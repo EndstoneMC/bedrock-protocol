@@ -1,5 +1,5 @@
 enum class {{ enum.name }} {
 {% for name, attr in enum.attributes.items() %}
-    {{ name }} = {{ attr.value }},
+    {{ name | camelize }} = {{ attr.value }},
 {% endfor %}
 };

@@ -6,13 +6,18 @@
 namespace {{ package | replace('.', '::') }} {
 
 {% endif %}
-{% for enum in mod.members.values()
-    if not enum.is_alias and enum.is_class
-    and "IntEnum" in (enum.bases | map("string") | list) %}
+{% for member in mod.members.values()
+    if not member.is_alias and member.is_class %}
 {% if not loop.first %}
 
 {% endif %}
+{% if "IntEnum" in (member.bases | map("string") | list) %}
+{% set enum = member %}
 {% include "enum.jinja" %}
+{% else %}
+{% set cls = member %}
+{% include "class.jinja" %}
+{% endif %}
 {% endfor %}
 {% if package %}
 

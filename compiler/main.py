@@ -5,6 +5,7 @@
 # dependencies = [
 #   "click",
 #   "griffe",
+#   "inflection",
 #   "jinja2",
 # ]
 # ///
@@ -13,6 +14,7 @@ from pathlib import Path
 
 import click
 import griffe
+import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 
@@ -40,6 +42,7 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         keep_trailing_newline=True,
         undefined=StrictUndefined,
     )
+    env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
     for inp in inputs:
