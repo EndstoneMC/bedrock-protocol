@@ -43,7 +43,7 @@ function(bedrock_protocol_generate)
         message(FATAL_ERROR "bedrock_protocol_generate: PACKETS is required")
     endif()
     if(NOT BP_OUT_DIR)
-        set(BP_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/bedrock_generated")
+        set(BP_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
     endif()
     file(MAKE_DIRECTORY "${BP_OUT_DIR}")
 
