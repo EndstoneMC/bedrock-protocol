@@ -1,6 +1,11 @@
 {% set members = enum | enum_members %}
+{% set csince = enum | class_since %}
+{% if csince or members.gates %}
 template <int ProtocolVersion>
-struct {{ enum.name }} {
+struct {{ enum.name }};
+
+template <int ProtocolVersion> requires ({% if csince %}ProtocolVersion >= {{ csince }}{% if members.gates %} && {% endif %}{% endif %}{% if members.gates %}ProtocolVersion < {{ members.gates[0][0] }}{% endif %})
+struct {{ enum.name }}<ProtocolVersion> {
     enum {
 {% for name, value in members.always %}
         {{ name | camelize }} = {{ value }},
@@ -20,3 +25,13 @@ struct {{ enum.name }}<ProtocolVersion> {
     };
 };
 {% endfor %}
+{% else %}
+template <int ProtocolVersion>
+struct {{ enum.name }} {
+    enum {
+{% for name, value in members.always %}
+        {{ name | camelize }} = {{ value }},
+{% endfor %}
+    };
+};
+{% endif %}

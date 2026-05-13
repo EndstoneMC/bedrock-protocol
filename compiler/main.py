@@ -47,6 +47,29 @@ def _parse_member_value(raw: str) -> tuple[int, int | None] | None:
     return None
 
 
+def class_since(cls) -> int | None:
+    """Read `@enum(since=N)` from a class's decorators. Returns N or None."""
+    for dec in cls.decorators:
+        try:
+            node = ast.parse(str(dec.value), mode="eval").body
+        except (SyntaxError, ValueError):
+            continue
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "enum"
+        ):
+            continue
+        for kw in node.keywords:
+            if (
+                kw.arg == "since"
+                and isinstance(kw.value, ast.Constant)
+                and isinstance(kw.value.value, int)
+            ):
+                return kw.value.value
+    return None
+
+
 def enum_members(cls) -> dict:
     """Bucket an enum class's attributes into always-present vs version-gated."""
     always: list[tuple[str, int]] = []
@@ -91,6 +114,7 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
     env.filters["enum_members"] = enum_members
+    env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
     for inp in inputs:

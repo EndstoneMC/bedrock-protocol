@@ -1,11 +1,12 @@
 from enum import IntEnum
 from typing import ClassVar
 
-from protocol.enum import value
+from protocol.enum import enum, value
 
 package = "bedrock.protocol"
 
 
+@enum(since=622)
 class DisconnectFailReason(IntEnum):
     UNKNOWN = 0
     CANT_CONNECT_NO_INTERNET = 1
