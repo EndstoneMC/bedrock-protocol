@@ -1,6 +1,7 @@
 #!/usr/bin/env -S uv run --script
 #
 # /// script
+# requires-python = ">=3.11"
 # dependencies = [
 #   "click",
 #   "griffe",
@@ -44,7 +45,8 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
     for inp in inputs:
         mod = griffe.load(inp.stem, search_paths=[str(inp.parent)])
         enums = [
-            cls for cls in mod.classes.values()
+            cls
+            for cls in mod.classes.values()
             if any(str(base) == "IntEnum" for base in cls.bases)
         ]
         if not enums:
