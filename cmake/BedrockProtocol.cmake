@@ -172,11 +172,13 @@ function(bedrock_protocol_generate)
     if(BP_TARGET)
         get_target_property(_target_type ${BP_TARGET} TYPE)
         if(_target_type STREQUAL "INTERFACE_LIBRARY")
-            target_sources(${BP_TARGET} INTERFACE ${_outputs})
-            target_include_directories(${BP_TARGET} INTERFACE "${BP_PROTOC_OUT_DIR}")
+            # custom_command OUTPUTs are directory-scoped; wrap them in a
+            # custom_target (which is global) so consumers in sibling dirs
+            # can reach the codegen rule.
+            add_custom_target(${BP_TARGET}_codegen DEPENDS ${_outputs})
+            add_dependencies(${BP_TARGET} ${BP_TARGET}_codegen)
         else()
             target_sources(${BP_TARGET} PRIVATE ${_outputs})
-            target_include_directories(${BP_TARGET} PUBLIC "${BP_PROTOC_OUT_DIR}")
         endif()
     endif()
     if(BP_OUT_VAR)

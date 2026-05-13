@@ -39,10 +39,20 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         keep_trailing_newline=True,
         undefined=StrictUndefined,
     )
+    template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
     for inp in inputs:
         mod = griffe.load(inp.stem, search_paths=[str(inp.parent)])
-        print(mod.__repr__())
+        enums = [
+            cls for cls in mod.classes.values()
+            if any(str(base) == "IntEnum" for base in cls.bases)
+        ]
+        if not enums:
+            continue
+        target = out_dir / f"{inp.stem}.hpp"
+        target.write_text(template.render(enums=enums))
+        if verbose:
+            click.echo(f"wrote {target}")
 
 
 if __name__ == "__main__":
