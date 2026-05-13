@@ -14,16 +14,41 @@ if(DEFINED _BEDROCK_PROTOCOL_INCLUDED)
 endif()
 set(_BEDROCK_PROTOCOL_INCLUDED TRUE)
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/../compiler")
 
-set(BEDROCK_PROTOCOL_PACKAGE_ROOT
-    "${CMAKE_CURRENT_LIST_DIR}/.."
-    CACHE PATH "Directory containing the bpc Python package")
+# Re-run codegen when any compiler source or template changes.
+file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
+    "${_compiler_dir}/*.py"
+    "${_compiler_dir}/templates/*")
 
-# Re-run codegen when any bpc source or template changes.
-file(GLOB_RECURSE _bpc_sources CONFIGURE_DEPENDS
-    "${BEDROCK_PROTOCOL_PACKAGE_ROOT}/bpc/*.py"
-    "${BEDROCK_PROTOCOL_PACKAGE_ROOT}/bpc/templates/*")
+# bpc is a uv script (PEP 723 inline deps). The Unix shebang doesn't fire on
+# Windows, so generate a tiny wrapper per-platform that always goes through
+# `uv run --script`, and point the imported target at it.
+find_program(UV_EXECUTABLE uv)
+if(NOT UV_EXECUTABLE)
+    message(FATAL_ERROR
+        "bedrock-protocol: uv is required to run the bpc compiler. "
+        "Install it from https://docs.astral.sh/uv/")
+endif()
+
+if(WIN32)
+    set(_compiler_exe "${CMAKE_BINARY_DIR}/bedrock_protocol_compiler.cmd")
+    file(WRITE "${_compiler_exe}"
+        "@\"${UV_EXECUTABLE}\" run --script \"${_compiler_dir}/main.py\" %*\r\n")
+else()
+    set(_compiler_exe "${CMAKE_BINARY_DIR}/bedrock_protocol_compiler")
+    file(WRITE "${_compiler_exe}"
+        "#!/bin/sh\nexec \"${UV_EXECUTABLE}\" run --script \"${_compiler_dir}/main.py\" \"$@\"\n")
+    file(CHMOD "${_compiler_exe}" PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE)
+endif()
+
+add_executable(bedrock_protocol_compiler IMPORTED GLOBAL)
+set_target_properties(bedrock_protocol_compiler PROPERTIES
+    IMPORTED_LOCATION "${_compiler_exe}")
+add_executable(bedrock::protocol_compiler ALIAS bedrock_protocol_compiler)
 
 function(bedrock_protocol_generate)
     set(_options APPEND_PATH)
@@ -93,23 +118,15 @@ function(bedrock_protocol_generate)
     endif()
 
     # Resolve the compiler invocation.
-    if(NOT BP_PROTOC_EXE AND TARGET bedrock::protocol-compiler)
-        set(BP_PROTOC_EXE bedrock::protocol-compiler)
+    if(NOT BP_PROTOC_EXE)
+        set(BP_PROTOC_EXE bedrock::protocol_compiler)
     endif()
     set(_protoc_dep)
-    if(BP_PROTOC_EXE)
-        if(TARGET ${BP_PROTOC_EXE})
-            set(_protoc_cmd "$<TARGET_FILE:${BP_PROTOC_EXE}>")
-            set(_protoc_dep ${BP_PROTOC_EXE})
-        else()
-            set(_protoc_cmd ${BP_PROTOC_EXE})
-        endif()
+    if(TARGET ${BP_PROTOC_EXE})
+        set(_protoc_cmd "$<TARGET_FILE:${BP_PROTOC_EXE}>")
+        set(_protoc_dep ${BP_PROTOC_EXE})
     else()
-        # Fall back to running the bundled bpc Python package directly.
-        set(_protoc_cmd
-            ${CMAKE_COMMAND} -E env
-                "PYTHONPATH=${BEDROCK_PROTOCOL_PACKAGE_ROOT}"
-            "${Python3_EXECUTABLE}" -m bpc)
+        set(_protoc_cmd ${BP_PROTOC_EXE})
     endif()
 
     # One custom_command per input keeps the per-file output path simple.
@@ -144,7 +161,7 @@ function(bedrock_protocol_generate)
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
             COMMAND ${_protoc_cmd}
                     --out "${_out_dir}" ${BP_PROTOC_OPTIONS} "${p}"
-            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_protoc_dep} ${_bpc_sources}
+            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_protoc_dep} ${_compiler_sources}
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             COMMENT "bpc: generating ${_rel}"
             VERBATIM)
@@ -153,8 +170,14 @@ function(bedrock_protocol_generate)
     endforeach()
 
     if(BP_TARGET)
-        target_sources(${BP_TARGET} PRIVATE ${_outputs})
-        target_include_directories(${BP_TARGET} PUBLIC "${BP_PROTOC_OUT_DIR}")
+        get_target_property(_target_type ${BP_TARGET} TYPE)
+        if(_target_type STREQUAL "INTERFACE_LIBRARY")
+            target_sources(${BP_TARGET} INTERFACE ${_outputs})
+            target_include_directories(${BP_TARGET} INTERFACE "${BP_PROTOC_OUT_DIR}")
+        else()
+            target_sources(${BP_TARGET} PRIVATE ${_outputs})
+            target_include_directories(${BP_TARGET} PUBLIC "${BP_PROTOC_OUT_DIR}")
+        endif()
     endif()
     if(BP_OUT_VAR)
         set(${BP_OUT_VAR} ${_outputs} PARENT_SCOPE)
