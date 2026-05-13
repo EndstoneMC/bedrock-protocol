@@ -16,6 +16,9 @@ class DisconnectPacketMessages:
 
 
 class DisconnectPacket:
+    """Sent from the server to a client to trigger a disconnection."""
+
     id: ClassVar[int] = 5
+
     reason: DisconnectFailReason
     messages: DisconnectPacketMessages | None
