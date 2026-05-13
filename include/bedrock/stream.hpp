@@ -3,29 +3,50 @@
 // so the stream types can be reused without dragging in everything else.
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <span>
+#include <system_error>
 #include <vector>
+
+#include <bedrock/expected.hpp>
 
 namespace bedrock::protocol {
 
-class BinaryStream {
-public:
-    std::vector<std::uint8_t> data;
-    auto put_u8(std::uint8_t v) { data.push_back(v); }
-};
-
 class ReadOnlyBinaryStream {
 public:
-    explicit ReadOnlyBinaryStream(std::span<const std::uint8_t> buf)
-        : buf_(buf), pos_(buf.data()) {}
+    template <class T>
+    using Result = std::expected<T, std::error_code>;
 
-    auto getByte() { return *pos_++; }
-    auto eof() const { return pos_ >= buf_.data() + buf_.size(); }
+    explicit ReadOnlyBinaryStream(std::span<const std::uint8_t> buf) : view_(buf) {}
+
+    auto canRead() const { return read_pos_ < view_.size(); }
+
+    auto getByte() -> Result<std::uint8_t> {
+        if (!canRead())
+            return tl::unexpected{std::make_error_code(std::errc::no_message_available)};
+        return view_[read_pos_++];
+    }
 
 private:
-    std::span<const std::uint8_t> buf_;
-    const std::uint8_t*           pos_;
+    std::span<const std::uint8_t> view_;
+    std::size_t                   read_pos_ = 0;
+};
+
+class BinaryStream : public ReadOnlyBinaryStream {
+public:
+    // Default-constructed: own a fresh internal buffer.
+    BinaryStream() : ReadOnlyBinaryStream({}), buffer_(owned_) {}
+
+    // External-buffer constructor: write into the caller's vector.
+    explicit BinaryStream(std::vector<std::uint8_t>& buffer)
+        : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
+
+    auto writeByte(std::uint8_t v) { buffer_.push_back(v); }
+
+private:
+    std::vector<std::uint8_t>  owned_;  // backing storage when default-constructed
+    std::vector<std::uint8_t>& buffer_;
 };
 
 }  // namespace bedrock::protocol

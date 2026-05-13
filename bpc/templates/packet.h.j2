@@ -41,5 +41,6 @@ struct {{ packet.name }} {
 {% endfor %}
 
     void Write(bedrock::protocol::BinaryStream& out) const;
-    void Read(bedrock::protocol::ReadOnlyBinaryStream& in);
+    auto Read(bedrock::protocol::ReadOnlyBinaryStream& in)
+        -> bedrock::protocol::ReadOnlyBinaryStream::Result<void>;
 };

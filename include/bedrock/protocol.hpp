@@ -3,8 +3,10 @@
 #pragma once
 
 #include <cstdint>
+#include <system_error>
 #include <variant>
 
+#include <bedrock/expected.hpp>
 #include <bedrock/stream.hpp>
 
 namespace bedrock::protocol {
@@ -13,19 +15,21 @@ namespace bedrock::protocol {
 
 inline void write_uvarint32(BinaryStream& s, std::uint32_t v) {
     while (v >= 0x80u) {
-        s.put_u8(static_cast<std::uint8_t>(v | 0x80u));
+        s.writeByte(static_cast<std::uint8_t>(v | 0x80u));
         v >>= 7;
     }
-    s.put_u8(static_cast<std::uint8_t>(v));
+    s.writeByte(static_cast<std::uint8_t>(v));
 }
 
-inline std::uint32_t read_uvarint32(ReadOnlyBinaryStream& s) {
+inline auto read_uvarint32(ReadOnlyBinaryStream& s)
+    -> ReadOnlyBinaryStream::Result<std::uint32_t> {
     auto v     = std::uint32_t{0};
     auto shift = 0;
     while (true) {
         auto b = s.getByte();
-        v |= static_cast<std::uint32_t>(b & 0x7fu) << shift;
-        if ((b & 0x80u) == 0) break;
+        if (!b) return tl::unexpected{b.error()};
+        v |= static_cast<std::uint32_t>(*b & 0x7fu) << shift;
+        if ((*b & 0x80u) == 0) break;
         shift += 7;
     }
     return v;
@@ -41,9 +45,11 @@ template <class T>
 inline void write_payload(BinaryStream&, const T&) {}
 
 template <class T>
-inline void read_payload(ReadOnlyBinaryStream&, T&) {}
+inline auto read_payload(ReadOnlyBinaryStream&, T&)
+    -> ReadOnlyBinaryStream::Result<void> { return {}; }
 
 inline void write_payload(BinaryStream&, std::monostate) {}
-inline void read_payload(ReadOnlyBinaryStream&, std::monostate&) {}
+inline auto read_payload(ReadOnlyBinaryStream&, std::monostate&)
+    -> ReadOnlyBinaryStream::Result<void> { return {}; }
 
 }  // namespace bedrock::protocol

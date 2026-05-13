@@ -27,6 +27,8 @@ add_library(bedrock::protocol ALIAS bedrock_protocol)
 target_include_directories(bedrock_protocol PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+target_link_libraries(bedrock_protocol PUBLIC tl::expected)
+
 bedrock_protocol_generate(
     TARGET  bedrock_protocol
     PACKETS ${BEDROCK_PROTOCOL_SOURCES})

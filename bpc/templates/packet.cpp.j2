@@ -15,19 +15,22 @@ void {{ packet.name }}::Write(bedrock::protocol::BinaryStream& out) const {
 {% endfor %}
 }
 
-void {{ packet.name }}::Read(bedrock::protocol::ReadOnlyBinaryStream& in) {
+auto {{ packet.name }}::Read(bedrock::protocol::ReadOnlyBinaryStream& in)
+    -> bedrock::protocol::ReadOnlyBinaryStream::Result<void> {
 {% for f in packet.fields %}
 {% if f.type is switch_type %}
     {
         auto __tag = bedrock::protocol::read_{{ f.type.discriminator }}(in);
-        switch (__tag) {
+        if (!__tag) return tl::unexpected{__tag.error()};
+        switch (*__tag) {
 {% for c in f.type.cases %}
 {% if c is none %}
             case {{ loop.index0 }}: {{ f.name }} = std::monostate{}; break;
 {% else %}
             case {{ loop.index0 }}: {
-                auto __v = {{ c.name }}{};
-                bedrock::protocol::read_payload(in, __v);
+                auto __v  = {{ c.name }}{};
+                auto __pr = bedrock::protocol::read_payload(in, __v);
+                if (!__pr) return tl::unexpected{__pr.error()};
                 {{ f.name }} = std::move(__v);
                 break;
             }
@@ -37,7 +40,12 @@ void {{ packet.name }}::Read(bedrock::protocol::ReadOnlyBinaryStream& in) {
         }
     }
 {% else %}
-    {{ f.name }} = static_cast<{{ f | cxx_type }}>(bedrock::protocol::read_{{ f | wire_type }}(in));
+    {
+        auto __r = bedrock::protocol::read_{{ f | wire_type }}(in);
+        if (!__r) return tl::unexpected{__r.error()};
+        {{ f.name }} = static_cast<{{ f | cxx_type }}>(*__r);
+    }
 {% endif %}
 {% endfor %}
+    return {};
 }
