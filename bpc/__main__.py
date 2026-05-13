@@ -40,6 +40,28 @@ PRIMITIVE_CXX = {
 }
 
 
+# Maps a DSL wire-type name to the camelCase suffix of the stream member
+# method that reads or writes it (i.e. `getXxx` / `writeXxx`).
+WIRE_METHOD_SUFFIX = {
+    "u8": "Byte",
+    "i8": "SignedByte",
+    "u16": "UnsignedShort",
+    "i16": "SignedShort",
+    "u32": "UnsignedInt",
+    "i32": "SignedInt",
+    "u64": "UnsignedLong",
+    "i64": "SignedLong",
+    "uvarint32": "UnsignedVarInt",
+    "varint32": "VarInt",
+    "uvarint64": "UnsignedVarLong",
+    "varint64": "VarLong",
+    "string": "String",
+    "bool": "Bool",
+    "float": "Float",
+    "double": "Double",
+}
+
+
 def _case_cxx(case) -> str:
     if case is None:
         return "std::monostate"
@@ -75,6 +97,11 @@ def wire_type(field: FieldDef) -> str:
     raise ValueError(f"unknown field type: {t!r}")
 
 
+def method_suffix(wire_name: str) -> str:
+    """C++ stream method suffix for a wire type — e.g. uvarint32 → UnsignedVarInt."""
+    return WIRE_METHOD_SUFFIX[wire_name]
+
+
 def build_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(PACKAGE_DIR / "templates")),
@@ -85,6 +112,7 @@ def build_env() -> Environment:
     )
     env.filters["cxx_type"] = cxx_type
     env.filters["wire_type"] = wire_type
+    env.filters["method_suffix"] = method_suffix
     env.tests["primitive_type"] = lambda x: isinstance(x, PrimitiveType)
     env.tests["named_type"] = lambda x: isinstance(x, NamedType)
     env.tests["switch_type"] = lambda x: isinstance(x, SwitchType)

@@ -18,6 +18,9 @@ build/
 __pycache__/
 *.py[cod]
 
+# VS Code
+.vscode/settings.json
+
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
