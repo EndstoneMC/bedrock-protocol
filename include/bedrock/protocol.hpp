@@ -1,11 +1,9 @@
-// Minimal Bedrock-Protocol runtime. Just enough surface area for the generated
-// code to compile and link. Real implementations replace these symbols.
 #pragma once
 
-#include <variant>
-
+// IWYU pragma: begin_keep
 #include "expected.hpp"
 #include "stream.hpp"
+// IWYU pragma: end_keep
 
 namespace bedrock::protocol {
 }  // namespace bedrock::protocol

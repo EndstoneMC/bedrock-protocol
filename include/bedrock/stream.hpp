@@ -1,6 +1,3 @@
-// Byte-stream primitives used by the Bedrock-Protocol runtime and the
-// generated packet (de)serialisers. Kept separate from <bedrock/protocol.hpp>
-// so the stream types can be reused without dragging in everything else.
 #pragma once
 
 #include <cstddef>
@@ -9,7 +6,7 @@
 #include <system_error>
 #include <vector>
 
-#include <bedrock/expected.hpp>
+#include "expected.hpp"  // IWYU pragma: keep
 
 namespace bedrock::protocol {
 
@@ -22,28 +19,35 @@ public:
 
     auto canRead() const { return read_pos_ < view_.size(); }
 
-    auto getByte() -> Result<std::uint8_t> {
-        if (!canRead())
+    auto getByte() -> Result<std::uint8_t>
+    {
+        if (!canRead()) {
             return tl::unexpected{std::make_error_code(std::errc::no_message_available)};
+        }
         return view_[read_pos_++];
     }
 
-    auto getUnsignedVarInt() -> Result<std::uint32_t> {
-        constexpr auto kMaxBytes = 5;  // ceil(32 / 7)
+    auto getUnsignedVarInt() -> Result<std::uint32_t>
+    {
+        constexpr auto kMaxBytes = 5;
         auto value = std::uint32_t{0};
         for (auto i = 0; i < kMaxBytes * 7; i += 7) {
             auto b = getByte();
-            if (!b) return tl::unexpected{b.error()};
+            if (!b) {
+                return tl::unexpected{b.error()};
+            }
             value |= (static_cast<std::uint32_t>(*b) & 0x7Fu) << i;
-            if ((*b & 0x80u) == 0) return value;
+            if ((*b & 0x80u) == 0) {
+                return value;
+            }
         }
-        // Continuation bit still set after kMaxBytes — malformed varint.
+        // Continuation bit still set after kMaxBytes - malformed varint.
         return tl::unexpected{std::make_error_code(std::errc::value_too_large)};
     }
 
 private:
     std::span<const std::uint8_t> view_;
-    std::size_t                   read_pos_ = 0;
+    std::size_t read_pos_ = 0;
 };
 
 class BinaryStream : public ReadOnlyBinaryStream {
@@ -52,12 +56,12 @@ public:
     BinaryStream() : ReadOnlyBinaryStream({}), buffer_(owned_) {}
 
     // External-buffer constructor: write into the caller's vector.
-    explicit BinaryStream(std::vector<std::uint8_t>& buffer)
-        : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
+    explicit BinaryStream(std::vector<std::uint8_t> &buffer) : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
 
     auto writeByte(std::uint8_t v) { buffer_.push_back(v); }
 
-    auto writeUnsignedVarInt(std::uint32_t value) {
+    auto writeUnsignedVarInt(std::uint32_t value)
+    {
         // A uvarint32 of a uint32_t is at most ceil(32 / 7) = 5 bytes.
         do {
             const auto byte = static_cast<std::uint8_t>(value & 0x7Fu);
@@ -67,8 +71,8 @@ public:
     }
 
 private:
-    std::vector<std::uint8_t>  owned_;  // backing storage when default-constructed
-    std::vector<std::uint8_t>& buffer_;
+    std::vector<std::uint8_t> owned_;  // backing storage when default-constructed
+    std::vector<std::uint8_t> &buffer_;
 };
 
 }  // namespace bedrock::protocol
