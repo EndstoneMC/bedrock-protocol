@@ -1,14 +1,13 @@
-# BedrockProtocol.cmake — provides bedrock_protocol_generate(), the moral
-# equivalent of protobuf_generate() for our DSL/codegen.
+# BedrockProtocol.cmake — bedrock_protocol_generate(), modelled on
+# protobuf_generate() from the upstream Protobuf CMake module.
 #
 # Usage:
 #     include(BedrockProtocol)
-#     add_executable(my_app main.cpp)
 #     bedrock_protocol_generate(
-#         TARGET   my_app
-#         PACKETS  packets/disconnect_packet.py
-#         OUT_DIR  ${CMAKE_CURRENT_BINARY_DIR}/bedrock_generated   # optional
-#     )
+#         TARGET      my_lib
+#         INPUTS      protocol/helloworld/helloworld.py
+#         IMPORT_DIRS protocol
+#         OUT_VAR     generated_sources)
 
 if(DEFINED _BEDROCK_PROTOCOL_INCLUDED)
     return()
@@ -17,79 +16,147 @@ set(_BEDROCK_PROTOCOL_INCLUDED TRUE)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-# Directory that contains the `bpc` Python package — added to PYTHONPATH
-# whenever we invoke `python -m bpc`.
 set(BEDROCK_PROTOCOL_PACKAGE_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/.."
     CACHE PATH "Directory containing the bpc Python package")
 
-set(_bpc_package_dir "${BEDROCK_PROTOCOL_PACKAGE_ROOT}/bpc")
-set(_bpc_sources
-    "${_bpc_package_dir}/__main__.py"
-    "${_bpc_package_dir}/dsl.py"
-    "${_bpc_package_dir}/templates/packet.h.j2"
-    "${_bpc_package_dir}/templates/packet.cpp.j2")
+# Re-run codegen when any bpc source or template changes.
+file(GLOB_RECURSE _bpc_sources CONFIGURE_DEPENDS
+    "${BEDROCK_PROTOCOL_PACKAGE_ROOT}/bpc/*.py"
+    "${BEDROCK_PROTOCOL_PACKAGE_ROOT}/bpc/templates/*")
 
 function(bedrock_protocol_generate)
-    set(options HEADER_ONLY)
-    set(oneValueArgs TARGET OUT_DIR)
-    set(multiValueArgs PACKETS)
-    cmake_parse_arguments(BP "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(_options APPEND_PATH)
+    set(_oneValueArgs
+        OUT_VAR
+        PROTOC_EXE
+        PROTOC_OUT_DIR
+        TARGET)
+    set(_multiValueArgs
+        DEPENDENCIES
+        INPUTS
+        IMPORT_DIRS
+        PROTOC_OPTIONS)
+    cmake_parse_arguments(BP
+        "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN})
 
-    if(NOT BP_TARGET)
-        message(FATAL_ERROR "bedrock_protocol_generate: TARGET is required")
+    if(NOT BP_PROTOC_OUT_DIR)
+        set(BP_PROTOC_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
-    if(NOT BP_PACKETS)
-        message(FATAL_ERROR "bedrock_protocol_generate: PACKETS is required")
-    endif()
-    if(NOT BP_OUT_DIR)
-        set(BP_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
-    endif()
-    file(MAKE_DIRECTORY "${BP_OUT_DIR}")
 
-    # Resolve packet inputs to absolute paths.
-    set(_packet_inputs)
-    foreach(p IN LISTS BP_PACKETS)
+    # INPUTS defaults to the TARGET's .py sources.
+    if(NOT BP_INPUTS)
+        if(NOT BP_TARGET)
+            message(FATAL_ERROR
+                "bedrock_protocol_generate: INPUTS or TARGET (with .py sources) is required")
+        endif()
+        get_target_property(_tgt_sources ${BP_TARGET} SOURCES)
+        if(_tgt_sources)
+            foreach(s IN LISTS _tgt_sources)
+                if(s MATCHES "\\.py$")
+                    list(APPEND BP_INPUTS "${s}")
+                endif()
+            endforeach()
+        endif()
+        if(NOT BP_INPUTS)
+            message(FATAL_ERROR
+                "bedrock_protocol_generate: target '${BP_TARGET}' has no .py sources")
+        endif()
+    endif()
+
+    # Absolutise inputs and import dirs.
+    set(_abs_inputs)
+    foreach(p IN LISTS BP_INPUTS)
         if(NOT IS_ABSOLUTE "${p}")
             set(p "${CMAKE_CURRENT_SOURCE_DIR}/${p}")
         endif()
-        list(APPEND _packet_inputs "${p}")
+        get_filename_component(p "${p}" ABSOLUTE)
+        list(APPEND _abs_inputs "${p}")
     endforeach()
 
-    set(_codegen_flags)
-    if(BP_HEADER_ONLY)
-        list(APPEND _codegen_flags "--header-only")
+    set(_import_dirs)
+    foreach(d IN LISTS BP_IMPORT_DIRS)
+        if(NOT IS_ABSOLUTE "${d}")
+            set(d "${CMAKE_CURRENT_SOURCE_DIR}/${d}")
+        endif()
+        get_filename_component(d "${d}" ABSOLUTE)
+        list(APPEND _import_dirs "${d}")
+    endforeach()
+    if(BP_APPEND_PATH)
+        foreach(p IN LISTS _abs_inputs)
+            get_filename_component(_dir "${p}" DIRECTORY)
+            list(APPEND _import_dirs "${_dir}")
+        endforeach()
+    endif()
+    if(_import_dirs)
+        list(REMOVE_DUPLICATES _import_dirs)
     endif()
 
-    set(_bpc_invocation
-        ${CMAKE_COMMAND} -E env "PYTHONPATH=${BEDROCK_PROTOCOL_PACKAGE_ROOT}"
-        "${Python3_EXECUTABLE}" -m bpc)
-
-    # Enumerate generated outputs at configure time so we can hand them to
-    # add_custom_command() / target_sources().
-    execute_process(
-        COMMAND ${_bpc_invocation}
-                --out "${BP_OUT_DIR}" --list-outputs ${_codegen_flags}
-                ${_packet_inputs}
-        OUTPUT_VARIABLE _outputs_raw
-        RESULT_VARIABLE _outputs_rc
-        ERROR_VARIABLE  _outputs_err
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(NOT _outputs_rc EQUAL 0)
-        message(FATAL_ERROR
-            "bedrock_protocol_generate: failed to enumerate outputs\n${_outputs_err}")
+    # Resolve the compiler invocation.
+    if(NOT BP_PROTOC_EXE AND TARGET bedrock::protocol-compiler)
+        set(BP_PROTOC_EXE bedrock::protocol-compiler)
     endif()
-    string(REPLACE "\n" ";" _generated "${_outputs_raw}")
+    set(_protoc_dep)
+    if(BP_PROTOC_EXE)
+        if(TARGET ${BP_PROTOC_EXE})
+            set(_protoc_cmd "$<TARGET_FILE:${BP_PROTOC_EXE}>")
+            set(_protoc_dep ${BP_PROTOC_EXE})
+        else()
+            set(_protoc_cmd ${BP_PROTOC_EXE})
+        endif()
+    else()
+        # Fall back to running the bundled bpc Python package directly.
+        set(_protoc_cmd
+            ${CMAKE_COMMAND} -E env
+                "PYTHONPATH=${BEDROCK_PROTOCOL_PACKAGE_ROOT}"
+            "${Python3_EXECUTABLE}" -m bpc)
+    endif()
 
-    add_custom_command(
-        OUTPUT  ${_generated}
-        COMMAND ${_bpc_invocation}
-                --out "${BP_OUT_DIR}" ${_codegen_flags} ${_packet_inputs}
-        DEPENDS ${_packet_inputs} ${_bpc_sources}
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMENT "bpc: generating bedrock-protocol sources for ${BP_TARGET}"
-        VERBATIM)
+    # One custom_command per input keeps the per-file output path simple.
+    set(_outputs)
+    foreach(p IN LISTS _abs_inputs)
+        # Shortest valid subpath under any import_dir wins; otherwise use the
+        # basename so the input still produces something.
+        set(_rel "")
+        foreach(d IN LISTS _import_dirs)
+            file(RELATIVE_PATH _cand "${d}" "${p}")
+            if(NOT _cand MATCHES "^\\.\\.")
+                if(_rel STREQUAL "")
+                    set(_rel "${_cand}")
+                else()
+                    string(LENGTH "${_cand}" _cand_len)
+                    string(LENGTH "${_rel}"  _rel_len)
+                    if(_cand_len LESS _rel_len)
+                        set(_rel "${_cand}")
+                    endif()
+                endif()
+            endif()
+        endforeach()
+        if(_rel STREQUAL "")
+            get_filename_component(_rel "${p}" NAME)
+        endif()
+        string(REGEX REPLACE "\\.py$" ".hpp" _rel "${_rel}")
+        set(_out "${BP_PROTOC_OUT_DIR}/${_rel}")
+        get_filename_component(_out_dir "${_out}" DIRECTORY)
 
-    target_sources(${BP_TARGET} PRIVATE ${_generated})
-    target_include_directories(${BP_TARGET} PUBLIC "${BP_OUT_DIR}")
+        add_custom_command(
+            OUTPUT  "${_out}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
+            COMMAND ${_protoc_cmd}
+                    --out "${_out_dir}" ${BP_PROTOC_OPTIONS} "${p}"
+            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_protoc_dep} ${_bpc_sources}
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMENT "bpc: generating ${_rel}"
+            VERBATIM)
+
+        list(APPEND _outputs "${_out}")
+    endforeach()
+
+    if(BP_TARGET)
+        target_sources(${BP_TARGET} PRIVATE ${_outputs})
+        target_include_directories(${BP_TARGET} PUBLIC "${BP_PROTOC_OUT_DIR}")
+    endif()
+    if(BP_OUT_VAR)
+        set(${BP_OUT_VAR} ${_outputs} PARENT_SCOPE)
+    endif()
 endfunction()

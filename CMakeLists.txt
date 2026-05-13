@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20 LANGUAGE CXX)
 project(bedrock-protocol CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -8,14 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(BedrockProtocol)
 
-# Bundled third-party dependencies (if any) — their targets become available
-# to the bedrock_protocol library defined below.
+# Bundled third-party dependencies
 add_subdirectory(third_party)
-
-# Collect every packet definition under protocol/. CONFIGURE_DEPENDS makes
-# CMake re-glob on rebuilds so adding a new packet file picks up automatically.
-file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
 
 # The single consumable library. Downstream:
 #     add_subdirectory(third_party/bedrock-protocol)
@@ -29,6 +23,10 @@ target_include_directories(bedrock_protocol PUBLIC
 
 target_link_libraries(bedrock_protocol PUBLIC tl::expected)
 
+# Collect every packet definition under protocol/. CONFIGURE_DEPENDS makes
+# CMake re-glob on rebuilds so adding a new packet file picks up automatically.
+file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
 bedrock_protocol_generate(
-    TARGET  bedrock_protocol
-    PACKETS ${BEDROCK_PROTOCOL_SOURCES})
+    TARGET      bedrock_protocol
+    INPUTS      ${BEDROCK_PROTOCOL_SOURCES}
+    IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
