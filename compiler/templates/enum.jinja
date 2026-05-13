@@ -1,5 +1,7 @@
-enum class {{ enum.name }} {
+struct {{ enum.name }} {
+    enum {
 {% for name, attr in enum.attributes.items() %}
-    {{ name | camelize }} = {{ attr.value }},
+        {{ name | camelize }} = {{ attr.value }},
 {% endfor %}
+    };
 };
