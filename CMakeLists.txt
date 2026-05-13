@@ -31,8 +31,19 @@ bedrock_protocol_generate(
     INPUTS         ${BEDROCK_PROTOCOL_SOURCES}
     IMPORT_DIRS    ${CMAKE_CURRENT_SOURCE_DIR}
     PROTOC_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    OUT_VAR        BEDROCK_PROTOCOL_GENERATED
 )
 target_include_directories(bedrock_protocol INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/generated>")
+
+# Stitch the generated headers into a single index — the hand-written
+# `<bedrock/protocol.hpp>` umbrella `#include`s this.
+set(_index "${CMAKE_CURRENT_BINARY_DIR}/generated/protocol/all.hpp")
+set(_index_content "#pragma once\n\n")
+foreach(_hdr IN LISTS BEDROCK_PROTOCOL_GENERATED)
+    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_BINARY_DIR}/generated/protocol" "${_hdr}")
+    string(APPEND _index_content "#include \"${_rel}\"\n")
+endforeach()
+file(WRITE "${_index}" "${_index_content}")
 
 # Tests
 if(BUILD_TESTING)

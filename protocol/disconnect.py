@@ -1,6 +1,8 @@
 from enum import IntEnum
 from typing import ClassVar
 
+package = "bedrock.protocol"
+
 
 class DisconnectFailReason(IntEnum):
     UNKNOWN = 0

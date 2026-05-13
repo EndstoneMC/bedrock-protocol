@@ -44,15 +44,10 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
     out_dir.mkdir(parents=True, exist_ok=True)
     for inp in inputs:
         mod = griffe.load(inp.stem, search_paths=[str(inp.parent)])
-        enums = [
-            cls
-            for cls in mod.classes.values()
-            if any(str(base) == "IntEnum" for base in cls.bases)
-        ]
-        if not enums:
-            continue
+        attr = mod.members.get("package")
+        package = str(attr.value).strip("'\"") if attr and attr.value else None
         target = out_dir / f"{inp.stem}.hpp"
-        target.write_text(template.render(enums=enums))
+        target.write_text(template.render(mod=mod, package=package))
         if verbose:
             click.echo(f"wrote {target}")
 

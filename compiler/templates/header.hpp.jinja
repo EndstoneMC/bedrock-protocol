@@ -2,9 +2,19 @@
 
 #include <cstdint>
 
-{% for enum in enums %}
-{% include "enum.jinja" %}
-{% if not loop.last %}
+{% if package %}
+namespace {{ package | replace('.', '::') }} {
 
 {% endif %}
+{% for enum in mod.members.values()
+    if not enum.is_alias and enum.is_class
+    and "IntEnum" in (enum.bases | map("string") | list) %}
+{% if not loop.first %}
+
+{% endif %}
+{% include "enum.jinja" %}
 {% endfor %}
+{% if package %}
+
+}  // namespace {{ package | replace('.', '::') }}
+{% endif %}

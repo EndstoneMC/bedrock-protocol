@@ -1,8 +1,11 @@
 #include <bedrock/protocol.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+namespace bp = bedrock::protocol;
+
 TEST_CASE("DisconnectFailReason enum values are stable")
 {
+    using bp::DisconnectFailReason;
     REQUIRE(static_cast<int>(DisconnectFailReason::UNKNOWN) == 0);
     REQUIRE(static_cast<int>(DisconnectFailReason::CANT_CONNECT_NO_INTERNET) == 1);
     REQUIRE(static_cast<int>(DisconnectFailReason::NO_PERMISSIONS) == 2);
