@@ -1,0 +1,10 @@
+#pragma once
+
+#include <cstdint>
+
+{% for enum in enums %}
+{% include "enum.jinja" %}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}

@@ -1,0 +1,5 @@
+enum class {{ enum.name }} {
+{% for name, value in enum.members %}
+    {{ name }} = {{ value }},
+{% endfor %}
+};
