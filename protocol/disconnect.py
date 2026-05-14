@@ -145,6 +145,10 @@ class DisconnectFailReason(IntEnum):
     EDITOR_MISMATCH_EDITOR_TO_VANILLA = value(133, since=893)
     EDITOR_MISMATCH_VANILLA_TO_EDITOR = value(134, since=893)
     DENY_LISTED = value(135, since=893)
+    NONCE_MISSING = value(136, since=975)
+    NONCE_NOT_FOUND = value(137, since=975)
+    NONCE_EXPIRED = value(138, since=975)
+    NONCE_NOT_VALID = value(139, since=975)
 
 
 class DisconnectPacketMessages:

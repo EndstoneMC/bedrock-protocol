@@ -89,10 +89,7 @@ def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None
     if isinstance(ann, griffe.ExprName):
         name = ann.name
         if name in enum_names:
-            # `Name_<V>` is an alias template that resolves through `NameAt<V>`
-            # to the concrete `v{change_point}::Name` enum — no `::Value` since
-            # the alias names an enum directly, not a struct wrapping one.
-            return f"{name}_<ProtocolVersion>"
+            return f"{name}_<ProtocolVersion>::Value"
         if name in class_names:
             return f"{name}_<ProtocolVersion>"
         if name in PRIMITIVE_TYPES:

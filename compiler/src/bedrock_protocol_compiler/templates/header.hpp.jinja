@@ -37,49 +37,24 @@ enum {{ name }} : {{ ctype }} {};
 {% endif %}
 {% endfor %}
 {% for enum_name, m in serializers %}
-{% set cp_enum = mod.classes[enum_name] %}
-{% set cps = cp_enum | enum_change_points %}
-{% if cps %}
-{% for cp, _entries in cps %}
 
-template <>
-struct Serializer<v{{ cp }}::{{ enum_name }}> {
-    static void serialize(BinaryStream &stream, v{{ cp }}::{{ enum_name }} value)
+template <int ProtocolVersion>
+struct Serializer<{{ enum_name }}_<ProtocolVersion>> {
+    static void serialize(BinaryStream &stream, typename {{ enum_name }}_<ProtocolVersion>::Value value)
     {
         stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
     }
 
     static auto deserialize(ReadOnlyBinaryStream &stream)
-        -> std::expected<v{{ cp }}::{{ enum_name }}, std::error_code>
+        -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
     {
         auto v = stream.{{ m.read }}();
         if (!v) {
             return tl::unexpected{v.error()};
         }
-        return static_cast<v{{ cp }}::{{ enum_name }}>(*v);
+        return static_cast<typename {{ enum_name }}_<ProtocolVersion>::Value>(*v);
     }
 };
-{% endfor %}
-{% else %}
-
-template <>
-struct Serializer<{{ enum_name }}> {
-    static void serialize(BinaryStream &stream, {{ enum_name }} value)
-    {
-        stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
-    }
-
-    static auto deserialize(ReadOnlyBinaryStream &stream)
-        -> std::expected<{{ enum_name }}, std::error_code>
-    {
-        auto v = stream.{{ m.read }}();
-        if (!v) {
-            return tl::unexpected{v.error()};
-        }
-        return static_cast<{{ enum_name }}>(*v);
-    }
-};
-{% endif %}
 {% endfor %}
 {% for member in mod.members.values()
     if not member.is_alias and member.is_class %}
