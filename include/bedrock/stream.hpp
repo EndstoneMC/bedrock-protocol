@@ -20,12 +20,8 @@
 
 #include "expected.hpp"  // IWYU pragma: keep
 
-namespace bedrock::protocol {
-
-namespace details {
-#if defined(__cpp_lib_byteswap) && __cpp_lib_byteswap >= 202110L
-using std::byteswap;
-#else
+#if !defined(__cpp_lib_byteswap) || __cpp_lib_byteswap < 202110L
+namespace std {
 template <std::integral T>
 constexpr T byteswap(T value) noexcept
 {
@@ -35,8 +31,10 @@ constexpr T byteswap(T value) noexcept
     std::ranges::reverse(repr);
     return std::bit_cast<T>(repr);
 }
+}  // namespace std
 #endif
-}  // namespace details
+
+namespace bedrock::protocol {
 
 class ReadOnlyBinaryStream {
 public:
@@ -88,7 +86,7 @@ public:
         if (!r) {
             return tl::unexpected{r.error()};
         }
-        return details::byteswap(value);
+        return std::byteswap(value);
     }
 
     auto getUnsignedVarInt() -> Result<std::uint32_t>
@@ -208,7 +206,7 @@ public:
 
     void writeSignedBigEndianInt(std::int32_t value)
     {
-        auto v = details::byteswap(value);
+        auto v = std::byteswap(value);
         write(&v, sizeof(v));
     }
 
