@@ -10,41 +10,12 @@
 # ]
 # ///
 
-import ast
 from pathlib import Path
 
 import click
 import griffe
 import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-
-
-def _parse_member_value(raw: str) -> tuple[int, int | None] | None:
-    """Parse `0` or `value(N, since=V)`. Returns (int_value, since_or_None)."""
-    try:
-        node = ast.parse(raw, mode="eval").body
-    except (SyntaxError, ValueError):
-        return None
-    if isinstance(node, ast.Constant) and isinstance(node.value, int):
-        return node.value, None
-    if (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "value"
-        and node.args
-        and isinstance(node.args[0], ast.Constant)
-        and isinstance(node.args[0].value, int)
-    ):
-        since: int | None = None
-        for kw in node.keywords:
-            if (
-                kw.arg == "since"
-                and isinstance(kw.value, ast.Constant)
-                and isinstance(kw.value.value, int)
-            ):
-                since = kw.value.value
-        return node.args[0].value, since
-    return None
 
 
 _PRIMITIVE_TYPES = {
@@ -54,43 +25,88 @@ _PRIMITIVE_TYPES = {
 }
 
 
+def _as_int(x) -> int | None:
+    """Coerce a griffe literal (a raw `str` from source) to int, or None."""
+    if isinstance(x, str):
+        try:
+            return int(x)
+        except ValueError:
+            return None
+    return None
+
+
+def _is_call(expr, name: str) -> bool:
+    return (
+        isinstance(expr, griffe.ExprCall)
+        and isinstance(expr.function, griffe.ExprName)
+        and expr.function.name == name
+    )
+
+
+def _keyword(call: griffe.ExprCall, name: str):
+    """Return the value of the first `name=` kwarg in a call, or None."""
+    for arg in call.arguments:
+        if isinstance(arg, griffe.ExprKeyword) and arg.name == name:
+            return arg.value
+    return None
+
+
 def _is_int_enum(cls) -> bool:
-    return any("IntEnum" in str(b) for b in cls.bases)
+    return any(
+        isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases
+    )
 
 
-def _split_top_level(s: str, sep: str) -> list[str]:
-    """Split `s` by `sep`, ignoring separators inside [ ] brackets."""
-    parts: list[str] = []
-    depth = 0
-    last = 0
-    for i, ch in enumerate(s):
-        if ch == "[":
-            depth += 1
-        elif ch == "]":
-            depth -= 1
-        elif ch == sep and depth == 0:
-            parts.append(s[last:i].strip())
-            last = i + 1
-    parts.append(s[last:].strip())
-    return parts
+def _parse_member_value(value) -> tuple[int, int | None] | None:
+    """Parse `0` or `value(N, since=V)`. Returns (int_value, since_or_None)."""
+    direct = _as_int(value)
+    if direct is not None:
+        return direct, None
+    if not _is_call(value, "value") or not value.arguments:
+        return None
+    ivalue = _as_int(value.arguments[0])
+    if ivalue is None:
+        return None
+    return ivalue, _as_int(_keyword(value, "since"))
 
 
-def _resolve_type(
-    py_type: str, class_names: set[str], enum_names: set[str]
-) -> str | None:
-    """Map a Python type expression to a C++ type. None if unmappable.
+def _parse_field_default(value) -> tuple[bool, int | None]:
+    """Parse `field(since=N)`. Returns (is_field_call, since_or_None)."""
+    if not _is_call(value, "field"):
+        return False, None
+    return True, _as_int(_keyword(value, "since"))
+
+
+def class_since(cls) -> int | None:
+    """Read `@enum(since=N)` from a class's decorators. Returns N or None."""
+    for dec in cls.decorators:
+        if _is_call(dec.value, "enum"):
+            since = _as_int(_keyword(dec.value, "since"))
+            if since is not None:
+                return since
+    return None
+
+
+def _resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None:
+    """Map a griffe annotation Expr to a C++ type. None if unmappable.
 
     Routes user-defined classes through their `ProtocolVersion` template, uses
     the inner `::Value` enum type for IntEnum classes, and maps explicit
-    `Union[A, B, None]` to `std::variant<A, B, std::monostate>` — variants
-    model on-the-wire discriminated unions.
+    `Union[A, B, None]` to `std::variant<A, B, std::monostate>`.
     """
-    py_type = py_type.strip()
-    if py_type.startswith("Union[") and py_type.endswith("]"):
-        members = _split_top_level(py_type[len("Union[") : -1], ",")
+    if (
+        isinstance(ann, griffe.ExprSubscript)
+        and isinstance(ann.left, griffe.ExprName)
+        and ann.left.name == "Union"
+    ):
+        elements = (
+            ann.slice.elements
+            if isinstance(ann.slice, griffe.ExprTuple)
+            else [ann.slice]
+        )
         parts: list[str] = []
-        for member in members:
-            if member == "None":
+        for member in elements:
+            if isinstance(member, str) and member == "None":
                 parts.append("std::monostate")
                 continue
             resolved = _resolve_type(member, class_names, enum_names)
@@ -98,63 +114,18 @@ def _resolve_type(
                 return None
             parts.append(resolved)
         return f"std::variant<{', '.join(parts)}>"
-    if py_type in enum_names:
-        return f"{py_type}<ProtocolVersion>::Value"
-    if py_type in class_names:
-        return f"{py_type}<ProtocolVersion>"
-    if py_type in _PRIMITIVE_TYPES:
-        return _PRIMITIVE_TYPES[py_type]
+    if isinstance(ann, griffe.ExprName):
+        name = ann.name
+        if name in enum_names:
+            return f"{name}<ProtocolVersion>::Value"
+        if name in class_names:
+            return f"{name}<ProtocolVersion>"
+        if name in _PRIMITIVE_TYPES:
+            return _PRIMITIVE_TYPES[name]
     return None
 
 
-def _parse_field_default(raw: str) -> tuple[bool, int | None]:
-    """Parse a field's default. Returns (is_field_call, since_or_None)."""
-    try:
-        node = ast.parse(raw, mode="eval").body
-    except (SyntaxError, ValueError):
-        return False, None
-    if not (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "field"
-    ):
-        return False, None
-    for kw in node.keywords:
-        if (
-            kw.arg == "since"
-            and isinstance(kw.value, ast.Constant)
-            and isinstance(kw.value.value, int)
-        ):
-            return True, kw.value.value
-    return True, None
-
-
-def class_since(cls) -> int | None:
-    """Read `@enum(since=N)` from a class's decorators. Returns N or None."""
-    for dec in cls.decorators:
-        try:
-            node = ast.parse(str(dec.value), mode="eval").body
-        except (SyntaxError, ValueError):
-            continue
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "enum"
-        ):
-            continue
-        for kw in node.keywords:
-            if (
-                kw.arg == "since"
-                and isinstance(kw.value, ast.Constant)
-                and isinstance(kw.value.value, int)
-            ):
-                return kw.value.value
-    return None
-
-
-def class_fields(
-    cls, class_names: set[str], enum_names: set[str]
-) -> dict | None:
+def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | None:
     """Resolve a struct's constants and instance fields, with version gating.
 
     Returns `None` if any type is unmappable — the template falls back to an
@@ -170,19 +141,21 @@ def class_fields(
     for name, attr in cls.attributes.items():
         if attr.annotation is None:
             return None
-        ann = str(attr.annotation).strip()
         if "instance-attribute" not in attr.labels:
-            ctype = _PRIMITIVE_TYPES.get(ann)
-            if ctype is None:
+            if not (
+                isinstance(attr.annotation, griffe.ExprName)
+                and attr.annotation.name in _PRIMITIVE_TYPES
+            ):
                 return None
+            ctype = _PRIMITIVE_TYPES[attr.annotation.name]
             constants.append((name, ctype, str(attr.value)))
             continue
-        ctype = _resolve_type(ann, class_names, enum_names)
+        ctype = _resolve_type(attr.annotation, class_names, enum_names)
         if ctype is None:
             return None
         since: int | None = None
         if attr.value is not None:
-            ok, parsed = _parse_field_default(str(attr.value))
+            ok, parsed = _parse_field_default(attr.value)
             if ok:
                 since = parsed
         raw_fields.append((name, ctype, since))
@@ -217,7 +190,7 @@ def enum_members(cls) -> dict:
     for name, attr in cls.attributes.items():
         if attr.value is None:
             continue
-        parsed = _parse_member_value(str(attr.value))
+        parsed = _parse_member_value(attr.value)
         if parsed is None:
             continue
         ivalue, since = parsed
@@ -258,7 +231,9 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
     for inp in inputs:
-        mod = griffe.load(inp.stem, search_paths=[str(inp.parent)])
+        mod = griffe.load(
+            inp.stem, search_paths=[str(inp.parent)], allow_inspection=False
+        )
         if not any(not c.is_alias for c in mod.classes.values()):
             if verbose:
                 click.echo(f"skip {inp} (no classes)")
@@ -266,8 +241,8 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         classes = [c for c in mod.classes.values() if not c.is_alias]
         class_names = {c.name for c in classes}
         enum_names = {c.name for c in classes if _is_int_enum(c)}
-        env.filters["class_fields"] = (
-            lambda cls, _cn=class_names, _en=enum_names: class_fields(cls, _cn, _en)
+        env.filters["class_fields"] = lambda cls, _cn=class_names, _en=enum_names: (
+            class_fields(cls, _cn, _en)
         )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
