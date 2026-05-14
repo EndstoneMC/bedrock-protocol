@@ -167,9 +167,6 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         undefined=StrictUndefined,
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
-    env.filters["camelize_lower"] = lambda s: inflection.camelize(
-        s.lower(), uppercase_first_letter=False
-    )
     env.filters["enum_members"] = enum_members
     env.filters["class_fields"] = class_fields
     env.filters["class_since"] = class_since

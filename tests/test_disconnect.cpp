@@ -16,7 +16,7 @@ TEST_CASE("DisconnectFailReason enum values are stable")
     REQUIRE(static_cast<int>(DisconnectFailReason_v986::HostDisconnected) == 140);
 }
 
-TEST_CASE("DisconnectPacketMessages gains filteredMessage at v712")
+TEST_CASE("DisconnectPacketMessages gains filtered_message at v712")
 {
     bp::DisconnectPacketMessages<700> pre;
     pre.message = "kicked";
@@ -24,7 +24,7 @@ TEST_CASE("DisconnectPacketMessages gains filteredMessage at v712")
 
     bp::DisconnectPacketMessages<712> post;
     post.message = "kicked";
-    post.filteredMessage = "***";
+    post.filtered_message = "***";
     REQUIRE(post.message == "kicked");
-    REQUIRE(post.filteredMessage == "***");
+    REQUIRE(post.filtered_message == "***");
 }
