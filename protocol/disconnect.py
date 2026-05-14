@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import ClassVar
 
-from protocol.enum import enum, value
+from protocol.enum import enum, field, value
 
 package = "bedrock.protocol"
 
@@ -154,12 +154,12 @@ class DisconnectFailReason(IntEnum):
 
 class DisconnectPacketMessages:
     message: str
-    filtered_message: str
+    filtered_message: str = field(since=712)
 
 
 class DisconnectPacket:
     """Sent from the server to a client to trigger a disconnection."""
 
     id: ClassVar[int] = 5
-    reason: DisconnectFailReason
+    reason: DisconnectFailReason = field(since=622)
     messages: DisconnectPacketMessages | None
