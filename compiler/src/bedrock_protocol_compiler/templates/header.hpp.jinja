@@ -37,7 +37,7 @@ enum {{ name }} : {{ ctype }} {};
 {% for enum_name, m in codecs %}
 
 template <int ProtocolVersion>
-struct Codec<{{ enum_name }}<ProtocolVersion>, ProtocolVersion> {
+struct Codec<{{ enum_name }}<ProtocolVersion>> {
     using Value = typename {{ enum_name }}<ProtocolVersion>::Value;
 
     static void serialize(BinaryStream &stream, Value value)

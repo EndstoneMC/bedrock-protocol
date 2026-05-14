@@ -35,8 +35,7 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
 
     bp::DisconnectPacket<500> old_pkt;
     old_pkt.messages = bp::DisconnectPacketMessages<500>{"bye"};
-    REQUIRE(std::get<bp::DisconnectPacketMessages<500>>(old_pkt.messages).message
-            == "bye");
+    REQUIRE(std::get<bp::DisconnectPacketMessages<500>>(old_pkt.messages).message == "bye");
 
     bp::DisconnectPacket<622> pkt;
     pkt.reason = bp::DisconnectFailReason<622>::Kicked;
@@ -50,7 +49,7 @@ TEST_CASE("Codec<DisconnectFailReason<622>>: roundtrip as uvarint32")
     std::vector<std::uint8_t> buf;
     bp::BinaryStream out{buf};
 
-    using DfrCodec = bp::Codec<bp::DisconnectFailReason<622>, 622>;
+    using DfrCodec = bp::Codec<bp::DisconnectFailReason<>>;
     DfrCodec::serialize(out, bp::DisconnectFailReason<622>::Kicked);
 
     // 55 < 128 → single byte, no continuation bit.
