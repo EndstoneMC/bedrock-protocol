@@ -26,6 +26,7 @@ target_link_libraries(bedrock_protocol INTERFACE tl::expected)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(BedrockProtocol)
 file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
+list(FILTER BEDROCK_PROTOCOL_SOURCES EXCLUDE REGEX "/_[^/]*\\.py$")
 bedrock_protocol_generate(
     TARGET         bedrock_protocol
     INPUTS         ${BEDROCK_PROTOCOL_SOURCES}

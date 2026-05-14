@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import ClassVar
 
-from protocol.enum import enum, field, value
+from protocol._dsl import enum, field, value
 
 package = "bedrock.protocol"
 
