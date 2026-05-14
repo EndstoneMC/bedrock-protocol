@@ -4,6 +4,9 @@
 // without the doc-helper / hook-library scaffolding.
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -52,13 +55,13 @@ public:
     }
 
     auto getUnsignedShort() -> Result<std::uint16_t> { return fixedLE<std::uint16_t>(); }
-    auto getSignedShort()   -> Result<std::int16_t>  { return fixedLE<std::int16_t>();  }
-    auto getUnsignedInt()   -> Result<std::uint32_t> { return fixedLE<std::uint32_t>(); }
-    auto getSignedInt()     -> Result<std::int32_t>  { return fixedLE<std::int32_t>();  }
+    auto getSignedShort() -> Result<std::int16_t> { return fixedLE<std::int16_t>(); }
+    auto getUnsignedInt() -> Result<std::uint32_t> { return fixedLE<std::uint32_t>(); }
+    auto getSignedInt() -> Result<std::int32_t> { return fixedLE<std::int32_t>(); }
     auto getUnsignedInt64() -> Result<std::uint64_t> { return fixedLE<std::uint64_t>(); }
-    auto getSignedInt64()   -> Result<std::int64_t>  { return fixedLE<std::int64_t>();  }
-    auto getFloat()         -> Result<float>         { return fixedLE<float>();         }
-    auto getDouble()        -> Result<double>        { return fixedLE<double>();        }
+    auto getSignedInt64() -> Result<std::int64_t> { return fixedLE<std::int64_t>(); }
+    auto getFloat() -> Result<float> { return fixedLE<float>(); }
+    auto getDouble() -> Result<double> { return fixedLE<double>(); }
 
     auto getSignedBigEndianInt() -> Result<std::int32_t>
     {
@@ -178,24 +181,23 @@ public:
     BinaryStream() : ReadOnlyBinaryStream({}), buffer_(owned_) {}
     explicit BinaryStream(std::vector<std::uint8_t> &buffer) : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
 
-    void writeByte(std::uint8_t value)        { write(&value, sizeof(value)); }
-    void writeBool(bool value)                { writeByte(value ? 1u : 0u); }
-    void writeUnsignedShort(std::uint16_t v)  { write(&v, sizeof(v)); }
-    void writeSignedShort(std::int16_t v)     { write(&v, sizeof(v)); }
-    void writeUnsignedInt(std::uint32_t v)    { write(&v, sizeof(v)); }
-    void writeSignedInt(std::int32_t v)       { write(&v, sizeof(v)); }
-    void writeUnsignedInt64(std::uint64_t v)  { write(&v, sizeof(v)); }
-    void writeSignedInt64(std::int64_t v)     { write(&v, sizeof(v)); }
-    void writeFloat(float v)                  { write(&v, sizeof(v)); }
-    void writeDouble(double v)                { write(&v, sizeof(v)); }
+    void writeByte(std::uint8_t value) { write(&value, sizeof(value)); }
+    void writeBool(bool value) { writeByte(value ? 1u : 0u); }
+    void writeUnsignedShort(std::uint16_t v) { write(&v, sizeof(v)); }
+    void writeSignedShort(std::int16_t v) { write(&v, sizeof(v)); }
+    void writeUnsignedInt(std::uint32_t v) { write(&v, sizeof(v)); }
+    void writeSignedInt(std::int32_t v) { write(&v, sizeof(v)); }
+    void writeUnsignedInt64(std::uint64_t v) { write(&v, sizeof(v)); }
+    void writeSignedInt64(std::int64_t v) { write(&v, sizeof(v)); }
+    void writeFloat(float v) { write(&v, sizeof(v)); }
+    void writeDouble(double v) { write(&v, sizeof(v)); }
 
     void writeSignedBigEndianInt(std::int32_t value)
     {
-#if defined(_MSC_VER)
-        const auto v = _byteswap_ulong(static_cast<std::uint32_t>(value));
-#else
-        const auto v = __builtin_bswap32(static_cast<std::uint32_t>(value));
-#endif
+        using T = decltype(value);
+        auto repr = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
+        std::ranges::reverse(repr);
+        auto v = std::bit_cast<T>(repr);
         write(&v, sizeof(v));
     }
 
@@ -233,10 +235,7 @@ public:
         write(value.data(), value.size());
     }
 
-    void writeRawBytes(std::span<const std::uint8_t> bytes)
-    {
-        write(bytes.data(), bytes.size());
-    }
+    void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
 
 private:
     void write(const void *data, std::size_t size)

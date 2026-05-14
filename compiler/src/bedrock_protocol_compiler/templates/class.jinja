@@ -4,11 +4,11 @@ struct {{ cls.name }} {
 };
 {% elif f.specializations %}
 template <int ProtocolVersion>
-struct {{ cls.name }};
+struct {{ cls.name }}_;
 {% for lo, hi, visible in f.specializations %}
 
 template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
-struct {{ cls.name }}<ProtocolVersion> {
+struct {{ cls.name }}_<ProtocolVersion> {
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}

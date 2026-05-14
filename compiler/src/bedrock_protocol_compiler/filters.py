@@ -187,3 +187,22 @@ def enum_members(cls) -> dict:
         else:
             gates.setdefault(since, []).append((name, ivalue))
     return {"always": always, "gates": sorted(gates.items())}
+
+
+def enum_change_points(cls) -> list[tuple[int, list[tuple[str, int]]]]:
+    """Return [(version, cumulative_members), ...] for each point where the
+    enum's member set changes. The cumulative list at point V is every member
+    valid at protocol V — `always` members plus every gated group with since <= V.
+    """
+    from .parse import class_since
+
+    cs = class_since(cls)
+    m = enum_members(cls)
+    cumulative = list(m["always"])
+    points: list[tuple[int, list[tuple[str, int]]]] = []
+    if cs is not None:
+        points.append((cs, list(cumulative)))
+    for since, group in m["gates"]:
+        cumulative = cumulative + group
+        points.append((since, list(cumulative)))
+    return points

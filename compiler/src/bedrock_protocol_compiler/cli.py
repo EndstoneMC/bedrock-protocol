@@ -7,7 +7,13 @@ import griffe
 import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .filters import class_fields, enum_members, enum_serializers, module_aliases
+from .filters import (
+    class_fields,
+    enum_change_points,
+    enum_members,
+    enum_serializers,
+    module_aliases,
+)
 from .parse import class_since, is_int_enum
 
 
@@ -27,6 +33,15 @@ from .parse import class_since, is_int_enum
     help="Generate an umbrella header at PATH listing #includes for each "
     "input (skips per-input compilation).",
 )
+@click.option(
+    "--latest",
+    "latest_version",
+    type=int,
+    default=974,
+    show_default=True,
+    help="Protocol version exposed as the default template argument and "
+    "via the `latest::` sub-namespace.",
+)
 @click.argument(
     "inputs",
     nargs=-1,
@@ -37,6 +52,7 @@ def main(
     verbose: bool,
     out_dir: Path | None,
     umbrella_path: Path | None,
+    latest_version: int,
     inputs: tuple[Path, ...],
 ):
     if umbrella_path is not None:
@@ -60,6 +76,7 @@ def main(
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
     env.filters["enum_members"] = enum_members
+    env.filters["enum_change_points"] = enum_change_points
     env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -100,6 +117,7 @@ def main(
                 has_classes=bool(classes),
                 serializers=serializers,
                 has_serializers=has_serializers,
+                latest_version=latest_version,
             )
         )
         if verbose:

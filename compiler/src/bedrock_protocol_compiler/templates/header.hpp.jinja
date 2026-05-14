@@ -37,10 +37,14 @@ enum {{ name }} : {{ ctype }} {};
 {% endif %}
 {% endfor %}
 {% for enum_name, m in serializers %}
+{% set cp_enum = mod.classes[enum_name] %}
+{% set cps = cp_enum | enum_change_points %}
+{% if cps %}
+{% for cp, _entries in cps %}
 
-template <int ProtocolVersion>
-struct SerializerFor<{{ enum_name }}<ProtocolVersion>> {
-    using Value = typename {{ enum_name }}<ProtocolVersion>::Value;
+template <>
+struct Serializer<v{{ cp }}::{{ enum_name }}> {
+    using Value = v{{ cp }}::{{ enum_name }};
     using Result = std::expected<Value, std::error_code>;
 
     static void serialize(BinaryStream &stream, Value value)
@@ -58,6 +62,29 @@ struct SerializerFor<{{ enum_name }}<ProtocolVersion>> {
     }
 };
 {% endfor %}
+{% else %}
+
+template <>
+struct Serializer<{{ enum_name }}> {
+    using Value = {{ enum_name }};
+    using Result = std::expected<Value, std::error_code>;
+
+    static void serialize(BinaryStream &stream, Value value)
+    {
+        stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
+    }
+
+    static auto deserialize(ReadOnlyBinaryStream &stream) -> Result
+    {
+        auto v = stream.{{ m.read }}();
+        if (!v) {
+            return tl::unexpected{v.error()};
+        }
+        return static_cast<Value>(*v);
+    }
+};
+{% endif %}
+{% endfor %}
 {% for member in mod.members.values()
     if not member.is_alias and member.is_class %}
 {% if "IntEnum" not in (member.bases | map("string") | list) %}
@@ -68,21 +95,21 @@ struct SerializerFor<{{ enum_name }}<ProtocolVersion>> {
 {% if not unknown %}
 
 template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
-struct SerializerFor<{{ member.name }}<ProtocolVersion>> {
-    using Value = {{ member.name }}<ProtocolVersion>;
+struct Serializer<{{ member.name }}_<ProtocolVersion>> {
+    using Value = {{ member.name }}_<ProtocolVersion>;
     using Result = std::expected<Value, std::error_code>;
 
     static void serialize(BinaryStream &stream, const Value &value)
     {
 {% for field in visible %}
 {% if field.kind == "enum" or field.kind == "struct" %}
-        SerializerFor<{{ field.type_name }}<ProtocolVersion>>::serialize(stream, value.{{ field.name }});
+        Serializer<{{ field.type_name }}_<ProtocolVersion>>::serialize(stream, value.{{ field.name }});
 {% elif field.kind == "string" %}
         stream.writeString(value.{{ field.name }});
 {% elif field.kind == "optional_variant" %}
         stream.writeUnsignedVarInt(value.{{ field.name }}.has_value() ? 0u : 1u);
         if (value.{{ field.name }}.has_value()) {
-            SerializerFor<{{ field.inner.type_name }}<ProtocolVersion>>::serialize(stream, *value.{{ field.name }});
+            Serializer<{{ field.inner.type_name }}_<ProtocolVersion>>::serialize(stream, *value.{{ field.name }});
         }
 {% endif %}
 {% endfor %}
@@ -94,7 +121,7 @@ struct SerializerFor<{{ member.name }}<ProtocolVersion>> {
 {% for field in visible %}
 {% if field.kind == "enum" or field.kind == "struct" %}
         {
-            auto v = SerializerFor<{{ field.type_name }}<ProtocolVersion>>::deserialize(stream);
+            auto v = Serializer<{{ field.type_name }}_<ProtocolVersion>>::deserialize(stream);
             if (!v) {
                 return tl::unexpected{v.error()};
             }
@@ -115,7 +142,7 @@ struct SerializerFor<{{ member.name }}<ProtocolVersion>> {
                 return tl::unexpected{disc.error()};
             }
             if (*disc == 0) {
-                auto v = SerializerFor<{{ field.inner.type_name }}<ProtocolVersion>>::deserialize(stream);
+                auto v = Serializer<{{ field.inner.type_name }}_<ProtocolVersion>>::deserialize(stream);
                 if (!v) {
                     return tl::unexpected{v.error()};
                 }
@@ -132,6 +159,24 @@ struct SerializerFor<{{ member.name }}<ProtocolVersion>> {
 {% endif %}
 {% endif %}
 {% endfor %}
+{% set latest_aliases = [] %}
+{% for member in mod.members.values()
+    if not member.is_alias and member.is_class %}
+{% if "IntEnum" in (member.bases | map("string") | list) %}
+{% set _ = latest_aliases.append(member.name) %}
+{% else %}
+{% set f = member | class_fields %}
+{% if f is not none and f.specializations %}
+{% set _ = latest_aliases.append(member.name) %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if latest_aliases %}
+
+{% for name in latest_aliases %}
+using {{ name }} = {{ name }}_<{{ latest_version }}>;
+{% endfor %}
+{% endif %}
 {% if package %}
 
 }  // namespace {{ package | replace('.', '::') }}

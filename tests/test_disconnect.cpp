@@ -5,24 +5,25 @@ namespace bp = bedrock::protocol;
 
 TEST_CASE("DisconnectFailReason enum values are stable")
 {
-    using DisconnectFailReason_v622 = bp::DisconnectFailReason<>;
+    using DisconnectFailReason_v622 = bp::DisconnectFailReason_<622>;
     REQUIRE(static_cast<int>(DisconnectFailReason_v622::Unknown) == 0);
     REQUIRE(static_cast<int>(DisconnectFailReason_v622::CantConnectNoInternet) == 1);
     REQUIRE(static_cast<int>(DisconnectFailReason_v622::NoPermissions) == 2);
     REQUIRE(static_cast<int>(DisconnectFailReason_v622::UnrecoverableError) == 3);
     REQUIRE(static_cast<int>(DisconnectFailReason_v622::ThirdPartyBlocked) == 4);
 
-    using DisconnectFailReason_v986 = bp::DisconnectFailReason<986>;
-    REQUIRE(static_cast<int>(DisconnectFailReason_v986::HostDisconnected) == 140);
+    // Bare name resolves to DisconnectFailReason_<974>, which is v893's concrete enum.
+    REQUIRE(static_cast<int>(bp::DisconnectFailReason::DenyListed) == 135);
+    REQUIRE(static_cast<int>(bp::DisconnectFailReason_<974>::DenyListed) == 135);
 }
 
 TEST_CASE("DisconnectPacketMessages gains filtered_message at v712")
 {
-    bp::DisconnectPacketMessages<700> pre;
+    bp::DisconnectPacketMessages_<700> pre;
     pre.message = "kicked";
     REQUIRE(pre.message == "kicked");
 
-    bp::DisconnectPacketMessages<712> post;
+    bp::DisconnectPacketMessages_<712> post;
     post.message = "kicked";
     post.filtered_message = "***";
     REQUIRE(post.message == "kicked");
@@ -31,16 +32,16 @@ TEST_CASE("DisconnectPacketMessages gains filtered_message at v712")
 
 TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622")
 {
-    STATIC_REQUIRE(bp::DisconnectPacket<622>::id == 5);
+    STATIC_REQUIRE(bp::DisconnectPacket_<622>::id == 5);
 
-    bp::DisconnectPacket<500> old_pkt;
-    old_pkt.messages = bp::DisconnectPacketMessages<500>{"bye"};
+    bp::DisconnectPacket_<500> old_pkt;
+    old_pkt.messages = bp::DisconnectPacketMessages_<500>{"bye"};
     REQUIRE(old_pkt.messages->message == "bye");
 
-    bp::DisconnectPacket<622> pkt;
-    pkt.reason = bp::DisconnectFailReason<622>::Kicked;
+    bp::DisconnectPacket_<622> pkt;
+    pkt.reason = bp::DisconnectFailReason_<622>::Kicked;
     pkt.messages.reset();
-    REQUIRE(pkt.reason == bp::DisconnectFailReason<622>::Kicked);
+    REQUIRE(pkt.reason == bp::DisconnectFailReason_<622>::Kicked);
     REQUIRE_FALSE(pkt.messages.has_value());
 }
 
@@ -55,10 +56,10 @@ TEST_CASE("Serializer<DisconnectFailReason>: wire matches gophertunnel Varint32"
     // enum value; this test serves as a wire-compat anchor against that
     // reference implementation.
 
-    using Reason = bp::DisconnectFailReason<>;
+    using Reason = bp::DisconnectFailReason;
 
     struct Case {
-        Reason::Value value;
+        Reason value;
         int raw;
         std::vector<std::uint8_t> expected;
     };
@@ -83,12 +84,12 @@ TEST_CASE("Serializer<DisconnectFailReason>: wire matches gophertunnel Varint32"
     }
 }
 
-TEST_CASE("Serializer<DisconnectPacket<v975>>: wire matches gophertunnel Marshal")
+TEST_CASE("Serializer<DisconnectPacket> (latest=v974): wire matches gophertunnel Marshal")
 {
     SECTION("messages skipped — discriminator only")
     {
-        bp::DisconnectPacket<975> pkt;
-        pkt.reason = bp::DisconnectFailReason<975>::Kicked;  // 55
+        bp::DisconnectPacket pkt;
+        pkt.reason = bp::DisconnectFailReason::Kicked;  // 55
         pkt.messages.reset();
 
         std::vector<std::uint8_t> buf;
@@ -100,17 +101,17 @@ TEST_CASE("Serializer<DisconnectPacket<v975>>: wire matches gophertunnel Marshal
         REQUIRE(buf == expected);
 
         bp::ReadOnlyBinaryStream in{buf};
-        auto v = bp::deserialize<bp::DisconnectPacket<975>>(in);
+        auto v = bp::deserialize<bp::DisconnectPacket>(in);
         REQUIRE(v.has_value());
-        REQUIRE(v->reason == bp::DisconnectFailReason<975>::Kicked);
+        REQUIRE(v->reason == bp::DisconnectFailReason::Kicked);
         REQUIRE_FALSE(v->messages.has_value());
     }
 
     SECTION("messages present with both strings")
     {
-        bp::DisconnectPacket<975> pkt;
-        pkt.reason = bp::DisconnectFailReason<975>::Kicked;
-        pkt.messages = bp::DisconnectPacketMessages<975>{"bye", "***"};
+        bp::DisconnectPacket pkt;
+        pkt.reason = bp::DisconnectFailReason::Kicked;
+        pkt.messages = bp::DisconnectPacketMessages{"bye", "***"};
 
         std::vector<std::uint8_t> buf;
         bp::BinaryStream out{buf};
@@ -124,9 +125,9 @@ TEST_CASE("Serializer<DisconnectPacket<v975>>: wire matches gophertunnel Marshal
         REQUIRE(buf == expected);
 
         bp::ReadOnlyBinaryStream in{buf};
-        auto v = bp::deserialize<bp::DisconnectPacket<975>>(in);
+        auto v = bp::deserialize<bp::DisconnectPacket>(in);
         REQUIRE(v.has_value());
-        REQUIRE(v->reason == bp::DisconnectFailReason<975>::Kicked);
+        REQUIRE(v->reason == bp::DisconnectFailReason::Kicked);
         REQUIRE(v->messages.has_value());
         REQUIRE(v->messages->message == "bye");
         REQUIRE(v->messages->filtered_message == "***");
