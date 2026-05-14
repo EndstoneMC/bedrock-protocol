@@ -9,10 +9,12 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .filters import (
     class_fields,
-    enum_change_points,
+    compute_templated_classes,
     enum_members,
+    enum_ranges,
     enum_serializers,
     module_aliases,
+    type_alias_wires,
 )
 from .parse import class_since, is_int_enum
 
@@ -76,7 +78,7 @@ def main(
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
     env.filters["enum_members"] = enum_members
-    env.filters["enum_change_points"] = enum_change_points
+    env.filters["enum_ranges"] = enum_ranges
     env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -87,15 +89,13 @@ def main(
         classes = [c for c in mod.classes.values() if not c.is_alias]
         class_names = {c.name for c in classes}
         enum_names = {c.name for c in classes if is_int_enum(c)}
+        templated_classes = compute_templated_classes(classes, enum_names)
+        alias_wires = type_alias_wires(mod)
         type_aliases = module_aliases(mod, class_names, enum_names)
         serializers = enum_serializers(mod, enum_names)
-        # A struct-level Serializer<Cls<V>> is emitted for any non-enum class
-        # whose fields are fully resolvable; the template fills in the per-
-        # field serialize/deserialize body. has_serializers gates the
-        # <bedrock/stream.hpp> + <bedrock/expected.hpp> includes.
         has_struct_serializer = any(
             not is_int_enum(c)
-            and class_fields(c, class_names, enum_names) is not None
+            and class_fields(c, class_names, enum_names, templated_classes, alias_wires) is not None
             for c in classes
         )
         has_serializers = bool(serializers) or has_struct_serializer
@@ -103,8 +103,9 @@ def main(
             if verbose:
                 click.echo(f"skip {inp} (nothing to emit)")
             continue
-        env.filters["class_fields"] = lambda cls, _cn=class_names, _en=enum_names: (
-            class_fields(cls, _cn, _en)
+        env.filters["class_fields"] = (
+            lambda cls, _cn=class_names, _en=enum_names, _tc=templated_classes, _aw=alias_wires:
+            class_fields(cls, _cn, _en, _tc, _aw)
         )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None

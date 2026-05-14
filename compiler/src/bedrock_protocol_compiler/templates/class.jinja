@@ -2,7 +2,17 @@
 {% if f is none %}
 struct {{ cls.name }} {
 };
-{% elif f.specializations %}
+{% elif not f.templated %}
+{% set _, _, visible = f.specializations[0] %}
+struct {{ cls.name }} {
+{% for name, type, value in f.constants %}
+    static constexpr {{ type }} {{ name }} = {{ value }};
+{% endfor %}
+{% for field in visible %}
+    {{ field.ctype }} {{ field.name }};
+{% endfor %}
+};
+{% elif f.specializations | length > 1 %}
 template <int ProtocolVersion>
 struct {{ cls.name }}_;
 {% for lo, hi, visible in f.specializations %}
@@ -18,11 +28,13 @@ struct {{ cls.name }}_<ProtocolVersion> {
 };
 {% endfor %}
 {% else %}
-struct {{ cls.name }} {
+{% set _, _, visible = f.specializations[0] %}
+template <int ProtocolVersion>
+struct {{ cls.name }}_ {
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
-{% for field in f.fields %}
+{% for field in visible %}
     {{ field.ctype }} {{ field.name }};
 {% endfor %}
 };

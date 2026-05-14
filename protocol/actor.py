@@ -1,7 +1,6 @@
 from enum import IntEnum
-from typing import Union
 
-from protocol._dsl import field, packet
+from protocol._dsl import field, packet, value
 from protocol._primitives import float32, uint8, uvarint64, varint32
 
 package = "bedrock.protocol"
@@ -65,12 +64,13 @@ class ActorEvent(IntEnum):
     TREASURE_HUNT = 72
     SUMMON_AGENT = 73
     FINISHED_CHARGING_ITEM = 74
+    LANDED_ON_GROUND = value(75, until=622)
     ACTOR_GROW_UP = 76
     VIBRATION_DETECTED = 77
     DRINK_MILK = 78
-    SHAKE_WETNESS_STOP = 79
-    KINETIC_DAMAGE_DEALT = 80
-    HURT_WITHOUT_RECEIVING_DAMAGE = 81
+    SHAKE_WETNESS_STOP = value(79, since=859)
+    KINETIC_DAMAGE_DEALT = value(80, since=897)
+    HURT_WITHOUT_RECEIVING_DAMAGE = value(81, since=975)
 
 
 class Vec3:
@@ -86,4 +86,4 @@ class ActorEventPacket:
     target_runtime_id: ActorRuntimeID
     event_id: ActorEvent = field(type=uint8)
     data: varint32
-    fire_at_position: Vec3 | None = field(type=Union)
+    fire_at_position: Vec3 | None = field(since=975)

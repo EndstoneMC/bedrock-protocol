@@ -24,10 +24,6 @@ PRIMITIVE_TYPES = {
 }
 
 
-# Wire-encoding name → (BinaryStream write method, ReadOnlyBinaryStream read
-# method, underlying C++ value the serializer converts to/from). Used by the
-# generated Serializer specializations. Method names match the explicit-typed
-# surface in stream.hpp (no template parameters at the call site).
 WIRE_METHODS = {
     "bool":      {"write": "writeBool",                "read": "getBool",                "underlying": "bool"},
     "int8":      {"write": "writeByte",                "read": "getByte",                "underlying": "std::uint8_t"},
@@ -48,13 +44,20 @@ WIRE_METHODS = {
 }
 
 
-def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None:
+def resolve_type(
+    ann,
+    class_names: set[str],
+    enum_names: set[str],
+    templated_classes: set[str] = frozenset(),
+    type_aliases: set[str] = frozenset(),
+) -> str | None:
     """Map a griffe annotation Expr to a C++ type. None if unmappable.
 
-    Routes user-defined classes through their `ProtocolVersion` template, uses
-    the inner `::Value` enum type for IntEnum classes, maps `X | None` to
-    `std::optional<X>`, and maps explicit `Union[A, B, None]` to
-    `std::variant<A, B, std::monostate>` (for true multi-way unions).
+    `templated_classes` is the subset of `class_names` that are emitted as
+    class templates (`Foo_<V>`). The complement (plain POD-ish structs)
+    is referenced by its bare name. Enums are always templated. Aliases
+    (`type X = primitive`) emit as `enum X : T {}` at namespace scope and
+    are referenced by their bare name.
     """
     if (
         isinstance(ann, griffe.ExprBinOp)
@@ -62,7 +65,7 @@ def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None
         and (ann.right == "None" or ann.left == "None")
     ):
         other = ann.left if ann.right == "None" else ann.right
-        inner = resolve_type(other, class_names, enum_names)
+        inner = resolve_type(other, class_names, enum_names, templated_classes, type_aliases)
         if inner is None:
             return None
         return f"std::optional<{inner}>"
@@ -81,7 +84,7 @@ def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None
             if isinstance(member, str) and member == "None":
                 parts.append("std::monostate")
                 continue
-            resolved = resolve_type(member, class_names, enum_names)
+            resolved = resolve_type(member, class_names, enum_names, templated_classes, type_aliases)
             if resolved is None:
                 return None
             parts.append(resolved)
@@ -91,7 +94,11 @@ def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None
         if name in enum_names:
             return f"{name}_<ProtocolVersion>::Value"
         if name in class_names:
-            return f"{name}_<ProtocolVersion>"
+            if name in templated_classes:
+                return f"{name}_<ProtocolVersion>"
+            return name
+        if name in type_aliases:
+            return name
         if name in PRIMITIVE_TYPES:
             return PRIMITIVE_TYPES[name]
     return None

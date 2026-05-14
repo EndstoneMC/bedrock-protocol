@@ -10,8 +10,13 @@ def _identity(cls):
     return cls
 
 
-def value(v, since: int | None = None):
-    """Mark a member's wire value, optionally gated by protocol version."""
+def value(v, since: int | None = None, until: int | None = None):
+    """Mark a member's wire value, optionally gated by protocol version.
+
+    - `since`: first protocol version where the member is present (inclusive).
+    - `until`: first protocol version where the member is removed (exclusive),
+      so the member is present in `[since, until)`.
+    """
     return v
 
 

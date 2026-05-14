@@ -1,37 +1,26 @@
-{% set members = enum | enum_members %}
-{% set csince = enum | class_since %}
-{% if csince or members.gates %}
-template <int ProtocolVersion>
-struct {{ enum.name }}_;
-
-template <int ProtocolVersion> requires ({% if csince %}ProtocolVersion >= {{ csince }}{% if members.gates %} && {% endif %}{% endif %}{% if members.gates %}ProtocolVersion < {{ members.gates[0][0] }}{% endif %})
-struct {{ enum.name }}_<ProtocolVersion> {
-    enum Value : int {
-{% for name, value in members.always %}
-        {{ name | camelize }} = {{ value }},
-{% endfor %}
-    };
-};
-{% set ns = namespace(cumulative=members.always) %}
-{% for since, group in members.gates %}
-{% set ns.cumulative = ns.cumulative + group %}
-
-template <int ProtocolVersion> requires (ProtocolVersion >= {{ since }}{% if not loop.last %} && ProtocolVersion < {{ members.gates[loop.index][0] }}{% endif %})
-struct {{ enum.name }}_<ProtocolVersion> {
-    enum Value : int {
-{% for name, value in ns.cumulative %}
-        {{ name | camelize }} = {{ value }},
-{% endfor %}
-    };
-};
-{% endfor %}
-{% else %}
+{% set ranges = enum | enum_ranges %}
+{% if ranges | length == 1 and ranges[0][0] is none and ranges[0][1] is none %}
+{% set _, _, visible = ranges[0] %}
 template <int ProtocolVersion>
 struct {{ enum.name }}_ {
     enum Value : int {
-{% for name, value in members.always %}
+{% for name, value in visible %}
         {{ name | camelize }} = {{ value }},
 {% endfor %}
     };
 };
+{% else %}
+template <int ProtocolVersion>
+struct {{ enum.name }}_;
+{% for lo, hi, visible in ranges %}
+
+template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
+struct {{ enum.name }}_<ProtocolVersion> {
+    enum Value : int {
+{% for name, value in visible %}
+        {{ name | camelize }} = {{ value }},
+{% endfor %}
+    };
+};
+{% endfor %}
 {% endif %}

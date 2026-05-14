@@ -50,11 +50,11 @@ def name_kwarg(expr, fn_name: str, kw: str) -> str | None:
     return None
 
 
-def parse_member_value(value) -> tuple[int, int | None] | None:
-    """Parse `0` or `value(N, since=V)`. Returns (int_value, since_or_None)."""
+def parse_member_value(value) -> tuple[int, int | None, int | None] | None:
+    """Parse `0` or `value(N, since=V, until=U)`. Returns (int_value, since, until)."""
     direct = as_int(value)
     if direct is not None:
-        return direct, None
+        return direct, None, None
     if not (
         isinstance(value, griffe.ExprCall)
         and isinstance(value.function, griffe.ExprName)
@@ -65,7 +65,7 @@ def parse_member_value(value) -> tuple[int, int | None] | None:
     ivalue = as_int(value.arguments[0])
     if ivalue is None:
         return None
-    return ivalue, since_kwarg(value, "value")
+    return ivalue, since_kwarg(value, "value"), int_kwarg(value, "value", "until")
 
 
 def class_since(cls) -> int | None:
