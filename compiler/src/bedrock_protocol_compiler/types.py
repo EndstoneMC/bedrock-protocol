@@ -13,6 +13,18 @@ PRIMITIVE_TYPES = {
 }
 
 
+# Wire-encoding name → (BinaryStream write method, ReadOnlyBinaryStream read
+# method, underlying C++ integer the codec converts to/from). Used by the
+# generated Codec specializations.
+WIRE_METHODS = {
+    "uvarint32": {
+        "write": "writeUnsignedVarInt",
+        "read": "getUnsignedVarInt",
+        "underlying": "std::uint32_t",
+    },
+}
+
+
 def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None:
     """Map a griffe annotation Expr to a C++ type. None if unmappable.
 

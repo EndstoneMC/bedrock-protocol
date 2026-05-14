@@ -27,6 +27,24 @@ def since_kwarg(expr, fn_name: str) -> int | None:
     return None
 
 
+def name_kwarg(expr, fn_name: str, kw: str) -> str | None:
+    """If `expr` is `fn_name(..., kw=X)` and X is an identifier, return X."""
+    if not (
+        isinstance(expr, griffe.ExprCall)
+        and isinstance(expr.function, griffe.ExprName)
+        and expr.function.name == fn_name
+    ):
+        return None
+    for arg in expr.arguments:
+        if (
+            isinstance(arg, griffe.ExprKeyword)
+            and arg.name == kw
+            and isinstance(arg.value, griffe.ExprName)
+        ):
+            return arg.value.name
+    return None
+
+
 def parse_member_value(value) -> tuple[int, int | None] | None:
     """Parse `0` or `value(N, since=V)`. Returns (int_value, since_or_None)."""
     direct = as_int(value)

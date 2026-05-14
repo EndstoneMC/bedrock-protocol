@@ -7,7 +7,7 @@ import griffe
 import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .filters import class_fields, enum_members, module_aliases
+from .filters import class_fields, enum_codecs, enum_members, module_aliases
 from .parse import class_since, is_int_enum
 
 
@@ -48,6 +48,7 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         class_names = {c.name for c in classes}
         enum_names = {c.name for c in classes if is_int_enum(c)}
         type_aliases = module_aliases(mod, class_names, enum_names)
+        codecs = enum_codecs(mod, enum_names)
         if not classes and not type_aliases:
             if verbose:
                 click.echo(f"skip {inp} (nothing to emit)")
@@ -64,6 +65,7 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
                 package=package,
                 type_aliases=type_aliases,
                 has_classes=bool(classes),
+                codecs=codecs,
             )
         )
         if verbose:

@@ -11,8 +11,14 @@ def value(v, since: int | None = None):
     return v
 
 
-def field(*, since: int | None = None) -> Any:
-    """Mark a struct field, optionally gated by protocol version."""
+def field(*, since: int | None = None, wire: Any = None) -> Any:
+    """Mark a struct field.
+
+    - `since`: protocol version that introduced the field.
+    - `wire`: the on-the-wire encoding (e.g. `uvarint32`), used by the
+      generated Codec specialization when the field's logical type doesn't
+      imply a unique encoding (e.g. an enum stored as a varint).
+    """
     return None
 
 

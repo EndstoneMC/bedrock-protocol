@@ -3,10 +3,11 @@
 import griffe
 
 from .parse import (
+    name_kwarg,
     parse_member_value,
     since_kwarg,
 )
-from .types import PRIMITIVE_TYPES, resolve_type
+from .types import PRIMITIVE_TYPES, WIRE_METHODS, resolve_type
 
 
 def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | None:
@@ -62,6 +63,33 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
         "specializations": specializations,
         "fields": [],
     }
+
+
+def enum_codecs(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
+    """Return (enum_name, wire_methods) for enums with a field-level `wire=`.
+
+    Walks struct fields, finds those whose annotation is one of the module's
+    enum classes and whose `field(...)` call carries a `wire=` marker, then
+    looks up the wire-method table. Last write wins on conflicting wires for
+    the same enum.
+    """
+    out: dict[str, dict] = {}
+    for cls in mod.classes.values():
+        if cls.is_alias:
+            continue
+        for _, attr in cls.attributes.items():
+            if "instance-attribute" not in attr.labels:
+                continue
+            if not isinstance(attr.annotation, griffe.ExprName):
+                continue
+            type_name = attr.annotation.name
+            if type_name not in enum_names:
+                continue
+            wire = name_kwarg(attr.value, "field", "wire")
+            if wire is None or wire not in WIRE_METHODS:
+                continue
+            out[type_name] = WIRE_METHODS[wire]
+    return list(out.items())
 
 
 def module_aliases(

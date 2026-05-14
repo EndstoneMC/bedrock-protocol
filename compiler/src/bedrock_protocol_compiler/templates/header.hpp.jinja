@@ -3,6 +3,13 @@
 #include <cstdint>
 #include <string>
 #include <variant>
+{% if codecs %}
+
+#include <system_error>
+
+#include <bedrock/expected.hpp>
+#include <bedrock/stream.hpp>
+{% endif %}
 
 {% if package %}
 namespace {{ package | replace('.', '::') }} {
@@ -26,6 +33,28 @@ enum {{ name }} : {{ ctype }} {};
 {% set cls = member %}
 {% include "class.jinja" %}
 {% endif %}
+{% endfor %}
+{% for enum_name, m in codecs %}
+
+template <int ProtocolVersion>
+struct Codec<{{ enum_name }}<ProtocolVersion>, ProtocolVersion> {
+    using Value = typename {{ enum_name }}<ProtocolVersion>::Value;
+
+    static void serialize(BinaryStream &stream, Value value)
+    {
+        stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
+    }
+
+    static auto deserialize(ReadOnlyBinaryStream &stream)
+        -> std::expected<Value, std::error_code>
+    {
+        auto v = stream.{{ m.read }}();
+        if (!v) {
+            return tl::unexpected{v.error()};
+        }
+        return static_cast<Value>(*v);
+    }
+};
 {% endfor %}
 {% if package %}
 

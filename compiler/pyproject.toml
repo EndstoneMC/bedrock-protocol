@@ -2,7 +2,7 @@
 name = "bedrock-protocol-compiler"
 version = "0.1.0"
 description = "Bedrock protocol compiler — reads protocol/*.py DSL and emits C++ headers."
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "click",
     "griffe",
