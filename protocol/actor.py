@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 from protocol._dsl import field, packet, value
-from protocol._primitives import float32, uint8, uvarint64, varint32
+from protocol.common import Vec3, uint8, uvarint64, varint32
 
 package = "bedrock.protocol"
 
@@ -71,12 +71,6 @@ class ActorEvent(IntEnum):
     SHAKE_WETNESS_STOP = value(79, since=859)
     KINETIC_DAMAGE_DEALT = value(80, since=897)
     HURT_WITHOUT_RECEIVING_DAMAGE = value(81, since=975)
-
-
-class Vec3:
-    x: float32
-    y: float32
-    z: float32
 
 
 @packet(id=27)

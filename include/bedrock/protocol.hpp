@@ -5,5 +5,3 @@
 #include "serializer.hpp"
 #include "stream.hpp"
 // IWYU pragma: end_keep
-
-#include "protocol/all.hpp"  // IWYU pragma: keep

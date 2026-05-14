@@ -6,8 +6,8 @@ PRIMITIVE_TYPES = {
     "str": "std::string",
     "int": "int",
     "bool": "bool",
-    "float32": "float",
-    "float64": "double",
+    "float": "float",
+    "double": "double",
     "varint32": "std::int32_t",
     "varint64": "std::int64_t",
     "uvarint32": "std::uint32_t",
@@ -39,8 +39,8 @@ WIRE_METHODS = {
     "varint64":  {"write": "writeVarInt64",            "read": "getVarInt64",            "underlying": "std::int64_t"},
     "uvarint32": {"write": "writeUnsignedVarInt",      "read": "getUnsignedVarInt",      "underlying": "std::uint32_t"},
     "uvarint64": {"write": "writeUnsignedVarInt64",    "read": "getUnsignedVarInt64",    "underlying": "std::uint64_t"},
-    "float32":   {"write": "writeFloat",               "read": "getFloat",               "underlying": "float"},
-    "float64":   {"write": "writeDouble",              "read": "getDouble",              "underlying": "double"},
+    "float":     {"write": "writeFloat",               "read": "getFloat",               "underlying": "float"},
+    "double":    {"write": "writeDouble",              "read": "getDouble",              "underlying": "double"},
 }
 
 
