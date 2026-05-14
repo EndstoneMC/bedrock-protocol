@@ -35,13 +35,13 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
 
     bp::DisconnectPacket<500> old_pkt;
     old_pkt.messages = bp::DisconnectPacketMessages<500>{"bye"};
-    REQUIRE(std::get<bp::DisconnectPacketMessages<500>>(old_pkt.messages).message == "bye");
+    REQUIRE(old_pkt.messages->message == "bye");
 
     bp::DisconnectPacket<622> pkt;
     pkt.reason = bp::DisconnectFailReason<622>::Kicked;
-    pkt.messages = std::monostate{};
+    pkt.messages.reset();
     REQUIRE(pkt.reason == bp::DisconnectFailReason<622>::Kicked);
-    REQUIRE(std::holds_alternative<std::monostate>(pkt.messages));
+    REQUIRE_FALSE(pkt.messages.has_value());
 }
 
 TEST_CASE("Serializer<DisconnectFailReason>: wire matches gophertunnel Varint32")

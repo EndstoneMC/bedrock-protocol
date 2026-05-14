@@ -1,5 +1,6 @@
 from enum import IntEnum
-from typing import ClassVar, Union
+from types import UnionType
+from typing import ClassVar
 
 from protocol._dsl import enum, field, value
 from protocol._primitives import varint32
@@ -163,4 +164,4 @@ class DisconnectPacket:
 
     id: ClassVar[int] = 5
     reason: DisconnectFailReason = field(type=varint32, since=622)
-    messages: Union[DisconnectPacketMessages, None]
+    messages: DisconnectPacketMessages | None = field(type=UnionType)

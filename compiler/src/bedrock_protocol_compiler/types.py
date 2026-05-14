@@ -52,9 +52,20 @@ def resolve_type(ann, class_names: set[str], enum_names: set[str]) -> str | None
     """Map a griffe annotation Expr to a C++ type. None if unmappable.
 
     Routes user-defined classes through their `ProtocolVersion` template, uses
-    the inner `::Value` enum type for IntEnum classes, and maps explicit
-    `Union[A, B, None]` to `std::variant<A, B, std::monostate>`.
+    the inner `::Value` enum type for IntEnum classes, maps `X | None` to
+    `std::optional<X>`, and maps explicit `Union[A, B, None]` to
+    `std::variant<A, B, std::monostate>` (for true multi-way unions).
     """
+    if (
+        isinstance(ann, griffe.ExprBinOp)
+        and ann.operator == "|"
+        and (ann.right == "None" or ann.left == "None")
+    ):
+        other = ann.left if ann.right == "None" else ann.right
+        inner = resolve_type(other, class_names, enum_names)
+        if inner is None:
+            return None
+        return f"std::optional<{inner}>"
     if (
         isinstance(ann, griffe.ExprSubscript)
         and isinstance(ann.left, griffe.ExprName)

@@ -4,19 +4,24 @@ griffe reads these statically; at runtime they're intentional no-ops.
 """
 
 from typing import Any, TypeAliasType
-
+from types import UnionType
 
 def value(v, since: int | None = None):
     """Mark a member's wire value, optionally gated by protocol version."""
     return v
 
 
-def field(*, type: type | TypeAliasType | None = None, since: int | None = None) -> Any:
+def field(
+    *,
+    type: type[str | UnionType] | TypeAliasType | None = None,
+    since: int | None = None,
+) -> Any:
     """Mark a struct field.
 
-    - `type`: the on-the-wire primitive (e.g. `uvarint32`, or `str` for the
-      Bedrock default string-encoded enum). Required for enum-typed fields
-      where the annotation alone doesn't fix encoding.
+    - `type`: the on-the-wire shape. For enum-typed fields, a primitive
+      (e.g. `uvarint32`, `varint32`, `str`). For `X | None` fields, defaults
+      to a single-byte bool flag + payload; passing `types.UnionType` switches
+      to a varint discriminator (`0` = present, `1` = None) instead.
     - `since`: protocol version that introduced the field.
     """
     return None
