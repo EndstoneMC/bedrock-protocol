@@ -47,6 +47,33 @@ def _parse_member_value(raw: str) -> tuple[int, int | None] | None:
     return None
 
 
+_PRIMITIVE_TYPES = {
+    "str": "std::string",
+}
+
+
+def _parse_field_default(raw: str) -> tuple[bool, int | None]:
+    """Parse a field's default. Returns (is_field_call, since_or_None)."""
+    try:
+        node = ast.parse(raw, mode="eval").body
+    except (SyntaxError, ValueError):
+        return False, None
+    if not (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "field"
+    ):
+        return False, None
+    for kw in node.keywords:
+        if (
+            kw.arg == "since"
+            and isinstance(kw.value, ast.Constant)
+            and isinstance(kw.value.value, int)
+        ):
+            return True, kw.value.value
+    return True, None
+
+
 def class_since(cls) -> int | None:
     """Read `@enum(since=N)` from a class's decorators. Returns N or None."""
     for dec in cls.decorators:
@@ -68,6 +95,33 @@ def class_since(cls) -> int | None:
             ):
                 return kw.value.value
     return None
+
+
+def class_fields(cls) -> dict | None:
+    """Bucket struct fields into always-present vs version-gated.
+
+    Returns None if any field's type isn't mappable to a C++ primitive — the
+    template falls back to emitting an empty shell in that case.
+    """
+    always: list[tuple[str, str]] = []
+    gates: dict[int, list[tuple[str, str]]] = {}
+    for name, attr in cls.attributes.items():
+        if "instance-attribute" not in attr.labels:
+            continue
+        if attr.annotation is None:
+            return None
+        ctype = _PRIMITIVE_TYPES.get(str(attr.annotation).strip())
+        if ctype is None:
+            return None
+        if attr.value is None:
+            always.append((name, ctype))
+            continue
+        is_field_call, since = _parse_field_default(str(attr.value))
+        if not is_field_call or since is None:
+            always.append((name, ctype))
+        else:
+            gates.setdefault(since, []).append((name, ctype))
+    return {"always": always, "gates": sorted(gates.items())}
 
 
 def enum_members(cls) -> dict:
@@ -113,7 +167,11 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         undefined=StrictUndefined,
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
+    env.filters["camelize_lower"] = lambda s: inflection.camelize(
+        s.lower(), uppercase_first_letter=False
+    )
     env.filters["enum_members"] = enum_members
+    env.filters["class_fields"] = class_fields
     env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)

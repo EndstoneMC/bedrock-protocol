@@ -1,2 +1,32 @@
+{% set fields = cls | class_fields %}
+{% if fields is none %}
 struct {{ cls.name }} {
 };
+{% elif fields.gates %}
+template <int ProtocolVersion>
+struct {{ cls.name }};
+
+template <int ProtocolVersion> requires (ProtocolVersion < {{ fields.gates[0][0] }})
+struct {{ cls.name }}<ProtocolVersion> {
+{% for name, type in fields.always %}
+    {{ type }} {{ name | camelize_lower }};
+{% endfor %}
+};
+{% set ns = namespace(cumulative=fields.always) %}
+{% for since, group in fields.gates %}
+{% set ns.cumulative = ns.cumulative + group %}
+
+template <int ProtocolVersion> requires (ProtocolVersion >= {{ since }}{% if not loop.last %} && ProtocolVersion < {{ fields.gates[loop.index][0] }}{% endif %})
+struct {{ cls.name }}<ProtocolVersion> {
+{% for name, type in ns.cumulative %}
+    {{ type }} {{ name | camelize_lower }};
+{% endfor %}
+};
+{% endfor %}
+{% else %}
+struct {{ cls.name }} {
+{% for name, type in fields.always %}
+    {{ type }} {{ name | camelize_lower }};
+{% endfor %}
+};
+{% endif %}
