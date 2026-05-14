@@ -13,8 +13,8 @@ def as_int(x) -> int | None:
     return None
 
 
-def since_kwarg(expr, fn_name: str) -> int | None:
-    """Return `N` if `expr` is the call `fn_name(..., since=N)`, else None."""
+def int_kwarg(expr, fn_name: str, kw: str) -> int | None:
+    """Return `N` if `expr` is the call `fn_name(..., kw=N)`, else None."""
     if not (
         isinstance(expr, griffe.ExprCall)
         and isinstance(expr.function, griffe.ExprName)
@@ -22,9 +22,14 @@ def since_kwarg(expr, fn_name: str) -> int | None:
     ):
         return None
     for arg in expr.arguments:
-        if isinstance(arg, griffe.ExprKeyword) and arg.name == "since":
+        if isinstance(arg, griffe.ExprKeyword) and arg.name == kw:
             return as_int(arg.value)
     return None
+
+
+def since_kwarg(expr, fn_name: str) -> int | None:
+    """Return `N` if `expr` is the call `fn_name(..., since=N)`, else None."""
+    return int_kwarg(expr, fn_name, "since")
 
 
 def name_kwarg(expr, fn_name: str, kw: str) -> str | None:
@@ -69,6 +74,15 @@ def class_since(cls) -> int | None:
         since = since_kwarg(dec.value, "enum")
         if since is not None:
             return since
+    return None
+
+
+def class_packet_id(cls) -> int | None:
+    """Read `@packet(id=N)` from a class's decorators. Returns N or None."""
+    for dec in cls.decorators:
+        pid = int_kwarg(dec.value, "packet", "id")
+        if pid is not None:
+            return pid
     return None
 
 

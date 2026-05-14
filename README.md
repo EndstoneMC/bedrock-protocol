@@ -23,18 +23,16 @@ A packet file is plain Python — read by the parser as syntax, never executed,
 so forward references to C++ types just work:
 
 ```python
-from typing import ClassVar
-
+@packet(id=5)
 class DisconnectPacket:
-    id: ClassVar[int] = 5
     reason: DisconnectFailReason
     messages: DisconnectPacketMessages | None
 ```
 
 Interpretation:
 
-* Class with `id: ClassVar[int] = N` ⇒ a packet. `ClassVar` marks `id` as
-  packet metadata, not a wire field.
+* Class decorated with `@packet(id=N)` ⇒ a packet. `id` is packet metadata,
+  not a wire field.
 * `field: <primitive>` (e.g. `uvarint32`, `string`, `u32`) ⇒ primitive field.
 * `field: SomeName` (bare named type) ⇒ enum-typed field, discriminator
   `uvarint32` by default.

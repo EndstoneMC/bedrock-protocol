@@ -4,11 +4,12 @@ import click
 import griffe
 
 from .parse import (
+    class_packet_id,
     name_kwarg,
     parse_member_value,
     since_kwarg,
 )
-from .types import PRIMITIVE_TYPES, WIRE_METHODS, resolve_type
+from .types import WIRE_METHODS, resolve_type
 
 
 def _serialize_kind_for_type(
@@ -32,7 +33,7 @@ def _field_serialize_kind(
     """Return `{kind, ...}` info for a field's annotation+value.
 
     Supported kinds today: `enum`, `struct`, `string`, `optional_variant`
-    (`X | None` with `field(type=UnionType)`).
+    (`X | None` with `field(type=Union)`).
     """
     ann = attr.annotation
     if (
@@ -45,7 +46,7 @@ def _field_serialize_kind(
         if inner is None:
             return None
         marker = name_kwarg(attr.value, "field", "type") if attr.value else None
-        if marker != "UnionType":
+        if marker != "Union":
             return None
         return {"kind": "optional_variant", "inner": inner}
     return _serialize_kind_for_type(ann, class_names, enum_names)
@@ -56,7 +57,8 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
 
     Returns `None` if any type is unmappable — the template falls back to an
     empty shell. Otherwise returns a dict with:
-      - `constants`: list of (name, ctype, value) for ClassVar attributes.
+      - `constants`: list of (name, ctype, value); currently just the packet
+        `id` when the class is decorated with `@packet(id=N)`.
       - `specializations`: list of (since_min, since_max_excl, visible_fields)
         ranges, each carrying the fields present at that ProtocolVersion. Empty
         if no field is version-gated.
@@ -67,20 +69,13 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
     and the Serializer specialization.
     """
     constants: list[tuple[str, str, str]] = []
+    pid = class_packet_id(cls)
+    if pid is not None:
+        constants.append(("id", "int", str(pid)))
     raw_fields: list[dict] = []
     for name, attr in cls.attributes.items():
         if attr.annotation is None:
             return None
-        if "instance-attribute" not in attr.labels:
-            if not (
-                isinstance(attr.annotation, griffe.ExprName)
-                and attr.annotation.name in PRIMITIVE_TYPES
-            ):
-                return None
-            constants.append(
-                (name, PRIMITIVE_TYPES[attr.annotation.name], str(attr.value))
-            )
-            continue
         ctype = resolve_type(attr.annotation, class_names, enum_names)
         if ctype is None:
             return None

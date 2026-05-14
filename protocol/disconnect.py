@@ -1,8 +1,7 @@
 from enum import IntEnum
-from types import UnionType
-from typing import ClassVar
+from typing import Union
 
-from protocol._dsl import enum, field, value
+from protocol._dsl import enum, field, packet, value
 from protocol._primitives import varint32
 
 package = "bedrock.protocol"
@@ -159,9 +158,9 @@ class DisconnectPacketMessages:
     filtered_message: str = field(since=712)
 
 
+@packet(id=5)
 class DisconnectPacket:
     """Sent from the server to a client to trigger a disconnection."""
 
-    id: ClassVar[int] = 5
     reason: DisconnectFailReason = field(type=varint32, since=622)
-    messages: DisconnectPacketMessages | None = field(type=UnionType)
+    messages: DisconnectPacketMessages | None = field(type=Union)
