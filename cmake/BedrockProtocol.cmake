@@ -1,11 +1,10 @@
-# BedrockProtocol.cmake — bedrock_protocol_generate(), modelled on
-# protobuf_generate() from the upstream Protobuf CMake module.
+# BedrockProtocol.cmake
 #
 # Usage:
 #     include(BedrockProtocol)
 #     bedrock_protocol_generate(
-#         TARGET      my_lib
-#         INPUTS      protocol/helloworld/helloworld.py
+#         TARGET      bedrock-protocol
+#         INPUTS      protocol/packet.py
 #         IMPORT_DIRS protocol
 #         OUT_VAR     generated_sources)
 
@@ -18,12 +17,12 @@ set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/../compiler")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
-    "${_compiler_dir}/*.py"
-    "${_compiler_dir}/templates/*")
+    "${_compiler_dir}/src/bedrock_protocol_compiler/*"
+    "${_compiler_dir}/pyproject.toml")
 
-# bpc is a uv script (PEP 723 inline deps). The Unix shebang doesn't fire on
-# Windows, so generate a tiny wrapper per-platform that always goes through
-# `uv run --script`, and point the imported target at it.
+# bpc is a uv-managed Python package. The wrapper per-platform routes through
+# `uv run --project`, which syncs the project's venv and invokes the `bpc`
+# script entry point declared in compiler/pyproject.toml.
 find_program(UV_EXECUTABLE uv)
 if(NOT UV_EXECUTABLE)
     message(FATAL_ERROR
@@ -32,13 +31,13 @@ if(NOT UV_EXECUTABLE)
 endif()
 
 if(WIN32)
-    set(_compiler_exe "${CMAKE_BINARY_DIR}/bedrock_protocol_compiler.cmd")
+    set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
     file(WRITE "${_compiler_exe}"
-        "@\"${UV_EXECUTABLE}\" run --script \"${_compiler_dir}/main.py\" %*\r\n")
+        "@\"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc %*\r\n")
 else()
-    set(_compiler_exe "${CMAKE_BINARY_DIR}/bedrock_protocol_compiler")
+    set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
     file(WRITE "${_compiler_exe}"
-        "#!/bin/sh\nexec \"${UV_EXECUTABLE}\" run --script \"${_compiler_dir}/main.py\" \"$@\"\n")
+        "#!/bin/sh\nexec \"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc \"$@\"\n")
     file(CHMOD "${_compiler_exe}" PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE
@@ -54,19 +53,19 @@ function(bedrock_protocol_generate)
     set(_options APPEND_PATH)
     set(_oneValueArgs
         OUT_VAR
-        PROTOC_EXE
-        PROTOC_OUT_DIR
+        COMPILER_EXE
+        COMPILER_OUT_DIR
         TARGET)
     set(_multiValueArgs
         DEPENDENCIES
         INPUTS
         IMPORT_DIRS
-        PROTOC_OPTIONS)
+        COMPILER_OPTIONS)
     cmake_parse_arguments(BP
         "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN})
 
-    if(NOT BP_PROTOC_OUT_DIR)
-        set(BP_PROTOC_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+    if(NOT BP_COMPILER_OUT_DIR)
+        set(BP_COMPILER_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
 
     # INPUTS defaults to the TARGET's .py sources.
@@ -118,15 +117,15 @@ function(bedrock_protocol_generate)
     endif()
 
     # Resolve the compiler invocation.
-    if(NOT BP_PROTOC_EXE)
-        set(BP_PROTOC_EXE bedrock::protocol_compiler)
+    if(NOT BP_COMPILER_EXE)
+        set(BP_COMPILER_EXE bedrock::protocol_compiler)
     endif()
-    set(_protoc_dep)
-    if(TARGET ${BP_PROTOC_EXE})
-        set(_protoc_cmd "$<TARGET_FILE:${BP_PROTOC_EXE}>")
-        set(_protoc_dep ${BP_PROTOC_EXE})
+    set(_compiler_dep)
+    if(TARGET ${BP_COMPILER_EXE})
+        set(_compiler_cmd "$<TARGET_FILE:${BP_COMPILER_EXE}>")
+        set(_compiler_dep ${BP_COMPILER_EXE})
     else()
-        set(_protoc_cmd ${BP_PROTOC_EXE})
+        set(_compiler_cmd ${BP_COMPILER_EXE})
     endif()
 
     # One custom_command per input keeps the per-file output path simple.
@@ -153,15 +152,15 @@ function(bedrock_protocol_generate)
             get_filename_component(_rel "${p}" NAME)
         endif()
         string(REGEX REPLACE "\\.py$" ".hpp" _rel "${_rel}")
-        set(_out "${BP_PROTOC_OUT_DIR}/${_rel}")
+        set(_out "${BP_COMPILER_OUT_DIR}/${_rel}")
         get_filename_component(_out_dir "${_out}" DIRECTORY)
 
         add_custom_command(
             OUTPUT  "${_out}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
-            COMMAND ${_protoc_cmd}
-                    --out "${_out_dir}" ${BP_PROTOC_OPTIONS} "${p}"
-            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_protoc_dep} ${_compiler_sources}
+            COMMAND ${_compiler_cmd}
+                    --out "${_out_dir}" ${BP_COMPILER_OPTIONS} "${p}"
+            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_compiler_dep} ${_compiler_sources}
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             COMMENT "bpc: generating ${_rel}"
             VERBATIM)

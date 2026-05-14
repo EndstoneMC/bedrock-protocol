@@ -31,7 +31,7 @@ bedrock_protocol_generate(
     TARGET         bedrock_protocol
     INPUTS         ${BEDROCK_PROTOCOL_SOURCES}
     IMPORT_DIRS    ${CMAKE_CURRENT_SOURCE_DIR}
-    PROTOC_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMPILER_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
     OUT_VAR        BEDROCK_PROTOCOL_GENERATED
 )
 target_include_directories(bedrock_protocol INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/generated>")

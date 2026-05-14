@@ -17,6 +17,7 @@ build/
 # Python
 __pycache__/
 *.py[cod]
+.venv/
 
 # VS Code
 .vscode/settings.json
