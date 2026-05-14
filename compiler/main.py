@@ -35,26 +35,18 @@ def _as_int(x) -> int | None:
     return None
 
 
-def _is_call(expr, name: str) -> bool:
-    return (
+def _since_kwarg(expr, fn_name: str) -> int | None:
+    """Return `N` if `expr` is the call `fn_name(..., since=N)`, else None."""
+    if not (
         isinstance(expr, griffe.ExprCall)
         and isinstance(expr.function, griffe.ExprName)
-        and expr.function.name == name
-    )
-
-
-def _keyword(call: griffe.ExprCall, name: str):
-    """Return the value of the first `name=` kwarg in a call, or None."""
-    for arg in call.arguments:
-        if isinstance(arg, griffe.ExprKeyword) and arg.name == name:
-            return arg.value
+        and expr.function.name == fn_name
+    ):
+        return None
+    for arg in expr.arguments:
+        if isinstance(arg, griffe.ExprKeyword) and arg.name == "since":
+            return _as_int(arg.value)
     return None
-
-
-def _is_int_enum(cls) -> bool:
-    return any(
-        isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases
-    )
 
 
 def _parse_member_value(value) -> tuple[int, int | None] | None:
@@ -62,28 +54,25 @@ def _parse_member_value(value) -> tuple[int, int | None] | None:
     direct = _as_int(value)
     if direct is not None:
         return direct, None
-    if not _is_call(value, "value") or not value.arguments:
+    if not (
+        isinstance(value, griffe.ExprCall)
+        and isinstance(value.function, griffe.ExprName)
+        and value.function.name == "value"
+        and value.arguments
+    ):
         return None
     ivalue = _as_int(value.arguments[0])
     if ivalue is None:
         return None
-    return ivalue, _as_int(_keyword(value, "since"))
-
-
-def _parse_field_default(value) -> tuple[bool, int | None]:
-    """Parse `field(since=N)`. Returns (is_field_call, since_or_None)."""
-    if not _is_call(value, "field"):
-        return False, None
-    return True, _as_int(_keyword(value, "since"))
+    return ivalue, _since_kwarg(value, "value")
 
 
 def class_since(cls) -> int | None:
     """Read `@enum(since=N)` from a class's decorators. Returns N or None."""
     for dec in cls.decorators:
-        if _is_call(dec.value, "enum"):
-            since = _as_int(_keyword(dec.value, "since"))
-            if since is not None:
-                return since
+        since = _since_kwarg(dec.value, "enum")
+        if since is not None:
+            return since
     return None
 
 
@@ -153,11 +142,7 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
         ctype = _resolve_type(attr.annotation, class_names, enum_names)
         if ctype is None:
             return None
-        since: int | None = None
-        if attr.value is not None:
-            ok, parsed = _parse_field_default(attr.value)
-            if ok:
-                since = parsed
+        since = _since_kwarg(attr.value, "field") if attr.value is not None else None
         raw_fields.append((name, ctype, since))
 
     sinces = sorted({s for _, _, s in raw_fields if s is not None})
@@ -240,7 +225,13 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
             continue
         classes = [c for c in mod.classes.values() if not c.is_alias]
         class_names = {c.name for c in classes}
-        enum_names = {c.name for c in classes if _is_int_enum(c)}
+        enum_names = {
+            c.name
+            for c in classes
+            if any(
+                isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in c.bases
+            )
+        }
         env.filters["class_fields"] = lambda cls, _cn=class_names, _en=enum_names: (
             class_fields(cls, _cn, _en)
         )
