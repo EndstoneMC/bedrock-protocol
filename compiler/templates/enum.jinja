@@ -1,7 +1,7 @@
 {% set members = enum | enum_members %}
 {% set csince = enum | class_since %}
 {% if csince or members.gates %}
-template <int ProtocolVersion>
+template <int ProtocolVersion{% if csince %} = {{ csince }}{% endif %}>
 struct {{ enum.name }};
 
 template <int ProtocolVersion> requires ({% if csince %}ProtocolVersion >= {{ csince }}{% if members.gates %} && {% endif %}{% endif %}{% if members.gates %}ProtocolVersion < {{ members.gates[0][0] }}{% endif %})
