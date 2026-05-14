@@ -17,9 +17,15 @@ from .parse import class_since, is_int_enum
 @click.option(
     "--out",
     "out_dir",
-    required=True,
     type=click.Path(file_okay=False, path_type=Path),
-    help="Output directory for generated .hpp files.",
+    help="Output directory for per-input .hpp files (compile mode).",
+)
+@click.option(
+    "--umbrella",
+    "umbrella_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="Generate an umbrella header at PATH listing #includes for each "
+    "input (skips per-input compilation).",
 )
 @click.argument(
     "inputs",
@@ -27,7 +33,24 @@ from .parse import class_since, is_int_enum
     required=True,
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
-def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
+def main(
+    verbose: bool,
+    out_dir: Path | None,
+    umbrella_path: Path | None,
+    inputs: tuple[Path, ...],
+):
+    if umbrella_path is not None:
+        umbrella_path.parent.mkdir(parents=True, exist_ok=True)
+        names = sorted(f"{inp.stem}.hpp" for inp in inputs)
+        body = "#pragma once\n\n" + "".join(f'#include "{n}"\n' for n in names)
+        umbrella_path.write_text(body)
+        if verbose:
+            click.echo(f"wrote {umbrella_path}")
+        return
+
+    if out_dir is None:
+        raise click.UsageError("--out is required when not using --umbrella")
+
     env = Environment(
         loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
         trim_blocks=True,
@@ -49,6 +72,16 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         enum_names = {c.name for c in classes if is_int_enum(c)}
         type_aliases = module_aliases(mod, class_names, enum_names)
         serializers = enum_serializers(mod, enum_names)
+        # A struct-level Serializer<Cls<V>> is emitted for any non-enum class
+        # whose fields are fully resolvable; the template fills in the per-
+        # field serialize/deserialize body. has_serializers gates the
+        # <bedrock/stream.hpp> + <bedrock/expected.hpp> includes.
+        has_struct_serializer = any(
+            not is_int_enum(c)
+            and class_fields(c, class_names, enum_names) is not None
+            for c in classes
+        )
+        has_serializers = bool(serializers) or has_struct_serializer
         if not classes and not type_aliases:
             if verbose:
                 click.echo(f"skip {inp} (nothing to emit)")
@@ -66,6 +99,7 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
                 type_aliases=type_aliases,
                 has_classes=bool(classes),
                 serializers=serializers,
+                has_serializers=has_serializers,
             )
         )
         if verbose:

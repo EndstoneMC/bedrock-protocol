@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <vector>
@@ -57,7 +59,7 @@ public:
     }
 
     template <std::integral T>
-    auto getIntLE() -> Result<T>
+    auto getInt() -> Result<T>
     {
         using U = std::make_unsigned_t<T>;
         U value = 0;
@@ -69,6 +71,23 @@ public:
             value |= static_cast<U>(*b) << (i * 8);
         }
         return static_cast<T>(value);
+    }
+
+    auto getString() -> Result<std::string>
+    {
+        auto len = getUnsignedVarInt();
+        if (!len) {
+            return tl::unexpected{len.error()};
+        }
+        if (read_pos_ + *len > view_.size()) {
+            return tl::unexpected{std::make_error_code(std::errc::no_message_available)};
+        }
+        std::string out;
+        out.reserve(*len);
+        for (auto i = std::uint32_t{0}; i < *len; ++i) {
+            out.push_back(static_cast<char>(view_[read_pos_++]));
+        }
+        return out;
     }
 
 private:
@@ -105,12 +124,20 @@ public:
     }
 
     template <std::integral T>
-    void writeIntLE(T value)
+    void writeInt(T value)
     {
         using U = std::make_unsigned_t<T>;
         const auto u = static_cast<U>(value);
         for (auto i = std::size_t{0}; i < sizeof(T); ++i) {
             writeByte(static_cast<std::uint8_t>((u >> (i * 8)) & 0xFFu));
+        }
+    }
+
+    void writeString(std::string_view s)
+    {
+        writeUnsignedVarInt(static_cast<std::uint32_t>(s.size()));
+        for (const auto c : s) {
+            writeByte(static_cast<std::uint8_t>(c));
         }
     }
 

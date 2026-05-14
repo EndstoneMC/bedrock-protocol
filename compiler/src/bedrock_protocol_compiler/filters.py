@@ -11,6 +11,46 @@ from .parse import (
 from .types import PRIMITIVE_TYPES, WIRE_METHODS, resolve_type
 
 
+def _serialize_kind_for_type(
+    ann, class_names: set[str], enum_names: set[str]
+) -> dict | None:
+    """Return `{kind, ...}` info for a direct (non-optional) type annotation."""
+    if isinstance(ann, griffe.ExprName):
+        name = ann.name
+        if name in enum_names:
+            return {"kind": "enum", "type_name": name}
+        if name in class_names:
+            return {"kind": "struct", "type_name": name}
+        if name == "str":
+            return {"kind": "string"}
+    return None
+
+
+def _field_serialize_kind(
+    attr, class_names: set[str], enum_names: set[str]
+) -> dict | None:
+    """Return `{kind, ...}` info for a field's annotation+value.
+
+    Supported kinds today: `enum`, `struct`, `string`, `optional_variant`
+    (`X | None` with `field(type=UnionType)`).
+    """
+    ann = attr.annotation
+    if (
+        isinstance(ann, griffe.ExprBinOp)
+        and ann.operator == "|"
+        and (ann.right == "None" or ann.left == "None")
+    ):
+        other = ann.left if ann.right == "None" else ann.right
+        inner = _serialize_kind_for_type(other, class_names, enum_names)
+        if inner is None:
+            return None
+        marker = name_kwarg(attr.value, "field", "type") if attr.value else None
+        if marker != "UnionType":
+            return None
+        return {"kind": "optional_variant", "inner": inner}
+    return _serialize_kind_for_type(ann, class_names, enum_names)
+
+
 def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | None:
     """Resolve a struct's constants and instance fields, with version gating.
 
@@ -20,10 +60,14 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
       - `specializations`: list of (since_min, since_max_excl, visible_fields)
         ranges, each carrying the fields present at that ProtocolVersion. Empty
         if no field is version-gated.
-      - `fields`: list of (name, ctype) when there are no gates (single shell).
+      - `fields`: list of field dicts when there are no gates (single shell).
+
+    Each field dict carries `name`, `ctype`, plus kind-specific info (see
+    `_field_serialize_kind`) so the template can emit both the struct shell
+    and the Serializer specialization.
     """
     constants: list[tuple[str, str, str]] = []
-    raw_fields: list[tuple[str, str, int | None]] = []
+    raw_fields: list[dict] = []
     for name, attr in cls.attributes.items():
         if attr.annotation is None:
             return None
@@ -40,24 +84,29 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
         ctype = resolve_type(attr.annotation, class_names, enum_names)
         if ctype is None:
             return None
+        kind_info = _field_serialize_kind(attr, class_names, enum_names) or {
+            "kind": "unknown"
+        }
         since = since_kwarg(attr.value, "field") if attr.value is not None else None
-        raw_fields.append((name, ctype, since))
+        raw_fields.append(
+            {"name": name, "ctype": ctype, "since": since, **kind_info}
+        )
 
-    sinces = sorted({s for _, _, s in raw_fields if s is not None})
+    sinces = sorted({f["since"] for f in raw_fields if f["since"] is not None})
     if not sinces:
         return {
             "constants": constants,
             "specializations": [],
-            "fields": [(n, t) for n, t, _ in raw_fields],
+            "fields": list(raw_fields),
         }
 
-    specializations: list[tuple[int | None, int | None, list[tuple[str, str]]]] = []
+    specializations: list[tuple[int | None, int | None, list[dict]]] = []
     specializations.append(
-        (None, sinces[0], [(n, t) for n, t, s in raw_fields if s is None])
+        (None, sinces[0], [f for f in raw_fields if f["since"] is None])
     )
     for i, lo in enumerate(sinces):
         hi = sinces[i + 1] if i + 1 < len(sinces) else None
-        visible = [(n, t) for n, t, s in raw_fields if s is None or s <= lo]
+        visible = [f for f in raw_fields if f["since"] is None or f["since"] <= lo]
         specializations.append((lo, hi, visible))
     return {
         "constants": constants,
@@ -105,16 +154,23 @@ def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
 def module_aliases(
     mod, class_names: set[str], enum_names: set[str]
 ) -> list[tuple[str, str]]:
-    """Return module-level `Name = <type>` aliases as (name, ctype) pairs.
+    """Return module-level type aliases as (name, ctype) pairs.
 
-    The `package` string attribute is skipped (it's namespace metadata, not a
-    type). Anything else whose RHS resolves to a known type is emitted.
+    Picks up both plain `Name = <type>` assignments (skipping `package`,
+    which is namespace metadata) and PEP 695 `type Name = <type>` statements,
+    which griffe surfaces in `mod.type_aliases`.
     """
     aliases: list[tuple[str, str]] = []
     for name, attr in mod.attributes.items():
         if name == "package" or attr.value is None:
             continue
         ctype = resolve_type(attr.value, class_names, enum_names)
+        if ctype is not None:
+            aliases.append((name, ctype))
+    for name, ta in mod.type_aliases.items():
+        if ta.value is None:
+            continue
+        ctype = resolve_type(ta.value, class_names, enum_names)
         if ctype is not None:
             aliases.append((name, ctype))
     return aliases

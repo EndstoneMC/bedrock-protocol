@@ -12,8 +12,8 @@ struct {{ cls.name }}<ProtocolVersion> {
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
-{% for name, type in visible %}
-    {{ type }} {{ name }};
+{% for field in visible %}
+    {{ field.ctype }} {{ field.name }};
 {% endfor %}
 };
 {% endfor %}
@@ -22,8 +22,8 @@ struct {{ cls.name }} {
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
-{% for name, type in f.fields %}
-    {{ type }} {{ name }};
+{% for field in f.fields %}
+    {{ field.ctype }} {{ field.name }};
 {% endfor %}
 };
 {% endif %}

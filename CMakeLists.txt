@@ -36,15 +36,20 @@ bedrock_protocol_generate(
 )
 target_include_directories(bedrock_protocol INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/generated>")
 
-# Stitch the generated headers into a single index — the hand-written
-# `<bedrock/protocol.hpp>` umbrella `#include`s this.
-set(_index "${CMAKE_CURRENT_BINARY_DIR}/generated/protocol/all.hpp")
-set(_index_content "#pragma once\n\n")
-foreach(_hdr IN LISTS BEDROCK_PROTOCOL_GENERATED)
-    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_BINARY_DIR}/generated/protocol" "${_hdr}")
-    string(APPEND _index_content "#include \"${_rel}\"\n")
-endforeach()
-file(WRITE "${_index}" "${_index_content}")
+# Umbrella header (`<bedrock/protocol.hpp>` `#include`s this) — emitted by
+# bpc itself via the --umbrella mode so the index is consistent with bpc's
+# per-input naming.
+set(_umbrella "${CMAKE_CURRENT_BINARY_DIR}/generated/protocol/all.hpp")
+add_custom_command(
+    OUTPUT  "${_umbrella}"
+    COMMAND "$<TARGET_FILE:bedrock::protocol_compiler>"
+            --umbrella "${_umbrella}" ${BEDROCK_PROTOCOL_SOURCES}
+    DEPENDS ${BEDROCK_PROTOCOL_SOURCES} bedrock::protocol_compiler
+    COMMENT "bpc: generating protocol/all.hpp"
+    VERBATIM
+)
+add_custom_target(bedrock_protocol_umbrella DEPENDS "${_umbrella}")
+add_dependencies(bedrock_protocol bedrock_protocol_umbrella)
 
 # Tests
 if(BUILD_TESTING)

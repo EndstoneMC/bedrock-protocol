@@ -23,9 +23,10 @@ PRIMITIVE_TYPES = {
 
 # Wire-encoding name → (BinaryStream write method, ReadOnlyBinaryStream read
 # method, underlying C++ integer the serializer converts to/from). Used by the
-# generated Serializer specializations. Fixed-width entries use the LE
-# template helpers and embed the type as a template argument in the method
-# name so the codegen call site stays uniform.
+# generated Serializer specializations. Fixed-width entries embed the type as
+# a template argument in the method name so the codegen call site stays
+# uniform. Little-endian is the default; big-endian variants would be named
+# explicitly (e.g. writeIntBE) when needed.
 WIRE_METHODS = {
     "uvarint32": {
         "write": "writeUnsignedVarInt",
@@ -37,14 +38,14 @@ WIRE_METHODS = {
         "read": "getVarInt",
         "underlying": "std::int32_t",
     },
-    "int8":   {"write": "writeIntLE<std::int8_t>",   "read": "getIntLE<std::int8_t>",   "underlying": "std::int8_t"},
-    "int16":  {"write": "writeIntLE<std::int16_t>",  "read": "getIntLE<std::int16_t>",  "underlying": "std::int16_t"},
-    "int32":  {"write": "writeIntLE<std::int32_t>",  "read": "getIntLE<std::int32_t>",  "underlying": "std::int32_t"},
-    "int64":  {"write": "writeIntLE<std::int64_t>",  "read": "getIntLE<std::int64_t>",  "underlying": "std::int64_t"},
-    "uint8":  {"write": "writeIntLE<std::uint8_t>",  "read": "getIntLE<std::uint8_t>",  "underlying": "std::uint8_t"},
-    "uint16": {"write": "writeIntLE<std::uint16_t>", "read": "getIntLE<std::uint16_t>", "underlying": "std::uint16_t"},
-    "uint32": {"write": "writeIntLE<std::uint32_t>", "read": "getIntLE<std::uint32_t>", "underlying": "std::uint32_t"},
-    "uint64": {"write": "writeIntLE<std::uint64_t>", "read": "getIntLE<std::uint64_t>", "underlying": "std::uint64_t"},
+    "int8":   {"write": "writeInt<std::int8_t>",   "read": "getInt<std::int8_t>",   "underlying": "std::int8_t"},
+    "int16":  {"write": "writeInt<std::int16_t>",  "read": "getInt<std::int16_t>",  "underlying": "std::int16_t"},
+    "int32":  {"write": "writeInt<std::int32_t>",  "read": "getInt<std::int32_t>",  "underlying": "std::int32_t"},
+    "int64":  {"write": "writeInt<std::int64_t>",  "read": "getInt<std::int64_t>",  "underlying": "std::int64_t"},
+    "uint8":  {"write": "writeInt<std::uint8_t>",  "read": "getInt<std::uint8_t>",  "underlying": "std::uint8_t"},
+    "uint16": {"write": "writeInt<std::uint16_t>", "read": "getInt<std::uint16_t>", "underlying": "std::uint16_t"},
+    "uint32": {"write": "writeInt<std::uint32_t>", "read": "getInt<std::uint32_t>", "underlying": "std::uint32_t"},
+    "uint64": {"write": "writeInt<std::uint64_t>", "read": "getInt<std::uint64_t>", "underlying": "std::uint64_t"},
 }
 
 
