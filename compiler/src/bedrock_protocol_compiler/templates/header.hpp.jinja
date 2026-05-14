@@ -9,7 +9,7 @@ namespace {{ package | replace('.', '::') }} {
 
 {% endif %}
 {% for name, ctype in type_aliases %}
-using {{ name }} = {{ ctype }};
+enum {{ name }} : {{ ctype }} {};
 {% endfor %}
 {% if type_aliases and has_classes %}
 
