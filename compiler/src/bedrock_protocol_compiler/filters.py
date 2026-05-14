@@ -64,6 +64,24 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
     }
 
 
+def module_aliases(
+    mod, class_names: set[str], enum_names: set[str]
+) -> list[tuple[str, str]]:
+    """Return module-level `Name = <type>` aliases as (name, ctype) pairs.
+
+    The `package` string attribute is skipped (it's namespace metadata, not a
+    type). Anything else whose RHS resolves to a known type is emitted.
+    """
+    aliases: list[tuple[str, str]] = []
+    for name, attr in mod.attributes.items():
+        if name == "package" or attr.value is None:
+            continue
+        ctype = resolve_type(attr.value, class_names, enum_names)
+        if ctype is not None:
+            aliases.append((name, ctype))
+    return aliases
+
+
 def enum_members(cls) -> dict:
     """Bucket an enum class's attributes into always-present vs version-gated."""
     always: list[tuple[str, int]] = []

@@ -7,7 +7,7 @@ import griffe
 import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .filters import class_fields, enum_members
+from .filters import class_fields, enum_members, module_aliases
 from .parse import class_since, is_int_enum
 
 
@@ -44,20 +44,28 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
         mod = griffe.load(
             inp.stem, search_paths=[str(inp.parent)], allow_inspection=False
         )
-        if not any(not c.is_alias for c in mod.classes.values()):
-            if verbose:
-                click.echo(f"skip {inp} (no classes)")
-            continue
         classes = [c for c in mod.classes.values() if not c.is_alias]
         class_names = {c.name for c in classes}
         enum_names = {c.name for c in classes if is_int_enum(c)}
+        type_aliases = module_aliases(mod, class_names, enum_names)
+        if not classes and not type_aliases:
+            if verbose:
+                click.echo(f"skip {inp} (nothing to emit)")
+            continue
         env.filters["class_fields"] = lambda cls, _cn=class_names, _en=enum_names: (
             class_fields(cls, _cn, _en)
         )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
         target = out_dir / f"{inp.stem}.hpp"
-        target.write_text(template.render(mod=mod, package=package))
+        target.write_text(
+            template.render(
+                mod=mod,
+                package=package,
+                type_aliases=type_aliases,
+                has_classes=bool(classes),
+            )
+        )
         if verbose:
             click.echo(f"wrote {target}")
 

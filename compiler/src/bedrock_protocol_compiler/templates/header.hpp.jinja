@@ -8,6 +8,12 @@
 namespace {{ package | replace('.', '::') }} {
 
 {% endif %}
+{% for name, ctype in type_aliases %}
+using {{ name }} = {{ ctype }};
+{% endfor %}
+{% if type_aliases and has_classes %}
+
+{% endif %}
 {% for member in mod.members.values()
     if not member.is_alias and member.is_class %}
 {% if not loop.first %}
