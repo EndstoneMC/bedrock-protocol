@@ -36,6 +36,21 @@ bedrock_protocol_generate(
 )
 target_include_directories(bedrock_protocol INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>")
 
+# Configure the umbrella header (<bedrock/protocol.hpp>) by stamping one
+# `#include` line per generated packet header into protocol.hpp.in.
+set(BEDROCK_PROTOCOL_INCLUDES "")
+set(_includes ${BEDROCK_PROTOCOL_GENERATED})
+list(SORT _includes)
+foreach (_gen IN LISTS _includes)
+    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_BINARY_DIR}" "${_gen}")
+    string(APPEND BEDROCK_PROTOCOL_INCLUDES "#include \"${_rel}\"\n")
+endforeach ()
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/bedrock/protocol.hpp.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/include/bedrock/protocol.hpp"
+        @ONLY
+)
+
 # Tests
 if (BUILD_TESTING)
     enable_testing()
