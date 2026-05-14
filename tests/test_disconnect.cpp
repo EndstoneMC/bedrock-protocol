@@ -44,20 +44,42 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
     REQUIRE(std::holds_alternative<std::monostate>(pkt.messages));
 }
 
-TEST_CASE("Serializer<DisconnectFailReason<622>>: roundtrip as uvarint32")
+TEST_CASE("Serializer<DisconnectFailReason>: wire matches gophertunnel Varint32")
 {
-    std::vector<std::uint8_t> buf;
-    bp::BinaryStream out{buf};
+    // Gophertunnel (sandertv/gophertunnel) encodes the `reason` field with
+    // `protocol.IO.Varint32`, which is zigzag-encoded signed varint:
+    //   ux := uint32(x) << 1
+    //   if x < 0 { ux = ^ux }
+    //   WriteVaruint32(ux)
+    // The expected bytes below are what gophertunnel produces for the same
+    // enum value; this test serves as a wire-compat anchor against that
+    // reference implementation.
 
     using Serializer = bp::Serializer<bp::DisconnectFailReason<>>;
-    Serializer::serialize(out, bp::DisconnectFailReason<622>::Kicked);
+    using Value = bp::DisconnectFailReason<>;
 
-    // 55 < 128 → single byte, no continuation bit.
-    REQUIRE(buf.size() == 1);
-    REQUIRE(buf[0] == 55);
+    struct Case {
+        Value::Value value;
+        int raw;
+        std::vector<std::uint8_t> expected;
+    };
+    const std::vector<Case> cases = {
+        {Value::Unknown, 0, {0x00}},                  // zigzag(0)   = 0
+        {Value::CantConnectNoInternet, 1, {0x02}},    // zigzag(1)   = 2
+        {Value::Kicked, 55, {0x6E}},                  // zigzag(55)  = 110
+        {Value::BadPacket, 90, {0xB4, 0x01}},         // zigzag(90)  = 180 → 0xB4 0x01
+    };
 
-    bp::ReadOnlyBinaryStream in{buf};
-    auto v = Serializer::deserialize(in);
-    REQUIRE(v.has_value());
-    REQUIRE(*v == bp::DisconnectFailReason<622>::Kicked);
+    for (const auto &c : cases) {
+        std::vector<std::uint8_t> buf;
+        bp::BinaryStream out{buf};
+        Serializer::serialize(out, c.value);
+        INFO("value=" << c.raw);
+        REQUIRE(buf == c.expected);
+
+        bp::ReadOnlyBinaryStream in{buf};
+        auto v = Serializer::deserialize(in);
+        REQUIRE(v.has_value());
+        REQUIRE(*v == c.value);
+    }
 }

@@ -32,6 +32,11 @@ WIRE_METHODS = {
         "read": "getUnsignedVarInt",
         "underlying": "std::uint32_t",
     },
+    "varint32": {
+        "write": "writeVarInt",
+        "read": "getVarInt",
+        "underlying": "std::int32_t",
+    },
     "int8":   {"write": "writeIntLE<std::int8_t>",   "read": "getIntLE<std::int8_t>",   "underlying": "std::int8_t"},
     "int16":  {"write": "writeIntLE<std::int16_t>",  "read": "getIntLE<std::int16_t>",  "underlying": "std::int16_t"},
     "int32":  {"write": "writeIntLE<std::int32_t>",  "read": "getIntLE<std::int32_t>",  "underlying": "std::int32_t"},

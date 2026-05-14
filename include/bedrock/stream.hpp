@@ -47,6 +47,15 @@ public:
         return tl::unexpected{std::make_error_code(std::errc::value_too_large)};
     }
 
+    auto getVarInt() -> Result<std::int32_t>
+    {
+        auto u = getUnsignedVarInt();
+        if (!u) {
+            return tl::unexpected{u.error()};
+        }
+        return static_cast<std::int32_t>((*u >> 1) ^ -(*u & 1u));
+    }
+
     template <std::integral T>
     auto getIntLE() -> Result<T>
     {
@@ -85,6 +94,14 @@ public:
             value >>= 7;
             writeByte(value ? (byte | 0x80u) : byte);
         } while (value);
+    }
+
+    auto writeVarInt(std::int32_t value)
+    {
+        // Zigzag encode in unsigned space (no signed overflow), then varint.
+        const auto u = static_cast<std::uint32_t>(value);
+        const auto sign = static_cast<std::uint32_t>(value >> 31);
+        writeUnsignedVarInt((u << 1) ^ sign);
     }
 
     template <std::integral T>
