@@ -42,14 +42,14 @@ struct Serializer;
 template <int ProtocolVersion>
 struct Serializer<{{ enum_name }}<ProtocolVersion>> {
     using Value = typename {{ enum_name }}<ProtocolVersion>::Value;
+    using Result = std::expected<Value, std::error_code>;
 
     static void serialize(BinaryStream &stream, Value value)
     {
         stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream)
-        -> std::expected<Value, std::error_code>
+    static auto deserialize(ReadOnlyBinaryStream &stream) -> Result
     {
         auto v = stream.{{ m.read }}();
         if (!v) {

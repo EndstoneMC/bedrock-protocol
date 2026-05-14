@@ -10,18 +10,36 @@ PRIMITIVE_TYPES = {
     "varint64": "std::int64_t",
     "uvarint32": "std::uint32_t",
     "uvarint64": "std::uint64_t",
+    "int8": "std::int8_t",
+    "int16": "std::int16_t",
+    "int32": "std::int32_t",
+    "int64": "std::int64_t",
+    "uint8": "std::uint8_t",
+    "uint16": "std::uint16_t",
+    "uint32": "std::uint32_t",
+    "uint64": "std::uint64_t",
 }
 
 
 # Wire-encoding name → (BinaryStream write method, ReadOnlyBinaryStream read
 # method, underlying C++ integer the serializer converts to/from). Used by the
-# generated Serializer specializations.
+# generated Serializer specializations. Fixed-width entries use the LE
+# template helpers and embed the type as a template argument in the method
+# name so the codegen call site stays uniform.
 WIRE_METHODS = {
     "uvarint32": {
         "write": "writeUnsignedVarInt",
         "read": "getUnsignedVarInt",
         "underlying": "std::uint32_t",
     },
+    "int8":   {"write": "writeIntLE<std::int8_t>",   "read": "getIntLE<std::int8_t>",   "underlying": "std::int8_t"},
+    "int16":  {"write": "writeIntLE<std::int16_t>",  "read": "getIntLE<std::int16_t>",  "underlying": "std::int16_t"},
+    "int32":  {"write": "writeIntLE<std::int32_t>",  "read": "getIntLE<std::int32_t>",  "underlying": "std::int32_t"},
+    "int64":  {"write": "writeIntLE<std::int64_t>",  "read": "getIntLE<std::int64_t>",  "underlying": "std::int64_t"},
+    "uint8":  {"write": "writeIntLE<std::uint8_t>",  "read": "getIntLE<std::uint8_t>",  "underlying": "std::uint8_t"},
+    "uint16": {"write": "writeIntLE<std::uint16_t>", "read": "getIntLE<std::uint16_t>", "underlying": "std::uint16_t"},
+    "uint32": {"write": "writeIntLE<std::uint32_t>", "read": "getIntLE<std::uint32_t>", "underlying": "std::uint32_t"},
+    "uint64": {"write": "writeIntLE<std::uint64_t>", "read": "getIntLE<std::uint64_t>", "underlying": "std::uint64_t"},
 }
 
 

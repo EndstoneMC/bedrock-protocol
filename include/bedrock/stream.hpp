@@ -1,9 +1,11 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <span>
 #include <system_error>
+#include <type_traits>
 #include <vector>
 
 #include "expected.hpp"  // IWYU pragma: keep
@@ -45,6 +47,21 @@ public:
         return tl::unexpected{std::make_error_code(std::errc::value_too_large)};
     }
 
+    template <std::integral T>
+    auto getIntLE() -> Result<T>
+    {
+        using U = std::make_unsigned_t<T>;
+        U value = 0;
+        for (auto i = std::size_t{0}; i < sizeof(T); ++i) {
+            auto b = getByte();
+            if (!b) {
+                return tl::unexpected{b.error()};
+            }
+            value |= static_cast<U>(*b) << (i * 8);
+        }
+        return static_cast<T>(value);
+    }
+
 private:
     std::span<const std::uint8_t> view_;
     std::size_t read_pos_ = 0;
@@ -68,6 +85,16 @@ public:
             value >>= 7;
             writeByte(value ? (byte | 0x80u) : byte);
         } while (value);
+    }
+
+    template <std::integral T>
+    void writeIntLE(T value)
+    {
+        using U = std::make_unsigned_t<T>;
+        const auto u = static_cast<U>(value);
+        for (auto i = std::size_t{0}; i < sizeof(T); ++i) {
+            writeByte(static_cast<std::uint8_t>((u >> (i * 8)) & 0xFFu));
+        }
     }
 
 private:
