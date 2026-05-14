@@ -38,6 +38,8 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
     REQUIRE(old_pkt.messages->message == "bye");
 
     bp::DisconnectPacket<622> pkt;
+    pkt.reason = bp::DisconnectFailReason<622>::Kicked;
     pkt.messages.reset();
+    REQUIRE(pkt.reason == bp::DisconnectFailReason<622>::Kicked);
     REQUIRE_FALSE(pkt.messages.has_value());
 }

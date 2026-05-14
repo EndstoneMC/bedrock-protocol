@@ -6,7 +6,7 @@ struct {{ enum.name }};
 
 template <int ProtocolVersion> requires ({% if csince %}ProtocolVersion >= {{ csince }}{% if members.gates %} && {% endif %}{% endif %}{% if members.gates %}ProtocolVersion < {{ members.gates[0][0] }}{% endif %})
 struct {{ enum.name }}<ProtocolVersion> {
-    enum {
+    enum Value : int {
 {% for name, value in members.always %}
         {{ name | camelize }} = {{ value }},
 {% endfor %}
@@ -18,7 +18,7 @@ struct {{ enum.name }}<ProtocolVersion> {
 
 template <int ProtocolVersion> requires (ProtocolVersion >= {{ since }}{% if not loop.last %} && ProtocolVersion < {{ members.gates[loop.index][0] }}{% endif %})
 struct {{ enum.name }}<ProtocolVersion> {
-    enum {
+    enum Value : int {
 {% for name, value in ns.cumulative %}
         {{ name | camelize }} = {{ value }},
 {% endfor %}
@@ -28,7 +28,7 @@ struct {{ enum.name }}<ProtocolVersion> {
 {% else %}
 template <int ProtocolVersion>
 struct {{ enum.name }} {
-    enum {
+    enum Value : int {
 {% for name, value in members.always %}
         {{ name | camelize }} = {{ value }},
 {% endfor %}

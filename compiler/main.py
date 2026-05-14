@@ -54,17 +54,26 @@ _PRIMITIVE_TYPES = {
 }
 
 
-def _resolve_type(py_type: str, class_names: set[str]) -> str | None:
+def _is_int_enum(cls) -> bool:
+    return any("IntEnum" in str(b) for b in cls.bases)
+
+
+def _resolve_type(
+    py_type: str, class_names: set[str], enum_names: set[str]
+) -> str | None:
     """Map a Python type expression to a C++ type. None if unmappable.
 
-    Handles `X | None` → `std::optional<X>` and routes user-defined classes
-    through their `ProtocolVersion` template.
+    Handles `X | None` → `std::optional<X>`, routes user-defined classes
+    through their `ProtocolVersion` template, and uses the inner `::Value`
+    enum type for IntEnum classes.
     """
     py_type = py_type.strip()
     optional = py_type.endswith("| None")
     if optional:
         py_type = py_type[: -len("| None")].strip()
-    if py_type in class_names:
+    if py_type in enum_names:
+        ctype = f"{py_type}<ProtocolVersion>::Value"
+    elif py_type in class_names:
         ctype = f"{py_type}<ProtocolVersion>"
     elif py_type in _PRIMITIVE_TYPES:
         ctype = _PRIMITIVE_TYPES[py_type]
@@ -120,7 +129,9 @@ def class_since(cls) -> int | None:
     return None
 
 
-def class_fields(cls, class_names: set[str]) -> dict | None:
+def class_fields(
+    cls, class_names: set[str], enum_names: set[str]
+) -> dict | None:
     """Resolve a struct's constants and instance fields, with version gating.
 
     Returns `None` if any type is unmappable — the template falls back to an
@@ -143,7 +154,7 @@ def class_fields(cls, class_names: set[str]) -> dict | None:
                 return None
             constants.append((name, ctype, str(attr.value)))
             continue
-        ctype = _resolve_type(ann, class_names)
+        ctype = _resolve_type(ann, class_names, enum_names)
         if ctype is None:
             return None
         since: int | None = None
@@ -229,8 +240,12 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
             if verbose:
                 click.echo(f"skip {inp} (no classes)")
             continue
-        class_names = {c.name for c in mod.classes.values() if not c.is_alias}
-        env.filters["class_fields"] = lambda cls, _n=class_names: class_fields(cls, _n)
+        classes = [c for c in mod.classes.values() if not c.is_alias]
+        class_names = {c.name for c in classes}
+        enum_names = {c.name for c in classes if _is_int_enum(c)}
+        env.filters["class_fields"] = (
+            lambda cls, _cn=class_names, _en=enum_names: class_fields(cls, _cn, _en)
+        )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
         target = out_dir / f"{inp.stem}.hpp"
