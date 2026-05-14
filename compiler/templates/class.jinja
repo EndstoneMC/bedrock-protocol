@@ -1,31 +1,28 @@
-{% set fields = cls | class_fields %}
-{% if fields is none %}
+{% set f = cls | class_fields %}
+{% if f is none %}
 struct {{ cls.name }} {
 };
-{% elif fields.gates %}
+{% elif f.specializations %}
 template <int ProtocolVersion>
 struct {{ cls.name }};
+{% for lo, hi, visible in f.specializations %}
 
-template <int ProtocolVersion> requires (ProtocolVersion < {{ fields.gates[0][0] }})
+template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
 struct {{ cls.name }}<ProtocolVersion> {
-{% for name, type in fields.always %}
-    {{ type }} {{ name }};
+{% for name, type, value in f.constants %}
+    static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
-};
-{% set ns = namespace(cumulative=fields.always) %}
-{% for since, group in fields.gates %}
-{% set ns.cumulative = ns.cumulative + group %}
-
-template <int ProtocolVersion> requires (ProtocolVersion >= {{ since }}{% if not loop.last %} && ProtocolVersion < {{ fields.gates[loop.index][0] }}{% endif %})
-struct {{ cls.name }}<ProtocolVersion> {
-{% for name, type in ns.cumulative %}
+{% for name, type in visible %}
     {{ type }} {{ name }};
 {% endfor %}
 };
 {% endfor %}
 {% else %}
 struct {{ cls.name }} {
-{% for name, type in fields.always %}
+{% for name, type, value in f.constants %}
+    static constexpr {{ type }} {{ name }} = {{ value }};
+{% endfor %}
+{% for name, type in f.fields %}
     {{ type }} {{ name }};
 {% endfor %}
 };

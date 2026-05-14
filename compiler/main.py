@@ -49,7 +49,30 @@ def _parse_member_value(raw: str) -> tuple[int, int | None] | None:
 
 _PRIMITIVE_TYPES = {
     "str": "std::string",
+    "int": "int",
+    "bool": "bool",
 }
+
+
+def _resolve_type(py_type: str, class_names: set[str]) -> str | None:
+    """Map a Python type expression to a C++ type. None if unmappable.
+
+    Handles `X | None` → `std::optional<X>` and routes user-defined classes
+    through their `ProtocolVersion` template.
+    """
+    py_type = py_type.strip()
+    optional = py_type.endswith("| None")
+    if optional:
+        py_type = py_type[: -len("| None")].strip()
+    if py_type in class_names:
+        ctype = f"{py_type}<ProtocolVersion>"
+    elif py_type in _PRIMITIVE_TYPES:
+        ctype = _PRIMITIVE_TYPES[py_type]
+    else:
+        return None
+    if optional:
+        ctype = f"std::optional<{ctype}>"
+    return ctype
 
 
 def _parse_field_default(raw: str) -> tuple[bool, int | None]:
@@ -97,31 +120,60 @@ def class_since(cls) -> int | None:
     return None
 
 
-def class_fields(cls) -> dict | None:
-    """Bucket struct fields into always-present vs version-gated.
+def class_fields(cls, class_names: set[str]) -> dict | None:
+    """Resolve a struct's constants and instance fields, with version gating.
 
-    Returns None if any field's type isn't mappable to a C++ primitive — the
-    template falls back to emitting an empty shell in that case.
+    Returns `None` if any type is unmappable — the template falls back to an
+    empty shell. Otherwise returns a dict with:
+      - `constants`: list of (name, ctype, value) for ClassVar attributes.
+      - `specializations`: list of (since_min, since_max_excl, visible_fields)
+        ranges, each carrying the fields present at that ProtocolVersion. Empty
+        if no field is version-gated.
+      - `fields`: list of (name, ctype) when there are no gates (single shell).
     """
-    always: list[tuple[str, str]] = []
-    gates: dict[int, list[tuple[str, str]]] = {}
+    constants: list[tuple[str, str, str]] = []
+    raw_fields: list[tuple[str, str, int | None]] = []
     for name, attr in cls.attributes.items():
-        if "instance-attribute" not in attr.labels:
-            continue
         if attr.annotation is None:
             return None
-        ctype = _PRIMITIVE_TYPES.get(str(attr.annotation).strip())
+        ann = str(attr.annotation).strip()
+        if "instance-attribute" not in attr.labels:
+            ctype = _PRIMITIVE_TYPES.get(ann)
+            if ctype is None:
+                return None
+            constants.append((name, ctype, str(attr.value)))
+            continue
+        ctype = _resolve_type(ann, class_names)
         if ctype is None:
             return None
-        if attr.value is None:
-            always.append((name, ctype))
-            continue
-        is_field_call, since = _parse_field_default(str(attr.value))
-        if not is_field_call or since is None:
-            always.append((name, ctype))
-        else:
-            gates.setdefault(since, []).append((name, ctype))
-    return {"always": always, "gates": sorted(gates.items())}
+        since: int | None = None
+        if attr.value is not None:
+            ok, parsed = _parse_field_default(str(attr.value))
+            if ok:
+                since = parsed
+        raw_fields.append((name, ctype, since))
+
+    sinces = sorted({s for _, _, s in raw_fields if s is not None})
+    if not sinces:
+        return {
+            "constants": constants,
+            "specializations": [],
+            "fields": [(n, t) for n, t, _ in raw_fields],
+        }
+
+    specializations: list[tuple[int | None, int | None, list[tuple[str, str]]]] = []
+    specializations.append(
+        (None, sinces[0], [(n, t) for n, t, s in raw_fields if s is None])
+    )
+    for i, lo in enumerate(sinces):
+        hi = sinces[i + 1] if i + 1 < len(sinces) else None
+        visible = [(n, t) for n, t, s in raw_fields if s is None or s <= lo]
+        specializations.append((lo, hi, visible))
+    return {
+        "constants": constants,
+        "specializations": specializations,
+        "fields": [],
+    }
 
 
 def enum_members(cls) -> dict:
@@ -168,7 +220,6 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
     )
     env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
     env.filters["enum_members"] = enum_members
-    env.filters["class_fields"] = class_fields
     env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -178,6 +229,8 @@ def main(verbose: bool, out_dir: Path, inputs: tuple[Path, ...]):
             if verbose:
                 click.echo(f"skip {inp} (no classes)")
             continue
+        class_names = {c.name for c in mod.classes.values() if not c.is_alias}
+        env.filters["class_fields"] = lambda cls, _n=class_names: class_fields(cls, _n)
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
         target = out_dir / f"{inp.stem}.hpp"

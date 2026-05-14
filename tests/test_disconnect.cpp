@@ -28,3 +28,16 @@ TEST_CASE("DisconnectPacketMessages gains filtered_message at v712")
     REQUIRE(post.message == "kicked");
     REQUIRE(post.filtered_message == "***");
 }
+
+TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622")
+{
+    STATIC_REQUIRE(bp::DisconnectPacket<622>::id == 5);
+
+    bp::DisconnectPacket<500> old_pkt;
+    old_pkt.messages = bp::DisconnectPacketMessages<500>{"bye"};
+    REQUIRE(old_pkt.messages->message == "bye");
+
+    bp::DisconnectPacket<622> pkt;
+    pkt.messages.reset();
+    REQUIRE_FALSE(pkt.messages.has_value());
+}
