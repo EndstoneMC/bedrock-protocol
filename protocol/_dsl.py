@@ -11,11 +11,12 @@ def value(v, since: int | None = None):
     return v
 
 
-def field(*, type: TypeAliasType | None = None, since: int | None = None) -> Any:
+def field(*, type: type | TypeAliasType | None = None, since: int | None = None) -> Any:
     """Mark a struct field.
 
-    - `type`: the on-the-wire primitive (e.g. `uvarint32`) — required for
-      enum-typed fields where the annotation alone doesn't fix encoding.
+    - `type`: the on-the-wire primitive (e.g. `uvarint32`, or `str` for the
+      Bedrock default string-encoded enum). Required for enum-typed fields
+      where the annotation alone doesn't fix encoding.
     - `since`: protocol version that introduced the field.
     """
     return None
