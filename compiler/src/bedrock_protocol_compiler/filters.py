@@ -272,21 +272,25 @@ def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
 def module_aliases(
     mod, class_names: set[str], enum_names: set[str]
 ) -> list[tuple[str, str]]:
-    """Return module-level type aliases as (name, ctype) pairs.
+    """Return module-level type aliases as (name, ctype) pairs, suitable for
+    emission as `enum Name : ctype {};` strong typedefs in the header.
 
-    Picks up both plain `Name = <type>` assignments (skipping `package`,
-    which is namespace metadata) and PEP 695 `type Name = <type>` statements,
-    which griffe surfaces in `mod.type_aliases`.
+    Picks up both plain `Name = <type>` assignments (skipping `package`, which
+    is namespace metadata) and PEP 695 `type Name = <type>` statements (griffe
+    surfaces these in `mod.type_aliases`). Aliases whose NAME is itself a
+    built-in primitive (`varint32`, `uint8`, `double`, ...) are skipped, since
+    those names are wired into the codegen's `PRIMITIVE_TYPES` table directly
+    and there is no need to emit a C++ alias for them.
     """
     aliases: list[tuple[str, str]] = []
     for name, attr in mod.attributes.items():
-        if name == "package" or attr.value is None:
+        if name == "package" or attr.value is None or name in PRIMITIVE_TYPES:
             continue
         ctype = resolve_type(attr.value, class_names, enum_names)
         if ctype is not None:
             aliases.append((name, ctype))
     for name, ta in mod.type_aliases.items():
-        if ta.value is None:
+        if ta.value is None or name in PRIMITIVE_TYPES:
             continue
         ctype = resolve_type(ta.value, class_names, enum_names)
         if ctype is not None:
