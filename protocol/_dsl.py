@@ -3,7 +3,7 @@
 griffe reads these statically; at runtime they're intentional no-ops.
 """
 
-from typing import Any
+from typing import Any, TypeAliasType
 
 
 def value(v, since: int | None = None):
@@ -11,13 +11,12 @@ def value(v, since: int | None = None):
     return v
 
 
-def field(*, since: int | None = None, wire: Any = None) -> Any:
+def field(*, type: TypeAliasType | None = None, since: int | None = None) -> Any:
     """Mark a struct field.
 
+    - `type`: the on-the-wire primitive (e.g. `uvarint32`) — required for
+      enum-typed fields where the annotation alone doesn't fix encoding.
     - `since`: protocol version that introduced the field.
-    - `wire`: the on-the-wire encoding (e.g. `uvarint32`), used by the
-      generated Serializer specialization when the field's logical type doesn't
-      imply a unique encoding (e.g. an enum stored as a varint).
     """
     return None
 

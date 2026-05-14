@@ -162,5 +162,5 @@ class DisconnectPacket:
     """Sent from the server to a client to trigger a disconnection."""
 
     id: ClassVar[int] = 5
-    reason: DisconnectFailReason = field(since=622, wire=uvarint32)
+    reason: DisconnectFailReason = field(type=uvarint32, since=622)
     messages: Union[DisconnectPacketMessages, None]

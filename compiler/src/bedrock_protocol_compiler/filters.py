@@ -1,5 +1,6 @@
 """Jinja filter implementations: shape griffe Classes into render-ready dicts."""
 
+import click
 import griffe
 
 from .parse import (
@@ -66,18 +67,19 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
 
 
 def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
-    """Return (enum_name, wire_methods) for enums with a field-level `wire=`.
+    """Return (enum_name, wire_methods) for enums with a field-level `type=`.
 
     Walks struct fields, finds those whose annotation is one of the module's
-    enum classes and whose `field(...)` call carries a `wire=` marker, then
-    looks up the wire-method table. Last write wins on conflicting wires for
-    the same enum.
+    enum classes, and pulls the `type=` primitive name out of `field(...)`.
+    Enum-typed fields are required to specify `type=` — missing or unknown
+    primitives raise a ClickException so the bpc command exits cleanly.
+    Last write wins on conflicting types for the same enum.
     """
     out: dict[str, dict] = {}
     for cls in mod.classes.values():
         if cls.is_alias:
             continue
-        for _, attr in cls.attributes.items():
+        for fname, attr in cls.attributes.items():
             if "instance-attribute" not in attr.labels:
                 continue
             if not isinstance(attr.annotation, griffe.ExprName):
@@ -85,9 +87,17 @@ def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
             type_name = attr.annotation.name
             if type_name not in enum_names:
                 continue
-            wire = name_kwarg(attr.value, "field", "wire")
-            if wire is None or wire not in WIRE_METHODS:
-                continue
+            wire = name_kwarg(attr.value, "field", "type")
+            if wire is None:
+                raise click.ClickException(
+                    f"{cls.name}.{fname}: enum-typed field requires "
+                    f"field(type=<primitive>) — e.g. type=uvarint32"
+                )
+            if wire not in WIRE_METHODS:
+                raise click.ClickException(
+                    f"{cls.name}.{fname}: unknown wire primitive {wire!r}; "
+                    f"valid: {sorted(WIRE_METHODS)}"
+                )
             out[type_name] = WIRE_METHODS[wire]
     return list(out.items())
 
