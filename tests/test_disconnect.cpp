@@ -35,11 +35,12 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
 
     bp::DisconnectPacket<500> old_pkt;
     old_pkt.messages = bp::DisconnectPacketMessages<500>{"bye"};
-    REQUIRE(old_pkt.messages->message == "bye");
+    REQUIRE(std::get<bp::DisconnectPacketMessages<500>>(old_pkt.messages).message
+            == "bye");
 
     bp::DisconnectPacket<622> pkt;
     pkt.reason = bp::DisconnectFailReason<622>::Kicked;
-    pkt.messages.reset();
+    pkt.messages = std::monostate{};
     REQUIRE(pkt.reason == bp::DisconnectFailReason<622>::Kicked);
-    REQUIRE_FALSE(pkt.messages.has_value());
+    REQUIRE(std::holds_alternative<std::monostate>(pkt.messages));
 }

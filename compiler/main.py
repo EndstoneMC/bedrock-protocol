@@ -58,30 +58,53 @@ def _is_int_enum(cls) -> bool:
     return any("IntEnum" in str(b) for b in cls.bases)
 
 
+def _split_top_level(s: str, sep: str) -> list[str]:
+    """Split `s` by `sep`, ignoring separators inside [ ] brackets."""
+    parts: list[str] = []
+    depth = 0
+    last = 0
+    for i, ch in enumerate(s):
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+        elif ch == sep and depth == 0:
+            parts.append(s[last:i].strip())
+            last = i + 1
+    parts.append(s[last:].strip())
+    return parts
+
+
 def _resolve_type(
     py_type: str, class_names: set[str], enum_names: set[str]
 ) -> str | None:
     """Map a Python type expression to a C++ type. None if unmappable.
 
-    Handles `X | None` → `std::optional<X>`, routes user-defined classes
-    through their `ProtocolVersion` template, and uses the inner `::Value`
-    enum type for IntEnum classes.
+    Routes user-defined classes through their `ProtocolVersion` template, uses
+    the inner `::Value` enum type for IntEnum classes, and maps explicit
+    `Union[A, B, None]` to `std::variant<A, B, std::monostate>` — variants
+    model on-the-wire discriminated unions.
     """
     py_type = py_type.strip()
-    optional = py_type.endswith("| None")
-    if optional:
-        py_type = py_type[: -len("| None")].strip()
+    if py_type.startswith("Union[") and py_type.endswith("]"):
+        members = _split_top_level(py_type[len("Union[") : -1], ",")
+        parts: list[str] = []
+        for member in members:
+            if member == "None":
+                parts.append("std::monostate")
+                continue
+            resolved = _resolve_type(member, class_names, enum_names)
+            if resolved is None:
+                return None
+            parts.append(resolved)
+        return f"std::variant<{', '.join(parts)}>"
     if py_type in enum_names:
-        ctype = f"{py_type}<ProtocolVersion>::Value"
-    elif py_type in class_names:
-        ctype = f"{py_type}<ProtocolVersion>"
-    elif py_type in _PRIMITIVE_TYPES:
-        ctype = _PRIMITIVE_TYPES[py_type]
-    else:
-        return None
-    if optional:
-        ctype = f"std::optional<{ctype}>"
-    return ctype
+        return f"{py_type}<ProtocolVersion>::Value"
+    if py_type in class_names:
+        return f"{py_type}<ProtocolVersion>"
+    if py_type in _PRIMITIVE_TYPES:
+        return _PRIMITIVE_TYPES[py_type]
+    return None
 
 
 def _parse_field_default(raw: str) -> tuple[bool, int | None]:
