@@ -2,4 +2,4 @@ from protocol._primitives import uvarint64
 
 package = "bedrock.protocol"
 
-ActorRuntimeID = uvarint64
+type ActorRuntimeID = uvarint64

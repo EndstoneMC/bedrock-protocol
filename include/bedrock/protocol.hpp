@@ -7,7 +7,7 @@
 
 namespace bedrock::protocol {
 template <typename T>
-struct Codec;
+struct Serializer;
 }  // namespace bedrock::protocol
 
 #include "protocol/all.hpp"  // IWYU pragma: keep

@@ -44,20 +44,20 @@ TEST_CASE("DisconnectPacket id is a static constexpr and reason appears at v622"
     REQUIRE(std::holds_alternative<std::monostate>(pkt.messages));
 }
 
-TEST_CASE("Codec<DisconnectFailReason<622>>: roundtrip as uvarint32")
+TEST_CASE("Serializer<DisconnectFailReason<622>>: roundtrip as uvarint32")
 {
     std::vector<std::uint8_t> buf;
     bp::BinaryStream out{buf};
 
-    using DfrCodec = bp::Codec<bp::DisconnectFailReason<>>;
-    DfrCodec::serialize(out, bp::DisconnectFailReason<622>::Kicked);
+    using Serializer = bp::Serializer<bp::DisconnectFailReason<>>;
+    Serializer::serialize(out, bp::DisconnectFailReason<622>::Kicked);
 
     // 55 < 128 → single byte, no continuation bit.
     REQUIRE(buf.size() == 1);
     REQUIRE(buf[0] == 55);
 
     bp::ReadOnlyBinaryStream in{buf};
-    auto v = DfrCodec::deserialize(in);
+    auto v = Serializer::deserialize(in);
     REQUIRE(v.has_value());
     REQUIRE(*v == bp::DisconnectFailReason<622>::Kicked);
 }

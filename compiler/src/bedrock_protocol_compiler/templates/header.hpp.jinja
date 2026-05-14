@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <variant>
-{% if codecs %}
+{% if serializers %}
 
 #include <system_error>
 
@@ -34,10 +34,13 @@ enum {{ name }} : {{ ctype }} {};
 {% include "class.jinja" %}
 {% endif %}
 {% endfor %}
-{% for enum_name, m in codecs %}
+{% for enum_name, m in serializers %}
+
+template <typename T>
+struct Serializer;
 
 template <int ProtocolVersion>
-struct Codec<{{ enum_name }}<ProtocolVersion>> {
+struct Serializer<{{ enum_name }}<ProtocolVersion>> {
     using Value = typename {{ enum_name }}<ProtocolVersion>::Value;
 
     static void serialize(BinaryStream &stream, Value value)

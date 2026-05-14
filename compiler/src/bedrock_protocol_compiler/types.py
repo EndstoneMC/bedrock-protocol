@@ -14,8 +14,8 @@ PRIMITIVE_TYPES = {
 
 
 # Wire-encoding name → (BinaryStream write method, ReadOnlyBinaryStream read
-# method, underlying C++ integer the codec converts to/from). Used by the
-# generated Codec specializations.
+# method, underlying C++ integer the serializer converts to/from). Used by the
+# generated Serializer specializations.
 WIRE_METHODS = {
     "uvarint32": {
         "write": "writeUnsignedVarInt",

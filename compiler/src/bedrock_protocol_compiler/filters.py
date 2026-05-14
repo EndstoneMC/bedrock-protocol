@@ -65,7 +65,7 @@ def class_fields(cls, class_names: set[str], enum_names: set[str]) -> dict | Non
     }
 
 
-def enum_codecs(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
+def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
     """Return (enum_name, wire_methods) for enums with a field-level `wire=`.
 
     Walks struct fields, finds those whose annotation is one of the module's
