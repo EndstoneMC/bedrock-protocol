@@ -44,21 +44,19 @@ enum {{ name }} : {{ ctype }} {};
 
 template <>
 struct Serializer<v{{ cp }}::{{ enum_name }}> {
-    using Value = v{{ cp }}::{{ enum_name }};
-    using Result = std::expected<Value, std::error_code>;
-
-    static void serialize(BinaryStream &stream, Value value)
+    static void serialize(BinaryStream &stream, v{{ cp }}::{{ enum_name }} value)
     {
         stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream) -> Result
+    static auto deserialize(ReadOnlyBinaryStream &stream)
+        -> std::expected<v{{ cp }}::{{ enum_name }}, std::error_code>
     {
         auto v = stream.{{ m.read }}();
         if (!v) {
             return tl::unexpected{v.error()};
         }
-        return static_cast<Value>(*v);
+        return static_cast<v{{ cp }}::{{ enum_name }}>(*v);
     }
 };
 {% endfor %}
@@ -66,21 +64,19 @@ struct Serializer<v{{ cp }}::{{ enum_name }}> {
 
 template <>
 struct Serializer<{{ enum_name }}> {
-    using Value = {{ enum_name }};
-    using Result = std::expected<Value, std::error_code>;
-
-    static void serialize(BinaryStream &stream, Value value)
+    static void serialize(BinaryStream &stream, {{ enum_name }} value)
     {
         stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream) -> Result
+    static auto deserialize(ReadOnlyBinaryStream &stream)
+        -> std::expected<{{ enum_name }}, std::error_code>
     {
         auto v = stream.{{ m.read }}();
         if (!v) {
             return tl::unexpected{v.error()};
         }
-        return static_cast<Value>(*v);
+        return static_cast<{{ enum_name }}>(*v);
     }
 };
 {% endif %}
@@ -96,10 +92,7 @@ struct Serializer<{{ enum_name }}> {
 
 template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
 struct Serializer<{{ member.name }}_<ProtocolVersion>> {
-    using Value = {{ member.name }}_<ProtocolVersion>;
-    using Result = std::expected<Value, std::error_code>;
-
-    static void serialize(BinaryStream &stream, const Value &value)
+    static void serialize(BinaryStream &stream, const {{ member.name }}_<ProtocolVersion> &value)
     {
 {% for field in visible %}
 {% if field.kind == "enum" or field.kind == "struct" %}
@@ -115,9 +108,10 @@ struct Serializer<{{ member.name }}_<ProtocolVersion>> {
 {% endfor %}
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream) -> Result
+    static auto deserialize(ReadOnlyBinaryStream &stream)
+        -> std::expected<{{ member.name }}_<ProtocolVersion>, std::error_code>
     {
-        Value out;
+        {{ member.name }}_<ProtocolVersion> out;
 {% for field in visible %}
 {% if field.kind == "enum" or field.kind == "struct" %}
         {

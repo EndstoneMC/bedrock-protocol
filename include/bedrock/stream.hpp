@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -14,11 +15,28 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 #include <vector>
 
 #include "expected.hpp"  // IWYU pragma: keep
 
 namespace bedrock::protocol {
+
+namespace details {
+#if defined(__cpp_lib_byteswap) && __cpp_lib_byteswap >= 202110L
+using std::byteswap;
+#else
+template <std::integral T>
+constexpr T byteswap(T value) noexcept
+{
+    static_assert(std::has_unique_object_representations_v<T>,
+                  "T may not have padding bits");
+    auto repr = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
+    std::ranges::reverse(repr);
+    return std::bit_cast<T>(repr);
+}
+#endif
+}  // namespace details
 
 class ReadOnlyBinaryStream {
 public:
@@ -65,16 +83,12 @@ public:
 
     auto getSignedBigEndianInt() -> Result<std::int32_t>
     {
-        std::uint32_t value = 0;
+        std::int32_t value = 0;
         auto r = read(&value, sizeof(value));
         if (!r) {
             return tl::unexpected{r.error()};
         }
-#if defined(_MSC_VER)
-        return static_cast<std::int32_t>(_byteswap_ulong(value));
-#else
-        return static_cast<std::int32_t>(__builtin_bswap32(value));
-#endif
+        return details::byteswap(value);
     }
 
     auto getUnsignedVarInt() -> Result<std::uint32_t>
@@ -194,10 +208,7 @@ public:
 
     void writeSignedBigEndianInt(std::int32_t value)
     {
-        using T = decltype(value);
-        auto repr = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
-        std::ranges::reverse(repr);
-        auto v = std::bit_cast<T>(repr);
+        auto v = details::byteswap(value);
         write(&v, sizeof(v));
     }
 
