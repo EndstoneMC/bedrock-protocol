@@ -25,8 +25,7 @@ namespace std {
 template <std::integral T>
 constexpr T byteswap(T value) noexcept
 {
-    static_assert(std::has_unique_object_representations_v<T>,
-                  "T may not have padding bits");
+    static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
     auto repr = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
     std::ranges::reverse(repr);
     return std::bit_cast<T>(repr);
@@ -78,16 +77,6 @@ public:
     auto getSignedInt64() -> Result<std::int64_t> { return fixedLE<std::int64_t>(); }
     auto getFloat() -> Result<float> { return fixedLE<float>(); }
     auto getDouble() -> Result<double> { return fixedLE<double>(); }
-
-    auto getSignedBigEndianInt() -> Result<std::int32_t>
-    {
-        std::int32_t value = 0;
-        auto r = read(&value, sizeof(value));
-        if (!r) {
-            return tl::unexpected{r.error()};
-        }
-        return std::byteswap(value);
-    }
 
     auto getUnsignedVarInt() -> Result<std::uint32_t>
     {
@@ -204,12 +193,6 @@ public:
     void writeFloat(float v) { write(&v, sizeof(v)); }
     void writeDouble(double v) { write(&v, sizeof(v)); }
 
-    void writeSignedBigEndianInt(std::int32_t value)
-    {
-        auto v = std::byteswap(value);
-        write(&v, sizeof(v));
-    }
-
     void writeUnsignedVarInt(std::uint32_t value)
     {
         do {
@@ -245,6 +228,49 @@ public:
     }
 
     void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
+
+    template <std::integral T>
+    void write(T value)
+    {
+        write<T, std::endian::little>(value);
+    }
+
+    template <std::integral T, std::endian Order>
+    void write(T value)
+    {
+        if constexpr (sizeof(T) == 1) {
+            writeByte(static_cast<std::uint8_t>(value));
+        }
+        else if constexpr (Order != std::endian::native) {
+            T swapped = std::byteswap(value);
+            write(&swapped, sizeof(swapped));
+        }
+        else {
+            write(&value, sizeof(value));
+        }
+    }
+
+    template <std::integral T, bool Varint>
+        requires Varint
+    void write(T value)
+    {
+        if constexpr (std::is_signed_v<T>) {
+            if constexpr (sizeof(T) <= 4) {
+                writeVarInt(static_cast<std::int32_t>(value));
+            }
+            else {
+                writeVarInt64(static_cast<std::int64_t>(value));
+            }
+        }
+        else {
+            if constexpr (sizeof(T) <= 4) {
+                writeUnsignedVarInt(static_cast<std::uint32_t>(value));
+            }
+            else {
+                writeUnsignedVarInt64(static_cast<std::uint64_t>(value));
+            }
+        }
+    }
 
 private:
     void write(const void *data, std::size_t size)
