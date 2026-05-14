@@ -6,6 +6,10 @@ PRIMITIVE_TYPES = {
     "str": "std::string",
     "int": "int",
     "bool": "bool",
+    "varint32": "std::int32_t",
+    "varint64": "std::int64_t",
+    "uvarint32": "std::uint32_t",
+    "uvarint64": "std::uint64_t",
 }
 
 
