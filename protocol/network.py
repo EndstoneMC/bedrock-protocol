@@ -1,13 +1,14 @@
 from enum import IntEnum
 
-from protocol._dsl import field, packet
+from protocol._dsl import field, packet, enum
 from protocol.common import int32, uint16, uint8
 
 package = "bedrock.protocol"
 
 
+@enum(since=554)
 class PacketCompressionAlgorithm(IntEnum):
-    Z_LIB = 0
+    ZLIB = 0
     SNAPPY = 1
     NONE = 0xFFFF
 
@@ -18,10 +19,10 @@ class NetworkSettingsPacket:
     compression and client-side packet throttling."""
 
     compression_threshold: uint16
-    compression_algorithm: PacketCompressionAlgorithm = field(type=uint16)
-    client_throttle_enabled: bool
-    client_throttle_threshold: uint8
-    client_throttle_scalar: float
+    compression_algorithm: PacketCompressionAlgorithm = field(type=uint16, since=554)
+    client_throttle_enabled: bool = field(since=554)
+    client_throttle_threshold: uint8 = field(since=554)
+    client_throttle_scalar: float = field(since=554)
 
 
 @packet(id=193)
