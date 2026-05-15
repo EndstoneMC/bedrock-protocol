@@ -1,12 +1,12 @@
 from enum import IntEnum
 
 from protocol._dsl import field, packet, value
-from protocol.common import Vec3, uint8, uvarint64, varint32
+from protocol.common import Vec3, uint8, uvarint64, varint32, varint64
 
 package = "bedrock.protocol"
 
 type ActorRuntimeID = uvarint64
-
+type ActorUniqueID = varint64
 
 class ActorEvent(IntEnum):
     NONE = 0
@@ -81,3 +81,34 @@ class ActorEventPacket:
     event_id: ActorEvent = field(type=uint8)
     data: varint32
     fire_at_position: Vec3 | None = field(since=975)
+
+
+class AnimateAction(IntEnum):
+    NO_ACTION = 0
+    SWING = 1
+    WAKE_UP = 3
+    CRITICAL_HIT = 4
+    MAGIC_CRITICAL_HIT = 5
+
+
+class ActorSwingSource(IntEnum):
+    NONE = 0
+    BUILD = 1
+    MINE = 2
+    INTERACT = 3
+    ATTACK = 4
+    USE_ITEM = 5
+    THROW_ITEM = 6
+    DROP_ITEM = 7
+    EVENT = 8
+
+
+@packet(id=44)
+class AnimatePacket:
+    """Combination of server-bound and client-bound packets that trigger
+    animations."""
+
+    action: AnimateAction = field(type=uint8)
+    target_runtime_id: ActorRuntimeID
+    data: float
+    swing_source: ActorSwingSource | None = field(type=str)

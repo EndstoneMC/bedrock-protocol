@@ -1,4 +1,4 @@
-add_executable(${PROJECT_NAME}_tests test_disconnect.cpp test_network.cpp)
+add_executable(${PROJECT_NAME}_tests test_actor.cpp test_disconnect.cpp test_network.cpp)
 target_link_libraries(${PROJECT_NAME}_tests PRIVATE
     bedrock::protocol
     Catch2::Catch2WithMain

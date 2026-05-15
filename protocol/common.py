@@ -14,6 +14,9 @@ type uint32 = int
 type uint64 = int
 type double = float
 
+class Vec2:
+    x: float
+    y: float
 
 class Vec3:
     x: float
