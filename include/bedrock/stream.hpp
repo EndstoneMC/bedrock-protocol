@@ -35,18 +35,17 @@ constexpr T byteswap(T value) noexcept
 
 namespace bedrock::protocol {
 
-class ReadOnlyBinaryStream {
+class BinaryReader {
 public:
     template <class T>
     using Result = std::expected<T, std::error_code>;
 
-    explicit ReadOnlyBinaryStream(std::span<const std::uint8_t> buf) : view_(buf) {}
+    explicit BinaryReader(std::span<const std::uint8_t> buf) : view_(buf) {}
 
     void setReadPointer(std::size_t p) { read_pos_ = p; }
     [[nodiscard]] auto getReadPointer() const { return read_pos_; }
     [[nodiscard]] auto getUnreadLength() const { return view_.size() - read_pos_; }
     [[nodiscard]] auto getLength() const { return view_.size(); }
-    [[nodiscard]] auto hasOverflowed() const { return overflowed_; }
     [[nodiscard]] auto getView() const { return view_; }
     [[nodiscard]] auto canRead() const { return read_pos_ < view_.size(); }
 
@@ -139,15 +138,11 @@ public:
 private:
     auto read(void *target, std::size_t num) -> Result<void>
     {
-        if (overflowed_) {
-            return make_unexpected(std::make_error_code(std::errc::invalid_seek));
-        }
         if (num == 0) {
             return {};
         }
         const auto end = read_pos_ + num;
         if (end < read_pos_ || end > view_.size()) {
-            overflowed_ = true;
             return make_unexpected(std::make_error_code(std::errc::no_message_available));
         }
         std::memcpy(target, view_.data() + read_pos_, num);
@@ -157,13 +152,11 @@ private:
 
     std::span<const std::uint8_t> view_;
     std::size_t read_pos_ = 0;
-    bool overflowed_ = false;
 };
 
-class BinaryStream : public ReadOnlyBinaryStream {
+class BinaryStream {
 public:
-    BinaryStream() : ReadOnlyBinaryStream({}), buffer_(owned_) {}
-    explicit BinaryStream(std::vector<std::uint8_t> &buffer) : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
+    explicit BinaryStream(std::vector<std::uint8_t> &buffer) : buffer_(buffer) {}
 
     void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
 
@@ -238,7 +231,6 @@ private:
         buffer_.insert(buffer_.end(), p, p + size);
     }
 
-    std::vector<std::uint8_t> owned_;
     std::vector<std::uint8_t> &buffer_;
 };
 

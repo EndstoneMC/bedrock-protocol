@@ -48,8 +48,8 @@
    like `->` or `=>`, straight quotes. If you reach for a semicolon to
    join two clauses, either rewrite as one sentence or break into two.
 
-6. **Stream wire API is templated, not named.** `(ReadOnly)BinaryStream`
-   exposes I/O exclusively through templates:
+6. **Stream wire API is templated, not named.** `BinaryReader` and
+   `BinaryStream` expose I/O exclusively through templates:
     - `read<T>()` / `write<T>(v)` -- fixed-width, native-endian little by
       default
     - `read<T, std::endian>()` / `write<T, std::endian>(v)` -- fixed-width

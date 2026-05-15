@@ -5,7 +5,7 @@
 namespace bedrock::protocol {
 
 class BinaryStream;
-class ReadOnlyBinaryStream;
+class BinaryReader;
 
 template <typename T>
 struct Serializer;
@@ -24,7 +24,7 @@ void serialize(BinaryStream &stream, const V &value)
 }
 
 template <typename T>
-auto deserialize(ReadOnlyBinaryStream &stream)
+auto deserialize(BinaryReader &stream)
 {
     return Serializer<T>::deserialize(stream);
 }

@@ -31,7 +31,7 @@ TEST_CASE("DisconnectPacket: id + round-trip without messages")
     bp::serialize(out, pkt);
     REQUIRE(buf == std::vector<std::uint8_t>{0x6E, 0x01});  // zigzag(55), disc=1
 
-    bp::ReadOnlyBinaryStream in{buf};
+    bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::DisconnectPacket>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->reason == bp::DisconnectFailReason::Kicked);
@@ -51,7 +51,7 @@ TEST_CASE("DisconnectPacket: round-trip with messages")
         0x6E, 0x00, 0x03, 'b', 'y', 'e', 0x03, '*', '*', '*',
     });
 
-    bp::ReadOnlyBinaryStream in{buf};
+    bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::DisconnectPacket>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->messages->message == "bye");

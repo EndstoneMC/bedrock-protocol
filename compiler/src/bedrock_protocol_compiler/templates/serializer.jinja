@@ -11,7 +11,7 @@ struct Serializer<{{ enum_name }}_<ProtocolVersion>> {
 {% endif %}
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream) -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
     {
 {% if m.varint %}
         auto v = stream.readVarInt<{{ m.underlying }}>();
@@ -71,7 +71,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% endfor %}
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream) -> std::expected<{{ member.name }}{{ self_t }}, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<{{ member.name }}{{ self_t }}, std::error_code>
     {
         {{ member.name }}{{ self_t }} out;
 {% for field in visible %}
