@@ -216,7 +216,7 @@ def class_fields(
 
     Returns `None` if any type is unmappable. Otherwise:
       - `constants`: list of (name, ctype, value); currently just the packet
-        `id` when the class is decorated with `@packet(id=N)`.
+        `Id` when the class is decorated with `@packet(id=N)`.
       - `specializations`: list of (since_min, since_max_excl, visible_fields)
         ranges. Always has at least one entry — a class with no version-gated
         fields collapses to a single `(None, None, all_fields)` specialization,
@@ -228,7 +228,7 @@ def class_fields(
     constants: list[tuple[str, str, str]] = []
     pid = class_packet_id(cls)
     if pid is not None:
-        constants.append(("id", "int", str(pid)))
+        constants.append(("Id", "int", str(pid)))
     raw_fields: list[dict] = []
     for name, attr in cls.attributes.items():
         if attr.annotation is None:

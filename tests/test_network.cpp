@@ -5,7 +5,7 @@ namespace bp = bedrock::protocol;
 
 TEST_CASE("RequestNetworkSettingsPacket: id + big-endian round-trip")
 {
-    STATIC_REQUIRE(bp::RequestNetworkSettingsPacket::id == 193);
+    STATIC_REQUIRE(bp::RequestNetworkSettingsPacket::Id == 193);
 
     bp::RequestNetworkSettingsPacket pkt{975};
 
@@ -22,7 +22,7 @@ TEST_CASE("RequestNetworkSettingsPacket: id + big-endian round-trip")
 
 TEST_CASE("NetworkSettingsPacket: id + round-trip with enum field")
 {
-    STATIC_REQUIRE(bp::NetworkSettingsPacket::id == 143);
+    STATIC_REQUIRE(bp::NetworkSettingsPacket::Id == 143);
 
     bp::NetworkSettingsPacket pkt;
     pkt.compression_threshold = 256;

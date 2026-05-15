@@ -21,7 +21,7 @@ TEST_CASE("DisconnectPacketMessages: filtered_message added at v712")
 
 TEST_CASE("DisconnectPacket: id + round-trip without messages")
 {
-    STATIC_REQUIRE(bp::DisconnectPacket_<622>::id == 5);
+    STATIC_REQUIRE(bp::DisconnectPacket_<622>::Id == 5);
 
     bp::DisconnectPacket pkt;
     pkt.reason = bp::DisconnectFailReason::Kicked;
