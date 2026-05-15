@@ -18,7 +18,7 @@ struct Serializer<{{ enum_name }}_<ProtocolVersion>> {
 {% else %}
         auto v = stream.read<{{ m.underlying }}>();
 {% endif %}
-        if (!v) return std::unexpected{v.error()};
+        if (!v) return make_unexpected(v.error());
         return static_cast<typename {{ enum_name }}_<ProtocolVersion>::Value>(*v);
     }
 };
@@ -52,6 +52,8 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% elif field.kind == "primitive" %}
 {% if field.varint %}
         stream.writeVarInt<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
+{% elif field.big_endian %}
+        stream.write<{{ field.underlying }}, std::endian::big>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
 {% else %}
         stream.write<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
 {% endif %}
@@ -76,48 +78,50 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% if field.kind == "enum" %}
         {
             auto v = Serializer<{{ field.type_name }}_<ProtocolVersion>>::deserialize(stream);
-            if (!v) return std::unexpected{v.error()};
+            if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "struct" %}
         {
             auto v = Serializer<{{ field.type_name }}{% if field.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-            if (!v) return std::unexpected{v.error()};
+            if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "string" %}
         {
             auto v = stream.read<std::string>();
-            if (!v) return std::unexpected{v.error()};
+            if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "primitive" %}
         {
 {% if field.varint %}
             auto v = stream.readVarInt<{{ field.underlying }}>();
+{% elif field.big_endian %}
+            auto v = stream.read<{{ field.underlying }}, std::endian::big>();
 {% else %}
             auto v = stream.read<{{ field.underlying }}>();
 {% endif %}
-            if (!v) return std::unexpected{v.error()};
+            if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = static_cast<{{ field.ctype }}>(*v);
         }
 {% elif field.kind == "optional" %}
         {
             auto present = stream.read<bool>();
-            if (!present) return std::unexpected{present.error()};
+            if (!present) return make_unexpected(present.error());
             if (*present) {
                 auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-                if (!v) return std::unexpected{v.error()};
+                if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = *v;
             }
         }
 {% elif field.kind == "optional_variant" %}
         {
             auto tag = stream.readVarInt<std::uint32_t>();
-            if (!tag) return std::unexpected{tag.error()};
+            if (!tag) return make_unexpected(tag.error());
             if (*tag == 0) {
                 auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-                if (!v) return std::unexpected{v.error()};
+                if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = *v;
             }
         }

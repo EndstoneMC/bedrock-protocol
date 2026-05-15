@@ -52,7 +52,7 @@ public:
 
     // Fixed-width read, native-endian little by default.
     template <typename T>
-        requires (std::integral<T> || std::floating_point<T>)
+        requires(std::integral<T> || std::floating_point<T>)
     auto read() -> Result<T>
     {
         return read<T, std::endian::little>();
@@ -61,19 +61,23 @@ public:
     // Fixed-width read with explicit byte order. `bool` is a special case
     // that accepts any non-zero byte as true (matching the wire convention).
     template <typename T, std::endian Order>
-        requires (std::integral<T> || std::floating_point<T>)
+        requires(std::integral<T> || std::floating_point<T>)
     auto read() -> Result<T>
     {
         if constexpr (std::same_as<T, bool>) {
             std::uint8_t b = 0;
             auto r = read(&b, 1);
-            if (!r) return std::unexpected{r.error()};
+            if (!r) {
+                return make_unexpected(r.error());
+            }
             return b != 0;
         }
         else {
             T value{};
             auto r = read(&value, sizeof(value));
-            if (!r) return std::unexpected{r.error()};
+            if (!r) {
+                return make_unexpected(r.error());
+            }
             if constexpr (sizeof(T) == 1 || Order == std::endian::native) {
                 return value;
             }
@@ -93,10 +97,14 @@ public:
     auto read() -> Result<std::string>
     {
         auto len = readVarInt<std::uint32_t>();
-        if (!len) return std::unexpected{len.error()};
+        if (!len) {
+            return make_unexpected(len.error());
+        }
         std::string out(*len, '\0');
         auto r = read(out.data(), *len);
-        if (!r) return std::unexpected{r.error()};
+        if (!r) {
+            return make_unexpected(r.error());
+        }
         return out;
     }
 
@@ -112,7 +120,9 @@ public:
         for (int n = 0; n < kMaxBytes; ++n) {
             std::uint8_t b = 0;
             auto r = read(&b, 1);
-            if (!r) return std::unexpected{r.error()};
+            if (!r) {
+                return make_unexpected(r.error());
+            }
             value |= (static_cast<U>(b) & U{0x7F}) << (n * 7);
             if ((b & 0x80u) == 0) {
                 if constexpr (std::is_signed_v<T>) {
@@ -123,14 +133,14 @@ public:
                 }
             }
         }
-        return std::unexpected{std::make_error_code(std::errc::value_too_large)};
+        return make_unexpected(std::make_error_code(std::errc::value_too_large));
     }
 
 private:
     auto read(void *target, std::size_t num) -> Result<void>
     {
         if (overflowed_) {
-            return std::unexpected{std::make_error_code(std::errc::invalid_seek)};
+            return make_unexpected(std::make_error_code(std::errc::invalid_seek));
         }
         if (num == 0) {
             return {};
@@ -138,7 +148,7 @@ private:
         const auto end = read_pos_ + num;
         if (end < read_pos_ || end > view_.size()) {
             overflowed_ = true;
-            return std::unexpected{std::make_error_code(std::errc::no_message_available)};
+            return make_unexpected(std::make_error_code(std::errc::no_message_available));
         }
         std::memcpy(target, view_.data() + read_pos_, num);
         read_pos_ = end;
@@ -159,12 +169,15 @@ public:
 
     // Fixed-width write, native-endian little by default.
     template <typename T>
-        requires (std::integral<T> || std::floating_point<T>)
-    void write(T value) { write<T, std::endian::little>(value); }
+        requires(std::integral<T> || std::floating_point<T>)
+    void write(T value)
+    {
+        write<T, std::endian::little>(value);
+    }
 
     // Fixed-width write with explicit byte order.
     template <typename T, std::endian Order>
-        requires (std::integral<T> || std::floating_point<T>)
+        requires(std::integral<T> || std::floating_point<T>)
     void write(T value)
     {
         if constexpr (sizeof(T) == 1) {

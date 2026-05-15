@@ -8,6 +8,7 @@ from .parse import (
     name_kwarg,
     parse_member_value,
     since_kwarg,
+    str_kwarg,
 )
 from .types import PRIMITIVE_TYPES, VARINT_PRIMITIVES, resolve_type
 
@@ -122,13 +123,16 @@ def _serialize_kind_for_type(
         # Built-in primitives win over alias_wires: the codegen knows their
         # wire encoding directly via PRIMITIVE_TYPES + VARINT_PRIMITIVES,
         # without consulting whatever `type varint32 = int` happens to alias
-        # to in common.py.
+        # to in common.py. `big_endian` defaults to False here -- it is a
+        # per-field choice (`field(endian="big")`) applied by the caller,
+        # not a property of the type.
         if name in PRIMITIVE_TYPES:
             return {
                 "kind": "primitive",
                 "type_name": None,
                 "underlying": PRIMITIVE_TYPES[name],
                 "varint": name in VARINT_PRIMITIVES,
+                "big_endian": False,
             }
         if name in alias_wires:
             w = alias_wires[name]
@@ -137,6 +141,7 @@ def _serialize_kind_for_type(
                 "type_name": name,
                 "underlying": w["underlying"],
                 "varint": w["varint"],
+                "big_endian": False,
             }
     return None
 
@@ -154,8 +159,19 @@ def _field_serialize_kind(
     (`X | None`, bool-flag wire with 1=present), and `optional_variant`
     (`X | None` with `field(type=Union)`, varint-discriminator wire with
     0=present and 1=absent for compat with gophertunnel's HideX pattern).
+
+    A `field(endian="big")` marker flips a primitive field's `big_endian`
+    flag so the codegen emits `stream.write<T, std::endian::big>(...)`. It
+    is only valid on fixed-width primitive fields.
     """
     ann = attr.annotation
+    endian = str_kwarg(attr.value, "field", "endian") if attr.value is not None else None
+    if endian is not None and endian not in ("big", "little"):
+        raise click.ClickException(
+            f'{attr.name}: field(endian=...) must be "big" or "little", '
+            f"got {endian!r}"
+        )
+
     if (
         isinstance(ann, griffe.ExprBinOp)
         and ann.operator == "|"
@@ -169,11 +185,24 @@ def _field_serialize_kind(
             return None
         marker = name_kwarg(attr.value, "field", "type") if attr.value else None
         if marker == "Union":
-            return {"kind": "optional_variant", "inner": inner}
-        return {"kind": "optional", "inner": inner}
-    return _serialize_kind_for_type(
-        ann, class_names, enum_names, templated_classes, alias_wires
-    )
+            info = {"kind": "optional_variant", "inner": inner}
+        else:
+            info = {"kind": "optional", "inner": inner}
+    else:
+        info = _serialize_kind_for_type(
+            ann, class_names, enum_names, templated_classes, alias_wires
+        )
+        if info is None:
+            return None
+
+    if endian is not None:
+        if info["kind"] != "primitive":
+            raise click.ClickException(
+                f"{attr.name}: field(endian=...) only applies to "
+                f"fixed-width primitive fields"
+            )
+        info = {**info, "big_endian": endian == "big"}
+    return info
 
 
 def class_fields(

@@ -50,6 +50,28 @@ def name_kwarg(expr, fn_name: str, kw: str) -> str | None:
     return None
 
 
+def str_kwarg(expr, fn_name: str, kw: str) -> str | None:
+    """If `expr` is `fn_name(..., kw="X")` and X is a string literal, return X.
+
+    griffe surfaces a literal as its raw source text, so a string keeps its
+    surrounding quotes (`'"big"'`) -- those are stripped here. Returns None
+    for a missing kwarg or a non-string value.
+    """
+    if not (
+        isinstance(expr, griffe.ExprCall)
+        and isinstance(expr.function, griffe.ExprName)
+        and expr.function.name == fn_name
+    ):
+        return None
+    for arg in expr.arguments:
+        if not (isinstance(arg, griffe.ExprKeyword) and arg.name == kw):
+            continue
+        v = arg.value
+        if isinstance(v, str) and len(v) >= 2 and v[0] in "\"'" and v[-1] == v[0]:
+            return v[1:-1]
+    return None
+
+
 def parse_member_value(value) -> tuple[int, int | None, int | None] | None:
     """Parse `0` or `value(N, since=V, until=U)`. Returns (int_value, since, until)."""
     direct = as_int(value)
