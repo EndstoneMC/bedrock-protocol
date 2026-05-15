@@ -48,6 +48,7 @@ def compute_templated_classes(classes, enum_names: set[str]) -> set[str]:
     templated: set[str] = set()
     for c in classes:
         from .parse import is_int_enum
+
         if is_int_enum(c):
             continue
         if _class_has_field_since(c):
@@ -58,6 +59,7 @@ def compute_templated_classes(classes, enum_names: set[str]) -> set[str]:
         changed = False
         for c in classes:
             from .parse import is_int_enum
+
             if is_int_enum(c) or c.name in templated:
                 continue
             for _, attr in c.attributes.items():
@@ -90,7 +92,10 @@ def type_alias_wires(mod) -> dict[str, dict]:
     for name, attr in mod.attributes.items():
         if name == "package" or attr.value is None or name in PRIMITIVE_TYPES:
             continue
-        if isinstance(attr.value, griffe.ExprName) and attr.value.name in PRIMITIVE_TYPES:
+        if (
+            isinstance(attr.value, griffe.ExprName)
+            and attr.value.name in PRIMITIVE_TYPES
+        ):
             out[name] = _info(attr.value.name)
     for name, ta in mod.type_aliases.items():
         if ta.value is None or name in PRIMITIVE_TYPES:
@@ -111,7 +116,7 @@ def _serialize_kind_for_type(
     if isinstance(ann, griffe.ExprName):
         name = ann.name
         if name in enum_names:
-            return {"kind": "enum", "type_name": name}
+            return {"kind": "enum", "type_name": name, "templated": True}
         if name in class_names:
             return {
                 "kind": "struct",
@@ -146,6 +151,36 @@ def _serialize_kind_for_type(
     return None
 
 
+def _enum_wire(type_kw: str | None, field_name: str) -> dict:
+    """Resolve an enum field's `field(type=...)` to a wire spec.
+
+    `type=str` yields `{"string": True}`, a name-coded enum (the codegen
+    reads/writes the enumerator name). Any other primitive yields
+    `{"string": False, "underlying": <c++ type>, "varint": <bool>}`, an
+    integer-coded enum. A missing or non-primitive `type=` is a hard error.
+
+    The wire encoding belongs to the field, not the enum, so the same enum
+    can be string-coded in one field and integer-coded in another.
+    """
+    if type_kw is None:
+        raise click.ClickException(
+            f"{field_name}: enum-typed field requires field(type=<primitive>) "
+            f"-- e.g. type=uvarint32 or type=str"
+        )
+    if type_kw == "str":
+        return {"string": True}
+    if type_kw not in PRIMITIVE_TYPES:
+        raise click.ClickException(
+            f"{field_name}: unknown wire primitive {type_kw!r}; "
+            f"valid: {sorted(PRIMITIVE_TYPES)}"
+        )
+    return {
+        "string": False,
+        "underlying": PRIMITIVE_TYPES[type_kw],
+        "varint": type_kw in VARINT_PRIMITIVES,
+    }
+
+
 def _field_serialize_kind(
     attr,
     class_names: set[str],
@@ -160,17 +195,22 @@ def _field_serialize_kind(
     (`X | None` with `field(type=Union)`, varint-discriminator wire with
     0=present and 1=absent for compat with gophertunnel's HideX pattern).
 
+    An `enum` kind (direct, or as an `optional` inner) carries a `wire` spec
+    resolved from `field(type=...)` -- see `_enum_wire`.
+
     A `field(endian="big")` marker flips a primitive field's `big_endian`
     flag so the codegen emits `stream.write<T, std::endian::big>(...)`. It
     is only valid on fixed-width primitive fields.
     """
     ann = attr.annotation
-    endian = str_kwarg(attr.value, "field", "endian") if attr.value is not None else None
+    endian = (
+        str_kwarg(attr.value, "field", "endian") if attr.value is not None else None
+    )
     if endian is not None and endian not in ("big", "little"):
         raise click.ClickException(
-            f'{attr.name}: field(endian=...) must be "big" or "little", '
-            f"got {endian!r}"
+            f'{attr.name}: field(endian=...) must be "big" or "little", got {endian!r}'
         )
+    type_kw = name_kwarg(attr.value, "field", "type") if attr.value is not None else None
 
     if (
         isinstance(ann, griffe.ExprBinOp)
@@ -183,8 +223,7 @@ def _field_serialize_kind(
         )
         if inner is None:
             return None
-        marker = name_kwarg(attr.value, "field", "type") if attr.value else None
-        if marker == "Union":
+        if type_kw == "Union":
             info = {"kind": "optional_variant", "inner": inner}
         else:
             info = {"kind": "optional", "inner": inner}
@@ -194,6 +233,19 @@ def _field_serialize_kind(
         )
         if info is None:
             return None
+
+    if info["kind"] == "enum":
+        info["wire"] = _enum_wire(type_kw, attr.name)
+    elif (
+        info["kind"] in ("optional", "optional_variant")
+        and info["inner"]["kind"] == "enum"
+    ):
+        if info["kind"] == "optional_variant":
+            raise click.ClickException(
+                f"{attr.name}: an optional enum field needs field(type=) for the "
+                f"enum wire primitive and so cannot also use type=Union"
+            )
+        info["inner"]["wire"] = _enum_wire(type_kw, attr.name)
 
     if endian is not None:
         if info["kind"] != "primitive":
@@ -242,9 +294,7 @@ def class_fields(
             attr, class_names, enum_names, templated_classes, alias_wires
         ) or {"kind": "unknown"}
         since = since_kwarg(attr.value, "field") if attr.value is not None else None
-        raw_fields.append(
-            {"name": name, "ctype": ctype, "since": since, **kind_info}
-        )
+        raw_fields.append({"name": name, "ctype": ctype, "since": since, **kind_info})
 
     is_templated = cls.name in templated_classes
     sinces = sorted({f["since"] for f in raw_fields if f["since"] is not None})
@@ -271,41 +321,41 @@ def class_fields(
 
 
 def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
-    """Return (enum_name, wire_info) for enums with a field-level `type=`.
+    """Return (enum_name, codec) for every enum a struct field encodes as a
+    string via `field(type=str)`.
 
-    Walks struct fields, finds those whose annotation is one of the module's
-    enum classes, and pulls the `type=` primitive name out of `field(...)`.
-    Enum-typed fields are required to specify `type=` — missing or unknown
-    primitives raise a ClickException so the bpc command exits cleanly. Last
-    write wins on conflicting types for the same enum. The returned info is
-    `{"underlying": <c++ type>, "varint": <bool>}`.
+    These enums need a `Serializer<Enum_<V>>` specialization that reads and
+    writes the enumerator name lowercased with underscores stripped
+    (`THROW_ITEM` -> `throwitem`). `codec` is `{"members": [(name, wire), ...]}`.
+
+    Integer-coded enum uses get no `Serializer` -- the codegen inlines a cast
+    around `stream.read`/`write` at the field site (see `_enum_wire`), so the
+    same enum may be string-coded in one field and integer-coded in another.
     """
+    enum_classes = {c.name: c for c in mod.classes.values() if not c.is_alias}
     out: dict[str, dict] = {}
     for cls in mod.classes.values():
         if cls.is_alias:
             continue
-        for fname, attr in cls.attributes.items():
-            if "instance-attribute" not in attr.labels:
+        for attr in cls.attributes.values():
+            if "instance-attribute" not in attr.labels or attr.value is None:
                 continue
-            if not isinstance(attr.annotation, griffe.ExprName):
+            ann = attr.annotation
+            if (
+                isinstance(ann, griffe.ExprBinOp)
+                and ann.operator == "|"
+                and (ann.right == "None" or ann.left == "None")
+            ):
+                ann = ann.left if ann.right == "None" else ann.right
+            if not isinstance(ann, griffe.ExprName) or ann.name not in enum_names:
                 continue
-            type_name = attr.annotation.name
-            if type_name not in enum_names:
+            if name_kwarg(attr.value, "field", "type") != "str":
                 continue
-            wire = name_kwarg(attr.value, "field", "type")
-            if wire is None:
-                raise click.ClickException(
-                    f"{cls.name}.{fname}: enum-typed field requires "
-                    f"field(type=<primitive>) — e.g. type=uvarint32"
-                )
-            if wire not in PRIMITIVE_TYPES:
-                raise click.ClickException(
-                    f"{cls.name}.{fname}: unknown wire primitive {wire!r}; "
-                    f"valid: {sorted(PRIMITIVE_TYPES)}"
-                )
-            out[type_name] = {
-                "underlying": PRIMITIVE_TYPES[wire],
-                "varint": wire in VARINT_PRIMITIVES,
+            entries = enum_members(enum_classes[ann.name])["entries"]
+            out[ann.name] = {
+                "members": [
+                    (n, n.lower().replace("_", "")) for n, _, _, _ in entries
+                ]
             }
     return list(out.items())
 
@@ -393,14 +443,14 @@ def enum_ranges(cls) -> list[tuple[int | None, int | None, list[tuple[str, int]]
     if cs is None:
         first = sorted_points[0]
         visible = [
-            (n, v) for n, v, s, u in entries
-            if s is None and (u is None or first <= u)
+            (n, v) for n, v, s, u in entries if s is None and (u is None or first <= u)
         ]
         if visible:
             # Representative V = first - 1; any V in [0, first).
             rep = first - 1
             visible = [
-                (n, v) for n, v, s, u in entries
+                (n, v)
+                for n, v, s, u in entries
                 if (s is None or s <= rep) and (u is None or rep < u)
             ]
             ranges.append((None, first, visible))
@@ -408,7 +458,8 @@ def enum_ranges(cls) -> list[tuple[int | None, int | None, list[tuple[str, int]]
     for i, lo in enumerate(sorted_points):
         hi = sorted_points[i + 1] if i + 1 < len(sorted_points) else None
         visible = [
-            (n, v) for n, v, s, u in entries
+            (n, v)
+            for n, v, s, u in entries
             if (s is None or s <= lo) and (u is None or lo < u)
         ]
         ranges.append((lo, hi, visible))

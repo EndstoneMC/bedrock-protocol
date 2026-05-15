@@ -51,7 +51,9 @@ def resolve_type(
         and (ann.right == "None" or ann.left == "None")
     ):
         other = ann.left if ann.right == "None" else ann.right
-        inner = resolve_type(other, class_names, enum_names, templated_classes, type_aliases)
+        inner = resolve_type(
+            other, class_names, enum_names, templated_classes, type_aliases
+        )
         if inner is None:
             return None
         return f"std::optional<{inner}>"
@@ -70,7 +72,9 @@ def resolve_type(
             if isinstance(member, str) and member == "None":
                 parts.append("std::monostate")
                 continue
-            resolved = resolve_type(member, class_names, enum_names, templated_classes, type_aliases)
+            resolved = resolve_type(
+                member, class_names, enum_names, templated_classes, type_aliases
+            )
             if resolved is None:
                 return None
             parts.append(resolved)
@@ -78,7 +82,11 @@ def resolve_type(
     if isinstance(ann, griffe.ExprName):
         name = ann.name
         if name in enum_names:
-            return f"{name}_<ProtocolVersion>::Value"
+            # `typename` is required when this lands inside a dependent
+            # template argument (std::optional<...>, std::variant<...>) and
+            # merely permitted in a plain member declaration, so emit it
+            # unconditionally.
+            return f"typename {name}_<ProtocolVersion>::Value"
         if name in class_names:
             if name in templated_classes:
                 return f"{name}_<ProtocolVersion>"
