@@ -192,9 +192,7 @@ def _direct_kind(ann, class_names: set[str], enum_names: set[str]) -> _Kind | No
     return None
 
 
-def _build_packet(
-    cls, class_names: set[str], enum_names: set[str]
-) -> PacketDef | None:
+def _build_packet(cls, class_names: set[str], enum_names: set[str]) -> PacketDef | None:
     """Build a `PacketDef` from a non-enum class. None if any field unmappable."""
     members: list[FieldDef] = []
     for name, attr in cls.attributes.items():
@@ -256,7 +254,9 @@ def _collect_enum_wires(
     return out
 
 
-def _build_alias(member, class_names: set[str], enum_names: set[str]) -> AliasDef | None:
+def _build_alias(
+    member, class_names: set[str], enum_names: set[str]
+) -> AliasDef | None:
     """Resolve a module-level alias (plain assignment or PEP 695 `type` stmt)."""
     if member.value is None:
         return None
@@ -294,7 +294,9 @@ def build_module(mod) -> ModuleDef:
         if name in packets_by_name:
             definitions.append(packets_by_name[name])
         elif name in cls_by_name and is_int_enum(cls_by_name[name]):
-            definitions.append(replace(_build_enum(cls_by_name[name]), wire=wires.get(name)))
+            definitions.append(
+                replace(_build_enum(cls_by_name[name]), wire=wires.get(name))
+            )
         elif isinstance(member, (griffe.Attribute, griffe.TypeAlias)):
             alias = _build_alias(member, class_names, enum_names)
             if alias is not None:

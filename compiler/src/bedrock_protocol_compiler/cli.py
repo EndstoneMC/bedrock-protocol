@@ -129,7 +129,8 @@ def main(
         serializers = enum_serializers(mod, enum_names)
         has_struct_serializer = any(
             not is_int_enum(c)
-            and class_fields(c, class_names, enum_names, templated_classes, alias_wires) is not None
+            and class_fields(c, class_names, enum_names, templated_classes, alias_wires)
+            is not None
             for c in own_classes
         )
         has_serializers = bool(serializers) or has_struct_serializer
@@ -138,8 +139,9 @@ def main(
                 click.echo(f"skip {inp} (nothing to emit)")
             continue
         env.filters["class_fields"] = (
-            lambda cls, _cn=class_names, _en=enum_names, _tc=templated_classes, _aw=alias_wires:
-            class_fields(cls, _cn, _en, _tc, _aw)
+            lambda cls, _cn=class_names, _en=enum_names, _tc=templated_classes, _aw=alias_wires: (
+                class_fields(cls, _cn, _en, _tc, _aw)
+            )
         )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
@@ -185,7 +187,9 @@ def _imports_from(mod) -> set[str]:
     return out
 
 
-def _module_name_and_root(path: Path, import_paths: tuple[Path, ...]) -> tuple[str, Path]:
+def _module_name_and_root(
+    path: Path, import_paths: tuple[Path, ...]
+) -> tuple[str, Path]:
     """Return (dotted module name, search root) for `path`.
 
     Anchored on the nearest containing `--import-path`. Falls back to
@@ -206,10 +210,7 @@ def _module_name_and_root(path: Path, import_paths: tuple[Path, ...]) -> tuple[s
 
 def _module_dependencies(mod, known_modules: set[str], self_module: str) -> set[str]:
     """Return the set of `known_modules` that `mod` imports from."""
-    return {
-        d for d in _imports_from(mod)
-        if d != self_module and d in known_modules
-    }
+    return {d for d in _imports_from(mod) if d != self_module and d in known_modules}
 
 
 if __name__ == "__main__":
