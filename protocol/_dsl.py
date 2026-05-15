@@ -33,10 +33,10 @@ def field(
       to a single-byte bool flag + payload; passing `typing.Union` switches
       to a varint discriminator (`0` = present, `1` = None) instead.
     - `since`: protocol version that introduced the field.
-    - `endian`: byte order for a fixed-width primitive field, `"big"` or
-      `"little"` (the default). Bedrock sends primitives little-endian or as
-      varints almost everywhere, the rare exception being a connection's
-      initial protocol version.
+    - `endian`: byte order for a fixed-width primitive or integer-coded enum
+      field, `"big"` or `"little"` (the default). Bedrock sends primitives
+      little-endian or as varints almost everywhere, the rare exceptions
+      being a connection's initial protocol version and the play status.
     """
     return None
 

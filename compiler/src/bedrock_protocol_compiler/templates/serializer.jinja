@@ -46,6 +46,8 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
         Serializer<{{ field.type_name }}_<ProtocolVersion>>::serialize(stream, value.{{ field.name }});
 {% elif field.kind == "enum" and field.wire.varint %}
         stream.writeVarInt<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
+{% elif field.kind == "enum" and field.wire.big_endian %}
+        stream.write<{{ field.wire.underlying }}, std::endian::big>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
 {% elif field.kind == "enum" %}
         stream.write<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
 {% elif field.kind == "struct" %}
@@ -96,6 +98,8 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
         {
 {% if field.wire.varint %}
             auto v = stream.readVarInt<{{ field.wire.underlying }}>();
+{% elif field.wire.big_endian %}
+            auto v = stream.read<{{ field.wire.underlying }}, std::endian::big>();
 {% else %}
             auto v = stream.read<{{ field.wire.underlying }}>();
 {% endif %}

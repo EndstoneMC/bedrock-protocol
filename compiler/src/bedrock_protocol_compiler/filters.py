@@ -156,8 +156,10 @@ def _enum_wire(type_kw: str | None, field_name: str) -> dict:
 
     `type=str` yields `{"string": True}`, a name-coded enum (the codegen
     reads/writes the enumerator name). Any other primitive yields
-    `{"string": False, "underlying": <c++ type>, "varint": <bool>}`, an
-    integer-coded enum. A missing or non-primitive `type=` is a hard error.
+    `{"string": False, "underlying": <c++ type>, "varint": <bool>,
+    "big_endian": <bool>}`, an integer-coded enum. `big_endian` defaults
+    False and is flipped by a `field(endian="big")` on the field. A missing
+    or non-primitive `type=` is a hard error.
 
     The wire encoding belongs to the field, not the enum, so the same enum
     can be string-coded in one field and integer-coded in another.
@@ -178,6 +180,7 @@ def _enum_wire(type_kw: str | None, field_name: str) -> dict:
         "string": False,
         "underlying": PRIMITIVE_TYPES[type_kw],
         "varint": type_kw in VARINT_PRIMITIVES,
+        "big_endian": False,
     }
 
 
@@ -198,9 +201,10 @@ def _field_serialize_kind(
     An `enum` kind (direct, or as an `optional` inner) carries a `wire` spec
     resolved from `field(type=...)` -- see `_enum_wire`.
 
-    A `field(endian="big")` marker flips a primitive field's `big_endian`
-    flag so the codegen emits `stream.write<T, std::endian::big>(...)`. It
-    is only valid on fixed-width primitive fields.
+    A `field(endian="big")` marker flips the `big_endian` flag on a
+    fixed-width primitive field, or on a fixed-width integer-coded enum
+    field's `wire` spec, so the codegen emits
+    `stream.write<T, std::endian::big>(...)`.
     """
     ann = attr.annotation
     endian = (
@@ -248,12 +252,19 @@ def _field_serialize_kind(
         info["inner"]["wire"] = _enum_wire(type_kw, attr.name)
 
     if endian is not None:
-        if info["kind"] != "primitive":
+        if info["kind"] == "primitive":
+            info = {**info, "big_endian": endian == "big"}
+        elif (
+            info["kind"] == "enum"
+            and not info["wire"]["string"]
+            and not info["wire"]["varint"]
+        ):
+            info["wire"] = {**info["wire"], "big_endian": endian == "big"}
+        else:
             raise click.ClickException(
-                f"{attr.name}: field(endian=...) only applies to "
-                f"fixed-width primitive fields"
+                f"{attr.name}: field(endian=...) only applies to fixed-width "
+                f"primitive or fixed-width integer-coded enum fields"
             )
-        info = {**info, "big_endian": endian == "big"}
     return info
 
 
