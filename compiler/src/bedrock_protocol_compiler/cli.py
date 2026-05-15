@@ -30,6 +30,14 @@ from .parse import class_since, is_int_enum
     help="Output directory for per-input .hpp files.",
 )
 @click.option(
+    "--import-path",
+    "import_paths",
+    multiple=True,
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    help="Search root for resolving `from X.Y import ...` between inputs. "
+    "Repeatable. Mirrors protoc's `--proto_path`.",
+)
+@click.option(
     "--latest",
     "latest_version",
     type=int,
@@ -47,6 +55,7 @@ from .parse import class_since, is_int_enum
 def main(
     verbose: bool,
     out_dir: Path,
+    import_paths: tuple[Path, ...],
     latest_version: int,
     inputs: tuple[Path, ...],
 ):
@@ -65,19 +74,44 @@ def main(
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pre-load every input so each file's `from X.Y import ...` can be resolved
-    # against the others. Keyed by the dotted module path that import statements
-    # would use (e.g. "protocol.common").
+    resolved_import_paths = tuple(p.resolve() for p in import_paths)
+
+    # Load explicit inputs, anchoring each on the nearest --import-path so its
+    # dotted name matches what `from X.Y import ...` would use elsewhere.
     mods: dict[str, tuple] = {}
+    output_modules: set[str] = set()
     for inp in inputs:
-        mod = griffe.load(
-            inp.stem, search_paths=[str(inp.parent)], allow_inspection=False
-        )
-        module_name = f"{inp.parent.name}.{inp.stem}" if inp.parent.name else inp.stem
-        mods[module_name] = (mod, inp)
+        name, root = _module_name_and_root(inp, resolved_import_paths)
+        mod = griffe.load(name, search_paths=[str(root)], allow_inspection=False)
+        mods[name] = (mod, inp)
+        output_modules.add(name)
+
+    # Follow imports out of the explicit inputs to load referenced modules from
+    # --import-path roots. Modules loaded this way provide context for type
+    # resolution but do not themselves produce output. Same protobuf split as
+    # `--proto_path` vs the explicit `.proto` arguments.
+    pending = list(output_modules)
+    while pending:
+        cur = pending.pop()
+        cur_mod, _ = mods[cur]
+        for dep_name in _imports_from(cur_mod):
+            if dep_name in mods:
+                continue
+            parts = dep_name.split(".")
+            for ip in resolved_import_paths:
+                candidate = ip.joinpath(*parts).with_suffix(".py")
+                if candidate.is_file():
+                    dep_mod = griffe.load(
+                        dep_name, search_paths=[str(ip)], allow_inspection=False
+                    )
+                    mods[dep_name] = (dep_mod, None)
+                    pending.append(dep_name)
+                    break
+
     known_modules = set(mods)
 
-    for module_name, (mod, inp) in mods.items():
+    for module_name in output_modules:
+        mod, inp = mods[module_name]
         deps = sorted(_module_dependencies(mod, known_modules, module_name))
         own_classes = [c for c in mod.classes.values() if not c.is_alias]
         extra_classes: list = []
@@ -127,15 +161,16 @@ def main(
             click.echo(f"wrote {target}")
 
 
-def _module_dependencies(mod, known_modules: set[str], self_module: str) -> set[str]:
-    """Return the set of `known_modules` that `mod` imports from.
+def _imports_from(mod) -> set[str]:
+    """Dotted source modules referenced by `from X.Y import ...` aliases.
 
-    Walks `mod.members` for griffe Alias entries (one per `from X.Y import Name`
-    binding) and extracts the source module from each alias's target path.
-    Modules outside `known_modules` (typing, enum, protocol._dsl, etc.) are
-    ignored.
+    Walks `mod.members` for griffe Alias entries (one per imported binding)
+    and extracts the source module from each alias's target path. Modules
+    whose path contains any component starting with `_` (private modules
+    like `protocol._dsl`) are skipped: they exist only to support the
+    schema DSL and have no header to emit or include.
     """
-    deps: set[str] = set()
+    out: set[str] = set()
     for _, member in mod.members.items():
         target = getattr(member, "target_path", None)
         if target is None:
@@ -143,10 +178,38 @@ def _module_dependencies(mod, known_modules: set[str], self_module: str) -> set[
         target_str = str(target)
         if "." not in target_str:
             continue
-        candidate = target_str.rsplit(".", 1)[0]
-        if candidate != self_module and candidate in known_modules:
-            deps.add(candidate)
-    return deps
+        dep = target_str.rsplit(".", 1)[0]
+        if any(part.startswith("_") for part in dep.split(".")):
+            continue
+        out.add(dep)
+    return out
+
+
+def _module_name_and_root(path: Path, import_paths: tuple[Path, ...]) -> tuple[str, Path]:
+    """Return (dotted module name, search root) for `path`.
+
+    Anchored on the nearest containing `--import-path`. Falls back to
+    `<parent.name>.<stem>` and `path.parent` when no import-path contains it.
+    """
+    path = path.resolve()
+    for ip in import_paths:
+        try:
+            rel = path.relative_to(ip)
+        except ValueError:
+            continue
+        return ".".join(rel.with_suffix("").parts), ip
+    return (
+        (f"{path.parent.name}.{path.stem}" if path.parent.name else path.stem),
+        path.parent,
+    )
+
+
+def _module_dependencies(mod, known_modules: set[str], self_module: str) -> set[str]:
+    """Return the set of `known_modules` that `mod` imports from."""
+    return {
+        d for d in _imports_from(mod)
+        if d != self_module and d in known_modules
+    }
 
 
 if __name__ == "__main__":

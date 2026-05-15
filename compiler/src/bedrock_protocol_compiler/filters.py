@@ -9,7 +9,7 @@ from .parse import (
     parse_member_value,
     since_kwarg,
 )
-from .types import PRIMITIVE_TYPES, WIRE_METHODS, resolve_type
+from .types import PRIMITIVE_TYPES, VARINT_PRIMITIVES, resolve_type
 
 
 def _has_named_ref(ann, names: set[str]) -> bool:
@@ -71,24 +71,31 @@ def compute_templated_classes(classes, enum_names: set[str]) -> set[str]:
 
 
 def type_alias_wires(mod) -> dict[str, dict]:
-    """Map module-level alias name to its wire methods, when the alias target
-    is a primitive with a known wire encoding.
+    """Map module-level alias name to its wire info, when the alias target is
+    a primitive with a known wire encoding.
 
-    Covers both `X = primitive` (plain assignment) and PEP 695
-    `type X = primitive` (which griffe surfaces in `mod.type_aliases`).
-    Aliases whose target is not a primitive in WIRE_METHODS are skipped.
+    Covers both `X = primitive` and PEP 695 `type X = primitive`. The returned
+    info is `{"underlying": <c++ type>, "varint": <bool>}` — enough for the
+    codegen to emit `stream.write<U, true>(...)` or `stream.write<U>(...)`.
     """
     out: dict[str, dict] = {}
+
+    def _info(prim_name: str) -> dict:
+        return {
+            "underlying": PRIMITIVE_TYPES[prim_name],
+            "varint": prim_name in VARINT_PRIMITIVES,
+        }
+
     for name, attr in mod.attributes.items():
-        if name == "package" or attr.value is None:
+        if name == "package" or attr.value is None or name in PRIMITIVE_TYPES:
             continue
-        if isinstance(attr.value, griffe.ExprName) and attr.value.name in WIRE_METHODS:
-            out[name] = WIRE_METHODS[attr.value.name]
+        if isinstance(attr.value, griffe.ExprName) and attr.value.name in PRIMITIVE_TYPES:
+            out[name] = _info(attr.value.name)
     for name, ta in mod.type_aliases.items():
-        if ta.value is None:
+        if ta.value is None or name in PRIMITIVE_TYPES:
             continue
-        if isinstance(ta.value, griffe.ExprName) and ta.value.name in WIRE_METHODS:
-            out[name] = WIRE_METHODS[ta.value.name]
+        if isinstance(ta.value, griffe.ExprName) and ta.value.name in PRIMITIVE_TYPES:
+            out[name] = _info(ta.value.name)
     return out
 
 
@@ -112,23 +119,24 @@ def _serialize_kind_for_type(
             }
         if name == "str":
             return {"kind": "string"}
+        # Built-in primitives win over alias_wires: the codegen knows their
+        # wire encoding directly via PRIMITIVE_TYPES + VARINT_PRIMITIVES,
+        # without consulting whatever `type varint32 = int` happens to alias
+        # to in common.py.
+        if name in PRIMITIVE_TYPES:
+            return {
+                "kind": "primitive",
+                "type_name": None,
+                "underlying": PRIMITIVE_TYPES[name],
+                "varint": name in VARINT_PRIMITIVES,
+            }
         if name in alias_wires:
             w = alias_wires[name]
             return {
                 "kind": "primitive",
                 "type_name": name,
-                "wire_write": w["write"],
-                "wire_read": w["read"],
                 "underlying": w["underlying"],
-            }
-        if name in WIRE_METHODS:
-            w = WIRE_METHODS[name]
-            return {
-                "kind": "primitive",
-                "type_name": None,
-                "wire_write": w["write"],
-                "wire_read": w["read"],
-                "underlying": w["underlying"],
+                "varint": w["varint"],
             }
     return None
 
@@ -234,13 +242,14 @@ def class_fields(
 
 
 def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
-    """Return (enum_name, wire_methods) for enums with a field-level `type=`.
+    """Return (enum_name, wire_info) for enums with a field-level `type=`.
 
     Walks struct fields, finds those whose annotation is one of the module's
     enum classes, and pulls the `type=` primitive name out of `field(...)`.
     Enum-typed fields are required to specify `type=` — missing or unknown
-    primitives raise a ClickException so the bpc command exits cleanly.
-    Last write wins on conflicting types for the same enum.
+    primitives raise a ClickException so the bpc command exits cleanly. Last
+    write wins on conflicting types for the same enum. The returned info is
+    `{"underlying": <c++ type>, "varint": <bool>}`.
     """
     out: dict[str, dict] = {}
     for cls in mod.classes.values():
@@ -260,12 +269,15 @@ def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
                     f"{cls.name}.{fname}: enum-typed field requires "
                     f"field(type=<primitive>) — e.g. type=uvarint32"
                 )
-            if wire not in WIRE_METHODS:
+            if wire not in PRIMITIVE_TYPES:
                 raise click.ClickException(
                     f"{cls.name}.{fname}: unknown wire primitive {wire!r}; "
-                    f"valid: {sorted(WIRE_METHODS)}"
+                    f"valid: {sorted(PRIMITIVE_TYPES)}"
                 )
-            out[type_name] = WIRE_METHODS[wire]
+            out[type_name] = {
+                "underlying": PRIMITIVE_TYPES[wire],
+                "varint": wire in VARINT_PRIMITIVES,
+            }
     return list(out.items())
 
 

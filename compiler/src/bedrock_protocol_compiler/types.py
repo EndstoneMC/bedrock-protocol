@@ -23,23 +23,11 @@ PRIMITIVE_TYPES = {
 }
 
 
-WIRE_METHODS = {
-    "bool":      {"write": "writeBool",                "read": "getBool",                "underlying": "bool"},
-    "int8":      {"write": "writeByte",                "read": "getByte",                "underlying": "std::uint8_t"},
-    "uint8":     {"write": "writeByte",                "read": "getByte",                "underlying": "std::uint8_t"},
-    "int16":     {"write": "writeSignedShort",         "read": "getSignedShort",         "underlying": "std::int16_t"},
-    "uint16":    {"write": "writeUnsignedShort",       "read": "getUnsignedShort",       "underlying": "std::uint16_t"},
-    "int32":     {"write": "writeSignedInt",           "read": "getSignedInt",           "underlying": "std::int32_t"},
-    "uint32":    {"write": "writeUnsignedInt",         "read": "getUnsignedInt",         "underlying": "std::uint32_t"},
-    "int64":     {"write": "writeSignedInt64",         "read": "getSignedInt64",         "underlying": "std::int64_t"},
-    "uint64":    {"write": "writeUnsignedInt64",       "read": "getUnsignedInt64",       "underlying": "std::uint64_t"},
-    "varint32":  {"write": "writeVarInt",              "read": "getVarInt",              "underlying": "std::int32_t"},
-    "varint64":  {"write": "writeVarInt64",            "read": "getVarInt64",            "underlying": "std::int64_t"},
-    "uvarint32": {"write": "writeUnsignedVarInt",      "read": "getUnsignedVarInt",      "underlying": "std::uint32_t"},
-    "uvarint64": {"write": "writeUnsignedVarInt64",    "read": "getUnsignedVarInt64",    "underlying": "std::uint64_t"},
-    "float":     {"write": "writeFloat",               "read": "getFloat",               "underlying": "float"},
-    "double":    {"write": "writeDouble",              "read": "getDouble",              "underlying": "double"},
-}
+# Subset of PRIMITIVE_TYPES that map to a varint wire encoding. The codegen
+# uses this to choose between `stream.write<T, true>(v)` (varint) and
+# `stream.write<T>(v)` (fixed-width little-endian) when emitting Serializer
+# bodies — no per-primitive method-name table is needed.
+VARINT_PRIMITIVES = {"varint32", "varint64", "uvarint32", "uvarint64"}
 
 
 def resolve_type(

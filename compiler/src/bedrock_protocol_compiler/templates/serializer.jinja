@@ -4,16 +4,21 @@ template <int ProtocolVersion>
 struct Serializer<{{ enum_name }}_<ProtocolVersion>> {
     static void serialize(BinaryStream &stream, typename {{ enum_name }}_<ProtocolVersion>::Value value)
     {
-        stream.{{ m.write }}(static_cast<{{ m.underlying }}>(value));
+{% if m.varint %}
+        stream.writeVarInt<{{ m.underlying }}>(static_cast<{{ m.underlying }}>(value));
+{% else %}
+        stream.write<{{ m.underlying }}>(static_cast<{{ m.underlying }}>(value));
+{% endif %}
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream)
-        -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
+    static auto deserialize(ReadOnlyBinaryStream &stream) -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
     {
-        auto v = stream.{{ m.read }}();
-        if (!v) {
-            return tl::unexpected{v.error()};
-        }
+{% if m.varint %}
+        auto v = stream.readVarInt<{{ m.underlying }}>();
+{% else %}
+        auto v = stream.read<{{ m.underlying }}>();
+{% endif %}
+        if (!v) return std::unexpected{v.error()};
         return static_cast<typename {{ enum_name }}_<ProtocolVersion>::Value>(*v);
     }
 };
@@ -43,16 +48,20 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% elif field.kind == "struct" %}
         Serializer<{{ field.type_name }}{% if field.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, value.{{ field.name }});
 {% elif field.kind == "string" %}
-        stream.writeString(value.{{ field.name }});
+        stream.write(value.{{ field.name }});
 {% elif field.kind == "primitive" %}
-        stream.{{ field.wire_write }}(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
+{% if field.varint %}
+        stream.writeVarInt<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
+{% else %}
+        stream.write<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
+{% endif %}
 {% elif field.kind == "optional" %}
-        stream.writeBool(value.{{ field.name }}.has_value());
+        stream.write<bool>(value.{{ field.name }}.has_value());
         if (value.{{ field.name }}.has_value()) {
             Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, *value.{{ field.name }});
         }
 {% elif field.kind == "optional_variant" %}
-        stream.writeUnsignedVarInt(value.{{ field.name }}.has_value() ? 0u : 1u);
+        stream.writeVarInt<std::uint32_t>(value.{{ field.name }}.has_value() ? 0u : 1u);
         if (value.{{ field.name }}.has_value()) {
             Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, *value.{{ field.name }});
         }
@@ -60,68 +69,55 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% endfor %}
     }
 
-    static auto deserialize(ReadOnlyBinaryStream &stream)
-        -> std::expected<{{ member.name }}{{ self_t }}, std::error_code>
+    static auto deserialize(ReadOnlyBinaryStream &stream) -> std::expected<{{ member.name }}{{ self_t }}, std::error_code>
     {
         {{ member.name }}{{ self_t }} out;
 {% for field in visible %}
 {% if field.kind == "enum" %}
         {
             auto v = Serializer<{{ field.type_name }}_<ProtocolVersion>>::deserialize(stream);
-            if (!v) {
-                return tl::unexpected{v.error()};
-            }
+            if (!v) return std::unexpected{v.error()};
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "struct" %}
         {
             auto v = Serializer<{{ field.type_name }}{% if field.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-            if (!v) {
-                return tl::unexpected{v.error()};
-            }
+            if (!v) return std::unexpected{v.error()};
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "string" %}
         {
-            auto v = stream.getString();
-            if (!v) {
-                return tl::unexpected{v.error()};
-            }
+            auto v = stream.read<std::string>();
+            if (!v) return std::unexpected{v.error()};
             out.{{ field.name }} = *v;
         }
 {% elif field.kind == "primitive" %}
         {
-            auto v = stream.{{ field.wire_read }}();
-            if (!v) {
-                return tl::unexpected{v.error()};
-            }
+{% if field.varint %}
+            auto v = stream.readVarInt<{{ field.underlying }}>();
+{% else %}
+            auto v = stream.read<{{ field.underlying }}>();
+{% endif %}
+            if (!v) return std::unexpected{v.error()};
             out.{{ field.name }} = static_cast<{{ field.ctype }}>(*v);
         }
 {% elif field.kind == "optional" %}
         {
-            auto present = stream.getBool();
-            if (!present) {
-                return tl::unexpected{present.error()};
-            }
+            auto present = stream.read<bool>();
+            if (!present) return std::unexpected{present.error()};
             if (*present) {
                 auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-                if (!v) {
-                    return tl::unexpected{v.error()};
-                }
+                if (!v) return std::unexpected{v.error()};
                 out.{{ field.name }} = *v;
             }
         }
 {% elif field.kind == "optional_variant" %}
         {
-            auto disc = stream.getUnsignedVarInt();
-            if (!disc) {
-                return tl::unexpected{disc.error()};
-            }
-            if (*disc == 0) {
+            auto tag = stream.readVarInt<std::uint32_t>();
+            if (!tag) return std::unexpected{tag.error()};
+            if (*tag == 0) {
                 auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
-                if (!v) {
-                    return tl::unexpected{v.error()};
-                }
+                if (!v) return std::unexpected{v.error()};
                 out.{{ field.name }} = *v;
             }
         }

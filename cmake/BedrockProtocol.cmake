@@ -128,6 +128,14 @@ function(bedrock_protocol_generate)
         set(_compiler_cmd ${BP_COMPILER_EXE})
     endif()
 
+    # Pass each import dir to bpc as --import-path so it can resolve
+    # `from X.Y import ...` references between inputs when invoked one
+    # input at a time. Mirrors protoc's --proto_path.
+    set(_import_args)
+    foreach(d IN LISTS _import_dirs)
+        list(APPEND _import_args --import-path "${d}")
+    endforeach()
+
     # One custom_command per input keeps the per-file output path simple.
     set(_outputs)
     foreach(p IN LISTS _abs_inputs)
@@ -159,8 +167,10 @@ function(bedrock_protocol_generate)
             OUTPUT  "${_out}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
             COMMAND ${_compiler_cmd}
-                    --out "${_out_dir}" ${BP_COMPILER_OPTIONS} "${p}"
-            DEPENDS "${p}" ${BP_DEPENDENCIES} ${_compiler_dep} ${_compiler_sources}
+                    --out "${_out_dir}" ${_import_args}
+                    ${BP_COMPILER_OPTIONS} "${p}"
+            DEPENDS "${p}" ${_abs_inputs} ${BP_DEPENDENCIES}
+                    ${_compiler_dep} ${_compiler_sources}
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             COMMENT "bpc: generating ${_rel}"
             VERBATIM)

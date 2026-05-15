@@ -50,103 +50,87 @@ public:
     [[nodiscard]] auto getView() const { return view_; }
     [[nodiscard]] auto canRead() const { return read_pos_ < view_.size(); }
 
-    auto getByte() -> Result<std::uint8_t>
+    // Fixed-width read, native-endian little by default.
+    template <typename T>
+        requires (std::integral<T> || std::floating_point<T>)
+    auto read() -> Result<T>
     {
-        std::uint8_t value = 0;
-        auto r = read(&value, sizeof(value));
-        if (!r) {
-            return tl::unexpected{r.error()};
-        }
-        return value;
+        return read<T, std::endian::little>();
     }
 
-    auto getBool() -> Result<bool>
+    // Fixed-width read with explicit byte order. `bool` is a special case
+    // that accepts any non-zero byte as true (matching the wire convention).
+    template <typename T, std::endian Order>
+        requires (std::integral<T> || std::floating_point<T>)
+    auto read() -> Result<T>
     {
-        auto b = getByte();
-        if (!b) {
-            return tl::unexpected{b.error()};
+        if constexpr (std::same_as<T, bool>) {
+            std::uint8_t b = 0;
+            auto r = read(&b, 1);
+            if (!r) return std::unexpected{r.error()};
+            return b != 0;
         }
-        return *b != 0;
-    }
-
-    auto getUnsignedShort() -> Result<std::uint16_t> { return fixedLE<std::uint16_t>(); }
-    auto getSignedShort() -> Result<std::int16_t> { return fixedLE<std::int16_t>(); }
-    auto getUnsignedInt() -> Result<std::uint32_t> { return fixedLE<std::uint32_t>(); }
-    auto getSignedInt() -> Result<std::int32_t> { return fixedLE<std::int32_t>(); }
-    auto getUnsignedInt64() -> Result<std::uint64_t> { return fixedLE<std::uint64_t>(); }
-    auto getSignedInt64() -> Result<std::int64_t> { return fixedLE<std::int64_t>(); }
-    auto getFloat() -> Result<float> { return fixedLE<float>(); }
-    auto getDouble() -> Result<double> { return fixedLE<double>(); }
-
-    auto getUnsignedVarInt() -> Result<std::uint32_t>
-    {
-        std::uint32_t value = 0;
-        for (auto i = 0;; i += 7) {
-            auto byte = getByte();
-            if (!byte) {
-                return tl::unexpected{byte.error()};
+        else {
+            T value{};
+            auto r = read(&value, sizeof(value));
+            if (!r) return std::unexpected{r.error()};
+            if constexpr (sizeof(T) == 1 || Order == std::endian::native) {
+                return value;
             }
-            value |= (static_cast<std::uint32_t>(*byte) & 0x7Fu) << i;
-            if ((*byte & 0x80u) == 0) {
-                break;
+            else if constexpr (std::floating_point<T>) {
+                using U = std::conditional_t<sizeof(T) == 4, std::uint32_t, std::uint64_t>;
+                return std::bit_cast<T>(std::byteswap(std::bit_cast<U>(value)));
+            }
+            else {
+                return std::byteswap(value);
             }
         }
-        return value;
     }
 
-    auto getUnsignedVarInt64() -> Result<std::uint64_t>
+    // Length-prefixed string (varuint32 byte count, then raw bytes).
+    template <typename T>
+        requires std::same_as<T, std::string>
+    auto read() -> Result<std::string>
     {
-        std::uint64_t value = 0;
-        for (auto i = 0;; i += 7) {
-            auto byte = getByte();
-            if (!byte) {
-                return tl::unexpected{byte.error()};
-            }
-            value |= (static_cast<std::uint64_t>(*byte) & std::uint64_t{0x7F}) << i;
-            if ((*byte & 0x80u) == 0) {
-                break;
-            }
-        }
-        return value;
-    }
-
-    auto getVarInt() -> Result<std::int32_t>
-    {
-        auto u = getUnsignedVarInt();
-        if (!u) {
-            return tl::unexpected{u.error()};
-        }
-        return static_cast<std::int32_t>((*u >> 1) ^ -(*u & 1u));
-    }
-
-    auto getVarInt64() -> Result<std::int64_t>
-    {
-        auto u = getUnsignedVarInt64();
-        if (!u) {
-            return tl::unexpected{u.error()};
-        }
-        return static_cast<std::int64_t>((*u >> 1) ^ -(*u & std::uint64_t{1}));
-    }
-
-    auto getString() -> Result<std::string>
-    {
-        auto len = getUnsignedVarInt();
-        if (!len) {
-            return tl::unexpected{len.error()};
-        }
+        auto len = readVarInt<std::uint32_t>();
+        if (!len) return std::unexpected{len.error()};
         std::string out(*len, '\0');
         auto r = read(out.data(), *len);
-        if (!r) {
-            return tl::unexpected{r.error()};
-        }
+        if (!r) return std::unexpected{r.error()};
         return out;
+    }
+
+    // LEB128 varint, zigzag-decoded for signed `T`. Reading more than
+    // ceil(bits(T)/7) continuation bytes is malformed input (5 for 32-bit,
+    // 10 for 64-bit) and yields `value_too_large`.
+    template <std::integral T>
+    auto readVarInt() -> Result<T>
+    {
+        using U = std::make_unsigned_t<T>;
+        constexpr int kMaxBytes = (sizeof(T) * 8 + 6) / 7;
+        U value = 0;
+        for (int n = 0; n < kMaxBytes; ++n) {
+            std::uint8_t b = 0;
+            auto r = read(&b, 1);
+            if (!r) return std::unexpected{r.error()};
+            value |= (static_cast<U>(b) & U{0x7F}) << (n * 7);
+            if ((b & 0x80u) == 0) {
+                if constexpr (std::is_signed_v<T>) {
+                    return static_cast<T>((value >> 1) ^ -(value & U{1}));
+                }
+                else {
+                    return static_cast<T>(value);
+                }
+            }
+        }
+        return std::unexpected{std::make_error_code(std::errc::value_too_large)};
     }
 
 private:
     auto read(void *target, std::size_t num) -> Result<void>
     {
         if (overflowed_) {
-            return tl::unexpected{std::make_error_code(std::errc::invalid_seek)};
+            return std::unexpected{std::make_error_code(std::errc::invalid_seek)};
         }
         if (num == 0) {
             return {};
@@ -154,22 +138,11 @@ private:
         const auto end = read_pos_ + num;
         if (end < read_pos_ || end > view_.size()) {
             overflowed_ = true;
-            return tl::unexpected{std::make_error_code(std::errc::no_message_available)};
+            return std::unexpected{std::make_error_code(std::errc::no_message_available)};
         }
         std::memcpy(target, view_.data() + read_pos_, num);
         read_pos_ = end;
         return {};
-    }
-
-    template <class T>
-    auto fixedLE() -> Result<T>
-    {
-        T value{};
-        auto r = read(&value, sizeof(value));
-        if (!r) {
-            return tl::unexpected{r.error()};
-        }
-        return value;  // host is LE; wire is LE; direct memcpy is the wire value
     }
 
     std::span<const std::uint8_t> view_;
@@ -182,94 +155,64 @@ public:
     BinaryStream() : ReadOnlyBinaryStream({}), buffer_(owned_) {}
     explicit BinaryStream(std::vector<std::uint8_t> &buffer) : ReadOnlyBinaryStream(buffer), buffer_(buffer) {}
 
-    void writeByte(std::uint8_t value) { write(&value, sizeof(value)); }
-    void writeBool(bool value) { writeByte(value ? 1u : 0u); }
-    void writeUnsignedShort(std::uint16_t v) { write(&v, sizeof(v)); }
-    void writeSignedShort(std::int16_t v) { write(&v, sizeof(v)); }
-    void writeUnsignedInt(std::uint32_t v) { write(&v, sizeof(v)); }
-    void writeSignedInt(std::int32_t v) { write(&v, sizeof(v)); }
-    void writeUnsignedInt64(std::uint64_t v) { write(&v, sizeof(v)); }
-    void writeSignedInt64(std::int64_t v) { write(&v, sizeof(v)); }
-    void writeFloat(float v) { write(&v, sizeof(v)); }
-    void writeDouble(double v) { write(&v, sizeof(v)); }
-
-    void writeUnsignedVarInt(std::uint32_t value)
-    {
-        do {
-            std::uint8_t byte = value & 0x7Fu;
-            value >>= 7;
-            writeByte(value ? (byte | 0x80u) : byte);
-        } while (value);
-    }
-
-    void writeUnsignedVarInt64(std::uint64_t value)
-    {
-        do {
-            std::uint8_t byte = value & 0x7Fu;
-            value >>= 7;
-            writeByte(value ? (byte | 0x80u) : byte);
-        } while (value);
-    }
-
-    void writeVarInt(std::int32_t value)
-    {
-        writeUnsignedVarInt(static_cast<std::uint32_t>((value >> 31) ^ (value << 1)));
-    }
-
-    void writeVarInt64(std::int64_t value)
-    {
-        writeUnsignedVarInt64(static_cast<std::uint64_t>((value >> 63) ^ (value << 1)));
-    }
-
-    void writeString(std::string_view value)
-    {
-        writeUnsignedVarInt(static_cast<std::uint32_t>(value.size()));
-        write(value.data(), value.size());
-    }
-
     void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
 
-    template <std::integral T>
-    void write(T value)
-    {
-        write<T, std::endian::little>(value);
-    }
+    // Fixed-width write, native-endian little by default.
+    template <typename T>
+        requires (std::integral<T> || std::floating_point<T>)
+    void write(T value) { write<T, std::endian::little>(value); }
 
-    template <std::integral T, std::endian Order>
+    // Fixed-width write with explicit byte order.
+    template <typename T, std::endian Order>
+        requires (std::integral<T> || std::floating_point<T>)
     void write(T value)
     {
         if constexpr (sizeof(T) == 1) {
-            writeByte(static_cast<std::uint8_t>(value));
+            const auto byte = static_cast<std::uint8_t>(value);
+            write(&byte, 1);
         }
         else if constexpr (Order != std::endian::native) {
-            T swapped = std::byteswap(value);
-            write(&swapped, sizeof(swapped));
+            if constexpr (std::floating_point<T>) {
+                using U = std::conditional_t<sizeof(T) == 4, std::uint32_t, std::uint64_t>;
+                U bits = std::byteswap(std::bit_cast<U>(value));
+                write(&bits, sizeof(bits));
+            }
+            else {
+                T swapped = std::byteswap(value);
+                write(&swapped, sizeof(swapped));
+            }
         }
         else {
             write(&value, sizeof(value));
         }
     }
 
-    template <std::integral T, bool Varint>
-        requires Varint
-    void write(T value)
+    // Length-prefixed string (varuint32 byte count, then raw bytes).
+    void write(std::string_view value)
     {
+        writeVarInt<std::uint32_t>(static_cast<std::uint32_t>(value.size()));
+        write(value.data(), value.size());
+    }
+
+    // LEB128 varint, zigzag-encoded for signed `T`.
+    template <std::integral T>
+    void writeVarInt(T value)
+    {
+        using U = std::make_unsigned_t<T>;
+        U bits;
         if constexpr (std::is_signed_v<T>) {
-            if constexpr (sizeof(T) <= 4) {
-                writeVarInt(static_cast<std::int32_t>(value));
-            }
-            else {
-                writeVarInt64(static_cast<std::int64_t>(value));
-            }
+            constexpr int kShift = sizeof(T) * 8 - 1;
+            bits = static_cast<U>((value >> kShift) ^ (value << 1));
         }
         else {
-            if constexpr (sizeof(T) <= 4) {
-                writeUnsignedVarInt(static_cast<std::uint32_t>(value));
-            }
-            else {
-                writeUnsignedVarInt64(static_cast<std::uint64_t>(value));
-            }
+            bits = value;
         }
+        do {
+            std::uint8_t byte = bits & U{0x7F};
+            bits >>= 7;
+            const auto out = static_cast<std::uint8_t>(bits ? (byte | 0x80u) : byte);
+            write(&out, 1);
+        } while (bits);
     }
 
 private:
