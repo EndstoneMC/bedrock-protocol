@@ -8,6 +8,7 @@ package = "bedrock.protocol"
 type ActorRuntimeID = uvarint64
 type ActorUniqueID = varint64
 
+
 class ActorEvent(IntEnum):
     NONE = 0
     JUMP = 1
@@ -83,14 +84,6 @@ class ActorEventPacket:
     fire_at_position: Vec3 | None = field(since=975)
 
 
-class AnimateAction(IntEnum):
-    NO_ACTION = 0
-    SWING = 1
-    WAKE_UP = 3
-    CRITICAL_HIT = 4
-    MAGIC_CRITICAL_HIT = 5
-
-
 class ActorSwingSource(IntEnum):
     NONE = 0
     BUILD = 1
@@ -108,7 +101,14 @@ class AnimatePacket:
     """Combination of server-bound and client-bound packets that trigger
     animations."""
 
-    action: AnimateAction = field(type=uint8)
+    class Action(IntEnum):
+        NO_ACTION = 0
+        SWING = 1
+        WAKE_UP = 3
+        CRITICAL_HIT = 4
+        MAGIC_CRITICAL_HIT = 5
+
+    action: Action = field(type=uint8)
     target_runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)

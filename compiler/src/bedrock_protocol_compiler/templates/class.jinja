@@ -5,6 +5,16 @@ struct {{ cls.name }} {
 {% elif not f.templated %}
 {% set _, _, visible = f.specializations[0] %}
 struct {{ cls.name }} {
+{% for ename, emembers in f.nested_enums %}
+    struct {{ ename }} {
+        enum Value : int {
+{% for mname, mvalue in emembers %}
+            {{ mname | camelize }} = {{ mvalue }},
+{% endfor %}
+        };
+    };
+
+{% endfor %}
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
@@ -19,6 +29,16 @@ struct {{ cls.name }}_;
 
 template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
 struct {{ cls.name }}_<ProtocolVersion> {
+{% for ename, emembers in f.nested_enums %}
+    struct {{ ename }} {
+        enum Value : int {
+{% for mname, mvalue in emembers %}
+            {{ mname | camelize }} = {{ mvalue }},
+{% endfor %}
+        };
+    };
+
+{% endfor %}
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}
@@ -31,6 +51,16 @@ struct {{ cls.name }}_<ProtocolVersion> {
 {% set _, _, visible = f.specializations[0] %}
 template <int ProtocolVersion>
 struct {{ cls.name }}_ {
+{% for ename, emembers in f.nested_enums %}
+    struct {{ ename }} {
+        enum Value : int {
+{% for mname, mvalue in emembers %}
+            {{ mname | camelize }} = {{ mvalue }},
+{% endfor %}
+        };
+    };
+
+{% endfor %}
 {% for name, type, value in f.constants %}
     static constexpr {{ type }} {{ name }} = {{ value }};
 {% endfor %}

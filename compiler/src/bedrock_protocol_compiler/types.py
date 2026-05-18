@@ -36,14 +36,20 @@ def resolve_type(
     enum_names: set[str],
     templated_classes: set[str] = frozenset(),
     type_aliases: set[str] = frozenset(),
+    nested_enum_names: set[str] = frozenset(),
 ) -> str | None:
     """Map a griffe annotation Expr to a C++ type. None if unmappable.
 
     `templated_classes` is the subset of `class_names` that are emitted as
     class templates (`Foo_<V>`). The complement (plain POD-ish structs)
-    is referenced by its bare name. Enums are always templated. Aliases
-    (`type X = primitive`) emit as `enum X : T {}` at namespace scope and
-    are referenced by their bare name.
+    is referenced by its bare name. Module-scope enums are always templated.
+    Aliases (`type X = primitive`) emit as `enum X : T {}` at namespace scope
+    and are referenced by their bare name.
+
+    `nested_enum_names` are enums declared inside the packet currently being
+    resolved. They emit as a plain `struct E { enum Value ... }` member of the
+    packet, so within that packet's body `E` is a member of the current
+    instantiation and `E::Value` needs no `typename` or `_<V>` suffix.
     """
     if (
         isinstance(ann, griffe.ExprBinOp)
@@ -52,7 +58,12 @@ def resolve_type(
     ):
         other = ann.left if ann.right == "None" else ann.right
         inner = resolve_type(
-            other, class_names, enum_names, templated_classes, type_aliases
+            other,
+            class_names,
+            enum_names,
+            templated_classes,
+            type_aliases,
+            nested_enum_names,
         )
         if inner is None:
             return None
@@ -73,7 +84,12 @@ def resolve_type(
                 parts.append("std::monostate")
                 continue
             resolved = resolve_type(
-                member, class_names, enum_names, templated_classes, type_aliases
+                member,
+                class_names,
+                enum_names,
+                templated_classes,
+                type_aliases,
+                nested_enum_names,
             )
             if resolved is None:
                 return None
@@ -81,6 +97,8 @@ def resolve_type(
         return f"std::variant<{', '.join(parts)}>"
     if isinstance(ann, griffe.ExprName):
         name = ann.name
+        if name in nested_enum_names:
+            return f"{name}::Value"
         if name in enum_names:
             # `typename` is required when this lands inside a dependent
             # template argument (std::optional<...>, std::variant<...>) and

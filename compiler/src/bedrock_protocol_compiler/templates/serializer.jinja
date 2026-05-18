@@ -104,7 +104,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
             auto v = stream.read<{{ field.wire.underlying }}>();
 {% endif %}
             if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = static_cast<typename {{ field.type_name }}_<ProtocolVersion>::Value>(*v);
+            out.{{ field.name }} = static_cast<{{ field.value_cast }}>(*v);
         }
 {% elif field.kind == "struct" %}
         {
@@ -146,7 +146,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
                 auto v = stream.read<{{ field.inner.wire.underlying }}>();
 {% endif %}
                 if (!v) return make_unexpected(v.error());
-                out.{{ field.name }} = static_cast<typename {{ field.inner.type_name }}_<ProtocolVersion>::Value>(*v);
+                out.{{ field.name }} = static_cast<{{ field.inner.value_cast }}>(*v);
 {% else %}
                 auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
                 if (!v) return make_unexpected(v.error());

@@ -8,7 +8,7 @@ TEST_CASE("AnimatePacket: id + round-trip with present string-enum swing source"
     STATIC_REQUIRE(bp::AnimatePacket::Id == 44);
 
     bp::AnimatePacket pkt;
-    pkt.action = bp::AnimateAction::MagicCriticalHit;
+    pkt.action = bp::AnimatePacket::Action::MagicCriticalHit;
     pkt.target_runtime_id = static_cast<bp::ActorRuntimeID>(7);
     pkt.data = 1.5f;
     pkt.swing_source = bp::ActorSwingSource::Attack;  // serialized as the name "attack"
@@ -23,7 +23,7 @@ TEST_CASE("AnimatePacket: id + round-trip with present string-enum swing source"
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::AnimatePacket>(in);
     REQUIRE(rt.has_value());
-    REQUIRE(rt->action == bp::AnimateAction::MagicCriticalHit);
+    REQUIRE(rt->action == bp::AnimatePacket::Action::MagicCriticalHit);
     REQUIRE(rt->target_runtime_id == static_cast<bp::ActorRuntimeID>(7));
     REQUIRE(rt->data == 1.5f);
     REQUIRE(rt->swing_source.has_value());
@@ -33,7 +33,7 @@ TEST_CASE("AnimatePacket: id + round-trip with present string-enum swing source"
 TEST_CASE("AnimatePacket: round-trip with absent swing source")
 {
     bp::AnimatePacket pkt;
-    pkt.action = bp::AnimateAction::Swing;
+    pkt.action = bp::AnimatePacket::Action::Swing;
     pkt.target_runtime_id = static_cast<bp::ActorRuntimeID>(1);
     pkt.data = 0.0f;
 
