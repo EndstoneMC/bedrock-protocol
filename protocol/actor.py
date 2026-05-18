@@ -121,7 +121,7 @@ class AnimateEntityPacket:
     animation: str
     next_state: str
     stop_expression: str
-    stop_expression_version: int32
+    stop_expression_version: int32 = field(since=465)
     controller: str
     blend_out_time: float
     runtime_ids: list[ActorRuntimeID]

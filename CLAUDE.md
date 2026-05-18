@@ -58,3 +58,20 @@
       `T`
     - `read<std::string>()` / `write(string_view)` -- varuint32 length +
       bytes
+
+7. **Version-gate new packets against reference implementations.** The
+   EndstoneMC protocol-docs JSON describes only the latest schema, so it
+   never reveals when a field appeared or was removed. Before adding (or
+   omitting) `field(since=)` / `value(since=, until=)` gating, cross-check
+   each field's history against two reference libraries:
+    - `CloudburstMC/Protocol` -- `bedrock-codec` keeps a per-protocol-version
+      serializer at
+      `.../bedrock/codec/vNNN/serializer/<Packet>Serializer_vNNN.java`.
+      A field that first appears in a later `vNNN` serializer is `since=NNN`.
+    - `Sandertv/gophertunnel` -- `minecraft/protocol/packet/<name>.go` for the
+      current field shape, plus `git log -S<field>` on that file to date
+      when each field was added or removed.
+
+   Use the protocol (network) version number. A field present in the oldest
+   serializer that defines the packet needs no gating. A type or field that
+   neither reference models is left ungated.
