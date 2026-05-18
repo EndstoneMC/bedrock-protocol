@@ -47,7 +47,7 @@ enum {{ name }} : {{ ctype }} {};
 {% if not loop.first %}
 
 {% endif %}
-namespace v{{ ns.version }} {
+namespace {{ ns.namespace }} {
 {% for e in ns.entries %}
 
 {% if e.alias %}
@@ -62,7 +62,7 @@ using {{ e.name }} = {{ e.target }}::{{ e.name }};
 {% endif %}
 {% endfor %}
 
-}  // namespace v{{ ns.version }}
+}  // namespace {{ ns.namespace }}
 {% endfor %}
 
 namespace detail {
@@ -72,10 +72,10 @@ namespace detail {
 {% endif %}
 template <int V>
 struct {{ t.name }}_;
-{% for lo, hi in t.ranges %}
+{% for lo, hi, ns in t.ranges %}
 
 template <int V> requires ({% if lo %}V >= {{ lo }}{% endif %}{% if lo and hi %} && {% endif %}{% if hi %}V < {{ hi }}{% endif %})
-struct {{ t.name }}_<V> { using type = v{{ lo }}::{{ t.name }}; };
+struct {{ t.name }}_<V> { using type = {{ ns }}::{{ t.name }}; };
 {% endfor %}
 {% endfor %}
 

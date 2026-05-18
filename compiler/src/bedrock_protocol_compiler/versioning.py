@@ -39,6 +39,15 @@ def _camel(name: str) -> str:
     return inflection.camelize(name.lower())
 
 
+def _ns(version: int) -> str:
+    """Snapshot-namespace name for the version range starting at `version`.
+
+    The base range -- everything below the first change-point -- is `base`;
+    every later range is `v{lo}`, named after its inclusive lower bound.
+    """
+    return "base" if version == 0 else f"v{version}"
+
+
 def _field_since(attr) -> int | None:
     return since_kwarg(attr.value, "field") if attr.value is not None else None
 
@@ -316,11 +325,11 @@ def plan_module(
     def serializer_fields(name: str, snap: int | None, fields):
         cls = name_to_cls[name]
         nested_names = set(nested_enums(cls))
-        owner_qual = f"v{snap}::{name}" if name in versioned else name
+        owner_qual = f"{_ns(snap)}::{name}" if name in versioned else name
 
         def qualify(tn: str) -> str:
             if tn in versioned:
-                return f"v{concrete[tn][snap]}::"
+                return f"{_ns(concrete[tn][snap])}::"
             return ""
 
         out = []
@@ -344,7 +353,7 @@ def plan_module(
         cls = name_to_cls[name]
         if name in versioned:
             fields = vis[name][snap][1]
-            qualified = f"v{snap}::{name}"
+            qualified = f"{_ns(snap)}::{name}"
         else:
             fields = list(cls.attributes.items())
             qualified = name
@@ -357,7 +366,7 @@ def plan_module(
         cls = name_to_cls[name]
         if name in versioned:
             members = vis[name][snap][1]
-            qualified = f"v{snap}::{name}"
+            qualified = f"{_ns(snap)}::{name}"
         else:
             members = [(n, v) for n, v, _, _ in enum_members(cls)["entries"]]
             qualified = name
@@ -396,10 +405,10 @@ def plan_module(
                     {
                         "alias": True,
                         "name": name,
-                        "target": f"v{concrete[name][s]}",
+                        "target": _ns(concrete[name][s]),
                     }
                 )
-        namespaces.append({"version": s, "entries": entries})
+        namespaces.append({"namespace": _ns(s), "entries": entries})
 
     traits = []
     for name in order:
@@ -407,7 +416,7 @@ def plan_module(
             continue
         fs = fresh_snapshots(name)
         ranges = [
-            (lo, fs[i + 1] if i + 1 < len(fs) else None)
+            (lo, fs[i + 1] if i + 1 < len(fs) else None, _ns(lo))
             for i, lo in enumerate(fs)
         ]
         traits.append({"name": name, "ranges": ranges})
