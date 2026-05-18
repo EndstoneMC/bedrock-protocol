@@ -223,6 +223,8 @@ class Frontend:
     def _typeref(self, ann: _Ann, field_name: str) -> TypeRef | None:
         if ann is None:
             return None
+        if self._is_uuid(ann):
+            return Named("UUID")
         arms = self._flatten_union(ann)
         if arms is not None:
             return self._union_typeref(arms, field_name)
@@ -393,6 +395,8 @@ class Frontend:
         nested: frozenset[str],
         field_name: str,
     ) -> Wire | None:
+        if self._is_uuid(ann):
+            return StructRef("UUID")
         if isinstance(ann, griffe.ExprSubscript):
             repeat = self._repeat_parts(ann, field_name)
             if repeat is not None:
@@ -472,6 +476,15 @@ class Frontend:
     @staticmethod
     def _is_none(arm: object) -> bool:
         return arm == "None"
+
+    @staticmethod
+    def _is_uuid(ann: _Ann) -> bool:
+        """A 128-bit UUID, spelled with the stdlib `uuid.UUID` (after
+        `import uuid`) or a bare `UUID` (after `from uuid import UUID`). The
+        backend routes it through the built-in `bedrock::protocol::UUID`."""
+        if isinstance(ann, griffe.ExprName):
+            return ann.name == "UUID"
+        return isinstance(ann, griffe.ExprAttribute) and str(ann) == "uuid.UUID"
 
     @staticmethod
     def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:

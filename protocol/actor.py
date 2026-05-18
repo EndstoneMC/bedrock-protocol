@@ -1,3 +1,4 @@
+import uuid
 from enum import IntEnum
 
 from protocol._dsl import field, packet, value
@@ -125,3 +126,11 @@ class AnimateEntityPacket:
     controller: str
     blend_out_time: float
     runtime_ids: list[ActorRuntimeID]
+
+
+@packet(id=152, since=407)
+class EmoteListPacket:
+    """Lists the emote pieces a player has equipped."""
+
+    runtime_id: ActorRuntimeID
+    emote_piece_ids: list[uuid.UUID]

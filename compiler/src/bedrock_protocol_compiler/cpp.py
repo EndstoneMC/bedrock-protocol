@@ -61,6 +61,10 @@ PRIMITIVE_TYPES: dict[str, str] = {
     "uint64": "std::uint64_t",
 }
 
+#: Types the backend resolves without a schema declaration. `UUID` is spelled
+#: `uuid.UUID` in the DSL and hand-written in <bedrock/uuid.hpp>.
+BUILTIN_TYPES: frozenset[str] = frozenset({"UUID"})
+
 
 # --- render model: a header expressed as data --------------------------------
 
@@ -125,6 +129,7 @@ class RenderModule:
     latest_version: int
     has_versioned: bool
     has_serializers: bool
+    uses_uuid: bool
 
 
 class _Code:
@@ -227,6 +232,7 @@ class CppBackend:
             latest_version=latest_version,
             has_versioned=bool(plan.versioned),
             has_serializers=bool(serializers),
+            uses_uuid=any("UUID" in s.referenced for s in module.structs),
         )
 
     # --- type definitions ----------------------------------------------------
@@ -262,7 +268,8 @@ class CppBackend:
             case Primitive(name=name):
                 return PRIMITIVE_TYPES.get(name)
             case Named(name=name):
-                return name if name in nested or name in self._known else None
+                resolved = name in nested or name in self._known or name in BUILTIN_TYPES
+                return name if resolved else None
             case Optional(inner=inner):
                 inner_type = self._cpp_type(inner, nested)
                 return None if inner_type is None else f"std::optional<{inner_type}>"
