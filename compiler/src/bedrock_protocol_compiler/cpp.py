@@ -19,6 +19,8 @@ from .schema import (
     EnumMember,
     EnumRef,
     Field,
+    Map,
+    Mapping,
     Module,
     Named,
     Opt,
@@ -268,6 +270,12 @@ class CppBackend:
                 if count is None:
                     return f"std::vector<{inner_type}>"
                 return f"std::array<{inner_type}, {count}>"
+            case Mapping(key=key, value=value):
+                key_type = self._cpp_type(key, nested)
+                value_type = self._cpp_type(value, nested)
+                if key_type is None or value_type is None:
+                    return None
+                return f"std::map<{key_type}, {value_type}>"
         return None
 
     # --- serializers ---------------------------------------------------------
@@ -391,6 +399,15 @@ class CppBackend:
                 with code.block(f"for (const auto &e{depth} : {expr})"):
                     self._write(code, type_ref.inner, inner, f"e{depth}")
                 self._rep -= 1
+            case Map(key=key, value=value, prefix=prefix):
+                assert isinstance(type_ref, Mapping)
+                depth = self._rep
+                self._rep += 1
+                code(self._scalar_write(prefix, f"{expr}.size()"))
+                with code.block(f"for (const auto &[k{depth}, v{depth}] : {expr})"):
+                    self._write(code, type_ref.key, key, f"k{depth}")
+                    self._write(code, type_ref.value, value, f"v{depth}")
+                self._rep -= 1
 
     def _read(
         self, code: _Code, type_ref: TypeRef | None, wire: Wire, target: str
@@ -446,6 +463,29 @@ class CppBackend:
                     )
                     with code.block(head):
                         self._read(code, type_ref.inner, inner, f"{target}[i{depth}]")
+                self._rep -= 1
+            case Map(key=key, value=value, prefix=prefix):
+                assert isinstance(type_ref, Mapping)
+                depth = self._rep
+                self._rep += 1
+                u = PRIMITIVE_TYPES[prefix.primitive]
+                verb = f"readVarInt<{u}>" if prefix.varint else f"read<{u}>"
+                code(f"auto len{depth} = stream.{verb}();")
+                code(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
+                code(f"{target}.clear();")
+                holder = f"std::remove_reference_t<decltype({target})>"
+                head = (
+                    f"for (auto rep{depth} = *len{depth}; "
+                    f"rep{depth} > 0; --rep{depth})"
+                )
+                with code.block(head):
+                    code(f"{holder}::key_type k{depth}{{}};")
+                    with code.block():
+                        self._read(code, type_ref.key, key, f"k{depth}")
+                    code(f"{holder}::mapped_type v{depth}{{}};")
+                    with code.block():
+                        self._read(code, type_ref.value, value, f"v{depth}")
+                    code(f"{target}.emplace(k{depth}, v{depth});")
                 self._rep -= 1
 
     @staticmethod

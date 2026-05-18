@@ -20,6 +20,8 @@ from .schema import (
     EnumMember,
     EnumRef,
     Field,
+    Map,
+    Mapping,
     Module,
     Named,
     Opt,
@@ -220,12 +222,19 @@ class Frontend:
             inner = self._typeref(self._optional_inner(ann), field_name)
             return Optional(inner) if inner is not None else None
         if isinstance(ann, griffe.ExprSubscript):
-            parts = self._repeat_parts(ann, field_name)
-            if parts is None:
-                return None
-            elem_ann, count = parts
-            inner = self._typeref(elem_ann, field_name)
-            return Repeated(inner, count) if inner is not None else None
+            repeat = self._repeat_parts(ann, field_name)
+            if repeat is not None:
+                elem_ann, count = repeat
+                inner = self._typeref(elem_ann, field_name)
+                return Repeated(inner, count) if inner is not None else None
+            mapping = self._map_parts(ann, field_name)
+            if mapping is not None:
+                key = self._typeref(mapping[0], field_name)
+                value = self._typeref(mapping[1], field_name)
+                if key is None or value is None:
+                    return None
+                return Mapping(key, value)
+            return None
         if isinstance(ann, griffe.ExprName):
             return Primitive(ann.name) if ann.name in PRIMITIVES else Named(ann.name)
         return None
@@ -310,6 +319,20 @@ class Frontend:
             )
         return named[0], len(named)
 
+    def _map_parts(
+        self, ann: griffe.ExprSubscript, field_name: str
+    ) -> tuple[griffe.Expr | str, griffe.Expr | str] | None:
+        """The (key, value) annotations of a `dict[K, V]` subscript, or None
+        for any other subscript."""
+        if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "dict"):
+            return None
+        slice_ = ann.slice
+        if not isinstance(slice_, griffe.ExprTuple) or len(slice_.elements) != 2:
+            raise CompilerError(
+                f"{field_name}: dict[...] needs exactly a key type and a value type"
+            )
+        return slice_.elements[0], slice_.elements[1]
+
     def _base_wire(
         self,
         ann: _Ann,
@@ -319,14 +342,21 @@ class Frontend:
         field_name: str,
     ) -> Wire | None:
         if isinstance(ann, griffe.ExprSubscript):
-            parts = self._repeat_parts(ann, field_name)
-            if parts is None:
-                return None
-            elem_ann, count = parts
-            inner = self._base_wire(elem_ann, type_kw, prefix, nested, field_name)
-            if inner is None:
-                return None
-            return Repeat(inner, prefix if count is None else None, count)
+            repeat = self._repeat_parts(ann, field_name)
+            if repeat is not None:
+                elem_ann, count = repeat
+                inner = self._base_wire(elem_ann, type_kw, prefix, nested, field_name)
+                if inner is None:
+                    return None
+                return Repeat(inner, prefix if count is None else None, count)
+            mapping = self._map_parts(ann, field_name)
+            if mapping is not None:
+                key = self._base_wire(mapping[0], type_kw, prefix, nested, field_name)
+                value = self._base_wire(mapping[1], type_kw, prefix, nested, field_name)
+                if key is None or value is None:
+                    return None
+                return Map(key, value, prefix)
+            return None
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name

@@ -40,11 +40,12 @@ def field(
       field, `"big"` or `"little"` (the default). Bedrock sends primitives
       little-endian or as varints almost everywhere, the rare exceptions
       being a connection's initial protocol version and the play status.
-    - `prefix`: for a repeated field annotated `list[T]`, the integer
-      primitive that length-prefixes the elements on the wire (default
-      `uvarint32`). A `list[T]` annotation is a length-prefixed sequence; a
-      `tuple[T, ...]` annotation of N identical types is a fixed-length array
-      of exactly N elements and carries no prefix.
+    - `prefix`: for a `list[T]` or `dict[K, V]` field, the integer primitive
+      that length-prefixes the elements on the wire (default `uvarint32`). A
+      `list[T]` annotation is a length-prefixed sequence and `dict[K, V]` a
+      length-prefixed map of key/value pairs; a `tuple[T, ...]` annotation of
+      N identical types is a fixed-length array of exactly N elements and
+      carries no prefix.
     """
     return None
 

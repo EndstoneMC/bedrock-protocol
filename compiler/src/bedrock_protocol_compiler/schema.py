@@ -76,7 +76,19 @@ class Repeated:
         return self.inner.referenced
 
 
-TypeRef = Primitive | Named | Optional | Repeated
+@dataclass(frozen=True)
+class Mapping:
+    """A `dict[K, V]` field's declared shape."""
+
+    key: TypeRef
+    value: TypeRef
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.key.referenced | self.value.referenced
+
+
+TypeRef = Primitive | Named | Optional | Repeated | Mapping
 
 
 # --- wire encodings: how a field travels on the wire -------------------------
@@ -135,7 +147,17 @@ class Repeat:
     count: int | None
 
 
-Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat
+@dataclass(frozen=True)
+class Map:
+    """A length-prefixed map: the pair count travels first as `prefix` (a
+    length scalar), then that many key encodings each followed by its value."""
+
+    key: Wire
+    value: Wire
+    prefix: Scalar
+
+
+Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map
 
 
 # --- declarations ------------------------------------------------------------
