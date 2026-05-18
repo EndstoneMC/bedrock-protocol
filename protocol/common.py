@@ -14,11 +14,20 @@ type uint32 = int
 type uint64 = int
 type double = float
 
+
 class Vec2:
     x: float
     y: float
+
 
 class Vec3:
     x: float
     y: float
     z: float
+
+
+type Color = int32
+
+
+class TintMapColor:
+    colors: tuple[Color, Color, Color, Color]

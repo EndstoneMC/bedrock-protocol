@@ -47,3 +47,28 @@ TEST_CASE("AnimatePacket: round-trip with absent swing source")
     REQUIRE(rt.has_value());
     REQUIRE_FALSE(rt->swing_source.has_value());
 }
+
+TEST_CASE("AnimateEntityPacket: id + round-trip with a length-prefixed list")
+{
+    STATIC_REQUIRE(bp::AnimateEntityPacket::Id == 158);
+
+    bp::AnimateEntityPacket pkt;
+    pkt.stop_expression_version = 0;
+    pkt.blend_out_time = 0.0f;
+    pkt.runtime_ids = {static_cast<bp::ActorRuntimeID>(1),
+                       static_cast<bp::ActorRuntimeID>(2)};
+
+    std::vector<std::uint8_t> buf;
+    bp::BinaryStream out{buf};
+    bp::serialize(out, pkt);
+    REQUIRE(buf == std::vector<std::uint8_t>{
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x01, 0x02,  // list: uvarint32 count 2, then two uvarint64 ids
+    });
+
+    bp::BinaryReader in{buf};
+    auto rt = bp::deserialize<bp::AnimateEntityPacket>(in);
+    REQUIRE(rt.has_value());
+    REQUIRE(rt->runtime_ids.size() == 2);
+    REQUIRE(rt->runtime_ids[1] == static_cast<bp::ActorRuntimeID>(2));
+}

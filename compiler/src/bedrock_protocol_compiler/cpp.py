@@ -24,6 +24,8 @@ from .schema import (
     Opt,
     Optional,
     Primitive,
+    Repeat,
+    Repeated,
     Scalar,
     Schema,
     Str,
@@ -161,6 +163,9 @@ class CppBackend:
         self._snap: int | None = None
         self._owner = ""
         self._nested: frozenset[str] = frozenset()
+        # Nesting depth of the repeated field being emitted, for unique loop
+        # variable names. Balanced by `_write` / `_read`, so it returns to 0.
+        self._rep = 0
 
     def render(self, latest_version: int) -> RenderModule:
         self._guard_cross_module()
@@ -256,6 +261,13 @@ class CppBackend:
             case Optional(inner=inner):
                 inner_type = self._cpp_type(inner, nested)
                 return None if inner_type is None else f"std::optional<{inner_type}>"
+            case Repeated(inner=inner, count=count):
+                inner_type = self._cpp_type(inner, nested)
+                if inner_type is None:
+                    return None
+                if count is None:
+                    return f"std::vector<{inner_type}>"
+                return f"std::array<{inner_type}, {count}>"
         return None
 
     # --- serializers ---------------------------------------------------------
@@ -370,6 +382,15 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({expr}.has_value())"):
                     self._write(code, type_ref.inner, inner, f"*{expr}")
+            case Repeat(inner=inner, prefix=prefix):
+                assert isinstance(type_ref, Repeated)
+                depth = self._rep
+                self._rep += 1
+                if prefix is not None:
+                    code(self._scalar_write(prefix, f"{expr}.size()"))
+                with code.block(f"for (const auto &e{depth} : {expr})"):
+                    self._write(code, type_ref.inner, inner, f"e{depth}")
+                self._rep -= 1
 
     def _read(
         self, code: _Code, type_ref: TypeRef | None, wire: Wire, target: str
@@ -401,6 +422,31 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({guard})"):
                     self._read(code, type_ref.inner, inner, target)
+            case Repeat(inner=inner, prefix=prefix, count=count):
+                assert isinstance(type_ref, Repeated)
+                depth = self._rep
+                self._rep += 1
+                if prefix is not None:
+                    u = PRIMITIVE_TYPES[prefix.primitive]
+                    verb = f"readVarInt<{u}>" if prefix.varint else f"read<{u}>"
+                    code(f"auto len{depth} = stream.{verb}();")
+                    code(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
+                    code(f"{target}.clear();")
+                    head = (
+                        f"for (auto rep{depth} = *len{depth}; "
+                        f"rep{depth} > 0; --rep{depth})"
+                    )
+                    with code.block(head):
+                        code(f"{target}.emplace_back();")
+                        self._read(code, type_ref.inner, inner, f"{target}.back()")
+                else:
+                    head = (
+                        f"for (std::size_t i{depth} = 0; "
+                        f"i{depth} < {count}; ++i{depth})"
+                    )
+                    with code.block(head):
+                        self._read(code, type_ref.inner, inner, f"{target}[i{depth}]")
+                self._rep -= 1
 
     @staticmethod
     def _scalar_write(scalar: Scalar, expr: str) -> str:

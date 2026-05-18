@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 from protocol._dsl import field, packet, value
-from protocol.common import Vec3, uint8, uvarint64, varint32, varint64
+from protocol.common import Vec3, int32, uint8, uvarint64, varint32, varint64
 
 package = "bedrock.protocol"
 
@@ -112,3 +112,16 @@ class AnimatePacket:
     target_runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
+
+
+@packet(id=158)
+class AnimateEntityPacket:
+    """Plays a named animation on a set of entities."""
+
+    animation: str
+    next_state: str
+    stop_expression: str
+    stop_expression_version: int32
+    controller: str
+    blend_out_time: float
+    runtime_ids: list[ActorRuntimeID]

@@ -25,6 +25,8 @@ from .schema import (
     Opt,
     Optional,
     Primitive,
+    Repeat,
+    Repeated,
     Scalar,
     Schema,
     Str,
@@ -204,19 +206,26 @@ class Frontend:
         since = self._int_kwarg(call, "field", "since") if call is not None else None
         return Field(
             attr.name,
-            self._typeref(attr.annotation),
+            self._typeref(attr.annotation, attr.name),
             self._wire(attr.name, attr.annotation, call, nested),
             since,
         )
 
     # --- type references -----------------------------------------------------
 
-    def _typeref(self, ann: _Ann) -> TypeRef | None:
+    def _typeref(self, ann: _Ann, field_name: str) -> TypeRef | None:
         if ann is None:
             return None
         if self._is_optional(ann):
-            inner = self._typeref(self._optional_inner(ann))
+            inner = self._typeref(self._optional_inner(ann), field_name)
             return Optional(inner) if inner is not None else None
+        if isinstance(ann, griffe.ExprSubscript):
+            parts = self._repeat_parts(ann, field_name)
+            if parts is None:
+                return None
+            elem_ann, count = parts
+            inner = self._typeref(elem_ann, field_name)
+            return Repeated(inner, count) if inner is not None else None
         if isinstance(ann, griffe.ExprName):
             return Primitive(ann.name) if ann.name in PRIMITIVES else Named(ann.name)
         return None
@@ -233,9 +242,10 @@ class Frontend:
                 f"got {endian!r}"
             )
         type_kw = self._name_kwarg(call, "field", "type") if call is not None else None
+        prefix = self._repeat_prefix(call, field_name)
         if self._is_optional(ann):
             base = self._base_wire(
-                self._optional_inner(ann), type_kw, nested, field_name
+                self._optional_inner(ann), type_kw, prefix, nested, field_name
             )
             if base is None:
                 return None
@@ -249,14 +259,74 @@ class Frontend:
                 )
             present_tag = 1 if discriminator and self._none_first(ann) else 0
             return Opt(base, discriminator, present_tag)
-        base = self._base_wire(ann, type_kw, nested, field_name)
+        base = self._base_wire(ann, type_kw, prefix, nested, field_name)
         if base is None:
             return None
         return self._with_endian(base, endian, field_name)
 
+    def _repeat_prefix(self, call: _Ann, field_name: str) -> Scalar:
+        """The length-prefix scalar a `list[T]` field uses -- `field(prefix=)`
+        or the `uvarint32` default. Ignored by fixed-length `tuple` fields."""
+        name = (
+            self._name_kwarg(call, "field", "prefix") if call is not None else None
+        )
+        if name is None:
+            return Scalar("uvarint32", varint=True)
+        if name not in PRIMITIVES or name in ("str", "bool", "float", "double"):
+            raise CompilerError(
+                f"{field_name}: field(prefix=...) must be an integer primitive, "
+                f"got {name!r}"
+            )
+        return Scalar(name, varint=name in VARINT_PRIMITIVES)
+
+    def _repeat_parts(
+        self, ann: griffe.ExprSubscript, field_name: str
+    ) -> tuple[griffe.Expr | str, int | None] | None:
+        """Classify a `list[T]` / `tuple[T, ...]` subscript into (element
+        annotation, count) -- count None for a length-prefixed `list`, the
+        element total for a fixed-length `tuple` -- or None for any other
+        subscript. Rejects heterogeneous or variable-length tuples."""
+        if not isinstance(ann.left, griffe.ExprName):
+            return None
+        if ann.left.name == "list":
+            return ann.slice, None
+        if ann.left.name != "tuple":
+            return None
+        slice_ = ann.slice
+        elements: list[griffe.Expr | str] = (
+            list(slice_.elements)
+            if isinstance(slice_, griffe.ExprTuple)
+            else [slice_]
+        )
+        named = [e for e in elements if isinstance(e, griffe.ExprName)]
+        if not named or len(named) != len(elements):
+            raise CompilerError(
+                f"{field_name}: tuple[...] must spell out a fixed count of named "
+                f"element types -- use list[T] for a variable-length list"
+            )
+        if any(e.name != named[0].name for e in named):
+            raise CompilerError(
+                f"{field_name}: tuple[...] elements must all be the same type"
+            )
+        return named[0], len(named)
+
     def _base_wire(
-        self, ann: _Ann, type_kw: str | None, nested: frozenset[str], field_name: str
+        self,
+        ann: _Ann,
+        type_kw: str | None,
+        prefix: Scalar,
+        nested: frozenset[str],
+        field_name: str,
     ) -> Wire | None:
+        if isinstance(ann, griffe.ExprSubscript):
+            parts = self._repeat_parts(ann, field_name)
+            if parts is None:
+                return None
+            elem_ann, count = parts
+            inner = self._base_wire(elem_ann, type_kw, prefix, nested, field_name)
+            if inner is None:
+                return None
+            return Repeat(inner, prefix if count is None else None, count)
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name

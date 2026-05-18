@@ -25,6 +25,7 @@ def field(
     type: type[str | Union] | TypeAliasType | None = None,
     since: int | None = None,
     endian: str | None = None,
+    prefix: TypeAliasType | None = None,
 ) -> Any:
     """Mark a struct field.
 
@@ -39,6 +40,11 @@ def field(
       field, `"big"` or `"little"` (the default). Bedrock sends primitives
       little-endian or as varints almost everywhere, the rare exceptions
       being a connection's initial protocol version and the play status.
+    - `prefix`: for a repeated field annotated `list[T]`, the integer
+      primitive that length-prefixes the elements on the wire (default
+      `uvarint32`). A `list[T]` annotation is a length-prefixed sequence; a
+      `tuple[T, ...]` annotation of N identical types is a fixed-length array
+      of exactly N elements and carries no prefix.
     """
     return None
 

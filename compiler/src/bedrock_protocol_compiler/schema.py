@@ -63,7 +63,20 @@ class Optional:
         return self.inner.referenced
 
 
-TypeRef = Primitive | Named | Optional
+@dataclass(frozen=True)
+class Repeated:
+    """A repeated field's declared shape: `list[T]` when `count` is None, a
+    fixed-length `tuple[T, ...]` of identical types when `count` is set."""
+
+    inner: TypeRef
+    count: int | None
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
+
+
+TypeRef = Primitive | Named | Optional | Repeated
 
 
 # --- wire encodings: how a field travels on the wire -------------------------
@@ -111,7 +124,18 @@ class Opt:
     present_tag: int = 0
 
 
-Wire = Scalar | Str | StructRef | EnumRef | Opt
+@dataclass(frozen=True)
+class Repeat:
+    """A repeated payload. `count` None is a length-prefixed list: the element
+    count travels first as `prefix` (a length scalar), then the elements. A set
+    `count` is a fixed-length array of exactly that many elements, no prefix."""
+
+    inner: Wire
+    prefix: Scalar | None
+    count: int | None
+
+
+Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat
 
 
 # --- declarations ------------------------------------------------------------
