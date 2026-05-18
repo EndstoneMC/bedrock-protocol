@@ -211,6 +211,7 @@ class Struct:
     fields: tuple[Field, ...]
     enums: tuple[Enum, ...]  # nested, version-invariant
     packet_id: int | None
+    since: int | None = None  # protocol version that introduced the packet
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -220,7 +221,10 @@ class Struct:
 
     @property
     def change_points(self) -> frozenset[int]:
-        return frozenset(f.since for f in self.fields if f.since is not None)
+        points = {f.since for f in self.fields if f.since is not None}
+        if self.since is not None:
+            points.add(self.since)
+        return frozenset(points)
 
 
 @dataclass(frozen=True)

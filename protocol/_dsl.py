@@ -55,6 +55,11 @@ def enum(*, since: int | None = None):
     return _identity
 
 
-def packet(*, id: int):
-    """Class decorator: mark a struct as a packet with on-the-wire id."""
+def packet(*, id: int, since: int | None = None):
+    """Class decorator: mark a struct as a packet.
+
+    - `id`: the on-the-wire packet id.
+    - `since`: protocol version that introduced the packet. The generated
+      type is absent from snapshots below it.
+    """
     return _identity

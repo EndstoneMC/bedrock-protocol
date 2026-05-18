@@ -119,7 +119,7 @@ class VersionPlan:
             self._concrete[name], self._visible[name], self._keys[name] = {}, {}, {}
             previous: int | None = None
             for s in self.snapshots:
-                here = not isinstance(t, Enum) or t.since is None or s >= t.since
+                here = t.since is None or s >= t.since
                 self._present[name][s] = here
                 if not here:
                     continue

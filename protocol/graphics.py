@@ -1,11 +1,12 @@
 from enum import IntEnum
 
-from protocol._dsl import field, packet, value
+from protocol._dsl import enum, field, packet, value
 from protocol.common import Vec3, uint8
 
 package = "bedrock.protocol"
 
 
+@enum(since=859)
 class GraphicsOverrideParameterType(IntEnum):
     SKY_ZENITH_COLOR = 0
     SKY_HORIZON_COLOR = 1
@@ -61,7 +62,7 @@ class GraphicsOverrideParameterType(IntEnum):
     ORBITAL_OFFSET_DEGREES = value(51, since=975)
 
 
-@packet(id=331)
+@packet(id=331, since=859)
 class GraphicsOverrideParameterPacket:
     """Server override of biome graphics parameters such as sky colour,
     water tint, and wave shape."""

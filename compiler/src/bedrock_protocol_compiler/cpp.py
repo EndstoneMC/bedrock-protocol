@@ -196,7 +196,8 @@ class CppBackend:
                         name=name,
                         target=self._ns(plan.concrete(name, snapshot)),
                     ))
-            namespaces.append(RenderNamespace(self._ns(snapshot), entries))
+            if entries:  # a snapshot before every type's `since` is empty
+                namespaces.append(RenderNamespace(self._ns(snapshot), entries))
 
         traits: list[RenderTrait] = []
         for name in plan.order:

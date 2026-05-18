@@ -185,7 +185,10 @@ class Frontend:
             nested.append(enum)
         nested_names = frozenset(e.name for e in nested)
         fields = tuple(self._field(attr, nested_names) for attr in cls.attributes.values())
-        return Struct(cls.name, fields, tuple(nested), self._packet_id(cls))
+        return Struct(
+            cls.name, fields, tuple(nested),
+            self._packet_id(cls), self._packet_since(cls),
+        )
 
     @staticmethod
     def _reject_versioned_nested(owner: str, enum: Enum) -> None:
@@ -490,6 +493,13 @@ class Frontend:
             pid = self._int_kwarg(dec.value, "packet", "id")
             if pid is not None:
                 return pid
+        return None
+
+    def _packet_since(self, cls: griffe.Class) -> int | None:
+        for dec in cls.decorators:
+            since = self._int_kwarg(dec.value, "packet", "since")
+            if since is not None:
+                return since
         return None
 
     def _member_value(self, value: _Ann) -> tuple[int, int | None, int | None] | None:

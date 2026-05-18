@@ -67,11 +67,17 @@
     - `CloudburstMC/Protocol` -- `bedrock-codec` keeps a per-protocol-version
       serializer at
       `.../bedrock/codec/vNNN/serializer/<Packet>Serializer_vNNN.java`.
-      A field that first appears in a later `vNNN` serializer is `since=NNN`.
+      A field that first appears in a later `vNNN` serializer is `since=NNN`,
+      and the oldest `vNNN` that defines the serializer at all is the
+      packet's own `since`.
     - `Sandertv/gophertunnel` -- `minecraft/protocol/packet/<name>.go` for the
       current field shape, plus `git log -S<field>` on that file to date
       when each field was added or removed.
 
-   Use the protocol (network) version number. A field present in the oldest
-   serializer that defines the packet needs no gating. A type or field that
-   neither reference models is left ungated.
+   Use the protocol (network) version number. Gate the packet or enum itself
+   at the version it first appears -- `@packet(since=N)` for a packet,
+   `@enum(since=N)` for an enum -- so the generated type is absent from
+   earlier snapshots. Fields and members present from that introduction need
+   no `since` of their own; only later additions take `field(since=)` or
+   `value(since=)`. A type or field that neither reference models is left
+   ungated.
