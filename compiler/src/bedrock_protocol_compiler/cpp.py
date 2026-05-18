@@ -341,10 +341,10 @@ class CppBackend:
                 code(f"Serializer<{self._type_at(name)}>::serialize(stream, {expr});")
             case EnumRef(scalar=scalar):
                 code(self._scalar_write(scalar, expr))
-            case Opt(inner=inner, discriminator=discriminator):
+            case Opt(inner=inner, discriminator=discriminator, present_tag=present):
                 if discriminator:
                     code(f"stream.writeVarInt<std::uint32_t>"
-                         f"({expr}.has_value() ? 0u : 1u);")
+                         f"({expr}.has_value() ? {present}u : {1 - present}u);")
                 else:
                     code(f"stream.write<bool>({expr}.has_value());")
                 with code.block(f"if ({expr}.has_value())"):
@@ -367,12 +367,12 @@ class CppBackend:
             case EnumRef(name=name, scalar=scalar):
                 self._scalar_read(code, scalar)
                 code(f"{target} = static_cast<{self._type_at(name)}>(*v);")
-            case Opt(inner=inner, discriminator=discriminator):
+            case Opt(inner=inner, discriminator=discriminator, present_tag=present):
                 holder = "tag" if discriminator else "present"
                 verb = (
                     "readVarInt<std::uint32_t>" if discriminator else "read<bool>"
                 )
-                guard = "*tag == 0" if discriminator else "*present"
+                guard = f"*tag == {present}" if discriminator else "*present"
                 code(f"auto {holder} = stream.{verb}();")
                 code(f"if (!{holder}) return make_unexpected({holder}.error());")
                 with code.block(f"if ({guard})"):

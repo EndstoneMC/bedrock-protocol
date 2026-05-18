@@ -102,10 +102,13 @@ class EnumRef:
 @dataclass(frozen=True)
 class Opt:
     """An optional payload. `discriminator` picks the presence encoding:
-    False is a one-byte bool flag, True is a varuint (0 present, 1 absent)."""
+    False is a one-byte bool flag (true present). True is a varuint union
+    index, where `present_tag` is the index that means present and the other
+    index means absent -- `T | None` makes present 0, `None | T` makes it 1."""
 
     inner: Wire
     discriminator: bool
+    present_tag: int = 0
 
 
 Wire = Scalar | Str | StructRef | EnumRef | Opt

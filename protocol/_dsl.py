@@ -29,9 +29,11 @@ def field(
     """Mark a struct field.
 
     - `type`: the on-the-wire shape. For enum-typed fields, a primitive
-      (e.g. `uvarint32`, `varint32`, `str`). For `X | None` fields, defaults
+      (e.g. `uvarint32`, `varint32`, `str`). For optional fields, defaults
       to a single-byte bool flag + payload; passing `typing.Union` switches
-      to a varint discriminator (`0` = present, `1` = None) instead.
+      to a varint union-index discriminator instead. The index follows the
+      annotation order, so `X | None` encodes present as 0 / absent as 1,
+      while `None | X` encodes present as 1 / absent as 0.
     - `since`: protocol version that introduced the field.
     - `endian`: byte order for a fixed-width primitive or integer-coded enum
       field, `"big"` or `"little"` (the default). Bedrock sends primitives

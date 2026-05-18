@@ -237,7 +237,8 @@ class Frontend:
                     f"{field_name}: an optional enum field needs field(type=) for "
                     f"the enum wire primitive and so cannot also use type=Union"
                 )
-            return Opt(base, discriminator)
+            present_tag = 1 if discriminator and self._none_first(ann) else 0
+            return Opt(base, discriminator, present_tag)
         return self._with_endian(base, endian, field_name)
 
     def _base_wire(self, ann, type_kw, nested, field_name) -> Wire | None:
@@ -312,6 +313,12 @@ class Frontend:
     @staticmethod
     def _optional_inner(ann):
         return ann.left if ann.right == "None" else ann.right
+
+    @staticmethod
+    def _none_first(ann) -> bool:
+        """True for `None | T`, False for `T | None` -- the union-index order
+        that fixes which discriminator value means present."""
+        return ann.left == "None"
 
     @staticmethod
     def _is_int_enum(cls: griffe.Class) -> bool:
