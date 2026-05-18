@@ -55,7 +55,7 @@ def main(
     import_paths: tuple[Path, ...],
     latest_version: int,
     inputs: tuple[Path, ...],
-):
+) -> None:
     env = Environment(
         loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
         trim_blocks=True,
@@ -81,4 +81,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()  # type: ignore[call-arg]
+    main()

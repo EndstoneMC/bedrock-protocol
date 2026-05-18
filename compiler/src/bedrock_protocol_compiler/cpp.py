@@ -6,15 +6,19 @@ templates carry no logic. A second language would be a sibling of this module.
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Any
 
 import inflection
 
 from .schema import (
     CompilerError,
     Enum,
+    EnumMember,
     EnumRef,
+    Field,
     Module,
     Named,
     Opt,
@@ -25,6 +29,8 @@ from .schema import (
     Str,
     Struct,
     StructRef,
+    TypeRef,
+    Wire,
 )
 from .versioning import VersionPlan
 
@@ -127,7 +133,7 @@ class _Code:
         self._lines.append("    " * self._depth + text if text else "")
 
     @contextmanager
-    def block(self, head: str = ""):
+    def block(self, head: str = "") -> Iterator[None]:
         self(f"{head} {{" if head else "{")
         self._depth += 1
         try:
@@ -215,15 +221,17 @@ class CppBackend:
 
     # --- type definitions ----------------------------------------------------
 
-    def _definition(self, t, view=None) -> RenderEnum | RenderStruct:
+    def _definition(
+        self, t: Enum | Struct, view: tuple[Any, ...] | None = None
+    ) -> RenderEnum | RenderStruct:
         if isinstance(t, Enum):
             return self._enum_def(t, t.members if view is None else view)
         return self._struct_def(t, t.fields if view is None else view)
 
-    def _enum_def(self, enum: Enum, members) -> RenderEnum:
+    def _enum_def(self, enum: Enum, members: Sequence[EnumMember]) -> RenderEnum:
         return RenderEnum(enum.name, [(self._camel(m.name), m.value) for m in members])
 
-    def _struct_def(self, struct: Struct, fields) -> RenderStruct:
+    def _struct_def(self, struct: Struct, fields: Sequence[Field]) -> RenderStruct:
         nested = frozenset(e.name for e in struct.enums)
         rendered: list[tuple[str, str]] = []
         for f in fields:
@@ -237,7 +245,9 @@ class CppBackend:
         nested_defs = [self._enum_def(e, e.members) for e in struct.enums]
         return RenderStruct(struct.name, nested_defs, constants, rendered)
 
-    def _cpp_type(self, type_ref, nested: frozenset[str]) -> str | None:
+    def _cpp_type(
+        self, type_ref: TypeRef | None, nested: frozenset[str]
+    ) -> str | None:
         match type_ref:
             case Primitive(name=name):
                 return PRIMITIVE_TYPES.get(name)
@@ -250,7 +260,9 @@ class CppBackend:
 
     # --- serializers ---------------------------------------------------------
 
-    def _serializers(self, by_name) -> list[RenderSerializer]:
+    def _serializers(
+        self, by_name: dict[str, Enum | Struct]
+    ) -> list[RenderSerializer]:
         string_coded = self._string_coded_enums()
         out: list[RenderSerializer] = []
         for name in self._plan.order:
@@ -278,31 +290,37 @@ class CppBackend:
                     out.add(wire.name)
         return frozenset(out)
 
-    def _struct_serializer(self, struct: Struct, snapshot) -> RenderSerializer | None:
+    def _struct_serializer(
+        self, struct: Struct, snapshot: int | None
+    ) -> RenderSerializer | None:
         if snapshot is None:
-            fields, qualified = struct.fields, struct.name
+            fields: Sequence[Field] = struct.fields
+            qualified = struct.name
         else:
             fields = self._plan.visible(struct.name, snapshot)
             qualified = f"{self._ns(snapshot)}::{struct.name}"
-        if any(f.wire is None for f in fields):
-            return None
+        wired: list[tuple[Field, Wire]] = []
+        for f in fields:
+            if f.wire is None:  # an unserializable field skips the whole struct
+                return None
+            wired.append((f, f.wire))
         self._snap, self._owner = snapshot, qualified
         self._nested = frozenset(e.name for e in struct.enums)
 
         serialize = _Code()
-        for f in fields:
-            self._write(serialize, f.type, f.wire, f"value.{f.name}")
+        for f, wire in wired:
+            self._write(serialize, f.type, wire, f"value.{f.name}")
         deserialize = _Code()
         deserialize(f"{qualified} out;")
-        for f in fields:
+        for f, wire in wired:
             with deserialize.block():
-                self._read(deserialize, f.type, f.wire, f"out.{f.name}")
+                self._read(deserialize, f.type, wire, f"out.{f.name}")
         deserialize("return out;")
         return RenderSerializer(
             qualified, f"const {qualified} &value", serialize.lines, deserialize.lines
         )
 
-    def _enum_serializer(self, enum: Enum, snapshot) -> RenderSerializer:
+    def _enum_serializer(self, enum: Enum, snapshot: int | None) -> RenderSerializer:
         if snapshot is None:
             members, qualified = enum.members, enum.name
         else:
@@ -329,7 +347,9 @@ class CppBackend:
             qualified, f"{qualified} value", serialize.lines, deserialize.lines
         )
 
-    def _write(self, code: _Code, type_ref, wire, expr: str) -> None:
+    def _write(
+        self, code: _Code, type_ref: TypeRef | None, wire: Wire, expr: str
+    ) -> None:
         match wire:
             case Scalar():
                 code(self._scalar_write(wire, expr))
@@ -339,7 +359,7 @@ class CppBackend:
                 code(f"Serializer<{self._type_at(name)}>::serialize(stream, {expr});")
             case EnumRef(name=name, scalar=None):
                 code(f"Serializer<{self._type_at(name)}>::serialize(stream, {expr});")
-            case EnumRef(scalar=scalar):
+            case EnumRef(scalar=Scalar() as scalar):
                 code(self._scalar_write(scalar, expr))
             case Opt(inner=inner, discriminator=discriminator, present_tag=present):
                 if discriminator:
@@ -347,10 +367,13 @@ class CppBackend:
                          f"({expr}.has_value() ? {present}u : {1 - present}u);")
                 else:
                     code(f"stream.write<bool>({expr}.has_value());")
+                assert isinstance(type_ref, Optional)
                 with code.block(f"if ({expr}.has_value())"):
                     self._write(code, type_ref.inner, inner, f"*{expr}")
 
-    def _read(self, code: _Code, type_ref, wire, target: str) -> None:
+    def _read(
+        self, code: _Code, type_ref: TypeRef | None, wire: Wire, target: str
+    ) -> None:
         match wire:
             case Scalar():
                 self._scalar_read(code, wire)
@@ -364,7 +387,7 @@ class CppBackend:
                 code(f"auto v = Serializer<{self._type_at(name)}>::deserialize(stream);")
                 code("if (!v) return make_unexpected(v.error());")
                 code(f"{target} = *v;")
-            case EnumRef(name=name, scalar=scalar):
+            case EnumRef(name=name, scalar=Scalar() as scalar):
                 self._scalar_read(code, scalar)
                 code(f"{target} = static_cast<{self._type_at(name)}>(*v);")
             case Opt(inner=inner, discriminator=discriminator, present_tag=present):
@@ -375,6 +398,7 @@ class CppBackend:
                 guard = f"*tag == {present}" if discriminator else "*present"
                 code(f"auto {holder} = stream.{verb}();")
                 code(f"if (!{holder}) return make_unexpected({holder}.error());")
+                assert isinstance(type_ref, Optional)
                 with code.block(f"if ({guard})"):
                     self._read(code, type_ref.inner, inner, target)
 
@@ -404,6 +428,7 @@ class CppBackend:
         if name in self._nested:
             return f"{self._owner}::{name}"
         if self._plan.is_versioned(name):
+            assert self._snap is not None
             return f"{self._ns(self._plan.concrete(name, self._snap))}::{name}"
         return name
 

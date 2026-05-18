@@ -10,6 +10,8 @@ spell it (C++ namespaces, traits, ...).
 
 from __future__ import annotations
 
+from typing import Any
+
 from .schema import Enum, Struct
 
 
@@ -24,8 +26,8 @@ class VersionPlan:
         self._present: dict[str, dict[int, bool]] = {}
         self._fresh: dict[str, dict[int, bool]] = {}
         self._concrete: dict[str, dict[int, int]] = {}
-        self._visible: dict[str, dict[int, tuple]] = {}
-        self._keys: dict[str, dict[int, tuple]] = {}
+        self._visible: dict[str, dict[int, tuple[Any, ...]]] = {}
+        self._keys: dict[str, dict[int, tuple[Any, ...]]] = {}
         self._plan_snapshots()
 
     # --- queries -------------------------------------------------------------
@@ -43,7 +45,7 @@ class VersionPlan:
         """The snapshot whose definition `(name, snapshot)` resolves to."""
         return self._concrete[name][snapshot]
 
-    def visible(self, name: str, snapshot: int) -> tuple:
+    def visible(self, name: str, snapshot: int) -> tuple[Any, ...]:
         """Fields (Struct) or members (Enum) present at `snapshot`."""
         return self._visible[name][snapshot]
 
@@ -124,7 +126,7 @@ class VersionPlan:
                 data, key = self._snapshot_view(t, s)
                 self._visible[name][s], self._keys[name][s] = data, key
                 if previous is None:
-                    fresh = True
+                    fresh, concrete = True, s
                 else:
                     own_changed = key != self._keys[name][previous]
                     dep_changed = any(
@@ -132,20 +134,23 @@ class VersionPlan:
                         for d in deps
                     )
                     fresh = own_changed or dep_changed
+                    concrete = s if fresh else self._concrete[name][previous]
                 self._fresh[name][s] = fresh
-                self._concrete[name][s] = s if fresh else self._concrete[name][previous]
+                self._concrete[name][s] = concrete
                 previous = s
 
     @staticmethod
-    def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[tuple, tuple]:
+    def _snapshot_view(
+        t: Enum | Struct, snapshot: int
+    ) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
         """The (data, identity-key) of a type at one snapshot. Two snapshots
         with equal keys share a definition."""
         if isinstance(t, Enum):
-            data = tuple(
+            members = tuple(
                 m for m in t.members
                 if (m.since is None or m.since <= snapshot)
                 and (m.until is None or snapshot < m.until)
             )
-            return data, tuple((m.name, m.value) for m in data)
-        data = tuple(f for f in t.fields if f.since is None or f.since <= snapshot)
-        return data, tuple(f.name for f in data)
+            return members, tuple((m.name, m.value) for m in members)
+        fields = tuple(f for f in t.fields if f.since is None or f.since <= snapshot)
+        return fields, tuple(f.name for f in fields)

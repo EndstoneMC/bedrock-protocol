@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import TypeGuard, cast
 
 import griffe
 
@@ -33,6 +34,10 @@ from .schema import (
     Wire,
 )
 
+#: An annotation, decorator argument, or literal as griffe surfaces it: an
+#: expression node, a raw-source literal string, or absent.
+_Ann = griffe.Expr | str | None
+
 
 class Frontend:
     def __init__(self, import_paths: list[Path]):
@@ -44,8 +49,9 @@ class Frontend:
         outputs: list[str] = []
         for inp in inputs:
             name, root = self._module_name_and_root(inp)
-            self._griffe[name] = griffe.load(
-                name, search_paths=[str(root)], allow_inspection=False
+            self._griffe[name] = cast(
+                griffe.Module,
+                griffe.load(name, search_paths=[str(root)], allow_inspection=False),
             )
             self._stems[name] = inp.stem
             outputs.append(name)
@@ -68,8 +74,11 @@ class Frontend:
                 for ip in self._import_paths:
                     candidate = ip.joinpath(*parts).with_suffix(".py")
                     if candidate.is_file():
-                        self._griffe[dep] = griffe.load(
-                            dep, search_paths=[str(ip)], allow_inspection=False
+                        self._griffe[dep] = cast(
+                            griffe.Module,
+                            griffe.load(
+                                dep, search_paths=[str(ip)], allow_inspection=False
+                            ),
                         )
                         pending.append(dep)
                         break
@@ -202,7 +211,7 @@ class Frontend:
 
     # --- type references -----------------------------------------------------
 
-    def _typeref(self, ann) -> TypeRef | None:
+    def _typeref(self, ann: _Ann) -> TypeRef | None:
         if ann is None:
             return None
         if self._is_optional(ann):
@@ -214,7 +223,9 @@ class Frontend:
 
     # --- wire encodings ------------------------------------------------------
 
-    def _wire(self, field_name, ann, call, nested: frozenset[str]) -> Wire | None:
+    def _wire(
+        self, field_name: str, ann: _Ann, call: _Ann, nested: frozenset[str]
+    ) -> Wire | None:
         endian = self._str_kwarg(call, "field", "endian") if call is not None else None
         if endian is not None and endian not in ("big", "little"):
             raise CompilerError(
@@ -222,13 +233,12 @@ class Frontend:
                 f"got {endian!r}"
             )
         type_kw = self._name_kwarg(call, "field", "type") if call is not None else None
-        optional = self._is_optional(ann)
-        base = self._base_wire(
-            self._optional_inner(ann) if optional else ann, type_kw, nested, field_name
-        )
-        if base is None:
-            return None
-        if optional:
+        if self._is_optional(ann):
+            base = self._base_wire(
+                self._optional_inner(ann), type_kw, nested, field_name
+            )
+            if base is None:
+                return None
             if endian is not None:
                 raise CompilerError(self._endian_scope_error(field_name))
             discriminator = type_kw == "Union"
@@ -239,9 +249,14 @@ class Frontend:
                 )
             present_tag = 1 if discriminator and self._none_first(ann) else 0
             return Opt(base, discriminator, present_tag)
+        base = self._base_wire(ann, type_kw, nested, field_name)
+        if base is None:
+            return None
         return self._with_endian(base, endian, field_name)
 
-    def _base_wire(self, ann, type_kw, nested, field_name) -> Wire | None:
+    def _base_wire(
+        self, ann: _Ann, type_kw: str | None, nested: frozenset[str], field_name: str
+    ) -> Wire | None:
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
@@ -303,7 +318,7 @@ class Frontend:
     # --- griffe Expr helpers -------------------------------------------------
 
     @staticmethod
-    def _is_optional(ann) -> bool:
+    def _is_optional(ann: object) -> TypeGuard[griffe.ExprBinOp]:
         return (
             isinstance(ann, griffe.ExprBinOp)
             and ann.operator == "|"
@@ -311,11 +326,11 @@ class Frontend:
         )
 
     @staticmethod
-    def _optional_inner(ann):
+    def _optional_inner(ann: griffe.ExprBinOp) -> griffe.Expr | str:
         return ann.left if ann.right == "None" else ann.right
 
     @staticmethod
-    def _none_first(ann) -> bool:
+    def _none_first(ann: griffe.ExprBinOp) -> bool:
         """True for `None | T`, False for `T | None` -- the union-index order
         that fixes which discriminator value means present."""
         return ann.left == "None"
@@ -327,7 +342,7 @@ class Frontend:
         )
 
     @staticmethod
-    def _as_int(value) -> int | None:
+    def _as_int(value: object) -> int | None:
         if isinstance(value, str):
             try:
                 return int(value)
@@ -336,7 +351,7 @@ class Frontend:
         return None
 
     @staticmethod
-    def _call_arg(expr, fn_name: str, kw: str):
+    def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
         """The value expression of `fn_name(..., kw=<value>)`, else None."""
         if not (
             isinstance(expr, griffe.ExprCall)
@@ -349,15 +364,15 @@ class Frontend:
                 return arg.value
         return None
 
-    def _int_kwarg(self, expr, fn_name: str, kw: str) -> int | None:
+    def _int_kwarg(self, expr: _Ann, fn_name: str, kw: str) -> int | None:
         value = self._call_arg(expr, fn_name, kw)
         return self._as_int(value) if value is not None else None
 
-    def _name_kwarg(self, expr, fn_name: str, kw: str) -> str | None:
+    def _name_kwarg(self, expr: _Ann, fn_name: str, kw: str) -> str | None:
         value = self._call_arg(expr, fn_name, kw)
         return value.name if isinstance(value, griffe.ExprName) else None
 
-    def _str_kwarg(self, expr, fn_name: str, kw: str) -> str | None:
+    def _str_kwarg(self, expr: _Ann, fn_name: str, kw: str) -> str | None:
         value = self._call_arg(expr, fn_name, kw)
         if isinstance(value, str) and len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
             return value[1:-1]
@@ -377,7 +392,7 @@ class Frontend:
                 return pid
         return None
 
-    def _member_value(self, value) -> tuple[int, int | None, int | None] | None:
+    def _member_value(self, value: _Ann) -> tuple[int, int | None, int | None] | None:
         """Parse `0` or `value(N, since=V, until=U)` into (value, since, until)."""
         direct = self._as_int(value)
         if direct is not None:
