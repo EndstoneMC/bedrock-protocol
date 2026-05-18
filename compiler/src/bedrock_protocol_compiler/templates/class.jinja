@@ -1,11 +1,7 @@
-{% if d.unmapped %}
 struct {{ d.name }} {
-};
-{% else %}
-struct {{ d.name }} {
-{% for ename, emembers in d.nested_enums %}
-    enum class {{ ename }} : int {
-{% for mname, mvalue in emembers %}
+{% for e in d.nested_enums %}
+    enum class {{ e.name }} : int {
+{% for mname, mvalue in e.members %}
         {{ mname }} = {{ mvalue }},
 {% endfor %}
     };
@@ -14,8 +10,7 @@ struct {{ d.name }} {
 {% for cname, ctype, cvalue in d.constants %}
     static constexpr {{ ctype }} {{ cname }} = {{ cvalue }};
 {% endfor %}
-{% for field in d.fields %}
-    {{ field.ctype }} {{ field.name }};
+{% for ctype, fname in d.fields %}
+    {{ ctype }} {{ fname }};
 {% endfor %}
 };
-{% endif %}

@@ -1,154 +1,16 @@
-{% if s.enum %}
 template <>
 struct Serializer<{{ s.qualified }}> {
-    static void serialize(BinaryStream &stream, {{ s.qualified }} value)
+    static void serialize(BinaryStream &stream, {{ s.param }})
     {
-        using E = {{ s.qualified }};
-{% for mname, wire in s.members %}
-        if (value == E::{{ mname }}) { stream.write(std::string_view{"{{ wire }}"}); return; }
+{% for line in s.serialize %}
+{{ line }}
 {% endfor %}
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<{{ s.qualified }}, std::error_code>
     {
-        using E = {{ s.qualified }};
-        auto v = stream.read<std::string>();
-        if (!v) return make_unexpected(v.error());
-{% for mname, wire in s.members %}
-        if (*v == "{{ wire }}") return E::{{ mname }};
+{% for line in s.deserialize %}
+{{ line }}
 {% endfor %}
-        return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
     }
 };
-{% else %}
-template <>
-struct Serializer<{{ s.qualified }}> {
-    static void serialize(BinaryStream &stream, const {{ s.qualified }} &value)
-    {
-{% for field in s.fields %}
-{% if field.kind == "enum" and field.wire.string %}
-        Serializer<{{ field.ser_type }}>::serialize(stream, value.{{ field.name }});
-{% elif field.kind == "enum" and field.wire.varint %}
-        stream.writeVarInt<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "enum" and field.wire.big_endian %}
-        stream.write<{{ field.wire.underlying }}, std::endian::big>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "enum" %}
-        stream.write<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "struct" %}
-        Serializer<{{ field.ser_type }}>::serialize(stream, value.{{ field.name }});
-{% elif field.kind == "string" %}
-        stream.write(value.{{ field.name }});
-{% elif field.kind == "primitive" and field.varint %}
-        stream.writeVarInt<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "primitive" and field.big_endian %}
-        stream.write<{{ field.underlying }}, std::endian::big>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "primitive" %}
-        stream.write<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% elif field.kind == "optional" %}
-        stream.write<bool>(value.{{ field.name }}.has_value());
-        if (value.{{ field.name }}.has_value()) {
-{% if field.inner.kind == "enum" and field.inner.wire.string %}
-            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
-{% elif field.inner.kind == "enum" and field.inner.wire.varint %}
-            stream.writeVarInt<{{ field.inner.wire.underlying }}>(static_cast<{{ field.inner.wire.underlying }}>(*value.{{ field.name }}));
-{% elif field.inner.kind == "enum" %}
-            stream.write<{{ field.inner.wire.underlying }}>(static_cast<{{ field.inner.wire.underlying }}>(*value.{{ field.name }}));
-{% else %}
-            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
-{% endif %}
-        }
-{% elif field.kind == "optional_variant" %}
-        stream.writeVarInt<std::uint32_t>(value.{{ field.name }}.has_value() ? 0u : 1u);
-        if (value.{{ field.name }}.has_value()) {
-            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
-        }
-{% endif %}
-{% endfor %}
-    }
-
-    static auto deserialize(BinaryReader &stream) -> std::expected<{{ s.qualified }}, std::error_code>
-    {
-        {{ s.qualified }} out;
-{% for field in s.fields %}
-{% if field.kind == "enum" and field.wire.string %}
-        {
-            auto v = Serializer<{{ field.ser_type }}>::deserialize(stream);
-            if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = *v;
-        }
-{% elif field.kind == "enum" %}
-        {
-{% if field.wire.varint %}
-            auto v = stream.readVarInt<{{ field.wire.underlying }}>();
-{% elif field.wire.big_endian %}
-            auto v = stream.read<{{ field.wire.underlying }}, std::endian::big>();
-{% else %}
-            auto v = stream.read<{{ field.wire.underlying }}>();
-{% endif %}
-            if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = static_cast<{{ field.value_cast }}>(*v);
-        }
-{% elif field.kind == "struct" %}
-        {
-            auto v = Serializer<{{ field.ser_type }}>::deserialize(stream);
-            if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = *v;
-        }
-{% elif field.kind == "string" %}
-        {
-            auto v = stream.read<std::string>();
-            if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = *v;
-        }
-{% elif field.kind == "primitive" %}
-        {
-{% if field.varint %}
-            auto v = stream.readVarInt<{{ field.underlying }}>();
-{% elif field.big_endian %}
-            auto v = stream.read<{{ field.underlying }}, std::endian::big>();
-{% else %}
-            auto v = stream.read<{{ field.underlying }}>();
-{% endif %}
-            if (!v) return make_unexpected(v.error());
-            out.{{ field.name }} = static_cast<{{ field.ctype }}>(*v);
-        }
-{% elif field.kind == "optional" %}
-        {
-            auto present = stream.read<bool>();
-            if (!present) return make_unexpected(present.error());
-            if (*present) {
-{% if field.inner.kind == "enum" and field.inner.wire.string %}
-                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
-                if (!v) return make_unexpected(v.error());
-                out.{{ field.name }} = *v;
-{% elif field.inner.kind == "enum" %}
-{% if field.inner.wire.varint %}
-                auto v = stream.readVarInt<{{ field.inner.wire.underlying }}>();
-{% else %}
-                auto v = stream.read<{{ field.inner.wire.underlying }}>();
-{% endif %}
-                if (!v) return make_unexpected(v.error());
-                out.{{ field.name }} = static_cast<{{ field.inner.value_cast }}>(*v);
-{% else %}
-                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
-                if (!v) return make_unexpected(v.error());
-                out.{{ field.name }} = *v;
-{% endif %}
-            }
-        }
-{% elif field.kind == "optional_variant" %}
-        {
-            auto tag = stream.readVarInt<std::uint32_t>();
-            if (!tag) return make_unexpected(tag.error());
-            if (*tag == 0) {
-                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
-                if (!v) return make_unexpected(v.error());
-                out.{{ field.name }} = *v;
-            }
-        }
-{% endif %}
-{% endfor %}
-        return out;
-    }
-};
-{% endif %}

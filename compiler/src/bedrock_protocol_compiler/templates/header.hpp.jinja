@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 #include <variant>
-{% if has_serializers %}
+{% if m.has_serializers %}
 
 #include <system_error>
 
@@ -12,24 +12,24 @@
 #include <bedrock/serializer.hpp>
 #include <bedrock/stream.hpp>
 {% endif %}
-{% if dep_includes %}
+{% if m.dep_includes %}
 
-{% for include in dep_includes %}
+{% for include in m.dep_includes %}
 #include "{{ include }}"
 {% endfor %}
 {% endif %}
 
-{% if package %}
-namespace {{ package }} {
+{% if m.package %}
+namespace {{ m.package }} {
 
 {% endif %}
-{% for name, ctype in module_aliases %}
+{% for name, ctype in m.module_aliases %}
 enum {{ name }} : {{ ctype }} {};
 {% endfor %}
-{% if module_aliases and (unversioned or has_versioned) %}
+{% if m.module_aliases and (m.unversioned or m.has_versioned) %}
 
 {% endif %}
-{% for d in unversioned %}
+{% for d in m.unversioned %}
 {% if not loop.first %}
 
 {% endif %}
@@ -39,21 +39,21 @@ enum {{ name }} : {{ ctype }} {};
 {% include "class.jinja" %}
 {% endif %}
 {% endfor %}
-{% if has_versioned %}
-{% if unversioned %}
+{% if m.has_versioned %}
+{% if m.unversioned %}
 
 {% endif %}
-{% for ns in namespaces %}
+{% for ns in m.namespaces %}
 {% if not loop.first %}
 
 {% endif %}
-namespace {{ ns.namespace }} {
+namespace {{ ns.name }} {
 {% for e in ns.entries %}
 
 {% if e.alias %}
 using {{ e.name }} = {{ e.target }}::{{ e.name }};
 {% else %}
-{% set d = e.def %}
+{% set d = e.definition %}
 {% if d.kind == "enum" %}
 {% include "enum.jinja" %}
 {% else %}
@@ -62,40 +62,40 @@ using {{ e.name }} = {{ e.target }}::{{ e.name }};
 {% endif %}
 {% endfor %}
 
-}  // namespace {{ ns.namespace }}
+}  // namespace {{ ns.name }}
 {% endfor %}
 
 namespace detail {
-{% for t in traits %}
+{% for t in m.traits %}
 {% if not loop.first %}
 
 {% endif %}
 template <int V>
 struct {{ t.name }}_;
-{% for lo, hi, ns in t.ranges %}
+{% for clause, ns in t.ranges %}
 
-template <int V> requires ({% if lo %}V >= {{ lo }}{% endif %}{% if lo and hi %} && {% endif %}{% if hi %}V < {{ hi }}{% endif %})
+template <int V> requires ({{ clause }})
 struct {{ t.name }}_<V> { using type = {{ ns }}::{{ t.name }}; };
 {% endfor %}
 {% endfor %}
 
 }  // namespace detail
 
-{% for t in traits %}
+{% for t in m.traits %}
 template <int V> using {{ t.name }}_ = typename detail::{{ t.name }}_<V>::type;
 {% endfor %}
 {% endif %}
-{% for s in serializers %}
+{% for s in m.serializers %}
 
 {% include "serializer.jinja" %}
 {% endfor %}
-{% if has_versioned and latest_aliases %}
+{% if m.has_versioned and m.latest_aliases %}
 
-{% for name in latest_aliases %}
-using {{ name }} = {{ name }}_<{{ latest_version }}>;
+{% for name in m.latest_aliases %}
+using {{ name }} = {{ name }}_<{{ m.latest_version }}>;
 {% endfor %}
 {% endif %}
-{% if package %}
+{% if m.package %}
 
-}  // namespace {{ package }}
+}  // namespace {{ m.package }}
 {% endif %}

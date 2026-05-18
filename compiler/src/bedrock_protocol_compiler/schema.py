@@ -1,0 +1,208 @@
+"""Language-agnostic protocol IR.
+
+The frontend turns griffe-parsed DSL modules into this model; a backend lowers
+it to a target language. Nothing here is C++-specific. A type's declared shape
+lives in `TypeRef`; how it travels on the wire lives in `Wire`. The two are
+kept apart so a backend can spell a struct member from one and a serializer
+body from the other without re-deriving either.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+#: DSL primitive names. `str` is length-prefixed; the rest are numeric/bool.
+PRIMITIVES: frozenset[str] = frozenset(
+    {
+        "str", "int", "bool", "float", "double",
+        "varint32", "varint64", "uvarint32", "uvarint64",
+        "int8", "int16", "int32", "int64",
+        "uint8", "uint16", "uint32", "uint64",
+    }
+)
+
+#: Primitives carried as LEB128 (zigzag for signed) rather than fixed-width.
+VARINT_PRIMITIVES: frozenset[str] = frozenset(
+    {"varint32", "varint64", "uvarint32", "uvarint64"}
+)
+
+
+class CompilerError(Exception):
+    """A schema-level error surfaced to the user without a traceback."""
+
+
+# --- type references: a field's declared shape -------------------------------
+
+
+@dataclass(frozen=True)
+class Primitive:
+    name: str
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset()
+
+
+@dataclass(frozen=True)
+class Named:
+    """A reference to a user-defined struct, enum, or alias."""
+
+    name: str
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset({self.name})
+
+
+@dataclass(frozen=True)
+class Optional:
+    inner: TypeRef
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
+
+
+TypeRef = Primitive | Named | Optional
+
+
+# --- wire encodings: how a field travels on the wire -------------------------
+
+
+@dataclass(frozen=True)
+class Scalar:
+    """A fixed-width or varint numeric/bool primitive."""
+
+    primitive: str
+    varint: bool
+    big_endian: bool = False
+
+
+@dataclass(frozen=True)
+class Str:
+    """A varuint32 length prefix followed by UTF-8 bytes."""
+
+
+@dataclass(frozen=True)
+class StructRef:
+    """A nested struct, encoded through its own serializer."""
+
+    name: str
+
+
+@dataclass(frozen=True)
+class EnumRef:
+    """An enum field. `scalar` None means name-coded (the enumerator name
+    travels as a string); otherwise the enum is integer-coded over `scalar`."""
+
+    name: str
+    scalar: Scalar | None
+
+
+@dataclass(frozen=True)
+class Opt:
+    """An optional payload. `discriminator` picks the presence encoding:
+    False is a one-byte bool flag, True is a varuint (0 present, 1 absent)."""
+
+    inner: Wire
+    discriminator: bool
+
+
+Wire = Scalar | Str | StructRef | EnumRef | Opt
+
+
+# --- declarations ------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class EnumMember:
+    name: str
+    value: int
+    since: int | None
+    until: int | None
+
+    @property
+    def wire_name(self) -> str:
+        """The string a name-coded enum puts on the wire."""
+        return self.name.lower().replace("_", "")
+
+
+@dataclass(frozen=True)
+class Enum:
+    name: str
+    members: tuple[EnumMember, ...]
+    since: int | None
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset()
+
+    @property
+    def change_points(self) -> frozenset[int]:
+        points = {self.since} if self.since is not None else set()
+        for m in self.members:
+            if m.since is not None:
+                points.add(m.since)
+            if m.until is not None:
+                points.add(m.until)
+        return frozenset(points)
+
+
+@dataclass(frozen=True)
+class Field:
+    name: str
+    type: TypeRef | None
+    wire: Wire | None
+    since: int | None
+
+
+@dataclass(frozen=True)
+class Struct:
+    name: str
+    fields: tuple[Field, ...]
+    enums: tuple[Enum, ...]  # nested, version-invariant
+    packet_id: int | None
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset().union(
+            *(f.type.referenced for f in self.fields if f.type is not None)
+        )
+
+    @property
+    def change_points(self) -> frozenset[int]:
+        return frozenset(f.since for f in self.fields if f.since is not None)
+
+
+@dataclass(frozen=True)
+class Alias:
+    """A module-level `type Name = <primitive>` declaration."""
+
+    name: str
+    primitive: str
+
+
+@dataclass(frozen=True)
+class Module:
+    name: str  # dotted, e.g. protocol.actor
+    stem: str  # input file stem, drives the output filename
+    package: str | None
+    types: tuple[Enum | Struct, ...]  # declaration order
+    aliases: tuple[Alias, ...]
+    imports: tuple[str, ...]  # dotted names of loaded modules it draws types from
+
+    @property
+    def enums(self) -> tuple[Enum, ...]:
+        return tuple(t for t in self.types if isinstance(t, Enum))
+
+    @property
+    def structs(self) -> tuple[Struct, ...]:
+        return tuple(t for t in self.types if isinstance(t, Struct))
+
+
+@dataclass(frozen=True)
+class Schema:
+    """Every loaded module, plus the subset that should produce output."""
+
+    modules: dict[str, Module]
+    outputs: tuple[str, ...]
