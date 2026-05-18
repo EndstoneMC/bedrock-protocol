@@ -99,3 +99,12 @@
    gophertunnel equivalent, do not hand-write the golden -- raise it
    instead. Golden tests cover packets only -- a non-packet component type
    is exercised through a packet that embeds it, not on its own.
+
+9. **Field names come from protocol-docs.** When adding a packet, name each
+   field after the EndstoneMC protocol-docs JSON (the same source rule 7
+   draws on), carried into the project's `snake_case` convention. Do not
+   invent or paraphrase names, and do not lift them from gophertunnel or
+   CloudburstMC -- those references date and shape fields, they do not name
+   them. If a field is absent from protocol-docs, fall back to the `.dot`
+   files in the `Mojang/bedrock-protocol-docs` repository and take the name
+   from there. Raise anything neither source names.

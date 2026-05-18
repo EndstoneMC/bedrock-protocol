@@ -17,6 +17,9 @@
 {% if m.uses_uuid %}
 #include <bedrock/uuid.hpp>
 {% endif %}
+{% if m.uses_nbt %}
+#include <bedrock/nbt.hpp>
+{% endif %}
 {% endif %}
 {% if m.dep_includes %}
 

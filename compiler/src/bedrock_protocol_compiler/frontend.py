@@ -12,6 +12,7 @@ from typing import cast
 import griffe
 
 from .schema import (
+    BUILTIN_TYPES,
     PRIMITIVES,
     VARINT_PRIMITIVES,
     Alias,
@@ -124,7 +125,7 @@ class Frontend:
         self._alias_primitive: dict[str, str] = {}
         for mod in self._griffe.values():
             for cls in mod.classes.values():
-                if cls.is_alias:
+                if cls.is_alias or cls.name in BUILTIN_TYPES:
                     continue
                 bucket = self._enum_names if self._is_int_enum(cls) else self._struct_names
                 bucket.add(cls.name)
@@ -137,7 +138,7 @@ class Frontend:
         mod = self._griffe[name]
         types: list[Enum | Struct] = []
         for cls in mod.classes.values():
-            if cls.is_alias:
+            if cls.is_alias or cls.name in BUILTIN_TYPES:
                 continue
             types.append(self._enum(cls) if self._is_int_enum(cls) else self._struct(cls))
         imports = tuple(
@@ -223,8 +224,8 @@ class Frontend:
     def _typeref(self, ann: _Ann, field_name: str) -> TypeRef | None:
         if ann is None:
             return None
-        if self._is_uuid(ann):
-            return Named("UUID")
+        if (builtin := self._builtin(ann)) is not None:
+            return Named(builtin)
         arms = self._flatten_union(ann)
         if arms is not None:
             return self._union_typeref(arms, field_name)
@@ -395,8 +396,8 @@ class Frontend:
         nested: frozenset[str],
         field_name: str,
     ) -> Wire | None:
-        if self._is_uuid(ann):
-            return StructRef("UUID")
+        if (builtin := self._builtin(ann)) is not None:
+            return StructRef(builtin)
         if isinstance(ann, griffe.ExprSubscript):
             repeat = self._repeat_parts(ann, field_name)
             if repeat is not None:
@@ -478,13 +479,15 @@ class Frontend:
         return arm == "None"
 
     @staticmethod
-    def _is_uuid(ann: _Ann) -> bool:
-        """A 128-bit UUID, spelled with the stdlib `uuid.UUID` (after
-        `import uuid`) or a bare `UUID` (after `from uuid import UUID`). The
-        backend routes it through the built-in `bedrock::protocol::UUID`."""
+    def _builtin(ann: _Ann) -> str | None:
+        """The name of the compiler built-in `ann` refers to (see
+        `BUILTIN_TYPES`), or None. A built-in is named bare -- `CompoundTag`,
+        or `UUID` from `from uuid import UUID` -- or as the stdlib `uuid.UUID`."""
         if isinstance(ann, griffe.ExprName):
-            return ann.name == "UUID"
-        return isinstance(ann, griffe.ExprAttribute) and str(ann) == "uuid.UUID"
+            return ann.name if ann.name in BUILTIN_TYPES else None
+        if isinstance(ann, griffe.ExprAttribute) and str(ann) == "uuid.UUID":
+            return "UUID"
+        return None
 
     @staticmethod
     def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:

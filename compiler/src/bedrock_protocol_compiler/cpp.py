@@ -14,6 +14,7 @@ from typing import Any
 import inflection
 
 from .schema import (
+    BUILTIN_TYPES,
     CompilerError,
     Enum,
     EnumMember,
@@ -21,6 +22,7 @@ from .schema import (
     Field,
     Map,
     Mapping,
+    NBT_TYPES,
     Module,
     Named,
     Opt,
@@ -60,10 +62,6 @@ PRIMITIVE_TYPES: dict[str, str] = {
     "uint32": "std::uint32_t",
     "uint64": "std::uint64_t",
 }
-
-#: Types the backend resolves without a schema declaration. `UUID` is spelled
-#: `uuid.UUID` in the DSL and hand-written in <bedrock/uuid.hpp>.
-BUILTIN_TYPES: frozenset[str] = frozenset({"UUID"})
 
 
 # --- render model: a header expressed as data --------------------------------
@@ -130,6 +128,7 @@ class RenderModule:
     has_versioned: bool
     has_serializers: bool
     uses_uuid: bool
+    uses_nbt: bool
 
 
 class _Code:
@@ -233,6 +232,7 @@ class CppBackend:
             has_versioned=bool(plan.versioned),
             has_serializers=bool(serializers),
             uses_uuid=any("UUID" in s.referenced for s in module.structs),
+            uses_nbt=any(s.referenced & NBT_TYPES for s in module.structs),
         )
 
     # --- type definitions ----------------------------------------------------

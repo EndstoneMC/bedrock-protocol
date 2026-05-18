@@ -26,6 +26,12 @@ class Vec3:
     z: float
 
 
+class BlockPos:
+    x: varint32
+    y: varint32
+    z: varint32
+
+
 type Color = int32
 
 
