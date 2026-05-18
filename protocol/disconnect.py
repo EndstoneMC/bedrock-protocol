@@ -131,7 +131,7 @@ class DisconnectFailReason(IntEnum):
     REALMS_TIMELINE_REQUIRED = value(119, since=818)
     GUEST_WITHOUT_HOST = value(120, since=818)
     FAILED_TO_JOIN_EXPERIENCE = value(121, since=818)
-    NETHER_NET_DATA_CHANNEL_CLOSED = value(123, since=827)
+    NETHER_NET_DATA_CHANNEL_CLOSED = value(122, since=827)
     DISCOVERY_ENVIRONMENT_MISMATCH = value(123, since=859)
     HOST_WITHOUT_KEYS = value(124, since=859)
     HOST_SIGNED_OUT = value(125, since=893)
