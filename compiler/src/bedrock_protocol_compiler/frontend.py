@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
-from typing import TypeGuard, cast
+from typing import cast
 
 import griffe
 
@@ -34,7 +34,9 @@ from .schema import (
     Str,
     Struct,
     StructRef,
+    Switch,
     TypeRef,
+    Variant,
     Wire,
 )
 
@@ -221,9 +223,9 @@ class Frontend:
     def _typeref(self, ann: _Ann, field_name: str) -> TypeRef | None:
         if ann is None:
             return None
-        if self._is_optional(ann):
-            inner = self._typeref(self._optional_inner(ann), field_name)
-            return Optional(inner) if inner is not None else None
+        arms = self._flatten_union(ann)
+        if arms is not None:
+            return self._union_typeref(arms, field_name)
         if isinstance(ann, griffe.ExprSubscript):
             repeat = self._repeat_parts(ann, field_name)
             if repeat is not None:
@@ -242,6 +244,25 @@ class Frontend:
             return Primitive(ann.name) if ann.name in PRIMITIVES else Named(ann.name)
         return None
 
+    def _union_typeref(
+        self, arms: list[griffe.Expr | str], field_name: str
+    ) -> TypeRef | None:
+        """`X | None` is an Optional; any other union is an N-arm Variant."""
+        if len(arms) == 2 and sum(self._is_none(a) for a in arms) == 1:
+            inner_ann = next(a for a in arms if not self._is_none(a))
+            inner = self._typeref(inner_ann, field_name)
+            return Optional(inner) if inner is not None else None
+        refs: list[TypeRef | None] = []
+        for arm in arms:
+            if self._is_none(arm):
+                refs.append(None)
+                continue
+            ref = self._typeref(arm, field_name)
+            if ref is None:
+                return None
+            refs.append(ref)
+        return Variant(tuple(refs))
+
     # --- wire encodings ------------------------------------------------------
 
     def _wire(
@@ -255,10 +276,30 @@ class Frontend:
             )
         type_kw = self._name_kwarg(call, "field", "type") if call is not None else None
         prefix = self._repeat_prefix(call, field_name)
-        if self._is_optional(ann):
-            base = self._base_wire(
-                self._optional_inner(ann), type_kw, prefix, nested, field_name
+        arms = self._flatten_union(ann)
+        if arms is not None:
+            return self._union_wire(
+                arms, field_name, type_kw, endian, prefix, nested
             )
+        base = self._base_wire(ann, type_kw, prefix, nested, field_name)
+        if base is None:
+            return None
+        return self._with_endian(base, endian, field_name)
+
+    def _union_wire(
+        self,
+        arms: list[griffe.Expr | str],
+        field_name: str,
+        type_kw: str | None,
+        endian: str | None,
+        prefix: Scalar,
+        nested: frozenset[str],
+    ) -> Wire | None:
+        """`X | None` is an Optional (bool flag, or a union index under
+        field(type=Union)); any other union is an N-arm varint-tagged Switch."""
+        if len(arms) == 2 and sum(self._is_none(a) for a in arms) == 1:
+            inner_ann = next(a for a in arms if not self._is_none(a))
+            base = self._base_wire(inner_ann, type_kw, prefix, nested, field_name)
             if base is None:
                 return None
             if endian is not None:
@@ -269,12 +310,20 @@ class Frontend:
                     f"{field_name}: an optional enum field needs field(type=) for "
                     f"the enum wire primitive and so cannot also use type=Union"
                 )
-            present_tag = 1 if discriminator and self._none_first(ann) else 0
+            present_tag = 1 if discriminator and self._is_none(arms[0]) else 0
             return Opt(base, discriminator, present_tag)
-        base = self._base_wire(ann, type_kw, prefix, nested, field_name)
-        if base is None:
-            return None
-        return self._with_endian(base, endian, field_name)
+        if endian is not None:
+            raise CompilerError(self._endian_scope_error(field_name))
+        wires: list[Wire | None] = []
+        for arm in arms:
+            if self._is_none(arm):
+                wires.append(None)
+                continue
+            wire = self._base_wire(arm, type_kw, prefix, nested, field_name)
+            if wire is None:
+                return None
+            wires.append(wire)
+        return Switch(tuple(wires))
 
     def _repeat_prefix(self, call: _Ann, field_name: str) -> Scalar:
         """The length-prefix scalar a `list[T]` field uses -- `field(prefix=)`
@@ -421,22 +470,25 @@ class Frontend:
     # --- griffe Expr helpers -------------------------------------------------
 
     @staticmethod
-    def _is_optional(ann: object) -> TypeGuard[griffe.ExprBinOp]:
-        return (
-            isinstance(ann, griffe.ExprBinOp)
-            and ann.operator == "|"
-            and (ann.right == "None" or ann.left == "None")
-        )
+    def _is_none(arm: object) -> bool:
+        return arm == "None"
 
     @staticmethod
-    def _optional_inner(ann: griffe.ExprBinOp) -> griffe.Expr | str:
-        return ann.left if ann.right == "None" else ann.right
-
-    @staticmethod
-    def _none_first(ann: griffe.ExprBinOp) -> bool:
-        """True for `None | T`, False for `T | None` -- the union-index order
-        that fixes which discriminator value means present."""
-        return ann.left == "None"
+    def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
+        """Flatten a `A | B | ...` annotation into its arms in source order,
+        or None when `ann` is not a `|` expression."""
+        if not (isinstance(ann, griffe.ExprBinOp) and ann.operator == "|"):
+            return None
+        arms: list[griffe.Expr | str] = []
+        stack: list[griffe.Expr | str] = [ann]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, griffe.ExprBinOp) and node.operator == "|":
+                stack.append(node.right)
+                stack.append(node.left)
+            else:
+                arms.append(node)
+        return arms
 
     @staticmethod
     def _is_int_enum(cls: griffe.Class) -> bool:

@@ -33,7 +33,9 @@ from .schema import (
     Str,
     Struct,
     StructRef,
+    Switch,
     TypeRef,
+    Variant,
     Wire,
 )
 from .versioning import VersionPlan
@@ -277,6 +279,17 @@ class CppBackend:
                 if key_type is None or value_type is None:
                     return None
                 return f"std::map<{key_type}, {value_type}>"
+            case Variant(arms=arms):
+                parts: list[str] = []
+                for arm in arms:
+                    if arm is None:
+                        parts.append("std::monostate")
+                        continue
+                    arm_type = self._cpp_type(arm, nested)
+                    if arm_type is None:
+                        return None
+                    parts.append(arm_type)
+                return f"std::variant<{', '.join(parts)}>"
         return None
 
     # --- serializers ---------------------------------------------------------
@@ -409,6 +422,21 @@ class CppBackend:
                     self._write(code, type_ref.key, key, f"k{depth}")
                     self._write(code, type_ref.value, value, f"v{depth}")
                 self._rep -= 1
+            case Switch(arms=arms):
+                assert isinstance(type_ref, Variant)
+                code(
+                    f"stream.writeVarInt<std::uint32_t>("
+                    f"static_cast<std::uint32_t>({expr}.index()));"
+                )
+                with code.block(f"switch ({expr}.index())"):
+                    for index, arm in enumerate(arms):
+                        with code.block(f"case {index}:"):
+                            if arm is not None:
+                                self._write(
+                                    code, type_ref.arms[index], arm,
+                                    f"std::get<{index}>({expr})",
+                                )
+                            code("break;")
 
     def _read(
         self, code: _Code, type_ref: TypeRef | None, wire: Wire, target: str
@@ -487,6 +515,34 @@ class CppBackend:
                     with code.block():
                         self._read(code, type_ref.value, value, f"v{depth}")
                     code(f"{target}.emplace(k{depth}, v{depth});")
+                self._rep -= 1
+            case Switch(arms=arms):
+                assert isinstance(type_ref, Variant)
+                depth = self._rep
+                self._rep += 1
+                code(f"auto tag{depth} = stream.readVarInt<std::uint32_t>();")
+                code(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
+                holder = f"std::remove_reference_t<decltype({target})>"
+                with code.block(f"switch (*tag{depth})"):
+                    for index, arm in enumerate(arms):
+                        with code.block(f"case {index}:"):
+                            code(
+                                f"std::variant_alternative_t<{index}, {holder}> "
+                                f"arm{depth}{{}};"
+                            )
+                            if arm is not None:
+                                with code.block():
+                                    self._read(
+                                        code, type_ref.arms[index], arm,
+                                        f"arm{depth}",
+                                    )
+                            code(f"{target}.emplace<{index}>(arm{depth});")
+                            code("break;")
+                    with code.block("default:"):
+                        code(
+                            "return make_unexpected(std::make_error_code("
+                            "std::errc::illegal_byte_sequence));"
+                        )
                 self._rep -= 1
 
     @staticmethod

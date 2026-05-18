@@ -88,7 +88,21 @@ class Mapping:
         return self.key.referenced | self.value.referenced
 
 
-TypeRef = Primitive | Named | Optional | Repeated | Mapping
+@dataclass(frozen=True)
+class Variant:
+    """A tagged-union field's declared shape: a `std::variant` over `arms`,
+    indexed by a discriminator. A None arm is an absent case (`std::monostate`)."""
+
+    arms: tuple[TypeRef | None, ...]
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset().union(
+            *(a.referenced for a in self.arms if a is not None)
+        )
+
+
+TypeRef = Primitive | Named | Optional | Repeated | Mapping | Variant
 
 
 # --- wire encodings: how a field travels on the wire -------------------------
@@ -157,7 +171,15 @@ class Map:
     prefix: Scalar
 
 
-Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map
+@dataclass(frozen=True)
+class Switch:
+    """A tagged union: a varuint32 discriminator selects one of `arms` by
+    index, then that arm's payload follows. A None arm carries no payload."""
+
+    arms: tuple[Wire | None, ...]
+
+
+Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map | Switch
 
 
 # --- declarations ------------------------------------------------------------
