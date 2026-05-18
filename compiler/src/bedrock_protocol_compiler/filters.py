@@ -1,37 +1,59 @@
-"""Jinja filter implementations: shape griffe Classes into render-ready dicts."""
+"""Shape griffe Classes into render-ready data: name references, wire kinds,
+module-level aliases. Version-snapshot planning lives in `versioning.py`."""
 
 import click
 import griffe
 
 from .parse import (
-    class_packet_id,
     class_since,
     is_int_enum,
     name_kwarg,
     parse_member_value,
-    since_kwarg,
     str_kwarg,
 )
 from .types import PRIMITIVE_TYPES, VARINT_PRIMITIVES, resolve_type
 
 
-def _has_named_ref(ann, names: set[str]) -> bool:
+def has_named_ref(ann, names: set[str]) -> bool:
     """True if `ann` (a griffe annotation expression) references any name in `names`."""
     if ann is None:
         return False
     if isinstance(ann, griffe.ExprName):
         return ann.name in names
     if isinstance(ann, griffe.ExprBinOp):
-        return _has_named_ref(ann.left, names) or _has_named_ref(ann.right, names)
+        return has_named_ref(ann.left, names) or has_named_ref(ann.right, names)
     if isinstance(ann, griffe.ExprSubscript):
         s = ann.slice
         if isinstance(s, griffe.ExprTuple):
-            return any(_has_named_ref(el, names) for el in s.elements)
-        return _has_named_ref(s, names)
+            return any(has_named_ref(el, names) for el in s.elements)
+        return has_named_ref(s, names)
     return False
 
 
-def _class_has_field_since(cls) -> bool:
+def referenced_names(ann) -> set[str]:
+    """Every identifier `ann` (a griffe annotation expression) mentions."""
+    if ann is None:
+        return set()
+    if isinstance(ann, griffe.ExprName):
+        return {ann.name}
+    if isinstance(ann, griffe.ExprBinOp):
+        return referenced_names(ann.left) | referenced_names(ann.right)
+    if isinstance(ann, griffe.ExprSubscript):
+        out = referenced_names(ann.left)
+        s = ann.slice
+        if isinstance(s, griffe.ExprTuple):
+            for el in s.elements:
+                out |= referenced_names(el)
+        else:
+            out |= referenced_names(s)
+        return out
+    return set()
+
+
+def class_has_field_since(cls) -> bool:
+    """True if any of the class's fields carries `field(since=N)`."""
+    from .parse import since_kwarg
+
     for _, attr in cls.attributes.items():
         if attr.value is not None and since_kwarg(attr.value, "field") is not None:
             return True
@@ -42,10 +64,9 @@ def nested_enums(cls) -> dict[str, griffe.Class]:
     """IntEnum classes declared inside `cls`, keyed by name.
 
     A nested enum models a per-packet enum (EndstoneMC's `Packet::Enum`). It
-    emits as a plain `struct Enum { enum Value : int { ... }; }` member of the
-    packet struct, not a `template <int V>` at namespace scope -- so it does
-    not need its own version parameter (which would illegally shadow the
-    packet's `ProtocolVersion`).
+    emits as an `enum class` member of the packet struct, not as a module-scope
+    type -- so it has no version parameter of its own and its visibility is the
+    owning packet's.
     """
     return {
         c.name: c
@@ -54,46 +75,13 @@ def nested_enums(cls) -> dict[str, griffe.Class]:
     }
 
 
-def compute_templated_classes(classes, enum_names: set[str]) -> set[str]:
-    """Return the names of non-enum classes that should be emitted as
-    `template <int ProtocolVersion> struct Foo_;` rather than plain structs.
-
-    A class is templated iff (a) any of its fields carries `field(since=N)` or
-    (b) any of its field annotations transitively reaches a templated entity
-    (every enum, plus other templated structs). Fixed-point iteration over
-    the dependency graph until stable.
-    """
-    templated: set[str] = set()
-    for c in classes:
-        if is_int_enum(c):
-            continue
-        if _class_has_field_since(c):
-            templated.add(c.name)
-
-    while True:
-        seed = enum_names | templated
-        changed = False
-        for c in classes:
-            if is_int_enum(c) or c.name in templated:
-                continue
-            for _, attr in c.attributes.items():
-                if _has_named_ref(attr.annotation, seed):
-                    templated.add(c.name)
-                    changed = True
-                    break
-        if not changed:
-            break
-
-    return templated
-
-
 def type_alias_wires(mod) -> dict[str, dict]:
     """Map module-level alias name to its wire info, when the alias target is
     a primitive with a known wire encoding.
 
     Covers both `X = primitive` and PEP 695 `type X = primitive`. The returned
     info is `{"underlying": <c++ type>, "varint": <bool>}` — enough for the
-    codegen to emit `stream.write<U, true>(...)` or `stream.write<U>(...)`.
+    codegen to emit `stream.writeVarInt<U>(...)` or `stream.write<U>(...)`.
     """
     out: dict[str, dict] = {}
 
@@ -123,7 +111,6 @@ def _serialize_kind_for_type(
     ann,
     class_names: set[str],
     enum_names: set[str],
-    templated_classes: set[str],
     alias_wires: dict[str, dict],
     nested_enum_names: set[str] = frozenset(),
 ) -> dict | None:
@@ -131,23 +118,18 @@ def _serialize_kind_for_type(
     if isinstance(ann, griffe.ExprName):
         name = ann.name
         if name in nested_enum_names:
-            return {"kind": "enum", "type_name": name, "nested": True, "templated": False}
+            return {"kind": "enum", "type_name": name, "nested": True}
         if name in enum_names:
-            return {"kind": "enum", "type_name": name, "nested": False, "templated": True}
+            return {"kind": "enum", "type_name": name, "nested": False}
         if name in class_names:
-            return {
-                "kind": "struct",
-                "type_name": name,
-                "templated": name in templated_classes,
-            }
+            return {"kind": "struct", "type_name": name}
         if name == "str":
             return {"kind": "string"}
         # Built-in primitives win over alias_wires: the codegen knows their
         # wire encoding directly via PRIMITIVE_TYPES + VARINT_PRIMITIVES,
         # without consulting whatever `type varint32 = int` happens to alias
         # to in common.py. `big_endian` defaults to False here -- it is a
-        # per-field choice (`field(endian="big")`) applied by the caller,
-        # not a property of the type.
+        # per-field choice (`field(endian="big")`) applied by the caller.
         if name in PRIMITIVE_TYPES:
             return {
                 "kind": "primitive",
@@ -202,10 +184,9 @@ def _enum_wire(type_kw: str | None, field_name: str) -> dict:
 
 
 def _reject_string_coded_nested(enum_info: dict, field_name: str) -> None:
-    """A string-coded enum is encoded via a `Serializer<Enum_<V>>` partial
-    specialization at namespace scope. A nested enum is a member of a
-    dependent type (`Packet_<V>::Enum`) and cannot be a specialization
-    pattern, so it must use an integer wire instead."""
+    """A string-coded enum is encoded via a `Serializer<Enum>` specialization.
+    A nested enum is a member of its owning packet and cannot be a
+    specialization pattern on its own, so it must use an integer wire."""
     if enum_info.get("nested") and enum_info["wire"]["string"]:
         raise click.ClickException(
             f"{field_name}: a nested enum cannot be string-coded "
@@ -214,11 +195,10 @@ def _reject_string_coded_nested(enum_info: dict, field_name: str) -> None:
         )
 
 
-def _field_serialize_kind(
+def field_serialize_kind(
     attr,
     class_names: set[str],
     enum_names: set[str],
-    templated_classes: set[str],
     alias_wires: dict[str, dict],
     nested_enum_names: set[str] = frozenset(),
 ) -> dict | None:
@@ -230,12 +210,9 @@ def _field_serialize_kind(
     0=present and 1=absent for compat with gophertunnel's HideX pattern).
 
     An `enum` kind (direct, or as an `optional` inner) carries a `wire` spec
-    resolved from `field(type=...)` -- see `_enum_wire`.
-
-    A `field(endian="big")` marker flips the `big_endian` flag on a
-    fixed-width primitive field, or on a fixed-width integer-coded enum
-    field's `wire` spec, so the codegen emits
-    `stream.write<T, std::endian::big>(...)`.
+    resolved from `field(type=...)` -- see `_enum_wire`. A `field(endian=...)`
+    marker flips the `big_endian` flag on a fixed-width primitive field, or on
+    a fixed-width integer-coded enum field's `wire` spec.
     """
     ann = attr.annotation
     endian = (
@@ -254,12 +231,7 @@ def _field_serialize_kind(
     ):
         other = ann.left if ann.right == "None" else ann.right
         inner = _serialize_kind_for_type(
-            other,
-            class_names,
-            enum_names,
-            templated_classes,
-            alias_wires,
-            nested_enum_names,
+            other, class_names, enum_names, alias_wires, nested_enum_names
         )
         if inner is None:
             return None
@@ -269,12 +241,7 @@ def _field_serialize_kind(
             info = {"kind": "optional", "inner": inner}
     else:
         info = _serialize_kind_for_type(
-            ann,
-            class_names,
-            enum_names,
-            templated_classes,
-            alias_wires,
-            nested_enum_names,
+            ann, class_names, enum_names, alias_wires, nested_enum_names
         )
         if info is None:
             return None
@@ -311,182 +278,16 @@ def _field_serialize_kind(
     return info
 
 
-def _reject_versioned_nested_enums(cls, nested: dict) -> None:
-    """A nested enum's member set must be version-invariant. Its visibility is
-    the owning packet's, and the packet specialization that contains it is
-    already version-scoped, so per-member `since`/`until` would have to
-    compose with the packet's own split -- not supported. Version such an
-    enum at module scope instead."""
-    for ename, ecls in nested.items():
-        if class_since(ecls) is not None:
-            raise click.ClickException(
-                f"{cls.name}.{ename}: a nested enum cannot carry @enum(since=); "
-                f"declare it at module scope to version it"
-            )
-        for mname, _, since, until in enum_members(ecls)["entries"]:
-            if since is not None or until is not None:
-                raise click.ClickException(
-                    f"{cls.name}.{ename}.{mname}: a nested enum cannot have "
-                    f"version-gated members; declare it at module scope to "
-                    f"version it"
-                )
-
-
-def _annotate_enum_value_cast(field: dict, owner: str, owner_templated: bool) -> None:
-    """Set `value_cast` on an enum field (direct, or an optional's inner): the
-    C++ type a deserialized integer is cast back to. A module-scope enum
-    stands alone (`Enum_<V>::Value`); a nested enum is reached through its
-    owning packet (`Packet_<V>::Enum::Value`)."""
-
-    def cast(type_name: str, is_nested: bool) -> str:
-        if not is_nested:
-            return f"typename {type_name}_<ProtocolVersion>::Value"
-        if owner_templated:
-            return f"typename {owner}_<ProtocolVersion>::{type_name}::Value"
-        return f"{owner}::{type_name}::Value"
-
-    if field["kind"] == "enum":
-        field["value_cast"] = cast(field["type_name"], field["nested"])
-    elif field["kind"] in ("optional", "optional_variant"):
-        inner = field["inner"]
-        if inner["kind"] == "enum":
-            inner["value_cast"] = cast(inner["type_name"], inner["nested"])
-
-
-def class_fields(
-    cls,
-    class_names: set[str],
-    enum_names: set[str],
-    templated_classes: set[str] = frozenset(),
-    alias_wires: dict[str, dict] | None = None,
-) -> dict | None:
-    """Resolve a struct's constants and instance fields, with version gating.
-
-    Returns `None` if any type is unmappable. Otherwise:
-      - `constants`: list of (name, ctype, value); currently just the packet
-        `Id` when the class is decorated with `@packet(id=N)`.
-      - `nested_enums`: list of (name, [(member, value), ...]) for IntEnum
-        classes declared inside `cls`, emitted as `struct` members.
-      - `specializations`: list of (since_min, since_max_excl, visible_fields)
-        ranges. Always has at least one entry — a class with no version-gated
-        fields collapses to a single `(None, None, all_fields)` specialization,
-        which the template emits as an unconstrained class-template body.
-    """
-    if alias_wires is None:
-        alias_wires = {}
-    type_aliases = set(alias_wires)
-    nested = nested_enums(cls)
-    _reject_versioned_nested_enums(cls, nested)
-    nested_names = set(nested)
-    is_templated = cls.name in templated_classes
-
-    constants: list[tuple[str, str, str]] = []
-    pid = class_packet_id(cls)
-    if pid is not None:
-        constants.append(("Id", "int", str(pid)))
-    raw_fields: list[dict] = []
-    for name, attr in cls.attributes.items():
-        if attr.annotation is None:
-            return None
-        ctype = resolve_type(
-            attr.annotation,
-            class_names,
-            enum_names,
-            templated_classes,
-            type_aliases,
-            nested_names,
-        )
-        if ctype is None:
-            return None
-        kind_info = _field_serialize_kind(
-            attr, class_names, enum_names, templated_classes, alias_wires, nested_names
-        ) or {"kind": "unknown"}
-        since = since_kwarg(attr.value, "field") if attr.value is not None else None
-        field = {"name": name, "ctype": ctype, "since": since, **kind_info}
-        _annotate_enum_value_cast(field, cls.name, is_templated)
-        raw_fields.append(field)
-
-    nested_defs = [
-        (ename, [(n, v) for n, v, _, _ in enum_members(ecls)["entries"]])
-        for ename, ecls in nested.items()
-    ]
-    sinces = sorted({f["since"] for f in raw_fields if f["since"] is not None})
-    if not sinces:
-        return {
-            "constants": constants,
-            "nested_enums": nested_defs,
-            "specializations": [(None, None, list(raw_fields))],
-            "templated": is_templated,
-        }
-
-    specializations: list[tuple[int | None, int | None, list[dict]]] = []
-    specializations.append(
-        (None, sinces[0], [f for f in raw_fields if f["since"] is None])
-    )
-    for i, lo in enumerate(sinces):
-        hi = sinces[i + 1] if i + 1 < len(sinces) else None
-        visible = [f for f in raw_fields if f["since"] is None or f["since"] <= lo]
-        specializations.append((lo, hi, visible))
-    return {
-        "constants": constants,
-        "nested_enums": nested_defs,
-        "specializations": specializations,
-        "templated": is_templated,
-    }
-
-
-def enum_serializers(mod, enum_names: set[str]) -> list[tuple[str, dict]]:
-    """Return (enum_name, codec) for every enum a struct field encodes as a
-    string via `field(type=str)`.
-
-    These enums need a `Serializer<Enum_<V>>` specialization that reads and
-    writes the enumerator name lowercased with underscores stripped
-    (`THROW_ITEM` -> `throwitem`). `codec` is `{"members": [(name, wire), ...]}`.
-
-    Integer-coded enum uses get no `Serializer` -- the codegen inlines a cast
-    around `stream.read`/`write` at the field site (see `_enum_wire`), so the
-    same enum may be string-coded in one field and integer-coded in another.
-    """
-    enum_classes = {c.name: c for c in mod.classes.values() if not c.is_alias}
-    out: dict[str, dict] = {}
-    for cls in mod.classes.values():
-        if cls.is_alias:
-            continue
-        for attr in cls.attributes.values():
-            if "instance-attribute" not in attr.labels or attr.value is None:
-                continue
-            ann = attr.annotation
-            if (
-                isinstance(ann, griffe.ExprBinOp)
-                and ann.operator == "|"
-                and (ann.right == "None" or ann.left == "None")
-            ):
-                ann = ann.left if ann.right == "None" else ann.right
-            if not isinstance(ann, griffe.ExprName) or ann.name not in enum_names:
-                continue
-            if name_kwarg(attr.value, "field", "type") != "str":
-                continue
-            entries = enum_members(enum_classes[ann.name])["entries"]
-            out[ann.name] = {
-                "members": [
-                    (n, n.lower().replace("_", "")) for n, _, _, _ in entries
-                ]
-            }
-    return list(out.items())
-
-
 def module_aliases(
     mod, class_names: set[str], enum_names: set[str]
 ) -> list[tuple[str, str]]:
     """Return module-level type aliases as (name, ctype) pairs, suitable for
     emission as `enum Name : ctype {};` strong typedefs in the header.
 
-    Picks up both plain `Name = <type>` assignments (skipping `package`, which
-    is namespace metadata) and PEP 695 `type Name = <type>` statements (griffe
-    surfaces these in `mod.type_aliases`). Aliases whose NAME is itself a
-    built-in primitive (`varint32`, `uint8`, `double`, ...) are skipped, since
-    those names are wired into the codegen's `PRIMITIVE_TYPES` table directly
-    and there is no need to emit a C++ alias for them.
+    Picks up both plain `Name = <type>` assignments (skipping `package`) and
+    PEP 695 `type Name = <type>` statements. Aliases whose NAME is itself a
+    built-in primitive are skipped -- those names are wired into the codegen's
+    PRIMITIVE_TYPES table directly.
     """
     aliases: list[tuple[str, str]] = []
     for name, attr in mod.attributes.items():
@@ -508,9 +309,8 @@ def enum_members(cls) -> dict:
     """Return the enum's entries as `{"entries": [(name, value, since, until)]}`.
 
     `since` is the protocol version at which the entry was introduced (or
-    `None` if it has always been there). `until` is the protocol version at
-    which the entry was removed (or `None` if it is still present). The
-    entry is visible for any V in `[since, until)`.
+    `None`). `until` is the protocol version at which it was removed (or
+    `None`). The entry is visible for any V in `[since, until)`.
     """
     entries: list[tuple[str, int, int | None, int | None]] = []
     for name, attr in cls.attributes.items():
@@ -524,59 +324,51 @@ def enum_members(cls) -> dict:
     return {"entries": entries}
 
 
-def enum_ranges(cls) -> list[tuple[int | None, int | None, list[tuple[str, int]]]]:
-    """Return `[(lo, hi, visible_entries), ...]` ranges where the visible set
-    is constant. `lo` is inclusive (or `None` for "no lower bound"); `hi` is
-    exclusive (or `None` for "no upper bound").
+def string_coded_enums(mod, enum_names: set[str]) -> set[str]:
+    """Names of module-scope enums that some struct field encodes as a string
+    via `field(type=str)`.
 
-    Change-points are the union of `@enum(since=N)`, every member's `since`,
-    and every member's `until`. A single range with `(None, None)` is
-    returned when the enum is wholly unversioned.
+    Such an enum needs a `Serializer<Enum>` specialization that reads and
+    writes the enumerator name lowercased with underscores stripped
+    (`THROW_ITEM` -> `throwitem`). Integer-coded enum uses get no `Serializer`
+    -- the codegen inlines a cast at the field site.
     """
-    from .parse import class_since
+    out: set[str] = set()
+    for cls in mod.classes.values():
+        if cls.is_alias:
+            continue
+        for attr in cls.attributes.values():
+            if "instance-attribute" not in attr.labels or attr.value is None:
+                continue
+            ann = attr.annotation
+            if (
+                isinstance(ann, griffe.ExprBinOp)
+                and ann.operator == "|"
+                and (ann.right == "None" or ann.left == "None")
+            ):
+                ann = ann.left if ann.right == "None" else ann.right
+            if not isinstance(ann, griffe.ExprName) or ann.name not in enum_names:
+                continue
+            if name_kwarg(attr.value, "field", "type") == "str":
+                out.add(ann.name)
+    return out
 
-    entries = enum_members(cls)["entries"]
-    cs = class_since(cls)
 
-    points: set[int] = set()
-    if cs is not None:
-        points.add(cs)
-    for _, _, since, until in entries:
-        if since is not None:
-            points.add(since)
-        if until is not None:
-            points.add(until)
-
-    if not points:
-        return [(None, None, [(n, v) for n, v, _, _ in entries])]
-
-    sorted_points = sorted(points)
-    ranges: list[tuple[int | None, int | None, list[tuple[str, int]]]] = []
-
-    # Pre-first-point range exists only when there is no class-level since
-    # (the enum is valid at versions below the first member-level change).
-    if cs is None:
-        first = sorted_points[0]
-        visible = [
-            (n, v) for n, v, s, u in entries if s is None and (u is None or first <= u)
-        ]
-        if visible:
-            # Representative V = first - 1; any V in [0, first).
-            rep = first - 1
-            visible = [
-                (n, v)
-                for n, v, s, u in entries
-                if (s is None or s <= rep) and (u is None or rep < u)
-            ]
-            ranges.append((None, first, visible))
-
-    for i, lo in enumerate(sorted_points):
-        hi = sorted_points[i + 1] if i + 1 < len(sorted_points) else None
-        visible = [
-            (n, v)
-            for n, v, s, u in entries
-            if (s is None or s <= lo) and (u is None or lo < u)
-        ]
-        ranges.append((lo, hi, visible))
-
-    return ranges
+def reject_versioned_nested_enums(cls, nested: dict) -> None:
+    """A nested enum's member set must be version-invariant: its visibility is
+    the owning packet's, and per-member `since`/`until` would have to compose
+    with the packet's own version split. Version such an enum at module scope
+    instead."""
+    for ename, ecls in nested.items():
+        if class_since(ecls) is not None:
+            raise click.ClickException(
+                f"{cls.name}.{ename}: a nested enum cannot carry @enum(since=); "
+                f"declare it at module scope to version it"
+            )
+        for mname, _, since, until in enum_members(ecls)["entries"]:
+            if since is not None or until is not None:
+                raise click.ClickException(
+                    f"{cls.name}.{ename}.{mname}: a nested enum cannot have "
+                    f"version-gated members; declare it at module scope to "
+                    f"version it"
+                )

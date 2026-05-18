@@ -1,26 +1,5 @@
-{% set ranges = enum | enum_ranges %}
-{% if ranges | length == 1 and ranges[0][0] is none and ranges[0][1] is none %}
-{% set _, _, visible = ranges[0] %}
-template <int ProtocolVersion>
-struct {{ enum.name }}_ {
-    enum Value : int {
-{% for name, value in visible %}
-        {{ name | camelize }} = {{ value }},
+enum class {{ d.name }} : int {
+{% for mname, mvalue in d.members %}
+    {{ mname }} = {{ mvalue }},
 {% endfor %}
-    };
 };
-{% else %}
-template <int ProtocolVersion>
-struct {{ enum.name }}_;
-{% for lo, hi, visible in ranges %}
-
-template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
-struct {{ enum.name }}_<ProtocolVersion> {
-    enum Value : int {
-{% for name, value in visible %}
-        {{ name | camelize }} = {{ value }},
-{% endfor %}
-    };
-};
-{% endfor %}
-{% endif %}

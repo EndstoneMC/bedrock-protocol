@@ -20,42 +20,76 @@
 {% endif %}
 
 {% if package %}
-namespace {{ package | replace('.', '::') }} {
+namespace {{ package }} {
 
 {% endif %}
-{% for name, ctype in type_aliases %}
+{% for name, ctype in module_aliases %}
 enum {{ name }} : {{ ctype }} {};
 {% endfor %}
-{% if type_aliases and has_classes %}
+{% if module_aliases and (unversioned or has_versioned) %}
 
 {% endif %}
-{% for member in mod.members.values()
-    if not member.is_alias and member.is_class %}
+{% for d in unversioned %}
 {% if not loop.first %}
 
 {% endif %}
-{% if "IntEnum" in (member.bases | map("string") | list) %}
-{% set enum = member %}
+{% if d.kind == "enum" %}
 {% include "enum.jinja" %}
 {% else %}
-{% set cls = member %}
 {% include "class.jinja" %}
 {% endif %}
 {% endfor %}
-{% include "serializer.jinja" %}
-{% set latest_aliases = [] %}
-{% for member in mod.members.values()
-    if not member.is_alias and member.is_class %}
-{% if "IntEnum" in (member.bases | map("string") | list) %}
-{% set _ = latest_aliases.append(member.name) %}
+{% if has_versioned %}
+{% if unversioned %}
+
+{% endif %}
+{% for ns in namespaces %}
+{% if not loop.first %}
+
+{% endif %}
+namespace v{{ ns.version }} {
+{% for e in ns.entries %}
+
+{% if e.alias %}
+using {{ e.name }} = {{ e.target }}::{{ e.name }};
 {% else %}
-{% set f = member | class_fields %}
-{% if f is not none and f.templated %}
-{% set _ = latest_aliases.append(member.name) %}
+{% set d = e.def %}
+{% if d.kind == "enum" %}
+{% include "enum.jinja" %}
+{% else %}
+{% include "class.jinja" %}
 {% endif %}
 {% endif %}
 {% endfor %}
-{% if latest_aliases %}
+
+}  // namespace v{{ ns.version }}
+{% endfor %}
+
+namespace detail {
+{% for t in traits %}
+{% if not loop.first %}
+
+{% endif %}
+template <int V>
+struct {{ t.name }}_;
+{% for lo, hi in t.ranges %}
+
+template <int V> requires ({% if lo %}V >= {{ lo }}{% endif %}{% if lo and hi %} && {% endif %}{% if hi %}V < {{ hi }}{% endif %})
+struct {{ t.name }}_<V> { using type = v{{ lo }}::{{ t.name }}; };
+{% endfor %}
+{% endfor %}
+
+}  // namespace detail
+
+{% for t in traits %}
+template <int V> using {{ t.name }}_ = typename detail::{{ t.name }}_<V>::type;
+{% endfor %}
+{% endif %}
+{% for s in serializers %}
+
+{% include "serializer.jinja" %}
+{% endfor %}
+{% if has_versioned and latest_aliases %}
 
 {% for name in latest_aliases %}
 using {{ name }} = {{ name }}_<{{ latest_version }}>;
@@ -63,5 +97,5 @@ using {{ name }} = {{ name }}_<{{ latest_version }}>;
 {% endif %}
 {% if package %}
 
-}  // namespace {{ package | replace('.', '::') }}
+}  // namespace {{ package }}
 {% endif %}

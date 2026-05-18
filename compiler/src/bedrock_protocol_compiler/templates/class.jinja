@@ -1,70 +1,20 @@
-{% set f = cls | class_fields %}
-{% if f is none %}
-struct {{ cls.name }} {
+{% if d.unmapped %}
+struct {{ d.name }} {
 };
-{% elif not f.templated %}
-{% set _, _, visible = f.specializations[0] %}
-struct {{ cls.name }} {
-{% for ename, emembers in f.nested_enums %}
-    struct {{ ename }} {
-        enum Value : int {
-{% for mname, mvalue in emembers %}
-            {{ mname | camelize }} = {{ mvalue }},
-{% endfor %}
-        };
-    };
-
-{% endfor %}
-{% for name, type, value in f.constants %}
-    static constexpr {{ type }} {{ name }} = {{ value }};
-{% endfor %}
-{% for field in visible %}
-    {{ field.ctype }} {{ field.name }};
-{% endfor %}
-};
-{% elif f.specializations | length > 1 %}
-template <int ProtocolVersion>
-struct {{ cls.name }}_;
-{% for lo, hi, visible in f.specializations %}
-
-template <int ProtocolVersion> requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %})
-struct {{ cls.name }}_<ProtocolVersion> {
-{% for ename, emembers in f.nested_enums %}
-    struct {{ ename }} {
-        enum Value : int {
-{% for mname, mvalue in emembers %}
-            {{ mname | camelize }} = {{ mvalue }},
-{% endfor %}
-        };
-    };
-
-{% endfor %}
-{% for name, type, value in f.constants %}
-    static constexpr {{ type }} {{ name }} = {{ value }};
-{% endfor %}
-{% for field in visible %}
-    {{ field.ctype }} {{ field.name }};
-{% endfor %}
-};
-{% endfor %}
 {% else %}
-{% set _, _, visible = f.specializations[0] %}
-template <int ProtocolVersion>
-struct {{ cls.name }}_ {
-{% for ename, emembers in f.nested_enums %}
-    struct {{ ename }} {
-        enum Value : int {
+struct {{ d.name }} {
+{% for ename, emembers in d.nested_enums %}
+    enum class {{ ename }} : int {
 {% for mname, mvalue in emembers %}
-            {{ mname | camelize }} = {{ mvalue }},
+        {{ mname }} = {{ mvalue }},
 {% endfor %}
-        };
     };
 
 {% endfor %}
-{% for name, type, value in f.constants %}
-    static constexpr {{ type }} {{ name }} = {{ value }};
+{% for cname, ctype, cvalue in d.constants %}
+    static constexpr {{ ctype }} {{ cname }} = {{ cvalue }};
 {% endfor %}
-{% for field in visible %}
+{% for field in d.fields %}
     {{ field.ctype }} {{ field.name }};
 {% endfor %}
 };

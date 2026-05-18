@@ -34,22 +34,20 @@ def resolve_type(
     ann,
     class_names: set[str],
     enum_names: set[str],
-    templated_classes: set[str] = frozenset(),
-    type_aliases: set[str] = frozenset(),
     nested_enum_names: set[str] = frozenset(),
+    type_aliases: set[str] = frozenset(),
 ) -> str | None:
-    """Map a griffe annotation Expr to a C++ type. None if unmappable.
+    """Map a griffe annotation Expr to a bare C++ type name. None if unmappable.
 
-    `templated_classes` is the subset of `class_names` that are emitted as
-    class templates (`Foo_<V>`). The complement (plain POD-ish structs)
-    is referenced by its bare name. Module-scope enums are always templated.
-    Aliases (`type X = primitive`) emit as `enum X : T {}` at namespace scope
-    and are referenced by their bare name.
+    Every user-defined type resolves to its bare name. A generated type lives
+    either in a version-snapshot namespace (`bedrock::protocol::v{N}`) or, when
+    it never varies, directly in `bedrock::protocol`. A field declaration is
+    emitted inside the snapshot namespace it belongs to, so unqualified lookup
+    binds each referenced name to the right definition -- the codegen does not
+    spell the namespace here.
 
-    `nested_enum_names` are enums declared inside the packet currently being
-    resolved. They emit as a plain `struct E { enum Value ... }` member of the
-    packet, so within that packet's body `E` is a member of the current
-    instantiation and `E::Value` needs no `typename` or `_<V>` suffix.
+    Module-scope and nested enums are true `enum class` types, so an enum
+    reference is just the enum name: no `::Value`, no `_<ProtocolVersion>`.
     """
     if (
         isinstance(ann, griffe.ExprBinOp)
@@ -58,12 +56,7 @@ def resolve_type(
     ):
         other = ann.left if ann.right == "None" else ann.right
         inner = resolve_type(
-            other,
-            class_names,
-            enum_names,
-            templated_classes,
-            type_aliases,
-            nested_enum_names,
+            other, class_names, enum_names, nested_enum_names, type_aliases
         )
         if inner is None:
             return None
@@ -84,12 +77,7 @@ def resolve_type(
                 parts.append("std::monostate")
                 continue
             resolved = resolve_type(
-                member,
-                class_names,
-                enum_names,
-                templated_classes,
-                type_aliases,
-                nested_enum_names,
+                member, class_names, enum_names, nested_enum_names, type_aliases
             )
             if resolved is None:
                 return None
@@ -98,16 +86,10 @@ def resolve_type(
     if isinstance(ann, griffe.ExprName):
         name = ann.name
         if name in nested_enum_names:
-            return f"{name}::Value"
+            return name
         if name in enum_names:
-            # `typename` is required when this lands inside a dependent
-            # template argument (std::optional<...>, std::variant<...>) and
-            # merely permitted in a plain member declaration, so emit it
-            # unconditionally.
-            return f"typename {name}_<ProtocolVersion>::Value"
+            return name
         if name in class_names:
-            if name in templated_classes:
-                return f"{name}_<ProtocolVersion>"
             return name
         if name in type_aliases:
             return name

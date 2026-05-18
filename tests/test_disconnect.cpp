@@ -1,3 +1,5 @@
+#include <type_traits>
+
 #include <bedrock/protocol.hpp>
 #include <catch2/catch_test_macros.hpp>
 
@@ -17,6 +19,12 @@ TEST_CASE("DisconnectPacketMessages: filtered_message added at v712")
 
     bp::DisconnectPacketMessages_<712> post{"kicked", "***"};
     REQUIRE(post.filtered_message == "***");
+
+    // Unchanged versions alias to one type; a change-point forks a fresh one.
+    STATIC_REQUIRE(std::is_same_v<bp::DisconnectPacketMessages_<622>,
+                                  bp::DisconnectPacketMessages_<700>>);
+    STATIC_REQUIRE(!std::is_same_v<bp::DisconnectPacketMessages_<700>,
+                                   bp::DisconnectPacketMessages_<712>>);
 }
 
 TEST_CASE("DisconnectPacket: id + round-trip without messages")

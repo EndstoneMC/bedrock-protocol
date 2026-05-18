@@ -1,49 +1,33 @@
-{% for enum_name, m in serializers %}
-
-template <int ProtocolVersion>
-struct Serializer<{{ enum_name }}_<ProtocolVersion>> {
-    static void serialize(BinaryStream &stream, typename {{ enum_name }}_<ProtocolVersion>::Value value)
+{% if s.enum %}
+template <>
+struct Serializer<{{ s.qualified }}> {
+    static void serialize(BinaryStream &stream, {{ s.qualified }} value)
     {
-        using E = {{ enum_name }}_<ProtocolVersion>;
-{% for name, wire in m.members %}
-        if (value == E::{{ name | camelize }}) { stream.write(std::string_view{"{{ wire }}"}); return; }
+        using E = {{ s.qualified }};
+{% for mname, wire in s.members %}
+        if (value == E::{{ mname }}) { stream.write(std::string_view{"{{ wire }}"}); return; }
 {% endfor %}
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<typename {{ enum_name }}_<ProtocolVersion>::Value, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<{{ s.qualified }}, std::error_code>
     {
-        using E = {{ enum_name }}_<ProtocolVersion>;
+        using E = {{ s.qualified }};
         auto v = stream.read<std::string>();
         if (!v) return make_unexpected(v.error());
-{% for name, wire in m.members %}
-        if (*v == "{{ wire }}") return E::{{ name | camelize }};
+{% for mname, wire in s.members %}
+        if (*v == "{{ wire }}") return E::{{ mname }};
 {% endfor %}
         return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
     }
 };
-{% endfor %}
-{% for member in mod.members.values()
-    if not member.is_alias and member.is_class %}
-{% if "IntEnum" not in (member.bases | map("string") | list) %}
-{% set f = member | class_fields %}
-{% if f is not none %}
-{% for lo, hi, visible in f.specializations %}
-{% set unknown = visible | rejectattr("kind", "in", ["enum", "struct", "string", "primitive", "optional", "optional_variant"]) | list %}
-{% if not unknown %}
-{% set self_t = "_<ProtocolVersion>" if f.templated else "" %}
-
-{% if f.templated %}
-template <int ProtocolVersion>{% if lo is not none or hi is not none %} requires ({% if lo is not none %}ProtocolVersion >= {{ lo }}{% endif %}{% if lo is not none and hi is not none %} && {% endif %}{% if hi is not none %}ProtocolVersion < {{ hi }}{% endif %}){% endif %}
-
 {% else %}
 template <>
-{% endif %}
-struct Serializer<{{ member.name }}{{ self_t }}> {
-    static void serialize(BinaryStream &stream, const {{ member.name }}{{ self_t }} &value)
+struct Serializer<{{ s.qualified }}> {
+    static void serialize(BinaryStream &stream, const {{ s.qualified }} &value)
     {
-{% for field in visible %}
+{% for field in s.fields %}
 {% if field.kind == "enum" and field.wire.string %}
-        Serializer<{{ field.type_name }}_<ProtocolVersion>>::serialize(stream, value.{{ field.name }});
+        Serializer<{{ field.ser_type }}>::serialize(stream, value.{{ field.name }});
 {% elif field.kind == "enum" and field.wire.varint %}
         stream.writeVarInt<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
 {% elif field.kind == "enum" and field.wire.big_endian %}
@@ -51,46 +35,44 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
 {% elif field.kind == "enum" %}
         stream.write<{{ field.wire.underlying }}>(static_cast<{{ field.wire.underlying }}>(value.{{ field.name }}));
 {% elif field.kind == "struct" %}
-        Serializer<{{ field.type_name }}{% if field.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, value.{{ field.name }});
+        Serializer<{{ field.ser_type }}>::serialize(stream, value.{{ field.name }});
 {% elif field.kind == "string" %}
         stream.write(value.{{ field.name }});
-{% elif field.kind == "primitive" %}
-{% if field.varint %}
+{% elif field.kind == "primitive" and field.varint %}
         stream.writeVarInt<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% elif field.big_endian %}
+{% elif field.kind == "primitive" and field.big_endian %}
         stream.write<{{ field.underlying }}, std::endian::big>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% else %}
+{% elif field.kind == "primitive" %}
         stream.write<{{ field.underlying }}>(static_cast<{{ field.underlying }}>(value.{{ field.name }}));
-{% endif %}
 {% elif field.kind == "optional" %}
         stream.write<bool>(value.{{ field.name }}.has_value());
         if (value.{{ field.name }}.has_value()) {
 {% if field.inner.kind == "enum" and field.inner.wire.string %}
-            Serializer<{{ field.inner.type_name }}_<ProtocolVersion>>::serialize(stream, *value.{{ field.name }});
+            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
 {% elif field.inner.kind == "enum" and field.inner.wire.varint %}
             stream.writeVarInt<{{ field.inner.wire.underlying }}>(static_cast<{{ field.inner.wire.underlying }}>(*value.{{ field.name }}));
 {% elif field.inner.kind == "enum" %}
             stream.write<{{ field.inner.wire.underlying }}>(static_cast<{{ field.inner.wire.underlying }}>(*value.{{ field.name }}));
 {% else %}
-            Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, *value.{{ field.name }});
+            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
 {% endif %}
         }
 {% elif field.kind == "optional_variant" %}
         stream.writeVarInt<std::uint32_t>(value.{{ field.name }}.has_value() ? 0u : 1u);
         if (value.{{ field.name }}.has_value()) {
-            Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::serialize(stream, *value.{{ field.name }});
+            Serializer<{{ field.inner.ser_type }}>::serialize(stream, *value.{{ field.name }});
         }
 {% endif %}
 {% endfor %}
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<{{ member.name }}{{ self_t }}, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<{{ s.qualified }}, std::error_code>
     {
-        {{ member.name }}{{ self_t }} out;
-{% for field in visible %}
+        {{ s.qualified }} out;
+{% for field in s.fields %}
 {% if field.kind == "enum" and field.wire.string %}
         {
-            auto v = Serializer<{{ field.type_name }}_<ProtocolVersion>>::deserialize(stream);
+            auto v = Serializer<{{ field.ser_type }}>::deserialize(stream);
             if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = *v;
         }
@@ -108,7 +90,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
         }
 {% elif field.kind == "struct" %}
         {
-            auto v = Serializer<{{ field.type_name }}{% if field.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
+            auto v = Serializer<{{ field.ser_type }}>::deserialize(stream);
             if (!v) return make_unexpected(v.error());
             out.{{ field.name }} = *v;
         }
@@ -136,7 +118,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
             if (!present) return make_unexpected(present.error());
             if (*present) {
 {% if field.inner.kind == "enum" and field.inner.wire.string %}
-                auto v = Serializer<{{ field.inner.type_name }}_<ProtocolVersion>>::deserialize(stream);
+                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
                 if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = *v;
 {% elif field.inner.kind == "enum" %}
@@ -148,7 +130,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
                 if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = static_cast<{{ field.inner.value_cast }}>(*v);
 {% else %}
-                auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
+                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
                 if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = *v;
 {% endif %}
@@ -159,7 +141,7 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
             auto tag = stream.readVarInt<std::uint32_t>();
             if (!tag) return make_unexpected(tag.error());
             if (*tag == 0) {
-                auto v = Serializer<{{ field.inner.type_name }}{% if field.inner.templated %}_<ProtocolVersion>{% endif %}>::deserialize(stream);
+                auto v = Serializer<{{ field.inner.ser_type }}>::deserialize(stream);
                 if (!v) return make_unexpected(v.error());
                 out.{{ field.name }} = *v;
             }
@@ -170,7 +152,3 @@ struct Serializer<{{ member.name }}{{ self_t }}> {
     }
 };
 {% endif %}
-{% endfor %}
-{% endif %}
-{% endif %}
-{% endfor %}

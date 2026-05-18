@@ -4,19 +4,11 @@ from pathlib import Path
 
 import click
 import griffe
-import inflection
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .filters import (
-    class_fields,
-    compute_templated_classes,
-    enum_members,
-    enum_ranges,
-    enum_serializers,
-    module_aliases,
-    type_alias_wires,
-)
-from .parse import class_since, is_int_enum
+from .filters import module_aliases, type_alias_wires
+from .parse import is_int_enum
+from .versioning import plan_module
 
 
 @click.command()
@@ -43,8 +35,8 @@ from .parse import class_since, is_int_enum
     type=int,
     default=974,
     show_default=True,
-    help="Protocol version exposed as the default template argument and "
-    "via the `latest::` sub-namespace.",
+    help="Protocol version exposed as the default template argument via the "
+    "bare-name `using XXX = XXX_<latest>` aliases.",
 )
 @click.argument(
     "inputs",
@@ -67,10 +59,6 @@ def main(
         keep_trailing_newline=True,
         undefined=StrictUndefined,
     )
-    env.filters["camelize"] = lambda s: inflection.camelize(s.lower())
-    env.filters["enum_members"] = enum_members
-    env.filters["enum_ranges"] = enum_ranges
-    env.filters["class_since"] = class_since
     template = env.get_template("header.hpp.jinja")
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -114,34 +102,24 @@ def main(
         mod, inp = mods[module_name]
         deps = sorted(_module_dependencies(mod, known_modules, module_name))
         own_classes = [c for c in mod.classes.values() if not c.is_alias]
-        extra_classes: list = []
+        dep_classes: list = []
         extra_alias_wires: dict[str, dict] = {}
         for dep in deps:
             dep_mod = mods[dep][0]
-            extra_classes.extend(c for c in dep_mod.classes.values() if not c.is_alias)
+            dep_classes.extend(c for c in dep_mod.classes.values() if not c.is_alias)
             extra_alias_wires.update(type_alias_wires(dep_mod))
-        resolvable = own_classes + extra_classes
+        resolvable = own_classes + dep_classes
         class_names = {c.name for c in resolvable}
         enum_names = {c.name for c in resolvable if is_int_enum(c)}
-        templated_classes = compute_templated_classes(resolvable, enum_names)
         alias_wires = {**extra_alias_wires, **type_alias_wires(mod)}
-        type_aliases = module_aliases(mod, class_names, enum_names)
-        serializers = enum_serializers(mod, enum_names)
-        has_struct_serializer = any(
-            not is_int_enum(c)
-            and class_fields(c, class_names, enum_names, templated_classes, alias_wires)
-            is not None
-            for c in own_classes
-        )
-        has_serializers = bool(serializers) or has_struct_serializer
-        if not own_classes and not type_aliases:
+        module_alias_list = module_aliases(mod, class_names, enum_names)
+        if not own_classes and not module_alias_list:
             if verbose:
                 click.echo(f"skip {inp} (nothing to emit)")
             continue
-        env.filters["class_fields"] = (
-            lambda cls, _cn=class_names, _en=enum_names, _tc=templated_classes, _aw=alias_wires: (
-                class_fields(cls, _cn, _en, _tc, _aw)
-            )
+
+        plan = plan_module(
+            mod, own_classes, dep_classes, class_names, enum_names, alias_wires
         )
         attr = mod.members.get("package")
         package = str(attr.value).strip("'\"") if attr and attr.value else None
@@ -149,14 +127,11 @@ def main(
         dep_includes = [d.replace(".", "/") + ".hpp" for d in deps]
         target.write_text(
             template.render(
-                mod=mod,
-                package=package,
-                type_aliases=type_aliases,
-                has_classes=bool(own_classes),
-                serializers=serializers,
-                has_serializers=has_serializers,
-                latest_version=latest_version,
+                package=package.replace(".", "::") if package else None,
+                module_aliases=module_alias_list,
                 dep_includes=dep_includes,
+                latest_version=latest_version,
+                **plan,
             )
         )
         if verbose:
