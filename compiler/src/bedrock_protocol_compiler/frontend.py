@@ -3,29 +3,31 @@
 `Expr` parsing -- is confined to this class.
 """
 
-from __future__ import annotations
-
 from dataclasses import replace
 from pathlib import Path
 from typing import cast
 
 import griffe
 
+from .redeclaration import EXTRA_NAMESPACE, REDECLARATIONS, RedeclarationExtension
 from .schema import (
     PRIMITIVES,
     VARINT_PRIMITIVES,
     Alias,
     CompilerError,
+    Cond,
     Enum,
     EnumMember,
     EnumRef,
     Field,
+    FieldArm,
     Map,
     Mapping,
     Module,
     Named,
     Opt,
     Optional,
+    Pred,
     Primitive,
     Repeat,
     Repeated,
@@ -52,12 +54,20 @@ class Frontend:
     def load(self, inputs: tuple[Path, ...]) -> Schema:
         self._griffe: dict[str, griffe.Module] = {}
         self._stems: dict[str, str] = {}
+        # One extension instance, shared across every `griffe.load`: it keeps
+        # version-redeclared class attributes that griffe would collapse.
+        self._extensions = griffe.Extensions(RedeclarationExtension())
         outputs: list[str] = []
         for inp in inputs:
             name, root = self._module_name_and_root(inp)
             self._griffe[name] = cast(
                 griffe.Module,
-                griffe.load(name, search_paths=[str(root)], allow_inspection=False),
+                griffe.load(
+                    name,
+                    search_paths=[str(root)],
+                    allow_inspection=False,
+                    extensions=self._extensions,
+                ),
             )
             self._stems[name] = inp.stem
             outputs.append(name)
@@ -83,7 +93,10 @@ class Frontend:
                         self._griffe[dep] = cast(
                             griffe.Module,
                             griffe.load(
-                                dep, search_paths=[str(ip)], allow_inspection=False
+                                dep,
+                                search_paths=[str(ip)],
+                                allow_inspection=False,
+                                extensions=self._extensions,
                             ),
                         )
                         pending.append(dep)
@@ -190,7 +203,13 @@ class Frontend:
             self._reject_versioned_nested(cls.name, enum)
             nested.append(enum)
         nested_names = frozenset(e.name for e in nested)
-        fields = tuple(self._field(attr, nested_names) for attr in cls.attributes.values())
+        fields_list: list[Field] = []
+        earlier: set[str] = set()
+        for attr in cls.attributes.values():
+            field = self._field(attr, nested_names, frozenset(earlier))
+            fields_list.append(field)
+            earlier.add(field.name)
+        fields = tuple(fields_list)
         since = self._packet_since(cls)
         if since is None:  # a non-packet struct version-gates via @type(since=)
             since = self._class_since(cls)
@@ -214,15 +233,62 @@ class Frontend:
                     f"version-gated members; declare it at module scope to version it"
                 )
 
-    def _field(self, attr: griffe.Attribute, nested: frozenset[str]) -> Field:
+    def _field(
+        self, attr: griffe.Attribute, nested: frozenset[str], earlier: frozenset[str]
+    ) -> Field:
+        """One field, built from `attr` -- or, when `attr` was redeclared once
+        per protocol era, from the ordered list the redeclaration extension
+        stashed on it. Each declaration becomes one version arm."""
+        decls = attr.extra.get(EXTRA_NAMESPACE, {}).get(REDECLARATIONS)
+        sources: list[griffe.Attribute] = decls if decls is not None else [attr]
+        arms = tuple(self._arm(d, nested, earlier) for d in sources)
+        self._check_arms(attr.name, arms)
+        return Field(attr.name, arms)
+
+    def _arm(
+        self, attr: griffe.Attribute, nested: frozenset[str], earlier: frozenset[str]
+    ) -> FieldArm:
         call = attr.value
         since = self._int_kwarg(call, "field", "since") if call is not None else None
-        return Field(
-            attr.name,
-            self._typeref(attr.annotation, attr.name),
-            self._wire(attr.name, attr.annotation, call, nested),
-            since,
-        )
+        until = self._int_kwarg(call, "field", "until") if call is not None else None
+        type_ref = self._typeref(attr.annotation, attr.name)
+        wire = self._wire(attr.name, attr.annotation, call, nested)
+        when = self._call_arg(call, "field", "when") if call is not None else None
+        if when is not None:
+            predicate = self._predicate(when, attr.name, nested, earlier)
+            if isinstance(wire, (Opt, Switch)):
+                raise CompilerError(
+                    f"{attr.name}: field(when=...) gates a bare payload type -- it "
+                    f"cannot also be an optional or union field"
+                )
+            if wire is not None:
+                wire = Cond(wire, predicate)
+            # A value-gated field stays plain `T`: presence is recomputed from
+            # the predicate, so an optional wrapper would be redundant.
+        return FieldArm(type_ref, wire, since, until)
+
+    @staticmethod
+    def _check_arms(name: str, arms: tuple[FieldArm, ...]) -> None:
+        """Version arms run in ascending, non-overlapping `[since, until)`
+        order; every arm but the last is bounded by `until=`."""
+        covered_to = 0
+        for i, arm in enumerate(arms):
+            lo = arm.since or 0
+            if lo < covered_to:
+                raise CompilerError(
+                    f"{name}: redeclared field arms overlap or are out of order "
+                    f"-- each since= must be at least the previous until="
+                )
+            if i < len(arms) - 1 and arm.until is None:
+                raise CompilerError(
+                    f"{name}: every redeclared field arm but the last needs until="
+                )
+            if arm.until is not None:
+                if arm.until <= lo:
+                    raise CompilerError(
+                        f"{name}: field arm until= must be greater than since="
+                    )
+                covered_to = arm.until
 
     # --- type references -----------------------------------------------------
 
@@ -475,6 +541,95 @@ class Frontend:
         return (
             f"{field_name}: field(endian=...) only applies to fixed-width "
             f"primitive or fixed-width integer-coded enum fields"
+        )
+
+    # --- when= predicates ----------------------------------------------------
+
+    def _predicate(
+        self,
+        lam: _Ann,
+        field_name: str,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> Pred:
+        """Lower a `field(when=lambda p: ...)` lambda into a `Pred` tree."""
+        if not isinstance(lam, griffe.ExprLambda):
+            raise CompilerError(
+                f"{field_name}: field(when=...) must be a lambda predicate"
+            )
+        if len(lam.parameters) != 1:
+            raise CompilerError(
+                f"{field_name}: field(when=...) lambda takes exactly one parameter"
+            )
+        return self._pred_node(
+            lam.body, lam.parameters[0].name, field_name, nested, earlier
+        )
+
+    def _pred_node(
+        self,
+        node: griffe.Expr | str,
+        param: str,
+        field_name: str,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> Pred:
+        def child(n: griffe.Expr | str) -> Pred:
+            return self._pred_node(n, param, field_name, nested, earlier)
+
+        if isinstance(node, griffe.ExprBoolOp):
+            return Pred(node.operator, operands=tuple(child(v) for v in node.values))
+        if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
+            return Pred("not", operands=(child(node.value),))
+        if isinstance(node, griffe.ExprCompare):
+            if len(node.operators) != 1 or len(node.comparators) != 1:
+                raise CompilerError(
+                    f"{field_name}: field(when=...) supports one comparison per "
+                    f"clause -- split a chained comparison with `and`"
+                )
+            op = str(node.operators[0])
+            if op not in ("==", "!=", "<", ">", "<=", ">="):
+                raise CompilerError(
+                    f"{field_name}: field(when=...) comparison {op!r} is unsupported"
+                )
+            return Pred(op, operands=(child(node.left), child(node.comparators[0])))
+        if isinstance(node, griffe.ExprAttribute):
+            return self._pred_attr(node, param, field_name, nested, earlier)
+        literal = self._as_int(node)
+        if literal is not None:
+            return Pred("int", text=str(literal))
+        raise CompilerError(
+            f"{field_name}: field(when=...) contains an unsupported expression: "
+            f"{node}"
+        )
+
+    def _pred_attr(
+        self,
+        node: griffe.ExprAttribute,
+        param: str,
+        field_name: str,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> Pred:
+        """`param.field` is a `field` leaf, `Enum.MEMBER` an `enum` leaf."""
+        parts = [str(v) for v in node.values]
+        if len(parts) != 2:
+            raise CompilerError(
+                f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is "
+                f"too deep -- use `param.field` or `Enum.MEMBER`"
+            )
+        head, tail = parts
+        if head == param:
+            if tail not in earlier:
+                raise CompilerError(
+                    f"{field_name}: field(when=...) references {tail!r}, which is "
+                    f"not a field declared before it"
+                )
+            return Pred("field", text=tail)
+        if head in nested or head in self._enum_names:
+            return Pred("enum", text=f"{head}.{tail}")
+        raise CompilerError(
+            f"{field_name}: field(when=...) reference {head!r} is neither the "
+            f"lambda parameter nor a known enum"
         )
 
     # --- griffe Expr helpers -------------------------------------------------

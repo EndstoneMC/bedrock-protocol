@@ -7,8 +7,6 @@ kept apart so a backend can spell a struct member from one and a serializer
 body from the other without re-deriving either.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 #: DSL primitive names. `str` is length-prefixed; the rest are numeric/bool.
@@ -56,7 +54,7 @@ class Named:
 
 @dataclass(frozen=True)
 class Optional:
-    inner: TypeRef
+    inner: "TypeRef"
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -68,7 +66,7 @@ class Repeated:
     """A repeated field's declared shape: `list[T]` when `count` is None, a
     fixed-length `tuple[T, ...]` of identical types when `count` is set."""
 
-    inner: TypeRef
+    inner: "TypeRef"
     count: int | None
 
     @property
@@ -80,8 +78,8 @@ class Repeated:
 class Mapping:
     """A `dict[K, V]` field's declared shape."""
 
-    key: TypeRef
-    value: TypeRef
+    key: "TypeRef"
+    value: "TypeRef"
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -93,7 +91,7 @@ class Variant:
     """A tagged-union field's declared shape: a `std::variant` over `arms`,
     indexed by a discriminator. A None arm is an absent case (`std::monostate`)."""
 
-    arms: tuple[TypeRef | None, ...]
+    arms: "tuple[TypeRef | None, ...]"
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -103,6 +101,23 @@ class Variant:
 
 
 TypeRef = Primitive | Named | Optional | Repeated | Mapping | Variant
+
+
+# --- predicates: a field's data-dependent presence condition -----------------
+
+
+@dataclass(frozen=True)
+class Pred:
+    """A `when=` predicate as a small expression tree. `kind` is either a leaf
+    type -- `field`, `enum`, `int` -- or an operator: a comparison (`==`,
+    `!=`, `<`, `>`, `<=`, `>=`), `and`, `or`, or `not`. A leaf carries its
+    payload in `text` (a field name, a dotted `Enum.MEMBER`, or an integer);
+    an operator carries its children in `operands`. The frontend builds this
+    from the parsed lambda so a backend never sees the DSL's surface syntax."""
+
+    kind: str
+    text: str = ""
+    operands: "tuple[Pred, ...]" = ()
 
 
 # --- wire encodings: how a field travels on the wire -------------------------
@@ -145,7 +160,7 @@ class Opt:
     index, where `present_tag` is the index that means present and the other
     index means absent -- `T | None` makes present 0, `None | T` makes it 1."""
 
-    inner: Wire
+    inner: "Wire"
     discriminator: bool
     present_tag: int = 0
 
@@ -156,7 +171,7 @@ class Repeat:
     count travels first as `prefix` (a length scalar), then the elements. A set
     `count` is a fixed-length array of exactly that many elements, no prefix."""
 
-    inner: Wire
+    inner: "Wire"
     prefix: Scalar | None
     count: int | None
 
@@ -166,8 +181,8 @@ class Map:
     """A length-prefixed map: the pair count travels first as `prefix` (a
     length scalar), then that many key encodings each followed by its value."""
 
-    key: Wire
-    value: Wire
+    key: "Wire"
+    value: "Wire"
     prefix: Scalar
 
 
@@ -176,10 +191,21 @@ class Switch:
     """A tagged union: a varuint32 discriminator selects one of `arms` by
     index, then that arm's payload follows. A None arm carries no payload."""
 
-    arms: tuple[Wire | None, ...]
+    arms: "tuple[Wire | None, ...]"
 
 
-Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map | Switch
+@dataclass(frozen=True)
+class Cond:
+    """A field present only when `predicate` holds against earlier fields.
+    Unlike `Opt`, no presence marker travels on the wire -- both sides
+    recompute presence from the same predicate. The field's declared type is
+    an `Optional`: it may be absent."""
+
+    inner: "Wire"
+    predicate: Pred
+
+
+Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map | Switch | Cond
 
 
 # --- declarations ------------------------------------------------------------
@@ -220,11 +246,49 @@ class Enum:
 
 
 @dataclass(frozen=True)
-class Field:
-    name: str
+class FieldArm:
+    """One version era of a field: its declared type and wire encoding over
+    the half-open protocol range `[since, until)`. A field with a single,
+    version-invariant shape has one arm; a field redeclared per era has one
+    arm per declaration."""
+
     type: TypeRef | None
     wire: Wire | None
     since: int | None
+    until: int | None
+
+
+@dataclass(frozen=True)
+class Field:
+    """A struct field. `arms` are version-disjoint eras in ascending order;
+    the field is present at a snapshot when one arm covers it."""
+
+    name: str
+    arms: tuple[FieldArm, ...]
+
+    def arm_at(self, snapshot: int) -> FieldArm | None:
+        """The arm covering `snapshot`, or None when the field is absent."""
+        for arm in self.arms:
+            lo = arm.since or 0
+            if lo <= snapshot and (arm.until is None or snapshot < arm.until):
+                return arm
+        return None
+
+    def present_at(self, snapshot: int) -> bool:
+        return self.arm_at(snapshot) is not None
+
+    @property
+    def type(self) -> TypeRef | None:
+        """The declared type. Valid only on a single-arm field -- an
+        unversioned field, or one narrowed to a snapshot."""
+        (arm,) = self.arms
+        return arm.type
+
+    @property
+    def wire(self) -> Wire | None:
+        """The wire encoding. Valid only on a single-arm field."""
+        (arm,) = self.arms
+        return arm.wire
 
 
 @dataclass(frozen=True)
@@ -238,12 +302,23 @@ class Struct:
     @property
     def referenced(self) -> frozenset[str]:
         return frozenset().union(
-            *(f.type.referenced for f in self.fields if f.type is not None)
+            *(
+                arm.type.referenced
+                for f in self.fields
+                for arm in f.arms
+                if arm.type is not None
+            )
         )
 
     @property
     def change_points(self) -> frozenset[int]:
-        points = {f.since for f in self.fields if f.since is not None}
+        points: set[int] = set()
+        for f in self.fields:
+            for arm in f.arms:
+                if arm.since is not None:
+                    points.add(arm.since)
+                if arm.until is not None:
+                    points.add(arm.until)
         if self.since is not None:
             points.add(self.since)
         return frozenset(points)

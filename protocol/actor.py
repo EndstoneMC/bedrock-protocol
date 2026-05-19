@@ -77,7 +77,11 @@ class ActorEvent(IntEnum):
 
 @packet(id=27)
 class ActorEventPacket:
-    """Server-to-client signal that plays an actor event on a specific entity."""
+    """All kinds of actor state changes (see Actor::handleEntityEvent).
+
+    Ranges from a crossbow being ready to fire to taming animals, some of
+    which may be obsolete (frex, ADD_PLAYER_LEVELS).
+    """
 
     target_runtime_id: ActorRuntimeID
     event_id: ActorEvent = field(type=uint8)
@@ -99,7 +103,7 @@ class ActorSwingSource(IntEnum):
 
 @packet(id=44)
 class AnimatePacket:
-    """Combination of server-bound and client-bound packets that trigger
+    """Combination of server bound and client bound packets to trigger
     animations."""
 
     class Action(IntEnum):
@@ -117,7 +121,8 @@ class AnimatePacket:
 
 @packet(id=158)
 class AnimateEntityPacket:
-    """Plays a named animation on a set of entities."""
+    """The AnimateEntityPacket is used to trigger a one-off animation on the
+    client it is sent to."""
 
     animation: str
     next_state: str
@@ -130,10 +135,36 @@ class AnimateEntityPacket:
 
 @packet(id=152, since=407)
 class EmoteListPacket:
-    """Lists the emote pieces a player has equipped."""
+    """Allows clients to download emotes that other clients have equipped."""
 
     runtime_id: ActorRuntimeID
     emote_piece_ids: list[uuid.UUID]
+
+
+@packet(id=33)
+class InteractPacket:
+    """Used for inventory button press and in _updateInteraction() for a
+    variety of purposes. From the client."""
+
+    class Action(IntEnum):
+        INVALID = 0
+        STOP_RIDING = 3
+        INTERACT_UPDATE = 4
+        NPC_OPEN = 5
+        OPEN_INVENTORY = 6
+
+    action: Action = field(type=uint8)
+    target_runtime_id: ActorRuntimeID
+    position: Vec3 = field(
+        when=lambda p: p.action == Action.INTERACT_UPDATE, until=388
+    )
+    position: Vec3 = field(
+        when=lambda p: p.action == Action.INTERACT_UPDATE
+        or p.action == Action.STOP_RIDING,
+        since=388,
+        until=898,
+    )
+    position: Vec3 | None = field(since=898)
 
 
 @type(since=544)
@@ -153,9 +184,6 @@ class AttributeOperands(IntEnum):
 
 @type(since=544)
 class AttributeModifier:
-    """An attribute modifier, carried in the UpdateAttributes modifier list
-    introduced at protocol 544."""
-
     id: str
     name: str
     amount: float
@@ -165,9 +193,6 @@ class AttributeModifier:
 
 
 class AttributeData:
-    """One attribute in an UpdateAttributesPacket. `modifiers` arrived at
-    protocol 544 and the default-bound fields at protocol 729."""
-
     min_value: float
     max_value: float
     current_value: float
@@ -180,8 +205,6 @@ class AttributeData:
 
 @packet(id=29)
 class UpdateAttributesPacket:
-    """Updates attributes such as health or movement speed on an entity."""
-
     runtime_id: ActorRuntimeID
     attribute_data: list[AttributeData]
     tick: uvarint64 = field(since=419)

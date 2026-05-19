@@ -24,6 +24,8 @@ def field(
     *,
     type: type[str | Union] | TypeAliasType | None = None,
     since: int | None = None,
+    until: int | None = None,
+    when: Any = None,
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
 ) -> Any:
@@ -36,6 +38,18 @@ def field(
       annotation order, so `X | None` encodes present as 0 / absent as 1,
       while `None | X` encodes present as 1 / absent as 0.
     - `since`: protocol version that introduced the field.
+    - `until`: first protocol version where the field is removed (exclusive),
+      so the field is present in `[since, until)`. Redeclaring the same field
+      name with adjacent `since` / `until` ranges and differing annotations
+      models a field whose type or wire shape changed across versions.
+    - `when`: a one-argument lambda gating the field on the value of earlier
+      fields in the same struct, e.g. `when=lambda p: p.action == Foo.BAR`.
+      Unlike `X | None`, nothing marks presence on the wire -- both serialize
+      and deserialize recompute it from the predicate, so the field reads as
+      `X` but compiles to an optional. The lambda body may use attribute
+      access on its parameter, `Enum.MEMBER` literals, integer literals,
+      comparisons, `and`/`or`, and `not`. It may only reference fields
+      declared before this one.
     - `endian`: byte order for a fixed-width primitive or integer-coded enum
       field, `"big"` or `"little"` (the default). Bedrock sends primitives
       little-endian or as varints almost everywhere, the rare exceptions

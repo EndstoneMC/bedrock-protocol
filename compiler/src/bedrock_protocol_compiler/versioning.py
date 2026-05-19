@@ -8,11 +8,10 @@ earlier one. `VersionPlan` computes that structure; a backend decides how to
 spell it (C++ namespaces, traits, ...).
 """
 
-from __future__ import annotations
-
+from dataclasses import replace
 from typing import Any
 
-from .schema import Enum, Struct
+from .schema import Enum, Field, Struct
 
 
 class VersionPlan:
@@ -152,5 +151,15 @@ class VersionPlan:
                 and (m.until is None or snapshot < m.until)
             )
             return members, tuple((m.name, m.value) for m in members)
-        fields = tuple(f for f in t.fields if f.since is None or f.since <= snapshot)
-        return fields, tuple(f.name for f in fields)
+        # Each field contributes the arm active at `snapshot`, narrowed to a
+        # single-arm Field. The key carries the arm's type and wire, so the
+        # snapshot also splits when only a field's encoding changed.
+        narrowed: list[Field] = []
+        key: list[Any] = []
+        for f in t.fields:
+            arm = f.arm_at(snapshot)
+            if arm is None:
+                continue
+            narrowed.append(replace(f, arms=(arm,)))
+            key.append((f.name, arm.type, arm.wire))
+        return tuple(narrowed), tuple(key)

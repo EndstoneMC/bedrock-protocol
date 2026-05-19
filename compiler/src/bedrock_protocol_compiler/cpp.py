@@ -4,8 +4,6 @@ spelling, namespace layout, serializer bodies -- are made here, so the
 templates carry no logic. A second language would be a sibling of this module.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -15,6 +13,7 @@ import inflection
 
 from .schema import (
     CompilerError,
+    Cond,
     Enum,
     EnumMember,
     EnumRef,
@@ -25,6 +24,7 @@ from .schema import (
     Named,
     Opt,
     Optional,
+    Pred,
     Primitive,
     Repeat,
     Repeated,
@@ -339,9 +339,12 @@ class CppBackend:
         out: set[str] = set()
         for struct in self._module.structs:
             for f in struct.fields:
-                wire = f.wire.inner if isinstance(f.wire, Opt) else f.wire
-                if isinstance(wire, EnumRef) and wire.scalar is None:
-                    out.add(wire.name)
+                for arm in f.arms:
+                    wire = arm.wire
+                    while isinstance(wire, (Opt, Cond)):
+                        wire = wire.inner
+                    if isinstance(wire, EnumRef) and wire.scalar is None:
+                        out.add(wire.name)
         return frozenset(out)
 
     def _struct_serializer(
@@ -424,6 +427,9 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({expr}.has_value())"):
                     self._write(code, type_ref.inner, inner, f"*{expr}")
+            case Cond(inner=inner, predicate=predicate):
+                with code.block(f"if ({self._predicate(predicate, 'value')})"):
+                    self._write(code, type_ref, inner, expr)
             case Repeat(inner=inner, prefix=prefix):
                 assert isinstance(type_ref, Repeated)
                 depth = self._rep
@@ -485,6 +491,9 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({guard})"):
                     self._read(code, type_ref.inner, inner, target)
+            case Cond(inner=inner, predicate=predicate):
+                with code.block(f"if ({self._predicate(predicate, 'out')})"):
+                    self._read(code, type_ref, inner, target)
             case Repeat(inner=inner, prefix=prefix, count=count):
                 assert isinstance(type_ref, Repeated)
                 depth = self._rep
@@ -561,6 +570,23 @@ class CppBackend:
                             "std::errc::illegal_byte_sequence));"
                         )
                 self._rep -= 1
+
+    def _predicate(self, pred: Pred, base: str) -> str:
+        """Render a `when=` predicate as a C++ boolean expression. `base` is
+        the struct accessor -- `value` when serializing, `out` when reading."""
+        if pred.kind == "field":
+            return f"{base}.{pred.text}"
+        if pred.kind == "int":
+            return pred.text
+        if pred.kind == "enum":
+            enum, member = pred.text.rsplit(".", 1)
+            return f"{self._type_at(enum)}::{self._camel(member)}"
+        if pred.kind == "not":
+            return f"!({self._predicate(pred.operands[0], base)})"
+        op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
+        return f" {op} ".join(
+            f"({self._predicate(o, base)})" for o in pred.operands
+        )
 
     @staticmethod
     def _scalar_write(scalar: Scalar, expr: str) -> str:
