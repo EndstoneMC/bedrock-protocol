@@ -25,6 +25,13 @@ from .schema import (
     Opt,
     Optional,
     Pred,
+    PredAnd,
+    PredCompare,
+    PredEnum,
+    PredField,
+    PredInt,
+    PredNot,
+    PredOr,
     Primitive,
     PrimitiveAlias,
     Repeat,
@@ -670,19 +677,24 @@ class CppBackend:
     def _predicate(self, pred: Pred, base: str) -> str:
         """Render a `when=` predicate as a C++ boolean expression. `base` is
         the struct accessor -- `value` when serializing, `out` when reading."""
-        if pred.kind == "field":
-            return f"{base}.{pred.text}"
-        if pred.kind == "int":
-            return pred.text
-        if pred.kind == "enum":
-            enum, member = pred.text.rsplit(".", 1)
-            return f"{self._type_at(enum)}::{self._camel(member)}"
-        if pred.kind == "not":
-            return f"!({self._predicate(pred.operands[0], base)})"
-        op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
-        return f" {op} ".join(
-            f"({self._predicate(o, base)})" for o in pred.operands
-        )
+        match pred:
+            case PredField(name=name):
+                return f"{base}.{name}"
+            case PredInt(value=value):
+                return str(value)
+            case PredEnum(enum=enum, member=member):
+                return f"{self._type_at(enum)}::{self._camel(member)}"
+            case PredNot(operand=operand):
+                return f"!({self._predicate(operand, base)})"
+            case PredAnd(operands=operands):
+                return " && ".join(f"({self._predicate(o, base)})" for o in operands)
+            case PredOr(operands=operands):
+                return " || ".join(f"({self._predicate(o, base)})" for o in operands)
+            case PredCompare(op=op, left=left, right=right):
+                return (
+                    f"({self._predicate(left, base)}) {op} "
+                    f"({self._predicate(right, base)})"
+                )
 
     @staticmethod
     def _scalar_write(scalar: Scalar, expr: str) -> str:
