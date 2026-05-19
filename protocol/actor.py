@@ -134,3 +134,35 @@ class EmoteListPacket:
 
     runtime_id: ActorRuntimeID
     emote_piece_ids: list[uuid.UUID]
+
+
+class AttributeModifier:
+    id: str
+    name: str
+    amount: float
+    operation: int32
+    operand: int32
+    is_serializable: bool
+
+
+class AttributeData:
+    """One attribute in an UpdateAttributesPacket. `modifiers` arrived at
+    protocol 544 and the default-bound fields at protocol 729."""
+
+    min_value: float
+    max_value: float
+    current_value: float
+    default_min_value: float = field(since=729)
+    default_max_value: float = field(since=729)
+    default_value: float
+    name: str
+    modifiers: list[AttributeModifier] = field(since=544)
+
+
+@packet(id=29)
+class UpdateAttributesPacket:
+    """Updates attributes such as health or movement speed on an entity."""
+
+    runtime_id: ActorRuntimeID
+    attribute_list: list[AttributeData]
+    tick: uvarint64 = field(since=419)

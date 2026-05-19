@@ -69,7 +69,7 @@
       `.../bedrock/codec/vNNN/serializer/<Packet>Serializer_vNNN.java`.
       A field that first appears in a later `vNNN` serializer is `since=NNN`,
       and the oldest `vNNN` that defines the serializer at all is the
-      packet's own `since`.
+      packet's own `since` -- except for the v291 floor, see below.
     - `Sandertv/gophertunnel` -- `minecraft/protocol/packet/<name>.go` for the
       current field shape, plus `git log -S<field>` on that file to date
       when each field was added or removed.
@@ -81,6 +81,13 @@
    no `since` of their own. Only later additions take `field(since=)` or
    `value(since=)`. A type or field that neither reference models is left
    ungated.
+
+   CloudburstMC's codec history begins at protocol 291, so v291 is a floor,
+   not a real introduction point: a packet or enum whose oldest serializer is
+   `v291` cannot be told apart from one that predates the reference window.
+   Leave it ungated -- no `since=291`. The earliest introduction worth gating
+   is 292 or later. The same applies to a `field(since=)` / `value(since=)`
+   that would land on 291: drop it.
 
    The protocol-docs JSON is mechanically dumped from a Bedrock server and
    the dumper is not perfect. When protocol-docs disagrees with gophertunnel

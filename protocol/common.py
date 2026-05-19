@@ -32,6 +32,12 @@ class BlockPos:
     z: varint32
 
 
+class SubChunkPos:
+    x: varint32
+    y: varint32
+    z: varint32
+
+
 type Color = int32
 
 
