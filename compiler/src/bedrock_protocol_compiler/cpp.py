@@ -25,13 +25,6 @@ from .schema import (
     Opt,
     Optional,
     Pred,
-    PredAnd,
-    PredCompare,
-    PredEnum,
-    PredField,
-    PredInt,
-    PredNot,
-    PredOr,
     Primitive,
     PrimitiveAlias,
     Repeat,
@@ -198,17 +191,16 @@ class CppBackend:
         primitive_aliases = [
             (a.name, PRIMITIVE_TYPES[a.primitive]) for a in module.primitive_aliases
         ]
-        # A type alias lowers to a flat `using X = ...`; a versioned name
-        # inside it has no single spelling there, so reject one.
+        type_aliases: list[tuple[str, str]] = []
         for a in module.type_aliases:
+            # A type alias lowers to a flat `using X = ...`; a versioned name
+            # inside it has no single spelling there, so reject one.
             for ref in a.target.referenced:
                 if plan.is_versioned(ref):
                     raise CompilerError(
                         f"{a.name}: a `type` alias cannot reference the "
                         f"versioned type {ref!r}"
                     )
-        type_aliases: list[tuple[str, str]] = []
-        for a in module.type_aliases:
             ctype = self._cpp_type(a.target, frozenset())
             assert ctype is not None  # frontend would have rejected an unresolvable target
             type_aliases.append((a.name, ctype))
@@ -247,10 +239,10 @@ class CppBackend:
                 ]
                 traits.append(RenderTrait(name, ranges))
 
-        serializers = self._serializers(by_name)
-        referenced = [s.referenced for s in module.structs] + [
-            a.target.referenced for a in module.type_aliases
-        ]
+        referenced = frozenset().union(
+            *(s.referenced for s in module.structs),
+            *(a.target.referenced for a in module.type_aliases),
+        )
         return RenderModule(
             package=module.package.replace(".", "::") if module.package else None,
             dep_includes=[
@@ -265,13 +257,13 @@ class CppBackend:
             unversioned=unversioned,
             namespaces=namespaces,
             traits=traits,
-            serializers=serializers,
+            serializers=self._serializers(by_name),
             latest_aliases=[
                 t.name for t in module.types if plan.is_versioned(t.name)
             ],
             latest_version=latest_version,
-            uses_uuid=any("UUID" in r for r in referenced),
-            uses_nbt=any(r & self._schema.builtins for r in referenced),
+            uses_uuid="UUID" in referenced,
+            uses_nbt=bool(referenced & self._schema.builtins),
         )
 
     # --- type definitions ----------------------------------------------------
@@ -466,7 +458,6 @@ class CppBackend:
         """A `type Name = A | B | C` alias serializes exactly as an inline
         `A | B | C` field does: the same varuint-tagged `Switch` body, written
         straight from and read straight into the variant itself."""
-        assert isinstance(a.target, Variant) and isinstance(a.wire, Switch)
         self._snap, self._owner, self._nested = None, a.name, frozenset()
         serialize = _Code()
         self._write(serialize, a.target, a.wire, "value")
@@ -677,24 +668,19 @@ class CppBackend:
     def _predicate(self, pred: Pred, base: str) -> str:
         """Render a `when=` predicate as a C++ boolean expression. `base` is
         the struct accessor -- `value` when serializing, `out` when reading."""
-        match pred:
-            case PredField(name=name):
-                return f"{base}.{name}"
-            case PredInt(value=value):
-                return str(value)
-            case PredEnum(enum=enum, member=member):
-                return f"{self._type_at(enum)}::{self._camel(member)}"
-            case PredNot(operand=operand):
-                return f"!({self._predicate(operand, base)})"
-            case PredAnd(operands=operands):
-                return " && ".join(f"({self._predicate(o, base)})" for o in operands)
-            case PredOr(operands=operands):
-                return " || ".join(f"({self._predicate(o, base)})" for o in operands)
-            case PredCompare(op=op, left=left, right=right):
-                return (
-                    f"({self._predicate(left, base)}) {op} "
-                    f"({self._predicate(right, base)})"
-                )
+        if pred.kind == "field":
+            return f"{base}.{pred.text}"
+        if pred.kind == "int":
+            return pred.text
+        if pred.kind == "enum":
+            enum, member = pred.text.rsplit(".", 1)
+            return f"{self._type_at(enum)}::{self._camel(member)}"
+        if pred.kind == "not":
+            return f"!({self._predicate(pred.operands[0], base)})"
+        op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
+        return f" {op} ".join(
+            f"({self._predicate(o, base)})" for o in pred.operands
+        )
 
     @staticmethod
     def _scalar_write(scalar: Scalar, expr: str) -> str:

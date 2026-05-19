@@ -5,7 +5,7 @@
 
 from dataclasses import replace
 from pathlib import Path
-from typing import cast, get_args
+from typing import cast
 
 import griffe
 
@@ -19,7 +19,6 @@ from .schema import (
     INTEGER_PRIMITIVES,
     PRIMITIVES,
     VARINT_PRIMITIVES,
-    CmpOp,
     CompilerError,
     Cond,
     Enum,
@@ -34,13 +33,6 @@ from .schema import (
     Opt,
     Optional,
     Pred,
-    PredAnd,
-    PredCompare,
-    PredEnum,
-    PredField,
-    PredInt,
-    PredNot,
-    PredOr,
     Primitive,
     PrimitiveAlias,
     Repeat,
@@ -56,10 +48,6 @@ from .schema import (
     Variant,
     Wire,
 )
-
-#: The comparison operators a `field(when=...)` lambda may use. Sourced from
-#: the `CmpOp` literal so the schema is the single source of truth.
-_CMP_OPS: frozenset[str] = frozenset(get_args(CmpOp))
 
 #: An annotation, decorator argument, or literal as griffe surfaces it: an
 #: expression node, a raw-source literal string, or absent.
@@ -782,10 +770,9 @@ class Frontend:
             return self._pred_node(n, param, field_name, nested, earlier)
 
         if isinstance(node, griffe.ExprBoolOp):
-            operands = tuple(child(v) for v in node.values)
-            return PredAnd(operands) if node.operator == "and" else PredOr(operands)
+            return Pred(node.operator, operands=tuple(child(v) for v in node.values))
         if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
-            return PredNot(child(node.value))
+            return Pred("not", operands=(child(node.value),))
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
@@ -793,18 +780,16 @@ class Frontend:
                     f"clause -- split a chained comparison with `and`"
                 )
             op = str(node.operators[0])
-            if op not in _CMP_OPS:
+            if op not in ("==", "!=", "<", ">", "<=", ">="):
                 raise CompilerError(
                     f"{field_name}: field(when=...) comparison {op!r} is unsupported"
                 )
-            return PredCompare(
-                cast(CmpOp, op), child(node.left), child(node.comparators[0])
-            )
+            return Pred(op, operands=(child(node.left), child(node.comparators[0])))
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, nested, earlier)
         literal = self._as_int(node)
         if literal is not None:
-            return PredInt(literal)
+            return Pred("int", text=str(literal))
         raise CompilerError(
             f"{field_name}: field(when=...) contains an unsupported expression: "
             f"{node}"
@@ -818,7 +803,7 @@ class Frontend:
         nested: frozenset[str],
         earlier: frozenset[str],
     ) -> Pred:
-        """`param.field` is a `PredField` leaf, `Enum.MEMBER` a `PredEnum` leaf."""
+        """`param.field` is a `field` leaf, `Enum.MEMBER` an `enum` leaf."""
         parts = [str(v) for v in node.values]
         if len(parts) != 2:
             raise CompilerError(
@@ -832,9 +817,9 @@ class Frontend:
                     f"{field_name}: field(when=...) references {tail!r}, which is "
                     f"not a field declared before it"
                 )
-            return PredField(tail)
+            return Pred("field", text=tail)
         if head in nested or head in self._enum_names:
-            return PredEnum(head, tail)
+            return Pred("enum", text=f"{head}.{tail}")
         raise CompilerError(
             f"{field_name}: field(when=...) reference {head!r} is neither the "
             f"lambda parameter nor a known enum"

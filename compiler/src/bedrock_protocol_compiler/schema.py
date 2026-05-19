@@ -8,7 +8,6 @@ body from the other without re-deriving either.
 """
 
 from dataclasses import dataclass
-from typing import Literal
 
 #: DSL primitive names. `str`/`bytes` are length-prefixed; the rest are
 #: numeric/bool. `bytes` shares `str`'s wire encoding (a varuint32 length
@@ -114,66 +113,18 @@ TypeRef = Primitive | Named | Optional | Repeated | Mapping | Variant
 # --- predicates: a field's data-dependent presence condition -----------------
 
 
-#: Comparison operators a `field(when=...)` lambda may use.
-CmpOp = Literal["==", "!=", "<", ">", "<=", ">="]
-
-
 @dataclass(frozen=True)
-class PredField:
-    """A reference to an earlier field of the containing struct."""
+class Pred:
+    """A `when=` predicate as a small expression tree. `kind` is either a leaf
+    type -- `field`, `enum`, `int` -- or an operator: a comparison (`==`,
+    `!=`, `<`, `>`, `<=`, `>=`), `and`, `or`, or `not`. A leaf carries its
+    payload in `text` (a field name, `Enum.MEMBER`, or an integer literal);
+    an operator carries its children in `operands`. The frontend builds this
+    from the parsed lambda so a backend never sees the DSL's surface syntax."""
 
-    name: str
-
-
-@dataclass(frozen=True)
-class PredEnum:
-    """A reference to a known enum's member, spelled `Enum.MEMBER` in the DSL."""
-
-    enum: str
-    member: str
-
-
-@dataclass(frozen=True)
-class PredInt:
-    """An integer literal."""
-
-    value: int
-
-
-@dataclass(frozen=True)
-class PredCompare:
-    """A binary comparison between two predicate nodes."""
-
-    op: CmpOp
-    left: "Pred"
-    right: "Pred"
-
-
-@dataclass(frozen=True)
-class PredAnd:
-    """Logical conjunction over two or more operands."""
-
-    operands: "tuple[Pred, ...]"
-
-
-@dataclass(frozen=True)
-class PredOr:
-    """Logical disjunction over two or more operands."""
-
-    operands: "tuple[Pred, ...]"
-
-
-@dataclass(frozen=True)
-class PredNot:
-    """Logical negation."""
-
-    operand: "Pred"
-
-
-#: A `when=` predicate as a small typed expression tree. The frontend builds
-#: it from the parsed lambda so a backend dispatches by node kind, never
-#: re-parsing the DSL's surface syntax.
-Pred = PredField | PredEnum | PredInt | PredCompare | PredAnd | PredOr | PredNot
+    kind: str
+    text: str = ""
+    operands: "tuple[Pred, ...]" = ()
 
 
 # --- wire encodings: how a field travels on the wire -------------------------
