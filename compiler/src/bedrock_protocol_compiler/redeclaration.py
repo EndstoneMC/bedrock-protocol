@@ -31,48 +31,6 @@ REDECLARATIONS = "redeclarations"
 CLASS_REDECLARATIONS = "class_redeclarations"
 
 
-def _field_guard(stmt: ast.stmt) -> tuple[ast.With, ast.expr] | None:
-    """A `with field(when=...):` block paired with its `when=` predicate, or
-    None when `stmt` is not such a guard block."""
-    if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
-        return None
-    ctx = stmt.items[0].context_expr
-    if not (
-        isinstance(ctx, ast.Call)
-        and isinstance(ctx.func, ast.Name)
-        and ctx.func.id == "field"
-    ):
-        return None
-    for kw in ctx.keywords:
-        if kw.arg == "when":
-            return stmt, kw.value
-    return None
-
-
-def _merge_group_when(stmt: ast.stmt, predicate: ast.expr, group: int) -> None:
-    """Merge a guard into one hoisted field as `field(_group_when=, _group_id=)`:
-    the shared predicate, and the index of the `with` block it came from so the
-    block survives hoisting and a backend can re-form it. A field with no
-    `field(...)` call gains one; an existing call gains the keywords. Statements
-    that are not annotated assignments are left untouched."""
-    if not isinstance(stmt, ast.AnnAssign):
-        return
-    keywords = [
-        ast.keyword(arg="_group_when", value=copy.deepcopy(predicate)),
-        ast.keyword(arg="_group_id", value=ast.Constant(value=group)),
-    ]
-    if stmt.value is None:
-        stmt.value = ast.Call(
-            func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords
-        )
-    elif isinstance(stmt.value, ast.Call):
-        stmt.value.keywords.extend(keywords)
-    else:
-        return
-    ast.copy_location(stmt.value, stmt)
-    ast.fix_missing_locations(stmt)
-
-
 class RedeclarationExtension(griffe.Extension):
     """Recovers redeclared attributes, redeclared classes, and `with`-guarded
     field groups -- declarations griffe would otherwise lose or cannot model."""
@@ -95,16 +53,60 @@ class RedeclarationExtension(griffe.Extension):
         new_body: list[ast.stmt] = []
         group = 0
         for stmt in node.body:
-            guard = _field_guard(stmt)
+            guard = self._field_guard(stmt)
             if guard is None:
                 new_body.append(stmt)
                 continue
             block, predicate = guard
             for inner in block.body:
-                _merge_group_when(inner, predicate, group)
+                self._merge_group_when(inner, predicate, group)
                 new_body.append(inner)
             group += 1
         node.body = new_body
+
+    @staticmethod
+    def _field_guard(stmt: ast.stmt) -> tuple[ast.With, ast.expr] | None:
+        """A `with field(when=...):` block paired with its `when=` predicate,
+        or None when `stmt` is not such a guard block."""
+        if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
+            return None
+        ctx = stmt.items[0].context_expr
+        if not (
+            isinstance(ctx, ast.Call)
+            and isinstance(ctx.func, ast.Name)
+            and ctx.func.id == "field"
+        ):
+            return None
+        for kw in ctx.keywords:
+            if kw.arg == "when":
+                return stmt, kw.value
+        return None
+
+    @staticmethod
+    def _merge_group_when(
+        stmt: ast.stmt, predicate: ast.expr, group: int
+    ) -> None:
+        """Merge a guard into a hoisted field as `field(_group_when=, _group_id=)`:
+        the shared predicate, and the index of the `with` block it came from so
+        the block survives hoisting and a backend can re-form it. A field with
+        no `field(...)` call gains one; an existing call gains the keywords.
+        Statements that are not annotated assignments are left untouched."""
+        if not isinstance(stmt, ast.AnnAssign):
+            return
+        keywords = [
+            ast.keyword(arg="_group_when", value=copy.deepcopy(predicate)),
+            ast.keyword(arg="_group_id", value=ast.Constant(value=group)),
+        ]
+        if stmt.value is None:
+            stmt.value = ast.Call(
+                func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords
+            )
+        elif isinstance(stmt.value, ast.Call):
+            stmt.value.keywords.extend(keywords)
+        else:
+            return
+        ast.copy_location(stmt.value, stmt)
+        ast.fix_missing_locations(stmt)
 
     # --- redeclared attributes ----------------------------------------------
 

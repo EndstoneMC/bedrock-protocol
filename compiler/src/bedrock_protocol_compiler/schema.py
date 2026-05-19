@@ -26,6 +26,11 @@ VARINT_PRIMITIVES: frozenset[str] = frozenset(
     {"varint32", "varint64", "uvarint32", "uvarint64"}
 )
 
+#: Primitives valid as an integer wire (a length prefix, a varuint tag, ...).
+INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset(
+    {"str", "bytes", "bool", "float", "double"}
+)
+
 
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
@@ -329,24 +334,28 @@ class Struct:
 
 
 @dataclass(frozen=True)
-class Alias:
-    """A module-level `type Name = <primitive>` declaration."""
+class PrimitiveAlias:
+    """A `type Name = <primitive>` declaration. Rendered as `enum Name :
+    ctype {}` -- a distinct integer type, wire-compatible with the underlying
+    primitive, so a user may specialize `Serializer<Name>` apart from the
+    primitive's own."""
 
     name: str
     primitive: str
 
 
 @dataclass(frozen=True)
-class UnionAlias:
-    """A module-level `type Name = A | B | C` declaration -- a named tagged
-    union. `type` is its declared shape and `wire` its encoding (a varuint32
-    tag, then the selected arm); both match what an inline `A | B | C` field
-    would get, so the alias and an inline union of the same arms travel
-    identically on the wire."""
+class TypeAlias:
+    """A `type Name = <non-primitive>` declaration. Rendered as a transparent
+    `using Name = <ctype>`; `target` is the alias's declared shape and `wire`
+    its encoding, both identical to what an inline use of the shape would
+    get. The only target needing its own generated serializer is a `Variant`
+    (which `using` lands on `std::variant<...>`, which has no built-in codec);
+    other targets travel through their underlying type's existing serializer."""
 
     name: str
-    type: Variant
-    wire: Switch
+    target: TypeRef
+    wire: Wire
 
 
 @dataclass(frozen=True)
@@ -355,8 +364,8 @@ class Module:
     stem: str  # input file stem, drives the output filename
     package: str | None
     types: tuple[Enum | Struct, ...]  # declaration order
-    aliases: tuple[Alias, ...]
-    union_aliases: tuple[UnionAlias, ...]
+    primitive_aliases: tuple[PrimitiveAlias, ...]
+    type_aliases: tuple[TypeAlias, ...]
     imports: tuple[str, ...]  # dotted names of loaded modules it draws types from
 
     @property

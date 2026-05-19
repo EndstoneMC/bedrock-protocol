@@ -26,6 +26,7 @@ from .schema import (
     Optional,
     Pred,
     Primitive,
+    PrimitiveAlias,
     Repeat,
     Repeated,
     Scalar,
@@ -34,8 +35,8 @@ from .schema import (
     Struct,
     StructRef,
     Switch,
+    TypeAlias,
     TypeRef,
-    UnionAlias,
     Variant,
     Wire,
 )
@@ -118,16 +119,14 @@ class RenderSerializer:
 class RenderModule:
     package: str | None
     dep_includes: list[str]
-    module_aliases: list[tuple[str, str]]
-    union_aliases: list[tuple[str, str]]
+    primitive_aliases: list[tuple[str, str]]  # `enum X : ctype {}` lines
+    type_aliases: list[tuple[str, str]]       # `using X = ctype` lines (any non-primitive)
     unversioned: list[RenderEnum | RenderStruct]
     namespaces: list[RenderNamespace]
     traits: list[RenderTrait]
     serializers: list[RenderSerializer]
     latest_aliases: list[str]
     latest_version: int
-    has_versioned: bool
-    has_serializers: bool
     uses_uuid: bool
     uses_nbt: bool
 
@@ -168,8 +167,8 @@ class CppBackend:
             for m in schema.modules.values()
             for name in (
                 *(t.name for t in m.types),
-                *(a.name for a in m.aliases),
-                *(u.name for u in m.union_aliases),
+                *(a.name for a in m.primitive_aliases),
+                *(a.name for a in m.type_aliases),
             )
         )
         # `@builtin` types (NBT tags), plus the stdlib `uuid.UUID`. The compiler
@@ -186,9 +185,26 @@ class CppBackend:
 
     def render(self, latest_version: int) -> RenderModule:
         self._guard_cross_module()
-        self._guard_union_aliases()
         module, plan = self._module, self._plan
         by_name = {t.name: t for t in module.types}
+
+        primitive_aliases = [
+            (a.name, PRIMITIVE_TYPES[a.primitive]) for a in module.primitive_aliases
+        ]
+        # A type alias lowers to a flat `using X = ...`; a versioned name
+        # inside it has no single spelling there, so reject one.
+        for a in module.type_aliases:
+            for ref in a.target.referenced:
+                if plan.is_versioned(ref):
+                    raise CompilerError(
+                        f"{a.name}: a `type` alias cannot reference the "
+                        f"versioned type {ref!r}"
+                    )
+        type_aliases: list[tuple[str, str]] = []
+        for a in module.type_aliases:
+            ctype = self._cpp_type(a.target, frozenset())
+            assert ctype is not None  # frontend would have rejected an unresolvable target
+            type_aliases.append((a.name, ctype))
 
         unversioned: list[RenderEnum | RenderStruct] = []
         for name in plan.order:
@@ -225,25 +241,20 @@ class CppBackend:
                 traits.append(RenderTrait(name, ranges))
 
         serializers = self._serializers(by_name)
-        serializers += [
-            self._union_alias_serializer(u) for u in module.union_aliases
+        referenced = [s.referenced for s in module.structs] + [
+            a.target.referenced for a in module.type_aliases
         ]
-        referenced = [
-            s.referenced for s in module.structs
-        ] + [u.type.referenced for u in module.union_aliases]
         return RenderModule(
             package=module.package.replace(".", "::") if module.package else None,
             dep_includes=[
                 d.replace(".", "/") + ".hpp"
                 for d in module.imports
                 if self._schema.modules[d].types
-                or self._schema.modules[d].aliases
-                or self._schema.modules[d].union_aliases
+                or self._schema.modules[d].primitive_aliases
+                or self._schema.modules[d].type_aliases
             ],
-            module_aliases=[
-                (a.name, PRIMITIVE_TYPES[a.primitive]) for a in module.aliases
-            ],
-            union_aliases=self._union_alias_usings(),
+            primitive_aliases=primitive_aliases,
+            type_aliases=type_aliases,
             unversioned=unversioned,
             namespaces=namespaces,
             traits=traits,
@@ -252,8 +263,6 @@ class CppBackend:
                 t.name for t in module.types if plan.is_versioned(t.name)
             ],
             latest_version=latest_version,
-            has_versioned=bool(plan.versioned),
-            has_serializers=bool(serializers),
             uses_uuid=any("UUID" in r for r in referenced),
             uses_nbt=any(r & self._schema.builtins for r in referenced),
         )
@@ -345,6 +354,13 @@ class CppBackend:
                     out += [self._enum_serializer(t, s) for s in snapshots]
             else:
                 out += filter(None, (self._struct_serializer(t, s) for s in snapshots))
+        # Only variant-targeted type aliases need a generated serializer --
+        # a `using X = std::variant<...>` resolves `Serializer<X>` to a variant
+        # specialization that doesn't exist by default. Other type-alias
+        # targets reuse their underlying type's serializer transparently.
+        for a in self._module.type_aliases:
+            if isinstance(a.target, Variant):
+                out.append(self._variant_alias_serializer(a))
         return out
 
     def _string_coded_enums(self) -> frozenset[str]:
@@ -439,33 +455,21 @@ class CppBackend:
                 open_group = None
         return groups
 
-    def _union_alias_serializer(self, ua: UnionAlias) -> RenderSerializer:
+    def _variant_alias_serializer(self, a: TypeAlias) -> RenderSerializer:
         """A `type Name = A | B | C` alias serializes exactly as an inline
         `A | B | C` field does: the same varuint-tagged `Switch` body, written
         straight from and read straight into the variant itself."""
-        self._snap, self._owner, self._nested = None, ua.name, frozenset()
+        assert isinstance(a.target, Variant) and isinstance(a.wire, Switch)
+        self._snap, self._owner, self._nested = None, a.name, frozenset()
         serialize = _Code()
-        self._write(serialize, ua.type, ua.wire, "value")
+        self._write(serialize, a.target, a.wire, "value")
         deserialize = _Code()
-        deserialize(f"{ua.name} out;")
-        self._read(deserialize, ua.type, ua.wire, "out")
+        deserialize(f"{a.name} out;")
+        self._read(deserialize, a.target, a.wire, "out")
         deserialize("return out;")
         return RenderSerializer(
-            ua.name, f"const {ua.name} &value", serialize.lines, deserialize.lines
+            a.name, f"const {a.name} &value", serialize.lines, deserialize.lines
         )
-
-    def _union_alias_usings(self) -> list[tuple[str, str]]:
-        """Each union alias as `(name, std::variant<...> spelling)`, the data
-        behind its `using` declaration."""
-        out: list[tuple[str, str]] = []
-        for u in self._module.union_aliases:
-            ctype = self._cpp_type(u.type, frozenset())
-            if ctype is None:
-                raise CompilerError(
-                    f"{u.name}: a `type` union alias arm is an unresolvable type"
-                )
-            out.append((u.name, ctype))
-        return out
 
     def _enum_serializer(self, enum: Enum, snapshot: int | None) -> RenderSerializer:
         if snapshot is None:
@@ -729,17 +733,6 @@ class CppBackend:
                     f"{struct.name}: references versioned type(s) {sorted(bad)} "
                     f"from another module -- cross-module versioning is unsupported"
                 )
-
-    def _guard_union_aliases(self) -> None:
-        """A union alias lowers to a flat `using X = std::variant<...>`; a
-        versioned arm has no single spelling there, so reject one."""
-        for u in self._module.union_aliases:
-            for arm in u.type.arms:
-                if isinstance(arm, Named) and self._plan.is_versioned(arm.name):
-                    raise CompilerError(
-                        f"{u.name}: a `type` union alias cannot have the "
-                        f"versioned arm {arm.name!r}"
-                    )
 
     # --- spellings -----------------------------------------------------------
 

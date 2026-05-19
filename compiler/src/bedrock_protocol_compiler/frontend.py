@@ -16,9 +16,9 @@ from .redeclaration import (
     RedeclarationExtension,
 )
 from .schema import (
+    INTEGER_PRIMITIVES,
     PRIMITIVES,
     VARINT_PRIMITIVES,
-    Alias,
     CompilerError,
     Cond,
     Enum,
@@ -34,6 +34,7 @@ from .schema import (
     Optional,
     Pred,
     Primitive,
+    PrimitiveAlias,
     Repeat,
     Repeated,
     Scalar,
@@ -42,8 +43,8 @@ from .schema import (
     Struct,
     StructRef,
     Switch,
+    TypeAlias,
     TypeRef,
-    UnionAlias,
     Variant,
     Wire,
 )
@@ -138,13 +139,22 @@ class Frontend:
     # --- type classification (spans every loaded module) ---------------------
 
     def _classify(self) -> None:
+        """Two passes over every loaded module: first classify classes by
+        kind, then parse and resolve aliases. An alias's arms may reference
+        any class from any module, so the alias pass must run after all
+        classes are classified; within the alias pass, declaration order is
+        the resolution order so an alias may reference an earlier alias."""
         self._enum_names: set[str] = set()
         self._struct_names: set[str] = set()
         self._builtins: set[str] = set()
-        self._alias_primitive: dict[str, str] = {}
-        # name -> arm annotations of a `type Name = A | B | C` union alias,
-        # kept so `_typeref` / `_base_wire` can expand a reference to it.
-        self._union_alias_arms: dict[str, list[griffe.Expr | str]] = {}
+        # All aliases by name -- the directory `_typeref` / `_base_wire`
+        # consult to expand a reference to one.
+        self._alias_index: dict[str, PrimitiveAlias | TypeAlias] = {}
+        # The same aliases bucketed per declaring module, for `_module` to
+        # read back without re-parsing the griffe state.
+        self._primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
+        self._type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
+
         for mod in self._griffe.values():
             for cls in mod.classes.values():
                 if cls.is_alias:
@@ -154,10 +164,42 @@ class Frontend:
                     continue
                 bucket = self._enum_names if self._is_int_enum(cls) else self._struct_names
                 bucket.add(cls.name)
-            for alias in self._aliases(mod):
-                self._alias_primitive[alias.name] = alias.primitive
-            for name, arms in self._union_alias_decls(mod):
-                self._union_alias_arms[name] = arms
+
+        for name, mod in self._griffe.items():
+            primitives: list[PrimitiveAlias] = []
+            others: list[TypeAlias] = []
+            sources = list(mod.attributes.items()) + list(mod.type_aliases.items())
+            for attr_name, attr in sources:
+                if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
+                    continue
+                alias = self._alias(attr_name, attr.value)
+                if alias is None:
+                    continue
+                self._alias_index[alias.name] = alias
+                if isinstance(alias, PrimitiveAlias):
+                    primitives.append(alias)
+                else:
+                    others.append(alias)
+            self._primitive_aliases_by_module[name] = tuple(primitives)
+            self._type_aliases_by_module[name] = tuple(others)
+
+    def _alias(
+        self, name: str, value: griffe.Expr | str
+    ) -> PrimitiveAlias | TypeAlias | None:
+        """Recognize a module-level `type Name = ...` binding. The
+        `<primitive>` form becomes a `PrimitiveAlias` (a distinct integer
+        type, `enum Name : ctype {}`); any other RHS whose annotation
+        resolves to a typeref and a wire becomes a `TypeAlias` (a transparent
+        `using Name = ctype`). A binding the typeref or wire walkers reject
+        returns None -- the attribute is not a type alias (e.g., the
+        `package = "..."` line of a DSL module)."""
+        if isinstance(value, griffe.ExprName) and value.name in PRIMITIVES:
+            return PrimitiveAlias(name, value.name)
+        type_ref = self._typeref(value, name)
+        wire = self._wire(name, value, None, frozenset())
+        if type_ref is None or wire is None:
+            return None
+        return TypeAlias(name, type_ref, wire)
 
     # --- module lowering -----------------------------------------------------
 
@@ -178,8 +220,13 @@ class Frontend:
             sorted(d for d in self._imports_of(mod) if d in self._griffe and d != name)
         )
         return Module(
-            name, self._stems.get(name, name), self._package(mod),
-            tuple(types), self._aliases(mod), self._union_aliases(mod), imports,
+            name=name,
+            stem=self._stems.get(name, name),
+            package=self._package(mod),
+            types=tuple(types),
+            primitive_aliases=self._primitive_aliases_by_module[name],
+            type_aliases=self._type_aliases_by_module[name],
+            imports=imports,
         )
 
     @staticmethod
@@ -189,54 +236,6 @@ class Frontend:
             return None
         return str(attr.value).strip("'\"")
 
-    def _aliases(self, mod: griffe.Module) -> tuple[Alias, ...]:
-        """`Name = <primitive>` and PEP 695 `type Name = <primitive>`, skipping
-        names that are themselves built-in primitives."""
-        out: list[Alias] = []
-        sources = list(mod.attributes.items()) + list(mod.type_aliases.items())
-        for name, attr in sources:
-            if name == "package" or name in PRIMITIVES or attr.value is None:
-                continue
-            if isinstance(attr.value, griffe.ExprName) and attr.value.name in PRIMITIVES:
-                out.append(Alias(name, attr.value.name))
-        return tuple(out)
-
-    def _union_alias_decls(
-        self, mod: griffe.Module
-    ) -> list[tuple[str, list[griffe.Expr | str]]]:
-        """Module-level `type Name = A | B | C` union aliases, each as its
-        name and the list of arm annotations. A `|` alias is rejected if it
-        mixes in `None` -- an alias names a type, it is not an optional."""
-        out: list[tuple[str, list[griffe.Expr | str]]] = []
-        sources = list(mod.attributes.items()) + list(mod.type_aliases.items())
-        for name, attr in sources:
-            if name == "package" or name in PRIMITIVES or attr.value is None:
-                continue
-            arms = self._flatten_union(attr.value)
-            if arms is None:
-                continue
-            if any(self._is_none(a) for a in arms):
-                raise CompilerError(f"{name}: a `type` alias cannot include None")
-            out.append((name, arms))
-        return out
-
-    def _union_aliases(self, mod: griffe.Module) -> tuple[UnionAlias, ...]:
-        """Resolve each `type Name = A | B | C` into a `UnionAlias` -- the same
-        `Variant` shape and `Switch` wire an inline union of those arms gets."""
-        out: list[UnionAlias] = []
-        for name, arms in self._union_alias_decls(mod):
-            type_ref = self._union_typeref(arms, name)
-            wire = self._union_wire(
-                arms, name, None, None, Scalar("uvarint32", varint=True), frozenset()
-            )
-            if not isinstance(type_ref, Variant) or not isinstance(wire, Switch):
-                raise CompilerError(
-                    f"{name}: a `type` union alias must be a tagged union of "
-                    f"two or more named types"
-                )
-            out.append(UnionAlias(name, type_ref, wire))
-        return tuple(out)
-
     def _enum(self, cls: griffe.Class) -> Enum:
         members: list[EnumMember] = []
         for name, attr in cls.attributes.items():
@@ -245,7 +244,7 @@ class Frontend:
             parsed = self._member_value(attr.value)
             if parsed is not None:
                 members.append(EnumMember(name, *parsed))
-        return Enum(cls.name, tuple(members), self._class_since(cls))
+        return Enum(cls.name, tuple(members), self._decorator_int_arg(cls, "type", "since"))
 
     def _struct(self, cls: griffe.Class) -> Struct:
         nested: list[Enum] = []
@@ -263,16 +262,20 @@ class Frontend:
             fields_list.append(field)
             earlier.add(field.name)
         fields = tuple(fields_list)
-        since = self._packet_since(cls)
+        since = self._decorator_int_arg(cls, "packet", "since")
         if since is None:  # a non-packet struct version-gates via @type(since=)
-            since = self._class_since(cls)
-            if self._class_until(cls) is not None:
+            since = self._decorator_int_arg(cls, "type", "since")
+            if self._decorator_int_arg(cls, "type", "until") is not None:
                 raise CompilerError(
                     f"{cls.name}: @type(until=) is only meaningful on a "
                     f"redeclared class -- a lone declaration cannot set until="
                 )
         return Struct(
-            cls.name, fields, tuple(nested), self._packet_id(cls), since,
+            cls.name,
+            fields,
+            tuple(nested),
+            self._decorator_int_arg(cls, "packet", "id"),
+            since,
         )
 
     def _merged_struct(self, decls: list[griffe.Class]) -> Struct:
@@ -290,7 +293,7 @@ class Frontend:
                     f"{name}: class redeclaration is supported for structs, "
                     f"not enums"
                 )
-            if self._packet_id(cls) is not None:
+            if self._decorator_int_arg(cls, "packet", "id") is not None:
                 raise CompilerError(
                     f"{name}: redeclaration of a @packet class is unsupported"
                 )
@@ -298,13 +301,13 @@ class Frontend:
                 raise CompilerError(
                     f"{name}: a redeclared class cannot contain nested types"
                 )
-            since = self._class_since(cls)
+            since = self._decorator_int_arg(cls, "type", "since")
             if since is None:
                 raise CompilerError(
                     f"{name}: every declaration of a redeclared class needs "
                     f"@type(since=)"
                 )
-            eras.append((cls, since, self._class_until(cls)))
+            eras.append((cls, since, self._decorator_int_arg(cls, "type", "until")))
         eras.sort(key=lambda e: e[1])
         self._check_class_eras(name, eras)
 
@@ -373,12 +376,9 @@ class Frontend:
     def _reject_field_version(self, struct: str, attr: griffe.Attribute) -> None:
         """A field inside a redeclared class draws its range from the class
         declarations, so it may not carry its own `field(since=/until=)`."""
-        call = attr.value
-        if call is None:
-            return
         if (
-            self._int_kwarg(call, "field", "since") is not None
-            or self._int_kwarg(call, "field", "until") is not None
+            self._int_kwarg(attr.value, "field", "since") is not None
+            or self._int_kwarg(attr.value, "field", "until") is not None
         ):
             raise CompilerError(
                 f"{struct}.{attr.name}: field(since=/until=) is not allowed "
@@ -417,25 +417,19 @@ class Frontend:
     def _arm(
         self, attr: griffe.Attribute, nested: frozenset[str], earlier: frozenset[str]
     ) -> FieldArm:
+        """One version era of a field, lowered from a single attribute. The
+        kwarg helpers tolerate `attr.value is None`, so a bare-annotated field
+        like `count: uint16` flows through the same paths as one carrying a
+        `field(...)` call."""
         call = attr.value
-        since = self._int_kwarg(call, "field", "since") if call is not None else None
-        until = self._int_kwarg(call, "field", "until") if call is not None else None
         type_ref = self._typeref(attr.annotation, attr.name)
         wire = self._wire(attr.name, attr.annotation, call, nested)
-        when = self._call_arg(call, "field", "when") if call is not None else None
-        # `_group_when` is injected by the redeclaration extension when a field
-        # is hoisted out of a `with field(when=...)` guard block. Unlike a
-        # direct field(when=), a group guard may legitimately wrap an optional
-        # or union field -- the guard gates the region, the optional flags the
-        # field within it.
-        group_when = (
-            self._call_arg(call, "field", "_group_when") if call is not None else None
-        )
-        # The `with` block index, carried alongside `_group_when` so co-guarded
-        # fields stay one group; None for a direct `field(when=...)`.
-        group_id = (
-            self._int_kwarg(call, "field", "_group_id") if call is not None else None
-        )
+        when = self._call_arg(call, "field", "when")
+        # _group_when is injected by the redeclaration extension when a field
+        # is hoisted out of a `with field(when=...)` block. Unlike a direct
+        # field(when=), a group guard may wrap an optional or union field --
+        # the guard gates the region, the optional flags the field within it.
+        group_when = self._call_arg(call, "field", "_group_when")
         if when is not None and group_when is not None:
             raise CompilerError(
                 f"{attr.name}: a field inside a with field(when=...) guard "
@@ -446,14 +440,19 @@ class Frontend:
             predicate = self._predicate(guard, attr.name, nested, earlier)
             if when is not None and isinstance(wire, (Opt, Switch)):
                 raise CompilerError(
-                    f"{attr.name}: field(when=...) gates a bare payload type -- it "
-                    f"cannot also be an optional or union field"
+                    f"{attr.name}: field(when=...) gates a bare payload type "
+                    f"-- it cannot also be an optional or union field"
                 )
             if wire is not None:
-                wire = Cond(wire, predicate, group_id)
-            # A value-gated field stays plain `T`: presence is recomputed from
-            # the predicate, so an optional wrapper would be redundant.
-        return FieldArm(type_ref, wire, since, until)
+                wire = Cond(
+                    wire, predicate, self._int_kwarg(call, "field", "_group_id")
+                )
+        return FieldArm(
+            type_ref,
+            wire,
+            since=self._int_kwarg(call, "field", "since"),
+            until=self._int_kwarg(call, "field", "until"),
+        )
 
     @staticmethod
     def _check_arms(name: str, arms: tuple[FieldArm, ...]) -> None:
@@ -505,10 +504,12 @@ class Frontend:
         if isinstance(ann, griffe.ExprName):
             if ann.name in PRIMITIVES:
                 return Primitive(ann.name)
-            if ann.name in self._union_alias_arms:
-                return self._union_typeref(
-                    self._union_alias_arms[ann.name], field_name
-                )
+            alias = self._alias_index.get(ann.name)
+            if isinstance(alias, TypeAlias):
+                # A type alias is a transparent `using` -- inline its target
+                # so a user struct's `referenced` set picks up the underlying
+                # types and the topo sort orders it after them.
+                return alias.target
             return Named(ann.name)
         return None
 
@@ -536,19 +537,17 @@ class Frontend:
     def _wire(
         self, field_name: str, ann: _Ann, call: _Ann, nested: frozenset[str]
     ) -> Wire | None:
-        endian = self._str_kwarg(call, "field", "endian") if call is not None else None
+        endian = self._str_kwarg(call, "field", "endian")
         if endian is not None and endian not in ("big", "little"):
             raise CompilerError(
                 f'{field_name}: field(endian=...) must be "big" or "little", '
                 f"got {endian!r}"
             )
-        type_kw = self._name_kwarg(call, "field", "type") if call is not None else None
+        type_kw = self._name_kwarg(call, "field", "type")
         prefix = self._repeat_prefix(call, field_name)
         arms = self._flatten_union(ann)
         if arms is not None:
-            return self._union_wire(
-                arms, field_name, type_kw, endian, prefix, nested
-            )
+            return self._union_wire(arms, field_name, type_kw, endian, prefix, nested)
         base = self._base_wire(ann, type_kw, prefix, nested, field_name)
         if base is None:
             return None
@@ -596,14 +595,10 @@ class Frontend:
     def _repeat_prefix(self, call: _Ann, field_name: str) -> Scalar:
         """The length-prefix scalar a `list[T]` field uses -- `field(prefix=)`
         or the `uvarint32` default. Ignored by fixed-length `tuple` fields."""
-        name = (
-            self._name_kwarg(call, "field", "prefix") if call is not None else None
-        )
+        name = self._name_kwarg(call, "field", "prefix")
         if name is None:
             return Scalar("uvarint32", varint=True)
-        if name not in PRIMITIVES or name in (
-            "str", "bytes", "bool", "float", "double",
-        ):
+        if name not in INTEGER_PRIMITIVES:
             raise CompilerError(
                 f"{field_name}: field(prefix=...) must be an integer primitive, "
                 f"got {name!r}"
@@ -699,13 +694,11 @@ class Frontend:
             return Str()
         if name in PRIMITIVES:
             return Scalar(name, varint=name in VARINT_PRIMITIVES)
-        if name in self._alias_primitive:
-            target = self._alias_primitive[name]
-            return Scalar(target, varint=target in VARINT_PRIMITIVES)
-        if name in self._union_alias_arms:
-            return self._union_wire(
-                self._union_alias_arms[name], field_name, None, None, prefix, nested
-            )
+        alias = self._alias_index.get(name)
+        if isinstance(alias, PrimitiveAlias):
+            return Scalar(alias.primitive, varint=alias.primitive in VARINT_PRIMITIVES)
+        if isinstance(alias, TypeAlias):
+            return alias.wire
         return None
 
     @staticmethod
@@ -906,8 +899,7 @@ class Frontend:
         return None
 
     def _int_kwarg(self, expr: _Ann, fn_name: str, kw: str) -> int | None:
-        value = self._call_arg(expr, fn_name, kw)
-        return self._as_int(value) if value is not None else None
+        return self._as_int(self._call_arg(expr, fn_name, kw))
 
     def _name_kwarg(self, expr: _Ann, fn_name: str, kw: str) -> str | None:
         value = self._call_arg(expr, fn_name, kw)
@@ -919,32 +911,17 @@ class Frontend:
             return value[1:-1]
         return None
 
-    def _class_since(self, cls: griffe.Class) -> int | None:
+    def _decorator_int_arg(
+        self, cls: griffe.Class, decorator: str, kwarg: str
+    ) -> int | None:
+        """The integer value of `@decorator(kwarg=N)` on `cls`, or None when
+        no decorator on the class carries that kwarg. Decorators with a
+        different head name are silently skipped, so unrelated decorators
+        coexist with the version/packet ones."""
         for dec in cls.decorators:
-            since = self._int_kwarg(dec.value, "type", "since")
-            if since is not None:
-                return since
-        return None
-
-    def _class_until(self, cls: griffe.Class) -> int | None:
-        for dec in cls.decorators:
-            until = self._int_kwarg(dec.value, "type", "until")
-            if until is not None:
-                return until
-        return None
-
-    def _packet_id(self, cls: griffe.Class) -> int | None:
-        for dec in cls.decorators:
-            pid = self._int_kwarg(dec.value, "packet", "id")
-            if pid is not None:
-                return pid
-        return None
-
-    def _packet_since(self, cls: griffe.Class) -> int | None:
-        for dec in cls.decorators:
-            since = self._int_kwarg(dec.value, "packet", "since")
-            if since is not None:
-                return since
+            value = self._int_kwarg(dec.value, decorator, kwarg)
+            if value is not None:
+                return value
         return None
 
     def _member_value(self, value: _Ann) -> tuple[int, int | None, int | None] | None:

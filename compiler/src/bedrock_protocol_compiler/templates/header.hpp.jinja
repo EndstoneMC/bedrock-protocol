@@ -7,7 +7,7 @@
 #include <string>
 #include <variant>
 #include <vector>
-{% if m.has_serializers %}
+{% if m.serializers %}
 
 #include <system_error>
 
@@ -32,10 +32,10 @@
 namespace {{ m.package }} {
 
 {% endif %}
-{% for name, ctype in m.module_aliases %}
+{% for name, ctype in m.primitive_aliases %}
 enum {{ name }} : {{ ctype }} {};
 {% endfor %}
-{% if m.module_aliases and (m.unversioned or m.union_aliases or m.has_versioned) %}
+{% if m.primitive_aliases and (m.unversioned or m.type_aliases or m.namespaces) %}
 
 {% endif %}
 {% for d in m.unversioned %}
@@ -48,16 +48,16 @@ enum {{ name }} : {{ ctype }} {};
 {% include "class.jinja" %}
 {% endif %}
 {% endfor %}
-{% if m.union_aliases %}
+{% if m.type_aliases %}
 {% if m.unversioned %}
 
 {% endif %}
-{% for name, ctype in m.union_aliases %}
+{% for name, ctype in m.type_aliases %}
 using {{ name }} = {{ ctype }};
 {% endfor %}
 {% endif %}
-{% if m.has_versioned %}
-{% if m.unversioned or m.union_aliases %}
+{% if m.namespaces %}
+{% if m.unversioned or m.type_aliases %}
 
 {% endif %}
 {% for ns in m.namespaces %}
@@ -106,7 +106,7 @@ template <int V> using {{ t.name }}_ = typename detail::{{ t.name }}_<V>::type;
 
 {% include "serializer.jinja" %}
 {% endfor %}
-{% if m.has_versioned and m.latest_aliases %}
+{% if m.namespaces and m.latest_aliases %}
 
 {% for name in m.latest_aliases %}
 using {{ name }} = {{ name }}_<{{ m.latest_version }}>;
