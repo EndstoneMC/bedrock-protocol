@@ -12,7 +12,6 @@ from typing import cast
 import griffe
 
 from .schema import (
-    BUILTIN_TYPES,
     PRIMITIVES,
     VARINT_PRIMITIVES,
     Alias,
@@ -65,7 +64,7 @@ class Frontend:
         self._follow_imports(outputs)
         self._classify()
         modules = {name: self._module(name) for name in self._griffe}
-        return Schema(modules, tuple(outputs))
+        return Schema(modules, tuple(outputs), frozenset(self._builtins))
 
     # --- module loading ------------------------------------------------------
 
@@ -122,10 +121,14 @@ class Frontend:
     def _classify(self) -> None:
         self._enum_names: set[str] = set()
         self._struct_names: set[str] = set()
+        self._builtins: set[str] = set()
         self._alias_primitive: dict[str, str] = {}
         for mod in self._griffe.values():
             for cls in mod.classes.values():
-                if cls.is_alias or cls.name in BUILTIN_TYPES:
+                if cls.is_alias:
+                    continue
+                if self._is_builtin(cls):
+                    self._builtins.add(cls.name)
                     continue
                 bucket = self._enum_names if self._is_int_enum(cls) else self._struct_names
                 bucket.add(cls.name)
@@ -138,7 +141,7 @@ class Frontend:
         mod = self._griffe[name]
         types: list[Enum | Struct] = []
         for cls in mod.classes.values():
-            if cls.is_alias or cls.name in BUILTIN_TYPES:
+            if cls.is_alias or cls.name in self._builtins:
                 continue
             types.append(self._enum(cls) if self._is_int_enum(cls) else self._struct(cls))
         imports = tuple(
@@ -478,13 +481,14 @@ class Frontend:
     def _is_none(arm: object) -> bool:
         return arm == "None"
 
-    @staticmethod
-    def _builtin(ann: _Ann) -> str | None:
-        """The name of the compiler built-in `ann` refers to (see
-        `BUILTIN_TYPES`), or None. A built-in is named bare -- `CompoundTag`,
+    def _builtin(self, ann: _Ann) -> str | None:
+        """The name of the compiler built-in `ann` refers to, or None. A
+        built-in is named bare -- a `@builtin`-decorated type like `CompoundTag`,
         or `UUID` from `from uuid import UUID` -- or as the stdlib `uuid.UUID`."""
         if isinstance(ann, griffe.ExprName):
-            return ann.name if ann.name in BUILTIN_TYPES else None
+            if ann.name in self._builtins or ann.name == "UUID":
+                return ann.name
+            return None
         if isinstance(ann, griffe.ExprAttribute) and str(ann) == "uuid.UUID":
             return "UUID"
         return None
@@ -510,6 +514,15 @@ class Frontend:
     def _is_int_enum(cls: griffe.Class) -> bool:
         return any(
             isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases
+        )
+
+    @staticmethod
+    def _is_builtin(cls: griffe.Class) -> bool:
+        """Whether `cls` carries the bare `@builtin` decorator -- a type the
+        compiler references but never defines, trusting a hand-written codec."""
+        return any(
+            isinstance(dec.value, griffe.ExprName) and dec.value.name == "builtin"
+            for dec in cls.decorators
         )
 
     @staticmethod

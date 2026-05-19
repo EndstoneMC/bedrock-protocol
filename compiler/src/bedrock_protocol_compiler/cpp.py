@@ -14,7 +14,6 @@ from typing import Any
 import inflection
 
 from .schema import (
-    BUILTIN_TYPES,
     CompilerError,
     Enum,
     EnumMember,
@@ -22,7 +21,6 @@ from .schema import (
     Field,
     Map,
     Mapping,
-    NBT_TYPES,
     Module,
     Named,
     Opt,
@@ -167,6 +165,10 @@ class CppBackend:
             for m in schema.modules.values()
             for name in (*(t.name for t in m.types), *(a.name for a in m.aliases))
         )
+        # `@builtin` types (NBT tags), plus the stdlib `uuid.UUID`. The compiler
+        # emits no definition for these -- it resolves them by name and routes
+        # them through a hand-written `Serializer` in an `<bedrock/*.hpp>`.
+        self._builtins = schema.builtins | frozenset({"UUID"})
         # Per-serializer context, set by `_struct_serializer` / `_enum_serializer`.
         self._snap: int | None = None
         self._owner = ""
@@ -217,7 +219,12 @@ class CppBackend:
         serializers = self._serializers(by_name)
         return RenderModule(
             package=module.package.replace(".", "::") if module.package else None,
-            dep_includes=[d.replace(".", "/") + ".hpp" for d in module.imports],
+            dep_includes=[
+                d.replace(".", "/") + ".hpp"
+                for d in module.imports
+                if self._schema.modules[d].types
+                or self._schema.modules[d].aliases
+            ],
             module_aliases=[
                 (a.name, PRIMITIVE_TYPES[a.primitive]) for a in module.aliases
             ],
@@ -232,7 +239,9 @@ class CppBackend:
             has_versioned=bool(plan.versioned),
             has_serializers=bool(serializers),
             uses_uuid=any("UUID" in s.referenced for s in module.structs),
-            uses_nbt=any(s.referenced & NBT_TYPES for s in module.structs),
+            uses_nbt=any(
+                s.referenced & self._schema.builtins for s in module.structs
+            ),
         )
 
     # --- type definitions ----------------------------------------------------
@@ -268,7 +277,11 @@ class CppBackend:
             case Primitive(name=name):
                 return PRIMITIVE_TYPES.get(name)
             case Named(name=name):
-                resolved = name in nested or name in self._known or name in BUILTIN_TYPES
+                resolved = (
+                    name in nested
+                    or name in self._known
+                    or name in self._builtins
+                )
                 return name if resolved else None
             case Optional(inner=inner):
                 inner_type = self._cpp_type(inner, nested)

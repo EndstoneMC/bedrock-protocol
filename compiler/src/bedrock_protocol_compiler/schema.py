@@ -26,21 +26,6 @@ VARINT_PRIMITIVES: frozenset[str] = frozenset(
     {"varint32", "varint64", "uvarint32", "uvarint64"}
 )
 
-#: The NBT tag types, in wire tag-id order. Every one is hand-written in
-#: `include/bedrock/nbt.hpp` and declared in `protocol/nbt.py`.
-NBT_TYPES: frozenset[str] = frozenset(
-    {
-        "ByteTag", "ShortTag", "IntTag", "LongTag", "FloatTag", "DoubleTag",
-        "ByteArrayTag", "StringTag", "ListTag", "CompoundTag", "IntArrayTag",
-        "LongArrayTag",
-    }
-)
-
-#: Types the compiler resolves without a schema declaration -- hand-written in
-#: an `include/bedrock/*.hpp` header and routed through their own Serializer.
-#: `UUID` is spelled `uuid.UUID`. The NBT tags come from `protocol.nbt`.
-BUILTIN_TYPES: frozenset[str] = NBT_TYPES | frozenset({"UUID"})
-
 
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
@@ -292,7 +277,10 @@ class Module:
 
 @dataclass(frozen=True)
 class Schema:
-    """Every loaded module, plus the subset that should produce output."""
+    """Every loaded module, the subset that should produce output, and the
+    names marked `@builtin` -- types the compiler references but never defines,
+    trusting a hand-written struct and `Serializer` in `<bedrock/nbt.hpp>`."""
 
     modules: dict[str, Module]
     outputs: tuple[str, ...]
+    builtins: frozenset[str]

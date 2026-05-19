@@ -63,3 +63,15 @@ def packet(*, id: int, since: int | None = None):
       type is absent from snapshots below it.
     """
     return _identity
+
+
+def builtin(cls):
+    """Class decorator: mark a type as a compiler built-in.
+
+    The compiler emits no definition and no serializer for the type. It
+    resolves fields of the type by name, routes them through `Serializer<Name>`,
+    and trusts a hand-written struct plus `Serializer` specialization in
+    `<bedrock/nbt.hpp>`. Use it for wire shapes the DSL cannot express -- see
+    protocol/nbt.py, where the twelve NBT tags are declared this way.
+    """
+    return cls
