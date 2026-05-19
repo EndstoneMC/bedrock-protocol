@@ -158,9 +158,9 @@ class InteractPacket:
             p.action == Action.INTERACT_UPDATE or p.action == Action.STOP_RIDING
         ),
         since=388,
-        until=898,
+        until=897,
     )
-    position: Vec3 | None = field(since=898)
+    position: Vec3 | None = field(since=897)
 
 
 @type(since=544)
