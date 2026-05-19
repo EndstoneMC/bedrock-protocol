@@ -33,11 +33,8 @@ class BookEditActionFinalize:
 
 @packet(id=97, since=924)
 class BookEditPacket:
-    """Sent by the client each time it edits a book in its inventory.
-
-    `operation` is a tagged union: a varint discriminator picks the action,
-    then that action's payload follows.
-    """
+    """Sends the updated state of the Book and Quill item from client to server
+    during use."""
 
     book_slot: varint32
     operation: (

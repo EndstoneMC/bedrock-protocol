@@ -141,7 +141,10 @@
     under `html/` -- an embedded SVG with no prose -- has no Description.
     Carry the Description across faithfully: decode HTML entities, fix obvious
     rendering typos, and adjust only for the ASCII / no-semicolon-splice rule
-    (rule 5). Do not invent prose, paraphrase a description from gophertunnel
+    (rule 5). Write each docstring as a single line; hand-wrap only the ones
+    `ruff check` flags over-length (E501), since `ruff format` does not
+    reflow docstring prose. Do not invent prose, paraphrase a description from
+    gophertunnel
     or CloudburstMC, or restate version history that `since` / `until` already
     encode. If `Mojang/bedrock-protocol-docs` gives no Description, leave the
     type undocumented rather than writing one.

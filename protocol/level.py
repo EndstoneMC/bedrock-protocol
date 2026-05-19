@@ -17,14 +17,12 @@ class DimensionDefinition:
 
 @packet(id=180, since=503)
 class DimensionDataPacket:
-    """Describes the data-driven dimensions a server has registered."""
-
     definitions: list[DimensionDefinition]
 
 
 @packet(id=56)
 class BlockActorDataPacket:
-    """Updates the NBT data of the block entity at a position."""
+    """Sends the entire user data compound tag and the block position to the client."""
 
     block_position: BlockPos
     actor_data_tags: CompoundTag
@@ -38,11 +36,6 @@ class SubChunkPosOffset:
 
 @packet(id=175, since=471)
 class SubChunkRequestPacket:
-    """Asks the server for sub-chunks around a center position. The offset list
-    that batches multiple sub-chunks into one request arrived at protocol 486."""
-
     dimension_type: DimensionType
     center_pos: SubChunkPos
-    sub_chunk_pos_offsets: list[SubChunkPosOffset] = field(
-        prefix=uint32, since=486
-    )
+    sub_chunk_pos_offsets: list[SubChunkPosOffset] = field(prefix=uint32, since=486)

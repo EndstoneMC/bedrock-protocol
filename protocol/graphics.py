@@ -64,8 +64,8 @@ class GraphicsOverrideParameterType(IntEnum):
 
 @packet(id=331, since=859)
 class GraphicsOverrideParameterPacket:
-    """Server override of biome graphics parameters such as sky colour,
-    water tint, and wave shape."""
+    """Sent from the server to the client when a server script changes the rendering
+    settings."""
 
     parameter_keyframe_values: dict[float, Vec3]
     float_value: float | None = field(since=924)

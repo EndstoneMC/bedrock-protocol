@@ -15,8 +15,8 @@ class PacketCompressionAlgorithm(IntEnum):
 
 @packet(id=143)
 class NetworkSettingsPacket:
-    """Server reply to RequestNetworkSettingsPacket that sets up
-    compression and client-side packet throttling."""
+    """Sends tunable options from host to client (compression threshold and
+    algorithm)."""
 
     compression_threshold: uint16
     compression_algorithm: PacketCompressionAlgorithm = field(type=uint16, since=554)
@@ -27,9 +27,9 @@ class NetworkSettingsPacket:
 
 @packet(id=193)
 class RequestNetworkSettingsPacket:
-    """This is the initial packet sent from the client to initiate a connection.
-
-    NOTE: this packet should not contain anything other than the client version.
-    """
+    """Requests tunable options from host to client (compression threshold and
+    algorithm). This is the initial packet sent from the client to initiate a
+    connection. NOTE: this packet should not contain anything other than the
+    client version, don't add new data here."""
 
     client_network_version: int32 = field(endian="big")

@@ -16,8 +16,5 @@ class TrimMaterial:
 
 @packet(id=302, since=582)
 class TrimDataPacket:
-    """Lists the armour-trim patterns and materials a server has registered,
-    sent to a client as it joins."""
-
     trim_patterns: list[TrimPattern]
     trim_materials: list[TrimMaterial]

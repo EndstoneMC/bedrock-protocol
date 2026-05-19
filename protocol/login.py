@@ -8,6 +8,8 @@ package = "bedrock.protocol"
 
 @packet(id=1)
 class LoginPacket:
+    """Sent once from client to server at login. About 100k."""
+
     client_network_version: int32 = field(endian="big")
     connection_request: str
 
@@ -27,12 +29,11 @@ class PlayStatus(IntEnum):
 
 @packet(id=2)
 class PlayStatusPacket:
+    """Describes the login status of the player."""
+
     status: PlayStatus = field(type=uint32, endian="big")
 
 
 @packet(id=94)
 class SubClientLoginPacket:
-    """Login request from a sub-client sharing the main client's connection in
-    split-screen play. Its connection request is shaped like LoginPacket's."""
-
     connection_request: str

@@ -77,11 +77,9 @@ class ActorEvent(IntEnum):
 
 @packet(id=27)
 class ActorEventPacket:
-    """All kinds of actor state changes (see Actor::handleEntityEvent).
-
-    Ranges from a crossbow being ready to fire to taming animals, some of
-    which may be obsolete (frex, ADD_PLAYER_LEVELS).
-    """
+    """All kinds of actor state changes (see Actor::handleEntityEvent). Ranges from
+    a crossbow being ready to fire to taming animals, some of which may be obsolete
+    (frex, ADD_PLAYER_LEVELS)."""
 
     target_runtime_id: ActorRuntimeID
     event_id: ActorEvent = field(type=uint8)
@@ -103,8 +101,7 @@ class ActorSwingSource(IntEnum):
 
 @packet(id=44)
 class AnimatePacket:
-    """Combination of server bound and client bound packets to trigger
-    animations."""
+    """Combination of server bound and client bound packets to trigger animations."""
 
     class Action(IntEnum):
         NO_ACTION = 0
@@ -121,8 +118,8 @@ class AnimatePacket:
 
 @packet(id=158)
 class AnimateEntityPacket:
-    """The AnimateEntityPacket is used to trigger a one-off animation on the
-    client it is sent to."""
+    """The AnimateEntityPacket is used to trigger a one-off animation on the client
+    it is sent to."""
 
     animation: str
     next_state: str
@@ -143,8 +140,8 @@ class EmoteListPacket:
 
 @packet(id=33)
 class InteractPacket:
-    """Used for inventory button press and in _updateInteraction() for a
-    variety of purposes. From the client."""
+    """Used for inventory button press and in _updateInteraction() for a variety of
+    purposes. From the client."""
 
     class Action(IntEnum):
         INVALID = 0
@@ -155,12 +152,11 @@ class InteractPacket:
 
     action: Action = field(type=uint8)
     target_runtime_id: ActorRuntimeID
+    position: Vec3 = field(when=lambda p: p.action == Action.INTERACT_UPDATE, until=388)
     position: Vec3 = field(
-        when=lambda p: p.action == Action.INTERACT_UPDATE, until=388
-    )
-    position: Vec3 = field(
-        when=lambda p: p.action == Action.INTERACT_UPDATE
-        or p.action == Action.STOP_RIDING,
+        when=lambda p: (
+            p.action == Action.INTERACT_UPDATE or p.action == Action.STOP_RIDING
+        ),
         since=388,
         until=898,
     )
