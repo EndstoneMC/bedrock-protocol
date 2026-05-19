@@ -200,11 +200,13 @@ class Switch:
 class Cond:
     """A field present only when `predicate` holds against earlier fields.
     Unlike `Opt`, no presence marker travels on the wire -- both sides
-    recompute presence from the same predicate. The field's declared type is
-    an `Optional`: it may be absent."""
+    recompute presence from the same predicate. `group`, when set, is the
+    index of the `with field(when=...)` block the field was declared in --
+    fields sharing it form one guarded region; None is a lone `field(when=)`."""
 
     inner: "Wire"
     predicate: Pred
+    group: int | None = None
 
 
 Wire = Scalar | Str | StructRef | EnumRef | Opt | Repeat | Map | Switch | Cond

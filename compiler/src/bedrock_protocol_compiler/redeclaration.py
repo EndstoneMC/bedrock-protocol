@@ -31,9 +31,9 @@ REDECLARATIONS = "redeclarations"
 CLASS_REDECLARATIONS = "class_redeclarations"
 
 
-def _guard_predicate(stmt: ast.stmt) -> ast.expr | None:
-    """The `when=` expression of a `with field(when=...):` statement, or None
-    when `stmt` is not such a guard block."""
+def _field_guard(stmt: ast.stmt) -> tuple[ast.With, ast.expr] | None:
+    """A `with field(when=...):` block paired with its `when=` predicate, or
+    None when `stmt` is not such a guard block."""
     if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
         return None
     ctx = stmt.items[0].context_expr
@@ -45,23 +45,28 @@ def _guard_predicate(stmt: ast.stmt) -> ast.expr | None:
         return None
     for kw in ctx.keywords:
         if kw.arg == "when":
-            return kw.value
+            return stmt, kw.value
     return None
 
 
-def _merge_group_when(stmt: ast.stmt, predicate: ast.expr) -> None:
-    """Merge a guard predicate into one hoisted field as `field(_group_when=)`.
-    A field with no `field(...)` call gains one; an existing call gains the
-    keyword. Statements that are not annotated assignments are left untouched."""
+def _merge_group_when(stmt: ast.stmt, predicate: ast.expr, group: int) -> None:
+    """Merge a guard into one hoisted field as `field(_group_when=, _group_id=)`:
+    the shared predicate, and the index of the `with` block it came from so the
+    block survives hoisting and a backend can re-form it. A field with no
+    `field(...)` call gains one; an existing call gains the keywords. Statements
+    that are not annotated assignments are left untouched."""
     if not isinstance(stmt, ast.AnnAssign):
         return
-    keyword = ast.keyword(arg="_group_when", value=copy.deepcopy(predicate))
+    keywords = [
+        ast.keyword(arg="_group_when", value=copy.deepcopy(predicate)),
+        ast.keyword(arg="_group_id", value=ast.Constant(value=group)),
+    ]
     if stmt.value is None:
         stmt.value = ast.Call(
-            func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=[keyword]
+            func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords
         )
     elif isinstance(stmt.value, ast.Call):
-        stmt.value.keywords.append(keyword)
+        stmt.value.keywords.extend(keywords)
     else:
         return
     ast.copy_location(stmt.value, stmt)
@@ -82,18 +87,23 @@ class RedeclarationExtension(griffe.Extension):
 
     def on_class_node(self, *, node: Any, **kwargs: Any) -> None:
         """Hoist every `with field(when=...)` block's fields into the class
-        body, merging the guard predicate into each as `_group_when=`."""
+        body, merging the guard predicate into each as `_group_when=` and the
+        block's index as `_group_id=` -- the index keeps the hoisted fields
+        identifiable as one block once the `with` is gone."""
         if not isinstance(node, ast.ClassDef):
             return
         new_body: list[ast.stmt] = []
+        group = 0
         for stmt in node.body:
-            predicate = _guard_predicate(stmt)
-            if predicate is None:
+            guard = _field_guard(stmt)
+            if guard is None:
                 new_body.append(stmt)
                 continue
-            for inner in stmt.body:
-                _merge_group_when(inner, predicate)
+            block, predicate = guard
+            for inner in block.body:
+                _merge_group_when(inner, predicate, group)
                 new_body.append(inner)
+            group += 1
         node.body = new_body
 
     # --- redeclared attributes ----------------------------------------------

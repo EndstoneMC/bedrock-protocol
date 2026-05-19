@@ -389,6 +389,11 @@ class Frontend:
         group_when = (
             self._call_arg(call, "field", "_group_when") if call is not None else None
         )
+        # The `with` block index, carried alongside `_group_when` so co-guarded
+        # fields stay one group; None for a direct `field(when=...)`.
+        group_id = (
+            self._int_kwarg(call, "field", "_group_id") if call is not None else None
+        )
         if when is not None and group_when is not None:
             raise CompilerError(
                 f"{attr.name}: a field inside a with field(when=...) guard "
@@ -403,7 +408,7 @@ class Frontend:
                     f"cannot also be an optional or union field"
                 )
             if wire is not None:
-                wire = Cond(wire, predicate)
+                wire = Cond(wire, predicate, group_id)
             # A value-gated field stays plain `T`: presence is recomputed from
             # the predicate, so an optional wrapper would be redundant.
         return FieldArm(type_ref, wire, since, until)

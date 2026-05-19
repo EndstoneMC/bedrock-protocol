@@ -364,19 +364,67 @@ class CppBackend:
             wired.append((f, f.wire))
         self._snap, self._owner = snapshot, qualified
         self._nested = frozenset(e.name for e in struct.enums)
+        groups = self._field_groups(wired)
 
+        # The fields of a `with field(when=...)` guard share one `if`; every
+        # other field stands alone. The guard `if` is emitted here, around the
+        # whole group -- `_write`/`_read` never see the `Cond` wrapper, each
+        # field is lowered straight from its inner wire.
         serialize = _Code()
-        for f, wire in wired:
-            self._write(serialize, f.type, wire, f"value.{f.name}")
+        for guard, group in groups:
+            if guard is None:
+                ((f, wire),) = group
+                self._write(serialize, f.type, wire, f"value.{f.name}")
+                continue
+            with serialize.block(f"if ({self._predicate(guard, 'value')})"):
+                for f, wire in group:
+                    assert isinstance(wire, Cond)
+                    self._write(serialize, f.type, wire.inner, f"value.{f.name}")
+
         deserialize = _Code()
         deserialize(f"{qualified} out;")
-        for f, wire in wired:
-            with deserialize.block():
-                self._read(deserialize, f.type, wire, f"out.{f.name}")
+        for guard, group in groups:
+            if guard is None:
+                ((f, wire),) = group
+                with deserialize.block():
+                    self._read(deserialize, f.type, wire, f"out.{f.name}")
+                continue
+            with deserialize.block(f"if ({self._predicate(guard, 'out')})"):
+                for f, wire in group:
+                    assert isinstance(wire, Cond)
+                    with deserialize.block():
+                        self._read(deserialize, f.type, wire.inner, f"out.{f.name}")
         deserialize("return out;")
         return RenderSerializer(
             qualified, f"const {qualified} &value", serialize.lines, deserialize.lines
         )
+
+    @staticmethod
+    def _field_groups(
+        wired: list[tuple[Field, Wire]],
+    ) -> list[tuple[Pred | None, list[tuple[Field, Wire]]]]:
+        """Partition a struct's fields into emission groups. Fields from one
+        `with field(when=...)` block -- carrying the same `Cond.group` index --
+        form one group, emitted under a single shared `if`. Every other field,
+        a lone `field(when=...)` included, is its own group; a group with a
+        guard predicate is gated, one with None is not."""
+        groups: list[tuple[Pred | None, list[tuple[Field, Wire]]]] = []
+        open_group: int | None = None
+        for f, wire in wired:
+            if (
+                isinstance(wire, Cond)
+                and wire.group is not None
+                and wire.group == open_group
+            ):
+                groups[-1][1].append((f, wire))
+                continue
+            if isinstance(wire, Cond):
+                groups.append((wire.predicate, [(f, wire)]))
+                open_group = wire.group
+            else:
+                groups.append((None, [(f, wire)]))
+                open_group = None
+        return groups
 
     def _enum_serializer(self, enum: Enum, snapshot: int | None) -> RenderSerializer:
         if snapshot is None:
@@ -428,9 +476,6 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({expr}.has_value())"):
                     self._write(code, type_ref.inner, inner, f"*{expr}")
-            case Cond(inner=inner, predicate=predicate):
-                with code.block(f"if ({self._predicate(predicate, 'value')})"):
-                    self._write(code, type_ref, inner, expr)
             case Repeat(inner=inner, prefix=prefix):
                 assert isinstance(type_ref, Repeated)
                 depth = self._rep
@@ -492,9 +537,6 @@ class CppBackend:
                 assert isinstance(type_ref, Optional)
                 with code.block(f"if ({guard})"):
                     self._read(code, type_ref.inner, inner, target)
-            case Cond(inner=inner, predicate=predicate):
-                with code.block(f"if ({self._predicate(predicate, 'out')})"):
-                    self._read(code, type_ref, inner, target)
             case Repeat(inner=inner, prefix=prefix, count=count):
                 assert isinstance(type_ref, Repeated)
                 depth = self._rep
