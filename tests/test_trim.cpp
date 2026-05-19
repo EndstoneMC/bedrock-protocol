@@ -27,6 +27,7 @@ TEST_CASE("TrimDataPacket: id + round-trip of pattern and material lists")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::TrimDataPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->trim_patterns.size() == 1);
     REQUIRE(rt->trim_patterns[0].pattern_id == "p_id");
     REQUIRE(rt->trim_materials[0].item_name == "m_item");

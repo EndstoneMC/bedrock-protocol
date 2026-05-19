@@ -23,6 +23,7 @@ TEST_CASE("LoginPacket: id + big-endian version with connection request blob")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::LoginPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->client_network_version == 975);
     REQUIRE(rt->connection_request == "hello");
 }
@@ -45,6 +46,7 @@ TEST_CASE("PlayStatusPacket: id + big-endian enum status round-trip")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::PlayStatusPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->status == bp::PlayStatus::PlayerSpawn);
 }
 
@@ -72,5 +74,6 @@ TEST_CASE("SubClientLoginPacket: id + connection-request blob round-trip")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::SubClientLoginPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->connection_request == "hello");
 }

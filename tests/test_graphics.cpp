@@ -27,6 +27,7 @@ TEST_CASE("GraphicsOverrideParameterPacket: id + round-trip with a dict field")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::GraphicsOverrideParameterPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->parameter_keyframe_values.size() == 1);
     REQUIRE(rt->parameter_keyframe_values.at(1.0f).y == 3.0f);
     REQUIRE_FALSE(rt->float_value.has_value());

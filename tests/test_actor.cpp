@@ -28,6 +28,7 @@ TEST_CASE("AnimatePacket: id + round-trip with present string-enum swing source"
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::AnimatePacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->action == bp::AnimatePacket::Action::MagicCriticalHit);
     REQUIRE(rt->target_runtime_id == static_cast<bp::ActorRuntimeID>(7));
     REQUIRE(rt->data == 1.5f);
@@ -54,6 +55,7 @@ TEST_CASE("AnimatePacket: round-trip with absent swing source")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::AnimatePacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE_FALSE(rt->swing_source.has_value());
 }
 
@@ -82,6 +84,7 @@ TEST_CASE("AnimateEntityPacket: id + round-trip with a length-prefixed list")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::AnimateEntityPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->runtime_ids.size() == 2);
     REQUIRE(rt->runtime_ids[1] == static_cast<bp::ActorRuntimeID>(2));
 }
@@ -109,6 +112,7 @@ TEST_CASE("EmoteListPacket: id + round-trip with a list of uuid.UUID")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::EmoteListPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->emote_piece_ids.size() == 1);
     REQUIRE(rt->emote_piece_ids[0].most_significant_bits == 0x0102030405060708ULL);
 }
@@ -153,6 +157,7 @@ TEST_CASE("UpdateAttributesPacket: id + round-trip with nested attribute list")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::UpdateAttributesPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->attribute_data.size() == 1);
     REQUIRE(rt->attribute_data[0].name == "minecraft:health");
     REQUIRE(rt->attribute_data[0].modifiers[0].serialize);
@@ -180,6 +185,7 @@ TEST_CASE("InteractPacket: pre-388 position is a value-gated plain Vec3")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::InteractPacket_<291>>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->action == bp::InteractPacket_<291>::Action::StopRiding);
 }
 
@@ -206,6 +212,7 @@ TEST_CASE("InteractPacket: 388-897 position gates on StopRiding too")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::InteractPacket_<388>>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->position.z == 3.0f);
 }
 
@@ -233,6 +240,7 @@ TEST_CASE("InteractPacket: 897+ position is a bool-flagged optional")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::InteractPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->position.has_value());
     REQUIRE(rt->position->z == 3.0f);
 }

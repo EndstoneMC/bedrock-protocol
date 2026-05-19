@@ -46,6 +46,7 @@ TEST_CASE("DisconnectPacket: id + round-trip without messages")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::DisconnectPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->reason == bp::DisconnectFailReason::Kicked);
     REQUIRE_FALSE(rt->messages.has_value());
 }
@@ -70,6 +71,7 @@ TEST_CASE("DisconnectPacket: round-trip with messages")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::DisconnectPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->messages->message == "bye");
     REQUIRE(rt->messages->filtered_message == "***");
 }

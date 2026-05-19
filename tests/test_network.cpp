@@ -21,6 +21,7 @@ TEST_CASE("RequestNetworkSettingsPacket: id + big-endian round-trip")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::RequestNetworkSettingsPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->client_network_version == 975);
 }
 
@@ -49,6 +50,7 @@ TEST_CASE("NetworkSettingsPacket: id + round-trip with enum field")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::NetworkSettingsPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->compression_threshold == 256);
     REQUIRE(rt->compression_algorithm == bp::PacketCompressionAlgorithm::Snappy);
     REQUIRE(rt->client_throttle_scalar == 0.75f);

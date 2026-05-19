@@ -25,6 +25,7 @@ TEST_CASE("BookEditPacket: id + round-trip of a tagged-union field")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::BookEditPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->operation.index() == 1);
     REQUIRE(std::get<bp::BookEditActionAddPage>(rt->operation).page_text == "hello");
 }

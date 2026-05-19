@@ -26,6 +26,7 @@ TEST_CASE("ResourcePackClientResponsePacket: id + uint16-prefixed string list")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::ResourcePackClientResponsePacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->response == bp::ResourcePackResponse::DownloadingFinished);
     REQUIRE(rt->downloading_packs.size() == 1);
     REQUIRE(rt->downloading_packs[0] == "pack_1.0.0");

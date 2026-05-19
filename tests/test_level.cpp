@@ -43,6 +43,7 @@ TEST_CASE("DimensionDataPacket: id + round-trip of a list of nested structs")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::DimensionDataPacket_<975>>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->definitions.size() == 1);
     REQUIRE(rt->definitions[0].name == "minecraft:nether");
     REQUIRE(rt->definitions[0].dimension_type == static_cast<bp::DimensionType>(1));
@@ -78,6 +79,7 @@ TEST_CASE("SubChunkRequestPacket: round-trip with a uint32-prefixed offset list"
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::SubChunkRequestPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->center_pos.z == 3);
     REQUIRE(rt->sub_chunk_pos_offsets.size() == 1);
     REQUIRE(rt->sub_chunk_pos_offsets[0].y == -1);
@@ -107,6 +109,7 @@ TEST_CASE("BlockActorDataPacket: id + round-trip with an NBT CompoundTag")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::BlockActorDataPacket>(in);
     REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->actor_data_tags.size() == 1);
     const auto &levels = rt->actor_data_tags.at("levels").get<bp::ListTag>();
     REQUIRE(levels.size() == 3);
