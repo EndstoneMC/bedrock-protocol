@@ -35,7 +35,7 @@ namespace {{ m.package }} {
 {% for name, ctype in m.module_aliases %}
 enum {{ name }} : {{ ctype }} {};
 {% endfor %}
-{% if m.module_aliases and (m.unversioned or m.has_versioned) %}
+{% if m.module_aliases and (m.unversioned or m.union_aliases or m.has_versioned) %}
 
 {% endif %}
 {% for d in m.unversioned %}
@@ -48,8 +48,16 @@ enum {{ name }} : {{ ctype }} {};
 {% include "class.jinja" %}
 {% endif %}
 {% endfor %}
-{% if m.has_versioned %}
+{% if m.union_aliases %}
 {% if m.unversioned %}
+
+{% endif %}
+{% for name, ctype in m.union_aliases %}
+using {{ name }} = {{ ctype }};
+{% endfor %}
+{% endif %}
+{% if m.has_versioned %}
+{% if m.unversioned or m.union_aliases %}
 
 {% endif %}
 {% for ns in m.namespaces %}

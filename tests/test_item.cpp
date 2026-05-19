@@ -214,8 +214,8 @@ TEST_CASE("SerializedNetworkItemStackDescriptor: tagged net-id variant")
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 300);
     REQUIRE(rt->net_id.has_value());
-    REQUIRE(rt->net_id->value.index() == 0);
-    REQUIRE(std::get<bp::ItemStackServerNetId>(rt->net_id->value).id == 42);
+    REQUIRE(rt->net_id->index() == 0);
+    REQUIRE(std::get<bp::ItemStackServerNetId>(*rt->net_id).id == 42);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -231,7 +231,7 @@ TEST_CASE("ItemStackNetIdVariant: request and legacy cases round-trip")
         bp::BinaryReader in{buf};
         auto rt = bp::deserialize<bp::ItemStackNetIdVariant>(in);
         REQUIRE(rt.has_value());
-        REQUIRE(rt->value.index() == nv.value.index());
+        REQUIRE(rt->index() == nv.index());
         REQUIRE(in.getUnreadLength() == 0);
     }
 }

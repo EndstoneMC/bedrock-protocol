@@ -43,6 +43,7 @@ from .schema import (
     StructRef,
     Switch,
     TypeRef,
+    UnionAlias,
     Variant,
     Wire,
 )
@@ -141,6 +142,9 @@ class Frontend:
         self._struct_names: set[str] = set()
         self._builtins: set[str] = set()
         self._alias_primitive: dict[str, str] = {}
+        # name -> arm annotations of a `type Name = A | B | C` union alias,
+        # kept so `_typeref` / `_base_wire` can expand a reference to it.
+        self._union_alias_arms: dict[str, list[griffe.Expr | str]] = {}
         for mod in self._griffe.values():
             for cls in mod.classes.values():
                 if cls.is_alias:
@@ -152,6 +156,8 @@ class Frontend:
                 bucket.add(cls.name)
             for alias in self._aliases(mod):
                 self._alias_primitive[alias.name] = alias.primitive
+            for name, arms in self._union_alias_decls(mod):
+                self._union_alias_arms[name] = arms
 
     # --- module lowering -----------------------------------------------------
 
@@ -173,7 +179,7 @@ class Frontend:
         )
         return Module(
             name, self._stems.get(name, name), self._package(mod),
-            tuple(types), self._aliases(mod), imports,
+            tuple(types), self._aliases(mod), self._union_aliases(mod), imports,
         )
 
     @staticmethod
@@ -193,6 +199,42 @@ class Frontend:
                 continue
             if isinstance(attr.value, griffe.ExprName) and attr.value.name in PRIMITIVES:
                 out.append(Alias(name, attr.value.name))
+        return tuple(out)
+
+    def _union_alias_decls(
+        self, mod: griffe.Module
+    ) -> list[tuple[str, list[griffe.Expr | str]]]:
+        """Module-level `type Name = A | B | C` union aliases, each as its
+        name and the list of arm annotations. A `|` alias is rejected if it
+        mixes in `None` -- an alias names a type, it is not an optional."""
+        out: list[tuple[str, list[griffe.Expr | str]]] = []
+        sources = list(mod.attributes.items()) + list(mod.type_aliases.items())
+        for name, attr in sources:
+            if name == "package" or name in PRIMITIVES or attr.value is None:
+                continue
+            arms = self._flatten_union(attr.value)
+            if arms is None:
+                continue
+            if any(self._is_none(a) for a in arms):
+                raise CompilerError(f"{name}: a `type` alias cannot include None")
+            out.append((name, arms))
+        return out
+
+    def _union_aliases(self, mod: griffe.Module) -> tuple[UnionAlias, ...]:
+        """Resolve each `type Name = A | B | C` into a `UnionAlias` -- the same
+        `Variant` shape and `Switch` wire an inline union of those arms gets."""
+        out: list[UnionAlias] = []
+        for name, arms in self._union_alias_decls(mod):
+            type_ref = self._union_typeref(arms, name)
+            wire = self._union_wire(
+                arms, name, None, None, Scalar("uvarint32", varint=True), frozenset()
+            )
+            if not isinstance(type_ref, Variant) or not isinstance(wire, Switch):
+                raise CompilerError(
+                    f"{name}: a `type` union alias must be a tagged union of "
+                    f"two or more named types"
+                )
+            out.append(UnionAlias(name, type_ref, wire))
         return tuple(out)
 
     def _enum(self, cls: griffe.Class) -> Enum:
@@ -461,7 +503,13 @@ class Frontend:
                 return Mapping(key, value)
             return None
         if isinstance(ann, griffe.ExprName):
-            return Primitive(ann.name) if ann.name in PRIMITIVES else Named(ann.name)
+            if ann.name in PRIMITIVES:
+                return Primitive(ann.name)
+            if ann.name in self._union_alias_arms:
+                return self._union_typeref(
+                    self._union_alias_arms[ann.name], field_name
+                )
+            return Named(ann.name)
         return None
 
     def _union_typeref(
@@ -654,6 +702,10 @@ class Frontend:
         if name in self._alias_primitive:
             target = self._alias_primitive[name]
             return Scalar(target, varint=target in VARINT_PRIMITIVES)
+        if name in self._union_alias_arms:
+            return self._union_wire(
+                self._union_alias_arms[name], field_name, None, None, prefix, nested
+            )
         return None
 
     @staticmethod

@@ -35,6 +35,7 @@ from .schema import (
     StructRef,
     Switch,
     TypeRef,
+    UnionAlias,
     Variant,
     Wire,
 )
@@ -118,6 +119,7 @@ class RenderModule:
     package: str | None
     dep_includes: list[str]
     module_aliases: list[tuple[str, str]]
+    union_aliases: list[tuple[str, str]]
     unversioned: list[RenderEnum | RenderStruct]
     namespaces: list[RenderNamespace]
     traits: list[RenderTrait]
@@ -164,7 +166,11 @@ class CppBackend:
         self._known = frozenset(
             name
             for m in schema.modules.values()
-            for name in (*(t.name for t in m.types), *(a.name for a in m.aliases))
+            for name in (
+                *(t.name for t in m.types),
+                *(a.name for a in m.aliases),
+                *(u.name for u in m.union_aliases),
+            )
         )
         # `@builtin` types (NBT tags), plus the stdlib `uuid.UUID`. The compiler
         # emits no definition for these -- it resolves them by name and routes
@@ -180,6 +186,7 @@ class CppBackend:
 
     def render(self, latest_version: int) -> RenderModule:
         self._guard_cross_module()
+        self._guard_union_aliases()
         module, plan = self._module, self._plan
         by_name = {t.name: t for t in module.types}
 
@@ -218,6 +225,12 @@ class CppBackend:
                 traits.append(RenderTrait(name, ranges))
 
         serializers = self._serializers(by_name)
+        serializers += [
+            self._union_alias_serializer(u) for u in module.union_aliases
+        ]
+        referenced = [
+            s.referenced for s in module.structs
+        ] + [u.type.referenced for u in module.union_aliases]
         return RenderModule(
             package=module.package.replace(".", "::") if module.package else None,
             dep_includes=[
@@ -225,10 +238,12 @@ class CppBackend:
                 for d in module.imports
                 if self._schema.modules[d].types
                 or self._schema.modules[d].aliases
+                or self._schema.modules[d].union_aliases
             ],
             module_aliases=[
                 (a.name, PRIMITIVE_TYPES[a.primitive]) for a in module.aliases
             ],
+            union_aliases=self._union_alias_usings(),
             unversioned=unversioned,
             namespaces=namespaces,
             traits=traits,
@@ -239,10 +254,8 @@ class CppBackend:
             latest_version=latest_version,
             has_versioned=bool(plan.versioned),
             has_serializers=bool(serializers),
-            uses_uuid=any("UUID" in s.referenced for s in module.structs),
-            uses_nbt=any(
-                s.referenced & self._schema.builtins for s in module.structs
-            ),
+            uses_uuid=any("UUID" in r for r in referenced),
+            uses_nbt=any(r & self._schema.builtins for r in referenced),
         )
 
     # --- type definitions ----------------------------------------------------
@@ -426,6 +439,34 @@ class CppBackend:
                 open_group = None
         return groups
 
+    def _union_alias_serializer(self, ua: UnionAlias) -> RenderSerializer:
+        """A `type Name = A | B | C` alias serializes exactly as an inline
+        `A | B | C` field does: the same varuint-tagged `Switch` body, written
+        straight from and read straight into the variant itself."""
+        self._snap, self._owner, self._nested = None, ua.name, frozenset()
+        serialize = _Code()
+        self._write(serialize, ua.type, ua.wire, "value")
+        deserialize = _Code()
+        deserialize(f"{ua.name} out;")
+        self._read(deserialize, ua.type, ua.wire, "out")
+        deserialize("return out;")
+        return RenderSerializer(
+            ua.name, f"const {ua.name} &value", serialize.lines, deserialize.lines
+        )
+
+    def _union_alias_usings(self) -> list[tuple[str, str]]:
+        """Each union alias as `(name, std::variant<...> spelling)`, the data
+        behind its `using` declaration."""
+        out: list[tuple[str, str]] = []
+        for u in self._module.union_aliases:
+            ctype = self._cpp_type(u.type, frozenset())
+            if ctype is None:
+                raise CompilerError(
+                    f"{u.name}: a `type` union alias arm is an unresolvable type"
+                )
+            out.append((u.name, ctype))
+        return out
+
     def _enum_serializer(self, enum: Enum, snapshot: int | None) -> RenderSerializer:
         if snapshot is None:
             members, qualified = enum.members, enum.name
@@ -496,8 +537,10 @@ class CppBackend:
                 self._rep -= 1
             case Switch(arms=arms):
                 assert isinstance(type_ref, Variant)
-                code(f"stream.writeVarInt<std::uint32_t>({expr}.index());")
-                with code.block(f"switch ({expr}.index())"):
+                # `expr` may be a dereference (`*value.x`) when the Switch sits
+                # inside an Opt -- parenthesize before the `.index()` postfix.
+                code(f"stream.writeVarInt<std::uint32_t>(({expr}).index());")
+                with code.block(f"switch (({expr}).index())"):
                     for index, arm in enumerate(arms):
                         with code.block(f"case {index}:"):
                             if arm is not None:
@@ -589,14 +632,19 @@ class CppBackend:
                 assert isinstance(type_ref, Variant)
                 depth = self._rep
                 self._rep += 1
+                # Decode into a local variant of the alias/field's own type,
+                # then assign -- `target` may be a std::optional<variant> when
+                # the Switch sits inside an Opt, so it cannot be emplaced into.
+                vartype = self._cpp_type(type_ref, self._nested)
+                assert vartype is not None
                 code(f"auto tag{depth} = stream.readVarInt<std::uint32_t>();")
                 code(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
-                holder = f"std::remove_reference_t<decltype({target})>"
+                code(f"{vartype} var{depth}{{}};")
                 with code.block(f"switch (*tag{depth})"):
                     for index, arm in enumerate(arms):
                         with code.block(f"case {index}:"):
                             code(
-                                f"std::variant_alternative_t<{index}, {holder}> "
+                                f"std::variant_alternative_t<{index}, {vartype}> "
                                 f"arm{depth}{{}};"
                             )
                             if arm is not None:
@@ -605,13 +653,14 @@ class CppBackend:
                                         code, type_ref.arms[index], arm,
                                         f"arm{depth}",
                                     )
-                            code(f"{target}.emplace<{index}>(arm{depth});")
+                            code(f"var{depth}.emplace<{index}>(arm{depth});")
                             code("break;")
                     with code.block("default:"):
                         code(
                             "return make_unexpected(std::make_error_code("
                             "std::errc::illegal_byte_sequence));"
                         )
+                code(f"{target} = var{depth};")
                 self._rep -= 1
 
     def _predicate(self, pred: Pred, base: str) -> str:
@@ -680,6 +729,17 @@ class CppBackend:
                     f"{struct.name}: references versioned type(s) {sorted(bad)} "
                     f"from another module -- cross-module versioning is unsupported"
                 )
+
+    def _guard_union_aliases(self) -> None:
+        """A union alias lowers to a flat `using X = std::variant<...>`; a
+        versioned arm has no single spelling there, so reject one."""
+        for u in self._module.union_aliases:
+            for arm in u.type.arms:
+                if isinstance(arm, Named) and self._plan.is_versioned(arm.name):
+                    raise CompilerError(
+                        f"{u.name}: a `type` union alias cannot have the "
+                        f"versioned arm {arm.name!r}"
+                    )
 
     # --- spellings -----------------------------------------------------------
 

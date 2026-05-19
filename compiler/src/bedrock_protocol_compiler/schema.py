@@ -337,12 +337,26 @@ class Alias:
 
 
 @dataclass(frozen=True)
+class UnionAlias:
+    """A module-level `type Name = A | B | C` declaration -- a named tagged
+    union. `type` is its declared shape and `wire` its encoding (a varuint32
+    tag, then the selected arm); both match what an inline `A | B | C` field
+    would get, so the alias and an inline union of the same arms travel
+    identically on the wire."""
+
+    name: str
+    type: Variant
+    wire: Switch
+
+
+@dataclass(frozen=True)
 class Module:
     name: str  # dotted, e.g. protocol.actor
     stem: str  # input file stem, drives the output filename
     package: str | None
     types: tuple[Enum | Struct, ...]  # declaration order
     aliases: tuple[Alias, ...]
+    union_aliases: tuple[UnionAlias, ...]
     imports: tuple[str, ...]  # dotted names of loaded modules it draws types from
 
     @property

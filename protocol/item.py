@@ -35,8 +35,9 @@ class ItemStackLegacyRequestId:
     id: varint32
 
 
-class ItemStackNetIdVariant:
-    value: ItemStackServerNetId | ItemStackRequestId | ItemStackLegacyRequestId
+type ItemStackNetIdVariant = (
+    ItemStackServerNetId | ItemStackRequestId | ItemStackLegacyRequestId
+)
 
 
 class SerializedNetworkItemStackDescriptor:
