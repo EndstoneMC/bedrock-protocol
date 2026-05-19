@@ -444,10 +444,7 @@ class CppBackend:
                 self._rep -= 1
             case Switch(arms=arms):
                 assert isinstance(type_ref, Variant)
-                code(
-                    f"stream.writeVarInt<std::uint32_t>("
-                    f"static_cast<std::uint32_t>({expr}.index()));"
-                )
+                code(f"stream.writeVarInt<std::uint32_t>({expr}.index());")
                 with code.block(f"switch ({expr}.index())"):
                     for index, arm in enumerate(arms):
                         with code.block(f"case {index}:"):
@@ -568,12 +565,11 @@ class CppBackend:
     @staticmethod
     def _scalar_write(scalar: Scalar, expr: str) -> str:
         u = PRIMITIVE_TYPES[scalar.primitive]
-        cast = f"static_cast<{u}>({expr})"
         if scalar.varint:
-            return f"stream.writeVarInt<{u}>({cast});"
+            return f"stream.writeVarInt<{u}>({expr});"
         if scalar.big_endian:
-            return f"stream.write<{u}, std::endian::big>({cast});"
-        return f"stream.write<{u}>({cast});"
+            return f"stream.write<{u}, std::endian::big>({expr});"
+        return f"stream.write<{u}>({expr});"
 
     @staticmethod
     def _scalar_read(code: _Code, scalar: Scalar) -> None:

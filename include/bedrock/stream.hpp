@@ -160,19 +160,23 @@ public:
 
     void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
 
-    // Fixed-width write, native-endian little by default.
-    template <typename T>
-        requires(std::integral<T> || std::floating_point<T>)
-    void write(T value)
+    // Fixed-width write, native-endian little by default. `value` is converted
+    // to the wire type `T`, so callers need not spell the cast.
+    template <typename T, typename V>
+        requires((std::integral<T> || std::floating_point<T>) &&
+                 requires(V v) { static_cast<T>(v); })
+    void write(V value)
     {
         write<T, std::endian::little>(value);
     }
 
     // Fixed-width write with explicit byte order.
-    template <typename T, std::endian Order>
-        requires(std::integral<T> || std::floating_point<T>)
-    void write(T value)
+    template <typename T, std::endian Order, typename V>
+        requires((std::integral<T> || std::floating_point<T>) &&
+                 requires(V v) { static_cast<T>(v); })
+    void write(V raw)
     {
+        const T value = static_cast<T>(raw);
         if constexpr (sizeof(T) == 1) {
             const auto byte = static_cast<std::uint8_t>(value);
             write(&byte, 1);
@@ -196,14 +200,17 @@ public:
     // Length-prefixed string (varuint32 byte count, then raw bytes).
     void write(std::string_view value)
     {
-        writeVarInt<std::uint32_t>(static_cast<std::uint32_t>(value.size()));
+        writeVarInt<std::uint32_t>(value.size());
         write(value.data(), value.size());
     }
 
-    // LEB128 varint, zigzag-encoded for signed `T`.
-    template <std::integral T>
-    void writeVarInt(T value)
+    // LEB128 varint, zigzag-encoded for signed `T`. The argument is converted
+    // to `T`, as in `write`.
+    template <std::integral T, typename V>
+        requires requires(V v) { static_cast<T>(v); }
+    void writeVarInt(V raw)
     {
+        const T value = static_cast<T>(raw);
         using U = std::make_unsigned_t<T>;
         U bits;
         if constexpr (std::is_signed_v<T>) {
