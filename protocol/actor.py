@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol._dsl import field, packet, value
+from protocol._dsl import field, packet, type, value
 from protocol.common import Vec3, int32, uint8, uvarint64, varint32, varint64
 
 package = "bedrock.protocol"
@@ -136,13 +136,32 @@ class EmoteListPacket:
     emote_piece_ids: list[uuid.UUID]
 
 
+@type(since=544)
+class AttributeModifierOperation(IntEnum):
+    OPERATION_ADDITION = 0
+    OPERATION_MULTIPLY_BASE = 1
+    OPERATION_MULTIPLY_TOTAL = 2
+    OPERATION_CAP = 3
+
+
+@type(since=544)
+class AttributeOperands(IntEnum):
+    OPERAND_MIN = 0
+    OPERAND_MAX = 1
+    OPERAND_CURRENT = 2
+
+
+@type(since=544)
 class AttributeModifier:
+    """An attribute modifier, carried in the UpdateAttributes modifier list
+    introduced at protocol 544."""
+
     id: str
     name: str
     amount: float
-    operation: int32
-    operand: int32
-    is_serializable: bool
+    operation: AttributeModifierOperation = field(type=int32)
+    operand: AttributeOperands = field(type=int32)
+    serialize: bool
 
 
 class AttributeData:
@@ -164,5 +183,5 @@ class UpdateAttributesPacket:
     """Updates attributes such as health or movement speed on an entity."""
 
     runtime_id: ActorRuntimeID
-    attribute_list: list[AttributeData]
+    attribute_data: list[AttributeData]
     tick: uvarint64 = field(since=419)

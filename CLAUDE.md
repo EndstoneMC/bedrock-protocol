@@ -74,9 +74,9 @@
       current field shape, plus `git log -S<field>` on that file to date
       when each field was added or removed.
 
-   Use the protocol (network) version number. Gate the packet or enum itself
-   at the version it first appears -- `@packet(since=N)` for a packet,
-   `@enum(since=N)` for an enum -- so the generated type is absent from
+   Use the protocol (network) version number. Gate the type itself at the
+   version it first appears -- `@packet(since=N)` for a packet, `@type(since=N)`
+   for an enum or non-packet struct -- so the generated type is absent from
    earlier snapshots. Fields and members present from that introduction need
    no `since` of their own. Only later additions take `field(since=)` or
    `value(since=)`. A type or field that neither reference models is left

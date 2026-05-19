@@ -1,12 +1,12 @@
 from enum import IntEnum
 
-from protocol._dsl import enum, field, packet, value
+from protocol._dsl import field, packet, type, value
 from protocol.common import Vec3, uint8
 
 package = "bedrock.protocol"
 
 
-@enum(since=859)
+@type(since=859)
 class GraphicsOverrideParameterType(IntEnum):
     SKY_ZENITH_COLOR = 0
     SKY_HORIZON_COLOR = 1

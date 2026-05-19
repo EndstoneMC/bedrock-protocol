@@ -35,4 +35,4 @@ class SubClientLoginPacket:
     """Login request from a sub-client sharing the main client's connection in
     split-screen play. Its connection request is shaped like LoginPacket's."""
 
-    sub_client_connection_request: str
+    connection_request: str

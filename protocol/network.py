@@ -1,12 +1,12 @@
 from enum import IntEnum
 
-from protocol._dsl import enum, field, packet
+from protocol._dsl import field, packet, type
 from protocol.common import int32, uint8, uint16
 
 package = "bedrock.protocol"
 
 
-@enum(since=554)
+@type(since=554)
 class PacketCompressionAlgorithm(IntEnum):
     ZLIB = 0
     SNAPPY = 1

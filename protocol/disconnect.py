@@ -1,13 +1,13 @@
 from enum import IntEnum
 from typing import Union
 
-from protocol._dsl import enum, field, packet, value
+from protocol._dsl import field, packet, type, value
 from protocol.common import varint32
 
 package = "bedrock.protocol"
 
 
-@enum(since=622)
+@type(since=622)
 class DisconnectFailReason(IntEnum):
     UNKNOWN = 0
     CANT_CONNECT_NO_INTERNET = 1

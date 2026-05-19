@@ -72,5 +72,5 @@ TEST_CASE("SubClientLoginPacket: id + connection-request blob round-trip")
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::SubClientLoginPacket>(in);
     REQUIRE(rt.has_value());
-    REQUIRE(rt->sub_client_connection_request == "hello");
+    REQUIRE(rt->connection_request == "hello");
 }

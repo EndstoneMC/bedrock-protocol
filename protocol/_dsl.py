@@ -50,8 +50,12 @@ def field(
     return None
 
 
-def enum(*, since: int | None = None):
-    """Class decorator: attach metadata to the type (e.g. `since=N`)."""
+def type(*, since: int | None = None):
+    """Class decorator: version-gate a type. `since=N` is the protocol version
+    that introduced it -- the generated type is absent from snapshots below N.
+    Applies to an enum or a non-packet struct; a packet carries its own
+    `since` on `@packet`.
+    """
     return _identity
 
 

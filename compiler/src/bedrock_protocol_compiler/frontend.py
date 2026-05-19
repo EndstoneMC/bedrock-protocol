@@ -191,9 +191,11 @@ class Frontend:
             nested.append(enum)
         nested_names = frozenset(e.name for e in nested)
         fields = tuple(self._field(attr, nested_names) for attr in cls.attributes.values())
+        since = self._packet_since(cls)
+        if since is None:  # a non-packet struct version-gates via @type(since=)
+            since = self._class_since(cls)
         return Struct(
-            cls.name, fields, tuple(nested),
-            self._packet_id(cls), self._packet_since(cls),
+            cls.name, fields, tuple(nested), self._packet_id(cls), since,
         )
 
     @staticmethod
@@ -202,7 +204,7 @@ class Frontend:
         version axis of its own. Version such an enum at module scope."""
         if enum.since is not None:
             raise CompilerError(
-                f"{owner}.{enum.name}: a nested enum cannot carry @enum(since=); "
+                f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); "
                 f"declare it at module scope to version it"
             )
         for m in enum.members:
@@ -564,7 +566,7 @@ class Frontend:
 
     def _class_since(self, cls: griffe.Class) -> int | None:
         for dec in cls.decorators:
-            since = self._int_kwarg(dec.value, "enum", "since")
+            since = self._int_kwarg(dec.value, "type", "since")
             if since is not None:
                 return since
         return None

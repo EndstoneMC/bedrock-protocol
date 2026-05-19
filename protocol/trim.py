@@ -19,5 +19,5 @@ class TrimDataPacket:
     """Lists the armour-trim patterns and materials a server has registered,
     sent to a client as it joins."""
 
-    trim_pattern_list: list[TrimPattern]
-    trim_material_list: list[TrimMaterial]
+    trim_patterns: list[TrimPattern]
+    trim_materials: list[TrimMaterial]
