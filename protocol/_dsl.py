@@ -60,15 +60,28 @@ def field(
       length-prefixed map of key/value pairs; a `tuple[T, ...]` annotation of
       N identical types is a fixed-length array of exactly N elements and
       carries no prefix.
+
+    `with field(when=lambda p: ...):` may also be written as a statement in a
+    struct body: every field declared inside the block is gated by the shared
+    predicate, as if each carried that `when=`. Unlike a per-field `when=`, a
+    guard block may enclose optional and union fields.
     """
     return None
 
 
-def type(*, since: int | None = None):
+def type(*, since: int | None = None, until: int | None = None):
     """Class decorator: version-gate a type. `since=N` is the protocol version
     that introduced it -- the generated type is absent from snapshots below N.
     Applies to an enum or a non-packet struct; a packet carries its own
     `since` on `@packet`.
+
+    A struct may be declared more than once, each declaration carrying an
+    adjacent `[since, until)` range, to model a type whose shape changed across
+    protocol versions; the compiler merges the declarations into one versioned
+    type. `until` is the first protocol version where that declaration's shape
+    no longer applies (exclusive). The declarations must be contiguous (each
+    `until` equal to the next `since`) and only the last omits `until`. `until`
+    is meaningful only on such a redeclared class.
     """
     return _identity
 

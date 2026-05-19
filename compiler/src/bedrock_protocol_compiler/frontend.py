@@ -9,7 +9,12 @@ from typing import cast
 
 import griffe
 
-from .redeclaration import EXTRA_NAMESPACE, REDECLARATIONS, RedeclarationExtension
+from .redeclaration import (
+    CLASS_REDECLARATIONS,
+    EXTRA_NAMESPACE,
+    REDECLARATIONS,
+    RedeclarationExtension,
+)
 from .schema import (
     PRIMITIVES,
     VARINT_PRIMITIVES,
@@ -156,7 +161,13 @@ class Frontend:
         for cls in mod.classes.values():
             if cls.is_alias or cls.name in self._builtins:
                 continue
-            types.append(self._enum(cls) if self._is_int_enum(cls) else self._struct(cls))
+            redecls = cls.extra.get(EXTRA_NAMESPACE, {}).get(CLASS_REDECLARATIONS)
+            if redecls is not None:
+                types.append(self._merged_struct(redecls))
+            elif self._is_int_enum(cls):
+                types.append(self._enum(cls))
+            else:
+                types.append(self._struct(cls))
         imports = tuple(
             sorted(d for d in self._imports_of(mod) if d in self._griffe and d != name)
         )
@@ -213,9 +224,125 @@ class Frontend:
         since = self._packet_since(cls)
         if since is None:  # a non-packet struct version-gates via @type(since=)
             since = self._class_since(cls)
+            if self._class_until(cls) is not None:
+                raise CompilerError(
+                    f"{cls.name}: @type(until=) is only meaningful on a "
+                    f"redeclared class -- a lone declaration cannot set until="
+                )
         return Struct(
             cls.name, fields, tuple(nested), self._packet_id(cls), since,
         )
+
+    def _merged_struct(self, decls: list[griffe.Class]) -> Struct:
+        """Lower a class redeclared once per protocol era -- each declaration
+        carrying a `[since, until)` range via `@type` -- into one `Struct`
+        whose fields carry version arms. Same-named fields across declarations
+        merge into a multi-arm field; a field unique to one era is a single-arm
+        field over that era's range."""
+        name = decls[0].name
+        # (class declaration, since, until), ordered by since.
+        eras: list[tuple[griffe.Class, int, int | None]] = []
+        for cls in decls:
+            if self._is_int_enum(cls):
+                raise CompilerError(
+                    f"{name}: class redeclaration is supported for structs, "
+                    f"not enums"
+                )
+            if self._packet_id(cls) is not None:
+                raise CompilerError(
+                    f"{name}: redeclaration of a @packet class is unsupported"
+                )
+            if cls.classes:
+                raise CompilerError(
+                    f"{name}: a redeclared class cannot contain nested types"
+                )
+            since = self._class_since(cls)
+            if since is None:
+                raise CompilerError(
+                    f"{name}: every declaration of a redeclared class needs "
+                    f"@type(since=)"
+                )
+            eras.append((cls, since, self._class_until(cls)))
+        eras.sort(key=lambda e: e[1])
+        self._check_class_eras(name, eras)
+
+        # Merged field order: first appearance across the declarations.
+        order: list[str] = []
+        era_fields: list[dict[str, griffe.Attribute]] = []
+        for cls, _, _ in eras:
+            attrs = dict(cls.attributes)
+            era_fields.append(attrs)
+            for fname in attrs:
+                if fname not in order:
+                    order.append(fname)
+
+        fields: list[Field] = []
+        for i, fname in enumerate(order):
+            earlier = frozenset(order[:i])
+            arms: list[FieldArm] = []
+            for (_, since, until), attrs in zip(eras, era_fields):
+                attr = attrs.get(fname)
+                if attr is None:
+                    continue
+                if attr.extra.get(EXTRA_NAMESPACE, {}).get(REDECLARATIONS):
+                    raise CompilerError(
+                        f"{name}.{fname}: a field cannot be version-redeclared "
+                        f"inside a redeclared class -- the class declarations "
+                        f"carry the version range"
+                    )
+                self._reject_field_version(name, attr)
+                arm = self._arm(attr, frozenset(), earlier)
+                arms.append(replace(arm, since=since, until=until))
+            self._check_arms(fname, tuple(arms))
+            fields.append(Field(fname, tuple(arms)))
+        return Struct(name, tuple(fields), (), None, eras[0][1])
+
+    @staticmethod
+    def _check_class_eras(
+        name: str, eras: list[tuple[griffe.Class, int, int | None]]
+    ) -> None:
+        """A redeclared class's eras run in ascending, contiguous `[since,
+        until)` order; every era but the last is bounded by `until=`, and that
+        `until=` is the next era's `since=`."""
+        for i, (_, since, until) in enumerate(eras):
+            last = i == len(eras) - 1
+            if last:
+                if until is not None:
+                    raise CompilerError(
+                        f"{name}: the last declaration of a redeclared class "
+                        f"must not set @type(until=)"
+                    )
+                continue
+            if until is None:
+                raise CompilerError(
+                    f"{name}: every declaration of a redeclared class but the "
+                    f"last needs @type(until=)"
+                )
+            if until <= since:
+                raise CompilerError(
+                    f"{name}: @type(until=) must be greater than since="
+                )
+            if until != eras[i + 1][1]:
+                raise CompilerError(
+                    f"{name}: redeclared class version ranges must be "
+                    f"contiguous -- each until= must equal the next since="
+                )
+
+    def _reject_field_version(self, struct: str, attr: griffe.Attribute) -> None:
+        """A field inside a redeclared class draws its range from the class
+        declarations, so it may not carry its own `field(since=/until=)`."""
+        call = attr.value
+        if call is None:
+            return
+        if (
+            self._int_kwarg(call, "field", "since") is not None
+            or self._int_kwarg(call, "field", "until") is not None
+        ):
+            raise CompilerError(
+                f"{struct}.{attr.name}: field(since=/until=) is not allowed "
+                f"inside a redeclared class -- the class declarations carry "
+                f"the version range"
+            )
 
     @staticmethod
     def _reject_versioned_nested(owner: str, enum: Enum) -> None:
@@ -254,9 +381,23 @@ class Frontend:
         type_ref = self._typeref(attr.annotation, attr.name)
         wire = self._wire(attr.name, attr.annotation, call, nested)
         when = self._call_arg(call, "field", "when") if call is not None else None
-        if when is not None:
-            predicate = self._predicate(when, attr.name, nested, earlier)
-            if isinstance(wire, (Opt, Switch)):
+        # `_group_when` is injected by the redeclaration extension when a field
+        # is hoisted out of a `with field(when=...)` guard block. Unlike a
+        # direct field(when=), a group guard may legitimately wrap an optional
+        # or union field -- the guard gates the region, the optional flags the
+        # field within it.
+        group_when = (
+            self._call_arg(call, "field", "_group_when") if call is not None else None
+        )
+        if when is not None and group_when is not None:
+            raise CompilerError(
+                f"{attr.name}: a field inside a with field(when=...) guard "
+                f"cannot also carry its own field(when=...)"
+            )
+        guard = when if when is not None else group_when
+        if guard is not None:
+            predicate = self._predicate(guard, attr.name, nested, earlier)
+            if when is not None and isinstance(wire, (Opt, Switch)):
                 raise CompilerError(
                     f"{attr.name}: field(when=...) gates a bare payload type -- it "
                     f"cannot also be an optional or union field"
@@ -407,7 +548,9 @@ class Frontend:
         )
         if name is None:
             return Scalar("uvarint32", varint=True)
-        if name not in PRIMITIVES or name in ("str", "bool", "float", "double"):
+        if name not in PRIMITIVES or name in (
+            "str", "bytes", "bool", "float", "double",
+        ):
             raise CompilerError(
                 f"{field_name}: field(prefix=...) must be an integer primitive, "
                 f"got {name!r}"
@@ -499,7 +642,7 @@ class Frontend:
             return EnumRef(name, scalar)
         if name in self._struct_names:
             return StructRef(name)
-        if name == "str":
+        if name in ("str", "bytes"):
             return Str()
         if name in PRIMITIVES:
             return Scalar(name, varint=name in VARINT_PRIMITIVES)
@@ -724,6 +867,13 @@ class Frontend:
             since = self._int_kwarg(dec.value, "type", "since")
             if since is not None:
                 return since
+        return None
+
+    def _class_until(self, cls: griffe.Class) -> int | None:
+        for dec in cls.decorators:
+            until = self._int_kwarg(dec.value, "type", "until")
+            if until is not None:
+                return until
         return None
 
     def _packet_id(self, cls: griffe.Class) -> int | None:

@@ -9,10 +9,12 @@ body from the other without re-deriving either.
 
 from dataclasses import dataclass
 
-#: DSL primitive names. `str` is length-prefixed; the rest are numeric/bool.
+#: DSL primitive names. `str`/`bytes` are length-prefixed; the rest are
+#: numeric/bool. `bytes` shares `str`'s wire encoding (a varuint32 length
+#: prefix then raw octets) -- it is a semantic synonym for an opaque buffer.
 PRIMITIVES: frozenset[str] = frozenset(
     {
-        "str", "int", "bool", "float", "double",
+        "str", "bytes", "int", "bool", "float", "double",
         "varint32", "varint64", "uvarint32", "uvarint64",
         "int8", "int16", "int32", "int64",
         "uint8", "uint16", "uint32", "uint64",

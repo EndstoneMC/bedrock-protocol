@@ -43,6 +43,7 @@ from .versioning import VersionPlan
 #: DSL primitive -> C++ type. Varint vs fixed-width is carried by `Scalar`.
 PRIMITIVE_TYPES: dict[str, str] = {
     "str": "std::string",
+    "bytes": "std::string",
     "int": "int",
     "bool": "bool",
     "float": "float",
