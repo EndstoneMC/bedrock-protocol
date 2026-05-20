@@ -1,5 +1,0 @@
-enum class {{ d.name }} : int {
-{% for mname, mvalue in d.members %}
-    {{ mname }} = {{ mvalue }},
-{% endfor %}
-};

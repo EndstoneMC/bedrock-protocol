@@ -7,7 +7,6 @@ dependencies = [
     "click",
     "griffe",
     "inflection",
-    "jinja2",
 ]
 
 [project.scripts]
