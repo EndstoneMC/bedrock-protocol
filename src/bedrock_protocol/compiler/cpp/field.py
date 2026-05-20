@@ -71,14 +71,14 @@ def cpp_type(
         return f"std::map<{key}, {value}>"
     if isinstance(t, VariantType):
         parts: list[str] = []
-        for arm in t.arms:
-            if arm is None:
+        for case in t.cases:
+            if case is None:
                 parts.append("std::monostate")
                 continue
-            arm_type = cpp_type(arm, ctx, nested)
-            if arm_type is None:
+            case_type = cpp_type(case, ctx, nested)
+            if case_type is None:
                 return None
-            parts.append(arm_type)
+            parts.append(case_type)
         return f"std::variant<{', '.join(parts)}>"
     if isinstance(t, CondType):
         return cpp_type(t.inner, ctx, nested)

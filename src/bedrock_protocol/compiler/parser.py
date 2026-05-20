@@ -460,9 +460,9 @@ class _AnnotationContext:
             )
         type_kw = _name_kwarg(call, "field", "type")
         prefix = self._repeat_prefix(call, field_name)
-        arms = _flatten_union(ann)
-        if arms is not None:
-            return self._union_type(arms, field_name, type_kw, endian, prefix, nested)
+        cases = _flatten_union(ann)
+        if cases is not None:
+            return self._union_type(cases, field_name, type_kw, endian, prefix, nested)
         base = self._base_type(ann, type_kw, prefix, nested, field_name)
         if base is None:
             return None
@@ -470,15 +470,15 @@ class _AnnotationContext:
 
     def _union_type(
         self,
-        arms: list[griffe.Expr | str],
+        cases: list[griffe.Expr | str],
         field_name: str,
         type_kw: str | None,
         endian: str | None,
         prefix: PrimitiveType,
         nested: frozenset[str],
     ) -> FieldType | None:
-        if len(arms) == 2 and sum(_is_none(a) for a in arms) == 1:
-            inner_ann = next(a for a in arms if not _is_none(a))
+        if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
+            inner_ann = next(a for a in cases if not _is_none(a))
             base = self._base_type(inner_ann, type_kw, prefix, nested, field_name)
             if base is None:
                 return None
@@ -490,16 +490,16 @@ class _AnnotationContext:
                     f"{field_name}: an optional enum field needs field(type=) for "
                     f"the enum wire primitive and so cannot also use type=Union"
                 )
-            present_tag = 1 if discriminator and _is_none(arms[0]) else 0
+            present_tag = 1 if discriminator and _is_none(cases[0]) else 0
             return OptionalType(base, discriminator, present_tag)
         if endian is not None:
             raise CompilerError(_endian_scope_error(field_name))
         types: list[FieldType | None] = []
-        for arm in arms:
-            if _is_none(arm):
+        for case in cases:
+            if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(arm, type_kw, prefix, nested, field_name)
+            t = self._base_type(case, type_kw, prefix, nested, field_name)
             if t is None:
                 return None
             types.append(t)
@@ -803,8 +803,8 @@ def _is_builtin_class(cls: griffe.Class) -> bool:
     )
 
 
-def _is_none(arm: object) -> bool:
-    return arm == "None"
+def _is_none(case: object) -> bool:
+    return case == "None"
 
 
 def _as_int(value: object) -> int | None:
@@ -819,7 +819,7 @@ def _as_int(value: object) -> int | None:
 def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
     if not (isinstance(ann, griffe.ExprBinOp) and ann.operator == "|"):
         return None
-    arms: list[griffe.Expr | str] = []
+    cases: list[griffe.Expr | str] = []
     stack: list[griffe.Expr | str] = [ann]
     while stack:
         node = stack.pop()
@@ -827,8 +827,8 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
             stack.append(node.right)
             stack.append(node.left)
         else:
-            arms.append(node)
-    return arms
+            cases.append(node)
+    return cases
 
 
 def _repeat_parts(

@@ -246,12 +246,12 @@ class SerializerGenerator:
             p(f"stream.writeVarInt<std::uint32_t>(({expr}).index());")
             p(f"switch (({expr}).index()) {{")
             with p.indented():
-                for index, arm in enumerate(t.arms):
+                for index, case in enumerate(t.cases):
                     p(f"case {index}: {{")
                     with p.indented():
-                        if arm is not None:
+                        if case is not None:
                             self._emit_write(
-                                p, arm, f"std::get<{index}>({expr})"
+                                p, case, f"std::get<{index}>({expr})"
                             )
                         p("break;")
                     p("}")
@@ -362,19 +362,19 @@ class SerializerGenerator:
             p(f"{vartype} var{depth}{{}};")
             p(f"switch (*tag{depth}) {{")
             with p.indented():
-                for index, arm in enumerate(t.arms):
+                for index, case in enumerate(t.cases):
                     p(f"case {index}: {{")
                     with p.indented():
                         p(
                             f"std::variant_alternative_t<{index}, {vartype}> "
-                            f"arm{depth}{{}};"
+                            f"alt{depth}{{}};"
                         )
-                        if arm is not None:
+                        if case is not None:
                             p("{")
                             with p.indented():
-                                self._emit_read(p, arm, f"arm{depth}")
+                                self._emit_read(p, case, f"alt{depth}")
                             p("}")
-                        p(f"var{depth}.emplace<{index}>(arm{depth});")
+                        p(f"var{depth}.emplace<{index}>(alt{depth});")
                         p("break;")
                     p("}")
                 p("default: {")

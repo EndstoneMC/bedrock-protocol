@@ -153,15 +153,15 @@ class MappingType:
 
 @dataclass(frozen=True)
 class VariantType:
-    """`std::variant`-shaped tagged union with a varuint32 tag. A None arm
+    """`std::variant`-shaped tagged union with a varuint32 tag. A None case
     carries no payload (`std::monostate` in C++)."""
-    arms: tuple["FieldType | None", ...]
+    cases: tuple["FieldType | None", ...]
     kind: Literal["variant"] = "variant"
 
     @property
     def referenced(self) -> frozenset[str]:
         return frozenset().union(
-            *(a.referenced for a in self.arms if a is not None)
+            *(a.referenced for a in self.cases if a is not None)
         )
 
 
