@@ -76,6 +76,10 @@ class StructGenerator:
     def _emit_enum_body(self, p: Printer, e) -> None:
         p(f"    enum class {e.name} : int {{")
         for v in e.values:
-            attr = " [[deprecated]]" if v.deprecated else ""
+            attr = (
+                f' [[deprecated("since v{v.deprecated}")]]'
+                if v.deprecated is not None
+                else ""
+            )
             p(f"        {camel(v.name)}{attr} = {v.number},")
         p("    };")

@@ -171,8 +171,15 @@ class BitsetType:
     little-endian dump of the bitset's numeric value: seven payload bits per
     byte, the top bit a continuation flag, with a single 0x00 byte for the
     empty bitset.
+
+    `size` is the literal width baked into the generated `std::bitset<N>`.
+    `enum_member` records a symbolic `(enum_name, member_name)` ref when the
+    DSL spelled the width as `bitset[Enum.MEMBER]`. The resolver narrows that
+    ref against each snapshot's nested-enum view, so per-version sentinels
+    yield per-version bitset widths.
     """
     size: int
+    enum_member: tuple[str, str] | None = None
     kind: Literal["bitset"] = "bitset"
 
     @property
@@ -214,7 +221,7 @@ class EnumValue:
     number: int
     since: int | None
     until: int | None
-    deprecated: bool = False
+    deprecated: int | None = None
     sentinel: bool = False
 
     @property
@@ -243,6 +250,8 @@ class Enum:
                 points.add(v.since)
             if v.until is not None:
                 points.add(v.until)
+            if v.deprecated is not None:
+                points.add(v.deprecated)
         return frozenset(points)
 
 
@@ -309,6 +318,8 @@ class Struct:
                     points.add(version.since)
                 if version.until is not None:
                     points.add(version.until)
+        for e in self.nested_enums:
+            points |= e.change_points
         return frozenset(points)
 
 

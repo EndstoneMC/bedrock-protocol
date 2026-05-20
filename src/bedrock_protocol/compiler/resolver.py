@@ -20,13 +20,21 @@ from dataclasses import replace
 from typing import Any, Iterable
 
 from ..descriptor import (
+    BitsetType,
     CompilerError,
+    CondType,
     Enum,
     Field,
+    FieldType,
+    FieldVersion,
     File,
     FileSet,
+    MappingType,
+    OptionalType,
+    RepeatedType,
     ResolvedFile,
     Struct,
+    VariantType,
     VersionSnapshot,
 )
 
@@ -193,21 +201,113 @@ def _snapshot_view(
     """A narrowed-to-snapshot view of `t`, plus an identity key that
     determines whether two snapshots share one definition."""
     if isinstance(t, Enum):
-        values = tuple(
-            v for v in t.values
-            if (v.since is None or v.since <= snapshot)
-            and (v.until is None or snapshot < v.until)
-        )
+        values = _narrow_enum_values(t.values, snapshot)
         view = Enum(t.name, values, t.since)
-        key = tuple((v.name, v.number) for v in values)
+        key = _enum_key(values)
         return view, None, key
+    narrowed_enums = tuple(
+        Enum(e.name, _narrow_enum_values(e.values, snapshot), e.since)
+        for e in t.nested_enums
+    )
+    nested_values = {
+        e.name: {v.name: v.number for v in e.values} for e in narrowed_enums
+    }
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:
         version = f.version_at(snapshot)
         if version is None:
             continue
+        rebound = _rebind_bitsets(version.type, nested_values)
+        if rebound is not version.type:
+            version = replace(version, type=rebound)
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
-    view_s = replace(t, fields=tuple(narrowed))
-    return None, view_s, tuple(key_parts)
+    view_s = replace(
+        t, fields=tuple(narrowed), nested_enums=narrowed_enums,
+    )
+    enum_key = tuple((e.name, _enum_key(e.values)) for e in narrowed_enums)
+    return None, view_s, tuple(key_parts) + (enum_key,)
+
+
+def _rebind_bitsets(
+    t: FieldType | None,
+    nested: dict[str, dict[str, int]],
+) -> FieldType | None:
+    """Walk a field-type tree, replacing `BitsetType(size=..., enum_member=X)`
+    with `BitsetType(size=N)` where N is the snapshot value of the enum
+    member. Anything without a symbolic ref or whose enum/member isn't in the
+    snapshot's nested-enum map is left untouched.
+    """
+    if t is None:
+        return None
+    if isinstance(t, BitsetType):
+        if t.enum_member is None:
+            return t
+        enum_name, member_name = t.enum_member
+        members = nested.get(enum_name)
+        if members is None or member_name not in members:
+            return t
+        new_size = members[member_name]
+        if new_size == t.size:
+            return t
+        return replace(t, size=new_size)
+    if isinstance(t, OptionalType):
+        inner = _rebind_bitsets(t.inner, nested)
+        return replace(t, inner=inner) if inner is not t.inner else t
+    if isinstance(t, RepeatedType):
+        inner = _rebind_bitsets(t.inner, nested)
+        return replace(t, inner=inner) if inner is not t.inner else t
+    if isinstance(t, MappingType):
+        key = _rebind_bitsets(t.key, nested)
+        val = _rebind_bitsets(t.value, nested)
+        if key is t.key and val is t.value:
+            return t
+        return replace(t, key=key, value=val)
+    if isinstance(t, VariantType):
+        new_cases = tuple(_rebind_bitsets(c, nested) for c in t.cases)
+        if new_cases == t.cases:
+            return t
+        return replace(t, cases=new_cases)
+    if isinstance(t, CondType):
+        inner = _rebind_bitsets(t.inner, nested)
+        return replace(t, inner=inner) if inner is not t.inner else t
+    return t
+
+
+def _enum_key(values: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Identity key for a narrowed enum view: name, number, and whether the
+    value carries deprecation at this snapshot. Two snapshots that differ
+    only in which members are `[[deprecated]]` get separate definitions."""
+    return tuple(
+        (v.name, v.number, v.deprecated is not None) for v in values
+    )
+
+
+def _narrow_enum_values(
+    values: tuple[Any, ...], snapshot: int
+) -> tuple[Any, ...]:
+    """Filter enum values to those present at `snapshot`, suppress the
+    `deprecated` marker on members whose deprecation version hasn't kicked
+    in yet, then re-resolve every sentinel as one past the highest
+    non-sentinel member of the narrowed set."""
+    from dataclasses import replace as _replace
+    present: list[Any] = []
+    for v in values:
+        if v.since is not None and v.since > snapshot:
+            continue
+        if v.until is not None and snapshot >= v.until:
+            continue
+        dep = v.deprecated if (
+            v.deprecated is not None and snapshot >= v.deprecated
+        ) else None
+        present.append(_replace(v, deprecated=dep))
+    if any(v.sentinel for v in present):
+        non_sentinel = [v.number for v in present if not v.sentinel]
+        if non_sentinel:
+            high = max(non_sentinel) + 1
+            present = [
+                _replace(v, number=high) if v.sentinel else v
+                for v in present
+            ]
+    return tuple(present)

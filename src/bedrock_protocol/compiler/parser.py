@@ -538,7 +538,7 @@ class _AnnotationContext:
         if isinstance(ann, griffe.ExprSubscript):
             bitset = self._bitset_parts(ann, field_name)
             if bitset is not None:
-                return BitsetType(size=bitset)
+                return bitset
             repeat = _repeat_parts(ann, field_name)
             if repeat is not None:
                 elem_ann, count = repeat
@@ -738,30 +738,34 @@ class _AnnotationContext:
 
     def _bitset_parts(
         self, ann: griffe.ExprSubscript, field_name: str
-    ) -> int | None:
+    ) -> BitsetType | None:
         if not (
             isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"
         ):
             return None
-        size = self._resolve_int(ann.slice)
+        size, enum_member = self._resolve_bitset_size(ann.slice)
         if size is None or size <= 0:
             raise CompilerError(
                 f"{field_name}: bitset[...] needs a positive integer size -- "
                 f"an int literal or a nested-enum member -- got {ann.slice!r}"
             )
-        return size
+        return BitsetType(size=size, enum_member=enum_member)
 
-    def _resolve_int(self, expr: _Ann) -> int | None:
+    def _resolve_bitset_size(
+        self, expr: _Ann
+    ) -> tuple[int | None, tuple[str, str] | None]:
+        """Return the int width and, if the source was `Enum.MEMBER`, the
+        symbolic ref so the resolver can re-resolve it per snapshot."""
         direct = _as_int(expr)
         if direct is not None:
-            return direct
+            return direct, None
         if isinstance(expr, griffe.ExprAttribute):
             parts = [str(v) for v in expr.values]
             if len(parts) == 2:
                 members = self.nested_enum_values.get(parts[0])
                 if members is not None and parts[1] in members:
-                    return members[parts[1]]
-        return None
+                    return members[parts[1]], (parts[0], parts[1])
+        return None, None
 
     # ---- misc --------------------------------------------------------------
 
@@ -776,10 +780,10 @@ class _AnnotationContext:
 
     def _enum_member_value(
         self, value: _Ann
-    ) -> tuple[int, int | None, int | None, bool, bool] | None:
+    ) -> tuple[int, int | None, int | None, int | None, bool] | None:
         direct = _as_int(value)
         if direct is not None:
-            return direct, None, None, False, False
+            return direct, None, None, None, False
         if not (
             isinstance(value, griffe.ExprCall)
             and isinstance(value.function, griffe.ExprName)
@@ -803,7 +807,7 @@ class _AnnotationContext:
             ivalue,
             _int_kwarg(value, "value", "since"),
             _int_kwarg(value, "value", "until"),
-            _bool_kwarg(value, "value", "deprecated"),
+            _int_kwarg(value, "value", "deprecated"),
             sentinel,
         )
 

@@ -14,21 +14,21 @@ class InputMode(IntEnum):
     MOUSE = 1
     TOUCH = 2
     GAME_PAD = 3
-    MOTION_CONTROLLER = value(4, deprecated=True)
-    COUNT = 5
+    MOTION_CONTROLLER = value(4, deprecated=859)
+    COUNT = value(sentinel=True)
 
 
 class ClientPlayMode(IntEnum):
     NORMAL = 0
     TEASER = 1
     SCREEN = 2
-    VIEWER = value(3, deprecated=True)
-    REALITY = value(4, deprecated=True)
-    PLACEMENT = value(5, deprecated=True)
-    LIVING_ROOM = value(6, deprecated=True)
+    VIEWER = value(3, deprecated=859)
+    REALITY = value(4, deprecated=859)
+    PLACEMENT = value(5, deprecated=859)
+    LIVING_ROOM = value(6, deprecated=859)
     EXIT_LEVEL = 7
-    EXIT_LEVEL_LIVING_ROOM = value(8, deprecated=True)
-    NUM_MODES = 9
+    EXIT_LEVEL_LIVING_ROOM = value(8, deprecated=859)
+    NUM_MODES = value(sentinel=True)
 
 
 @type(since=527)
@@ -36,7 +36,7 @@ class NewInteractionModel(IntEnum):
     TOUCH = 0
     CROSSHAIR = 1
     CLASSIC = 2
-    COUNT = 3
+    COUNT = value(sentinel=True)
 
 
 @packet(id=144, since=388)
@@ -44,7 +44,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP = value(2, deprecated=True)
+        NORTH_JUMP = value(2, deprecated=685)
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -96,8 +96,12 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = value(51, since=729)
         DOWN_RIGHT = value(52, since=729)
         START_USING_ITEM = value(53, since=748)
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = value(54, since=748, deprecated=True)
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = value(55, since=748, deprecated=True)
+        # BDS marks these `_DEPRECATED` but CloudburstMC does not carry an
+        # explicit deprecation version. Best-effort guess: v859, the same
+        # cleanup wave that retired the deprecated ClientPlayMode / InputMode
+        # members. Revisit if CB picks up a definitive annotation.
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = value(54, since=748, deprecated=859)
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = value(55, since=748, deprecated=859)
         START_SPIN_ATTACK = value(56, since=748)
         STOP_SPIN_ATTACK = value(57, since=748)
         IS_HOTBAR_ONLY_TOUCH = value(58, since=766)

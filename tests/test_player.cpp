@@ -72,9 +72,9 @@ TEST_CASE("PlayerAuthInputPacket: 388 floor predates tick/delta and interaction_
         bp::Vec3{0.0f, 0.0f, 0.0f},
         bp::Vec2{0.0f, 0.0f},
         0.0f,
-        std::bitset<65>{},
-        bp::InputMode::Touch,
-        bp::ClientPlayMode::Normal,
+        std::bitset<37>{},
+        bp::InputMode_<388>::Touch,
+        bp::ClientPlayMode_<388>::Normal,
     };
 
     std::vector<std::uint8_t> buf;

@@ -189,7 +189,11 @@ class FileGenerator:
                 narrowed = view.enum or view.struct
                 assert narrowed is not None
                 anchor: int | None = None
-                if isinstance(narrowed, Struct) and _has_nested(narrowed):
+                if (
+                    isinstance(narrowed, Struct)
+                    and _has_nested(narrowed)
+                    and not _has_versioned_nested(narrowed)
+                ):
                     fresh = self._resolved.fresh_snapshots(name)
                     if fresh and fresh[0].lo != snap:
                         anchor = fresh[0].lo
@@ -386,6 +390,24 @@ def _has_nested(s: Struct) -> bool:
     Today only nested enums exist; nested structs / aliases plug in here when
     they land."""
     return bool(s.nested_enums)
+
+
+def _has_versioned_nested(s: Struct) -> bool:
+    """At least one nested-enum member carries a `since=` / `until=` /
+    `deprecated=` gate, so the enum's snapshot view differs between
+    snapshots (either in membership or in which members are marked
+    deprecated). The aliasing dedup would point later snapshots at the
+    wrong shape, so each fresh snapshot has to emit its own nested-enum
+    body."""
+    for e in s.nested_enums:
+        for v in e.values:
+            if (
+                v.since is not None
+                or v.until is not None
+                or v.deprecated is not None
+            ):
+                return True
+    return False
 
 
 def _walk_has_bitset(t: FieldType | None) -> bool:

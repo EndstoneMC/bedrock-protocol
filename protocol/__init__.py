@@ -14,20 +14,21 @@ def _identity(cls):
 
 
 def value(
-    v=None,
+    v: int = 0,
     since: int | None = None,
     until: int | None = None,
-    deprecated: bool = False,
+    deprecated: int | None = None,
     sentinel: bool = False,
-):
+) -> int:
     """Mark a member's wire value, optionally gated by protocol version.
 
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
-    - `deprecated`: the member is still on the wire but Mojang has marked it
-      deprecated. Emit a `[[deprecated]]` attribute on the generated value so
-      a downstream `-Wdeprecated-declarations` build flags any new use.
+    - `deprecated`: protocol version where Mojang marked the member deprecated.
+      Acts like `until=` but the member stays on the wire: every snapshot from
+      this version on emits the value with `[[deprecated("since vN")]]`, so a
+      downstream `-Wdeprecated-declarations` build flags any new use.
     - `sentinel`: a count sentinel. The number is auto-computed at parse time
       as one past the highest non-sentinel member of the enum. `v` is ignored
       when set. Useful for `bitset[Enum.SENTINEL]` so the bitset width follows
