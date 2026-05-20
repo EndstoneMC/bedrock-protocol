@@ -53,7 +53,7 @@ from ..descriptor import (
     VariantRef,
     Wire,
 )
-from . import redeclaration
+from . import extensions
 
 _Ann = griffe.Expr | str | None
 
@@ -81,7 +81,7 @@ class SourceTree:
         self._import_paths = [p.resolve() for p in import_paths]
         # Shared across every griffe.load: keeps version-redeclared attributes
         # griffe's name-keyed mapping would otherwise collapse.
-        self._extensions = griffe.Extensions(redeclaration.RedeclarationExtension())
+        self._extensions = griffe.Extensions(extensions.RedeclarationExtension())
 
     # --- public API ---------------------------------------------------------
 
@@ -245,8 +245,8 @@ class SourceTree:
         for cls in mod.classes.values():
             if cls.is_alias or cls.name in classified.builtins:
                 continue
-            redecls = cls.extra.get(redeclaration.EXTRA_NAMESPACE, {}).get(
-                redeclaration.CLASS_REDECLARATIONS
+            redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
+                extensions.CLASS_REDECLARATIONS
             )
             if redecls is not None:
                 struct = ctx.merged_struct(redecls)
@@ -390,8 +390,8 @@ class _AnnotationContext:
                 attr = attrs.get(fname)
                 if attr is None:
                     continue
-                if attr.extra.get(redeclaration.EXTRA_NAMESPACE, {}).get(
-                    redeclaration.REDECLARATIONS
+                if attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
+                    extensions.REDECLARATIONS
                 ):
                     raise CompilerError(
                         f"{name}.{fname}: a field cannot be version-redeclared "
@@ -416,8 +416,8 @@ class _AnnotationContext:
         nested: frozenset[str],
         earlier: frozenset[str],
     ) -> FieldDescriptor:
-        decls = attr.extra.get(redeclaration.EXTRA_NAMESPACE, {}).get(
-            redeclaration.REDECLARATIONS
+        decls = attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
+            extensions.REDECLARATIONS
         )
         sources: list[griffe.Attribute] = decls if decls is not None else [attr]
         eras = tuple(self._field_era(d, nested, earlier) for d in sources)
