@@ -54,7 +54,7 @@ class CppGenerator(CodeGenerator):
 
 
 def _parse_parameter(parameter: str) -> int:
-    """Parse `--opt cpp=latest=<int>`. Empty string is allowed (use default)."""
+    """Parse `--opt latest=<int>`. Empty string is allowed (use default)."""
     if not parameter:
         return _DEFAULT_LATEST
     parts: dict[str, str] = {}
@@ -64,7 +64,7 @@ def _parse_parameter(parameter: str) -> int:
             continue
         if "=" not in chunk:
             raise CompilerError(
-                f"cpp: --opt cpp expected key=value, got {chunk!r}"
+                f"cpp: --opt expected key=value, got {chunk!r}"
             )
         k, v = chunk.split("=", 1)
         parts[k.strip()] = v.strip()
@@ -77,5 +77,5 @@ def _parse_parameter(parameter: str) -> int:
         return int(latest_str)
     except ValueError:
         raise CompilerError(
-            f"cpp: --opt cpp=latest must be an integer, got {latest_str!r}"
+            f"cpp: --opt latest must be an integer, got {latest_str!r}"
         )

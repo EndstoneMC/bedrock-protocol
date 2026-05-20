@@ -1,6 +1,6 @@
 """Backend registry — protoc analog of `RegisterGenerator` calls in the CLI.
 
-The CLI builds its `--out <name>=<dir>` choices from `GENERATORS.keys()`.
+The CLI accepts `--language NAME` for any name in `GENERATORS.keys()`.
 Adding a new backend is one entry in this dict.
 """
 

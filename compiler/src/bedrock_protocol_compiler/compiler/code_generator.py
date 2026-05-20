@@ -47,7 +47,7 @@ class CodeGenerator(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """Short id, e.g. `"cpp"`. Used by the CLI as `--out <name>=<dir>`."""
+        """Short id, e.g. `"cpp"`. Used by the CLI as `--language <name>`."""
         ...
 
     @abstractmethod
@@ -57,8 +57,8 @@ class CodeGenerator(ABC):
         parameter: str,
         context: GeneratorContext,
     ) -> None:
-        """Generate one input file's output. `parameter` is the raw
-        `--opt <name>=<value>` payload (empty when none was given). The
+        """Generate one input file's output. `parameter` is the joined
+        `--opt KEY=VAL,...` payload (empty when none was given). The
         backend writes results through `context.open(relative_path)`.
         """
         ...

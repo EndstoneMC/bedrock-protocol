@@ -1,12 +1,12 @@
 """CLI driver — protoc analog of `compiler/command_line_interface.h`.
 
-    bpc --out cpp=<dir> [--opt cpp=key=val,...] \
+    bpc --language cpp --out <dir> [--opt KEY=VAL]...
         [--import-path <dir>]... <inputs>...
 
-A single repeatable `--out NAME=DIR` selects the registered backend(s);
-`--opt NAME=k=v,k=v` carries per-backend parameters. The shape mirrors
-protoc's `--<name>_out` / `--<name>_opt` without the Windows drive-letter
-ambiguity of `--cpp_out=opt:C:\\…`.
+`--language NAME` selects the registered backend; `--out DIR` is its output
+directory; `--opt KEY=VAL` carries backend parameters. One backend per
+invocation. The shape mirrors protoc's `--<name>_out` / `--<name>_opt`
+without the Windows drive-letter ambiguity of `--cpp_out=opt:C:\\...`.
 """
 
 from __future__ import annotations
@@ -28,20 +28,27 @@ from .descriptor import CompilerError
 @click.version_option(version="0.1.0", prog_name="bpc")
 @click.option("-v", "--verbose", is_flag=True, help="Print one line per output file.")
 @click.option(
-    "--out",
-    "outs",
-    multiple=True,
+    "--language",
+    "--lang",
+    "language",
     required=True,
-    metavar="NAME=DIR",
-    help="Backend output directory, e.g. --out cpp=build/include/bedrock. "
-         "Repeatable; one per registered backend you want to invoke.",
+    metavar="NAME",
+    help="Target backend, e.g. --language cpp. One per invocation.",
+)
+@click.option(
+    "--out",
+    "out_dir",
+    required=True,
+    metavar="DIR",
+    type=click.Path(file_okay=False, path_type=Path),
+    help="Backend output directory.",
 )
 @click.option(
     "--opt",
     "opts",
     multiple=True,
-    metavar="NAME=KEY=VAL[,KEY=VAL]",
-    help="Per-backend option string, e.g. --opt cpp=latest=974.",
+    metavar="KEY=VAL",
+    help="Backend option, e.g. --opt latest=974. Repeatable.",
 )
 @click.option(
     "--import-path",
@@ -59,13 +66,18 @@ from .descriptor import CompilerError
 )
 def main(
     verbose: bool,
-    outs: tuple[str, ...],
+    language: str,
+    out_dir: Path,
     opts: tuple[str, ...],
     import_paths: tuple[Path, ...],
     inputs: tuple[Path, ...],
 ) -> None:
-    out_map = _parse_out_flags(outs)
-    opt_map = _parse_opt_flags(opts, known=set(out_map))
+    factory = GENERATORS.get(language)
+    if factory is None:
+        raise click.ClickException(
+            f"unknown language {language!r}; known: {sorted(GENERATORS)}"
+        )
+    parameter = _join_opts(opts)
 
     try:
         file_set = SourceTree(list(import_paths)).load_all(inputs)
@@ -78,56 +90,28 @@ def main(
             resolved = resolve(file_set.files[output_name], file_set)
         except CompilerError as exc:
             raise click.ClickException(str(exc))
-        for name, out_dir in out_map.items():
-            factory = GENERATORS.get(name)
-            if factory is None:
-                raise click.ClickException(
-                    f"unknown backend {name!r}; known: {sorted(GENERATORS)}"
-                )
-            ctx = FilesystemContext(out_dir, verbose=verbose)
-            try:
-                factory().generate(resolved, opt_map.get(name, ""), ctx)
-            except CompilerError as exc:
-                raise click.ClickException(str(exc))
-            for err in ctx.errors:
-                click.echo(f"error: {name}: {err}", err=True)
-                error_seen = True
+        ctx = FilesystemContext(out_dir, verbose=verbose)
+        try:
+            factory().generate(resolved, parameter, ctx)
+        except CompilerError as exc:
+            raise click.ClickException(str(exc))
+        for err in ctx.errors:
+            click.echo(f"error: {language}: {err}", err=True)
+            error_seen = True
 
     if error_seen:
-        raise click.ClickException("one or more backends reported errors")
+        raise click.ClickException("backend reported errors")
 
 
-def _parse_out_flags(outs: tuple[str, ...]) -> dict[str, Path]:
-    result: dict[str, Path] = {}
-    for raw in outs:
-        if "=" not in raw:
-            raise click.ClickException(
-                f"--out expected NAME=DIR, got {raw!r}"
-            )
-        name, dir_str = raw.split("=", 1)
-        if name in result:
-            raise click.ClickException(f"--out {name}= given twice")
-        result[name] = Path(dir_str)
-    return result
-
-
-def _parse_opt_flags(opts: tuple[str, ...], known: set[str]) -> dict[str, str]:
-    result: dict[str, str] = {}
+def _join_opts(opts: tuple[str, ...]) -> str:
+    """Merge repeated --opt KEY=VAL into one comma-separated parameter string.
+    Each chunk must already be KEY=VAL; the backend parses the joined form."""
     for raw in opts:
         if "=" not in raw:
             raise click.ClickException(
-                f"--opt expected NAME=KEY=VAL, got {raw!r}"
+                f"--opt expected KEY=VAL, got {raw!r}"
             )
-        name, value = raw.split("=", 1)
-        if name not in known:
-            raise click.ClickException(
-                f"--opt {name}: no matching --out {name}=<dir> was given"
-            )
-        if name in result:
-            result[name] = f"{result[name]},{value}"
-        else:
-            result[name] = value
-    return result
+    return ",".join(opts)
 
 
 if __name__ == "__main__":
