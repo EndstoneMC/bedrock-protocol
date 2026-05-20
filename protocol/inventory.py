@@ -182,7 +182,7 @@ class ItemUseInventoryTransaction:
 
     transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
-    trigger_type: TriggerType = field(type=uvarint32, since=685)
+    trigger_type: TriggerType = field(type=uvarint32, since=712)
     position: BlockPos
     face: varint32
     slot: varint32
@@ -190,7 +190,7 @@ class ItemUseInventoryTransaction:
     from_position: Vec3
     click_position: Vec3
     target_block_id: uvarint32
-    client_interact_prediction: PredictedResult = field(type=uint8, since=685)
+    client_interact_prediction: PredictedResult = field(type=uint8, since=712)
     client_cooldown_state: ClientCooldownState = field(type=uint8, since=944)
 
 
