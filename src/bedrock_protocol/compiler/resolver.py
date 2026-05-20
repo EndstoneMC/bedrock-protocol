@@ -205,13 +205,14 @@ def _snapshot_view(
         view = Enum(t.name, values, t.since)
         key = _enum_key(values)
         return view, None, key
-    narrowed_enums = tuple(
-        Enum(e.name, _narrow_enum_values(e.values, snapshot), e.since)
-        for e in t.nested_enums
-    )
-    nested_values = {
-        e.name: {v.name: v.number for v in e.values} for e in narrowed_enums
-    }
+    narrowed_enums: list[Enum] = []
+    nested_values: dict[str, dict[str, int]] = {}
+    enum_key_parts: list[Any] = []
+    for e in t.nested_enums:
+        ev = _narrow_enum_values(e.values, snapshot)
+        narrowed_enums.append(Enum(e.name, ev, e.since))
+        nested_values[e.name] = {v.name: v.number for v in ev}
+        enum_key_parts.append((e.name, _enum_key(ev)))
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:
@@ -224,10 +225,9 @@ def _snapshot_view(
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
     view_s = replace(
-        t, fields=tuple(narrowed), nested_enums=narrowed_enums,
+        t, fields=tuple(narrowed), nested_enums=tuple(narrowed_enums),
     )
-    enum_key = tuple((e.name, _enum_key(e.values)) for e in narrowed_enums)
-    return None, view_s, tuple(key_parts) + (enum_key,)
+    return None, view_s, tuple(key_parts) + (tuple(enum_key_parts),)
 
 
 def _rebind_bitsets(

@@ -7,9 +7,10 @@ field declarations. protoc analog: `compiler/cpp/cpp_message.{h,cc}`.
 
 from __future__ import annotations
 
-from ...descriptor import Struct
+from ...descriptor import Enum, Struct
+from .enum import EnumGenerator
 from .field import FileContext, cpp_type
-from .names import camel, snapshot_namespace
+from .names import snapshot_namespace
 from .printer import Printer
 
 
@@ -55,31 +56,22 @@ class StructGenerator:
             rendered_fields.append((ctype, f.name))
 
         p(f"struct {s.name} {{")
-        for e in s.nested_enums:
-            self._emit_nested(p, e.name, lambda: self._emit_enum_body(p, e))
-        if s.packet_id is not None:
-            p(f"    static constexpr int Id = {s.packet_id};")
-        for ctype, fname in rendered_fields:
-            p(f"    {ctype} {fname};")
+        with p.indented(1):
+            for e in s.nested_enums:
+                self._emit_nested_enum(p, e)
+                p()
+            if s.packet_id is not None:
+                p(f"static constexpr int Id = {s.packet_id};")
+            for ctype, fname in rendered_fields:
+                p(f"{ctype} {fname};")
         p("};")
 
-    def _emit_nested(self, p: Printer, name: str, body) -> None:
-        """Either alias `name` from the anchor snapshot, or call `body` to
-        emit the fresh definition. Followed by a blank line."""
+    def _emit_nested_enum(self, p: Printer, e: Enum) -> None:
+        """Alias `e` from the anchor snapshot or fall through to the full
+        body. The body is `EnumGenerator` again -- there's only one place
+        in the codebase that knows how to format an enum value line."""
         if self._anchor is not None:
             ns = snapshot_namespace(self._anchor)
-            p(f"    using {name} = {ns}::{self._struct.name}::{name};")
+            p(f"using {e.name} = {ns}::{self._struct.name}::{e.name};")
         else:
-            body()
-        p()
-
-    def _emit_enum_body(self, p: Printer, e) -> None:
-        p(f"    enum class {e.name} : int {{")
-        for v in e.values:
-            attr = (
-                f' [[deprecated("since v{v.deprecated}")]]'
-                if v.deprecated is not None
-                else ""
-            )
-            p(f"        {camel(v.name)}{attr} = {v.number},")
-        p("    };")
+            EnumGenerator(e).emit(p)
