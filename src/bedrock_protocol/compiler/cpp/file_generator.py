@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Iterable, Sequence
 
-from ..descriptor import (
+from ...descriptor import (
     CompilerError,
     CondWire,
     EnumDescriptor,

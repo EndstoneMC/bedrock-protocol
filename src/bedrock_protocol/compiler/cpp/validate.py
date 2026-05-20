@@ -8,7 +8,7 @@ emitting anything.
 
 from __future__ import annotations
 
-from ..descriptor import (
+from ...descriptor import (
     CompilerError,
     CondWire,
     EnumDescriptor,

@@ -13,11 +13,11 @@ if(DEFINED _BEDROCK_PROTOCOL_INCLUDED)
 endif()
 set(_BEDROCK_PROTOCOL_INCLUDED TRUE)
 
-set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/../compiler")
+set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/..")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
-    "${_compiler_dir}/src/bedrock_protocol_compiler/*"
+    "${_compiler_dir}/src/bedrock_protocol/*"
     "${_compiler_dir}/pyproject.toml")
 
 # bpc is a uv-managed Python package. The wrapper per-platform routes through

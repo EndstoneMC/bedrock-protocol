@@ -10,8 +10,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from ..descriptor import CompilerError, ResolvedFileDescriptor
-from ..compiler.code_generator import CodeGenerator, GeneratorContext
+from ...descriptor import CompilerError, ResolvedFileDescriptor
+from ..code_generator import CodeGenerator, GeneratorContext
 from .file_generator import FileGenerator
 from . import validate
 

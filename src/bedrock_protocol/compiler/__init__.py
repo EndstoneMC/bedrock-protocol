@@ -13,7 +13,7 @@ The pipeline:
 
 from .code_generator import CodeGenerator, GeneratorContext, FilesystemContext
 from .parser import SourceTree
-from .registry import GENERATORS, register, lookup
+from .registry import GENERATORS
 from .resolver import resolve, resolve_all
 
 __all__ = [
@@ -22,8 +22,6 @@ __all__ = [
     "GENERATORS",
     "GeneratorContext",
     "SourceTree",
-    "lookup",
-    "register",
     "resolve",
     "resolve_all",
 ]

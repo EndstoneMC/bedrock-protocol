@@ -4,7 +4,7 @@
    in commits or PR descriptions, ever.
 
 2. **Jinja templates emit no explanatory comments into generated headers.**
-   Files under `compiler/src/bedrock_protocol_compiler/templates/` should not
+   Files under `src/bedrock_protocol/compiler/cpp/templates/` should not
    write `//` blocks into the generated C++ output. Namespace close-markers
    like `}  // namespace bedrock::protocol` are fine (bracket-matching aids).
    Prose explanations above a code construct are not. If you want to leave

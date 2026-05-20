@@ -39,9 +39,8 @@ class GeneratorContext(Protocol):
 
 
 class CodeGenerator(ABC):
-    """One language target. Subclasses register themselves via
-    `compiler.registry.register(name, factory)` (or by adding an entry to
-    `GENERATORS` directly) and the CLI dispatches by name.
+    """One language target. Subclasses register by adding an entry to
+    `compiler.registry.GENERATORS`, and the CLI dispatches by name.
     """
 
     @property
