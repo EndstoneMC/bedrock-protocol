@@ -45,6 +45,17 @@ def resolve_all(file_set: FileSet) -> tuple[ResolvedFile, ...]:
 
 
 def resolve(file: File, file_set: FileSet) -> ResolvedFile:
+    cached = file_set.resolved.get(file.name)
+    if cached is not None:
+        return cached
+
+    # Resolve imports first so cross-file lookups (`is_versioned`, `present_at`)
+    # find their snapshot information already in `file_set.resolved`.
+    for imp in file.imports:
+        other = file_set.files.get(imp)
+        if other is not None:
+            resolve(other, file_set)
+
     all_types: tuple[Enum | Struct, ...] = (
         *file.enums, *file.structs,
     )
@@ -58,12 +69,14 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
     )
     own = frozenset(by_name)
 
-    versioned = _versioned_types(types)
+    versioned = _versioned_types(types, file, file_set)
     order = _topo_order(types, own)
-    snapshots = _snapshot_points(types, versioned)
-    snapshots_by_type = _plan_snapshots(types, by_name, versioned, order, snapshots)
+    snapshots = _snapshot_points(types, versioned, file, file_set)
+    snapshots_by_type = _plan_snapshots(
+        types, by_name, versioned, order, snapshots, file, file_set,
+    )
 
-    return ResolvedFile(
+    resolved = ResolvedFile(
         file=file,
         file_set=file_set,
         declaration_order=tuple(order),
@@ -71,6 +84,8 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
         snapshots=tuple(snapshots),
         snapshots_by_type=snapshots_by_type,
     )
+    file_set.resolved[file.name] = resolved
+    return resolved
 
 
 # --- versioned classification -------------------------------------------------
@@ -78,10 +93,18 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
 
 def _versioned_types(
     types: tuple[Enum | Struct, ...],
+    file: File,
+    file_set: FileSet,
 ) -> frozenset[str]:
     """Names that are versioned, either by their own change points or by a
-    transitive reference to a versioned type."""
+    transitive reference to a versioned type. The closure folds in versioned
+    names from already-resolved imports so a reference to an imported
+    versioned type propagates back into this file's set."""
     versioned: set[str] = {t.name for t in types if t.change_points}
+    for imp in file.imports:
+        other = file_set.resolved.get(imp)
+        if other is not None:
+            versioned |= other.versioned_types
     while True:
         grew = False
         for t in types:
@@ -131,11 +154,22 @@ def _topo_order(
 def _snapshot_points(
     types: tuple[Enum | Struct, ...],
     versioned: frozenset[str],
+    file: File,
+    file_set: FileSet,
 ) -> list[int]:
     points = {0}
     for t in types:
         if t.name in versioned:
             points |= t.change_points
+    # An imported versioned type can change at a protocol version this file
+    # never names directly; without picking those up, a consumer struct that
+    # references the import won't get a snapshot row for that change point.
+    for imp in file.imports:
+        other = file_set.resolved.get(imp)
+        if other is None:
+            continue
+        for s in other.snapshots:
+            points.add(s)
     return sorted(points)
 
 
@@ -145,6 +179,8 @@ def _plan_snapshots(
     versioned: frozenset[str],
     order: Iterable[str],
     snapshots: list[int],
+    file: File,
+    file_set: FileSet,
 ) -> dict[str, tuple[VersionSnapshot, ...]]:
     """One `VersionSnapshot` tuple per versioned type, in snapshot order."""
     result: dict[str, tuple[VersionSnapshot, ...]] = {}
@@ -153,6 +189,21 @@ def _plan_snapshots(
     keys: dict[str, dict[int, tuple[Any, ...]]] = {}
     # The snapshot whose definition (name, snapshot) resolves to.
     concrete: dict[str, dict[int, int]] = {}
+
+    def dep_concrete(name: str, snapshot: int) -> int | None:
+        own = concrete.get(name)
+        if own is not None:
+            view = own.get(snapshot)
+            if view is not None:
+                return view
+        for imp in file.imports:
+            other = file_set.resolved.get(imp)
+            if other is None:
+                continue
+            snap = other.present_at(name, snapshot)
+            if snap is not None:
+                return snap.concrete
+        return None
 
     for name in order:
         if name not in versioned:
@@ -175,7 +226,7 @@ def _plan_snapshots(
             else:
                 own_changed = key != keys[name][previous]
                 dep_changed = any(
-                    concrete[d].get(s) != concrete[d].get(previous)
+                    dep_concrete(d, s) != dep_concrete(d, previous)
                     for d in deps
                 )
                 fresh = own_changed or dep_changed

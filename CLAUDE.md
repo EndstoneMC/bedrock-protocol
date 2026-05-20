@@ -131,7 +131,15 @@
     in `schema.py`'s recursive IR (`TypeRef`, `Wire`, `Pred`) -- write that
     annotation as a string literal, e.g. `inner: "TypeRef"`.
 
-11. **Packet and type docstrings come from `Mojang/bedrock-protocol-docs`.**
+11. **Single-field gates use `= field(when=...)`, not a `with` block.** When
+    only one field is guarded by a predicate, write it inline as
+    `name: T = field(when=lambda p: ...)`. Reserve `with field(when=...):`
+    for groups of two or more fields that share the same gate, or for the
+    optional / union case the inline form does not support (see the `when`
+    docstring in `protocol/__init__.py`). A solo field inside a `with` block
+    is just noise.
+
+12. **Packet and type docstrings come from `Mojang/bedrock-protocol-docs`.**
     The docstring of a `@packet` or `@type` is the Description that
     `Mojang/bedrock-protocol-docs` gives for it -- the single source of truth
     for docstring prose. A packet with a text page under `docs/` carries its

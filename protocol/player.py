@@ -1,8 +1,9 @@
 from enum import IntEnum
 
-from protocol import bitset, field, packet, type, uvarint32, uvarint64, value
+from protocol import bitset, field, packet, type, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorUniqueID
-from protocol.common import Vec2, Vec3
+from protocol.common import BlockPos, Vec2, Vec3
+from protocol.inventory import PackedItemUseLegacyInventoryTransaction
 
 package = "bedrock.protocol"
 
@@ -37,6 +38,67 @@ class NewInteractionModel(IntEnum):
     CROSSHAIR = 1
     CLASSIC = 2
     COUNT = value(sentinel=True)
+
+
+class PlayerActionType(IntEnum):
+    START_DESTROY_BLOCK = 0
+    ABORT_DESTROY_BLOCK = 1
+    STOP_DESTROY_BLOCK = 2
+    GET_UPDATED_BLOCK = 3
+    DROP_ITEM = 4
+    START_SLEEPING = 5
+    STOP_SLEEPING = 6
+    RESPAWN = 7
+    START_JUMP = 8
+    START_SPRINTING = 9
+    STOP_SPRINTING = 10
+    START_SNEAKING = 11
+    STOP_SNEAKING = 12
+    CREATIVE_DESTROY_BLOCK = 13
+    CHANGE_DIMENSION_ACK = 14
+    START_GLIDING = 15
+    STOP_GLIDING = 16
+    DENY_DESTROY_BLOCK = 17
+    CRACK_BLOCK = 18
+    CHANGE_SKIN = 19
+    UPDATED_ENCHANTING_SEED = 20
+    START_SWIMMING = 21
+    STOP_SWIMMING = 22
+    START_SPIN_ATTACK = 23
+    STOP_SPIN_ATTACK = 24
+    INTERACT_WITH_BLOCK = 25
+    PREDICT_DESTROY_BLOCK = 26
+    CONTINUE_DESTROY_BLOCK = 27
+    START_ITEM_USE_ON = 28
+    STOP_ITEM_USE_ON = 29
+    HANDLED_TELEPORT = 30
+    MISSED_SWING = 31
+    START_CRAWLING = 32
+    STOP_CRAWLING = 33
+    START_FLYING = 34
+    STOP_FLYING = 35
+    CLIENT_ACK_SERVER_DATA = 36
+    START_USING_ITEM = 37
+    COUNT = value(sentinel=True)
+
+
+class PlayerBlockActionData:
+    action: PlayerActionType = field(type=varint32)
+    with field(
+        when=lambda p: (
+            p.action == PlayerActionType.START_DESTROY_BLOCK
+            or p.action == PlayerActionType.ABORT_DESTROY_BLOCK
+            or p.action == PlayerActionType.CRACK_BLOCK
+            or p.action == PlayerActionType.PREDICT_DESTROY_BLOCK
+            or p.action == PlayerActionType.CONTINUE_DESTROY_BLOCK
+        )
+    ):
+        block_position: BlockPos
+        face: varint32
+
+
+class PlayerBlockActions:
+    actions: list[PlayerBlockActionData] = field(prefix=varint32)
 
 
 @packet(id=144, since=388)
@@ -124,6 +186,12 @@ class PlayerAuthInputPacket:
     interact_rotation: Vec2 = field(since=748)
     client_tick: PlayerInputTick = field(since=419)
     pos_delta: Vec3 = field(since=419)
+    item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
+        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_INTERACTION),
+    )
+    player_block_actions: PlayerBlockActions = field(
+        when=lambda p: p.input_data.test(InputData.PERFORM_BLOCK_ACTIONS),
+    )
     with field(
         when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)
     ):

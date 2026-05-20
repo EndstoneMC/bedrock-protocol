@@ -14,7 +14,7 @@ for lists, endianness for scalars, ...). One tree, one walk.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Mapping
 
 # --- primitives ---------------------------------------------------------------
@@ -359,16 +359,18 @@ class File:
     declaration_order: tuple[str, ...]                     # type names in source order
 
 
-@dataclass(frozen=True)
+@dataclass
 class FileSet:
     """Every loaded file plus the subset marked for output.
 
     Analog of protoc's `DescriptorPool`, narrowed: we keep no cross-file
-    resolution machinery beyond the import dependency graph.
+    resolution machinery beyond the import dependency graph and a memo of
+    each file's `ResolvedFile` once it has been processed.
     """
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     builtins: frozenset[str]
+    resolved: dict[str, "ResolvedFile"] = field(default_factory=dict)
 
 
 # --- resolved descriptors (post-versioning) -----------------------------------
@@ -422,14 +424,39 @@ class ResolvedFile:
         return None
 
     def is_versioned(self, name: str) -> bool:
-        return name in self.versioned_types
+        if name in self.versioned_types:
+            return True
+        for imp in self.file.imports:
+            other = self.file_set.resolved.get(imp)
+            if other is not None and other.is_versioned(name):
+                return True
+        return False
 
     def snapshots_of(self, name: str) -> tuple[VersionSnapshot, ...]:
-        return self.snapshots_by_type.get(name, ())
+        own = self.snapshots_by_type.get(name)
+        if own is not None:
+            return own
+        for imp in self.file.imports:
+            other = self.file_set.resolved.get(imp)
+            if other is None:
+                continue
+            snaps = other.snapshots_of(name)
+            if snaps:
+                return snaps
+        return ()
 
     def present_at(self, name: str, snapshot: int) -> VersionSnapshot | None:
-        for s in self.snapshots_of(name):
+        # Exact-boundary match first -- that's what intra-file callers iterate.
+        # Cross-file consumers may ask about a snapshot that isn't a boundary
+        # in the producer file (e.g. PAIP at v388 referencing an inventory
+        # type whose own boundaries are {0, 685, 944}); fall through to a
+        # range lookup so they get the snapshot whose `[lo, hi)` covers it.
+        snaps = self.snapshots_of(name)
+        for s in snaps:
             if s.lo == snapshot:
+                return s
+        for s in snaps:
+            if s.lo <= snapshot and (s.hi is None or snapshot < s.hi):
                 return s
         return None
 

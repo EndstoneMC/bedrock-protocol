@@ -643,6 +643,8 @@ class _AnnotationContext:
             return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
         if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
             return Predicate("not", operands=(child(node.value),))
+        if isinstance(node, griffe.ExprBinOp) and node.operator == "&":
+            return Predicate("&", operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
@@ -675,24 +677,25 @@ class _AnnotationContext:
         earlier: frozenset[str],
     ) -> Predicate:
         parts = [str(v) for v in node.values]
-        if len(parts) != 2:
+        if len(parts) < 2:
             raise CompilerError(
                 f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is "
-                f"too deep -- use `param.field` or `Enum.MEMBER`"
+                f"too shallow -- use `param.field` or `Enum.MEMBER`"
             )
-        head, tail = parts
+        head = parts[0]
         if head == param:
-            if tail not in earlier:
+            top = parts[1]
+            if top not in earlier:
                 raise CompilerError(
-                    f"{field_name}: field(when=...) references {tail!r}, which is "
+                    f"{field_name}: field(when=...) references {top!r}, which is "
                     f"not a field declared before it"
                 )
-            return Predicate("field", text=tail)
-        if head in nested or head in self.enum_names:
-            return Predicate("enum", text=f"{head}.{tail}")
+            return Predicate("field", text=".".join(parts[1:]))
+        if len(parts) == 2 and (head in nested or head in self.enum_names):
+            return Predicate("enum", text=f"{head}.{parts[1]}")
         raise CompilerError(
-            f"{field_name}: field(when=...) reference {head!r} is neither the "
-            f"lambda parameter nor a known enum"
+            f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is "
+            f"neither a `{param}.field[.sub...]` chain nor an Enum.MEMBER"
         )
 
     def _pred_call(
@@ -935,6 +938,9 @@ def _as_int(value: object) -> int | None:
             return int(value)
         except ValueError:
             return None
+    if isinstance(value, griffe.ExprUnaryOp) and value.operator == "-":
+        inner = _as_int(value.value)
+        return None if inner is None else -inner
     return None
 
 

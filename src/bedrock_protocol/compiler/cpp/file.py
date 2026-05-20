@@ -178,6 +178,19 @@ class FileGenerator:
 
     def _emit_snapshot_namespace(self, p: Printer, snap: int) -> None:
         p(f"namespace {snapshot_namespace(snap)} {{")
+        # Pull cross-file versioned types this file references into this
+        # snapshot's namespace as `using` aliases, so the unqualified spelling
+        # `Name` inside our snapshot's struct fields resolves to the right
+        # snapshot of the foreign type instead of ADL-ing out to the global
+        # `using Name = vLatest::Name;` block.
+        for name in self._cross_file_versioned_refs():
+            view = self._resolved.present_at(name, snap)
+            if view is None:
+                continue
+            ns = snapshot_namespace(view.concrete)
+            if ns == snapshot_namespace(snap):
+                continue
+            p(f"using {name} = {ns}::{name};")
         for name in self._resolved.declaration_order:
             if not self._resolved.is_versioned(name):
                 continue
@@ -317,6 +330,17 @@ class FileGenerator:
             n for n in self._resolved.declaration_order
             if self._resolved.is_versioned(n)
         ]
+
+    def _cross_file_versioned_refs(self) -> list[str]:
+        own = set(self._resolved.declaration_order)
+        refs: set[str] = set()
+        for t in (*self._file.enums, *self._file.structs):
+            for ref in t.referenced:
+                if ref in own:
+                    continue
+                if self._resolved.is_versioned(ref):
+                    refs.add(ref)
+        return sorted(refs)
 
     def _has_namespaces(self) -> bool:
         return any(
