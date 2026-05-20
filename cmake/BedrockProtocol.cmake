@@ -167,7 +167,7 @@ function(bedrock_protocol_generate)
             OUTPUT  "${_out}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
             COMMAND ${_compiler_cmd}
-                    --out "${_out_dir}" ${_import_args}
+                    --out "cpp=${_out_dir}" ${_import_args}
                     ${BP_COMPILER_OPTIONS} "${p}"
             DEPENDS "${p}" ${_abs_inputs} ${BP_DEPENDENCIES}
                     ${_compiler_dep} ${_compiler_sources}
