@@ -4,6 +4,7 @@ from protocol import bitset, field, packet, type, uvarint32, uvarint64, value, v
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.inventory import PackedItemUseLegacyInventoryTransaction
+from protocol.item_stack_request import ItemStackRequestData
 
 package = "bedrock.protocol"
 
@@ -188,6 +189,9 @@ class PlayerAuthInputPacket:
     pos_delta: Vec3 = field(since=419)
     item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
         when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_INTERACTION),
+    )
+    item_stack_request: ItemStackRequestData = field(
+        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_STACK_REQUEST),
     )
     player_block_actions: PlayerBlockActions = field(
         when=lambda p: p.input_data.test(InputData.PERFORM_BLOCK_ACTIONS),

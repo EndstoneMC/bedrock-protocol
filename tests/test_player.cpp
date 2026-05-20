@@ -56,6 +56,37 @@ bp::PlayerAuthInputPacket withItemUse(bp::PackedItemUseLegacyInventoryTransactio
         static_cast<bp::PlayerInputTick>(7),  // client_tick
         bp::Vec3{0.0f, -0.5f, 0.0f},          // pos_delta
         std::move(iut),                       // item_use_transaction
+        bp::ItemStackRequestData{},           // item_stack_request (gated off)
+        bp::PlayerBlockActions{},             // player_block_actions (gated off)
+        bp::Vec2{},                           // vehicle_rot (gated off)
+        static_cast<bp::ActorUniqueID>(0),    // client_predicted_vehicle (gated off)
+        bp::Vec2{0.5f, 0.5f},                 // analog_move_vector
+        bp::Vec3{0.0f, 0.0f, 1.0f},           // camera_orientation
+        bp::Vec2{1.0f, -1.0f},                // raw_move_vector
+    };
+}
+
+// Mirror of withItemUse for PerformItemStackRequest. The two helpers are
+// distinct because PAIP's two gates are independent: each test only ever
+// sets one of them.
+bp::PlayerAuthInputPacket withItemStackRequest(bp::ItemStackRequestData req)
+{
+    std::bitset<65> flags;
+    flags.set(static_cast<std::size_t>(InputData::PerformItemStackRequest));
+    return bp::PlayerAuthInputPacket{
+        bp::Vec2{0.5f, 1.5f},                 // rot
+        bp::Vec3{2.0f, 65.0f, -3.5f},         // pos
+        bp::Vec2{0.25f, -0.25f},              // move
+        1.25f,                                // y_head_rot
+        flags,
+        bp::InputMode::Mouse,
+        bp::ClientPlayMode::Normal,
+        bp::NewInteractionModel::Classic,
+        bp::Vec2{0.5f, 1.5f},                 // interact_rotation
+        static_cast<bp::PlayerInputTick>(7),  // client_tick
+        bp::Vec3{0.0f, -0.5f, 0.0f},          // pos_delta
+        bp::PackedItemUseLegacyInventoryTransaction{},  // item_use_transaction (gated off)
+        std::move(req),                       // item_stack_request
         bp::PlayerBlockActions{},             // player_block_actions (gated off)
         bp::Vec2{},                           // vehicle_rot (gated off)
         static_cast<bp::ActorUniqueID>(0),    // client_predicted_vehicle (gated off)
@@ -84,6 +115,7 @@ TEST_CASE("PlayerAuthInputPacket: id + round-trip of the v766+ field set")
         static_cast<bp::PlayerInputTick>(7),  // client_tick
         bp::Vec3{0.0f, -0.5f, 0.0f},          // pos_delta
         bp::PackedItemUseLegacyInventoryTransaction{},  // item_use_transaction (gated off)
+        bp::ItemStackRequestData{},                     // item_stack_request (gated off)
         bp::PlayerBlockActions{},             // player_block_actions (gated off)
         bp::Vec2{},                           // vehicle_rot (gated off)
         static_cast<bp::ActorUniqueID>(0),    // client_predicted_vehicle (gated off)
@@ -211,6 +243,7 @@ TEST_CASE("PlayerAuthInputPacket: bitset input_data round-trip across the 64-bit
         static_cast<bp::PlayerInputTick>(0),
         bp::Vec3{},
         bp::PackedItemUseLegacyInventoryTransaction{},
+        bp::ItemStackRequestData{},
         bp::PlayerBlockActions{},
         bp::Vec2{},
         static_cast<bp::ActorUniqueID>(0),
@@ -266,6 +299,7 @@ TEST_CASE("PlayerAuthInputPacket: ClientPredictedVehicle bit gates the vehicle p
         static_cast<bp::PlayerInputTick>(7),
         bp::Vec3{0.0f, -0.5f, 0.0f},
         bp::PackedItemUseLegacyInventoryTransaction{},  // item_use_transaction (gated off)
+        bp::ItemStackRequestData{},                     // item_stack_request (gated off)
         bp::PlayerBlockActions{},                       // player_block_actions (gated off)
         bp::Vec2{45.0f, 90.0f},                         // vehicle_rot
         static_cast<bp::ActorUniqueID>(-7),  // client_predicted_vehicle
@@ -319,6 +353,7 @@ TEST_CASE("PlayerAuthInputPacket: PerformBlockActions bit gates the action list"
         static_cast<bp::PlayerInputTick>(7),
         bp::Vec3{0.0f, -0.5f, 0.0f},
         bp::PackedItemUseLegacyInventoryTransaction{},  // item_use_transaction (gated off)
+        bp::ItemStackRequestData{},                     // item_stack_request (gated off)
         bp::PlayerBlockActions{{
             // StartDestroyBlock carries pos + face
             {bp::PlayerActionType::StartDestroyBlock, bp::BlockPos{10, 70, -3}, 1},
@@ -692,4 +727,191 @@ TEST_CASE("PlayerAuthInputPacket: ItemUseTransaction non-zero trigger/prediction
     REQUIRE(rt->item_use_transaction.transaction.trigger_type == IUT::TriggerType::SimulationTick);
     REQUIRE(rt->item_use_transaction.transaction.client_interact_prediction == IUT::PredictedResult::Success);
     REQUIRE(rt->item_use_transaction.transaction.client_cooldown_state == IUT::ClientCooldownState::On);
+}
+
+// Phase C envelope goldens. The three tests below share the same v766+ PAIP
+// envelope produced by withItemStackRequest(); each diffs against the same
+// baseline `protocol.ItemStackRequest{}` gophertunnel emits, varying only the
+// envelope contents.
+
+TEST_CASE("PlayerAuthInputPacket: empty ItemStackRequest envelope")
+{
+    auto pkt = withItemStackRequest(bp::ItemStackRequestData{});
+
+    // generated by gophertunnel:
+    // packet.PlayerAuthInput{... PerformItemStackRequest bit set ...
+    //   ItemStackRequest: protocol.ItemStackRequest{} /* zero everything */}
+    const std::vector<std::uint8_t> golden{
+        0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0, 0x3F, 0x00, 0x00, 0x00, 0x40,
+        0x00, 0x00, 0x82, 0x42, 0x00, 0x00, 0x60, 0xC0, 0x00, 0x00, 0x80, 0x3E,
+        0x00, 0x00, 0x80, 0xBE, 0x00, 0x00, 0xA0, 0x3F, 0x80, 0x80, 0x80, 0x80,
+        0x80, 0x02, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0,
+        0x3F, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBF, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x3F, 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80,
+        0xBF,
+    };
+
+    std::vector<std::uint8_t> buf;
+    bp::BinaryStream out{buf};
+    bp::serialize(out, pkt);
+    REQUIRE(buf == golden);
+
+    bp::BinaryReader in{buf};
+    auto rt = bp::deserialize<bp::PlayerAuthInputPacket>(in);
+    REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
+    REQUIRE(rt->item_stack_request.client_request_id.id == 0);
+    REQUIRE(rt->item_stack_request.actions.empty());
+    REQUIRE(rt->item_stack_request.strings_to_filter.empty());
+    REQUIRE(rt->item_stack_request.strings_to_filter_origin == bp::TextProcessingEventOrigin::ServerChatPublic);
+}
+
+TEST_CASE("PlayerAuthInputPacket: ItemStackRequest with four heterogeneous actions")
+{
+    bp::ItemStackRequestData req;
+    req.client_request_id.id = 7;
+
+    bp::TakeStackRequestAction take;
+    take.count = 2;
+    take.source.container.container_name = bp::ContainerEnumName::HotbarContainer;
+    take.source.container.dynamic_id = std::nullopt;
+    take.source.slot = 0;
+    take.source.stack_network_id = 100;
+    take.destination.container.container_name = bp::ContainerEnumName::InventoryContainer;
+    take.destination.container.dynamic_id = std::nullopt;
+    take.destination.slot = 5;
+    take.destination.stack_network_id = 0;
+
+    bp::CraftRecipeStackRequestAction recipe;
+    recipe.recipe_network_id = 42;
+    recipe.number_of_crafts = 3;
+
+    bp::ScreenLabTableCombineStackRequestAction lab;
+
+    bp::CraftResultsDeprecatedStackRequestAction results;
+    results.times_crafted = 2;
+
+    req.actions = {take, recipe, lab, results};
+    req.strings_to_filter = {"hello"};
+    req.strings_to_filter_origin = bp::TextProcessingEventOrigin::AnvilText;
+
+    auto pkt = withItemStackRequest(std::move(req));
+
+    // generated by gophertunnel:
+    // protocol.ItemStackRequest{RequestID: 7, FilterStrings: []string{"hello"},
+    //   FilterCause: AnvilText, Actions: [Take{Count:2,Source:Hotbar/0/100,
+    //   Destination:Inventory/5/0}, CraftRecipe{Recipe:42, NumberOfCrafts:3},
+    //   LabTableCombine{}, CraftResultsDeprecated{TimesCrafted:2}]}
+    const std::vector<std::uint8_t> golden{
+        0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0, 0x3F, 0x00, 0x00, 0x00, 0x40,
+        0x00, 0x00, 0x82, 0x42, 0x00, 0x00, 0x60, 0xC0, 0x00, 0x00, 0x80, 0x3E,
+        0x00, 0x00, 0x80, 0xBE, 0x00, 0x00, 0xA0, 0x3F, 0x80, 0x80, 0x80, 0x80,
+        0x80, 0x02, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0,
+        0x3F, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBF, 0x00, 0x00,
+        0x00, 0x00, 0x0E, 0x04, 0x00, 0x02, 0x1C, 0x00, 0x00, 0xC8, 0x01, 0x1D,
+        0x00, 0x05, 0x00, 0x0C, 0x2A, 0x03, 0x09, 0x13, 0x00, 0x02, 0x01, 0x05,
+        0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x3F, 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80,
+        0xBF,
+    };
+
+    std::vector<std::uint8_t> buf;
+    bp::BinaryStream out{buf};
+    bp::serialize(out, pkt);
+    REQUIRE(buf == golden);
+
+    bp::BinaryReader in{buf};
+    auto rt = bp::deserialize<bp::PlayerAuthInputPacket>(in);
+    REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
+    REQUIRE(rt->item_stack_request.actions.size() == 4);
+    REQUIRE(rt->item_stack_request.actions[0].index() == 0);   // Take
+    REQUIRE(rt->item_stack_request.actions[1].index() == 12);  // CraftRecipe
+    REQUIRE(rt->item_stack_request.actions[2].index() == 9);   // LabTableCombine
+    REQUIRE(rt->item_stack_request.actions[3].index() == 19);  // CraftResultsDeprecated
+    REQUIRE(std::get<bp::TakeStackRequestAction>(rt->item_stack_request.actions[0]).count == 2);
+    REQUIRE(std::get<bp::CraftRecipeStackRequestAction>(rt->item_stack_request.actions[1]).recipe_network_id == 42);
+    REQUIRE(rt->item_stack_request.strings_to_filter == std::vector<std::string>{"hello"});
+    REQUIRE(rt->item_stack_request.strings_to_filter_origin == bp::TextProcessingEventOrigin::AnvilText);
+}
+
+TEST_CASE("PlayerAuthInputPacket: AutoCraftRecipe with all five ItemDescriptor variants")
+{
+    bp::ItemStackRequestData req{};  // value-init so strings_to_filter_origin defaults to ServerChatPublic
+    req.client_request_id.id = 11;
+
+    bp::CraftRecipeAutoStackRequestAction action;
+    action.recipe_network_id = 5;
+    action.number_of_crafts = 1;
+    action.times_crafted = 1;
+    action.ingredients = {
+        bp::ItemDescriptorCount{
+            bp::InternalItemDescriptor{static_cast<std::int16_t>(7), static_cast<std::int16_t>(0)},
+            1,
+        },
+        bp::ItemDescriptorCount{
+            bp::MolangItemDescriptor{"q.is_baby", 1},
+            2,
+        },
+        bp::ItemDescriptorCount{
+            bp::ItemTagItemDescriptor{"minecraft:planks"},
+            3,
+        },
+        bp::ItemDescriptorCount{
+            bp::DeferredItemDescriptor{"minecraft:stick", static_cast<std::int16_t>(0)},
+            4,
+        },
+        bp::ItemDescriptorCount{
+            bp::ComplexAliasItemDescriptor{"alias"},
+            5,
+        },
+    };
+
+    req.actions = {action};
+    auto pkt = withItemStackRequest(std::move(req));
+
+    // generated by gophertunnel:
+    // protocol.ItemStackRequest{RequestID: 11, Actions:
+    //   [&AutoCraftRecipe{Recipe:5, NumberOfCrafts:1, TimesCrafted:1,
+    //     Ingredients: [Default(7), MoLang("q.is_baby", v=1),
+    //                   ItemTag("minecraft:planks"),
+    //                   Deferred("minecraft:stick", 0), ComplexAlias("alias")]}]}
+    const std::vector<std::uint8_t> golden{
+        0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0, 0x3F, 0x00, 0x00, 0x00, 0x40,
+        0x00, 0x00, 0x82, 0x42, 0x00, 0x00, 0x60, 0xC0, 0x00, 0x00, 0x80, 0x3E,
+        0x00, 0x00, 0x80, 0xBE, 0x00, 0x00, 0xA0, 0x3F, 0x80, 0x80, 0x80, 0x80,
+        0x80, 0x02, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0xC0,
+        0x3F, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBF, 0x00, 0x00,
+        0x00, 0x00, 0x16, 0x01, 0x0D, 0x05, 0x01, 0x01, 0x05, 0x01, 0x07, 0x00,
+        0x00, 0x00, 0x02, 0x02, 0x09, 0x71, 0x2E, 0x69, 0x73, 0x5F, 0x62, 0x61,
+        0x62, 0x79, 0x01, 0x04, 0x03, 0x10, 0x6D, 0x69, 0x6E, 0x65, 0x63, 0x72,
+        0x61, 0x66, 0x74, 0x3A, 0x70, 0x6C, 0x61, 0x6E, 0x6B, 0x73, 0x06, 0x04,
+        0x0F, 0x6D, 0x69, 0x6E, 0x65, 0x63, 0x72, 0x61, 0x66, 0x74, 0x3A, 0x73,
+        0x74, 0x69, 0x63, 0x6B, 0x00, 0x00, 0x08, 0x05, 0x05, 0x61, 0x6C, 0x69,
+        0x61, 0x73, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3F,
+        0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0xBF,
+    };
+
+    std::vector<std::uint8_t> buf;
+    bp::BinaryStream out{buf};
+    bp::serialize(out, pkt);
+    REQUIRE(buf == golden);
+
+    bp::BinaryReader in{buf};
+    auto rt = bp::deserialize<bp::PlayerAuthInputPacket>(in);
+    REQUIRE(rt.has_value());
+    REQUIRE(in.getUnreadLength() == 0);
+    REQUIRE(rt->item_stack_request.actions.size() == 1);
+    const auto &auto_craft = std::get<bp::CraftRecipeAutoStackRequestAction>(rt->item_stack_request.actions[0]);
+    REQUIRE(auto_craft.recipe_network_id == 5);
+    REQUIRE(auto_craft.ingredients.size() == 5);
+    REQUIRE(auto_craft.ingredients[0].descriptor.index() == 1);  // Internal
+    REQUIRE(auto_craft.ingredients[1].descriptor.index() == 2);  // Molang
+    REQUIRE(auto_craft.ingredients[2].descriptor.index() == 3);  // ItemTag
+    REQUIRE(auto_craft.ingredients[3].descriptor.index() == 4);  // Deferred
+    REQUIRE(auto_craft.ingredients[4].descriptor.index() == 5);  // ComplexAlias
 }
