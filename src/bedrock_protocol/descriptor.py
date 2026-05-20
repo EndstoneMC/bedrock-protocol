@@ -1,16 +1,15 @@
 """Bedrock-protocol IR — the language-agnostic boundary between frontend and backend.
 
 This module is the analog of protoc's `descriptor.{h,cc}`. The frontend
-(`compiler.parser`) produces a `FileDescriptor`; the resolver
-(`compiler.resolver`) refines it into a `ResolvedFileDescriptor`, which is
-the only descriptor type a backend receives.
+(`compiler.parser`) produces a `File`; the resolver (`compiler.resolver`)
+refines it into a `ResolvedFile`, which is the only descriptor type a
+backend receives.
 
-Every dataclass here is frozen and read-only. A backend that wants to know
-"what is this type's shape" reads `TypeRef`; a backend that wants to know
-"how does this travel on the wire" reads `Wire`. The split is deliberate —
-the C++ backend spells `std::optional<X>` from the `TypeRef` but emits a
-one-byte presence flag from the `Wire`, and a future Python backend would
-make different choices on both.
+Every dataclass here is frozen and read-only. Each field carries a single
+`FieldType` tree that describes both the shape the user wrote (`X | None`
+→ `OptionalType`, `list[T]` → `RepeatedType`, ...) and the encoding it
+takes on the wire (presence-bit vs union-tag for optionals, length prefix
+for lists, endianness for scalars, ...). One tree, one walk.
 """
 
 from __future__ import annotations
@@ -44,79 +43,6 @@ class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
 
 
-# --- declared shape (TypeRef) -------------------------------------------------
-
-
-@dataclass(frozen=True)
-class PrimitiveRef:
-    kind: Literal["primitive"] = "primitive"
-    name: str = ""
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return frozenset()
-
-
-@dataclass(frozen=True)
-class NamedRef:
-    """Reference to a user-defined enum, struct, or alias."""
-    name: str
-    kind: Literal["named"] = "named"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return frozenset({self.name})
-
-
-@dataclass(frozen=True)
-class OptionalRef:
-    inner: "TypeRef"
-    kind: Literal["optional"] = "optional"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return self.inner.referenced
-
-
-@dataclass(frozen=True)
-class RepeatedRef:
-    """`list[T]` when `count` is None, `tuple[T, ..., T]` when set."""
-    inner: "TypeRef"
-    count: int | None
-    kind: Literal["repeated"] = "repeated"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return self.inner.referenced
-
-
-@dataclass(frozen=True)
-class MappingRef:
-    key: "TypeRef"
-    value: "TypeRef"
-    kind: Literal["mapping"] = "mapping"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return self.key.referenced | self.value.referenced
-
-
-@dataclass(frozen=True)
-class VariantRef:
-    """`std::variant`-shaped tagged union. A None arm is `std::monostate`."""
-    arms: tuple["TypeRef | None", ...]
-    kind: Literal["variant"] = "variant"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return frozenset().union(
-            *(a.referenced for a in self.arms if a is not None)
-        )
-
-
-TypeRef = PrimitiveRef | NamedRef | OptionalRef | RepeatedRef | MappingRef | VariantRef
-
-
 # --- predicate trees ---------------------------------------------------------
 
 
@@ -132,75 +58,115 @@ class Predicate:
     operands: tuple["Predicate", ...] = ()
 
 
-# --- on-the-wire encoding (Wire) ---------------------------------------------
+# --- field type tree ---------------------------------------------------------
 
 
 @dataclass(frozen=True)
-class ScalarWire:
-    primitive: str
-    varint: bool
+class PrimitiveType:
+    """A DSL primitive. `str` / `bytes` are length-prefixed; the rest are
+    fixed-width or varint (varint-ness derives from `name in VARINT_PRIMITIVES`).
+    `big_endian` only applies to fixed-width numeric primitives.
+
+    `alias` is set when this field references a `type Name = <primitive>`
+    declaration: `name` still drives the wire encoding (so a `Color = int32`
+    serializes as `int32`), but a backend spells the field with the alias
+    name (so the C++ field type is `Color`, not `std::int32_t`).
+    """
+    name: str
     big_endian: bool = False
-    kind: Literal["scalar"] = "scalar"
+    alias: str | None = None
+    kind: Literal["primitive"] = "primitive"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset({self.alias}) if self.alias is not None else frozenset()
 
 
 @dataclass(frozen=True)
-class StringWire:
-    """A varuint32 length prefix followed by raw bytes."""
-    kind: Literal["string"] = "string"
-
-
-@dataclass(frozen=True)
-class StructWire:
+class StructType:
+    """A reference to a user-defined struct."""
     name: str
     kind: Literal["struct"] = "struct"
 
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset({self.name})
+
 
 @dataclass(frozen=True)
-class EnumWire:
-    """`scalar` None → name-coded; set → integer-coded over that scalar."""
+class EnumType:
+    """A reference to a user-defined enum. `scalar=None` means name-coded
+    (string on the wire); `scalar` set means integer-coded over that
+    primitive."""
     name: str
-    scalar: ScalarWire | None
+    scalar: PrimitiveType | None
     kind: Literal["enum"] = "enum"
 
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset({self.name})
+
 
 @dataclass(frozen=True)
-class OptionalWire:
-    """`discriminator` False → one-byte bool flag; True → varuint union tag.
+class OptionalType:
+    """`discriminator=False` → one-byte bool flag; True → varuint union tag.
 
     With a union tag, `present_tag` is the tag value that means "payload
     follows" (0 for `T | None`, 1 for `None | T`).
     """
-    inner: "Wire"
-    discriminator: bool
+    inner: "FieldType"
+    discriminator: bool = False
     present_tag: int = 0
     kind: Literal["optional"] = "optional"
 
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
+
 
 @dataclass(frozen=True)
-class RepeatedWire:
-    inner: "Wire"
-    prefix: ScalarWire | None
-    count: int | None
+class RepeatedType:
+    """`list[T]` when `count` is None and `prefix` carries the length wire;
+    `tuple[T, ..., T]` when `count` is set and `prefix` is None (fixed array)."""
+    inner: "FieldType"
+    count: int | None = None
+    prefix: PrimitiveType | None = None
     kind: Literal["repeated"] = "repeated"
 
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
+
 
 @dataclass(frozen=True)
-class MappingWire:
-    key: "Wire"
-    value: "Wire"
-    prefix: ScalarWire
+class MappingType:
+    """Length-prefixed map of key/value pairs."""
+    key: "FieldType"
+    value: "FieldType"
+    prefix: PrimitiveType
     kind: Literal["mapping"] = "mapping"
 
-
-@dataclass(frozen=True)
-class SwitchWire:
-    """varuint32-tagged union. A None arm carries no payload."""
-    arms: tuple["Wire | None", ...]
-    kind: Literal["switch"] = "switch"
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.key.referenced | self.value.referenced
 
 
 @dataclass(frozen=True)
-class CondWire:
+class VariantType:
+    """`std::variant`-shaped tagged union with a varuint32 tag. A None arm
+    carries no payload (`std::monostate` in C++)."""
+    arms: tuple["FieldType | None", ...]
+    kind: Literal["variant"] = "variant"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset().union(
+            *(a.referenced for a in self.arms if a is not None)
+        )
+
+
+@dataclass(frozen=True)
+class CondType:
     """Field present only when `predicate` holds against earlier fields.
     No presence marker on the wire — both sides recompute it.
 
@@ -208,15 +174,19 @@ class CondWire:
     from; fields sharing it form one guarded region. None is a lone
     `field(when=)`.
     """
-    inner: "Wire"
+    inner: "FieldType"
     predicate: Predicate
     group: int | None = None
     kind: Literal["cond"] = "cond"
 
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
 
-Wire = (
-    ScalarWire | StringWire | StructWire | EnumWire | OptionalWire
-    | RepeatedWire | MappingWire | SwitchWire | CondWire
+
+FieldType = (
+    PrimitiveType | StructType | EnumType | OptionalType | RepeatedType
+    | MappingType | VariantType | CondType
 )
 
 
@@ -224,7 +194,7 @@ Wire = (
 
 
 @dataclass(frozen=True)
-class EnumValueDescriptor:
+class EnumValue:
     name: str
     number: int
     since: int | None
@@ -237,9 +207,9 @@ class EnumValueDescriptor:
 
 
 @dataclass(frozen=True)
-class EnumDescriptor:
+class Enum:
     name: str
-    values: tuple[EnumValueDescriptor, ...]
+    values: tuple[EnumValue, ...]
     since: int | None = None
 
     @property
@@ -260,51 +230,43 @@ class EnumDescriptor:
 
 
 @dataclass(frozen=True)
-class FieldEraDescriptor:
-    """One version era of a field — its declared shape and wire encoding
-    over the half-open protocol range `[since, until)`. A field with a
-    single, version-invariant shape has one era; one redeclared per era
-    has one entry per declaration.
+class FieldVersion:
+    """One version of a field — its declared type tree over the half-open
+    protocol range `[since, until)`. A field with a single, version-invariant
+    shape has one entry; a redeclared field has one entry per declaration.
     """
-    type_ref: TypeRef | None
-    wire: Wire | None
+    type: FieldType | None
     since: int | None
     until: int | None
 
 
 @dataclass(frozen=True)
-class FieldDescriptor:
+class Field:
     name: str
-    eras: tuple[FieldEraDescriptor, ...]
+    versions: tuple[FieldVersion, ...]
 
-    def era_at(self, snapshot: int) -> FieldEraDescriptor | None:
-        for era in self.eras:
-            lo = era.since or 0
-            if lo <= snapshot and (era.until is None or snapshot < era.until):
-                return era
+    def version_at(self, snapshot: int) -> FieldVersion | None:
+        for version in self.versions:
+            lo = version.since or 0
+            if lo <= snapshot and (version.until is None or snapshot < version.until):
+                return version
         return None
 
     def present_at(self, snapshot: int) -> bool:
-        return self.era_at(snapshot) is not None
+        return self.version_at(snapshot) is not None
 
     @property
-    def type_ref_single(self) -> TypeRef | None:
-        """Declared shape of a single-era field. Caller asserts the field has one era."""
-        (era,) = self.eras
-        return era.type_ref
-
-    @property
-    def wire_single(self) -> Wire | None:
-        """Wire encoding of a single-era field. Caller asserts the field has one era."""
-        (era,) = self.eras
-        return era.wire
+    def type_single(self) -> FieldType | None:
+        """Type tree of a single-version field. Caller asserts the field has one version."""
+        (version,) = self.versions
+        return version.type
 
 
 @dataclass(frozen=True)
-class StructDescriptor:
+class Struct:
     name: str
-    fields: tuple[FieldDescriptor, ...]
-    nested_enums: tuple[EnumDescriptor, ...]
+    fields: tuple[Field, ...]
+    nested_enums: tuple[Enum, ...]
     packet_id: int | None
     since: int | None = None
 
@@ -312,10 +274,10 @@ class StructDescriptor:
     def referenced(self) -> frozenset[str]:
         return frozenset().union(
             *(
-                era.type_ref.referenced
+                version.type.referenced
                 for f in self.fields
-                for era in f.eras
-                if era.type_ref is not None
+                for version in f.versions
+                if version.type is not None
             )
         )
 
@@ -325,16 +287,16 @@ class StructDescriptor:
         if self.since is not None:
             points.add(self.since)
         for f in self.fields:
-            for era in f.eras:
-                if era.since is not None:
-                    points.add(era.since)
-                if era.until is not None:
-                    points.add(era.until)
+            for version in f.versions:
+                if version.since is not None:
+                    points.add(version.since)
+                if version.until is not None:
+                    points.add(version.until)
         return frozenset(points)
 
 
 @dataclass(frozen=True)
-class PrimitiveAliasDescriptor:
+class PrimitiveAlias:
     """`type Name = <primitive>`. Rendered as `enum Name : ctype {}` in C++:
     a distinct integer type wire-compatible with the underlying primitive,
     so a user may specialize `Serializer<Name>` apart from the primitive's."""
@@ -343,16 +305,15 @@ class PrimitiveAliasDescriptor:
 
 
 @dataclass(frozen=True)
-class TypeAliasDescriptor:
+class TypeAlias:
     """`type Name = <non-primitive>`. Rendered as `using Name = ctype` in
-    C++; `target` is the declared shape and `wire` its encoding."""
+    C++; `target` is the single field-type tree."""
     name: str
-    target: TypeRef
-    wire: Wire
+    target: FieldType
 
 
 @dataclass(frozen=True)
-class FileDescriptor:
+class File:
     """One `.py` file's contribution to the schema.
 
     `imports` carry dotted names of other loaded files this one draws types
@@ -362,10 +323,10 @@ class FileDescriptor:
     name: str                                              # dotted module name
     stem: str                                              # output filename stem
     package: str | None                                    # output namespace
-    enums: tuple[EnumDescriptor, ...]
-    structs: tuple[StructDescriptor, ...]
-    primitive_aliases: tuple[PrimitiveAliasDescriptor, ...]
-    type_aliases: tuple[TypeAliasDescriptor, ...]
+    enums: tuple[Enum, ...]
+    structs: tuple[Struct, ...]
+    primitive_aliases: tuple[PrimitiveAlias, ...]
+    type_aliases: tuple[TypeAlias, ...]
     imports: tuple[str, ...]
     declaration_order: tuple[str, ...]                     # type names in source order
 
@@ -377,7 +338,7 @@ class FileSet:
     Analog of protoc's `DescriptorPool`, narrowed: we keep no cross-file
     resolution machinery beyond the import dependency graph.
     """
-    files: Mapping[str, FileDescriptor]
+    files: Mapping[str, File]
     outputs: tuple[str, ...]
     builtins: frozenset[str]
 
@@ -387,7 +348,7 @@ class FileSet:
 
 @dataclass(frozen=True)
 class VersionSnapshot:
-    """One version era of a type. `lo` is `since` (inclusive), `hi` is
+    """One version of a type. `lo` is `since` (inclusive), `hi` is
     `until` (exclusive); `hi=None` means "open-ended". `is_fresh` marks
     snapshots whose definition is a new shape rather than a re-use.
     """
@@ -395,25 +356,25 @@ class VersionSnapshot:
     hi: int | None
     is_fresh: bool
     concrete: int                                          # snapshot where this shape was first emitted
-    enum: EnumDescriptor | None = None                     # narrowed view if this type is an enum
-    struct: StructDescriptor | None = None                 # narrowed view if this type is a struct
+    enum: Enum | None = None                               # narrowed view if this type is an enum
+    struct: Struct | None = None                           # narrowed view if this type is a struct
 
 
 @dataclass(frozen=True)
-class ResolvedFileDescriptor:
+class ResolvedFile:
     """The post-resolver boundary delivered to backends.
 
     Carries everything the frontend has resolved on behalf of the backend:
     version snapshots, topological order, the FileSet for cross-file lookup.
     """
-    file: FileDescriptor
+    file: File
     file_set: FileSet
     declaration_order: tuple[str, ...]                     # versioned topo order
     versioned_types: frozenset[str]
     snapshots: tuple[int, ...]                             # global snapshot points
     snapshots_by_type: Mapping[str, tuple[VersionSnapshot, ...]]
 
-    def lookup(self, name: str) -> EnumDescriptor | StructDescriptor | None:
+    def lookup(self, name: str) -> Enum | Struct | None:
         for e in self.file.enums:
             if e.name == name:
                 return e

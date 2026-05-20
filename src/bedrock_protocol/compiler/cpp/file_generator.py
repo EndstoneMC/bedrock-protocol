@@ -1,39 +1,31 @@
-"""Lower a `ResolvedFileDescriptor` into a `RenderedFile` the Jinja
-templates print. All C++-specific decisions — type spelling, namespace
-layout, serializer bodies — live here.
+"""Lower a `ResolvedFile` into a `RenderedFile` the Jinja templates print.
+All C++-specific decisions — type spelling, namespace layout, serializer
+bodies — live here.
 """
 
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from ...descriptor import (
+    VARINT_PRIMITIVES,
     CompilerError,
-    CondWire,
-    EnumDescriptor,
-    EnumValueDescriptor,
-    EnumWire,
-    FieldDescriptor,
-    MappingRef,
-    MappingWire,
-    NamedRef,
-    OptionalRef,
-    OptionalWire,
+    CondType,
+    Enum,
+    EnumType,
+    Field,
+    FieldType,
+    MappingType,
+    OptionalType,
     Predicate,
-    PrimitiveRef,
-    RepeatedRef,
-    RepeatedWire,
-    ResolvedFileDescriptor,
-    ScalarWire,
-    StringWire,
-    StructDescriptor,
-    StructWire,
-    SwitchWire,
-    TypeAliasDescriptor,
-    TypeRef,
-    VariantRef,
+    PrimitiveType,
+    RepeatedType,
+    ResolvedFile,
+    Struct,
+    StructType,
+    TypeAlias,
+    VariantType,
     VersionSnapshot,
-    Wire,
 )
 from .code_buffer import CodeBuffer
 from .names import PRIMITIVE_TYPES, camel, requires_clause, snapshot_namespace
@@ -49,9 +41,9 @@ from .render import (
 
 
 class FileGenerator:
-    """One `ResolvedFileDescriptor` → one `RenderedFile`."""
+    """One `ResolvedFile` → one `RenderedFile`."""
 
-    def __init__(self, resolved: ResolvedFileDescriptor) -> None:
+    def __init__(self, resolved: ResolvedFile) -> None:
         self._resolved = resolved
         self._file = resolved.file
         self._file_set = resolved.file_set
@@ -80,10 +72,10 @@ class FileGenerator:
 
     def render(self, latest_version: int) -> RenderedFile:
         file = self._file
-        all_types: tuple[EnumDescriptor | StructDescriptor, ...] = (
+        all_types: tuple[Enum | Struct, ...] = (
             *file.enums, *file.structs,
         )
-        by_name: dict[str, EnumDescriptor | StructDescriptor] = {
+        by_name: dict[str, Enum | Struct] = {
             t.name: t for t in all_types
         }
 
@@ -182,21 +174,21 @@ class FileGenerator:
     # --- type definitions ----------------------------------------------------
 
     def _definition(
-        self, t: EnumDescriptor | StructDescriptor
+        self, t: Enum | Struct
     ) -> RenderEnum | RenderStruct:
-        if isinstance(t, EnumDescriptor):
+        if isinstance(t, Enum):
             return self._enum_def(t)
         return self._struct_def(t)
 
-    def _enum_def(self, e: EnumDescriptor) -> RenderEnum:
+    def _enum_def(self, e: Enum) -> RenderEnum:
         return RenderEnum(e.name, [(camel(v.name), v.number) for v in e.values])
 
-    def _struct_def(self, s: StructDescriptor) -> RenderStruct:
+    def _struct_def(self, s: Struct) -> RenderStruct:
         nested = frozenset(e.name for e in s.nested_enums)
         rendered: list[tuple[str, str]] = []
         for f in s.fields:
-            (era,) = f.eras
-            ctype = self._cpp_type(era.type_ref, nested) if era.type_ref is not None else None
+            (version,) = f.versions
+            ctype = self._cpp_type(version.type, nested) if version.type is not None else None
             if ctype is None:
                 # Unresolvable field — degrade to a bare struct.
                 return RenderStruct(s.name, [], [], [])
@@ -207,35 +199,37 @@ class FileGenerator:
         nested_defs = [self._enum_def(e) for e in s.nested_enums]
         return RenderStruct(s.name, nested_defs, constants, rendered)
 
-    def _cpp_type(self, type_ref: TypeRef | None, nested: frozenset[str]) -> str | None:
-        if type_ref is None:
+    def _cpp_type(self, t: FieldType | None, nested: frozenset[str]) -> str | None:
+        if t is None:
             return None
-        if isinstance(type_ref, PrimitiveRef):
-            return PRIMITIVE_TYPES.get(type_ref.name)
-        if isinstance(type_ref, NamedRef):
-            name = type_ref.name
+        if isinstance(t, PrimitiveType):
+            if t.alias is not None:
+                return t.alias
+            return PRIMITIVE_TYPES.get(t.name)
+        if isinstance(t, (StructType, EnumType)):
+            name = t.name
             if name in nested or name in self._known or name in self._builtins:
                 return name
             return None
-        if isinstance(type_ref, OptionalRef):
-            inner = self._cpp_type(type_ref.inner, nested)
+        if isinstance(t, OptionalType):
+            inner = self._cpp_type(t.inner, nested)
             return None if inner is None else f"std::optional<{inner}>"
-        if isinstance(type_ref, RepeatedRef):
-            inner = self._cpp_type(type_ref.inner, nested)
+        if isinstance(t, RepeatedType):
+            inner = self._cpp_type(t.inner, nested)
             if inner is None:
                 return None
-            if type_ref.count is None:
+            if t.count is None:
                 return f"std::vector<{inner}>"
-            return f"std::array<{inner}, {type_ref.count}>"
-        if isinstance(type_ref, MappingRef):
-            key = self._cpp_type(type_ref.key, nested)
-            value = self._cpp_type(type_ref.value, nested)
+            return f"std::array<{inner}, {t.count}>"
+        if isinstance(t, MappingType):
+            key = self._cpp_type(t.key, nested)
+            value = self._cpp_type(t.value, nested)
             if key is None or value is None:
                 return None
             return f"std::map<{key}, {value}>"
-        if isinstance(type_ref, VariantRef):
+        if isinstance(t, VariantType):
             parts: list[str] = []
-            for arm in type_ref.arms:
+            for arm in t.arms:
                 if arm is None:
                     parts.append("std::monostate")
                     continue
@@ -244,12 +238,14 @@ class FileGenerator:
                     return None
                 parts.append(arm_type)
             return f"std::variant<{', '.join(parts)}>"
+        if isinstance(t, CondType):
+            return self._cpp_type(t.inner, nested)
         return None
 
     # --- serializers ---------------------------------------------------------
 
     def _serializers(
-        self, by_name: dict[str, EnumDescriptor | StructDescriptor]
+        self, by_name: dict[str, Enum | Struct]
     ) -> list[RenderSerializer]:
         string_coded = self._string_coded_enums()
         out: list[RenderSerializer] = []
@@ -259,7 +255,7 @@ class FileGenerator:
                 fresh = self._resolved.fresh_snapshots(name)
             else:
                 fresh = ()
-            if isinstance(t, EnumDescriptor):
+            if isinstance(t, Enum):
                 if name not in string_coded:
                     continue
                 if not fresh:
@@ -278,7 +274,7 @@ class FileGenerator:
                         if rendered is not None:
                             out.append(rendered)
         for a in self._file.type_aliases:
-            if isinstance(a.target, VariantRef):
+            if isinstance(a.target, VariantType):
                 out.append(self._variant_alias_serializer(a))
         return out
 
@@ -292,18 +288,18 @@ class FileGenerator:
         out: set[str] = set()
         for struct in self._file.structs:
             for f in struct.fields:
-                for era in f.eras:
-                    w = era.wire
-                    while isinstance(w, (OptionalWire, CondWire)):
-                        w = w.inner
-                    if isinstance(w, EnumWire) and w.scalar is None:
-                        out.add(w.name)
+                for version in f.versions:
+                    t = version.type
+                    while isinstance(t, (OptionalType, CondType)):
+                        t = t.inner
+                    if isinstance(t, EnumType) and t.scalar is None:
+                        out.add(t.name)
         return frozenset(out)
 
     def _struct_serializer(
         self,
-        struct: StructDescriptor,
-        view: StructDescriptor | None,
+        struct: Struct,
+        view: Struct | None,
         snapshot: int | None = None,
     ) -> RenderSerializer | None:
         if view is None:
@@ -313,61 +309,61 @@ class FileGenerator:
             assert snapshot is not None
             fields = view.fields
             qualified = f"{snapshot_namespace(snapshot)}::{struct.name}"
-        wired: list[tuple[FieldDescriptor, Wire]] = []
+        typed: list[tuple[Field, FieldType]] = []
         for f in fields:
-            w = f.wire_single
-            if w is None:
+            t = f.type_single
+            if t is None:
                 return None
-            wired.append((f, w))
+            typed.append((f, t))
         self._snapshot, self._owner_qualified = snapshot, qualified
         self._nested_enums = frozenset(e.name for e in struct.nested_enums)
-        groups = _field_groups(wired)
+        groups = _field_groups(typed)
 
         serialize = CodeBuffer()
         for guard, group in groups:
             if guard is None:
-                ((f, w),) = group
-                self._emit_write(serialize, f.type_ref_single, w, f"value.{f.name}")
+                ((f, t),) = group
+                self._emit_write(serialize, t, f"value.{f.name}")
                 continue
             with serialize.block(f"if ({self._render_predicate(guard, 'value')})"):
-                for f, w in group:
-                    assert isinstance(w, CondWire)
-                    self._emit_write(serialize, f.type_ref_single, w.inner, f"value.{f.name}")
+                for f, t in group:
+                    assert isinstance(t, CondType)
+                    self._emit_write(serialize, t.inner, f"value.{f.name}")
 
         deserialize = CodeBuffer()
         deserialize(f"{qualified} out;")
         for guard, group in groups:
             if guard is None:
-                ((f, w),) = group
+                ((f, t),) = group
                 with deserialize.block():
-                    self._emit_read(deserialize, f.type_ref_single, w, f"out.{f.name}")
+                    self._emit_read(deserialize, t, f"out.{f.name}")
                 continue
             with deserialize.block(f"if ({self._render_predicate(guard, 'out')})"):
-                for f, w in group:
-                    assert isinstance(w, CondWire)
+                for f, t in group:
+                    assert isinstance(t, CondType)
                     with deserialize.block():
-                        self._emit_read(deserialize, f.type_ref_single, w.inner, f"out.{f.name}")
+                        self._emit_read(deserialize, t.inner, f"out.{f.name}")
         deserialize("return out;")
         return RenderSerializer(
             qualified, f"const {qualified} &value", serialize.lines, deserialize.lines
         )
 
-    def _variant_alias_serializer(self, a: TypeAliasDescriptor) -> RenderSerializer:
+    def _variant_alias_serializer(self, a: TypeAlias) -> RenderSerializer:
         self._snapshot, self._owner_qualified, self._nested_enums = (
             None, a.name, frozenset()
         )
         serialize = CodeBuffer()
-        self._emit_write(serialize, a.target, a.wire, "value")
+        self._emit_write(serialize, a.target, "value")
         deserialize = CodeBuffer()
         deserialize(f"{a.name} out;")
-        self._emit_read(deserialize, a.target, a.wire, "out")
+        self._emit_read(deserialize, a.target, "out")
         deserialize("return out;")
         return RenderSerializer(
             a.name, f"const {a.name} &value", serialize.lines, deserialize.lines
         )
 
     def _enum_serializer(
-        self, enum: EnumDescriptor, snapshot: int | None
+        self, enum: Enum, snapshot: int | None
     ) -> RenderSerializer:
         if snapshot is None:
             values, qualified = enum.values, enum.name
@@ -398,100 +394,98 @@ class FileGenerator:
     # --- serialize body emission --------------------------------------------
 
     def _emit_write(
-        self, code: CodeBuffer, type_ref: TypeRef | None, wire: Wire, expr: str
+        self, code: CodeBuffer, t: FieldType, expr: str
     ) -> None:
-        if isinstance(wire, ScalarWire):
-            code(_scalar_write(wire, expr))
-        elif isinstance(wire, StringWire):
-            code(f"stream.write({expr});")
-        elif isinstance(wire, StructWire):
-            code(f"Serializer<{self._type_at(wire.name)}>::serialize(stream, {expr});")
-        elif isinstance(wire, EnumWire):
-            if wire.scalar is None:
-                code(f"Serializer<{self._type_at(wire.name)}>::serialize(stream, {expr});")
+        if isinstance(t, PrimitiveType):
+            code(_primitive_write(t, expr))
+        elif isinstance(t, StructType):
+            code(f"Serializer<{self._type_at(t.name)}>::serialize(stream, {expr});")
+        elif isinstance(t, EnumType):
+            if t.scalar is None:
+                code(f"Serializer<{self._type_at(t.name)}>::serialize(stream, {expr});")
             else:
-                code(_scalar_write(wire.scalar, expr))
-        elif isinstance(wire, OptionalWire):
-            if wire.discriminator:
+                code(_primitive_write(t.scalar, expr))
+        elif isinstance(t, OptionalType):
+            if t.discriminator:
                 code(
                     f"stream.writeVarInt<std::uint32_t>"
-                    f"({expr}.has_value() ? {wire.present_tag}u : {1 - wire.present_tag}u);"
+                    f"({expr}.has_value() ? {t.present_tag}u : {1 - t.present_tag}u);"
                 )
             else:
                 code(f"stream.write<bool>({expr}.has_value());")
-            assert isinstance(type_ref, OptionalRef)
             with code.block(f"if ({expr}.has_value())"):
-                self._emit_write(code, type_ref.inner, wire.inner, f"*{expr}")
-        elif isinstance(wire, RepeatedWire):
-            assert isinstance(type_ref, RepeatedRef)
+                self._emit_write(code, t.inner, f"*{expr}")
+        elif isinstance(t, RepeatedType):
             depth = self._loop_depth
             self._loop_depth += 1
-            if wire.prefix is not None:
-                code(_scalar_write(wire.prefix, f"{expr}.size()"))
+            if t.prefix is not None:
+                code(_primitive_write(t.prefix, f"{expr}.size()"))
             with code.block(f"for (const auto &e{depth} : {expr})"):
-                self._emit_write(code, type_ref.inner, wire.inner, f"e{depth}")
+                self._emit_write(code, t.inner, f"e{depth}")
             self._loop_depth -= 1
-        elif isinstance(wire, MappingWire):
-            assert isinstance(type_ref, MappingRef)
+        elif isinstance(t, MappingType):
             depth = self._loop_depth
             self._loop_depth += 1
-            code(_scalar_write(wire.prefix, f"{expr}.size()"))
+            code(_primitive_write(t.prefix, f"{expr}.size()"))
             with code.block(f"for (const auto &[k{depth}, v{depth}] : {expr})"):
-                self._emit_write(code, type_ref.key, wire.key, f"k{depth}")
-                self._emit_write(code, type_ref.value, wire.value, f"v{depth}")
+                self._emit_write(code, t.key, f"k{depth}")
+                self._emit_write(code, t.value, f"v{depth}")
             self._loop_depth -= 1
-        elif isinstance(wire, SwitchWire):
-            assert isinstance(type_ref, VariantRef)
+        elif isinstance(t, VariantType):
             code(f"stream.writeVarInt<std::uint32_t>(({expr}).index());")
             with code.block(f"switch (({expr}).index())"):
-                for index, arm in enumerate(wire.arms):
+                for index, arm in enumerate(t.arms):
                     with code.block(f"case {index}:"):
                         if arm is not None:
                             self._emit_write(
-                                code, type_ref.arms[index], arm,
-                                f"std::get<{index}>({expr})",
+                                code, arm, f"std::get<{index}>({expr})"
                             )
                         code("break;")
+        elif isinstance(t, CondType):
+            # Reached only at the top of a struct walk; the caller has
+            # already opened the guarded `if` block.
+            self._emit_write(code, t.inner, expr)
 
     def _emit_read(
-        self, code: CodeBuffer, type_ref: TypeRef | None, wire: Wire, target: str
+        self, code: CodeBuffer, t: FieldType, target: str
     ) -> None:
-        if isinstance(wire, ScalarWire):
-            _scalar_read(code, wire)
-            cast = self._cpp_type(type_ref, self._nested_enums)
-            code(f"{target} = static_cast<{cast}>(*v);")
-        elif isinstance(wire, StringWire):
-            code("auto v = stream.read<std::string>();")
+        if isinstance(t, PrimitiveType):
+            _primitive_read(code, t)
+            if t.name in ("str", "bytes") and t.alias is None:
+                code(f"{target} = *v;")
+            else:
+                cast = self._cpp_type(t, self._nested_enums)
+                code(f"{target} = static_cast<{cast}>(*v);")
+        elif isinstance(t, StructType):
+            code(f"auto v = Serializer<{self._type_at(t.name)}>::deserialize(stream);")
             code("if (!v) return make_unexpected(v.error());")
             code(f"{target} = *v;")
-        elif isinstance(wire, StructWire):
-            code(f"auto v = Serializer<{self._type_at(wire.name)}>::deserialize(stream);")
-            code("if (!v) return make_unexpected(v.error());")
-            code(f"{target} = *v;")
-        elif isinstance(wire, EnumWire):
-            if wire.scalar is None:
-                code(f"auto v = Serializer<{self._type_at(wire.name)}>::deserialize(stream);")
+        elif isinstance(t, EnumType):
+            if t.scalar is None:
+                code(f"auto v = Serializer<{self._type_at(t.name)}>::deserialize(stream);")
                 code("if (!v) return make_unexpected(v.error());")
                 code(f"{target} = *v;")
             else:
-                _scalar_read(code, wire.scalar)
-                code(f"{target} = static_cast<{self._type_at(wire.name)}>(*v);")
-        elif isinstance(wire, OptionalWire):
-            holder = "tag" if wire.discriminator else "present"
-            verb = "readVarInt<std::uint32_t>" if wire.discriminator else "read<bool>"
-            guard = f"*tag == {wire.present_tag}" if wire.discriminator else "*present"
+                _primitive_read(code, t.scalar)
+                code(f"{target} = static_cast<{self._type_at(t.name)}>(*v);")
+        elif isinstance(t, OptionalType):
+            holder = "tag" if t.discriminator else "present"
+            verb = "readVarInt<std::uint32_t>" if t.discriminator else "read<bool>"
+            guard = f"*tag == {t.present_tag}" if t.discriminator else "*present"
             code(f"auto {holder} = stream.{verb}();")
             code(f"if (!{holder}) return make_unexpected({holder}.error());")
-            assert isinstance(type_ref, OptionalRef)
             with code.block(f"if ({guard})"):
-                self._emit_read(code, type_ref.inner, wire.inner, target)
-        elif isinstance(wire, RepeatedWire):
-            assert isinstance(type_ref, RepeatedRef)
+                self._emit_read(code, t.inner, target)
+        elif isinstance(t, RepeatedType):
             depth = self._loop_depth
             self._loop_depth += 1
-            if wire.prefix is not None:
-                u = PRIMITIVE_TYPES[wire.prefix.primitive]
-                verb = f"readVarInt<{u}>" if wire.prefix.varint else f"read<{u}>"
+            if t.prefix is not None:
+                u = PRIMITIVE_TYPES[t.prefix.name]
+                verb = (
+                    f"readVarInt<{u}>"
+                    if t.prefix.name in VARINT_PRIMITIVES
+                    else f"read<{u}>"
+                )
                 code(f"auto len{depth} = stream.{verb}();")
                 code(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
                 code(f"{target}.clear();")
@@ -501,21 +495,24 @@ class FileGenerator:
                 )
                 with code.block(head):
                     code(f"{target}.emplace_back();")
-                    self._emit_read(code, type_ref.inner, wire.inner, f"{target}.back()")
+                    self._emit_read(code, t.inner, f"{target}.back()")
             else:
                 head = (
                     f"for (std::size_t i{depth} = 0; "
-                    f"i{depth} < {wire.count}; ++i{depth})"
+                    f"i{depth} < {t.count}; ++i{depth})"
                 )
                 with code.block(head):
-                    self._emit_read(code, type_ref.inner, wire.inner, f"{target}[i{depth}]")
+                    self._emit_read(code, t.inner, f"{target}[i{depth}]")
             self._loop_depth -= 1
-        elif isinstance(wire, MappingWire):
-            assert isinstance(type_ref, MappingRef)
+        elif isinstance(t, MappingType):
             depth = self._loop_depth
             self._loop_depth += 1
-            u = PRIMITIVE_TYPES[wire.prefix.primitive]
-            verb = f"readVarInt<{u}>" if wire.prefix.varint else f"read<{u}>"
+            u = PRIMITIVE_TYPES[t.prefix.name]
+            verb = (
+                f"readVarInt<{u}>"
+                if t.prefix.name in VARINT_PRIMITIVES
+                else f"read<{u}>"
+            )
             code(f"auto len{depth} = stream.{verb}();")
             code(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
             code(f"{target}.clear();")
@@ -527,23 +524,22 @@ class FileGenerator:
             with code.block(head):
                 code(f"{holder}::key_type k{depth}{{}};")
                 with code.block():
-                    self._emit_read(code, type_ref.key, wire.key, f"k{depth}")
+                    self._emit_read(code, t.key, f"k{depth}")
                 code(f"{holder}::mapped_type v{depth}{{}};")
                 with code.block():
-                    self._emit_read(code, type_ref.value, wire.value, f"v{depth}")
+                    self._emit_read(code, t.value, f"v{depth}")
                 code(f"{target}.emplace(k{depth}, v{depth});")
             self._loop_depth -= 1
-        elif isinstance(wire, SwitchWire):
-            assert isinstance(type_ref, VariantRef)
+        elif isinstance(t, VariantType):
             depth = self._loop_depth
             self._loop_depth += 1
-            vartype = self._cpp_type(type_ref, self._nested_enums)
+            vartype = self._cpp_type(t, self._nested_enums)
             assert vartype is not None
             code(f"auto tag{depth} = stream.readVarInt<std::uint32_t>();")
             code(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
             code(f"{vartype} var{depth}{{}};")
             with code.block(f"switch (*tag{depth})"):
-                for index, arm in enumerate(wire.arms):
+                for index, arm in enumerate(t.arms):
                     with code.block(f"case {index}:"):
                         code(
                             f"std::variant_alternative_t<{index}, {vartype}> "
@@ -551,9 +547,7 @@ class FileGenerator:
                         )
                         if arm is not None:
                             with code.block():
-                                self._emit_read(
-                                    code, type_ref.arms[index], arm, f"arm{depth}"
-                                )
+                                self._emit_read(code, arm, f"arm{depth}")
                         code(f"var{depth}.emplace<{index}>(arm{depth});")
                         code("break;")
                 with code.block("default:"):
@@ -563,6 +557,8 @@ class FileGenerator:
                     )
             code(f"{target} = var{depth};")
             self._loop_depth -= 1
+        elif isinstance(t, CondType):
+            self._emit_read(code, t.inner, target)
 
     # --- helpers -------------------------------------------------------------
 
@@ -601,45 +597,50 @@ def _next_fresh_lo(fresh: Sequence[VersionSnapshot], i: int) -> int | None:
 
 
 def _field_groups(
-    wired: list[tuple[FieldDescriptor, Wire]],
-) -> list[tuple[Predicate | None, list[tuple[FieldDescriptor, Wire]]]]:
+    typed: list[tuple[Field, FieldType]],
+) -> list[tuple[Predicate | None, list[tuple[Field, FieldType]]]]:
     """Partition a struct's fields into emission groups. Fields from one
-    `with field(when=...)` block (carrying the same `CondWire.group`) form
-    one group emitted under a shared `if`; everything else stands alone."""
-    groups: list[tuple[Predicate | None, list[tuple[FieldDescriptor, Wire]]]] = []
+    `with field(when=...)` block (sharing a `CondType.group`) form one
+    group emitted under a shared `if`; everything else stands alone."""
+    groups: list[tuple[Predicate | None, list[tuple[Field, FieldType]]]] = []
     open_group: int | None = None
-    for f, w in wired:
+    for f, t in typed:
         if (
-            isinstance(w, CondWire)
-            and w.group is not None
-            and w.group == open_group
+            isinstance(t, CondType)
+            and t.group is not None
+            and t.group == open_group
         ):
-            groups[-1][1].append((f, w))
+            groups[-1][1].append((f, t))
             continue
-        if isinstance(w, CondWire):
-            groups.append((w.predicate, [(f, w)]))
-            open_group = w.group
+        if isinstance(t, CondType):
+            groups.append((t.predicate, [(f, t)]))
+            open_group = t.group
         else:
-            groups.append((None, [(f, w)]))
+            groups.append((None, [(f, t)]))
             open_group = None
     return groups
 
 
-def _scalar_write(scalar: ScalarWire, expr: str) -> str:
-    u = PRIMITIVE_TYPES[scalar.primitive]
-    if scalar.varint:
+def _primitive_write(p: PrimitiveType, expr: str) -> str:
+    if p.name in ("str", "bytes"):
+        return f"stream.write({expr});"
+    u = PRIMITIVE_TYPES[p.name]
+    if p.name in VARINT_PRIMITIVES:
         return f"stream.writeVarInt<{u}>({expr});"
-    if scalar.big_endian:
+    if p.big_endian:
         return f"stream.write<{u}, std::endian::big>({expr});"
     return f"stream.write<{u}>({expr});"
 
 
-def _scalar_read(code: CodeBuffer, scalar: ScalarWire) -> None:
-    u = PRIMITIVE_TYPES[scalar.primitive]
-    if scalar.varint:
-        code(f"auto v = stream.readVarInt<{u}>();")
-    elif scalar.big_endian:
-        code(f"auto v = stream.read<{u}, std::endian::big>();")
+def _primitive_read(code: CodeBuffer, p: PrimitiveType) -> None:
+    if p.name in ("str", "bytes"):
+        code("auto v = stream.read<std::string>();")
     else:
-        code(f"auto v = stream.read<{u}>();")
+        u = PRIMITIVE_TYPES[p.name]
+        if p.name in VARINT_PRIMITIVES:
+            code(f"auto v = stream.readVarInt<{u}>();")
+        elif p.big_endian:
+            code(f"auto v = stream.read<{u}, std::endian::big>();")
+        else:
+            code(f"auto v = stream.read<{u}>();")
     code("if (!v) return make_unexpected(v.error());")

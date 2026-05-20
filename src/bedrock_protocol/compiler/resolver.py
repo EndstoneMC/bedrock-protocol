@@ -1,8 +1,8 @@
 """Version-snapshot analysis + dependency resolution.
 
 Analog of protoc's `DescriptorBuilder` step inside `DescriptorPool::Add`.
-Takes the raw `FileDescriptor` the parser emitted, validates that every
-type reference resolves (against the file or its imports), classifies which
+Takes the raw `File` the parser emitted, validates that every type
+reference resolves (against the file or its imports), classifies which
 types are versioned, computes a topological order, and projects each
 versioned type into per-snapshot views.
 
@@ -21,31 +21,31 @@ from typing import Any, Iterable
 
 from ..descriptor import (
     CompilerError,
-    EnumDescriptor,
-    FieldDescriptor,
-    FileDescriptor,
+    Enum,
+    Field,
+    File,
     FileSet,
-    ResolvedFileDescriptor,
-    StructDescriptor,
+    ResolvedFile,
+    Struct,
     VersionSnapshot,
 )
 
 
-def resolve_all(file_set: FileSet) -> tuple[ResolvedFileDescriptor, ...]:
+def resolve_all(file_set: FileSet) -> tuple[ResolvedFile, ...]:
     """Resolve every output file in `file_set`, in `file_set.outputs` order."""
     return tuple(resolve(file_set.files[name], file_set) for name in file_set.outputs)
 
 
-def resolve(file: FileDescriptor, file_set: FileSet) -> ResolvedFileDescriptor:
-    all_types: tuple[EnumDescriptor | StructDescriptor, ...] = (
+def resolve(file: File, file_set: FileSet) -> ResolvedFile:
+    all_types: tuple[Enum | Struct, ...] = (
         *file.enums, *file.structs,
     )
-    by_name: dict[str, EnumDescriptor | StructDescriptor] = {
+    by_name: dict[str, Enum | Struct] = {
         t.name: t for t in all_types
     }
     # Source declaration order, not enums-then-structs — the layout the C++
     # backend emits depends on this.
-    types: tuple[EnumDescriptor | StructDescriptor, ...] = tuple(
+    types: tuple[Enum | Struct, ...] = tuple(
         by_name[n] for n in file.declaration_order if n in by_name
     )
     own = frozenset(by_name)
@@ -55,7 +55,7 @@ def resolve(file: FileDescriptor, file_set: FileSet) -> ResolvedFileDescriptor:
     snapshots = _snapshot_points(types, versioned)
     snapshots_by_type = _plan_snapshots(types, by_name, versioned, order, snapshots)
 
-    return ResolvedFileDescriptor(
+    return ResolvedFile(
         file=file,
         file_set=file_set,
         declaration_order=tuple(order),
@@ -69,7 +69,7 @@ def resolve(file: FileDescriptor, file_set: FileSet) -> ResolvedFileDescriptor:
 
 
 def _versioned_types(
-    types: tuple[EnumDescriptor | StructDescriptor, ...],
+    types: tuple[Enum | Struct, ...],
 ) -> frozenset[str]:
     """Names that are versioned, either by their own change points or by a
     transitive reference to a versioned type."""
@@ -77,7 +77,7 @@ def _versioned_types(
     while True:
         grew = False
         for t in types:
-            if isinstance(t, EnumDescriptor) or t.name in versioned:
+            if isinstance(t, Enum) or t.name in versioned:
                 continue
             if t.referenced & versioned:
                 versioned.add(t.name)
@@ -90,7 +90,7 @@ def _versioned_types(
 
 
 def _topo_order(
-    types: tuple[EnumDescriptor | StructDescriptor, ...],
+    types: tuple[Enum | Struct, ...],
     own: frozenset[str],
 ) -> list[str]:
     """Names ordered so a referenced type precedes its user. Ties keep
@@ -121,7 +121,7 @@ def _topo_order(
 
 
 def _snapshot_points(
-    types: tuple[EnumDescriptor | StructDescriptor, ...],
+    types: tuple[Enum | Struct, ...],
     versioned: frozenset[str],
 ) -> list[int]:
     points = {0}
@@ -132,8 +132,8 @@ def _snapshot_points(
 
 
 def _plan_snapshots(
-    types: tuple[EnumDescriptor | StructDescriptor, ...],
-    by_name: dict[str, EnumDescriptor | StructDescriptor],
+    types: tuple[Enum | Struct, ...],
+    by_name: dict[str, Enum | Struct],
     versioned: frozenset[str],
     order: Iterable[str],
     snapshots: list[int],
@@ -188,26 +188,26 @@ def _plan_snapshots(
 
 
 def _snapshot_view(
-    t: EnumDescriptor | StructDescriptor, snapshot: int
-) -> tuple[EnumDescriptor | None, StructDescriptor | None, tuple[Any, ...]]:
+    t: Enum | Struct, snapshot: int
+) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
     """A narrowed-to-snapshot view of `t`, plus an identity key that
     determines whether two snapshots share one definition."""
-    if isinstance(t, EnumDescriptor):
+    if isinstance(t, Enum):
         values = tuple(
             v for v in t.values
             if (v.since is None or v.since <= snapshot)
             and (v.until is None or snapshot < v.until)
         )
-        view = EnumDescriptor(t.name, values, t.since)
+        view = Enum(t.name, values, t.since)
         key = tuple((v.name, v.number) for v in values)
         return view, None, key
-    narrowed: list[FieldDescriptor] = []
+    narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:
-        era = f.era_at(snapshot)
-        if era is None:
+        version = f.version_at(snapshot)
+        if version is None:
             continue
-        narrowed.append(FieldDescriptor(f.name, (era,)))
-        key_parts.append((f.name, era.type_ref, era.wire))
+        narrowed.append(Field(f.name, (version,)))
+        key_parts.append((f.name, version.type))
     view_s = replace(t, fields=tuple(narrowed))
     return None, view_s, tuple(key_parts)

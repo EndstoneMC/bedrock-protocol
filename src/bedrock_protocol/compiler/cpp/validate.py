@@ -10,22 +10,21 @@ from __future__ import annotations
 
 from ...descriptor import (
     CompilerError,
-    CondWire,
-    EnumDescriptor,
-    EnumWire,
-    OptionalWire,
-    ResolvedFileDescriptor,
-    StructDescriptor,
-    Wire,
+    CondType,
+    Enum,
+    EnumType,
+    OptionalType,
+    ResolvedFile,
+    Struct,
 )
 
 
-def check(resolved: ResolvedFileDescriptor) -> None:
+def check(resolved: ResolvedFile) -> None:
     _check_no_string_coded_nested_enums(resolved)
     _check_no_cross_module_versioned_references(resolved)
 
 
-def _check_no_string_coded_nested_enums(resolved: ResolvedFileDescriptor) -> None:
+def _check_no_string_coded_nested_enums(resolved: ResolvedFile) -> None:
     """C++ codec for name-coded enums emits `Serializer<Enum>` specializations
     at namespace scope, which is awkward for a nested enum. Reject it here."""
     file = resolved.file
@@ -34,11 +33,11 @@ def _check_no_string_coded_nested_enums(resolved: ResolvedFileDescriptor) -> Non
         if not nested:
             continue
         for f in struct.fields:
-            for era in f.eras:
-                w = era.wire
-                while isinstance(w, (OptionalWire, CondWire)):
-                    w = w.inner
-                if isinstance(w, EnumWire) and w.name in nested and w.scalar is None:
+            for version in f.versions:
+                t = version.type
+                while isinstance(t, (OptionalType, CondType)):
+                    t = t.inner
+                if isinstance(t, EnumType) and t.name in nested and t.scalar is None:
                     raise CompilerError(
                         f"{struct.name}.{f.name}: a nested enum cannot be "
                         f"string-coded (field(type=str)) -- use an integer wire "
@@ -47,7 +46,7 @@ def _check_no_string_coded_nested_enums(resolved: ResolvedFileDescriptor) -> Non
 
 
 def _check_no_cross_module_versioned_references(
-    resolved: ResolvedFileDescriptor,
+    resolved: ResolvedFile,
 ) -> None:
     """Cross-module references to a versioned type would need both headers'
     snapshot sets aligned — unsupported. Plain (unversioned) cross-module
@@ -58,7 +57,7 @@ def _check_no_cross_module_versioned_references(
         other = resolved.file_set.files.get(dep)
         if other is None:
             continue
-        other_types: tuple[EnumDescriptor | StructDescriptor, ...] = (
+        other_types: tuple[Enum | Struct, ...] = (
             *other.enums, *other.structs,
         )
         for t in other_types:

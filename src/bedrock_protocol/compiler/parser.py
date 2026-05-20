@@ -1,4 +1,4 @@
-"""Frontend — `.py` DSL files to `FileDescriptor` instances.
+"""Frontend — `.py` DSL files to `File` instances.
 
 Analog of protoc's `io::Tokenizer` + `compiler::Parser`. We use griffe to
 statically parse the user's Python source — the DSL decorators
@@ -7,9 +7,9 @@ never executes them, only reads them as AST.
 
 A `SourceTree` follows `from X.Y import ...` references between modules so a
 struct in one file can reference a type declared in another. Every file the
-sourcetree loads becomes a `FileDescriptor` in the resulting `FileSet`;
-files passed to `load_all()` are also listed as `outputs` so the CLI knows
-which ones to emit.
+sourcetree loads becomes a `File` in the resulting `FileSet`; files passed
+to `load_all()` are also listed as `outputs` so the CLI knows which ones to
+emit.
 """
 
 from __future__ import annotations
@@ -25,33 +25,25 @@ from ..descriptor import (
     PRIMITIVES,
     VARINT_PRIMITIVES,
     CompilerError,
-    CondWire,
-    EnumDescriptor,
-    EnumValueDescriptor,
-    EnumWire,
-    FieldDescriptor,
-    FieldEraDescriptor,
-    FileDescriptor,
+    CondType,
+    Enum,
+    EnumType,
+    EnumValue,
+    Field,
+    FieldVersion,
+    FieldType,
+    File,
     FileSet,
-    MappingRef,
-    MappingWire,
-    NamedRef,
-    OptionalRef,
-    OptionalWire,
+    MappingType,
+    OptionalType,
     Predicate,
-    PrimitiveAliasDescriptor,
-    PrimitiveRef,
-    RepeatedRef,
-    RepeatedWire,
-    ScalarWire,
-    StringWire,
-    StructDescriptor,
-    StructWire,
-    SwitchWire,
-    TypeAliasDescriptor,
-    TypeRef,
-    VariantRef,
-    Wire,
+    PrimitiveAlias,
+    PrimitiveType,
+    RepeatedType,
+    Struct,
+    StructType,
+    TypeAlias,
+    VariantType,
 )
 from . import extensions
 
@@ -65,13 +57,13 @@ class _ClassifyResult:
     enum_names: frozenset[str]
     struct_names: frozenset[str]
     builtins: frozenset[str]
-    aliases_by_name: dict[str, PrimitiveAliasDescriptor | TypeAliasDescriptor]
-    primitive_aliases_by_module: dict[str, tuple[PrimitiveAliasDescriptor, ...]]
-    type_aliases_by_module: dict[str, tuple[TypeAliasDescriptor, ...]]
+    aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
+    primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]]
+    type_aliases_by_module: dict[str, tuple[TypeAlias, ...]]
 
 
 class SourceTree:
-    """Loads `.py` DSL files via griffe, lowers them to `FileDescriptor`.
+    """Loads `.py` DSL files via griffe, lowers them to `File`.
 
     `import_paths` are the directories the loader uses to resolve `from X.Y
     import ...` references between modules — protoc's `--proto_path` equivalent.
@@ -171,9 +163,9 @@ class SourceTree:
         enum_names: set[str] = set()
         struct_names: set[str] = set()
         builtins: set[str] = set()
-        aliases_by_name: dict[str, PrimitiveAliasDescriptor | TypeAliasDescriptor] = {}
-        primitive_aliases_by_module: dict[str, tuple[PrimitiveAliasDescriptor, ...]] = {}
-        type_aliases_by_module: dict[str, tuple[TypeAliasDescriptor, ...]] = {}
+        aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
+        primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
+        type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
 
         for mod in loaded.values():
             for cls in mod.classes.values():
@@ -191,8 +183,8 @@ class SourceTree:
         # reference any class anywhere; within this pass declaration order
         # is the resolution order so an alias may reference an earlier one.
         for name, mod in loaded.items():
-            primitives: list[PrimitiveAliasDescriptor] = []
-            others: list[TypeAliasDescriptor] = []
+            primitives: list[PrimitiveAlias] = []
+            others: list[TypeAlias] = []
             sources = list(mod.attributes.items()) + list(mod.type_aliases.items())
             ctx = _AnnotationContext(
                 enum_names=frozenset(enum_names),
@@ -207,7 +199,7 @@ class SourceTree:
                 if alias is None:
                     continue
                 aliases_by_name[alias.name] = alias
-                if isinstance(alias, PrimitiveAliasDescriptor):
+                if isinstance(alias, PrimitiveAlias):
                     primitives.append(alias)
                 else:
                     others.append(alias)
@@ -232,15 +224,15 @@ class SourceTree:
         stem: str,
         loaded: dict[str, griffe.Module],
         classified: _ClassifyResult,
-    ) -> FileDescriptor:
+    ) -> File:
         ctx = _AnnotationContext(
             enum_names=classified.enum_names,
             struct_names=classified.struct_names,
             builtins=classified.builtins,
             aliases=classified.aliases_by_name,
         )
-        enums: list[EnumDescriptor] = []
-        structs: list[StructDescriptor] = []
+        enums: list[Enum] = []
+        structs: list[Struct] = []
         order: list[str] = []
         for cls in mod.classes.values():
             if cls.is_alias or cls.name in classified.builtins:
@@ -266,7 +258,7 @@ class SourceTree:
                 if d in loaded and d != name
             )
         )
-        return FileDescriptor(
+        return File(
             name=name,
             stem=stem,
             package=_package_of(mod),
@@ -290,35 +282,34 @@ class _AnnotationContext:
     enum_names: frozenset[str]
     struct_names: frozenset[str]
     builtins: frozenset[str]
-    aliases: dict[str, PrimitiveAliasDescriptor | TypeAliasDescriptor]
+    aliases: dict[str, PrimitiveAlias | TypeAlias]
 
     # ---- aliases -----------------------------------------------------------
 
     def parse_alias(
         self, name: str, value: griffe.Expr | str
-    ) -> PrimitiveAliasDescriptor | TypeAliasDescriptor | None:
+    ) -> PrimitiveAlias | TypeAlias | None:
         if isinstance(value, griffe.ExprName) and value.name in PRIMITIVES:
-            return PrimitiveAliasDescriptor(name, value.name)
-        type_ref = self.type_ref(value, name)
-        wire = self.wire(name, value, None, frozenset())
-        if type_ref is None or wire is None:
+            return PrimitiveAlias(name, value.name)
+        target = self.type(name, value, None, frozenset())
+        if target is None:
             return None
-        return TypeAliasDescriptor(name, type_ref, wire)
+        return TypeAlias(name, target)
 
     # ---- declarations ------------------------------------------------------
 
-    def enum(self, cls: griffe.Class) -> EnumDescriptor:
-        values: list[EnumValueDescriptor] = []
+    def enum(self, cls: griffe.Class) -> Enum:
+        values: list[EnumValue] = []
         for name, attr in cls.attributes.items():
             if attr.value is None:
                 continue
             parsed = self._enum_member_value(attr.value)
             if parsed is not None:
-                values.append(EnumValueDescriptor(name, *parsed))
-        return EnumDescriptor(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
+                values.append(EnumValue(name, *parsed))
+        return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
 
-    def struct(self, cls: griffe.Class) -> StructDescriptor:
-        nested_enums: list[EnumDescriptor] = []
+    def struct(self, cls: griffe.Class) -> Struct:
+        nested_enums: list[Enum] = []
         for inner in cls.classes.values():
             if inner.is_alias or not _is_int_enum(inner):
                 continue
@@ -326,7 +317,7 @@ class _AnnotationContext:
             self._reject_versioned_nested(cls.name, inner_enum)
             nested_enums.append(inner_enum)
         nested_names = frozenset(e.name for e in nested_enums)
-        fields: list[FieldDescriptor] = []
+        fields: list[Field] = []
         earlier: set[str] = set()
         for attr in cls.attributes.values():
             f = self.field(attr, nested_names, frozenset(earlier))
@@ -340,7 +331,7 @@ class _AnnotationContext:
                     f"{cls.name}: @type(until=) is only meaningful on a "
                     f"redeclared class -- a lone declaration cannot set until="
                 )
-        return StructDescriptor(
+        return Struct(
             name=cls.name,
             fields=tuple(fields),
             nested_enums=tuple(nested_enums),
@@ -348,9 +339,9 @@ class _AnnotationContext:
             since=since,
         )
 
-    def merged_struct(self, decls: list[griffe.Class]) -> StructDescriptor:
+    def merged_struct(self, decls: list[griffe.Class]) -> Struct:
         name = decls[0].name
-        eras: list[tuple[griffe.Class, int, int | None]] = []
+        versions: list[tuple[griffe.Class, int, int | None]] = []
         for cls in decls:
             if _is_int_enum(cls):
                 raise CompilerError(
@@ -369,24 +360,24 @@ class _AnnotationContext:
                 raise CompilerError(
                     f"{name}: every declaration of a redeclared class needs @type(since=)"
                 )
-            eras.append((cls, since, _decorator_int(cls, "type", "until")))
-        eras.sort(key=lambda e: e[1])
-        self._check_class_eras(name, eras)
+            versions.append((cls, since, _decorator_int(cls, "type", "until")))
+        versions.sort(key=lambda e: e[1])
+        self._check_class_versions(name, versions)
 
         order: list[str] = []
-        era_fields: list[dict[str, griffe.Attribute]] = []
-        for cls, _, _ in eras:
+        version_fields: list[dict[str, griffe.Attribute]] = []
+        for cls, _, _ in versions:
             attrs = dict(cls.attributes)
-            era_fields.append(attrs)
+            version_fields.append(attrs)
             for fname in attrs:
                 if fname not in order:
                     order.append(fname)
 
-        fields: list[FieldDescriptor] = []
+        fields: list[Field] = []
         for i, fname in enumerate(order):
             earlier = frozenset(order[:i])
-            era_list: list[FieldEraDescriptor] = []
-            for (_, since, until), attrs in zip(eras, era_fields):
+            version_list: list[FieldVersion] = []
+            for (_, since, until), attrs in zip(versions, version_fields):
                 attr = attrs.get(fname)
                 if attr is None:
                     continue
@@ -398,16 +389,16 @@ class _AnnotationContext:
                         f"inside a redeclared class"
                     )
                 self._reject_field_version(name, attr)
-                era = self._field_era(attr, frozenset(), earlier)
-                era_list.append(replace(era, since=since, until=until))
-            self._check_eras(fname, tuple(era_list))
-            fields.append(FieldDescriptor(fname, tuple(era_list)))
-        return StructDescriptor(
+                version = self._field_version(attr, frozenset(), earlier)
+                version_list.append(replace(version, since=since, until=until))
+            self._check_versions(fname, tuple(version_list))
+            fields.append(Field(fname, tuple(version_list)))
+        return Struct(
             name=name,
             fields=tuple(fields),
             nested_enums=(),
             packet_id=None,
-            since=eras[0][1],
+            since=versions[0][1],
         )
 
     def field(
@@ -415,24 +406,23 @@ class _AnnotationContext:
         attr: griffe.Attribute,
         nested: frozenset[str],
         earlier: frozenset[str],
-    ) -> FieldDescriptor:
+    ) -> Field:
         decls = attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
             extensions.REDECLARATIONS
         )
         sources: list[griffe.Attribute] = decls if decls is not None else [attr]
-        eras = tuple(self._field_era(d, nested, earlier) for d in sources)
-        self._check_eras(attr.name, eras)
-        return FieldDescriptor(attr.name, eras)
+        versions = tuple(self._field_version(d, nested, earlier) for d in sources)
+        self._check_versions(attr.name, versions)
+        return Field(attr.name, versions)
 
-    def _field_era(
+    def _field_version(
         self,
         attr: griffe.Attribute,
         nested: frozenset[str],
         earlier: frozenset[str],
-    ) -> FieldEraDescriptor:
+    ) -> FieldVersion:
         call = attr.value
-        type_ref = self.type_ref(attr.annotation, attr.name)
-        wire = self.wire(attr.name, attr.annotation, call, nested)
+        t = self.type(attr.name, attr.annotation, call, nested)
         when = _call_arg(call, "field", "when")
         group_when = _call_arg(call, "field", "_group_when")
         if when is not None and group_when is not None:
@@ -443,78 +433,26 @@ class _AnnotationContext:
         guard = when if when is not None else group_when
         if guard is not None:
             predicate = self._predicate(guard, attr.name, nested, earlier)
-            if when is not None and isinstance(wire, (OptionalWire, SwitchWire)):
+            if when is not None and isinstance(t, (OptionalType, VariantType)):
                 raise CompilerError(
                     f"{attr.name}: field(when=...) gates a bare payload type -- "
                     f"it cannot also be an optional or union field"
                 )
-            if wire is not None:
-                wire = CondWire(
-                    wire, predicate, _int_kwarg(call, "field", "_group_id")
+            if t is not None:
+                t = CondType(
+                    t, predicate, _int_kwarg(call, "field", "_group_id")
                 )
-        return FieldEraDescriptor(
-            type_ref=type_ref,
-            wire=wire,
+        return FieldVersion(
+            type=t,
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
         )
 
-    # ---- TypeRef walker ----------------------------------------------------
+    # ---- field-type walker -------------------------------------------------
 
-    def type_ref(self, ann: _Ann, field_name: str) -> TypeRef | None:
-        if ann is None:
-            return None
-        if (builtin := self._builtin_of(ann)) is not None:
-            return NamedRef(builtin)
-        arms = _flatten_union(ann)
-        if arms is not None:
-            return self._union_type_ref(arms, field_name)
-        if isinstance(ann, griffe.ExprSubscript):
-            repeat = _repeat_parts(ann, field_name)
-            if repeat is not None:
-                elem_ann, count = repeat
-                inner = self.type_ref(elem_ann, field_name)
-                return RepeatedRef(inner, count) if inner is not None else None
-            mapping = _map_parts(ann, field_name)
-            if mapping is not None:
-                key = self.type_ref(mapping[0], field_name)
-                value = self.type_ref(mapping[1], field_name)
-                if key is None or value is None:
-                    return None
-                return MappingRef(key, value)
-            return None
-        if isinstance(ann, griffe.ExprName):
-            if ann.name in PRIMITIVES:
-                return PrimitiveRef(name=ann.name)
-            alias = self.aliases.get(ann.name)
-            if isinstance(alias, TypeAliasDescriptor):
-                return alias.target
-            return NamedRef(ann.name)
-        return None
-
-    def _union_type_ref(
-        self, arms: list[griffe.Expr | str], field_name: str
-    ) -> TypeRef | None:
-        if len(arms) == 2 and sum(_is_none(a) for a in arms) == 1:
-            inner_ann = next(a for a in arms if not _is_none(a))
-            inner = self.type_ref(inner_ann, field_name)
-            return OptionalRef(inner) if inner is not None else None
-        refs: list[TypeRef | None] = []
-        for arm in arms:
-            if _is_none(arm):
-                refs.append(None)
-                continue
-            ref = self.type_ref(arm, field_name)
-            if ref is None:
-                return None
-            refs.append(ref)
-        return VariantRef(tuple(refs))
-
-    # ---- Wire walker -------------------------------------------------------
-
-    def wire(
+    def type(
         self, field_name: str, ann: _Ann, call: _Ann, nested: frozenset[str]
-    ) -> Wire | None:
+    ) -> FieldType | None:
         endian = _str_kwarg(call, "field", "endian")
         if endian is not None and endian not in ("big", "little"):
             raise CompilerError(
@@ -524,117 +462,125 @@ class _AnnotationContext:
         prefix = self._repeat_prefix(call, field_name)
         arms = _flatten_union(ann)
         if arms is not None:
-            return self._union_wire(arms, field_name, type_kw, endian, prefix, nested)
-        base = self._base_wire(ann, type_kw, prefix, nested, field_name)
+            return self._union_type(arms, field_name, type_kw, endian, prefix, nested)
+        base = self._base_type(ann, type_kw, prefix, nested, field_name)
         if base is None:
             return None
         return self._with_endian(base, endian, field_name)
 
-    def _union_wire(
+    def _union_type(
         self,
         arms: list[griffe.Expr | str],
         field_name: str,
         type_kw: str | None,
         endian: str | None,
-        prefix: ScalarWire,
+        prefix: PrimitiveType,
         nested: frozenset[str],
-    ) -> Wire | None:
+    ) -> FieldType | None:
         if len(arms) == 2 and sum(_is_none(a) for a in arms) == 1:
             inner_ann = next(a for a in arms if not _is_none(a))
-            base = self._base_wire(inner_ann, type_kw, prefix, nested, field_name)
+            base = self._base_type(inner_ann, type_kw, prefix, nested, field_name)
             if base is None:
                 return None
             if endian is not None:
                 raise CompilerError(_endian_scope_error(field_name))
             discriminator = type_kw == "Union"
-            if discriminator and isinstance(base, EnumWire):
+            if discriminator and isinstance(base, EnumType):
                 raise CompilerError(
                     f"{field_name}: an optional enum field needs field(type=) for "
                     f"the enum wire primitive and so cannot also use type=Union"
                 )
             present_tag = 1 if discriminator and _is_none(arms[0]) else 0
-            return OptionalWire(base, discriminator, present_tag)
+            return OptionalType(base, discriminator, present_tag)
         if endian is not None:
             raise CompilerError(_endian_scope_error(field_name))
-        wires: list[Wire | None] = []
+        types: list[FieldType | None] = []
         for arm in arms:
             if _is_none(arm):
-                wires.append(None)
+                types.append(None)
                 continue
-            w = self._base_wire(arm, type_kw, prefix, nested, field_name)
-            if w is None:
+            t = self._base_type(arm, type_kw, prefix, nested, field_name)
+            if t is None:
                 return None
-            wires.append(w)
-        return SwitchWire(tuple(wires))
+            types.append(t)
+        return VariantType(tuple(types))
 
-    def _base_wire(
+    def _base_type(
         self,
         ann: _Ann,
         type_kw: str | None,
-        prefix: ScalarWire,
+        prefix: PrimitiveType,
         nested: frozenset[str],
         field_name: str,
-    ) -> Wire | None:
+    ) -> FieldType | None:
         if (builtin := self._builtin_of(ann)) is not None:
-            return StructWire(builtin)
+            return StructType(builtin)
         if isinstance(ann, griffe.ExprSubscript):
             repeat = _repeat_parts(ann, field_name)
             if repeat is not None:
                 elem_ann, count = repeat
-                inner = self._base_wire(elem_ann, type_kw, prefix, nested, field_name)
+                inner = self._base_type(elem_ann, type_kw, prefix, nested, field_name)
                 if inner is None:
                     return None
-                return RepeatedWire(inner, prefix if count is None else None, count)
+                return RepeatedType(
+                    inner=inner,
+                    count=count,
+                    prefix=prefix if count is None else None,
+                )
             mapping = _map_parts(ann, field_name)
             if mapping is not None:
-                key = self._base_wire(mapping[0], type_kw, prefix, nested, field_name)
-                value = self._base_wire(mapping[1], type_kw, prefix, nested, field_name)
+                key = self._base_type(mapping[0], type_kw, prefix, nested, field_name)
+                value = self._base_type(mapping[1], type_kw, prefix, nested, field_name)
                 if key is None or value is None:
                     return None
-                return MappingWire(key, value, prefix)
+                return MappingType(key, value, prefix)
             return None
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
         if name in nested or name in self.enum_names:
-            scalar = _enum_wire(type_kw, field_name)
+            scalar = _enum_scalar(type_kw, field_name)
             if scalar is None and name in nested:
                 raise CompilerError(
                     f"{field_name}: a nested enum cannot be string-coded "
                     f"(field(type=str)) -- use an integer wire primitive, or "
                     f"lift the enum to module scope"
                 )
-            return EnumWire(name, scalar)
+            return EnumType(name, scalar)
         if name in self.struct_names:
-            return StructWire(name)
-        if name in ("str", "bytes"):
-            return StringWire()
+            return StructType(name)
         if name in PRIMITIVES:
-            return ScalarWire(name, varint=name in VARINT_PRIMITIVES)
+            return PrimitiveType(name=name)
         alias = self.aliases.get(name)
-        if isinstance(alias, PrimitiveAliasDescriptor):
-            return ScalarWire(alias.primitive, varint=alias.primitive in VARINT_PRIMITIVES)
-        if isinstance(alias, TypeAliasDescriptor):
-            return alias.wire
+        if isinstance(alias, PrimitiveAlias):
+            return PrimitiveType(name=alias.primitive, alias=alias.name)
+        if isinstance(alias, TypeAlias):
+            return alias.target
         return None
 
-    def _repeat_prefix(self, call: _Ann, field_name: str) -> ScalarWire:
+    def _repeat_prefix(self, call: _Ann, field_name: str) -> PrimitiveType:
         name = _name_kwarg(call, "field", "prefix")
         if name is None:
-            return ScalarWire("uvarint32", varint=True)
+            return PrimitiveType(name="uvarint32")
         if name not in INTEGER_PRIMITIVES:
             raise CompilerError(
                 f"{field_name}: field(prefix=...) must be an integer primitive, got {name!r}"
             )
-        return ScalarWire(name, varint=name in VARINT_PRIMITIVES)
+        return PrimitiveType(name=name)
 
-    def _with_endian(self, base: Wire, endian: str | None, field_name: str) -> Wire:
+    def _with_endian(
+        self, base: FieldType, endian: str | None, field_name: str
+    ) -> FieldType:
         if endian is None:
             return base
         big = endian == "big"
-        if isinstance(base, ScalarWire):
+        if isinstance(base, PrimitiveType):
             return replace(base, big_endian=big)
-        if isinstance(base, EnumWire) and base.scalar is not None and not base.scalar.varint:
+        if (
+            isinstance(base, EnumType)
+            and base.scalar is not None
+            and base.scalar.name not in VARINT_PRIMITIVES
+        ):
             return replace(base, scalar=replace(base.scalar, big_endian=big))
         raise CompilerError(_endian_scope_error(field_name))
 
@@ -760,11 +706,11 @@ class _AnnotationContext:
     # ---- structural checks -------------------------------------------------
 
     @staticmethod
-    def _check_class_eras(
-        name: str, eras: list[tuple[griffe.Class, int, int | None]]
+    def _check_class_versions(
+        name: str, versions: list[tuple[griffe.Class, int, int | None]]
     ) -> None:
-        for i, (_, since, until) in enumerate(eras):
-            last = i == len(eras) - 1
+        for i, (_, since, until) in enumerate(versions):
+            last = i == len(versions) - 1
             if last:
                 if until is not None:
                     raise CompilerError(
@@ -781,32 +727,32 @@ class _AnnotationContext:
                 raise CompilerError(
                     f"{name}: @type(until=) must be greater than since="
                 )
-            if until != eras[i + 1][1]:
+            if until != versions[i + 1][1]:
                 raise CompilerError(
                     f"{name}: redeclared class version ranges must be contiguous "
                     f"-- each until= must equal the next since="
                 )
 
     @staticmethod
-    def _check_eras(name: str, eras: tuple[FieldEraDescriptor, ...]) -> None:
+    def _check_versions(name: str, versions: tuple[FieldVersion, ...]) -> None:
         covered_to = 0
-        for i, era in enumerate(eras):
-            lo = era.since or 0
+        for i, version in enumerate(versions):
+            lo = version.since or 0
             if lo < covered_to:
                 raise CompilerError(
-                    f"{name}: redeclared field eras overlap or are out of order "
+                    f"{name}: redeclared field versions overlap or are out of order "
                     f"-- each since= must be at least the previous until="
                 )
-            if i < len(eras) - 1 and era.until is None:
+            if i < len(versions) - 1 and version.until is None:
                 raise CompilerError(
-                    f"{name}: every redeclared field era but the last needs until="
+                    f"{name}: every redeclared field version but the last needs until="
                 )
-            if era.until is not None:
-                if era.until <= lo:
+            if version.until is not None:
+                if version.until <= lo:
                     raise CompilerError(
-                        f"{name}: field era until= must be greater than since="
+                        f"{name}: field version until= must be greater than since="
                     )
-                covered_to = era.until
+                covered_to = version.until
 
     @staticmethod
     def _reject_field_version(struct: str, attr: griffe.Attribute) -> None:
@@ -820,7 +766,7 @@ class _AnnotationContext:
             )
 
     @staticmethod
-    def _reject_versioned_nested(owner: str, enum: EnumDescriptor) -> None:
+    def _reject_versioned_nested(owner: str, enum: Enum) -> None:
         if enum.since is not None:
             raise CompilerError(
                 f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); "
@@ -924,7 +870,7 @@ def _map_parts(
     return slice_.elements[0], slice_.elements[1]
 
 
-def _enum_wire(type_kw: str | None, field_name: str) -> ScalarWire | None:
+def _enum_scalar(type_kw: str | None, field_name: str) -> PrimitiveType | None:
     if type_kw is None:
         raise CompilerError(
             f"{field_name}: enum-typed field requires field(type=<primitive>) "
@@ -936,7 +882,7 @@ def _enum_wire(type_kw: str | None, field_name: str) -> ScalarWire | None:
         raise CompilerError(
             f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}"
         )
-    return ScalarWire(type_kw, varint=type_kw in VARINT_PRIMITIVES)
+    return PrimitiveType(name=type_kw)
 
 
 def _endian_scope_error(field_name: str) -> str:

@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Protocol, TextIO, runtime_checkable
 
-from ..descriptor import ResolvedFileDescriptor
+from ..descriptor import ResolvedFile
 
 
 @runtime_checkable
@@ -52,7 +52,7 @@ class CodeGenerator(ABC):
     @abstractmethod
     def generate(
         self,
-        resolved: ResolvedFileDescriptor,
+        resolved: ResolvedFile,
         parameter: str,
         context: GeneratorContext,
     ) -> None:

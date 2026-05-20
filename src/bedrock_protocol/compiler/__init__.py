@@ -2,9 +2,9 @@
 
 The pipeline:
 
-    parser.SourceTree(import_paths).load(source) ─► FileDescriptor
+    parser.SourceTree(import_paths).load(source) ─► File
                                                           │
-                                  resolver.resolve(file, set) ─► ResolvedFileDescriptor
+                                  resolver.resolve(file, set) ─► ResolvedFile
                                                           │
                                   registry.GENERATORS[name]() ─► CodeGenerator
                                                           │

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from ...descriptor import CompilerError, ResolvedFileDescriptor
+from ...descriptor import CompilerError, ResolvedFile
 from ..code_generator import CodeGenerator, GeneratorContext
 from .file_generator import FileGenerator
 from . import validate
@@ -36,7 +36,7 @@ class CppGenerator(CodeGenerator):
 
     def generate(
         self,
-        resolved: ResolvedFileDescriptor,
+        resolved: ResolvedFile,
         parameter: str,
         context: GeneratorContext,
     ) -> None:
