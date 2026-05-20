@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from ...descriptor import (
     VARINT_PRIMITIVES,
+    BitsetType,
     CondType,
     Enum,
     EnumType,
@@ -256,6 +257,8 @@ class SerializerGenerator:
                         p("break;")
                     p("}")
             p("}")
+        elif isinstance(t, BitsetType):
+            p(f"Serializer<std::bitset<{t.size}>>::serialize(stream, {expr});")
         elif isinstance(t, CondType):
             self._emit_write(p, t.inner, expr)
 
@@ -387,6 +390,10 @@ class SerializerGenerator:
             p("}")
             p(f"{target} = var{depth};")
             self._loop_depth -= 1
+        elif isinstance(t, BitsetType):
+            p(f"auto v = Serializer<std::bitset<{t.size}>>::deserialize(stream);")
+            p("if (!v) return make_unexpected(v.error());")
+            p(f"{target} = *v;")
         elif isinstance(t, CondType):
             self._emit_read(p, t.inner, target)
 

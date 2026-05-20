@@ -166,6 +166,21 @@ class VariantType:
 
 
 @dataclass(frozen=True)
+class BitsetType:
+    """A fixed-size `std::bitset<N>` on the wire. Serialized as a base-128
+    little-endian dump of the bitset's numeric value: seven payload bits per
+    byte, the top bit a continuation flag, with a single 0x00 byte for the
+    empty bitset.
+    """
+    size: int
+    kind: Literal["bitset"] = "bitset"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset()
+
+
+@dataclass(frozen=True)
 class CondType:
     """Field present only when `predicate` holds against earlier fields.
     No presence marker on the wire — both sides recompute it.
@@ -186,7 +201,7 @@ class CondType:
 
 FieldType = (
     PrimitiveType | StructType | EnumType | OptionalType | RepeatedType
-    | MappingType | VariantType | CondType
+    | MappingType | VariantType | BitsetType | CondType
 )
 
 
@@ -199,6 +214,8 @@ class EnumValue:
     number: int
     since: int | None
     until: int | None
+    deprecated: bool = False
+    sentinel: bool = False
 
     @property
     def wire_name(self) -> str:

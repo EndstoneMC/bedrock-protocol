@@ -14,7 +14,7 @@ emit.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field as dc_field, replace
 from pathlib import Path
 from typing import Iterator, cast
 
@@ -24,6 +24,7 @@ from ..descriptor import (
     INTEGER_PRIMITIVES,
     PRIMITIVES,
     VARINT_PRIMITIVES,
+    BitsetType,
     CompilerError,
     CondType,
     Enum,
@@ -195,6 +196,12 @@ class SourceTree:
             for attr_name, attr in sources:
                 if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
                     continue
+                # `from X import Y` re-exports a name griffe surfaces in the same
+                # mapping local PEP-695 aliases live in. Treat it as a reference,
+                # not a fresh declaration -- the home module already owns the
+                # definition we'd otherwise duplicate.
+                if getattr(attr, "is_alias", False):
+                    continue
                 alias = ctx.parse_alias(attr_name, attr.value)
                 if alias is None:
                     continue
@@ -276,13 +283,18 @@ class SourceTree:
 
 @dataclass
 class _AnnotationContext:
-    """Bundle of name dictionaries the annotation walker reads. Immutable
-    after the classify pass — no `self.` mutation during lowering.
+    """Bundle of name dictionaries the annotation walker reads.
+
+    `nested_enum_values` is the one mutable slot -- struct() populates it with
+    the current owner's nested enum constants before parsing its fields so an
+    annotation like `bitset[Inner.MEMBER]` can resolve to an integer, and
+    clears it afterward so the next struct sees a clean slate.
     """
     enum_names: frozenset[str]
     struct_names: frozenset[str]
     builtins: frozenset[str]
     aliases: dict[str, PrimitiveAlias | TypeAlias]
+    nested_enum_values: dict[str, dict[str, int]] = dc_field(default_factory=dict)
 
     # ---- aliases -----------------------------------------------------------
 
@@ -306,6 +318,7 @@ class _AnnotationContext:
             parsed = self._enum_member_value(attr.value)
             if parsed is not None:
                 values.append(EnumValue(name, *parsed))
+        values = _resolve_sentinels(values)
         return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
 
     def struct(self, cls: griffe.Class) -> Struct:
@@ -317,12 +330,19 @@ class _AnnotationContext:
             self._reject_versioned_nested(cls.name, inner_enum)
             nested_enums.append(inner_enum)
         nested_names = frozenset(e.name for e in nested_enums)
-        fields: list[Field] = []
-        earlier: set[str] = set()
-        for attr in cls.attributes.values():
-            f = self.field(attr, nested_names, frozenset(earlier))
-            fields.append(f)
-            earlier.add(f.name)
+        self.nested_enum_values = {
+            e.name: {v.name: v.number for v in e.values}
+            for e in nested_enums
+        }
+        try:
+            fields: list[Field] = []
+            earlier: set[str] = set()
+            for attr in cls.attributes.values():
+                f = self.field(attr, nested_names, frozenset(earlier))
+                fields.append(f)
+                earlier.add(f.name)
+        finally:
+            self.nested_enum_values = {}
         since = _decorator_int(cls, "packet", "since")
         if since is None:
             since = _decorator_int(cls, "type", "since")
@@ -516,6 +536,9 @@ class _AnnotationContext:
         if (builtin := self._builtin_of(ann)) is not None:
             return StructType(builtin)
         if isinstance(ann, griffe.ExprSubscript):
+            bitset = self._bitset_parts(ann, field_name)
+            if bitset is not None:
+                return BitsetType(size=bitset)
             repeat = _repeat_parts(ann, field_name)
             if repeat is not None:
                 elem_ann, count = repeat
@@ -634,6 +657,8 @@ class _AnnotationContext:
             return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, nested, earlier)
+        if isinstance(node, griffe.ExprCall):
+            return self._pred_call(node, param, field_name, nested, earlier)
         literal = _as_int(node)
         if literal is not None:
             return Predicate("int", text=str(literal))
@@ -670,6 +695,74 @@ class _AnnotationContext:
             f"lambda parameter nor a known enum"
         )
 
+    def _pred_call(
+        self,
+        node: griffe.ExprCall,
+        param: str,
+        field_name: str,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> Predicate:
+        """A `p.<field>.test(<int|Enum.MEMBER>)` bit-test on a bitset field."""
+        receiver = node.function
+        if not isinstance(receiver, griffe.ExprAttribute):
+            raise CompilerError(
+                f"{field_name}: field(when=...) call {node} is unsupported -- "
+                f"only `p.<field>.test(<bit>)` is allowed"
+            )
+        parts = [str(v) for v in receiver.values]
+        if len(parts) != 3 or parts[0] != param or parts[2] != "test":
+            raise CompilerError(
+                f"{field_name}: field(when=...) call must be of the form "
+                f"`{param}.<earlier-field>.test(<bit>)`, got {receiver}"
+            )
+        target = parts[1]
+        if target not in earlier:
+            raise CompilerError(
+                f"{field_name}: field(when=...) references {target!r}, which is "
+                f"not a field declared before it"
+            )
+        args = [a for a in node.arguments if not isinstance(a, griffe.ExprKeyword)]
+        if len(args) != 1:
+            raise CompilerError(
+                f"{field_name}: field(when=...) `.test(...)` takes exactly one "
+                f"bit-index argument, got {len(args)}"
+            )
+        operand = self._pred_node(args[0], param, field_name, nested, earlier)
+        if operand.kind not in ("int", "enum"):
+            raise CompilerError(
+                f"{field_name}: field(when=...) `.test(...)` argument must be an "
+                f"integer literal or Enum.MEMBER, got {args[0]}"
+            )
+        return Predicate("bittest", text=target, operands=(operand,))
+
+    def _bitset_parts(
+        self, ann: griffe.ExprSubscript, field_name: str
+    ) -> int | None:
+        if not (
+            isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"
+        ):
+            return None
+        size = self._resolve_int(ann.slice)
+        if size is None or size <= 0:
+            raise CompilerError(
+                f"{field_name}: bitset[...] needs a positive integer size -- "
+                f"an int literal or a nested-enum member -- got {ann.slice!r}"
+            )
+        return size
+
+    def _resolve_int(self, expr: _Ann) -> int | None:
+        direct = _as_int(expr)
+        if direct is not None:
+            return direct
+        if isinstance(expr, griffe.ExprAttribute):
+            parts = [str(v) for v in expr.values]
+            if len(parts) == 2:
+                members = self.nested_enum_values.get(parts[0])
+                if members is not None and parts[1] in members:
+                    return members[parts[1]]
+        return None
+
     # ---- misc --------------------------------------------------------------
 
     def _builtin_of(self, ann: _Ann) -> str | None:
@@ -683,24 +776,35 @@ class _AnnotationContext:
 
     def _enum_member_value(
         self, value: _Ann
-    ) -> tuple[int, int | None, int | None] | None:
+    ) -> tuple[int, int | None, int | None, bool, bool] | None:
         direct = _as_int(value)
         if direct is not None:
-            return direct, None, None
+            return direct, None, None, False, False
         if not (
             isinstance(value, griffe.ExprCall)
             and isinstance(value.function, griffe.ExprName)
             and value.function.name == "value"
-            and value.arguments
         ):
             return None
-        ivalue = _as_int(value.arguments[0])
-        if ivalue is None:
-            return None
+        sentinel = _bool_kwarg(value, "value", "sentinel")
+        positionals = [
+            a for a in value.arguments if not isinstance(a, griffe.ExprKeyword)
+        ]
+        if sentinel:
+            # The number is filled in post-pass via _resolve_sentinels.
+            ivalue = 0
+        else:
+            if not positionals:
+                return None
+            ivalue = _as_int(positionals[0])
+            if ivalue is None:
+                return None
         return (
             ivalue,
             _int_kwarg(value, "value", "since"),
             _int_kwarg(value, "value", "until"),
+            _bool_kwarg(value, "value", "deprecated"),
+            sentinel,
         )
 
     # ---- structural checks -------------------------------------------------
@@ -772,12 +876,26 @@ class _AnnotationContext:
                 f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); "
                 f"declare it at module scope to version it"
             )
-        for v in enum.values:
-            if v.since is not None or v.until is not None:
-                raise CompilerError(
-                    f"{owner}.{enum.name}.{v.name}: a nested enum cannot have "
-                    f"version-gated members; declare it at module scope to version it"
-                )
+        # Per-value `since=`/`until=` is allowed on nested enums. The nested
+        # body emitted into the owner's first-snapshot definition carries every
+        # member; the version gate is documentation that travels with the IR.
+
+
+def _resolve_sentinels(values: list[EnumValue]) -> list[EnumValue]:
+    """Fill in the number of each `value(sentinel=True)` member as one past
+    the highest non-sentinel member of the enum. If the enum has no concrete
+    members, the sentinel is rejected -- there's nothing to count past."""
+    non_sentinel = [v.number for v in values if not v.sentinel]
+    if not any(v.sentinel for v in values):
+        return values
+    if not non_sentinel:
+        sentinel = next(v for v in values if v.sentinel)
+        raise CompilerError(
+            f"{sentinel.name}: value(sentinel=True) needs at least one "
+            f"non-sentinel member to count past"
+        )
+    high = max(non_sentinel) + 1
+    return [replace(v, number=high) if v.sentinel else v for v in values]
 
 
 # --- module-free helpers ------------------------------------------------------
@@ -857,6 +975,8 @@ def _repeat_parts(
     return named[0], len(named)
 
 
+
+
 def _map_parts(
     ann: griffe.ExprSubscript, field_name: str
 ) -> tuple[griffe.Expr | str, griffe.Expr | str] | None:
@@ -907,6 +1027,15 @@ def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
 
 def _int_kwarg(expr: _Ann, fn_name: str, kw: str) -> int | None:
     return _as_int(_call_arg(expr, fn_name, kw))
+
+
+def _bool_kwarg(expr: _Ann, fn_name: str, kw: str) -> bool:
+    value = _call_arg(expr, fn_name, kw)
+    if isinstance(value, str) and value == "True":
+        return True
+    if isinstance(value, griffe.ExprName) and value.name == "True":
+        return True
+    return False
 
 
 def _name_kwarg(expr: _Ann, fn_name: str, kw: str) -> str | None:

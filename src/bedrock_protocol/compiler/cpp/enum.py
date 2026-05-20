@@ -19,5 +19,6 @@ class EnumGenerator:
     def emit(self, p: Printer) -> None:
         p(f"enum class {self._enum.name} : int {{")
         for v in self._enum.values:
-            p(f"    {camel(v.name)} = {v.number},")
+            attr = " [[deprecated]]" if v.deprecated else ""
+            p(f"    {camel(v.name)}{attr} = {v.number},")
         p("};")

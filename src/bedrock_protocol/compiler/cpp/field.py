@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...descriptor import (
+    BitsetType,
     CondType,
     EnumType,
     FieldType,
@@ -80,6 +81,8 @@ def cpp_type(
                 return None
             parts.append(case_type)
         return f"std::variant<{', '.join(parts)}>"
+    if isinstance(t, BitsetType):
+        return f"std::bitset<{t.size}>"
     if isinstance(t, CondType):
         return cpp_type(t.inner, ctx, nested)
     return None
@@ -122,6 +125,12 @@ def render_predicate(
         return f"{q}::{camel(member)}"
     if pred.kind == "not":
         return f"!({render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)})"
+    if pred.kind == "bittest":
+        arg = render_predicate(
+            pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot,
+        )
+        bit = f"static_cast<std::size_t>({arg})"
+        return f"{base}.{pred.text}.test({bit})"
     op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
     return f" {op} ".join(
         f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})"

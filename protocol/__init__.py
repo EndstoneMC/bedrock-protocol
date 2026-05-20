@@ -13,12 +13,25 @@ def _identity(cls):
     return cls
 
 
-def value(v, since: int | None = None, until: int | None = None):
+def value(
+    v=None,
+    since: int | None = None,
+    until: int | None = None,
+    deprecated: bool = False,
+    sentinel: bool = False,
+):
     """Mark a member's wire value, optionally gated by protocol version.
 
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
+    - `deprecated`: the member is still on the wire but Mojang has marked it
+      deprecated. Emit a `[[deprecated]]` attribute on the generated value so
+      a downstream `-Wdeprecated-declarations` build flags any new use.
+    - `sentinel`: a count sentinel. The number is auto-computed at parse time
+      as one past the highest non-sentinel member of the enum. `v` is ignored
+      when set. Useful for `bitset[Enum.SENTINEL]` so the bitset width follows
+      the enum's high water mark instead of needing a hard-coded literal.
     """
     return v
 
@@ -109,6 +122,20 @@ def builtin(cls):
     protocol/nbt.py, where the twelve NBT tags are declared this way.
     """
     return cls
+
+
+@builtin
+class bitset:
+    """A fixed-width `std::bitset<N>` on the wire.
+
+    Spell as `bitset[N]` in a field annotation: the wire form is a base-128
+    little-endian dump of the bitset's numeric value (seven payload bits per
+    byte, the top bit a continuation flag, with a lone 0x00 byte for the
+    empty bitset).
+    """
+
+    def __class_getitem__(cls, _n: int):
+        return cls
 
 
 type varint32 = int

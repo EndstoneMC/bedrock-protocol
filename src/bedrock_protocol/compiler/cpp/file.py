@@ -9,10 +9,14 @@ to the per-construct generators (`EnumGenerator`, `StructGenerator`,
 from __future__ import annotations
 
 from ...descriptor import (
+    BitsetType,
     CondType,
     Enum,
     EnumType,
+    FieldType,
+    MappingType,
     OptionalType,
+    RepeatedType,
     ResolvedFile,
     Struct,
     VariantType,
@@ -76,10 +80,12 @@ class FileGenerator:
         p()
 
     def _emit_includes(self, p: Printer) -> None:
-        for inc in (
-            "<array>", "<cstdint>", "<map>", "<optional>",
-            "<string>", "<variant>", "<vector>",
-        ):
+        uses_bitset = self._uses_bitset()
+        stdlib = ["<array>", "<cstdint>", "<map>", "<optional>",
+                  "<string>", "<variant>", "<vector>"]
+        if uses_bitset:
+            stdlib.insert(1, "<bitset>")
+        for inc in stdlib:
             p(f"#include {inc}")
         if self._has_serializers():
             p()
@@ -88,6 +94,8 @@ class FileGenerator:
             p("#include <bedrock/expected.hpp>")
             p("#include <bedrock/serializer.hpp>")
             p("#include <bedrock/stream.hpp>")
+            if uses_bitset:
+                p("#include <bedrock/bitset.hpp>")
             if self._uses_uuid():
                 p("#include <bedrock/uuid.hpp>")
             if self._uses_nbt():
@@ -180,17 +188,29 @@ class FileGenerator:
             if view.is_fresh:
                 narrowed = view.enum or view.struct
                 assert narrowed is not None
-                self._emit_definition(p, narrowed)
+                anchor: int | None = None
+                if isinstance(narrowed, Struct) and _has_nested(narrowed):
+                    fresh = self._resolved.fresh_snapshots(name)
+                    if fresh and fresh[0].lo != snap:
+                        anchor = fresh[0].lo
+                self._emit_definition(p, narrowed, nested_anchor=anchor)
             else:
                 p(f"using {name} = {snapshot_namespace(view.concrete)}::{name};")
         p()
         p(f"}}  // namespace {snapshot_namespace(snap)}")
 
-    def _emit_definition(self, p: Printer, t: Enum | Struct) -> None:
+    def _emit_definition(
+        self,
+        p: Printer,
+        t: Enum | Struct,
+        nested_anchor: int | None = None,
+    ) -> None:
         if isinstance(t, Enum):
             EnumGenerator(t).emit(p)
         else:
-            StructGenerator(t, self._ctx).emit(p)
+            StructGenerator(
+                t, self._ctx, nested_anchor=nested_anchor,
+            ).emit(p)
 
     # --- versioning traits --------------------------------------------------
 
@@ -330,6 +350,17 @@ class FileGenerator:
     def _uses_nbt(self) -> bool:
         return bool(self._referenced() & self._file_set.builtins)
 
+    def _uses_bitset(self) -> bool:
+        for s in self._file.structs:
+            for f in s.fields:
+                for version in f.versions:
+                    if _walk_has_bitset(version.type):
+                        return True
+        for a in self._file.type_aliases:
+            if _walk_has_bitset(a.target):
+                return True
+        return False
+
     def _has_serializers(self) -> bool:
         for name in self._resolved.declaration_order:
             t = self._by_name()[name]
@@ -348,6 +379,27 @@ class FileGenerator:
 
 
 # --- module-free helpers --------------------------------------------------------
+
+
+def _has_nested(s: Struct) -> bool:
+    """A struct has at least one nested type that the dedup logic can anchor.
+    Today only nested enums exist; nested structs / aliases plug in here when
+    they land."""
+    return bool(s.nested_enums)
+
+
+def _walk_has_bitset(t: FieldType | None) -> bool:
+    if t is None:
+        return False
+    if isinstance(t, BitsetType):
+        return True
+    if isinstance(t, (OptionalType, CondType, RepeatedType)):
+        return _walk_has_bitset(t.inner)
+    if isinstance(t, MappingType):
+        return _walk_has_bitset(t.key) or _walk_has_bitset(t.value)
+    if isinstance(t, VariantType):
+        return any(_walk_has_bitset(c) for c in t.cases)
+    return False
 
 
 def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:

@@ -7,6 +7,7 @@ add_executable(${PROJECT_NAME}_tests
     test_level.cpp
     test_login.cpp
     test_network.cpp
+    test_player.cpp
     test_resource_pack.cpp
     test_trim.cpp)
 target_link_libraries(${PROJECT_NAME}_tests PRIVATE
