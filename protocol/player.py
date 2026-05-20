@@ -96,10 +96,6 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = value(51, since=729)
         DOWN_RIGHT = value(52, since=729)
         START_USING_ITEM = value(53, since=748)
-        # BDS marks these `_DEPRECATED` but CloudburstMC does not carry an
-        # explicit deprecation version. Best-effort guess: v859, the same
-        # cleanup wave that retired the deprecated ClientPlayMode / InputMode
-        # members. Revisit if CB picks up a definitive annotation.
         IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = value(54, since=748, deprecated=859)
         IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = value(55, since=748, deprecated=859)
         START_SPIN_ATTACK = value(56, since=748)
@@ -121,6 +117,10 @@ class PlayerAuthInputPacket:
     input_mode: InputMode = field(type=uvarint32)
     play_mode: ClientPlayMode = field(type=uvarint32)
     new_interaction_model: NewInteractionModel = field(type=uvarint32, since=527)
+    vr_gaze_direction: Vec3 = field(
+        when=lambda p: p.play_mode == ClientPlayMode.REALITY,
+        until=748,
+    )
     interact_rotation: Vec2 = field(since=748)
     client_tick: PlayerInputTick = field(since=419)
     pos_delta: Vec3 = field(since=419)
