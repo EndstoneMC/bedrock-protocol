@@ -143,8 +143,9 @@ class SourceTree:
                     continue
                 parts = dep.split(".")
                 for ip in self._import_paths:
-                    candidate = ip.joinpath(*parts).with_suffix(".py")
-                    if candidate.is_file():
+                    module = ip.joinpath(*parts).with_suffix(".py")
+                    package = ip.joinpath(*parts, "__init__.py")
+                    if module.is_file() or package.is_file():
                         loaded[dep] = self._griffe_load(dep, ip)
                         pending.append(dep)
                         break

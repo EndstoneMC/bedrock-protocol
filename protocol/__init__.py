@@ -1,6 +1,9 @@
-"""DSL helpers consumed by the bpc compiler.
+"""DSL surface consumed by the bpc compiler.
 
-griffe reads these statically; at runtime they're intentional no-ops.
+griffe reads this statically; at runtime the decorators and helpers are
+intentional no-ops. The primitive type aliases at the bottom exist only so
+mypy and IDEs accept annotations like `x: varint32`; the compiler recognizes
+the names directly.
 """
 
 from typing import Any, TypeAliasType, Union
@@ -106,3 +109,18 @@ def builtin(cls):
     protocol/nbt.py, where the twelve NBT tags are declared this way.
     """
     return cls
+
+
+type varint32 = int
+type varint64 = int
+type uvarint32 = int
+type uvarint64 = int
+type int8 = int
+type int16 = int
+type int32 = int
+type int64 = int
+type uint8 = int
+type uint16 = int
+type uint32 = int
+type uint64 = int
+type double = float

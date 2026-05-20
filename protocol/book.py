@@ -1,5 +1,4 @@
-from protocol._dsl import packet
-from protocol.common import varint32
+from protocol import packet, varint32
 
 package = "bedrock.protocol"
 

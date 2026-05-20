@@ -7,7 +7,7 @@ routes it through `Serializer<Name>` without emitting a definition of its own.
 The names are declared in wire tag-id order.
 """
 
-from protocol._dsl import builtin
+from protocol import builtin
 
 package = "bedrock.protocol"
 

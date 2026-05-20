@@ -1,5 +1,5 @@
-from protocol._dsl import field, packet
-from protocol.common import BlockPos, SubChunkPos, int8, uint32, varint32
+from protocol import field, int8, packet, uint32, varint32
+from protocol.common import BlockPos, SubChunkPos
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"

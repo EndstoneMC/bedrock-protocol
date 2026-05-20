@@ -1,4 +1,4 @@
-from protocol._dsl import packet
+from protocol import packet
 
 package = "bedrock.protocol"
 

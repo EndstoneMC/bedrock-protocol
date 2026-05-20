@@ -1,18 +1,6 @@
-package = "bedrock.protocol"
+from protocol import int32, varint32
 
-type varint32 = int
-type varint64 = int
-type uvarint32 = int
-type uvarint64 = int
-type int8 = int
-type int16 = int
-type int32 = int
-type int64 = int
-type uint8 = int
-type uint16 = int
-type uint32 = int
-type uint64 = int
-type double = float
+package = "bedrock.protocol"
 
 
 class Vec2:

@@ -1,7 +1,6 @@
 from enum import IntEnum
 
-from protocol._dsl import field, packet
-from protocol.common import uint8, uint16
+from protocol import field, packet, uint8, uint16
 
 package = "bedrock.protocol"
 

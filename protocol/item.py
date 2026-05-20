@@ -1,5 +1,4 @@
-from protocol._dsl import field
-from protocol.common import int16, uint16, uvarint32, varint32
+from protocol import field, int16, uint16, uvarint32, varint32
 
 package = "bedrock.protocol"
 
