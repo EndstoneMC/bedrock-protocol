@@ -3,8 +3,7 @@ from enum import IntEnum
 from protocol import bitset, field, packet, type, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec2, Vec3
-from protocol.inventory import PackedItemUseLegacyInventoryTransaction
-from protocol.item_stack_request import ItemStackRequestData
+from protocol.inventory import ItemStackRequestData, PackedItemUseLegacyInventoryTransaction
 
 package = "bedrock.protocol"
 
