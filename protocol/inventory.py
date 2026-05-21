@@ -2,6 +2,7 @@ from enum import IntEnum
 
 from protocol import field, int16, int32, uint8, uint16, uint32, uvarint32, varint32
 from protocol.common import BlockPos, Vec3
+from protocol.molang import MolangVersion
 
 package = "bedrock.protocol"
 
@@ -132,7 +133,7 @@ class InventorySourceType(IntEnum):
 
 
 class InventorySource:
-    source_type: InventorySourceType = field(type=uvarint32)  # TODO: confirm against BDS
+    source_type: InventorySourceType = field(type=uvarint32)
     container_id: varint32 = field(
         when=lambda p: (
             p.source_type == InventorySourceType.CONTAINER_INVENTORY
@@ -218,13 +219,13 @@ class InvalidItemDescriptor:
 
 
 class InternalItemDescriptor:
-    network_id: int16  # TODO: confirm against BDS
-    aux_value: int16 = field(when=lambda p: p.network_id != 0)
+    item_id: int16
+    aux_value: int16 = field(when=lambda p: p.item_id != 0)
 
 
 class MolangDescriptor:
     expression_tags: str
-    version: uint8  # TODO: confirm against BDS
+    version: MolangVersion = field(type=uint8)
 
 
 class ItemTagDescriptor:
@@ -326,7 +327,7 @@ class CraftRecipeStackRequestAction:
 
 class CraftRecipeAutoStackRequestAction:
     recipe_net_id: uvarint32
-    num_requested_crafts: uint8
+    num_requested_crafts: uint8  # always set to the same value as num_crafts
     num_crafts: uint8
     ingredients: list[ItemDescriptorCount]
 

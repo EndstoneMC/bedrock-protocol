@@ -845,7 +845,7 @@ TEST_CASE("PlayerAuthInputPacket: AutoCraftRecipe with all five ItemDescriptor v
 
     bp::CraftRecipeAutoStackRequestAction action;
     action.recipe_net_id = 5;
-    action.num_crafts = 1;
+    action.num_requested_crafts = 1;
     action.num_crafts = 1;
     action.ingredients = {
         bp::ItemDescriptorCount{
@@ -853,7 +853,7 @@ TEST_CASE("PlayerAuthInputPacket: AutoCraftRecipe with all five ItemDescriptor v
             1,
         },
         bp::ItemDescriptorCount{
-            bp::MolangDescriptor{"q.is_baby", 1},
+            bp::MolangDescriptor{"q.is_baby", bp::MolangVersion::Initial},
             2,
         },
         bp::ItemDescriptorCount{

@@ -16,7 +16,7 @@ TEST_CASE("CraftingDataPacket: id + round-trip with shapeless and shaped recipes
         bp::RecipeUnlockingRequirement::UnlockingContext::AlwaysUnlocked;
     shapeless.net_id = 42;
 
-    bp::ShapedRecipe shaped;
+    bp::ShapedRecipe shaped{};
     shaped.recipe_id = "shape_test";
     shaped.width = 2;
     shaped.height = 3;

@@ -8,7 +8,7 @@ type DimensionType = varint32
 
 
 class DimensionDefinition:
-    name: str  # TODO: confirm against BDS
+    name: str
     height_maximum: varint32
     height_minimum: varint32
     generator_type: varint32
