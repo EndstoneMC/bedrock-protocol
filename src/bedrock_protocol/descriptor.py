@@ -159,9 +159,13 @@ class MappingType:
 
 @dataclass(frozen=True)
 class VariantType:
-    """`std::variant`-shaped tagged union with a varuint32 tag. A None case
-    carries no payload (`std::monostate` in C++)."""
+    """`std::variant`-shaped tagged union. `discriminator` is the integer
+    primitive that prefixes the active case index on the wire (default
+    `uvarint32`); a `None` case carries no payload (`std::monostate` in C++)."""
     cases: tuple["FieldType | None", ...]
+    discriminator: PrimitiveType = field(
+        default_factory=lambda: PrimitiveType(name="uvarint32")
+    )
     kind: Literal["variant"] = "variant"
 
     @property

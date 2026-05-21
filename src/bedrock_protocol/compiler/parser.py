@@ -491,13 +491,21 @@ class _AnnotationContext:
                 raise CompilerError(_endian_scope_error(field_name))
             return PrimitiveType(name="bytes", trailing=True)
         prefix = self._repeat_prefix(call, field_name)
+        tag = self._variant_tag(call, field_name)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, endian, prefix, nested)
-        base = self._base_type(ann, type_kw, prefix, nested, field_name)
-        if base is None:
-            return None
-        return self._with_endian(base, endian, field_name)
+            result = self._union_type(cases, field_name, type_kw, endian, prefix, nested, tag)
+        else:
+            base = self._base_type(ann, type_kw, prefix, nested, field_name, tag)
+            if base is None:
+                return None
+            result = self._with_endian(base, endian, field_name)
+        if tag is not None and not _has_variant(result):
+            raise CompilerError(
+                f"{field_name}: field(tag=...) sets a tagged-union discriminator "
+                f"but the field's type tree contains no multi-case union"
+            )
+        return result
 
     def _union_type(
         self,
@@ -507,10 +515,11 @@ class _AnnotationContext:
         endian: str | None,
         prefix: PrimitiveType,
         nested: frozenset[str],
+        tag: PrimitiveType | None = None,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
-            base = self._base_type(inner_ann, type_kw, prefix, nested, field_name)
+            base = self._base_type(inner_ann, type_kw, prefix, nested, field_name, tag)
             if base is None:
                 return None
             if endian is not None:
@@ -530,11 +539,13 @@ class _AnnotationContext:
             if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(case, type_kw, prefix, nested, field_name)
+            t = self._base_type(case, type_kw, prefix, nested, field_name, tag)
             if t is None:
                 return None
             types.append(t)
-        return VariantType(tuple(types))
+        if tag is None:
+            return VariantType(tuple(types))
+        return VariantType(tuple(types), discriminator=tag)
 
     def _base_type(
         self,
@@ -543,6 +554,7 @@ class _AnnotationContext:
         prefix: PrimitiveType,
         nested: frozenset[str],
         field_name: str,
+        tag: PrimitiveType | None = None,
     ) -> FieldType | None:
         if (builtin := self._builtin_of(ann)) is not None:
             return StructType(builtin)
@@ -553,7 +565,7 @@ class _AnnotationContext:
             repeat = _repeat_parts(ann, field_name)
             if repeat is not None:
                 elem_ann, count = repeat
-                inner = self._base_type(elem_ann, type_kw, prefix, nested, field_name)
+                inner = self._base_type(elem_ann, type_kw, prefix, nested, field_name, tag)
                 if inner is None:
                     return None
                 return RepeatedType(
@@ -563,12 +575,15 @@ class _AnnotationContext:
                 )
             mapping = _map_parts(ann, field_name)
             if mapping is not None:
-                key = self._base_type(mapping[0], type_kw, prefix, nested, field_name)
-                value = self._base_type(mapping[1], type_kw, prefix, nested, field_name)
+                key = self._base_type(mapping[0], type_kw, prefix, nested, field_name, tag)
+                value = self._base_type(mapping[1], type_kw, prefix, nested, field_name, tag)
                 if key is None or value is None:
                     return None
                 return MappingType(key, value, prefix)
             return None
+        cases = _flatten_union(ann)
+        if cases is not None:
+            return self._union_type(cases, field_name, type_kw, None, prefix, nested, tag)
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
@@ -591,6 +606,18 @@ class _AnnotationContext:
         if isinstance(alias, TypeAlias):
             return alias.target
         return None
+
+    def _variant_tag(self, call: _Ann, field_name: str) -> PrimitiveType | None:
+        """`field(tag=<integer primitive>)` overrides a `VariantType`'s
+        on-wire discriminator. Absent kwarg → leave the default (`uvarint32`)."""
+        name = _name_kwarg(call, "field", "tag")
+        if name is None:
+            return None
+        if name not in INTEGER_PRIMITIVES:
+            raise CompilerError(
+                f"{field_name}: field(tag=...) must be an integer primitive, got {name!r}"
+            )
+        return PrimitiveType(name=name)
 
     def _repeat_prefix(self, call: _Ann, field_name: str) -> PrimitiveType:
         name = _name_kwarg(call, "field", "prefix")
@@ -897,6 +924,20 @@ class _AnnotationContext:
         # Per-value `since=`/`until=` is allowed on nested enums. The nested
         # body emitted into the owner's first-snapshot definition carries every
         # member; the version gate is documentation that travels with the IR.
+
+
+def _has_variant(t: FieldType | None) -> bool:
+    """True iff the type tree contains a `VariantType` somewhere -- used to
+    validate `field(tag=...)` actually has a target."""
+    if t is None:
+        return False
+    if isinstance(t, VariantType):
+        return True
+    if isinstance(t, (OptionalType, RepeatedType, CondType)):
+        return _has_variant(t.inner)
+    if isinstance(t, MappingType):
+        return _has_variant(t.key) or _has_variant(t.value)
+    return False
 
 
 def _is_trailing(t: FieldType | None) -> bool:

@@ -244,7 +244,7 @@ class SerializerGenerator:
             p("}")
             self._loop_depth -= 1
         elif isinstance(t, VariantType):
-            p(f"stream.writeVarInt<std::uint32_t>(({expr}).index());")
+            p(f"{_primitive_write(t.discriminator, f'({expr}).index()')}")
             p(f"switch (({expr}).index()) {{")
             with p.indented():
                 for index, case in enumerate(t.cases):
@@ -360,7 +360,14 @@ class SerializerGenerator:
             self._loop_depth += 1
             vartype = cpp_type(t, self._ctx, self._nested_enums)
             assert vartype is not None
-            p(f"auto tag{depth} = stream.readVarInt<std::uint32_t>();")
+            d = t.discriminator
+            u = PRIMITIVE_TYPES[d.name]
+            verb = (
+                f"readVarInt<{u}>"
+                if d.name in VARINT_PRIMITIVES
+                else f"read<{u}>"
+            )
+            p(f"auto tag{depth} = stream.{verb}();")
             p(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
             p(f"{vartype} var{depth}{{}};")
             p(f"switch (*tag{depth}) {{")

@@ -45,6 +45,7 @@ def field(
     when: Any = None,
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
+    tag: TypeAliasType | None = None,
 ) -> Any:
     """Mark a struct field.
 
@@ -80,6 +81,12 @@ def field(
       field as trailing -- the wire form has no length marker and the frame
       boundary terminates the read. A trailing field must be the last
       field of its struct.
+    - `tag`: integer primitive that prefixes the active-case index of a
+      multi-case union on the wire (default `uvarint32`). Applies to a
+      `T1 | T2 | T3 | ...` annotation, including inline unions inside a
+      `list[T1 | T2 | T3]` -- each list element carries its own tag. Has
+      no effect on a `T | None` optional. The field's resolved type must
+      contain a multi-case union or `tag=` is an error.
 
     `with field(when=lambda p: ...):` may also be written as a statement in a
     struct body: every field declared inside the block is gated by the shared
