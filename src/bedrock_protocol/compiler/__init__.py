@@ -8,7 +8,7 @@ The pipeline:
                                                           │
                                   registry.GENERATORS[name]() ─► CodeGenerator
                                                           │
-                                  .generate(resolved, parameter, GeneratorContext)
+                                  .generate(resolved, GeneratorContext)
 """
 
 from .code_generator import CodeGenerator, GeneratorContext, FilesystemContext

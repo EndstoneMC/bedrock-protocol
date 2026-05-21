@@ -35,20 +35,20 @@ TEST_CASE("NetworkItemInstanceDescriptor: non-air round-trip")
 
     bp::NetworkItemInstanceDescriptor item;
     item.id = 5;
-    item.count = 1;
+    item.stack_size = 1;
     item.aux_value = 0;
     item.block_runtime_id = 0;
-    item.user_data = kEmptyUserData;
+    item.user_data_buffer = kEmptyUserData;
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::NetworkItemInstanceDescriptor>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 5);
-    REQUIRE(rt->count == 1);
+    REQUIRE(rt->stack_size == 1);
     REQUIRE(rt->aux_value == 0);
     REQUIRE(rt->block_runtime_id == 0);
-    REQUIRE(rt->user_data == kEmptyUserData);
+    REQUIRE(rt->user_data_buffer == kEmptyUserData);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -59,7 +59,7 @@ TEST_CASE("NetworkItemInstanceDescriptor: air omits the guarded body")
 
     bp::NetworkItemInstanceDescriptor item;
     item.id = 0;
-    item.user_data = "ignored";  // a guarded field, not serialized when id == 0
+    item.user_data_buffer = "ignored";  // a guarded field, not serialized when id == 0
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
@@ -80,21 +80,21 @@ TEST_CASE("NetworkItemStackDescriptor: net id absent")
 
     bp::NetworkItemStackDescriptor item;
     item.id = 7;
-    item.count = 64;
+    item.stack_size = 64;
     item.aux_value = 0;
-    item.net_id = std::nullopt;
+    item.net_id_variant = std::nullopt;
     item.block_runtime_id = 10;
-    item.user_data = kEmptyUserData;
+    item.user_data_buffer = kEmptyUserData;
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::NetworkItemStackDescriptor>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 7);
-    REQUIRE(rt->count == 64);
-    REQUIRE_FALSE(rt->net_id.has_value());
+    REQUIRE(rt->stack_size == 64);
+    REQUIRE_FALSE(rt->net_id_variant.has_value());
     REQUIRE(rt->block_runtime_id == 10);
-    REQUIRE(rt->user_data == kEmptyUserData);
+    REQUIRE(rt->user_data_buffer == kEmptyUserData);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -109,18 +109,18 @@ TEST_CASE("NetworkItemStackDescriptor: net id present")
 
     bp::NetworkItemStackDescriptor item;
     item.id = 7;
-    item.count = 1;
+    item.stack_size = 1;
     item.aux_value = 0;
-    item.net_id = 100;
+    item.net_id_variant = 100;
     item.block_runtime_id = 0;
-    item.user_data = kEmptyUserData;
+    item.user_data_buffer = kEmptyUserData;
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::NetworkItemStackDescriptor>(in);
     REQUIRE(rt.has_value());
-    REQUIRE(rt->net_id.has_value());
-    REQUIRE(*rt->net_id == 100);
+    REQUIRE(rt->net_id_variant.has_value());
+    REQUIRE(*rt->net_id_variant == 100);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -145,20 +145,20 @@ TEST_CASE("SerializedNetworkItemStackDescriptor: id 0 writes a full header")
 
     bp::SerializedNetworkItemStackDescriptor item;
     item.id = 0;
-    item.count = 1;
+    item.stack_size = 1;
     item.aux_value = 0;
-    item.net_id = std::nullopt;
+    item.net_id_variant = std::nullopt;
     item.block_runtime_id = 0;
-    item.user_data = "";
+    item.user_data_buffer = "";
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::SerializedNetworkItemStackDescriptor>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 0);
-    REQUIRE(rt->count == 1);
-    REQUIRE_FALSE(rt->net_id.has_value());
-    REQUIRE(rt->user_data.empty());
+    REQUIRE(rt->stack_size == 1);
+    REQUIRE_FALSE(rt->net_id_variant.has_value());
+    REQUIRE(rt->user_data_buffer.empty());
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -173,19 +173,19 @@ TEST_CASE("SerializedNetworkItemStackDescriptor: net id absent")
 
     bp::SerializedNetworkItemStackDescriptor item;
     item.id = 10;
-    item.count = 1;
+    item.stack_size = 1;
     item.aux_value = 0;
-    item.net_id = std::nullopt;
+    item.net_id_variant = std::nullopt;
     item.block_runtime_id = 0;
-    item.user_data = kEmptyUserData;
+    item.user_data_buffer = kEmptyUserData;
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::SerializedNetworkItemStackDescriptor>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 10);
-    REQUIRE_FALSE(rt->net_id.has_value());
-    REQUIRE(rt->user_data == kEmptyUserData);
+    REQUIRE_FALSE(rt->net_id_variant.has_value());
+    REQUIRE(rt->user_data_buffer == kEmptyUserData);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -202,20 +202,20 @@ TEST_CASE("SerializedNetworkItemStackDescriptor: tagged net-id variant")
 
     bp::SerializedNetworkItemStackDescriptor item;
     item.id = 300;
-    item.count = 2;
+    item.stack_size = 2;
     item.aux_value = 5;
-    item.net_id = bp::ItemStackNetIdVariant{bp::ItemStackServerNetId{42}};
+    item.net_id_variant = bp::ItemStackNetIdVariant{bp::ItemStackNetId{42}};
     item.block_runtime_id = 7;
-    item.user_data = kEmptyUserData;
+    item.user_data_buffer = kEmptyUserData;
     REQUIRE(encode(item) == golden);
 
     bp::BinaryReader in{golden};
     auto rt = bp::deserialize<bp::SerializedNetworkItemStackDescriptor>(in);
     REQUIRE(rt.has_value());
     REQUIRE(rt->id == 300);
-    REQUIRE(rt->net_id.has_value());
-    REQUIRE(rt->net_id->index() == 0);
-    REQUIRE(std::get<bp::ItemStackServerNetId>(*rt->net_id).id == 42);
+    REQUIRE(rt->net_id_variant.has_value());
+    REQUIRE(rt->net_id_variant->index() == 0);
+    REQUIRE(std::get<bp::ItemStackNetId>(*rt->net_id_variant).id == 42);
     REQUIRE(in.getUnreadLength() == 0);
 }
 
@@ -240,16 +240,16 @@ TEST_CASE("bytes carries raw binary, including embedded NULs")
 {
     bp::NetworkItemInstanceDescriptor item;
     item.id = 1;
-    item.count = 1;
+    item.stack_size = 1;
     item.aux_value = 0;
     item.block_runtime_id = 0;
-    item.user_data = std::string{"\x00\xFF\x00\x10", 4};
+    item.user_data_buffer = std::string{"\x00\xFF\x00\x10", 4};
 
     auto buf = encode(item);
     bp::BinaryReader in{buf};
     auto rt = bp::deserialize<bp::NetworkItemInstanceDescriptor>(in);
     REQUIRE(rt.has_value());
-    REQUIRE(rt->user_data.size() == 4);
-    REQUIRE(rt->user_data == std::string{"\x00\xFF\x00\x10", 4});
+    REQUIRE(rt->user_data_buffer.size() == 4);
+    REQUIRE(rt->user_data_buffer == std::string{"\x00\xFF\x00\x10", 4});
     REQUIRE(in.getUnreadLength() == 0);
 }

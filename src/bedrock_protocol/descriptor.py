@@ -402,6 +402,7 @@ class FileSet:
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     builtins: frozenset[str]
+    version: int | None = None
     resolved: dict[str, "ResolvedFile"] = field(default_factory=dict)
 
 

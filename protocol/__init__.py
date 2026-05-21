@@ -1,12 +1,8 @@
-"""DSL surface consumed by the bpc compiler.
-
-griffe reads this statically; at runtime the decorators and helpers are
-intentional no-ops. The primitive type aliases at the bottom exist only so
-mypy and IDEs accept annotations like `x: varint32`; the compiler recognizes
-the names directly.
-"""
+"""DSL surface consumed by the bpc compiler."""
 
 from typing import Any, TypeAliasType, Union
+
+__version__ = 975
 
 
 def _identity(cls):

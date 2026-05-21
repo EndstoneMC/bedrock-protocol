@@ -1,12 +1,11 @@
 """CLI driver — protoc analog of `compiler/command_line_interface.h`.
 
-    bpc --language cpp --out <dir> [--opt KEY=VAL]...
-        [--import-path <dir>]... <inputs>...
+    bpc --language cpp --out <dir> [--import-path <dir>]... <inputs>...
 
 `--language NAME` selects the registered backend; `--out DIR` is its output
-directory; `--opt KEY=VAL` carries backend parameters. One backend per
-invocation. The shape mirrors protoc's `--<name>_out` / `--<name>_opt`
-without the Windows drive-letter ambiguity of `--cpp_out=opt:C:\\...`.
+directory. One backend per invocation. The protocol version a backend
+targets is sourced from the DSL itself (`__version__` in
+`protocol/__init__.py`), so there is no command-line knob for it.
 """
 
 from __future__ import annotations
@@ -44,13 +43,6 @@ from .descriptor import CompilerError
     help="Backend output directory.",
 )
 @click.option(
-    "--opt",
-    "opts",
-    multiple=True,
-    metavar="KEY=VAL",
-    help="Backend option, e.g. --opt latest=974. Repeatable.",
-)
-@click.option(
     "--import-path",
     "import_paths",
     multiple=True,
@@ -68,7 +60,6 @@ def main(
     verbose: bool,
     language: str,
     out_dir: Path,
-    opts: tuple[str, ...],
     import_paths: tuple[Path, ...],
     inputs: tuple[Path, ...],
 ) -> None:
@@ -77,12 +68,17 @@ def main(
         raise click.ClickException(
             f"unknown language {language!r}; known: {sorted(GENERATORS)}"
         )
-    parameter = _join_opts(opts)
 
     try:
         file_set = SourceTree(list(import_paths)).load_all(inputs)
     except CompilerError as exc:
         raise click.ClickException(str(exc))
+
+    if file_set.version is None:
+        raise click.ClickException(
+            "no __version__ declared in the DSL surface "
+            "(expected `__version__ = <int>` in protocol/__init__.py)"
+        )
 
     error_seen = False
     for output_name in file_set.outputs:
@@ -92,7 +88,7 @@ def main(
             raise click.ClickException(str(exc))
         ctx = FilesystemContext(out_dir, verbose=verbose)
         try:
-            factory().generate(resolved, parameter, ctx)
+            factory().generate(resolved, ctx)
         except CompilerError as exc:
             raise click.ClickException(str(exc))
         for err in ctx.errors:
@@ -101,17 +97,6 @@ def main(
 
     if error_seen:
         raise click.ClickException("backend reported errors")
-
-
-def _join_opts(opts: tuple[str, ...]) -> str:
-    """Merge repeated --opt KEY=VAL into one comma-separated parameter string.
-    Each chunk must already be KEY=VAL; the backend parses the joined form."""
-    for raw in opts:
-        if "=" not in raw:
-            raise click.ClickException(
-                f"--opt expected KEY=VAL, got {raw!r}"
-            )
-    return ",".join(opts)
 
 
 if __name__ == "__main__":

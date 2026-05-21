@@ -110,6 +110,7 @@ class SourceTree:
             files=files,
             outputs=tuple(output_names),
             builtins=classified.builtins,
+            version=_dsl_version(griffe_modules),
         )
 
     # --- griffe loading -----------------------------------------------------
@@ -1092,6 +1093,22 @@ def _package_of(mod: griffe.Module) -> str | None:
     if attr is None or attr.value is None:
         return None
     return str(attr.value).strip("'\"")
+
+
+def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
+    """Pull `__version__` off any loaded module that declares it -- in
+    practice the DSL surface module (`protocol/__init__.py`), which the
+    schema files all import from. The single source for "what protocol
+    version this project targets"; the CLI raises if it is missing."""
+    for mod in loaded.values():
+        attr = mod.attributes.get("__version__")
+        if attr is None or attr.value is None:
+            continue
+        try:
+            return int(str(attr.value))
+        except ValueError:
+            continue
+    return None
 
 
 def _is_int_enum(cls: griffe.Class) -> bool:
