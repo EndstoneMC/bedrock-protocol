@@ -295,8 +295,11 @@ class FileGenerator:
                         del p.lines[pos:]
                 # An outer namespace-only struct (no fields of its own, only
                 # nested types) has no body to serialize -- the nested-type
-                # serializers above are all the wire codec needs.
-                if not t.fields:
+                # serializers above are all the wire codec needs. A truly
+                # empty leaf struct (no fields AND no nested types), in
+                # contrast, can appear as a variant alternative and still
+                # needs its own zero-byte Serializer specialization.
+                if not t.fields and (t.nested_structs or t.nested_enums):
                     continue
                 if not fresh:
                     pos = len(p.lines)
