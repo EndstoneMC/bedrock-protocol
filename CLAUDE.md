@@ -117,6 +117,15 @@
    (`Marshal(buf *bytes.Buffer)`), so the driver differs per era. Never
    hand-compute a golden, not even by reading the `Marshal` source.
 
+   For a packet whose body is (or contains) a `CompoundTag`, the Go-side NBT
+   struct used to build the golden must declare its `nbt:"..."`-tagged fields
+   in alphabetical key order, and a `map[string]any` payload must be replaced
+   by such a struct. Our `CompoundTag` is `std::map`-backed and writes entries
+   in sorted-key order, while gophertunnel's NBT encoder follows Go's struct
+   declaration order and randomizes map iteration -- mismatch yields the same
+   compound semantically but a different byte sequence, and the round-trip
+   `REQUIRE(buf == golden)` fails. Sort the Go struct fields before generating.
+
 9. **Field names come from protocol-docs.** When adding a packet, name each
    field after the EndstoneMC protocol-docs JSON (the same source rule 7
    draws on), carried into the project's `snake_case` convention. Do not

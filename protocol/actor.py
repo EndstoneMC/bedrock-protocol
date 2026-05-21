@@ -3,6 +3,7 @@ from enum import IntEnum
 
 from protocol import field, int32, packet, type, uint8, uvarint64, value, varint32, varint64
 from protocol.common import Vec3
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -204,3 +205,10 @@ class UpdateAttributesPacket:
     runtime_id: ActorRuntimeID
     attribute_data: list[AttributeData]
     tick: uvarint64 = field(since=419)
+
+
+@packet(id=119)
+class AvailableActorIdentifiersPacket:
+    """Sends the whole list of actor identifiers at game start from the server."""
+
+    identifier_list: CompoundTag
