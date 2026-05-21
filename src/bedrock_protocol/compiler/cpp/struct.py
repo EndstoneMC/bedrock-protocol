@@ -42,6 +42,11 @@ class StructGenerator:
 
     def emit(self, p: Printer) -> None:
         s = self._struct
+        attr = (
+            f' [[deprecated("since v{s.deprecated}")]]'
+            if s.deprecated is not None
+            else ""
+        )
         rendered_fields: list[tuple[str, str]] = []
         for f in s.fields:
             (version,) = f.versions
@@ -51,11 +56,11 @@ class StructGenerator:
                 else None
             )
             if ctype is None:
-                p(f"struct {s.name} {{}};")
+                p(f"struct{attr} {s.name} {{}};")
                 return
             rendered_fields.append((ctype, f.name))
 
-        p(f"struct {s.name} {{")
+        p(f"struct{attr} {s.name} {{")
         with p.indented(1):
             for e in s.nested_enums:
                 self._emit_nested_enum(p, e)

@@ -51,6 +51,16 @@ from . import extensions
 _Ann = griffe.Expr | str | None
 
 
+@dataclass(frozen=True)
+class _TagSpec:
+    """Resolved `field(tag=...)` for a tagged-union discriminator: `primitive`
+    is the wire form, `enum_name` is the optional `IntEnum` whose members
+    supply the C++ case labels (one-to-one with the variant alternatives in
+    declaration order)."""
+    primitive: PrimitiveType
+    enum_name: str | None = None
+
+
 @dataclass
 class _ClassifyResult:
     """Output of the cross-module classification pass — immutable from
@@ -358,6 +368,7 @@ class _AnnotationContext:
             nested_enums=tuple(nested_enums),
             packet_id=_decorator_int(cls, "packet", "id"),
             since=since,
+            deprecated=_decorator_int(cls, "type", "deprecated"),
         )
 
     def merged_struct(self, decls: list[griffe.Class]) -> Struct:
@@ -515,7 +526,7 @@ class _AnnotationContext:
         endian: str | None,
         prefix: PrimitiveType,
         nested: frozenset[str],
-        tag: PrimitiveType | None = None,
+        tag: _TagSpec | None = None,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
@@ -545,7 +556,9 @@ class _AnnotationContext:
             types.append(t)
         if tag is None:
             return VariantType(tuple(types))
-        return VariantType(tuple(types), discriminator=tag)
+        return VariantType(
+            tuple(types), discriminator=tag.primitive, tag_enum=tag.enum_name
+        )
 
     def _base_type(
         self,
@@ -554,7 +567,7 @@ class _AnnotationContext:
         prefix: PrimitiveType,
         nested: frozenset[str],
         field_name: str,
-        tag: PrimitiveType | None = None,
+        tag: _TagSpec | None = None,
     ) -> FieldType | None:
         if (builtin := self._builtin_of(ann)) is not None:
             return StructType(builtin)
@@ -607,17 +620,23 @@ class _AnnotationContext:
             return alias.target
         return None
 
-    def _variant_tag(self, call: _Ann, field_name: str) -> PrimitiveType | None:
-        """`field(tag=<integer primitive>)` overrides a `VariantType`'s
-        on-wire discriminator. Absent kwarg → leave the default (`uvarint32`)."""
+    def _variant_tag(self, call: _Ann, field_name: str) -> _TagSpec | None:
+        """`field(tag=<integer primitive | IntEnum>)` overrides a `VariantType`'s
+        on-wire discriminator. An enum tag names the C++ case labels but keeps
+        the wire form as `varint32` (matching the BDS convention for tagged-
+        union recipe / action enums). Absent kwarg -> leave the default
+        (`uvarint32`)."""
         name = _name_kwarg(call, "field", "tag")
         if name is None:
             return None
-        if name not in INTEGER_PRIMITIVES:
-            raise CompilerError(
-                f"{field_name}: field(tag=...) must be an integer primitive, got {name!r}"
-            )
-        return PrimitiveType(name=name)
+        if name in INTEGER_PRIMITIVES:
+            return _TagSpec(primitive=PrimitiveType(name=name))
+        if name in self.enum_names:
+            return _TagSpec(primitive=PrimitiveType(name="varint32"), enum_name=name)
+        raise CompilerError(
+            f"{field_name}: field(tag=...) must be an integer primitive or "
+            f"a user-defined IntEnum, got {name!r}"
+        )
 
     def _repeat_prefix(self, call: _Ann, field_name: str) -> PrimitiveType:
         name = _name_kwarg(call, "field", "prefix")

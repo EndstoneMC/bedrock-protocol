@@ -161,18 +161,25 @@ class MappingType:
 class VariantType:
     """`std::variant`-shaped tagged union. `discriminator` is the integer
     primitive that prefixes the active case index on the wire (default
-    `uvarint32`); a `None` case carries no payload (`std::monostate` in C++)."""
+    `uvarint32`); a `None` case carries no payload (`std::monostate` in C++).
+    `tag_enum` names a user-defined `IntEnum` whose members supply the C++
+    case labels (`EnumName::MEMBER`) one-to-one with the variant alternatives,
+    in declaration order; the wire form remains `discriminator`."""
     cases: tuple["FieldType | None", ...]
     discriminator: PrimitiveType = field(
         default_factory=lambda: PrimitiveType(name="uvarint32")
     )
+    tag_enum: str | None = None
     kind: Literal["variant"] = "variant"
 
     @property
     def referenced(self) -> frozenset[str]:
-        return frozenset().union(
+        refs = frozenset().union(
             *(a.referenced for a in self.cases if a is not None)
         )
+        if self.tag_enum is not None:
+            refs = refs | frozenset({self.tag_enum})
+        return refs
 
 
 @dataclass(frozen=True)
@@ -305,6 +312,7 @@ class Struct:
     nested_enums: tuple[Enum, ...]
     packet_id: int | None
     since: int | None = None
+    deprecated: int | None = None
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -322,6 +330,8 @@ class Struct:
         points: set[int] = set()
         if self.since is not None:
             points.add(self.since)
+        if self.deprecated is not None:
+            points.add(self.deprecated)
         for f in self.fields:
             for version in f.versions:
                 if version.since is not None:

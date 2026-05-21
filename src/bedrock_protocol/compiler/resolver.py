@@ -275,10 +275,16 @@ def _snapshot_view(
             version = replace(version, type=rebound)
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
+    dep = t.deprecated if (
+        t.deprecated is not None and snapshot >= t.deprecated
+    ) else None
     view_s = replace(
-        t, fields=tuple(narrowed), nested_enums=tuple(narrowed_enums),
+        t,
+        fields=tuple(narrowed),
+        nested_enums=tuple(narrowed_enums),
+        deprecated=dep,
     )
-    return None, view_s, tuple(key_parts) + (tuple(enum_key_parts),)
+    return None, view_s, tuple(key_parts) + (tuple(enum_key_parts), dep is not None)
 
 
 def _rebind_bitsets(

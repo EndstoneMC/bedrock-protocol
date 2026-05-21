@@ -40,9 +40,18 @@ class FileContext:
 
 
 def cpp_type(
-    t: FieldType | None, ctx: FileContext, nested: frozenset[str]
+    t: FieldType | None,
+    ctx: FileContext,
+    nested: frozenset[str],
+    snapshot: int | None = None,
 ) -> str | None:
-    """C++ spelling for a field-type node, or None if unresolvable."""
+    """C++ spelling for a field-type node, or None if unresolvable.
+
+    When `snapshot` is set, versioned struct / enum references are
+    snapshot-qualified (e.g. `v354::FurnaceRecipe`). Inside a namespace
+    that already contains the right view (the struct's own body), pass
+    `snapshot=None` and let unqualified lookup do the work.
+    """
     if t is None:
         return None
     if isinstance(t, PrimitiveType):
@@ -51,22 +60,30 @@ def cpp_type(
         return PRIMITIVE_TYPES.get(t.name)
     if isinstance(t, (StructType, EnumType)):
         name = t.name
-        if name in nested or name in ctx.known or name in ctx.builtins:
+        if name in nested:
             return name
-        return None
+        if name in ctx.builtins:
+            return name
+        if name not in ctx.known:
+            return None
+        if snapshot is not None and ctx.resolved.is_versioned(name):
+            view = ctx.resolved.present_at(name, snapshot)
+            if view is not None:
+                return f"{snapshot_namespace(view.concrete)}::{name}"
+        return name
     if isinstance(t, OptionalType):
-        inner = cpp_type(t.inner, ctx, nested)
+        inner = cpp_type(t.inner, ctx, nested, snapshot)
         return None if inner is None else f"std::optional<{inner}>"
     if isinstance(t, RepeatedType):
-        inner = cpp_type(t.inner, ctx, nested)
+        inner = cpp_type(t.inner, ctx, nested, snapshot)
         if inner is None:
             return None
         if t.count is None:
             return f"std::vector<{inner}>"
         return f"std::array<{inner}, {t.count}>"
     if isinstance(t, MappingType):
-        key = cpp_type(t.key, ctx, nested)
-        value = cpp_type(t.value, ctx, nested)
+        key = cpp_type(t.key, ctx, nested, snapshot)
+        value = cpp_type(t.value, ctx, nested, snapshot)
         if key is None or value is None:
             return None
         return f"std::map<{key}, {value}>"
@@ -76,7 +93,7 @@ def cpp_type(
             if case is None:
                 parts.append("std::monostate")
                 continue
-            case_type = cpp_type(case, ctx, nested)
+            case_type = cpp_type(case, ctx, nested, snapshot)
             if case_type is None:
                 return None
             parts.append(case_type)
@@ -84,7 +101,7 @@ def cpp_type(
     if isinstance(t, BitsetType):
         return f"std::bitset<{t.size}>"
     if isinstance(t, CondType):
-        return cpp_type(t.inner, ctx, nested)
+        return cpp_type(t.inner, ctx, nested, snapshot)
     return None
 
 

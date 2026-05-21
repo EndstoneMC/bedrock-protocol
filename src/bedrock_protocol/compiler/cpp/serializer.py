@@ -245,10 +245,11 @@ class SerializerGenerator:
             self._loop_depth -= 1
         elif isinstance(t, VariantType):
             p(f"{_primitive_write(t.discriminator, f'({expr}).index()')}")
-            p(f"switch (({expr}).index()) {{")
+            switch_wrap, case_labels = self._variant_switch(t)
+            p(f"switch ({switch_wrap.format(int_expr=f'({expr}).index()')}) {{")
             with p.indented():
                 for index, case in enumerate(t.cases):
-                    p(f"case {index}: {{")
+                    p(f"case {case_labels[index]}: {{")
                     with p.indented():
                         if case is not None:
                             self._emit_write(
@@ -358,7 +359,9 @@ class SerializerGenerator:
         elif isinstance(t, VariantType):
             depth = self._loop_depth
             self._loop_depth += 1
-            vartype = cpp_type(t, self._ctx, self._nested_enums)
+            vartype = cpp_type(
+                t, self._ctx, self._nested_enums, self._snapshot
+            )
             assert vartype is not None
             d = t.discriminator
             u = PRIMITIVE_TYPES[d.name]
@@ -370,10 +373,11 @@ class SerializerGenerator:
             p(f"auto tag{depth} = stream.{verb}();")
             p(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
             p(f"{vartype} var{depth}{{}};")
-            p(f"switch (*tag{depth}) {{")
+            switch_wrap, case_labels = self._variant_switch(t)
+            p(f"switch ({switch_wrap.format(int_expr=f'*tag{depth}')}) {{")
             with p.indented():
                 for index, case in enumerate(t.cases):
-                    p(f"case {index}: {{")
+                    p(f"case {case_labels[index]}: {{")
                     with p.indented():
                         p(
                             f"std::variant_alternative_t<{index}, {vartype}> "
@@ -424,6 +428,45 @@ class SerializerGenerator:
             name, self._ctx, self._owner_qualified, self._nested_enums,
             self._snapshot,
         )
+
+    def _variant_switch(self, t: VariantType) -> tuple[str, list[str]]:
+        """Pick the C++ switch expression and per-case labels for `t`.
+
+        Returns `(wrap, labels)` where `wrap` is a `.format(int_expr=...)`-able
+        template that wraps the caller's integer expression (the variant
+        `index()` on write, the freshly-read tag on read), and `labels[i]` is
+        the case label for variant alternative `i`.
+
+        With `tag_enum` set, switch on `static_cast<EnumName>(int)` and label
+        each case with `EnumName::MEMBER`; holes (variant alternatives whose
+        wire index has no enum member at the current snapshot) fall back to
+        `static_cast<EnumName>(N)`.
+
+        Without `tag_enum`, switch on the raw integer with bare integer labels
+        (the legacy form)."""
+        if t.tag_enum is None:
+            labels = [str(i) for i in range(len(t.cases))]
+            return "{int_expr}", labels
+        enum_q = self._type_at(t.tag_enum)
+        enum_view = (
+            self._ctx.resolved.present_at(t.tag_enum, self._snapshot)
+            if self._snapshot is not None
+            else None
+        )
+        members: dict[int, str] = {}
+        if enum_view is not None and enum_view.enum is not None:
+            members = {v.number: camel(v.name) for v in enum_view.enum.values}
+        else:
+            decl = self._ctx.resolved.lookup(t.tag_enum)
+            if isinstance(decl, Enum):
+                members = {v.number: camel(v.name) for v in decl.values}
+        labels = []
+        for i in range(len(t.cases)):
+            if i in members:
+                labels.append(f"{enum_q}::{members[i]}")
+            else:
+                labels.append(f"static_cast<{enum_q}>({i})")
+        return f"static_cast<{enum_q}>({{int_expr}})", labels
 
 
 # --- module-free helpers --------------------------------------------------------

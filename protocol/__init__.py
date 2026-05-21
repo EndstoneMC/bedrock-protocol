@@ -45,7 +45,7 @@ def field(
     when: Any = None,
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
-    tag: TypeAliasType | None = None,
+    tag: TypeAliasType | type | None = None,
 ) -> Any:
     """Mark a struct field.
 
@@ -88,6 +88,10 @@ def field(
       no effect on a `T | None` optional. The field's resolved type must
       contain a multi-case union or `tag=` is an error.
 
+      An `IntEnum` is also accepted: the wire form stays `varint32` and
+      the enum's members supply the C++ case labels (`EnumName::MEMBER`),
+      one-to-one with the union alternatives in declaration order.
+
     `with field(when=lambda p: ...):` may also be written as a statement in a
     struct body: every field declared inside the block is gated by the shared
     predicate, as if each carried that `when=`. Unlike a per-field `when=`, a
@@ -96,7 +100,12 @@ def field(
     return None
 
 
-def type(*, since: int | None = None, until: int | None = None):
+def type(
+    *,
+    since: int | None = None,
+    until: int | None = None,
+    deprecated: int | None = None,
+):
     """Class decorator: version-gate a type. `since=N` is the protocol version
     that introduced it -- the generated type is absent from snapshots below N.
     Applies to an enum or a non-packet struct; a packet carries its own
@@ -109,6 +118,12 @@ def type(*, since: int | None = None, until: int | None = None):
     no longer applies (exclusive). The declarations must be contiguous (each
     `until` equal to the next `since`) and only the last omits `until`. `until`
     is meaningful only on such a redeclared class.
+
+    `deprecated`: the protocol version where Mojang marked the type deprecated.
+    The generated type stays emittable (so a `std::variant` index that pins
+    the type to a wire-tag value keeps its slot), but the C++ definition
+    carries `[[deprecated("since vN")]]` so a downstream
+    `-Wdeprecated-declarations` build flags any new use.
     """
     return _identity
 
