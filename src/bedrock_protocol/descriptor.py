@@ -71,10 +71,16 @@ class PrimitiveType:
     declaration: `name` still drives the wire encoding (so a `Color = int32`
     serializes as `int32`), but a backend spells the field with the alias
     name (so the C++ field type is `Color`, not `std::int32_t`).
+
+    `trailing` flips a `bytes` field from "length-prefixed" to "consume the
+    remaining unread bytes in the frame" -- the wire form has no length
+    marker, and the frame boundary terminates the read. Only valid for
+    `bytes`, and only when the field is the last one in its struct.
     """
     name: str
     big_endian: bool = False
     alias: str | None = None
+    trailing: bool = False
     kind: Literal["primitive"] = "primitive"
 
     @property

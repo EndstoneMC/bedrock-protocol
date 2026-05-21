@@ -448,6 +448,8 @@ def _field_groups(
 
 
 def _primitive_write(p: PrimitiveType, expr: str) -> str:
+    if p.trailing:
+        return f"stream.writeRawBytes({expr});"
     if p.name in ("str", "bytes"):
         return f"stream.write({expr});"
     u = PRIMITIVE_TYPES[p.name]
@@ -459,7 +461,9 @@ def _primitive_write(p: PrimitiveType, expr: str) -> str:
 
 
 def _primitive_read(out: Printer, p: PrimitiveType) -> None:
-    if p.name in ("str", "bytes"):
+    if p.trailing:
+        out("auto v = stream.readRemaining();")
+    elif p.name in ("str", "bytes"):
         out("auto v = stream.read<std::string>();")
     else:
         u = PRIMITIVE_TYPES[p.name]

@@ -107,6 +107,20 @@ public:
         return out;
     }
 
+    // All remaining unread bytes in the frame. Used for trailing payloads
+    // that the wire leaves length-less because the frame boundary
+    // terminates them.
+    auto readRemaining() -> Result<std::string>
+    {
+        const auto remaining = getUnreadLength();
+        std::string out(remaining, '\0');
+        auto r = read(out.data(), remaining);
+        if (!r) {
+            return make_unexpected(r.error());
+        }
+        return out;
+    }
+
     // LEB128 varint, zigzag-decoded for signed `T`. Reading more than
     // ceil(bits(T)/7) continuation bytes is malformed input (5 for 32-bit,
     // 10 for 64-bit) and yields `value_too_large`.
@@ -159,6 +173,10 @@ public:
     explicit BinaryStream(std::vector<std::uint8_t> &buffer) : buffer_(buffer) {}
 
     void writeRawBytes(std::span<const std::uint8_t> bytes) { write(bytes.data(), bytes.size()); }
+
+    // Same, accepting a string_view so a `bytes` field (carried as
+    // std::string) can be written without reinterpret_cast at the call site.
+    void writeRawBytes(std::string_view bytes) { write(bytes.data(), bytes.size()); }
 
     // Fixed-width write, native-endian little by default. `value` is converted
     // to the wire type `T`, so callers need not spell the cast.

@@ -76,7 +76,10 @@ def field(
       `list[T]` annotation is a length-prefixed sequence and `dict[K, V]` a
       length-prefixed map of key/value pairs; a `tuple[T, ...]` annotation of
       N identical types is a fixed-length array of exactly N elements and
-      carries no prefix.
+      carries no prefix. On a bare `bytes` field, `prefix=None` marks the
+      field as trailing -- the wire form has no length marker and the frame
+      boundary terminates the read. A trailing field must be the last
+      field of its struct.
 
     `with field(when=lambda p: ...):` may also be written as a statement in a
     struct body: every field declared inside the block is gated by the shared

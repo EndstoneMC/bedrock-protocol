@@ -343,6 +343,7 @@ class _AnnotationContext:
                 earlier.add(f.name)
         finally:
             self.nested_enum_values = {}
+        _check_trailing_is_last(cls.name, fields)
         since = _decorator_int(cls, "packet", "since")
         if since is None:
             since = _decorator_int(cls, "type", "since")
@@ -413,6 +414,7 @@ class _AnnotationContext:
                 version_list.append(replace(version, since=since, until=until))
             self._check_versions(fname, tuple(version_list))
             fields.append(Field(fname, tuple(version_list)))
+        _check_trailing_is_last(name, fields)
         return Struct(
             name=name,
             fields=tuple(fields),
@@ -479,6 +481,15 @@ class _AnnotationContext:
                 f'{field_name}: field(endian=...) must be "big" or "little", got {endian!r}'
             )
         type_kw = _name_kwarg(call, "field", "type")
+        if _is_none(_call_arg(call, "field", "prefix")):
+            if not (isinstance(ann, griffe.ExprName) and ann.name == "bytes"):
+                raise CompilerError(
+                    f"{field_name}: field(prefix=None) marks a trailing payload "
+                    f"and is only valid on a bare `bytes` field"
+                )
+            if endian is not None:
+                raise CompilerError(_endian_scope_error(field_name))
+            return PrimitiveType(name="bytes", trailing=True)
         prefix = self._repeat_prefix(call, field_name)
         cases = _flatten_union(ann)
         if cases is not None:
@@ -888,6 +899,24 @@ class _AnnotationContext:
         # member; the version gate is documentation that travels with the IR.
 
 
+def _is_trailing(t: FieldType | None) -> bool:
+    """True iff the field is a trailing-bytes primitive (possibly wrapped in
+    a CondType for `with field(when=...)`). The frame-consuming read leaves
+    nothing for a following field, so this must be the last field."""
+    while isinstance(t, CondType):
+        t = t.inner
+    return isinstance(t, PrimitiveType) and t.trailing
+
+
+def _check_trailing_is_last(struct_name: str, fields: list[Field]) -> None:
+    for i, f in enumerate(fields[:-1]):
+        if any(_is_trailing(v.type) for v in f.versions):
+            raise CompilerError(
+                f"{struct_name}.{f.name}: a trailing field (bytes with "
+                f"field(prefix=None)) must be the last field of the struct"
+            )
+
+
 def _resolve_sentinels(values: list[EnumValue]) -> list[EnumValue]:
     """Fill in the number of each `value(sentinel=True)` member as one past
     the highest non-sentinel member of the enum. If the enum has no concrete
@@ -929,6 +958,9 @@ def _is_builtin_class(cls: griffe.Class) -> bool:
 
 
 def _is_none(case: object) -> bool:
+    """A literal `None` in source. griffe spells a keyword literal as the
+    bare string `'None'` (vs `ExprName('Other')` for a name reference), so
+    this also flags an explicit `field(prefix=None)`."""
     return case == "None"
 
 
