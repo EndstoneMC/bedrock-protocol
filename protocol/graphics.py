@@ -67,9 +67,9 @@ class GraphicsOverrideParameterPacket:
     """Sent from the server to the client when a server script changes the rendering
     settings."""
 
-    parameter_keyframe_values: dict[float, Vec3]
+    keyframes: dict[float, Vec3]
     float_value: float | None = field(since=924)
     vec3_value: Vec3 | None = field(since=924)
-    biome_identifier: str
-    identifier_for_parameter: GraphicsOverrideParameterType = field(type=uint8)
+    biome_id: str
+    parameter_id: GraphicsOverrideParameterType = field(type=uint8)
     reset_parameter: bool

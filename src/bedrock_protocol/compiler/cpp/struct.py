@@ -38,7 +38,7 @@ class StructGenerator:
         self._anchor = nested_anchor
         self._nested: frozenset[str] = frozenset(
             e.name for e in struct.nested_enums
-        )
+        ) | frozenset(ns.name for ns in struct.nested_structs)
 
     def emit(self, p: Printer) -> None:
         s = self._struct
@@ -62,6 +62,9 @@ class StructGenerator:
 
         p(f"struct{attr} {s.name} {{")
         with p.indented(1):
+            for ns in s.nested_structs:
+                self._emit_nested_struct(p, ns)
+                p()
             for e in s.nested_enums:
                 self._emit_nested_enum(p, e)
                 p()
@@ -80,3 +83,14 @@ class StructGenerator:
             p(f"using {e.name} = {ns}::{self._struct.name}::{e.name};")
         else:
             EnumGenerator(e).emit(p)
+
+    def _emit_nested_struct(self, p: Printer, ns: Struct) -> None:
+        """Alias the nested struct from the anchor snapshot or recurse into a
+        full definition. Mirrors the nested-enum treatment so a packet's
+        nested types remain one C++ type across every snapshot of the outer
+        struct."""
+        if self._anchor is not None:
+            anchor_ns = snapshot_namespace(self._anchor)
+            p(f"using {ns.name} = {anchor_ns}::{self._struct.name}::{ns.name};")
+        else:
+            StructGenerator(ns, self._ctx, nested_anchor=None).emit(p)

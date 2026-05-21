@@ -126,21 +126,12 @@
    compound semantically but a different byte sequence, and the round-trip
    `REQUIRE(buf == golden)` fails. Sort the Go struct fields before generating.
 
-9. **Field names come from protocol-docs.** When adding a packet, name each
-   field after the EndstoneMC protocol-docs JSON (the same source rule 7
-   draws on), carried into the project's `snake_case` convention. Do not
-   invent or paraphrase names, and do not lift them from gophertunnel or
-   CloudburstMC -- those references date and shape fields, they do not name
-   them. If a field is absent from protocol-docs, fall back to the `.dot`
-   files in the `Mojang/bedrock-protocol-docs` repository and take the name
-   from there. Raise anything neither source names.
+9. **No `from __future__ import annotations`.** The compiler's Python omits
+   it. Where an annotation needs a forward or recursive reference -- common
+   in `schema.py`'s recursive IR (`TypeRef`, `Wire`, `Pred`) -- write that
+   annotation as a string literal, e.g. `inner: "TypeRef"`.
 
-10. **No `from __future__ import annotations`.** The compiler's Python omits
-    it. Where an annotation needs a forward or recursive reference -- common
-    in `schema.py`'s recursive IR (`TypeRef`, `Wire`, `Pred`) -- write that
-    annotation as a string literal, e.g. `inner: "TypeRef"`.
-
-11. **Single-field gates use `= field(when=...)`, not a `with` block.** When
+10. **Single-field gates use `= field(when=...)`, not a `with` block.** When
     only one field is guarded by a predicate, write it inline as
     `name: T = field(when=lambda p: ...)`. Reserve `with field(when=...):`
     for groups of two or more fields that share the same gate, or for the
@@ -148,7 +139,7 @@
     docstring in `protocol/__init__.py`). A solo field inside a `with` block
     is just noise.
 
-12. **Packet and type docstrings come from `Mojang/bedrock-protocol-docs`.**
+11. **Packet and type docstrings come from `Mojang/bedrock-protocol-docs`.**
     The docstring of a `@packet` or `@type` is the Description that
     `Mojang/bedrock-protocol-docs` gives for it -- the single source of truth
     for docstring prose. A packet with a text page under `docs/` carries its
@@ -165,3 +156,55 @@
     or CloudburstMC, or restate version history that `since` / `until` already
     encode. If `Mojang/bedrock-protocol-docs` gives no Description, leave the
     type undocumented rather than writing one.
+
+12. **Names mirror BDS.** The generated headers should read like the BDS
+    binary's own headers wherever we can verify them: class names, type
+    definitions, nested structure names, and member names all come from
+    BDS. Resolve every name through this hierarchy, in order, and stop at
+    the first source that has it:
+    - **bedrock-headers** -- the BDS-extracted C++ headers. The
+      authoritative source. A name lifted from here needs no TODO: it is
+      the BDS name by construction. Carry it into the project's
+      conventions (`PascalCase` for types, `snake_case` for fields) without
+      paraphrasing or shortening.
+    - **EndstoneMC/protocol-docs** -- fall back here only when
+      bedrock-headers does not cover the symbol. Leave a `# TODO: confirm
+      against BDS` next to the name so a later pass can reconcile it once
+      headers catch up.
+    - **Mojang/bedrock-protocol-docs `.dot` files** -- last resort, when
+      neither of the above has the symbol. Always leave a
+      `# TODO: confirm against BDS`. The DOT files are upstream naming
+      but not BDS-verified.
+
+    Never lift a name from gophertunnel or CloudburstMC -- those references
+    date and shape symbols, they do not name them. If no source names a
+    symbol, raise it rather than inventing or paraphrasing one.
+
+    **Strip Mojang-internal marker prefixes.** A few BDS names carry prefixes
+    like `INTERNAL_` (server-internal disconnect reasons such as
+    `INTERNAL_UserLeaveGameAttempted`, `INTERNAL_NoFailOccurred`,
+    `INTERNAL_RequestServerShutdown`) or `TESTONLY_` (test-only entries such
+    as `TESTONLY_CantConnect`). These are Mojang-internal markers that mean
+    nothing to community plugin developers, who are the audience here. Drop
+    the prefix in the DSL (`USER_LEAVE_GAME_ATTEMPTED`, `CANT_CONNECT`,
+    `NO_FAIL_OCCURRED`, `REQUEST_SERVER_SHUTDOWN`). The wire value is
+    unchanged, only the name is cleaned up. This is the one allowed
+    paraphrase of a bedrock-headers name -- no `# TODO: confirm against BDS`
+    needed, since the underlying value is still BDS-anchored. Similarly,
+    a `_Deprecated` suffix or `DEPRECATED_` prefix on a BDS member is
+    metadata: drop it from the name and model the deprecation through the
+    DSL's `value(deprecated=...)` / `field(deprecated=...)` instead.
+
+    **Names only -- not wire shape.** Rule 12 governs what to call a symbol,
+    nothing else. The DSL declares wire fields, not in-memory members: BDS
+    headers show every member of a class, but only a subset is serialized,
+    and the on-wire shape (which fields, in what order, with what prefix /
+    type / gating) is invisible from a header alone. To learn the wire
+    shape, consult the protocol references in this order: EndstoneMC
+    protocol-docs (current schema), `Mojang/bedrock-protocol-docs` (current
+    + history), `Sandertv/gophertunnel` (shape + dating), `CloudburstMC/Protocol`
+    (per-protocol-version codec, also for dating). Do not infer wire fields
+    from bedrock-headers. In particular, a type whose body is empty in the
+    schema (e.g. an empty `class ShapedRecipe: pass`) should not be
+    "completed" by copying members out of the BDS header -- if the wire
+    references show no fields, the body stays empty.

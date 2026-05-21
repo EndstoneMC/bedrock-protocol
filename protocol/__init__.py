@@ -45,6 +45,7 @@ def field(
     when: Any = None,
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
+    count: Any = None,
     tag: TypeAliasType | type | None = None,
 ) -> Any:
     """Mark a struct field.
@@ -81,6 +82,17 @@ def field(
       field as trailing -- the wire form has no length marker and the frame
       boundary terminates the read. A trailing field must be the last
       field of its struct.
+    - `count`: a one-argument lambda whose body is an integer expression
+      over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
+      valid on a `list[T]` field. The wire has no length prefix -- both
+      serialize and deserialize compute the element count by evaluating the
+      expression against the surrounding struct. Setting `count=` suppresses
+      the default `prefix=`; passing an explicit `prefix=` together with
+      `count=` is an error. The expression may reference earlier fields
+      (`p.<name>`), integer literals, and arithmetic operators `*`, `+`,
+      `-`. Use this for inline arrays sized by sibling fields (BDS's shaped
+      recipe grid, for instance, is `width * height` ingredients with no
+      separate count on the wire).
     - `tag`: integer primitive that prefixes the active-case index of a
       multi-case union on the wire (default `uvarint32`). Applies to a
       `T1 | T2 | T3 | ...` annotation, including inline unions inside a

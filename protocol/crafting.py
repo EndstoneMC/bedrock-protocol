@@ -79,7 +79,17 @@ class SmithingTrimRecipe:
 
 
 class ShapedRecipe:
-    pass
+    recipe_id: str
+    width: varint32
+    height: varint32
+    ingredients: list[ItemDescriptorCount] = field(count=lambda p: p.width * p.height)
+    results: list[NetworkItemInstanceDescriptor]
+    uuid: uuid.UUID
+    tag: str
+    priority: varint32
+    assume_symmetry: bool = field(since=671)
+    unlocking_requirement: RecipeUnlockingRequirement = field(since=685)
+    net_id: uvarint32
 
 
 class ShapedChemistryRecipe(ShapedRecipe):
@@ -102,7 +112,7 @@ class FurnaceAuxRecipe:
 
 
 class CraftingDataEntry:
-    body: (
+    recipe: (
         ShapelessRecipe
         | ShapedRecipe
         | FurnaceRecipe
@@ -144,7 +154,7 @@ class MaterialReducerDataEntry:
 @packet(id=52)
 class CraftingDataPacket:
     crafting_entries: list[CraftingDataEntry]
-    potion_mixes: list[PotionMixDataEntry]
-    container_mixes: list[ContainerMixDataEntry]
-    material_reducers: list[MaterialReducerDataEntry]
+    potion_mix_entries: list[PotionMixDataEntry]
+    container_mix_entries: list[ContainerMixDataEntry]
+    material_reducer_entries: list[MaterialReducerDataEntry]
     clear_recipes: bool

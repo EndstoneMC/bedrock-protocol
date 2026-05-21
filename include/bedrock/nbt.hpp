@@ -34,7 +34,7 @@ enum class Type : std::uint8_t {
     Byte = 1,
     Short = 2,
     Int = 3,
-    Long = 4,
+    Int64 = 4,
     Float = 5,
     Double = 6,
     ByteArray = 7,
@@ -42,7 +42,6 @@ enum class Type : std::uint8_t {
     List = 9,
     Compound = 10,
     IntArray = 11,
-    LongArray = 12,
 };
 
 // A leaf tag carrying a single scalar or string payload.
@@ -146,13 +145,12 @@ private:
 using ByteTag = nbt::ValueTag<std::int8_t>;
 using ShortTag = nbt::ValueTag<std::int16_t>;
 using IntTag = nbt::ValueTag<std::int32_t>;
-using LongTag = nbt::ValueTag<std::int64_t>;
+using Int64Tag = nbt::ValueTag<std::int64_t>;
 using FloatTag = nbt::ValueTag<float>;
 using DoubleTag = nbt::ValueTag<double>;
 using StringTag = nbt::ValueTag<std::string>;
 using ByteArrayTag = nbt::ArrayTag<std::int8_t>;
 using IntArrayTag = nbt::ArrayTag<std::int32_t>;
-using LongArrayTag = nbt::ArrayTag<std::int64_t>;
 
 class Tag;
 
@@ -262,9 +260,9 @@ private:
 class Tag {
 public:
     using Storage =
-        std::variant<std::monostate, ByteTag, ShortTag, IntTag, LongTag,
+        std::variant<std::monostate, ByteTag, ShortTag, IntTag, Int64Tag,
                      FloatTag, DoubleTag, ByteArrayTag, StringTag, ListTag,
-                     CompoundTag, IntArrayTag, LongArrayTag>;
+                     CompoundTag, IntArrayTag>;
 
     Tag() noexcept : storage_(std::monostate{}) {}
     Tag(const ByteTag &v) : storage_(v) {}
@@ -273,8 +271,8 @@ public:
     Tag(ShortTag &&v) : storage_(std::move(v)) {}
     Tag(const IntTag &v) : storage_(v) {}
     Tag(IntTag &&v) : storage_(std::move(v)) {}
-    Tag(const LongTag &v) : storage_(v) {}
-    Tag(LongTag &&v) : storage_(std::move(v)) {}
+    Tag(const Int64Tag &v) : storage_(v) {}
+    Tag(Int64Tag &&v) : storage_(std::move(v)) {}
     Tag(const FloatTag &v) : storage_(v) {}
     Tag(FloatTag &&v) : storage_(std::move(v)) {}
     Tag(const DoubleTag &v) : storage_(v) {}
@@ -289,8 +287,6 @@ public:
     Tag(CompoundTag &&v) : storage_(std::move(v)) {}
     Tag(const IntArrayTag &v) : storage_(v) {}
     Tag(IntArrayTag &&v) : storage_(std::move(v)) {}
-    Tag(const LongArrayTag &v) : storage_(v) {}
-    Tag(LongArrayTag &&v) : storage_(std::move(v)) {}
 
     [[nodiscard]] nbt::Type type() const noexcept
     {
@@ -308,8 +304,7 @@ public:
                 else if constexpr (std::is_same_v<V, ListTag> ||
                                    std::is_same_v<V, CompoundTag> ||
                                    std::is_same_v<V, ByteArrayTag> ||
-                                   std::is_same_v<V, IntArrayTag> ||
-                                   std::is_same_v<V, LongArrayTag>) {
+                                   std::is_same_v<V, IntArrayTag>) {
                     return payload.size();
                 }
                 else {
@@ -722,7 +717,7 @@ inline void writeTag(BinaryStream &stream, const Tag &tag)
         else if constexpr (std::is_same_v<V, IntTag>) {
             stream.writeVarInt<std::int32_t>(payload.value());
         }
-        else if constexpr (std::is_same_v<V, LongTag>) {
+        else if constexpr (std::is_same_v<V, Int64Tag>) {
             stream.writeVarInt<std::int64_t>(payload.value());
         }
         else if constexpr (std::is_same_v<V, FloatTag>) {
@@ -746,13 +741,6 @@ inline void writeTag(BinaryStream &stream, const Tag &tag)
                 static_cast<std::int32_t>(payload.size()));
             for (auto element : payload) {
                 stream.writeVarInt<std::int32_t>(element);
-            }
-        }
-        else if constexpr (std::is_same_v<V, LongArrayTag>) {
-            stream.writeVarInt<std::int32_t>(
-                static_cast<std::int32_t>(payload.size()));
-            for (auto element : payload) {
-                stream.writeVarInt<std::int64_t>(element);
             }
         }
         else if constexpr (std::is_same_v<V, ListTag>) {
@@ -793,10 +781,10 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
         if (!v) return make_unexpected(v.error());
         return Tag{IntTag{*v}};
     }
-    case Type::Long: {
+    case Type::Int64: {
         auto v = stream.readVarInt<std::int64_t>();
         if (!v) return make_unexpected(v.error());
-        return Tag{LongTag{*v}};
+        return Tag{Int64Tag{*v}};
     }
     case Type::Float: {
         auto v = stream.read<float>();
@@ -835,23 +823,12 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
         }
         return Tag{std::move(out)};
     }
-    case Type::LongArray: {
-        auto count = stream.readVarInt<std::int32_t>();
-        if (!count) return make_unexpected(count.error());
-        LongArrayTag out;
-        for (std::int32_t i = 0; i < *count; ++i) {
-            auto element = stream.readVarInt<std::int64_t>();
-            if (!element) return make_unexpected(element.error());
-            out.push_back(*element);
-        }
-        return Tag{std::move(out)};
-    }
     case Type::List: {
         auto element_type = stream.read<std::uint8_t>();
         if (!element_type) return make_unexpected(element_type.error());
         auto count = stream.readVarInt<std::int32_t>();
         if (!count) return make_unexpected(count.error());
-        if (*element_type > static_cast<std::uint8_t>(Type::LongArray) ||
+        if (*element_type > static_cast<std::uint8_t>(Type::IntArray) ||
             (*count > 0 && *element_type == 0)) {
             return make_unexpected(
                 std::make_error_code(std::errc::illegal_byte_sequence));
@@ -904,7 +881,7 @@ inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
     if (*type == 0) {
         return std::pair<std::string, Tag>{};
     }
-    if (*type > static_cast<std::uint8_t>(Type::LongArray)) {
+    if (*type > static_cast<std::uint8_t>(Type::IntArray)) {
         return make_unexpected(
             std::make_error_code(std::errc::illegal_byte_sequence));
     }

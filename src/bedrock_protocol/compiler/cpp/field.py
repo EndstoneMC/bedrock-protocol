@@ -60,17 +60,21 @@ def cpp_type(
         return PRIMITIVE_TYPES.get(t.name)
     if isinstance(t, (StructType, EnumType)):
         name = t.name
-        if name in nested:
-            return name
-        if name in ctx.builtins:
-            return name
+        # A dotted ref `Parent.Child` is a nested struct: the spelling is
+        # `Parent::Child` and the snapshot rules apply to the outer parent.
+        root = name.split(".", 1)[0]
+        cpp_spell = name.replace(".", "::")
+        if root in nested:
+            return cpp_spell
+        if root in ctx.builtins:
+            return cpp_spell
         if name not in ctx.known:
             return None
-        if snapshot is not None and ctx.resolved.is_versioned(name):
-            view = ctx.resolved.present_at(name, snapshot)
+        if snapshot is not None and ctx.resolved.is_versioned(root):
+            view = ctx.resolved.present_at(root, snapshot)
             if view is not None:
-                return f"{snapshot_namespace(view.concrete)}::{name}"
-        return name
+                return f"{snapshot_namespace(view.concrete)}::{cpp_spell}"
+        return cpp_spell
     if isinstance(t, OptionalType):
         inner = cpp_type(t.inner, ctx, nested, snapshot)
         return None if inner is None else f"std::optional<{inner}>"
@@ -115,12 +119,14 @@ def qualified_at(
     """Qualified spelling of `name` from inside a serializer at `snapshot`."""
     if name in nested_enums:
         return f"{owner_qualified}::{name}"
-    if ctx.resolved.is_versioned(name):
+    root = name.split(".", 1)[0]
+    cpp_spell = name.replace(".", "::")
+    if ctx.resolved.is_versioned(root):
         assert snapshot is not None
-        view = ctx.resolved.present_at(name, snapshot)
+        view = ctx.resolved.present_at(root, snapshot)
         assert view is not None
-        return f"{snapshot_namespace(view.concrete)}::{name}"
-    return name
+        return f"{snapshot_namespace(view.concrete)}::{cpp_spell}"
+    return cpp_spell
 
 
 def render_predicate(
@@ -149,6 +155,10 @@ def render_predicate(
         bit = f"static_cast<std::size_t>({arg})"
         return f"{base}.{pred.text}.test({bit})"
     op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
+    if pred.kind in ("*", "+", "-"):
+        lhs = render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)
+        rhs = render_predicate(pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot)
+        return f"({lhs} {op} {rhs})"
     return f" {op} ".join(
         f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})"
         for o in pred.operands

@@ -28,7 +28,7 @@ class IntTag:
 
 
 @builtin
-class LongTag:
+class Int64Tag:
     """A signed 64-bit integer, varint-coded."""
 
 
@@ -65,8 +65,3 @@ class CompoundTag:
 @builtin
 class IntArrayTag:
     """A length-prefixed array of varint-coded 32-bit integers."""
-
-
-@builtin
-class LongArrayTag:
-    """A length-prefixed array of varint-coded 64-bit integers."""

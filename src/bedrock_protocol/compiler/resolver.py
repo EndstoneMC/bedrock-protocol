@@ -110,11 +110,20 @@ def _versioned_types(
         for t in types:
             if isinstance(t, Enum) or t.name in versioned:
                 continue
-            if t.referenced & versioned:
+            refs = frozenset(_root_of(r) for r in t.referenced)
+            if refs & versioned:
                 versioned.add(t.name)
                 grew = True
         if not grew:
             return frozenset(versioned)
+
+
+def _root_of(ref: str) -> str:
+    """Top-level name a dotted reference belongs to. A `Parent.Child` reference
+    is a use of `Parent` for purposes of cross-type bookkeeping (topological
+    order, versioning closure, cross-file imports); the nested-type detail
+    matters only inside C++ codegen."""
+    return ref.split(".", 1)[0]
 
 
 # --- topological order --------------------------------------------------------
@@ -129,7 +138,8 @@ def _topo_order(
     decl = [t.name for t in types]
     rank = {n: i for i, n in enumerate(decl)}
     deps = {
-        t.name: (t.referenced & own) - {t.name} for t in types
+        t.name: (frozenset(_root_of(r) for r in t.referenced) & own) - {t.name}
+        for t in types
     }
     order: list[str] = []
     state: dict[str, int] = {}
@@ -209,7 +219,9 @@ def _plan_snapshots(
         if name not in versioned:
             continue
         t = by_name[name]
-        deps = (t.referenced & versioned) - {name}
+        deps = (
+            frozenset(_root_of(r) for r in t.referenced) & versioned
+        ) - {name}
         keys[name] = {}
         concrete[name] = {}
         out: list[VersionSnapshot] = []

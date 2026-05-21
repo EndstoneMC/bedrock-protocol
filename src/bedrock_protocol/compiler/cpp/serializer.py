@@ -316,6 +316,20 @@ class SerializerGenerator:
                     p(f"{target}.emplace_back();")
                     self._emit_read(p, t.inner, f"{target}.back()")
                 p("}")
+            elif t.count_expr is not None:
+                base = target.rsplit(".", 1)[0]
+                expr = render_predicate(
+                    t.count_expr, base, self._ctx, self._owner_qualified,
+                    self._nested_enums, self._snapshot,
+                )
+                p(f"{target}.resize(static_cast<std::size_t>({expr}));")
+                p(
+                    f"for (std::size_t i{depth} = 0; "
+                    f"i{depth} < {target}.size(); ++i{depth}) {{"
+                )
+                with p.indented():
+                    self._emit_read(p, t.inner, f"{target}[i{depth}]")
+                p("}")
             else:
                 p(
                     f"for (std::size_t i{depth} = 0; "

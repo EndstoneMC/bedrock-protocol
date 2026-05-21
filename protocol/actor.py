@@ -82,7 +82,7 @@ class ActorEventPacket:
     a crossbow being ready to fire to taming animals, some of which may be obsolete
     (frex, ADD_PLAYER_LEVELS)."""
 
-    target_runtime_id: ActorRuntimeID
+    runtime_id: ActorRuntimeID
     event_id: ActorEvent = field(type=uint8)
     data: varint32
     fire_at_position: Vec3 | None = field(since=975)
@@ -112,7 +112,7 @@ class AnimatePacket:
         MAGIC_CRITICAL_HIT = 5
 
     action: Action = field(type=uint8)
-    target_runtime_id: ActorRuntimeID
+    runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
 
@@ -152,16 +152,16 @@ class InteractPacket:
         OPEN_INVENTORY = 6
 
     action: Action = field(type=uint8)
-    target_runtime_id: ActorRuntimeID
-    position: Vec3 = field(when=lambda p: p.action == Action.INTERACT_UPDATE, until=388)
-    position: Vec3 = field(
+    target_id: ActorRuntimeID
+    pos: Vec3 = field(when=lambda p: p.action == Action.INTERACT_UPDATE, until=388)
+    pos: Vec3 = field(
         when=lambda p: (
             p.action == Action.INTERACT_UPDATE or p.action == Action.STOP_RIDING
         ),
         since=388,
         until=897,
     )
-    position: Vec3 | None = field(since=897)
+    pos: Vec3 | None = field(since=897)
 
 
 @type(since=544)

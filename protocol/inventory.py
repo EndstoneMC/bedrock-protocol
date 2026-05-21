@@ -9,23 +9,23 @@ package = "bedrock.protocol"
 class NetworkItemStackDescriptor:
     id: varint32
     with field(when=lambda p: p.id != 0):
-        count: uint16
+        stack_size: uint16
         aux_value: uvarint32
-        net_id: varint32 | None
+        net_id_variant: varint32 | None
         block_runtime_id: varint32
-        user_data: bytes
+        user_data_buffer: bytes
 
 
 class NetworkItemInstanceDescriptor:
     id: varint32
     with field(when=lambda p: p.id != 0):
-        count: uint16
+        stack_size: uint16
         aux_value: uvarint32
         block_runtime_id: varint32
-        user_data: bytes
+        user_data_buffer: bytes
 
 
-class ItemStackServerNetId:
+class ItemStackNetId:
     id: varint32
 
 
@@ -38,7 +38,7 @@ class ItemStackLegacyRequestId:
 
 
 type ItemStackNetIdVariant = (
-    ItemStackServerNetId | ItemStackRequestId | ItemStackLegacyRequestId
+    ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
 )
 
 
@@ -46,11 +46,11 @@ class SerializedNetworkItemStackDescriptor:
     """Mirror of the BDS type cerealizer<NetworkItemStackDescriptor>::SerializedData."""
 
     id: int16
-    count: uint16
+    stack_size: uint16
     aux_value: uvarint32
-    net_id: ItemStackNetIdVariant | None
+    net_id_variant: ItemStackNetIdVariant | None
     block_runtime_id: uvarint32
-    user_data: bytes
+    user_data_buffer: bytes
 
 
 class ContainerEnumName(IntEnum):
@@ -132,7 +132,7 @@ class InventorySourceType(IntEnum):
 
 
 class InventorySource:
-    source_type: InventorySourceType = field(type=uvarint32)
+    source_type: InventorySourceType = field(type=uvarint32)  # TODO: confirm against BDS
     container_id: varint32 = field(
         when=lambda p: (
             p.source_type == InventorySourceType.CONTAINER_INVENTORY
@@ -147,16 +147,16 @@ class InventorySource:
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
-    from_item: NetworkItemStackDescriptor
-    to_item: NetworkItemStackDescriptor
+    from_item_descriptor: NetworkItemStackDescriptor
+    to_item_descriptor: NetworkItemStackDescriptor
 
 
 class InventoryTransaction:
     actions: list[InventoryAction]
 
 
-class LegacySetItemSlot:
-    container_enum_name: ContainerEnumName = field(type=uint8)
+class LegacySetSlot:
+    container_enum: ContainerEnumName = field(type=uint8)
     slots: bytes
 
 
@@ -183,34 +183,34 @@ class ItemUseInventoryTransaction:
     transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
     trigger_type: TriggerType = field(type=uvarint32, since=712)
-    position: BlockPos
+    pos: BlockPos
     face: varint32
     slot: varint32
     item: NetworkItemStackDescriptor
-    from_position: Vec3
-    click_position: Vec3
+    from_pos: Vec3
+    click_pos: Vec3
     target_block_id: uvarint32
-    client_interact_prediction: PredictedResult = field(type=uint8, since=712)
+    client_predicted_result: PredictedResult = field(type=uint8, since=712)
     client_cooldown_state: ClientCooldownState = field(type=uint8, since=944)
 
 
 class PackedItemUseLegacyInventoryTransaction:
     id: ItemStackLegacyRequestId
-    container_slots: list[LegacySetItemSlot] = field(
+    slots: list[LegacySetSlot] = field(
         when=lambda p: p.id.id < -1 and (p.id.id & 1) == 0,
     )
     transaction: ItemUseInventoryTransaction
 
 
 class FullContainerName:
-    container_name: ContainerEnumName = field(type=uint8)
+    name: ContainerEnumName = field(type=uint8)
     dynamic_id: uint32 | None
 
 
 class ItemStackRequestSlotInfo:
-    container: FullContainerName
+    full_container_name: FullContainerName
     slot: uint8
-    stack_network_id: varint32
+    net_id_variant: varint32
 
 
 class InvalidItemDescriptor:
@@ -218,90 +218,90 @@ class InvalidItemDescriptor:
 
 
 class InternalItemDescriptor:
-    network_id: int16
-    metadata_value: int16 = field(when=lambda p: p.network_id != 0)
+    network_id: int16  # TODO: confirm against BDS
+    aux_value: int16 = field(when=lambda p: p.network_id != 0)
 
 
-class MolangItemDescriptor:
-    expression: str
-    version: uint8
+class MolangDescriptor:
+    expression_tags: str
+    version: uint8  # TODO: confirm against BDS
 
 
-class ItemTagItemDescriptor:
-    tag: str
+class ItemTagDescriptor:
+    item_tag: str
 
 
-class DeferredItemDescriptor:
-    name: str
-    metadata_value: int16
+class DeferredDescriptor:
+    full_name: str
+    aux_value: int16
 
 
-class ComplexAliasItemDescriptor:
-    name: str
+class ComplexAliasDescriptor:
+    full_name: str
 
 
 type ItemDescriptor = (
     InvalidItemDescriptor
     | InternalItemDescriptor
-    | MolangItemDescriptor
-    | ItemTagItemDescriptor
-    | DeferredItemDescriptor
-    | ComplexAliasItemDescriptor
+    | MolangDescriptor
+    | ItemTagDescriptor
+    | DeferredDescriptor
+    | ComplexAliasDescriptor
 )
 
 
 class ItemDescriptorCount:
-    descriptor: ItemDescriptor
+    descriptor: ItemDescriptor = field(tag=uint8)
     count: varint32
 
 
 class TakeStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
-    destination: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
 
 
 class PlaceStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
-    destination: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
 
 
 class SwapStackRequestAction:
-    source: ItemStackRequestSlotInfo
-    destination: ItemStackRequestSlotInfo
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
 
 
 class DropStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
     randomly: bool
 
 
 class DestroyStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
 
 
 class ConsumeStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
 
 
 class CreateStackRequestAction:
-    results_slot: uint8
+    results_index: uint8
 
 
 class PlaceInItemContainerDeprecatedStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
-    destination: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
 
 
 class TakeFromItemContainerDeprecatedStackRequestAction:
-    count: uint8
-    source: ItemStackRequestSlotInfo
-    destination: ItemStackRequestSlotInfo
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
 
 
 class ScreenLabTableCombineStackRequestAction:
@@ -309,47 +309,47 @@ class ScreenLabTableCombineStackRequestAction:
 
 
 class ScreenBeaconPaymentStackRequestAction:
-    primary_effect: varint32
-    secondary_effect: varint32
+    primary_effect_id: varint32
+    secondary_effect_id: varint32
 
 
 class ScreenHUDMineBlockStackRequestAction:
-    hotbar_slot: varint32
+    slot: varint32
     predicted_durability: varint32
-    stack_network_id: varint32
+    net_id_variant: varint32
 
 
 class CraftRecipeStackRequestAction:
-    recipe_network_id: uvarint32
+    recipe_net_id: uvarint32
     num_crafts: uint8
 
 
 class CraftRecipeAutoStackRequestAction:
-    recipe_network_id: uvarint32
+    recipe_net_id: uvarint32
     num_requested_crafts: uint8
     num_crafts: uint8
     ingredients: list[ItemDescriptorCount]
 
 
 class CraftCreativeStackRequestAction:
-    creative_item_network_id: uvarint32
+    recipe_net_id: uvarint32
     num_crafts: uint8
 
 
 class CraftRecipeOptionalStackRequestAction:
-    recipe_network_id: uvarint32
-    filter_string_index: int32
+    recipe_net_id: uvarint32
+    filtered_string_index: int32
 
 
 class CraftRepairAndDisenchantStackRequestAction:
-    recipe_network_id: uvarint32
+    recipe_net_id: uvarint32
     num_crafts: uint8
-    cost: varint32
+    repair_cost: varint32
 
 
 class CraftLoomStackRequestAction:
-    pattern: str
-    times_crafted: uint8
+    pattern_name_id: str
+    num_crafts: uint8
 
 
 class CraftNonImplementedDeprecatedStackRequestAction:
@@ -357,8 +357,8 @@ class CraftNonImplementedDeprecatedStackRequestAction:
 
 
 class CraftResultsDeprecatedStackRequestAction:
-    result_items: list[NetworkItemInstanceDescriptor]
-    times_crafted: uint8
+    craft_results: list[NetworkItemInstanceDescriptor]
+    num_crafts: uint8
 
 
 type ItemStackRequestAction = (

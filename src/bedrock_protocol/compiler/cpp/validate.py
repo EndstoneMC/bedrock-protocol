@@ -66,7 +66,8 @@ def _check_no_cross_module_versioned_references(
     if not dep_versioned:
         return
     for struct in file.structs:
-        bad = struct.referenced & dep_versioned
+        roots = frozenset(r.split(".", 1)[0] for r in struct.referenced)
+        bad = roots & dep_versioned
         if bad:
             raise CompilerError(
                 f"{struct.name}: references versioned type(s) {sorted(bad)} "

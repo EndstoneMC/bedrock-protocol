@@ -178,6 +178,20 @@ class SourceTree:
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
         type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
 
+        def collect(cls: griffe.Class, prefix: str) -> None:
+            """Record a class and recurse into its nested non-enum, non-builtin
+            classes, registering each under its dotted path so a field
+            annotation like `Parent.Child` resolves to a struct."""
+            full = cls.name if not prefix else f"{prefix}.{cls.name}"
+            if _is_int_enum(cls):
+                enum_names.add(full)
+                return
+            struct_names.add(full)
+            for inner in cls.classes.values():
+                if inner.is_alias or _is_builtin_class(inner):
+                    continue
+                collect(inner, full)
+
         for mod in loaded.values():
             for cls in mod.classes.values():
                 if cls.is_alias:
@@ -185,10 +199,7 @@ class SourceTree:
                 if _is_builtin_class(cls):
                     builtins.add(cls.name)
                     continue
-                if _is_int_enum(cls):
-                    enum_names.add(cls.name)
-                else:
-                    struct_names.add(cls.name)
+                collect(cls, "")
 
         # Alias pass — must run after classification because an alias may
         # reference any class anywhere; within this pass declaration order
@@ -333,12 +344,17 @@ class _AnnotationContext:
 
     def struct(self, cls: griffe.Class) -> Struct:
         nested_enums: list[Enum] = []
+        nested_structs: list[Struct] = []
         for inner in cls.classes.values():
-            if inner.is_alias or not _is_int_enum(inner):
+            if inner.is_alias:
                 continue
-            inner_enum = self.enum(inner)
-            self._reject_versioned_nested(cls.name, inner_enum)
-            nested_enums.append(inner_enum)
+            if _is_int_enum(inner):
+                inner_enum = self.enum(inner)
+                self._reject_versioned_nested(cls.name, inner_enum)
+                nested_enums.append(inner_enum)
+            else:
+                self._reject_versioned_nested_struct(cls.name, inner)
+                nested_structs.append(self.struct(inner))
         nested_names = frozenset(e.name for e in nested_enums)
         self.nested_enum_values = {
             e.name: {v.name: v.number for v in e.values}
@@ -369,6 +385,7 @@ class _AnnotationContext:
             packet_id=_decorator_int(cls, "packet", "id"),
             since=since,
             deprecated=_decorator_int(cls, "type", "deprecated"),
+            nested_structs=tuple(nested_structs),
         )
 
     def merged_struct(self, decls: list[griffe.Class]) -> Struct:
@@ -456,6 +473,9 @@ class _AnnotationContext:
     ) -> FieldVersion:
         call = attr.value
         t = self.type(attr.name, attr.annotation, call, nested)
+        count = _call_arg(call, "field", "count")
+        if count is not None and t is not None:
+            t = self._attach_count_expr(t, count, attr.name, call, nested, earlier)
         when = _call_arg(call, "field", "when")
         group_when = _call_arg(call, "field", "_group_when")
         if when is not None and group_when is not None:
@@ -480,6 +500,34 @@ class _AnnotationContext:
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
         )
+
+    def _attach_count_expr(
+        self,
+        t: FieldType,
+        lam: _Ann,
+        field_name: str,
+        call: _Ann,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> FieldType:
+        if not isinstance(t, RepeatedType):
+            raise CompilerError(
+                f"{field_name}: field(count=...) only applies to a list[T] "
+                f"field, got a non-list type"
+            )
+        if t.count is not None:
+            raise CompilerError(
+                f"{field_name}: field(count=...) is for variable-length lists; "
+                f"a fixed-length tuple[T, ...] already carries its own count"
+            )
+        if _call_arg(call, "field", "prefix") is not None:
+            raise CompilerError(
+                f"{field_name}: field(count=...) and field(prefix=...) are "
+                f"mutually exclusive -- a count-derived list has no length "
+                f"prefix on the wire"
+            )
+        expr = self._predicate(lam, field_name, nested, earlier)
+        return replace(t, count_expr=expr, prefix=None)
 
     # ---- field-type walker -------------------------------------------------
 
@@ -597,6 +645,15 @@ class _AnnotationContext:
         cases = _flatten_union(ann)
         if cases is not None:
             return self._union_type(cases, field_name, type_kw, None, prefix, nested, tag)
+        if isinstance(ann, griffe.ExprAttribute):
+            # Dotted name `Parent.Child[.Grandchild...]` -- the resolver
+            # recognises this as a nested struct reference when the full path
+            # is in `struct_names`.
+            parts = [str(v) for v in ann.values]
+            dotted = ".".join(parts)
+            if dotted in self.struct_names:
+                return StructType(dotted)
+            return None
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
@@ -617,7 +674,14 @@ class _AnnotationContext:
         if isinstance(alias, PrimitiveAlias):
             return PrimitiveType(name=alias.primitive, alias=alias.name)
         if isinstance(alias, TypeAlias):
-            return alias.target
+            target = alias.target
+            if tag is not None and isinstance(target, VariantType):
+                target = replace(
+                    target,
+                    discriminator=tag.primitive,
+                    tag_enum=tag.enum_name,
+                )
+            return target
         return None
 
     def _variant_tag(self, call: _Ann, field_name: str) -> _TagSpec | None:
@@ -702,6 +766,8 @@ class _AnnotationContext:
             return Predicate("not", operands=(child(node.value),))
         if isinstance(node, griffe.ExprBinOp) and node.operator == "&":
             return Predicate("&", operands=(child(node.left), child(node.right)))
+        if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
+            return Predicate(node.operator, operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
@@ -943,6 +1009,30 @@ class _AnnotationContext:
         # Per-value `since=`/`until=` is allowed on nested enums. The nested
         # body emitted into the owner's first-snapshot definition carries every
         # member; the version gate is documentation that travels with the IR.
+
+    @staticmethod
+    def _reject_versioned_nested_struct(owner: str, cls: griffe.Class) -> None:
+        """Nested struct types are scoped inside their parent and so cannot
+        carry their own `@type(since=/until=/deprecated=)` or `@packet(...)`
+        decorator. Versioning a nested type means lifting it to module scope."""
+        for kw in ("since", "until", "deprecated"):
+            if _decorator_int(cls, "type", kw) is not None:
+                raise CompilerError(
+                    f"{owner}.{cls.name}: a nested struct cannot carry "
+                    f"@type({kw}=); declare it at module scope to version it"
+                )
+        if _decorator_int(cls, "packet", "id") is not None:
+            raise CompilerError(
+                f"{owner}.{cls.name}: a nested struct cannot be a @packet"
+            )
+        redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
+            extensions.CLASS_REDECLARATIONS
+        )
+        if redecls is not None:
+            raise CompilerError(
+                f"{owner}.{cls.name}: a nested struct cannot be redeclared "
+                f"across version ranges; lift it to module scope"
+            )
 
 
 def _has_variant(t: FieldType | None) -> bool:

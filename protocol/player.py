@@ -83,18 +83,18 @@ class PlayerActionType(IntEnum):
 
 
 class PlayerBlockActionData:
-    action: PlayerActionType = field(type=varint32)
+    player_action_type: PlayerActionType = field(type=varint32)
     with field(
         when=lambda p: (
-            p.action == PlayerActionType.START_DESTROY_BLOCK
-            or p.action == PlayerActionType.ABORT_DESTROY_BLOCK
-            or p.action == PlayerActionType.CRACK_BLOCK
-            or p.action == PlayerActionType.PREDICT_DESTROY_BLOCK
-            or p.action == PlayerActionType.CONTINUE_DESTROY_BLOCK
+            p.player_action_type == PlayerActionType.START_DESTROY_BLOCK
+            or p.player_action_type == PlayerActionType.ABORT_DESTROY_BLOCK
+            or p.player_action_type == PlayerActionType.CRACK_BLOCK
+            or p.player_action_type == PlayerActionType.PREDICT_DESTROY_BLOCK
+            or p.player_action_type == PlayerActionType.CONTINUE_DESTROY_BLOCK
         )
     ):
-        block_position: BlockPos
-        face: varint32
+        pos: BlockPos
+        facing: varint32
 
 
 class PlayerBlockActions:
@@ -179,7 +179,7 @@ class PlayerAuthInputPacket:
     input_mode: InputMode = field(type=uvarint32)
     play_mode: ClientPlayMode = field(type=uvarint32)
     new_interaction_model: NewInteractionModel = field(type=uvarint32, since=527)
-    vr_gaze_direction: Vec3 = field(
+    vr_gaze_direction: Vec3 = field(  # TODO: confirm against BDS
         when=lambda p: p.play_mode == ClientPlayMode.REALITY,
         until=748,
     )

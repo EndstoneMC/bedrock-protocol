@@ -8,7 +8,7 @@ type DimensionType = varint32
 
 
 class DimensionDefinition:
-    name: str
+    name: str  # TODO: confirm against BDS
     height_maximum: varint32
     height_minimum: varint32
     generator_type: varint32
@@ -24,8 +24,8 @@ class DimensionDataPacket:
 class BlockActorDataPacket:
     """Sends the entire user data compound tag and the block position to the client."""
 
-    block_position: BlockPos
-    actor_data_tags: CompoundTag
+    pos: BlockPos
+    data: CompoundTag
 
 
 class SubChunkPosOffset:

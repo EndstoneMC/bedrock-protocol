@@ -45,6 +45,11 @@ class FileGenerator:
                 *(a.name for a in f.primitive_aliases),
                 *(a.name for a in f.type_aliases),
             )
+        ) | frozenset(
+            n
+            for f in resolved.file_set.files.values()
+            for s in f.structs
+            for n in _flatten_nested_dotted(s, "")
         )
         builtins = resolved.file_set.builtins | frozenset({"UUID"})
         self._ctx = FileContext(
@@ -279,6 +284,20 @@ class FileGenerator:
                         p()
                         gen.emit_for_enum(p, s.enum, s.lo)
             else:
+                # Emit nested-struct serializers before the parent's, so the
+                # parent's variant case bodies see them already declared. A
+                # nested struct cannot be versioned, so there's only one shape
+                # to emit regardless of the parent's snapshot set.
+                for ns in _walk_nested_structs(t, ""):
+                    pos = len(p.lines)
+                    p()
+                    if not gen.emit_for_struct(p, ns, None):
+                        del p.lines[pos:]
+                # An outer namespace-only struct (no fields of its own, only
+                # nested types) has no body to serialize -- the nested-type
+                # serializers above are all the wire codec needs.
+                if not t.fields:
+                    continue
                 if not fresh:
                     pos = len(p.lines)
                     p()
@@ -336,10 +355,11 @@ class FileGenerator:
         refs: set[str] = set()
         for t in (*self._file.enums, *self._file.structs):
             for ref in t.referenced:
-                if ref in own:
+                root = ref.split(".", 1)[0]
+                if root in own:
                     continue
-                if self._resolved.is_versioned(ref):
-                    refs.add(ref)
+                if self._resolved.is_versioned(root):
+                    refs.add(root)
         return sorted(refs)
 
     def _has_namespaces(self) -> bool:
@@ -411,9 +431,9 @@ class FileGenerator:
 
 def _has_nested(s: Struct) -> bool:
     """A struct has at least one nested type that the dedup logic can anchor.
-    Today only nested enums exist; nested structs / aliases plug in here when
-    they land."""
-    return bool(s.nested_enums)
+    Both nested enums and nested structs are anchored the same way: the first
+    fresh snapshot owns the definition, later snapshots emit a `using` alias."""
+    return bool(s.nested_enums or s.nested_structs)
 
 
 def _has_versioned_nested(s: Struct) -> bool:
@@ -446,6 +466,33 @@ def _walk_has_bitset(t: FieldType | None) -> bool:
     if isinstance(t, VariantType):
         return any(_walk_has_bitset(c) for c in t.cases)
     return False
+
+
+def _flatten_nested_dotted(s: Struct, prefix: str) -> list[str]:
+    """Every nested struct under `s` spelled as its dotted path.
+    `BookEditAction` with children `ReplacePage`, `AddPage` flattens to
+    `["BookEditAction.ReplacePage", "BookEditAction.AddPage", ...]`."""
+    base = s.name if not prefix else f"{prefix}.{s.name}"
+    out: list[str] = []
+    for ns in s.nested_structs:
+        full = f"{base}.{ns.name}"
+        out.append(full)
+        out.extend(_flatten_nested_dotted(ns, base))
+    return out
+
+
+def _walk_nested_structs(s: Struct, prefix: str) -> list[Struct]:
+    """Yield each nested struct under `s` as a Struct whose `name` carries the
+    full `Parent::Child` C++ spelling, suitable for handing to
+    `SerializerGenerator.emit_for_struct` as a free-standing struct shape."""
+    from dataclasses import replace
+    base = s.name if not prefix else f"{prefix}::{s.name}"
+    out: list[Struct] = []
+    for ns in s.nested_structs:
+        qualified = f"{base}::{ns.name}"
+        out.append(replace(ns, name=qualified, nested_structs=()))
+        out.extend(_walk_nested_structs(ns, base))
+    return out
 
 
 def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:

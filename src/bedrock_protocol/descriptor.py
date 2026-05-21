@@ -132,10 +132,14 @@ class OptionalType:
 
 @dataclass(frozen=True)
 class RepeatedType:
-    """`list[T]` when `count` is None and `prefix` carries the length wire;
-    `tuple[T, ..., T]` when `count` is set and `prefix` is None (fixed array)."""
+    """`list[T]` when `count` and `count_expr` are None and `prefix` carries
+    the length wire; `tuple[T, ..., T]` when `count` is set and `prefix` is
+    None (fixed array); `list[T]` with `count_expr` set when the element
+    count is computed at serialize/deserialize time from earlier fields
+    (`count=lambda p: ...`), again carrying no wire prefix."""
     inner: "FieldType"
     count: int | None = None
+    count_expr: "Predicate | None" = None
     prefix: PrimitiveType | None = None
     kind: Literal["repeated"] = "repeated"
 
@@ -313,10 +317,11 @@ class Struct:
     packet_id: int | None
     since: int | None = None
     deprecated: int | None = None
+    nested_structs: tuple["Struct", ...] = ()
 
     @property
     def referenced(self) -> frozenset[str]:
-        return frozenset().union(
+        own = frozenset().union(
             *(
                 version.type.referenced
                 for f in self.fields
@@ -324,6 +329,13 @@ class Struct:
                 if version.type is not None
             )
         )
+        # Nested structs may reference other module-scope types -- a field on
+        # `BookEditAction.ReplacePage` of type `Vec3` should pull `Vec3` into
+        # the parent's reference set so cross-file imports and topological
+        # ordering work the same as a non-nested field would.
+        for ns in self.nested_structs:
+            own = own | ns.referenced
+        return own
 
     @property
     def change_points(self) -> frozenset[int]:
