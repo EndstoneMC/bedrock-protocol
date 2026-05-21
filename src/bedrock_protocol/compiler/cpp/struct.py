@@ -71,7 +71,7 @@ class StructGenerator:
             if s.packet_id is not None:
                 p(f"static constexpr int Id = {s.packet_id};")
             for ctype, fname in rendered_fields:
-                p(f"{ctype} {fname};")
+                p(f"{ctype} {fname}{{}};")
         p("};")
 
     def _emit_nested_enum(self, p: Printer, e: Enum) -> None:
