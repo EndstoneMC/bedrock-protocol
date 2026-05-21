@@ -321,23 +321,19 @@ class ScreenHUDMineBlockStackRequestAction:
 
 class CraftRecipeStackRequestAction:
     recipe_network_id: uvarint32
-    number_of_crafts: uint8
+    num_crafts: uint8
 
 
 class CraftRecipeAutoStackRequestAction:
-    # BDS' header shows `mIngredients, mNumIngredients (u8)` but gophertunnel
-    # writes the second u8 between number_of_crafts and the ingredients list
-    # (and calls it TimesCrafted). The golden bytes match the gophertunnel
-    # order, so until a BDS .cpp / IDA trace says otherwise we follow that.
     recipe_network_id: uvarint32
-    number_of_crafts: uint8
-    times_crafted: uint8
+    num_requested_crafts: uint8
+    num_crafts: uint8
     ingredients: list[ItemDescriptorCount]
 
 
 class CraftCreativeStackRequestAction:
     creative_item_network_id: uvarint32
-    number_of_crafts: uint8
+    num_crafts: uint8
 
 
 class CraftRecipeOptionalStackRequestAction:
@@ -347,7 +343,7 @@ class CraftRecipeOptionalStackRequestAction:
 
 class CraftRepairAndDisenchantStackRequestAction:
     recipe_network_id: uvarint32
-    number_of_crafts: uint8
+    num_crafts: uint8
     cost: varint32
 
 
