@@ -256,133 +256,156 @@ class ItemDescriptorCount:
     count: varint32
 
 
-class TakeStackRequestAction:
+class ItemStackRequestActionType(IntEnum):
+    TAKE = 0
+    PLACE = 1
+    SWAP = 2
+    DROP = 3
+    DESTROY = 4
+    CONSUME = 5
+    CREATE = 6
+    PLACE_IN_ITEM_CONTAINER = 7
+    TAKE_FROM_ITEM_CONTAINER = 8
+    SCREEN_LAB_TABLE_COMBINE = 9
+    SCREEN_BEACON_PAYMENT = 10
+    SCREEN_HUD_MINE_BLOCK = 11
+    CRAFT_RECIPE = 12
+    CRAFT_RECIPE_AUTO = 13
+    CRAFT_CREATIVE = 14
+    CRAFT_RECIPE_OPTIONAL = 15
+    CRAFT_REPAIR_AND_DISENCHANT = 16
+    CRAFT_LOOM = 17
+    CRAFT_NON_IMPLEMENTED = 18
+    CRAFT_RESULTS = 19
+
+
+class ItemStackRequestActionTake:
     amount: uint8
     src: ItemStackRequestSlotInfo
     dst: ItemStackRequestSlotInfo
 
 
-class PlaceStackRequestAction:
+class ItemStackRequestActionPlace:
     amount: uint8
     src: ItemStackRequestSlotInfo
     dst: ItemStackRequestSlotInfo
 
 
-class SwapStackRequestAction:
+class ItemStackRequestActionSwap:
     src: ItemStackRequestSlotInfo
     dst: ItemStackRequestSlotInfo
 
 
-class DropStackRequestAction:
+class ItemStackRequestActionDrop:
     amount: uint8
     src: ItemStackRequestSlotInfo
     randomly: bool
 
 
-class DestroyStackRequestAction:
+class ItemStackRequestActionDestroy:
     amount: uint8
     src: ItemStackRequestSlotInfo
 
 
-class ConsumeStackRequestAction:
+class ItemStackRequestActionConsume:
     amount: uint8
     src: ItemStackRequestSlotInfo
 
 
-class CreateStackRequestAction:
+class ItemStackRequestActionCreate:
     results_index: uint8
 
 
-class PlaceInItemContainerDeprecatedStackRequestAction:
+class ItemStackRequestActionPlaceInItemContainer:
     amount: uint8
     src: ItemStackRequestSlotInfo
     dst: ItemStackRequestSlotInfo
 
 
-class TakeFromItemContainerDeprecatedStackRequestAction:
+class ItemStackRequestActionTakeFromItemContainer:
     amount: uint8
     src: ItemStackRequestSlotInfo
     dst: ItemStackRequestSlotInfo
 
 
-class ScreenLabTableCombineStackRequestAction:
+class ItemStackRequestActionLabTableCombine:
     pass
 
 
-class ScreenBeaconPaymentStackRequestAction:
+class ItemStackRequestActionBeaconPayment:
     primary_effect_id: varint32
     secondary_effect_id: varint32
 
 
-class ScreenHUDMineBlockStackRequestAction:
+class ItemStackRequestActionMineBlock:
     slot: varint32
     predicted_durability: varint32
     net_id_variant: varint32
 
 
-class CraftRecipeStackRequestAction:
+class ItemStackRequestActionCraftRecipe:
     recipe_net_id: uvarint32
     num_crafts: uint8
 
 
-class CraftRecipeAutoStackRequestAction:
+class ItemStackRequestActionCraftRecipeAuto:
     recipe_net_id: uvarint32
     num_requested_crafts: uint8  # always set to the same value as num_crafts
     num_crafts: uint8
     ingredients: list[ItemDescriptorCount]
 
 
-class CraftCreativeStackRequestAction:
+class ItemStackRequestActionCraftCreative:
     recipe_net_id: uvarint32
     num_crafts: uint8
 
 
-class CraftRecipeOptionalStackRequestAction:
+class ItemStackRequestActionCraftRecipeOptional:
     recipe_net_id: uvarint32
     filtered_string_index: int32
 
 
-class CraftRepairAndDisenchantStackRequestAction:
+class ItemStackRequestActionCraftGrindstone:
     recipe_net_id: uvarint32
     num_crafts: uint8
     repair_cost: varint32
 
 
-class CraftLoomStackRequestAction:
+class ItemStackRequestActionCraftLoom:
     pattern_name_id: str
     num_crafts: uint8
 
 
-class CraftNonImplementedDeprecatedStackRequestAction:
+class ItemStackRequestActionCraftNonImplemented:
     pass
 
 
-class CraftResultsDeprecatedStackRequestAction:
+class ItemStackRequestActionCraftResults:
     craft_results: list[NetworkItemInstanceDescriptor]
     num_crafts: uint8
 
 
 type ItemStackRequestAction = (
-    TakeStackRequestAction
-    | PlaceStackRequestAction
-    | SwapStackRequestAction
-    | DropStackRequestAction
-    | DestroyStackRequestAction
-    | ConsumeStackRequestAction
-    | CreateStackRequestAction
-    | PlaceInItemContainerDeprecatedStackRequestAction
-    | TakeFromItemContainerDeprecatedStackRequestAction
-    | ScreenLabTableCombineStackRequestAction
-    | ScreenBeaconPaymentStackRequestAction
-    | ScreenHUDMineBlockStackRequestAction
-    | CraftRecipeStackRequestAction
-    | CraftRecipeAutoStackRequestAction
-    | CraftCreativeStackRequestAction
-    | CraftRecipeOptionalStackRequestAction
-    | CraftRepairAndDisenchantStackRequestAction
-    | CraftLoomStackRequestAction
-    | CraftNonImplementedDeprecatedStackRequestAction
-    | CraftResultsDeprecatedStackRequestAction
+    ItemStackRequestActionTake
+    | ItemStackRequestActionPlace
+    | ItemStackRequestActionSwap
+    | ItemStackRequestActionDrop
+    | ItemStackRequestActionDestroy
+    | ItemStackRequestActionConsume
+    | ItemStackRequestActionCreate
+    | ItemStackRequestActionPlaceInItemContainer
+    | ItemStackRequestActionTakeFromItemContainer
+    | ItemStackRequestActionLabTableCombine
+    | ItemStackRequestActionBeaconPayment
+    | ItemStackRequestActionMineBlock
+    | ItemStackRequestActionCraftRecipe
+    | ItemStackRequestActionCraftRecipeAuto
+    | ItemStackRequestActionCraftCreative
+    | ItemStackRequestActionCraftRecipeOptional
+    | ItemStackRequestActionCraftGrindstone
+    | ItemStackRequestActionCraftLoom
+    | ItemStackRequestActionCraftNonImplemented
+    | ItemStackRequestActionCraftResults
 )
 
 

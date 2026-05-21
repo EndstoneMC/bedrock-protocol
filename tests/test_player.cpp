@@ -773,7 +773,7 @@ TEST_CASE("PlayerAuthInputPacket: ItemStackRequest with four heterogeneous actio
     bp::ItemStackRequestData req;
     req.client_request_id.id = 7;
 
-    bp::TakeStackRequestAction take;
+    bp::ItemStackRequestActionTake take;
     take.amount = 2;
     take.src.full_container_name.name = bp::ContainerEnumName::HotbarContainer;
     take.src.full_container_name.dynamic_id = std::nullopt;
@@ -784,13 +784,13 @@ TEST_CASE("PlayerAuthInputPacket: ItemStackRequest with four heterogeneous actio
     take.dst.slot = 5;
     take.dst.net_id_variant = 0;
 
-    bp::CraftRecipeStackRequestAction recipe;
+    bp::ItemStackRequestActionCraftRecipe recipe;
     recipe.recipe_net_id = 42;
     recipe.num_crafts = 3;
 
-    bp::ScreenLabTableCombineStackRequestAction lab;
+    bp::ItemStackRequestActionLabTableCombine lab;
 
-    bp::CraftResultsDeprecatedStackRequestAction results;
+    bp::ItemStackRequestActionCraftResults results;
     results.num_crafts = 2;
 
     req.actions = {take, recipe, lab, results};
@@ -832,8 +832,8 @@ TEST_CASE("PlayerAuthInputPacket: ItemStackRequest with four heterogeneous actio
     REQUIRE(rt->item_stack_request.actions[1].index() == 12);  // CraftRecipe
     REQUIRE(rt->item_stack_request.actions[2].index() == 9);   // LabTableCombine
     REQUIRE(rt->item_stack_request.actions[3].index() == 19);  // CraftResultsDeprecated
-    REQUIRE(std::get<bp::TakeStackRequestAction>(rt->item_stack_request.actions[0]).amount == 2);
-    REQUIRE(std::get<bp::CraftRecipeStackRequestAction>(rt->item_stack_request.actions[1]).recipe_net_id == 42);
+    REQUIRE(std::get<bp::ItemStackRequestActionTake>(rt->item_stack_request.actions[0]).amount == 2);
+    REQUIRE(std::get<bp::ItemStackRequestActionCraftRecipe>(rt->item_stack_request.actions[1]).recipe_net_id == 42);
     REQUIRE(rt->item_stack_request.strings_to_filter == std::vector<std::string>{"hello"});
     REQUIRE(rt->item_stack_request.strings_to_filter_origin == bp::TextProcessingEventOrigin::AnvilText);
 }
@@ -843,7 +843,7 @@ TEST_CASE("PlayerAuthInputPacket: AutoCraftRecipe with all five ItemDescriptor v
     bp::ItemStackRequestData req{};  // value-init so strings_to_filter_origin defaults to ServerChatPublic
     req.client_request_id.id = 11;
 
-    bp::CraftRecipeAutoStackRequestAction action;
+    bp::ItemStackRequestActionCraftRecipeAuto action;
     action.recipe_net_id = 5;
     action.num_requested_crafts = 1;
     action.num_crafts = 1;
@@ -906,7 +906,7 @@ TEST_CASE("PlayerAuthInputPacket: AutoCraftRecipe with all five ItemDescriptor v
     REQUIRE(rt.has_value());
     REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->item_stack_request.actions.size() == 1);
-    const auto &auto_craft = std::get<bp::CraftRecipeAutoStackRequestAction>(rt->item_stack_request.actions[0]);
+    const auto &auto_craft = std::get<bp::ItemStackRequestActionCraftRecipeAuto>(rt->item_stack_request.actions[0]);
     REQUIRE(auto_craft.recipe_net_id == 5);
     REQUIRE(auto_craft.ingredients.size() == 5);
     REQUIRE(auto_craft.ingredients[0].descriptor.index() == 1);  // Internal
