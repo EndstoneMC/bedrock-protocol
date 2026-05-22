@@ -3,6 +3,7 @@ add_executable(${PROJECT_NAME}_tests
     test_book.cpp
     test_crafting.cpp
     test_disconnect.cpp
+    test_game.cpp
     test_graphics.cpp
     test_inventory.cpp
     test_level.cpp
