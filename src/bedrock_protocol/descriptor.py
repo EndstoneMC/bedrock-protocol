@@ -100,6 +100,13 @@ class PrimitiveType:
     serializes as `int32`), but a backend spells the field with the alias
     name (so the C++ field type is `Color`, not `std::int32_t`).
 
+    `wire_as` decouples the in-memory C++ type (`name`) from the wire
+    encoding. With `wire_as` set, the backend spells the field using `name`
+    (e.g. `std::int32_t`) but reads / writes it using `wire_as` (e.g.
+    `uvarint32`), `static_cast`-ing between the two. Used for fields like
+    `NetworkBlockPos::y` where BDS keeps the in-memory type as `int` but
+    the wire encoding flips between signed and unsigned varint per packet.
+
     `trailing` flips a `bytes` field from "length-prefixed" to "consume the
     remaining unread bytes in the frame" -- the wire form has no length
     marker, and the frame boundary terminates the read. Only valid for
@@ -110,6 +117,7 @@ class PrimitiveType:
     big_endian: bool = False
     alias: str | None = None
     trailing: bool = False
+    wire_as: "PrimitiveType | None" = None
     kind: Literal["primitive"] = "primitive"
 
     @property

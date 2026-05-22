@@ -47,11 +47,17 @@ def field(
     """Mark a struct field.
 
     - `type`: the on-the-wire shape. For enum-typed fields, a primitive
-      (e.g. `uvarint32`, `varint32`, `str`). For optional fields, defaults
-      to a single-byte bool flag + payload; passing `typing.Union` switches
-      to a varint union-index discriminator instead. The index follows the
-      annotation order, so `X | None` encodes present as 0 / absent as 1,
-      while `None | X` encodes present as 1 / absent as 0.
+      (e.g. `uvarint32`, `varint32`, `str`). For an integer-primitive-typed
+      field, an *integer* primitive that overrides the wire encoding while
+      the annotation keeps owning the in-memory type -- `y: int32 = field(type=uvarint32)`
+      gives `std::int32_t y` in C++ but reads / writes Y as `varint<uint32_t>`
+      with a `static_cast` at the boundary (used for `NetworkBlockPos`,
+      where BDS keeps Y as `int` but the wire writes it unsigned). For
+      optional fields, defaults to a single-byte bool flag + payload;
+      passing `typing.Union` switches to a varint union-index discriminator
+      instead. The index follows the annotation order, so `X | None` encodes
+      present as 0 / absent as 1, while `None | X` encodes present as 1 /
+      absent as 0.
     - `since`: protocol version that introduced the field.
     - `until`: first protocol version where the field is removed (exclusive),
       so the field is present in `[since, until)`. Redeclaring the same field

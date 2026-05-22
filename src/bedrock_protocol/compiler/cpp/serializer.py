@@ -530,6 +530,8 @@ def _field_groups(
 
 
 def _primitive_write(p: PrimitiveType, expr: str) -> str:
+    if p.wire_as is not None:
+        return _primitive_write(p.wire_as, expr)
     if p.trailing:
         return f"stream.writeRawBytes({expr});"
     if p.name in ("str", "bytes"):
@@ -543,15 +545,16 @@ def _primitive_write(p: PrimitiveType, expr: str) -> str:
 
 
 def _primitive_read(out: Printer, p: PrimitiveType) -> None:
-    if p.trailing:
+    wire = p.wire_as if p.wire_as is not None else p
+    if wire.trailing:
         out("auto v = stream.readRemaining();")
-    elif p.name in ("str", "bytes"):
+    elif wire.name in ("str", "bytes"):
         out("auto v = stream.read<std::string>();")
     else:
-        u = PRIMITIVE_TYPES[p.name]
-        if p.name in VARINT_PRIMITIVES:
+        u = PRIMITIVE_TYPES[wire.name]
+        if wire.name in VARINT_PRIMITIVES:
             out(f"auto v = stream.readVarInt<{u}>();")
-        elif p.big_endian:
+        elif wire.big_endian:
             out(f"auto v = stream.read<{u}, std::endian::big>();")
         else:
             out(f"auto v = stream.read<{u}>();")

@@ -711,6 +711,9 @@ class _AnnotationContext:
         if name in self.struct_names:
             return StructType(name)
         if name in PRIMITIVES:
+            if type_kw is not None:
+                wire = _wire_override(name, type_kw, field_name)
+                return PrimitiveType(name=name, wire_as=wire)
             return PrimitiveType(name=name)
         alias = self.aliases.get(name)
         if isinstance(alias, PrimitiveAlias):
@@ -1258,6 +1261,24 @@ def _enum_scalar(type_kw: str | None, field_name: str) -> PrimitiveType | None:
     if type_kw not in PRIMITIVES:
         raise CompilerError(
             f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}"
+        )
+    return PrimitiveType(name=type_kw)
+
+
+def _wire_override(name: str, type_kw: str, field_name: str) -> PrimitiveType:
+    """`x: <int-primitive> = field(type=<int-primitive>)` keeps the C++
+    field type as the annotation but encodes / decodes the wire form as
+    `type_kw`. Both sides must be integer primitives so a static_cast
+    bridges them at the codegen boundary."""
+    if name not in INTEGER_PRIMITIVES:
+        raise CompilerError(
+            f"{field_name}: field(type=) on a primitive field only applies to "
+            f"integer primitives, got annotation {name!r}"
+        )
+    if type_kw not in INTEGER_PRIMITIVES:
+        raise CompilerError(
+            f"{field_name}: field(type=) wire override must be an integer "
+            f"primitive, got {type_kw!r}"
         )
     return PrimitiveType(name=type_kw)
 
