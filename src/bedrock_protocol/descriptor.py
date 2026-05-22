@@ -21,22 +21,49 @@ from typing import Literal, Mapping
 
 #: DSL primitive names. `str` and `bytes` are length-prefixed UTF-8 / opaque
 #: buffers; the rest are numeric or boolean.
-PRIMITIVES: frozenset[str] = frozenset({
-    "str", "bytes", "int", "bool", "float", "double",
-    "varint32", "varint64", "uvarint32", "uvarint64",
-    "int8", "int16", "int32", "int64",
-    "uint8", "uint16", "uint32", "uint64",
-})
+PRIMITIVES: frozenset[str] = frozenset(
+    {
+        "str",
+        "bytes",
+        "int",
+        "bool",
+        "float",
+        "double",
+        "varint32",
+        "varint64",
+        "uvarint32",
+        "uvarint64",
+        "int8",
+        "int16",
+        "int32",
+        "int64",
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+    }
+)
 
 #: Primitives carried as LEB128 (zigzag for signed) rather than fixed-width.
-VARINT_PRIMITIVES: frozenset[str] = frozenset({
-    "varint32", "varint64", "uvarint32", "uvarint64",
-})
+VARINT_PRIMITIVES: frozenset[str] = frozenset(
+    {
+        "varint32",
+        "varint64",
+        "uvarint32",
+        "uvarint64",
+    }
+)
 
 #: Primitives that may length-prefix a list, map, or string.
-INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({
-    "str", "bytes", "bool", "float", "double",
-})
+INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset(
+    {
+        "str",
+        "bytes",
+        "bool",
+        "float",
+        "double",
+    }
+)
 
 
 class CompilerError(Exception):
@@ -53,6 +80,7 @@ class Predicate:
     `kind` is either a leaf (`field`, `enum`, `int`) or an operator
     (`==`, `!=`, `<`, `>`, `<=`, `>=`, `and`, `or`, `not`).
     """
+
     kind: str
     text: str = ""
     operands: tuple["Predicate", ...] = ()
@@ -77,6 +105,7 @@ class PrimitiveType:
     marker, and the frame boundary terminates the read. Only valid for
     `bytes`, and only when the field is the last one in its struct.
     """
+
     name: str
     big_endian: bool = False
     alias: str | None = None
@@ -91,6 +120,7 @@ class PrimitiveType:
 @dataclass(frozen=True)
 class StructType:
     """A reference to a user-defined struct."""
+
     name: str
     kind: Literal["struct"] = "struct"
 
@@ -104,6 +134,7 @@ class EnumType:
     """A reference to a user-defined enum. `scalar=None` means name-coded
     (string on the wire); `scalar` set means integer-coded over that
     primitive."""
+
     name: str
     scalar: PrimitiveType | None
     kind: Literal["enum"] = "enum"
@@ -120,6 +151,7 @@ class OptionalType:
     With a union tag, `present_tag` is the tag value that means "payload
     follows" (0 for `T | None`, 1 for `None | T`).
     """
+
     inner: "FieldType"
     discriminator: bool = False
     present_tag: int = 0
@@ -137,6 +169,7 @@ class RepeatedType:
     None (fixed array); `list[T]` with `count_expr` set when the element
     count is computed at serialize/deserialize time from earlier fields
     (`count=lambda p: ...`), again carrying no wire prefix."""
+
     inner: "FieldType"
     count: int | None = None
     count_expr: "Predicate | None" = None
@@ -151,6 +184,7 @@ class RepeatedType:
 @dataclass(frozen=True)
 class MappingType:
     """Length-prefixed map of key/value pairs."""
+
     key: "FieldType"
     value: "FieldType"
     prefix: PrimitiveType
@@ -162,6 +196,21 @@ class MappingType:
 
 
 @dataclass(frozen=True)
+class TupleType:
+    """`tuple[A, B, ...]` with at least two heterogeneous element types.
+    Wire form is each element serialized in declaration order with no
+    length prefix. A homogeneous `tuple[T, T, ...]` stays a `RepeatedType`
+    with a fixed `count`; this node only models the mixed-type case."""
+
+    members: tuple["FieldType", ...]
+    kind: Literal["tuple"] = "tuple"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset().union(*(m.referenced for m in self.members))
+
+
+@dataclass(frozen=True)
 class VariantType:
     """`std::variant`-shaped tagged union. `discriminator` is the integer
     primitive that prefixes the active case index on the wire (default
@@ -169,6 +218,7 @@ class VariantType:
     `tag_enum` names a user-defined `IntEnum` whose members supply the C++
     case labels (`EnumName::MEMBER`) one-to-one with the variant alternatives,
     in declaration order; the wire form remains `discriminator`."""
+
     cases: tuple["FieldType | None", ...]
     discriminator: PrimitiveType = field(
         default_factory=lambda: PrimitiveType(name="uvarint32")
@@ -178,9 +228,7 @@ class VariantType:
 
     @property
     def referenced(self) -> frozenset[str]:
-        refs = frozenset().union(
-            *(a.referenced for a in self.cases if a is not None)
-        )
+        refs = frozenset().union(*(a.referenced for a in self.cases if a is not None))
         if self.tag_enum is not None:
             refs = refs | frozenset({self.tag_enum})
         return refs
@@ -196,9 +244,10 @@ class BitsetType:
     `size` is the literal width baked into the generated `std::bitset<N>`.
     `enum_member` records a symbolic `(enum_name, member_name)` ref when the
     DSL spelled the width as `bitset[Enum.MEMBER]`. The resolver narrows that
-    ref against each snapshot's nested-enum view, so per-version sentinels
-    yield per-version bitset widths.
+    ref against each snapshot's nested-enum view, so per-version member
+    numbers yield per-version bitset widths.
     """
+
     size: int
     enum_member: tuple[str, str] | None = None
     kind: Literal["bitset"] = "bitset"
@@ -217,6 +266,7 @@ class CondType:
     from; fields sharing it form one guarded region. None is a lone
     `field(when=)`.
     """
+
     inner: "FieldType"
     predicate: Predicate
     group: int | None = None
@@ -228,8 +278,16 @@ class CondType:
 
 
 FieldType = (
-    PrimitiveType | StructType | EnumType | OptionalType | RepeatedType
-    | MappingType | VariantType | BitsetType | CondType
+    PrimitiveType
+    | StructType
+    | EnumType
+    | OptionalType
+    | RepeatedType
+    | MappingType
+    | TupleType
+    | VariantType
+    | BitsetType
+    | CondType
 )
 
 
@@ -243,7 +301,6 @@ class EnumValue:
     since: int | None
     until: int | None
     deprecated: int | None = None
-    sentinel: bool = False
 
     @property
     def wire_name(self) -> str:
@@ -282,6 +339,7 @@ class FieldVersion:
     protocol range `[since, until)`. A field with a single, version-invariant
     shape has one entry; a redeclared field has one entry per declaration.
     """
+
     type: FieldType | None
     since: int | None
     until: int | None
@@ -352,6 +410,8 @@ class Struct:
                     points.add(version.until)
         for e in self.nested_enums:
             points |= e.change_points
+        for ns in self.nested_structs:
+            points |= ns.change_points
         return frozenset(points)
 
 
@@ -360,6 +420,7 @@ class PrimitiveAlias:
     """`type Name = <primitive>`. Rendered as `enum Name : ctype {}` in C++:
     a distinct integer type wire-compatible with the underlying primitive,
     so a user may specialize `Serializer<Name>` apart from the primitive's."""
+
     name: str
     primitive: str
 
@@ -368,6 +429,7 @@ class PrimitiveAlias:
 class TypeAlias:
     """`type Name = <non-primitive>`. Rendered as `using Name = ctype` in
     C++; `target` is the single field-type tree."""
+
     name: str
     target: FieldType
 
@@ -380,15 +442,16 @@ class File:
     from. The resolver dereferences them against the surrounding
     `FileSet`.
     """
-    name: str                                              # dotted module name
-    stem: str                                              # output filename stem
-    package: str | None                                    # output namespace
+
+    name: str  # dotted module name
+    stem: str  # output filename stem
+    package: str | None  # output namespace
     enums: tuple[Enum, ...]
     structs: tuple[Struct, ...]
     primitive_aliases: tuple[PrimitiveAlias, ...]
     type_aliases: tuple[TypeAlias, ...]
     imports: tuple[str, ...]
-    declaration_order: tuple[str, ...]                     # type names in source order
+    declaration_order: tuple[str, ...]  # type names in source order
 
 
 @dataclass
@@ -399,6 +462,7 @@ class FileSet:
     resolution machinery beyond the import dependency graph and a memo of
     each file's `ResolvedFile` once it has been processed.
     """
+
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     builtins: frozenset[str]
@@ -415,12 +479,13 @@ class VersionSnapshot:
     `until` (exclusive); `hi=None` means "open-ended". `is_fresh` marks
     snapshots whose definition is a new shape rather than a re-use.
     """
+
     lo: int
     hi: int | None
     is_fresh: bool
-    concrete: int                                          # snapshot where this shape was first emitted
-    enum: Enum | None = None                               # narrowed view if this type is an enum
-    struct: Struct | None = None                           # narrowed view if this type is a struct
+    concrete: int  # snapshot where this shape was first emitted
+    enum: Enum | None = None  # narrowed view if this type is an enum
+    struct: Struct | None = None  # narrowed view if this type is a struct
 
 
 @dataclass(frozen=True)
@@ -430,11 +495,12 @@ class ResolvedFile:
     Carries everything the frontend has resolved on behalf of the backend:
     version snapshots, topological order, the FileSet for cross-file lookup.
     """
+
     file: File
     file_set: FileSet
-    declaration_order: tuple[str, ...]                     # versioned topo order
+    declaration_order: tuple[str, ...]  # versioned topo order
     versioned_types: frozenset[str]
-    snapshots: tuple[int, ...]                             # global snapshot points
+    snapshots: tuple[int, ...]  # global snapshot points
     snapshots_by_type: Mapping[str, tuple[VersionSnapshot, ...]]
 
     def lookup(self, name: str) -> Enum | Struct | None:

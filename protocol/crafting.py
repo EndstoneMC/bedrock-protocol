@@ -1,5 +1,5 @@
 import uuid
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import field, packet, type, uint8, uvarint32, value, varint32
 from protocol.inventory import ItemDescriptorCount, NetworkItemInstanceDescriptor
@@ -18,7 +18,7 @@ class CraftingDataEntryType(IntEnum):
     SHAPED_CHEMISTRY_RECIPE = 7
     SMITHING_TRANSFORM_RECIPE = 8
     SMITHING_TRIM_RECIPE = 9
-    COUNT = value(sentinel=True)
+    COUNT = auto()
 
 
 @type(since=685)

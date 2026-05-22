@@ -1,9 +1,12 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import bitset, field, packet, type, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec2, Vec3
-from protocol.inventory import ItemStackRequestData, PackedItemUseLegacyInventoryTransaction
+from protocol.inventory import (
+    ItemStackRequestData,
+    PackedItemUseLegacyInventoryTransaction,
+)
 
 package = "bedrock.protocol"
 
@@ -16,7 +19,7 @@ class InputMode(IntEnum):
     TOUCH = 2
     GAME_PAD = 3
     MOTION_CONTROLLER = value(4, deprecated=859)
-    COUNT = value(sentinel=True)
+    COUNT = auto()
 
 
 class ClientPlayMode(IntEnum):
@@ -29,7 +32,7 @@ class ClientPlayMode(IntEnum):
     LIVING_ROOM = value(6, deprecated=859)
     EXIT_LEVEL = 7
     EXIT_LEVEL_LIVING_ROOM = value(8, deprecated=859)
-    NUM_MODES = value(sentinel=True)
+    NUM_MODES = auto()
 
 
 @type(since=527)
@@ -37,7 +40,7 @@ class NewInteractionModel(IntEnum):
     TOUCH = 0
     CROSSHAIR = 1
     CLASSIC = 2
-    COUNT = value(sentinel=True)
+    COUNT = auto()
 
 
 class PlayerActionType(IntEnum):
@@ -79,7 +82,7 @@ class PlayerActionType(IntEnum):
     STOP_FLYING = 35
     CLIENT_ACK_SERVER_DATA = 36
     START_USING_ITEM = 37
-    COUNT = value(sentinel=True)
+    COUNT = auto()
 
 
 class PlayerBlockActionData:
@@ -169,7 +172,7 @@ class PlayerAuthInputPacket:
         SNEAK_RELEASED_RAW = value(62, since=766)
         SNEAK_PRESSED_RAW = value(63, since=766)
         SNEAK_CURRENT_RAW = value(64, since=766)
-        INPUT_NUM = value(sentinel=True)
+        INPUT_NUM = auto()
 
     rot: Vec2
     pos: Vec3

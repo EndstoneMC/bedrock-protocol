@@ -28,6 +28,7 @@ from ...descriptor import (
     RepeatedType,
     Struct,
     StructType,
+    TupleType,
     TypeAlias,
     VariantType,
 )
@@ -162,8 +163,12 @@ class SerializerGenerator:
                 self._emit_write(p, t, f"value.{f.name}")
                 continue
             expr = render_predicate(
-                guard, "value", self._ctx, self._owner_qualified,
-                self._nested_enums, self._snapshot,
+                guard,
+                "value",
+                self._ctx,
+                self._owner_qualified,
+                self._nested_enums,
+                self._snapshot,
             )
             p(f"if ({expr}) {{")
             with p.indented():
@@ -186,8 +191,12 @@ class SerializerGenerator:
                 p("}")
                 continue
             expr = render_predicate(
-                guard, "out", self._ctx, self._owner_qualified,
-                self._nested_enums, self._snapshot,
+                guard,
+                "out",
+                self._ctx,
+                self._owner_qualified,
+                self._nested_enums,
+                self._snapshot,
             )
             p(f"if ({expr}) {{")
             with p.indented():
@@ -243,6 +252,13 @@ class SerializerGenerator:
                 self._emit_write(p, t.value, f"v{depth}")
             p("}")
             self._loop_depth -= 1
+        elif isinstance(t, TupleType):
+            if len(t.members) == 2:
+                self._emit_write(p, t.members[0], f"{expr}.first")
+                self._emit_write(p, t.members[1], f"{expr}.second")
+            else:
+                for i, m in enumerate(t.members):
+                    self._emit_write(p, m, f"std::get<{i}>({expr})")
         elif isinstance(t, VariantType):
             p(f"{_primitive_write(t.discriminator, f'({expr}).index()')}")
             switch_wrap, case_labels = self._variant_switch(t)
@@ -252,9 +268,7 @@ class SerializerGenerator:
                     p(f"case {case_labels[index]}: {{")
                     with p.indented():
                         if case is not None:
-                            self._emit_write(
-                                p, case, f"std::get<{index}>({expr})"
-                            )
+                            self._emit_write(p, case, f"std::get<{index}>({expr})")
                         p("break;")
                     p("}")
             p("}")
@@ -319,8 +333,12 @@ class SerializerGenerator:
             elif t.count_expr is not None:
                 base = target.rsplit(".", 1)[0]
                 expr = render_predicate(
-                    t.count_expr, base, self._ctx, self._owner_qualified,
-                    self._nested_enums, self._snapshot,
+                    t.count_expr,
+                    base,
+                    self._ctx,
+                    self._owner_qualified,
+                    self._nested_enums,
+                    self._snapshot,
                 )
                 p(f"{target}.resize(static_cast<std::size_t>({expr}));")
                 p(
@@ -352,10 +370,7 @@ class SerializerGenerator:
             p(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
             p(f"{target}.clear();")
             holder = f"std::remove_reference_t<decltype({target})>"
-            p(
-                f"for (auto rep{depth} = *len{depth}; "
-                f"rep{depth} > 0; --rep{depth}) {{"
-            )
+            p(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth}) {{")
             with p.indented():
                 p(f"{holder}::key_type k{depth}{{}};")
                 p("{")
@@ -370,20 +385,24 @@ class SerializerGenerator:
                 p(f"{target}.emplace(k{depth}, v{depth});")
             p("}")
             self._loop_depth -= 1
+        elif isinstance(t, TupleType):
+            if len(t.members) == 2:
+                slots = [f"{target}.first", f"{target}.second"]
+            else:
+                slots = [f"std::get<{i}>({target})" for i in range(len(t.members))]
+            for m, slot in zip(t.members, slots):
+                p("{")
+                with p.indented():
+                    self._emit_read(p, m, slot)
+                p("}")
         elif isinstance(t, VariantType):
             depth = self._loop_depth
             self._loop_depth += 1
-            vartype = cpp_type(
-                t, self._ctx, self._nested_enums, self._snapshot
-            )
+            vartype = cpp_type(t, self._ctx, self._nested_enums, self._snapshot)
             assert vartype is not None
             d = t.discriminator
             u = PRIMITIVE_TYPES[d.name]
-            verb = (
-                f"readVarInt<{u}>"
-                if d.name in VARINT_PRIMITIVES
-                else f"read<{u}>"
-            )
+            verb = f"readVarInt<{u}>" if d.name in VARINT_PRIMITIVES else f"read<{u}>"
             p(f"auto tag{depth} = stream.{verb}();")
             p(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
             p(f"{vartype} var{depth}{{}};")
@@ -439,7 +458,10 @@ class SerializerGenerator:
 
     def _type_at(self, name: str) -> str:
         return qualified_at(
-            name, self._ctx, self._owner_qualified, self._nested_enums,
+            name,
+            self._ctx,
+            self._owner_qualified,
+            self._nested_enums,
             self._snapshot,
         )
 
@@ -495,11 +517,7 @@ def _field_groups(
     groups: list[tuple[Predicate | None, list[tuple[Field, FieldType]]]] = []
     open_group: int | None = None
     for f, t in typed:
-        if (
-            isinstance(t, CondType)
-            and t.group is not None
-            and t.group == open_group
-        ):
+        if isinstance(t, CondType) and t.group is not None and t.group == open_group:
             groups[-1][1].append((f, t))
             continue
         if isinstance(t, CondType):

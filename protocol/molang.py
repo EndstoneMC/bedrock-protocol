@@ -1,6 +1,4 @@
-from enum import IntEnum
-
-from protocol import value
+from enum import IntEnum, auto
 
 package = "bedrock.protocol"
 
@@ -21,4 +19,4 @@ class MolangVersion(IntEnum):
     DEPRECATED_SNIFFER_AND_CAMEL_QUERIES = 11
     LEAF_SUPPORTING_IN_FIRST_SOLID_BLOCK_BELOW = 12
     CARRYING_BLOCK_QUERY_ALL_ACTORS = 13
-    NUM_VALID_VERSIONS = value(sentinel=True)
+    NUM_VALID_VERSIONS = auto()

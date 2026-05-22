@@ -23,6 +23,7 @@ from ..descriptor import ResolvedFile
 @runtime_checkable
 class GeneratorContext(Protocol):
     """The single chokepoint a backend writes through."""
+
     out_dir: Path
 
     @contextmanager

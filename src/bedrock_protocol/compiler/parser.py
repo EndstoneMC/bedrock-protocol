@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field as dc_field, replace
 from pathlib import Path
-from typing import Iterator, cast
+from typing import cast
 
 import griffe
 
@@ -43,6 +43,7 @@ from ..descriptor import (
     RepeatedType,
     Struct,
     StructType,
+    TupleType,
     TypeAlias,
     VariantType,
 )
@@ -57,6 +58,7 @@ class _TagSpec:
     is the wire form, `enum_name` is the optional `IntEnum` whose members
     supply the C++ case labels (one-to-one with the variant alternatives in
     declaration order)."""
+
     primitive: PrimitiveType
     enum_name: str | None = None
 
@@ -65,6 +67,7 @@ class _TagSpec:
 class _ClassifyResult:
     """Output of the cross-module classification pass — immutable from
     `_lower_file`'s point of view, so no mid-pipeline mutation."""
+
     enum_names: frozenset[str]
     struct_names: frozenset[str]
     builtins: frozenset[str]
@@ -103,7 +106,9 @@ class SourceTree:
         self._follow_imports(griffe_modules, output_names)
         classified = self._classify(griffe_modules)
         files = {
-            name: self._lower_file(name, mod, stems.get(name, name), griffe_modules, classified)
+            name: self._lower_file(
+                name, mod, stems.get(name, name), griffe_modules, classified
+            )
             for name, mod in griffe_modules.items()
         }
         return FileSet(
@@ -116,12 +121,15 @@ class SourceTree:
     # --- griffe loading -----------------------------------------------------
 
     def _griffe_load(self, name: str, root: Path) -> griffe.Module:
-        return cast(griffe.Module, griffe.load(
-            name,
-            search_paths=[str(root)],
-            allow_inspection=False,
-            extensions=self._extensions,
-        ))
+        return cast(
+            griffe.Module,
+            griffe.load(
+                name,
+                search_paths=[str(root)],
+                allow_inspection=False,
+                extensions=self._extensions,
+            ),
+        )
 
     def _module_name_and_root(self, path: Path) -> tuple[str, Path]:
         path = path.resolve()
@@ -216,7 +224,11 @@ class SourceTree:
                 aliases=aliases_by_name,
             )
             for attr_name, attr in sources:
-                if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
+                if (
+                    attr_name == "package"
+                    or attr_name in PRIMITIVES
+                    or attr.value is None
+                ):
                     continue
                 # `from X import Y` re-exports a name griffe surfaces in the same
                 # mapping local PEP-695 aliases live in. Treat it as a reference,
@@ -282,10 +294,7 @@ class SourceTree:
                 structs.append(struct)
                 order.append(struct.name)
         imports = tuple(
-            sorted(
-                d for d in self._imports_of(mod)
-                if d in loaded and d != name
-            )
+            sorted(d for d in self._imports_of(mod) if d in loaded and d != name)
         )
         return File(
             name=name,
@@ -312,6 +321,7 @@ class _AnnotationContext:
     annotation like `bitset[Inner.MEMBER]` can resolve to an integer, and
     clears it afterward so the next struct sees a clean slate.
     """
+
     enum_names: frozenset[str]
     struct_names: frozenset[str]
     builtins: frozenset[str]
@@ -334,13 +344,22 @@ class _AnnotationContext:
 
     def enum(self, cls: griffe.Class) -> Enum:
         values: list[EnumValue] = []
+        next_auto = 0
         for name, attr in cls.attributes.items():
             if attr.value is None:
                 continue
+            if _is_auto_call(attr.value):
+                values.append(EnumValue(name, next_auto, None, None, None))
+                next_auto += 1
+                continue
             parsed = self._enum_member_value(attr.value)
-            if parsed is not None:
-                values.append(EnumValue(name, *parsed))
-        values = _resolve_sentinels(values)
+            if parsed is None:
+                continue
+            ivalue, since, until, deprecated = parsed
+            if ivalue is None:
+                ivalue = next_auto
+            next_auto = ivalue + 1
+            values.append(EnumValue(name, ivalue, since, until, deprecated))
         return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
 
     def struct(self, cls: griffe.Class) -> Struct:
@@ -358,8 +377,7 @@ class _AnnotationContext:
                 nested_structs.append(self.struct(inner))
         nested_names = frozenset(e.name for e in nested_enums)
         self.nested_enum_values = {
-            e.name: {v.name: v.number for v in e.values}
-            for e in nested_enums
+            e.name: {v.name: v.number for v in e.values} for e in nested_enums
         }
         try:
             fields: list[Field] = []
@@ -493,9 +511,7 @@ class _AnnotationContext:
                     f"it cannot also be an optional or union field"
                 )
             if t is not None:
-                t = CondType(
-                    t, predicate, _int_kwarg(call, "field", "_group_id")
-                )
+                t = CondType(t, predicate, _int_kwarg(call, "field", "_group_id"))
         return FieldVersion(
             type=t,
             since=_int_kwarg(call, "field", "since"),
@@ -551,10 +567,12 @@ class _AnnotationContext:
                 raise CompilerError(_endian_scope_error(field_name))
             return PrimitiveType(name="bytes", trailing=True)
         prefix = self._repeat_prefix(call, field_name)
-        tag = self._variant_tag(call, field_name)
+        tag = self._variant_tag(call, field_name, nested)
         cases = _flatten_union(ann)
         if cases is not None:
-            result = self._union_type(cases, field_name, type_kw, endian, prefix, nested, tag)
+            result = self._union_type(
+                cases, field_name, type_kw, endian, prefix, nested, tag
+            )
         else:
             base = self._base_type(ann, type_kw, prefix, nested, field_name, tag)
             if base is None:
@@ -627,7 +645,24 @@ class _AnnotationContext:
             repeat = _repeat_parts(ann, field_name)
             if repeat is not None:
                 elem_ann, count = repeat
-                inner = self._base_type(elem_ann, type_kw, prefix, nested, field_name, tag)
+                if isinstance(elem_ann, list):
+                    members: list[FieldType] = []
+                    for case in elem_ann:
+                        m = self._base_type(
+                            case,
+                            type_kw,
+                            prefix,
+                            nested,
+                            field_name,
+                            tag,
+                        )
+                        if m is None:
+                            return None
+                        members.append(m)
+                    return TupleType(members=tuple(members))
+                inner = self._base_type(
+                    elem_ann, type_kw, prefix, nested, field_name, tag
+                )
                 if inner is None:
                     return None
                 return RepeatedType(
@@ -637,15 +672,21 @@ class _AnnotationContext:
                 )
             mapping = _map_parts(ann, field_name)
             if mapping is not None:
-                key = self._base_type(mapping[0], type_kw, prefix, nested, field_name, tag)
-                value = self._base_type(mapping[1], type_kw, prefix, nested, field_name, tag)
+                key = self._base_type(
+                    mapping[0], type_kw, prefix, nested, field_name, tag
+                )
+                value = self._base_type(
+                    mapping[1], type_kw, prefix, nested, field_name, tag
+                )
                 if key is None or value is None:
                     return None
                 return MappingType(key, value, prefix)
             return None
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, None, prefix, nested, tag)
+            return self._union_type(
+                cases, field_name, type_kw, None, prefix, nested, tag
+            )
         if isinstance(ann, griffe.ExprAttribute):
             # Dotted name `Parent.Child[.Grandchild...]` -- the resolver
             # recognises this as a nested struct reference when the full path
@@ -685,18 +726,22 @@ class _AnnotationContext:
             return target
         return None
 
-    def _variant_tag(self, call: _Ann, field_name: str) -> _TagSpec | None:
+    def _variant_tag(
+        self, call: _Ann, field_name: str, nested: frozenset[str] = frozenset()
+    ) -> _TagSpec | None:
         """`field(tag=<integer primitive | IntEnum>)` overrides a `VariantType`'s
         on-wire discriminator. An enum tag names the C++ case labels but keeps
         the wire form as `varint32` (matching the BDS convention for tagged-
         union recipe / action enums). Absent kwarg -> leave the default
-        (`uvarint32`)."""
+        (`uvarint32`). A `nested` IntEnum declared inside the same struct is
+        valid here too -- the parser resolves it the same way a nested-enum
+        field type would."""
         name = _name_kwarg(call, "field", "tag")
         if name is None:
             return None
         if name in INTEGER_PRIMITIVES:
             return _TagSpec(primitive=PrimitiveType(name=name))
-        if name in self.enum_names:
+        if name in nested or name in self.enum_names:
             return _TagSpec(primitive=PrimitiveType(name="varint32"), enum_name=name)
         raise CompilerError(
             f"{field_name}: field(tag=...) must be an integer primitive or "
@@ -762,13 +807,17 @@ class _AnnotationContext:
             return self._pred_node(n, param, field_name, nested, earlier)
 
         if isinstance(node, griffe.ExprBoolOp):
-            return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
+            return Predicate(
+                node.operator, operands=tuple(child(v) for v in node.values)
+            )
         if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
             return Predicate("not", operands=(child(node.value),))
         if isinstance(node, griffe.ExprBinOp) and node.operator == "&":
             return Predicate("&", operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
-            return Predicate(node.operator, operands=(child(node.left), child(node.right)))
+            return Predicate(
+                node.operator, operands=(child(node.left), child(node.right))
+            )
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
@@ -780,7 +829,9 @@ class _AnnotationContext:
                 raise CompilerError(
                     f"{field_name}: field(when=...) comparison {op!r} is unsupported"
                 )
-            return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
+            return Predicate(
+                op, operands=(child(node.left), child(node.comparators[0]))
+            )
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, nested, earlier)
         if isinstance(node, griffe.ExprCall):
@@ -866,9 +917,7 @@ class _AnnotationContext:
     def _bitset_parts(
         self, ann: griffe.ExprSubscript, field_name: str
     ) -> BitsetType | None:
-        if not (
-            isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"
-        ):
+        if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
             return None
         size, enum_member = self._resolve_bitset_size(ann.slice)
         if size is None or size <= 0:
@@ -907,35 +956,31 @@ class _AnnotationContext:
 
     def _enum_member_value(
         self, value: _Ann
-    ) -> tuple[int, int | None, int | None, int | None, bool] | None:
+    ) -> tuple[int | None, int | None, int | None, int | None] | None:
         direct = _as_int(value)
         if direct is not None:
-            return direct, None, None, None, False
+            return direct, None, None, None
         if not (
             isinstance(value, griffe.ExprCall)
             and isinstance(value.function, griffe.ExprName)
             and value.function.name == "value"
         ):
             return None
-        sentinel = _bool_kwarg(value, "value", "sentinel")
         positionals = [
             a for a in value.arguments if not isinstance(a, griffe.ExprKeyword)
         ]
-        if sentinel:
-            # The number is filled in post-pass via _resolve_sentinels.
-            ivalue = 0
-        else:
-            if not positionals:
-                return None
+        ivalue: int | None
+        if positionals:
             ivalue = _as_int(positionals[0])
             if ivalue is None:
                 return None
+        else:
+            ivalue = None
         return (
             ivalue,
             _int_kwarg(value, "value", "since"),
             _int_kwarg(value, "value", "until"),
             _int_kwarg(value, "value", "deprecated"),
-            sentinel,
         )
 
     # ---- structural checks -------------------------------------------------
@@ -1013,14 +1058,17 @@ class _AnnotationContext:
 
     @staticmethod
     def _reject_versioned_nested_struct(owner: str, cls: griffe.Class) -> None:
-        """Nested struct types are scoped inside their parent and so cannot
-        carry their own `@type(since=/until=/deprecated=)` or `@packet(...)`
-        decorator. Versioning a nested type means lifting it to module scope."""
-        for kw in ("since", "until", "deprecated"):
+        """A nested struct may carry `@type(since=)` to gate its presence on
+        protocol version: the parent's snapshot set picks up the gate and the
+        nested type only appears in snapshots `>= since`. `until=` and
+        `deprecated=` remain reserved for module-scope redeclaration, and a
+        nested struct still cannot be a `@packet` or be itself redeclared
+        across version ranges."""
+        for kw in ("until", "deprecated"):
             if _decorator_int(cls, "type", kw) is not None:
                 raise CompilerError(
                     f"{owner}.{cls.name}: a nested struct cannot carry "
-                    f"@type({kw}=); declare it at module scope to version it"
+                    f"@type({kw}=); declare it at module scope to use it"
                 )
         if _decorator_int(cls, "packet", "id") is not None:
             raise CompilerError(
@@ -1047,6 +1095,8 @@ def _has_variant(t: FieldType | None) -> bool:
         return _has_variant(t.inner)
     if isinstance(t, MappingType):
         return _has_variant(t.key) or _has_variant(t.value)
+    if isinstance(t, TupleType):
+        return any(_has_variant(m) for m in t.members)
     return False
 
 
@@ -1066,23 +1116,6 @@ def _check_trailing_is_last(struct_name: str, fields: list[Field]) -> None:
                 f"{struct_name}.{f.name}: a trailing field (bytes with "
                 f"field(prefix=None)) must be the last field of the struct"
             )
-
-
-def _resolve_sentinels(values: list[EnumValue]) -> list[EnumValue]:
-    """Fill in the number of each `value(sentinel=True)` member as one past
-    the highest non-sentinel member of the enum. If the enum has no concrete
-    members, the sentinel is rejected -- there's nothing to count past."""
-    non_sentinel = [v.number for v in values if not v.sentinel]
-    if not any(v.sentinel for v in values):
-        return values
-    if not non_sentinel:
-        sentinel = next(v for v in values if v.sentinel)
-        raise CompilerError(
-            f"{sentinel.name}: value(sentinel=True) needs at least one "
-            f"non-sentinel member to count past"
-        )
-    high = max(non_sentinel) + 1
-    return [replace(v, number=high) if v.sentinel else v for v in values]
 
 
 # --- module-free helpers ------------------------------------------------------
@@ -1114,6 +1147,15 @@ def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
 def _is_int_enum(cls: griffe.Class) -> bool:
     return any(
         isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases
+    )
+
+
+def _is_auto_call(value: _Ann) -> bool:
+    return (
+        isinstance(value, griffe.ExprCall)
+        and isinstance(value.function, griffe.ExprName)
+        and value.function.name == "auto"
+        and not value.arguments
     )
 
 
@@ -1160,7 +1202,16 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
 
 def _repeat_parts(
     ann: griffe.ExprSubscript, field_name: str
-) -> tuple[griffe.Expr | str, int | None] | None:
+) -> tuple[griffe.Expr | str, int | None] | tuple[list[griffe.Expr | str], int] | None:
+    """Decode a `list[...]` or `tuple[...]` subscript.
+
+    Returns:
+      - `(elem_ann, None)` for `list[T]`,
+      - `(elem_ann, N)` for a homogeneous `tuple[T, T, ...]` (all elements
+        spell the same primitive / type name) -- the legacy fixed-array case,
+      - `(elements, N)` for a heterogeneous `tuple[A, B, ...]` where the
+        first item is the per-element annotation list and N is its length.
+    """
     if not isinstance(ann.left, griffe.ExprName):
         return None
     if ann.left.name == "list":
@@ -1171,19 +1222,16 @@ def _repeat_parts(
     elements: list[griffe.Expr | str] = (
         list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
     )
-    named = [e for e in elements if isinstance(e, griffe.ExprName)]
-    if not named or len(named) != len(elements):
+    if not elements:
         raise CompilerError(
-            f"{field_name}: tuple[...] must spell out a fixed count of named "
+            f"{field_name}: tuple[...] must spell out a fixed count of "
             f"element types -- use list[T] for a variable-length list"
         )
-    if any(e.name != named[0].name for e in named):
-        raise CompilerError(
-            f"{field_name}: tuple[...] elements must all be the same type"
-        )
-    return named[0], len(named)
-
-
+    # Homogeneous iff every element is an ExprName with the same name.
+    named = [e for e in elements if isinstance(e, griffe.ExprName)]
+    if len(named) == len(elements) and all(e.name == named[0].name for e in named):
+        return named[0], len(named)
+    return elements, len(elements)
 
 
 def _map_parts(

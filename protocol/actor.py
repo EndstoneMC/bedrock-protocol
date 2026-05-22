@@ -1,7 +1,17 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8, uvarint64, value, varint32, varint64
+from protocol import (
+    field,
+    int32,
+    packet,
+    type,
+    uint8,
+    uvarint64,
+    value,
+    varint32,
+    varint64,
+)
 from protocol.common import Vec3
 from protocol.nbt import CompoundTag
 

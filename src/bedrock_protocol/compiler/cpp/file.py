@@ -86,8 +86,15 @@ class FileGenerator:
 
     def _emit_includes(self, p: Printer) -> None:
         uses_bitset = self._uses_bitset()
-        stdlib = ["<array>", "<cstdint>", "<map>", "<optional>",
-                  "<string>", "<variant>", "<vector>"]
+        stdlib = [
+            "<array>",
+            "<cstdint>",
+            "<map>",
+            "<optional>",
+            "<string>",
+            "<variant>",
+            "<vector>",
+        ]
         if uses_bitset:
             stdlib.insert(1, "<bitset>")
         for inc in stdlib:
@@ -134,11 +141,13 @@ class FileGenerator:
 
     def _emit_primitive_aliases(self, p: Printer) -> None:
         from .names import PRIMITIVE_TYPES
+
         for a in self._file.primitive_aliases:
             p(f"enum {a.name} : {PRIMITIVE_TYPES[a.primitive]} {{}};")
-        if (
-            self._file.primitive_aliases
-            and (self._unversioned_names() or self._file.type_aliases or self._has_namespaces())
+        if self._file.primitive_aliases and (
+            self._unversioned_names()
+            or self._file.type_aliases
+            or self._has_namespaces()
         ):
             p()
 
@@ -159,6 +168,7 @@ class FileGenerator:
             for ref in a.target.referenced:
                 if self._resolved.is_versioned(ref):
                     from ...descriptor import CompilerError
+
                     raise CompilerError(
                         f"{a.name}: a `type` alias cannot reference the "
                         f"versioned type {ref!r}"
@@ -231,7 +241,9 @@ class FileGenerator:
             EnumGenerator(t).emit(p)
         else:
             StructGenerator(
-                t, self._ctx, nested_anchor=nested_anchor,
+                t,
+                self._ctx,
+                nested_anchor=nested_anchor,
             ).emit(p)
 
     # --- versioning traits --------------------------------------------------
@@ -285,14 +297,28 @@ class FileGenerator:
                         gen.emit_for_enum(p, s.enum, s.lo)
             else:
                 # Emit nested-struct serializers before the parent's, so the
-                # parent's variant case bodies see them already declared. A
-                # nested struct cannot be versioned, so there's only one shape
-                # to emit regardless of the parent's snapshot set.
-                for ns in _walk_nested_structs(t, ""):
-                    pos = len(p.lines)
-                    p()
-                    if not gen.emit_for_struct(p, ns, None):
-                        del p.lines[pos:]
+                # parent's variant case bodies see them already declared. If
+                # no nested type carries its own `@type(since=)`, every parent
+                # snapshot sees the same nested shape and one unversioned
+                # serializer at `Parent::Child` covers them all. If a nested
+                # struct IS versioned, the parent's fresh snapshots disagree
+                # on which nested types exist, so each fresh snapshot needs
+                # its own `Serializer<vN::Parent::Child>` specialization.
+                if fresh and _has_versioned_nested(t):
+                    for s in fresh:
+                        assert s.struct is not None
+                        prefix = snapshot_namespace(s.lo)
+                        for ns in _walk_nested_structs(s.struct, prefix):
+                            pos = len(p.lines)
+                            p()
+                            if not gen.emit_for_struct(p, ns, None):
+                                del p.lines[pos:]
+                else:
+                    for ns in _walk_nested_structs(t, ""):
+                        pos = len(p.lines)
+                        p()
+                        if not gen.emit_for_struct(p, ns, None):
+                            del p.lines[pos:]
                 # An outer namespace-only struct (no fields of its own, only
                 # nested types) has no body to serialize -- the nested-type
                 # serializers above are all the wire codec needs. A truly
@@ -343,13 +369,15 @@ class FileGenerator:
 
     def _unversioned_names(self) -> list[str]:
         return [
-            n for n in self._resolved.declaration_order
+            n
+            for n in self._resolved.declaration_order
             if not self._resolved.is_versioned(n)
         ]
 
     def _versioned_names(self) -> list[str]:
         return [
-            n for n in self._resolved.declaration_order
+            n
+            for n in self._resolved.declaration_order
             if self._resolved.is_versioned(n)
         ]
 
@@ -366,9 +394,7 @@ class FileGenerator:
         return sorted(refs)
 
     def _has_namespaces(self) -> bool:
-        return any(
-            self._snapshot_has_entries(s) for s in self._resolved.snapshots
-        )
+        return any(self._snapshot_has_entries(s) for s in self._resolved.snapshots)
 
     def _snapshot_has_entries(self, snap: int) -> bool:
         for name in self._resolved.declaration_order:
@@ -440,20 +466,19 @@ def _has_nested(s: Struct) -> bool:
 
 
 def _has_versioned_nested(s: Struct) -> bool:
-    """At least one nested-enum member carries a `since=` / `until=` /
-    `deprecated=` gate, so the enum's snapshot view differs between
-    snapshots (either in membership or in which members are marked
-    deprecated). The aliasing dedup would point later snapshots at the
-    wrong shape, so each fresh snapshot has to emit its own nested-enum
-    body."""
+    """At least one nested type has change points across protocol versions,
+    so its snapshot view differs from one parent snapshot to the next.
+    Nested-enum membership / member deprecation, and nested-struct presence
+    (a nested struct gated by `@type(since=)`) both qualify. The aliasing
+    dedup would point later snapshots at the wrong shape, so each fresh
+    snapshot has to emit its own nested body."""
     for e in s.nested_enums:
         for v in e.values:
-            if (
-                v.since is not None
-                or v.until is not None
-                or v.deprecated is not None
-            ):
+            if v.since is not None or v.until is not None or v.deprecated is not None:
                 return True
+    for ns in s.nested_structs:
+        if ns.since is not None:
+            return True
     return False
 
 
@@ -489,6 +514,7 @@ def _walk_nested_structs(s: Struct, prefix: str) -> list[Struct]:
     full `Parent::Child` C++ spelling, suitable for handing to
     `SerializerGenerator.emit_for_struct` as a free-standing struct shape."""
     from dataclasses import replace
+
     base = s.name if not prefix else f"{prefix}::{s.name}"
     out: list[Struct] = []
     for ns in s.nested_structs:

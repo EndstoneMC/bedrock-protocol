@@ -25,6 +25,7 @@ from ...descriptor import (
     RepeatedType,
     ResolvedFile,
     StructType,
+    TupleType,
     VariantType,
 )
 from .names import PRIMITIVE_TYPES, camel, snapshot_namespace
@@ -33,6 +34,7 @@ from .names import PRIMITIVE_TYPES, camel, snapshot_namespace
 @dataclass(frozen=True)
 class FileContext:
     """Cross-cutting state shared across the per-construct generators."""
+
     resolved: ResolvedFile
     known: frozenset[str]
     builtins: frozenset[str]
@@ -91,6 +93,16 @@ def cpp_type(
         if key is None or value is None:
             return None
         return f"std::map<{key}, {value}>"
+    if isinstance(t, TupleType):
+        parts: list[str] = []
+        for m in t.members:
+            spelled = cpp_type(m, ctx, nested, snapshot)
+            if spelled is None:
+                return None
+            parts.append(spelled)
+        if len(parts) == 2:
+            return f"std::pair<{parts[0]}, {parts[1]}>"
+        return f"std::tuple<{', '.join(parts)}>"
     if isinstance(t, VariantType):
         parts: list[str] = []
         for case in t.cases:
@@ -150,14 +162,23 @@ def render_predicate(
         return f"!({render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)})"
     if pred.kind == "bittest":
         arg = render_predicate(
-            pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot,
+            pred.operands[0],
+            base,
+            ctx,
+            owner_qualified,
+            nested_enums,
+            snapshot,
         )
         bit = f"static_cast<std::size_t>({arg})"
         return f"{base}.{pred.text}.test({bit})"
     op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
     if pred.kind in ("*", "+", "-"):
-        lhs = render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)
-        rhs = render_predicate(pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot)
+        lhs = render_predicate(
+            pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot
+        )
+        rhs = render_predicate(
+            pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot
+        )
         return f"({lhs} {op} {rhs})"
     return f" {op} ".join(
         f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})"

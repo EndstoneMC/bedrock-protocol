@@ -1,5 +1,6 @@
 """DSL surface consumed by the bpc compiler."""
 
+from enum import auto
 from typing import Any, TypeAliasType, Union
 
 __version__ = 975
@@ -10,14 +11,17 @@ def _identity(cls):
 
 
 def value(
-    v: int = 0,
+    v: int | None = None,
     since: int | None = None,
     until: int | None = None,
     deprecated: int | None = None,
-    sentinel: bool = False,
 ) -> int:
     """Mark a member's wire value, optionally gated by protocol version.
 
+    - `v`: explicit wire value. Omit to auto-number as `previous_member + 1`,
+      mirroring `enum.auto()` but allowing the version-gating kwargs below.
+      For an auto-numbered member with no other options, prefer plain
+      `enum.auto()` -- shorter and more idiomatic.
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
@@ -25,12 +29,8 @@ def value(
       Acts like `until=` but the member stays on the wire: every snapshot from
       this version on emits the value with `[[deprecated("since vN")]]`, so a
       downstream `-Wdeprecated-declarations` build flags any new use.
-    - `sentinel`: a count sentinel. The number is auto-computed at parse time
-      as one past the highest non-sentinel member of the enum. `v` is ignored
-      when set. Useful for `bitset[Enum.SENTINEL]` so the bitset width follows
-      the enum's high water mark instead of needing a hard-coded literal.
     """
-    return v
+    return auto() if v is None else v
 
 
 def field(
@@ -63,8 +63,9 @@ def field(
       and deserialize recompute it from the predicate, so the field reads as
       `X` but compiles to an optional. The lambda body may use attribute
       access on its parameter, `Enum.MEMBER` literals, integer literals,
-      comparisons, `and`/`or`, and `not`. It may only reference fields
-      declared before this one.
+      comparisons, `and`/`or`, `not`, and bitwise `&` (handy for testing
+      bits in a fixed-width flags field, e.g. `p.flags & FLAG_HAS_X != 0`).
+      It may only reference fields declared before this one.
     - `endian`: byte order for a fixed-width primitive or integer-coded enum
       field, `"big"` or `"little"` (the default). Bedrock sends primitives
       little-endian or as varints almost everywhere, the rare exceptions

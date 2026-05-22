@@ -48,7 +48,7 @@ from .descriptor import CompilerError
     multiple=True,
     type=click.Path(exists=True, file_okay=False, path_type=Path),
     help="Search root for resolving `from X.Y import ...` between inputs. "
-         "Repeatable. Mirrors protoc's --proto_path.",
+    "Repeatable. Mirrors protoc's --proto_path.",
 )
 @click.argument(
     "inputs",

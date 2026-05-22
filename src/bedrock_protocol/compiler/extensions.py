@@ -83,9 +83,7 @@ class RedeclarationExtension(griffe.Extension):
         return None
 
     @staticmethod
-    def _merge_group_when(
-        stmt: ast.stmt, predicate: ast.expr, group: int
-    ) -> None:
+    def _merge_group_when(stmt: ast.stmt, predicate: ast.expr, group: int) -> None:
         """Merge a guard into a hoisted field as `field(_group_when=, _group_id=)`:
         the shared predicate, and the index of the `with` block it came from so
         the block survives hoisting and a backend can re-form it. A field with
@@ -110,9 +108,7 @@ class RedeclarationExtension(griffe.Extension):
 
     # --- redeclared attributes ----------------------------------------------
 
-    def on_attribute_instance(
-        self, *, attr: griffe.Attribute, **kwargs: Any
-    ) -> None:
+    def on_attribute_instance(self, *, attr: griffe.Attribute, **kwargs: Any) -> None:
         parent = attr.parent
         if parent is None or not parent.is_class:
             return

@@ -208,3 +208,20 @@
     schema (e.g. an empty `class ShapedRecipe: pass`) should not be
     "completed" by copying members out of the BDS header -- if the wire
     references show no fields, the body stays empty.
+
+13. **Enum member values: `value(N, ...)` for explicit, `auto()` for the rest.**
+    The DSL's enum surface is three forms, picked by what the member needs:
+    - A bare integer literal (`HARD = 3`) when the wire number is itself
+      meaningful and worth reading. Use this for the first member of a run
+      that anchors the numbering (often the `0` baseline), or for values
+      that are wire-deliberate (e.g. `UNDEFINED = -1`).
+    - `value(N, since=, until=, deprecated=)` when the member needs version
+      gating or deprecation marking. The positional `N` is mandatory here:
+      a member that's only present in a version window has to pin its wire
+      number explicitly, since auto-numbering would shift if a sibling was
+      added earlier in the run.
+    - `auto()` (from `enum.auto`) for everything else, including count or
+      bitset-width sentinels like `COUNT = auto()` at the end of an enum.
+      Auto-number is `previous_member + 1`, mirroring gophertunnel's `iota`
+      blocks. Do not spell auto-numbered members as `value()` -- prefer the
+      shorter, Python-idiomatic `auto()` unless you also need a version kwarg.

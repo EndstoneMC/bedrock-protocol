@@ -21,12 +21,10 @@ from typing import Any, Iterable
 
 from ..descriptor import (
     BitsetType,
-    CompilerError,
     CondType,
     Enum,
     Field,
     FieldType,
-    FieldVersion,
     File,
     FileSet,
     MappingType,
@@ -34,6 +32,7 @@ from ..descriptor import (
     RepeatedType,
     ResolvedFile,
     Struct,
+    TupleType,
     VariantType,
     VersionSnapshot,
 )
@@ -57,11 +56,10 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
             resolve(other, file_set)
 
     all_types: tuple[Enum | Struct, ...] = (
-        *file.enums, *file.structs,
+        *file.enums,
+        *file.structs,
     )
-    by_name: dict[str, Enum | Struct] = {
-        t.name: t for t in all_types
-    }
+    by_name: dict[str, Enum | Struct] = {t.name: t for t in all_types}
     # Source declaration order, not enums-then-structs — the layout the C++
     # backend emits depends on this.
     types: tuple[Enum | Struct, ...] = tuple(
@@ -73,7 +71,13 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
     order = _topo_order(types, own)
     snapshots = _snapshot_points(types, versioned, file, file_set)
     snapshots_by_type = _plan_snapshots(
-        types, by_name, versioned, order, snapshots, file, file_set,
+        types,
+        by_name,
+        versioned,
+        order,
+        snapshots,
+        file,
+        file_set,
     )
 
     resolved = ResolvedFile(
@@ -219,9 +223,7 @@ def _plan_snapshots(
         if name not in versioned:
             continue
         t = by_name[name]
-        deps = (
-            frozenset(_root_of(r) for r in t.referenced) & versioned
-        ) - {name}
+        deps = (frozenset(_root_of(r) for r in t.referenced) & versioned) - {name}
         keys[name] = {}
         concrete[name] = {}
         out: list[VersionSnapshot] = []
@@ -238,21 +240,22 @@ def _plan_snapshots(
             else:
                 own_changed = key != keys[name][previous]
                 dep_changed = any(
-                    dep_concrete(d, s) != dep_concrete(d, previous)
-                    for d in deps
+                    dep_concrete(d, s) != dep_concrete(d, previous) for d in deps
                 )
                 fresh = own_changed or dep_changed
                 conc = s if fresh else concrete[name][previous]
             concrete[name][s] = conc
             hi = snapshots[i + 1] if i + 1 < len(snapshots) else None
-            out.append(VersionSnapshot(
-                lo=s,
-                hi=hi,
-                is_fresh=fresh,
-                concrete=conc,
-                enum=enum_view,
-                struct=struct_view,
-            ))
+            out.append(
+                VersionSnapshot(
+                    lo=s,
+                    hi=hi,
+                    is_fresh=fresh,
+                    concrete=conc,
+                    enum=enum_view,
+                    struct=struct_view,
+                )
+            )
             previous = s
         result[name] = tuple(out)
     return result
@@ -276,6 +279,15 @@ def _snapshot_view(
         narrowed_enums.append(Enum(e.name, ev, e.since))
         nested_values[e.name] = {v.name: v.number for v in ev}
         enum_key_parts.append((e.name, _enum_key(ev)))
+    narrowed_nested_structs: list[Struct] = []
+    nested_struct_key_parts: list[Any] = []
+    for ns in t.nested_structs:
+        if ns.since is not None and snapshot < ns.since:
+            continue
+        _, ns_view, ns_key = _snapshot_view(ns, snapshot)
+        assert ns_view is not None
+        narrowed_nested_structs.append(ns_view)
+        nested_struct_key_parts.append((ns.name, ns_key))
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:
@@ -287,16 +299,24 @@ def _snapshot_view(
             version = replace(version, type=rebound)
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
-    dep = t.deprecated if (
-        t.deprecated is not None and snapshot >= t.deprecated
-    ) else None
+    dep = (
+        t.deprecated
+        if (t.deprecated is not None and snapshot >= t.deprecated)
+        else None
+    )
     view_s = replace(
         t,
         fields=tuple(narrowed),
         nested_enums=tuple(narrowed_enums),
+        nested_structs=tuple(narrowed_nested_structs),
         deprecated=dep,
     )
-    return None, view_s, tuple(key_parts) + (tuple(enum_key_parts), dep is not None)
+    return (
+        None,
+        view_s,
+        tuple(key_parts)
+        + (tuple(enum_key_parts), tuple(nested_struct_key_parts), dep is not None),
+    )
 
 
 def _rebind_bitsets(
@@ -338,6 +358,11 @@ def _rebind_bitsets(
         if new_cases == t.cases:
             return t
         return replace(t, cases=new_cases)
+    if isinstance(t, TupleType):
+        new_members = tuple(_rebind_bitsets(m, nested) for m in t.members)
+        if new_members == t.members:
+            return t
+        return replace(t, members=new_members)
     if isinstance(t, CondType):
         inner = _rebind_bitsets(t.inner, nested)
         return replace(t, inner=inner) if inner is not t.inner else t
@@ -348,35 +373,25 @@ def _enum_key(values: tuple[Any, ...]) -> tuple[Any, ...]:
     """Identity key for a narrowed enum view: name, number, and whether the
     value carries deprecation at this snapshot. Two snapshots that differ
     only in which members are `[[deprecated]]` get separate definitions."""
-    return tuple(
-        (v.name, v.number, v.deprecated is not None) for v in values
-    )
+    return tuple((v.name, v.number, v.deprecated is not None) for v in values)
 
 
-def _narrow_enum_values(
-    values: tuple[Any, ...], snapshot: int
-) -> tuple[Any, ...]:
-    """Filter enum values to those present at `snapshot`, suppress the
+def _narrow_enum_values(values: tuple[Any, ...], snapshot: int) -> tuple[Any, ...]:
+    """Filter enum values to those present at `snapshot` and suppress the
     `deprecated` marker on members whose deprecation version hasn't kicked
-    in yet, then re-resolve every sentinel as one past the highest
-    non-sentinel member of the narrowed set."""
+    in yet."""
     from dataclasses import replace as _replace
+
     present: list[Any] = []
     for v in values:
         if v.since is not None and v.since > snapshot:
             continue
         if v.until is not None and snapshot >= v.until:
             continue
-        dep = v.deprecated if (
-            v.deprecated is not None and snapshot >= v.deprecated
-        ) else None
+        dep = (
+            v.deprecated
+            if (v.deprecated is not None and snapshot >= v.deprecated)
+            else None
+        )
         present.append(_replace(v, deprecated=dep))
-    if any(v.sentinel for v in present):
-        non_sentinel = [v.number for v in present if not v.sentinel]
-        if non_sentinel:
-            high = max(non_sentinel) + 1
-            present = [
-                _replace(v, number=high) if v.sentinel else v
-                for v in present
-            ]
     return tuple(present)

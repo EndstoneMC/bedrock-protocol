@@ -58,7 +58,8 @@ def _check_no_cross_module_versioned_references(
         if other is None:
             continue
         other_types: tuple[Enum | Struct, ...] = (
-            *other.enums, *other.structs,
+            *other.enums,
+            *other.structs,
         )
         for t in other_types:
             if t.change_points:
