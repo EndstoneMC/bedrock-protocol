@@ -1,4 +1,4 @@
-from protocol import int32, varint32
+from protocol import field, int32, uvarint32, varint32, type
 
 package = "bedrock.protocol"
 
@@ -18,6 +18,13 @@ class BlockPos:
     x: varint32
     y: varint32
     z: varint32
+
+
+@type(deprecated=944)
+class NetworkBlockPos:
+    x: int32 = field(type=varint32)
+    y: int32 = field(type=uvarint32)
+    z: int32 = field(type=varint32)
 
 
 class SubChunkPos:

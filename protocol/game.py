@@ -14,11 +14,13 @@ from protocol import (
     varint32,
 )
 from protocol.actor import ActorRuntimeID, ActorUniqueID
-from protocol.common import BlockPos, Vec2, Vec3
+from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
 from protocol.nbt import CompoundTag
 from protocol.level import DimensionType
 
 package = "bedrock.protocol"
+
+type LevelSeed64 = uint64
 
 
 class GameType(IntEnum):
@@ -37,6 +39,55 @@ class Difficulty(IntEnum):
     HARD = 3
     COUNT = auto()
     UNKNOWN = auto()
+
+
+class GeneratorType(IntEnum):
+    LEGACY = 0
+    OVERWORLD = 1
+    FLAT = 2
+    NETHER = 3
+    THE_END = 4
+    VOID = 5
+    UNDEFINED = 6
+
+
+class NetherWorldType(IntEnum):
+    NORMAL = 0
+    FLAT = 1
+
+
+class EducationEditionOffer(IntEnum):
+    NONE = 0
+    REST_OF_WORLD = 1
+    CHINA = 2  # TODO: BDS marks this `China_Deprecated`; confirm the deprecation version
+
+
+class EditorWorldType(IntEnum):
+    NON_EDITOR = 0
+    EDITOR_PROJECT = 1
+    EDITOR_TEST_LEVEL = 2
+    EDITOR_REALMS_UPLOAD = 3
+
+
+class GamePublishSetting(IntEnum):
+    NO_MULTI_PLAY = 0
+    INVITE_ONLY = 1
+    FRIENDS_ONLY = 2
+    FRIENDS_OF_FRIENDS = 3
+    PUBLIC = 4
+
+
+class PlayerPermissionLevel(IntEnum):
+    VISITOR = 0
+    MEMBER = 1
+    OPERATOR = 2
+    CUSTOM = 3
+
+
+class ChatRestrictionLevel(IntEnum):
+    NONE = 0
+    DROPPED = 1
+    DISABLED = 2
 
 
 class SpawnBiomeType(IntEnum):
@@ -79,21 +130,34 @@ class Experiments:
     experiments_ever_toggled: bool
 
 
+@type(since=419)
+class ItemEntry:
+    """Item registry entry sent in StartGame from v419..v775. Replaced by
+    the dedicated ItemRegistryPacket at v776 (gating lives on the field)."""
+
+    name: str
+    runtime_id: int16
+    component_based: bool
+
+
 class LevelSettings:
     seed: varint32 = field(until=503)
-    seed: uint64 = field(since=503)
+    seed: LevelSeed64 = field(since=503)
     spawn_settings: SpawnSettings = field(since=407)
-    generator: varint32
+    generator: GeneratorType = field(type=varint32)
     game_type: GameType = field(type=varint32)
     is_hardcore: bool = field(since=671)
     game_difficulty: Difficulty = field(type=varint32)
-    default_spawn: BlockPos
+    default_spawn: NetworkBlockPos = field(until=944)
+    default_spawn: BlockPos = field(since=944)
     achievements_disabled: bool
-    editor_world_type: varint32 = field(since=671)
+    editor_world: bool = field(since=534, until=671)
+    editor_world_type: EditorWorldType = field(type=varint32, since=671)
     is_created_in_editor: bool = field(since=582)
     is_exported_from_editor: bool = field(since=582)
     time: varint32
-    education_edition_offer: varint32 = field(since=407)
+    education_edition_offer: bool = field(until=407)
+    education_edition_offer: EducationEditionOffer = field(type=varint32, since=407)
     education_features_enabled: bool
     education_product_id: str = field(since=407)
     rain_level: float
@@ -101,15 +165,15 @@ class LevelSettings:
     confirmed_platform_locked_content: bool = field(since=332)
     multiplayer_game_intent: bool
     lan_broadcast_intent: bool
-    xbl_broadcast_intent: varint32 = field(since=332)
-    platform_broadcast_intent: varint32 = field(since=332)
+    xbl_broadcast_intent: GamePublishSetting = field(type=varint32, since=332)
+    platform_broadcast_intent: GamePublishSetting = field(type=varint32, since=332)
     commands_enabled: bool
     texture_packs_required: bool
     game_rules: GameRules
     experiments: Experiments = field(since=419)
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
-    default_permissions: varint32
+    default_permissions: PlayerPermissionLevel = field(type=varint32)
     server_chunk_tick_range: int32
     has_locked_behavior_pack: bool
     has_locked_resource_pack: bool
@@ -124,10 +188,10 @@ class LevelSettings:
     base_game_version: str = field(since=388)
     limited_world_width: int32 = field(since=407)
     limited_world_depth: int32 = field(since=407)
-    nether_type: bool = field(since=407)
+    nether_type: NetherWorldType = field(type=bool, since=407)
     edu_shared_uri_resource: EduSharedUriResource = field(since=465)
     override_force_experimental_gameplay_flag: bool | None = field(since=407)
-    chat_restriction_level: uint8 = field(since=544)
+    chat_restriction_level: ChatRestrictionLevel = field(type=uint8, since=544)
     disable_player_interactions: bool = field(since=544)
     server_id: str = field(since=685, until=924)
     world_id: str = field(since=685, until=924)
@@ -209,6 +273,7 @@ class StartGamePacket:
     level_current_time: uint64
     enchantment_seed: varint32
     block_properties: list[tuple[str, CompoundTag]] = field(since=388)
+    items: list[ItemEntry] = field(since=419, until=776)
     multiplayer_correlation_id: str
     enable_item_stack_net_manager: bool = field(since=407)
     server_version: str = field(since=465)
