@@ -71,8 +71,19 @@
       and the oldest `vNNN` that defines the serializer at all is the
       packet's own `since` -- except for the v291 floor, see below.
     - `Sandertv/gophertunnel` -- `minecraft/protocol/packet/<name>.go` for the
-      current field shape, plus `git log -S<field>` on that file to date
-      when each field was added or removed.
+      current field shape, plus `git log -p -- minecraft/protocol/packet/<name>.go`
+      on that file to walk every Marshal diff. `git log -S<field>` only catches
+      additions/removals of field *names* -- it misses type / encoding changes
+      that keep a name (e.g. `io.UBlockPos(&pk.WorldSpawn) -> io.BlockPos(...)`,
+      `io.Bool(&pk.EditorWorld) -> io.Varint32(&pk.EditorWorldType)`, or
+      `io.Bool(&pk.X) -> protocol.OptionalFunc(io, &pk.X, io.Bool)`). A name
+      that survives across versions says nothing about whether the on-wire
+      shape did. Read the `Marshal` body diff in every commit that touched
+      the file, and gate each shape change with `field(since=, until=)`,
+      reapplying the right wire type for each interval. When a commit message
+      says "Fix incorrect ..." or reverts an earlier change, treat that as a
+      gophertunnel bug interval, not a real Mojang protocol change -- date the
+      DSL by the corrected shape and leave the buggy interval out of the gating.
 
    Use the protocol (network) version number. Gate the type itself at the
    version it first appears -- `@packet(since=N)` for a packet, `@type(since=N)`
