@@ -229,3 +229,14 @@ class ClientMovementPredictionSyncPacket:
     ]
     actor_unique_id: ActorUniqueID
     actor_flying_state: bool
+
+
+@type(since=944)
+class PlayerPartyInfo:
+    party_id: str
+    is_leader: bool = field(since=975)
+
+
+@packet(id=342, since=944)
+class PartyChangedPacket:
+    party_info: PlayerPartyInfo | None
