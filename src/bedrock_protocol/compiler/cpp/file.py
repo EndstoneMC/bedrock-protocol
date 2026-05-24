@@ -468,16 +468,16 @@ def _has_nested(s: Struct) -> bool:
 def _has_versioned_nested(s: Struct) -> bool:
     """At least one nested type has change points across protocol versions,
     so its snapshot view differs from one parent snapshot to the next.
-    Nested-enum membership / member deprecation, and nested-struct presence
-    (a nested struct gated by `@type(since=)`) both qualify. The aliasing
-    dedup would point later snapshots at the wrong shape, so each fresh
-    snapshot has to emit its own nested body."""
+    Nested-enum membership / member deprecation, a nested struct gated by
+    `@type(since=)`, or a nested struct whose own fields are version-gated
+    all qualify. The aliasing dedup would point later snapshots at the wrong
+    shape, so each fresh snapshot has to emit its own nested body."""
     for e in s.nested_enums:
         for v in e.values:
             if v.since is not None or v.until is not None or v.deprecated is not None:
                 return True
     for ns in s.nested_structs:
-        if ns.since is not None:
+        if ns.change_points:
             return True
     return False
 
