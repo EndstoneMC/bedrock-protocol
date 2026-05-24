@@ -1,6 +1,18 @@
 from enum import IntEnum
 
-from protocol import field, int16, int32, uint8, uint16, uint32, uvarint32, varint32
+from protocol import (
+    field,
+    int8,
+    int16,
+    int32,
+    packet,
+    uint8,
+    uint16,
+    uint32,
+    uvarint32,
+    varint32,
+)
+from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 from protocol.molang import MolangVersion
 
@@ -433,3 +445,25 @@ class ItemStackRequestData:
     actions: list[ItemStackRequestAction]
     strings_to_filter: list[str]
     strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
+
+
+@packet(id=31)
+class MobEquipmentPacket:
+    runtime_id: ActorRuntimeID
+    item: NetworkItemStackDescriptor = field(until=975)
+    item: SerializedNetworkItemStackDescriptor = field(since=975)
+    slot: uint8
+    selected_slot: uint8
+    container_id: int8
+
+
+@packet(id=50)
+class InventorySlotPacket:
+    inventory_id: uvarint32
+    slot: uvarint32
+    full_container_name: FullContainerName = field(until=975)
+    full_container_name: FullContainerName | None = field(since=975)
+    storage_item: NetworkItemStackDescriptor = field(until=975)
+    storage_item: SerializedNetworkItemStackDescriptor | None = field(since=975)
+    item: NetworkItemStackDescriptor = field(until=975)
+    item: SerializedNetworkItemStackDescriptor = field(since=975)
