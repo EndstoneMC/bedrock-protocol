@@ -121,10 +121,11 @@ class AnimatePacket:
         CRITICAL_HIT = 4
         MAGIC_CRITICAL_HIT = 5
 
-    action: Action = field(type=uint8)
+    action: Action = field(type=varint32, until=897)
+    action: Action = field(type=uint8, since=897)
     runtime_id: ActorRuntimeID
-    data: float
-    swing_source: ActorSwingSource | None = field(type=str)
+    data: float = field(since=859)
+    swing_source: ActorSwingSource | None = field(type=str, since=897)
 
 
 @packet(id=158)
