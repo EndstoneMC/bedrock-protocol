@@ -86,6 +86,22 @@ class ActorEvent(IntEnum):
     HURT_WITHOUT_RECEIVING_DAMAGE = value(81, since=975)
 
 
+class MoveActorAbsoluteData:
+    runtime_id: ActorRuntimeID
+    # header packs four flags: FLAG_ON_GROUND=0x1, FLAG_TELEPORTED=0x2,
+    # FLAG_FORCE_MOVE=0x4, FLAG_FORCE_COMPLETION=0x8 (new at v975).
+    header: uint8
+    position: Vec3
+    rotation_x: uint8
+    rotation_y: uint8
+    rotation_y_head: uint8
+
+
+@packet(id=18)
+class MoveActorAbsolutePacket:
+    move_data: MoveActorAbsoluteData
+
+
 @packet(id=27)
 class ActorEventPacket:
     """All kinds of actor state changes (see Actor::handleEntityEvent). Ranges from
