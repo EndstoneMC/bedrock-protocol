@@ -15,6 +15,9 @@ class DimensionDefinition:
     dimension_type: DimensionType = field(since=975)
 
 
+# TODO: absent from EndstoneMC/protocol-docs r26_u3 (v1001) -- renamed or
+# removed after v975. Investigate when bumping past v975 and decide whether
+# to add `until=` here or rename the packet to match BDS r26_u3.
 @packet(id=180, since=503)
 class DimensionDataPacket:
     definitions: list[DimensionDefinition]
