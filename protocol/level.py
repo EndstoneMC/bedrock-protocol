@@ -1,5 +1,5 @@
-from protocol import field, int8, packet, uint32, varint32
-from protocol.common import BlockPos, SubChunkPos
+from protocol import field, int8, int64, packet, type, uint32, uint64, uvarint32, varint32
+from protocol.common import BlockPos, SubChunkPos, Vec3
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -21,6 +21,35 @@ class DimensionDefinition:
 @packet(id=180, since=503)
 class DimensionDataPacket:
     definitions: list[DimensionDefinition]
+
+
+@type(since=975)
+class ServerSoundHandle:
+    value: uint64
+
+
+@packet(id=86)
+class PlaySoundPacket:
+    name: str
+    pos: BlockPos
+    volume: float
+    pitch: float
+    server_sound_handle: ServerSoundHandle | None = field(since=975)
+
+
+@packet(id=123, since=332)
+class LevelSoundEventPacket:
+    """Most sounds get launched on server and replicated to clients, but a handful of player
+    initiated sounds are launched on their client and replicated through the network."""
+
+    event_id: uvarint32
+    pos: Vec3
+    data: varint32
+    actor_identifier: str
+    is_baby: bool
+    is_global: bool
+    actor: int64 = field(since=786)
+    fire_at_position: Vec3 | None = field(since=975)
 
 
 @packet(id=56)
