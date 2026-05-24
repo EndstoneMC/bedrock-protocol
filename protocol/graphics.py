@@ -1,7 +1,9 @@
 from enum import IntEnum
 
-from protocol import field, packet, type, uint8, value
-from protocol.common import Vec3
+from protocol import field, packet, type, uint8, uvarint64, value
+from protocol.actor import ActorUniqueID
+from protocol.common import Color, Vec3
+from protocol.level import DimensionType
 
 package = "bedrock.protocol"
 
@@ -73,3 +75,78 @@ class GraphicsOverrideParameterPacket:
     biome_id: str
     parameter_id: GraphicsOverrideParameterType = field(type=uint8)
     reset_parameter: bool
+
+
+@type(since=975)
+class ScriptPrimitiveShapeType(IntEnum):
+    LINE = 0
+    BOX = 1
+    SPHERE = 2
+    CIRCLE = 3
+    TEXT = 4
+    ARROW = 5
+
+
+@type(since=975)
+class NullType:
+    pass
+
+
+@type(since=975)
+class ArrowDataPayload:
+    end_location: Vec3 | None
+    arrow_head_length: float | None
+    arrow_head_radius: float | None
+    num_segments: uint8 | None
+
+
+@type(since=975)
+class TextDataPayload:
+    text: str
+    use_rotation: bool
+    background_color: Color | None
+    depth_test: bool
+    show_backface: bool
+    show_text_backface: bool
+
+
+@type(since=975)
+class BoxDataPayload:
+    box_bound: Vec3
+
+
+@type(since=975)
+class LineDataPayload:
+    end_location: Vec3
+
+
+@type(since=975)
+class SphereDataPayload:
+    num_segments: uint8
+
+
+@type(since=975)
+class PrimitiveShapeDataPayload:
+    network_id: uvarint64
+    shape_type: ScriptPrimitiveShapeType | None = field(type=uint8)
+    location: Vec3 | None
+    scale: float | None
+    rotation: Vec3 | None
+    time_left_total_sec: float | None
+    max_render_distance: float | None
+    color: Color | None
+    dimension_id: DimensionType | None
+    attached_to_id: ActorUniqueID | None
+    extra_data_payload: (
+        NullType
+        | ArrowDataPayload
+        | TextDataPayload
+        | BoxDataPayload
+        | LineDataPayload
+        | SphereDataPayload
+    )
+
+
+@packet(id=328, since=975)
+class PrimitiveShapesPacket:
+    shapes: list[PrimitiveShapeDataPayload]
