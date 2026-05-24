@@ -8,6 +8,7 @@ add_executable(${PROJECT_NAME}_tests
     test_inventory.cpp
     test_level.cpp
     test_login.cpp
+    test_mapping.cpp
     test_network.cpp
     test_player.cpp
     test_resource_pack.cpp

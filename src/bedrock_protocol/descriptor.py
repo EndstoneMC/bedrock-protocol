@@ -340,6 +340,21 @@ class Enum:
                 points.add(v.deprecated)
         return frozenset(points)
 
+    @property
+    def shape_change_points(self) -> frozenset[int]:
+        """Change points that affect the on-wire shape. `deprecated=` only
+        flips an attribute on the C++ member; the integer value stays put,
+        so cross-module consumers see one wire shape across all snapshots."""
+        points: set[int] = set()
+        if self.since is not None:
+            points.add(self.since)
+        for v in self.values:
+            if v.since is not None:
+                points.add(v.since)
+            if v.until is not None:
+                points.add(v.until)
+        return frozenset(points)
+
 
 @dataclass(frozen=True)
 class FieldVersion:
@@ -420,6 +435,28 @@ class Struct:
             points |= e.change_points
         for ns in self.nested_structs:
             points |= ns.change_points
+        return frozenset(points)
+
+    @property
+    def shape_change_points(self) -> frozenset[int]:
+        """Change points that affect the on-wire shape. A struct decorated
+        only with `deprecated=` carries a `[[deprecated]]` annotation on its
+        later snapshot but the field layout is identical, so cross-module
+        consumers can safely refer to it -- excluded here.
+        """
+        points: set[int] = set()
+        if self.since is not None:
+            points.add(self.since)
+        for f in self.fields:
+            for version in f.versions:
+                if version.since is not None:
+                    points.add(version.since)
+                if version.until is not None:
+                    points.add(version.until)
+        for e in self.nested_enums:
+            points |= e.shape_change_points
+        for ns in self.nested_structs:
+            points |= ns.shape_change_points
         return frozenset(points)
 
 

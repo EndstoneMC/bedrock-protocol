@@ -103,6 +103,11 @@ class SourceTree:
             griffe_modules[name] = self._griffe_load(name, root)
             stems[name] = src.stem
             output_names.append(name)
+        # Ensure each input's owning package is loaded too -- the DSL surface
+        # (`protocol/__init__.py`) is where `__version__` lives, and a leaf
+        # module that happens not to import from it would otherwise leave the
+        # version unresolved.
+        self._load_owning_packages(griffe_modules, output_names)
         self._follow_imports(griffe_modules, output_names)
         classified = self._classify(griffe_modules)
         files = {
@@ -142,6 +147,26 @@ class SourceTree:
         parent = path.parent
         name = f"{parent.name}.{path.stem}" if parent.name else path.stem
         return name, parent
+
+    def _load_owning_packages(
+        self,
+        loaded: dict[str, griffe.Module],
+        seed: list[str],
+    ) -> None:
+        """Load each input's parent package(s) so the DSL surface module is
+        available even when the input has no `from <package> import ...` line.
+        """
+        for name in seed:
+            parts = name.split(".")
+            for cut in range(len(parts) - 1, 0, -1):
+                parent = ".".join(parts[:cut])
+                if parent in loaded:
+                    continue
+                for ip in self._import_paths:
+                    pkg_init = ip.joinpath(*parts[:cut], "__init__.py")
+                    if pkg_init.is_file():
+                        loaded[parent] = self._griffe_load(parent, ip)
+                        break
 
     def _follow_imports(
         self,

@@ -48,9 +48,10 @@ def _check_no_string_coded_nested_enums(resolved: ResolvedFile) -> None:
 def _check_no_cross_module_versioned_references(
     resolved: ResolvedFile,
 ) -> None:
-    """Cross-module references to a versioned type would need both headers'
-    snapshot sets aligned — unsupported. Plain (unversioned) cross-module
-    references like `Vec3` are fine."""
+    """Cross-module references to a shape-versioned type would need both
+    headers' snapshot sets aligned — unsupported. Plain (unversioned)
+    cross-module references like `Vec3` are fine, as are references to a
+    deprecation-only versioned type whose wire layout never changes."""
     file = resolved.file
     dep_versioned: set[str] = set()
     for dep in file.imports:
@@ -62,7 +63,7 @@ def _check_no_cross_module_versioned_references(
             *other.structs,
         )
         for t in other_types:
-            if t.change_points:
+            if t.shape_change_points:
                 dep_versioned.add(t.name)
     if not dep_versioned:
         return
