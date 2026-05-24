@@ -234,6 +234,23 @@ class ServerConfiguration:
         store_name: str
 
 
+@packet(id=346, since=975)
+class ServerStoreInfoPacket:
+    client_store_entry_point_configuration: (
+        ServerConfiguration.ClientStoreEntryPointConfiguration | None
+    )
+
+
+@packet(id=347, since=975)
+class ServerPresenceInfoPacket:
+    # protocol-docs (r26_u3 = v1001) lists a third field `richPresenceId: str`,
+    # but bedrock-headers, CloudburstMC ServerPresenceInfoSerializer_v975, and
+    # gophertunnel's PresenceInfo all agree on just experience_name +
+    # world_name. The third field is a post-v975 addition that landed in
+    # v1001 -- add it (with since=1001) when the bump past v975 lands.
+    presence_configuration: ServerConfiguration.PresenceConfiguration | None
+
+
 @type(since=924)
 class ServerConfigurationJoinInfo:
     gatherings_configuration_join_info: (
