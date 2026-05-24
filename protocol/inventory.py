@@ -467,3 +467,29 @@ class InventorySlotPacket:
     storage_item: SerializedNetworkItemStackDescriptor | None = field(since=975)
     item: NetworkItemStackDescriptor = field(until=975)
     item: SerializedNetworkItemStackDescriptor = field(since=975)
+
+
+class EnchantmentInstance:
+    enchant_type: uvarint32
+    level: uint8
+
+
+class ItemEnchants:
+    slot: int32
+    item_enchants: tuple[
+        list[EnchantmentInstance], list[EnchantmentInstance], list[EnchantmentInstance]
+    ]
+
+
+class ItemEnchantOption:
+    cost: uint8
+    enchants: ItemEnchants
+    enchant_name: str
+    enchant_net_id: uvarint32
+
+
+@packet(id=146)
+class PlayerEnchantOptionsPacket:
+    """Sent by the server to update the enchantment options displayed when the user opens the enchantment table and puts an item in."""
+
+    options: list[ItemEnchantOption]
