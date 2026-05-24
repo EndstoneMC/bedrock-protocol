@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import bitset, field, packet, type, uvarint32, uvarint64, value, varint32
+from protocol import bitset, field, packet, type, uint8, uint64, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.inventory import (
@@ -240,3 +240,60 @@ class PlayerPartyInfo:
 @packet(id=342, since=944)
 class PartyChangedPacket:
     party_info: PlayerPartyInfo | None
+
+
+@type(since=786)
+class GraphicsMode(IntEnum):
+    SIMPLE = 0
+    FANCY = 1
+    ADVANCED = 2
+    RAY_TRACED = 3
+
+
+@packet(id=323, since=786)
+class UpdateClientOptionsPacket:
+    """The values in this packet are originally synced through the Connection Request and then
+    updated via this packet."""
+
+    graphics_mode: GraphicsMode | None = field(type=uint8)
+    filter_profanity: bool | None = field(since=975)
+
+
+# TODO: confirm against BDS -- MemoryCategory enum has 90+ entries that shift across versions;
+# modelling as raw uint8 for now until a future pass adds the full enum.
+@type(since=924)
+class MemoryCategoryCounter:
+    category: uint8
+    current_bytes: uint64
+
+
+@type(since=975)
+class EntityDiagnosticTimingInfo:
+    display_name: str
+    entity: str
+    time_in_ns: uint64
+    percent_of_total: uint8
+
+
+@type(since=975)
+class SystemDiagnosticTimingInfo:
+    display_name: str
+    system_index: uint64
+    time_in_ns: uint64
+    percent_of_total: uint8
+
+
+@packet(id=315, since=712)
+class ServerboundDiagnosticsPacket:
+    avg_fps: float
+    avg_server_sim_tick_time_ms: float
+    avg_client_sim_tick_time_ms: float
+    avg_begin_frame_time_ms: float
+    avg_input_time_ms: float
+    avg_render_time_ms: float
+    avg_end_frame_time_ms: float
+    avg_remainder_time_percent: float
+    avg_unaccounted_time_percent: float
+    memory_category_values: list[MemoryCategoryCounter] = field(since=924)
+    entity_diagnostics: list[EntityDiagnosticTimingInfo] = field(since=975)
+    system_diagnostics: list[SystemDiagnosticTimingInfo] = field(since=975)
