@@ -377,12 +377,15 @@ def _enum_key(values: tuple[Any, ...]) -> tuple[Any, ...]:
 
 
 def _narrow_enum_values(values: tuple[Any, ...], snapshot: int) -> tuple[Any, ...]:
-    """Filter enum values to those present at `snapshot` and suppress the
+    """Filter enum values to those present at `snapshot`, suppress the
     `deprecated` marker on members whose deprecation version hasn't kicked
-    in yet."""
+    in yet, and recompute `auto()`-derived members' numbers as
+    `previous_present + 1` so trailing sentinels (`COUNT`, `INPUT_NUM`, ...)
+    track the snapshot's actual member count instead of the parse-time one."""
     from dataclasses import replace as _replace
 
     present: list[Any] = []
+    last_num = -1
     for v in values:
         if v.since is not None and v.since > snapshot:
             continue
@@ -393,5 +396,10 @@ def _narrow_enum_values(values: tuple[Any, ...], snapshot: int) -> tuple[Any, ..
             if (v.deprecated is not None and snapshot >= v.deprecated)
             else None
         )
-        present.append(_replace(v, deprecated=dep))
+        if v.is_auto:
+            num = last_num + 1
+        else:
+            num = v.number
+        present.append(_replace(v, number=num, deprecated=dep))
+        last_num = num
     return tuple(present)

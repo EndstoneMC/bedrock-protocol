@@ -309,6 +309,7 @@ class EnumValue:
     since: int | None
     until: int | None
     deprecated: int | None = None
+    is_auto: bool = False
 
     @property
     def wire_name(self) -> str:

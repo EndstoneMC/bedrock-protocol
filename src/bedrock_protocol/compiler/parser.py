@@ -374,7 +374,7 @@ class _AnnotationContext:
             if attr.value is None:
                 continue
             if _is_auto_call(attr.value):
-                values.append(EnumValue(name, next_auto, None, None, None))
+                values.append(EnumValue(name, next_auto, None, None, None, is_auto=True))
                 next_auto += 1
                 continue
             parsed = self._enum_member_value(attr.value)
