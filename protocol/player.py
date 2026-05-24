@@ -1,12 +1,26 @@
 from enum import IntEnum, auto
 
-from protocol import bitset, field, packet, type, uint8, uint64, uvarint32, uvarint64, value, varint32
+from protocol import (
+    bitset,
+    field,
+    int32,
+    packet,
+    type,
+    uint8,
+    uint32,
+    uint64,
+    uvarint32,
+    uvarint64,
+    value,
+    varint32,
+)
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.inventory import (
     ItemStackRequestData,
     PackedItemUseLegacyInventoryTransaction,
 )
+from protocol.level import DimensionType
 
 package = "bedrock.protocol"
 
@@ -297,3 +311,123 @@ class ServerboundDiagnosticsPacket:
     memory_category_values: list[MemoryCategoryCounter] = field(since=924)
     entity_diagnostics: list[EntityDiagnosticTimingInfo] = field(since=975)
     system_diagnostics: list[SystemDiagnosticTimingInfo] = field(since=975)
+
+
+class BoolAttributeOperation(IntEnum):
+    OVERRIDE = 0
+    ALPHA_BLEND = 1
+    AND = 2
+    NAND = 3
+    OR = 4
+    NOR = 5
+    XOR = 6
+    XNOR = 7
+
+
+class FloatAttributeOperation(IntEnum):
+    OVERRIDE = 0
+    ALPHA_BLEND = 1
+    ADD = 2
+    SUBTRACT = 3
+    MULTIPLY = 4
+    MINIMUM = 5
+    MAXIMUM = 6
+
+
+class ColorAttributeOperation(IntEnum):
+    OVERRIDE = 0
+    ALPHA_BLEND = 1
+    ADD = 2
+    SUBTRACT = 3
+    MULTIPLY = 4
+
+
+class BoolAttributeData:
+    value: bool
+    operation: BoolAttributeOperation = field(type=str)
+
+
+class FloatAttributeData:
+    value: float
+    operation: FloatAttributeOperation = field(type=str)
+    constraint_min_value: float | None
+    constraint_max_value: float | None
+
+
+# Cereal serializes Color255RGBA as a tagged union over a CSS-style string or a
+# raw four-int RGBA array. CloudburstMC v975 preserves both arms; protocol-docs
+# r26_u3 (v1001) collapses it to a bare `string`, suggesting Mojang dropped the
+# array form after v975. Keep both arms for the v975 wire.
+class Color255RGBAString:
+    value: str
+
+
+class Color255RGBAArray:
+    value: tuple[int32, int32, int32, int32]
+
+
+type Color255RGBA = Color255RGBAString | Color255RGBAArray
+
+
+class ColorAttributeData:
+    value: Color255RGBA = field(tag=uvarint32)
+    operation: ColorAttributeOperation = field(type=str)
+
+
+type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
+
+
+class EnvironmentAttributeData:
+    name: str
+    from_attribute: AttributeDataVariant | None = field(tag=uvarint32)
+    attribute: AttributeDataVariant = field(tag=uvarint32)
+    to_attribute: AttributeDataVariant | None = field(tag=uvarint32)
+    current_transition_ticks: uint32
+    total_transition_ticks: uint32
+    easing: str
+
+
+class AttributeLayerSettings:
+    priority: int32
+    weight: float
+    enabled: bool
+    transitions_paused: bool
+
+
+class AttributeLayerData:
+    name: str
+    dimension_id: DimensionType
+    settings: AttributeLayerSettings
+    attributes: list[EnvironmentAttributeData]
+
+
+class UpdateAttributeLayersData:
+    attribute_layers: list[AttributeLayerData]
+
+
+class UpdateAttributeLayerSettingsData:
+    layer_name: str
+    layer_dimension_id: DimensionType
+    attribute_layer_settings: AttributeLayerSettings
+
+
+class UpdateEnvironmentAttributesData:
+    layer_name: str
+    layer_dimension_id: DimensionType
+    attributes: list[EnvironmentAttributeData]
+
+
+class RemoveEnvironmentAttributesData:
+    layer_name: str
+    layer_dimension_id: DimensionType
+    attributes: list[str]
+
+
+@packet(id=345, since=944)
+class ClientboundAttributeLayerSyncPacket:
+    data: (
+        UpdateAttributeLayersData
+        | UpdateAttributeLayerSettingsData
+        | UpdateEnvironmentAttributesData
+        | RemoveEnvironmentAttributesData
+    ) = field(tag=uvarint32)
