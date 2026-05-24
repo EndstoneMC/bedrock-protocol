@@ -206,3 +206,26 @@ class PlayerAuthInputPacket:
     analog_move_vector: Vec2 = field(since=575)
     camera_orientation: Vec3 = field(since=748)
     raw_move_vector: Vec2 = field(since=766)
+
+
+class ActorDataFlagComponent:
+    value: bitset[130]
+
+
+class ActorDataBoundingBoxComponent:
+    value: tuple[float, float, float]
+
+
+@packet(id=322, since=776)
+class ClientMovementPredictionSyncPacket:
+    """Only used in Server-Authoritative Movement. Sent periodically if the client
+    has received corrections from the server. Contains information about
+    client-predictions that are relevant to movement."""
+
+    actor_data_flag: ActorDataFlagComponent
+    actor_bounding_box: ActorDataBoundingBoxComponent
+    movement_attributes: tuple[
+        float, float, float, float, float, float, float, float, float
+    ]
+    actor_unique_id: ActorUniqueID
+    actor_flying_state: bool
