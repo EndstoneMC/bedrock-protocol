@@ -7,6 +7,7 @@ add_executable(${PROJECT_NAME}_tests
     test_graphics.cpp
     test_inventory.cpp
     test_level.cpp
+    test_locator.cpp
     test_login.cpp
     test_mapping.cpp
     test_network.cpp
