@@ -36,10 +36,12 @@ add_executable(${PROJECT_NAME}_tests
     test_052_crafting_data.cpp
     test_054_gui_data_pick_item.cpp
     test_056_block_actor_data.cpp
+    test_059_set_commands_enabled.cpp
     test_060_set_difficulty.cpp
     test_062_set_player_game_type.cpp
     test_066_spawn_experience_orb.cpp
     test_070_chunk_radius_updated.cpp
+    test_073_camera.cpp
     test_074_boss_event.cpp
     test_081_update_equip.cpp
     test_082_resource_pack_data_info.cpp
@@ -52,9 +54,14 @@ add_executable(${PROJECT_NAME}_tests
     test_094_sub_client_login.cpp
     test_096_set_last_hurt_by.cpp
     test_097_book_edit.cpp
+    test_098_npc_request.cpp
+    test_100_modal_form_request.cpp
+    test_106_remove_objective.cpp
+    test_107_set_display_objective.cpp
     test_109_lab_table.cpp
     test_111_move_actor_delta.cpp
     test_113_set_local_player_as_initialized.cpp
+    test_114_update_soft_enum.cpp
     test_115_network_stack_latency.cpp
     test_118_spawn_particle_effect.cpp
     test_119_available_actor_identifiers.cpp
@@ -64,9 +71,11 @@ add_executable(${PROJECT_NAME}_tests
     test_128_remove_entity.cpp
     test_129_client_cache_status.cpp
     test_130_on_screen_texture_animation.cpp
+    test_131_map_create_locked_copy.cpp
     test_135_client_cache_blob_status.cpp
     test_136_client_cache_miss_response.cpp
     test_138_emote.cpp
+    test_140_settings_command.cpp
     test_141_anvil_damage.cpp
     test_142_completed_using_item.cpp
     test_143_network_settings.cpp
@@ -74,25 +83,44 @@ add_executable(${PROJECT_NAME}_tests
     test_145_creative_content.cpp
     test_146_player_enchant_options.cpp
     test_148_item_stack_response.cpp
+    test_150_code_builder.cpp
     test_152_emote_list.cpp
+    test_154_position_tracking_db_client_request.cpp
+    test_155_debug_info.cpp
     test_156_packet_violation_warning.cpp
     test_157_motion_prediction_hints.cpp
     test_158_animate_entity.cpp
+    test_159_camera_shake.cpp
     test_160_player_fog.cpp
     test_161_correct_player_move_prediction.cpp
     test_165_sync_actor_property.cpp
     test_166_add_volume_entity.cpp
     test_167_remove_volume_entity.cpp
+    test_169_npc_dialogue.cpp
+    test_170_edu_uri_resource.cpp
     test_175_sub_chunk_request.cpp
+    test_177_script_message.cpp
+    test_178_code_builder_source.cpp
     test_180_dimension_data.cpp
+    test_181_agent_action_event.cpp
     test_182_change_mob_property.cpp
+    test_183_lesson_progress.cpp
+    test_186_toast_request.cpp
     test_189_death_info.cpp
     test_193_request_network_settings.cpp
     test_199_unlocked_recipes.cpp
+    test_300_camera_instruction.cpp
     test_302_trim_data.cpp
+    test_303_open_sign.cpp
+    test_304_agent_animation.cpp
     test_306_player_toggle_crafter_slot_request.cpp
     test_308_set_hud.cpp
     test_309_award_achievement.cpp
+    test_310_clientbound_close_form.cpp
+    test_312_serverbound_loading_screen.cpp
+    test_314_current_structure_feature.cpp
+    test_316_camera_aim_assist.cpp
+    test_321_client_camera_aim_assist.cpp
     test_315_serverbound_diagnostics.cpp
     test_317_container_registry_cleanup.cpp
     test_318_movement_effect.cpp
@@ -101,6 +129,8 @@ add_executable(${PROJECT_NAME}_tests
     test_327_clientbound_control_scheme_set.cpp
     test_328_primitive_shapes.cpp
     test_331_graphics_override_parameter.cpp
+    test_334_clientbound_data_driven_ui_close_screen.cpp
+    test_335_clientbound_data_driven_ui_reload.cpp
     test_336_clientbound_texture_shift.cpp
     test_340_resource_packs_ready_for_validation.cpp
     test_341_locator_bar.cpp

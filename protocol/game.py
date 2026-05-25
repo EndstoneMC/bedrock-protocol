@@ -21,6 +21,7 @@ from protocol import (
 from protocol.actor import ActorRuntimeID, ActorUniqueID, CommandPermissionLevel
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
 from protocol.dimension import DimensionType, GeneratorType
+from protocol.edu import EduSharedUriResource
 from protocol.input import PlayerInputTick
 from protocol.nbt import CompoundTag
 
@@ -94,12 +95,6 @@ class SpawnSettings:
     type: SpawnBiomeType = field(type=int16)
     user_defined_biome_name: str
     dimension: DimensionType
-
-
-@type(since=465)
-class EduSharedUriResource:
-    button_name: str
-    link_uri: str
 
 
 class GameRule:

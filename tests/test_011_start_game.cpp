@@ -387,7 +387,7 @@ TEST_CASE("StartGamePacket: v465 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<465>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
 
     pkt.level_id = "leveltest";
@@ -482,7 +482,7 @@ TEST_CASE("StartGamePacket: v475 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<475>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
 
     pkt.level_id = "leveltest";
@@ -580,7 +580,7 @@ TEST_CASE("StartGamePacket: v503 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<503>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
 
     pkt.level_id = "leveltest";
@@ -677,7 +677,7 @@ TEST_CASE("StartGamePacket: v527 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<527>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
 
     pkt.level_id = "leveltest";
@@ -786,7 +786,7 @@ TEST_CASE("StartGamePacket: v544 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<544>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
@@ -894,7 +894,7 @@ TEST_CASE("StartGamePacket: v567 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<567>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
@@ -1005,7 +1005,7 @@ TEST_CASE("StartGamePacket: v582 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<582>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
@@ -1120,7 +1120,7 @@ TEST_CASE("StartGamePacket: v589 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<589>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
@@ -1238,7 +1238,7 @@ TEST_CASE("StartGamePacket: v685 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<685>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
@@ -1517,7 +1517,7 @@ TEST_CASE("StartGamePacket: v924 baseline round-trip")
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
     s.nether_type = bp::NetherWorldType::Normal;
-    s.edu_shared_uri_resource = bp::EduSharedUriResource_<924>{};
+    s.edu_shared_uri_resource = bp::EduSharedUriResource{};
     s.override_force_experimental_gameplay_flag = std::nullopt;
     s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
