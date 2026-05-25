@@ -694,9 +694,7 @@ class ItemStackResponseInfo:
     success: bool = field(until=419)
     result: ItemStackNetResult = field(type=uint8, since=419)
     client_request_id: int32 = field(type=varint32)
-    containers: list[ItemStackResponseContainerInfo] = field(
-        when=lambda p: p.success, until=419
-    )
+    containers: list[ItemStackResponseContainerInfo] = field(when=lambda p: p.success, until=419)
     containers: list[ItemStackResponseContainerInfo] = field(
         when=lambda p: p.result == ItemStackNetResult.SUCCESS, since=419
     )

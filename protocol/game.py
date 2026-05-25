@@ -1,5 +1,5 @@
 import uuid
-from enum import IntEnum, auto
+from enum import IntEnum
 
 from protocol import (
     field,
@@ -746,9 +746,7 @@ class ServerStatsPacket:
 class ServerStoreInfoPacket:
     """Sent by the server to provide ClientStoreEntryPointConfiguration to the client."""
 
-    client_store_entry_point_configuration: (
-        ServerConfiguration.ClientStoreEntryPointConfiguration | None
-    )
+    client_store_entry_point_configuration: ServerConfiguration.ClientStoreEntryPointConfiguration | None
 
 
 @packet(id=105)

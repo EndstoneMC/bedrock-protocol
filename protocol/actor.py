@@ -4,15 +4,14 @@ from enum import IntEnum
 from protocol import (
     bitset,
     field,
+    int8,
     int16,
     int32,
     int64,
-    int8,
     packet,
-    type,
+    uint8,
     uint16,
     uint32,
-    uint8,
     uvarint32,
     uvarint64,
     value,
@@ -451,8 +450,7 @@ class BossEventPacket:
 
     player_id: ActorUniqueID = field(
         when=lambda p: (
-            p.event_type == BossEventUpdateType.PLAYER_ADDED
-            or p.event_type == BossEventUpdateType.PLAYER_REMOVED
+            p.event_type == BossEventUpdateType.PLAYER_ADDED or p.event_type == BossEventUpdateType.PLAYER_REMOVED
         ),
         until=486,
     )
@@ -470,26 +468,17 @@ class BossEventPacket:
     # here -- the pre-776 redeclaration would overlap with the with-block, which
     # the DSL does not currently support for nested field redeclarations.
     with field(
-        when=lambda p: (
-            p.event_type == BossEventUpdateType.ADD
-            or p.event_type == BossEventUpdateType.UPDATE_NAME
-        ),
+        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_NAME,
         since=776,
     ):
         name: str
         filtered_name: str
 
     health_percent: float = field(
-        when=lambda p: (
-            p.event_type == BossEventUpdateType.ADD
-            or p.event_type == BossEventUpdateType.UPDATE_PERCENT
-        ),
+        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_PERCENT,
     )
     darken_screen: uint16 = field(
-        when=lambda p: (
-            p.event_type == BossEventUpdateType.ADD
-            or p.event_type == BossEventUpdateType.UPDATE_PROPERTIES
-        ),
+        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_PROPERTIES,
     )
 
     with field(
@@ -593,8 +582,6 @@ class HurtArmorPacket:
 
 # MobArmorEquipmentPacket (id=32) needs NetworkItemStackDescriptor. See
 # AddItemActorPacket above for the resolver-cycle rationale.
-
-
 
 
 @packet(id=157, since=419)

@@ -466,9 +466,7 @@ class _AnnotationContext:
         # Old-only fields (present in an earlier decl but dropped in a later
         # one, e.g. texture_id → texture_path) are inserted relative to their
         # neighbours from the older decl's source order.
-        version_fields: list[dict[str, griffe.Attribute]] = [
-            dict(cls.attributes) for cls, _, _ in versions
-        ]
+        version_fields: list[dict[str, griffe.Attribute]] = [dict(cls.attributes) for cls, _, _ in versions]
         order: list[str] = list(version_fields[-1].keys())
         for attrs in reversed(version_fields[:-1]):
             field_names = list(attrs.keys())
@@ -477,7 +475,7 @@ class _AnnotationContext:
                     continue
                 # Find the next field in this decl's source order that's
                 # already placed; insert before it. If none, append.
-                anchor = next((f for f in field_names[i + 1:] if f in order), None)
+                anchor = next((f for f in field_names[i + 1 :] if f in order), None)
                 if anchor is None:
                     order.append(fname)
                 else:
@@ -957,9 +955,7 @@ class _AnnotationContext:
         # protocol floor (since=0); only that slot may be implicit.
         for i, (_, since, until) in enumerate(versions):
             if since == 0 and i != 0:
-                raise CompilerError(
-                    f"{name}: only the first declaration of a redeclared class may omit since="
-                )
+                raise CompilerError(f"{name}: only the first declaration of a redeclared class may omit since=")
             last = i == len(versions) - 1
             if last:
                 if until is not None:

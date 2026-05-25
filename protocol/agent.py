@@ -5,6 +5,7 @@ from protocol.actor import ActorRuntimeID
 
 package = "bedrock.protocol"
 
+
 class AgentCapabilities:
     can_modify_blocks: bool | None
 

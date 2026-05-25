@@ -13,7 +13,7 @@ from protocol import (
     uvarint64,
     varint32,
 )
-from protocol.actor import ActorRuntimeID, ActorUniqueID
+from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, NetworkBlockPos, SubChunkPos, Vec3
 from protocol.dimension import DimensionType
 from protocol.nbt import CompoundTag

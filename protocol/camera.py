@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, int64, packet, uint32, uint8
+from protocol import field, int32, int64, packet, uint8, uint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
 from protocol.nbt import CompoundTag

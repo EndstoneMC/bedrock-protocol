@@ -1,10 +1,11 @@
 from enum import IntEnum
 
-from protocol import field, int32, int8, packet, uint16, uint32, uint8, uvarint32, varint32
+from protocol import field, int8, int32, packet, uint8, uint16, uint32, uvarint32, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Color, NetworkBlockPos
 
 package = "bedrock.protocol"
+
 
 class MapDecorationType(IntEnum):
     MARKER_WHITE = 0
@@ -55,12 +56,8 @@ class MapItemTrackedActorType(IntEnum):
 class MapItemTrackedActorUniqueId:
     type: MapItemTrackedActorType = field(type=int32)
     key_entity_id: ActorUniqueID = field(when=lambda p: p.type == MapItemTrackedActorType.ENTITY)
-    key_block_pos: NetworkBlockPos = field(
-        when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, until=944
-    )
-    key_block_pos: BlockPos = field(
-        when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, since=944
-    )
+    key_block_pos: NetworkBlockPos = field(when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, until=944)
+    key_block_pos: BlockPos = field(when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, since=944)
 
 
 @packet(id=67)

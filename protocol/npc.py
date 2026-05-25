@@ -5,6 +5,7 @@ from protocol.actor import ActorRuntimeID, ActorUniqueID
 
 package = "bedrock.protocol"
 
+
 @packet(id=169, since=448)
 class NpcDialoguePacket:
     """Sent from the server to client when remote firing an NPC dialogue window for a client."""

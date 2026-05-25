@@ -1,4 +1,3 @@
-import uuid
 from enum import IntEnum
 
 from protocol import (
@@ -14,7 +13,7 @@ from protocol import (
 )
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
-from protocol.input import PlayerActionType, PlayerInputTick
+from protocol.input import PlayerInputTick
 from protocol.inventory import ItemStackRequestData
 
 package = "bedrock.protocol"
@@ -177,12 +176,8 @@ class MovePlayerPacket:
     reset_position: PositionMode = field(type=uint8)
     on_ground: bool
     riding_id: ActorRuntimeID
-    cause: TeleportationCause = field(
-        type=int32, when=lambda p: p.reset_position == PositionMode.TELEPORT
-    )
-    source_entity_type: int32 = field(
-        when=lambda p: p.reset_position == PositionMode.TELEPORT
-    )
+    cause: TeleportationCause = field(type=int32, when=lambda p: p.reset_position == PositionMode.TELEPORT)
+    source_entity_type: int32 = field(when=lambda p: p.reset_position == PositionMode.TELEPORT)
     tick: PlayerInputTick = field(since=419)
 
 
@@ -269,4 +264,3 @@ class SetPlayerInventoryOptionsPacket:
 class PlayerListPacketType(IntEnum):
     ADD = 0
     REMOVE = 1
-

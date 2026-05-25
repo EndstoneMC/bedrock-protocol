@@ -58,8 +58,7 @@ class ScorePacketInfo:
     identity_type: IdentityDefinitionType = field(type=uint8)
     entity_id: varint64 = field(
         when=lambda p: (
-            p.identity_type == IdentityDefinitionType.PLAYER
-            or p.identity_type == IdentityDefinitionType.ENTITY
+            p.identity_type == IdentityDefinitionType.PLAYER or p.identity_type == IdentityDefinitionType.ENTITY
         ),
     )
     fake_player_name: str = field(

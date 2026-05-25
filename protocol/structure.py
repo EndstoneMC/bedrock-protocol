@@ -6,6 +6,7 @@ from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
+
 @packet(id=314, since=712)
 class CurrentStructureFeaturePacket:
     """Informs the client of which Structure Feature they are currently occupying."""

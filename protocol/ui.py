@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, packet, type, uint32, uint8, uvarint32, varint32
+from protocol import field, packet, type, uint8, uint32, uvarint32, varint32
 from protocol.common import BlockPos
 
 package = "bedrock.protocol"

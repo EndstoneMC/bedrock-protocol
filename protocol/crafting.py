@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int32, packet, type, uint32, uint8, uvarint32, value, varint32
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.common import BlockPos, NetworkBlockPos
 from protocol.inventory import ItemDescriptorCount, NetworkItemInstanceDescriptor
 
