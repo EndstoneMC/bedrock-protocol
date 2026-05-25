@@ -32,6 +32,7 @@ TEST_CASE("GraphicsOverrideParameterPacket: id + round-trip with a dict field")
     REQUIRE(rt.has_value());
     REQUIRE(in.getUnreadLength() == 0);
     REQUIRE(rt->keyframes.size() == 1);
-    REQUIRE(rt->keyframes.at(1.0f).y == 3.0f);
+    REQUIRE(rt->keyframes[0].first == 1.0f);
+    REQUIRE(rt->keyframes[0].second.y == 3.0f);
     REQUIRE_FALSE(rt->float_value.has_value());
 }

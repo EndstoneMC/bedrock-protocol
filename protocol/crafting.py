@@ -1,10 +1,20 @@
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, packet, type, uint8, uvarint32, value, varint32
+from protocol import field, int32, packet, type, uint32, uint8, uvarint32, value, varint32
+from protocol.common import BlockPos, NetworkBlockPos
 from protocol.inventory import ItemDescriptorCount, NetworkItemInstanceDescriptor
 
 package = "bedrock.protocol"
+
+
+@packet(id=141, since=388)
+class AnvilDamagePacket:
+    """Requests an anvil to be damaged."""
+
+    damage: int32 = field(type=uint8)
+    position: NetworkBlockPos = field(until=944)
+    position: BlockPos = field(since=944)
 
 
 class CraftingDataEntryType(IntEnum):
@@ -44,10 +54,12 @@ class ShapelessRecipe:
     net_id: uvarint32
 
 
+# BDS: UserDataShapelessRecipe (alias of ShapelessRecipe wire form).
 class UserDataShapelessRecipe(ShapelessRecipe):
     pass
 
 
+# BDS: ShapelessChemistryRecipe (alias of ShapelessRecipe wire form).
 class ShapelessChemistryRecipe(ShapelessRecipe):
     pass
 
@@ -76,6 +88,8 @@ class SmithingTrimRecipe:
     net_id: uvarint32
 
 
+# BDS: ShapedRecipe. Ingredients are an inline width*height array with no
+# length prefix -- the count comes from sibling fields.
 class ShapedRecipe:
     recipe_id: str
     width: varint32
@@ -90,6 +104,7 @@ class ShapedRecipe:
     net_id: uvarint32
 
 
+# BDS: ShapedChemistryRecipe (alias of ShapedRecipe wire form).
 class ShapedChemistryRecipe(ShapedRecipe):
     pass
 
@@ -109,6 +124,7 @@ class FurnaceAuxRecipe:
     tag: str = field(since=354)
 
 
+# BDS: CraftingDataEntry. Polymorphic recipe record tagged by CraftingDataEntryType.
 class CraftingDataEntry:
     recipe: (
         ShapelessRecipe
@@ -152,7 +168,72 @@ class MaterialReducerDataEntry:
 @packet(id=52)
 class CraftingDataPacket:
     crafting_entries: list[CraftingDataEntry]
-    potion_mix_entries: list[PotionMixDataEntry]
-    container_mix_entries: list[ContainerMixDataEntry]
-    material_reducer_entries: list[MaterialReducerDataEntry]
+    potion_mix_entries: list[PotionMixDataEntry] = field(since=388)
+    container_mix_entries: list[ContainerMixDataEntry] = field(since=388)
+    material_reducer_entries: list[MaterialReducerDataEntry] = field(since=465)
     clear_recipes: bool
+
+
+class CraftingType(IntEnum):
+    INVENTORY = 0
+    CRAFTING = 1
+
+
+@packet(id=53)
+class CraftingEventPacket:
+    container_id: uint8
+    type: CraftingType = field(type=varint32)
+    uuid: uuid.UUID
+    inputs: list[NetworkItemInstanceDescriptor]
+    outputs: list[NetworkItemInstanceDescriptor]
+
+
+class LabTablePacketType(IntEnum):
+    START_COMBINE = 0
+    START_REACTION = 1
+    RESET = 2
+
+
+class LabTableReactionType(IntEnum):
+    NONE = 0
+    ICE_BOMB = 1
+    BLEACH = 2
+    ELEPHANT_TOOTHPASTE = 3
+    FERTILIZER = 4
+    HEAT_BLOCK = 5
+    MAGNESIUM_SALTS = 6
+    MISC_FIRE = 7
+    MISC_EXPLOSION = 8
+    MISC_LAVA = 9
+    MISC_MYSTICAL = 10
+    MISC_SMOKE = 11
+    MISC_LARGE_SMOKE = 12
+
+
+@packet(id=109)
+class LabTablePacket:
+    """For the EDU Chemistry Lab Table block actor."""
+
+    # CloudburstMC's LabTableSerializer writes pos via helper.writeVector3i
+    # (three signed varints unconditionally), NOT helper.writeBlockPosition,
+    # so no v944 unsigned-Y to signed-Y switch applies here.
+    type: LabTablePacketType = field(type=uint8)
+    pos: BlockPos
+    reaction: LabTableReactionType = field(type=uint8)
+
+
+class UnlockedRecipesPacketType(IntEnum):
+    EMPTY = 0
+    INITIALLY_UNLOCKED_RECIPES = 1
+    NEWLY_UNLOCKED_RECIPES = 2
+    REMOVE_UNLOCKED_RECIPES = 3
+    REMOVE_ALL_UNLOCKED_RECIPES = 4
+
+
+@packet(id=199, since=575)
+class UnlockedRecipesPacket:
+    """Sent from server to client, for all previously unlocked recipes on load and for any newly unlocked recipes during gameplay."""
+
+    # COMPILER_EXTENSION_NEEDED: until v589 the wire form was a single `bool` (true == NEWLY_UNLOCKED_RECIPES, false == INITIALLY_UNLOCKED_RECIPES); since v589 it is a uint32 enum
+    packet_type: UnlockedRecipesPacketType = field(type=uint32, since=589)
+    unlocked_recipes: list[str]

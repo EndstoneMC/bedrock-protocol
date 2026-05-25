@@ -126,7 +126,6 @@ class GameRules:
 
 class Experiments:
     experiment_data: list[tuple[str, bool]] = field(prefix=uint32)
-    experiments_ever_toggled: bool
 
 
 @type(since=419)
@@ -170,6 +169,7 @@ class LevelSettings:
     texture_packs_required: bool
     game_rules: GameRules
     experiments: Experiments = field(since=419)
+    experiments_previously_toggled: bool = field(since=419)
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
     default_permissions: PlayerPermissionLevel = field(type=varint32)

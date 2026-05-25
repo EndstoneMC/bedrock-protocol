@@ -26,15 +26,9 @@ TEST_CASE("ResourcePackStackPacket: round-trip with one stack entry")
     //   Experiments: []protocol.ExperimentData{},
     //   ExperimentsPreviouslyToggled: false,
     //   IncludeEditorPacks: true}
-    // plus a 0x00 inserted at offset 22 for Experiments::experiments_ever_toggled:
-    // bedrock models the trailing bool inside the Experiments aggregate AND keeps
-    // a separate ResourcePackStack::experiments_previously_toggled field, so the
-    // C++ wire carries one additional byte that gophertunnel folds into the
-    // ExperimentsPreviouslyToggled bool.
     const std::vector<std::uint8_t> golden{
         0x01, 0x01, 0x05, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x03, 0x31, 0x2E, 0x30,
-        0x00, 0x04, 0x31, 0x2E, 0x32, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x01,
+        0x00, 0x04, 0x31, 0x2E, 0x32, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
     };
 
     std::vector<std::uint8_t> buf;

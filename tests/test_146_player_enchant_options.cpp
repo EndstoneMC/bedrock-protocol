@@ -27,7 +27,7 @@ TEST_CASE("PlayerEnchantOptionsPacket: id + round-trip with one ItemEnchantOptio
     bp::ItemEnchantOption opt;
     opt.cost = 7;
     opt.enchants.slot = 0;
-    std::get<1>(opt.enchants.item_enchants).push_back(bp::EnchantmentInstance{5, 2});
+    opt.enchants.enchants_1.push_back(bp::EnchantmentInstance{5, 2});
     opt.enchant_name = "calm imbue range";
     opt.enchant_net_id = 42;
     pkt.options.push_back(opt);
@@ -53,7 +53,7 @@ TEST_CASE("PlayerEnchantOptionsPacket: id + round-trip with one ItemEnchantOptio
     REQUIRE(rt->options.size() == 1);
     REQUIRE(rt->options[0].cost == 7);
     REQUIRE(rt->options[0].enchant_name == "calm imbue range");
-    REQUIRE(std::get<1>(rt->options[0].enchants.item_enchants).size() == 1);
-    REQUIRE(std::get<1>(rt->options[0].enchants.item_enchants)[0].enchant_type == 5);
-    REQUIRE(std::get<1>(rt->options[0].enchants.item_enchants)[0].level == 2);
+    REQUIRE(rt->options[0].enchants.enchants_1.size() == 1);
+    REQUIRE(rt->options[0].enchants.enchants_1[0].enchant_type == 5);
+    REQUIRE(rt->options[0].enchants.enchants_1[0].level == 2);
 }
