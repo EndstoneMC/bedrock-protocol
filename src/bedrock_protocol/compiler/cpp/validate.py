@@ -39,9 +39,7 @@ def _check_no_string_coded_nested_enums(resolved: ResolvedFile) -> None:
                     t = t.inner
                 if isinstance(t, EnumType) and t.name in nested and t.scalar is None:
                     raise CompilerError(
-                        f"{struct.name}.{f.name}: a nested enum cannot be "
-                        f"string-coded (field(type=str)) -- use an integer wire "
-                        f"primitive, or lift the enum to module scope"
+                        f"{struct.name}.{f.name}: a nested enum cannot be string-coded (field(type=str)) -- use an integer wire primitive, or lift the enum to module scope"
                     )
 
 
@@ -72,6 +70,5 @@ def _check_no_cross_module_versioned_references(
         bad = roots & dep_versioned
         if bad:
             raise CompilerError(
-                f"{struct.name}: references versioned type(s) {sorted(bad)} "
-                f"from another module -- cross-module versioning is unsupported"
+                f"{struct.name}: references versioned type(s) {sorted(bad)} from another module -- cross-module versioning is unsupported"
             )

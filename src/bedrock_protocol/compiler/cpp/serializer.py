@@ -130,10 +130,7 @@ class SerializerGenerator:
         with p.indented(2):
             p(f"using E = {qualified};")
             for v in enum.values:
-                p(
-                    f"if (value == E::{camel(v.name)}) {{ "
-                    f'stream.write(std::string_view{{"{v.wire_name}"}}); return; }}'
-                )
+                p(f'if (value == E::{camel(v.name)}) {{ stream.write(std::string_view{{"{v.wire_name}"}}); return; }}')
         p("    }")
         p()
         self._emit_template_deserialize_open(p, qualified)
@@ -143,10 +140,7 @@ class SerializerGenerator:
             p("if (!v) return make_unexpected(v.error());")
             for v in enum.values:
                 p(f'if (*v == "{v.wire_name}") return E::{camel(v.name)};')
-            p(
-                "return make_unexpected("
-                "std::make_error_code(std::errc::illegal_byte_sequence));"
-            )
+            p("return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
         p("    }")
         p("};")
 
@@ -222,10 +216,7 @@ class SerializerGenerator:
                 p(_primitive_write(t.scalar, expr))
         elif isinstance(t, OptionalType):
             if t.discriminator:
-                p(
-                    f"stream.writeVarInt<std::uint32_t>"
-                    f"({expr}.has_value() ? {t.present_tag}u : {1 - t.present_tag}u);"
-                )
+                p(f"stream.writeVarInt<std::uint32_t>({expr}.has_value() ? {t.present_tag}u : {1 - t.present_tag}u);")
             else:
                 p(f"stream.write<bool>({expr}.has_value());")
             p(f"if ({expr}.has_value()) {{")
@@ -314,18 +305,11 @@ class SerializerGenerator:
             self._loop_depth += 1
             if t.prefix is not None:
                 u = PRIMITIVE_TYPES[t.prefix.name]
-                verb = (
-                    f"readVarInt<{u}>"
-                    if t.prefix.name in VARINT_PRIMITIVES
-                    else f"read<{u}>"
-                )
+                verb = f"readVarInt<{u}>" if t.prefix.name in VARINT_PRIMITIVES else f"read<{u}>"
                 p(f"auto len{depth} = stream.{verb}();")
                 p(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
                 p(f"{target}.clear();")
-                p(
-                    f"for (auto rep{depth} = *len{depth}; "
-                    f"rep{depth} > 0; --rep{depth}) {{"
-                )
+                p(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth}) {{")
                 with p.indented():
                     p(f"{target}.emplace_back();")
                     self._emit_read(p, t.inner, f"{target}.back()")
@@ -341,18 +325,12 @@ class SerializerGenerator:
                     self._snapshot,
                 )
                 p(f"{target}.resize(static_cast<std::size_t>({expr}));")
-                p(
-                    f"for (std::size_t i{depth} = 0; "
-                    f"i{depth} < {target}.size(); ++i{depth}) {{"
-                )
+                p(f"for (std::size_t i{depth} = 0; i{depth} < {target}.size(); ++i{depth}) {{")
                 with p.indented():
                     self._emit_read(p, t.inner, f"{target}[i{depth}]")
                 p("}")
             else:
-                p(
-                    f"for (std::size_t i{depth} = 0; "
-                    f"i{depth} < {t.count}; ++i{depth}) {{"
-                )
+                p(f"for (std::size_t i{depth} = 0; i{depth} < {t.count}; ++i{depth}) {{")
                 with p.indented():
                     self._emit_read(p, t.inner, f"{target}[i{depth}]")
                 p("}")
@@ -361,11 +339,7 @@ class SerializerGenerator:
             depth = self._loop_depth
             self._loop_depth += 1
             u = PRIMITIVE_TYPES[t.prefix.name]
-            verb = (
-                f"readVarInt<{u}>"
-                if t.prefix.name in VARINT_PRIMITIVES
-                else f"read<{u}>"
-            )
+            verb = f"readVarInt<{u}>" if t.prefix.name in VARINT_PRIMITIVES else f"read<{u}>"
             p(f"auto len{depth} = stream.{verb}();")
             p(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
             p(f"{target}.clear();")
@@ -412,10 +386,7 @@ class SerializerGenerator:
                 for index, case in enumerate(t.cases):
                     p(f"case {case_labels[index]}: {{")
                     with p.indented():
-                        p(
-                            f"std::variant_alternative_t<{index}, {vartype}> "
-                            f"alt{depth}{{}};"
-                        )
+                        p(f"std::variant_alternative_t<{index}, {vartype}> alt{depth}{{}};")
                         if case is not None:
                             p("{")
                             with p.indented():
@@ -426,10 +397,7 @@ class SerializerGenerator:
                     p("}")
                 p("default: {")
                 with p.indented():
-                    p(
-                        "return make_unexpected(std::make_error_code("
-                        "std::errc::illegal_byte_sequence));"
-                    )
+                    p("return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
                 p("}")
             p("}")
             p(f"{target} = var{depth};")
@@ -450,10 +418,7 @@ class SerializerGenerator:
         p("    {")
 
     def _emit_template_deserialize_open(self, p: Printer, qualified: str) -> None:
-        p(
-            f"    static auto deserialize(BinaryReader &stream) -> "
-            f"std::expected<{qualified}, std::error_code>"
-        )
+        p(f"    static auto deserialize(BinaryReader &stream) -> std::expected<{qualified}, std::error_code>")
         p("    {")
 
     def _type_at(self, name: str) -> str:
@@ -484,11 +449,7 @@ class SerializerGenerator:
             labels = [str(i) for i in range(len(t.cases))]
             return "{int_expr}", labels
         enum_q = self._type_at(t.tag_enum)
-        enum_view = (
-            self._ctx.resolved.present_at(t.tag_enum, self._snapshot)
-            if self._snapshot is not None
-            else None
-        )
+        enum_view = self._ctx.resolved.present_at(t.tag_enum, self._snapshot) if self._snapshot is not None else None
         members: dict[int, str] = {}
         if enum_view is not None and enum_view.enum is not None:
             members = {v.number: camel(v.name) for v in enum_view.enum.values}

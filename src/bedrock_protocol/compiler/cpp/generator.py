@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from ...descriptor import CompilerError, ResolvedFile
 from ..code_generator import CodeGenerator, GeneratorContext
-from .file import FileGenerator
 from . import validate
+from .file import FileGenerator
 
 
 class CppGenerator(CodeGenerator):
@@ -25,10 +25,7 @@ class CppGenerator(CodeGenerator):
         context: GeneratorContext,
     ) -> None:
         if resolved.file_set.version is None:
-            raise CompilerError(
-                "cpp: descriptor carries no version "
-                "(expected __version__ in the DSL surface module)"
-            )
+            raise CompilerError("cpp: descriptor carries no version (expected __version__ in the DSL surface module)")
         try:
             validate.check(resolved)
             text = FileGenerator(resolved).render(resolved.file_set.version)

@@ -173,14 +173,9 @@ def render_predicate(
         return f"{base}.{pred.text}.test({bit})"
     op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
     if pred.kind in ("*", "+", "-"):
-        lhs = render_predicate(
-            pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot
-        )
-        rhs = render_predicate(
-            pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot
-        )
+        lhs = render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)
+        rhs = render_predicate(pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot)
         return f"({lhs} {op} {rhs})"
     return f" {op} ".join(
-        f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})"
-        for o in pred.operands
+        f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})" for o in pred.operands
     )

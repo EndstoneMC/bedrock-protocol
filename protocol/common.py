@@ -1,4 +1,4 @@
-from protocol import field, int32, uvarint32, varint32, type
+from protocol import field, int32, type, uvarint32, varint32
 
 package = "bedrock.protocol"
 
@@ -38,3 +38,9 @@ type Color = int32
 
 class TintMapColor:
     colors: tuple[Color, Color, Color, Color]
+
+
+# Cereal writes SharedTypes::Color255RGBA as a tagged union over a CSS-style
+# hex string or a raw four-int RGBA array; the BDS struct itself is one
+# `mce::Color { float r, g, b, a; }` wrapper.
+type Color255RGBA = str | tuple[int32, int32, int32, int32]

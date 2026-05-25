@@ -11,7 +11,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from javalang.tree import Cast, LambdaExpression, MemberReference, MethodInvocation, StatementExpression, TernaryExpression
+from javalang.tree import (
+    Cast,
+    LambdaExpression,
+    MemberReference,
+    MethodInvocation,
+    StatementExpression,
+    TernaryExpression,
+)
 
 
 @dataclass

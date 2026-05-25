@@ -15,7 +15,7 @@ from protocol import (
     varint32,
 )
 from protocol.actor import ActorUniqueID
-from protocol.common import BlockPos, Vec2, Vec3
+from protocol.common import BlockPos, Color255RGBA, Vec2, Vec3
 from protocol.inventory import (
     ItemStackRequestData,
     PackedItemUseLegacyInventoryTransaction,
@@ -212,9 +212,7 @@ class PlayerAuthInputPacket:
     player_block_actions: PlayerBlockActions = field(
         when=lambda p: p.input_data.test(InputData.PERFORM_BLOCK_ACTIONS),
     )
-    with field(
-        when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)
-    ):
+    with field(when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)):
         vehicle_rot: Vec2 = field(since=662)
         client_predicted_vehicle: ActorUniqueID = field(since=649)
     analog_move_vector: Vec2 = field(since=575)
@@ -238,9 +236,7 @@ class ClientMovementPredictionSyncPacket:
 
     actor_data_flag: ActorDataFlagComponent
     actor_bounding_box: ActorDataBoundingBoxComponent
-    movement_attributes: tuple[
-        float, float, float, float, float, float, float, float, float
-    ]
+    movement_attributes: tuple[float, float, float, float, float, float, float, float, float]
     actor_unique_id: ActorUniqueID
     actor_flying_state: bool
 
@@ -352,21 +348,6 @@ class FloatAttributeData:
     operation: FloatAttributeOperation = field(type=str)
     constraint_min_value: float | None
     constraint_max_value: float | None
-
-
-# Cereal serializes Color255RGBA as a tagged union over a CSS-style string or a
-# raw four-int RGBA array. CloudburstMC v975 preserves both arms; protocol-docs
-# r26_u3 (v1001) collapses it to a bare `string`, suggesting Mojang dropped the
-# array form after v975. Keep both arms for the v975 wire.
-class Color255RGBAString:
-    value: str
-
-
-class Color255RGBAArray:
-    value: tuple[int32, int32, int32, int32]
-
-
-type Color255RGBA = Color255RGBAString | Color255RGBAArray
 
 
 class ColorAttributeData:

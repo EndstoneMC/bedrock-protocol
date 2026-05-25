@@ -50,9 +50,7 @@ class ItemStackLegacyRequestId:
     id: varint32
 
 
-type ItemStackNetIdVariant = (
-    ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
-)
+type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
 
 
 class SerializedNetworkItemStackDescriptor:
@@ -476,13 +474,12 @@ class EnchantmentInstance:
 
 class ItemEnchants:
     slot: int32
-    item_enchants: tuple[
-        list[EnchantmentInstance], list[EnchantmentInstance], list[EnchantmentInstance]
-    ]
+    item_enchants: tuple[list[EnchantmentInstance], list[EnchantmentInstance], list[EnchantmentInstance]]
 
 
 class ItemEnchantOption:
-    cost: uint8
+    cost: uvarint32 = field(until=975)
+    cost: uint8 = field(since=975)
     enchants: ItemEnchants
     enchant_name: str
     enchant_net_id: uvarint32

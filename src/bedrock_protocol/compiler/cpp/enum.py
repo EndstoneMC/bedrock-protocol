@@ -22,10 +22,6 @@ class EnumGenerator:
         p(f"enum class {self._enum.name} : int {{")
         with p.indented(1):
             for v in self._enum.values:
-                attr = (
-                    f' [[deprecated("since v{v.deprecated}")]]'
-                    if v.deprecated is not None
-                    else ""
-                )
+                attr = f' [[deprecated("since v{v.deprecated}")]]' if v.deprecated is not None else ""
                 p(f"{camel(v.name)}{attr} = {v.number},")
         p("};")

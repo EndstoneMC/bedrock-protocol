@@ -46,10 +46,7 @@ class FileGenerator:
                 *(a.name for a in f.type_aliases),
             )
         ) | frozenset(
-            n
-            for f in resolved.file_set.files.values()
-            for s in f.structs
-            for n in _flatten_nested_dotted(s, "")
+            n for f in resolved.file_set.files.values() for s in f.structs for n in _flatten_nested_dotted(s, "")
         )
         builtins = resolved.file_set.builtins | frozenset({"UUID"})
         self._ctx = FileContext(
@@ -114,11 +111,7 @@ class FileGenerator:
                 p("#include <bedrock/nbt.hpp>")
 
     def _emit_dep_includes(self, p: Printer) -> None:
-        deps = [
-            d.replace(".", "/") + ".hpp"
-            for d in self._file.imports
-            if self._import_has_content(d)
-        ]
+        deps = [d.replace(".", "/") + ".hpp" for d in self._file.imports if self._import_has_content(d)]
         if not deps:
             return
         p()
@@ -145,9 +138,7 @@ class FileGenerator:
         for a in self._file.primitive_aliases:
             p(f"enum {a.name} : {PRIMITIVE_TYPES[a.primitive]} {{}};")
         if self._file.primitive_aliases and (
-            self._unversioned_names()
-            or self._file.type_aliases
-            or self._has_namespaces()
+            self._unversioned_names() or self._file.type_aliases or self._has_namespaces()
         ):
             p()
 
@@ -169,10 +160,7 @@ class FileGenerator:
                 if self._resolved.is_versioned(ref):
                     from ...descriptor import CompilerError
 
-                    raise CompilerError(
-                        f"{a.name}: a `type` alias cannot reference the "
-                        f"versioned type {ref!r}"
-                    )
+                    raise CompilerError(f"{a.name}: a `type` alias cannot reference the versioned type {ref!r}")
             ctype = cpp_type(a.target, self._ctx, frozenset())
             assert ctype is not None
             p(f"using {a.name} = {ctype};")
@@ -217,11 +205,7 @@ class FileGenerator:
                 narrowed = view.enum or view.struct
                 assert narrowed is not None
                 anchor: int | None = None
-                if (
-                    isinstance(narrowed, Struct)
-                    and _has_nested(narrowed)
-                    and not _has_versioned_nested(narrowed)
-                ):
+                if isinstance(narrowed, Struct) and _has_nested(narrowed) and not _has_versioned_nested(narrowed):
                     fresh = self._resolved.fresh_snapshots(name)
                     if fresh and fresh[0].lo != snap:
                         anchor = fresh[0].lo
@@ -279,11 +263,7 @@ class FileGenerator:
         by_name = self._by_name()
         for name in self._resolved.declaration_order:
             t = by_name[name]
-            fresh = (
-                self._resolved.fresh_snapshots(name)
-                if self._resolved.is_versioned(name)
-                else ()
-            )
+            fresh = self._resolved.fresh_snapshots(name) if self._resolved.is_versioned(name) else ()
             if isinstance(t, Enum):
                 if name not in self._ctx.string_coded_enums:
                     continue
@@ -368,18 +348,10 @@ class FileGenerator:
         return out
 
     def _unversioned_names(self) -> list[str]:
-        return [
-            n
-            for n in self._resolved.declaration_order
-            if not self._resolved.is_versioned(n)
-        ]
+        return [n for n in self._resolved.declaration_order if not self._resolved.is_versioned(n)]
 
     def _versioned_names(self) -> list[str]:
-        return [
-            n
-            for n in self._resolved.declaration_order
-            if self._resolved.is_versioned(n)
-        ]
+        return [n for n in self._resolved.declaration_order if self._resolved.is_versioned(n)]
 
     def _cross_file_versioned_refs(self) -> list[str]:
         own = set(self._resolved.declaration_order)
@@ -408,12 +380,7 @@ class FileGenerator:
         other = self._file_set.files.get(dep)
         if other is None:
             return False
-        return bool(
-            other.enums
-            or other.structs
-            or other.primitive_aliases
-            or other.type_aliases
-        )
+        return bool(other.enums or other.structs or other.primitive_aliases or other.type_aliases)
 
     def _referenced(self) -> frozenset[str]:
         return frozenset().union(

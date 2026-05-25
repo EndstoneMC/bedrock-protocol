@@ -228,9 +228,7 @@ class VariantType:
     in declaration order; the wire form remains `discriminator`."""
 
     cases: tuple["FieldType | None", ...]
-    discriminator: PrimitiveType = field(
-        default_factory=lambda: PrimitiveType(name="uvarint32")
-    )
+    discriminator: PrimitiveType = field(default_factory=lambda: PrimitiveType(name="uvarint32"))
     tag_enum: str | None = None
     kind: Literal["variant"] = "variant"
 
@@ -404,12 +402,7 @@ class Struct:
     @property
     def referenced(self) -> frozenset[str]:
         own = frozenset().union(
-            *(
-                version.type.referenced
-                for f in self.fields
-                for version in f.versions
-                if version.type is not None
-            )
+            *(version.type.referenced for f in self.fields for version in f.versions if version.type is not None)
         )
         # Nested structs may reference other module-scope types -- a field on
         # `BookEditAction.ReplacePage` of type `Vec3` should pull `Vec3` into

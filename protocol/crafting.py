@@ -30,9 +30,7 @@ class RecipeUnlockingRequirement:
         PLAYER_HAS_MANY_ITEMS = 3
 
     context: UnlockingContext = field(type=uint8)
-    ingredients: list[ItemDescriptorCount] = field(
-        when=lambda p: p.context == UnlockingContext.NONE
-    )
+    ingredients: list[ItemDescriptorCount] = field(when=lambda p: p.context == UnlockingContext.NONE)
 
 
 class ShapelessRecipe:

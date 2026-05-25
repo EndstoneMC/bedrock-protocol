@@ -15,8 +15,8 @@ from pathlib import Path
 import click
 
 from .compiler import (
-    FilesystemContext,
     GENERATORS,
+    FilesystemContext,
     SourceTree,
     resolve,
 )
@@ -47,8 +47,7 @@ from .descriptor import CompilerError
     "import_paths",
     multiple=True,
     type=click.Path(exists=True, file_okay=False, path_type=Path),
-    help="Search root for resolving `from X.Y import ...` between inputs. "
-    "Repeatable. Mirrors protoc's --proto_path.",
+    help="Search root for resolving `from X.Y import ...` between inputs. Repeatable. Mirrors protoc's --proto_path.",
 )
 @click.argument(
     "inputs",
@@ -65,9 +64,7 @@ def main(
 ) -> None:
     factory = GENERATORS.get(language)
     if factory is None:
-        raise click.ClickException(
-            f"unknown language {language!r}; known: {sorted(GENERATORS)}"
-        )
+        raise click.ClickException(f"unknown language {language!r}; known: {sorted(GENERATORS)}")
 
     try:
         file_set = SourceTree(list(import_paths)).load_all(inputs)
@@ -76,8 +73,7 @@ def main(
 
     if file_set.version is None:
         raise click.ClickException(
-            "no __version__ declared in the DSL surface "
-            "(expected `__version__ = <int>` in protocol/__init__.py)"
+            "no __version__ declared in the DSL surface (expected `__version__ = <int>` in protocol/__init__.py)"
         )
 
     error_seen = False

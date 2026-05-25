@@ -1,8 +1,50 @@
 from enum import IntEnum
 
-from protocol import field, int32, packet, uint32, value
+from protocol import field, int32, packet, uint32, uint64, uvarint32, value
+from protocol.actor import ActorRuntimeID
 
 package = "bedrock.protocol"
+
+
+@packet(id=135, since=361)
+class ClientCacheBlobStatusPacket:
+    """Client Cache Blob Status Packet. Sent periodically by the client to
+    update the server on which blob it has (ACK) and which blobs it is lacking
+    (MISS)."""
+
+    missing_count: uvarint32
+    found_count: uvarint32
+    missing_ids: list[uint64] = field(count=lambda p: p.missing_count)
+    found_ids: list[uint64] = field(count=lambda p: p.found_count)
+
+
+class MissingBlobData:
+    blob_id: uint64  # ClientBlobCache::BlobId == uint64_t
+    blob_data: bytes
+
+
+@packet(id=136, since=361)
+class ClientCacheMissResponsePacket:
+    """Only active in a real client-server scenario. This packet is just a list
+    of <blobId, blob> pairs sent from server to client."""
+
+    blobs: list[MissingBlobData]
+
+
+@packet(id=129, since=361)
+class ClientCacheStatusPacket:
+    """It is sent by the Client once, at login, to communicate if it supports
+    the cache or not."""
+
+    enabled: bool
+
+
+@packet(id=4)
+class ClientToServerHandshakePacket:
+    """Sets up encryption and authenticates in educational version once at level
+    startup from client."""
+
+    pass
 
 
 @packet(id=1)
@@ -31,6 +73,20 @@ class PlayStatusPacket:
     """Describes the login status of the player."""
 
     status: PlayStatus = field(type=uint32, endian="big")
+
+
+@packet(id=3)
+class ServerToClientHandshakePacket:
+    """Sent from the server at the end of the login packet."""
+
+    data: str
+
+
+@packet(id=113)
+class SetLocalPlayerAsInitializedPacket:
+    """Client tells the server that the client is ready to roll."""
+
+    player_id: ActorRuntimeID
 
 
 @packet(id=94)

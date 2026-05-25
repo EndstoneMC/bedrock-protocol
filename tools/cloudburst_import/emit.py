@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .enums import EnumDraft
 from .grouping import NestedClass
 from .mappings import DraftField
-from .version_chain import ChainLink, CLOUDBURST_FLOOR, PacketInfo
+from .version_chain import CLOUDBURST_FLOOR, ChainLink, PacketInfo
 
 
 @dataclass
@@ -89,9 +89,7 @@ def _collect_stdlib_imports(draft: PacketDraft) -> list[str]:
     out: list[str] = []
     if draft.enums:
         out.append("from enum import IntEnum")
-    needs_union = any(
-        " | None" in f.dsl_type or f.extras.get("type") == "Union" for f in draft.fields
-    )
+    needs_union = any(" | None" in f.dsl_type or f.extras.get("type") == "Union" for f in draft.fields)
     if needs_union:
         out.append("from typing import Union")
     needs_uuid = any("uuid.UUID" in f.dsl_type for f in draft.fields)

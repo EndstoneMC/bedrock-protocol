@@ -213,10 +213,7 @@ def _render_type(t) -> str:
     if isinstance(t, ReferenceType):
         name = t.name
         if t.arguments:
-            inner = ", ".join(
-                _render_type(a.type) if hasattr(a, "type") and a.type else "?"
-                for a in t.arguments
-            )
+            inner = ", ".join(_render_type(a.type) if hasattr(a, "type") and a.type else "?" for a in t.arguments)
             name = f"{name}<{inner}>"
         if t.dimensions:
             name += "[]" * len(t.dimensions)

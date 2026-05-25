@@ -32,24 +32,31 @@ class BookEditAction:
         xuid: str
 
 
-@packet(id=97)
+@packet(id=97, until=924)
 class BookEditPacket:
     """Sends the updated state of the Book and Quill item from client to server
     during use."""
 
-    book_slot: varint32 = field(type=uint8, until=924)
-    book_slot: varint32 = field(since=924)
+    book_slot: uint8
     operation: (
         BookEditAction.ReplacePage
         | BookEditAction.AddPage
         | BookEditAction.DeletePage
         | BookEditAction.SwapPages
         | BookEditAction.Finalize
-    ) = field(tag=uint8, until=924)
+    ) = field(tag=uint8)
+
+
+@packet(id=97, since=924)
+class BookEditPacket:  # noqa: F811
+    """Sends the updated state of the Book and Quill item from client to server
+    during use."""
+
+    book_slot: varint32
     operation: (
         BookEditAction.ReplacePage
         | BookEditAction.AddPage
         | BookEditAction.DeletePage
         | BookEditAction.SwapPages
         | BookEditAction.Finalize
-    ) = field(tag=uvarint32, since=924)
+    ) = field(tag=uvarint32)

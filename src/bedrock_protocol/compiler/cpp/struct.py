@@ -36,25 +36,17 @@ class StructGenerator:
         self._struct = struct
         self._ctx = ctx
         self._anchor = nested_anchor
-        self._nested: frozenset[str] = frozenset(
-            e.name for e in struct.nested_enums
-        ) | frozenset(ns.name for ns in struct.nested_structs)
+        self._nested: frozenset[str] = frozenset(e.name for e in struct.nested_enums) | frozenset(
+            ns.name for ns in struct.nested_structs
+        )
 
     def emit(self, p: Printer) -> None:
         s = self._struct
-        attr = (
-            f' [[deprecated("since v{s.deprecated}")]]'
-            if s.deprecated is not None
-            else ""
-        )
+        attr = f' [[deprecated("since v{s.deprecated}")]]' if s.deprecated is not None else ""
         rendered_fields: list[tuple[str, str]] = []
         for f in s.fields:
             (version,) = f.versions
-            ctype = (
-                cpp_type(version.type, self._ctx, self._nested)
-                if version.type is not None
-                else None
-            )
+            ctype = cpp_type(version.type, self._ctx, self._nested) if version.type is not None else None
             if ctype is None:
                 p(f"struct{attr} {s.name} {{}};")
                 return

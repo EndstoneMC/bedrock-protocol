@@ -11,7 +11,7 @@ The pipeline:
                                   .generate(resolved, GeneratorContext)
 """
 
-from .code_generator import CodeGenerator, GeneratorContext, FilesystemContext
+from .code_generator import CodeGenerator, FilesystemContext, GeneratorContext
 from .parser import SourceTree
 from .registry import GENERATORS
 from .resolver import resolve, resolve_all

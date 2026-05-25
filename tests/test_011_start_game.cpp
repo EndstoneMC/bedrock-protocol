@@ -187,7 +187,7 @@ TEST_CASE("StartGamePacket: v419 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<419>{};
-    s.experiments = bp::Experiments_<419>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -279,7 +279,7 @@ TEST_CASE("StartGamePacket: v428 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<428>{};
-    s.experiments = bp::Experiments_<428>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -371,7 +371,7 @@ TEST_CASE("StartGamePacket: v465 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<465>{};
-    s.experiments = bp::Experiments_<465>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -466,7 +466,7 @@ TEST_CASE("StartGamePacket: v475 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<475>{};
-    s.experiments = bp::Experiments_<475>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -564,7 +564,7 @@ TEST_CASE("StartGamePacket: v503 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<503>{};
-    s.experiments = bp::Experiments_<503>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -661,7 +661,7 @@ TEST_CASE("StartGamePacket: v527 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<527>{};
-    s.experiments = bp::Experiments_<527>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -768,7 +768,7 @@ TEST_CASE("StartGamePacket: v544 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<544>{};
-    s.experiments = bp::Experiments_<544>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Visitor;
@@ -875,7 +875,7 @@ TEST_CASE("StartGamePacket: v567 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<567>{};
-    s.experiments = bp::Experiments_<567>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -986,7 +986,7 @@ TEST_CASE("StartGamePacket: v582 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<582>{};
-    s.experiments = bp::Experiments_<582>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -1101,7 +1101,7 @@ TEST_CASE("StartGamePacket: v589 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<589>{};
-    s.experiments = bp::Experiments_<589>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -1219,7 +1219,7 @@ TEST_CASE("StartGamePacket: v685 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<685>{};
-    s.experiments = bp::Experiments_<685>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;
@@ -1498,7 +1498,7 @@ TEST_CASE("StartGamePacket: v924 baseline round-trip")
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules = bp::GameRules_<924>{};
-    s.experiments = bp::Experiments_<924>{};
+    s.experiments = bp::Experiments{};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
     s.default_permissions = bp::PlayerPermissionLevel::Member;

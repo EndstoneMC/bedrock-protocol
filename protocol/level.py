@@ -14,7 +14,7 @@ from protocol import (
     uvarint32,
     varint32,
 )
-from protocol.common import BlockPos, SubChunkPos, Vec2, Vec3
+from protocol.common import BlockPos, SubChunkPos, Vec3
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"

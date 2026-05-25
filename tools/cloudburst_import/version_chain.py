@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .parser import (
-    CodecRegistration,
     Serializer,
     parse_codec_registrations,
     parse_serializer,
@@ -296,7 +295,7 @@ def _walk_stmts(stmts: list, cond_stack: list[str], out: list[FieldOp]) -> None:
 
 
 def _cond_signature(expr) -> str:
-    from javalang.tree import BinaryOperation, MethodInvocation, MemberReference
+    from javalang.tree import BinaryOperation, MemberReference, MethodInvocation
 
     if isinstance(expr, MethodInvocation):
         return f"call:{expr.member}"

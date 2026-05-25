@@ -15,8 +15,8 @@ from protocol import (
 )
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
-from protocol.nbt import CompoundTag
 from protocol.level import DimensionType
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -124,7 +124,6 @@ class GameRules:
     game_rules: list[GameRule]
 
 
-@type(since=419)
 class Experiments:
     experiment_data: list[tuple[str, bool]] = field(prefix=uint32)
     experiments_ever_toggled: bool
@@ -188,7 +187,7 @@ class LevelSettings:
     base_game_version: str = field(since=388)
     limited_world_width: int32 = field(since=407)
     limited_world_depth: int32 = field(since=407)
-    nether_type: NetherWorldType = field(type=bool, since=407)
+    nether_type: NetherWorldType = field(type=uint8, since=407)
     edu_shared_uri_resource: EduSharedUriResource = field(since=465)
     override_force_experimental_gameplay_flag: bool | None = field(since=407)
     chat_restriction_level: ChatRestrictionLevel = field(type=uint8, since=544)
@@ -236,32 +235,21 @@ class ServerConfiguration:
 
 @packet(id=346, since=975)
 class ServerStoreInfoPacket:
-    client_store_entry_point_configuration: (
-        ServerConfiguration.ClientStoreEntryPointConfiguration | None
-    )
+    client_store_entry_point_configuration: ServerConfiguration.ClientStoreEntryPointConfiguration | None
 
 
 @packet(id=347, since=975)
 class ServerPresenceInfoPacket:
-    # protocol-docs (r26_u3 = v1001) lists a third field `richPresenceId: str`,
-    # but bedrock-headers, CloudburstMC ServerPresenceInfoSerializer_v975, and
-    # gophertunnel's PresenceInfo all agree on just experience_name +
-    # world_name. The third field is a post-v975 addition that landed in
-    # v1001 -- add it (with since=1001) when the bump past v975 lands.
     presence_configuration: ServerConfiguration.PresenceConfiguration | None
 
 
 @type(since=924)
 class ServerConfigurationJoinInfo:
-    gatherings_configuration_join_info: (
-        ServerConfiguration.GatheringsConfigurationJoinInfo | None
-    )
-    client_store_entrypoint_configuration: (
-        ServerConfiguration.ClientStoreEntryPointConfiguration | None
-    ) = field(since=944)
-    presence_configuration: ServerConfiguration.PresenceConfiguration | None = field(
+    gatherings_configuration_join_info: ServerConfiguration.GatheringsConfigurationJoinInfo | None
+    client_store_entrypoint_configuration: ServerConfiguration.ClientStoreEntryPointConfiguration | None = field(
         since=944
     )
+    presence_configuration: ServerConfiguration.PresenceConfiguration | None = field(since=944)
 
 
 @type(since=924)
@@ -301,7 +289,5 @@ class StartGamePacket:
     block_network_ids_are_hashes: bool = field(since=582)
     tick_death_systems_enabled: bool = field(since=827, until=898)
     network_permissions: NetworkPermissions = field(since=589)
-    server_configuration_join_info: ServerConfigurationJoinInfo | None = field(
-        since=924
-    )
+    server_configuration_join_info: ServerConfigurationJoinInfo | None = field(since=924)
     server_telemetry_data: ServerTelemetryData = field(since=924)

@@ -71,11 +71,7 @@ class RedeclarationExtension(griffe.Extension):
         if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
             return None
         ctx = stmt.items[0].context_expr
-        if not (
-            isinstance(ctx, ast.Call)
-            and isinstance(ctx.func, ast.Name)
-            and ctx.func.id == "field"
-        ):
+        if not (isinstance(ctx, ast.Call) and isinstance(ctx.func, ast.Name) and ctx.func.id == "field"):
             return None
         for kw in ctx.keywords:
             if kw.arg == "when":
@@ -96,9 +92,7 @@ class RedeclarationExtension(griffe.Extension):
             ast.keyword(arg="_group_id", value=ast.Constant(value=group)),
         ]
         if stmt.value is None:
-            stmt.value = ast.Call(
-                func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords
-            )
+            stmt.value = ast.Call(func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords)
         elif isinstance(stmt.value, ast.Call):
             stmt.value.keywords.extend(keywords)
         else:

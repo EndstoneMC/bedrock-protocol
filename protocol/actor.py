@@ -182,9 +182,7 @@ class InteractPacket:
     target_id: ActorRuntimeID
     pos: Vec3 = field(when=lambda p: p.action == Action.INTERACT_UPDATE, until=388)
     pos: Vec3 = field(
-        when=lambda p: (
-            p.action == Action.INTERACT_UPDATE or p.action == Action.STOP_RIDING
-        ),
+        when=lambda p: p.action == Action.INTERACT_UPDATE or p.action == Action.STOP_RIDING,
         since=388,
         until=897,
     )

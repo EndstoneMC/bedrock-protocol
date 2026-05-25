@@ -29,3 +29,7 @@ packages = ["src/bedrock_protocol"]
 files = ["src"]
 python_version = "3.12"
 strict = true
+
+[tool.ruff]
+line-length = 120
+lint.extend-select = ["I", "E", "F"]

@@ -57,13 +57,10 @@ def group_optional_unions(
 
         stem = m.group(1)  # e.g. "Message"
         run_end = i
-        while (
-            run_end < len(fields)
-            and fields[run_end].cond_chain == f.cond_chain
-        ):
+        while run_end < len(fields) and fields[run_end].cond_chain == f.cond_chain:
             run_end += 1
 
-        nested_name = f"{packet_name[:-len('Packet')] if packet_name.endswith('Packet') else packet_name}Packet{_pluralize(stem)}"
+        nested_name = f"{packet_name[: -len('Packet')] if packet_name.endswith('Packet') else packet_name}Packet{_pluralize(stem)}"
         outer_field_name = _to_snake(_pluralize(stem))
 
         inner_fields = [_strip_cond(g) for g in fields[i:run_end]]

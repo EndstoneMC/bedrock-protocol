@@ -143,12 +143,19 @@ def type(
     return _identity
 
 
-def packet(*, id: int, since: int | None = None):
+def packet(*, id: int, since: int | None = None, until: int | None = None):
     """Class decorator: mark a struct as a packet.
 
     - `id`: the on-the-wire packet id.
     - `since`: protocol version that introduced the packet. The generated
       type is absent from snapshots below it.
+    - `until`: first protocol version where this declaration's shape no
+      longer applies (exclusive). Meaningful only on a redeclared packet,
+      where the same `@packet(id=N)` class name appears more than once with
+      adjacent `[since, until)` ranges to model a shape change across
+      versions, mirroring the `@type(since=, until=)` form. Every
+      redeclaration must share the same `id`, and only the last omits
+      `until`.
     """
     return _identity
 

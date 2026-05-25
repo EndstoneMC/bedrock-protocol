@@ -39,10 +39,7 @@ class EnumDraft:
 @cache
 def _data_index(cloudburst_root: Path) -> dict[str, Path]:
     """Map enum/class simple name to its `.java` path, indexed once per run."""
-    base = (
-        cloudburst_root
-        / "bedrock-codec/src/main/java/org/cloudburstmc/protocol/bedrock/data"
-    )
+    base = cloudburst_root / "bedrock-codec/src/main/java/org/cloudburstmc/protocol/bedrock/data"
     out: dict[str, Path] = {}
     if not base.exists():
         return out

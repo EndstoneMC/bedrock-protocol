@@ -88,11 +88,6 @@ class ScriptPrimitiveShapeType(IntEnum):
 
 
 @type(since=975)
-class NullType:
-    pass
-
-
-@type(since=975)
 class ArrowDataPayload:
     end_location: Vec3 | None
     arrow_head_length: float | None
@@ -137,14 +132,7 @@ class PrimitiveShapeDataPayload:
     color: Color | None
     dimension_id: DimensionType | None
     attached_to_id: ActorUniqueID | None
-    extra_data_payload: (
-        NullType
-        | ArrowDataPayload
-        | TextDataPayload
-        | BoxDataPayload
-        | LineDataPayload
-        | SphereDataPayload
-    )
+    extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
 
 
 @packet(id=328, since=975)

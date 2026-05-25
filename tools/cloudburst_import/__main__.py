@@ -94,19 +94,14 @@ def _generate(cloudburst: Path, info: PacketInfo) -> str:
     fields = [
         f
         for f in fields
-        if not (
-            f.dsl_type == "bytes"
-            and (f.todo or "").startswith("CLOUDBURST_IMPORT_TODO: non-call statement")
-        )
+        if not (f.dsl_type == "bytes" and (f.todo or "").startswith("CLOUDBURST_IMPORT_TODO: non-call statement"))
     ]
     fields, nested = group_optional_unions(fields, info.name)
     refs = _collect_enum_refs(fields) + [
         tok for nc in nested for f in nc.fields for tok in _extract_type_tokens(f.dsl_type)
     ]
     enums = collect_enum_drafts(cloudburst, refs)
-    return render(
-        PacketDraft(info=info, chain=chain, fields=fields, enums=enums, nested=nested)
-    )
+    return render(PacketDraft(info=info, chain=chain, fields=fields, enums=enums, nested=nested))
 
 
 def _collect_enum_refs(fields) -> list[str]:
@@ -134,9 +129,7 @@ def _extract_type_tokens(dsl_type: str) -> list[str]:
 def _load_java_field_types(cloudburst: Path, packet_class: str) -> dict[str, str]:
     """Snake-case map of packet-class field names to their Java types."""
     candidate = (
-        cloudburst
-        / "bedrock-codec/src/main/java/org/cloudburstmc/protocol/bedrock/packet"
-        / f"{packet_class}.java"
+        cloudburst / "bedrock-codec/src/main/java/org/cloudburstmc/protocol/bedrock/packet" / f"{packet_class}.java"
     )
     if not candidate.exists():
         return {}
@@ -159,6 +152,7 @@ def _module_name_for(packet_class: str) -> str:
     if base.endswith("Packet"):
         base = base[: -len("Packet")]
     import re
+
     return re.sub(r"(?<!^)(?=[A-Z])", "_", base).lower()
 
 

@@ -14,7 +14,8 @@ emit.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dc_field, replace
+from dataclasses import dataclass, replace
+from dataclasses import field as dc_field
 from pathlib import Path
 from typing import cast
 
@@ -31,8 +32,8 @@ from ..descriptor import (
     EnumType,
     EnumValue,
     Field,
-    FieldVersion,
     FieldType,
+    FieldVersion,
     File,
     FileSet,
     MappingType,
@@ -111,9 +112,7 @@ class SourceTree:
         self._follow_imports(griffe_modules, output_names)
         classified = self._classify(griffe_modules)
         files = {
-            name: self._lower_file(
-                name, mod, stems.get(name, name), griffe_modules, classified
-            )
+            name: self._lower_file(name, mod, stems.get(name, name), griffe_modules, classified)
             for name, mod in griffe_modules.items()
         }
         return FileSet(
@@ -249,11 +248,7 @@ class SourceTree:
                 aliases=aliases_by_name,
             )
             for attr_name, attr in sources:
-                if (
-                    attr_name == "package"
-                    or attr_name in PRIMITIVES
-                    or attr.value is None
-                ):
+                if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
                     continue
                 # `from X import Y` re-exports a name griffe surfaces in the same
                 # mapping local PEP-695 aliases live in. Treat it as a reference,
@@ -303,9 +298,7 @@ class SourceTree:
         for cls in mod.classes.values():
             if cls.is_alias or cls.name in classified.builtins:
                 continue
-            redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
-                extensions.CLASS_REDECLARATIONS
-            )
+            redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(extensions.CLASS_REDECLARATIONS)
             if redecls is not None:
                 struct = ctx.merged_struct(redecls)
                 structs.append(struct)
@@ -318,9 +311,7 @@ class SourceTree:
                 struct = ctx.struct(cls)
                 structs.append(struct)
                 order.append(struct.name)
-        imports = tuple(
-            sorted(d for d in self._imports_of(mod) if d in loaded and d != name)
-        )
+        imports = tuple(sorted(d for d in self._imports_of(mod) if d in loaded and d != name))
         return File(
             name=name,
             stem=stem,
@@ -355,9 +346,7 @@ class _AnnotationContext:
 
     # ---- aliases -----------------------------------------------------------
 
-    def parse_alias(
-        self, name: str, value: griffe.Expr | str
-    ) -> PrimitiveAlias | TypeAlias | None:
+    def parse_alias(self, name: str, value: griffe.Expr | str) -> PrimitiveAlias | TypeAlias | None:
         if isinstance(value, griffe.ExprName) and value.name in PRIMITIVES:
             return PrimitiveAlias(name, value.name)
         target = self.type(name, value, None, frozenset())
@@ -401,9 +390,7 @@ class _AnnotationContext:
                 self._reject_versioned_nested_struct(cls.name, inner)
                 nested_structs.append(self.struct(inner))
         nested_names = frozenset(e.name for e in nested_enums)
-        self.nested_enum_values = {
-            e.name: {v.name: v.number for v in e.values} for e in nested_enums
-        }
+        self.nested_enum_values = {e.name: {v.name: v.number for v in e.values} for e in nested_enums}
         try:
             fields: list[Field] = []
             earlier: set[str] = set()
@@ -419,9 +406,12 @@ class _AnnotationContext:
             since = _decorator_int(cls, "type", "since")
             if _decorator_int(cls, "type", "until") is not None:
                 raise CompilerError(
-                    f"{cls.name}: @type(until=) is only meaningful on a "
-                    f"redeclared class -- a lone declaration cannot set until="
+                    f"{cls.name}: @type(until=) is only meaningful on a redeclared class -- a lone declaration cannot set until="
                 )
+        if _decorator_int(cls, "packet", "until") is not None:
+            raise CompilerError(
+                f"{cls.name}: @packet(until=) is only meaningful on a redeclared packet -- a lone declaration cannot set until="
+            )
         return Struct(
             name=cls.name,
             fields=tuple(fields),
@@ -435,36 +425,63 @@ class _AnnotationContext:
     def merged_struct(self, decls: list[griffe.Class]) -> Struct:
         name = decls[0].name
         versions: list[tuple[griffe.Class, int, int | None]] = []
+        packet_ids: list[int] = []
         for cls in decls:
             if _is_int_enum(cls):
-                raise CompilerError(
-                    f"{name}: class redeclaration is supported for structs, not enums"
-                )
-            if _decorator_int(cls, "packet", "id") is not None:
-                raise CompilerError(
-                    f"{name}: redeclaration of a @packet class is unsupported"
-                )
+                raise CompilerError(f"{name}: class redeclaration is supported for structs, not enums")
             if cls.classes:
-                raise CompilerError(
-                    f"{name}: a redeclared class cannot contain nested types"
-                )
-            since = _decorator_int(cls, "type", "since")
-            if since is None:
-                raise CompilerError(
-                    f"{name}: every declaration of a redeclared class needs @type(since=)"
-                )
-            versions.append((cls, since, _decorator_int(cls, "type", "until")))
+                raise CompilerError(f"{name}: a redeclared class cannot contain nested types")
+            pkt_id = _decorator_int(cls, "packet", "id")
+            pkt_since = _decorator_int(cls, "packet", "since")
+            pkt_until = _decorator_int(cls, "packet", "until")
+            type_since = _decorator_int(cls, "type", "since")
+            type_until = _decorator_int(cls, "type", "until")
+            if pkt_id is not None:
+                if type_since is not None or type_until is not None:
+                    raise CompilerError(
+                        f"{name}: a redeclared @packet decl carries since=/until= on @packet, not @type"
+                    )
+                packet_ids.append(pkt_id)
+                since = pkt_since
+                until = pkt_until
+            else:
+                if pkt_since is not None or pkt_until is not None:
+                    raise CompilerError(f"{name}: every declaration of a redeclared @packet must set @packet(id=)")
+                since = type_since
+                until = type_until
+            # A missing since= means "from the protocol floor"; only valid on
+            # the first declaration. _check_class_versions enforces that.
+            versions.append((cls, since if since is not None else 0, until))
+        if packet_ids and len(packet_ids) != len(decls):
+            raise CompilerError(f"{name}: every declaration of a redeclared @packet must set @packet(id=)")
+        if packet_ids and len(set(packet_ids)) != 1:
+            raise CompilerError(f"{name}: every declaration of a redeclared @packet must share the same id=")
         versions.sort(key=lambda e: e[1])
         self._check_class_versions(name, versions)
 
-        order: list[str] = []
-        version_fields: list[dict[str, griffe.Attribute]] = []
-        for cls, _, _ in versions:
-            attrs = dict(cls.attributes)
-            version_fields.append(attrs)
-            for fname in attrs:
-                if fname not in order:
+        # The latest declaration's source order becomes the canonical field
+        # order for the merged struct: it's the wire shape at the current
+        # protocol version, and a redecl that adds a field in the middle of
+        # the layout should place it there, not at the end.
+        # Old-only fields (present in an earlier decl but dropped in a later
+        # one, e.g. texture_id → texture_path) are inserted relative to their
+        # neighbours from the older decl's source order.
+        version_fields: list[dict[str, griffe.Attribute]] = [
+            dict(cls.attributes) for cls, _, _ in versions
+        ]
+        order: list[str] = list(version_fields[-1].keys())
+        for attrs in reversed(version_fields[:-1]):
+            field_names = list(attrs.keys())
+            for i, fname in enumerate(field_names):
+                if fname in order:
+                    continue
+                # Find the next field in this decl's source order that's
+                # already placed; insert before it. If none, append.
+                anchor = next((f for f in field_names[i + 1:] if f in order), None)
+                if anchor is None:
                     order.append(fname)
+                else:
+                    order.insert(order.index(anchor), fname)
 
         fields: list[Field] = []
         for i, fname in enumerate(order):
@@ -474,12 +491,9 @@ class _AnnotationContext:
                 attr = attrs.get(fname)
                 if attr is None:
                     continue
-                if attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
-                    extensions.REDECLARATIONS
-                ):
+                if attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(extensions.REDECLARATIONS):
                     raise CompilerError(
-                        f"{name}.{fname}: a field cannot be version-redeclared "
-                        f"inside a redeclared class"
+                        f"{name}.{fname}: a field cannot be version-redeclared inside a redeclared class"
                     )
                 self._reject_field_version(name, attr)
                 version = self._field_version(attr, frozenset(), earlier)
@@ -491,7 +505,7 @@ class _AnnotationContext:
             name=name,
             fields=tuple(fields),
             nested_enums=(),
-            packet_id=None,
+            packet_id=packet_ids[0] if packet_ids else None,
             since=versions[0][1],
         )
 
@@ -501,9 +515,7 @@ class _AnnotationContext:
         nested: frozenset[str],
         earlier: frozenset[str],
     ) -> Field:
-        decls = attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
-            extensions.REDECLARATIONS
-        )
+        decls = attr.extra.get(extensions.EXTRA_NAMESPACE, {}).get(extensions.REDECLARATIONS)
         sources: list[griffe.Attribute] = decls if decls is not None else [attr]
         versions = tuple(self._field_version(d, nested, earlier) for d in sources)
         self._check_versions(attr.name, versions)
@@ -524,16 +536,14 @@ class _AnnotationContext:
         group_when = _call_arg(call, "field", "_group_when")
         if when is not None and group_when is not None:
             raise CompilerError(
-                f"{attr.name}: a field inside a with field(when=...) guard "
-                f"cannot also carry its own field(when=...)"
+                f"{attr.name}: a field inside a with field(when=...) guard cannot also carry its own field(when=...)"
             )
         guard = when if when is not None else group_when
         if guard is not None:
             predicate = self._predicate(guard, attr.name, nested, earlier)
             if when is not None and isinstance(t, (OptionalType, VariantType)):
                 raise CompilerError(
-                    f"{attr.name}: field(when=...) gates a bare payload type -- "
-                    f"it cannot also be an optional or union field"
+                    f"{attr.name}: field(when=...) gates a bare payload type -- it cannot also be an optional or union field"
                 )
             if t is not None:
                 t = CondType(t, predicate, _int_kwarg(call, "field", "_group_id"))
@@ -553,40 +563,29 @@ class _AnnotationContext:
         earlier: frozenset[str],
     ) -> FieldType:
         if not isinstance(t, RepeatedType):
-            raise CompilerError(
-                f"{field_name}: field(count=...) only applies to a list[T] "
-                f"field, got a non-list type"
-            )
+            raise CompilerError(f"{field_name}: field(count=...) only applies to a list[T] field, got a non-list type")
         if t.count is not None:
             raise CompilerError(
-                f"{field_name}: field(count=...) is for variable-length lists; "
-                f"a fixed-length tuple[T, ...] already carries its own count"
+                f"{field_name}: field(count=...) is for variable-length lists; a fixed-length tuple[T, ...] already carries its own count"
             )
         if _call_arg(call, "field", "prefix") is not None:
             raise CompilerError(
-                f"{field_name}: field(count=...) and field(prefix=...) are "
-                f"mutually exclusive -- a count-derived list has no length "
-                f"prefix on the wire"
+                f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- a count-derived list has no length prefix on the wire"
             )
         expr = self._predicate(lam, field_name, nested, earlier)
         return replace(t, count_expr=expr, prefix=None)
 
     # ---- field-type walker -------------------------------------------------
 
-    def type(
-        self, field_name: str, ann: _Ann, call: _Ann, nested: frozenset[str]
-    ) -> FieldType | None:
+    def type(self, field_name: str, ann: _Ann, call: _Ann, nested: frozenset[str]) -> FieldType | None:
         endian = _str_kwarg(call, "field", "endian")
         if endian is not None and endian not in ("big", "little"):
-            raise CompilerError(
-                f'{field_name}: field(endian=...) must be "big" or "little", got {endian!r}'
-            )
+            raise CompilerError(f'{field_name}: field(endian=...) must be "big" or "little", got {endian!r}')
         type_kw = _name_kwarg(call, "field", "type")
         if _is_none(_call_arg(call, "field", "prefix")):
             if not (isinstance(ann, griffe.ExprName) and ann.name == "bytes"):
                 raise CompilerError(
-                    f"{field_name}: field(prefix=None) marks a trailing payload "
-                    f"and is only valid on a bare `bytes` field"
+                    f"{field_name}: field(prefix=None) marks a trailing payload and is only valid on a bare `bytes` field"
                 )
             if endian is not None:
                 raise CompilerError(_endian_scope_error(field_name))
@@ -595,9 +594,7 @@ class _AnnotationContext:
         tag = self._variant_tag(call, field_name, nested)
         cases = _flatten_union(ann)
         if cases is not None:
-            result = self._union_type(
-                cases, field_name, type_kw, endian, prefix, nested, tag
-            )
+            result = self._union_type(cases, field_name, type_kw, endian, prefix, nested, tag)
         else:
             base = self._base_type(ann, type_kw, prefix, nested, field_name, tag)
             if base is None:
@@ -605,8 +602,7 @@ class _AnnotationContext:
             result = self._with_endian(base, endian, field_name)
         if tag is not None and not _has_variant(result):
             raise CompilerError(
-                f"{field_name}: field(tag=...) sets a tagged-union discriminator "
-                f"but the field's type tree contains no multi-case union"
+                f"{field_name}: field(tag=...) sets a tagged-union discriminator but the field's type tree contains no multi-case union"
             )
         return result
 
@@ -630,8 +626,7 @@ class _AnnotationContext:
             discriminator = type_kw == "Union"
             if discriminator and isinstance(base, EnumType):
                 raise CompilerError(
-                    f"{field_name}: an optional enum field needs field(type=) for "
-                    f"the enum wire primitive and so cannot also use type=Union"
+                    f"{field_name}: an optional enum field needs field(type=) for the enum wire primitive and so cannot also use type=Union"
                 )
             present_tag = 1 if discriminator and _is_none(cases[0]) else 0
             return OptionalType(base, discriminator, present_tag)
@@ -648,9 +643,7 @@ class _AnnotationContext:
             types.append(t)
         if tag is None:
             return VariantType(tuple(types))
-        return VariantType(
-            tuple(types), discriminator=tag.primitive, tag_enum=tag.enum_name
-        )
+        return VariantType(tuple(types), discriminator=tag.primitive, tag_enum=tag.enum_name)
 
     def _base_type(
         self,
@@ -685,9 +678,7 @@ class _AnnotationContext:
                             return None
                         members.append(m)
                     return TupleType(members=tuple(members))
-                inner = self._base_type(
-                    elem_ann, type_kw, prefix, nested, field_name, tag
-                )
+                inner = self._base_type(elem_ann, type_kw, prefix, nested, field_name, tag)
                 if inner is None:
                     return None
                 return RepeatedType(
@@ -697,21 +688,15 @@ class _AnnotationContext:
                 )
             mapping = _map_parts(ann, field_name)
             if mapping is not None:
-                key = self._base_type(
-                    mapping[0], type_kw, prefix, nested, field_name, tag
-                )
-                value = self._base_type(
-                    mapping[1], type_kw, prefix, nested, field_name, tag
-                )
+                key = self._base_type(mapping[0], type_kw, prefix, nested, field_name, tag)
+                value = self._base_type(mapping[1], type_kw, prefix, nested, field_name, tag)
                 if key is None or value is None:
                     return None
                 return MappingType(key, value, prefix)
             return None
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(
-                cases, field_name, type_kw, None, prefix, nested, tag
-            )
+            return self._union_type(cases, field_name, type_kw, None, prefix, nested, tag)
         if isinstance(ann, griffe.ExprAttribute):
             # Dotted name `Parent.Child[.Grandchild...]` -- the resolver
             # recognises this as a nested struct reference when the full path
@@ -728,9 +713,7 @@ class _AnnotationContext:
             scalar = _enum_scalar(type_kw, field_name)
             if scalar is None and name in nested:
                 raise CompilerError(
-                    f"{field_name}: a nested enum cannot be string-coded "
-                    f"(field(type=str)) -- use an integer wire primitive, or "
-                    f"lift the enum to module scope"
+                    f"{field_name}: a nested enum cannot be string-coded (field(type=str)) -- use an integer wire primitive, or lift the enum to module scope"
                 )
             return EnumType(name, scalar)
         if name in self.struct_names:
@@ -754,9 +737,7 @@ class _AnnotationContext:
             return target
         return None
 
-    def _variant_tag(
-        self, call: _Ann, field_name: str, nested: frozenset[str] = frozenset()
-    ) -> _TagSpec | None:
+    def _variant_tag(self, call: _Ann, field_name: str, nested: frozenset[str] = frozenset()) -> _TagSpec | None:
         """`field(tag=<integer primitive | IntEnum>)` overrides a `VariantType`'s
         on-wire discriminator. An enum tag names the C++ case labels but keeps
         the wire form as `varint32` (matching the BDS convention for tagged-
@@ -772,8 +753,7 @@ class _AnnotationContext:
         if name in nested or name in self.enum_names:
             return _TagSpec(primitive=PrimitiveType(name="varint32"), enum_name=name)
         raise CompilerError(
-            f"{field_name}: field(tag=...) must be an integer primitive or "
-            f"a user-defined IntEnum, got {name!r}"
+            f"{field_name}: field(tag=...) must be an integer primitive or a user-defined IntEnum, got {name!r}"
         )
 
     def _repeat_prefix(self, call: _Ann, field_name: str) -> PrimitiveType:
@@ -781,24 +761,16 @@ class _AnnotationContext:
         if name is None:
             return PrimitiveType(name="uvarint32")
         if name not in INTEGER_PRIMITIVES:
-            raise CompilerError(
-                f"{field_name}: field(prefix=...) must be an integer primitive, got {name!r}"
-            )
+            raise CompilerError(f"{field_name}: field(prefix=...) must be an integer primitive, got {name!r}")
         return PrimitiveType(name=name)
 
-    def _with_endian(
-        self, base: FieldType, endian: str | None, field_name: str
-    ) -> FieldType:
+    def _with_endian(self, base: FieldType, endian: str | None, field_name: str) -> FieldType:
         if endian is None:
             return base
         big = endian == "big"
         if isinstance(base, PrimitiveType):
             return replace(base, big_endian=big)
-        if (
-            isinstance(base, EnumType)
-            and base.scalar is not None
-            and base.scalar.name not in VARINT_PRIMITIVES
-        ):
+        if isinstance(base, EnumType) and base.scalar is not None and base.scalar.name not in VARINT_PRIMITIVES:
             return replace(base, scalar=replace(base.scalar, big_endian=big))
         raise CompilerError(_endian_scope_error(field_name))
 
@@ -812,16 +784,10 @@ class _AnnotationContext:
         earlier: frozenset[str],
     ) -> Predicate:
         if not isinstance(lam, griffe.ExprLambda):
-            raise CompilerError(
-                f"{field_name}: field(when=...) must be a lambda predicate"
-            )
+            raise CompilerError(f"{field_name}: field(when=...) must be a lambda predicate")
         if len(lam.parameters) != 1:
-            raise CompilerError(
-                f"{field_name}: field(when=...) lambda takes exactly one parameter"
-            )
-        return self._pred_node(
-            lam.body, lam.parameters[0].name, field_name, nested, earlier
-        )
+            raise CompilerError(f"{field_name}: field(when=...) lambda takes exactly one parameter")
+        return self._pred_node(lam.body, lam.parameters[0].name, field_name, nested, earlier)
 
     def _pred_node(
         self,
@@ -835,31 +801,22 @@ class _AnnotationContext:
             return self._pred_node(n, param, field_name, nested, earlier)
 
         if isinstance(node, griffe.ExprBoolOp):
-            return Predicate(
-                node.operator, operands=tuple(child(v) for v in node.values)
-            )
+            return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
         if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
             return Predicate("not", operands=(child(node.value),))
         if isinstance(node, griffe.ExprBinOp) and node.operator == "&":
             return Predicate("&", operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
-            return Predicate(
-                node.operator, operands=(child(node.left), child(node.right))
-            )
+            return Predicate(node.operator, operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
-                    f"{field_name}: field(when=...) supports one comparison per "
-                    f"clause -- split a chained comparison with `and`"
+                    f"{field_name}: field(when=...) supports one comparison per clause -- split a chained comparison with `and`"
                 )
             op = str(node.operators[0])
             if op not in ("==", "!=", "<", ">", "<=", ">="):
-                raise CompilerError(
-                    f"{field_name}: field(when=...) comparison {op!r} is unsupported"
-                )
-            return Predicate(
-                op, operands=(child(node.left), child(node.comparators[0]))
-            )
+                raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
+            return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, nested, earlier)
         if isinstance(node, griffe.ExprCall):
@@ -867,9 +824,7 @@ class _AnnotationContext:
         literal = _as_int(node)
         if literal is not None:
             return Predicate("int", text=str(literal))
-        raise CompilerError(
-            f"{field_name}: field(when=...) contains an unsupported expression: {node}"
-        )
+        raise CompilerError(f"{field_name}: field(when=...) contains an unsupported expression: {node}")
 
     def _pred_attr(
         self,
@@ -882,23 +837,20 @@ class _AnnotationContext:
         parts = [str(v) for v in node.values]
         if len(parts) < 2:
             raise CompilerError(
-                f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is "
-                f"too shallow -- use `param.field` or `Enum.MEMBER`"
+                f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is too shallow -- use `param.field` or `Enum.MEMBER`"
             )
         head = parts[0]
         if head == param:
             top = parts[1]
             if top not in earlier:
                 raise CompilerError(
-                    f"{field_name}: field(when=...) references {top!r}, which is "
-                    f"not a field declared before it"
+                    f"{field_name}: field(when=...) references {top!r}, which is not a field declared before it"
                 )
             return Predicate("field", text=".".join(parts[1:]))
         if len(parts) == 2 and (head in nested or head in self.enum_names):
             return Predicate("enum", text=f"{head}.{parts[1]}")
         raise CompilerError(
-            f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is "
-            f"neither a `{param}.field[.sub...]` chain nor an Enum.MEMBER"
+            f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is neither a `{param}.field[.sub...]` chain nor an Enum.MEMBER"
         )
 
     def _pred_call(
@@ -913,51 +865,41 @@ class _AnnotationContext:
         receiver = node.function
         if not isinstance(receiver, griffe.ExprAttribute):
             raise CompilerError(
-                f"{field_name}: field(when=...) call {node} is unsupported -- "
-                f"only `p.<field>.test(<bit>)` is allowed"
+                f"{field_name}: field(when=...) call {node} is unsupported -- only `p.<field>.test(<bit>)` is allowed"
             )
         parts = [str(v) for v in receiver.values]
         if len(parts) != 3 or parts[0] != param or parts[2] != "test":
             raise CompilerError(
-                f"{field_name}: field(when=...) call must be of the form "
-                f"`{param}.<earlier-field>.test(<bit>)`, got {receiver}"
+                f"{field_name}: field(when=...) call must be of the form `{param}.<earlier-field>.test(<bit>)`, got {receiver}"
             )
         target = parts[1]
         if target not in earlier:
             raise CompilerError(
-                f"{field_name}: field(when=...) references {target!r}, which is "
-                f"not a field declared before it"
+                f"{field_name}: field(when=...) references {target!r}, which is not a field declared before it"
             )
         args = [a for a in node.arguments if not isinstance(a, griffe.ExprKeyword)]
         if len(args) != 1:
             raise CompilerError(
-                f"{field_name}: field(when=...) `.test(...)` takes exactly one "
-                f"bit-index argument, got {len(args)}"
+                f"{field_name}: field(when=...) `.test(...)` takes exactly one bit-index argument, got {len(args)}"
             )
         operand = self._pred_node(args[0], param, field_name, nested, earlier)
         if operand.kind not in ("int", "enum"):
             raise CompilerError(
-                f"{field_name}: field(when=...) `.test(...)` argument must be an "
-                f"integer literal or Enum.MEMBER, got {args[0]}"
+                f"{field_name}: field(when=...) `.test(...)` argument must be an integer literal or Enum.MEMBER, got {args[0]}"
             )
         return Predicate("bittest", text=target, operands=(operand,))
 
-    def _bitset_parts(
-        self, ann: griffe.ExprSubscript, field_name: str
-    ) -> BitsetType | None:
+    def _bitset_parts(self, ann: griffe.ExprSubscript, field_name: str) -> BitsetType | None:
         if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
             return None
         size, enum_member = self._resolve_bitset_size(ann.slice)
         if size is None or size <= 0:
             raise CompilerError(
-                f"{field_name}: bitset[...] needs a positive integer size -- "
-                f"an int literal or a nested-enum member -- got {ann.slice!r}"
+                f"{field_name}: bitset[...] needs a positive integer size -- an int literal or a nested-enum member -- got {ann.slice!r}"
             )
         return BitsetType(size=size, enum_member=enum_member)
 
-    def _resolve_bitset_size(
-        self, expr: _Ann
-    ) -> tuple[int | None, tuple[str, str] | None]:
+    def _resolve_bitset_size(self, expr: _Ann) -> tuple[int | None, tuple[str, str] | None]:
         """Return the int width and, if the source was `Enum.MEMBER`, the
         symbolic ref so the resolver can re-resolve it per snapshot."""
         direct = _as_int(expr)
@@ -982,9 +924,7 @@ class _AnnotationContext:
             return "UUID"
         return None
 
-    def _enum_member_value(
-        self, value: _Ann
-    ) -> tuple[int | None, int | None, int | None, int | None] | None:
+    def _enum_member_value(self, value: _Ann) -> tuple[int | None, int | None, int | None, int | None] | None:
         direct = _as_int(value)
         if direct is not None:
             return direct, None, None, None
@@ -994,9 +934,7 @@ class _AnnotationContext:
             and value.function.name == "value"
         ):
             return None
-        positionals = [
-            a for a in value.arguments if not isinstance(a, griffe.ExprKeyword)
-        ]
+        positionals = [a for a in value.arguments if not isinstance(a, griffe.ExprKeyword)]
         ivalue: int | None
         if positionals:
             ivalue = _as_int(positionals[0])
@@ -1014,31 +952,28 @@ class _AnnotationContext:
     # ---- structural checks -------------------------------------------------
 
     @staticmethod
-    def _check_class_versions(
-        name: str, versions: list[tuple[griffe.Class, int, int | None]]
-    ) -> None:
+    def _check_class_versions(name: str, versions: list[tuple[griffe.Class, int, int | None]]) -> None:
+        # A redecl that omits since= is the first one and stands for the
+        # protocol floor (since=0); only that slot may be implicit.
         for i, (_, since, until) in enumerate(versions):
+            if since == 0 and i != 0:
+                raise CompilerError(
+                    f"{name}: only the first declaration of a redeclared class may omit since="
+                )
             last = i == len(versions) - 1
             if last:
                 if until is not None:
                     raise CompilerError(
-                        f"{name}: the last declaration of a redeclared class must "
-                        f"not set @type(until=)"
+                        f"{name}: the last declaration of a redeclared class must not set @type(until=)"
                     )
                 continue
             if until is None:
-                raise CompilerError(
-                    f"{name}: every declaration of a redeclared class but the last "
-                    f"needs @type(until=)"
-                )
+                raise CompilerError(f"{name}: every declaration of a redeclared class but the last needs @type(until=)")
             if until <= since:
-                raise CompilerError(
-                    f"{name}: @type(until=) must be greater than since="
-                )
+                raise CompilerError(f"{name}: @type(until=) must be greater than since=")
             if until != versions[i + 1][1]:
                 raise CompilerError(
-                    f"{name}: redeclared class version ranges must be contiguous "
-                    f"-- each until= must equal the next since="
+                    f"{name}: redeclared class version ranges must be contiguous -- each until= must equal the next since="
                 )
 
     @staticmethod
@@ -1048,37 +983,27 @@ class _AnnotationContext:
             lo = version.since or 0
             if lo < covered_to:
                 raise CompilerError(
-                    f"{name}: redeclared field versions overlap or are out of order "
-                    f"-- each since= must be at least the previous until="
+                    f"{name}: redeclared field versions overlap or are out of order -- each since= must be at least the previous until="
                 )
             if i < len(versions) - 1 and version.until is None:
-                raise CompilerError(
-                    f"{name}: every redeclared field version but the last needs until="
-                )
+                raise CompilerError(f"{name}: every redeclared field version but the last needs until=")
             if version.until is not None:
                 if version.until <= lo:
-                    raise CompilerError(
-                        f"{name}: field version until= must be greater than since="
-                    )
+                    raise CompilerError(f"{name}: field version until= must be greater than since=")
                 covered_to = version.until
 
     @staticmethod
     def _reject_field_version(struct: str, attr: griffe.Attribute) -> None:
-        if (
-            _int_kwarg(attr.value, "field", "since") is not None
-            or _int_kwarg(attr.value, "field", "until") is not None
-        ):
+        if _int_kwarg(attr.value, "field", "since") is not None or _int_kwarg(attr.value, "field", "until") is not None:
             raise CompilerError(
-                f"{struct}.{attr.name}: field(since=/until=) is not allowed inside "
-                f"a redeclared class -- the class declarations carry the version range"
+                f"{struct}.{attr.name}: field(since=/until=) is not allowed inside a redeclared class -- the class declarations carry the version range"
             )
 
     @staticmethod
     def _reject_versioned_nested(owner: str, enum: Enum) -> None:
         if enum.since is not None:
             raise CompilerError(
-                f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); "
-                f"declare it at module scope to version it"
+                f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); declare it at module scope to version it"
             )
         # Per-value `since=`/`until=` is allowed on nested enums. The nested
         # body emitted into the owner's first-snapshot definition carries every
@@ -1095,20 +1020,14 @@ class _AnnotationContext:
         for kw in ("until", "deprecated"):
             if _decorator_int(cls, "type", kw) is not None:
                 raise CompilerError(
-                    f"{owner}.{cls.name}: a nested struct cannot carry "
-                    f"@type({kw}=); declare it at module scope to use it"
+                    f"{owner}.{cls.name}: a nested struct cannot carry @type({kw}=); declare it at module scope to use it"
                 )
         if _decorator_int(cls, "packet", "id") is not None:
-            raise CompilerError(
-                f"{owner}.{cls.name}: a nested struct cannot be a @packet"
-            )
-        redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(
-            extensions.CLASS_REDECLARATIONS
-        )
+            raise CompilerError(f"{owner}.{cls.name}: a nested struct cannot be a @packet")
+        redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(extensions.CLASS_REDECLARATIONS)
         if redecls is not None:
             raise CompilerError(
-                f"{owner}.{cls.name}: a nested struct cannot be redeclared "
-                f"across version ranges; lift it to module scope"
+                f"{owner}.{cls.name}: a nested struct cannot be redeclared across version ranges; lift it to module scope"
             )
 
 
@@ -1141,8 +1060,7 @@ def _check_trailing_is_last(struct_name: str, fields: list[Field]) -> None:
     for i, f in enumerate(fields[:-1]):
         if any(_is_trailing(v.type) for v in f.versions):
             raise CompilerError(
-                f"{struct_name}.{f.name}: a trailing field (bytes with "
-                f"field(prefix=None)) must be the last field of the struct"
+                f"{struct_name}.{f.name}: a trailing field (bytes with field(prefix=None)) must be the last field of the struct"
             )
 
 
@@ -1173,9 +1091,7 @@ def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
 
 
 def _is_int_enum(cls: griffe.Class) -> bool:
-    return any(
-        isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases
-    )
+    return any(isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases)
 
 
 def _is_auto_call(value: _Ann) -> bool:
@@ -1188,10 +1104,7 @@ def _is_auto_call(value: _Ann) -> bool:
 
 
 def _is_builtin_class(cls: griffe.Class) -> bool:
-    return any(
-        isinstance(dec.value, griffe.ExprName) and dec.value.name == "builtin"
-        for dec in cls.decorators
-    )
+    return any(isinstance(dec.value, griffe.ExprName) and dec.value.name == "builtin" for dec in cls.decorators)
 
 
 def _is_none(case: object) -> bool:
@@ -1247,13 +1160,10 @@ def _repeat_parts(
     if ann.left.name != "tuple":
         return None
     slice_ = ann.slice
-    elements: list[griffe.Expr | str] = (
-        list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
-    )
+    elements: list[griffe.Expr | str] = list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
     if not elements:
         raise CompilerError(
-            f"{field_name}: tuple[...] must spell out a fixed count of "
-            f"element types -- use list[T] for a variable-length list"
+            f"{field_name}: tuple[...] must spell out a fixed count of element types -- use list[T] for a variable-length list"
         )
     # Homogeneous iff every element is an ExprName with the same name.
     named = [e for e in elements if isinstance(e, griffe.ExprName)]
@@ -1262,31 +1172,24 @@ def _repeat_parts(
     return elements, len(elements)
 
 
-def _map_parts(
-    ann: griffe.ExprSubscript, field_name: str
-) -> tuple[griffe.Expr | str, griffe.Expr | str] | None:
+def _map_parts(ann: griffe.ExprSubscript, field_name: str) -> tuple[griffe.Expr | str, griffe.Expr | str] | None:
     if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "dict"):
         return None
     slice_ = ann.slice
     if not isinstance(slice_, griffe.ExprTuple) or len(slice_.elements) != 2:
-        raise CompilerError(
-            f"{field_name}: dict[...] needs exactly a key type and a value type"
-        )
+        raise CompilerError(f"{field_name}: dict[...] needs exactly a key type and a value type")
     return slice_.elements[0], slice_.elements[1]
 
 
 def _enum_scalar(type_kw: str | None, field_name: str) -> PrimitiveType | None:
     if type_kw is None:
         raise CompilerError(
-            f"{field_name}: enum-typed field requires field(type=<primitive>) "
-            f"-- e.g. type=uvarint32 or type=str"
+            f"{field_name}: enum-typed field requires field(type=<primitive>) -- e.g. type=uvarint32 or type=str"
         )
     if type_kw == "str":
         return None
     if type_kw not in PRIMITIVES:
-        raise CompilerError(
-            f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}"
-        )
+        raise CompilerError(f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}")
     return PrimitiveType(name=type_kw)
 
 
@@ -1297,22 +1200,15 @@ def _wire_override(name: str, type_kw: str, field_name: str) -> PrimitiveType:
     bridges them at the codegen boundary."""
     if name not in INTEGER_PRIMITIVES:
         raise CompilerError(
-            f"{field_name}: field(type=) on a primitive field only applies to "
-            f"integer primitives, got annotation {name!r}"
+            f"{field_name}: field(type=) on a primitive field only applies to integer primitives, got annotation {name!r}"
         )
     if type_kw not in INTEGER_PRIMITIVES:
-        raise CompilerError(
-            f"{field_name}: field(type=) wire override must be an integer "
-            f"primitive, got {type_kw!r}"
-        )
+        raise CompilerError(f"{field_name}: field(type=) wire override must be an integer primitive, got {type_kw!r}")
     return PrimitiveType(name=type_kw)
 
 
 def _endian_scope_error(field_name: str) -> str:
-    return (
-        f"{field_name}: field(endian=...) only applies to fixed-width primitive "
-        f"or fixed-width integer-coded enum fields"
-    )
+    return f"{field_name}: field(endian=...) only applies to fixed-width primitive or fixed-width integer-coded enum fields"
 
 
 def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
@@ -1348,12 +1244,7 @@ def _name_kwarg(expr: _Ann, fn_name: str, kw: str) -> str | None:
 
 def _str_kwarg(expr: _Ann, fn_name: str, kw: str) -> str | None:
     value = _call_arg(expr, fn_name, kw)
-    if (
-        isinstance(value, str)
-        and len(value) >= 2
-        and value[0] in "\"'"
-        and value[-1] == value[0]
-    ):
+    if isinstance(value, str) and len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
         return value[1:-1]
     return None
 

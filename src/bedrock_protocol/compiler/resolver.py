@@ -62,9 +62,7 @@ def resolve(file: File, file_set: FileSet) -> ResolvedFile:
     by_name: dict[str, Enum | Struct] = {t.name: t for t in all_types}
     # Source declaration order, not enums-then-structs — the layout the C++
     # backend emits depends on this.
-    types: tuple[Enum | Struct, ...] = tuple(
-        by_name[n] for n in file.declaration_order if n in by_name
-    )
+    types: tuple[Enum | Struct, ...] = tuple(by_name[n] for n in file.declaration_order if n in by_name)
     own = frozenset(by_name)
 
     versioned = _versioned_types(types, file, file_set)
@@ -141,10 +139,7 @@ def _topo_order(
     declaration order; the reference graph is acyclic."""
     decl = [t.name for t in types]
     rank = {n: i for i, n in enumerate(decl)}
-    deps = {
-        t.name: (frozenset(_root_of(r) for r in t.referenced) & own) - {t.name}
-        for t in types
-    }
+    deps = {t.name: (frozenset(_root_of(r) for r in t.referenced) & own) - {t.name} for t in types}
     order: list[str] = []
     state: dict[str, int] = {}
 
@@ -239,9 +234,7 @@ def _plan_snapshots(
                 conc = s
             else:
                 own_changed = key != keys[name][previous]
-                dep_changed = any(
-                    dep_concrete(d, s) != dep_concrete(d, previous) for d in deps
-                )
+                dep_changed = any(dep_concrete(d, s) != dep_concrete(d, previous) for d in deps)
                 fresh = own_changed or dep_changed
                 conc = s if fresh else concrete[name][previous]
             concrete[name][s] = conc
@@ -261,9 +254,7 @@ def _plan_snapshots(
     return result
 
 
-def _snapshot_view(
-    t: Enum | Struct, snapshot: int
-) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
+def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
     """A narrowed-to-snapshot view of `t`, plus an identity key that
     determines whether two snapshots share one definition."""
     if isinstance(t, Enum):
@@ -299,11 +290,7 @@ def _snapshot_view(
             version = replace(version, type=rebound)
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
-    dep = (
-        t.deprecated
-        if (t.deprecated is not None and snapshot >= t.deprecated)
-        else None
-    )
+    dep = t.deprecated if (t.deprecated is not None and snapshot >= t.deprecated) else None
     view_s = replace(
         t,
         fields=tuple(narrowed),
@@ -314,8 +301,7 @@ def _snapshot_view(
     return (
         None,
         view_s,
-        tuple(key_parts)
-        + (tuple(enum_key_parts), tuple(nested_struct_key_parts), dep is not None),
+        tuple(key_parts) + (tuple(enum_key_parts), tuple(nested_struct_key_parts), dep is not None),
     )
 
 
@@ -391,11 +377,7 @@ def _narrow_enum_values(values: tuple[Any, ...], snapshot: int) -> tuple[Any, ..
             continue
         if v.until is not None and snapshot >= v.until:
             continue
-        dep = (
-            v.deprecated
-            if (v.deprecated is not None and snapshot >= v.deprecated)
-            else None
-        )
+        dep = v.deprecated if (v.deprecated is not None and snapshot >= v.deprecated) else None
         if v.is_auto:
             num = last_num + 1
         else:
