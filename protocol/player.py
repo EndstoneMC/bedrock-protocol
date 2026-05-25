@@ -1,4 +1,5 @@
-from enum import IntEnum, auto
+import uuid
+from enum import IntEnum
 
 from protocol import (
     bitset,
@@ -7,217 +8,16 @@ from protocol import (
     packet,
     type,
     uint8,
-    uint32,
     uint64,
-    uvarint32,
     uvarint64,
-    value,
     varint32,
 )
-from protocol.actor import ActorUniqueID
-from protocol.common import BlockPos, Color255RGBA, Vec2, Vec3
-from protocol.inventory import (
-    ItemStackRequestData,
-    PackedItemUseLegacyInventoryTransaction,
-)
-from protocol.level import DimensionType
+from protocol.actor import ActorRuntimeID, ActorUniqueID
+from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
+from protocol.input import PlayerActionType, PlayerInputTick
+from protocol.inventory import ItemStackRequestData
 
 package = "bedrock.protocol"
-
-type PlayerInputTick = uvarint64
-
-
-class InputMode(IntEnum):
-    UNDEFINED = 0
-    MOUSE = 1
-    TOUCH = 2
-    GAME_PAD = 3
-    MOTION_CONTROLLER = value(4, deprecated=859)
-    COUNT = auto()
-
-
-class ClientPlayMode(IntEnum):
-    NORMAL = 0
-    TEASER = 1
-    SCREEN = 2
-    VIEWER = value(3, deprecated=859)
-    REALITY = value(4, deprecated=859)
-    PLACEMENT = value(5, deprecated=859)
-    LIVING_ROOM = value(6, deprecated=859)
-    EXIT_LEVEL = 7
-    EXIT_LEVEL_LIVING_ROOM = value(8, deprecated=859)
-    NUM_MODES = auto()
-
-
-@type(since=527)
-class NewInteractionModel(IntEnum):
-    TOUCH = 0
-    CROSSHAIR = 1
-    CLASSIC = 2
-    COUNT = auto()
-
-
-class PlayerActionType(IntEnum):
-    START_DESTROY_BLOCK = 0
-    ABORT_DESTROY_BLOCK = 1
-    STOP_DESTROY_BLOCK = 2
-    GET_UPDATED_BLOCK = 3
-    DROP_ITEM = 4
-    START_SLEEPING = 5
-    STOP_SLEEPING = 6
-    RESPAWN = 7
-    START_JUMP = 8
-    START_SPRINTING = 9
-    STOP_SPRINTING = 10
-    START_SNEAKING = 11
-    STOP_SNEAKING = 12
-    CREATIVE_DESTROY_BLOCK = 13
-    CHANGE_DIMENSION_ACK = 14
-    START_GLIDING = 15
-    STOP_GLIDING = 16
-    DENY_DESTROY_BLOCK = 17
-    CRACK_BLOCK = 18
-    CHANGE_SKIN = 19
-    UPDATED_ENCHANTING_SEED = 20
-    START_SWIMMING = 21
-    STOP_SWIMMING = 22
-    START_SPIN_ATTACK = 23
-    STOP_SPIN_ATTACK = 24
-    INTERACT_WITH_BLOCK = 25
-    PREDICT_DESTROY_BLOCK = 26
-    CONTINUE_DESTROY_BLOCK = 27
-    START_ITEM_USE_ON = 28
-    STOP_ITEM_USE_ON = 29
-    HANDLED_TELEPORT = 30
-    MISSED_SWING = 31
-    START_CRAWLING = 32
-    STOP_CRAWLING = 33
-    START_FLYING = 34
-    STOP_FLYING = 35
-    CLIENT_ACK_SERVER_DATA = 36
-    START_USING_ITEM = 37
-    COUNT = auto()
-
-
-class PlayerBlockActionData:
-    player_action_type: PlayerActionType = field(type=varint32)
-    with field(
-        when=lambda p: (
-            p.player_action_type == PlayerActionType.START_DESTROY_BLOCK
-            or p.player_action_type == PlayerActionType.ABORT_DESTROY_BLOCK
-            or p.player_action_type == PlayerActionType.CRACK_BLOCK
-            or p.player_action_type == PlayerActionType.PREDICT_DESTROY_BLOCK
-            or p.player_action_type == PlayerActionType.CONTINUE_DESTROY_BLOCK
-        )
-    ):
-        pos: BlockPos
-        facing: varint32
-
-
-class PlayerBlockActions:
-    actions: list[PlayerBlockActionData] = field(prefix=varint32)
-
-
-@packet(id=144, since=388)
-class PlayerAuthInputPacket:
-    class InputData(IntEnum):
-        ASCEND = 0
-        DESCEND = 1
-        NORTH_JUMP = value(2, deprecated=685)
-        JUMP_DOWN = 3
-        SPRINT_DOWN = 4
-        CHANGE_HEIGHT = 5
-        JUMPING = 6
-        AUTO_JUMPING_IN_WATER = 7
-        SNEAKING = 8
-        SNEAK_DOWN = 9
-        UP = 10
-        DOWN = 11
-        LEFT = 12
-        RIGHT = 13
-        UP_LEFT = 14
-        UP_RIGHT = 15
-        WANT_UP = 16
-        WANT_DOWN = 17
-        WANT_DOWN_SLOW = 18
-        WANT_UP_SLOW = 19
-        SPRINTING = 20
-        ASCEND_BLOCK = 21
-        DESCEND_BLOCK = 22
-        SNEAK_TOGGLE_DOWN = 23
-        PERSIST_SNEAK = 24
-        START_SPRINTING = 25
-        STOP_SPRINTING = 26
-        START_SNEAKING = 27
-        STOP_SNEAKING = 28
-        START_SWIMMING = 29
-        STOP_SWIMMING = 30
-        START_JUMPING = 31
-        START_GLIDING = 32
-        STOP_GLIDING = 33
-        PERFORM_ITEM_INTERACTION = 34
-        PERFORM_BLOCK_ACTIONS = 35
-        PERFORM_ITEM_STACK_REQUEST = 36
-        HANDLED_TELEPORT = value(37, since=567)
-        EMOTING = value(38, since=575)
-        MISSED_SWING = value(39, since=594)
-        START_CRAWLING = value(40, since=594)
-        STOP_CRAWLING = value(41, since=594)
-        START_FLYING = value(42, since=618)
-        STOP_FLYING = value(43, since=618)
-        CLIENT_ACK_SERVER_DATA = value(44, since=622)
-        IS_IN_CLIENT_PREDICTED_VEHICLE = value(45, since=649)
-        PADDLING_LEFT = value(46, since=662)
-        PADDLING_RIGHT = value(47, since=662)
-        BLOCK_BREAKING_DELAY_ENABLED = value(48, since=685)
-        HORIZONTAL_COLLISION = value(49, since=729)
-        VERTICAL_COLLISION = value(50, since=729)
-        DOWN_LEFT = value(51, since=729)
-        DOWN_RIGHT = value(52, since=729)
-        START_USING_ITEM = value(53, since=748)
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = value(54, since=748, deprecated=859)
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = value(55, since=748, deprecated=859)
-        START_SPIN_ATTACK = value(56, since=748)
-        STOP_SPIN_ATTACK = value(57, since=748)
-        IS_HOTBAR_ONLY_TOUCH = value(58, since=766)
-        JUMP_RELEASED_RAW = value(59, since=766)
-        JUMP_PRESSED_RAW = value(60, since=766)
-        JUMP_CURRENT_RAW = value(61, since=766)
-        SNEAK_RELEASED_RAW = value(62, since=766)
-        SNEAK_PRESSED_RAW = value(63, since=766)
-        SNEAK_CURRENT_RAW = value(64, since=766)
-        INPUT_NUM = auto()
-
-    rot: Vec2
-    pos: Vec3
-    move: Vec2
-    y_head_rot: float
-    input_data: bitset[InputData.INPUT_NUM]
-    input_mode: InputMode = field(type=uvarint32)
-    play_mode: ClientPlayMode = field(type=uvarint32)
-    new_interaction_model: NewInteractionModel = field(type=uvarint32, since=527)
-    vr_gaze_direction: Vec3 = field(  # TODO: confirm against BDS
-        when=lambda p: p.play_mode == ClientPlayMode.REALITY,
-        until=748,
-    )
-    interact_rotation: Vec2 = field(since=748)
-    client_tick: PlayerInputTick = field(since=419)
-    pos_delta: Vec3 = field(since=419)
-    item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_INTERACTION),
-    )
-    item_stack_request: ItemStackRequestData = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_STACK_REQUEST),
-    )
-    player_block_actions: PlayerBlockActions = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_BLOCK_ACTIONS),
-    )
-    with field(when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)):
-        vehicle_rot: Vec2 = field(since=662)
-        client_predicted_vehicle: ActorUniqueID = field(since=649)
-    analog_move_vector: Vec2 = field(since=575)
-    camera_orientation: Vec3 = field(since=748)
-    raw_move_vector: Vec2 = field(since=766)
 
 
 class ActorDataFlagComponent:
@@ -309,106 +109,164 @@ class ServerboundDiagnosticsPacket:
     system_diagnostics: list[SystemDiagnosticTimingInfo] = field(since=975)
 
 
-class BoolAttributeOperation(IntEnum):
-    OVERRIDE = 0
-    ALPHA_BLEND = 1
-    AND = 2
-    NAND = 3
-    OR = 4
-    NOR = 5
-    XOR = 6
-    XNOR = 7
+# ============================================================================
+# Wave 3a additions: helper types + player-related packets
+# ============================================================================
 
 
-class FloatAttributeOperation(IntEnum):
-    OVERRIDE = 0
-    ALPHA_BLEND = 1
-    ADD = 2
-    SUBTRACT = 3
-    MULTIPLY = 4
-    MINIMUM = 5
-    MAXIMUM = 6
+@packet(id=327, since=800)
+class ClientboundControlSchemeSetPacket:
+    """Set the control scheme that the player should use"""
+
+    class Scheme(IntEnum):
+        # BDS: ControlScheme::Scheme.
+        LOCKED_PLAYER_RELATIVE_STRAFE = 0
+        CAMERA_RELATIVE = 1
+        CAMERA_RELATIVE_STRAFE = 2
+        PLAYER_RELATIVE = 3
+        PLAYER_RELATIVE_STRAFE = 4
+
+    control_scheme: Scheme = field(type=uint8)
 
 
-class ColorAttributeOperation(IntEnum):
-    OVERRIDE = 0
-    ALPHA_BLEND = 1
-    ADD = 2
-    SUBTRACT = 3
-    MULTIPLY = 4
+class RewindType(IntEnum):
+    PLAYER = 0
+    VEHICLE = 1
 
 
-class BoolAttributeData:
-    value: bool
-    operation: BoolAttributeOperation = field(type=str)
+# Modeling the v827+ wire shape only -- the pre-v827 era reordered
+# prediction_type and the vehicle fields several times. v975 is the target so
+# the simpler post-v827 shape is sufficient.
+@packet(id=161, since=827)
+class CorrectPlayerMovePredictionPacket:
+    """Sent to a player when their simulation of movement mismatches enough
+    from the server that it wants to correct the client."""
+
+    prediction_type: RewindType = field(type=uint8)
+    pos: Vec3
+    pos_delta: Vec3
+    vehicle_rotation: Vec2
+    vehicle_angular_velocity: float | None
+    on_ground: bool
+    tick: uvarint64
 
 
-class FloatAttributeData:
-    value: float
-    operation: FloatAttributeOperation = field(type=str)
-    constraint_min_value: float | None
-    constraint_max_value: float | None
+@packet(id=19)
+class MovePlayerPacket:
+    """Server-bound and client-bound movement updates for the local player."""
+
+    class PositionMode(IntEnum):
+        # BDS: PlayerPositionModeComponent::PositionMode (uint8 on the wire).
+        NORMAL = 0
+        RESPAWN = 1
+        TELEPORT = 2
+        ONLY_HEAD_ROT = 3
+
+    class TeleportationCause(IntEnum):
+        # BDS: MinecraftEventing::TeleportationCause (int32 on the wire).
+        UNKNOWN = 0
+        PROJECTILE = 1
+        CHORUS_FRUIT = 2
+        COMMAND = 3
+        BEHAVIOR = 4
+
+    player_id: ActorRuntimeID
+    pos: Vec3
+    rot: Vec2
+    y_head_rot: float
+    reset_position: PositionMode = field(type=uint8)
+    on_ground: bool
+    riding_id: ActorRuntimeID
+    cause: TeleportationCause = field(
+        type=int32, when=lambda p: p.reset_position == PositionMode.TELEPORT
+    )
+    source_entity_type: int32 = field(
+        when=lambda p: p.reset_position == PositionMode.TELEPORT
+    )
+    tick: PlayerInputTick = field(since=419)
 
 
-class ColorAttributeData:
-    value: Color255RGBA = field(tag=uvarint32)
-    operation: ColorAttributeOperation = field(type=str)
+@packet(id=34)
+class BlockPickRequestPacket:
+    """Player picks up a block in the world, client to server."""
+
+    pos: BlockPos
+    with_data: bool
+    max_slots: uint8
 
 
-type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
+@packet(id=54)
+class GuiDataPickItemPacket:
+    """The server telling the client what item slot to hover over in the hotbar."""
+
+    item_name: str
+    item_effect_name: str
+    slot: int32 = field(endian="little")
 
 
-class EnvironmentAttributeData:
-    name: str
-    from_attribute: AttributeDataVariant | None = field(tag=uvarint32)
-    attribute: AttributeDataVariant = field(tag=uvarint32)
-    to_attribute: AttributeDataVariant | None = field(tag=uvarint32)
-    current_transition_ticks: uint32
-    total_transition_ticks: uint32
-    easing: str
+# ItemFrameDropItemPacket (id=71, until=662) was removed before v975. The DSL
+# requires a packet redeclaration to use until=. No successor exists at id=71
+# in v975, so drop the gate -- packet is emitted but unused at the v975 target.
+@packet(id=71)
+class ItemFrameDropItemPacket:
+    pos: NetworkBlockPos
 
 
-class AttributeLayerSettings:
-    priority: int32
-    weight: float
-    enabled: bool
-    transitions_paused: bool
+@packet(id=147, since=407)
+class ItemStackRequestPacket:
+    """Carries a batch of item-stack requests from the client."""
+
+    request_batch: list[ItemStackRequestData]
 
 
-class AttributeLayerData:
-    name: str
-    dimension_id: DimensionType
-    settings: AttributeLayerSettings
-    attributes: list[EnvironmentAttributeData]
+@packet(id=176, since=486)
+class PlayerStartItemCooldownPacket:
+    """Packet sent by the player to start the cooldown on an item."""
+
+    item_category: str
+    duration_ticks: varint32
 
 
-class UpdateAttributeLayersData:
-    attribute_layers: list[AttributeLayerData]
+class InventoryLeftTabIndex(IntEnum):
+    NONE = 0
+    RECIPE_CONSTRUCTION = 1
+    RECIPE_EQUIPMENT = 2
+    RECIPE_ITEMS = 3
+    RECIPE_NATURE = 4
+    RECIPE_SEARCH = 5
+    SURVIVAL = 6
 
 
-class UpdateAttributeLayerSettingsData:
-    layer_name: str
-    layer_dimension_id: DimensionType
-    attribute_layer_settings: AttributeLayerSettings
+class InventoryRightTabIndex(IntEnum):
+    NONE = 0
+    FULL_SCREEN = 1
+    CRAFTING = 2
+    ARMOR = 3
 
 
-class UpdateEnvironmentAttributesData:
-    layer_name: str
-    layer_dimension_id: DimensionType
-    attributes: list[EnvironmentAttributeData]
+@type(since=630)
+class InventoryLayout(IntEnum):
+    NONE = 0
+    INVENTORY_ONLY = 1
+    DEFAULT = 2
+    RECIPE_BOOK_ONLY = 3
 
 
-class RemoveEnvironmentAttributesData:
-    layer_name: str
-    layer_dimension_id: DimensionType
-    attributes: list[str]
+@type(since=630)
+class InventoryOptions:
+    left_inventory_tab: InventoryLeftTabIndex = field(type=varint32)
+    right_inventory_tab: InventoryRightTabIndex = field(type=varint32)
+    filtering: bool
+    layout_inv: InventoryLayout = field(type=varint32)
+    layout_craft: InventoryLayout = field(type=varint32)
 
 
-@packet(id=345, since=944)
-class ClientboundAttributeLayerSyncPacket:
-    data: (
-        UpdateAttributeLayersData
-        | UpdateAttributeLayerSettingsData
-        | UpdateEnvironmentAttributesData
-        | RemoveEnvironmentAttributesData
-    ) = field(tag=uvarint32)
+@packet(id=307, since=630)
+class SetPlayerInventoryOptionsPacket:
+    inventory_options: InventoryOptions
+
+
+class PlayerListPacketType(IntEnum):
+    ADD = 0
+    REMOVE = 1
+

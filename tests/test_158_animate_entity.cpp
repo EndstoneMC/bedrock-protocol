@@ -11,7 +11,7 @@ TEST_CASE("AnimateEntityPacket: id + round-trip with a length-prefixed list")
     STATIC_REQUIRE(bp::AnimateEntityPacket::Id == 158);
 
     bp::AnimateEntityPacket pkt;
-    pkt.stop_expression_version = 0;
+    pkt.stop_expression_version = bp::MolangVersion::BeforeVersioning;
     pkt.blend_out_time = 0.0f;
     pkt.runtime_ids = {static_cast<bp::ActorRuntimeID>(1), static_cast<bp::ActorRuntimeID>(2)};
 
