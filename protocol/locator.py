@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, packet, type, uint8, uint32
+from protocol import field, packet, uint8, uint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
 from protocol.level import DimensionType
@@ -21,24 +21,15 @@ class WaypointAction(IntEnum):
     UPDATE = 3
 
 
-@type(until=975)
 class ServerWaypointPayload:
     update_flag: uint32
     is_visible: bool | None
     world_position: WorldPosition | None
-    texture_id: uint32 | None
-    color: uint32 | None  # ARGB packed mce::Color
-    client_position_authority: bool | None
-    actor_id: ActorUniqueID | None
-
-
-@type(since=975)
-class ServerWaypointPayload:  # noqa: F811
-    update_flag: uint32
-    is_visible: bool | None
-    world_position: WorldPosition | None
-    texture_path: str | None
-    icon_size: Vec2 | None
+    # v975 replaced the texture-id ordinal with a texture-path string and added
+    # an icon-size Vec2 alongside it.
+    texture_id: uint32 | None = field(until=975)
+    texture_path: str | None = field(since=975)
+    icon_size: Vec2 | None = field(since=975)
     color: uint32 | None  # ARGB packed mce::Color
     client_position_authority: bool | None
     actor_id: ActorUniqueID | None
