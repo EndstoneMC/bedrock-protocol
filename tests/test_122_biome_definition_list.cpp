@@ -11,17 +11,18 @@ TEST_CASE("BiomeDefinitionListPacket: id + round-trip with two biomes and a stri
     STATIC_REQUIRE(bp::BiomeDefinitionListPacket::Id == 122);
 
     bp::BiomeDefinitionListPacket pkt;
-    pkt.biome_data.emplace(0, bp::BiomeDefinitionData{
+    pkt.indexed_definitions.emplace(0, bp::BiomeDefinitionData{
         /*id=*/1, /*temperature=*/0.5f, /*downfall=*/0.25f,
         /*foliage_snow=*/0.0f, /*depth=*/0.1f, /*scale=*/0.2f,
         /*map_water_color_argb=*/-16777216, /*rain=*/true,
-        /*tags=*/std::nullopt, /*chunk_gen_data=*/std::nullopt,
+        /*tag_indices=*/std::nullopt, /*chunk_gen_data=*/std::nullopt,
     });
-    pkt.biome_data.emplace(1, bp::BiomeDefinitionData{
+    pkt.indexed_definitions.emplace(1, bp::BiomeDefinitionData{
         /*id=*/2, /*temperature=*/0.8f, /*downfall=*/0.0f,
         /*foliage_snow=*/0.0f, /*depth=*/0.3f, /*scale=*/0.4f,
         /*map_water_color_argb=*/-1, /*rain=*/false,
-        /*tags=*/bp::BiomeTagsData{{3, 4}}, /*chunk_gen_data=*/std::nullopt,
+        /*tag_indices=*/bp::BiomeTagsData{{3, 4}},
+        /*chunk_gen_data=*/std::nullopt,
     });
     pkt.string_list.strings = {"plains", "desert", "ocean", "tag_warm", "tag_cold"};
 
@@ -54,13 +55,13 @@ TEST_CASE("BiomeDefinitionListPacket: id + round-trip with two biomes and a stri
     auto rt = bp::deserialize<bp::BiomeDefinitionListPacket>(in);
     REQUIRE(rt.has_value());
     REQUIRE(in.getUnreadLength() == 0);
-    REQUIRE(rt->biome_data.size() == 2);
-    REQUIRE(rt->biome_data.at(0).id == 1);
-    REQUIRE(rt->biome_data.at(0).rain);
-    REQUIRE_FALSE(rt->biome_data.at(0).tags.has_value());
-    REQUIRE(rt->biome_data.at(1).id == 2);
-    REQUIRE(rt->biome_data.at(1).tags.has_value());
-    REQUIRE(rt->biome_data.at(1).tags->tags == std::vector<std::uint16_t>{3, 4});
+    REQUIRE(rt->indexed_definitions.size() == 2);
+    REQUIRE(rt->indexed_definitions.at(0).id == 1);
+    REQUIRE(rt->indexed_definitions.at(0).rain);
+    REQUIRE_FALSE(rt->indexed_definitions.at(0).tag_indices.has_value());
+    REQUIRE(rt->indexed_definitions.at(1).id == 2);
+    REQUIRE(rt->indexed_definitions.at(1).tag_indices.has_value());
+    REQUIRE(rt->indexed_definitions.at(1).tag_indices->tags == std::vector<std::uint16_t>{3, 4});
     REQUIRE(rt->string_list.strings.size() == 5);
     REQUIRE(rt->string_list.strings[0] == "plains");
 }

@@ -7,11 +7,13 @@ add_executable(${PROJECT_NAME}_tests
     test_006_resource_packs_info.cpp
     test_007_resource_pack_stack.cpp
     test_008_resource_pack_client_response.cpp
+    test_010_set_time.cpp
     test_011_start_game.cpp
     test_014_remove_actor.cpp
     test_017_take_item_actor.cpp
     test_018_move_actor_absolute.cpp
     test_019_move_player.cpp
+    test_021_update_block.cpp
     test_022_add_painting.cpp
     test_027_actor_event.cpp
     test_028_mob_effect.cpp
@@ -23,7 +25,9 @@ add_executable(${PROJECT_NAME}_tests
     test_036_player_action.cpp
     test_040_set_actor_motion.cpp
     test_041_set_actor_link.cpp
+    test_043_set_spawn_position.cpp
     test_044_animate.cpp
+    test_045_respawn.cpp
     test_046_container_open.cpp
     test_047_container_close.cpp
     test_049_inventory_content.cpp
@@ -32,13 +36,17 @@ add_executable(${PROJECT_NAME}_tests
     test_052_crafting_data.cpp
     test_054_gui_data_pick_item.cpp
     test_056_block_actor_data.cpp
+    test_060_set_difficulty.cpp
+    test_062_set_player_game_type.cpp
     test_066_spawn_experience_orb.cpp
+    test_070_chunk_radius_updated.cpp
     test_074_boss_event.cpp
     test_081_update_equip.cpp
     test_082_resource_pack_data_info.cpp
     test_083_resource_pack_chunk_data.cpp
     test_084_resource_pack_chunk_request.cpp
     test_086_play_sound.cpp
+    test_087_stop_sound.cpp
     test_088_set_title.cpp
     test_089_add_behavior_tree.cpp
     test_094_sub_client_login.cpp
@@ -78,11 +86,13 @@ add_executable(${PROJECT_NAME}_tests
     test_175_sub_chunk_request.cpp
     test_180_dimension_data.cpp
     test_182_change_mob_property.cpp
+    test_189_death_info.cpp
     test_193_request_network_settings.cpp
     test_199_unlocked_recipes.cpp
     test_302_trim_data.cpp
     test_306_player_toggle_crafter_slot_request.cpp
     test_308_set_hud.cpp
+    test_309_award_achievement.cpp
     test_315_serverbound_diagnostics.cpp
     test_317_container_registry_cleanup.cpp
     test_318_movement_effect.cpp

@@ -4,7 +4,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, uint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
-from protocol.level import DimensionType
+from protocol.dimension import DimensionType
 
 package = "bedrock.protocol"
 

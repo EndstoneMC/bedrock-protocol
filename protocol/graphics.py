@@ -15,7 +15,7 @@ from protocol import (
 )
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
-from protocol.level import DimensionType
+from protocol.dimension import DimensionType
 
 package = "bedrock.protocol"
 

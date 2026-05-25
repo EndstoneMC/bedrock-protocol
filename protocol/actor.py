@@ -20,7 +20,7 @@ from protocol import (
     varint64,
 )
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
-from protocol.level import DimensionType
+from protocol.dimension import DimensionType
 from protocol.molang import MolangVersion
 from protocol.nbt import CompoundTag
 

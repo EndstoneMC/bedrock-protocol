@@ -11,7 +11,7 @@ TEST_CASE("LevelSoundEventPacket: id + round-trip with v975 fire_at_position")
     STATIC_REQUIRE(bp::LevelSoundEventPacket::Id == 123);
 
     bp::LevelSoundEventPacket pkt;
-    pkt.event_id = 4;  // SoundEvent::Jump in BDS LevelSoundEvent enum
+    pkt.event_id = bp::LevelSoundEvent{4};  // SoundEvent::Jump in BDS LevelSoundEvent enum
     pkt.pos = bp::Vec3{0.5f, 64.0f, -1.25f};
     pkt.data = -1;
     pkt.actor_identifier = "minecraft:pig";

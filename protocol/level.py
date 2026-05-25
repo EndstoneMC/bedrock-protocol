@@ -3,76 +3,197 @@ from enum import IntEnum
 from protocol import (
     field,
     int8,
-    int16,
-    int32,
     int64,
     packet,
-    type,
+    uint8,
     uint16,
     uint32,
     uint64,
     uvarint32,
+    uvarint64,
     varint32,
 )
-from protocol.common import BlockPos, SubChunkPos, Vec3
+from protocol.actor import ActorRuntimeID, ActorUniqueID
+from protocol.common import BlockPos, NetworkBlockPos, SubChunkPos, Vec3
+from protocol.dimension import DimensionType
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
-
-type DimensionType = varint32
-
-
-class DimensionDefinition:
-    name: str
-    height_maximum: varint32
-    height_minimum: varint32
-    generator_type: varint32
-    dimension_type: DimensionType = field(since=975)
-
-
-# TODO: absent from EndstoneMC/protocol-docs r26_u3 (v1001) -- renamed or
-# removed after v975. Investigate when bumping past v975 and decide whether
-# to add `until=` here or rename the packet to match BDS r26_u3.
-@packet(id=180, since=503)
-class DimensionDataPacket:
-    definitions: list[DimensionDefinition]
-
-
-@type(since=975)
-class ServerSoundHandle:
-    value: uint64
-
-
-@packet(id=86)
-class PlaySoundPacket:
-    name: str
-    pos: BlockPos
-    volume: float
-    pitch: float
-    server_sound_handle: ServerSoundHandle | None = field(since=975)
-
-
-@packet(id=123, since=332)
-class LevelSoundEventPacket:
-    """Most sounds get launched on server and replicated to clients, but a handful of player
-    initiated sounds are launched on their client and replicated through the network."""
-
-    event_id: uvarint32
-    pos: Vec3
-    data: varint32
-    actor_identifier: str
-    is_baby: bool
-    is_global: bool
-    actor: int64 = field(since=786)
-    fire_at_position: Vec3 | None = field(since=975)
 
 
 @packet(id=56)
 class BlockActorDataPacket:
     """Sends the entire user data compound tag and the block position to the client."""
 
-    pos: BlockPos
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
     data: CompoundTag
+
+
+@packet(id=26)
+class BlockEventPacket:
+    """Whenever a block event happens it is sent from the server to sync client and server, with arbitrarily encoded information in b0 and b1."""
+
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
+    b0: varint32
+    b1: varint32
+
+
+# bedrock-headers android/r26_u2 declares this id as BlockPalette_deprecated in
+# MinecraftPacketIds. Neither CloudburstMC, gophertunnel, nor EndstoneMC/protocol-docs
+# carries a body for it -- the id is allocated but the packet is no longer serialized.
+# Empty stub kept so the id is not silently absent from the v975 enum surface.
+@packet(id=116)
+class BlockPalettePacket:
+    pass
+
+
+@packet(id=70)
+class ChunkRadiusUpdatedPacket:
+    chunk_radius: varint32
+
+
+# ExplodePacket (id=23, removed at v388) is omitted: lone @packet(until=) is
+# not expressible in the DSL today, and the same id is reused by TickSyncPacket
+# in [388, 685).
+
+
+class ChunkPos:
+    x: varint32
+    z: varint32
+
+
+class SubChunkMetadata:
+    blob_id: uint64
+
+
+@packet(id=58)
+class LevelChunkPacket:
+    pos: ChunkPos
+    dimension_id: DimensionType = field(since=649)
+    # At v486+ the uvarint32 sub-chunk count carries two sentinel values:
+    # 0xFFFFFFFF = "request mode limitless" (no trailer), 0xFFFFFFFE = "request
+    # mode limited" followed by a uint16 LE highest-sub-chunk index. The trailer
+    # is gated by comparing the raw wire integer against the sentinel.
+    sub_chunks_count: uvarint32
+    highest_sub_chunk: uint16 = field(
+        when=lambda p: p.sub_chunks_count == 0xFFFFFFFE,
+        since=486,
+    )
+    cache_enabled: bool
+    cache_blobs: list[SubChunkMetadata] = field(when=lambda p: p.cache_enabled)
+    serialized_chunk: bytes
+
+
+type LevelEvent = varint32
+
+
+@packet(id=25)
+class LevelEventPacket:
+    """Splash Potions, weather events, global pause, simlock commands, oh my!"""
+
+    event_id: LevelEvent
+    pos: Vec3
+    data: varint32
+
+
+@packet(id=124, since=361)
+class LevelEventGenericPacket:
+    event_id: LevelEvent
+    data: CompoundTag
+
+
+type LevelSoundEvent = uvarint32
+
+
+@packet(id=123, since=332)
+class LevelSoundEventPacket:
+    """Most sounds get launched on server and replicated to clients, but a handful of player initiated sounds are launched on their client and replicated through the network."""
+
+    event_id: LevelSoundEvent
+    pos: Vec3
+    data: varint32
+    actor_identifier: str
+    is_baby: bool
+    is_global: bool
+    # BDS names this mActor (ActorUniqueID), but the wire encodes it as a little-endian int64,
+    # not the usual varint64.
+    actor: int64 = field(since=786)
+    fire_at_position: Vec3 | None = field(since=975)
+
+
+# LevelSoundEventV1Packet (id=24) and LevelSoundEventV2Packet (id=120, v313..v786)
+# are omitted: both were removed before v975 and the DSL cannot express a lone
+# @packet(until=) today.
+
+
+@packet(id=121, since=313)
+class NetworkChunkPublisherUpdatePacket:
+    """Tells clients to update the chunk view for the local player."""
+
+    position: BlockPos
+    radius: uvarint32
+    server_built_chunks: list[ChunkPos] = field(prefix=uint32, since=544)
+
+
+@packet(id=86)
+class PlaySoundPacket:
+    """This packet is only used via command or script event. This is for 3rd party content."""
+
+    name: str
+    pos: BlockPos
+    volume: float
+    pitch: float
+    server_sound_handle: uint64 | None = field(since=975)
+
+
+@packet(id=69)
+class RequestChunkRadiusPacket:
+    """The client can't just change the view radius without the server's approval, otherwise there could be holes on unrendered area."""
+
+    chunk_radius: varint32
+    max_chunk_radius: uint8 = field(since=582)
+
+
+class PlayerRespawnState(IntEnum):
+    SEARCHING_FOR_SPAWN = 0
+    READY_TO_SPAWN = 1
+    CLIENT_READY_TO_SPAWN = 2
+
+
+@packet(id=45)
+class RespawnPacket:
+    pos: Vec3
+    state: PlayerRespawnState = field(type=uint8, since=388)
+    runtime_id: ActorRuntimeID = field(since=388)
+
+
+class SpawnPositionType(IntEnum):
+    PLAYER_RESPAWN = 0
+    WORLD_SPAWN = 1
+
+
+@packet(id=43)
+class SetSpawnPositionPacket:
+    """When a player logs in or the SetWorldSpawnCommand is used this is sent from the server to the client. Does not change when using a bed, that is a separate packet (RespawnPacket)."""
+
+    spawn_pos_type: SpawnPositionType = field(type=varint32)
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
+    spawn_forced: bool = field(until=407)
+    dimension_type: DimensionType = field(since=407)
+    spawn_block_pos: NetworkBlockPos = field(since=407, until=944)
+    spawn_block_pos: BlockPos = field(since=944)
+
+
+@packet(id=87)
+class StopSoundPacket:
+    """Allows you to stop a sound or all sounds on all clients, only used in a /command."""
+
+    name: str
+    stop_all: bool
+    stop_music_legacy: bool = field(since=712)
 
 
 class SubChunkPosOffset:
@@ -81,249 +202,91 @@ class SubChunkPosOffset:
     z: int8
 
 
+# SubChunkPacket (id=174) is omitted: its v471..v486 incremental wire shapes
+# require cross-struct predicates (the per-entry payload is gated by the
+# packet-level cache_enabled flag) and lone @packet(until=) on the legacy
+# fields. SubChunkRequestPacket (id=175) below covers the request half.
+
+
 @packet(id=175, since=471)
 class SubChunkRequestPacket:
+    """Sent from the client to the server representing a batch of subchunks that the client requests from the server."""
+
     dimension_type: DimensionType
     center_pos: SubChunkPos
     sub_chunk_pos_offsets: list[SubChunkPosOffset] = field(prefix=uint32, since=486)
 
 
-# Expression operators used inside biome scatter / element data; the wire form
-# is varint32 with -1 representing the absent / unknown op.
-type ExpressionOp = varint32
+type BlockRuntimeId = uvarint32
 
 
-class CoordinateEvaluationOrder(IntEnum):
-    XYZ = 0
-    XZY = 1
-    YXZ = 2
-    YZX = 3
-    ZXY = 4
-    ZYX = 5
+class UpdateBlockFlags(IntEnum):
+    """Bit flags packed into the `update_flags` field of UpdateBlock*Packet."""
+
+    NEIGHBORS = 0x01
+    NETWORK = 0x02
+    NO_GRAPHIC = 0x04
+    UNUSED = 0x08
+    PRIORITY = 0x10
 
 
-class RandomDistributionType(IntEnum):
-    SINGLE_VALUED = 0
-    UNIFORM = 1
-    GAUSSIAN = 2
-    INVERSE_GAUSSIAN = 3
-    FIXED_GRID = 4
-    JITTERED_GRID = 5
-    TRIANGLE = 6
+@packet(id=21)
+class UpdateBlockPacket:
+    """This happens often. Luckily, the packets are small."""
+
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
+    runtime_id: BlockRuntimeId
+    update_flags: uvarint32
+    layer: uvarint32
 
 
-class BiomeTemperatureCategory(IntEnum):
-    MEDIUM = 0
-    WARM = 1
-    LUKEWARM = 2
-    COLD = 3
-    FROZEN = 4
+@packet(id=134, since=361)
+class UpdateBlockPropertiesPacket:
+    properties: CompoundTag
 
 
-class VillageType(IntEnum):
-    DESERT = 0
-    ICE = 1
-    SAVANNA = 2
-    TAIGA = 3
-    DEFAULT = 4
+# bedrock-headers declares
+# `ActorBlockSyncMessage { ActorUniqueID mEntityUniqueID; MessageId mMessage; }`
+# but the wire shape from CloudburstMC and gophertunnel encodes the entity id
+# as uvarint64 (ActorRuntimeID), not the zigzag-signed varint64 that
+# ActorUniqueID would use. Wire as ActorRuntimeID + uvarint64 MessageId.
+class ActorBlockSyncMessage:
+    # BDS: ActorBlockSyncMessage::MessageId (uint32_t, written as uvarint32).
+    class MessageId(IntEnum):
+        NONE = 0
+        CREATE = 1
+        DESTROY = 2
+
+    entity_unique_id: ActorRuntimeID
+    message: MessageId = field(type=uvarint64)
 
 
-class BiomeCoordinateData:
-    min_value_type: ExpressionOp
-    min_value: uint16
-    max_value_type: ExpressionOp
-    max_value: uint16
-    grid_offset: uint32
-    grid_step_size: uint32
-    distribution: RandomDistributionType = field(type=varint32)
+@packet(id=110)
+class UpdateBlockSyncedPacket:
+    """Variation of UpdateBlockPacket that includes information to sync entities with renderchunk generation. Occasionally when blocks change a sync message is sent and during the change on the dimension, this packet is sent to the client to alert the update flags and sync info at a specific position."""
+
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
+    runtime_id: BlockRuntimeId
+    update_flags: uvarint32
+    layer: uvarint32
+    entity_block_sync_message: ActorBlockSyncMessage
 
 
-class BiomeScatterParamData:
-    coordinates: list[BiomeCoordinateData]
-    eval_order: CoordinateEvaluationOrder = field(type=varint32)
-    chance_percent_type: ExpressionOp
-    chance_percent: uint16
-    chance_numerator: int32
-    chance_denominator: int32
-    iterations_type: ExpressionOp
-    iterations: uint16
+class UpdateSubChunkNetworkBlockInfo:
+    pos: NetworkBlockPos = field(until=944)
+    pos: BlockPos = field(since=944)
+    runtime_id: uvarint32  # BlockRuntimeId
+    update_flags: uvarint32  # BDS in-memory is `byte mUpdateFlags`; wire is uvarint32
+    sync_message: ActorBlockSyncMessage
 
 
-class BiomeConsolidatedFeatureData:
-    scatter: BiomeScatterParamData
-    feature: uint16
-    identifier: uint16
-    pass_: uint16
-    can_use_internal_feature: bool
+@packet(id=172, since=465)
+class UpdateSubChunkBlocksPacket:
+    """Packet sent for every set of blocks changed in a sub chunk every tick."""
 
-
-class BiomeConsolidatedFeaturesData:
-    features: list[BiomeConsolidatedFeatureData]
-
-
-class BiomeClimateData:
-    temperature: float
-    downfall: float
-    snow_accumulation_min: float
-    snow_accumulation_max: float
-
-
-class BiomeMountainParamsData:
-    steep_block: uint32
-    north_slopes: bool
-    south_slopes: bool
-    west_slopes: bool
-    east_slopes: bool
-    top_slide_enabled: bool
-
-
-class BiomeSurfaceMaterialData:
-    top_block: uint32
-    mid_block: uint32
-    sea_floor_block: uint32
-    foundation_block: uint32
-    sea_block: uint32
-    sea_floor_depth: int32
-
-
-class BiomeElementData:
-    noise_freq_scale: float
-    noise_lower_bound: float
-    noise_upper_bound: float
-    height_min_type: ExpressionOp
-    height_min: uint16
-    height_max_type: ExpressionOp
-    height_max: uint16
-    adjusted_materials: BiomeSurfaceMaterialData
-
-
-class BiomeSurfaceMaterialAdjustmentData:
-    adjustments: list[BiomeElementData]
-
-
-class BiomeWeightedData:
-    biome_identifier: uint16
-    weight: uint32
-
-
-class BiomeConditionalTransformationData:
-    transforms_into: list[BiomeWeightedData]
-    condition_json: uint16
-    min_passing_neighbors: uint32
-
-
-class BiomeWeightedTemperatureData:
-    temperature: BiomeTemperatureCategory = field(type=varint32)
-    weight: uint32
-
-
-class BiomeOverworldGenRulesData:
-    hills_transformations: list[BiomeWeightedData]
-    mutate_transformations: list[BiomeWeightedData]
-    river_transformations: list[BiomeWeightedData]
-    shore_transformations: list[BiomeWeightedData]
-    pre_hills_edge: list[BiomeConditionalTransformationData]
-    post_shore_edge: list[BiomeConditionalTransformationData]
-    climate: list[BiomeWeightedTemperatureData]
-
-
-class BiomeMultinoiseGenRulesData:
-    temperature: float
-    humidity: float
-    altitude: float
-    weirdness: float
-    weight: float
-
-
-class BiomeLegacyWorldGenRulesData:
-    legacy_pre_hills_edge: list[BiomeConditionalTransformationData]
-
-
-class BiomeReplacementData:
-    replacement_biome: uint16
-    dimension: uint16
-    target_biomes: list[uint16]
-    amount: float
-    noise_frequency_scale: float
-    replacement_index: uint32
-
-
-class BiomeReplacementsData:
-    biome_replacements: list[BiomeReplacementData]
-
-
-class BiomeMesaSurfaceData:
-    clay_material: uint32
-    hard_clay_material: uint32
-    bryce_pillars: bool
-    has_forest: bool
-
-
-class BiomeCappedSurfaceData:
-    floor_blocks: list[uint32]
-    ceiling_blocks: list[uint32]
-    sea_block: uint32 | None
-    foundation_block: uint32 | None
-    beach_block: uint32 | None
-
-
-class BiomeNoiseGradientSurfaceData:
-    non_replaceable_blocks: list[uint32]
-    gradient_blocks: list[uint32]
-    noise_seed_string: str
-    first_octave: int32
-    amplitudes: list[float]
-
-
-class BiomeSurfaceBuilderData:
-    surface_materials: BiomeSurfaceMaterialData | None
-    has_default_overworld_surface: bool
-    has_swamp_surface: bool
-    has_frozen_ocean_surface: bool
-    has_the_end_surface: bool
-    mesa_surface: BiomeMesaSurfaceData | None
-    capped_surface: BiomeCappedSurfaceData | None
-    noise_gradient_surface: BiomeNoiseGradientSurfaceData | None
-
-
-class BiomeDefinitionChunkGenData:
-    climate: BiomeClimateData | None
-    consolidated_features: BiomeConsolidatedFeaturesData | None
-    mountain_params: BiomeMountainParamsData | None
-    surface_material_adjustments: BiomeSurfaceMaterialAdjustmentData | None
-    overworld_gen_rules: BiomeOverworldGenRulesData | None
-    multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
-    legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
-    replace_biomes: BiomeReplacementsData | None
-    village_type: VillageType | None = field(type=int8)
-    surface_builder_data: BiomeSurfaceBuilderData | None
-    subsurface_builder_data: BiomeSurfaceBuilderData | None
-
-
-class BiomeTagsData:
-    tags: list[uint16]
-
-
-class BiomeDefinitionData:
-    id: int16
-    temperature: float
-    downfall: float
-    foliage_snow: float
-    depth: float
-    scale: float
-    map_water_color_argb: int32
-    rain: bool
-    tags: BiomeTagsData | None
-    chunk_gen_data: BiomeDefinitionChunkGenData | None
-
-
-class BiomeStringList:
-    strings: list[str]
-
-
-@packet(id=122)
-class BiomeDefinitionListPacket:
-    """Sent by the server to tell the client about the biomes that are available."""
-
-    biome_data: dict[uint16, BiomeDefinitionData] = field(prefix=uvarint32)
-    string_list: BiomeStringList
+    sub_chunk_block_position: NetworkBlockPos = field(until=944)
+    sub_chunk_block_position: BlockPos = field(since=944)
+    standards: list[UpdateSubChunkNetworkBlockInfo]
+    extras: list[UpdateSubChunkNetworkBlockInfo]

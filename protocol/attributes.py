@@ -3,7 +3,7 @@ from enum import IntEnum
 from protocol import field, int32, packet, type, uint32, uvarint32, uvarint64
 from protocol.actor import ActorRuntimeID
 from protocol.common import Color255RGBA
-from protocol.level import DimensionType
+from protocol.dimension import DimensionType
 
 package = "bedrock.protocol"
 
