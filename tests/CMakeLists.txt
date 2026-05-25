@@ -1,7 +1,11 @@
 add_executable(${PROJECT_NAME}_tests
     test_001_login.cpp
     test_002_play_status.cpp
+    test_003_server_to_client_handshake.cpp
+    test_004_client_to_server_handshake.cpp
     test_005_disconnect.cpp
+    test_006_resource_packs_info.cpp
+    test_007_resource_pack_stack.cpp
     test_008_resource_pack_client_response.cpp
     test_011_start_game.cpp
     test_018_move_actor_absolute.cpp
@@ -13,16 +17,25 @@ add_executable(${PROJECT_NAME}_tests
     test_050_inventory_slot.cpp
     test_052_crafting_data.cpp
     test_056_block_actor_data.cpp
+    test_082_resource_pack_data_info.cpp
+    test_083_resource_pack_chunk_data.cpp
+    test_084_resource_pack_chunk_request.cpp
     test_086_play_sound.cpp
     test_094_sub_client_login.cpp
     test_097_book_edit.cpp
+    test_113_set_local_player_as_initialized.cpp
+    test_115_network_stack_latency.cpp
     test_119_available_actor_identifiers.cpp
     test_122_biome_definition_list.cpp
     test_123_level_sound_event.cpp
+    test_129_client_cache_status.cpp
+    test_135_client_cache_blob_status.cpp
+    test_136_client_cache_miss_response.cpp
     test_143_network_settings.cpp
     test_144_player_auth_input.cpp
     test_146_player_enchant_options.cpp
     test_152_emote_list.cpp
+    test_156_packet_violation_warning.cpp
     test_158_animate_entity.cpp
     test_175_sub_chunk_request.cpp
     test_180_dimension_data.cpp
@@ -33,6 +46,7 @@ add_executable(${PROJECT_NAME}_tests
     test_323_update_client_options.cpp
     test_328_primitive_shapes.cpp
     test_331_graphics_override_parameter.cpp
+    test_340_resource_packs_ready_for_validation.cpp
     test_341_locator_bar.cpp
     test_342_party_changed.cpp
     test_345_clientbound_attribute_layer_sync.cpp
