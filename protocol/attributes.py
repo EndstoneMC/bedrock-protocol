@@ -108,6 +108,8 @@ class EnvironmentAttributeData:
     current_transition_ticks: uint32
     total_transition_ticks: uint32
     easing: str
+    local_transition_ticks: uint32 = field(since=1001)
+    noise_transition: bool = field(since=1001)
 
 
 class AttributeLayerSettings:
@@ -119,6 +121,7 @@ class AttributeLayerSettings:
 
 class AttributeLayerData:
     name: str
+    noise_name: str | None = field(since=1001)
     dimension_id: DimensionType
     settings: AttributeLayerSettings
     attributes: list[EnvironmentAttributeData]

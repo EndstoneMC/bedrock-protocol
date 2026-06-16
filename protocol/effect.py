@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int64, packet, uint8, uvarint32, uvarint64, varint32
+from protocol import field, int64, packet, uint8, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorRuntimeID
 
 package = "bedrock.protocol"
@@ -31,6 +31,7 @@ class MovementEffectType(IntEnum):
     INVALID = -1
     GLIDE_BOOST = 0
     DOLPHIN_BOOST = 1
+    GEYSER_BOOST = value(2, since=1001)
 
 
 @packet(id=318, since=748)

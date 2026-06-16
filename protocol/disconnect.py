@@ -148,6 +148,8 @@ class DisconnectFailReason(IntEnum):
     NONCE_NOT_FOUND = value(137, since=975)
     NONCE_EXPIRED = value(138, since=975)
     NONCE_NOT_VALID = value(139, since=975)
+    HOST_DISCONNECTED = value(140, since=1001)
+    EDITOR_JOIN_INTENT_POLICY_FAILURE = value(141, since=1001)
 
 
 class DisconnectPacketMessages:

@@ -14,7 +14,7 @@ from protocol import (
     varint32,
 )
 from protocol.actor import ActorUniqueID
-from protocol.common import Color, Vec3
+from protocol.common import Color, Vec2, Vec3
 from protocol.dimension import DimensionType
 
 package = "bedrock.protocol"
@@ -83,6 +83,10 @@ class ScriptPrimitiveShapeType(IntEnum):
     CIRCLE = 3
     TEXT = 4
     ARROW = 5
+    CYLINDER = value(6, since=1001)
+    PYRAMID = value(7, since=1001)
+    ELLIPSOID = value(8, since=1001)
+    CONE = value(9, since=1001)
 
 
 @type(since=975)
@@ -110,6 +114,34 @@ class SphereDataPayload:
 
 @type(since=975)
 class CircleDataPayload:
+    num_segments: uint8
+
+
+@type(since=1001)
+class CylinderDataPayload:
+    radius_x: Vec2
+    radius_z: Vec2
+    height: float
+    num_segments: uint8
+
+
+@type(since=1001)
+class PyramidDataPayload:
+    width: float
+    depth: float | None
+    height: float
+
+
+@type(since=1001)
+class EllipsoidDataPayload:
+    radii: Vec3
+    segments_per_axis: uint8
+
+
+@type(since=1001)
+class ConeDataPayload:
+    radii: Vec2
+    height: float
     num_segments: uint8
 
 
@@ -145,7 +177,8 @@ class PrimitiveShapeDataPayload:
     attached_to_id: ActorUniqueID | None = field(since=924)
     # Pre-v859, the variant payload was inlined as a fixed sequence of optionals per shape kind
     # rather than tag-discriminated. The since=859 codec switches to writing a uvarint payload
-    # type ahead of the variant body.
+    # type ahead of the variant body. v1001 grew the discriminant with cylinder, pyramid,
+    # ellipsoid, and cone shape payloads.
     extra_data_payload: (
         None
         | ArrowDataPayload
@@ -154,7 +187,20 @@ class PrimitiveShapeDataPayload:
         | LineDataPayload
         | SphereDataPayload
         | CircleDataPayload
-    ) = field(tag=uint8, since=859)
+    ) = field(tag=uint8, since=859, until=1001)
+    extra_data_payload: (
+        None
+        | ArrowDataPayload
+        | TextDataPayload
+        | BoxDataPayload
+        | LineDataPayload
+        | SphereDataPayload
+        | CircleDataPayload
+        | CylinderDataPayload
+        | PyramidDataPayload
+        | EllipsoidDataPayload
+        | ConeDataPayload
+    ) = field(tag=uint8, since=1001)
 
 
 @packet(id=328, since=975)
@@ -228,6 +274,7 @@ class GraphicsOverrideParameterPacket:
     float_value: float | None = field(since=924)
     vec3_value: Vec3 | None = field(since=924)
     biome_id: str
+    player_identifier: str | None = field(since=1001)
     parameter_id: GraphicsOverrideParameterType = field(type=uint8)
     reset_parameter: bool
 

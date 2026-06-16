@@ -5,6 +5,7 @@ from protocol import (
     int8,
     int64,
     packet,
+    type,
     uint8,
     uint16,
     uint32,
@@ -111,7 +112,10 @@ type LevelSoundEvent = uvarint32
 class LevelSoundEventPacket:
     """Most sounds get launched on server and replicated to clients, but a handful of player initiated sounds are launched on their client and replicated through the network."""
 
-    event_id: LevelSoundEvent
+    # v1001 replaced the uvarint32 enum ordinal with the lower-cased sound-event
+    # name as a length-prefixed string (e.g. "item.use.on", "fall.big").
+    event_id: LevelSoundEvent = field(until=1001)
+    event_id: str = field(since=1001)
     pos: Vec3
     data: varint32
     actor_identifier: str
@@ -146,6 +150,17 @@ class PlaySoundPacket:
     volume: float
     pitch: float
     server_sound_handle: uint64 | None = field(since=975)
+
+
+@type(since=1001)
+class SoundDataEvent(IntEnum):
+    STOP = 0
+
+
+@packet(id=348, since=1001)
+class ClientboundUpdateSoundDataPacket:
+    server_sound_handle: uint64
+    sound_event: SoundDataEvent = field(type=str)
 
 
 @packet(id=69)

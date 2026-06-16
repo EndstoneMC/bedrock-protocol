@@ -632,26 +632,29 @@ class PhotoTransferPacket:
     new_photo_name: str = field(since=465)
 
 
-# BDS models the payload as a std::variant<StartVideoCapture, StopVideoCapture>,
-# where the byte on the wire is the variant index. CloudburstMC has the inverse
-# mapping (STOP=0, START=1), but we follow BDS.
-class PlayerVideoCaptureAction(IntEnum):
-    START_VIDEO_CAPTURE = 0
-    STOP_VIDEO_CAPTURE = 1
+class StartVideoCapture:
+    frame_rate: uint32
+    file_prefix: str
+
+
+class StopVideoCapture:
+    pass
 
 
 @packet(id=324, since=786)
 class PlayerVideoCapturePacket:
     """Used by a test command to start/stop video capture."""
 
+    # BDS models the payload as a std::variant<StartVideoCapture, StopVideoCapture>,
+    # the byte on the wire being the variant index. CloudburstMC has the inverse
+    # mapping (STOP=0, START=1), but we follow BDS.
+    #
     # TODO: sources disagree on the variant-tag wire width. gophertunnel and
     # CloudburstMC encode a 1-byte tag; protocol-docs JSON says `uvarint32`;
     # the bedrock-protocol-docs HTML labels the control value `uint32`. BDS
     # has a std::variant whose cereal serialization is not visible from the
     # header. Drafted as uint8 (matches both other reference libraries).
-    action: PlayerVideoCaptureAction = field(type=uint8)
-    frame_rate: uint32 = field(when=lambda p: p.action == PlayerVideoCaptureAction.START_VIDEO_CAPTURE)
-    file_prefix: str = field(when=lambda p: p.action == PlayerVideoCaptureAction.START_VIDEO_CAPTURE)
+    params: StartVideoCapture | StopVideoCapture = field(tag=uint8)
 
 
 @packet(id=92)

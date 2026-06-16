@@ -3,7 +3,7 @@
 from enum import auto
 from typing import Any, TypeAliasType, Union
 
-__version__ = 975
+__version__ = 1001
 
 
 def _identity(cls):

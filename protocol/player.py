@@ -51,6 +51,26 @@ class PartyChangedPacket:
     party_info: PlayerPartyInfo | None
 
 
+@type(since=1001)
+class PartyDestinationCookieIntent(IntEnum):
+    NOTIFY = 0
+    OPT_IN = 1
+    OPT_OUT = 2
+
+
+@packet(id=349, since=1001)
+class SendPartyDestinationCookiePacket:
+    cookie: str
+    intent: PartyDestinationCookieIntent = field(type=str)
+    destination_name: str
+
+
+@packet(id=350, since=1001)
+class PartyDestinationCookieResponsePacket:
+    cookie: str
+    accepted: bool
+
+
 @type(since=786)
 class GraphicsMode(IntEnum):
     SIMPLE = 0
@@ -92,6 +112,15 @@ class SystemDiagnosticTimingInfo:
     percent_of_total: uint8
 
 
+@type(since=1001)
+class WhiskerScopeDataSummary:
+    label: str
+    indentation: str
+    total_high_cost_ns: uint64
+    total_mid_cost_ns: uint64
+    total_low_cost_ns: uint64
+
+
 @packet(id=315, since=712)
 class ServerboundDiagnosticsPacket:
     avg_fps: float
@@ -106,6 +135,7 @@ class ServerboundDiagnosticsPacket:
     memory_category_values: list[MemoryCategoryCounter] = field(since=924)
     entity_diagnostics: list[EntityDiagnosticTimingInfo] = field(since=975)
     system_diagnostics: list[SystemDiagnosticTimingInfo] = field(since=975)
+    whisker_scopes: list[WhiskerScopeDataSummary] = field(since=1001)
 
 
 # ============================================================================
