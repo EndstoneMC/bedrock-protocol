@@ -115,11 +115,46 @@ newly-appearing packet the DSL already models, diff the dump's
 post-cereal shape against the DSL's existing shape and **date the delta
 against the production references** (gophertunnel, CloudburstMC/Protocol,
 Nukkit-MOT), then gate it with `since=N`. v1001 alone flattened
-`BossEventPacket` (dropping `darken_screen`, narrowing colour/overlay to
-a byte), reordered `SubChunkRequestPacket` and swapped its offset prefix
-to `uvarint32`, and interleaved `ClientCacheBlobStatusPacket`'s two
-lists -- every one of them an added file in the dump, every one a real
-wire change.
+`BossEventPacket` (dropping `darken_screen`), reordered
+`SubChunkRequestPacket` and swapped its offset prefix to `uvarint32`,
+and interleaved `ClientCacheBlobStatusPacket`'s two lists -- every one
+of them an added file in the dump, every one a real wire change.
+
+### Reference width is byte-aliased -- never read a discriminator's width off a community lib
+
+BDS `cereal` writes a `std::variant` discriminator, and most small
+scoped enums, as a **`uvarint32`**. gophertunnel, CloudburstMC, and
+Nukkit-MOT routinely model the same field as a `uint8` (a single fixed
+byte). For any value that fits in 7 bits (0-127) -- which covers nearly
+every variant index and small enum -- `uvarint32` and `uint8` encode to
+the **identical byte**, so the community libs are byte-indistinguishable
+from the truth and **carry no information about the width**. A
+serializer calling `io.Uint8(&x)` is not evidence the field is one byte
+wide, and a "narrowing from `uvarint32` to `uint8`" reported across
+versions is almost always an artifact of this aliasing, not a real
+Mojang change. (v1001's `BossEventPacket` flattened from a union to a
+flat layout and dropped `darken_screen` -- both real and observable --
+but the refs *also* showed its `event_type`/`colour`/`overlay` as
+`uint8`; those are aliased and stay `uvarint32`.)
+
+Consequences:
+- Default a variant discriminator and a small enum to `uvarint32`. In
+  the DSL a bare `A | B` union already does this -- never write
+  `tag=uint8`, and do not "correct" a width down to `uint8` because a
+  reference shows a byte.
+- The aliasing only hides **single-byte-range** differences. A
+  multi-byte gap is still observable and the references are reliable
+  there: a fixed `uint32` length prefix (4 bytes) versus a `uvarint32`
+  one (1 byte for small counts) genuinely differ on the wire, so a
+  `uint32` -> `uvarint32` prefix change IS a real, ref-confirmable
+  change. Keep the two straight -- distrust the refs on
+  discriminator / enum *width*, trust them on field order, presence,
+  and wide fixed-width prefixes.
+- When a discriminator or enum width actually matters, the only
+  authority is BDS: confirm the enum's underlying type / the
+  `std::variant` against `bedrock-headers`, or disassemble the cereal
+  serializer. The community libs cannot answer the question -- they are
+  byte-aliased by construction.
 
 ## What the DSL diff looks like
 
