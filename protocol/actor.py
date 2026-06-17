@@ -441,26 +441,34 @@ class BossBarOverlay(IntEnum):
     NOTCHED_20 = 4
 
 
-@packet(id=74)
+# COMPILER_EXTENSION_NEEDED: the v1001 cereal migration flattens this
+# event-type-discriminated union into a layout that always writes every field
+# (and drops darken_screen). That flat form orders `player_id` BEFORE
+# `event_type` (per protocol-docs r26_u3), but the pre-1001 union must keep
+# `event_type` first so the `when=` gates can discriminate on it. The
+# redeclaration resolver (parser.py) merges a redeclared class to one canonical
+# field order -- the latest declaration's -- and applies it to every version, so
+# it would emit the pre-1001 wire in the flat v1001 order and reject the union's
+# `when=` (which would reference a field declared after it). Modelling this needs
+# per-version field ordering in redeclared classes. Until then this packet does
+# not codegen; the two forms below are the intended v1001 wire shape, kept as the
+# spec.
+@packet(id=74, until=1001)
 class BossEventPacket:
     """Sent when a boss gets updated"""
 
     boss_id: ActorUniqueID
     event_type: BossEventUpdateType = field(type=uvarint32)
 
-    player_id: ActorUniqueID = field(
-        when=lambda p: (
-            p.event_type == BossEventUpdateType.PLAYER_ADDED or p.event_type == BossEventUpdateType.PLAYER_REMOVED
-        ),
-        until=486,
-    )
+    # player_id is also written for QUERY from 486 on; QUERY (value 8) does not
+    # exist before 486, so this single condition is exact across all versions
+    # (a version-redeclaration here is disallowed once the packet itself is one).
     player_id: ActorUniqueID = field(
         when=lambda p: (
             p.event_type == BossEventUpdateType.PLAYER_ADDED
             or p.event_type == BossEventUpdateType.PLAYER_REMOVED
             or p.event_type == BossEventUpdateType.QUERY
         ),
-        since=486,
     )
 
     # Pre-776: a single `name` field gated on ADD or UPDATE_NAME. From 776 BDS
@@ -490,6 +498,24 @@ class BossEventPacket:
     ):
         color: BossBarColor = field(type=uvarint32)
         overlay: BossBarOverlay = field(type=uvarint32)
+
+
+# v1001 (cereal migration): flat layout, every field always written,
+# darken_screen dropped. event_type / color / overlay stay uvarint32 -- the
+# small-enum byte-aliasing makes the reference libraries' uint8 indistinguishable
+# from the cereal uvarint32 (all values fit in one byte either way).
+@packet(id=74, since=1001)
+class BossEventPacket:  # noqa: F811
+    """Sent when a boss gets updated"""
+
+    boss_id: ActorUniqueID
+    player_id: ActorUniqueID
+    event_type: BossEventUpdateType = field(type=uvarint32)
+    name: str
+    filtered_name: str
+    health_percent: float
+    color: BossBarColor = field(type=uvarint32)
+    overlay: BossBarOverlay = field(type=uvarint32)
 
 
 @packet(id=182, since=503)

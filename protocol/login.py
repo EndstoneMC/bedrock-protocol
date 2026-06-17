@@ -6,7 +6,7 @@ from protocol.actor import ActorRuntimeID
 package = "bedrock.protocol"
 
 
-@packet(id=135, since=361)
+@packet(id=135, since=361, until=1001)
 class ClientCacheBlobStatusPacket:
     """Client Cache Blob Status Packet. Sent periodically by the client to
     update the server on which blob it has (ACK) and which blobs it is lacking
@@ -16,6 +16,19 @@ class ClientCacheBlobStatusPacket:
     found_count: uvarint32
     missing_ids: list[uint64] = field(count=lambda p: p.missing_count)
     found_ids: list[uint64] = field(count=lambda p: p.found_count)
+
+
+# v1001 (cereal migration): the leading missing/found counts gave way to two
+# ordinary uvarint32-prefixed lists, so each count now immediately precedes its
+# own elements instead of both counts being written up front.
+@packet(id=135, since=1001)
+class ClientCacheBlobStatusPacket:  # noqa: F811
+    """Client Cache Blob Status Packet. Sent periodically by the client to
+    update the server on which blob it has (ACK) and which blobs it is lacking
+    (MISS)."""
+
+    missing_ids: list[uint64]
+    found_ids: list[uint64]
 
 
 class MissingBlobData:
