@@ -187,7 +187,7 @@ class PrimitiveShapeDataPayload:
         | LineDataPayload
         | SphereDataPayload
         | CircleDataPayload
-    ) = field(tag=uint8, since=859, until=1001)
+    ) = field(since=859, until=1001)
     extra_data_payload: (
         None
         | ArrowDataPayload
@@ -200,7 +200,7 @@ class PrimitiveShapeDataPayload:
         | PyramidDataPayload
         | EllipsoidDataPayload
         | ConeDataPayload
-    ) = field(tag=uint8, since=1001)
+    ) = field(since=1001)
 
 
 @packet(id=328, since=975)

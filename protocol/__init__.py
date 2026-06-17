@@ -96,16 +96,24 @@ def field(
       `-`. Use this for inline arrays sized by sibling fields (BDS's shaped
       recipe grid, for instance, is `width * height` ingredients with no
       separate count on the wire).
-    - `tag`: integer primitive that prefixes the active-case index of a
-      multi-case union on the wire (default `uvarint32`). Applies to a
-      `T1 | T2 | T3 | ...` annotation, including inline unions inside a
-      `list[T1 | T2 | T3]` -- each list element carries its own tag. Has
-      no effect on a `T | None` optional. The field's resolved type must
-      contain a multi-case union or `tag=` is an error.
+    - `tag`: the discriminator for a multi-case union. A `T1 | T2 | T3 | ...`
+      annotation -- including an inline union inside a `list[T1 | T2 | T3]`,
+      where each element carries its own tag -- is always prefixed on the wire
+      by a `uvarint32` active-case index. That width is fixed, so a plain
+      `std::variant` field needs no `tag=` at all: leave it off and the union
+      takes the default. Do not pass an integer primitive to set the width.
+      `tag=uvarint32` is redundant and `tag=uint8` (or any other width) is not
+      a real Bedrock variant encoding. The parser still accepts an integer
+      primitive for flexibility, but a bare union is the idiom.
 
-      An `IntEnum` is also accepted: the wire form stays `varint32` and
-      the enum's members supply the C++ case labels (`EnumName::MEMBER`),
-      one-to-one with the union alternatives in declaration order.
+      Pass an `IntEnum` for the one job `tag=` still does: an enum-discriminated
+      union, where the wire form becomes `varint32` (zigzag, matching BDS's
+      recipe / action enums) and the enum's members supply the C++ case labels
+      (`EnumName::MEMBER`), one-to-one with the union alternatives in
+      declaration order.
+
+      `tag=` has no effect on a `T | None` optional, and the field's resolved
+      type must contain a multi-case union or `tag=` is an error.
 
     `with field(when=lambda p: ...):` may also be written as a statement in a
     struct body: every field declared inside the block is gated by the shared

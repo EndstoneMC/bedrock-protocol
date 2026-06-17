@@ -211,10 +211,16 @@ class ServerConfiguration:
         scenario_id: str
         server_id: str
 
-    @type(since=944)
+    @type(since=944, until=1001)
     class PresenceConfiguration:
         experience_name: str
         world_name: str
+
+    @type(since=1001)
+    class PresenceConfiguration:  # noqa: F811
+        experience_name: str | None
+        world_name: str | None
+        rich_presence_id: str
 
     @type(since=944)
     class ClientStoreEntryPointConfiguration:
@@ -645,16 +651,7 @@ class StopVideoCapture:
 class PlayerVideoCapturePacket:
     """Used by a test command to start/stop video capture."""
 
-    # BDS models the payload as a std::variant<StartVideoCapture, StopVideoCapture>,
-    # the byte on the wire being the variant index. CloudburstMC has the inverse
-    # mapping (STOP=0, START=1), but we follow BDS.
-    #
-    # TODO: sources disagree on the variant-tag wire width. gophertunnel and
-    # CloudburstMC encode a 1-byte tag; protocol-docs JSON says `uvarint32`;
-    # the bedrock-protocol-docs HTML labels the control value `uint32`. BDS
-    # has a std::variant whose cereal serialization is not visible from the
-    # header. Drafted as uint8 (matches both other reference libraries).
-    params: StartVideoCapture | StopVideoCapture = field(tag=uint8)
+    params: StartVideoCapture | StopVideoCapture
 
 
 @packet(id=92)
@@ -946,7 +943,7 @@ class SyncWorldClocksPacket:
         | SyncWorldClocksInitializeRegistryData
         | SyncWorldClocksAddTimeMarkerData
         | SyncWorldClocksRemoveTimeMarkerData
-    ) = field(tag=uvarint32)
+    )
 
 
 class TextPacketType(IntEnum):

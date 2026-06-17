@@ -1,4 +1,4 @@
-from protocol import field, packet, uint8, uvarint32, varint32
+from protocol import field, packet, uint8, varint32
 
 package = "bedrock.protocol"
 
@@ -44,7 +44,7 @@ class BookEditPacket:
         | BookEditAction.DeletePage
         | BookEditAction.SwapPages
         | BookEditAction.Finalize
-    ) = field(tag=uint8)
+    )
 
 
 @packet(id=97, since=924)
@@ -59,4 +59,4 @@ class BookEditPacket:  # noqa: F811
         | BookEditAction.DeletePage
         | BookEditAction.SwapPages
         | BookEditAction.Finalize
-    ) = field(tag=uvarint32)
+    )

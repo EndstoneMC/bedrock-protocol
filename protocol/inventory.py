@@ -307,7 +307,7 @@ type ItemDescriptor = (
 
 
 class ItemDescriptorCount:
-    descriptor: ItemDescriptor = field(tag=uint8)
+    descriptor: ItemDescriptor
     count: varint32
 
 

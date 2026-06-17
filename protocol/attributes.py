@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint32, uvarint32, uvarint64
+from protocol import field, int32, packet, type, uint32, uvarint64
 from protocol.actor import ActorRuntimeID
 from protocol.common import Color255RGBA
 from protocol.dimension import DimensionType
@@ -93,7 +93,7 @@ class FloatAttributeData:
 
 
 class ColorAttributeData:
-    value: Color255RGBA = field(tag=uvarint32)
+    value: Color255RGBA
     operation: ColorAttributeOperation = field(type=str)
 
 
@@ -102,9 +102,9 @@ type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttrib
 
 class EnvironmentAttributeData:
     name: str
-    from_attribute: AttributeDataVariant | None = field(tag=uvarint32)
-    attribute: AttributeDataVariant = field(tag=uvarint32)
-    to_attribute: AttributeDataVariant | None = field(tag=uvarint32)
+    from_attribute: AttributeDataVariant | None
+    attribute: AttributeDataVariant
+    to_attribute: AttributeDataVariant | None
     current_transition_ticks: uint32
     total_transition_ticks: uint32
     easing: str
@@ -156,4 +156,4 @@ class ClientboundAttributeLayerSyncPacket:
         | UpdateAttributeLayerSettingsData
         | UpdateEnvironmentAttributesData
         | RemoveEnvironmentAttributesData
-    ) = field(tag=uvarint32)
+    )
