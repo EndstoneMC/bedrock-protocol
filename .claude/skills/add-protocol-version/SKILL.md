@@ -34,11 +34,15 @@ confirms the change against a second:
    This is where the bulk of additions and shape changes surface
    field-by-field.
 
-2. **`CloudburstMC/Nukkit`** -- treat as a protocol-only reference.
-   The server itself is effectively dead, but the project is kept
-   alive specifically to mirror Mojang's wire changes. The bedrock
-   adapter modules show the same updates Endstone's dump captures,
-   often with clearer commit messages.
+2. **`CloudburstMC/Nukkit`** -- a protocol-tracking reference. Its
+   gameplay server is barely maintained, but the protocol layer stays
+   current (it tracked v1001 / 1.26.30 within a day of release), and
+   the commit messages on each wire change are often clearer than the
+   dump. Two cautions: it is a *server*, so client-to-server and many
+   server-to-client packets have stubbed `decode()`/`encode()` or no
+   class at all -- a missing or flat-placeholder packet here is
+   silence, not evidence -- and it only models gameplay packets, so the
+   test / debug / editor long tail is absent.
 
 ### Cross-validation (don't trust either source alone)
 
@@ -54,6 +58,18 @@ confirms the change against a second:
    it, but the project's update cadence is slower: the latest
    protocol bumps land here last and the diff between current schema
    and the snapshot we're targeting is often incomplete.
+
+5. **`MemoriesOfTime/Nukkit-MOT`** -- an actively maintained,
+   production-used multi-version server (a separate Nukkit fork from
+   CloudburstMC/Nukkit). It carries many protocol versions in one tree
+   behind `if (protocol >= NNN)` branches, so those branches *date* a
+   wire change precisely, and it is usually among the first to track a
+   new BDS release (it had v1001 / 1.26.30 the day after release). That
+   makes it the strongest cross-check exactly where Protocol and
+   gophertunnel are weakest -- the freshest versions. Same two cautions
+   as CloudburstMC/Nukkit: server-side stubs, and gameplay packets only.
+   Never a naming source (CLAUDE.md rule 12) -- Nukkit naming is
+   community, not BDS.
 
 ### Watch for in-progress work
 
@@ -71,12 +87,39 @@ that it came from a branch and may shift before merge.
 
 ### Disagreement is a stop sign, not a vote
 
-When the four sources disagree about a field's name, type, presence,
+When the sources disagree about a field's name, type, presence,
 or wire position, do not pick one. Pause and surface the discrepancy
 to the user. This rule is identical to CLAUDE.md rule 7: the
 protocol-docs JSON is mechanically dumped and is sometimes wrong, but
 silently overriding it with gophertunnel or CloudburstMC just buries
 the conflict.
+
+### A new file in the dump is a cerealisation, not a freebie
+
+`EndstoneMC/protocol-docs` only emits packets that go through Mojang's
+`cereal` reflective serializer. A still-hand-written packet
+(`read()` / `write()`) is **absent from the dump entirely**, so when
+Mojang migrates a packet to cereal it shows up as a *new file* at that
+version -- and that migration frequently **rewrites the wire format**:
+field reorder, prefix-width swaps (fixed `uint32` -> `uvarint32`),
+optional handling, dropped fields, or a discriminated union collapsing
+to a flat layout.
+
+So an added file in the `old..new` diff is not "the dumper finally
+noticed an unchanged packet" -- it is the **highest-risk** kind of
+change. Never assume the wire is unchanged just because the dump entry
+is new, and never trust the dump's flattened view of what used to be a
+union -- it cannot represent per-case gating, so it lists every variant
+field as if always present and silently drops some. For every
+newly-appearing packet the DSL already models, diff the dump's
+post-cereal shape against the DSL's existing shape and **date the delta
+against the production references** (gophertunnel, CloudburstMC/Protocol,
+Nukkit-MOT), then gate it with `since=N`. v1001 alone flattened
+`BossEventPacket` (dropping `darken_screen`, narrowing colour/overlay to
+a byte), reordered `SubChunkRequestPacket` and swapped its offset prefix
+to `uvarint32`, and interleaved `ClientCacheBlobStatusPacket`'s two
+lists -- every one of them an added file in the dump, every one a real
+wire change.
 
 ## What the DSL diff looks like
 
