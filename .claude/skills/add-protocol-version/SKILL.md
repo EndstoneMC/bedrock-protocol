@@ -19,10 +19,89 @@ diff bumps `__version__` in `protocol/__init__.py`.
 
 ## Sources of truth — read in this order
 
-The skill exists because Mojang publishes no canonical changelog and
-the community references disagree. Resolve the wire shape of every
-edit by walking these sources in order and stopping at the first that
-confirms the change against a second:
+The community references disagree on wire shape and none of them
+enumerate the full change set, so resolve every edit by walking these
+sources in order and stopping at the first that confirms the change
+against a second.
+
+### Enumeration — the WHAT (use first if available)
+
+0. **The per-protocol-version changelog** — a one-line-per-version list
+   of what changed (packet / enum / field / component), one entry per
+   integer protocol bump. When you have one for the cycle, it is the
+   strongest **completeness** check: the sources below tell you *how*
+   each change is shaped on the wire, but only the changelog tells you
+   the *full set*, so it catches changes a `protocol-docs` two-dot diff
+   misses (a still-hand-serialized packet is absent from the dump
+   entirely). It does **not** resolve wire shape — every entry still has
+   to be confirmed against the sources below. The verbatim 975→1001
+   changelog and its audited verdicts are recorded at the end of this
+   file as a worked example.
+
+   **Source / how to refresh for the next cycle:** _TODO — confirm with
+   the maintainer where these entries come from (BDS strings, an
+   internal Mojang changelog, a community tracker, …) and record the
+   exact fetch step here, so the next bump can obtain its own
+   changelog._
+
+   **Using it during a bump.** Treat the changelog as a checklist: for
+   every entry between the old and new `__version__`, find the DSL
+   symbol and assign a verdict — **COVERED-CORRECT** (present, gated at
+   the right boundary), **MISSING** (a wire change not yet modelled →
+   gate it, or stop-and-raise if blocked), **N-A-WIRE-INVARIANT**,
+   **N-A-NOT-WIRE**, or **PARTIAL** (modelled but simplified; confirm
+   against BDS). A clean bump ends with every entry COVERED-CORRECT or
+   N-A, and every MISSING/PARTIAL fixed or explicitly raised.
+
+   **Read each entry as a change-kind.** The changelog is not just enum
+   notes — it tells you which packets were re-serialized, which fields
+   moved, and which packets are new. Most entries are real wire changes:
+
+   - **"… Converted to Cereal"** — the packet was migrated to Mojang's
+     `cereal` serializer. This is the **highest-value signal in the
+     changelog**: it names exactly which packets to re-derive, and it
+     flags a **likely binary/wire-format change** — field reorder,
+     prefix-width swap (`uint32` → `uvarint32`), dropped field, or a
+     discriminated union collapsing to a flat layout. When the entry
+     adds "broke binary compatibility," the wire definitely changed.
+     Never assume the wire is unchanged: diff the post-cereal shape
+     against the production refs and gate `since=<release>`. A
+     reordering rewrite can exceed what the redeclaration resolver
+     expresses and must be marked `COMPILER_EXTENSION_NEEDED` (as
+     BossEvent / SubChunkRequest were). Pair with the "A new file in the
+     dump is a cerealisation" section below.
+   - **Packet field added / removed / reshaped** — e.g. "Added
+     richPresenceId to PresenceConfiguration", "now includes hit
+     position", "mSoundEvent changed from LevelSoundEvent to
+     SoundEventIdentifier". A real wire change: gate the field with
+     `since=`/`until=`, or redeclare it for a type/shape change
+     (section 3 of "What the DSL diff looks like").
+   - **New packet** — e.g. "Added ClientboundUpdateSoundDataPacket". Add
+     `@packet(id=…, since=<release>)` + a gophertunnel golden test.
+   - **Enum member added** — **N-A-WIRE-INVARIANT** *when the carrying
+     field is a raw integer*. If the DSL models the field as a raw alias
+     (`type LevelSoundEvent = uvarint32`) or a bare `varint32`, adding
+     members (`SlimeLanding`, `Equipping`, `GEYSER_BOOST`, …) does not
+     change the wire — nothing to gate. Only model the add if the DSL
+     has that enum as a named `IntEnum` whose surface you keep complete.
+     Doubly moot if the field also becomes a string at the release
+     (LevelSoundEvent → string at 1001).
+   - **Behavior-pack / component / world-gen data** —
+     **N-A-NOT-WIRE**. Entries naming components or generation data
+     (`BlockGeometryComponent`, `BiomeNoiseGradient…surfaceData`) are
+     NBT/JSON behavior-pack or chunk-gen data, not network packets —
+     don't chase them.
+
+   **Cross-cutting boundary rule — intra-cycle version numbers collapse
+   to the shipped release.** The integers between two shipped releases
+   (e.g. 976–1000) are internal / beta increments — no client ever
+   shipped on them. The DSL only carries gates at **shipped release**
+   protocols (verify: the only gates in the recent range are `…924, 944,
+   975, 1001`, never an intermediate value). So gate every change in the
+   cycle at `since=<release>` (e.g. `since=1001`), **not** at its raw
+   changelog number — a change dated 980 or 998 is still `since=1001`.
+   This applies to all the kinds above. (The DSL gates at the first
+   protocol of a cycle.)
 
 ### Primary (drives the diff)
 
@@ -34,6 +113,8 @@ confirms the change against a second:
    This is where the bulk of additions and shape changes surface
    field-by-field.
 
+### Cross-validation (don't trust either source alone)
+
 2. **`CloudburstMC/Nukkit`** -- a protocol-tracking reference. Its
    gameplay server is barely maintained, but the protocol layer stays
    current (it tracked v1001 / 1.26.30 within a day of release), and
@@ -43,8 +124,6 @@ confirms the change against a second:
    class at all -- a missing or flat-placeholder packet here is
    silence, not evidence -- and it only models gameplay packets, so the
    test / debug / editor long tail is absent.
-
-### Cross-validation (don't trust either source alone)
 
 3. **`CloudburstMC/Protocol`** -- the standalone protocol library.
    Has per-protocol-version serializers
@@ -68,7 +147,7 @@ confirms the change against a second:
    makes it the strongest cross-check exactly where Protocol and
    gophertunnel are weakest -- the freshest versions. Same two cautions
    as CloudburstMC/Nukkit: server-side stubs, and gameplay packets only.
-   Never a naming source (CLAUDE.md rule 12) -- Nukkit naming is
+   Never a naming source (see `.claude/rules/protocol.md`) -- Nukkit naming is
    community, not BDS.
 
 ### Watch for in-progress work
@@ -89,7 +168,7 @@ that it came from a branch and may shift before merge.
 
 When the sources disagree about a field's name, type, presence,
 or wire position, do not pick one. Pause and surface the discrepancy
-to the user. This rule is identical to CLAUDE.md rule 7: the
+to the user. This rule is identical to `.claude/rules/protocol.md`: the
 protocol-docs JSON is mechanically dumped and is sometimes wrong, but
 silently overriding it with gophertunnel or CloudburstMC just buries
 the conflict.
@@ -208,7 +287,7 @@ not a versioned redeclaration.
 
 Most new enum members are non-trailing. Use `value(N, since=NEW)`
 where `N` is the explicit wire number (auto-numbering won't survive
-later edits to siblings; CLAUDE.md rule 13):
+later edits to siblings; see `.claude/rules/protocol.md`):
 
 ```python
 class DisconnectFailReason(IntEnum):
@@ -236,7 +315,7 @@ class NewThingPacket:
 ```
 
 Every new packet needs a golden round-trip test (`tests/test_<group>.cpp`)
-generated by gophertunnel. CLAUDE.md rule 8 is non-negotiable:
+generated by gophertunnel. The golden-tests rule (`.claude/rules/tests.md`) is non-negotiable:
 
 - Never hand-compute the golden bytes.
 - Precede with `// generated by gophertunnel:` plus the marshalled
@@ -276,15 +355,18 @@ exactly this reason.
 
 1. Read the previous `__version__` from
    [protocol/__init__.py](protocol/__init__.py).
-2. Decide the new version N. Verify N is not below 292 (CLAUDE.md
-   rule 7 floor) -- the floor doesn't apply to new bumps in practice,
+2. Decide the new version N. Verify N is not below 292 (the v291 floor
+   in `.claude/rules/protocol.md`) -- the floor doesn't apply to new bumps in practice,
    but a typo that lands you at 291 or below should be caught.
 3. Note that the bump should be the **last** edit in the diff. Do
    not bump `__version__` until every gated change is in place.
 
 ### B. Survey the diff at the source
 
-4. Pull or refresh local clones of all four reference repos.
+4. Pull or refresh local clones of all four reference repos. Also get
+   the per-protocol-version changelog for the OLD→N cycle if one exists
+   (source 0 under "Sources of truth") — it is the completeness backstop
+   for steps 5–7.
 5. Run `git diff` on EndstoneMC/protocol-docs between the branch
    tagged for the old version and the branch for N. Read every
    touched packet file.
@@ -302,6 +384,18 @@ exactly this reason.
    `<packet>::<field> | <kind: add|remove|reshape|enum-add|...> | <sources confirming>`.
    Keep this list in the working notes for the commit; you'll cite
    it in the commit body.
+7a. **Coverage pass against the changelog.** If you have the
+   per-version changelog, walk every entry between OLD and N and assign
+   each a verdict — COVERED-CORRECT / MISSING / N-A-WIRE-INVARIANT /
+   N-A-NOT-WIRE / PARTIAL — reading each entry as a change-kind
+   (cerealization / field change / new packet / enum-add / component)
+   and applying the boundary rule, per source 0 under "Sources of
+   truth". Cerealization entries are the priority: each is a likely
+   binary-format change and names exactly which packet to re-derive. Any
+   entry the protocol-docs diff didn't surface but the changelog lists
+   is a candidate MISSING. Reconcile the two lists before applying
+   edits; an entry that is genuinely N-A is recorded as such, not
+   silently dropped.
 
 ### C. Apply DSL edits, one file at a time
 
@@ -313,10 +407,10 @@ exactly this reason.
    gates the field, not the whole nested type.
 10. For new packets, also:
     - Carry the Description from `Mojang/bedrock-protocol-docs`
-      verbatim as the docstring (CLAUDE.md rule 11). If the upstream
+      verbatim as the docstring (`.claude/rules/protocol.md`). If the upstream
       has no Description, omit the docstring entirely.
     - Resolve every new name through the bedrock-headers /
-      protocol-docs / `.dot` files hierarchy (CLAUDE.md rule 12).
+      protocol-docs / `.dot` files hierarchy (`.claude/rules/protocol.md`).
       Add `# TODO: confirm against BDS` where appropriate.
 
 ### D. Write the gophertunnel-driven golden tests
@@ -325,7 +419,7 @@ exactly this reason.
     `tests/test_<group>.cpp` and register the file in
     `tests/CMakeLists.txt` if it's new.
 12. Generate the golden bytes by marshalling the equivalent packet
-    in `Sandertv/gophertunnel` (CLAUDE.md rule 8). If gophertunnel
+    in `Sandertv/gophertunnel` (`.claude/rules/tests.md`). If gophertunnel
     doesn't have the packet on `master` or any visible branch/PR,
     stop and raise.
 13. For shape changes on existing packets, add or extend a test
@@ -354,7 +448,7 @@ exactly this reason.
 18. Body should cite the per-row change list from step 7 and name
     each upstream source that confirmed each row, so a reviewer can
     audit without re-walking the four repos. No
-    `Co-Authored-By: Claude ...` line (CLAUDE.md rule 1).
+    `Co-Authored-By: Claude ...` line (`.claude/rules/style.md`).
 
 ## Quick reference
 
@@ -370,3 +464,59 @@ exactly this reason.
 | Removed packet | **raise** (no lone `@packet(until=)`) |
 | Rename | **raise** (no rename primitive) |
 | Wire shape DSL can't express | **raise** (no compiler edits) |
+
+## Worked example: the v975 → v1001 changelog (BDS 1.26.20 → 1.26.30)
+
+Verbatim per-version entries for the cycle, then the audited verdicts
+(2026-06-19). All covered changes are gated `since=1001` per rule 1.
+
+```
+976: Added support to noise transitions for ClientboundAttributeLayerSyncPacket
+977: Added ClientboundUpdateSoundDataPacket
+978: Modified ServerBoundDiagnosticsPacket to include whisker profiler scope diagnostic data
+979: SubChunkRequestPacket : Converted to Cereal
+980: Added richPresenceId to PresenceConfiguration
+981: Updated the data contained in BiomeNoiseGradientsurfaceData yet again.
+982: ItemUseOnActorInventoryTransaction now includes hit position for an ActionType::Attack action
+983: Added SlimeLanding, AbsorbBlock and EjectBlock to LevelSoundEvent enum
+984: BossEventPacket : Converted to Cereal, broke binary compatibility
+985: InventoryTransactionPacket : Converted to Cereal
+986: LegacyTelemetryEventPacket : Added Equipping to the MinecraftEventing::InteractionType enum
+987: Added GeyserEruptionStart and GeyserEruptionActive to LevelSoundEvent enum
+988: MobArmorEquipmentPacket: Converted to Cereal
+989: Added Cylinder, Ellipsoid, Cone and Pyramid payload types to PrimitiveShapesPacket
+990: Added PlayerID to GraphicsOverrideParameterPacket for handling Per-Player Graphics Overrides
+991: Add RecordBounce LevelSoundEvent.
+992: Added BucketFillLandAnimal and BucketEmptyLandAnimal LevelSoundEvents
+993: LevelSoundEventPacket : mSoundEvent changed from LevelSoundEvent to SoundEventIdentifier (variant of enum or string)
+994: Added n_way_visual_rotation field to BlockGeometryComponent
+995: Added isChatLogging to StartGamePacket
+996: ClientCacheBlobStatusPacket : Converted to Cereal
+997: LevelSettings: Added allowAnonymousBlockDropsInEditorWorlds flag for hybrid editor worlds and fixed the read-order placement of ServerEditorConnectionPolicy to match the write order.
+998: Added MovementEffectType::GEYSER_BOOST
+999: Updated mExperienceName and mWorldName in PresenceConfiguration to be optional (StartGamePacket and ServerPresenceInfoPacket)
+1000: Added GeyserContinuousEruptionStart and GeyserContinuousEruptionActive to LevelSoundEvent enum
+1001: InventoryContentPacket : Converted to Cereal
+```
+
+**Covered:** 976 (`attributes.py` noise_transition), 977 (`level.py`
+ClientboundUpdateSoundDataPacket), 978 (`player.py` whisker_scopes), 979
+(SubChunkRequest — COMPILER_EXTENSION_NEEDED), 980 (`game.py` richPresenceId),
+984 (BossEvent — COMPILER_EXTENSION_NEEDED), 989 (`graphics.py` PrimitiveShapes),
+990 (`graphics.py` player_id), 993 (`level.py` — modelled as `str`; PARTIAL,
+confirm no variant discriminator), 996 (`login.py` ClientCacheBlobStatus,
+codegens), 998 (`effect.py` GEYSER_BOOST), 999 (`game.py` experience/world
+optional).
+
+**N-A wire-invariant (rule 2):** 983, 986, 987, 991, 992, 1000.
+**N-A not-wire (rule 3):** 981, 994.
+
+**Open gaps at the audit:**
+- **1001 InventoryContentPacket → Cereal** — present at `inventory.py`
+  `@packet(id=49)` but no `since=1001` redeclaration. Already uses
+  `NetworkItemStackDescriptor` (no import cycle), so directly fixable.
+- **995 isChatLogging / 997 allowAnonymousBlockDropsInEditorWorlds** — absent
+  from StartGamePacket / LevelSettings.
+- **982 / 985 / 988** (ItemUseOnActorInventoryTransaction hit_pos,
+  InventoryTransactionPacket, MobArmorEquipmentPacket cereal) — only in
+  `protocol/_drafts/`, blocked on the `NetworkItemStackDescriptor` resolver cycle.
