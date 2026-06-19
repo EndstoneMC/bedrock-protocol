@@ -1,30 +1,50 @@
-from protocol import field, packet, uint8, varint32
+from protocol import packet, type, uint8, varint32
 
 package = "bedrock.protocol"
 
 
 class BookEditAction:
+    @type(until=924)
     class ReplacePage:
-        page_index: varint32 = field(type=uint8, until=924)
-        page_index: varint32 = field(since=924)
+        page_index: uint8
         page_text: str
         photo_name: str
 
+    @type(since=924)
+    class ReplacePage:
+        page_index: varint32
+        page_text: str
+        photo_name: str
+
+    @type(until=924)
     class AddPage:
-        page_index: varint32 = field(type=uint8, until=924)
-        page_index: varint32 = field(since=924)
+        page_index: uint8
         page_text: str
         photo_name: str
 
-    class DeletePage:
-        page_index: varint32 = field(type=uint8, until=924)
-        page_index: varint32 = field(since=924)
+    @type(since=924)
+    class AddPage:
+        page_index: varint32
+        page_text: str
+        photo_name: str
 
+    @type(until=924)
+    class DeletePage:
+        page_index: uint8
+
+    @type(since=924)
+    class DeletePage:
+        page_index: varint32
+
+    @type(until=924)
     class SwapPages:
-        page_index: varint32 = field(type=uint8, until=924)
-        page_index: varint32 = field(since=924)
-        swap_with_index: varint32 = field(type=uint8, until=924)
-        swap_with_index: varint32 = field(since=924)
+        page_index: uint8
+        swap_with_index: uint8
+
+    @type(since=924)
+    class SwapPages:
+        page_index: varint32
+        swap_with_index: varint32
 
     class Finalize:
         title: str
@@ -48,7 +68,7 @@ class BookEditPacket:
 
 
 @packet(id=97, since=924)
-class BookEditPacket:  # noqa: F811
+class BookEditPacket:
     """Sends the updated state of the Book and Quill item from client to server
     during use."""
 
