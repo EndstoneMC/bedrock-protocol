@@ -346,7 +346,7 @@ class SetTitlePacket:
         SUBTITLE_TEXT_OBJECT = 7
         ACTIONBAR_TEXT_OBJECT = 8
 
-    type: TitleType = field(type=varint32)
+    type: TitleType = field(type=uvarint32)
     title_text: str
     fade_in_time: varint32
     stay_time: varint32

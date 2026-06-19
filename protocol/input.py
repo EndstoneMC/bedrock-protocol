@@ -87,7 +87,7 @@ class PlayerActionType(IntEnum):
 
 
 class PlayerBlockActionData:
-    player_action_type: PlayerActionType = field(type=varint32)
+    player_action_type: PlayerActionType = field(type=uvarint32)
     with field(
         when=lambda p: (
             p.player_action_type == PlayerActionType.START_DESTROY_BLOCK
@@ -212,7 +212,7 @@ class PlayerActionPacket:
     """Sent from the client whenever the player performs an action."""
 
     runtime_id: ActorRuntimeID
-    action: PlayerActionType = field(type=varint32)
+    action: PlayerActionType = field(type=uvarint32)
     pos: BlockPos
     result_pos: BlockPos = field(since=527)
     face: varint32

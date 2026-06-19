@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int64, packet, uint8, varint32
+from protocol import field, int64, packet, uint8, uvarint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 
 package = "bedrock.protocol"
@@ -15,7 +15,7 @@ class NpcDialoguePacket:
         CLOSE = 1
 
     npc_id: ActorUniqueID = field(type=int64)
-    npc_dialogue_action_type: NpcDialogueActionType = field(type=varint32)
+    npc_dialogue_action_type: NpcDialogueActionType = field(type=uvarint32)
     dialogue: str
     scene_name: str
     npc_name: str

@@ -219,7 +219,7 @@ class SetSpawnPositionPacket:
     """When a player logs in or the SetWorldSpawnCommand is used this is sent from the server
     to the client. Does not change when using a bed, that is a separate packet (RespawnPacket)."""
 
-    spawn_pos_type: SpawnPositionType = field(type=varint32)
+    spawn_pos_type: SpawnPositionType = field(type=uvarint32)
     pos: NetworkBlockPos = field(until=944)
     pos: BlockPos = field(since=944)
     spawn_forced: bool = field(until=407)

@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, packet, type, uint8, uint32, uvarint32, varint32
+from protocol import field, packet, type, uint8, uint32, uvarint32
 from protocol.common import BlockPos
 
 package = "bedrock.protocol"
@@ -105,7 +105,7 @@ class ServerboundLoadingScreenPacketType(IntEnum):
 class ServerboundLoadingScreenPacket:
     """Sent from the client to the server to message to the server about the state of the loading screen."""
 
-    type: ServerboundLoadingScreenPacketType = field(type=varint32)
+    type: ServerboundLoadingScreenPacketType = field(type=uvarint32)
     loading_screen_id: uint32 | None
 
 

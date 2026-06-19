@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8
+from protocol import field, packet, type, uint8, uint32
 from protocol.actor import ActorRuntimeID
 
 package = "bedrock.protocol"
@@ -33,7 +33,7 @@ class AgentActionEventPacket:
     """packet containing data of Agent Action Type"""
 
     request_id: str
-    action: AgentActionType = field(type=int32)
+    action: AgentActionType = field(type=uint32)
     response: str
 
 

@@ -132,7 +132,7 @@ class LevelSettings:
     seed: LevelSeed64 = field(since=503)
     spawn_settings: SpawnSettings = field(since=407)
     generator: GeneratorType = field(type=varint32)
-    game_type: GameType = field(type=varint32)
+    game_type: GameType = field(type=uvarint32)
     is_hardcore: bool = field(since=671)
     game_difficulty: Difficulty = field(type=varint32)
     default_spawn: NetworkBlockPos = field(until=944)
@@ -612,7 +612,7 @@ class MultiplayerSettingsPacketType(IntEnum):
 
 @packet(id=139, since=388)
 class MultiplayerSettingsPacket:
-    packet_type: MultiplayerSettingsPacketType = field(type=varint32)
+    packet_type: MultiplayerSettingsPacketType = field(type=uvarint32)
 
 
 @packet(id=173, since=471)
@@ -754,7 +754,7 @@ class SetDefaultGameTypePacket:
     """Same as SetPlayerGameTypePacket and UpdatePlayerGameTypePacket, the only difference is that this changes the
     default for all clients."""
 
-    default_game_type: GameType = field(type=varint32)
+    default_game_type: GameType = field(type=uvarint32)
 
 
 @packet(id=60)
@@ -772,7 +772,7 @@ class SetPlayerGameTypePacket:
     gametype and sends a packet back (UpdatePlayerGameTypePacket) to make sure it
     matches on the client."""
 
-    player_game_type: GameType = field(type=varint32)
+    player_game_type: GameType = field(type=uvarint32)
 
 
 @packet(id=10)
@@ -863,7 +863,7 @@ class SimulationTypePacket:
 class StartGamePacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
-    entity_game_type: GameType = field(type=varint32)
+    entity_game_type: GameType = field(type=uvarint32)
     pos: Vec3
     rot: Vec2
     settings: LevelSettings
@@ -1036,7 +1036,7 @@ class UpdatePlayerGameTypePacket:
     """The server will send this back to all clients on receipt of the SetPlayerGameTypePacket so that cached game type
     and permissions flags in mLevel on all clients is kept up to date."""
 
-    player_game_type: GameType = field(type=varint32)
+    player_game_type: GameType = field(type=uvarint32)
     target_player: ActorUniqueID
     tick: PlayerInputTick = field(since=671)
 

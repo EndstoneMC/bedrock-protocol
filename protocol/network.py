@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, int64, packet, type, uint8, uint16, varint32
+from protocol import field, int32, int64, packet, type, uint8, uint16, uvarint32, varint32
 
 package = "bedrock.protocol"
 
@@ -52,8 +52,8 @@ class PacketViolationSeverity(IntEnum):
 class PacketViolationWarningPacket:
     """This is sent when the client detects a malformed packet."""
 
-    violation_type: PacketViolationType = field(type=varint32)
-    violation_severity: PacketViolationSeverity = field(type=varint32)
+    violation_type: PacketViolationType = field(type=uvarint32)
+    violation_severity: PacketViolationSeverity = field(type=uvarint32)
     violating_packet_id: varint32
     violation_context: str
 
