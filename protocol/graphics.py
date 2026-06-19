@@ -281,14 +281,16 @@ class GraphicsOverrideParameterPacket:
 
 @packet(id=130, since=354)
 class OnScreenTextureAnimationPacket:
-    """Sent from the player (and in one case from the village) to make those really cool animated effects for the hero of the village and the totem saving you."""
+    """Sent from the player (and in one case from the village) to make those really cool animated effects
+    for the hero of the village and the totem saving you."""
 
     effect_id: uint32
 
 
 @packet(id=160, since=419)
 class PlayerFogPacket:
-    """This is the packet that tracks the active fog stack from the server so the local players can apply different fog settings."""
+    """This is the packet that tracks the active fog stack from the server so the local players can apply
+    different fog settings."""
 
     fog_stack: list[str]
 
@@ -318,9 +320,11 @@ class HudElement(IntEnum):
 
 @packet(id=308, since=649)
 class SetHudPacket:
-    """This packet is only used via the set hud command. This is for 3rd party content. This packet will toggle the HUD visibility."""
+    """This packet is only used via the set hud command. This is for 3rd party content. This packet will
+    toggle the HUD visibility."""
 
-    # COMPILER_EXTENSION_NEEDED: each element is a HudElement enum, but list[Enum] cannot carry a `field(type=<primitive>)` override; the wire encoding switches from uvarint32 (<v786) to varint32 (>=v786)
+    # COMPILER_EXTENSION_NEEDED: each element is a HudElement enum, but list[Enum] cannot carry a
+    # `field(type=<primitive>)` override. The wire encoding switches from uvarint32 (<v786) to varint32 (>=v786)
     elements: list[uvarint32] = field(until=786)
     elements: list[varint32] = field(since=786)
     visibility: HudVisibility = field(type=uint8, until=786)

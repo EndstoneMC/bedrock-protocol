@@ -8,7 +8,9 @@ package = "bedrock.protocol"
 
 @packet(id=28)
 class MobEffectPacket:
-    """At the start of the game the server sends any mob effects with _sendAdditionalLevelData() if the joining player saved out with them, and then anytime a mob effect is added, removed, or updated this packet is sent."""
+    """At the start of the game the server sends any mob effects with _sendAdditionalLevelData() if the
+    joining player saved out with them, and then anytime a mob effect is added, removed, or updated this
+    packet is sent."""
 
     class Event(IntEnum):
         INVALID = 0

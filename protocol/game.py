@@ -217,7 +217,7 @@ class ServerConfiguration:
         world_name: str
 
     @type(since=1001)
-    class PresenceConfiguration:  # noqa: F811
+    class PresenceConfiguration:
         experience_name: str | None
         world_name: str | None
         rich_presence_id: str
@@ -325,7 +325,8 @@ class ClientCheatAbilityPacket:
 
 @packet(id=171, since=465)
 class CreatePhotoPacket:
-    """Players now have the possibility to export photos from their portfolios into photo items in their inventory. EDU."""
+    """Players now have the possibility to export photos from their portfolios into photo items in their inventory.
+    EDU."""
 
     id: ActorUniqueID
     photo_name: str
@@ -534,7 +535,8 @@ class FeatureBinaryJsonFormat:
 
 @packet(id=191, since=544)
 class FeatureRegistryPacket:
-    """This is the packet that tracks the active feature registry data from the server so that client can place the features themselves."""
+    """This is the packet that tracks the active feature registry data from the server so that client can place the
+    features themselves."""
 
     features_data: list[FeatureBinaryJsonFormat]
 
@@ -589,7 +591,7 @@ class SimpleItemDefinition:
 
 
 @type(since=776)
-class SimpleItemDefinition:  # noqa: F811
+class SimpleItemDefinition:
     name: str
     runtime_id: int16
     component_based: bool
@@ -751,7 +753,8 @@ class ServerStoreInfoPacket:
 
 @packet(id=105)
 class SetDefaultGameTypePacket:
-    """Same as SetPlayerGameTypePacket and UpdatePlayerGameTypePacket, the only difference is that this changes the default for all clients."""
+    """Same as SetPlayerGameTypePacket and UpdatePlayerGameTypePacket, the only difference is that this changes the
+    default for all clients."""
 
     default_game_type: GameType = field(type=varint32)
 
@@ -963,7 +966,9 @@ class TextPacketType(IntEnum):
 
 @packet(id=9)
 class TextPacket:
-    """Represents a text message that needs to be displayed in-game. Used for commands, messages, and other info printed to the screen. Most of which are server->client or server broadcasted to all clients, but some cases have a client to other client via the server."""
+    """Represents a text message that needs to be displayed in-game. Used for commands, messages, and other info
+    printed to the screen. Most of which are server->client or server broadcasted to all clients, but some cases have
+    a client to other client via the server."""
 
     localize: bool
     # COMPILER_EXTENSION_NEEDED: the variant body's three cases differ structurally
@@ -988,7 +993,8 @@ class TickingAreasLoadStatusPacket:
 
 @packet(id=85)
 class TransferPacket:
-    """Used to kick off transferring the client between online games, or it can be used to cause players to quit the world and rejoin."""
+    """Used to kick off transferring the client between online games, or it can be used to cause players to quit the
+    world and rejoin."""
 
     destination: str
     destination_port: uint16
@@ -1037,7 +1043,8 @@ class UpdateAdventureSettingsPacket:
 
 @packet(id=151, since=407)
 class UpdatePlayerGameTypePacket:
-    """The server will send this back to all clients on receipt of the SetPlayerGameTypePacket so that cached game type and permissions flags in mLevel on all clients is kept up to date."""
+    """The server will send this back to all clients on receipt of the SetPlayerGameTypePacket so that cached game type
+    and permissions flags in mLevel on all clients is kept up to date."""
 
     player_game_type: GameType = field(type=varint32)
     target_player: ActorUniqueID
@@ -1064,7 +1071,8 @@ class SerializableVoxelShape:
 
 @packet(id=337, since=924)
 class VoxelShapesPacket:
-    """Sends the serializable voxel shapes data to the client as it's needed on both the client and server. This packet should always be sent before StartGamePacket."""
+    """Sends the serializable voxel shapes data to the client as it's needed on both the client and server. This packet
+    should always be sent before StartGamePacket."""
 
     shapes: list[SerializableVoxelShape]
     name_map: dict[str, uint16] = field(prefix=uvarint32)

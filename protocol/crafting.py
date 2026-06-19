@@ -232,8 +232,11 @@ class UnlockedRecipesPacketType(IntEnum):
 
 @packet(id=199, since=575)
 class UnlockedRecipesPacket:
-    """Sent from server to client, for all previously unlocked recipes on load and for any newly unlocked recipes during gameplay."""
+    """Sent from server to client, for all previously unlocked recipes on load
+    and for any newly unlocked recipes during gameplay."""
 
-    # COMPILER_EXTENSION_NEEDED: until v589 the wire form was a single `bool` (true == NEWLY_UNLOCKED_RECIPES, false == INITIALLY_UNLOCKED_RECIPES); since v589 it is a uint32 enum
+    # COMPILER_EXTENSION_NEEDED: until v589 the wire form was a single `bool`
+    # (true == NEWLY_UNLOCKED_RECIPES, false == INITIALLY_UNLOCKED_RECIPES);
+    # since v589 it is a uint32 enum
     packet_type: UnlockedRecipesPacketType = field(type=uint32, since=589)
     unlocked_recipes: list[str]

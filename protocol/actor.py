@@ -488,7 +488,7 @@ class BossEventPacket:
 # small-enum byte-aliasing makes the reference libraries' uint8 indistinguishable
 # from the cereal uvarint32 (all values fit in one byte either way).
 @packet(id=74, since=1001)
-class BossEventPacket:  # noqa: F811
+class BossEventPacket:
     """Sent when a boss gets updated"""
 
     boss_id: ActorUniqueID
@@ -581,7 +581,9 @@ type ActorDamageCause = varint32
 
 @packet(id=38)
 class HurtArmorPacket:
-    """Sends the damage taken after armor is taken into account. This looks like it is trying to be phased out, this is not sent while the ItemStackNetManagerServer is active. From the server."""
+    """Sends the damage taken after armor is taken into account. This looks like it is trying
+    to be phased out, this is not sent while the ItemStackNetManagerServer is active. From the
+    server."""
 
     cause: ActorDamageCause = field(since=407)
     dmg: varint32
@@ -595,7 +597,8 @@ class HurtArmorPacket:
 
 @packet(id=157, since=419)
 class MotionPredictionHintsPacket:
-    """It is essentially a SetActionMotionPacket with a bool indicating if the actor was on the ground at the time the packet is sent or not."""
+    """It is essentially a SetActionMotionPacket with a bool indicating if the actor was on the
+    ground at the time the packet is sent or not."""
 
     runtime_id: ActorRuntimeID
     motion: Vec3
@@ -748,7 +751,8 @@ class UpdateEquipPacket:
 
 @packet(id=80)
 class UpdateTradePacket:
-    """This is used when the player trades with an npc. This sends all of the updated trade info in one big ol' packet."""
+    """This is used when the player trades with an npc. This sends all of the updated trade info
+    in one big ol' packet."""
 
     container_id: int8
     type: int8

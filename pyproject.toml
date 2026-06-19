@@ -1,7 +1,7 @@
 [project]
 name = "bedrock-protocol"
 version = "0.1.0"
-description = "Bedrock protocol compiler — reads protocol/*.py DSL and emits C++ headers."
+description = "Bedrock protocol compiler -- reads protocol/*.py DSL and emits C++ headers."
 requires-python = ">=3.12"
 dependencies = [
     "click",
@@ -30,3 +30,10 @@ strict = true
 [tool.ruff]
 line-length = 120
 lint.extend-select = ["I", "E", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# The protocol/ DSL files are read statically, never executed. F811 covers the
+# deliberate @packet/@type version-redeclaration pattern. F821 covers enum
+# references inside `when=` predicate lambdas, which Python scopes as undefined but
+# the compiler resolves. Both stay active for the compiler under src/.
+"protocol/*.py" = ["F811", "F821"]

@@ -22,7 +22,7 @@ class ClientCacheBlobStatusPacket:
 # ordinary uvarint32-prefixed lists, so each count now immediately precedes its
 # own elements instead of both counts being written up front.
 @packet(id=135, since=1001)
-class ClientCacheBlobStatusPacket:  # noqa: F811
+class ClientCacheBlobStatusPacket:
     """Client Cache Blob Status Packet. Sent periodically by the client to
     update the server on which blob it has (ACK) and which blobs it is lacking
     (MISS)."""

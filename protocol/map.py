@@ -119,7 +119,8 @@ class ClientPixelsProxy:
 
 @packet(id=68)
 class MapInfoRequestPacket:
-    """In the case of the client being unable to find map data for a map item it sends a uuid for a map to the server."""
+    """In the case of the client being unable to find map data for a map item it sends a uuid for a map to the
+    server."""
 
     map_id: ActorUniqueID
     client_pixels: list[ClientPixelsProxy] = field(prefix=uint32, since=544)

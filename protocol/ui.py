@@ -59,7 +59,8 @@ class ClientboundLoadingScreenPacket:
 
 @packet(id=100)
 class ModalFormRequestPacket:
-    """Not sent from vanilla. The feature is meant for third-party servers to be able to drive dynamic ui forms. The request comes with some JSON that describes a custom UI screen thirdparty uses. Server->client."""
+    """Not sent from vanilla. The feature is meant for third-party servers to be able to drive dynamic ui forms.
+    The request comes with some JSON that describes a custom UI screen thirdparty uses. Server->client."""
 
     form_id: uvarint32
     form_json: str

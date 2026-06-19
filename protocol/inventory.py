@@ -503,7 +503,9 @@ class ContainerOpenPacket:
 
 @packet(id=47)
 class ContainerClosePacket:
-    """After the game deletes the container manager on the client, the client sends this packet. Then the server deletes its container manager, and sends a packet back to the client that closes the container screen."""
+    """After the game deletes the container manager on the client, the client sends this packet. Then the
+    server deletes its container manager, and sends a packet back to the client that closes the container
+    screen."""
 
     container_id: ContainerID
     container_type: ContainerType = field(type=int8, since=685)
@@ -512,7 +514,8 @@ class ContainerClosePacket:
 
 @packet(id=48)
 class PlayerHotbarPacket:
-    """Sent from the server when the player uses pick block on actors or blocks, in addition to the player uses the clear, give, or replace item command or if the serverplayer uses _sendAdditionalLevelData()."""
+    """Sent from the server when the player uses pick block on actors or blocks, in addition to the player
+    uses the clear, give, or replace item command or if the serverplayer uses _sendAdditionalLevelData()."""
 
     selected_slot: uvarint32
     container_id: ContainerID
@@ -521,7 +524,8 @@ class PlayerHotbarPacket:
 
 @packet(id=49)
 class InventoryContentPacket:
-    """This is used for updating an entire container. Example uses include: player respawned, replace items command, 3rd party content calls sendInventory(), block picking."""
+    """This is used for updating an entire container. Example uses include: player respawned, replace items
+    command, 3rd party content calls sendInventory(), block picking."""
 
     inventory_id: uvarint32  # BDS mInventoryId (ContainerID)
     # v291..v407 wrote items as the legacy NetworkItemInstanceDescriptor; from v407
@@ -539,7 +543,8 @@ class InventoryContentPacket:
 
 @packet(id=50)
 class InventorySlotPacket:
-    """Updates one slot in an inventory rather than the whole thing. So like animal inventory (horses, donkeys, etc) and chests. Hotbar, offhand, and some player inventory changes."""
+    """Updates one slot in an inventory rather than the whole thing. So like animal inventory (horses,
+    donkeys, etc) and chests. Hotbar, offhand, and some player inventory changes."""
 
     inventory_id: uvarint32  # BDS mInventoryId (ContainerID)
     slot: uvarint32
@@ -563,7 +568,8 @@ class InventorySlotPacket:
 
 @packet(id=51)
 class ContainerSetDataPacket:
-    """This is sent from the server basically any time that the "cooking" state of the brewing stand or the furnace changes (i.e. the loading bar)."""
+    """This is sent from the server basically any time that the "cooking" state of the brewing stand or the
+    furnace changes (i.e. the loading bar)."""
 
     container_id: ContainerID
     id: varint32
@@ -777,6 +783,7 @@ class ItemEnchantOption:
 
 @packet(id=146, since=407)
 class PlayerEnchantOptionsPacket:
-    """Sent by the server to update the enchantment options displayed when the user opens the enchantment table and puts an item in."""
+    """Sent by the server to update the enchantment options displayed when the user opens the enchantment
+    table and puts an item in."""
 
     options: list[ItemEnchantOption]

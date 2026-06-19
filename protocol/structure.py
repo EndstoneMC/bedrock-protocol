@@ -16,7 +16,8 @@ class CurrentStructureFeaturePacket:
 
 @packet(id=313, since=712)
 class JigsawStructureDataPacket:
-    """Jigsaw Structure data used by client jigsaw structure worldgen. This packet contains a copy of the behavior pack jigsaw structure rules."""
+    """Jigsaw Structure data used by client jigsaw structure worldgen. This packet contains a
+    copy of the behavior pack jigsaw structure rules."""
 
     jigsaw_structure_data_tag: CompoundTag
 
@@ -26,7 +27,8 @@ type PositionTrackingId = varint32
 
 @packet(id=154, since=407)
 class PositionTrackingDBClientRequestPacket:
-    """Client to server packet for server authoritative runtime database (with persistent LevelStorage backup) designed primarily to track lodestone stuff."""
+    """Client to server packet for server authoritative runtime database (with persistent
+    LevelStorage backup) designed primarily to track lodestone stuff."""
 
     class Action(IntEnum):
         QUERY = 0
@@ -37,7 +39,8 @@ class PositionTrackingDBClientRequestPacket:
 
 @packet(id=153, since=407)
 class PositionTrackingDBServerBroadcastPacket:
-    """Server to client packet for server authoritative runtime database (with persistent LevelStorage backup) designed primarily to track lodestone stuff."""
+    """Server to client packet for server authoritative runtime database (with persistent
+    LevelStorage backup) designed primarily to track lodestone stuff."""
 
     class Action(IntEnum):
         UPDATE = 0
@@ -110,13 +113,17 @@ class StructureTemplateRequestOperation(IntEnum):
     EXPORT_FROM_SAVE_MODE = 1
     EXPORT_FROM_LOAD_MODE = 2
     QUERY_SAVED_STRUCTURE = 3
-    # TODO: gophertunnel removed this constant at v685 (1.21.20), CloudburstMC marks it `@deprecated since v712`, and bedrock-headers (latest) omits it entirely. Until=685 reflects gophertunnel; confirm against an older BDS or older bedrock-headers snapshot.
+    # TODO: gophertunnel removed this constant at v685 (1.21.20), CloudburstMC marks it
+    # `@deprecated since v712`, and bedrock-headers (latest) omits it entirely. Until=685
+    # reflects gophertunnel; confirm against an older BDS or older bedrock-headers snapshot.
     IMPORT_FROM_SAVE = value(4, since=560, until=685)
 
 
 @packet(id=132, since=361)
 class StructureTemplateDataRequestPacket:
-    """Used to request structure information from a server. This is used to kick off the process of loading and returning a structure in a Tag from the server back to the client. Currently this functionality is completely disabled and does nothing."""
+    """Used to request structure information from a server. This is used to kick off the process
+    of loading and returning a structure in a Tag from the server back to the client. Currently
+    this functionality is completely disabled and does nothing."""
 
     structure_name: str
     structure_block_pos: NetworkBlockPos = field(until=944)
@@ -134,7 +141,11 @@ class StructureTemplateResponseType(IntEnum):
 
 @packet(id=133, since=361)
 class StructureTemplateDataResponsePacket:
-    """This is used in exporting from load, exporting from save, and querying saved structures from structure blocks. The client sends a packet to the server, from there the structure is built and then put into a Tag where it is sent back to the client, from there you can view the structure in the Structure Block Screen. Currently this functionality is completely disabled and does nothing. Used to reply to a request for structure information."""
+    """This is used in exporting from load, exporting from save, and querying saved structures
+    from structure blocks. The client sends a packet to the server, from there the structure is
+    built and then put into a Tag where it is sent back to the client, from there you can view
+    the structure in the Structure Block Screen. Currently this functionality is completely
+    disabled and does nothing. Used to reply to a request for structure information."""
 
     structure_name: str
     has_structure_tag: bool

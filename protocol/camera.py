@@ -10,7 +10,8 @@ package = "bedrock.protocol"
 
 @packet(id=73)
 class CameraPacket:
-    """Used only in EDU through the tripod camera item or the TakePictureCommand. Sends the camera actor id and the target player id from the server."""
+    """Used only in EDU through the tripod camera item or the TakePictureCommand. Sends the camera actor id and the
+    target player id from the server."""
 
     camera_id: ActorUniqueID
     target_player_id: ActorUniqueID
@@ -105,7 +106,9 @@ class CameraAimAssistPresetDefinition:
 
 @packet(id=320, since=766)
 class CameraAimAssistPresetsPacket:
-    """Sent by the server to clients for initializing and updating the client aim-assist registry. AddToExisting operations are sent by the server when new presets/categories are added to the registry through creator facing APIs."""
+    """Sent by the server to clients for initializing and updating the client aim-assist registry. AddToExisting
+    operations are sent by the server when new presets/categories are added to the registry through creator facing
+    APIs."""
 
     # v766..v800 wrote a `CameraAimAssistCategories` wrapper (an identifier +
     # nested list of categories) BEFORE the presets. At v800 the outer shape
@@ -345,7 +348,8 @@ class CameraShakeAction(IntEnum):
 
 @packet(id=159, since=419)
 class CameraShakePacket:
-    """Used to control trigger camera shake movements on the client's player camera. It may be used to queue or stop a camera shake."""
+    """Used to control trigger camera shake movements on the client's player camera. It may be used to queue or stop a
+    camera shake."""
 
     intensity: float
     seconds: float

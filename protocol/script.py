@@ -50,7 +50,8 @@ class CodeBuilderSourcePacket:
 
 @packet(id=155, since=407)
 class DebugInfoPacket:
-    """The system sends debug information via a generic network packet. This enables rendering of any server information on the client in for instance ImGui."""
+    """The system sends debug information via a generic network packet. This enables rendering of any server
+    information on the client in for instance ImGui."""
 
     actor_id: ActorUniqueID
     data: str
@@ -58,11 +59,13 @@ class DebugInfoPacket:
 
 @packet(id=190, since=534)
 class EditorNetworkPacket:
-    """General use Editor specific packet - carries a payload of whatever serialized data that the individual IEditorNetworkPayload generates."""
+    """General use Editor specific packet - carries a payload of whatever serialized data that the individual
+    IEditorNetworkPayload generates."""
 
     route_to_manager: bool = field(since=712)
     # TODO: protocol-docs and bedrock-headers say the body is two strings (raw_variant_name + raw_variant_data),
-    # but gophertunnel and CloudburstMC marshal a single network-little-endian CompoundTag here. Modelling as the latter.
+    # but gophertunnel and CloudburstMC marshal a single network-little-endian CompoundTag here. Modelling as the
+    # latter.
     payload: CompoundTag
 
 

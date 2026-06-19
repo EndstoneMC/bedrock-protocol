@@ -406,11 +406,13 @@ class _AnnotationContext:
             since = _decorator_int(cls, "type", "since")
             if _decorator_int(cls, "type", "until") is not None:
                 raise CompilerError(
-                    f"{cls.name}: @type(until=) is only meaningful on a redeclared class -- a lone declaration cannot set until="
+                    f"{cls.name}: @type(until=) is only meaningful on a redeclared class -- "
+                    "a lone declaration cannot set until="
                 )
         if _decorator_int(cls, "packet", "until") is not None:
             raise CompilerError(
-                f"{cls.name}: @packet(until=) is only meaningful on a redeclared packet -- a lone declaration cannot set until="
+                f"{cls.name}: @packet(until=) is only meaningful on a redeclared packet -- "
+                "a lone declaration cannot set until="
             )
         return Struct(
             name=cls.name,
@@ -541,7 +543,8 @@ class _AnnotationContext:
             predicate = self._predicate(guard, attr.name, nested, earlier)
             if when is not None and isinstance(t, (OptionalType, VariantType)):
                 raise CompilerError(
-                    f"{attr.name}: field(when=...) gates a bare payload type -- it cannot also be an optional or union field"
+                    f"{attr.name}: field(when=...) gates a bare payload type -- "
+                    "it cannot also be an optional or union field"
                 )
             if t is not None:
                 t = CondType(t, predicate, _int_kwarg(call, "field", "_group_id"))
@@ -564,11 +567,13 @@ class _AnnotationContext:
             raise CompilerError(f"{field_name}: field(count=...) only applies to a list[T] field, got a non-list type")
         if t.count is not None:
             raise CompilerError(
-                f"{field_name}: field(count=...) is for variable-length lists; a fixed-length tuple[T, ...] already carries its own count"
+                f"{field_name}: field(count=...) is for variable-length lists; "
+                "a fixed-length tuple[T, ...] already carries its own count"
             )
         if _call_arg(call, "field", "prefix") is not None:
             raise CompilerError(
-                f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- a count-derived list has no length prefix on the wire"
+                f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- "
+                "a count-derived list has no length prefix on the wire"
             )
         expr = self._predicate(lam, field_name, nested, earlier)
         return replace(t, count_expr=expr, prefix=None)
@@ -583,7 +588,8 @@ class _AnnotationContext:
         if _is_none(_call_arg(call, "field", "prefix")):
             if not (isinstance(ann, griffe.ExprName) and ann.name == "bytes"):
                 raise CompilerError(
-                    f"{field_name}: field(prefix=None) marks a trailing payload and is only valid on a bare `bytes` field"
+                    f"{field_name}: field(prefix=None) marks a trailing payload and is only valid "
+                    "on a bare `bytes` field"
                 )
             if endian is not None:
                 raise CompilerError(_endian_scope_error(field_name))
@@ -600,7 +606,8 @@ class _AnnotationContext:
             result = self._with_endian(base, endian, field_name)
         if tag is not None and not _has_variant(result):
             raise CompilerError(
-                f"{field_name}: field(tag=...) sets a tagged-union discriminator but the field's type tree contains no multi-case union"
+                f"{field_name}: field(tag=...) sets a tagged-union discriminator but the field's "
+                "type tree contains no multi-case union"
             )
         return result
 
@@ -624,7 +631,8 @@ class _AnnotationContext:
             discriminator = type_kw == "Union"
             if discriminator and isinstance(base, EnumType):
                 raise CompilerError(
-                    f"{field_name}: an optional enum field needs field(type=) for the enum wire primitive and so cannot also use type=Union"
+                    f"{field_name}: an optional enum field needs field(type=) for the enum wire "
+                    "primitive and so cannot also use type=Union"
                 )
             present_tag = 1 if discriminator and _is_none(cases[0]) else 0
             return OptionalType(base, discriminator, present_tag)
@@ -711,7 +719,8 @@ class _AnnotationContext:
             scalar = _enum_scalar(type_kw, field_name)
             if scalar is None and name in nested:
                 raise CompilerError(
-                    f"{field_name}: a nested enum cannot be string-coded (field(type=str)) -- use an integer wire primitive, or lift the enum to module scope"
+                    f"{field_name}: a nested enum cannot be string-coded (field(type=str)) -- "
+                    "use an integer wire primitive, or lift the enum to module scope"
                 )
             return EnumType(name, scalar)
         if name in self.struct_names:
@@ -809,7 +818,8 @@ class _AnnotationContext:
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:
                 raise CompilerError(
-                    f"{field_name}: field(when=...) supports one comparison per clause -- split a chained comparison with `and`"
+                    f"{field_name}: field(when=...) supports one comparison per clause -- "
+                    "split a chained comparison with `and`"
                 )
             op = str(node.operators[0])
             if op not in ("==", "!=", "<", ">", "<=", ">="):
@@ -835,7 +845,8 @@ class _AnnotationContext:
         parts = [str(v) for v in node.values]
         if len(parts) < 2:
             raise CompilerError(
-                f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is too shallow -- use `param.field` or `Enum.MEMBER`"
+                f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is too shallow -- "
+                "use `param.field` or `Enum.MEMBER`"
             )
         head = parts[0]
         if head == param:
@@ -848,7 +859,8 @@ class _AnnotationContext:
         if len(parts) == 2 and (head in nested or head in self.enum_names):
             return Predicate("enum", text=f"{head}.{parts[1]}")
         raise CompilerError(
-            f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is neither a `{param}.field[.sub...]` chain nor an Enum.MEMBER"
+            f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is neither a "
+            f"`{param}.field[.sub...]` chain nor an Enum.MEMBER"
         )
 
     def _pred_call(
@@ -868,7 +880,8 @@ class _AnnotationContext:
         parts = [str(v) for v in receiver.values]
         if len(parts) != 3 or parts[0] != param or parts[2] != "test":
             raise CompilerError(
-                f"{field_name}: field(when=...) call must be of the form `{param}.<earlier-field>.test(<bit>)`, got {receiver}"
+                f"{field_name}: field(when=...) call must be of the form "
+                f"`{param}.<earlier-field>.test(<bit>)`, got {receiver}"
             )
         target = parts[1]
         if target not in earlier:
@@ -883,7 +896,8 @@ class _AnnotationContext:
         operand = self._pred_node(args[0], param, field_name, nested, earlier)
         if operand.kind not in ("int", "enum"):
             raise CompilerError(
-                f"{field_name}: field(when=...) `.test(...)` argument must be an integer literal or Enum.MEMBER, got {args[0]}"
+                f"{field_name}: field(when=...) `.test(...)` argument must be an integer literal "
+                f"or Enum.MEMBER, got {args[0]}"
             )
         return Predicate("bittest", text=target, operands=(operand,))
 
@@ -893,7 +907,8 @@ class _AnnotationContext:
         size, enum_member = self._resolve_bitset_size(ann.slice)
         if size is None or size <= 0:
             raise CompilerError(
-                f"{field_name}: bitset[...] needs a positive integer size -- an int literal or a nested-enum member -- got {ann.slice!r}"
+                f"{field_name}: bitset[...] needs a positive integer size -- "
+                f"an int literal or a nested-enum member -- got {ann.slice!r}"
             )
         return BitsetType(size=size, enum_member=enum_member)
 
@@ -969,7 +984,8 @@ class _AnnotationContext:
                 raise CompilerError(f"{name}: @type(until=) must be greater than since=")
             if until != versions[i + 1][1]:
                 raise CompilerError(
-                    f"{name}: redeclared class version ranges must be contiguous -- each until= must equal the next since="
+                    f"{name}: redeclared class version ranges must be contiguous -- "
+                    "each until= must equal the next since="
                 )
 
     @staticmethod
@@ -979,7 +995,8 @@ class _AnnotationContext:
             lo = version.since or 0
             if lo < covered_to:
                 raise CompilerError(
-                    f"{name}: redeclared field versions overlap or are out of order -- each since= must be at least the previous until="
+                    f"{name}: redeclared field versions overlap or are out of order -- "
+                    "each since= must be at least the previous until="
                 )
             if i < len(versions) - 1 and version.until is None:
                 raise CompilerError(f"{name}: every redeclared field version but the last needs until=")
@@ -992,14 +1009,16 @@ class _AnnotationContext:
     def _reject_field_version(struct: str, attr: griffe.Attribute) -> None:
         if _int_kwarg(attr.value, "field", "since") is not None or _int_kwarg(attr.value, "field", "until") is not None:
             raise CompilerError(
-                f"{struct}.{attr.name}: field(since=/until=) is not allowed inside a redeclared class -- the class declarations carry the version range"
+                f"{struct}.{attr.name}: field(since=/until=) is not allowed inside a redeclared "
+                "class -- the class declarations carry the version range"
             )
 
     @staticmethod
     def _reject_versioned_nested(owner: str, enum: Enum) -> None:
         if enum.since is not None:
             raise CompilerError(
-                f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); declare it at module scope to version it"
+                f"{owner}.{enum.name}: a nested enum cannot carry @type(since=); "
+                "declare it at module scope to version it"
             )
         # Per-value `since=`/`until=` is allowed on nested enums. The nested
         # body emitted into the owner's first-snapshot definition carries every
@@ -1016,14 +1035,16 @@ class _AnnotationContext:
         for kw in ("until", "deprecated"):
             if _decorator_int(cls, "type", kw) is not None:
                 raise CompilerError(
-                    f"{owner}.{cls.name}: a nested struct cannot carry @type({kw}=); declare it at module scope to use it"
+                    f"{owner}.{cls.name}: a nested struct cannot carry @type({kw}=); "
+                    "declare it at module scope to use it"
                 )
         if _decorator_int(cls, "packet", "id") is not None:
             raise CompilerError(f"{owner}.{cls.name}: a nested struct cannot be a @packet")
         redecls = cls.extra.get(extensions.EXTRA_NAMESPACE, {}).get(extensions.CLASS_REDECLARATIONS)
         if redecls is not None:
             raise CompilerError(
-                f"{owner}.{cls.name}: a nested struct cannot be redeclared across version ranges; lift it to module scope"
+                f"{owner}.{cls.name}: a nested struct cannot be redeclared across version ranges; "
+                "lift it to module scope"
             )
 
 
@@ -1056,7 +1077,8 @@ def _check_trailing_is_last(struct_name: str, fields: list[Field]) -> None:
     for i, f in enumerate(fields[:-1]):
         if any(_is_trailing(v.type) for v in f.versions):
             raise CompilerError(
-                f"{struct_name}.{f.name}: a trailing field (bytes with field(prefix=None)) must be the last field of the struct"
+                f"{struct_name}.{f.name}: a trailing field (bytes with field(prefix=None)) "
+                "must be the last field of the struct"
             )
 
 
@@ -1156,10 +1178,13 @@ def _repeat_parts(
     if ann.left.name != "tuple":
         return None
     slice_ = ann.slice
-    elements: list[griffe.Expr | str] = list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
+    elements: list[griffe.Expr | str] = (
+        list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
+    )
     if not elements:
         raise CompilerError(
-            f"{field_name}: tuple[...] must spell out a fixed count of element types -- use list[T] for a variable-length list"
+            f"{field_name}: tuple[...] must spell out a fixed count of element types -- "
+            "use list[T] for a variable-length list"
         )
     # Homogeneous iff every element is an ExprName with the same name.
     named = [e for e in elements if isinstance(e, griffe.ExprName)]
@@ -1196,7 +1221,8 @@ def _wire_override(name: str, type_kw: str, field_name: str) -> PrimitiveType:
     bridges them at the codegen boundary."""
     if name not in INTEGER_PRIMITIVES:
         raise CompilerError(
-            f"{field_name}: field(type=) on a primitive field only applies to integer primitives, got annotation {name!r}"
+            f"{field_name}: field(type=) on a primitive field only applies to integer primitives, "
+            f"got annotation {name!r}"
         )
     if type_kw not in INTEGER_PRIMITIVES:
         raise CompilerError(f"{field_name}: field(type=) wire override must be an integer primitive, got {type_kw!r}")
@@ -1204,7 +1230,10 @@ def _wire_override(name: str, type_kw: str, field_name: str) -> PrimitiveType:
 
 
 def _endian_scope_error(field_name: str) -> str:
-    return f"{field_name}: field(endian=...) only applies to fixed-width primitive or fixed-width integer-coded enum fields"
+    return (
+        f"{field_name}: field(endian=...) only applies to fixed-width primitive "
+        "or fixed-width integer-coded enum fields"
+    )
 
 
 def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:

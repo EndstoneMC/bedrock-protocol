@@ -245,7 +245,8 @@ class CommandRequestPacket:
 
 @packet(id=59)
 class SetCommandsEnabledPacket:
-    """This is used by the world settings screen, cheats, EDU builds for teachers, and various other places to enable cheats/commands."""
+    """This is used by the world settings screen, cheats, EDU builds for teachers,
+    and various other places to enable cheats/commands."""
 
     commands_enabled: bool
 
@@ -267,7 +268,9 @@ class SoftEnumUpdateType(IntEnum):
 
 @packet(id=114)
 class UpdateSoftEnumPacket:
-    """This is used for the scoreboard and tag systems (overwhelmingly used by 3rd party content). This allows someone to sync between server and client tags and enums on mobs or on the level."""
+    """This is used for the scoreboard and tag systems (overwhelmingly used by 3rd party
+    content). This allows someone to sync between server and client tags and enums on
+    mobs or on the level."""
 
     enum_name: str
     values: list[str]
