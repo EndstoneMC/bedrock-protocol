@@ -284,6 +284,34 @@ observable -- yet the refs also showed its `event_type` / `colour` / `overlay` a
   underlying type or the `std::variant` against bedrock-headers, or disassemble the
   cereal serializer. The community libs cannot answer the question.
 
+## An enum field's wire type comes from protocol-docs, and enums are never signed varint
+
+Every enum-typed field needs an explicit `field(type=<primitive>)`; the compiler rejects
+a bare `x: SomeEnum`, with no implicit default, and that is deliberate. A `uvarint32`
+default would read cleanly for the ~80% of enum fields that are small unsigned ints, but
+silently mis-encode the name-coded (`str`, ~16%) and wide fixed-width (`uint16` /
+`uint32`, ~5%) ones -- a corrupt frame with no diagnostic. Keeping the annotation
+mandatory turns that latent wire bug into a loud compile error and documents each field's
+wire width in place. Take that primitive from protocol-docs,
+which records each field's encoding and -- unlike the `uvarint32` / `uint8` width above --
+reliably distinguishes signed `varint32` from unsigned `uvarint32`. The dump carries both
+across the corpus, so a `uvarint32` reading is real signal, not a fallback, and the
+signedness is observable on the wire: `varint32` zigzags, so a value of `1` encodes
+`0x02` where `uvarint32` encodes `0x01`. They are not byte-aliased the way `uvarint32`
+and `uint8` are.
+
+Across the entire dumped corpus, **not one enum-typed field is signed varint** -- cereal
+writes a scoped enum as `uvarint32`, as a fixed width (`uint8` / `uint16` / `uint32`,
+with `endian="big"` for the rare big-endian one), or as a name-coded `string`, never as
+signed varint. So `field(type=varint32)` on an enum is almost always a bug copied from a
+community lib's signed modelling (gophertunnel / CloudburstMC often spell a Bedrock enum
+as a signed varint even though cereal does not). Correct it to `uvarint32` -- or to
+`uint8`, which is wire-identical for 0..127 per the byte-aliasing rule, so prefer
+`uvarint32` as the canonical small-enum spelling. Reserve `field(type=str)` for the
+enums the dump marks `string` (name-coded), and a wide fixed type for the few it marks
+`uint16` / `uint32`. When the enum's packet is absent from the dump (not cerealised),
+fall back to the same default -- `uvarint32` for a small enum -- and never `varint32`.
+
 ## v291 is a floor, not an introduction point
 
 CloudburstMC's codec history begins at protocol 291, so a packet or enum whose oldest
