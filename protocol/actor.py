@@ -95,10 +95,14 @@ class ActorEvent(IntEnum):
 
 
 class MoveActorAbsoluteData:
+    class Header(IntEnum):
+        IS_ON_GROUND = 1 << 0
+        FORCE_MOVE = 1 << 1
+        FORCE_MOVE_LOCAL_ENTITY = 1 << 2
+        FORCE_COMPLETION = 1 << 3
+
     runtime_id: ActorRuntimeID
-    # header packs four flags: FLAG_ON_GROUND=0x1, FLAG_TELEPORTED=0x2,
-    # FLAG_FORCE_MOVE=0x4, FLAG_FORCE_COMPLETION=0x8 (new at v975).
-    header: uint8
+    header: Header = field(type=uint8)
     position: Vec3
     rotation_x: uint8
     rotation_y: uint8
@@ -210,11 +214,6 @@ class AvailableActorIdentifiersPacket:
     identifier_list: CompoundTag
 
 
-# ============================================================================
-# Wave 3a additions: helper types + actor-related packets
-# ============================================================================
-
-
 @packet(id=89)
 class AddBehaviorTreePacket:
     json_input: str
@@ -245,19 +244,9 @@ class PropertySyncFloatEntry:
     data: float
 
 
-# Two consecutive uvarint32-prefixed lists.
 class PropertySyncData:
     int_entries: list[PropertySyncIntEntry]
     float_entries: list[PropertySyncFloatEntry]
-
-
-# bedrock-headers android/r26_u2 declares this id as AddEntity_DEPRECATED in
-# MinecraftPacketIds. Neither CloudburstMC, gophertunnel, nor EndstoneMC/protocol-docs
-# carries a body for it -- the id is allocated but the packet is no longer serialized.
-# Empty stub kept so the id is not silently absent from the v975 enum surface.
-@packet(id=127)
-class AddEntityPacket:
-    pass
 
 
 # SyncedAttribute is the spawn-only wire form sent inline in AddActorPacket --
@@ -510,12 +499,12 @@ class BossEventPacket:  # noqa: F811
 
     boss_id: ActorUniqueID
     player_id: ActorUniqueID
-    event_type: BossEventUpdateType = field(type=uvarint32)
+    event_type: BossEventUpdateType
     name: str
     filtered_name: str
     health_percent: float
-    color: BossBarColor = field(type=uvarint32)
-    overlay: BossBarOverlay = field(type=uvarint32)
+    color: BossBarColor
+    overlay: BossBarOverlay
 
 
 @packet(id=182, since=503)
