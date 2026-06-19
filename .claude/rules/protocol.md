@@ -253,6 +253,14 @@ Leave it ungated -- no `since=291`. The same applies to any `field(since=)` /
 `value(since=)` that would land on 291: drop it. The earliest introduction worth
 gating is 292 or later.
 
+## Omit deprecated and no-longer-serialized packets
+
+When bedrock-headers marks a packet id `X_Deprecated` / `X_DEPRECATED` in
+MinecraftPacketIds and no reference (protocol-docs, gophertunnel, CloudburstMC)
+carries a body for it, the packet is no longer on the wire. Omit it from the DSL
+entirely. Do not keep an empty `class X: pass` stub just to hold the id in the
+generated enum surface -- a packet that nothing serializes should not appear at all.
+
 ## Stop and raise -- do not edit silently
 
 When you hit one of the cases below, pause and surface it to the user together with

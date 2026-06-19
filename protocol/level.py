@@ -73,15 +73,6 @@ class BlockEventPacket:
     b1: varint32
 
 
-# bedrock-headers android/r26_u2 declares this id as BlockPalette_deprecated in
-# MinecraftPacketIds. Neither CloudburstMC, gophertunnel, nor EndstoneMC/protocol-docs
-# carries a body for it -- the id is allocated but the packet is no longer serialized.
-# Empty stub kept so the id is not silently absent from the v975 enum surface.
-@packet(id=116)
-class BlockPalettePacket:
-    pass
-
-
 @packet(id=70)
 class ChunkRadiusUpdatedPacket:
     chunk_radius: varint32

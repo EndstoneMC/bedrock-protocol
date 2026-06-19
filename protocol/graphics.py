@@ -367,12 +367,3 @@ class SpawnParticleEffectPacket:
     pos: Vec3
     effect_name: str
     molang_variables: str | None = field(since=503)
-
-
-# bedrock-headers android/r26_u2 declares this id as VideoStreamConnect_DEPRECATED in
-# MinecraftPacketIds. Neither CloudburstMC, gophertunnel, nor EndstoneMC/protocol-docs
-# carries a body for it -- the id is allocated but the packet is no longer serialized.
-# Empty stub kept so the id is not silently absent from the v975 enum surface.
-@packet(id=125)
-class VideoStreamConnectPacket:
-    pass

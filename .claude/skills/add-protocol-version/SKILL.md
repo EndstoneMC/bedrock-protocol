@@ -330,7 +330,10 @@ Pause for the user when:
 
 - A packet is **removed** at version NEW. The DSL today can't gate a
   packet definition with a lone `until=` (see the `ExplodePacket`
-  note in `protocol/level.py`).
+  note in `protocol/level.py`). A packet that bedrock-headers marks
+  `_DEPRECATED` with no body in any reference is a different case: omit
+  it from the DSL entirely, do not keep a `pass` stub
+  (see `.claude/rules/protocol.md`).
 - A struct is **renamed**, or a field rename collides with another
   field's history. The DSL has no rename primitive.
 - A new field uses a wire shape the DSL doesn't model (a packed
@@ -462,6 +465,7 @@ exactly this reason.
 | Deprecated enum value | `MEMBER = value(N, deprecated=NEW)` |
 | New packet | `@packet(id=I, since=NEW)` + golden test |
 | Removed packet | **raise** (no lone `@packet(until=)`) |
+| Deprecated / unserialized packet | omit entirely (no `pass` stub) |
 | Rename | **raise** (no rename primitive) |
 | Wire shape DSL can't express | **raise** (no compiler edits) |
 

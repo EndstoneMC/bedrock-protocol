@@ -46,17 +46,6 @@ class ClientboundDataDrivenUIShowScreenPacket:
     data_instance_id: uint32 | None = field(since=944)
 
 
-# bedrock-headers android/r26_u2 declares this id as ClientboundLoadingScreenPacket_Deprecated
-# in MinecraftPacketIds. Neither CloudburstMC, gophertunnel, nor EndstoneMC/protocol-docs
-# carries a body for it -- the id is allocated but the packet is no longer serialized. The
-# loading-screen flow is now driven by ServerboundLoadingScreenPacket (id=312) plus the
-# ChangeDimensionPacket.loading_screen_id field added at v712. Empty stub kept so the id
-# is not silently absent from the v975 enum surface.
-@packet(id=311)
-class ClientboundLoadingScreenPacket:
-    pass
-
-
 @packet(id=100)
 class ModalFormRequestPacket:
     """Not sent from vanilla. The feature is meant for third-party servers to be able to drive dynamic ui forms.
