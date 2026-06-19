@@ -20,10 +20,9 @@ class EditorNetworkPacket:
     IEditorNetworkPayload generates."""
 
     route_to_manager: bool = field(since=712)
-    # TODO: protocol-docs and bedrock-headers say the body is two strings (raw_variant_name + raw_variant_data),
-    # but gophertunnel and CloudburstMC marshal a single network-little-endian CompoundTag here. Modelling as the
-    # latter.
-    payload: CompoundTag
+    payload: CompoundTag = field(until=1001)
+    raw_variant_name: str = field(since=1001)
+    raw_variant_data: str = field(since=1001)
 
 
 # ScriptCustomEventPacket (id=117, until=594) is omitted: lone @packet(until=)

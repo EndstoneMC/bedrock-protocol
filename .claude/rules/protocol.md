@@ -199,6 +199,14 @@ not pick one. Raise it (see Stop and raise below). The protocol-docs dump is mec
 and sometimes wrong, but silently overriding it with gophertunnel or CloudburstMC
 just buries the conflict.
 
+Lean toward protocol-docs for the current shape. It is dumped from the live server and
+reflects the current wire layout, whereas gophertunnel and CloudburstMC land new bumps
+last and lag behind. When protocol-docs shows a shape the community libs do not, the
+usual cause is that they are stale, not that protocol-docs is wrong. Never silently
+model a community lib's shape as the current one, and never write "protocol-docs says X
+but we model gophertunnel's Y" -- gate the change at the version protocol-docs
+introduced it, or raise it.
+
 ## A new file in the dump is a cerealisation, not a freebie
 
 protocol-docs only emits packets that go through Mojang's `cereal` reflective
