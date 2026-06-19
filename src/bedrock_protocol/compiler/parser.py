@@ -357,22 +357,27 @@ class _AnnotationContext:
     # ---- declarations ------------------------------------------------------
 
     def enum(self, cls: griffe.Class) -> Enum:
+        is_flag = _is_int_flag(cls)
         values: list[EnumValue] = []
         next_auto = 0
+        seen: list[int] = []
         for name, attr in cls.attributes.items():
             if attr.value is None:
                 continue
             if _is_auto_call(attr.value):
-                values.append(EnumValue(name, next_auto, None, None, None, is_auto=True))
-                next_auto += 1
+                number = _flag_auto(seen) if is_flag else next_auto
+                values.append(EnumValue(name, number, None, None, None, is_auto=True))
+                next_auto = number + 1
+                seen.append(number)
                 continue
             parsed = self._enum_member_value(attr.value)
             if parsed is None:
                 continue
             ivalue, since, until, deprecated = parsed
             if ivalue is None:
-                ivalue = next_auto
+                ivalue = _flag_auto(seen) if is_flag else next_auto
             next_auto = ivalue + 1
+            seen.append(ivalue)
             values.append(EnumValue(name, ivalue, since, until, deprecated))
         return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
 
@@ -1109,7 +1114,22 @@ def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
 
 
 def _is_int_enum(cls: griffe.Class) -> bool:
-    return any(isinstance(b, griffe.ExprName) and b.name == "IntEnum" for b in cls.bases)
+    """True for an `IntEnum` or `IntFlag` declaration -- both compile to a C++
+    `enum class`; they differ only in how `auto()` numbers members (`_flag_auto`)."""
+    return any(isinstance(b, griffe.ExprName) and b.name in ("IntEnum", "IntFlag") for b in cls.bases)
+
+
+def _is_int_flag(cls: griffe.Class) -> bool:
+    """True for an `IntFlag` declaration, whose `auto()` members take successive
+    powers of two (bit positions) rather than consecutive integers."""
+    return any(isinstance(b, griffe.ExprName) and b.name == "IntFlag" for b in cls.bases)
+
+
+def _flag_auto(seen: list[int]) -> int:
+    """Next bit value for an `IntFlag` `auto()` member: the lowest power of two
+    above every value already assigned (Python `enum.Flag` semantics); the first
+    `auto()` is 1."""
+    return 1 if not seen else 1 << max(seen).bit_length()
 
 
 def _is_auto_call(value: _Ann) -> bool:
@@ -1132,6 +1152,18 @@ def _is_none(case: object) -> bool:
     return case == "None"
 
 
+_BINOPS = {
+    "<<": lambda a, b: a << b,
+    ">>": lambda a, b: a >> b,
+    "|": lambda a, b: a | b,
+    "&": lambda a, b: a & b,
+    "^": lambda a, b: a ^ b,
+    "+": lambda a, b: a + b,
+    "-": lambda a, b: a - b,
+    "*": lambda a, b: a * b,
+}
+
+
 def _as_int(value: object) -> int | None:
     if isinstance(value, str):
         try:
@@ -1141,6 +1173,12 @@ def _as_int(value: object) -> int | None:
     if isinstance(value, griffe.ExprUnaryOp) and value.operator == "-":
         inner = _as_int(value.value)
         return None if inner is None else -inner
+    if isinstance(value, griffe.ExprBinOp):
+        left, right = _as_int(value.left), _as_int(value.right)
+        if left is None or right is None:
+            return None
+        fold = _BINOPS.get(value.operator)
+        return None if fold is None else fold(left, right)
     return None
 
 

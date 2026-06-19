@@ -121,9 +121,12 @@ the wire references show no fields, the body stays empty (`.claude/rules/protoco
 
 ### 4.2 Enum
 
-A class deriving `enum.IntEnum` is an enum. Its members supply C++ case labels
-and wire values. Member-value forms are governed by `.claude/rules/protocol.md` and
-section 7 below.
+A class deriving `enum.IntEnum` or `enum.IntFlag` is an enum; both compile to the
+same C++ `enum class Name : int`. Its members supply C++ case labels and wire
+values. Member-value forms are governed by `.claude/rules/protocol.md` and section 7
+below. `IntFlag` marks a bit-flag enum and differs from `IntEnum` only in how a bare
+`auto()` member is numbered -- successive powers of two instead of consecutive
+integers (section 7).
 
 ```python
 class GameType(IntEnum):
@@ -133,11 +136,19 @@ class GameType(IntEnum):
     ADVENTURE = 2
     DEFAULT = 5
     SPECTATOR = 6
+
+
+class Header(IntFlag):       # bit flags; auto() -> 1, 2, 4, 8
+    IS_ON_GROUND = auto()
+    FORCE_MOVE = auto()
+    FORCE_MOVE_LOCAL_ENTITY = auto()
+    FORCE_COMPLETION = auto()
 ```
 
 An enum has no wire form on its own. It rides the encoding of the field that
-references it (section 5), defaulting to `varint32` unless the field overrides
-with `field(type=...)`.
+references it (section 5), which must name that encoding with `field(type=...)`
+(`uvarint32`, `uint8`, `str` for a name-coded enum, ...). There is no implicit
+default: the compiler rejects a bare `x: SomeEnum`.
 
 ### 4.3 Packet
 
@@ -218,7 +229,7 @@ wire half without touching the in-memory half.
 | `bool` | single byte (0 / 1) |
 | `str` | `uvarint32` length prefix + UTF-8 bytes |
 | `bytes` | `uvarint32` length prefix + raw bytes (or trailing, see `prefix=None`) |
-| an enum type | the enum's underlying encoding (default `varint32`) |
+| an enum type | the encoding named by its mandatory `field(type=...)` (e.g. `uvarint32`, `uint8`, `str`); no default |
 | a struct type | that struct's fields inline, in order |
 | `uuid.UUID` | 16 bytes |
 | `bitset[N]` | base-128 little-endian dump of the N-bit value (7 payload bits/byte, high bit continues, lone `0x00` for empty) |
@@ -390,14 +401,29 @@ Three forms, picked by what the member needs (`.claude/rules/protocol.md`):
   member must pin its number, since auto-numbering would shift if a sibling was
   added earlier in the run.
 - **`auto()`** (from `enum.auto`) for everything else, including trailing
-  count / width sentinels (`COUNT = auto()`). Auto-number is
-  `previous_member + 1`, mirroring gophertunnel's `iota`.
+  count / width sentinels (`COUNT = auto()`). In an `IntEnum`, `auto()` is
+  `previous_member + 1`, mirroring gophertunnel's `iota`. In an `IntFlag`, it is
+  the next bit -- the lowest power of two above every value assigned so far -- so
+  the first `auto()` is `1`, then `2`, `4`, `8`, ..., matching Python's
+  `enum.Flag`.
 
 ```python
 class DisconnectFailReason(IntEnum):
     UNKNOWN = 0                                          # anchor
     NETHER_NET_FAILED_TO_CREATE_OFFER = value(91, since=630)   # gated
     SOME_LATER_VALUE = auto()                            # previous + 1
+```
+
+A member value may also be a constant integer expression -- a left shift such as
+`1 << 3` for an explicit bit, or any combination of `<< >> | & ^ + - *` over integer
+literals. The compiler folds it to a constant. This is the way to spell a bit-flag
+that has gaps, where `auto()` cannot reproduce the numbering:
+
+```python
+class AdventureSettingsFlags(IntFlag):
+    WORLD_IMMUTABLE = 1 << 0
+    NO_PVM = 1 << 1
+    SHOW_NAME_TAGS = 1 << 4      # gap at bits 2,3 -- auto() can't express this
 ```
 
 `value(...)` keywords (`since` / `until` / `deprecated`) carry the same meaning
