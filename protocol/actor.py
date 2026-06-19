@@ -234,17 +234,15 @@ class ActorLink:
     vehicle_angular_velocity: float = field(since=712)
 
 
-class PropertySyncIntEntry:
-    property_index: uvarint32
-    data: varint32
-
-
-class PropertySyncFloatEntry:
-    property_index: uvarint32
-    data: float
-
-
 class PropertySyncData:
+    class PropertySyncIntEntry:
+        property_index: uvarint32
+        data: varint32
+
+    class PropertySyncFloatEntry:
+        property_index: uvarint32
+        data: float
+
     int_entries: list[PropertySyncIntEntry]
     float_entries: list[PropertySyncFloatEntry]
 

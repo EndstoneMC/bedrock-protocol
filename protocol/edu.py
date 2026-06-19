@@ -17,17 +17,17 @@ class CodeBuilderPacket:
     should_open_code_builder: bool
 
 
-class CodeBuilderStorageQueryOptionsOperation(IntEnum):
-    NONE = 0
-    GET = 1
-    SET = 2
-    RESET = 3
+class CodeBuilderStorageQueryOptions:
+    class Operation(IntEnum):
+        NONE = 0
+        GET = 1
+        SET = 2
+        RESET = 3
 
-
-class CodeBuilderStorageQueryOptionsCategory(IntEnum):
-    NONE = 0
-    CODE_STATUS = 1
-    INSTANTIATION = 2
+    class Category(IntEnum):
+        NONE = 0
+        CODE_STATUS = 1
+        INSTANTIATION = 2
 
 
 class CodeBuilderExecutionStateCodeStatus(IntEnum):
@@ -43,8 +43,8 @@ class CodeBuilderExecutionStateCodeStatus(IntEnum):
 class CodeBuilderSourcePacket:
     """This is EDU exclusive, used in getInterface() of WebviewSystem."""
 
-    operation: CodeBuilderStorageQueryOptionsOperation = field(type=uint8)
-    category: CodeBuilderStorageQueryOptionsCategory = field(type=uint8)
+    operation: CodeBuilderStorageQueryOptions.Operation = field(type=uint8)
+    category: CodeBuilderStorageQueryOptions.Category = field(type=uint8)
     # Removed at v685, field name from CloudburstMC (pre-v776, BDS-invisible).
     value: str = field(until=685)
     code_status: CodeBuilderExecutionStateCodeStatus = field(type=uint8, since=685)

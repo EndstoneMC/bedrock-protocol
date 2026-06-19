@@ -48,10 +48,18 @@ nest together: `MapItemTrackedActor::Type` and `MapItemTrackedActor::UniqueId` b
 inside `MapItemTrackedActor`, the way `BookEditAction`'s action structs live inside
 `BookEditAction`. If the DSL's nesting limits force a hoist (a version-gated nested class
 that would leave its enclosing namespace empty on an earlier snapshot), keep the BDS
-name on the hoisted class and flag it. A nested type that refers to a sibling -- its
-discriminator enum, say -- names it with a qualified string forward reference in the
-annotation (`type: "MapItemTrackedActor.Type"`), since the enclosing class is not yet
-bound while its body is read.
+name on the hoisted class and flag it.
+
+A BDS `FooPacketPayload` (a packet's variant body) maps onto the DSL `@packet FooPacket`
+itself: nest its variant structs directly inside the packet class and drop the `Payload`
+suffix, as `SyncWorldClocksPacket` and `PlayerVideoCapturePacket` do.
+
+Reference a sibling nested type by its bare name when it sits at the same level and is
+already defined earlier in the body -- a packet field unioning its own nested variants,
+or `PropertySyncData.int_entries: list[PropertySyncIntEntry]`. Use a qualified string
+forward reference only when an inner body must reach a sibling through the not-yet-bound
+enclosing class (`type: "MapItemTrackedActor.Type"` from inside
+`MapItemTrackedActor.UniqueId`).
 
 Never lift a name from gophertunnel or CloudburstMC. Those references date and shape
 symbols, they do not name them. If no source names a symbol, raise it rather than

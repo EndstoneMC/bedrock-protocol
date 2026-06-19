@@ -640,18 +640,16 @@ class PhotoTransferPacket:
     new_photo_name: str = field(since=465)
 
 
-class StartVideoCapture:
-    frame_rate: uint32
-    file_prefix: str
-
-
-class StopVideoCapture:
-    pass
-
-
 @packet(id=324, since=786)
 class PlayerVideoCapturePacket:
     """Used by a test command to start/stop video capture."""
+
+    class StartVideoCapture:
+        frame_rate: uint32
+        file_prefix: str
+
+    class StopVideoCapture:
+        pass
 
     params: StartVideoCapture | StopVideoCapture
 
@@ -915,37 +913,29 @@ class WorldClockData:
     time_markers: list[TimeMarkerData]
 
 
-@type(since=944)
-class SyncWorldClocksSyncStateData:
-    clock_data: list[SyncWorldClockStateData]
-
-
-@type(since=944)
-class SyncWorldClocksInitializeRegistryData:
-    clock_data: list[WorldClockData]
-
-
-@type(since=944)
-class SyncWorldClocksAddTimeMarkerData:
-    clock_id: uint64 = field(type=uvarint64)
-    time_markers: list[TimeMarkerData]
-
-
-@type(since=944)
-class SyncWorldClocksRemoveTimeMarkerData:
-    clock_id: uint64 = field(type=uvarint64)
-    time_marker_ids: list[uvarint64]
-
-
 @packet(id=344, since=944)
 class SyncWorldClocksPacket:
     """Initializes and syncs world clocks from the server to clients. (Currently disabled)"""
 
+    class SyncStateData:
+        clock_data: list[SyncWorldClockStateData]
+
+    class InitializeRegistryData:
+        clock_data: list[WorldClockData]
+
+    class AddTimeMarkerData:
+        clock_id: uint64 = field(type=uvarint64)
+        time_markers: list[TimeMarkerData]
+
+    class RemoveTimeMarkerData:
+        clock_id: uint64 = field(type=uvarint64)
+        time_marker_ids: list[uvarint64]
+
     data: (
-        SyncWorldClocksSyncStateData
-        | SyncWorldClocksInitializeRegistryData
-        | SyncWorldClocksAddTimeMarkerData
-        | SyncWorldClocksRemoveTimeMarkerData
+        SyncStateData
+        | InitializeRegistryData
+        | AddTimeMarkerData
+        | RemoveTimeMarkerData
     )
 
 
