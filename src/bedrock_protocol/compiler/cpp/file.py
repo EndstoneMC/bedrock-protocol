@@ -89,6 +89,7 @@ class FileGenerator:
             "<map>",
             "<optional>",
             "<string>",
+            "<type_traits>",
             "<variant>",
             "<vector>",
         ]

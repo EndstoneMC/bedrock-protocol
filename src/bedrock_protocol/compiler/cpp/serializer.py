@@ -46,6 +46,7 @@ class SerializerGenerator:
         self._snapshot: int | None = None
         self._owner_qualified = ""
         self._nested_enums: frozenset[str] = frozenset()
+        self._enum_fields: frozenset[str] = frozenset()
         self._loop_depth = 0
 
     # --- public emitters ----------------------------------------------------
@@ -76,6 +77,7 @@ class SerializerGenerator:
         self._snapshot = snapshot
         self._owner_qualified = qualified
         self._nested_enums = frozenset(e.name for e in struct.nested_enums)
+        self._enum_fields = frozenset(f.name for f, t in typed if _is_scalar_enum(t))
         self._loop_depth = 0
         groups = _field_groups(typed)
         param = f"const {qualified} &value"
@@ -99,6 +101,7 @@ class SerializerGenerator:
         self._snapshot = None
         self._owner_qualified = alias.name
         self._nested_enums = frozenset()
+        self._enum_fields = frozenset()
         self._loop_depth = 0
         qualified = alias.name
         param = f"const {qualified} &value"
@@ -163,6 +166,7 @@ class SerializerGenerator:
                 self._owner_qualified,
                 self._nested_enums,
                 self._snapshot,
+                self._enum_fields,
             )
             p(f"if ({expr}) {{")
             with p.indented():
@@ -191,6 +195,7 @@ class SerializerGenerator:
                 self._owner_qualified,
                 self._nested_enums,
                 self._snapshot,
+                self._enum_fields,
             )
             p(f"if ({expr}) {{")
             with p.indented():
@@ -323,6 +328,7 @@ class SerializerGenerator:
                     self._owner_qualified,
                     self._nested_enums,
                     self._snapshot,
+                    self._enum_fields,
                 )
                 p(f"{target}.resize(static_cast<std::size_t>({expr}));")
                 p(f"for (std::size_t i{depth} = 0; i{depth} < {target}.size(); ++i{depth}) {{")
@@ -467,6 +473,15 @@ class SerializerGenerator:
 
 
 # --- module-free helpers --------------------------------------------------------
+
+
+def _is_scalar_enum(t: FieldType) -> bool:
+    """A field whose (optional / conditional) type bottoms out in an enum --
+    used to decide which `when=` field references need an underlying-type cast
+    inside a bitwise operator (`render_predicate`)."""
+    while isinstance(t, (CondType, OptionalType)):
+        t = t.inner
+    return isinstance(t, EnumType)
 
 
 def _field_groups(

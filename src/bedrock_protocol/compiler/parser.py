@@ -816,9 +816,7 @@ class _AnnotationContext:
             return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
         if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
             return Predicate("not", operands=(child(node.value),))
-        if isinstance(node, griffe.ExprBinOp) and node.operator == "&":
-            return Predicate("&", operands=(child(node.left), child(node.right)))
-        if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
+        if isinstance(node, griffe.ExprBinOp) and node.operator in ("&", "|", "^", "*", "+", "-"):
             return Predicate(node.operator, operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprCompare):
             if len(node.operators) != 1 or len(node.comparators) != 1:

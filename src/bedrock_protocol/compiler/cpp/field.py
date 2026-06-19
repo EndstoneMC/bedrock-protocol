@@ -148,34 +148,41 @@ def render_predicate(
     owner_qualified: str,
     nested_enums: frozenset[str],
     snapshot: int | None,
+    enum_fields: frozenset[str] = frozenset(),
 ) -> str:
-    """Render a `Predicate` AST node into a C++ boolean expression."""
-    if pred.kind == "field":
-        return f"{base}.{pred.text}"
-    if pred.kind == "int":
-        return pred.text
-    if pred.kind == "enum":
-        enum, member = pred.text.rsplit(".", 1)
-        q = qualified_at(enum, ctx, owner_qualified, nested_enums, snapshot)
-        return f"{q}::{camel(member)}"
-    if pred.kind == "not":
-        return f"!({render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)})"
-    if pred.kind == "bittest":
-        arg = render_predicate(
-            pred.operands[0],
-            base,
-            ctx,
-            owner_qualified,
-            nested_enums,
-            snapshot,
-        )
-        bit = f"static_cast<std::size_t>({arg})"
-        return f"{base}.{pred.text}.test({bit})"
-    op = {"and": "&&", "or": "||"}.get(pred.kind, pred.kind)
-    if pred.kind in ("*", "+", "-"):
-        lhs = render_predicate(pred.operands[0], base, ctx, owner_qualified, nested_enums, snapshot)
-        rhs = render_predicate(pred.operands[1], base, ctx, owner_qualified, nested_enums, snapshot)
-        return f"({lhs} {op} {rhs})"
-    return f" {op} ".join(
-        f"({render_predicate(o, base, ctx, owner_qualified, nested_enums, snapshot)})" for o in pred.operands
-    )
+    """Render a `Predicate` AST node into a C++ boolean expression.
+
+    `enum_fields` names the owner struct's scalar enum-typed fields. Inside a
+    bitwise operator (`&`, `|`, `^`), an enum operand -- an `Enum.MEMBER` or a
+    reference to one of those fields -- is cast to its underlying integer with
+    `static_cast<std::underlying_type_t<decltype(x)>>`, since a scoped enum has
+    no built-in bitwise operators. Everywhere else the enum value is left as-is.
+    """
+
+    def cast_underlying(expr: str) -> str:
+        return f"static_cast<std::underlying_type_t<decltype({expr})>>({expr})"
+
+    def go(node: Predicate, in_bitwise: bool) -> str:
+        if node.kind == "field":
+            ref = f"{base}.{node.text}"
+            return cast_underlying(ref) if in_bitwise and node.text in enum_fields else ref
+        if node.kind == "int":
+            return node.text
+        if node.kind == "enum":
+            enum, member = node.text.rsplit(".", 1)
+            q = qualified_at(enum, ctx, owner_qualified, nested_enums, snapshot)
+            ref = f"{q}::{camel(member)}"
+            return cast_underlying(ref) if in_bitwise else ref
+        if node.kind == "not":
+            return f"!({go(node.operands[0], False)})"
+        if node.kind == "bittest":
+            bit = f"static_cast<std::size_t>({go(node.operands[0], False)})"
+            return f"{base}.{node.text}.test({bit})"
+        if node.kind in ("&", "|", "^"):
+            return "(" + f" {node.kind} ".join(go(o, True) for o in node.operands) + ")"
+        op = {"and": "&&", "or": "||"}.get(node.kind, node.kind)
+        if node.kind in ("*", "+", "-"):
+            return f"({go(node.operands[0], False)} {op} {go(node.operands[1], False)})"
+        return f" {op} ".join(f"({go(o, False)})" for o in node.operands)
+
+    return go(pred, False)
