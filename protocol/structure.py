@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, int64, packet, type, uint8, value, varint32, varint64
+from protocol import field, int32, int64, packet, type, uint8, value, varint64
 from protocol.common import BlockPos, NetworkBlockPos, Vec3
 from protocol.nbt import CompoundTag
 
@@ -20,36 +20,6 @@ class JigsawStructureDataPacket:
     copy of the behavior pack jigsaw structure rules."""
 
     jigsaw_structure_data_tag: CompoundTag
-
-
-type PositionTrackingId = varint32
-
-
-@packet(id=154, since=407)
-class PositionTrackingDBClientRequestPacket:
-    """Client to server packet for server authoritative runtime database (with persistent
-    LevelStorage backup) designed primarily to track lodestone stuff."""
-
-    class Action(IntEnum):
-        QUERY = 0
-
-    action: Action = field(type=uint8)
-    id: PositionTrackingId
-
-
-@packet(id=153, since=407)
-class PositionTrackingDBServerBroadcastPacket:
-    """Server to client packet for server authoritative runtime database (with persistent
-    LevelStorage backup) designed primarily to track lodestone stuff."""
-
-    class Action(IntEnum):
-        UPDATE = 0
-        DESTROY = 1
-        NOT_FOUND = 2
-
-    action: Action = field(type=uint8)
-    id: PositionTrackingId
-    data: CompoundTag
 
 
 # Body still needs wiring: BDS declares StructureEditorData with nested

@@ -3,6 +3,7 @@ from enum import IntEnum
 from protocol import (
     field,
     int8,
+    int32,
     int64,
     packet,
     type,
@@ -15,11 +16,41 @@ from protocol import (
     varint32,
 )
 from protocol.actor import ActorRuntimeID
-from protocol.common import BlockPos, NetworkBlockPos, SubChunkPos, Vec3
+from protocol.common import BlockPos, NetworkBlockPos, Vec3
 from protocol.dimension import DimensionType
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+
+
+type PositionTrackingId = varint32
+
+
+@packet(id=154, since=407)
+class PositionTrackingDBClientRequestPacket:
+    """Client to server packet for server authoritative runtime database (with persistent
+    LevelStorage backup) designed primarily to track lodestone stuff."""
+
+    class Action(IntEnum):
+        QUERY = 0
+
+    action: Action = field(type=uint8)
+    id: PositionTrackingId
+
+
+@packet(id=153, since=407)
+class PositionTrackingDBServerBroadcastPacket:
+    """Server to client packet for server authoritative runtime database (with persistent
+    LevelStorage backup) designed primarily to track lodestone stuff."""
+
+    class Action(IntEnum):
+        UPDATE = 0
+        DESTROY = 1
+        NOT_FOUND = 2
+
+    action: Action = field(type=uint8)
+    id: PositionTrackingId
+    data: CompoundTag
 
 
 @packet(id=56)
@@ -33,7 +64,8 @@ class BlockActorDataPacket:
 
 @packet(id=26)
 class BlockEventPacket:
-    """Whenever a block event happens it is sent from the server to sync client and server, with arbitrarily encoded information in b0 and b1."""
+    """Whenever a block event happens it is sent from the server to sync client and server,
+    with arbitrarily encoded information in b0 and b1."""
 
     pos: NetworkBlockPos = field(until=944)
     pos: BlockPos = field(since=944)
@@ -110,7 +142,8 @@ type LevelSoundEvent = uvarint32
 
 @packet(id=123, since=332)
 class LevelSoundEventPacket:
-    """Most sounds get launched on server and replicated to clients, but a handful of player initiated sounds are launched on their client and replicated through the network."""
+    """Most sounds get launched on server and replicated to clients, but a handful of player
+    initiated sounds are launched on their client and replicated through the network."""
 
     # v1001 replaced the uvarint32 enum ordinal with the lower-cased sound-event
     # name as a length-prefixed string (e.g. "item.use.on", "fall.big").
@@ -165,7 +198,8 @@ class ClientboundUpdateSoundDataPacket:
 
 @packet(id=69)
 class RequestChunkRadiusPacket:
-    """The client can't just change the view radius without the server's approval, otherwise there could be holes on unrendered area."""
+    """The client can't just change the view radius without the server's approval, otherwise
+    there could be holes on unrendered area."""
 
     chunk_radius: varint32
     max_chunk_radius: uint8 = field(since=582)
@@ -191,7 +225,8 @@ class SpawnPositionType(IntEnum):
 
 @packet(id=43)
 class SetSpawnPositionPacket:
-    """When a player logs in or the SetWorldSpawnCommand is used this is sent from the server to the client. Does not change when using a bed, that is a separate packet (RespawnPacket)."""
+    """When a player logs in or the SetWorldSpawnCommand is used this is sent from the server
+    to the client. Does not change when using a bed, that is a separate packet (RespawnPacket)."""
 
     spawn_pos_type: SpawnPositionType = field(type=varint32)
     pos: NetworkBlockPos = field(until=944)
@@ -209,6 +244,19 @@ class StopSoundPacket:
     name: str
     stop_all: bool
     stop_music_legacy: bool = field(since=712)
+
+
+@type(until=1001)
+class SubChunkPos:
+    x: varint32
+    y: varint32
+    z: varint32
+
+@type(since=1001)
+class SubChunkPos:
+    x: int32
+    y: int32
+    z: int32
 
 
 class SubChunkPosOffset:
@@ -247,7 +295,7 @@ class SubChunkRequestPacket:
 
 
 @packet(id=175, since=1001)
-class SubChunkRequestPacket:  # noqa: F811
+class SubChunkRequestPacket:
     """Sent from the client to the server representing a batch of subchunks that the client requests from the server."""
 
     dimension_type: DimensionType
@@ -302,7 +350,10 @@ class ActorBlockSyncMessage:
 
 @packet(id=110)
 class UpdateBlockSyncedPacket:
-    """Variation of UpdateBlockPacket that includes information to sync entities with renderchunk generation. Occasionally when blocks change a sync message is sent and during the change on the dimension, this packet is sent to the client to alert the update flags and sync info at a specific position."""
+    """Variation of UpdateBlockPacket that includes information to sync entities with renderchunk
+    generation. Occasionally when blocks change a sync message is sent and during the change on
+    the dimension, this packet is sent to the client to alert the update flags and sync info at
+    a specific position."""
 
     pos: NetworkBlockPos = field(until=944)
     pos: BlockPos = field(since=944)

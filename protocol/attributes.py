@@ -2,10 +2,15 @@ from enum import IntEnum
 
 from protocol import field, int32, packet, type, uint32, uvarint64
 from protocol.actor import ActorRuntimeID
-from protocol.common import Color255RGBA
 from protocol.dimension import DimensionType
 
 package = "bedrock.protocol"
+
+
+# Cereal writes SharedTypes::Color255RGBA as a tagged union over a CSS-style
+# hex string or a raw four-int RGBA array; the BDS struct itself is one
+# `mce::Color { float r, g, b, a; }` wrapper.
+type Color255RGBA = str | tuple[int32, int32, int32, int32]
 
 
 @type(since=544)

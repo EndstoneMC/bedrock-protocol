@@ -6,10 +6,6 @@ from protocol.actor import ActorRuntimeID
 package = "bedrock.protocol"
 
 
-class AgentCapabilities:
-    can_modify_blocks: bool | None
-
-
 @type(since=503)
 class AgentActionType(IntEnum):
     ATTACK = 1
