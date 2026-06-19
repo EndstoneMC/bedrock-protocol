@@ -249,8 +249,6 @@ class PropertySyncData:
     float_entries: list[PropertySyncFloatEntry]
 
 
-# SyncedAttribute is the spawn-only wire form sent inline in AddActorPacket --
-# (name, min, current, max) without modifiers or default bounds.
 class SyncedAttribute:
     name: str
     min_value: float
@@ -262,10 +260,6 @@ class SyncedAttribute:
 class AddActorPacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
-    # TODO: gophertunnel keeps Attributes as (name, min, value, max) but CloudburstMC's
-    # v291 attribute serializer reads (name, min, max, value); the BDS header lists
-    # mMinValue / mCurrentValue / mMaxValue with no on-wire order, so the disagreement
-    # cannot be resolved from headers alone.
     actor_type: uvarint32 = field(until=313)
     actor_type: str = field(since=313)
     pos: Vec3
