@@ -1,5 +1,5 @@
 import uuid
-from enum import IntEnum, IntFlag, auto
+from enum import IntEnum, IntFlag
 
 from protocol import (
     bitset,
@@ -96,10 +96,10 @@ class ActorEvent(IntEnum):
 
 class MoveActorAbsoluteData:
     class Header(IntFlag):
-        IS_ON_GROUND = auto()
-        FORCE_MOVE = auto()
-        FORCE_MOVE_LOCAL_ENTITY = auto()
-        FORCE_COMPLETION = auto()
+        IS_ON_GROUND = 1 << 0
+        FORCE_MOVE = 1 << 1
+        FORCE_MOVE_LOCAL_ENTITY = 1 << 2
+        FORCE_COMPLETION = 1 << 3
 
     runtime_id: ActorRuntimeID
     header: Header = field(type=uint8)
