@@ -1,238 +1,51 @@
-# Project rules
+# bedrock-protocol
 
-1. **Never add Claude as a co-author.** No `Co-Authored-By: Claude ...` lines
-   in commits or PR descriptions, ever.
+A protoc-style codegen for Minecraft Bedrock wire packets. The schema is a Python
+DSL under `protocol/` (read statically, never executed) compiled to C++ headers by
+the compiler under `src/bedrock_protocol/`. Build with CMake, type-check with
+`uv run mypy`, lint with ruff.
 
-2. **Jinja templates emit no explanatory comments into generated headers.**
-   Files under `src/bedrock_protocol/compiler/cpp/templates/` should not
-   write `//` blocks into the generated C++ output. Namespace close-markers
-   like `}  // namespace bedrock::protocol` are fine (bracket-matching aids).
-   Prose explanations above a code construct are not. If you want to leave
-   a "why this exists" note in the generated file, document it in the Jinja
-   template's own `{# ... #}` instead so it is seen by codegen maintainers,
-   not by header consumers.
+## Rules
 
-3. **Tests are usage examples too.** Keep them terse and high-signal, but
-   demonstrate each public API shape. The `tests/` folder doubles as the
-   canonical place a new dev reads to learn the library. Avoid:
-    - Enumerating many similar values (`REQUIRE(Foo::A == 0); REQUIRE(Foo::B == 1); ...`).
-      Two or three anchors are enough. Pick the first, a representative
-      middle, and the latest.
-    - `struct Case { ... }` + vector + for-loop scaffolding when the cases
-      collapse to a single round-trip exercising the same path.
-    - Multi-line explanatory comments restating what the test does or quoting
-      reference implementations. One short inline comment is enough.
-    - `SECTION` wrappers when each section is self-contained. Promote to
-      separate `TEST_CASE`s.
-    - Re-asserting state immediately after assigning it.
-    - A standalone "wire format" test for a primitive when an outer round-trip
-      already exercises the same encoding.
+The project's binding rules live under `.claude/rules/`, grouped into three files and
+imported below. Read them before editing the DSL, the compiler, the tests, or the
+docs.
 
-   Keep each public API shape demonstrated somewhere: explicit-version
-   access (`Foo_<N>`), bare-name-for-latest, field gating,
-   serialize/deserialize, aggregate init of generated structs, optional
-   field handling. If consolidating drops the only demonstration of a
-   form, fold it into a different test.
+@.claude/rules/style.md
+@.claude/rules/protocol.md
+@.claude/rules/tests.md
 
-4. **Keep `README.md` minimal.** The library is still in active design.
-   Every interface is subject to change. Do not expand the README with
-   detailed API documentation, exhaustive examples, or extended rationale
-   that will rot as the design moves. Cover the bare essentials: what the
-   project is, how to build it, and the smallest possible "hello world"
-   snippet. Link out for anything beyond that.
+## Enforced automatically
 
-5. **ASCII only. No semicolons joining sentences.** Non-ASCII punctuation
-   (em-dashes, en-dashes, Unicode arrows like the right-arrow character,
-   smart quotes) and semicolons used to splice independent clauses are
-   common LLM tells. Use plain ASCII throughout: regular hyphens, arrows
-   like `->` or `=>`, straight quotes. If you reach for a semicolon to
-   join two clauses, either rewrite as one sentence or break into two.
+`.claude/settings.json` wires `.claude/hooks/check_rules.py` as Pre/PostToolUse hooks
+that block, before an edit or commit lands (all five map to `style.md`):
 
-6. **Stream wire API is templated, not named.** `BinaryReader` and
-   `BinaryStream` expose I/O exclusively through templates:
-    - `read<T>()` / `write<T>(v)` -- fixed-width, native-endian little by
-      default
-    - `read<T, std::endian>()` / `write<T, std::endian>(v)` -- fixed-width
-      with explicit byte order (swap only when `Order != std::endian::native`)
-    - `readVarInt<T>()` / `writeVarInt<T>(v)` -- LEB128, zigzag for signed
-      `T`
-    - `read<std::string>()` / `write(string_view)` -- varuint32 length +
-      bytes
+- non-ASCII characters in any edited file
+- `from __future__ import annotations` in a `.py` file
+- `ruff check` failures on an edited `.py` file
+- `//` prose comments emitted from a Jinja template
+- a `Co-Authored-By` trailer on `git commit`
 
-7. **Version-gate new packets against reference implementations.** The
-   EndstoneMC protocol-docs JSON describes only the latest schema, so it
-   never reveals when a field appeared or was removed. Before adding (or
-   omitting) `field(since=)` / `value(since=, until=)` gating, cross-check
-   each field's history against two reference libraries:
-    - `CloudburstMC/Protocol` -- `bedrock-codec` keeps a per-protocol-version
-      serializer at
-      `.../bedrock/codec/vNNN/serializer/<Packet>Serializer_vNNN.java`.
-      A field that first appears in a later `vNNN` serializer is `since=NNN`,
-      and the oldest `vNNN` that defines the serializer at all is the
-      packet's own `since` -- except for the v291 floor, see below.
-    - `Sandertv/gophertunnel` -- `minecraft/protocol/packet/<name>.go` for the
-      current field shape, plus `git log -p -- minecraft/protocol/packet/<name>.go`
-      on that file to walk every Marshal diff. `git log -S<field>` only catches
-      additions/removals of field *names* -- it misses type / encoding changes
-      that keep a name (e.g. `io.UBlockPos(&pk.WorldSpawn) -> io.BlockPos(...)`,
-      `io.Bool(&pk.EditorWorld) -> io.Varint32(&pk.EditorWorldType)`, or
-      `io.Bool(&pk.X) -> protocol.OptionalFunc(io, &pk.X, io.Bool)`). A name
-      that survives across versions says nothing about whether the on-wire
-      shape did. Read the `Marshal` body diff in every commit that touched
-      the file, and gate each shape change with `field(since=, until=)`,
-      reapplying the right wire type for each interval. When a commit message
-      says "Fix incorrect ..." or reverts an earlier change, treat that as a
-      gophertunnel bug interval, not a real Mojang protocol change -- date the
-      DSL by the corrected shape and leave the buggy interval out of the gating.
+Everything else is enforced by review. mypy strict (`uv run mypy`) is the type gate.
+Run it before committing.
 
-   Use the protocol (network) version number. Gate the type itself at the
-   version it first appears -- `@packet(since=N)` for a packet, `@type(since=N)`
-   for an enum or non-packet struct -- so the generated type is absent from
-   earlier snapshots. Fields and members present from that introduction need
-   no `since` of their own. Only later additions take `field(since=)` or
-   `value(since=)`. A type or field that neither reference models is left
-   ungated.
+## Compatibility: former rule numbers
 
-   CloudburstMC's codec history begins at protocol 291, so v291 is a floor,
-   not a real introduction point: a packet or enum whose oldest serializer is
-   `v291` cannot be told apart from one that predates the reference window.
-   Leave it ungated -- no `since=291`. The earliest introduction worth gating
-   is 292 or later. The same applies to a `field(since=)` / `value(since=)`
-   that would land on 291: drop it.
+`SPEC.md` and the `add-protocol-version` skill reference the old "CLAUDE.md rule N"
+numbering. The map from the old numbers to the rule file that now holds each one:
 
-   The protocol-docs JSON is mechanically dumped from a Bedrock server and
-   the dumper is not perfect. When protocol-docs disagrees with gophertunnel
-   and CloudburstMC -- a field's shape, name, type, or id -- do not silently
-   pick one. Raise the discrepancy.
-
-8. **Every packet gets a golden round-trip test generated by gophertunnel.**
-   When you add a packet, add a test that serializes the struct and asserts
-   its bytes against a `const std::vector<std::uint8_t> golden`. Do not
-   hand-compute the golden. Construct the equivalent `packet.<Name>` in
-   `Sandertv/gophertunnel`, marshal it through a `protocol.Writer` (this
-   writes the body only, with no packet-id header, matching our `serialize`),
-   and embed the resulting bytes. Precede the `golden` with a two-line
-   comment: a first line `// generated by gophertunnel:` and a second line
-   with the marshalled `packet.<Name>{...}` literal. If a packet has no
-   gophertunnel equivalent, do not hand-write the golden -- raise it
-   instead. Golden tests cover packets only -- a non-packet component type
-   is exercised through a packet that embeds it, not on its own.
-
-   A golden for a protocol version older than gophertunnel's current one
-   cannot come from `master`: a packet's `Marshal` there reflects only the
-   latest protocol. Check out `Sandertv/gophertunnel` at the historical
-   commit whose marshaller matches that era -- find it with
-   `git log -- minecraft/protocol/packet/<name>.go` -- marshal there, and
-   record the commit in the comment: `// generated by gophertunnel @<commit>:`.
-   Commits before the 2023 Marshal/Unmarshal merge use a different API
-   (`Marshal(buf *bytes.Buffer)`), so the driver differs per era. Never
-   hand-compute a golden, not even by reading the `Marshal` source.
-
-   For a packet whose body is (or contains) a `CompoundTag`, the Go-side NBT
-   struct used to build the golden must declare its `nbt:"..."`-tagged fields
-   in alphabetical key order, and a `map[string]any` payload must be replaced
-   by such a struct. Our `CompoundTag` is `std::map`-backed and writes entries
-   in sorted-key order, while gophertunnel's NBT encoder follows Go's struct
-   declaration order and randomizes map iteration -- mismatch yields the same
-   compound semantically but a different byte sequence, and the round-trip
-   `REQUIRE(buf == golden)` fails. Sort the Go struct fields before generating.
-
-9. **No `from __future__ import annotations`.** The compiler's Python omits
-   it. Where an annotation needs a forward or recursive reference -- common
-   in `schema.py`'s recursive IR (`TypeRef`, `Wire`, `Pred`) -- write that
-   annotation as a string literal, e.g. `inner: "TypeRef"`.
-
-10. **Single-field gates use `= field(when=...)`, not a `with` block.** When
-    only one field is guarded by a predicate, write it inline as
-    `name: T = field(when=lambda p: ...)`. Reserve `with field(when=...):`
-    for groups of two or more fields that share the same gate, or for the
-    optional / union case the inline form does not support (see the `when`
-    docstring in `protocol/__init__.py`). A solo field inside a `with` block
-    is just noise.
-
-11. **Packet and type docstrings come from `Mojang/bedrock-protocol-docs`.**
-    The docstring of a `@packet` or `@type` is the Description that
-    `Mojang/bedrock-protocol-docs` gives for it -- the single source of truth
-    for docstring prose. A packet with a text page under `docs/` carries its
-    Description in `<div class="description">` blocks (there may be more than
-    one, and a leading short name like `Interact` or `Animate Actor` is a
-    title, not part of the description). A packet that appears only as a tree
-    under `html/` -- an embedded SVG with no prose -- has no Description.
-    Carry the Description across faithfully: decode HTML entities, fix obvious
-    rendering typos, and adjust only for the ASCII / no-semicolon-splice rule
-    (rule 5). Write each docstring as a single line; hand-wrap only the ones
-    `ruff check` flags over-length (E501), since `ruff format` does not
-    reflow docstring prose. Do not invent prose, paraphrase a description from
-    gophertunnel
-    or CloudburstMC, or restate version history that `since` / `until` already
-    encode. If `Mojang/bedrock-protocol-docs` gives no Description, leave the
-    type undocumented rather than writing one.
-
-12. **Names mirror BDS.** The generated headers should read like the BDS
-    binary's own headers wherever we can verify them: class names, type
-    definitions, nested structure names, and member names all come from
-    BDS. Resolve every name through this hierarchy, in order, and stop at
-    the first source that has it:
-    - **bedrock-headers** -- the BDS-extracted C++ headers. The
-      authoritative source. A name lifted from here needs no TODO: it is
-      the BDS name by construction. Carry it into the project's
-      conventions (`PascalCase` for types, `snake_case` for fields) without
-      paraphrasing or shortening.
-    - **EndstoneMC/protocol-docs** -- fall back here only when
-      bedrock-headers does not cover the symbol. Leave a `# TODO: confirm
-      against BDS` next to the name so a later pass can reconcile it once
-      headers catch up.
-    - **Mojang/bedrock-protocol-docs `.dot` files** -- last resort, when
-      neither of the above has the symbol. Always leave a
-      `# TODO: confirm against BDS`. The DOT files are upstream naming
-      but not BDS-verified.
-
-    Never lift a name from gophertunnel or CloudburstMC -- those references
-    date and shape symbols, they do not name them. If no source names a
-    symbol, raise it rather than inventing or paraphrasing one.
-
-    **Strip Mojang-internal marker prefixes.** A few BDS names carry prefixes
-    like `INTERNAL_` (server-internal disconnect reasons such as
-    `INTERNAL_UserLeaveGameAttempted`, `INTERNAL_NoFailOccurred`,
-    `INTERNAL_RequestServerShutdown`) or `TESTONLY_` (test-only entries such
-    as `TESTONLY_CantConnect`). These are Mojang-internal markers that mean
-    nothing to community plugin developers, who are the audience here. Drop
-    the prefix in the DSL (`USER_LEAVE_GAME_ATTEMPTED`, `CANT_CONNECT`,
-    `NO_FAIL_OCCURRED`, `REQUEST_SERVER_SHUTDOWN`). The wire value is
-    unchanged, only the name is cleaned up. This is the one allowed
-    paraphrase of a bedrock-headers name -- no `# TODO: confirm against BDS`
-    needed, since the underlying value is still BDS-anchored. Similarly,
-    a `_Deprecated` suffix or `DEPRECATED_` prefix on a BDS member is
-    metadata: drop it from the name and model the deprecation through the
-    DSL's `value(deprecated=...)` / `field(deprecated=...)` instead.
-
-    **Names only -- not wire shape.** Rule 12 governs what to call a symbol,
-    nothing else. The DSL declares wire fields, not in-memory members: BDS
-    headers show every member of a class, but only a subset is serialized,
-    and the on-wire shape (which fields, in what order, with what prefix /
-    type / gating) is invisible from a header alone. To learn the wire
-    shape, consult the protocol references in this order: EndstoneMC
-    protocol-docs (current schema), `Mojang/bedrock-protocol-docs` (current
-    + history), `Sandertv/gophertunnel` (shape + dating), `CloudburstMC/Protocol`
-    (per-protocol-version codec, also for dating). Do not infer wire fields
-    from bedrock-headers. In particular, a type whose body is empty in the
-    schema (e.g. an empty `class ShapedRecipe: pass`) should not be
-    "completed" by copying members out of the BDS header -- if the wire
-    references show no fields, the body stays empty.
-
-13. **Enum member values: `value(N, ...)` for explicit, `auto()` for the rest.**
-    The DSL's enum surface is three forms, picked by what the member needs:
-    - A bare integer literal (`HARD = 3`) when the wire number is itself
-      meaningful and worth reading. Use this for the first member of a run
-      that anchors the numbering (often the `0` baseline), or for values
-      that are wire-deliberate (e.g. `UNDEFINED = -1`).
-    - `value(N, since=, until=, deprecated=)` when the member needs version
-      gating or deprecation marking. The positional `N` is mandatory here:
-      a member that's only present in a version window has to pin its wire
-      number explicitly, since auto-numbering would shift if a sibling was
-      added earlier in the run.
-    - `auto()` (from `enum.auto`) for everything else, including count or
-      bitset-width sentinels like `COUNT = auto()` at the end of an enum.
-      Auto-number is `previous_member + 1`, mirroring gophertunnel's `iota`
-      blocks. Do not spell auto-numbered members as `value()` -- prefer the
-      shorter, Python-idiomatic `auto()` unless you also need a version kwarg.
+| Old | Now |
+| --- | --- |
+| rule 1  | `style.md` (commits) |
+| rule 2  | `style.md` (no template comments) |
+| rule 3  | `tests.md` (tests as usage examples) |
+| rule 4  | `style.md` (keep README minimal) |
+| rule 5  | `style.md` (ASCII, no semicolon splices) |
+| rule 6  | `style.md` (stream wire API) |
+| rule 7  | `protocol.md` (version-gating, sources) |
+| rule 8  | `tests.md` (golden round-trip tests) |
+| rule 9  | `style.md` (no `from __future__ import annotations`) |
+| rule 10 | `protocol.md` (single-field gates) |
+| rule 11 | `protocol.md` (docstrings) |
+| rule 12 | `protocol.md` (names mirror BDS) |
+| rule 13 | `protocol.md` (enum member values) |

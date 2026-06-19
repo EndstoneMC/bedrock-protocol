@@ -17,51 +17,51 @@ field, enum value, and packet that changed between the previous
 and a gophertunnel-generated golden test, and the final line of the
 diff bumps `__version__` in `protocol/__init__.py`.
 
-## Sources of truth — read in this order
+## Sources of truth -- read in this order
 
 The community references disagree on wire shape and none of them
 enumerate the full change set, so resolve every edit by walking these
 sources in order and stopping at the first that confirms the change
 against a second.
 
-### Enumeration — the WHAT (use first if available)
+### Enumeration -- the WHAT (use first if available)
 
-0. **The per-protocol-version changelog** — a one-line-per-version list
+0. **The per-protocol-version changelog** -- a one-line-per-version list
    of what changed (packet / enum / field / component), one entry per
    integer protocol bump. When you have one for the cycle, it is the
    strongest **completeness** check: the sources below tell you *how*
    each change is shaped on the wire, but only the changelog tells you
    the *full set*, so it catches changes a `protocol-docs` two-dot diff
    misses (a still-hand-serialized packet is absent from the dump
-   entirely). It does **not** resolve wire shape — every entry still has
-   to be confirmed against the sources below. The verbatim 975→1001
+   entirely). It does **not** resolve wire shape -- every entry still has
+   to be confirmed against the sources below. The verbatim 975->1001
    changelog and its audited verdicts are recorded at the end of this
    file as a worked example.
 
-   **Source / how to refresh for the next cycle:** _TODO — confirm with
+   **Source / how to refresh for the next cycle:** _TODO -- confirm with
    the maintainer where these entries come from (BDS strings, an
-   internal Mojang changelog, a community tracker, …) and record the
+   internal Mojang changelog, a community tracker, ...) and record the
    exact fetch step here, so the next bump can obtain its own
    changelog._
 
    **Using it during a bump.** Treat the changelog as a checklist: for
    every entry between the old and new `__version__`, find the DSL
-   symbol and assign a verdict — **COVERED-CORRECT** (present, gated at
-   the right boundary), **MISSING** (a wire change not yet modelled →
+   symbol and assign a verdict -- **COVERED-CORRECT** (present, gated at
+   the right boundary), **MISSING** (a wire change not yet modelled ->
    gate it, or stop-and-raise if blocked), **N-A-WIRE-INVARIANT**,
    **N-A-NOT-WIRE**, or **PARTIAL** (modelled but simplified; confirm
    against BDS). A clean bump ends with every entry COVERED-CORRECT or
    N-A, and every MISSING/PARTIAL fixed or explicitly raised.
 
    **Read each entry as a change-kind.** The changelog is not just enum
-   notes — it tells you which packets were re-serialized, which fields
+   notes -- it tells you which packets were re-serialized, which fields
    moved, and which packets are new. Most entries are real wire changes:
 
-   - **"… Converted to Cereal"** — the packet was migrated to Mojang's
+   - **"... Converted to Cereal"** -- the packet was migrated to Mojang's
      `cereal` serializer. This is the **highest-value signal in the
      changelog**: it names exactly which packets to re-derive, and it
-     flags a **likely binary/wire-format change** — field reorder,
-     prefix-width swap (`uint32` → `uvarint32`), dropped field, or a
+     flags a **likely binary/wire-format change** -- field reorder,
+     prefix-width swap (`uint32` -> `uvarint32`), dropped field, or a
      discriminated union collapsing to a flat layout. When the entry
      adds "broke binary compatibility," the wire definitely changed.
      Never assume the wire is unchanged: diff the post-cereal shape
@@ -70,36 +70,36 @@ against a second.
      expresses and must be marked `COMPILER_EXTENSION_NEEDED` (as
      BossEvent / SubChunkRequest were). Pair with the "A new file in the
      dump is a cerealisation" section below.
-   - **Packet field added / removed / reshaped** — e.g. "Added
+   - **Packet field added / removed / reshaped** -- e.g. "Added
      richPresenceId to PresenceConfiguration", "now includes hit
      position", "mSoundEvent changed from LevelSoundEvent to
      SoundEventIdentifier". A real wire change: gate the field with
      `since=`/`until=`, or redeclare it for a type/shape change
      (section 3 of "What the DSL diff looks like").
-   - **New packet** — e.g. "Added ClientboundUpdateSoundDataPacket". Add
-     `@packet(id=…, since=<release>)` + a gophertunnel golden test.
-   - **Enum member added** — **N-A-WIRE-INVARIANT** *when the carrying
+   - **New packet** -- e.g. "Added ClientboundUpdateSoundDataPacket". Add
+     `@packet(id=..., since=<release>)` + a gophertunnel golden test.
+   - **Enum member added** -- **N-A-WIRE-INVARIANT** *when the carrying
      field is a raw integer*. If the DSL models the field as a raw alias
      (`type LevelSoundEvent = uvarint32`) or a bare `varint32`, adding
-     members (`SlimeLanding`, `Equipping`, `GEYSER_BOOST`, …) does not
-     change the wire — nothing to gate. Only model the add if the DSL
+     members (`SlimeLanding`, `Equipping`, `GEYSER_BOOST`, ...) does not
+     change the wire -- nothing to gate. Only model the add if the DSL
      has that enum as a named `IntEnum` whose surface you keep complete.
      Doubly moot if the field also becomes a string at the release
-     (LevelSoundEvent → string at 1001).
-   - **Behavior-pack / component / world-gen data** —
+     (LevelSoundEvent -> string at 1001).
+   - **Behavior-pack / component / world-gen data** --
      **N-A-NOT-WIRE**. Entries naming components or generation data
-     (`BlockGeometryComponent`, `BiomeNoiseGradient…surfaceData`) are
-     NBT/JSON behavior-pack or chunk-gen data, not network packets —
+     (`BlockGeometryComponent`, `BiomeNoiseGradient...surfaceData`) are
+     NBT/JSON behavior-pack or chunk-gen data, not network packets --
      don't chase them.
 
-   **Cross-cutting boundary rule — intra-cycle version numbers collapse
+   **Cross-cutting boundary rule -- intra-cycle version numbers collapse
    to the shipped release.** The integers between two shipped releases
-   (e.g. 976–1000) are internal / beta increments — no client ever
+   (e.g. 976-1000) are internal / beta increments -- no client ever
    shipped on them. The DSL only carries gates at **shipped release**
-   protocols (verify: the only gates in the recent range are `…924, 944,
+   protocols (verify: the only gates in the recent range are `...924, 944,
    975, 1001`, never an intermediate value). So gate every change in the
    cycle at `since=<release>` (e.g. `since=1001`), **not** at its raw
-   changelog number — a change dated 980 or 998 is still `since=1001`.
+   changelog number -- a change dated 980 or 998 is still `since=1001`.
    This applies to all the kinds above. (The DSL gates at the first
    protocol of a cycle.)
 
@@ -324,7 +324,7 @@ generated by gophertunnel. The golden-tests rule (`.claude/rules/tests.md`) is n
   the freshest protocols -- **stop and raise**. Do not invent a
   golden, even by reading `Marshal`.
 
-### Stop and raise — do not edit silently
+### Stop and raise -- do not edit silently
 
 Pause for the user when:
 
@@ -364,9 +364,9 @@ exactly this reason.
 ### B. Survey the diff at the source
 
 4. Pull or refresh local clones of all four reference repos. Also get
-   the per-protocol-version changelog for the OLD→N cycle if one exists
-   (source 0 under "Sources of truth") — it is the completeness backstop
-   for steps 5–7.
+   the per-protocol-version changelog for the OLD->N cycle if one exists
+   (source 0 under "Sources of truth") -- it is the completeness backstop
+   for steps 5-7.
 5. Run `git diff` on EndstoneMC/protocol-docs between the branch
    tagged for the old version and the branch for N. Read every
    touched packet file.
@@ -386,8 +386,8 @@ exactly this reason.
    it in the commit body.
 7a. **Coverage pass against the changelog.** If you have the
    per-version changelog, walk every entry between OLD and N and assign
-   each a verdict — COVERED-CORRECT / MISSING / N-A-WIRE-INVARIANT /
-   N-A-NOT-WIRE / PARTIAL — reading each entry as a change-kind
+   each a verdict -- COVERED-CORRECT / MISSING / N-A-WIRE-INVARIANT /
+   N-A-NOT-WIRE / PARTIAL -- reading each entry as a change-kind
    (cerealization / field change / new packet / enum-add / component)
    and applying the boundary rule, per source 0 under "Sources of
    truth". Cerealization entries are the priority: each is a likely
@@ -465,7 +465,7 @@ exactly this reason.
 | Rename | **raise** (no rename primitive) |
 | Wire shape DSL can't express | **raise** (no compiler edits) |
 
-## Worked example: the v975 → v1001 changelog (BDS 1.26.20 → 1.26.30)
+## Worked example: the v975 -> v1001 changelog (BDS 1.26.20 -> 1.26.30)
 
 Verbatim per-version entries for the cycle, then the audited verdicts
 (2026-06-19). All covered changes are gated `since=1001` per rule 1.
@@ -501,9 +501,9 @@ Verbatim per-version entries for the cycle, then the audited verdicts
 
 **Covered:** 976 (`attributes.py` noise_transition), 977 (`level.py`
 ClientboundUpdateSoundDataPacket), 978 (`player.py` whisker_scopes), 979
-(SubChunkRequest — COMPILER_EXTENSION_NEEDED), 980 (`game.py` richPresenceId),
-984 (BossEvent — COMPILER_EXTENSION_NEEDED), 989 (`graphics.py` PrimitiveShapes),
-990 (`graphics.py` player_id), 993 (`level.py` — modelled as `str`; PARTIAL,
+(SubChunkRequest -- COMPILER_EXTENSION_NEEDED), 980 (`game.py` richPresenceId),
+984 (BossEvent -- COMPILER_EXTENSION_NEEDED), 989 (`graphics.py` PrimitiveShapes),
+990 (`graphics.py` player_id), 993 (`level.py` -- modelled as `str`; PARTIAL,
 confirm no variant discriminator), 996 (`login.py` ClientCacheBlobStatus,
 codegens), 998 (`effect.py` GEYSER_BOOST), 999 (`game.py` experience/world
 optional).
@@ -512,11 +512,11 @@ optional).
 **N-A not-wire (rule 3):** 981, 994.
 
 **Open gaps at the audit:**
-- **1001 InventoryContentPacket → Cereal** — present at `inventory.py`
+- **1001 InventoryContentPacket -> Cereal** -- present at `inventory.py`
   `@packet(id=49)` but no `since=1001` redeclaration. Already uses
   `NetworkItemStackDescriptor` (no import cycle), so directly fixable.
-- **995 isChatLogging / 997 allowAnonymousBlockDropsInEditorWorlds** — absent
+- **995 isChatLogging / 997 allowAnonymousBlockDropsInEditorWorlds** -- absent
   from StartGamePacket / LevelSettings.
 - **982 / 985 / 988** (ItemUseOnActorInventoryTransaction hit_pos,
-  InventoryTransactionPacket, MobArmorEquipmentPacket cereal) — only in
+  InventoryTransactionPacket, MobArmorEquipmentPacket cereal) -- only in
   `protocol/_drafts/`, blocked on the `NetworkItemStackDescriptor` resolver cycle.
