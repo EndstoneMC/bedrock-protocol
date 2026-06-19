@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, int64, packet, type, uint8, value, varint64
+from protocol import field, int32, int64, packet, type, uint8, value, varint32, varint64
 from protocol.common import BlockPos, NetworkBlockPos, Vec3
 from protocol.nbt import CompoundTag
 
@@ -22,11 +22,29 @@ class JigsawStructureDataPacket:
     jigsaw_structure_data_tag: CompoundTag
 
 
-# Body still needs wiring: BDS declares StructureEditorData with nested
-# StructureSettings, StructureBlockType, StructureRedstoneSaveMode. The wire
-# shape changed at v340/v361/v388/v554/v776.
+class StructureBlockType(IntEnum):
+    DATA = 0
+    SAVE = 1
+    LOAD = 2
+    CORNER = 3
+    INVALID = 4
+    EXPORT = 5
+
+
+class StructureRedstoneSaveMode(IntEnum):
+    SAVES_TO_MEMORY = 0
+    SAVES_TO_DISK = 1
+
+
 class StructureEditorData:
-    pass
+    structure_name: str
+    filtered_structure_name: str = field(since=776)
+    data_field: str
+    include_players: bool
+    show_bounding_box: bool
+    structure_block_type: StructureBlockType = field(type=varint32)
+    structure_settings: StructureSettings
+    redstone_save_mode: StructureRedstoneSaveMode = field(type=varint32, since=388)
 
 
 @packet(id=90)
