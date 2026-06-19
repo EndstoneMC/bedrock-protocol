@@ -859,8 +859,13 @@ class _AnnotationContext:
                     f"{field_name}: field(when=...) references {top!r}, which is not a field declared before it"
                 )
             return Predicate("field", text=".".join(parts[1:]))
-        if len(parts) == 2 and (head in nested or head in self.enum_names):
-            return Predicate("enum", text=f"{head}.{parts[1]}")
+        # `Enum.MEMBER`, where the enum may be a bare nested name (`Type.X`) or a
+        # qualified path to a nested enum (`Outer.Inner.X`) -- the latter is how a
+        # predicate reaches a sibling-nested enum, or names its own packet's enum
+        # so the lambda body resolves the symbol for editors / linters.
+        enum_path = ".".join(parts[:-1])
+        if enum_path in nested or enum_path in self.enum_names:
+            return Predicate("enum", text=".".join(parts))
         raise CompilerError(
             f"{field_name}: field(when=...) reference {'.'.join(parts)!r} is neither a "
             f"`{param}.field[.sub...]` chain nor an Enum.MEMBER"

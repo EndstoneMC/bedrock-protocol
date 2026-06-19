@@ -56,9 +56,7 @@ class MapItemTrackedActor:
         key_block_pos: NetworkBlockPos = field(
             when=lambda p: p.type == MapItemTrackedActor.Type.BLOCK_ENTITY, until=944
         )
-        key_block_pos: BlockPos = field(
-            when=lambda p: p.type == MapItemTrackedActor.Type.BLOCK_ENTITY, since=944
-        )
+        key_block_pos: BlockPos = field(when=lambda p: p.type == MapItemTrackedActor.Type.BLOCK_ENTITY, since=944)
 
 
 @packet(id=67)
@@ -80,17 +78,25 @@ class ClientboundMapItemDataPacket:
     # caller-pinned value, so a caller must set the flags matching the payload
     # blocks they populate; the DSL has no spelling for "this flag is set iff
     # field X is non-empty" on serialize.
-    map_ids: list[ActorUniqueID] = field(when=lambda p: p.type & Type.CREATION != 0)
+    map_ids: list[ActorUniqueID] = field(when=lambda p: p.type & ClientboundMapItemDataPacket.Type.CREATION != 0)
     scale: int8 = field(
-        when=lambda p: p.type & (Type.TEXTURE_UPDATE | Type.DECORATION_UPDATE | Type.CREATION) != 0
+        when=lambda p: (
+            p.type
+            & (
+                ClientboundMapItemDataPacket.Type.TEXTURE_UPDATE
+                | ClientboundMapItemDataPacket.Type.DECORATION_UPDATE
+                | ClientboundMapItemDataPacket.Type.CREATION
+            )
+            != 0
+        )
     )
     tracked_objects: list[MapItemTrackedActor.UniqueId] = field(
-        when=lambda p: p.type & Type.DECORATION_UPDATE != 0,
+        when=lambda p: p.type & ClientboundMapItemDataPacket.Type.DECORATION_UPDATE != 0,
     )
     decorations: list[MapDecoration] = field(
-        when=lambda p: p.type & Type.DECORATION_UPDATE != 0,
+        when=lambda p: p.type & ClientboundMapItemDataPacket.Type.DECORATION_UPDATE != 0,
     )
-    with field(when=lambda p: p.type & Type.TEXTURE_UPDATE != 0):
+    with field(when=lambda p: p.type & ClientboundMapItemDataPacket.Type.TEXTURE_UPDATE != 0):
         width: varint32
         height: varint32
         x_offset: varint32
