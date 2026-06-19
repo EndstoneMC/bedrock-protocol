@@ -52,7 +52,10 @@ name on the hoisted class and flag it.
 
 A BDS `FooPacketPayload` (a packet's variant body) maps onto the DSL `@packet FooPacket`
 itself: nest its variant structs directly inside the packet class and drop the `Payload`
-suffix, as `SyncWorldClocksPacket` and `PlayerVideoCapturePacket` do.
+suffix, as `SyncWorldClocksPacket` and `PlayerVideoCapturePacket` do. A helper struct BDS
+parks in a packet's anonymous namespace -- spelled with the `<Packet>Anon` marker, e.g.
+`MapInfoRequestPacketAnon::ClientPixelsProxy` -- nests inside that packet the same way
+(drop the `Anon`): `class ClientPixelsProxy` inside `MapInfoRequestPacket`.
 
 Reference a sibling nested type by its bare name when it sits at the same level and is
 already defined earlier in the body -- a packet field unioning its own nested variants,
@@ -129,6 +132,15 @@ two or more fields that share the same gate, or for the optional / union case th
 inline form does not support (see the `when` docstring in `protocol/__init__.py`). A
 solo field inside a `with` block is just noise.
 
+**In a `when=` lambda, reference an enum member by its fully-qualified path.** The lambda
+body cannot see class-local names, so a bare `Type.MEMBER` for a nested enum is unresolved
+in that scope -- an editor / linter undefined-name warning, and a `NameError` if the
+predicate ever ran. Spell it from a module-level name:
+`p.kind == MapItemTrackedActor.Type.ENTITY`, or
+`p.type & ClientboundMapItemDataPacket.Type.CREATION` for a flag nested in the packet
+itself. A top-level enum is already module-level, so `p.mode == GameType.SURVIVAL` needs
+no qualifying.
+
 **Enum member values: `value(N, ...)` for explicit, `auto()` for the rest.** Three
 forms, picked by what the member needs:
 
@@ -148,6 +160,16 @@ forms, picked by what the member needs:
 **Discriminator and small-enum width default to `uvarint32`.** A bare `A | B` union
 already encodes this. Never write `tag=uint8`. A community library showing a single
 byte is not evidence of a one-byte field -- see Reference width is byte-aliased below.
+
+**Bit-flag enums derive `IntFlag`, not `IntEnum`.** A field holding OR'd flags (a
+bitmask) uses `class Foo(IntFlag)`. There `auto()` yields successive powers of two
+(`1, 2, 4, 8`), so a contiguous flag set is just `auto()` members; when the flags skip a
+bit, spell the explicit power of two with a shift (`SHOW_NAME_TAGS = 1 << 4` past a
+reserved `1 << 3`), which `auto()` cannot express and the compiler folds to a constant.
+Gate on a flag field by testing named flags, never raw masks (`& 0x8`); combine bits with
+`|` and qualify each flag per the `when=` rule above. The generated codec casts the enum
+to its underlying integer for the bit test, so the field stays the named `IntFlag`.
+`ClientboundMapItemDataPacket.Type` and `MoveActorAbsoluteData.Header` are the models.
 
 ## How to version-gate
 
