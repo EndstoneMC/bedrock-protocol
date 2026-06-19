@@ -41,6 +41,18 @@ the first source that has it:
    above has the symbol. Always leave a `# TODO: confirm against BDS`. The DOT files
    are upstream naming but not BDS-verified.
 
+**Preserve BDS nested types as nested classes.** A BDS `Outer::Inner` type becomes a
+nested `class Inner` inside `class Outer`, not a flattened `OuterInner` -- flattening
+invents a name BDS does not have. When the outer holds several nested types they all
+nest together: `MapItemTrackedActor::Type` and `MapItemTrackedActor::UniqueId` both live
+inside `MapItemTrackedActor`, the way `BookEditAction`'s action structs live inside
+`BookEditAction`. If the DSL's nesting limits force a hoist (a version-gated nested class
+that would leave its enclosing namespace empty on an earlier snapshot), keep the BDS
+name on the hoisted class and flag it. A nested type that refers to a sibling -- its
+discriminator enum, say -- names it with a qualified string forward reference in the
+annotation (`type: "MapItemTrackedActor.Type"`), since the enclosing class is not yet
+bound while its body is read.
+
 Never lift a name from gophertunnel or CloudburstMC. Those references date and shape
 symbols, they do not name them. If no source names a symbol, raise it rather than
 inventing or paraphrasing one (see Stop and raise below).
@@ -88,6 +100,17 @@ docstring prose.
   restate version history that `since` / `until` already encode. If
   `Mojang/bedrock-protocol-docs` gives no Description, leave the type undocumented
   rather than writing one.
+
+## Keep DSL comments to blockers and open questions
+
+A `#` comment in a protocol DSL file is justified only when it records a blocker
+(`COMPILER_EXTENSION_NEEDED`) or an open question that needs review (a `TODO`, a
+`confirm against BDS`, a source disagreement still to resolve). Do not leave settled
+explanatory comments: the rationale for a modelling decision, how gophertunnel or
+CloudburstMC happens to serialize a field, or version history that `since` / `until`
+already encode. If the decision is made and the gates express it, the comment is noise
+-- delete it. Docstrings follow their own rule above, and mechanical pragmas
+(`# noqa`) are not comments in this sense and stay.
 
 ## DSL spelling
 

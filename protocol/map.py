@@ -44,20 +44,21 @@ class MapDecoration:
     color: Color = field(type=uvarint32)
 
 
-class MapItemTrackedActorType(IntEnum):
-    ENTITY = 0
-    BLOCK_ENTITY = 1
-    OTHER = 2
+class MapItemTrackedActor:
+    class Type(IntEnum):
+        ENTITY = 0
+        BLOCK_ENTITY = 1
+        OTHER = 2
 
-
-# MapItemTrackedActor::UniqueId. CloudburstMC writes the discriminator as a
-# 32-bit little-endian int (the underlying BDS enum is `int`) and only one of
-# the two payload fields based on its value.
-class MapItemTrackedActorUniqueId:
-    type: MapItemTrackedActorType = field(type=int32)
-    key_entity_id: ActorUniqueID = field(when=lambda p: p.type == MapItemTrackedActorType.ENTITY)
-    key_block_pos: NetworkBlockPos = field(when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, until=944)
-    key_block_pos: BlockPos = field(when=lambda p: p.type == MapItemTrackedActorType.BLOCK_ENTITY, since=944)
+    class UniqueId:
+        type: "MapItemTrackedActor.Type" = field(type=int32)
+        key_entity_id: ActorUniqueID = field(when=lambda p: p.type == MapItemTrackedActor.Type.ENTITY)
+        key_block_pos: NetworkBlockPos = field(
+            when=lambda p: p.type == MapItemTrackedActor.Type.BLOCK_ENTITY, until=944
+        )
+        key_block_pos: BlockPos = field(
+            when=lambda p: p.type == MapItemTrackedActor.Type.BLOCK_ENTITY, since=944
+        )
 
 
 @packet(id=67)
@@ -87,7 +88,7 @@ class ClientboundMapItemDataPacket:
 
     # FLAG_DECORATION_UPDATE = 0x4. Two consecutive uvarint32-prefixed lists:
     # tracked objects (block / entity) then decorations.
-    tracked_objects: list[MapItemTrackedActorUniqueId] = field(
+    tracked_objects: list[MapItemTrackedActor.UniqueId] = field(
         when=lambda p: p.type & 0x4 != 0,
     )
     decorations: list[MapDecoration] = field(
