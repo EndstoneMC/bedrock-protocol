@@ -191,15 +191,15 @@ class PlayerAuthInputPacket:
     client_tick: PlayerInputTick = field(since=419)
     pos_delta: Vec3 = field(since=419)
     item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_INTERACTION),
+        when=lambda p: p.input_data.test(PlayerAuthInputPacket.InputData.PERFORM_ITEM_INTERACTION),
     )
     item_stack_request: ItemStackRequestData = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_STACK_REQUEST),
+        when=lambda p: p.input_data.test(PlayerAuthInputPacket.InputData.PERFORM_ITEM_STACK_REQUEST),
     )
     player_block_actions: PlayerBlockActions = field(
-        when=lambda p: p.input_data.test(InputData.PERFORM_BLOCK_ACTIONS),
+        when=lambda p: p.input_data.test(PlayerAuthInputPacket.InputData.PERFORM_BLOCK_ACTIONS),
     )
-    with field(when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)):
+    with field(when=lambda p: p.input_data.test(PlayerAuthInputPacket.InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)):
         vehicle_rot: Vec2 = field(since=662)
         client_predicted_vehicle: ActorUniqueID = field(since=649)
     analog_move_vector: Vec2 = field(since=575)
