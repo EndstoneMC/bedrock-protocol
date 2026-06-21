@@ -132,18 +132,28 @@ class SerializerGenerator:
         p("    {")
         with p.indented(2):
             p(f"using E = {qualified};")
-            for v in enum.values:
-                p(f'if (value == E::{camel(v.name)}) {{ stream.write(std::string_view{{"{v.wire_name}"}}); return; }}')
+            p("static const std::unordered_map<E, std::string_view> names{")
+            with p.indented():
+                for v in enum.values:
+                    p(f'{{E::{camel(v.name)}, "{v.wire_name}"}},')
+            p("};")
+            p("auto it = names.find(value);")
+            p("if (it != names.end()) stream.write(it->second);")
         p("    }")
         p()
         self._emit_template_deserialize_open(p, qualified)
         with p.indented(2):
             p(f"using E = {qualified};")
+            p("static const std::unordered_map<std::string_view, E> values{")
+            with p.indented():
+                for v in enum.values:
+                    p(f'{{"{v.wire_name}", E::{camel(v.name)}}},')
+            p("};")
             p("auto v = stream.read<std::string>();")
             p("if (!v) return make_unexpected(v.error());")
-            for v in enum.values:
-                p(f'if (*v == "{v.wire_name}") return E::{camel(v.name)};')
-            p("return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
+            p("auto it = values.find(*v);")
+            p("if (it == values.end()) return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
+            p("return it->second;")
         p("    }")
         p("};")
 

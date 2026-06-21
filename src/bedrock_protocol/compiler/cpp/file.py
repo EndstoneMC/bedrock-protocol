@@ -93,6 +93,8 @@ class FileGenerator:
             "<variant>",
             "<vector>",
         ]
+        if self._ctx.string_coded_enums:
+            stdlib.insert(6, "<unordered_map>")
         if uses_bitset:
             stdlib.insert(1, "<bitset>")
         for inc in stdlib:
