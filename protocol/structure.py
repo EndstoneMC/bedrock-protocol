@@ -36,26 +36,6 @@ class StructureRedstoneSaveMode(IntEnum):
     SAVES_TO_DISK = 1
 
 
-class StructureEditorData:
-    structure_name: str
-    filtered_structure_name: str = field(since=776)
-    data_field: str
-    include_players: bool
-    show_bounding_box: bool
-    structure_block_type: StructureBlockType = field(type=varint32)
-    structure_settings: StructureSettings
-    redstone_save_mode: StructureRedstoneSaveMode = field(type=varint32, since=388)
-
-
-@packet(id=90)
-class StructureBlockUpdatePacket:
-    block_pos: NetworkBlockPos = field(until=944)
-    block_pos: BlockPos = field(since=944)
-    data: StructureEditorData
-    trigger: bool
-    is_waterlogged: bool = field(since=554)
-
-
 class StructureRotation(IntEnum):
     NONE = 0
     ROTATE_90 = 1
@@ -93,6 +73,26 @@ class StructureSettings:
     integrity_value: float
     integrity_seed: int32
     pivot: Vec3 = field(since=388)
+
+
+class StructureEditorData:
+    structure_name: str
+    filtered_structure_name: str = field(since=776)
+    data_field: str
+    include_players: bool
+    show_bounding_box: bool
+    structure_block_type: StructureBlockType = field(type=varint32)
+    structure_settings: StructureSettings
+    redstone_save_mode: StructureRedstoneSaveMode = field(type=varint32, since=388)
+
+
+@packet(id=90)
+class StructureBlockUpdatePacket:
+    block_pos: NetworkBlockPos = field(until=944)
+    block_pos: BlockPos = field(since=944)
+    data: StructureEditorData
+    trigger: bool
+    is_waterlogged: bool = field(since=554)
 
 
 @type(since=361)
