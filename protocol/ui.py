@@ -23,11 +23,18 @@ class ClientboundCloseFormPacket:
     pass
 
 
-@packet(id=334, since=924)
+@packet(id=334, since=924, until=944)
+class ClientboundDataDrivenUICloseAllScreensPacket:
+    """Allows the server to tell the client to close all Data Driven UI screens."""
+
+    pass
+
+
+@packet(id=334, since=944)
 class ClientboundDataDrivenUICloseScreenPacket:
     """Allows the server to tell the client to close Data Driven UI screens."""
 
-    form_id: uint32 | None = field(since=944)
+    form_id: uint32 | None
 
 
 @packet(id=335, since=924)
