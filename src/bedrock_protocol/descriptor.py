@@ -396,6 +396,7 @@ class Struct:
     nested_enums: tuple[Enum, ...]
     packet_id: int | None
     since: int | None = None
+    until: int | None = None
     deprecated: int | None = None
     nested_structs: tuple["Struct", ...] = ()
 
@@ -417,6 +418,8 @@ class Struct:
         points: set[int] = set()
         if self.since is not None:
             points.add(self.since)
+        if self.until is not None:
+            points.add(self.until)
         if self.deprecated is not None:
             points.add(self.deprecated)
         for f in self.fields:
@@ -441,6 +444,8 @@ class Struct:
         points: set[int] = set()
         if self.since is not None:
             points.add(self.since)
+        if self.until is not None:
+            points.add(self.until)
         for f in self.fields:
             for version in f.versions:
                 if version.since is not None:

@@ -223,8 +223,9 @@ def _plan_snapshots(
         concrete[name] = {}
         out: list[VersionSnapshot] = []
         previous: int | None = None
+        until = getattr(t, "until", None)
         for i, s in enumerate(snapshots):
-            present = t.since is None or s >= t.since
+            present = (t.since is None or s >= t.since) and (until is None or s < until)
             if not present:
                 continue
             enum_view, struct_view, key = _snapshot_view(t, s)

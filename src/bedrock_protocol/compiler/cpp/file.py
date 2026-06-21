@@ -240,6 +240,7 @@ class FileGenerator:
             return
         p()
         p("namespace detail {")
+        by_name = self._by_name()
         for i, name in enumerate(self._versioned_names()):
             fresh = self._resolved.fresh_snapshots(name)
             if i:
@@ -247,7 +248,9 @@ class FileGenerator:
             p("template <int V>")
             p(f"struct {name}_;")
             for j, s in enumerate(fresh):
-                hi = fresh[j + 1].lo if j + 1 < len(fresh) else None
+                # The last snapshot runs to the packet's removal version
+                # (until=) if it is a removed packet, otherwise open-ended.
+                hi = fresh[j + 1].lo if j + 1 < len(fresh) else getattr(by_name.get(name), "until", None)
                 clause = requires_clause(s.lo, hi)
                 ns = snapshot_namespace(s.lo)
                 p()
@@ -335,8 +338,13 @@ class FileGenerator:
         names = self._versioned_names()
         if not names:
             return
+        by_name = self._by_name()
         p()
         for name in names:
+            until = getattr(by_name.get(name), "until", None)
+            if until is not None and latest_version >= until:
+                # Removed before the current version -- no current-version alias.
+                continue
             p(f"using {name} = {name}_<{latest_version}>;")
 
     # --- helpers ------------------------------------------------------------

@@ -414,17 +414,27 @@ class _AnnotationContext:
                     f"{cls.name}: @type(until=) is only meaningful on a redeclared class -- "
                     "a lone declaration cannot set until="
                 )
-        if _decorator_int(cls, "packet", "until") is not None:
-            raise CompilerError(
-                f"{cls.name}: @packet(until=) is only meaningful on a redeclared packet -- "
-                "a lone declaration cannot set until="
-            )
+        # A lone @packet may set until= to mark the packet removed at that
+        # version (its id is then free to be reused by another packet from
+        # `until` on). A non-packet type still cannot: it is referenced by
+        # name, and a bounded lifetime has no meaning without a successor.
+        packet_id = _decorator_int(cls, "packet", "id")
+        until = _decorator_int(cls, "packet", "until")
+        if until is not None:
+            if packet_id is None:
+                raise CompilerError(
+                    f"{cls.name}: @packet(until=) is only meaningful on a packet -- "
+                    "a lone declaration cannot set until="
+                )
+            if until <= (since or 0):
+                raise CompilerError(f"{cls.name}: @packet(until=) must be greater than since=")
         return Struct(
             name=cls.name,
             fields=tuple(fields),
             nested_enums=tuple(nested_enums),
-            packet_id=_decorator_int(cls, "packet", "id"),
+            packet_id=packet_id,
             since=since,
+            until=until,
             deprecated=_decorator_int(cls, "type", "deprecated"),
             nested_structs=tuple(nested_structs),
         )
