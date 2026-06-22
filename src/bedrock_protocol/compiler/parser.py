@@ -636,7 +636,11 @@ class _AnnotationContext:
                 raise CompilerError(_endian_scope_error(field_name))
             return PrimitiveType(name="bytes", trailing=True)
         prefix = self._repeat_prefix(call, field_name)
-        tag = self._variant_tag(call, field_name, nested)
+        tag = self._variant_tag(call, field_name, nested, type_kw)
+        if tag is not None and tag.enum_name is not None:
+            # An enum tag consumes field(type=) as its discriminator wire width;
+            # it must not also override the union cases' own wire types.
+            type_kw = None
         cases = _flatten_union(ann)
         if cases is not None:
             result = self._union_type(cases, field_name, type_kw, endian, prefix, nested, tag)
@@ -785,11 +789,20 @@ class _AnnotationContext:
             return target
         return None
 
-    def _variant_tag(self, call: _Ann, field_name: str, nested: frozenset[str] = frozenset()) -> _TagSpec | None:
+    def _variant_tag(
+        self,
+        call: _Ann,
+        field_name: str,
+        nested: frozenset[str] = frozenset(),
+        type_kw: str | None = None,
+    ) -> _TagSpec | None:
         """`field(tag=<integer primitive | IntEnum>)` overrides a `VariantType`'s
-        on-wire discriminator. An enum tag names the C++ case labels but keeps
-        the wire form as `varint32` (matching the BDS convention for tagged-
-        union recipe / action enums). Absent kwarg -> leave the default
+        on-wire discriminator. An enum tag names the C++ case labels; its wire
+        form defaults to `varint32` (zigzag, matching the BDS convention for
+        tagged-union recipe / action enums), but an accompanying
+        `field(type=<integer primitive>)` selects the width instead -- e.g.
+        `field(tag=Type, type=uvarint32)` for an unsigned tag such as
+        SynchedActorData's data-item type. Absent kwarg -> leave the default
         (`uvarint32`). A `nested` IntEnum declared inside the same struct is
         valid here too -- the parser resolves it the same way a nested-enum
         field type would."""
@@ -799,7 +812,13 @@ class _AnnotationContext:
         if name in INTEGER_PRIMITIVES:
             return _TagSpec(primitive=PrimitiveType(name=name))
         if name in nested or name in self.enum_names:
-            return _TagSpec(primitive=PrimitiveType(name="varint32"), enum_name=name)
+            width = "varint32" if type_kw is None else type_kw
+            if width not in INTEGER_PRIMITIVES:
+                raise CompilerError(
+                    f"{field_name}: field(type=) on an enum-tagged union selects the discriminator "
+                    f"wire width and must be an integer primitive, got {type_kw!r}"
+                )
+            return _TagSpec(primitive=PrimitiveType(name=width), enum_name=name)
         raise CompilerError(
             f"{field_name}: field(tag=...) must be an integer primitive or a user-defined IntEnum, got {name!r}"
         )

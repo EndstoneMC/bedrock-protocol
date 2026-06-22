@@ -107,10 +107,14 @@ def field(
       primitive for flexibility, but a bare union is the idiom.
 
       Pass an `IntEnum` for the one job `tag=` still does: an enum-discriminated
-      union, where the wire form becomes `varint32` (zigzag, matching BDS's
+      union, where the wire form defaults to `varint32` (zigzag, matching BDS's
       recipe / action enums) and the enum's members supply the C++ case labels
       (`EnumName::MEMBER`), one-to-one with the union alternatives in
-      declaration order.
+      declaration order. Pair it with `type=<integer primitive>` to choose the
+      tag's wire width instead of the `varint32` default -- e.g.
+      `field(tag=Type, type=uvarint32)` for an unsigned discriminator such as
+      SynchedActorData's data-item type. On an enum-tagged union, `type=`
+      describes the tag, not the cases (each case keeps its own wire type).
 
       `tag=` has no effect on a `T | None` optional, and the field's resolved
       type must contain a multi-case union or `tag=` is an error.
