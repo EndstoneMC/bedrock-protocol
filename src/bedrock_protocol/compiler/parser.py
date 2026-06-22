@@ -379,7 +379,7 @@ class _AnnotationContext:
             next_auto = ivalue + 1
             seen.append(ivalue)
             values.append(EnumValue(name, ivalue, since, until, deprecated))
-        return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"))
+        return Enum(cls.name, tuple(values), _decorator_int(cls, "type", "since"), is_flag)
 
     def struct(self, cls: griffe.Class) -> Struct:
         nested_enums: list[Enum] = []

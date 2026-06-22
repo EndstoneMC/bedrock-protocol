@@ -320,6 +320,7 @@ class Enum:
     name: str
     values: tuple[EnumValue, ...]
     since: int | None = None
+    is_flag: bool = False
 
     @property
     def referenced(self) -> frozenset[str]:

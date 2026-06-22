@@ -90,6 +90,7 @@ class FileGenerator:
             "<optional>",
             "<string>",
             "<type_traits>",
+            "<unordered_set>",
             "<variant>",
             "<vector>",
         ]

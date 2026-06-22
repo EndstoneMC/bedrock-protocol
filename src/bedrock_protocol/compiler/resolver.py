@@ -260,7 +260,7 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
     determines whether two snapshots share one definition."""
     if isinstance(t, Enum):
         values = _narrow_enum_values(t.values, snapshot)
-        view = Enum(t.name, values, t.since)
+        view = Enum(t.name, values, t.since, t.is_flag)
         key = _enum_key(values)
         return view, None, key
     narrowed_enums: list[Enum] = []
@@ -268,7 +268,7 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
     enum_key_parts: list[Any] = []
     for e in t.nested_enums:
         ev = _narrow_enum_values(e.values, snapshot)
-        narrowed_enums.append(Enum(e.name, ev, e.since))
+        narrowed_enums.append(Enum(e.name, ev, e.since, e.is_flag))
         nested_values[e.name] = {v.name: v.number for v in ev}
         enum_key_parts.append((e.name, _enum_key(ev)))
     narrowed_nested_structs: list[Struct] = []

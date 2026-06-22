@@ -304,6 +304,12 @@ class SerializerGenerator:
                 p(f"{target} = *v;")
             else:
                 _primitive_read(p, t.scalar)
+                numbers = self._scalar_enum_valid_numbers(t.name)
+                if numbers is not None:
+                    members = ", ".join(str(n) for n in numbers)
+                    p(f"static const std::unordered_set<std::int64_t> valid{{{members}}};")
+                    p("if (!valid.contains(static_cast<std::int64_t>(*v)))")
+                    p("    return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
                 p(f"{target} = static_cast<{self._type_at(t.name)}>(*v);")
         elif isinstance(t, OptionalType):
             holder = "tag" if t.discriminator else "present"
@@ -445,6 +451,24 @@ class SerializerGenerator:
             self._nested_enums,
             self._snapshot,
         )
+
+    def _scalar_enum_valid_numbers(self, name: str) -> list[int] | None:
+        """Valid member numbers of scalar enum `name` at the current snapshot,
+        used to reject unknown values on read. Returns None when the enum can't
+        be resolved or is a flag enum (whose wire value is a bitmask, not a
+        single member) -- in that case the read stays a plain cast."""
+        enum_def: Enum | None = None
+        if self._snapshot is not None:
+            view = self._ctx.resolved.present_at(name, self._snapshot)
+            if view is not None and view.enum is not None:
+                enum_def = view.enum
+        if enum_def is None:
+            decl = self._ctx.resolved.lookup(name)
+            if isinstance(decl, Enum):
+                enum_def = decl
+        if enum_def is None or enum_def.is_flag or not enum_def.values:
+            return None
+        return sorted({v.number for v in enum_def.values})
 
     def _variant_switch(self, t: VariantType) -> tuple[str, list[str]]:
         """Pick the C++ switch expression and per-case labels for `t`.
