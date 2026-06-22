@@ -243,8 +243,8 @@ class PropertySyncData:
         property_index: uvarint32
         data: float
 
-    int_entries: list[PropertySyncIntEntry]
-    float_entries: list[PropertySyncFloatEntry]
+    int_entries: "list[PropertySyncIntEntry]"
+    float_entries: "list[PropertySyncFloatEntry]"
 
 
 class SyncedAttribute:
@@ -252,6 +252,24 @@ class SyncedAttribute:
     min_value: float
     current_value: float
     max_value: float
+
+
+class DataItem:
+    class Type(IntEnum):
+        BYTE = 0
+        SHORT = 1
+        INT = 2
+        FLOAT = 3
+        STRING = 4
+        COMPOUND_TAG = 5
+        POS = 6
+        INT64 = 7
+        VEC3 = 8
+
+    id: uvarint32
+    value: (
+        uint8 | int16 | varint32 | float | str | CompoundTag | BlockPos | varint64 | Vec3
+    ) = field(tag=Type, type=uvarint32)
 
 
 @packet(id=13)
@@ -266,11 +284,7 @@ class AddActorPacket:
     y_head_rotation: float
     y_body_rotation: float = field(since=534)
     attributes: list[SyncedAttribute]
-    # COMPILER_EXTENSION_NEEDED: SynchedActorData::DataList -- a uvarint32-prefixed list
-    # of (uvarint32 key, uvarint32 type-tag, payload) records where the payload type is
-    # selected by the tag (byte/short/int/uvarint64/float/str/CompoundTag/BlockPos/
-    # varint64/Vec3). The DSL has no element-internal-tag list form.
-    data: bytes
+    packed_items: list[DataItem]
     synched_properties: PropertySyncData = field(since=557)
     links: list[ActorLink]
 
@@ -649,11 +663,7 @@ class PassengerJumpPacket:
 @packet(id=39)
 class SetActorDataPacket:
     runtime_id: ActorRuntimeID
-    # COMPILER_EXTENSION_NEEDED: SynchedActorData::DataList -- a uvarint32-prefixed list
-    # of (uvarint32 key, uvarint32 type-tag, payload) records where the payload type is
-    # selected by the tag (byte/short/int/uvarint64/float/str/CompoundTag/BlockPos/
-    # varint64/Vec3). The DSL has no element-internal-tag list form.
-    packed_items: bytes
+    packed_items: list[DataItem]
     synched_properties: PropertySyncData = field(since=557)
     tick: uvarint64 = field(since=419)
 
