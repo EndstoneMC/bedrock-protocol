@@ -25,9 +25,10 @@ class EditorNetworkPacket:
     raw_variant_data: str = field(since=1001)
 
 
-# ScriptCustomEventPacket (id=117, until=594) is omitted: lone @packet(until=)
-# is not expressible in the DSL today, and the body is fully removed long
-# before v975. The id is unused on v975.
+@packet(id=117, until=594)
+class ScriptCustomEventPacket:
+    event_name: str
+    data: str
 
 
 @packet(id=177, since=486)

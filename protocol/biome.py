@@ -83,7 +83,6 @@ class BiomeDefinitionListPacket:
     string_list: BiomeStringList = field(since=800)
 
 
-# CompressedBiomeDefinitionListPacket (id=301, v582..v800) is omitted: it has
-# been removed since v800 and the DSL cannot express a lone @packet(until=)
-# without a successor declaration. Reintroduce paired with a redeclaration when
-# the gating syntax for orphan-until packets lands.
+@packet(id=301, since=582, until=800)
+class CompressedBiomeDefinitionListPacket:
+    definitions: bytes

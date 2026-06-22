@@ -541,8 +541,10 @@ class FeatureRegistryPacket:
     features_data: list[FeatureBinaryJsonFormat]
 
 
-# FilterTextPacket (id=163, v422..v671) is omitted: removed before v975 and the
-# DSL cannot express a lone @packet(until=) today.
+@packet(id=163, since=422, until=671)
+class FilterTextPacket:
+    text: str
+    from_server: bool
 
 
 @packet(id=72)
@@ -931,12 +933,7 @@ class SyncWorldClocksPacket:
         clock_id: uint64 = field(type=uvarint64)
         time_marker_ids: list[uvarint64]
 
-    data: (
-        SyncStateData
-        | InitializeRegistryData
-        | AddTimeMarkerData
-        | RemoveTimeMarkerData
-    )
+    data: SyncStateData | InitializeRegistryData | AddTimeMarkerData | RemoveTimeMarkerData
 
 
 class TextPacketType(IntEnum):
@@ -970,8 +967,10 @@ class TextPacket:
     filtered_message: str | None = field(since=685)
 
 
-# TickSyncPacket (id=23, v388..v685) is omitted: removed before v975 and the
-# DSL cannot express a lone @packet(until=) today.
+@packet(id=23, since=388, until=685)
+class TickSyncPacket:
+    request_timestamp: int64
+    response_timestamp: int64
 
 
 @packet(id=179, since=503)
@@ -1041,8 +1040,16 @@ class UpdatePlayerGameTypePacket:
     tick: PlayerInputTick = field(since=671)
 
 
-# VideoStreamConnectPacket (id=125, v340..v361) is omitted: removed before v975
-# and the DSL cannot express a lone @packet(until=) today.
+# COMPILER_EXTENSION_NEEDED: was at id 125 in [340, 361) before moving here at v361;
+# the DSL can't express a packet whose id changes by version, so the id-125 lifetime
+# is unmodeled.
+@packet(id=126, since=361, until=407)
+class VideoStreamConnectPacket:
+    address: str
+    screenshot_frequency: float
+    action: uint8
+    width: int32
+    height: int32
 
 
 class SerializableCells:

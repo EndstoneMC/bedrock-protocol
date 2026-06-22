@@ -275,10 +275,12 @@ class AddActorPacket:
     links: list[ActorLink]
 
 
-# AddHangingEntityPacket (id=16, until=361) was removed before v975. The DSL
-# requires a packet redeclaration to use until=, but id=16 is now reused by
-# ServerPlayerPostMovePositionPacket (since=630). Skipping this packet entirely
-# is safe at the v975 target -- gophertunnel does not carry it either.
+@packet(id=16, until=361)
+class AddHangingEntityPacket:
+    actor_id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    position: NetworkBlockPos
+    direction: varint32
 
 
 # AddItemActorPacket (id=15) needs NetworkItemStackDescriptor from

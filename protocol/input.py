@@ -218,10 +218,7 @@ class PlayerActionPacket:
     face: varint32
 
 
-# PlayerInputPacket (id=57, until=800) was removed at v800. The DSL requires a
-# packet redeclaration to use until=, and no successor lives at id=57 in v975.
-# Drop the gate -- packet is emitted but BDS no longer uses it.
-@packet(id=57)
+@packet(id=57, until=800)
 class PlayerInputPacket:
     mov: Vec2
     is_jumping: bool

@@ -78,9 +78,11 @@ class ChunkRadiusUpdatedPacket:
     chunk_radius: varint32
 
 
-# ExplodePacket (id=23, removed at v388) is omitted: lone @packet(until=) is
-# not expressible in the DSL today, and the same id is reused by TickSyncPacket
-# in [388, 685).
+@packet(id=23, until=388)
+class ExplodePacket:
+    position: Vec3
+    radius: varint32
+    records: list[BlockPos]
 
 
 class ChunkPos:
@@ -151,9 +153,24 @@ class LevelSoundEventPacket:
     fire_at_position: Vec3 | None = field(since=975)
 
 
-# LevelSoundEventV1Packet (id=24) and LevelSoundEventV2Packet (id=120, v313..v786)
-# are omitted: both were removed before v975 and the DSL cannot express a lone
-# @packet(until=) today.
+@packet(id=24, until=786)
+class LevelSoundEventV1Packet:
+    sound: uint8
+    position: Vec3
+    extra_data: varint32
+    pitch: varint32
+    baby_sound: bool
+    relative_volume_disabled: bool
+
+
+@packet(id=120, since=313, until=786)
+class LevelSoundEventV2Packet:
+    sound: uint8
+    position: Vec3
+    extra_data: varint32
+    identifier: str
+    baby_sound: bool
+    relative_volume_disabled: bool
 
 
 @packet(id=121, since=313)
@@ -242,6 +259,7 @@ class SubChunkPos:
     x: varint32
     y: varint32
     z: varint32
+
 
 @type(since=1001)
 class SubChunkPos:

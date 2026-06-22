@@ -229,10 +229,7 @@ class GuiDataPickItemPacket:
     slot: int32 = field(endian="little")
 
 
-# ItemFrameDropItemPacket (id=71, until=662) was removed before v975. The DSL
-# requires a packet redeclaration to use until=. No successor exists at id=71
-# in v975, so drop the gate -- packet is emitted but unused at the v975 target.
-@packet(id=71)
+@packet(id=71, until=662)
 class ItemFrameDropItemPacket:
     pos: NetworkBlockPos
 

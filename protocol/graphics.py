@@ -203,6 +203,10 @@ class PrimitiveShapeDataPayload:
     ) = field(since=1001)
 
 
+# COMPILER_EXTENSION_NEEDED: DebugDrawerPacket (id 328, [859, 975)) was the predecessor
+# here, carrying list[ShapeDataPayload] (PrimitiveShapeDataPayload minus max_render_distance,
+# with ActorRuntimeID and ScriptDebugShapeType). Not yet modeled -- needs a ShapeDataPayload
+# type plus the field-reorder support already flagged on PrimitiveShapeDataPayload.
 @packet(id=328, since=975)
 class PrimitiveShapesPacket:
     """Send primitive drawing shape info (from scripting) to the client for rendering."""
