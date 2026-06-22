@@ -468,13 +468,16 @@ class _AnnotationContext:
                 until = type_until
             # A missing since= means "from the protocol floor"; only valid on
             # the first declaration. _check_class_versions enforces that.
-            versions.append((cls, since if since is not None else 0, until))
+            versions.append((cls, since if since is not None else 0, until, pkt_id))
         if packet_ids and len(packet_ids) != len(decls):
             raise CompilerError(f"{name}: every declaration of a redeclared @packet must set @packet(id=)")
-        if packet_ids and len(set(packet_ids)) != 1:
-            raise CompilerError(f"{name}: every declaration of a redeclared @packet must share the same id=")
         versions.sort(key=lambda e: e[1])
         self._check_class_versions(name, versions)
+        # When the per-declaration ids differ, the packet changed id across
+        # versions; record the per-range id so each snapshot emits its own.
+        id_ranges: tuple[tuple[int, int | None, int | None], ...] = ()
+        if packet_ids and len({v[3] for v in versions}) > 1:
+            id_ranges = tuple((v[3], v[1], v[2]) for v in versions)
 
         # The latest declaration's source order becomes the canonical field
         # order for the merged struct: it's the wire shape at the current
@@ -483,7 +486,7 @@ class _AnnotationContext:
         # Old-only fields (present in an earlier decl but dropped in a later
         # one, e.g. texture_id → texture_path) are inserted relative to their
         # neighbours from the older decl's source order.
-        version_fields: list[dict[str, griffe.Attribute]] = [dict(cls.attributes) for cls, _, _ in versions]
+        version_fields: list[dict[str, griffe.Attribute]] = [dict(cls.attributes) for cls, _, _, _ in versions]
         order: list[str] = list(version_fields[-1].keys())
         for attrs in reversed(version_fields[:-1]):
             field_names = list(attrs.keys())
@@ -502,7 +505,7 @@ class _AnnotationContext:
         for i, fname in enumerate(order):
             earlier = frozenset(order[:i])
             version_list: list[FieldVersion] = []
-            for (_, since, until), attrs in zip(versions, version_fields):
+            for (_, since, until, _), attrs in zip(versions, version_fields):
                 attr = attrs.get(fname)
                 if attr is None:
                     continue
@@ -520,8 +523,10 @@ class _AnnotationContext:
             name=name,
             fields=tuple(fields),
             nested_enums=(),
-            packet_id=packet_ids[0] if packet_ids else None,
+            packet_id=versions[0][3] if packet_ids else None,
             since=versions[0][1],
+            until=versions[-1][2],
+            packet_id_ranges=id_ranges,
         )
 
     def field(
@@ -983,18 +988,17 @@ class _AnnotationContext:
     # ---- structural checks -------------------------------------------------
 
     @staticmethod
-    def _check_class_versions(name: str, versions: list[tuple[griffe.Class, int, int | None]]) -> None:
+    def _check_class_versions(name: str, versions: list[tuple[griffe.Class, int, int | None, int | None]]) -> None:
         # A redecl that omits since= is the first one and stands for the
         # protocol floor (since=0); only that slot may be implicit.
-        for i, (_, since, until) in enumerate(versions):
+        for i, (_, since, until, _) in enumerate(versions):
             if since == 0 and i != 0:
                 raise CompilerError(f"{name}: only the first declaration of a redeclared class may omit since=")
             last = i == len(versions) - 1
             if last:
-                if until is not None:
-                    raise CompilerError(
-                        f"{name}: the last declaration of a redeclared class must not set @type(until=)"
-                    )
+                # The last declaration may set until= to mark the packet removed.
+                if until is not None and until <= since:
+                    raise CompilerError(f"{name}: @packet(until=) must be greater than since=")
                 continue
             if until is None:
                 raise CompilerError(f"{name}: every declaration of a redeclared class but the last needs @type(until=)")

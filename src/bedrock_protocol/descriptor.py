@@ -400,6 +400,15 @@ class Struct:
     until: int | None = None
     deprecated: int | None = None
     nested_structs: tuple["Struct", ...] = ()
+    # Non-empty when the packet's id changed across versions: (id, since, until)
+    # per range. packet_id stays the fallback for snapshots outside any range.
+    packet_id_ranges: tuple[tuple[int, int | None, int | None], ...] = ()
+
+    def packet_id_at(self, version: int) -> int | None:
+        for pid, since, until in self.packet_id_ranges:
+            if version >= (since or 0) and (until is None or version < until):
+                return pid
+        return self.packet_id
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -423,6 +432,11 @@ class Struct:
             points.add(self.until)
         if self.deprecated is not None:
             points.add(self.deprecated)
+        for _, since, until in self.packet_id_ranges:
+            if since is not None:
+                points.add(since)
+            if until is not None:
+                points.add(until)
         for f in self.fields:
             for version in f.versions:
                 if version.since is not None:
@@ -447,6 +461,11 @@ class Struct:
             points.add(self.since)
         if self.until is not None:
             points.add(self.until)
+        for _, since, until in self.packet_id_ranges:
+            if since is not None:
+                points.add(since)
+            if until is not None:
+                points.add(until)
         for f in self.fields:
             for version in f.versions:
                 if version.since is not None:

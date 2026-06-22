@@ -292,17 +292,19 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
     dep = t.deprecated if (t.deprecated is not None and snapshot >= t.deprecated) else None
+    pid = t.packet_id_at(snapshot) if t.packet_id_ranges else t.packet_id
     view_s = replace(
         t,
         fields=tuple(narrowed),
         nested_enums=tuple(narrowed_enums),
         nested_structs=tuple(narrowed_nested_structs),
         deprecated=dep,
+        packet_id=pid,
     )
     return (
         None,
         view_s,
-        tuple(key_parts) + (tuple(enum_key_parts), tuple(nested_struct_key_parts), dep is not None),
+        tuple(key_parts) + (tuple(enum_key_parts), tuple(nested_struct_key_parts), dep is not None, pid),
     )
 
 

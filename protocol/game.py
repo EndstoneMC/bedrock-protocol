@@ -1040,9 +1040,13 @@ class UpdatePlayerGameTypePacket:
     tick: PlayerInputTick = field(since=671)
 
 
-# COMPILER_EXTENSION_NEEDED: was at id 125 in [340, 361) before moving here at v361;
-# the DSL can't express a packet whose id changes by version, so the id-125 lifetime
-# is unmodeled.
+@packet(id=125, since=340, until=361)
+class VideoStreamConnectPacket:
+    address: str
+    screenshot_frequency: float
+    action: uint8
+
+
 @packet(id=126, since=361, until=407)
 class VideoStreamConnectPacket:
     address: str
