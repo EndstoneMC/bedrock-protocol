@@ -424,18 +424,6 @@ class BossBarOverlay(IntEnum):
     NOTCHED_20 = 4
 
 
-# COMPILER_EXTENSION_NEEDED: the v1001 cereal migration flattens this
-# event-type-discriminated union into a layout that always writes every field
-# (and drops darken_screen). That flat form orders `player_id` BEFORE
-# `event_type` (per protocol-docs r26_u3), but the pre-1001 union must keep
-# `event_type` first so the `when=` gates can discriminate on it. The
-# redeclaration resolver (parser.py) merges a redeclared class to one canonical
-# field order -- the latest declaration's -- and applies it to every version, so
-# it would emit the pre-1001 wire in the flat v1001 order and reject the union's
-# `when=` (which would reference a field declared after it). Modelling this needs
-# per-version field ordering in redeclared classes. Until then this packet does
-# not codegen; the two forms below are the intended v1001 wire shape, kept as the
-# spec.
 @packet(id=74, until=1001)
 class BossEventPacket:
     """Sent when a boss gets updated"""
@@ -493,12 +481,12 @@ class BossEventPacket:
 
     boss_id: ActorUniqueID
     player_id: ActorUniqueID
-    event_type: BossEventUpdateType
+    event_type: BossEventUpdateType = field(type=uvarint32)
     name: str
     filtered_name: str
     health_percent: float
-    color: BossBarColor
-    overlay: BossBarOverlay
+    color: BossBarColor = field(type=uvarint32)
+    overlay: BossBarOverlay = field(type=uvarint32)
 
 
 @packet(id=182, since=503)

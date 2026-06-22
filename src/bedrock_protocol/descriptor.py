@@ -403,12 +403,22 @@ class Struct:
     # Non-empty when the packet's id changed across versions: (id, since, until)
     # per range. packet_id stays the fallback for snapshots outside any range.
     packet_id_ranges: tuple[tuple[int, int | None, int | None], ...] = ()
+    # Non-empty only when a redeclared class reorders its fields across versions:
+    # (field-name order, since, until) per declaration. The serializer emits each
+    # snapshot in the order of the declaration covering it.
+    field_orders: tuple[tuple[tuple[str, ...], int | None, int | None], ...] = ()
 
     def packet_id_at(self, version: int) -> int | None:
         for pid, since, until in self.packet_id_ranges:
             if version >= (since or 0) and (until is None or version < until):
                 return pid
         return self.packet_id
+
+    def field_order_at(self, version: int) -> tuple[str, ...] | None:
+        for order, since, until in self.field_orders:
+            if version >= (since or 0) and (until is None or version < until):
+                return order
+        return None
 
     @property
     def referenced(self) -> frozenset[str]:

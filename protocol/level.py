@@ -280,20 +280,6 @@ class SubChunkPosOffset:
 # fields. SubChunkRequestPacket (id=175) below covers the request half.
 
 
-# COMPILER_EXTENSION_NEEDED: the v1001 cereal migration reorders the two
-# trailing fields -- the offset list moved ahead of the center position and its
-# length prefix narrowed from a fixed uint32 to a uvarint32 (SubChunkPos itself
-# also switched to fixed int32 coords, see protocol/common.py). Expressing this
-# needs two compiler features the redeclaration path lacks today:
-#   1. Per-version field ordering. parser.py merges a redeclared class to a
-#      single canonical order (the latest declaration's) and emits it for every
-#      version, so the pre-1001 wire would be written in the v1001 order. A
-#      version that reorders shared fields cannot be modelled until the merge
-#      keeps a per-version order.
-#   2. A field(since=) gate inside a redeclared class (the offsets `since=486`
-#      below), which the resolver currently rejects.
-# Until both land, this packet does not codegen; the two @packet forms below are
-# the intended v1001 wire shape, kept as the spec.
 @packet(id=175, since=471, until=1001)
 class SubChunkRequestPacket:
     """Sent from the client to the server representing a batch of subchunks that the client requests from the server."""

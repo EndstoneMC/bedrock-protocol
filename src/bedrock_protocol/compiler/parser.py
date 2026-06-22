@@ -501,9 +501,17 @@ class _AnnotationContext:
                 else:
                     order.insert(order.index(anchor), fname)
 
+        # A genuine reorder = some declaration whose shared fields run in a
+        # different relative order than the canonical (latest) order. Only then
+        # are per-version orderings kept; append-only redeclarations collapse to
+        # the single canonical order, unchanged.
+        reordered = any([f for f in a if f in order] != [f for f in order if f in a] for a in version_fields)
+        field_orders = (
+            tuple((tuple(a.keys()), lo, hi) for (_, lo, hi, _), a in zip(versions, version_fields)) if reordered else ()
+        )
+
         fields: list[Field] = []
-        for i, fname in enumerate(order):
-            earlier = frozenset(order[:i])
+        for fname in order:
             version_list: list[FieldVersion] = []
             for (_, since, until, _), attrs in zip(versions, version_fields):
                 attr = attrs.get(fname)
@@ -513,9 +521,21 @@ class _AnnotationContext:
                     raise CompilerError(
                         f"{name}.{fname}: a field cannot be version-redeclared inside a redeclared class"
                     )
-                self._reject_field_version(name, attr)
+                # Predicates resolve against the order in *this* declaration, not
+                # the merged canonical order. A field's own since=/until= (a field
+                # gate inside a redeclared class) is intersected with the
+                # declaration's range.
+                decl_names = list(attrs.keys())
+                earlier = frozenset(decl_names[: decl_names.index(fname)])
                 version = self._field_version(attr, frozenset(), earlier)
-                version_list.append(replace(version, since=since, until=until))
+                lo = since if version.since is None else max(since, version.since)
+                if until is None:
+                    hi = version.until
+                elif version.until is None:
+                    hi = until
+                else:
+                    hi = min(until, version.until)
+                version_list.append(replace(version, since=lo, until=hi))
             self._check_versions(fname, tuple(version_list))
             fields.append(Field(fname, tuple(version_list)))
         _check_trailing_is_last(name, fields)
@@ -527,6 +547,7 @@ class _AnnotationContext:
             since=versions[0][1],
             until=versions[-1][2],
             packet_id_ranges=id_ranges,
+            field_orders=field_orders,
         )
 
     def field(

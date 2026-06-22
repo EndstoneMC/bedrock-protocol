@@ -291,6 +291,16 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
             version = replace(version, type=rebound)
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
+    if t.field_orders:
+        # Emit this snapshot in the order of the declaration covering it, not the
+        # merged canonical order. Stable, so any field absent from the declared
+        # order keeps its canonical position at the end.
+        order = t.field_order_at(snapshot)
+        if order is not None:
+            rank = {fname: i for i, fname in enumerate(order)}
+            keyed = sorted(zip(narrowed, key_parts), key=lambda nk: rank.get(nk[0].name, len(rank)))
+            narrowed = [n for n, _ in keyed]
+            key_parts = [k for _, k in keyed]
     dep = t.deprecated if (t.deprecated is not None and snapshot >= t.deprecated) else None
     pid = t.packet_id_at(snapshot) if t.packet_id_ranges else t.packet_id
     view_s = replace(
