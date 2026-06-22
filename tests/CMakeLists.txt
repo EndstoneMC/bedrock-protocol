@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}_tests
     test_034_block_pick_request.cpp
     test_035_actor_pick_request.cpp
     test_036_player_action.cpp
+    test_039_set_actor_data.cpp
     test_040_set_actor_motion.cpp
     test_041_set_actor_link.cpp
     test_043_set_spawn_position.cpp
@@ -67,7 +68,6 @@ add_executable(${PROJECT_NAME}_tests
     test_119_available_actor_identifiers.cpp
     test_122_biome_definition_list.cpp
     test_123_level_sound_event.cpp
-    test_127_add_entity.cpp
     test_128_remove_entity.cpp
     test_129_client_cache_status.cpp
     test_130_on_screen_texture_animation.cpp
