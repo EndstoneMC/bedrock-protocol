@@ -128,6 +128,7 @@ add_executable(${PROJECT_NAME}_tests
     test_323_update_client_options.cpp
     test_327_clientbound_control_scheme_set.cpp
     test_328_primitive_shapes.cpp
+    test_330_clientbound_data_store.cpp
     test_331_graphics_override_parameter.cpp
     test_334_clientbound_data_driven_ui_close_screen.cpp
     test_335_clientbound_data_driven_ui_reload.cpp

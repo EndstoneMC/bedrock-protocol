@@ -113,6 +113,8 @@ class FileGenerator:
                 p("#include <bedrock/uuid.hpp>")
             if self._uses_nbt():
                 p("#include <bedrock/nbt.hpp>")
+            if self._uses_ddui():
+                p("#include <bedrock/ddui.hpp>")
 
     def _emit_dep_includes(self, p: Printer) -> None:
         deps = [d.replace(".", "/") + ".hpp" for d in self._file.imports if self._import_has_content(d)]
@@ -404,7 +406,11 @@ class FileGenerator:
         return "UUID" in self._referenced()
 
     def _uses_nbt(self) -> bool:
-        return bool(self._referenced() & self._file_set.builtins)
+        # DynamicValue is a built-in too, but lives in its own header (ddui.hpp).
+        return bool((self._referenced() & self._file_set.builtins) - {"DynamicValue"})
+
+    def _uses_ddui(self) -> bool:
+        return "DynamicValue" in self._referenced()
 
     def _uses_bitset(self) -> bool:
         for s in self._file.structs:

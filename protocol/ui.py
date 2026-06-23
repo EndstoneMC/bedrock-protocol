@@ -1,19 +1,45 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, packet, type, uint8, uint32, uvarint32
+from protocol import double, field, packet, type, uint8, uint32, uvarint32
 from protocol.common import BlockPos
+from protocol.ddui import DynamicValue
 
 package = "bedrock.protocol"
 
 
-# ClientboundDataStorePacket (id=330, since=898) and ServerboundDataStorePacket
-# (id=332, since=898) are omitted: the data-store value type
-# (Bedrock::DDUI::DataStorePropertyValue) is recursive -- a MAP variant carries
-# a list of key/value pairs whose values are themselves DataStorePropertyValue
-# -- and the DSL has no spelling for a recursive struct nested inside a tagged
-# union today. The ids stay allocated but unused on v975 until the compiler
-# grows that spelling.
+class DataStoreUpdate:
+    data_store_name: str
+    property: str
+    path: str
+    data: double | bool | str
+    property_update_count: uint32
+    path_update_count: uint32
+
+
+class DataStoreChange:
+    data_store_name: str
+    property: str
+    update_count: uint32
+    new_data: DynamicValue
+
+
+class DataStoreRemoval:
+    data_store_name: str
+
+
+@packet(id=330, since=898)
+class ClientboundDataStorePacket:
+    """Sent by the server to update, change, or remove data-store entries on the client."""
+
+    updates: list[DataStoreUpdate | DataStoreChange | DataStoreRemoval]
+
+
+@packet(id=332, since=898)
+class ServerboundDataStorePacket:
+    """Sent by the client to update a data-store property on the server."""
+
+    update: DataStoreUpdate
 
 
 @packet(id=310, since=686)
