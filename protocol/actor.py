@@ -20,6 +20,8 @@ from protocol import (
 )
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
 from protocol.dimension import DimensionType
+from protocol.game import GameType
+from protocol.inventory import NetworkItemStackDescriptor
 from protocol.molang import MolangVersion
 from protocol.nbt import CompoundTag
 
@@ -297,10 +299,17 @@ class AddHangingEntityPacket:
     direction: varint32
 
 
-# AddItemActorPacket (id=15) needs NetworkItemStackDescriptor from
-# protocol.inventory, which already imports protocol.actor -- importing
-# inventory from here would create a resolver cycle. Skipped this wave; the
-# packet should land once the item-stack types live in a non-cycling module.
+@packet(id=15)
+class AddItemActorPacket:
+    """Makes an item entity show up. One of the few entities that cannot be sent via AddActorPacket."""
+
+    entity_id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    item: NetworkItemStackDescriptor
+    pos: Vec3
+    velocity: Vec3
+    packed_items: list[DataItem]
+    from_fishing: bool
 
 
 @packet(id=22)
@@ -385,10 +394,29 @@ class AdventureSettingsBody:  # pre-v534 wire shape, pre-v776 BDS-invisible; tru
     entity_unique_id: int64
 
 
-# AddPlayerPacket (id=12) carries a NetworkItemStackDescriptor as
-# `carried_item`. protocol.inventory already imports protocol.actor, so
-# importing inventory here would loop the resolver. Skipped this wave -- the
-# packet should land once the item-stack types live in a non-cycling module.
+@packet(id=12)
+class AddPlayerPacket:
+    """Makes a player entity show up client-side. One of the few entities that cannot be sent via AddActorPacket."""
+
+    uuid: uuid.UUID
+    username: str
+    entity_id: ActorUniqueID = field(until=534)
+    runtime_id: ActorRuntimeID
+    platform_chat_id: str
+    position: Vec3
+    velocity: Vec3
+    pitch: float
+    yaw: float
+    head_yaw: float
+    held_item: NetworkItemStackDescriptor
+    game_type: GameType = field(type=varint32, since=503)
+    packed_items: list[DataItem]
+    properties: PropertySyncData = field(since=557)
+    adventure_settings: AdventureSettingsBody = field(until=534)
+    abilities: SerializedAbilitiesData = field(since=534)
+    links: list[ActorLink]
+    device_id: str
+    build_platform: BuildPlatform = field(type=int32, since=388)
 
 
 @packet(id=166, since=440)
@@ -591,8 +619,16 @@ class HurtArmorPacket:
     armor_slots: bitset[5] = field(since=465)
 
 
-# MobArmorEquipmentPacket (id=32) needs NetworkItemStackDescriptor. See
-# AddItemActorPacket above for the resolver-cycle rationale.
+@packet(id=32)
+class MobArmorEquipmentPacket:
+    """Updates the armour an entity is wearing. Sent for players and other entities."""
+
+    runtime_id: ActorRuntimeID
+    helmet: NetworkItemStackDescriptor
+    chestplate: NetworkItemStackDescriptor
+    leggings: NetworkItemStackDescriptor
+    boots: NetworkItemStackDescriptor
+    body: NetworkItemStackDescriptor = field(since=712)
 
 
 @packet(id=157, since=419)

@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME}_tests
     test_010_set_time.cpp
     test_011_start_game.cpp
     test_014_remove_actor.cpp
+    test_015_add_item_actor.cpp
     test_017_take_item_actor.cpp
     test_018_move_actor_absolute.cpp
     test_019_move_player.cpp
@@ -19,6 +20,7 @@ add_executable(${PROJECT_NAME}_tests
     test_028_mob_effect.cpp
     test_029_update_attributes.cpp
     test_031_mob_equipment.cpp
+    test_032_mob_armor_equipment.cpp
     test_033_interact.cpp
     test_034_block_pick_request.cpp
     test_035_actor_pick_request.cpp
