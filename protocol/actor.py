@@ -21,7 +21,7 @@ from protocol import (
 from protocol.common import BlockPos, NetworkBlockPos, Vec2, Vec3
 from protocol.dimension import DimensionType
 from protocol.game import GameType
-from protocol.inventory import NetworkItemStackDescriptor
+from protocol.inventory import ContainerID, NetworkItemStackDescriptor
 from protocol.molang import MolangVersion
 from protocol.nbt import CompoundTag
 
@@ -755,17 +755,11 @@ class PlayerToggleCrafterSlotRequestPacket:
     is_disabled: bool
 
 
-# ContainerID lives in protocol.inventory (signed-char in BDS,
-# SharedTypes::Legacy::ContainerID). protocol.inventory imports protocol.actor,
-# so we cannot import inventory here without a resolver cycle. Encode as raw
-# int8 directly.
-
-
 @packet(id=81)
 class UpdateEquipPacket:
     """Seemingly only used for the Horse Inventory. More specifically when the player opens the horse inventory."""
 
-    container_id: int8
+    container_id: ContainerID
     type: int8
     size: varint32
     entity_unique_id: ActorUniqueID
@@ -777,7 +771,7 @@ class UpdateTradePacket:
     """This is used when the player trades with an npc. This sends all of the updated trade info
     in one big ol' packet."""
 
-    container_id: int8
+    container_id: ContainerID
     type: int8
     size: varint32
     # v291 wrote a merchant-timer varint here (40 when economy trading), v313

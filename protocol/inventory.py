@@ -718,7 +718,7 @@ class MobEquipmentPacket:
     item: SerializedNetworkItemStackDescriptor = field(since=975)
     slot: uint8
     selected_slot: uint8
-    container_id: int8
+    container_id: ContainerID
 
 
 class ArmorSlot(IntEnum):
