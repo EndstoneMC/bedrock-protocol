@@ -43,17 +43,22 @@ def resolve_all(file_set: FileSet) -> tuple[ResolvedFile, ...]:
     return tuple(resolve(file_set.files[name], file_set) for name in file_set.outputs)
 
 
-def resolve(file: File, file_set: FileSet) -> ResolvedFile:
+def resolve(file: File, file_set: FileSet, _visiting: frozenset[str] = frozenset()) -> ResolvedFile:
     cached = file_set.resolved.get(file.name)
     if cached is not None:
         return cached
 
     # Resolve imports first so cross-file lookups (`is_versioned`, `present_at`)
-    # find their snapshot information already in `file_set.resolved`.
+    # find their snapshot information already in `file_set.resolved`. Skip any
+    # import already being resolved higher up the stack: that is an import cycle
+    # (e.g. actor <-> inventory), and recursing into it would never terminate.
+    # Cyclic partners reference only each other's non-versioned types, so the
+    # missing pre-resolution is harmless -- the in-flight resolve() caches it.
+    deeper = _visiting | {file.name}
     for imp in file.imports:
         other = file_set.files.get(imp)
-        if other is not None:
-            resolve(other, file_set)
+        if other is not None and imp not in deeper:
+            resolve(other, file_set, deeper)
 
     all_types: tuple[Enum | Struct, ...] = (
         *file.enums,

@@ -596,24 +596,30 @@ class ResolvedFile:
                     return s
         return None
 
-    def is_versioned(self, name: str) -> bool:
+    def is_versioned(self, name: str, _seen: frozenset[str] = frozenset()) -> bool:
         if name in self.versioned_types:
             return True
+        seen = _seen | {self.file.name}
         for imp in self.file.imports:
+            if imp in seen:  # stop at an import cycle (e.g. actor <-> inventory)
+                continue
             other = self.file_set.resolved.get(imp)
-            if other is not None and other.is_versioned(name):
+            if other is not None and other.is_versioned(name, seen):
                 return True
         return False
 
-    def snapshots_of(self, name: str) -> tuple[VersionSnapshot, ...]:
+    def snapshots_of(self, name: str, _seen: frozenset[str] = frozenset()) -> tuple[VersionSnapshot, ...]:
         own = self.snapshots_by_type.get(name)
         if own is not None:
             return own
+        seen = _seen | {self.file.name}
         for imp in self.file.imports:
+            if imp in seen:  # stop at an import cycle
+                continue
             other = self.file_set.resolved.get(imp)
             if other is None:
                 continue
-            snaps = other.snapshots_of(name)
+            snaps = other.snapshots_of(name, seen)
             if snaps:
                 return snaps
         return ()
