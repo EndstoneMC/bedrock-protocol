@@ -267,9 +267,9 @@ class DataItem:
         VEC3 = 8
 
     id: uvarint32
-    value: (
-        uint8 | int16 | varint32 | float | str | CompoundTag | BlockPos | varint64 | Vec3
-    ) = field(tag=Type, type=uvarint32)
+    value: uint8 | int16 | varint32 | float | str | CompoundTag | BlockPos | varint64 | Vec3 = field(
+        tag=Type, type=uvarint32
+    )
 
 
 @packet(id=13)
@@ -450,9 +450,8 @@ class BossEventPacket:
     # (a version-redeclaration here is disallowed once the packet itself is one).
     player_id: ActorUniqueID = field(
         when=lambda p: (
-            p.event_type == BossEventUpdateType.PLAYER_ADDED
-            or p.event_type == BossEventUpdateType.PLAYER_REMOVED
-            or p.event_type == BossEventUpdateType.QUERY
+            p.event_type
+            in {BossEventUpdateType.PLAYER_ADDED, BossEventUpdateType.PLAYER_REMOVED, BossEventUpdateType.QUERY}
         ),
     )
 
@@ -461,24 +460,23 @@ class BossEventPacket:
     # here -- the pre-776 redeclaration would overlap with the with-block, which
     # the DSL does not currently support for nested field redeclarations.
     with field(
-        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_NAME,
+        when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_NAME},
         since=776,
     ):
         name: str
         filtered_name: str
 
     health_percent: float = field(
-        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_PERCENT,
+        when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PERCENT},
     )
     darken_screen: uint16 = field(
-        when=lambda p: p.event_type == BossEventUpdateType.ADD or p.event_type == BossEventUpdateType.UPDATE_PROPERTIES,
+        when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PROPERTIES},
     )
 
     with field(
         when=lambda p: (
-            p.event_type == BossEventUpdateType.ADD
-            or p.event_type == BossEventUpdateType.UPDATE_PROPERTIES
-            or p.event_type == BossEventUpdateType.UPDATE_STYLE
+            p.event_type
+            in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PROPERTIES, BossEventUpdateType.UPDATE_STYLE}
         )
     ):
         color: BossBarColor = field(type=uvarint32)

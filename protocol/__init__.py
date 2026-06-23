@@ -69,7 +69,9 @@ def field(
       and deserialize recompute it from the predicate, so the field reads as
       `X` but compiles to an optional. The lambda body may use attribute
       access on its parameter, `Enum.MEMBER` literals, integer literals,
-      comparisons, `and`/`or`, `not`, and bitwise `&` (handy for testing
+      comparisons, set-membership against a `{...}` literal (`p.x in {Foo.A,
+      Foo.B}`, desugaring to an `or` chain of `==`; `not in` to an `and`
+      chain of `!=`), `and`/`or`, `not`, and bitwise `&` (handy for testing
       bits in a fixed-width flags field, e.g. `p.flags & FLAG_HAS_X != 0`).
       It may only reference fields declared before this one.
     - `endian`: byte order for a fixed-width primitive or integer-coded enum

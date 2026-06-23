@@ -880,6 +880,8 @@ class _AnnotationContext:
                     "split a chained comparison with `and`"
                 )
             op = str(node.operators[0])
+            if op in ("in", "not in"):
+                return self._pred_membership(node, op, param, field_name, nested, earlier)
             if op not in ("==", "!=", "<", ">", "<=", ">="):
                 raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
             return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
@@ -891,6 +893,34 @@ class _AnnotationContext:
         if literal is not None:
             return Predicate("int", text=str(literal))
         raise CompilerError(f"{field_name}: field(when=...) contains an unsupported expression: {node}")
+
+    def _pred_membership(
+        self,
+        node: griffe.ExprCompare,
+        op: str,
+        param: str,
+        field_name: str,
+        nested: frozenset[str],
+        earlier: frozenset[str],
+    ) -> Predicate:
+        """Desugar a set-membership test into a chain of equalities:
+        `x in {a, b, c}`  -> `(x == a or x == b or x == c)`;
+        `x not in {a, b}` -> `(x != a and x != b)`. The right operand must be a
+        set / list / tuple literal."""
+        container = node.comparators[0]
+        if not isinstance(container, (griffe.ExprSet, griffe.ExprList, griffe.ExprTuple)):
+            raise CompilerError(
+                f"{field_name}: field(when=...) `{op}` requires a set/list/tuple literal on the right, got {container}"
+            )
+        elements = list(container.elements)
+        if not elements:
+            raise CompilerError(f"{field_name}: field(when=...) `{op}` needs a non-empty set literal")
+        left = self._pred_node(node.left, param, field_name, nested, earlier)
+        cmp_op, bool_op = ("==", "or") if op == "in" else ("!=", "and")
+        clauses = tuple(
+            Predicate(cmp_op, operands=(left, self._pred_node(e, param, field_name, nested, earlier))) for e in elements
+        )
+        return clauses[0] if len(clauses) == 1 else Predicate(bool_op, operands=clauses)
 
     def _pred_attr(
         self,
@@ -1273,9 +1303,7 @@ def _repeat_parts(
     if ann.left.name != "tuple":
         return None
     slice_ = ann.slice
-    elements: list[griffe.Expr | str] = (
-        list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
-    )
+    elements: list[griffe.Expr | str] = list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
     if not elements:
         raise CompilerError(
             f"{field_name}: tuple[...] must spell out a fixed count of element types -- "
