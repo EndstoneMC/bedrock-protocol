@@ -22,9 +22,10 @@ from bedrock_protocol.descriptor import (
     Struct,
     VariantType,
 )
+
+from .class_ import ClassGenerator
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .class_ import ClassGenerator
 from .names import PRIMITIVE_TYPES, camel, requires_clause, snapshot_namespace
 from .printer import Printer
 
@@ -252,7 +253,9 @@ class FileGenerator:
         else:
             gen.generate_serializer_definition(p)
 
-    def _emit_struct_serializer(self, p: Printer, struct: Struct, snapshot: int | None, qualified: str, mode: str) -> None:
+    def _emit_struct_serializer(
+        self, p: Printer, struct: Struct, snapshot: int | None, qualified: str, mode: str
+    ) -> None:
         gen = ClassGenerator(struct, self._ctx, snapshot=snapshot, qualified=qualified)
         if mode == "decl":
             gen.generate_serializer_declaration(p)
@@ -276,7 +279,9 @@ class FileGenerator:
         with p.block():
             gen.generate_serialize(p, "value")
         p.print("\n")
-        p.print(f"auto Serializer<{name}>::deserialize(BinaryReader &stream) -> std::expected<{name}, std::error_code>\n")
+        p.print(
+            f"auto Serializer<{name}>::deserialize(BinaryReader &stream) -> std::expected<{name}, std::error_code>\n"
+        )
         with p.block():
             p.print(f"{name} out;\n")
             with p.block():

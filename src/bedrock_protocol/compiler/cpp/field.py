@@ -28,7 +28,9 @@ from bedrock_protocol.descriptor import (
     StructType,
     VariantType,
 )
+
 from .names import PRIMITIVE_TYPES, snapshot_namespace
+from .printer import Printer
 
 
 @dataclass(frozen=True)
@@ -157,10 +159,10 @@ class FieldGenerator(ABC):
     disambiguates the loop / temporary names of nested combinators."""
 
     @abstractmethod
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None: ...
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None: ...
 
     @abstractmethod
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None: ...
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None: ...
 
 
 class PrimitiveFieldGenerator(FieldGenerator):
@@ -168,11 +170,11 @@ class PrimitiveFieldGenerator(FieldGenerator):
         self._prim = prim
         self._gc = gc
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes(*type_includes(self._prim))
         p.print(_primitive_write(self._prim, var) + "\n")
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>", *type_includes(self._prim))
         p.print(_primitive_read(self._prim) + "\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
@@ -191,7 +193,7 @@ class EnumFieldGenerator(FieldGenerator):
     def _qualified(self) -> str:
         return qualified_at(self._enum.name, self._gc.ctx, self._gc.snapshot)
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         if self._enum.scalar is None:
             p.add_includes("<bedrock/serializer.hpp>")
             p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
@@ -199,7 +201,7 @@ class EnumFieldGenerator(FieldGenerator):
             p.add_includes(*type_includes(self._enum.scalar))
             p.print(_primitive_write(self._enum.scalar, var) + "\n")
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         if self._enum.scalar is None:
             p.add_includes("<bedrock/serializer.hpp>")
@@ -221,11 +223,11 @@ class ClassFieldGenerator(FieldGenerator):
     def _qualified(self) -> str:
         return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot)
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes("<bedrock/serializer.hpp>")
         p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<bedrock/serializer.hpp>", "<expected>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
@@ -237,12 +239,12 @@ class OptionalFieldGenerator(FieldGenerator):
         self._inner = inner
         self._gc = gc
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.print(f"stream.write<bool>({var}.has_value());\n")
         with p.block(f"if ({var}.has_value())"):
             self._inner.generate_serialize(p, f"*{var}", depth)
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         p.print("auto present = stream.read<bool>();\n")
         p.print("if (!present) return std::unexpected(present.error());\n")
@@ -256,13 +258,13 @@ class RepeatedFieldGenerator(FieldGenerator):
         self._prefix = prefix
         self._gc = gc
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes(*type_includes(self._prefix))
         p.print(_primitive_write(self._prefix, f"{var}.size()") + "\n")
         with p.block(f"for (const auto &e{depth} : {var})"):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>", *type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
         p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
@@ -285,7 +287,7 @@ class VariantFieldGenerator(FieldGenerator):
         self._variant_type = variant_type
         self._gc = gc
 
-    def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes("<variant>", *type_includes(self._disc))
         p.print(_primitive_write(self._disc, f"({var}).index()") + "\n")
         with p.block(f"switch (({var}).index())"):
@@ -295,7 +297,7 @@ class VariantFieldGenerator(FieldGenerator):
                         case.generate_serialize(p, f"std::get<{index}>({var})", depth + 1)
                     p.print("break;\n")
 
-    def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<variant>", "<system_error>", "<expected>", *type_includes(self._disc))
         p.print(f"auto tag{depth} = stream.{_read_verb(self._disc)}();\n")
         p.print(f"if (!tag{depth}) return std::unexpected(tag{depth}.error());\n")

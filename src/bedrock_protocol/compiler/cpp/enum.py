@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from bedrock_protocol.descriptor import Enum
+
 from .names import camel
 from .printer import Printer
 
@@ -75,5 +76,8 @@ class EnumGenerator:
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print("for (auto &c : *v) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));\n")
             p.print("auto it = values.find(*v);\n")
-            p.print("if (it == values.end()) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+            p.print(
+                "if (it == values.end()) "
+                "return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n"
+            )
             p.print("return it->second;\n")

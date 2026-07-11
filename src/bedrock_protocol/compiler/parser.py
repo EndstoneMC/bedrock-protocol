@@ -200,7 +200,10 @@ class SourceTree:
                 if alias is None:
                     continue
                 aliases_by_name[alias.name] = alias
-                (primitives if isinstance(alias, PrimitiveAlias) else others).append(alias)
+                if isinstance(alias, PrimitiveAlias):
+                    primitives.append(alias)
+                else:
+                    others.append(alias)
             primitive_aliases_by_module[name] = tuple(primitives)
             type_aliases_by_module[name] = tuple(others)
 
@@ -463,7 +466,9 @@ def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
 
 def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
     if not (
-        isinstance(expr, griffe.ExprCall) and isinstance(expr.function, griffe.ExprName) and expr.function.name == fn_name
+        isinstance(expr, griffe.ExprCall)
+        and isinstance(expr.function, griffe.ExprName)
+        and expr.function.name == fn_name
     ):
         return None
     for arg in expr.arguments:

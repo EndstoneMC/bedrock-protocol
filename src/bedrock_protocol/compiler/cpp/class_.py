@@ -10,6 +10,7 @@ The serializer bodies iterate the struct's fields and delegate each to the
 from __future__ import annotations
 
 from bedrock_protocol.descriptor import Struct
+
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
 from .printer import Printer
 
