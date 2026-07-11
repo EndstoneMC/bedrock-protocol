@@ -16,7 +16,7 @@
 #include <system_error>
 #include <type_traits>
 
-#include "expected.hpp"  // IWYU pragma: keep
+#include <expected>
 
 #if !defined(__cpp_lib_byteswap) || __cpp_lib_byteswap < 202110L
 namespace std {
@@ -65,7 +65,7 @@ public:
             std::uint8_t b = 0;
             auto r = read(&b, 1);
             if (!r) {
-                return make_unexpected(r.error());
+                return std::unexpected(r.error());
             }
             return b != 0;
         }
@@ -73,7 +73,7 @@ public:
             T value{};
             auto r = read(&value, sizeof(value));
             if (!r) {
-                return make_unexpected(r.error());
+                return std::unexpected(r.error());
             }
             if constexpr (sizeof(T) == 1 || Order == std::endian::native) {
                 return value;
@@ -95,12 +95,12 @@ public:
     {
         auto len = readVarInt<std::uint32_t>();
         if (!len) {
-            return make_unexpected(len.error());
+            return std::unexpected(len.error());
         }
         std::string out(*len, '\0');
         auto r = read(out.data(), *len);
         if (!r) {
-            return make_unexpected(r.error());
+            return std::unexpected(r.error());
         }
         return out;
     }
@@ -114,7 +114,7 @@ public:
         std::string out(remaining, '\0');
         auto r = read(out.data(), remaining);
         if (!r) {
-            return make_unexpected(r.error());
+            return std::unexpected(r.error());
         }
         return out;
     }
@@ -132,7 +132,7 @@ public:
             std::uint8_t b = 0;
             auto r = read(&b, 1);
             if (!r) {
-                return make_unexpected(r.error());
+                return std::unexpected(r.error());
             }
             value |= (static_cast<U>(b) & U{0x7F}) << (n * 7);
             if ((b & 0x80u) == 0) {
@@ -144,7 +144,7 @@ public:
                 }
             }
         }
-        return make_unexpected(std::make_error_code(std::errc::value_too_large));
+        return std::unexpected(std::make_error_code(std::errc::value_too_large));
     }
 
 private:
@@ -155,7 +155,7 @@ private:
         }
         const auto end = read_pos_ + num;
         if (end < read_pos_ || end > view_.size()) {
-            return make_unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(std::make_error_code(std::errc::message_size));
         }
         std::memcpy(target, view_.data() + read_pos_, num);
         read_pos_ = end;

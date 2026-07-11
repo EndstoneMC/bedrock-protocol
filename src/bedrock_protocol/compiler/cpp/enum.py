@@ -40,7 +40,7 @@ class EnumGenerator:
         p.add_includes(
             "<bedrock/serializer.hpp>",
             "<bedrock/stream.hpp>",
-            "<bedrock/expected.hpp>",
+            "<expected>",
             "<system_error>",
             "<cctype>",
             "<string>",
@@ -72,8 +72,8 @@ class EnumGenerator:
             p.outdent()
             p.print("};\n")
             p.print("auto v = stream.read<std::string>();\n")
-            p.print("if (!v) return make_unexpected(v.error());\n")
+            p.print("if (!v) return std::unexpected(v.error());\n")
             p.print("for (auto &c : *v) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));\n")
             p.print("auto it = values.find(*v);\n")
-            p.print("if (it == values.end()) return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+            p.print("if (it == values.end()) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
             p.print("return it->second;\n")

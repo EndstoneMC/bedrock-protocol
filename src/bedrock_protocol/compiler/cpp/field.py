@@ -173,9 +173,9 @@ class PrimitiveFieldGenerator(FieldGenerator):
         p.print(_primitive_write(self._prim, var) + "\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/expected.hpp>", *type_includes(self._prim))
+        p.add_includes("<expected>", *type_includes(self._prim))
         p.print(_primitive_read(self._prim) + "\n")
-        p.print("if (!v) return make_unexpected(v.error());\n")
+        p.print("if (!v) return std::unexpected(v.error());\n")
         if self._prim.name in ("str", "bytes") and self._prim.alias is None:
             p.print(f"{target} = *v;\n")
         else:
@@ -200,16 +200,16 @@ class EnumFieldGenerator(FieldGenerator):
             p.print(_primitive_write(self._enum.scalar, var) + "\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/expected.hpp>")
+        p.add_includes("<expected>")
         if self._enum.scalar is None:
             p.add_includes("<bedrock/serializer.hpp>")
             p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
-            p.print("if (!v) return make_unexpected(v.error());\n")
+            p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = *v;\n")
         else:
             p.add_includes(*type_includes(self._enum.scalar))
             p.print(_primitive_read(self._enum.scalar) + "\n")
-            p.print("if (!v) return make_unexpected(v.error());\n")
+            p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
 
 
@@ -226,9 +226,9 @@ class ClassFieldGenerator(FieldGenerator):
         p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/expected.hpp>")
+        p.add_includes("<bedrock/serializer.hpp>", "<expected>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
-        p.print("if (!v) return make_unexpected(v.error());\n")
+        p.print("if (!v) return std::unexpected(v.error());\n")
         p.print(f"{target} = *v;\n")
 
 
@@ -243,9 +243,9 @@ class OptionalFieldGenerator(FieldGenerator):
             self._inner.generate_serialize(p, f"*{var}", depth)
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/expected.hpp>")
+        p.add_includes("<expected>")
         p.print("auto present = stream.read<bool>();\n")
-        p.print("if (!present) return make_unexpected(present.error());\n")
+        p.print("if (!present) return std::unexpected(present.error());\n")
         with p.block("if (*present)"):
             self._inner.generate_deserialize(p, target, depth)
 
@@ -263,9 +263,9 @@ class RepeatedFieldGenerator(FieldGenerator):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/expected.hpp>", *type_includes(self._prefix))
+        p.add_includes("<expected>", *type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
-        p.print(f"if (!len{depth}) return make_unexpected(len{depth}.error());\n")
+        p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
         p.print(f"{target}.clear();\n")
         with p.block(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth})"):
             p.print(f"{target}.emplace_back();\n")
@@ -296,9 +296,9 @@ class VariantFieldGenerator(FieldGenerator):
                     p.print("break;\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
-        p.add_includes("<variant>", "<system_error>", "<bedrock/expected.hpp>", *type_includes(self._disc))
+        p.add_includes("<variant>", "<system_error>", "<expected>", *type_includes(self._disc))
         p.print(f"auto tag{depth} = stream.{_read_verb(self._disc)}();\n")
-        p.print(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());\n")
+        p.print(f"if (!tag{depth}) return std::unexpected(tag{depth}.error());\n")
         p.print(f"{self._variant_type} var{depth}{{}};\n")
         with p.block(f"switch (*tag{depth})"):
             for index, case in enumerate(self._cases):
@@ -310,7 +310,7 @@ class VariantFieldGenerator(FieldGenerator):
                     p.print(f"var{depth}.emplace<{index}>(alt{depth});\n")
                     p.print("break;\n")
             with p.block("default:"):
-                p.print("return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+                p.print("return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
         p.print(f"{target} = var{depth};\n")
 
 
