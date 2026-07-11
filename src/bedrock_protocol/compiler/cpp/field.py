@@ -183,7 +183,7 @@ class EnumFieldGenerator(FieldGenerator):
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
 
 
-class MessageFieldGenerator(FieldGenerator):
+class ClassFieldGenerator(FieldGenerator):
     def __init__(self, struct_type: StructType, gc: GenContext) -> None:
         self._struct = struct_type
         self._gc = gc
@@ -284,7 +284,7 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
     if isinstance(t, EnumType):
         return EnumFieldGenerator(t, gc)
     if isinstance(t, StructType):
-        return MessageFieldGenerator(t, gc)
+        return ClassFieldGenerator(t, gc)
     if isinstance(t, OptionalType):
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), gc)
     if isinstance(t, RepeatedType):

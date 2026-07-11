@@ -1,4 +1,4 @@
-"""`MessageGenerator` — one struct shape: its `struct { ... };` definition and
+"""`ClassGenerator` — one struct shape: its `struct { ... };` definition and
 its `Serializer<T>` specialization (declaration in the header, out-of-line
 bodies in the source). protoc analog: `compiler/cpp/cpp_message.{h,cc}`.
 
@@ -14,7 +14,7 @@ from .field import FileContext, GenContext, cpp_type, make_field_generator
 from .printer import Printer
 
 
-class MessageGenerator:
+class ClassGenerator:
     """One (possibly snapshot-narrowed) `Struct` → its C++ struct + serializer.
 
     `qualified` is the `Serializer<...>` target spelling (`Foo` when
