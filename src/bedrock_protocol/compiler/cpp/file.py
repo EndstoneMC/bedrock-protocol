@@ -71,7 +71,13 @@ class FileGenerator:
 
     def render_source(self) -> str:
         p = Printer()
-        p.print(f'#include "{self._file.stem}.hpp"\n\n')
+        p.print(f'#include "{self._file.stem}.hpp"\n')
+        src = self._source_includes()
+        if src:
+            p.print("\n")
+            for inc in sorted(src):
+                p.print(f"#include {inc}\n")
+        p.print("\n")
         self._emit_namespace_open(p)
         self._emit_serializers(p, mode="def")
         self._emit_namespace_close(p)
@@ -128,8 +134,14 @@ class FileGenerator:
         for a in self._file.primitive_aliases:
             if PRIMITIVE_TYPES[a.primitive].startswith("std::"):
                 out.add("<cstdint>")
+        return out
+
+    def _source_includes(self) -> set[str]:
+        """Headers used only by the serializer bodies (in the `.cpp`). The
+        name-coded enum codec builds an `unordered_map<E, string_view>`, reads a
+        `std::string`, and lowercases with `std::tolower`."""
+        out: set[str] = set()
         if self._ctx.string_coded_enums:
-            # name-coded enum serializer: unordered_map<E, string_view> + tolower.
             out |= {"<cctype>", "<string>", "<string_view>", "<unordered_map>"}
         return out
 
