@@ -117,6 +117,29 @@ def _read_verb(prim: PrimitiveType) -> str:
     return f"readVarInt<{u}>" if prim.name in VARINT_PRIMITIVES else f"read<{u}>"
 
 
+def type_includes(t: FieldType | None) -> set[str]:
+    """Headers a type's C++ spelling needs: `std::vector<...>` -> `<vector>`,
+    a `std::int32_t` field -> `<cstdint>`, and so on. Struct/enum references
+    carry no stdlib header."""
+    if isinstance(t, PrimitiveType):
+        if t.name in ("str", "bytes"):
+            return {"<string>"}
+        if PRIMITIVE_TYPES[t.name].startswith("std::"):
+            return {"<cstdint>"}
+        return set()
+    if isinstance(t, OptionalType):
+        return {"<optional>"} | type_includes(t.inner)
+    if isinstance(t, RepeatedType):
+        return {"<vector>"} | type_includes(t.inner)
+    if isinstance(t, VariantType):
+        out = {"<variant>"}
+        for c in t.cases:
+            if c is not None:
+                out |= type_includes(c)
+        return out
+    return set()
+
+
 # --- generator context + hierarchy --------------------------------------------
 
 
@@ -146,9 +169,11 @@ class PrimitiveFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+        p.add_includes(*type_includes(self._prim))
         p.print(_primitive_write(self._prim, var) + "\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/expected.hpp>", *type_includes(self._prim))
         p.print(_primitive_read(self._prim) + "\n")
         p.print("if (!v) return make_unexpected(v.error());\n")
         if self._prim.name in ("str", "bytes") and self._prim.alias is None:
@@ -168,16 +193,21 @@ class EnumFieldGenerator(FieldGenerator):
 
     def generate_serialize(self, p, var: str, depth: int = 0) -> None:
         if self._enum.scalar is None:
+            p.add_includes("<bedrock/serializer.hpp>")
             p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
         else:
+            p.add_includes(*type_includes(self._enum.scalar))
             p.print(_primitive_write(self._enum.scalar, var) + "\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/expected.hpp>")
         if self._enum.scalar is None:
+            p.add_includes("<bedrock/serializer.hpp>")
             p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
             p.print("if (!v) return make_unexpected(v.error());\n")
             p.print(f"{target} = *v;\n")
         else:
+            p.add_includes(*type_includes(self._enum.scalar))
             p.print(_primitive_read(self._enum.scalar) + "\n")
             p.print("if (!v) return make_unexpected(v.error());\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
@@ -192,9 +222,11 @@ class ClassFieldGenerator(FieldGenerator):
         return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot)
 
     def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/serializer.hpp>")
         p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/expected.hpp>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
         p.print("if (!v) return make_unexpected(v.error());\n")
         p.print(f"{target} = *v;\n")
@@ -211,6 +243,7 @@ class OptionalFieldGenerator(FieldGenerator):
             self._inner.generate_serialize(p, f"*{var}", depth)
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/expected.hpp>")
         p.print("auto present = stream.read<bool>();\n")
         p.print("if (!present) return make_unexpected(present.error());\n")
         with p.block("if (*present)"):
@@ -224,11 +257,13 @@ class RepeatedFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+        p.add_includes(*type_includes(self._prefix))
         p.print(_primitive_write(self._prefix, f"{var}.size()") + "\n")
         with p.block(f"for (const auto &e{depth} : {var})"):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<bedrock/expected.hpp>", *type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
         p.print(f"if (!len{depth}) return make_unexpected(len{depth}.error());\n")
         p.print(f"{target}.clear();\n")
@@ -251,6 +286,7 @@ class VariantFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def generate_serialize(self, p, var: str, depth: int = 0) -> None:
+        p.add_includes("<variant>", *type_includes(self._disc))
         p.print(_primitive_write(self._disc, f"({var}).index()") + "\n")
         with p.block(f"switch (({var}).index())"):
             for index, case in enumerate(self._cases):
@@ -260,6 +296,7 @@ class VariantFieldGenerator(FieldGenerator):
                     p.print("break;\n")
 
     def generate_deserialize(self, p, target: str, depth: int = 0) -> None:
+        p.add_includes("<variant>", "<system_error>", "<bedrock/expected.hpp>", *type_includes(self._disc))
         p.print(f"auto tag{depth} = stream.{_read_verb(self._disc)}();\n")
         p.print(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());\n")
         p.print(f"{self._variant_type} var{depth}{{}};\n")

@@ -23,7 +23,7 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 from .enum import EnumGenerator
-from .field import FileContext, GenContext, cpp_type, make_field_generator
+from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
 from .class_ import ClassGenerator
 from .names import PRIMITIVE_TYPES, camel, requires_clause, snapshot_namespace
 from .printer import Printer
@@ -49,101 +49,63 @@ class FileGenerator:
             known=known,
             string_coded_enums=_string_coded_enums(resolved),
         )
+        self._header_includes: set[str] = set()
 
     # --- public driver ------------------------------------------------------
 
     def render_header(self, latest_version: int) -> str:
+        # Render the body first; the generators record their includes on the
+        # Printer as they print. Then stamp the collected set at the top.
+        body = Printer()
+        self._emit_namespace_open(body)
+        self._emit_primitive_aliases(body)
+        self._emit_unversioned(body)
+        self._emit_type_aliases(body)
+        self._emit_versioned_namespaces(body)
+        self._emit_traits(body)
+        self._emit_serializers(body, mode="decl")
+        self._emit_latest_aliases(body, latest_version)
+        self._emit_namespace_close(body)
+        self._header_includes = set(body.includes)
+
         p = Printer()
         p.print("#pragma once\n\n")
-        self._emit_includes(p)
+        self._emit_includes(p, self._header_includes)
         self._emit_version_include(p)
         p.print("\n")
-        self._emit_namespace_open(p)
-        self._emit_primitive_aliases(p)
-        self._emit_unversioned(p)
-        self._emit_type_aliases(p)
-        self._emit_versioned_namespaces(p)
-        self._emit_traits(p)
-        self._emit_serializers(p, mode="decl")
-        self._emit_latest_aliases(p, latest_version)
-        self._emit_namespace_close(p)
+        p.print(body.text)
         return p.text
 
     def render_source(self) -> str:
+        body = Printer()
+        self._emit_namespace_open(body)
+        self._emit_serializers(body, mode="def")
+        self._emit_namespace_close(body)
+
         p = Printer()
         p.print(f'#include "{self._file.stem}.hpp"\n')
-        src = self._source_includes()
-        if src:
+        # Only what the bodies need beyond what the header already pulls in.
+        extra = body.includes - self._header_includes
+        if extra:
             p.print("\n")
-            for inc in sorted(src):
-                p.print(f"#include {inc}\n")
+            self._emit_includes(p, extra)
         p.print("\n")
-        self._emit_namespace_open(p)
-        self._emit_serializers(p, mode="def")
-        self._emit_namespace_close(p)
+        p.print(body.text)
         return p.text
 
     # --- includes -----------------------------------------------------------
 
-    def _emit_includes(self, p: Printer) -> None:
-        """Emit exactly the headers the generated code uses, as a sorted set:
-        stdlib first, then the bedrock codec headers."""
-        stdlib = self._stdlib_includes()
-        project: set[str] = set()
-        if self._has_serializers():
-            stdlib.add("<system_error>")
-            project |= {"<bedrock/expected.hpp>", "<bedrock/serializer.hpp>", "<bedrock/stream.hpp>"}
-        for inc in sorted(stdlib):
+    def _emit_includes(self, p: Printer, includes: set[str]) -> None:
+        """Emit `includes` in two sorted groups: stdlib then bedrock headers."""
+        std = sorted(i for i in includes if not i.startswith("<bedrock/"))
+        project = sorted(i for i in includes if i.startswith("<bedrock/"))
+        for inc in std:
             p.print(f"#include {inc}\n")
         if project:
-            p.print("\n")
-            for inc in sorted(project):
+            if std:
+                p.print("\n")
+            for inc in project:
                 p.print(f"#include {inc}\n")
-
-    def _stdlib_includes(self) -> set[str]:
-        """The stdlib headers demanded by the file's types: `<vector>` only when
-        a `std::vector` is generated, `<optional>` only for a `std::optional`,
-        and so on."""
-        out: set[str] = set()
-
-        def walk(t: FieldType | None) -> None:
-            if isinstance(t, PrimitiveType):
-                if t.name in ("str", "bytes"):
-                    out.add("<string>")
-                elif PRIMITIVE_TYPES[t.name].startswith("std::"):
-                    out.add("<cstdint>")
-            elif isinstance(t, OptionalType):
-                out.add("<optional>")
-                walk(t.inner)
-            elif isinstance(t, RepeatedType):
-                out.add("<vector>")
-                walk(t.prefix)
-                walk(t.inner)
-            elif isinstance(t, VariantType):
-                out.add("<variant>")
-                walk(t.discriminator)
-                for c in t.cases:
-                    walk(c)
-
-        for s in self._file.structs:
-            for f in s.fields:
-                for v in f.versions:
-                    walk(v.type)
-        for a in self._file.type_aliases:
-            walk(a.target)
-        for a in self._file.primitive_aliases:
-            if PRIMITIVE_TYPES[a.primitive].startswith("std::"):
-                out.add("<cstdint>")
-        return out
-
-    def _source_includes(self) -> set[str]:
-        """Headers used only by the serializer bodies (in the `.cpp`). The
-        name-coded enum codec builds an `unordered_map<E, string_view>`, reads a
-        `std::string`, and lowercases with `std::tolower`."""
-        out: set[str] = set()
-        if self._ctx.string_coded_enums:
-            out |= {"<cctype>", "<string>", "<string_view>", "<unordered_map>"}
-        return out
 
     def _emit_version_include(self, p: Printer) -> None:
         """A file with versioned types spells the `_<ProtocolVersion V>`
@@ -171,6 +133,7 @@ class FileGenerator:
 
     def _emit_primitive_aliases(self, p: Printer) -> None:
         for a in self._file.primitive_aliases:
+            p.add_includes(*type_includes(PrimitiveType(name=a.primitive)))
             p.print(f"enum {a.name} : {PRIMITIVE_TYPES[a.primitive]} {{}};\n")
         if self._file.primitive_aliases:
             p.print("\n")
@@ -185,6 +148,7 @@ class FileGenerator:
         for a in self._file.type_aliases:
             ctype = cpp_type(a.target, self._ctx)
             assert ctype is not None
+            p.add_includes(*type_includes(a.target))
             p.print(f"using {a.name} = {ctype};\n")
         if self._file.type_aliases:
             p.print("\n")
@@ -297,6 +261,7 @@ class FileGenerator:
 
     def _emit_variant_alias_serializer(self, p: Printer, name: str, target: VariantType, mode: str) -> None:
         if mode == "decl":
+            p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
             p.print("template <>\n")
             p.print(f"struct Serializer<{name}> {{\n")
             p.indent()
@@ -305,6 +270,7 @@ class FileGenerator:
             p.outdent()
             p.print("};\n")
             return
+        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
         gen = make_field_generator(target, GenContext(self._ctx, None))
         p.print(f"void Serializer<{name}>::serialize(BinaryWriter &stream, const {name} &value)\n")
         with p.block():
@@ -341,16 +307,6 @@ class FileGenerator:
             if self._resolved.is_versioned(name) and self._resolved.present_at(name, snap) is not None:
                 return True
         return False
-
-    def _has_serializers(self) -> bool:
-        for name in self._resolved.declaration_order:
-            t = self._by_name()[name]
-            if isinstance(t, Enum):
-                if t.name in self._ctx.string_coded_enums:
-                    return True
-            elif t.fields:
-                return True
-        return any(isinstance(a.target, VariantType) for a in self._file.type_aliases)
 
     def _version_enum(self) -> Enum | None:
         for f in self._file_set.files.values():

@@ -19,8 +19,20 @@ class Printer:
         self._out: list[str] = []
         self._depth = 0
         self._at_line_start = True
+        self._includes: set[str] = set()
 
     # --- protoc-style API ---------------------------------------------------
+
+    def add_includes(self, *headers: str) -> None:
+        """Record headers the code being printed depends on. A generator calls
+        this next to the `print()` that emits a `std::vector`, a `Serializer<>`,
+        etc.; `FileGenerator` collects `includes` and emits them at the top."""
+        self._includes.update(headers)
+
+    @property
+    def includes(self) -> set[str]:
+        return self._includes
+
 
     def print(self, *args: object) -> None:
         """`print(text)` or `print(vars, text)`. `$name$` markers in `text` are

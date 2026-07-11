@@ -10,7 +10,7 @@ The serializer bodies iterate the struct's fields and delegate each to the
 from __future__ import annotations
 
 from bedrock_protocol.descriptor import Struct
-from .field import FileContext, GenContext, cpp_type, make_field_generator
+from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
 from .printer import Printer
 
 
@@ -46,6 +46,7 @@ class ClassGenerator:
             if ctype is None:
                 p.print(f"struct {self._struct.name} {{}};\n")
                 return
+            p.add_includes(*type_includes(version.type))
             rendered.append((ctype, f.name))
         p.print(f"struct {self._struct.name} {{\n")
         p.indent()
@@ -59,6 +60,7 @@ class ClassGenerator:
     # --- serializer ---------------------------------------------------------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
+        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
         q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
@@ -69,6 +71,7 @@ class ClassGenerator:
         p.print("};\n")
 
     def generate_serializer_definition(self, p: Printer) -> None:
+        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
         q = self._qualified
         gc = GenContext(self._ctx, self._snapshot)
 

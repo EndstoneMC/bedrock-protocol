@@ -26,6 +26,7 @@ class EnumGenerator:
     # --- serializer (name-coded: verbatim member name on the wire) ----------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
+        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
         q = self._enum.name
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
@@ -36,6 +37,16 @@ class EnumGenerator:
         p.print("};\n")
 
     def generate_serializer_definition(self, p: Printer) -> None:
+        p.add_includes(
+            "<bedrock/serializer.hpp>",
+            "<bedrock/stream.hpp>",
+            "<bedrock/expected.hpp>",
+            "<system_error>",
+            "<cctype>",
+            "<string>",
+            "<string_view>",
+            "<unordered_map>",
+        )
         q = self._enum.name
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
