@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  lint:
+    name: Lint (ruff + mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: ruff
+        run: uvx ruff check .
+      - name: mypy
+        run: uv run mypy
+
+  build:
+    name: Build + goldens (Clang ${{ matrix.llvm }}, libc++)
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        llvm: [18]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install Clang ${{ matrix.llvm }} + libc++
+        run: |
+          sudo apt-get update -y -q
+          sudo apt-get install -y -q lsb-release wget software-properties-common gnupg
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{ matrix.llvm }}
+          sudo apt-get install -y -q libc++-${{ matrix.llvm }}-dev libc++abi-${{ matrix.llvm }}-dev
+      - uses: lukka/get-cmake@latest
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_COMPILER=clang++-${{ matrix.llvm }}
+          -DCMAKE_CXX_FLAGS=-stdlib=libc++
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
