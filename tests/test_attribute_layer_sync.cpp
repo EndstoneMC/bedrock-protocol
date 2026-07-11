@@ -53,8 +53,11 @@ bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
     return packet;
 }
 
-// Golden bytes derived from CloudburstMC/Protocol's ClientboundAttributeLayerSync
-// v944/v975 serializer (the authoritative per-version wire encoder), body only.
+// Golden derived from CloudburstMC/Protocol's ClientBoundAttributeLayerSync
+// serializer -- field order, presence flags, varints, lengths. One patch: the
+// `operation` name-code is BDS-verbatim UPPERCASE (1.26.20 binary, IDA-confirmed);
+// CloudburstMC's lowercase is an unvalidated error, so it is not the oracle for
+// the name-code casing.
 const std::string golden_v975 = bytes({
     0x02,                                              // payload type = UpdateEnvironmentAttributes
     0x03, 0x77, 0x65, 0x74,                            // layer name "wet"
@@ -64,7 +67,7 @@ const std::string golden_v975 = bytes({
     0x00,                                              // from_attribute absent
     0x00,                                              //   attribute type = 0 (bool)
     0x01,                                              //   bool value = true
-    0x08, 0x4f, 0x56, 0x45, 0x52, 0x52, 0x49, 0x44, 0x45,  //   operation "OVERRIDE" (BDS uppercase verbatim)
+    0x08, 0x4f, 0x56, 0x45, 0x52, 0x52, 0x49, 0x44, 0x45,  //   operation "OVERRIDE" (CloudburstMC lowercase patched to BDS verbatim)
     0x00,                                              // to_attribute absent
     0x00, 0x00, 0x00, 0x00,                            // current_transition_ticks = 0
     0x00, 0x00, 0x00, 0x00,                            // total_transition_ticks = 0
