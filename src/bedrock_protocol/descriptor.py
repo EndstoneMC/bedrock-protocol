@@ -1,15 +1,12 @@
 """Bedrock-protocol IR — the language-agnostic boundary between frontend and backend.
 
-This module is the analog of protoc's `descriptor.{h,cc}`. The frontend
-(`compiler.parser`) produces a `File`; the resolver (`compiler.resolver`)
-refines it into a `ResolvedFile`, which is the only descriptor type a
-backend receives.
+Analog of protoc's `descriptor.{h,cc}`. The frontend (`compiler.parser`)
+produces a `File`; the resolver (`compiler.resolver`) refines it into a
+`ResolvedFile`, the only descriptor type a backend receives.
 
-Every dataclass here is frozen and read-only. Each field carries a single
-`FieldType` tree that describes both the shape the user wrote (`X | None`
-→ `OptionalType`, `list[T]` → `RepeatedType`, ...) and the encoding it
-takes on the wire (presence-bit vs union-tag for optionals, length prefix
-for lists, endianness for scalars, ...). One tree, one walk.
+Every dataclass is frozen. Each field carries one `FieldType` tree describing
+both the shape the user wrote (`X | None` → `OptionalType`, `list[T]` →
+`RepeatedType`, `A | B` → `VariantType`) and the encoding it takes on the wire.
 """
 
 from __future__ import annotations
@@ -19,8 +16,7 @@ from typing import Literal, Mapping
 
 # --- primitives ---------------------------------------------------------------
 
-#: DSL primitive names. `str` and `bytes` are length-prefixed UTF-8 / opaque
-#: buffers; the rest are numeric or boolean.
+#: DSL primitive names. `str` / `bytes` are length-prefixed; the rest numeric/bool.
 PRIMITIVES: frozenset[str] = frozenset(
     {
         "str",
@@ -54,36 +50,12 @@ VARINT_PRIMITIVES: frozenset[str] = frozenset(
     }
 )
 
-#: Primitives that may length-prefix a list, map, or string.
-INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset(
-    {
-        "str",
-        "bytes",
-        "bool",
-        "float",
-        "double",
-    }
-)
+#: Primitives that may length-prefix a list or string.
+INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({"str", "bytes", "bool", "float", "double"})
 
 
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
-
-
-# --- predicate trees ---------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class Predicate:
-    """A `when=` predicate as a small expression tree.
-
-    `kind` is either a leaf (`field`, `enum`, `int`) or an operator
-    (`==`, `!=`, `<`, `>`, `<=`, `>=`, `and`, `or`, `not`).
-    """
-
-    kind: str
-    text: str = ""
-    operands: tuple["Predicate", ...] = ()
 
 
 # --- field type tree ---------------------------------------------------------
@@ -91,33 +63,16 @@ class Predicate:
 
 @dataclass(frozen=True)
 class PrimitiveType:
-    """A DSL primitive. `str` / `bytes` are length-prefixed; the rest are
-    fixed-width or varint (varint-ness derives from `name in VARINT_PRIMITIVES`).
-    `big_endian` only applies to fixed-width numeric primitives.
+    """A DSL primitive. `str` / `bytes` are length-prefixed; numeric primitives
+    are fixed-width or varint (`name in VARINT_PRIMITIVES`).
 
-    `alias` is set when this field references a `type Name = <primitive>`
-    declaration: `name` still drives the wire encoding (so a `Color = int32`
-    serializes as `int32`), but a backend spells the field with the alias
-    name (so the C++ field type is `Color`, not `std::int32_t`).
-
-    `wire_as` decouples the in-memory C++ type (`name`) from the wire
-    encoding. With `wire_as` set, the backend spells the field using `name`
-    (e.g. `std::int32_t`) but reads / writes it using `wire_as` (e.g.
-    `uvarint32`), `static_cast`-ing between the two. Used for fields like
-    `NetworkBlockPos::y` where BDS keeps the in-memory type as `int` but
-    the wire encoding flips between signed and unsigned varint per packet.
-
-    `trailing` flips a `bytes` field from "length-prefixed" to "consume the
-    remaining unread bytes in the frame" -- the wire form has no length
-    marker, and the frame boundary terminates the read. Only valid for
-    `bytes`, and only when the field is the last one in its struct.
-    """
+    `alias` is set when the field references a `type Name = <primitive>`
+    declaration: `name` drives the wire encoding, but a backend spells the
+    field with the alias name (so `Color = int32` serializes as `int32` yet the
+    C++ field type reads `Color`)."""
 
     name: str
-    big_endian: bool = False
     alias: str | None = None
-    trailing: bool = False
-    wire_as: "PrimitiveType | None" = None
     kind: Literal["primitive"] = "primitive"
 
     @property
@@ -140,8 +95,7 @@ class StructType:
 @dataclass(frozen=True)
 class EnumType:
     """A reference to a user-defined enum. `scalar=None` means name-coded
-    (string on the wire); `scalar` set means integer-coded over that
-    primitive."""
+    (string on the wire); `scalar` set means integer-coded over that primitive."""
 
     name: str
     scalar: PrimitiveType | None
@@ -154,15 +108,9 @@ class EnumType:
 
 @dataclass(frozen=True)
 class OptionalType:
-    """`discriminator=False` → one-byte bool flag; True → varuint union tag.
-
-    With a union tag, `present_tag` is the tag value that means "payload
-    follows" (0 for `T | None`, 1 for `None | T`).
-    """
+    """`T | None` → a one-byte bool presence flag followed by the payload."""
 
     inner: "FieldType"
-    discriminator: bool = False
-    present_tag: int = 0
     kind: Literal["optional"] = "optional"
 
     @property
@@ -172,16 +120,11 @@ class OptionalType:
 
 @dataclass(frozen=True)
 class RepeatedType:
-    """`list[T]` when `count` and `count_expr` are None and `prefix` carries
-    the length wire; `tuple[T, ..., T]` when `count` is set and `prefix` is
-    None (fixed array); `list[T]` with `count_expr` set when the element
-    count is computed at serialize/deserialize time from earlier fields
-    (`count=lambda p: ...`), again carrying no wire prefix."""
+    """`list[T]` — a length prefix (`prefix`, default `uvarint32`) followed by
+    that many elements."""
 
     inner: "FieldType"
-    count: int | None = None
-    count_expr: "Predicate | None" = None
-    prefix: PrimitiveType | None = None
+    prefix: PrimitiveType = field(default_factory=lambda: PrimitiveType(name="uvarint32"))
     kind: Literal["repeated"] = "repeated"
 
     @property
@@ -190,111 +133,21 @@ class RepeatedType:
 
 
 @dataclass(frozen=True)
-class MappingType:
-    """Length-prefixed map of key/value pairs."""
-
-    key: "FieldType"
-    value: "FieldType"
-    prefix: PrimitiveType
-    kind: Literal["mapping"] = "mapping"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return self.key.referenced | self.value.referenced
-
-
-@dataclass(frozen=True)
-class TupleType:
-    """`tuple[A, B, ...]` with at least two heterogeneous element types.
-    Wire form is each element serialized in declaration order with no
-    length prefix. A homogeneous `tuple[T, T, ...]` stays a `RepeatedType`
-    with a fixed `count`; this node only models the mixed-type case."""
-
-    members: tuple["FieldType", ...]
-    kind: Literal["tuple"] = "tuple"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return frozenset().union(*(m.referenced for m in self.members))
-
-
-@dataclass(frozen=True)
 class VariantType:
-    """`std::variant`-shaped tagged union. `discriminator` is the integer
-    primitive that prefixes the active case index on the wire (default
-    `uvarint32`); a `None` case carries no payload (`std::monostate` in C++).
-    `tag_enum` names a user-defined `IntEnum` whose members supply the C++
-    case labels (`EnumName::MEMBER`) one-to-one with the variant alternatives,
-    in declaration order; the wire form remains `discriminator`."""
+    """`A | B | C` → a `std::variant`-shaped tagged union. `discriminator` is
+    the integer primitive prefixing the active case index on the wire (default
+    `uvarint32`); a `None` case carries no payload (`std::monostate`)."""
 
     cases: tuple["FieldType | None", ...]
     discriminator: PrimitiveType = field(default_factory=lambda: PrimitiveType(name="uvarint32"))
-    tag_enum: str | None = None
     kind: Literal["variant"] = "variant"
 
     @property
     def referenced(self) -> frozenset[str]:
-        refs = frozenset().union(*(a.referenced for a in self.cases if a is not None))
-        if self.tag_enum is not None:
-            refs = refs | frozenset({self.tag_enum})
-        return refs
+        return frozenset().union(*(a.referenced for a in self.cases if a is not None))
 
 
-@dataclass(frozen=True)
-class BitsetType:
-    """A fixed-size `std::bitset<N>` on the wire. Serialized as a base-128
-    little-endian dump of the bitset's numeric value: seven payload bits per
-    byte, the top bit a continuation flag, with a single 0x00 byte for the
-    empty bitset.
-
-    `size` is the literal width baked into the generated `std::bitset<N>`.
-    `enum_member` records a symbolic `(enum_name, member_name)` ref when the
-    DSL spelled the width as `bitset[Enum.MEMBER]`. The resolver narrows that
-    ref against each snapshot's nested-enum view, so per-version member
-    numbers yield per-version bitset widths.
-    """
-
-    size: int
-    enum_member: tuple[str, str] | None = None
-    kind: Literal["bitset"] = "bitset"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return frozenset()
-
-
-@dataclass(frozen=True)
-class CondType:
-    """Field present only when `predicate` holds against earlier fields.
-    No presence marker on the wire — both sides recompute it.
-
-    `group` is the index of the `with field(when=...)` block the field came
-    from; fields sharing it form one guarded region. None is a lone
-    `field(when=)`.
-    """
-
-    inner: "FieldType"
-    predicate: Predicate
-    group: int | None = None
-    kind: Literal["cond"] = "cond"
-
-    @property
-    def referenced(self) -> frozenset[str]:
-        return self.inner.referenced
-
-
-FieldType = (
-    PrimitiveType
-    | StructType
-    | EnumType
-    | OptionalType
-    | RepeatedType
-    | MappingType
-    | TupleType
-    | VariantType
-    | BitsetType
-    | CondType
-)
+FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | VariantType
 
 
 # --- declarations ------------------------------------------------------------
@@ -304,10 +157,6 @@ FieldType = (
 class EnumValue:
     name: str
     number: int
-    since: int | None
-    until: int | None
-    deprecated: int | None = None
-    is_auto: bool = False
 
     @property
     def wire_name(self) -> str:
@@ -321,8 +170,6 @@ class EnumValue:
 class Enum:
     name: str
     values: tuple[EnumValue, ...]
-    since: int | None = None
-    is_flag: bool = False
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -330,40 +177,17 @@ class Enum:
 
     @property
     def change_points(self) -> frozenset[int]:
-        points: set[int] = set()
-        if self.since is not None:
-            points.add(self.since)
-        for v in self.values:
-            if v.since is not None:
-                points.add(v.since)
-            if v.until is not None:
-                points.add(v.until)
-            if v.deprecated is not None:
-                points.add(v.deprecated)
-        return frozenset(points)
+        return frozenset()
 
-    @property
-    def shape_change_points(self) -> frozenset[int]:
-        """Change points that affect the on-wire shape. `deprecated=` only
-        flips an attribute on the C++ member; the integer value stays put,
-        so cross-module consumers see one wire shape across all snapshots."""
-        points: set[int] = set()
-        if self.since is not None:
-            points.add(self.since)
-        for v in self.values:
-            if v.since is not None:
-                points.add(v.since)
-            if v.until is not None:
-                points.add(v.until)
-        return frozenset(points)
+    #: Change points affecting the on-wire shape (same as change_points here).
+    shape_change_points = change_points
 
 
 @dataclass(frozen=True)
 class FieldVersion:
     """One version of a field — its declared type tree over the half-open
-    protocol range `[since, until)`. A field with a single, version-invariant
-    shape has one entry; a redeclared field has one entry per declaration.
-    """
+    protocol range `[since, until)`. A version-invariant field has one entry;
+    a `field(since=)`-gated field has one entry with a bounded range."""
 
     type: FieldType | None
     since: int | None
@@ -387,7 +211,7 @@ class Field:
 
     @property
     def type_single(self) -> FieldType | None:
-        """Type tree of a single-version field. Caller asserts the field has one version."""
+        """Type tree of a single-version field. Caller asserts one version."""
         (version,) = self.versions
         return version.type
 
@@ -396,44 +220,15 @@ class Field:
 class Struct:
     name: str
     fields: tuple[Field, ...]
-    nested_enums: tuple[Enum, ...]
-    packet_id: int | None
+    packet_id: int | None = None
     since: int | None = None
     until: int | None = None
-    deprecated: int | None = None
-    nested_structs: tuple["Struct", ...] = ()
-    # Non-empty when the packet's id changed across versions: (id, since, until)
-    # per range. packet_id stays the fallback for snapshots outside any range.
-    packet_id_ranges: tuple[tuple[int, int | None, int | None], ...] = ()
-    # Non-empty only when a redeclared class reorders its fields across versions:
-    # (field-name order, since, until) per declaration. The serializer emits each
-    # snapshot in the order of the declaration covering it.
-    field_orders: tuple[tuple[tuple[str, ...], int | None, int | None], ...] = ()
-
-    def packet_id_at(self, version: int) -> int | None:
-        for pid, since, until in self.packet_id_ranges:
-            if version >= (since or 0) and (until is None or version < until):
-                return pid
-        return self.packet_id
-
-    def field_order_at(self, version: int) -> tuple[str, ...] | None:
-        for order, since, until in self.field_orders:
-            if version >= (since or 0) and (until is None or version < until):
-                return order
-        return None
 
     @property
     def referenced(self) -> frozenset[str]:
-        own = frozenset().union(
+        return frozenset().union(
             *(version.type.referenced for f in self.fields for version in f.versions if version.type is not None)
         )
-        # Nested structs may reference other module-scope types -- a field on
-        # `BookEditAction.ReplacePage` of type `Vec3` should pull `Vec3` into
-        # the parent's reference set so cross-file imports and topological
-        # ordering work the same as a non-nested field would.
-        for ns in self.nested_structs:
-            own = own | ns.referenced
-        return own
 
     @property
     def change_points(self) -> frozenset[int]:
@@ -442,60 +237,23 @@ class Struct:
             points.add(self.since)
         if self.until is not None:
             points.add(self.until)
-        if self.deprecated is not None:
-            points.add(self.deprecated)
-        for _, since, until in self.packet_id_ranges:
-            if since is not None:
-                points.add(since)
-            if until is not None:
-                points.add(until)
         for f in self.fields:
             for version in f.versions:
                 if version.since is not None:
                     points.add(version.since)
                 if version.until is not None:
                     points.add(version.until)
-        for e in self.nested_enums:
-            points |= e.change_points
-        for ns in self.nested_structs:
-            points |= ns.change_points
         return frozenset(points)
 
-    @property
-    def shape_change_points(self) -> frozenset[int]:
-        """Change points that affect the on-wire shape. A struct decorated
-        only with `deprecated=` carries a `[[deprecated]]` annotation on its
-        later snapshot but the field layout is identical, so cross-module
-        consumers can safely refer to it -- excluded here.
-        """
-        points: set[int] = set()
-        if self.since is not None:
-            points.add(self.since)
-        if self.until is not None:
-            points.add(self.until)
-        for _, since, until in self.packet_id_ranges:
-            if since is not None:
-                points.add(since)
-            if until is not None:
-                points.add(until)
-        for f in self.fields:
-            for version in f.versions:
-                if version.since is not None:
-                    points.add(version.since)
-                if version.until is not None:
-                    points.add(version.until)
-        for e in self.nested_enums:
-            points |= e.shape_change_points
-        for ns in self.nested_structs:
-            points |= ns.shape_change_points
-        return frozenset(points)
+    #: Change points affecting the on-wire shape (same as change_points here).
+    shape_change_points = change_points
 
 
 @dataclass(frozen=True)
 class PrimitiveAlias:
-    """`type Name = <primitive>`. Rendered as `enum Name : ctype {}` in C++:
-    a distinct integer type wire-compatible with the underlying primitive,
-    so a user may specialize `Serializer<Name>` apart from the primitive's."""
+    """`type Name = <primitive>`. Rendered as `enum Name : ctype {}` in C++: a
+    distinct integer type wire-compatible with the underlying primitive, so a
+    user may specialize `Serializer<Name>` apart from the primitive's."""
 
     name: str
     primitive: str
@@ -503,8 +261,8 @@ class PrimitiveAlias:
 
 @dataclass(frozen=True)
 class TypeAlias:
-    """`type Name = <non-primitive>`. Rendered as `using Name = ctype` in
-    C++; `target` is the single field-type tree."""
+    """`type Name = <non-primitive>`. Rendered as `using Name = ctype`;
+    `target` is the single field-type tree."""
 
     name: str
     target: FieldType
@@ -512,12 +270,8 @@ class TypeAlias:
 
 @dataclass(frozen=True)
 class File:
-    """One `.py` file's contribution to the schema.
-
-    `imports` carry dotted names of other loaded files this one draws types
-    from. The resolver dereferences them against the surrounding
-    `FileSet`.
-    """
+    """One `.py` file's contribution to the schema. `imports` carry dotted
+    names of other loaded files this one draws types from."""
 
     name: str  # dotted module name
     stem: str  # output filename stem
@@ -532,16 +286,11 @@ class File:
 
 @dataclass
 class FileSet:
-    """Every loaded file plus the subset marked for output.
-
-    Analog of protoc's `DescriptorPool`, narrowed: we keep no cross-file
-    resolution machinery beyond the import dependency graph and a memo of
-    each file's `ResolvedFile` once it has been processed.
-    """
+    """Every loaded file plus the subset marked for output. Analog of protoc's
+    `DescriptorPool`, narrowed to the import graph and a resolve memo."""
 
     files: Mapping[str, File]
     outputs: tuple[str, ...]
-    builtins: frozenset[str]
     version: int | None = None
     resolved: dict[str, "ResolvedFile"] = field(default_factory=dict)
 
@@ -551,26 +300,22 @@ class FileSet:
 
 @dataclass(frozen=True)
 class VersionSnapshot:
-    """One version of a type. `lo` is `since` (inclusive), `hi` is
-    `until` (exclusive); `hi=None` means "open-ended". `is_fresh` marks
-    snapshots whose definition is a new shape rather than a re-use.
-    """
+    """One version of a type. `lo` is `since` (inclusive), `hi` is `until`
+    (exclusive); `hi=None` is open-ended. `is_fresh` marks snapshots whose
+    definition is a new shape rather than a re-use of an earlier one."""
 
     lo: int
     hi: int | None
     is_fresh: bool
     concrete: int  # snapshot where this shape was first emitted
-    enum: Enum | None = None  # narrowed view if this type is an enum
-    struct: Struct | None = None  # narrowed view if this type is a struct
+    enum: Enum | None = None
+    struct: Struct | None = None
 
 
 @dataclass(frozen=True)
 class ResolvedFile:
-    """The post-resolver boundary delivered to backends.
-
-    Carries everything the frontend has resolved on behalf of the backend:
-    version snapshots, topological order, the FileSet for cross-file lookup.
-    """
+    """The post-resolver boundary delivered to backends: version snapshots,
+    topological order, and the FileSet for cross-file lookup."""
 
     file: File
     file_set: FileSet
@@ -603,7 +348,7 @@ class ResolvedFile:
             return True
         seen = _seen | {self.file.name}
         for imp in self.file.imports:
-            if imp in seen:  # stop at an import cycle (e.g. actor <-> inventory)
+            if imp in seen:  # stop at an import cycle
                 continue
             other = self.file_set.resolved.get(imp)
             if other is not None and other.is_versioned(name, seen):
@@ -616,7 +361,7 @@ class ResolvedFile:
             return own
         seen = _seen | {self.file.name}
         for imp in self.file.imports:
-            if imp in seen:  # stop at an import cycle
+            if imp in seen:
                 continue
             other = self.file_set.resolved.get(imp)
             if other is None:
@@ -627,11 +372,6 @@ class ResolvedFile:
         return ()
 
     def present_at(self, name: str, snapshot: int) -> VersionSnapshot | None:
-        # Exact-boundary match first -- that's what intra-file callers iterate.
-        # Cross-file consumers may ask about a snapshot that isn't a boundary
-        # in the producer file (e.g. PAIP at v388 referencing an inventory
-        # type whose own boundaries are {0, 685, 944}); fall through to a
-        # range lookup so they get the snapshot whose `[lo, hi)` covers it.
         snaps = self.snapshots_of(name)
         for s in snaps:
             if s.lo == snapshot:

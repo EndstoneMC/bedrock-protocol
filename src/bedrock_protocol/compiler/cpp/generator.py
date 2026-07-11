@@ -8,9 +8,9 @@ from `__version__` in the DSL surface module).
 
 from __future__ import annotations
 
-from ...descriptor import CompilerError, ResolvedFile
-from ..code_generator import CodeGenerator, GeneratorContext
-from . import validate
+from bedrock_protocol.compiler.code_generator import CodeGenerator, GeneratorContext
+from bedrock_protocol.descriptor import CompilerError, ResolvedFile
+
 from .file import FileGenerator
 
 
@@ -27,7 +27,6 @@ class CppGenerator(CodeGenerator):
         if resolved.file_set.version is None:
             raise CompilerError("cpp: descriptor carries no version (expected __version__ in the DSL surface module)")
         try:
-            validate.check(resolved)
             gen = FileGenerator(resolved)
             header = gen.render_header(resolved.file_set.version)
             source = gen.render_source()

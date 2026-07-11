@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Protocol, TextIO, runtime_checkable
 
-from ..descriptor import ResolvedFile
+from bedrock_protocol.descriptor import ResolvedFile
 
 
 @runtime_checkable
