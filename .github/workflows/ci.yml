@@ -20,29 +20,44 @@ jobs:
         run: uv run mypy
 
   build:
-    name: Build + goldens (Clang ${{ matrix.llvm }}, libc++)
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        llvm: [18]
+        include:
+          - name: Linux GCC (libstdc++)
+            os: ubuntu-24.04
+            cxx: g++
+          - name: Linux Clang (libstdc++)
+            os: ubuntu-24.04
+            cxx: clang++-18
+            llvm: "18"
+          - name: Windows MSVC
+            os: windows-2022
+            cxx: cl
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: Install Clang ${{ matrix.llvm }} + libc++
+      - uses: lukka/get-cmake@latest
+
+      - name: Install Clang ${{ matrix.llvm }}
+        if: matrix.llvm
         run: |
           sudo apt-get update -y -q
           sudo apt-get install -y -q lsb-release wget software-properties-common gnupg
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ matrix.llvm }}
-          sudo apt-get install -y -q libc++-${{ matrix.llvm }}-dev libc++abi-${{ matrix.llvm }}-dev
-      - uses: lukka/get-cmake@latest
+
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # No -stdlib override: each compiler uses its native standard library
+      # (libstdc++ for GCC/Clang on Linux, the MSVC STL for cl).
       - name: Configure
-        run: >
-          cmake -B build -G Ninja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_COMPILER=clang++-${{ matrix.llvm }}
-          -DCMAKE_CXX_FLAGS=-stdlib=libc++
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
       - name: Build
         run: cmake --build build
       - name: Test
