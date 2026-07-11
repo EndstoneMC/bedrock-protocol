@@ -16,6 +16,7 @@ from bedrock_protocol.descriptor import (
     EnumType,
     FieldType,
     OptionalType,
+    PrimitiveType,
     RepeatedType,
     ResolvedFile,
     Struct,
@@ -79,17 +80,58 @@ class FileGenerator:
     # --- includes -----------------------------------------------------------
 
     def _emit_includes(self, p: Printer) -> None:
-        stdlib = ["<cstdint>", "<optional>", "<string>", "<variant>", "<vector>"]
-        if self._ctx.string_coded_enums:
-            stdlib.insert(0, "<cctype>")
-            stdlib.append("<unordered_map>")
+        """Emit exactly the headers the generated code uses, as a sorted set:
+        stdlib first, then the bedrock codec headers."""
+        stdlib = self._stdlib_includes()
+        project: set[str] = set()
+        if self._has_serializers():
+            stdlib.add("<system_error>")
+            project |= {"<bedrock/expected.hpp>", "<bedrock/serializer.hpp>", "<bedrock/stream.hpp>"}
         for inc in sorted(stdlib):
             p.print(f"#include {inc}\n")
-        if self._has_serializers():
-            p.print("\n#include <system_error>\n\n")
-            p.print("#include <bedrock/expected.hpp>\n")
-            p.print("#include <bedrock/serializer.hpp>\n")
-            p.print("#include <bedrock/stream.hpp>\n")
+        if project:
+            p.print("\n")
+            for inc in sorted(project):
+                p.print(f"#include {inc}\n")
+
+    def _stdlib_includes(self) -> set[str]:
+        """The stdlib headers demanded by the file's types: `<vector>` only when
+        a `std::vector` is generated, `<optional>` only for a `std::optional`,
+        and so on."""
+        out: set[str] = set()
+
+        def walk(t: FieldType | None) -> None:
+            if isinstance(t, PrimitiveType):
+                if t.name in ("str", "bytes"):
+                    out.add("<string>")
+                elif PRIMITIVE_TYPES[t.name].startswith("std::"):
+                    out.add("<cstdint>")
+            elif isinstance(t, OptionalType):
+                out.add("<optional>")
+                walk(t.inner)
+            elif isinstance(t, RepeatedType):
+                out.add("<vector>")
+                walk(t.prefix)
+                walk(t.inner)
+            elif isinstance(t, VariantType):
+                out.add("<variant>")
+                walk(t.discriminator)
+                for c in t.cases:
+                    walk(c)
+
+        for s in self._file.structs:
+            for f in s.fields:
+                for v in f.versions:
+                    walk(v.type)
+        for a in self._file.type_aliases:
+            walk(a.target)
+        for a in self._file.primitive_aliases:
+            if PRIMITIVE_TYPES[a.primitive].startswith("std::"):
+                out.add("<cstdint>")
+        if self._ctx.string_coded_enums:
+            # name-coded enum serializer: unordered_map<E, string_view> + tolower.
+            out |= {"<cctype>", "<string>", "<string_view>", "<unordered_map>"}
+        return out
 
     def _emit_version_include(self, p: Printer) -> None:
         """A file with versioned types spells the `_<ProtocolVersion V>`
@@ -100,7 +142,7 @@ class FileGenerator:
             if f is self._file:
                 continue
             if any(e.name == "ProtocolVersion" for e in f.enums):
-                p.print(f'#include "{name.replace(".", "/")}.hpp"\n')
+                p.print(f'\n#include "{name.replace(".", "/")}.hpp"\n')
                 return
 
     # --- namespace ----------------------------------------------------------
