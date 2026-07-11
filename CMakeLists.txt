@@ -39,8 +39,10 @@ bedrock_protocol_generate(
 
 # Configure the umbrella header (<bedrock/protocol.hpp>) by stamping one
 # `#include` line per generated packet header into protocol.hpp.in.
+# BEDROCK_PROTOCOL_GENERATED holds every generated file; keep only the headers.
 set(BEDROCK_PROTOCOL_INCLUDES "")
 set(_includes ${BEDROCK_PROTOCOL_GENERATED})
+list(FILTER _includes INCLUDE REGEX "\\.h$")
 list(SORT _includes)
 foreach (_gen IN LISTS _includes)
     file(RELATIVE_PATH _rel "${CMAKE_CURRENT_BINARY_DIR}" "${_gen}")

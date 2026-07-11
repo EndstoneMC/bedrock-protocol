@@ -83,7 +83,7 @@ class FileGenerator:
         self._emit_namespace_close(body)
 
         p = Printer()
-        p.print(f'#include "{self._file.stem}.hpp"\n')
+        p.print(f'#include "{self._file.stem}.h"\n')
         # Only what the bodies need beyond what the header already pulls in.
         extra = body.includes - self._header_includes
         if extra:
@@ -116,7 +116,7 @@ class FileGenerator:
             if f is self._file:
                 continue
             if any(e.name == "ProtocolVersion" for e in f.enums):
-                p.print(f'\n#include "{name.replace(".", "/")}.hpp"\n')
+                p.print(f'\n#include "{name.replace(".", "/")}.h"\n')
                 return
 
     # --- namespace ----------------------------------------------------------

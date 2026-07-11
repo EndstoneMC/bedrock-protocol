@@ -34,8 +34,8 @@ class CppGenerator(CodeGenerator):
             context.error(str(exc))
             return
         stem = resolved.file.stem
-        with context.open(f"{stem}.hpp") as fh:
+        with context.open(f"{stem}.h") as fh:
             fh.write(header)
         with context.open(f"{stem}.cpp") as fh:
             fh.write(source)
-        context.verbose(f"cpp: wrote {stem}.hpp + {stem}.cpp")
+        context.verbose(f"cpp: wrote {stem}.h + {stem}.cpp")

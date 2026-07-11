@@ -137,7 +137,7 @@ function(bedrock_protocol_generate)
     endforeach()
 
     # One custom_command per input keeps the per-file output path simple.
-    set(_outputs)
+    set(_generated)
     foreach(p IN LISTS _abs_inputs)
         # Shortest valid subpath under any import_dir wins; otherwise use the
         # basename so the input still produces something.
@@ -160,14 +160,16 @@ function(bedrock_protocol_generate)
             get_filename_component(_rel "${p}" NAME)
         endif()
         string(REGEX REPLACE "\\.py$" "" _stem "${_rel}")
-        set(_out_hpp "${BP_COMPILER_OUT_DIR}/${_stem}.hpp")
+        # The generated header pairs with a compiled .cpp, so it is `.h`, not
+        # `.hpp` (which is reserved for the header-only runtime support).
+        set(_out_hdr "${BP_COMPILER_OUT_DIR}/${_stem}.h")
         set(_out_cpp "${BP_COMPILER_OUT_DIR}/${_stem}.cpp")
-        get_filename_component(_out_dir "${_out_hpp}" DIRECTORY)
+        get_filename_component(_out_dir "${_out_hdr}" DIRECTORY)
 
         # One bpc invocation emits both the declaration header and the
         # out-of-line definition source; declare both as OUTPUTs.
         add_custom_command(
-            OUTPUT  "${_out_hpp}" "${_out_cpp}"
+            OUTPUT  "${_out_hdr}" "${_out_cpp}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
             COMMAND ${_compiler_cmd}
                     --language cpp --out "${_out_dir}" ${_import_args}
@@ -175,11 +177,12 @@ function(bedrock_protocol_generate)
             DEPENDS "${p}" ${_abs_inputs} ${BP_DEPENDENCIES}
                     ${_compiler_dep} ${_compiler_sources}
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            COMMENT "bpc: generating ${_stem}.{hpp,cpp}"
+            COMMENT "bpc: generating ${_stem}.{h,cpp}"
             VERBATIM)
 
-        list(APPEND _hpp_outputs "${_out_hpp}")
-        list(APPEND _cpp_outputs "${_out_cpp}")
+        # protobuf_generate keeps one flat list of every generated file (both
+        # the .h and the .cpp), not separate header/source lists.
+        list(APPEND _generated "${_out_hdr}" "${_out_cpp}")
     endforeach()
 
     if(BP_TARGET)
@@ -188,15 +191,15 @@ function(bedrock_protocol_generate)
             # custom_command OUTPUTs are directory-scoped; wrap them in a
             # custom_target (which is global) so consumers in sibling dirs
             # can reach the codegen rule.
-            add_custom_target(${BP_TARGET}_codegen DEPENDS ${_hpp_outputs} ${_cpp_outputs})
+            add_custom_target(${BP_TARGET}_codegen DEPENDS ${_generated})
             add_dependencies(${BP_TARGET} ${BP_TARGET}_codegen)
         else()
-            # Compile the generated .cpp bodies into the library; the paired
-            # .hpp is produced by the same custom_command.
-            target_sources(${BP_TARGET} PRIVATE ${_cpp_outputs})
+            # The .cpp bodies compile into the library; the paired .h rides
+            # along for IDE / dependency tracking, as protobuf_generate does.
+            target_sources(${BP_TARGET} PRIVATE ${_generated})
         endif()
     endif()
     if(BP_OUT_VAR)
-        set(${BP_OUT_VAR} ${_hpp_outputs} PARENT_SCOPE)
+        set(${BP_OUT_VAR} ${_generated} PARENT_SCOPE)
     endif()
 endfunction()
