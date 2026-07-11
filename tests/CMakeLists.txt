@@ -1,0 +1,5 @@
+add_executable(bedrock_protocol_tests test_attribute_layer_sync.cpp)
+target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)
+
+include(Catch)
+catch_discover_tests(bedrock_protocol_tests)

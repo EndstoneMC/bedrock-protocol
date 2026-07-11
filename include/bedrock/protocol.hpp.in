@@ -1,0 +1,7 @@
+#pragma once
+
+#include "bedrock/expected.hpp"
+#include "bedrock/serializer.hpp"
+#include "bedrock/stream.hpp"
+
+@BEDROCK_PROTOCOL_INCLUDES@

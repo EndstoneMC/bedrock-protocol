@@ -1,0 +1,22 @@
+# clangd configuration for bedrock-protocol.
+# See https://clangd.llvm.org/config for the full schema.
+
+CompileFlags:
+  # Strip MSVC / clang-cl flags that clangd does not recognise when the
+  # compile DB was produced by a Windows build.
+  Remove:
+    - /JMC
+    - /MP
+    - /Gm-
+    - /diagnostics:*
+    - -external:*
+    - /external:*
+    - /experimental:*
+  Add:
+    - -std=c++23
+    - -xc++
+    - -Iinclude
+    - -Ibuild/include
+    - -Wno-unknown-warning-option
+    - -Wno-unknown-attributes
+    - -Wno-unused-command-line-argument

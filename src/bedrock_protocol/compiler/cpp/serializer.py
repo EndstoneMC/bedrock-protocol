@@ -1,0 +1,583 @@
+"""`SerializerGenerator` — emits `Serializer<T>` specializations.
+
+Three flavors: struct serializers (one per concrete struct shape — a fresh
+snapshot view or an unversioned struct), name-coded enum serializers, and
+`type` alias serializers for `std::variant`-shaped aliases that need
+their own codec at namespace scope.
+
+The two walkers `_emit_write` and `_emit_read` recurse through a
+`FieldType` and emit the C++ that pushes / pulls each node onto / from
+the wire. protoc analog: blended pieces of `cpp_message.cc` and
+`cpp_field.cc`.
+"""
+
+from __future__ import annotations
+
+from ...descriptor import (
+    VARINT_PRIMITIVES,
+    BitsetType,
+    CondType,
+    Enum,
+    EnumType,
+    Field,
+    FieldType,
+    MappingType,
+    OptionalType,
+    Predicate,
+    PrimitiveType,
+    RepeatedType,
+    Struct,
+    StructType,
+    TupleType,
+    TypeAlias,
+    VariantType,
+)
+from .field import FileContext, cpp_type, qualified_at, render_predicate
+from .names import PRIMITIVE_TYPES, camel, snapshot_namespace
+from .printer import Printer
+
+
+class SerializerGenerator:
+    """Per-file generator for `Serializer<T>` specializations."""
+
+    def __init__(self, ctx: FileContext) -> None:
+        self._ctx = ctx
+        # Walker state set per emit_* call.
+        self._snapshot: int | None = None
+        self._owner_qualified = ""
+        self._nested_enums: frozenset[str] = frozenset()
+        self._enum_fields: frozenset[str] = frozenset()
+        self._loop_depth = 0
+
+    # --- public emitters ----------------------------------------------------
+
+    def emit_for_struct(
+        self,
+        p: Printer,
+        struct: Struct,
+        view: Struct | None,
+        snapshot: int | None = None,
+        *,
+        mode: str = "def",
+    ) -> bool:
+        """Emit the `Serializer<X>` specialization for one struct shape.
+        `mode="decl"` emits the header declaration; `mode="def"` the out-of-line
+        bodies. Returns False if the struct couldn't be serialized (unresolved
+        field type); the caller should skip it."""
+        if view is None:
+            fields = struct.fields
+            qualified = struct.name
+        else:
+            assert snapshot is not None
+            fields = view.fields
+            qualified = f"{snapshot_namespace(snapshot)}::{struct.name}"
+        typed: list[tuple[Field, FieldType]] = []
+        for f in fields:
+            t = f.type_single
+            if t is None:
+                return False
+            typed.append((f, t))
+        self._snapshot = snapshot
+        self._owner_qualified = qualified
+        self._nested_enums = frozenset(e.name for e in struct.nested_enums)
+        self._enum_fields = frozenset(f.name for f, t in typed if _is_scalar_enum(t))
+        self._loop_depth = 0
+        groups = _field_groups(typed)
+        param = f"const {qualified} &value"
+
+        if mode == "decl":
+            self._emit_decl(p, qualified, param)
+            return True
+
+        p(self._serialize_head(qualified, param))
+        with p.block():
+            self._emit_struct_serialize(p, groups)
+        p()
+        p(self._deserialize_head(qualified))
+        with p.block():
+            p(f"{qualified} out;")
+            self._emit_struct_deserialize(p, groups)
+            p("return out;")
+        return True
+
+    def emit_for_variant_alias(self, p: Printer, alias: TypeAlias, *, mode: str = "def") -> None:
+        """Emit `Serializer<Alias>` for a `type Alias = T1 | T2` declaration."""
+        self._snapshot = None
+        self._owner_qualified = alias.name
+        self._nested_enums = frozenset()
+        self._enum_fields = frozenset()
+        self._loop_depth = 0
+        qualified = alias.name
+        param = f"const {qualified} &value"
+
+        if mode == "decl":
+            self._emit_decl(p, qualified, param)
+            return
+
+        p(self._serialize_head(qualified, param))
+        with p.block():
+            self._emit_write(p, alias.target, "value")
+        p()
+        p(self._deserialize_head(qualified))
+        with p.block():
+            p(f"{qualified} out;")
+            self._emit_read(p, alias.target, "out")
+            p("return out;")
+
+    def emit_for_enum(self, p: Printer, enum: Enum, snapshot: int | None, *, mode: str = "def") -> None:
+        """Emit `Serializer<Enum>` for a name-coded enum (string on the wire)."""
+        if snapshot is None:
+            qualified = enum.name
+        else:
+            qualified = f"{snapshot_namespace(snapshot)}::{enum.name}"
+        param = f"{qualified} value"
+
+        if mode == "decl":
+            self._emit_decl(p, qualified, param)
+            return
+
+        p(self._serialize_head(qualified, param))
+        with p.block():
+            p(f"using E = {qualified};")
+            p("static const std::unordered_map<E, std::string_view> names{")
+            with p.indented():
+                for v in enum.values:
+                    p(f'{{E::{camel(v.name)}, "{v.wire_name}"}},')
+            p("};")
+            p("auto it = names.find(value);")
+            p("if (it != names.end()) stream.write(it->second);")
+        p()
+        p(self._deserialize_head(qualified))
+        with p.block():
+            p(f"using E = {qualified};")
+            # BDS lowercases the incoming string before the enum lookup, so the
+            # read is case-insensitive; the keys are lowercased to match.
+            p("static const std::unordered_map<std::string_view, E> values{")
+            with p.indented():
+                for v in enum.values:
+                    p(f'{{"{v.wire_name.lower()}", E::{camel(v.name)}}},')
+            p("};")
+            p("auto v = stream.read<std::string>();")
+            p("if (!v) return make_unexpected(v.error());")
+            p("for (auto &c : *v) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));")
+            p("auto it = values.find(*v);")
+            p("if (it == values.end()) return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
+            p("return it->second;")
+
+    # --- struct serializer assembly ----------------------------------------
+
+    def _emit_struct_serialize(
+        self,
+        p: Printer,
+        groups: list[tuple[Predicate | None, list[tuple[Field, FieldType]]]],
+    ) -> None:
+        for guard, group in groups:
+            if guard is None:
+                ((f, t),) = group
+                self._emit_write(p, t, f"value.{f.name}")
+                continue
+            expr = render_predicate(
+                guard,
+                "value",
+                self._ctx,
+                self._owner_qualified,
+                self._nested_enums,
+                self._snapshot,
+                self._enum_fields,
+            )
+            p(f"if ({expr}) {{")
+            with p.indented():
+                for f, t in group:
+                    assert isinstance(t, CondType)
+                    self._emit_write(p, t.inner, f"value.{f.name}")
+            p("}")
+
+    def _emit_struct_deserialize(
+        self,
+        p: Printer,
+        groups: list[tuple[Predicate | None, list[tuple[Field, FieldType]]]],
+    ) -> None:
+        for guard, group in groups:
+            if guard is None:
+                ((f, t),) = group
+                p("{")
+                with p.indented():
+                    self._emit_read(p, t, f"out.{f.name}")
+                p("}")
+                continue
+            expr = render_predicate(
+                guard,
+                "out",
+                self._ctx,
+                self._owner_qualified,
+                self._nested_enums,
+                self._snapshot,
+                self._enum_fields,
+            )
+            p(f"if ({expr}) {{")
+            with p.indented():
+                for f, t in group:
+                    assert isinstance(t, CondType)
+                    p("{")
+                    with p.indented():
+                        self._emit_read(p, t.inner, f"out.{f.name}")
+                    p("}")
+            p("}")
+
+    # --- write walker ------------------------------------------------------
+
+    def _emit_write(self, p: Printer, t: FieldType, expr: str) -> None:
+        if isinstance(t, PrimitiveType):
+            p(_primitive_write(t, expr))
+        elif isinstance(t, StructType):
+            p(f"Serializer<{self._type_at(t.name)}>::serialize(stream, {expr});")
+        elif isinstance(t, EnumType):
+            if t.scalar is None:
+                p(f"Serializer<{self._type_at(t.name)}>::serialize(stream, {expr});")
+            else:
+                p(_primitive_write(t.scalar, expr))
+        elif isinstance(t, OptionalType):
+            if t.discriminator:
+                p(f"stream.writeVarInt<std::uint32_t>({expr}.has_value() ? {t.present_tag}u : {1 - t.present_tag}u);")
+            else:
+                p(f"stream.write<bool>({expr}.has_value());")
+            p(f"if ({expr}.has_value()) {{")
+            with p.indented():
+                self._emit_write(p, t.inner, f"*{expr}")
+            p("}")
+        elif isinstance(t, RepeatedType):
+            depth = self._loop_depth
+            self._loop_depth += 1
+            if t.prefix is not None:
+                p(_primitive_write(t.prefix, f"{expr}.size()"))
+            p(f"for (const auto &e{depth} : {expr}) {{")
+            with p.indented():
+                self._emit_write(p, t.inner, f"e{depth}")
+            p("}")
+            self._loop_depth -= 1
+        elif isinstance(t, MappingType):
+            depth = self._loop_depth
+            self._loop_depth += 1
+            p(_primitive_write(t.prefix, f"{expr}.size()"))
+            p(f"for (const auto &[k{depth}, v{depth}] : {expr}) {{")
+            with p.indented():
+                self._emit_write(p, t.key, f"k{depth}")
+                self._emit_write(p, t.value, f"v{depth}")
+            p("}")
+            self._loop_depth -= 1
+        elif isinstance(t, TupleType):
+            if len(t.members) == 2:
+                self._emit_write(p, t.members[0], f"{expr}.first")
+                self._emit_write(p, t.members[1], f"{expr}.second")
+            else:
+                for i, m in enumerate(t.members):
+                    self._emit_write(p, m, f"std::get<{i}>({expr})")
+        elif isinstance(t, VariantType):
+            p(f"{_primitive_write(t.discriminator, f'({expr}).index()')}")
+            switch_wrap, case_labels = self._variant_switch(t)
+            p(f"switch ({switch_wrap.format(int_expr=f'({expr}).index()')}) {{")
+            with p.indented():
+                for index, case in enumerate(t.cases):
+                    p(f"case {case_labels[index]}: {{")
+                    with p.indented():
+                        if case is not None:
+                            self._emit_write(p, case, f"std::get<{index}>({expr})")
+                        p("break;")
+                    p("}")
+            p("}")
+        elif isinstance(t, BitsetType):
+            p(f"Serializer<std::bitset<{t.size}>>::serialize(stream, {expr});")
+        elif isinstance(t, CondType):
+            self._emit_write(p, t.inner, expr)
+
+    # --- read walker -------------------------------------------------------
+
+    def _emit_read(self, p: Printer, t: FieldType, target: str) -> None:
+        if isinstance(t, PrimitiveType):
+            _primitive_read(p, t)
+            if t.name in ("str", "bytes") and t.alias is None:
+                p(f"{target} = *v;")
+            else:
+                cast = cpp_type(t, self._ctx, self._nested_enums)
+                p(f"{target} = static_cast<{cast}>(*v);")
+        elif isinstance(t, StructType):
+            p(f"auto v = Serializer<{self._type_at(t.name)}>::deserialize(stream);")
+            p("if (!v) return make_unexpected(v.error());")
+            p(f"{target} = *v;")
+        elif isinstance(t, EnumType):
+            if t.scalar is None:
+                p(f"auto v = Serializer<{self._type_at(t.name)}>::deserialize(stream);")
+                p("if (!v) return make_unexpected(v.error());")
+                p(f"{target} = *v;")
+            else:
+                _primitive_read(p, t.scalar)
+                numbers = self._scalar_enum_valid_numbers(t.name)
+                if numbers is not None:
+                    members = ", ".join(str(n) for n in numbers)
+                    p(f"static const std::unordered_set<std::int64_t> valid{{{members}}};")
+                    p("if (!valid.contains(static_cast<std::int64_t>(*v)))")
+                    p("    return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
+                p(f"{target} = static_cast<{self._type_at(t.name)}>(*v);")
+        elif isinstance(t, OptionalType):
+            holder = "tag" if t.discriminator else "present"
+            verb = "readVarInt<std::uint32_t>" if t.discriminator else "read<bool>"
+            guard = f"*tag == {t.present_tag}" if t.discriminator else "*present"
+            p(f"auto {holder} = stream.{verb}();")
+            p(f"if (!{holder}) return make_unexpected({holder}.error());")
+            p(f"if ({guard}) {{")
+            with p.indented():
+                self._emit_read(p, t.inner, target)
+            p("}")
+        elif isinstance(t, RepeatedType):
+            depth = self._loop_depth
+            self._loop_depth += 1
+            if t.prefix is not None:
+                u = PRIMITIVE_TYPES[t.prefix.name]
+                verb = f"readVarInt<{u}>" if t.prefix.name in VARINT_PRIMITIVES else f"read<{u}>"
+                p(f"auto len{depth} = stream.{verb}();")
+                p(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
+                p(f"{target}.clear();")
+                p(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth}) {{")
+                with p.indented():
+                    p(f"{target}.emplace_back();")
+                    self._emit_read(p, t.inner, f"{target}.back()")
+                p("}")
+            elif t.count_expr is not None:
+                base = target.rsplit(".", 1)[0]
+                expr = render_predicate(
+                    t.count_expr,
+                    base,
+                    self._ctx,
+                    self._owner_qualified,
+                    self._nested_enums,
+                    self._snapshot,
+                    self._enum_fields,
+                )
+                p(f"{target}.resize(static_cast<std::size_t>({expr}));")
+                p(f"for (std::size_t i{depth} = 0; i{depth} < {target}.size(); ++i{depth}) {{")
+                with p.indented():
+                    self._emit_read(p, t.inner, f"{target}[i{depth}]")
+                p("}")
+            else:
+                p(f"for (std::size_t i{depth} = 0; i{depth} < {t.count}; ++i{depth}) {{")
+                with p.indented():
+                    self._emit_read(p, t.inner, f"{target}[i{depth}]")
+                p("}")
+            self._loop_depth -= 1
+        elif isinstance(t, MappingType):
+            depth = self._loop_depth
+            self._loop_depth += 1
+            u = PRIMITIVE_TYPES[t.prefix.name]
+            verb = f"readVarInt<{u}>" if t.prefix.name in VARINT_PRIMITIVES else f"read<{u}>"
+            p(f"auto len{depth} = stream.{verb}();")
+            p(f"if (!len{depth}) return make_unexpected(len{depth}.error());")
+            p(f"{target}.clear();")
+            holder = f"std::remove_reference_t<decltype({target})>"
+            p(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth}) {{")
+            with p.indented():
+                p(f"{holder}::key_type k{depth}{{}};")
+                p("{")
+                with p.indented():
+                    self._emit_read(p, t.key, f"k{depth}")
+                p("}")
+                p(f"{holder}::mapped_type v{depth}{{}};")
+                p("{")
+                with p.indented():
+                    self._emit_read(p, t.value, f"v{depth}")
+                p("}")
+                p(f"{target}.emplace(k{depth}, v{depth});")
+            p("}")
+            self._loop_depth -= 1
+        elif isinstance(t, TupleType):
+            if len(t.members) == 2:
+                slots = [f"{target}.first", f"{target}.second"]
+            else:
+                slots = [f"std::get<{i}>({target})" for i in range(len(t.members))]
+            for m, slot in zip(t.members, slots):
+                p("{")
+                with p.indented():
+                    self._emit_read(p, m, slot)
+                p("}")
+        elif isinstance(t, VariantType):
+            depth = self._loop_depth
+            self._loop_depth += 1
+            vartype = cpp_type(t, self._ctx, self._nested_enums, self._snapshot)
+            assert vartype is not None
+            d = t.discriminator
+            u = PRIMITIVE_TYPES[d.name]
+            verb = f"readVarInt<{u}>" if d.name in VARINT_PRIMITIVES else f"read<{u}>"
+            p(f"auto tag{depth} = stream.{verb}();")
+            p(f"if (!tag{depth}) return make_unexpected(tag{depth}.error());")
+            p(f"{vartype} var{depth}{{}};")
+            switch_wrap, case_labels = self._variant_switch(t)
+            p(f"switch ({switch_wrap.format(int_expr=f'*tag{depth}')}) {{")
+            with p.indented():
+                for index, case in enumerate(t.cases):
+                    p(f"case {case_labels[index]}: {{")
+                    with p.indented():
+                        p(f"std::variant_alternative_t<{index}, {vartype}> alt{depth}{{}};")
+                        if case is not None:
+                            p("{")
+                            with p.indented():
+                                self._emit_read(p, case, f"alt{depth}")
+                            p("}")
+                        p(f"var{depth}.emplace<{index}>(alt{depth});")
+                        p("break;")
+                    p("}")
+                p("default: {")
+                with p.indented():
+                    p("return make_unexpected(std::make_error_code(std::errc::illegal_byte_sequence));")
+                p("}")
+            p("}")
+            p(f"{target} = var{depth};")
+            self._loop_depth -= 1
+        elif isinstance(t, BitsetType):
+            p(f"auto v = Serializer<std::bitset<{t.size}>>::deserialize(stream);")
+            p("if (!v) return make_unexpected(v.error());")
+            p(f"{target} = *v;")
+        elif isinstance(t, CondType):
+            self._emit_read(p, t.inner, target)
+
+    # --- helpers ------------------------------------------------------------
+
+    def _emit_decl(self, p: Printer, qualified: str, param: str) -> None:
+        """The header-side declaration: a full `Serializer<T>` specialization
+        whose two static members are declared but not defined."""
+        p("template <>")
+        p(f"struct Serializer<{qualified}> {{")
+        p(f"    static void serialize(BinaryWriter &stream, {param});")
+        p(f"    static auto deserialize(BinaryReader &stream) -> std::expected<{qualified}, std::error_code>;")
+        p("};")
+
+    def _serialize_head(self, qualified: str, param: str) -> str:
+        return f"void Serializer<{qualified}>::serialize(BinaryWriter &stream, {param})"
+
+    def _deserialize_head(self, qualified: str) -> str:
+        return f"auto Serializer<{qualified}>::deserialize(BinaryReader &stream) -> std::expected<{qualified}, std::error_code>"
+
+    def _type_at(self, name: str) -> str:
+        return qualified_at(
+            name,
+            self._ctx,
+            self._owner_qualified,
+            self._nested_enums,
+            self._snapshot,
+        )
+
+    def _scalar_enum_valid_numbers(self, name: str) -> list[int] | None:
+        """Valid member numbers of scalar enum `name` at the current snapshot,
+        used to reject unknown values on read. Returns None when the enum can't
+        be resolved or is a flag enum (whose wire value is a bitmask, not a
+        single member) -- in that case the read stays a plain cast."""
+        enum_def: Enum | None = None
+        if self._snapshot is not None:
+            view = self._ctx.resolved.present_at(name, self._snapshot)
+            if view is not None and view.enum is not None:
+                enum_def = view.enum
+        if enum_def is None:
+            decl = self._ctx.resolved.lookup(name)
+            if isinstance(decl, Enum):
+                enum_def = decl
+        if enum_def is None or enum_def.is_flag or not enum_def.values:
+            return None
+        return sorted({v.number for v in enum_def.values})
+
+    def _variant_switch(self, t: VariantType) -> tuple[str, list[str]]:
+        """Pick the C++ switch expression and per-case labels for `t`.
+
+        Returns `(wrap, labels)` where `wrap` is a `.format(int_expr=...)`-able
+        template that wraps the caller's integer expression (the variant
+        `index()` on write, the freshly-read tag on read), and `labels[i]` is
+        the case label for variant alternative `i`.
+
+        With `tag_enum` set, switch on `static_cast<EnumName>(int)` and label
+        each case with `EnumName::MEMBER`; holes (variant alternatives whose
+        wire index has no enum member at the current snapshot) fall back to
+        `static_cast<EnumName>(N)`.
+
+        Without `tag_enum`, switch on the raw integer with bare integer labels
+        (the legacy form)."""
+        if t.tag_enum is None:
+            labels = [str(i) for i in range(len(t.cases))]
+            return "{int_expr}", labels
+        enum_q = self._type_at(t.tag_enum)
+        enum_view = self._ctx.resolved.present_at(t.tag_enum, self._snapshot) if self._snapshot is not None else None
+        members: dict[int, str] = {}
+        if enum_view is not None and enum_view.enum is not None:
+            members = {v.number: camel(v.name) for v in enum_view.enum.values}
+        else:
+            decl = self._ctx.resolved.lookup(t.tag_enum)
+            if isinstance(decl, Enum):
+                members = {v.number: camel(v.name) for v in decl.values}
+        labels = []
+        for i in range(len(t.cases)):
+            if i in members:
+                labels.append(f"{enum_q}::{members[i]}")
+            else:
+                labels.append(f"static_cast<{enum_q}>({i})")
+        return f"static_cast<{enum_q}>({{int_expr}})", labels
+
+
+# --- module-free helpers --------------------------------------------------------
+
+
+def _is_scalar_enum(t: FieldType) -> bool:
+    """A field whose (optional / conditional) type bottoms out in an enum --
+    used to decide which `when=` field references need an underlying-type cast
+    inside a bitwise operator (`render_predicate`)."""
+    while isinstance(t, (CondType, OptionalType)):
+        t = t.inner
+    return isinstance(t, EnumType)
+
+
+def _field_groups(
+    typed: list[tuple[Field, FieldType]],
+) -> list[tuple[Predicate | None, list[tuple[Field, FieldType]]]]:
+    """Partition a struct's fields into emission groups. Fields from one
+    `with field(when=...)` block (sharing a `CondType.group`) form one
+    group emitted under a shared `if`; everything else stands alone."""
+    groups: list[tuple[Predicate | None, list[tuple[Field, FieldType]]]] = []
+    open_group: int | None = None
+    for f, t in typed:
+        if isinstance(t, CondType) and t.group is not None and t.group == open_group:
+            groups[-1][1].append((f, t))
+            continue
+        if isinstance(t, CondType):
+            groups.append((t.predicate, [(f, t)]))
+            open_group = t.group
+        else:
+            groups.append((None, [(f, t)]))
+            open_group = None
+    return groups
+
+
+def _primitive_write(p: PrimitiveType, expr: str) -> str:
+    if p.wire_as is not None:
+        return _primitive_write(p.wire_as, expr)
+    if p.trailing:
+        return f"stream.writeRawBytes({expr});"
+    if p.name in ("str", "bytes"):
+        return f"stream.write({expr});"
+    u = PRIMITIVE_TYPES[p.name]
+    if p.name in VARINT_PRIMITIVES:
+        return f"stream.writeVarInt<{u}>({expr});"
+    if p.big_endian:
+        return f"stream.write<{u}, std::endian::big>({expr});"
+    return f"stream.write<{u}>({expr});"
+
+
+def _primitive_read(out: Printer, p: PrimitiveType) -> None:
+    wire = p.wire_as if p.wire_as is not None else p
+    if wire.trailing:
+        out("auto v = stream.readRemaining();")
+    elif wire.name in ("str", "bytes"):
+        out("auto v = stream.read<std::string>();")
+    else:
+        u = PRIMITIVE_TYPES[wire.name]
+        if wire.name in VARINT_PRIMITIVES:
+            out(f"auto v = stream.readVarInt<{u}>();")
+        elif wire.big_endian:
+            out(f"auto v = stream.read<{u}, std::endian::big>();")
+        else:
+            out(f"auto v = stream.read<{u}>();")
+    out("if (!v) return make_unexpected(v.error());")
