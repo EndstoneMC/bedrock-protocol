@@ -1,3 +1,5 @@
+import uuid
+
 from protocol import packet, type
 
 package = "bedrock.protocol"
@@ -18,6 +20,36 @@ class PresenceConfiguration:
     experience_name: str | None
     world_name: str | None
     rich_presence_id: str
+
+
+class GatheringsConfigurationJoinInfo:
+    experience_id: uuid.UUID
+    experience_name: str
+    experience_world_id: uuid.UUID
+    experience_world_name: str
+    creator_id: str
+    target_id: uuid.UUID
+    scenario_id: str
+    server_id: str
+
+
+class ClientStoreEntryPointConfiguration:
+    store_id: str
+    store_name: str
+
+
+class ServerConfigurationJoinInfo:
+    gatherings_configuration_join_info: GatheringsConfigurationJoinInfo | None
+    client_store_entrypoint_configuration: ClientStoreEntryPointConfiguration | None
+    presence_configuration: PresenceConfiguration | None
+
+
+# BDS: Social::Events::ServerTelemetryData.
+class ServerTelemetryData:
+    server_id: str
+    scenario_id: str
+    world_id: str
+    owner_id: str
 
 
 @packet(id=347)
