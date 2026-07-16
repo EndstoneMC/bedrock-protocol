@@ -361,6 +361,7 @@ class _AnnotationContext:
             packet_id=_decorator_int(decls[0], "packet", "id"),
             since=_decl_since(decls[0]),
             until=_decl_until(decls[-1]),
+            builtin=any(_has_decorator(d, "builtin") for d in decls),
         )
 
     def field(self, attr: griffe.Attribute) -> Field:
@@ -541,6 +542,11 @@ def _is_none(case: object) -> bool:
     """A literal `None` in source. griffe spells a keyword literal as the bare
     string `'None'` (vs `ExprName('Other')` for a name reference)."""
     return case == "None"
+
+
+def _has_decorator(cls: griffe.Class, name: str) -> bool:
+    """A bare decorator like `@builtin`, which carries no call parentheses."""
+    return any(_base_name(d.value) == name for d in cls.decorators)
 
 
 def _decl_since(cls: griffe.Class) -> int | None:

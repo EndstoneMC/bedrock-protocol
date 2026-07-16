@@ -222,11 +222,16 @@ class Field:
 
 @dataclass(frozen=True)
 class Struct:
+    """`builtin` marks a type the compiler must not define: it emits no struct and
+    no serializer, references the name as-is, and trusts a hand-written definition
+    plus `Serializer` specialization in the matching `<bedrock/*.hpp>` header."""
+
     name: str
     fields: tuple[Field, ...]
     packet_id: int | None = None
     since: int | None = None
     until: int | None = None
+    builtin: bool = False
 
     @property
     def referenced(self) -> frozenset[str]:

@@ -67,7 +67,7 @@ class FileGenerator:
         self._emit_serializers(body, mode="decl")
         self._emit_latest_aliases(body, latest_version)
         self._emit_namespace_close(body)
-        self._header_includes = set(body.includes)
+        self._header_includes = set(body.includes) | self._builtin_includes()
 
         p = Printer()
         p.print("#pragma once\n\n")
@@ -133,19 +133,34 @@ class FileGenerator:
 
     def _type_owners(self) -> dict[str, str]:
         """Type name -> the module declaring it, for every file but this one. Only
-        files that name a package emit a header; the DSL surface itself does not."""
+        files that name a package emit a header; the DSL surface itself does not.
+        Builtins are excluded -- they live in a hand-written header, not a
+        generated one (see `_builtin_includes`)."""
         owners: dict[str, str] = {}
         for name, f in self._file_set.files.items():
             if f is self._file or not f.package:
                 continue
             for declared in (
                 *(e.name for e in f.enums),
-                *(s.name for s in f.structs),
+                *(s.name for s in f.structs if not s.builtin),
                 *(a.name for a in f.primitive_aliases),
                 *(a.name for a in f.type_aliases),
             ):
                 owners[declared] = name
         return owners
+
+    def _builtin_includes(self) -> set[str]:
+        """`<bedrock/<stem>.hpp>` for every builtin this file references: the
+        compiler emits no definition for those, so the hand-written header that
+        does define them has to come in."""
+        homes: dict[str, str] = {}
+        for name, f in self._file_set.files.items():
+            # Take the header from the module's own name: `stem` is only set for
+            # files named on the command line, and falls back to the dotted path.
+            for struct in f.structs:
+                if struct.builtin:
+                    homes[struct.name] = name.rsplit(".", 1)[-1]
+        return {f"<bedrock/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
 
     def _referenced_names(self) -> set[str]:
         out: set[str] = set()
@@ -177,7 +192,10 @@ class FileGenerator:
     def _emit_unversioned(self, p: Printer) -> None:
         by_name = self._by_name()
         for name in self._unversioned_names():
-            self._emit_definition(p, by_name[name])
+            t = by_name[name]
+            if isinstance(t, Struct) and t.builtin:
+                continue  # hand-written in <bedrock/*.hpp>
+            self._emit_definition(p, t)
             p.print("\n")
 
     def _emit_type_aliases(self, p: Printer) -> None:
@@ -262,6 +280,8 @@ class FileGenerator:
         by_name = self._by_name()
         for name in self._resolved.declaration_order:
             t = by_name[name]
+            if isinstance(t, Struct) and t.builtin:
+                continue  # Serializer<T> is hand-written alongside the type
             if isinstance(t, Enum):
                 if name in self._ctx.string_coded_enums:
                     p.print("\n")
