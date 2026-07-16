@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from bedrock_protocol.descriptor import Enum
 
-from .names import camel
+from .field import type_includes
+from .names import PRIMITIVE_TYPES
 from .printer import Printer
 
 
@@ -17,10 +18,13 @@ class EnumGenerator:
     # --- type definition ----------------------------------------------------
 
     def generate_definition(self, p: Printer) -> None:
-        p.print(f"enum class {self._enum.name} : int {{\n")
+        underlying = self._enum.underlying
+        p.add_includes(*type_includes(underlying))
+        ctype = "int" if underlying is None else PRIMITIVE_TYPES[underlying.name]
+        p.print(f"enum class {self._enum.name} : {ctype} {{\n")
         p.indent()
         for v in self._enum.values:
-            p.print(f"{camel(v.name)} = {v.number},\n")
+            p.print(f"{v.name} = {v.number},\n")
         p.outdent()
         p.print("};\n")
 
@@ -55,7 +59,7 @@ class EnumGenerator:
             p.print("static const std::unordered_map<E, std::string_view> names{\n")
             p.indent()
             for v in self._enum.values:
-                p.print(f'{{E::{camel(v.name)}, "{v.wire_name}"}},\n')
+                p.print(f'{{E::{v.name}, "{v.wire_name}"}},\n')
             p.outdent()
             p.print("};\n")
             p.print("auto it = names.find(value);\n")
@@ -69,7 +73,7 @@ class EnumGenerator:
             p.print("static const std::unordered_map<std::string_view, E> values{\n")
             p.indent()
             for v in self._enum.values:
-                p.print(f'{{"{v.wire_name.lower()}", E::{camel(v.name)}}},\n')
+                p.print(f'{{"{v.wire_name.lower()}", E::{v.name}}},\n')
             p.outdent()
             p.print("};\n")
             p.print("auto v = stream.read<std::string>();\n")

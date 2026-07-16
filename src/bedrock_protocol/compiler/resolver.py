@@ -211,7 +211,7 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
     whether two snapshots share one definition."""
     if isinstance(t, Enum):
         key = tuple((v.name, v.number) for v in t.values)
-        return Enum(t.name, t.values), None, key
+        return Enum(t.name, t.values, t.underlying), None, key
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:

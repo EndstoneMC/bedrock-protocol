@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import inflection
-
 #: DSL primitive name → C++ type spelling.
 PRIMITIVE_TYPES: dict[str, str] = {
     "str": "std::string",
@@ -29,10 +27,6 @@ PRIMITIVE_TYPES: dict[str, str] = {
 
 def snapshot_namespace(version: int) -> str:
     return "base" if version == 0 else f"v{version}"
-
-
-def camel(name: str) -> str:
-    return inflection.camelize(name.lower())
 
 
 def requires_clause(lo: int, hi: int | None) -> str:

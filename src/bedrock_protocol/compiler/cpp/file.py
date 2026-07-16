@@ -26,7 +26,7 @@ from bedrock_protocol.descriptor import (
 from .class_ import ClassGenerator
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .names import PRIMITIVE_TYPES, camel, requires_clause, snapshot_namespace
+from .names import PRIMITIVE_TYPES, requires_clause, snapshot_namespace
 from .printer import Printer
 
 
@@ -212,7 +212,7 @@ class FileGenerator:
         venum = self._version_enum()
         latest_arg = str(latest_version)
         if venum is not None:
-            member = next((camel(v.name) for v in venum.values if v.number == latest_version), None)
+            member = next((v.name for v in venum.values if v.number == latest_version), None)
             if member is not None:
                 latest_arg = f"{venum.name}::{member}"
         for name in names:

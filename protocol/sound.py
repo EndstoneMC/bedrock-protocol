@@ -6,7 +6,7 @@ package = "bedrock.protocol"
 
 
 class SoundDataEvent(IntEnum):
-    Stop = 0
+    STOP = 0
 
 
 class ServerSoundHandle:

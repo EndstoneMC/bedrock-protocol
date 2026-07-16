@@ -4,5 +4,5 @@ package = "bedrock.protocol"
 
 
 class ProtocolVersion(IntEnum):
-    v975 = 975
-    v1001 = 1001
+    V975 = 975
+    V1001 = 1001

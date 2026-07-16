@@ -45,6 +45,7 @@ _Ann = griffe.Expr | str | None
 @dataclass(frozen=True)
 class _ClassifyResult:
     enum_names: frozenset[str]
+    enum_underlying: dict[str, PrimitiveType | None]
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
     primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]]
@@ -174,6 +175,7 @@ class SourceTree:
 
     def _classify(self, loaded: dict[str, griffe.Module]) -> _ClassifyResult:
         enum_names: set[str] = set()
+        enum_underlying: dict[str, PrimitiveType | None] = {}
         struct_names: set[str] = set()
         aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
@@ -183,14 +185,18 @@ class SourceTree:
             for cls in mod.classes.values():
                 if cls.is_alias:
                     continue
-                (enum_names if _is_int_enum(cls) else struct_names).add(cls.name)
+                if _is_int_enum(cls):
+                    enum_names.add(cls.name)
+                    enum_underlying[cls.name] = _enum_underlying(cls)
+                else:
+                    struct_names.add(cls.name)
 
         # Alias pass — after classification, since an alias may reference any
         # class. Declaration order is the resolution order.
         for name, mod in loaded.items():
             primitives: list[PrimitiveAlias] = []
             others: list[TypeAlias] = []
-            ctx = _AnnotationContext(frozenset(enum_names), frozenset(struct_names), aliases_by_name)
+            ctx = _AnnotationContext(frozenset(enum_names), enum_underlying, frozenset(struct_names), aliases_by_name)
             for attr_name, attr in list(mod.attributes.items()) + list(mod.type_aliases.items()):
                 if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
                     continue
@@ -209,6 +215,7 @@ class SourceTree:
 
         return _ClassifyResult(
             enum_names=frozenset(enum_names),
+            enum_underlying=enum_underlying,
             struct_names=frozenset(struct_names),
             aliases_by_name=aliases_by_name,
             primitive_aliases_by_module=primitive_aliases_by_module,
@@ -225,7 +232,12 @@ class SourceTree:
         loaded: dict[str, griffe.Module],
         classified: _ClassifyResult,
     ) -> File:
-        ctx = _AnnotationContext(classified.enum_names, classified.struct_names, classified.aliases_by_name)
+        ctx = _AnnotationContext(
+            classified.enum_names,
+            classified.enum_underlying,
+            classified.struct_names,
+            classified.aliases_by_name,
+        )
         enums: list[Enum] = []
         structs: list[Struct] = []
         order: list[str] = []
@@ -262,6 +274,7 @@ class _AnnotationContext:
     """The name dictionaries the annotation walker reads."""
 
     enum_names: frozenset[str]
+    enum_underlying: dict[str, PrimitiveType | None]
     struct_names: frozenset[str]
     aliases: dict[str, PrimitiveAlias | TypeAlias]
 
@@ -284,7 +297,7 @@ class _AnnotationContext:
             if number is None:
                 continue
             values.append(EnumValue(name, number))
-        return Enum(cls.name, tuple(values))
+        return Enum(cls.name, tuple(values), _enum_underlying(cls))
 
     def struct(self, cls: griffe.Class) -> Struct:
         fields = tuple(self.field(attr) for attr in cls.attributes.values())
@@ -308,6 +321,29 @@ class _AnnotationContext:
             until=_int_kwarg(call, "field", "until"),
         )
         return Field(attr.name, (version,))
+
+    # ---- enum wire type ----------------------------------------------------
+
+    def _enum_scalar(self, type_kw: str | None, field_name: str, enum_name: str) -> PrimitiveType | None:
+        """The wire encoding of an enum-typed field. The default is the enum's
+        underlying type + EnumAsValue + Compression, picked because it is the
+        commonest shape -- cereal itself defaults to a name-coded string. Every
+        other case is explicit: `field(type=str)` for that name-coded default, and
+        a fixed primitive (`field(type=uint8)`) where BDS does not compress."""
+        if type_kw == "str":
+            return None
+        if type_kw is not None:
+            if type_kw not in PRIMITIVES:
+                raise CompilerError(f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}")
+            return PrimitiveType(name=type_kw)
+        underlying = self.enum_underlying.get(enum_name)
+        if underlying is None:
+            raise CompilerError(
+                f"{field_name}: {enum_name} declares no underlying type, so its wire encoding "
+                f"cannot be derived -- give the enum one as a second base "
+                f"(class {enum_name}(IntEnum, uint8)) or pass field(type=...)"
+            )
+        return _default_enum_wire(underlying)
 
     # ---- field-type walker -------------------------------------------------
 
@@ -361,7 +397,7 @@ class _AnnotationContext:
             return None
         name = ann.name
         if name in self.enum_names:
-            return EnumType(name, _enum_scalar(type_kw, field_name))
+            return EnumType(name, self._enum_scalar(type_kw, field_name, name))
         if name in self.struct_names:
             return StructType(name)
         if name in PRIMITIVES:
@@ -399,8 +435,61 @@ def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
     return None
 
 
+def _base_name(base: griffe.Expr | str) -> str | None:
+    """Last component of a base-class expression. Both the bare `IntEnum` and
+    the dotted `enum.IntEnum` spelling yield "IntEnum"."""
+    if isinstance(base, griffe.ExprAttribute):
+        base = base.values[-1]
+    return base.name if isinstance(base, griffe.ExprName) else None
+
+
 def _is_int_enum(cls: griffe.Class) -> bool:
-    return any(isinstance(b, griffe.ExprName) and b.name in ("IntEnum", "IntFlag") for b in cls.bases)
+    return any(_base_name(b) in ("IntEnum", "IntFlag") for b in cls.bases)
+
+
+#: DSL fixed-width integer primitive -> (size in bytes, signed). The set an enum
+#: may declare as its C++ underlying type; a varint is an encoding, not a type.
+_INT_WIDTHS: dict[str, tuple[int, bool]] = {
+    "int8": (1, True),
+    "uint8": (1, False),
+    "int16": (2, True),
+    "uint16": (2, False),
+    "int": (4, True),
+    "int32": (4, True),
+    "uint32": (4, False),
+    "int64": (8, True),
+    "uint64": (8, False),
+}
+
+
+def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
+    """The DSL's default for a scoped enum: the underlying type, EnumAsValue and
+    Compression -- the commonest shape, not cereal's own default (which is a
+    name-coded string, spelled here as `field(type=str)`). A single byte has nothing
+    to compress, so an `int8` / `uint8` underlying goes out as-is; anything wider
+    compresses to a varint sized off it (8 bytes to `[u]varint64`, else
+    `[u]varint32`), signedness following the underlying type."""
+    size, signed = _INT_WIDTHS[underlying.name]
+    if size == 1:
+        return underlying
+    width = 64 if size == 8 else 32
+    return PrimitiveType(name=f"{'' if signed else 'u'}varint{width}")
+
+
+def _enum_underlying(cls: griffe.Class) -> PrimitiveType | None:
+    """The enum's C++ underlying type, written as a second base
+    (`class MemoryCategory(IntEnum, uint8)`). None means the C++ default, `int`."""
+    for base in cls.bases:
+        name = _base_name(base)
+        if name is None or name in ("IntEnum", "IntFlag"):
+            continue
+        if name not in _INT_WIDTHS:
+            raise CompilerError(
+                f"{cls.name}: enum underlying type must be a fixed-width integer primitive, got {name!r}; "
+                f"valid: {sorted(_INT_WIDTHS)}"
+            )
+        return PrimitiveType(name=name)
+    return None
 
 
 def _is_none(case: object) -> bool:
@@ -441,18 +530,6 @@ def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | s
     if isinstance(ann.left, griffe.ExprName) and ann.left.name == "list":
         return ann.slice
     return None
-
-
-def _enum_scalar(type_kw: str | None, field_name: str) -> PrimitiveType | None:
-    if type_kw is None:
-        raise CompilerError(
-            f"{field_name}: enum-typed field requires field(type=<primitive>) -- e.g. type=uvarint32 or type=str"
-        )
-    if type_kw == "str":
-        return None
-    if type_kw not in PRIMITIVES:
-        raise CompilerError(f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}")
-    return PrimitiveType(name=type_kw)
 
 
 def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
