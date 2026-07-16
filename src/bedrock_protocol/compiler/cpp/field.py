@@ -4,7 +4,7 @@ protoc analog: `compiler/cpp/cpp_field.{h,cc}` plus the per-type field
 generators (`primitive_field`, `string_field`, `enum_field`, `message_field`,
 `repeated_*`). `make_field_generator` is the `FieldGeneratorMap` factory: it
 walks a `FieldType` and builds a generator tree whose combinator nodes
-(optional / repeated / variant) hold a child generator and recurse.
+(optional / repeated / map / variant) hold a child generator and recurse.
 
 `cpp_type()` is the shared type-spelling used by field declarations and
 `type`-alias rendering. `FileContext` is the cross-cutting state every
@@ -21,6 +21,7 @@ from bedrock_protocol.descriptor import (
     CompilerError,
     EnumType,
     FieldType,
+    MappingType,
     OptionalType,
     PrimitiveType,
     RepeatedType,
@@ -68,6 +69,10 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
     if isinstance(t, RepeatedType):
         inner = cpp_type(t.inner, ctx, snapshot)
         return None if inner is None else f"std::vector<{inner}>"
+    if isinstance(t, MappingType):
+        key = cpp_type(t.key, ctx, snapshot)
+        value = cpp_type(t.value, ctx, snapshot)
+        return None if key is None or value is None else f"std::map<{key}, {value}>"
     if isinstance(t, VariantType):
         parts: list[str] = []
         for case in t.cases:
@@ -133,6 +138,8 @@ def type_includes(t: FieldType | None) -> set[str]:
         return {"<optional>"} | type_includes(t.inner)
     if isinstance(t, RepeatedType):
         return {"<vector>"} | type_includes(t.inner)
+    if isinstance(t, MappingType):
+        return {"<map>"} | type_includes(t.key) | type_includes(t.value)
     if isinstance(t, VariantType):
         out = {"<variant>"}
         for c in t.cases:
@@ -274,6 +281,43 @@ class RepeatedFieldGenerator(FieldGenerator):
             self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
 
 
+class MapFieldGenerator(FieldGenerator):
+    """`dict[K, V]`: a length prefix then that many key/value pairs. The key
+    read is brace-scoped so its temporary cannot collide with the value's."""
+
+    def __init__(
+        self,
+        key: FieldGenerator,
+        value: FieldGenerator,
+        prefix: PrimitiveType,
+        key_type: str,
+        gc: GenContext,
+    ) -> None:
+        self._key = key
+        self._value = value
+        self._prefix = prefix
+        self._key_type = key_type
+        self._gc = gc
+
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
+        p.add_includes("<map>", *type_includes(self._prefix))
+        p.print(_primitive_write(self._prefix, f"{var}.size()") + "\n")
+        with p.block(f"for (const auto &[k{depth}, v{depth}] : {var})"):
+            self._key.generate_serialize(p, f"k{depth}", depth + 1)
+            self._value.generate_serialize(p, f"v{depth}", depth + 1)
+
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+        p.add_includes("<expected>", "<map>", *type_includes(self._prefix))
+        p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
+        p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+        p.print(f"{target}.clear();\n")
+        with p.block(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth})"):
+            p.print(f"{self._key_type} key{depth}{{}};\n")
+            with p.block(""):
+                self._key.generate_deserialize(p, f"key{depth}", depth + 1)
+            self._value.generate_deserialize(p, f"{target}[key{depth}]", depth + 1)
+
+
 class VariantFieldGenerator(FieldGenerator):
     def __init__(
         self,
@@ -328,6 +372,16 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), gc)
     if isinstance(t, RepeatedType):
         return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc)
+    if isinstance(t, MappingType):
+        key_type = cpp_type(t.key, gc.ctx, gc.snapshot)
+        assert key_type is not None
+        return MapFieldGenerator(
+            make_field_generator(t.key, gc),
+            make_field_generator(t.value, gc),
+            t.prefix,
+            key_type,
+            gc,
+        )
     if isinstance(t, VariantType):
         cases = [None if c is None else make_field_generator(c, gc) for c in t.cases]
         variant_type = cpp_type(t, gc.ctx, gc.snapshot)

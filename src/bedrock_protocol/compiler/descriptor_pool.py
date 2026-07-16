@@ -1,9 +1,17 @@
-"""Version-snapshot analysis + dependency resolution.
+"""`DescriptorPool` — protoc analog of `descriptor.{h,cc}`'s pool half.
 
-Analog of protoc's `DescriptorBuilder` step inside `DescriptorPool::Add`. Takes
-the raw `File` the parser emitted, classifies which types are versioned,
-computes a topological order, and projects each versioned type into
-per-snapshot views.
+protoc splits a schema in two: `FileDescriptorProto` is what the parser emits,
+pure data; `FileDescriptor` is what `DescriptorPool::BuildFile` returns, with its
+cross-file references resolved. We mirror that pair as `File` and `ResolvedFile`,
+and this is the pool that turns one into the other.
+
+`build_file` is protoc's `DescriptorPool::BuildFile`: it resolves a file's imports
+first, then runs the equivalent of `DescriptorBuilder` over it -- classify which
+types are versioned, order them topologically, and project each versioned type
+into per-snapshot views. Built files are memoised here, in the pool, the way
+protoc keeps them in `DescriptorPool::Tables`; a descriptor holds a back-reference
+to its pool (`ResolvedFile.pool`, protoc's `FileDescriptor::pool()`) rather than
+carrying the cache itself.
 
 A versioned type is one whose definition changes at a known protocol version,
 transitively. Each versioned type splits into snapshots `[s_i, s_{i+1})`; each
@@ -27,58 +35,79 @@ from bedrock_protocol.descriptor import (
 )
 
 
-def resolve_all(file_set: FileSet) -> tuple[ResolvedFile, ...]:
-    """Resolve every output file in `file_set`, in `file_set.outputs` order."""
-    return tuple(resolve(file_set.files[name], file_set) for name in file_set.outputs)
+class DescriptorPool:
+    """Builds `ResolvedFile` descriptors from the parser's `File` protos, and owns
+    them once built. protoc's `DescriptorPool`."""
 
+    def __init__(self, file_set: FileSet) -> None:
+        self._file_set = file_set
+        self._built: dict[str, ResolvedFile] = {}
 
-def resolve(file: File, file_set: FileSet, _visiting: frozenset[str] = frozenset()) -> ResolvedFile:
-    cached = file_set.resolved.get(file.name)
-    if cached is not None:
-        return cached
+    @property
+    def file_set(self) -> FileSet:
+        return self._file_set
 
-    # Resolve imports first so cross-file lookups find their snapshot info
-    # already cached. Skip an import already being resolved higher up the stack
-    # (an import cycle): recursing would never terminate.
-    deeper = _visiting | {file.name}
-    for imp in file.imports:
-        other = file_set.files.get(imp)
-        if other is not None and imp not in deeper:
-            resolve(other, file_set, deeper)
+    def find_file_by_name(self, name: str) -> ResolvedFile | None:
+        """An already-built descriptor, or None. protoc's
+        `DescriptorPool::FindFileByName`, minus the on-demand build: a file's
+        imports are always built before it, so a lookup during a build finds them."""
+        return self._built.get(name)
 
-    all_types: tuple[Enum | Struct, ...] = (*file.enums, *file.structs)
-    by_name: dict[str, Enum | Struct] = {t.name: t for t in all_types}
-    # Source declaration order, not enums-then-structs -- the C++ layout depends on it.
-    types: tuple[Enum | Struct, ...] = tuple(by_name[n] for n in file.declaration_order if n in by_name)
-    own = frozenset(by_name)
+    def build_all(self) -> tuple[ResolvedFile, ...]:
+        """Every output file, in `file_set.outputs` order."""
+        return tuple(self.build_file(name) for name in self._file_set.outputs)
 
-    versioned = _versioned_types(types, file, file_set)
-    order = _topo_order(types, own)
-    snapshots = _snapshot_points(types, versioned, file, file_set)
-    snapshots_by_type = _plan_snapshots(types, by_name, versioned, order, snapshots, file, file_set)
+    def build_file(self, name: str, _visiting: frozenset[str] = frozenset()) -> ResolvedFile:
+        """protoc's `DescriptorPool::BuildFile`: cross-reference one file and hand
+        back its descriptor, building its imports first."""
+        built = self._built.get(name)
+        if built is not None:
+            return built
+        resolved = self._build(self._file_set.files[name], _visiting)
+        self._built[name] = resolved
+        return resolved
 
-    resolved = ResolvedFile(
-        file=file,
-        file_set=file_set,
-        declaration_order=tuple(order),
-        versioned_types=versioned,
-        snapshots=tuple(snapshots),
-        snapshots_by_type=snapshots_by_type,
-    )
-    file_set.resolved[file.name] = resolved
-    return resolved
+    def _build(self, file: File, _visiting: frozenset[str]) -> ResolvedFile:
+        file_set = self._file_set
+        # Build imports first so cross-file lookups find their snapshot info
+        # already in the pool. Skip an import already being built higher up the
+        # stack (an import cycle): recursing would never terminate.
+        deeper = _visiting | {file.name}
+        for imp in file.imports:
+            if imp in file_set.files and imp not in deeper:
+                self.build_file(imp, deeper)
+
+        all_types: tuple[Enum | Struct, ...] = (*file.enums, *file.structs)
+        by_name: dict[str, Enum | Struct] = {t.name: t for t in all_types}
+        # Source declaration order, not enums-then-structs -- the C++ layout depends on it.
+        types: tuple[Enum | Struct, ...] = tuple(by_name[n] for n in file.declaration_order if n in by_name)
+        own = frozenset(by_name)
+
+        versioned = _versioned_types(types, file, self)
+        order = _topo_order(types, own)
+        snapshots = _snapshot_points(types, versioned, file, self)
+        snapshots_by_type = _plan_snapshots(types, by_name, versioned, order, snapshots, file, self)
+
+        return ResolvedFile(
+            file=file,
+            pool=self,
+            declaration_order=tuple(order),
+            versioned_types=versioned,
+            snapshots=tuple(snapshots),
+            snapshots_by_type=snapshots_by_type,
+        )
 
 
 # --- versioned classification -------------------------------------------------
 
 
-def _versioned_types(types: tuple[Enum | Struct, ...], file: File, file_set: FileSet) -> frozenset[str]:
+def _versioned_types(types: tuple[Enum | Struct, ...], file: File, pool: DescriptorPool) -> frozenset[str]:
     """Names that are versioned by their own change points or by a transitive
     reference to a versioned type. Folds in versioned names from resolved
     imports so a reference to an imported versioned type propagates back."""
     versioned: set[str] = {t.name for t in types if t.change_points}
     for imp in file.imports:
-        other = file_set.resolved.get(imp)
+        other = pool.find_file_by_name(imp)
         if other is not None:
             versioned |= other.versioned_types
     while True:
@@ -131,14 +160,14 @@ def _snapshot_points(
     types: tuple[Enum | Struct, ...],
     versioned: frozenset[str],
     file: File,
-    file_set: FileSet,
+    pool: DescriptorPool,
 ) -> list[int]:
     points = {0}
     for t in types:
         if t.name in versioned:
             points |= t.change_points
     for imp in file.imports:
-        other = file_set.resolved.get(imp)
+        other = pool.find_file_by_name(imp)
         if other is not None:
             points |= set(other.snapshots)
     return sorted(points)
@@ -151,7 +180,7 @@ def _plan_snapshots(
     order: Iterable[str],
     snapshots: list[int],
     file: File,
-    file_set: FileSet,
+    pool: DescriptorPool,
 ) -> dict[str, tuple[VersionSnapshot, ...]]:
     """One `VersionSnapshot` tuple per versioned type, in snapshot order."""
     result: dict[str, tuple[VersionSnapshot, ...]] = {}
@@ -165,7 +194,7 @@ def _plan_snapshots(
             if view is not None:
                 return view
         for imp in file.imports:
-            other = file_set.resolved.get(imp)
+            other = pool.find_file_by_name(imp)
             if other is None:
                 continue
             snap = other.present_at(name, snapshot)

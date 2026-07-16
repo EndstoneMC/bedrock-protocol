@@ -6,13 +6,17 @@ produces a `File`; the resolver (`compiler.resolver`) refines it into a
 
 Every dataclass is frozen. Each field carries one `FieldType` tree describing
 both the shape the user wrote (`X | None` → `OptionalType`, `list[T]` →
-`RepeatedType`, `A | B` → `VariantType`) and the encoding it takes on the wire.
+`RepeatedType`, `dict[K, V]` → `MappingType`, `A | B` → `VariantType`) and the
+encoding it takes on the wire.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Mapping
+from typing import TYPE_CHECKING, Literal, Mapping
+
+if TYPE_CHECKING:
+    from bedrock_protocol.compiler.descriptor_pool import DescriptorPool
 
 # --- primitives ---------------------------------------------------------------
 
@@ -139,6 +143,21 @@ class RepeatedType:
 
 
 @dataclass(frozen=True)
+class MappingType:
+    """`dict[K, V]` — a length prefix (`prefix`, default `uvarint32`) followed
+    by that many key/value pairs, each key immediately preceding its value."""
+
+    key: "FieldType"
+    value: "FieldType"
+    prefix: PrimitiveType = field(default_factory=lambda: PrimitiveType(name="uvarint32"))
+    kind: Literal["mapping"] = "mapping"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.key.referenced | self.value.referenced
+
+
+@dataclass(frozen=True)
 class VariantType:
     """`A | B | C` → a `std::variant`-shaped tagged union. `discriminator` is
     the integer primitive prefixing the active case index on the wire (default
@@ -153,7 +172,7 @@ class VariantType:
         return frozenset().union(*(a.referenced for a in self.cases if a is not None))
 
 
-FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | VariantType
+FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | MappingType | VariantType
 
 
 # --- declarations ------------------------------------------------------------
@@ -299,15 +318,15 @@ class File:
     declaration_order: tuple[str, ...]  # type names in source order
 
 
-@dataclass
+@dataclass(frozen=True)
 class FileSet:
-    """Every loaded file plus the subset marked for output. Analog of protoc's
-    `DescriptorPool`, narrowed to the import graph and a resolve memo."""
+    """Every parsed file plus the subset marked for output -- protoc's
+    `FileDescriptorSet`. Pure data: the built descriptors live in the
+    `DescriptorPool`, not here."""
 
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     version: int | None = None
-    resolved: dict[str, "ResolvedFile"] = field(default_factory=dict)
 
 
 # --- resolved descriptors (post-versioning) -----------------------------------
@@ -329,11 +348,12 @@ class VersionSnapshot:
 
 @dataclass(frozen=True)
 class ResolvedFile:
-    """The post-resolver boundary delivered to backends: version snapshots,
-    topological order, and the FileSet for cross-file lookup."""
+    """A cross-referenced file -- protoc's `FileDescriptor` to `File`'s
+    `FileDescriptorProto`. Carries version snapshots and topological order, and
+    reaches its imports through `pool`, protoc's `FileDescriptor::pool()`."""
 
     file: File
-    file_set: FileSet
+    pool: "DescriptorPool"
     declaration_order: tuple[str, ...]  # versioned topo order
     versioned_types: frozenset[str]
     snapshots: tuple[int, ...]  # global snapshot points
@@ -347,7 +367,7 @@ class ResolvedFile:
             if s.name == name:
                 return s
         for imp in self.file.imports:
-            other = self.file_set.files.get(imp)
+            other = self.pool.file_set.files.get(imp)
             if other is None:
                 continue
             for e in other.enums:
@@ -365,7 +385,7 @@ class ResolvedFile:
         for imp in self.file.imports:
             if imp in seen:  # stop at an import cycle
                 continue
-            other = self.file_set.resolved.get(imp)
+            other = self.pool.find_file_by_name(imp)
             if other is not None and other.is_versioned(name, seen):
                 return True
         return False
@@ -378,7 +398,7 @@ class ResolvedFile:
         for imp in self.file.imports:
             if imp in seen:
                 continue
-            other = self.file_set.resolved.get(imp)
+            other = self.pool.find_file_by_name(imp)
             if other is None:
                 continue
             snaps = other.snapshots_of(name, seen)

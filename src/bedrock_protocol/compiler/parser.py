@@ -12,6 +12,7 @@ are listed as `outputs` so the CLI knows which to emit.
 
 from __future__ import annotations
 
+import keyword
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, cast
@@ -30,6 +31,7 @@ from bedrock_protocol.descriptor import (
     FieldVersion,
     File,
     FileSet,
+    MappingType,
     OptionalType,
     PrimitiveAlias,
     PrimitiveType,
@@ -355,7 +357,7 @@ class _AnnotationContext:
                     since=_tighten(version.since, lo, max),
                     until=_tighten(version.until, hi, min),
                 )
-                fields.append(Field(attr.name, (narrowed,)))
+                fields.append(Field(_field_name(attr.name), (narrowed,)))
         return Struct(
             name=decls[0].name,
             fields=tuple(fields),
@@ -373,7 +375,7 @@ class _AnnotationContext:
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
         )
-        return Field(attr.name, (version,))
+        return Field(_field_name(attr.name), (version,))
 
     # ---- enum wire type ----------------------------------------------------
 
@@ -436,10 +438,17 @@ class _AnnotationContext:
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
             elem = _list_element(ann, field_name)
-            if elem is None:
+            if elem is not None:
+                inner = self._base_type(elem, type_kw, prefix, field_name)
+                return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
+            mapping = _map_parts(ann, field_name)
+            if mapping is None:
                 return None
-            inner = self._base_type(elem, type_kw, prefix, field_name)
-            return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
+            key = self._base_type(mapping[0], type_kw, prefix, field_name)
+            value = self._base_type(mapping[1], type_kw, prefix, field_name)
+            if key is None or value is None:
+                return None
+            return MappingType(key=key, value=value, prefix=prefix)
         cases = _flatten_union(ann)
         if cases is not None:
             return self._union_type(cases, field_name, type_kw, prefix)
@@ -645,6 +654,24 @@ def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | s
     if isinstance(ann.left, griffe.ExprName) and ann.left.name == "list":
         return ann.slice
     return None
+
+
+def _field_name(name: str) -> str:
+    """The emitted name of a DSL field. A single trailing underscore escapes a
+    Python keyword (PEP 8's `pass_`) and is dropped, so a BDS `mPass` field can
+    keep its name; any other trailing underscore is part of the name."""
+    return name[:-1] if name.endswith("_") and keyword.iskeyword(name[:-1]) else name
+
+
+def _map_parts(ann: griffe.ExprSubscript, field_name: str) -> tuple[griffe.Expr | str, griffe.Expr | str] | None:
+    """The key / value annotations of a `dict[K, V]` subscript, or None for
+    anything else."""
+    if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "dict"):
+        return None
+    slice_ = ann.slice
+    if not isinstance(slice_, griffe.ExprTuple) or len(slice_.elements) != 2:
+        raise CompilerError(f"{field_name}: dict[...] needs exactly a key type and a value type")
+    return slice_.elements[0], slice_.elements[1]
 
 
 def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:

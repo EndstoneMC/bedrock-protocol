@@ -15,6 +15,7 @@ from bedrock_protocol.descriptor import (
     Enum,
     EnumType,
     FieldType,
+    MappingType,
     OptionalType,
     PrimitiveType,
     RepeatedType,
@@ -34,10 +35,10 @@ class FileGenerator:
     def __init__(self, resolved: ResolvedFile) -> None:
         self._resolved = resolved
         self._file = resolved.file
-        self._file_set = resolved.file_set
+        self._file_set = resolved.pool.file_set
         known = frozenset(BUILTIN_HEADERS) | frozenset(
             name
-            for f in resolved.file_set.files.values()
+            for f in resolved.pool.file_set.files.values()
             for name in (
                 *(e.name for e in f.enums),
                 *(s.name for s in f.structs),
@@ -391,6 +392,9 @@ def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:
                 out.add(t.name)
         elif isinstance(t, (OptionalType, RepeatedType)):
             walk(t.inner)
+        elif isinstance(t, MappingType):
+            walk(t.key)
+            walk(t.value)
         elif isinstance(t, VariantType):
             for c in t.cases:
                 walk(c)

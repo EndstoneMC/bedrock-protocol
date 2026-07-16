@@ -2,7 +2,7 @@
 
 Drives `FileGenerator` over the resolved descriptor and writes the
 resulting C++ header to the `GeneratorContext`. The latest protocol
-version targeted is read off `resolved.file_set.version` (originating
+version targeted is read off `resolved.pool.file_set.version` (originating
 from `__version__` in the DSL surface module).
 """
 
@@ -24,11 +24,11 @@ class CppGenerator(CodeGenerator):
         resolved: ResolvedFile,
         context: GeneratorContext,
     ) -> None:
-        if resolved.file_set.version is None:
+        if resolved.pool.file_set.version is None:
             raise CompilerError("cpp: descriptor carries no version (expected __version__ in the DSL surface module)")
         try:
             gen = FileGenerator(resolved)
-            header = gen.render_header(resolved.file_set.version)
+            header = gen.render_header(resolved.pool.file_set.version)
             source = gen.render_source()
         except CompilerError as exc:
             context.error(str(exc))

@@ -16,9 +16,9 @@ import click
 
 from .compiler import (
     GENERATORS,
+    DescriptorPool,
     FilesystemContext,
     SourceTree,
-    resolve,
 )
 from .descriptor import CompilerError
 
@@ -68,6 +68,7 @@ def main(
 
     try:
         file_set = SourceTree(list(import_paths)).load_all(inputs)
+        pool = DescriptorPool(file_set)
     except CompilerError as exc:
         raise click.ClickException(str(exc))
 
@@ -79,7 +80,7 @@ def main(
     error_seen = False
     for output_name in file_set.outputs:
         try:
-            resolved = resolve(file_set.files[output_name], file_set)
+            resolved = pool.build_file(output_name)
         except CompilerError as exc:
             raise click.ClickException(str(exc))
         ctx = FilesystemContext(out_dir, verbose=verbose)

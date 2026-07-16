@@ -1,4 +1,9 @@
-"""DSL surface consumed by the bpc compiler."""
+"""DSL surface consumed by the bpc compiler.
+
+A field name may carry a single trailing underscore to escape a Python keyword
+(PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
+the BDS name.
+"""
 
 from enum import auto
 from typing import Any, TypeAliasType, Union

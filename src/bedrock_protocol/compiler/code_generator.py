@@ -6,7 +6,7 @@ A backend implements `CodeGenerator.generate(resolved, context)`. The
 filesystem directly. This mirrors protoc's `GeneratorContext::Open`.
 
 The protocol version a backend targets is carried on the descriptor itself
-(`resolved.file_set.version`, originating from `__version__` in the DSL
+(`resolved.pool.file_set.version`, originating from `__version__` in the DSL
 surface module). There is no parameter / opt facility.
 """
 
@@ -62,7 +62,7 @@ class CodeGenerator(ABC):
     ) -> None:
         """Generate one input file's output. The backend writes results
         through `context.open(relative_path)`. The protocol version comes
-        from `resolved.file_set.version`."""
+        from `resolved.pool.file_set.version`."""
         ...
 
     def supported_features(self) -> int:

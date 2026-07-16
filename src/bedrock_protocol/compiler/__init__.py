@@ -2,9 +2,9 @@
 
 The pipeline:
 
-    parser.SourceTree(import_paths).load(source) ─► File
+    parser.SourceTree(import_paths).load_all(sources) ─► FileSet   (File protos)
                                                           │
-                                  resolver.resolve(file, set) ─► ResolvedFile
+                              DescriptorPool(file_set).build_file(name) ─► ResolvedFile
                                                           │
                                   registry.GENERATORS[name]() ─► CodeGenerator
                                                           │
@@ -12,16 +12,15 @@ The pipeline:
 """
 
 from .code_generator import CodeGenerator, FilesystemContext, GeneratorContext
+from .descriptor_pool import DescriptorPool
 from .parser import SourceTree
 from .registry import GENERATORS
-from .resolver import resolve, resolve_all
 
 __all__ = [
     "CodeGenerator",
+    "DescriptorPool",
     "FilesystemContext",
     "GENERATORS",
     "GeneratorContext",
     "SourceTree",
-    "resolve",
-    "resolve_all",
 ]
