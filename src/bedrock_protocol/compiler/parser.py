@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Callable, cast
 
 import griffe
 
@@ -42,6 +42,23 @@ from bedrock_protocol.descriptor import (
 _Ann = griffe.Expr | str | None
 
 
+class _DeclarationCollector(griffe.Extension):
+    """Every `class` statement, in source order, grouped by module.
+
+    griffe keeps members in a dict, so a type declared twice to model a wire
+    reshape survives only as its last declaration -- silently. This hook fires per
+    `ClassDef` once its body is attached, before that overwrite, so both shapes
+    reach the parser."""
+
+    def __init__(self) -> None:
+        self.by_module: dict[str, list[griffe.Class]] = {}
+
+    def on_class_members(self, *, node: object, cls: griffe.Class, agent: object, **kwargs: object) -> None:
+        parent = cls.parent
+        if isinstance(parent, griffe.Module):
+            self.by_module.setdefault(parent.path, []).append(cls)
+
+
 @dataclass(frozen=True)
 class _ClassifyResult:
     enum_names: frozenset[str]
@@ -60,6 +77,7 @@ class SourceTree:
 
     def __init__(self, import_paths: list[Path]) -> None:
         self._import_paths = [p.resolve() for p in import_paths]
+        self._declarations: dict[str, list[griffe.Class]] = {}
 
     # --- public API ---------------------------------------------------------
 
@@ -91,10 +109,30 @@ class SourceTree:
     # --- griffe loading -----------------------------------------------------
 
     def _griffe_load(self, name: str, root: Path) -> griffe.Module:
-        return cast(
+        collector = _DeclarationCollector()
+        module = cast(
             griffe.Module,
-            griffe.load(name, search_paths=[str(root)], allow_inspection=False),
+            griffe.load(
+                name,
+                search_paths=[str(root)],
+                allow_inspection=False,
+                extensions=griffe.Extensions(collector),
+            ),
         )
+        # A load may reach modules a previous one already covered; replace rather
+        # than append so a module's declarations are never counted twice.
+        self._declarations.update(collector.by_module)
+        return module
+
+    def _declarations_of(self, module_name: str) -> list[list[griffe.Class]]:
+        """The module's classes grouped by name, each group in source order. A
+        group of more than one is a version-redeclared type."""
+        groups: dict[str, list[griffe.Class]] = {}
+        for cls in self._declarations.get(module_name, []):
+            if cls.is_alias:
+                continue
+            groups.setdefault(cls.name, []).append(cls)
+        return list(groups.values())
 
     def _module_name_and_root(self, path: Path) -> tuple[str, Path]:
         path = path.resolve()
@@ -181,10 +219,9 @@ class SourceTree:
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
         type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
 
-        for mod in loaded.values():
-            for cls in mod.classes.values():
-                if cls.is_alias:
-                    continue
+        for mod_name in loaded:
+            for decls in self._declarations_of(mod_name):
+                cls = decls[0]
                 if _is_int_enum(cls):
                     enum_names.add(cls.name)
                     enum_underlying[cls.name] = _enum_underlying(cls)
@@ -241,17 +278,19 @@ class SourceTree:
         enums: list[Enum] = []
         structs: list[Struct] = []
         order: list[str] = []
-        for cls in mod.classes.values():
-            if cls.is_alias:
-                continue
-            if _is_int_enum(cls):
-                e = ctx.enum(cls)
+        for decls in self._declarations_of(name):
+            if _is_int_enum(decls[0]):
+                if len(decls) > 1:
+                    raise CompilerError(
+                        f"{decls[0].name}: an enum cannot be redeclared; version-gate its members with value(since=)"
+                    )
+                e = ctx.enum(decls[0])
                 enums.append(e)
                 order.append(e.name)
             else:
-                s = ctx.struct(cls)
-                structs.append(s)
-                order.append(s.name)
+                st = ctx.struct(decls)
+                structs.append(st)
+                order.append(st.name)
         imports = tuple(sorted(d for d in self._imports_of(mod) if d in loaded and d != name))
         return File(
             name=name,
@@ -299,17 +338,29 @@ class _AnnotationContext:
             previous = number
         return Enum(cls.name, tuple(values), _enum_underlying(cls))
 
-    def struct(self, cls: griffe.Class) -> Struct:
-        fields = tuple(self.field(attr) for attr in cls.attributes.values())
-        since = _decorator_int(cls, "packet", "since")
-        if since is None:
-            since = _decorator_int(cls, "type", "since")
+    def struct(self, decls: list[griffe.Class]) -> Struct:
+        """One struct from every declaration of its name. A type redeclared over
+        adjacent ranges models a wire reshape: each declaration's fields carry that
+        declaration's range, so a snapshot narrows to exactly one shape -- including
+        its field *order*, which a reshaped packet may change."""
+        _check_redeclaration(decls)
+        fields: list[Field] = []
+        for decl in decls:
+            lo, hi = _decl_since(decl), _decl_until(decl)
+            for attr in decl.attributes.values():
+                (version,) = self.field(attr).versions
+                narrowed = FieldVersion(
+                    type=version.type,
+                    since=_tighten(version.since, lo, max),
+                    until=_tighten(version.until, hi, min),
+                )
+                fields.append(Field(attr.name, (narrowed,)))
         return Struct(
-            name=cls.name,
-            fields=fields,
-            packet_id=_decorator_int(cls, "packet", "id"),
-            since=since,
-            until=_decorator_int(cls, "packet", "until"),
+            name=decls[0].name,
+            fields=tuple(fields),
+            packet_id=_decorator_int(decls[0], "packet", "id"),
+            since=_decl_since(decls[0]),
+            until=_decl_until(decls[-1]),
         )
 
     def field(self, attr: griffe.Attribute) -> Field:
@@ -490,6 +541,46 @@ def _is_none(case: object) -> bool:
     """A literal `None` in source. griffe spells a keyword literal as the bare
     string `'None'` (vs `ExprName('Other')` for a name reference)."""
     return case == "None"
+
+
+def _decl_since(cls: griffe.Class) -> int | None:
+    since = _decorator_int(cls, "packet", "since")
+    return since if since is not None else _decorator_int(cls, "type", "since")
+
+
+def _decl_until(cls: griffe.Class) -> int | None:
+    until = _decorator_int(cls, "packet", "until")
+    return until if until is not None else _decorator_int(cls, "type", "until")
+
+
+def _tighten(own: int | None, decl: int | None, pick: Callable[[int, int], int]) -> int | None:
+    """A field's bound against its declaration's: the narrower of the two wins, so
+    `field(since=486)` inside an `until=1001` declaration spans [486, 1001)."""
+    if own is None:
+        return decl
+    if decl is None:
+        return own
+    return pick(own, decl)
+
+
+def _check_redeclaration(decls: list[griffe.Class]) -> None:
+    """Redeclarations must tile one range: same id, each `until` meeting the next
+    `since`, and only the last left open. Anything else silently drops or
+    double-counts a shape at some snapshot."""
+    if len(decls) == 1:
+        return
+    name = decls[0].name
+    ids = {_decorator_int(d, "packet", "id") for d in decls}
+    if len(ids) > 1:
+        raise CompilerError(f"{name}: every redeclaration must share one packet id, got {sorted(map(str, ids))}")
+    for current, following in zip(decls, decls[1:]):
+        until, since = _decl_until(current), _decl_since(following)
+        if until is None:
+            raise CompilerError(f"{name}: only the last declaration may omit until=; an earlier one leaves it open")
+        if until != since:
+            raise CompilerError(
+                f"{name}: redeclarations must be adjacent -- until={until} is followed by since={since}"
+            )
 
 
 def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: int | None) -> int:

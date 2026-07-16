@@ -1,11 +1,11 @@
-import enum
+from enum import IntEnum
 
-from protocol import field, packet, uint8, uint64
+from protocol import auto, field, packet, uint8, uint64
 
 package = "bedrock.protocol"
 
 
-class MemoryCategory(enum.IntEnum, uint8):
+class MemoryCategory(IntEnum, uint8):
     UNKNOWN = 0
     INVALID_SIZE_UNKNOWN = 1
     ACTOR = 2
@@ -98,7 +98,7 @@ class MemoryCategory(enum.IntEnum, uint8):
     GAMEFACE_MEDIA = 89
     GAMEFACE_JSON = 90
     GAMEFACE_SCRIPT_ENGINE = 91
-    COUNT = enum.auto()
+    COUNT = auto()
 
 
 class MemoryCategoryCounter:

@@ -72,7 +72,7 @@ class FileGenerator:
         p = Printer()
         p.print("#pragma once\n\n")
         self._emit_includes(p, self._header_includes)
-        self._emit_version_include(p)
+        self._emit_generated_includes(p)
         p.print("\n")
         p.print(body.text)
         return p.text
@@ -108,17 +108,52 @@ class FileGenerator:
             for inc in project:
                 p.print(f"#include {inc}\n")
 
-    def _emit_version_include(self, p: Printer) -> None:
-        """A file with versioned types spells the `_<ProtocolVersion V>`
-        selector, so pull in the generated version header."""
-        if not self._has_namespaces():
-            return
+    def _emit_generated_includes(self, p: Printer) -> None:
+        """Headers this file's own header needs: the `ProtocolVersion` one when it
+        spells the `_<V>` selector, plus the owner of every type it references but
+        another file declares. The umbrella header includes every generated header,
+        but in sorted order, so a header that leans on it compiles only by luck of
+        the alphabet -- and never standalone."""
+        needed: set[str] = set()
         for name, f in self._file_set.files.items():
             if f is self._file:
                 continue
-            if any(e.name == "ProtocolVersion" for e in f.enums):
-                p.print(f'\n#include "{name.replace(".", "/")}.h"\n')
-                return
+            if self._has_namespaces() and any(e.name == "ProtocolVersion" for e in f.enums):
+                needed.add(name)
+        owners = self._type_owners()
+        for ref in self._referenced_names():
+            owner = owners.get(ref)
+            if owner is not None:
+                needed.add(owner)
+        if not needed:
+            return
+        p.print("\n")
+        for name in sorted(needed):
+            p.print(f'#include "{name.replace(".", "/")}.h"\n')
+
+    def _type_owners(self) -> dict[str, str]:
+        """Type name -> the module declaring it, for every file but this one. Only
+        files that name a package emit a header; the DSL surface itself does not."""
+        owners: dict[str, str] = {}
+        for name, f in self._file_set.files.items():
+            if f is self._file or not f.package:
+                continue
+            for declared in (
+                *(e.name for e in f.enums),
+                *(s.name for s in f.structs),
+                *(a.name for a in f.primitive_aliases),
+                *(a.name for a in f.type_aliases),
+            ):
+                owners[declared] = name
+        return owners
+
+    def _referenced_names(self) -> set[str]:
+        out: set[str] = set()
+        for struct in self._file.structs:
+            out |= {r.split(".", 1)[0] for r in struct.referenced}
+        for alias in self._file.type_aliases:
+            out |= {r.split(".", 1)[0] for r in alias.target.referenced}
+        return out
 
     # --- namespace ----------------------------------------------------------
 

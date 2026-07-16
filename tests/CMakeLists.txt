@@ -1,4 +1,4 @@
-add_executable(bedrock_protocol_tests test_315_serverbound_diagnostics.cpp test_345_attribute_layer_sync.cpp test_348_update_sound_data.cpp)
+add_executable(bedrock_protocol_tests test_175_sub_chunk_request.cpp test_315_serverbound_diagnostics.cpp test_345_attribute_layer_sync.cpp test_348_update_sound_data.cpp)
 target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)
 
 include(Catch)

@@ -134,6 +134,40 @@ guess — the compiler never invents a width. Beware that a wrong choice here is
 easily byte-aliased: `uint8` and `uvarint32` agree for 0..127, so a golden will not
 catch it. Take the encoding from protocol-docs, which records it per field.
 
+## A reshaped type is redeclared, not patched
+
+When a type's wire shape changes, declare it twice over adjacent ranges — the same
+name, `until=N` then `since=N`, each body holding the plain field types of its era:
+
+```python
+@packet(id=175, until=1001)          @packet(id=175, since=1001)
+class SubChunkRequestPacket:         class SubChunkRequestPacket:
+    dimension_type: DimensionType        dimension_type: DimensionType
+    center_pos: SubChunkPos              sub_chunk_pos_offsets: list[SubChunkPosOffset]
+    sub_chunk_pos_offsets: list[...]     center_pos: SubChunkPos
+        = field(prefix=uint32)
+```
+
+Two bodies read as a before / after, and only this form can express a **reorder** —
+each declaration's fields carry its range, so a snapshot narrows to one shape with
+its own field order. Field-level `field(since=)` can add or drop a trailing field
+but cannot move one. Redeclarations must tile one range: same id, each `until`
+meeting the next `since`, only the last left open; anything else is a compile error.
+An enum cannot be redeclared — version-gate its members instead.
+
+## A cerealisation is the highest-risk change
+
+protocol-docs only dumps packets that go through cereal, so a packet Mojang migrates
+appears as a **new file** at that version — and the migration frequently rewrites the
+wire. Never read an added file as "the dumper finally noticed it". 979 moved
+`SubChunkRequestPacket`'s `center_pos` behind the offsets, swapped the offset count
+from a fixed `uint32` to `uvarint32`, and reshaped `SubChunkPos` from `varint32` to
+fixed `int32` — three wire breaks in one line of changelog.
+
+The dump cannot show the pre-cereal shape (it wasn't dumped then), so take it from
+gophertunnel's history (`git log -p` the packet and read the `Marshal` diff) or
+CloudburstMC's older per-version serializer, and gate the delta at the snapshot.
+
 ## Enum members are int literals or `auto()`
 
 Spell a member's wire number as a plain int literal, or `auto()` (previous + 1) where
