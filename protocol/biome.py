@@ -3,8 +3,6 @@ from protocol import int32, type, uint32
 package = "bedrock.protocol"
 
 
-# BDS SharedTypes::FloatRange, versionless -- only reachable from the schema at 1001,
-# but not itself new, so left ungated.
 class FloatRange:
     min: float
     max: float
@@ -22,8 +20,6 @@ class SerializedNoiseBlockSpecifier:
     noise: str
     threshold: float
     range: FloatRange
-    # BDS types this BlockRuntimeId, which UpdateBlockPacket writes as a uvarint32;
-    # here cereal writes it fixed.
     block_runtime_id: uint32
 
 

@@ -150,6 +150,19 @@ cerealised packet that leans on the default will emit the wrong byte, silently:
 both errors are byte-aliased below 128. Until it is fixed, spell `field(type=)` on
 any enum in a cerealised packet rather than trusting the default.
 
+## DSL comments record blockers and open questions, nothing else
+
+A `#` in a protocol file is earned only by something unresolved: a `TODO`, a
+`confirm against BDS`, a source disagreement still open, a blocker. Everything
+else is noise and gets deleted — why a modelling decision went the way it did, how
+gophertunnel or CloudburstMC happens to encode a field, which BDS namespace a type
+came from, or version history that `since` / `until` already state. If the decision
+is settled and the code expresses it, the comment is restating the code to a reader
+who can see it.
+
+That reasoning is worth keeping — it just belongs in the commit message, where it
+is attached to the change rather than left behind in the schema.
+
 ## A reshaped type is redeclared, not patched
 
 When a type's wire shape changes, declare it twice over adjacent ranges — the same

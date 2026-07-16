@@ -5,16 +5,12 @@ from protocol import packet, type
 package = "bedrock.protocol"
 
 
-# BDS wraps this in `namespace ServerConfiguration`, which does not fold into the
-# name.
 @type(until=1001)
 class PresenceConfiguration:
     experience_name: str
     world_name: str
 
 
-# 999 turned both names optional and 980 appended rich_presence_id; both land on
-# the same snapshot.
 @type(since=1001)
 class PresenceConfiguration:
     experience_name: str | None
@@ -44,7 +40,6 @@ class ServerConfigurationJoinInfo:
     presence_configuration: PresenceConfiguration | None
 
 
-# BDS: Social::Events::ServerTelemetryData.
 class ServerTelemetryData:
     server_id: str
     scenario_id: str

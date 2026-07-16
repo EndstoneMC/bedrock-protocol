@@ -18,8 +18,6 @@ class SubChunkPos:
     z: int32
 
 
-# BDS nests this in SubChunkPacket, which is not modelled; hoisted, keeping the
-# BDS name.
 class SubChunkPosOffset:
     x: int8
     y: int8

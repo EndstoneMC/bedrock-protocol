@@ -50,7 +50,6 @@ class SpawnBiomeType(IntEnum, int16):
     USER_DEFINED = 1
 
 
-# BDS: Editor::WorldType.
 class EditorWorldType(IntEnum, int):
     NON_EDITOR = 0
     EDITOR_PROJECT = 1
@@ -64,7 +63,6 @@ class EducationEditionOffer(IntEnum, uint32):
     CHINA = 2
 
 
-# BDS: Social::GamePublishSetting.
 class GamePublishSetting(IntEnum, int):
     NO_MULTI_PLAY = 0
     INVITE_ONLY = 1
@@ -94,7 +92,6 @@ class ServerEditorConnectionPolicy(IntEnum, int):
 
 
 class SpawnSettings:
-    # int16 underlying would derive varint32; the wire is the fixed width.
     type: SpawnBiomeType = field(type=int16)
     user_defined_biome_name: str
     dimension: DimensionType
@@ -103,8 +100,6 @@ class SpawnSettings:
 class GameRule:
     name: str
     can_be_modified_by_player: bool
-    # BDS GameRule::Type: INVALID=0, BOOL=1, INT=2, FLOAT=3. The union's uvarint32
-    # discriminator indexes the cases, so a leading None lands the payloads on 1/2/3.
     value: None | bool | uvarint32 | float
 
 
@@ -206,7 +201,6 @@ class StartGamePacket:
     server_enabled_client_side_generation: bool
     block_network_ids_are_hashes: bool
     network_permissions: NetworkPermissions
-    # 995 added is_chat_logging between the network permissions and the join info.
     is_chat_logging: bool = field(since=1001)
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData
