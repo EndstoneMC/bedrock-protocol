@@ -168,6 +168,22 @@ The dump cannot show the pre-cereal shape (it wasn't dumped then), so take it fr
 gophertunnel's history (`git log -p` the packet and read the `Marshal` diff) or
 CloudburstMC's older per-version serializer, and gate the delta at the snapshot.
 
+## A union spells its discriminator, it does not tag
+
+A `A | B | C` field is prefixed by a `uvarint32` index over the cases in
+declaration order, so line the cases up with the wire's own numbering rather than
+reaching for `field(tag=)`. Where BDS numbers a union from one, lead with `None`:
+`std::monostate` takes index 0 and carries no payload.
+
+```python
+# BDS GameRule::Type: INVALID=0, BOOL=1, INT=2, FLOAT=3.
+value: None | bool | uvarint32 | float
+```
+
+That writes the discriminator and lands bool / int / float on 1 / 2 / 3, matching
+gophertunnel's GameRuleLegacy. Being explicit keeps the index visible next to the
+cases instead of hiding it behind an enum the reader has to go and count.
+
 ## Enum members are int literals or `auto()`
 
 Spell a member's wire number as a plain int literal, or `auto()` (previous + 1) where
