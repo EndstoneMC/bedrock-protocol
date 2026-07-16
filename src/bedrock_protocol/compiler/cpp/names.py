@@ -25,6 +25,11 @@ PRIMITIVE_TYPES: dict[str, str] = {
 }
 
 
+#: Compiler builtin -> the hand-written header defining it and its `Serializer`.
+#: The DSL names these through `BUILTIN_ANNOTATIONS`; this is the C++ mapping.
+BUILTIN_HEADERS: dict[str, str] = {"UUID": "<bedrock/uuid.hpp>"}
+
+
 def snapshot_namespace(version: int) -> str:
     return "base" if version == 0 else f"v{version}"
 

@@ -50,6 +50,12 @@ VARINT_PRIMITIVES: frozenset[str] = frozenset(
     }
 )
 
+#: Annotations that name a compiler builtin: the DSL spells the stdlib type it
+#: stands in for, and each backend maps it to its own hand-written implementation
+#: rather than emitting a definition. Language-agnostic here; the C++ spelling and
+#: header live in the cpp backend.
+BUILTIN_ANNOTATIONS: dict[str, str] = {"uuid.UUID": "UUID"}
+
 #: Primitives that may length-prefix a list or string.
 INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({"str", "bytes", "bool", "float", "double"})
 

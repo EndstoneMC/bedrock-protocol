@@ -19,6 +19,7 @@ from typing import Callable, cast
 import griffe
 
 from bedrock_protocol.descriptor import (
+    BUILTIN_ANNOTATIONS,
     PRIMITIVES,
     CompilerError,
     Enum,
@@ -442,6 +443,9 @@ class _AnnotationContext:
         cases = _flatten_union(ann)
         if cases is not None:
             return self._union_type(cases, field_name, type_kw, prefix)
+        dotted = _dotted_name(ann)
+        if dotted is not None and dotted in BUILTIN_ANNOTATIONS:
+            return StructType(BUILTIN_ANNOTATIONS[dotted])
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
@@ -542,6 +546,14 @@ def _is_none(case: object) -> bool:
     """A literal `None` in source. griffe spells a keyword literal as the bare
     string `'None'` (vs `ExprName('Other')` for a name reference)."""
     return case == "None"
+
+
+def _dotted_name(ann: _Ann) -> str | None:
+    """`uuid.UUID` as the string "uuid.UUID"; None for anything not a dotted path."""
+    if not isinstance(ann, griffe.ExprAttribute):
+        return None
+    parts = [v.name for v in ann.values if isinstance(v, griffe.ExprName)]
+    return ".".join(parts) if len(parts) == len(ann.values) else None
 
 
 def _has_decorator(cls: griffe.Class, name: str) -> bool:

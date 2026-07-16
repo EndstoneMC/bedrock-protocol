@@ -26,7 +26,7 @@ from bedrock_protocol.descriptor import (
 from .class_ import ClassGenerator
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .names import PRIMITIVE_TYPES, requires_clause, snapshot_namespace
+from .names import BUILTIN_HEADERS, PRIMITIVE_TYPES, requires_clause, snapshot_namespace
 from .printer import Printer
 
 
@@ -35,7 +35,7 @@ class FileGenerator:
         self._resolved = resolved
         self._file = resolved.file
         self._file_set = resolved.file_set
-        known = frozenset(
+        known = frozenset(BUILTIN_HEADERS) | frozenset(
             name
             for f in resolved.file_set.files.values()
             for name in (
@@ -160,7 +160,8 @@ class FileGenerator:
             for struct in f.structs:
                 if struct.builtin:
                     homes[struct.name] = name.rsplit(".", 1)[-1]
-        return {f"<bedrock/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
+        out = {f"<bedrock/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
+        return out | {BUILTIN_HEADERS[r] for r in self._referenced_names() if r in BUILTIN_HEADERS}
 
     def _referenced_names(self) -> set[str]:
         out: set[str] = set()
