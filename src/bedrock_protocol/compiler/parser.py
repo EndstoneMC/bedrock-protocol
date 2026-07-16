@@ -1,21 +1,17 @@
-"""Frontend — `.py` DSL files to `File` instances.
+"""Frontend — one loaded module to one `File` proto.
 
-Analog of protoc's `io::Tokenizer` + `compiler::Parser` + `importer`. We use
-griffe to statically parse the user's Python source: the DSL decorators
-(`@packet`, `@type`, `field()`) are runtime no-ops, so griffe never executes
-them, only reads them as AST.
+protoc analog: `compiler/parser.{h,cc}` (its `io::Tokenizer` has no counterpart --
+griffe already hands us an AST). The DSL's decorators (`@packet`, `@type`) and
+`field()` calls are runtime no-ops, so griffe never executes them, only reads them.
 
-A `SourceTree` follows `from X.Y import ...` between modules so a struct in one
-file can reference a type declared in another. Files passed to `load_all()`
-are listed as `outputs` so the CLI knows which to emit.
+Which modules get parsed, and where they come from, is `importer.py`'s business.
 """
 
 from __future__ import annotations
 
 import keyword
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Callable, cast
+from dataclasses import dataclass, field
+from typing import Callable
 
 import griffe
 
@@ -30,7 +26,6 @@ from bedrock_protocol.descriptor import (
     FieldType,
     FieldVersion,
     File,
-    FileSet,
     MappingType,
     OptionalType,
     PrimitiveAlias,
@@ -45,290 +40,94 @@ from bedrock_protocol.descriptor import (
 _Ann = griffe.Expr | str | None
 
 
-class _DeclarationCollector(griffe.Extension):
-    """Every `class` statement, in source order, grouped by module.
-
-    griffe keeps members in a dict, so a type declared twice to model a wire
-    reshape survives only as its last declaration -- silently. This hook fires per
-    `ClassDef` once its body is attached, before that overwrite, so both shapes
-    reach the parser."""
-
-    def __init__(self) -> None:
-        self.by_module: dict[str, list[griffe.Class]] = {}
-
-    def on_class_members(self, *, node: object, cls: griffe.Class, agent: object, **kwargs: object) -> None:
-        parent = cls.parent
-        if isinstance(parent, griffe.Module):
-            self.by_module.setdefault(parent.path, []).append(cls)
-
-
 @dataclass(frozen=True)
-class _ClassifyResult:
+class SymbolTable:
+    """Every name a schema declares, across all its files. protoc resolves type
+    references in `DescriptorBuilder` and lets the parser record a bare name; we
+    resolve while parsing, so the parser needs the whole table up front."""
+
     enum_names: frozenset[str]
     enum_underlying: dict[str, PrimitiveType | None]
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
-    primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]]
-    type_aliases_by_module: dict[str, tuple[TypeAlias, ...]]
+    primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = field(default_factory=dict)
+    type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = field(default_factory=dict)
 
 
-class SourceTree:
-    """Loads `.py` DSL files via griffe, lowers them to `File`.
+class Parser:
+    """Turns one loaded module into one `File` proto — protoc's `Parser`.
 
-    `import_paths` are the roots the loader uses to resolve `from X.Y import
-    ...` between modules — protoc's `--proto_path` equivalent."""
+    Reads griffe's AST rather than a token stream: the DSL's decorators and
+    `field()` calls are runtime no-ops, so they are only ever read, never run.
+    """
 
-    def __init__(self, import_paths: list[Path]) -> None:
-        self._import_paths = [p.resolve() for p in import_paths]
-        self._declarations: dict[str, list[griffe.Class]] = {}
+    def __init__(self, symbols: SymbolTable) -> None:
+        self._symbols = symbols
 
-    # --- public API ---------------------------------------------------------
+    @property
+    def enum_names(self) -> frozenset[str]:
+        return self._symbols.enum_names
 
-    def load_all(self, sources: tuple[Path, ...]) -> FileSet:
-        """Load every source file plus its transitive imports, returning the
-        complete `FileSet`. The order in `sources` is preserved in `outputs`."""
-        griffe_modules: dict[str, griffe.Module] = {}
-        stems: dict[str, str] = {}
-        output_names: list[str] = []
-        for src in sources:
-            name, root = self._module_name_and_root(src)
-            griffe_modules[name] = self._griffe_load(name, root)
-            stems[name] = src.stem
-            output_names.append(name)
-        self._load_owning_packages(griffe_modules, output_names)
-        self._load_version_module(griffe_modules, output_names)
-        self._follow_imports(griffe_modules, output_names)
-        classified = self._classify(griffe_modules)
-        files = {
-            name: self._lower_file(name, mod, stems.get(name, name), griffe_modules, classified)
-            for name, mod in griffe_modules.items()
-        }
-        return FileSet(
-            files=files,
-            outputs=tuple(output_names),
-            version=_dsl_version(griffe_modules),
-        )
+    @property
+    def struct_names(self) -> frozenset[str]:
+        return self._symbols.struct_names
 
-    # --- griffe loading -----------------------------------------------------
+    @property
+    def enum_underlying(self) -> dict[str, PrimitiveType | None]:
+        return self._symbols.enum_underlying
 
-    def _griffe_load(self, name: str, root: Path) -> griffe.Module:
-        collector = _DeclarationCollector()
-        module = cast(
-            griffe.Module,
-            griffe.load(
-                name,
-                search_paths=[str(root)],
-                allow_inspection=False,
-                extensions=griffe.Extensions(collector),
-            ),
-        )
-        # A load may reach modules a previous one already covered; replace rather
-        # than append so a module's declarations are never counted twice.
-        self._declarations.update(collector.by_module)
-        return module
+    @property
+    def aliases(self) -> dict[str, PrimitiveAlias | TypeAlias]:
+        return self._symbols.aliases_by_name
 
-    def _declarations_of(self, module_name: str) -> list[list[griffe.Class]]:
-        """The module's classes grouped by name, each group in source order. A
-        group of more than one is a version-redeclared type."""
-        groups: dict[str, list[griffe.Class]] = {}
-        for cls in self._declarations.get(module_name, []):
-            if cls.is_alias:
-                continue
-            groups.setdefault(cls.name, []).append(cls)
-        return list(groups.values())
-
-    def _module_name_and_root(self, path: Path) -> tuple[str, Path]:
-        path = path.resolve()
-        for ip in self._import_paths:
-            try:
-                rel = path.relative_to(ip)
-            except ValueError:
-                continue
-            return ".".join(rel.with_suffix("").parts), ip
-        parent = path.parent
-        name = f"{parent.name}.{path.stem}" if parent.name else path.stem
-        return name, parent
-
-    def _load_owning_packages(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
-        """Load each input's parent package(s) so the DSL surface module is
-        available even when the input has no `from <package> import ...` line
-        (it is where `__version__` lives)."""
-        for name in seed:
-            parts = name.split(".")
-            for cut in range(len(parts) - 1, 0, -1):
-                parent = ".".join(parts[:cut])
-                if parent in loaded:
-                    continue
-                for ip in self._import_paths:
-                    if ip.joinpath(*parts[:cut], "__init__.py").is_file():
-                        loaded[parent] = self._griffe_load(parent, ip)
-                        break
-
-    def _load_version_module(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
-        """Always load the DSL's `version` submodule (which declares the
-        compiler-owned `ProtocolVersion` enum) so any file with versioned types
-        can spell the typed `_<ProtocolVersion V>` selector without importing
-        it. The enum stays DSL-owned; the import is just no longer boilerplate."""
-        for name in seed:
-            parts = name.split(".")
-            for cut in range(len(parts) - 1, 0, -1):
-                mod_name = ".".join(parts[:cut] + ["version"])
-                if mod_name in loaded:
-                    break
-                for ip in self._import_paths:
-                    if ip.joinpath(*parts[:cut], "version.py").is_file():
-                        loaded[mod_name] = self._griffe_load(mod_name, ip)
-                        break
-                else:
-                    continue
-                break
-
-    def _follow_imports(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
-        pending = list(seed)
-        while pending:
-            for dep in self._imports_of(loaded[pending.pop()]):
-                if dep in loaded:
-                    continue
-                parts = dep.split(".")
-                for ip in self._import_paths:
-                    module = ip.joinpath(*parts).with_suffix(".py")
-                    package = ip.joinpath(*parts, "__init__.py")
-                    if module.is_file() or package.is_file():
-                        loaded[dep] = self._griffe_load(dep, ip)
-                        pending.append(dep)
-                        break
-
-    @staticmethod
-    def _imports_of(mod: griffe.Module) -> set[str]:
-        """Source modules `mod`'s `from X.Y import ...` lines refer to. Names
-        with a `_`-prefixed component (the DSL surface itself) are omitted."""
-        out: set[str] = set()
-        for member in mod.members.values():
-            target = getattr(member, "target_path", None)
-            if target is None or "." not in str(target):
-                continue
-            dep = str(target).rsplit(".", 1)[0]
-            if not any(part.startswith("_") for part in dep.split(".")):
-                out.add(dep)
-        return out
-
-    # --- classification -----------------------------------------------------
-
-    def _classify(self, loaded: dict[str, griffe.Module]) -> _ClassifyResult:
-        enum_names: set[str] = set()
-        enum_underlying: dict[str, PrimitiveType | None] = {}
-        struct_names: set[str] = set()
-        aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
-        primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
-        type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
-
-        for mod_name in loaded:
-            for decls in self._declarations_of(mod_name):
-                cls = decls[0]
-                if _is_int_enum(cls):
-                    enum_names.add(cls.name)
-                    enum_underlying[cls.name] = _enum_underlying(cls)
-                else:
-                    struct_names.add(cls.name)
-
-        # Alias pass — after classification, since an alias may reference any
-        # class. Declaration order is the resolution order.
-        for name, mod in loaded.items():
-            primitives: list[PrimitiveAlias] = []
-            others: list[TypeAlias] = []
-            ctx = _AnnotationContext(frozenset(enum_names), enum_underlying, frozenset(struct_names), aliases_by_name)
-            for attr_name, attr in list(mod.attributes.items()) + list(mod.type_aliases.items()):
-                if attr_name == "package" or attr_name in PRIMITIVES or attr.value is None:
-                    continue
-                if getattr(attr, "is_alias", False):
-                    continue
-                alias = ctx.parse_alias(attr_name, attr.value)
-                if alias is None:
-                    continue
-                aliases_by_name[alias.name] = alias
-                if isinstance(alias, PrimitiveAlias):
-                    primitives.append(alias)
-                else:
-                    others.append(alias)
-            primitive_aliases_by_module[name] = tuple(primitives)
-            type_aliases_by_module[name] = tuple(others)
-
-        return _ClassifyResult(
-            enum_names=frozenset(enum_names),
-            enum_underlying=enum_underlying,
-            struct_names=frozenset(struct_names),
-            aliases_by_name=aliases_by_name,
-            primitive_aliases_by_module=primitive_aliases_by_module,
-            type_aliases_by_module=type_aliases_by_module,
-        )
-
-    # --- lowering -----------------------------------------------------------
-
-    def _lower_file(
+    def parse_file(
         self,
         name: str,
         mod: griffe.Module,
         stem: str,
-        loaded: dict[str, griffe.Module],
-        classified: _ClassifyResult,
+        loaded: set[str],
+        raw_imports: set[str],
+        declarations: list[list[griffe.Class]],
     ) -> File:
-        ctx = _AnnotationContext(
-            classified.enum_names,
-            classified.enum_underlying,
-            classified.struct_names,
-            classified.aliases_by_name,
-        )
+        """One module to one `File` proto — protoc's `Parser::Parse`.
+
+        Everything it reads is handed to it: `declarations` are the module's class
+        statements grouped by name, and `raw_imports` the modules it draws from.
+        Opening files is the `SourceTree`'s job, not the parser's."""
         enums: list[Enum] = []
         structs: list[Struct] = []
         order: list[str] = []
-        for decls in self._declarations_of(name):
-            if _is_int_enum(decls[0]):
+        for decls in declarations:
+            if is_int_enum(decls[0]):
                 if len(decls) > 1:
                     raise CompilerError(
                         f"{decls[0].name}: an enum cannot be redeclared; version-gate its members with value(since=)"
                     )
-                e = ctx.enum(decls[0])
+                e = self.enum(decls[0])
                 enums.append(e)
                 order.append(e.name)
             else:
-                st = ctx.struct(decls)
+                st = self.struct(decls)
                 structs.append(st)
                 order.append(st.name)
-        imports = tuple(sorted(d for d in self._imports_of(mod) if d in loaded and d != name))
+        imports = tuple(sorted(d for d in raw_imports if d in loaded and d != name))
         return File(
             name=name,
             stem=stem,
             package=_package_of(mod),
             enums=tuple(enums),
             structs=tuple(structs),
-            primitive_aliases=classified.primitive_aliases_by_module[name],
-            type_aliases=classified.type_aliases_by_module[name],
+            primitive_aliases=self._symbols.primitive_aliases_by_module[name],
+            type_aliases=self._symbols.type_aliases_by_module[name],
             imports=imports,
             declaration_order=tuple(order),
         )
-
-
-# --- annotation lowering ------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class _AnnotationContext:
-    """The name dictionaries the annotation walker reads."""
-
-    enum_names: frozenset[str]
-    enum_underlying: dict[str, PrimitiveType | None]
-    struct_names: frozenset[str]
-    aliases: dict[str, PrimitiveAlias | TypeAlias]
-
-    # ---- aliases -----------------------------------------------------------
 
     def parse_alias(self, name: str, value: griffe.Expr | str) -> PrimitiveAlias | TypeAlias | None:
         if isinstance(value, griffe.ExprName) and value.name in PRIMITIVES:
             return PrimitiveAlias(name, value.name)
         target = self.type(name, value, None)
         return None if target is None else TypeAlias(name, target)
-
-    # ---- declarations ------------------------------------------------------
 
     def enum(self, cls: griffe.Class) -> Enum:
         values: list[EnumValue] = []
@@ -339,7 +138,7 @@ class _AnnotationContext:
             number = _enum_number(cls.name, name, attr.value, previous)
             values.append(EnumValue(name, number))
             previous = number
-        return Enum(cls.name, tuple(values), _enum_underlying(cls))
+        return Enum(cls.name, tuple(values), enum_underlying_of(cls))
 
     def struct(self, decls: list[griffe.Class]) -> Struct:
         """One struct from every declaration of its name. A type redeclared over
@@ -482,21 +281,6 @@ def _package_of(mod: griffe.Module) -> str | None:
     return str(attr.value).strip("'\"")
 
 
-def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
-    """Pull `__version__` off any loaded module that declares it -- in practice
-    the DSL surface module (`protocol/__init__.py`). The single source for the
-    protocol version this project targets; the CLI raises if it is missing."""
-    for mod in loaded.values():
-        attr = mod.attributes.get("__version__")
-        if attr is None or attr.value is None:
-            continue
-        try:
-            return int(str(attr.value))
-        except ValueError:
-            continue
-    return None
-
-
 def _base_name(base: griffe.Expr | str) -> str | None:
     """Last component of a base-class expression. Both the bare `IntEnum` and
     the dotted `enum.IntEnum` spelling yield "IntEnum"."""
@@ -505,7 +289,7 @@ def _base_name(base: griffe.Expr | str) -> str | None:
     return base.name if isinstance(base, griffe.ExprName) else None
 
 
-def _is_int_enum(cls: griffe.Class) -> bool:
+def is_int_enum(cls: griffe.Class) -> bool:
     return any(_base_name(b) in ("IntEnum", "IntFlag") for b in cls.bases)
 
 
@@ -537,7 +321,7 @@ def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
     return PrimitiveType(name=f"{'' if signed else 'u'}varint{width}")
 
 
-def _enum_underlying(cls: griffe.Class) -> PrimitiveType | None:
+def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
     """The enum's C++ underlying type, written as a second base
     (`class MemoryCategory(IntEnum, uint8)`). None means the C++ default, `int`."""
     for base in cls.bases:

@@ -18,6 +18,7 @@ from .compiler import (
     GENERATORS,
     DescriptorPool,
     FilesystemContext,
+    Importer,
     SourceTree,
 )
 from .descriptor import CompilerError
@@ -67,7 +68,7 @@ def main(
         raise click.ClickException(f"unknown language {language!r}; known: {sorted(GENERATORS)}")
 
     try:
-        file_set = SourceTree(list(import_paths)).load_all(inputs)
+        file_set = Importer(SourceTree(list(import_paths))).load_all(inputs)
         pool = DescriptorPool(file_set)
     except CompilerError as exc:
         raise click.ClickException(str(exc))
