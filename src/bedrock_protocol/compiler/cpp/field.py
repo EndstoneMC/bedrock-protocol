@@ -2,7 +2,8 @@
 
 protoc analog: `compiler/cpp/cpp_field.{h,cc}` plus the per-type field
 generators (`primitive_field`, `string_field`, `enum_field`, `message_field`,
-`repeated_*`). `make_field_generator` is the `FieldGeneratorMap` factory: it
+`repeated_*`). `FieldGeneratorMap` is protoc's per-message map from a field to
+its generator; `make_field_generator` is the factory behind it, which
 walks a `FieldType` and builds a generator tree whose combinator nodes
 (optional / repeated / map / variant) hold a child generator and recurse.
 
@@ -20,17 +21,19 @@ from bedrock_protocol.descriptor import (
     VARINT_PRIMITIVES,
     CompilerError,
     EnumType,
+    Field,
     FieldType,
     MappingType,
     OptionalType,
     PrimitiveType,
     RepeatedType,
     ResolvedFile,
+    Struct,
     StructType,
     VariantType,
 )
 
-from .names import PRIMITIVE_TYPES, snapshot_namespace
+from .helpers import PRIMITIVE_TYPES, snapshot_namespace
 from .printer import Printer
 
 
@@ -360,8 +363,27 @@ class VariantFieldGenerator(FieldGenerator):
         p.print(f"{target} = var{depth};\n")
 
 
+class FieldGeneratorMap:
+    """One struct's fields, each mapped to its codec generator — protoc's
+    `FieldGeneratorMap`. Built once per message, then indexed: `get(field)` is
+    protoc's `field_generators_.get(field)`.
+
+    The struct must be a snapshot view, where each field name appears once."""
+
+    def __init__(self, struct: Struct, ctx: FileContext, snapshot: int | None) -> None:
+        gc = GenContext(ctx, snapshot)
+        self._by_name: dict[str, FieldGenerator] = {}
+        for f in struct.fields:
+            (version,) = f.versions
+            assert version.type is not None
+            self._by_name[f.name] = make_field_generator(version.type, gc)
+
+    def get(self, field: Field) -> FieldGenerator:
+        return self._by_name[field.name]
+
+
 def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
-    """`FieldGeneratorMap` factory: build the codec generator for a wire node."""
+    """Build the codec generator for one wire node, recursing through combinators."""
     if isinstance(t, PrimitiveType):
         return PrimitiveFieldGenerator(t, gc)
     if isinstance(t, EnumType):

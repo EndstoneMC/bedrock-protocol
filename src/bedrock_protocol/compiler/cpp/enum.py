@@ -7,7 +7,7 @@ from __future__ import annotations
 from bedrock_protocol.descriptor import Enum
 
 from .field import type_includes
-from .names import PRIMITIVE_TYPES
+from .helpers import PRIMITIVE_TYPES
 from .printer import Printer
 
 

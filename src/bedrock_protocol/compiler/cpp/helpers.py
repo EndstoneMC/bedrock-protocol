@@ -1,4 +1,4 @@
-"""C++ naming + spelling helpers."""
+"""C++ naming + spelling helpers — protoc analog of `compiler/cpp/cpp_helpers.{h,cc}`."""
 
 from __future__ import annotations
 

@@ -2,7 +2,7 @@
 
 The public surface is the `CppGenerator` class. Everything else is
 implementation detail: `FileGenerator` assembles a header/source pair,
-delegating to `ClassGenerator` / `EnumGenerator` and the `FieldGenerator`
+delegating to `MessageGenerator` / `EnumGenerator` and the `FieldGenerator`
 codec, all printed through `Printer`.
 """
 

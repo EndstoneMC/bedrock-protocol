@@ -2,7 +2,7 @@
 
 protoc analog: `compiler/cpp/cpp_file.{h,cc}`. Routes each section through a
 `Printer`, delegating type definitions and serializers to `EnumGenerator` /
-`ClassGenerator` and the `FieldGenerator` codec.
+`MessageGenerator` and the `FieldGenerator` codec.
 
 The `.hpp` holds type definitions, the DSL-owned `ProtocolVersion` `_<V>`
 selector, and declaration-only `Serializer<T>` specializations; the `.cpp`
@@ -24,10 +24,10 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 
-from .class_ import ClassGenerator
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .names import BUILTIN_HEADERS, PRIMITIVE_TYPES, requires_clause, snapshot_namespace
+from .helpers import BUILTIN_HEADERS, PRIMITIVE_TYPES, requires_clause, snapshot_namespace
+from .message import MessageGenerator
 from .printer import Printer
 
 
@@ -232,7 +232,7 @@ class FileGenerator:
         if isinstance(t, Enum):
             EnumGenerator(t).generate_definition(p)
         elif isinstance(t, Struct):
-            ClassGenerator(t, self._ctx).generate_class_definition(p)
+            MessageGenerator(t, self._ctx).generate_class_definition(p)
 
     # --- versioning traits + selector --------------------------------------
 
@@ -313,7 +313,7 @@ class FileGenerator:
     def _emit_struct_serializer(
         self, p: Printer, struct: Struct, snapshot: int | None, qualified: str, mode: str
     ) -> None:
-        gen = ClassGenerator(struct, self._ctx, snapshot=snapshot, qualified=qualified)
+        gen = MessageGenerator(struct, self._ctx, snapshot=snapshot, qualified=qualified)
         if mode == "decl":
             gen.generate_serializer_declaration(p)
         else:

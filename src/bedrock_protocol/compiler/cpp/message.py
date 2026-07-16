@@ -1,9 +1,9 @@
-"""`ClassGenerator` — one struct shape: its `struct { ... };` definition and
+"""`MessageGenerator` — one struct shape: its `struct { ... };` definition and
 its `Serializer<T>` specialization (declaration in the header, out-of-line
 bodies in the source). protoc analog: `compiler/cpp/cpp_message.{h,cc}`.
 
 The serializer bodies iterate the struct's fields and delegate each to the
-`FieldGenerator` built by `make_field_generator` — protoc's
+`FieldGenerator` its `FieldGeneratorMap` holds — protoc's
 `field_generators_.get(field).GenerateSerialize...` pattern.
 """
 
@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from bedrock_protocol.descriptor import Struct
 
-from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
+from .field import FieldGeneratorMap, FileContext, cpp_type, type_includes
 from .printer import Printer
 
 
-class ClassGenerator:
+class MessageGenerator:
     """One (possibly snapshot-narrowed) `Struct` → its C++ struct + serializer.
 
     `qualified` is the `Serializer<...>` target spelling (`Foo` when
@@ -34,6 +34,7 @@ class ClassGenerator:
         self._ctx = ctx
         self._snapshot = snapshot
         self._qualified = qualified if qualified is not None else struct.name
+        self._field_generators = FieldGeneratorMap(struct, ctx, snapshot)
 
     # --- type definition ----------------------------------------------------
 
@@ -74,22 +75,17 @@ class ClassGenerator:
     def generate_serializer_definition(self, p: Printer) -> None:
         p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
         q = self._qualified
-        gc = GenContext(self._ctx, self._snapshot)
 
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, const {q} &value)\n")
         with p.block():
             for f in self._struct.fields:
-                (version,) = f.versions
-                assert version.type is not None
-                make_field_generator(version.type, gc).generate_serialize(p, f"value.{f.name}")
+                self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
             p.print(f"{q} out;\n")
             for f in self._struct.fields:
-                (version,) = f.versions
-                assert version.type is not None
-                gen = make_field_generator(version.type, gc)
+                gen = self._field_generators.get(f)
                 with p.block():  # scope each field's read locals (v, present, len, tag, ...)
                     gen.generate_deserialize(p, f"out.{f.name}")
             p.print("return out;\n")
