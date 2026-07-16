@@ -46,17 +46,10 @@ def field(
 ) -> Any:
     """Mark a struct field.
 
-    - `type`: the on-the-wire shape. An enum-typed field needs this only to
-      override its default: the enum's underlying type (declared as a second
-      base, `class MemoryCategory(IntEnum, uint8)`) plus enum-as-value and
-      compression. That is the commonest shape rather than cereal's own default,
-      which is a name-coded string. One byte has nothing to compress, so an
-      `int8` / `uint8` enum writes as-is and `category: MemoryCategory` alone
-      gives a `uint8`; a wider underlying compresses to `[u]varint32`, or
-      `[u]varint64` at eight bytes. Spell `type=` for the rest: `type=str` for a
-      name-coded enum, a fixed primitive (`type=int64`) where BDS does not
-      compress, and `endian="big"` alongside it for a big-endian one. An enum
-      with no underlying base and no `type=` is an error rather than a guess.
+    - `type`: the on-the-wire shape. An enum-typed field defaults to its enum's
+      underlying type, compressed to a varint above one byte; pass `type=str`
+      for a name-coded enum, or a fixed primitive where BDS does not compress.
+      An enum with neither an underlying base nor `type=` is an error.
       For an integer-primitive-typed
       field, an *integer* primitive that overrides the wire encoding while
       the annotation keeps owning the in-memory type -- `y: int32 = field(type=uvarint32)`

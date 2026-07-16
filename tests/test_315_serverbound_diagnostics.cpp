@@ -42,7 +42,7 @@ const std::string golden_base = bytes({
     0x00, 0x00, 0xe0, 0x40,                          // avg_remainder_time_percent = 7.0f
     0x00, 0x00, 0x00, 0x41,                          // avg_unaccounted_time_percent = 8.0f
     0x01,                                            // memory_category_values: count = 1
-    0x00,                                            //   [0].category = UNKNOWN (uint8)
+    0x02,                                            //   [0].category = ACTOR (uint8)
     0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //   [0].current_bytes = 1024
     0x01,                                            // entity_diagnostics: count = 1
     0x06, 0x5a, 0x6f, 0x6d, 0x62, 0x69, 0x65,        //   [0].display_name = "Zombie"
@@ -83,7 +83,7 @@ void fill_base(Packet &packet)
     packet.avg_end_frame_time_ms = 6.0f;
     packet.avg_remainder_time_percent = 7.0f;
     packet.avg_unaccounted_time_percent = 8.0f;
-    packet.memory_category_values.push_back({.category = bp::MemoryCategory::UNKNOWN, .current_bytes = 1024});
+    packet.memory_category_values.push_back({.category = bp::MemoryCategory::ACTOR, .current_bytes = 1024});
     packet.entity_diagnostics.push_back(
         {.display_name = "Zombie", .entity = "minecraft:zombie", .time_in_ns = 500, .percent_of_total = 50});
     packet.system_diagnostics.push_back(
@@ -117,7 +117,7 @@ TEST_CASE("serverbound-diagnostics round-trips against the golden")
     REQUIRE(reader.getUnreadLength() == 0);
     REQUIRE(back->avg_fps == 60.0f);
     REQUIRE(back->memory_category_values.size() == 1);
-    REQUIRE(back->memory_category_values[0].category == bp::MemoryCategory::UNKNOWN);
+    REQUIRE(back->memory_category_values[0].category == bp::MemoryCategory::ACTOR);
     REQUIRE(back->memory_category_values[0].current_bytes == 1024);
     REQUIRE(back->entity_diagnostics.size() == 1);
     REQUIRE(back->entity_diagnostics[0].entity == "minecraft:zombie");

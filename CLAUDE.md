@@ -134,6 +134,14 @@ guess — the compiler never invents a width. Beware that a wrong choice here is
 easily byte-aliased: `uint8` and `uvarint32` agree for 0..127, so a golden will not
 catch it. Take the encoding from protocol-docs, which records it per field.
 
+## Enum members are int literals or `auto()`
+
+Spell a member's wire number as a plain int literal, or `auto()` (previous + 1) where
+the number is derived rather than chosen — a trailing count sentinel is the usual
+case: BDS's `MemoryCategory_count = 92` is `COUNT = auto()`, which stays correct as
+members are added. Anything else is a compile error; the compiler never skips a
+member it cannot read.
+
 ## Placeholder an enum with stub enumerators, never with its primitive
 
 When BDS gives a field an enum you are not ready to transcribe in full, never fall

@@ -290,13 +290,13 @@ class _AnnotationContext:
 
     def enum(self, cls: griffe.Class) -> Enum:
         values: list[EnumValue] = []
+        previous: int | None = None
         for name, attr in cls.attributes.items():
             if attr.value is None:
                 continue
-            number = _as_int(attr.value)
-            if number is None:
-                continue
+            number = _enum_number(cls.name, name, attr.value, previous)
             values.append(EnumValue(name, number))
+            previous = number
         return Enum(cls.name, tuple(values), _enum_underlying(cls))
 
     def struct(self, cls: griffe.Class) -> Struct:
@@ -325,11 +325,8 @@ class _AnnotationContext:
     # ---- enum wire type ----------------------------------------------------
 
     def _enum_scalar(self, type_kw: str | None, field_name: str, enum_name: str) -> PrimitiveType | None:
-        """The wire encoding of an enum-typed field. The default is the enum's
-        underlying type + EnumAsValue + Compression, picked because it is the
-        commonest shape -- cereal itself defaults to a name-coded string. Every
-        other case is explicit: `field(type=str)` for that name-coded default, and
-        a fixed primitive (`field(type=uint8)`) where BDS does not compress."""
+        """The wire encoding of an enum-typed field: `field(type=)` if given
+        (`str` marks it name-coded), else derived from the enum's underlying type."""
         if type_kw == "str":
             return None
         if type_kw is not None:
@@ -463,12 +460,9 @@ _INT_WIDTHS: dict[str, tuple[int, bool]] = {
 
 
 def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
-    """The DSL's default for a scoped enum: the underlying type, EnumAsValue and
-    Compression -- the commonest shape, not cereal's own default (which is a
-    name-coded string, spelled here as `field(type=str)`). A single byte has nothing
-    to compress, so an `int8` / `uint8` underlying goes out as-is; anything wider
-    compresses to a varint sized off it (8 bytes to `[u]varint64`, else
-    `[u]varint32`), signedness following the underlying type."""
+    """The default wire encoding: underlying type, enum-as-value and compression.
+    One byte has nothing to compress and goes as-is; wider compresses to
+    `[u]varint32`, or `[u]varint64` at eight, signedness following the underlying."""
     size, signed = _INT_WIDTHS[underlying.name]
     if size == 1:
         return underlying
@@ -496,6 +490,16 @@ def _is_none(case: object) -> bool:
     """A literal `None` in source. griffe spells a keyword literal as the bare
     string `'None'` (vs `ExprName('Other')` for a name reference)."""
     return case == "None"
+
+
+def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: int | None) -> int:
+    """A member's wire number: an int literal, or `auto()` for previous + 1."""
+    if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "auto":
+        return 0 if previous is None else previous + 1
+    number = _as_int(value)
+    if number is None:
+        raise CompilerError(f"{enum_name}.{name}: enum member must be an int literal or auto(), got {value!r}")
+    return number
 
 
 def _as_int(value: object) -> int | None:

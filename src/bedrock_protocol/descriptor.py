@@ -168,12 +168,8 @@ class EnumValue:
 
 @dataclass(frozen=True)
 class Enum:
-    """`underlying` is the enum's C++ underlying type, spelled in the DSL as a
-    second base (`class MemoryCategory(IntEnum, uint8)`) and taken from BDS.
-    `None` means the C++ default, `int` -- which is what BDS's own scoped enums
-    resolve to when they declare no underlying type. It is the in-memory width,
-    not the wire encoding: an enum-typed field still declares its own
-    `field(type=...)`."""
+    """`underlying` is the enum's C++ underlying type, spelled as a second base
+    (`class MemoryCategory(IntEnum, uint8)`); `None` means the C++ default, `int`."""
 
     name: str
     values: tuple[EnumValue, ...]
