@@ -94,6 +94,7 @@ class ServerEditorConnectionPolicy(IntEnum, int):
 
 
 class SpawnSettings:
+    # int16 underlying would derive varint32; the wire is the fixed width.
     type: SpawnBiomeType = field(type=int16)
     user_defined_biome_name: str
     dimension: DimensionType
@@ -129,16 +130,17 @@ class BlockEntry:
 class LevelSettings:
     seed: int64
     spawn_settings: SpawnSettings
-    generator: GeneratorType = field(type=varint32)
-    game_type: GameType = field(type=varint32)
+    generator: GeneratorType
+    game_type: GameType
     is_hardcore: bool
-    game_difficulty: Difficulty = field(type=varint32)
+    game_difficulty: Difficulty
     default_spawn: BlockPos
     achievements_disabled: bool
-    editor_world_type: EditorWorldType = field(type=varint32)
+    editor_world_type: EditorWorldType
     is_created_in_editor: bool
     is_exported_from_editor: bool
     time: varint32
+    # uint32 underlying would derive uvarint32; this packet writes it signed.
     education_edition_offer: EducationEditionOffer = field(type=varint32)
     education_features_enabled: bool
     education_product_id: str
@@ -147,8 +149,8 @@ class LevelSettings:
     confirmed_platform_locked_content: bool
     multiplayer_game_intent: bool
     lan_broadcast_intent: bool
-    xbl_broadcast_intent: GamePublishSetting = field(type=varint32)
-    platform_broadcast_intent: GamePublishSetting = field(type=varint32)
+    xbl_broadcast_intent: GamePublishSetting
+    platform_broadcast_intent: GamePublishSetting
     commands_enabled: bool
     texture_packs_required: bool
     game_rules: list[GameRule]
@@ -156,6 +158,7 @@ class LevelSettings:
     experiments_previously_toggled: bool
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
+    # int8 underlying would derive int8; the hand-written wire compresses it.
     default_permissions: PlayerPermissionLevel = field(type=varint32)
     server_chunk_tick_range: int32
     has_locked_behavior_pack: bool
@@ -171,14 +174,14 @@ class LevelSettings:
     base_game_version: str
     limited_world_width: int32
     limited_world_depth: int32
-    nether_type: NetherWorldType = field(type=bool)
+    nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
     override_force_experimental_gameplay: bool | None
-    chat_restriction_level: ChatRestrictionLevel = field(type=uint8)
+    chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     # 997 aligned the read/write order and added the anonymous-drops flag; both are
     # absent from the 975 wire in gophertunnel and CloudburstMC alike.
-    server_editor_connection_policy: ServerEditorConnectionPolicy = field(type=varint32, since=1001)
+    server_editor_connection_policy: ServerEditorConnectionPolicy = field(since=1001)
     allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
 
 
@@ -186,7 +189,7 @@ class LevelSettings:
 class StartGamePacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
-    entity_game_type: GameType = field(type=varint32)
+    entity_game_type: GameType
     pos: Vec3
     rot: Vec2
     settings: LevelSettings
