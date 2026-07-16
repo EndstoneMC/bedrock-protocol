@@ -134,6 +134,22 @@ guess — the compiler never invents a width. Beware that a wrong choice here is
 easily byte-aliased: `uint8` and `uvarint32` agree for 0..127, so a golden will not
 catch it. Take the encoding from protocol-docs, which records it per field.
 
+**Known wrong for cerealised enums; deferred.** The default derives its signedness
+and its one-byte case from the underlying type, and cereal does neither:
+
+- cereal writes an enum **unsigned** whatever the underlying is — `GameType : int`
+  dumps `uvarint32`, and not one enum field in the corpus is a signed varint. The
+  default derives `varint32` for it.
+- compression is **per field, not per width** — `PlayerPermissionLevel : int8_t`
+  dumps `uvarint32` while `ChatRestrictionLevel : uint8_t` dumps `uint8`. The
+  default derives as-is for both.
+
+Nothing models a cerealised enum through the default today, so nothing is wrong on
+the wire; every enum on StartGamePacket is hand-written or explicit. But a
+cerealised packet that leans on the default will emit the wrong byte, silently:
+both errors are byte-aliased below 128. Until it is fixed, spell `field(type=)` on
+any enum in a cerealised packet rather than trusting the default.
+
 ## A reshaped type is redeclared, not patched
 
 When a type's wire shape changes, declare it twice over adjacent ranges — the same

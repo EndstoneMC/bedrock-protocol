@@ -140,7 +140,6 @@ class LevelSettings:
     is_created_in_editor: bool
     is_exported_from_editor: bool
     time: varint32
-    # uint32 underlying would derive uvarint32; this packet writes it signed.
     education_edition_offer: EducationEditionOffer = field(type=varint32)
     education_features_enabled: bool
     education_product_id: str
@@ -158,7 +157,6 @@ class LevelSettings:
     experiments_previously_toggled: bool
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
-    # int8 underlying would derive int8; the hand-written wire compresses it.
     default_permissions: PlayerPermissionLevel = field(type=varint32)
     server_chunk_tick_range: int32
     has_locked_behavior_pack: bool
@@ -179,8 +177,6 @@ class LevelSettings:
     override_force_experimental_gameplay: bool | None
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
-    # 997 aligned the read/write order and added the anonymous-drops flag; both are
-    # absent from the 975 wire in gophertunnel and CloudburstMC alike.
     server_editor_connection_policy: ServerEditorConnectionPolicy = field(since=1001)
     allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
 
