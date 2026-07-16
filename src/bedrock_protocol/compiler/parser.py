@@ -500,9 +500,11 @@ def _is_int_enum(cls: griffe.Class) -> bool:
     return any(_base_name(b) in ("IntEnum", "IntFlag") for b in cls.bases)
 
 
-#: DSL fixed-width integer primitive -> (size in bytes, signed). The set an enum
-#: may declare as its C++ underlying type; a varint is an encoding, not a type.
+#: DSL primitive an enum may declare as its C++ underlying type -> (size in bytes,
+#: signed). A varint is an encoding, not a type, so it is not among them. `bool` is:
+#: BDS really does declare `enum class NetherWorldType : bool`.
 _INT_WIDTHS: dict[str, tuple[int, bool]] = {
+    "bool": (1, False),
     "int8": (1, True),
     "uint8": (1, False),
     "int16": (2, True),
@@ -535,7 +537,7 @@ def _enum_underlying(cls: griffe.Class) -> PrimitiveType | None:
             continue
         if name not in _INT_WIDTHS:
             raise CompilerError(
-                f"{cls.name}: enum underlying type must be a fixed-width integer primitive, got {name!r}; "
+                f"{cls.name}: enum underlying type must be a fixed-width primitive, got {name!r}; "
                 f"valid: {sorted(_INT_WIDTHS)}"
             )
         return PrimitiveType(name=name)
