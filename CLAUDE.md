@@ -2,293 +2,187 @@
 
 ## Sources of truth
 
-Each aspect of a type has exactly one authority. Walk them per aspect, not as a
-general ranking, and confirm a change against a second source before acting:
+Each aspect of a type has one authority. Walk them per aspect, not as a ranking,
+and confirm against a second source before acting:
 
-- **Field name, field type** — bedrock-headers (`~/bedrock-headers`), the
-  BDS-extracted C++ headers. Authoritative: a name taken from here needs no
-  TODO. Carry it into the project's conventions (`PascalCase` types,
-  `snake_case` fields) without paraphrasing or shortening — `mTotalHighCostNS`
-  becomes `total_high_cost_ns`.
-- **Wire type, wire shape** — [EndstoneMC/protocol-docs](https://github.com/EndstoneMC/protocol-docs),
-  the dumped schema, on the branch for the release (`r26_u3`). It records each
-  field's encoding, prefix and order.
-- **Golden bytes** — [gophertunnel](https://github.com/sandertv/gophertunnel)
-  (see Tests below).
-- **Cross validation** — [CloudburstMC/Nukkit](https://github.com/CloudburstMC/Nukkit).
-- **Second validation only** — [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol).
+| aspect | source |
+| --- | --- |
+| field/class name, C++ type | **bedrock-headers** (`~/bedrock-headers`) — authoritative, no TODO needed |
+| wire type, order, prefix | **EndstoneMC/protocol-docs**, on the release branch (`r26_u3`) |
+| golden bytes | **gophertunnel** (see Tests) |
+| dating, cross-validation | **Nukkit-MOT**, **CloudburstMC/Protocol** |
 
-Never take a name from gophertunnel or CloudburstMC. Those references date and
-shape symbols, they do not name them. Mojang/bedrock-protocol-docs is a last
-resort for a symbol none of the above carries, and always earns a
-`# TODO: confirm against BDS`.
+Never take a *name* from gophertunnel or CloudburstMC — they date and shape
+symbols, they do not name them. Mojang/bedrock-protocol-docs is a last resort and
+always earns a `# TODO: confirm against BDS`. **Do not trust `main`**: it has real
+bugs (its StartGame `game_type` is `uvarint32` where the wire is `varint32`).
 
-## A community ref is only as good as its consumer's coverage
+**A ref is only as good as its consumer's coverage.** CloudburstMC/Protocol is
+exercised by Geyser, gophertunnel by Dragonfly — a packet neither runs has an
+effectively untested codec. Agreement is evidence only where the consumer actually
+exercises the packet; silence is never evidence. Check whether a codec and a test
+exist before leaning on a ref. gophertunnel's `MemoryCategory` list is the standing
+proof: it carries a `VR` entry BDS does not, so every constant after `Textures` is
+off by one and nothing caught it.
 
-The ordering above is about testing depth, not taste. Each community reference is
-only exercised as far as its downstream consumer goes, so a codec nobody runs can
-be wrong indefinitely with nothing to surface it.
+**Dating shortcuts:** Nukkit-MOT annotates members `@since vNNN`. A CloudburstMC
+`Serializer_v1001` that extends `Serializer_v975` and appends a field dates that
+field to 1001.
 
-- **CloudburstMC/Protocol** is only trivially tested: Nukkit does not use it, and
-  its real exercise is Geyser, which touches a subset of packets. A codec error in
-  a packet Geyser never sends or receives simply never appears. Second validation
-  only, never a tiebreaker.
-- **gophertunnel** is slightly better — Dragonfly runs it in production — but has
-  the same shape of problem: a packet Dragonfly does not exercise carries an
-  effectively untested codec.
-
-So agreement from a ref is strong evidence only for packets its consumer actually
-exercises, and silence is never evidence. Rate a packet's coverage before leaning
-on a ref for it, rather than assuming either way — check whether a codec and a test
-actually exist. For `ServerboundDiagnosticsPacket`, CloudburstMC/Nukkit carries only
-the id constant (silence, no codec), while Nukkit-MOT both models the packet and
-covers it in its regression tests, which made it the strongest cross-check here
-despite ranking below gophertunnel in general.
-
-gophertunnel's `MemoryCategory` list is the standing proof that coverage gaps bite:
-it carries a `VR` entry BDS 1001 does not, so every constant after `Textures` is off
-by one and nothing caught it. When a ref is uncorroborated, take only the generic
-encoding conventions from it (`Float32` = fixed LE, `Slice` = varuint32 count,
-`String` = varuint32 + bytes), which every packet shares, and confirm field order,
-presence and type against protocol-docs.
-
-Nukkit-MOT is also the cheapest dating source when it covers a packet: it annotates
-members with `@since vNNN` directly (`whiskerScopes @since v1001`). CloudburstMC's
-per-version serializers date the same way structurally — a `Serializer_v1001`
-extending `Serializer_v975` and appending one field dates that field to 1001.
+**A protocol-docs branch is a network version**, not a release ordering — check its
+README (`r26_u3` = 1001, `r26_u4` = **2168**). A packet missing from the dump is not
+cerealised at that version, so the dump cannot describe it at all.
 
 ## Names mirror BDS
 
-Class names and nesting match BDS exactly, so the generated C++ reads like the
-BDS headers. Never fold an enclosing namespace into the class name:
-`Bedrock::Profile::Whisker::Diagnostics::ScopeDataSummary` is `ScopeDataSummary`,
-not `WhiskerScopeDataSummary`. A BDS `Outer::Inner` stays a nested `class Inner`
-inside `class Outer`, never a flattened `OuterInner`. A `FooPacketPayload` maps
-onto the `@packet FooPacket` itself, dropping the `Payload` suffix.
+Class names and nesting match BDS exactly, so the generated C++ reads like the BDS
+headers. Never fold an enclosing namespace into a class name:
+`Bedrock::Profile::Whisker::Diagnostics::ScopeDataSummary` is `ScopeDataSummary`.
+A BDS `Outer::Inner` stays nested, never flattened to `OuterInner`. A
+`FooPacketPayload` maps onto `@packet FooPacket`, dropping the `Payload` suffix.
 
-Search bedrock-headers case-insensitively. BDS spells these `Serverbound` /
-`Clientbound` with a lowercase `b`, so a `ServerBound` grep misses the header
-outright and wrongly concludes BDS does not carry the type.
+Grep bedrock-headers **case-insensitively**: BDS spells these `Serverbound` /
+`Clientbound` with a lowercase `b`, so a `ServerBound` search wrongly concludes the
+type is absent.
 
-## Enum members are PEP 8, and emitted verbatim
+## Headers name, they don't shape
 
-Enum members follow PEP 8 in the DSL — `UPPER_CASE` — and the compiler applies no
-transform, so the generated C++ inherits that one consistent style rather than
-BDS's per-enum mix (`BoolAttributeOperation` is screaming snake, `SoundDataEvent`
-CamelCase, `MemoryCategory` mixed case and underscores). Convert a BDS name into
-PEP 8 when adding it: `Invalid_SizeUnknown` becomes `INVALID_SIZE_UNKNOWN`,
-`JsonUI_ControlTree_PopulateTTS` becomes `JSON_UI_CONTROL_TREE_POPULATE_TTS`. This
-is the enum member exception to Names mirror BDS above — class names still match
-BDS exactly; only members are restyled.
+A header lists every member, but only a subset is serialized, and it shows no
+order, prefix, or gating. `ProfilerLiteTelemetry` declares twelve floats of which
+nine reach the wire. cereal also writes a nested payload struct **inline**, so a
+composed BDS type lands on the wire flat and the DSL models it flat. Never infer
+wire shape from a header, and never "complete" a type by copying members out of one.
 
-**Name-coded enums are PEP 8 too.** When a field is `field(type=str)` the member
-name is also the string on the wire, but BDS lowercases that string before the enum
-lookup, so the casing is not load-bearing — `STOP` and `Stop` both resolve. Spell
-the member PEP 8 and let the wire carry it. The generated reader lowercases both its
-keys and the incoming string, so a peer's own spelling still reads back; `test_348`
-pins that with a case-insensitive read of gophertunnel's `"Stop"` bytes.
+## Reference widths are byte-aliased
 
-Where this makes our bytes differ from a reference, patch the golden and say so in
-its comment — `test_348` writes `"STOP"` where gophertunnel spells the constant
-`"Stop"`, and `test_345` writes BDS-verbatim `"OVERRIDE"` where CloudburstMC has an
-unvalidated lowercase. Casing is the one name-code aspect a reference cannot settle;
-the member's identity still has to be the BDS one.
+cereal writes variant discriminators and most small enums as `uvarint32`;
+gophertunnel and CloudburstMC model the same field as `uint8`. For 0..127 both
+encode to the identical byte, so a community lib showing a byte carries **no width
+information** and no golden will catch a wrong choice. Only BDS and protocol-docs
+answer width. Field order, presence, and wide fixed-width prefixes remain
+trustworthy in those refs.
 
-`ProtocolVersion` (`protocol/version.py`) is compiler-owned rather than BDS and
-spells its members `V975` / `V1001`.
+## Enums
 
-## An enum's underlying type is a second base
+**Members are PEP 8 (`UPPER_CASE`) and emitted verbatim** — the compiler applies no
+transform, so the DSL spelling *is* the C++ spelling. BDS has no single convention
+(screaming snake, CamelCase, mixed), so convert when adding:
+`JsonUI_ControlTree_PopulateTTS` → `JSON_UI_CONTROL_TREE_POPULATE_TTS`. This is the
+one exception to *Names mirror BDS*; class names still match exactly.
 
-Spell an enum's C++ underlying type as a second base, taken from bedrock-headers:
-BDS `enum class MemoryCategory : uint8_t` becomes
-`class MemoryCategory(IntEnum, uint8)` and generates
-`enum class MemoryCategory : std::uint8_t`. Both `IntEnum` and the dotted
-`enum.IntEnum` spelling are accepted. Omitting the base generates `: int`, which
-is the C++ default and what a BDS enum declaring no underlying type resolves to —
-so omit it only after confirming BDS declares none, never by default.
+Name-coded enums (`field(type=str)`) are PEP 8 too: BDS lowercases before lookup, so
+casing is not load-bearing. Patch the golden and say so in its comment.
 
-The underlying type also gives an enum-typed field its **default wire encoding**, so
-`category: MemoryCategory` needs no `field(type=...)`. That default is ours, not
-cereal's. cereal defaults a scoped enum to a name-coded **string**, writing a value
-only when `EnumAsValue` is set — protocol-dumper's `serialization_type`
-(`src/visitor.cpp`) takes the `string` branch whenever the trait is absent. The DSL
-inverts that and defaults to underlying type + `EnumAsValue` + `Compression`, purely
-because that is the commoner shape: the frequent case costs nothing to write, and
-cereal's real default becomes the explicit `field(type=str)`. The derivation:
+**Values are int literals or `auto()`** (previous + 1) — use `auto()` where the
+number is derived, typically a trailing count sentinel (`COUNT = auto()` for BDS's
+`MemoryCategory_count = 92`). Anything else is a compile error.
 
-| underlying | default wire | |
-| --- | --- | --- |
-| `int8` / `uint8` | `int8` / `uint8` | a single byte has nothing to compress, so it goes as-is |
-| `int16` / `int32` / `int` / `uint16` / `uint32` | `varint32` / `uvarint32` | |
-| `int64` / `uint64` | `varint64` / `uvarint64` | |
+**The underlying type is a second base**, taken from bedrock-headers:
+`enum class MemoryCategory : uint8_t` → `class MemoryCategory(IntEnum, uint8)`.
+Omitting it generates `: int` — the C++ default — so omit only after confirming BDS
+declares none. BDS really does have `enum class NetherWorldType : bool`.
 
-Signedness follows the underlying type. Everything else is spelled out:
+That underlying type also gives the field its **default wire encoding**, so
+`category: MemoryCategory` needs no `field(type=)`: one byte goes as-is, wider
+compresses to `[u]varint32` (`[u]varint64` at eight), signedness following the
+underlying. Spell `field(type=)` for everything else — `str` (name-coded),
+a fixed primitive (uncompressed), or `endian="big"`. An enum with neither an
+underlying base nor `field(type=)` is a compile error; the compiler never guesses.
 
-- **Name-coded** — `field(type=str)`. cereal's own default, and the one case no
-  underlying type can reveal, since it turns on the *absence* of `EnumAsValue`.
-- **Uncompressed** — `field(type=int64)`, where BDS writes the fixed width instead.
-- **Big-endian** — `field(type=int64, endian="big")`.
+> **Deferred bug:** this default is wrong for *cerealised* enums. cereal writes
+> enums **unsigned** regardless of underlying (`GameType : int` dumps `uvarint32`),
+> and compression is **per field, not per width** (`PlayerPermissionLevel : int8_t`
+> dumps `uvarint32`, `ChatRestrictionLevel : uint8_t` dumps `uint8`). Nothing routes
+> through it today, but the failure is silent and byte-aliased below 128. Until it is
+> fixed, spell `field(type=)` on any enum in a cerealised packet.
 
-An enum with no underlying base and no `field(type=)` is a compile error, not a
-guess — the compiler never invents a width. Beware that a wrong choice here is
-easily byte-aliased: `uint8` and `uvarint32` agree for 0..127, so a golden will not
-catch it. Take the encoding from protocol-docs, which records it per field.
-
-**Known wrong for cerealised enums; deferred.** The default derives its signedness
-and its one-byte case from the underlying type, and cereal does neither:
-
-- cereal writes an enum **unsigned** whatever the underlying is — `GameType : int`
-  dumps `uvarint32`, and not one enum field in the corpus is a signed varint. The
-  default derives `varint32` for it.
-- compression is **per field, not per width** — `PlayerPermissionLevel : int8_t`
-  dumps `uvarint32` while `ChatRestrictionLevel : uint8_t` dumps `uint8`. The
-  default derives as-is for both.
-
-Nothing models a cerealised enum through the default today, so nothing is wrong on
-the wire; every enum on StartGamePacket is hand-written or explicit. But a
-cerealised packet that leans on the default will emit the wrong byte, silently:
-both errors are byte-aliased below 128. Until it is fixed, spell `field(type=)` on
-any enum in a cerealised packet rather than trusting the default.
-
-## DSL comments record blockers and open questions, nothing else
-
-A `#` in a protocol file is earned only by something unresolved: a `TODO`, a
-`confirm against BDS`, a source disagreement still open, a blocker. Everything
-else is noise and gets deleted — why a modelling decision went the way it did, how
-gophertunnel or CloudburstMC happens to encode a field, which BDS namespace a type
-came from, or version history that `since` / `until` already state. If the decision
-is settled and the code expresses it, the comment is restating the code to a reader
-who can see it.
-
-That reasoning is worth keeping — it just belongs in the commit message, where it
-is attached to the change rather than left behind in the schema.
+**Placeholder with stub enumerators, never with the primitive.** A `category: uint8`
+throws the type away — the field stops saying what it is and every call site loses
+the enum. Declare the enum with its real name and underlying type, name only the
+members you have, and leave a `# TODO: enumerator stub`. Filling it in later is
+additive and touches no call site.
 
 ## A reshaped type is redeclared, not patched
 
-When a type's wire shape changes, declare it twice over adjacent ranges — the same
-name, `until=N` then `since=N`, each body holding the plain field types of its era:
+Declare it twice over adjacent ranges, each body holding its era's plain types:
 
 ```python
 @packet(id=175, until=1001)          @packet(id=175, since=1001)
 class SubChunkRequestPacket:         class SubChunkRequestPacket:
     dimension_type: DimensionType        dimension_type: DimensionType
-    center_pos: SubChunkPos              sub_chunk_pos_offsets: list[SubChunkPosOffset]
+    center_pos: SubChunkPos              sub_chunk_pos_offsets: list[...]
     sub_chunk_pos_offsets: list[...]     center_pos: SubChunkPos
         = field(prefix=uint32)
 ```
 
-Two bodies read as a before / after, and only this form can express a **reorder** —
-each declaration's fields carry its range, so a snapshot narrows to one shape with
-its own field order. Field-level `field(since=)` can add or drop a trailing field
-but cannot move one. Redeclarations must tile one range: same id, each `until`
-meeting the next `since`, only the last left open; anything else is a compile error.
-An enum cannot be redeclared — version-gate its members instead.
+Only this form can express a **reorder** — each declaration's fields carry its
+range. Field-level `field(since=)` adds or drops a trailing field but cannot move
+one. Redeclarations must tile one range: same id, each `until` meeting the next
+`since`, only the last left open. An enum cannot be redeclared — gate its members.
 
 ## A cerealisation is the highest-risk change
 
-protocol-docs only dumps packets that go through cereal, so a packet Mojang migrates
-appears as a **new file** at that version — and the migration frequently rewrites the
-wire. Never read an added file as "the dumper finally noticed it". 979 moved
+protocol-docs only dumps cerealised packets, so a migrated packet appears as a
+**new file** — never read that as "the dumper finally noticed it". 979 moved
 `SubChunkRequestPacket`'s `center_pos` behind the offsets, swapped the offset count
-from a fixed `uint32` to `uvarint32`, and reshaped `SubChunkPos` from `varint32` to
-fixed `int32` — three wire breaks in one line of changelog.
+from fixed `uint32` to `uvarint32`, and reshaped `SubChunkPos` from `varint32` to
+fixed `int32`: three wire breaks in one changelog line.
 
-The dump cannot show the pre-cereal shape (it wasn't dumped then), so take it from
-gophertunnel's history (`git log -p` the packet and read the `Marshal` diff) or
-CloudburstMC's older per-version serializer, and gate the delta at the snapshot.
+The dump cannot show the pre-cereal shape. Take it from gophertunnel's history
+(`git log -p` the packet, read the `Marshal` diff) or CloudburstMC's older
+per-version serializer, and gate the delta at the snapshot.
 
-## A union spells its discriminator, it does not tag
+## A union spells its discriminator
 
-A `A | B | C` field is prefixed by a `uvarint32` index over the cases in
-declaration order, so line the cases up with the wire's own numbering rather than
-reaching for `field(tag=)`. Where BDS numbers a union from one, lead with `None`:
-`std::monostate` takes index 0 and carries no payload.
+A `A | B | C` field is prefixed by a `uvarint32` index over the cases in declaration
+order. Line the cases up with the wire's numbering rather than reaching for
+`field(tag=)`; where BDS numbers from one, lead with `None` so `std::monostate`
+takes index 0:
 
 ```python
 # BDS GameRule::Type: INVALID=0, BOOL=1, INT=2, FLOAT=3.
 value: None | bool | uvarint32 | float
 ```
 
-That writes the discriminator and lands bool / int / float on 1 / 2 / 3, matching
-gophertunnel's GameRuleLegacy. Being explicit keeps the index visible next to the
-cases instead of hiding it behind an enum the reader has to go and count.
-
-## Enum members are int literals or `auto()`
-
-Spell a member's wire number as a plain int literal, or `auto()` (previous + 1) where
-the number is derived rather than chosen — a trailing count sentinel is the usual
-case: BDS's `MemoryCategory_count = 92` is `COUNT = auto()`, which stays correct as
-members are added. Anything else is a compile error; the compiler never skips a
-member it cannot read.
-
-## Placeholder an enum with stub enumerators, never with its primitive
-
-When BDS gives a field an enum you are not ready to transcribe in full, never fall
-back to the raw primitive (`category: uint8`). That throws away the type: the field
-stops saying what it is, every call site loses the enum, and nothing marks the gap.
-
-Declare the enum with its real name and real underlying type, name only the members
-you have, and type the field as the enum with its own wire primitive:
-
-```python
-# TODO: enumerator stub -- BDS declares 92 members (Unknown=0 .. MemoryCategory_count=92).
-class MemoryCategory(IntEnum, uint8):
-    UNKNOWN = 0
-
-
-class MemoryCategoryCounter:
-    category: MemoryCategory = field(type=uint8)
-```
-
-The generated C++ then carries `enum class MemoryCategory : std::uint8_t` and a
-`MemoryCategory category` field from the start, so filling the members in later is
-additive and no call site changes. A `# TODO: enumerator stub` records what is
-missing. The enum's underlying type and the field's `field(type=)` stay independent
-— fill the stub in without touching the wire.
-
-## Headers name, they don't shape
-
-A BDS header lists every member of a class, but only a subset is serialized, and
-a header shows no order, prefix or gating. `ProfilerLiteTelemetry` declares
-twelve floats of which nine reach the wire. cereal also writes a nested payload
-struct inline, so a composed BDS type — `ServerboundDiagnosticsPacketPayload`
-holding `ProfilerLiteTelemetry` + `EntitySystemDiagnosticSummary` + the whisker
-vector — lands on the wire flat, and the DSL models it flat. Take the wire shape
-from protocol-docs and gophertunnel; never infer it from a header, and never
-"complete" a type by copying members out of one.
-
-## Reference width is byte-aliased
-
-cereal writes a variant discriminator and most small scoped enums as
-`uvarint32`; gophertunnel and CloudburstMC routinely model the same field as
-`uint8`. For 0..127 the two encode to the identical byte, so a community lib
-showing a byte carries no width information and is never the justification for a
-width. Only BDS answers width. Field order, presence and wide fixed-width
-prefixes are still trustworthy in those refs.
-
-An enum that cannot be pinned down — `Memory::MemoryCategory`, 90+ entries that
-shift across versions — is modelled as its underlying primitive with a
-`# TODO: confirm against BDS`, not silently retyped.
-
 ## Version gating
 
-`since=` / `until=` must align to a declared `ProtocolVersion` snapshot
-(`protocol/version.py`), never a raw changelog number. Gate a change at the
-next snapshot at or after it: a packet or field the changelog dates to 977
-gates `since=1001`, not `since=977`. Only 975 and 1001 are materialized, so an
-off-snapshot boundary buys nothing — keep every `requires (V >= N)` on a real
-snapshot.
+`since=` / `until=` must land on a declared `ProtocolVersion` snapshot
+(`protocol/version.py`), never a raw changelog number. Gate a change at the next
+snapshot at or after it: a field the changelog dates to 977 gates `since=1001`. Only
+975 and 1001 are materialized, so an off-snapshot boundary buys nothing.
+
+## DSL comments record blockers only
+
+A `#` in a protocol file is earned by something unresolved: a `TODO`, a
+`confirm against BDS`, an open disagreement. Delete everything else — why a
+modelling decision went the way it did, how gophertunnel encodes a field, which BDS
+namespace a type came from, version history that `since` already states. That
+reasoning belongs in the commit message, attached to the change.
 
 ## Tests
 
-Name per-packet test files `test_{packet_id:03}_{name}.cpp` — the packet's
-wire id zero-padded to three digits, then a descriptive name (e.g.
-`test_348_update_sound_data.cpp`).
+Name per-packet files `test_{packet_id:03}_{name}.cpp`.
 
-Golden bytes come from [gophertunnel](https://github.com/sandertv/gophertunnel)
-(`minecraft/protocol/packet`), not hand-derivation: read the packet's `Marshal`
-and encode each field as its `protocol.IO` call dictates (`Uint64` = fixed LE,
-`String` = varuint32 length + bytes, etc.). Cite the source packet/method in a
-comment above the golden. Where gophertunnel and BDS disagree, verify against
-the BDS binary and note the deviation (as the attribute-layer name-code casing
-does).
+**Generate goldens by running gophertunnel; never derive them by hand.** Write a
+small Go program that marshals the packet through `protocol.NewWriter`, and paste
+the bytes under a `// generated by gophertunnel:` comment carrying the packet
+literal that produced them. Hand-derivation silently invents bytes — an empty
+`CompoundTag` is three bytes (named root, empty name), not four, and only an
+executed golden catches that.
+
+gophertunnel marshals its *current* shape only, so an older version's golden cannot
+be generated the same way. Either check gophertunnel out at the matching commit and
+re-run, or assert the old form structurally (size delta plus round-trip). Never fake
+one by deleting bytes from the newer literal.
+
+## The compiler mirrors protoc
+
+`src/bedrock_protocol/` follows protoc's architecture, names, and call shapes —
+`Importer` / `SourceTree` / `Parser`, `DescriptorPool.build_file`, `FileGenerator` /
+`MessageGenerator` / `EnumGenerator` / `FieldGeneratorMap`, `CodeGenerator` +
+`GeneratorContext`. When adding to it, find protoc's equivalent first and follow it;
+when diverging, say so where it bites (the parser resolves type references eagerly
+where protoc defers them to `DescriptorBuilder`, which is why `SymbolTable` exists).
+
+Refactors must be **output-identical**: regenerate the whole schema before and after
+and diff. Behaviour changes ride in their own commit.
