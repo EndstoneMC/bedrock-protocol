@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import field, packet, uint32, uint64, value
 
@@ -578,9 +578,7 @@ class LevelSoundEvent(IntEnum, uint32):
     BUCKET_EMPTY_LAND_ANIMAL = value(608, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_START = value(609, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_ACTIVE = value(610, since=1001)
-    # TODO: UNDEFINED is a count sentinel and was 601 before the 983..1000
-    # additions; a member cannot be redeclared, so only the 1001 value is here.
-    UNDEFINED = 611
+    UNDEFINED = auto()
 
 
 class SoundDataEvent(IntEnum):

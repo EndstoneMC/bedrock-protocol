@@ -26,6 +26,7 @@ from typing import Any, Iterable
 
 from bedrock_protocol.descriptor import (
     Enum,
+    EnumValue,
     Field,
     File,
     FileSet,
@@ -235,11 +236,24 @@ def _plan_snapshots(
     return result
 
 
+def _renumber(values: tuple[EnumValue, ...]) -> tuple[EnumValue, ...]:
+    """Re-resolve `auto()` members against the members actually present. A count
+    sentinel written `COUNT = auto()` therefore counts its own snapshot's members
+    rather than the whole declaration's."""
+    out: list[EnumValue] = []
+    previous: int | None = None
+    for v in values:
+        number = (0 if previous is None else previous + 1) if v.is_auto else v.number
+        out.append(replace(v, number=number))
+        previous = number
+    return tuple(out)
+
+
 def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
     """A narrowed-to-snapshot view of `t`, plus an identity key that determines
     whether two snapshots share one definition."""
     if isinstance(t, Enum):
-        values = tuple(v for v in t.values if v.present_at(snapshot))
+        values = _renumber(tuple(v for v in t.values if v.present_at(snapshot)))
         key = tuple((v.name, v.number) for v in values)
         return Enum(t.name, values, t.underlying), None, key
     narrowed: list[Field] = []

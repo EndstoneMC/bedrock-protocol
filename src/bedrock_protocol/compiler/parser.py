@@ -140,6 +140,7 @@ class Parser:
                 EnumValue(
                     name,
                     number,
+                    is_auto=_is_auto(attr.value),
                     since=_int_kwarg(attr.value, "value", "since"),
                     until=_int_kwarg(attr.value, "value", "until"),
                 )
@@ -401,6 +402,16 @@ def _check_redeclaration(decls: list[griffe.Class]) -> None:
             raise CompilerError(
                 f"{name}: redeclarations must be adjacent -- until={until} is followed by since={since}"
             )
+
+
+def _is_auto(value: griffe.Expr | str) -> bool:
+    """`auto()`, or `value()` with no positional number — both mean previous + 1."""
+    if not isinstance(value, griffe.ExprCall):
+        return False
+    name = _base_name(value.function)
+    if name == "auto":
+        return True
+    return name == "value" and not any(not isinstance(a, griffe.ExprKeyword) for a in value.arguments)
 
 
 def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: int | None) -> int:

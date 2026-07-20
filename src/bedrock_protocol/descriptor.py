@@ -187,6 +187,9 @@ class EnumValue:
     number: int
     since: int | None = None
     until: int | None = None
+    #: Spelled `auto()`: the number is `previous + 1` within whichever snapshot the
+    #: member appears in, so a trailing sentinel tracks the members present there.
+    is_auto: bool = False
 
     def present_at(self, snapshot: int) -> bool:
         return (self.since is None or snapshot >= self.since) and (self.until is None or snapshot < self.until)
