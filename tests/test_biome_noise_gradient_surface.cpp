@@ -27,8 +27,8 @@ std::string bytes(std::initializer_list<int> raw)
 }
 
 // BiomeNoiseGradientSurfaceData sits four optionals deep inside
-// BiomeDefinitionListPacket (122), which is not modelled, so the goldens exercise the
-// type's own serializer rather than a packet body.
+// BiomeDefinitionListPacket (122), so the goldens exercise the type's own serializer
+// rather than reaching it through a packet body.
 
 // Golden derived from gophertunnel's BiomeNoiseGradientSurface.Marshal as it stood
 // before the 1.26.30 bump: FuncSlice(NonReplaceableBlocks, Uint32) and

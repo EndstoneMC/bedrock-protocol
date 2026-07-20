@@ -45,6 +45,11 @@ Grep bedrock-headers **case-insensitively**: BDS spells these `Serverbound` /
 `Clientbound` with a lowercase `b`, so a `ServerBound` search wrongly concludes the
 type is absent.
 
+A field name colliding with a Python keyword takes a single trailing underscore
+(`pass_`), which the compiler strips — BDS's `mPass` keeps its name on the wire and
+in C++. The escape fires only on keywords; any other trailing underscore is part of
+the name.
+
 ## Headers name, they don't shape
 
 A header lists every member, but only a subset is serialized, and it shows no
@@ -52,6 +57,10 @@ order, prefix, or gating. `ProfilerLiteTelemetry` declares twelve floats of whic
 nine reach the wire. cereal also writes a nested payload struct **inline**, so a
 composed BDS type lands on the wire flat and the DSL models it flat. Never infer
 wire shape from a header, and never "complete" a type by copying members out of one.
+
+bedrock-headers' `.cpp` files are **declaration-only** — `BiomeDefinitionData.cpp`
+holds the signatures of `write` / `read` and no bodies. A serializer sitting next to
+its header is not a wire source; protocol-docs still is.
 
 ## Reference widths are byte-aliased
 
@@ -151,6 +160,12 @@ value: None | bool | uvarint32 | float
 snapshot at or after it: a field the changelog dates to 977 gates `since=1001`. Only
 975 and 1001 are materialized, so an off-snapshot boundary buys nothing.
 
+**Diff the type closure across protocol-docs branches before modelling a packet.**
+Walk the packet's transitive types on the old and new branch and diff the two dumps:
+that settles in one step whether an update touched this packet at all. `r26_u4` is
+network version 2168, but packet 122's whole closure is byte-identical to `r26_u3`,
+so it needed no gating and no new snapshot. A new branch is not evidence of change.
+
 ## DSL comments record blockers only
 
 A `#` in a protocol file is earned by something unresolved: a `TODO`, a
@@ -186,3 +201,16 @@ where protoc defers them to `DescriptorBuilder`, which is why `SymbolTable` exis
 
 Refactors must be **output-identical**: regenerate the whole schema before and after
 and diff. Behaviour changes ride in their own commit.
+
+**`main` is an unrelated history — a reference, never a base.** It has its own root
+commit, so nothing merges or rebases between the two. It carries a much fuller
+compiler (`MappingType`, `TupleType`, `CondType`, `BitsetType`) and a wider schema,
+which makes it the first place to read when adding a feature — but port the *idea*
+protoc-faithfully into this architecture rather than lifting the code, and re-verify
+any wire detail against the sources of truth above.
+
+The rewrite **deliberately dropped** every path the MVP did not use — `dict`,
+`bitset`, `when=`, `count=`, `tuple`, `endian`, nested types, `tag=IntEnum`,
+deprecation. A missing feature is therefore a deferral, not an oversight: when a
+packet first needs one, re-add it as its own reviewable change (as `@builtin` and
+`dict[K, V]` were), with a test that exercises it.
