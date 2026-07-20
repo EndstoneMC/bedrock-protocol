@@ -7,7 +7,7 @@ and confirm against a second source before acting:
 
 | aspect | source |
 | --- | --- |
-| field/class name, C++ type | **bedrock-headers** (`~/bedrock-headers`) — authoritative, no TODO needed |
+| field/class name, C++ type | **bedrock-headers** (`~/bedrock-headers`) — authoritative, no TODO needed. Branched per release (`android/rNN_uN`); a type's shape can differ from head, so read the era's branch. BossEvent's enums were `: int` through r26_u2, `: uint8_t` at r26_u3 |
 | wire type, order, prefix | **EndstoneMC/protocol-docs**, on the release branch (`r26_u3`) |
 | golden bytes | **gophertunnel** (see Tests) |
 | dating, cross-validation | **Nukkit-MOT**, **CloudburstMC/Protocol** |
@@ -101,9 +101,11 @@ underlying base nor `field(type=)` is a compile error; the compiler never guesse
 > **Deferred bug:** this default is wrong for *cerealised* enums. cereal writes
 > enums **unsigned** regardless of underlying (`GameType : int` dumps `uvarint32`),
 > and compression is **per field, not per width** (`PlayerPermissionLevel : int8_t`
-> dumps `uvarint32`, `ChatRestrictionLevel : uint8_t` dumps `uint8`). Nothing routes
-> through it today, but the failure is silent and byte-aliased below 128. Until it is
-> fixed, spell `field(type=)` on any enum in a cerealised packet.
+> dumps `uvarint32`, `ChatRestrictionLevel : uint8_t` dumps `uint8`); a narrowed
+> underlying need not move the wire (BossEvent stayed `uvarint32` after `: int` →
+> `: uint8_t`). Until it is fixed, spell `field(type=)` only where the true wire and
+> the derived default **diverge on a real value** — drop it where the enum's range
+> keeps them byte-equal, since the annotation then only adds noise.
 
 **Placeholder with stub enumerators, never with the primitive.** A `category: uint8`
 throws the type away — the field stops saying what it is and every call site loses
@@ -140,6 +142,22 @@ fixed `int32`: three wire breaks in one changelog line.
 The dump cannot show the pre-cereal shape. Take it from gophertunnel's history
 (`git log -p` the packet, read the `Marshal` diff) or CloudburstMC's older
 per-version serializer, and gate the delta at the snapshot.
+
+**A pre-cereal switch becomes `when=`.** Where the old `Marshal` branched on a type
+field (`switch pk.EventType`), gate each arm on it: `field(when=lambda p: p.x ==
+E.A)` for a lone field, `with field(when=...):` for a run. The predicate reads
+earlier fields only, carries no presence byte, and leaves an excluded field
+default-constructed. cereal typically flattens the switch away, so the new snapshot
+is a flat redeclaration with every field unconditional — model both, gated at the
+boundary (984's BossEvent: eight switch arms at 975, flat at 1001, `darken_screen`
+dropped).
+
+**The cerealised form reads clean.** cereal writes every field flat and
+unconditional, so the post-migration declaration is bare `name: Type` lines — no
+`when=`, no union, no `field(type=)` beyond a genuine wire divergence (an enum
+carrying its bedrock-headers underlying needs none; a small enum's byte falls out
+either way). Annotation clutter on a cerealised form is a smell that you are
+modelling the pre-cereal shape.
 
 ## A union spells its discriminator
 
