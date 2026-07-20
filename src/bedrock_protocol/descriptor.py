@@ -68,6 +68,28 @@ class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
 
 
+# --- predicate tree ----------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Predicate:
+    """A `when=` predicate as a small expression tree. `kind` is either a leaf
+    (`field`, `enum`, `int`) or an operator (`==`, `!=`, `<`, `>`, `<=`, `>=`,
+    `and`, `or`, `not`)."""
+
+    kind: str
+    text: str = ""
+    operands: tuple["Predicate", ...] = ()
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        """Enums the predicate names, so a struct gating on one orders after it
+        and inherits its versioning."""
+        if self.kind == "enum":
+            return frozenset({self.text.rsplit(".", 1)[0]})
+        return frozenset().union(*(o.referenced for o in self.operands))
+
+
 # --- field type tree ---------------------------------------------------------
 
 
@@ -172,7 +194,27 @@ class VariantType:
         return frozenset().union(*(a.referenced for a in self.cases if a is not None))
 
 
-FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | MappingType | VariantType
+@dataclass(frozen=True)
+class CondType:
+    """Present only when `predicate` holds against earlier fields of the same
+    struct. Nothing marks presence on the wire -- both sides recompute it, so
+    the field is spelled as its bare payload rather than an optional.
+
+    `group` is the index of the `with field(when=...)` block the field came
+    from; fields sharing it emit under one `if`. `None` is a lone
+    `field(when=)`."""
+
+    inner: "FieldType"
+    predicate: Predicate
+    group: int | None = None
+    kind: Literal["cond"] = "cond"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced | self.predicate.referenced
+
+
+FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | MappingType | VariantType | CondType
 
 
 # --- declarations ------------------------------------------------------------

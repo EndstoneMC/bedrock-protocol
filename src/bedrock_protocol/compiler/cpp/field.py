@@ -20,11 +20,13 @@ from dataclasses import dataclass
 from bedrock_protocol.descriptor import (
     VARINT_PRIMITIVES,
     CompilerError,
+    CondType,
     EnumType,
     Field,
     FieldType,
     MappingType,
     OptionalType,
+    Predicate,
     PrimitiveType,
     RepeatedType,
     ResolvedFile,
@@ -87,7 +89,31 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
                 return None
             parts.append(spelled)
         return f"std::variant<{', '.join(parts)}>"
+    if isinstance(t, CondType):
+        # A gated field carries no presence marker: it is spelled as its bare
+        # payload and left default-constructed when the predicate is false.
+        return cpp_type(t.inner, ctx, snapshot)
     return None
+
+
+def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int | None) -> str:
+    """A `when=` predicate as a C++ boolean expression. `base` is the struct
+    variable its field references hang off — `value` writing, `out` reading."""
+
+    def go(node: Predicate) -> str:
+        if node.kind == "field":
+            return f"{base}.{node.text}"
+        if node.kind == "int":
+            return node.text
+        if node.kind == "enum":
+            enum, member = node.text.rsplit(".", 1)
+            return f"{qualified_at(enum, ctx, snapshot)}::{member}"
+        if node.kind == "not":
+            return f"!({go(node.operands[0])})"
+        op = {"and": "&&", "or": "||"}.get(node.kind, node.kind)
+        return f" {op} ".join(f"({go(o)})" for o in node.operands)
+
+    return go(pred)
 
 
 def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
@@ -149,6 +175,8 @@ def type_includes(t: FieldType | None) -> set[str]:
             if c is not None:
                 out |= type_includes(c)
         return out
+    if isinstance(t, CondType):
+        return type_includes(t.inner)
     return set()
 
 
@@ -409,4 +437,8 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         variant_type = cpp_type(t, gc.ctx, gc.snapshot)
         assert variant_type is not None
         return VariantFieldGenerator(cases, t.discriminator, variant_type, gc)
+    if isinstance(t, CondType):
+        # The `if` belongs to the struct, not the field: `MessageGenerator` emits
+        # it around the whole guarded group, so the codec here is the payload's.
+        return make_field_generator(t.inner, gc)
     raise CompilerError(f"no field generator for {t!r}")

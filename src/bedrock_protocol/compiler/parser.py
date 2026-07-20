@@ -19,6 +19,7 @@ from bedrock_protocol.descriptor import (
     BUILTIN_ANNOTATIONS,
     PRIMITIVES,
     CompilerError,
+    CondType,
     Enum,
     EnumType,
     EnumValue,
@@ -28,6 +29,7 @@ from bedrock_protocol.descriptor import (
     File,
     MappingType,
     OptionalType,
+    Predicate,
     PrimitiveAlias,
     PrimitiveType,
     RepeatedType,
@@ -157,8 +159,10 @@ class Parser:
         fields: list[Field] = []
         for decl in decls:
             lo, hi = _decl_since(decl), _decl_until(decl)
+            earlier: set[str] = set()
             for attr in decl.attributes.values():
-                (version,) = self.field(attr).versions
+                (version,) = self.field(attr, frozenset(earlier)).versions
+                earlier.add(_field_name(attr.name))
                 narrowed = FieldVersion(
                     type=version.type,
                     since=_tighten(version.since, lo, max),
@@ -174,15 +178,129 @@ class Parser:
             builtin=any(_has_decorator(d, "builtin") for d in decls),
         )
 
-    def field(self, attr: griffe.Attribute) -> Field:
+    def field(self, attr: griffe.Attribute, earlier: frozenset[str] = frozenset()) -> Field:
         call = attr.value
         t = self.type(attr.name, attr.annotation, call)
+        guard = self._guard(attr.name, call)
+        if guard is not None and t is not None:
+            if _call_arg(call, "field", "when") is not None and isinstance(t, (OptionalType, VariantType)):
+                raise CompilerError(
+                    f"{attr.name}: field(when=...) gates a bare payload -- it cannot also be optional or a union; "
+                    "wrap it in a with field(when=...) block instead"
+                )
+            t = CondType(t, self._predicate(guard, attr.name, earlier), _int_kwarg(call, "field", "_group_id"))
         version = FieldVersion(
             type=t,
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
         )
         return Field(_field_name(attr.name), (version,))
+
+    # ---- when= predicates --------------------------------------------------
+
+    def _guard(self, field_name: str, call: _Ann) -> _Ann:
+        """The field's gating lambda: its own `when=`, or the one a
+        `with field(when=...)` block merged in as `_group_when=`."""
+        own = _call_arg(call, "field", "when")
+        group = _call_arg(call, "field", "_group_when")
+        if own is not None and group is not None:
+            raise CompilerError(
+                f"{field_name}: a field inside a with field(when=...) block cannot carry its own field(when=...)"
+            )
+        return own if own is not None else group
+
+    def _predicate(self, lam: _Ann, field_name: str, earlier: frozenset[str]) -> Predicate:
+        if not isinstance(lam, griffe.ExprLambda):
+            raise CompilerError(f"{field_name}: field(when=...) must be a lambda predicate")
+        if len(lam.parameters) != 1:
+            raise CompilerError(f"{field_name}: field(when=...) lambda takes exactly one parameter")
+        return self._pred_node(lam.body, lam.parameters[0].name, field_name, earlier)
+
+    def _pred_node(
+        self,
+        node: griffe.Expr | str,
+        param: str,
+        field_name: str,
+        earlier: frozenset[str],
+    ) -> Predicate:
+        def child(n: griffe.Expr | str) -> Predicate:
+            return self._pred_node(n, param, field_name, earlier)
+
+        if isinstance(node, griffe.ExprBoolOp):
+            return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
+        if isinstance(node, griffe.ExprUnaryOp) and node.operator == "not":
+            return Predicate("not", operands=(child(node.value),))
+        if isinstance(node, griffe.ExprCompare):
+            if len(node.operators) != 1 or len(node.comparators) != 1:
+                raise CompilerError(
+                    f"{field_name}: field(when=...) takes one comparison per clause -- "
+                    "split a chained comparison with `and`"
+                )
+            op = str(node.operators[0])
+            if op in ("in", "not in"):
+                return self._pred_membership(node, op, param, field_name, earlier)
+            if op not in ("==", "!=", "<", ">", "<=", ">="):
+                raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
+            return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
+        if isinstance(node, griffe.ExprAttribute):
+            return self._pred_attr(node, param, field_name, earlier)
+        literal = _as_int(node)
+        if literal is not None:
+            return Predicate("int", text=str(literal))
+        raise CompilerError(f"{field_name}: field(when=...) contains an unsupported expression: {node}")
+
+    def _pred_membership(
+        self,
+        node: griffe.ExprCompare,
+        op: str,
+        param: str,
+        field_name: str,
+        earlier: frozenset[str],
+    ) -> Predicate:
+        """Desugar set membership into a chain of equalities: `x in {a, b, c}`
+        to `x == a or x == b or x == c`, `x not in {a, b}` to `x != a and
+        x != b`. The right operand must be a set / list / tuple literal."""
+        container = node.comparators[0]
+        if not isinstance(container, (griffe.ExprSet, griffe.ExprList, griffe.ExprTuple)):
+            raise CompilerError(
+                f"{field_name}: field(when=...) `{op}` needs a set/list/tuple literal on the right, got {container}"
+            )
+        elements = list(container.elements)
+        if not elements:
+            raise CompilerError(f"{field_name}: field(when=...) `{op}` needs a non-empty set literal")
+        left = self._pred_node(node.left, param, field_name, earlier)
+        compare, join = ("==", "or") if op == "in" else ("!=", "and")
+        clauses = tuple(
+            Predicate(compare, operands=(left, self._pred_node(e, param, field_name, earlier))) for e in elements
+        )
+        return clauses[0] if len(clauses) == 1 else Predicate(join, operands=clauses)
+
+    def _pred_attr(
+        self,
+        node: griffe.ExprAttribute,
+        param: str,
+        field_name: str,
+        earlier: frozenset[str],
+    ) -> Predicate:
+        parts = [str(v) for v in node.values]
+        spelled = ".".join(parts)
+        if len(parts) != 2:
+            raise CompilerError(
+                f"{field_name}: field(when=...) reference {spelled!r} must be `{param}.field` or `Enum.MEMBER`"
+            )
+        head, tail = parts
+        if head == param:
+            name = _field_name(tail)
+            if name not in earlier:
+                raise CompilerError(
+                    f"{field_name}: field(when=...) references {tail!r}, which is not a field declared before it"
+                )
+            return Predicate("field", text=name)
+        if head in self.enum_names:
+            return Predicate("enum", text=spelled)
+        raise CompilerError(
+            f"{field_name}: field(when=...) reference {spelled!r} is neither `{param}.field` nor `Enum.MEMBER`"
+        )
 
     # ---- enum wire type ----------------------------------------------------
 

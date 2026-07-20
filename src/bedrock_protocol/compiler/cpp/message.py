@@ -9,9 +9,9 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import Struct
+from bedrock_protocol.descriptor import CondType, Field, Predicate, Struct
 
-from .field import FieldGeneratorMap, FileContext, cpp_type, type_includes
+from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
 from .printer import Printer
 
 
@@ -78,14 +78,50 @@ class MessageGenerator:
 
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, const {q} &value)\n")
         with p.block():
-            for f in self._struct.fields:
-                self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
+            for guard, group in self._groups():
+                if guard is None:
+                    (f,) = group
+                    self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
+                    continue
+                with p.block(f"if ({self._condition(guard, 'value')})"):
+                    for f in group:
+                        self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
             p.print(f"{q} out;\n")
-            for f in self._struct.fields:
-                gen = self._field_generators.get(f)
-                with p.block():  # scope each field's read locals (v, present, len, tag, ...)
-                    gen.generate_deserialize(p, f"out.{f.name}")
+            for guard, group in self._groups():
+                if guard is None:
+                    (f,) = group
+                    with p.block():  # scope each field's read locals (v, present, len, tag, ...)
+                        self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
+                    continue
+                with p.block(f"if ({self._condition(guard, 'out')})"):
+                    for f in group:
+                        with p.block():
+                            self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
             p.print("return out;\n")
+
+    # --- gated fields -------------------------------------------------------
+
+    def _condition(self, guard: Predicate, base: str) -> str:
+        return render_predicate(guard, base, self._ctx, self._snapshot)
+
+    def _groups(self) -> list[tuple[Predicate | None, list[Field]]]:
+        """The fields partitioned into emission groups. Fields hoisted out of one
+        `with field(when=...)` block share a `CondType.group` and emit under a
+        single `if`; every other field stands alone."""
+        groups: list[tuple[Predicate | None, list[Field]]] = []
+        open_group: int | None = None
+        for f in self._struct.fields:
+            (version,) = f.versions
+            t = version.type
+            if not isinstance(t, CondType):
+                groups.append((None, [f]))
+                open_group = None
+            elif t.group is not None and t.group == open_group:
+                groups[-1][1].append(f)
+            else:
+                groups.append((t.predicate, [f]))
+                open_group = t.group
+        return groups

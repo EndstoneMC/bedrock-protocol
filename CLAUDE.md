@@ -209,8 +209,8 @@ which makes it the first place to read when adding a feature — but port the *i
 protoc-faithfully into this architecture rather than lifting the code, and re-verify
 any wire detail against the sources of truth above.
 
-The rewrite **deliberately dropped** every path the MVP did not use — `dict`,
-`bitset`, `when=`, `count=`, `tuple`, `endian`, nested types, `tag=IntEnum`,
-deprecation. A missing feature is therefore a deferral, not an oversight: when a
-packet first needs one, re-add it as its own reviewable change (as `@builtin` and
-`dict[K, V]` were), with a test that exercises it.
+The rewrite **deliberately dropped** every path the MVP did not use — `bitset`,
+`count=`, `tuple`, `endian`, nested types, `tag=IntEnum`, deprecation. A missing
+feature is therefore a deferral, not an oversight: when a packet first needs one,
+re-add it as its own reviewable change (as `@builtin`, `dict[K, V]` and `when=`
+were), with a test that exercises it.

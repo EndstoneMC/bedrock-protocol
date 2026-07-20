@@ -13,6 +13,8 @@ file necessarily names.
 
 from __future__ import annotations
 
+import ast
+import copy
 from pathlib import Path
 from typing import cast
 
@@ -30,20 +32,76 @@ from .parser import Parser, SymbolTable, enum_underlying_of, is_int_enum
 
 
 class _DeclarationCollector(griffe.Extension):
-    """Every `class` statement, in source order, grouped by module.
+    """Every `class` statement, in source order, grouped by module, plus the
+    `with field(when=...)` blocks griffe cannot model.
 
     griffe keeps members in a dict, so a type declared twice to model a wire
-    reshape survives only as its last declaration -- silently. This hook fires per
-    `ClassDef` once its body is attached, before that overwrite, so both shapes
-    reach the parser."""
+    reshape survives only as its last declaration -- silently. `on_class_members`
+    fires per `ClassDef` once its body is attached, before that overwrite, so both
+    shapes reach the parser."""
 
     def __init__(self) -> None:
         self.by_module: dict[str, list[griffe.Class]] = {}
+
+    def on_class_node(self, *, node: object, agent: object, **kwargs: object) -> None:
+        """Hoist each `with field(when=...)` block's fields into the class body,
+        merging the block's predicate into every field as `_group_when=` and the
+        block's index as `_group_id=`. griffe has no `with` in its object model,
+        so the block has to be flattened before the body is visited; the index is
+        what keeps the hoisted fields identifiable as one block afterwards."""
+        if not isinstance(node, ast.ClassDef):
+            return
+        body: list[ast.stmt] = []
+        group = 0
+        for stmt in node.body:
+            guard = _with_guard(stmt)
+            if guard is None:
+                body.append(stmt)
+                continue
+            block, predicate = guard
+            for inner in block.body:
+                _merge_guard(inner, predicate, group)
+                body.append(inner)
+            group += 1
+        node.body = body
 
     def on_class_members(self, *, node: object, cls: griffe.Class, agent: object, **kwargs: object) -> None:
         parent = cls.parent
         if isinstance(parent, griffe.Module):
             self.by_module.setdefault(parent.path, []).append(cls)
+
+
+def _with_guard(stmt: ast.stmt) -> tuple[ast.With, ast.expr] | None:
+    """A `with field(when=...):` block paired with its predicate, or None."""
+    if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
+        return None
+    ctx = stmt.items[0].context_expr
+    if not (isinstance(ctx, ast.Call) and isinstance(ctx.func, ast.Name) and ctx.func.id == "field"):
+        return None
+    for kw in ctx.keywords:
+        if kw.arg == "when":
+            return stmt, kw.value
+    return None
+
+
+def _merge_guard(stmt: ast.stmt, predicate: ast.expr, group: int) -> None:
+    """Merge a block's guard into one hoisted field as `field(_group_when=,
+    _group_id=)`. A field with no `field(...)` call gains one; anything that is
+    not an annotated assignment is left alone."""
+    if not isinstance(stmt, ast.AnnAssign):
+        return
+    keywords = [
+        ast.keyword(arg="_group_when", value=copy.deepcopy(predicate)),
+        ast.keyword(arg="_group_id", value=ast.Constant(value=group)),
+    ]
+    if stmt.value is None:
+        stmt.value = ast.Call(func=ast.Name(id="field", ctx=ast.Load()), args=[], keywords=keywords)
+    elif isinstance(stmt.value, ast.Call):
+        stmt.value.keywords.extend(keywords)
+    else:
+        return
+    ast.copy_location(stmt.value, stmt)
+    ast.fix_missing_locations(stmt)
 
 
 class SourceTree:
