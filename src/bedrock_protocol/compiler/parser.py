@@ -362,6 +362,10 @@ class Parser:
         field_name: str,
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
+            opt = _optional_element(ann)
+            if opt is not None:
+                inner = self._base_type(opt, type_kw, prefix, field_name)
+                return None if inner is None else OptionalType(inner)
             elem = _list_element(ann, field_name)
             if elem is not None:
                 inner = self._base_type(elem, type_kw, prefix, field_name)
@@ -582,6 +586,15 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
 def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | str | None:
     """The element annotation of a `list[T]` subscript, or None for anything else."""
     if isinstance(ann.left, griffe.ExprName) and ann.left.name == "list":
+        return ann.slice
+    return None
+
+
+def _optional_element(ann: griffe.ExprSubscript) -> griffe.Expr | str | None:
+    """The `T` of an `Optional[T]` subscript, or None. An explicit spelling of
+    `T | None` that, unlike the union form, nests: `Optional[Optional[T]]` is a
+    two-level optional, which `| None` cannot express (it flattens)."""
+    if isinstance(ann.left, griffe.ExprName) and ann.left.name == "Optional":
         return ann.slice
     return None
 

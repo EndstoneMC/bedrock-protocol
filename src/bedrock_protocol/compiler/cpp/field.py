@@ -69,6 +69,10 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
                 return f"{snapshot_namespace(view.concrete)}::{t.name}"
         return t.name
     if isinstance(t, OptionalType):
+        # A nested optional is a cereal presence wrapper: the outer marker collapses
+        # away, leaving a single std::optional (the wire still carries both bools).
+        if isinstance(t.inner, OptionalType):
+            return cpp_type(t.inner, ctx, snapshot)
         inner = cpp_type(t.inner, ctx, snapshot)
         return None if inner is None else f"std::optional<{inner}>"
     if isinstance(t, RepeatedType):
@@ -273,21 +277,53 @@ class ClassFieldGenerator(FieldGenerator):
 
 
 class OptionalFieldGenerator(FieldGenerator):
-    def __init__(self, inner: FieldGenerator, gc: GenContext) -> None:
+    """`T | None` — a bool presence flag then the payload. The read stages through
+    a temporary of the payload type: a container payload fills itself via
+    `.clear()` / `.emplace_back()`, which the target `std::optional` has no members
+    for, so it is built first and then moved in. `value_type` is that payload's
+    C++ spelling."""
+
+    def __init__(self, inner: FieldGenerator, value_type: str, gc: GenContext) -> None:
         self._inner = inner
+        self._value_type = value_type
         self._gc = gc
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.print(f"stream.write<bool>({var}.has_value());\n")
         with p.block(f"if ({var}.has_value())"):
-            self._inner.generate_serialize(p, f"*{var}", depth)
+            self._inner.generate_serialize(p, f"(*{var})", depth)
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         p.print("auto present = stream.read<bool>();\n")
         p.print("if (!present) return std::unexpected(present.error());\n")
         with p.block("if (*present)"):
-            self._inner.generate_deserialize(p, target, depth)
+            p.print(f"{self._value_type} staged{{}};\n")
+            self._inner.generate_deserialize(p, "staged", depth)
+            p.print(f"{target} = std::move(staged);\n")
+
+
+class PresenceWrapperGenerator(FieldGenerator):
+    """The outer optional of a nested `Optional[Optional[T]]`. A cereal dynamic
+    member is prefixed by an always-true member-present marker bool (the generic
+    `writeAdditionalData` the composite-member loop emits), ahead of the value's
+    own `std::optional` has-value bool -- two bools on the wire. The marker never
+    varies, so the C++ type collapses to a single `std::optional<T>` (`cpp_type`
+    unwraps one level); this emits the marker and delegates the real optional to
+    `inner`, which owns the C++ value."""
+
+    def __init__(self, inner: FieldGenerator) -> None:
+        self._inner = inner
+
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
+        p.print("stream.write<bool>(true);\n")
+        self._inner.generate_serialize(p, var, depth)
+
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+        p.add_includes("<expected>")
+        p.print("auto marker = stream.read<bool>();\n")
+        p.print("if (!marker) return std::unexpected(marker.error());\n")
+        self._inner.generate_deserialize(p, target, depth)
 
 
 class RepeatedFieldGenerator(FieldGenerator):
@@ -419,7 +455,11 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
     if isinstance(t, StructType):
         return ClassFieldGenerator(t, gc)
     if isinstance(t, OptionalType):
-        return OptionalFieldGenerator(make_field_generator(t.inner, gc), gc)
+        if isinstance(t.inner, OptionalType):
+            return PresenceWrapperGenerator(make_field_generator(t.inner, gc))
+        value_type = cpp_type(t.inner, gc.ctx, gc.snapshot)
+        assert value_type is not None
+        return OptionalFieldGenerator(make_field_generator(t.inner, gc), value_type, gc)
     if isinstance(t, RepeatedType):
         return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc)
     if isinstance(t, MappingType):
