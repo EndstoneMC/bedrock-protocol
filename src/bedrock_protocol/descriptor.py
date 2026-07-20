@@ -180,8 +180,16 @@ FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType 
 
 @dataclass(frozen=True)
 class EnumValue:
+    """`since` / `until` bound the member to `[since, until)`, for a value BDS
+    added or removed at a known protocol version."""
+
     name: str
     number: int
+    since: int | None = None
+    until: int | None = None
+
+    def present_at(self, snapshot: int) -> bool:
+        return (self.since is None or snapshot >= self.since) and (self.until is None or snapshot < self.until)
 
     @property
     def wire_name(self) -> str:
@@ -206,7 +214,15 @@ class Enum:
 
     @property
     def change_points(self) -> frozenset[int]:
-        return frozenset()
+        """Versions where a member appears or disappears, so an enum whose members
+        are gated is versioned like a struct whose fields are."""
+        points: set[int] = set()
+        for v in self.values:
+            if v.since is not None:
+                points.add(v.since)
+            if v.until is not None:
+                points.add(v.until)
+        return frozenset(points)
 
     #: Change points affecting the on-wire shape (same as change_points here).
     shape_change_points = change_points

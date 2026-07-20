@@ -239,8 +239,9 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
     """A narrowed-to-snapshot view of `t`, plus an identity key that determines
     whether two snapshots share one definition."""
     if isinstance(t, Enum):
-        key = tuple((v.name, v.number) for v in t.values)
-        return Enum(t.name, t.values, t.underlying), None, key
+        values = tuple(v for v in t.values if v.present_at(snapshot))
+        key = tuple((v.name, v.number) for v in values)
+        return Enum(t.name, values, t.underlying), None, key
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:

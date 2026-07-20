@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, packet, uint32, uint64
+from protocol import field, packet, uint32, uint64, value
 
 package = "bedrock.protocol"
 
@@ -568,16 +568,18 @@ class LevelSoundEvent(IntEnum, uint32):
     RESET_GROWTH = 598
     PUSHED_BY_PLAYER = 599
     BOUNCE = 600
-    SLIME_LANDING = 601
-    ABSORB_BLOCK = 602
-    EJECT_BLOCK = 603
-    GEYSER_ERUPTION_START = 604
-    GEYSER_ERUPTION_ACTIVE = 605
-    RECORD_BOUNCE = 606
-    BUCKET_FILL_LAND_ANIMAL = 607
-    BUCKET_EMPTY_LAND_ANIMAL = 608
-    GEYSER_CONTINUOUS_ERUPTION_START = 609
-    GEYSER_CONTINUOUS_ERUPTION_ACTIVE = 610
+    SLIME_LANDING = value(601, since=1001)
+    ABSORB_BLOCK = value(602, since=1001)
+    EJECT_BLOCK = value(603, since=1001)
+    GEYSER_ERUPTION_START = value(604, since=1001)
+    GEYSER_ERUPTION_ACTIVE = value(605, since=1001)
+    RECORD_BOUNCE = value(606, since=1001)
+    BUCKET_FILL_LAND_ANIMAL = value(607, since=1001)
+    BUCKET_EMPTY_LAND_ANIMAL = value(608, since=1001)
+    GEYSER_CONTINUOUS_ERUPTION_START = value(609, since=1001)
+    GEYSER_CONTINUOUS_ERUPTION_ACTIVE = value(610, since=1001)
+    # TODO: UNDEFINED is a count sentinel and was 601 before the 983..1000
+    # additions; a member cannot be redeclared, so only the 1001 value is here.
     UNDEFINED = 611
 
 

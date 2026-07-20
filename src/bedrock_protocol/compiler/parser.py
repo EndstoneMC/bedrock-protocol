@@ -136,7 +136,14 @@ class Parser:
             if attr.value is None:
                 continue
             number = _enum_number(cls.name, name, attr.value, previous)
-            values.append(EnumValue(name, number))
+            values.append(
+                EnumValue(
+                    name,
+                    number,
+                    since=_int_kwarg(attr.value, "value", "since"),
+                    until=_int_kwarg(attr.value, "value", "until"),
+                )
+            )
             previous = number
         return Enum(cls.name, tuple(values), enum_underlying_of(cls))
 
@@ -400,6 +407,16 @@ def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: 
     """A member's wire number: an int literal, or `auto()` for previous + 1."""
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "auto":
         return 0 if previous is None else previous + 1
+    if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "value":
+        # value(N, since=, until=): N is positional, and mandatory when gated --
+        # auto-numbering a member that is absent at some snapshot would shift its
+        # siblings' wire numbers.
+        for arg in value.arguments:
+            if not isinstance(arg, griffe.ExprKeyword):
+                explicit = _as_int(arg)
+                if explicit is not None:
+                    return explicit
+        raise CompilerError(f"{enum_name}.{name}: value() needs an explicit wire number, e.g. value(601, since=1001)")
     number = _as_int(value)
     if number is None:
         raise CompilerError(f"{enum_name}.{name}: enum member must be an int literal or auto(), got {value!r}")
