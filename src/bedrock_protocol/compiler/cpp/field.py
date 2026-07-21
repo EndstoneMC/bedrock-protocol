@@ -135,26 +135,26 @@ def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
 
 
 def _primitive_write(prim: PrimitiveType, expr: str) -> str:
-    if prim.name in ("str", "bytes"):
+    if prim.encoding in ("str", "bytes"):
         return f"stream.write({expr});"
-    u = PRIMITIVE_TYPES[prim.name]
-    if prim.name in VARINT_PRIMITIVES:
+    u = PRIMITIVE_TYPES[prim.encoding]
+    if prim.encoding in VARINT_PRIMITIVES:
         return f"stream.writeVarInt<{u}>({expr});"
     return f"stream.write<{u}>({expr});"
 
 
 def _primitive_read(prim: PrimitiveType) -> str:
-    if prim.name in ("str", "bytes"):
+    if prim.encoding in ("str", "bytes"):
         return "auto v = stream.read<std::string>();"
-    u = PRIMITIVE_TYPES[prim.name]
-    if prim.name in VARINT_PRIMITIVES:
+    u = PRIMITIVE_TYPES[prim.encoding]
+    if prim.encoding in VARINT_PRIMITIVES:
         return f"auto v = stream.readVarInt<{u}>();"
     return f"auto v = stream.read<{u}>();"
 
 
 def _read_verb(prim: PrimitiveType) -> str:
-    u = PRIMITIVE_TYPES[prim.name]
-    return f"readVarInt<{u}>" if prim.name in VARINT_PRIMITIVES else f"read<{u}>"
+    u = PRIMITIVE_TYPES[prim.encoding]
+    return f"readVarInt<{u}>" if prim.encoding in VARINT_PRIMITIVES else f"read<{u}>"
 
 
 def type_includes(t: FieldType | None) -> set[str]:
@@ -164,7 +164,8 @@ def type_includes(t: FieldType | None) -> set[str]:
     if isinstance(t, PrimitiveType):
         if t.name in ("str", "bytes"):
             return {"<string>"}
-        if PRIMITIVE_TYPES[t.name].startswith("std::"):
+        # the codec names the encoding's C++ type too, which may be the wider one
+        if any(PRIMITIVE_TYPES[n].startswith("std::") for n in (t.name, t.encoding)):
             return {"<cstdint>"}
         return set()
     if isinstance(t, OptionalType):

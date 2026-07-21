@@ -101,11 +101,22 @@ class PrimitiveType:
     `alias` is set when the field references a `type Name = <primitive>`
     declaration: `name` drives the wire encoding, but a backend spells the
     field with the alias name (so `Color = int32` serializes as `int32` yet the
-    C++ field type reads `Color`)."""
+    C++ field type reads `Color`).
+
+    `wire` is set by `field(type=<integer primitive>)`: `name` keeps owning the
+    in-memory type and `wire` takes over the encoding, so a BDS member declared
+    narrow but written as a varint keeps both halves."""
 
     name: str
     alias: str | None = None
+    wire: str | None = None
     kind: Literal["primitive"] = "primitive"
+
+    @property
+    def encoding(self) -> str:
+        """The primitive the value takes on the wire — its own, unless
+        `field(type=)` overrode it."""
+        return self.wire if self.wire is not None else self.name
 
     @property
     def referenced(self) -> frozenset[str]:

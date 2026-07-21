@@ -17,6 +17,7 @@ import griffe
 
 from bedrock_protocol.descriptor import (
     BUILTIN_ANNOTATIONS,
+    INTEGER_PRIMITIVES,
     PRIMITIVES,
     CompilerError,
     CondType,
@@ -392,10 +393,14 @@ class Parser:
         if name in self.struct_names:
             return StructType(name)
         if name in PRIMITIVES:
-            return PrimitiveType(name=name)
+            return PrimitiveType(name=name, wire=_wire_override(type_kw, name, field_name))
         alias = self.aliases.get(name)
         if isinstance(alias, PrimitiveAlias):
-            return PrimitiveType(name=alias.primitive, alias=alias.name)
+            return PrimitiveType(
+                name=alias.primitive,
+                alias=alias.name,
+                wire=_wire_override(type_kw, alias.primitive, field_name),
+            )
         if isinstance(alias, TypeAlias):
             return alias.target
         return None
@@ -465,6 +470,20 @@ def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
             )
         return PrimitiveType(name=name)
     return None
+
+
+def _wire_override(type_kw: str | None, own: str, field_name: str) -> str | None:
+    """`field(type=)` on a primitive-typed field: the annotation keeps owning the
+    in-memory type and the override takes the wire, for a BDS member declared
+    narrow but written as a varint. Both halves must be integers."""
+    if type_kw is None or type_kw == own:
+        return None
+    if own not in INTEGER_PRIMITIVES or type_kw not in INTEGER_PRIMITIVES:
+        raise CompilerError(
+            f"{field_name}: field(type={type_kw}) overrides the wire encoding of an integer primitive; "
+            f"{own!r} -> {type_kw!r} is not one"
+        )
+    return type_kw
 
 
 def _is_none(case: object) -> bool:
