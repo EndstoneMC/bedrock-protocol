@@ -1,6 +1,10 @@
-from protocol import varint32
+from protocol import int32, varint32
 
 package = "bedrock.protocol"
+
+
+# BDS mce::Color holds four floats; cereal binds it as one packed ARGB int32.
+type Color = int32
 
 
 class Vec2:
