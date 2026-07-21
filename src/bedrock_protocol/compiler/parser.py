@@ -10,7 +10,7 @@ Which modules get parsed, and where they come from, is `importer.py`'s business.
 from __future__ import annotations
 
 import keyword
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable
 
 import griffe
@@ -181,7 +181,7 @@ class Parser:
 
     def field(self, attr: griffe.Attribute, earlier: frozenset[str] = frozenset()) -> Field:
         call = attr.value
-        t = self.type(attr.name, attr.annotation, call)
+        t = self._counted(self.type(attr.name, attr.annotation, call), call, attr.name, earlier)
         guard = self._guard(attr.name, call)
         if guard is not None and t is not None:
             if _call_arg(call, "field", "when") is not None and isinstance(t, (OptionalType, VariantType)):
@@ -196,6 +196,29 @@ class Parser:
             until=_int_kwarg(call, "field", "until"),
         )
         return Field(_field_name(attr.name), (version,))
+
+    # ---- count= expressions ------------------------------------------------
+
+    def _counted(
+        self,
+        t: FieldType | None,
+        call: _Ann,
+        field_name: str,
+        earlier: frozenset[str],
+    ) -> FieldType | None:
+        """`field(count=...)`: the element count is an expression over earlier
+        fields rather than a wire prefix."""
+        lam = _call_arg(call, "field", "count")
+        if lam is None or t is None:
+            return t
+        if not isinstance(t, RepeatedType):
+            raise CompilerError(f"{field_name}: field(count=...) applies to a list[T] field, got {t.kind}")
+        if _call_arg(call, "field", "prefix") is not None:
+            raise CompilerError(
+                f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- "
+                "a counted list carries no length prefix on the wire"
+            )
+        return replace(t, count=self._predicate(lam, field_name, earlier))
 
     # ---- when= predicates --------------------------------------------------
 
@@ -243,6 +266,8 @@ class Parser:
             if op not in ("==", "!=", "<", ">", "<=", ">="):
                 raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
             return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
+        if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
+            return Predicate(node.operator, operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, earlier)
         literal = _as_int(node)

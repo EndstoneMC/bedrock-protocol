@@ -328,19 +328,39 @@ class PresenceWrapperGenerator(FieldGenerator):
 
 
 class RepeatedFieldGenerator(FieldGenerator):
-    def __init__(self, inner: FieldGenerator, prefix: PrimitiveType, gc: GenContext) -> None:
+    """`list[T]`: a length prefix then the elements. A `count=` list carries no
+    prefix -- the length is an expression over earlier fields of the surrounding
+    struct, which the read recomputes from what it has already filled in."""
+
+    def __init__(
+        self,
+        inner: FieldGenerator,
+        prefix: PrimitiveType,
+        gc: GenContext,
+        count: Predicate | None = None,
+    ) -> None:
         self._inner = inner
         self._prefix = prefix
         self._gc = gc
+        self._count = count
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
-        p.add_includes(*type_includes(self._prefix))
-        p.print(_primitive_write(self._prefix, f"{var}.size()") + "\n")
+        if self._count is None:
+            p.add_includes(*type_includes(self._prefix))
+            p.print(_primitive_write(self._prefix, f"{var}.size()") + "\n")
         with p.block(f"for (const auto &e{depth} : {var})"):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<expected>", *type_includes(self._prefix))
+        p.add_includes("<expected>")
+        if self._count is not None:
+            count = render_predicate(self._count, target.rsplit(".", 1)[0], self._gc.ctx, self._gc.snapshot)
+            p.print(f"{target}.clear();\n")
+            with p.block(f"for (auto rep{depth} = {count}; rep{depth} > 0; --rep{depth})"):
+                p.print(f"{target}.emplace_back();\n")
+                self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
+            return
+        p.add_includes(*type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
         p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
         p.print(f"{target}.clear();\n")
@@ -462,7 +482,7 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         assert value_type is not None
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), value_type, gc)
     if isinstance(t, RepeatedType):
-        return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc)
+        return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc, t.count)
     if isinstance(t, MappingType):
         key_type = cpp_type(t.key, gc.ctx, gc.snapshot)
         assert key_type is not None

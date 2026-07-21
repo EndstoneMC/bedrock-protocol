@@ -164,15 +164,21 @@ class OptionalType:
 @dataclass(frozen=True)
 class RepeatedType:
     """`list[T]` — a length prefix (`prefix`, default `uvarint32`) followed by
-    that many elements."""
+    that many elements.
+
+    `count` replaces the prefix with an expression over earlier fields: nothing
+    on the wire marks the length, and both sides recompute it -- for a list whose
+    count BDS wrote somewhere else."""
 
     inner: "FieldType"
     prefix: PrimitiveType = field(default_factory=lambda: PrimitiveType(name="uvarint32"))
+    count: "Predicate | None" = None
     kind: Literal["repeated"] = "repeated"
 
     @property
     def referenced(self) -> frozenset[str]:
-        return self.inner.referenced
+        own = self.count.referenced if self.count is not None else frozenset()
+        return self.inner.referenced | own
 
 
 @dataclass(frozen=True)
