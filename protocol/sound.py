@@ -1,6 +1,8 @@
 from enum import IntEnum, auto
 
-from protocol import field, packet, uint32, uint64, value
+from protocol import field, int64, packet, uint32, uint64, value, varint32
+from protocol.actor import ActorUniqueID
+from protocol.common import Vec3
 
 package = "bedrock.protocol"
 
@@ -593,3 +595,33 @@ class ServerSoundHandle:
 class ClientboundUpdateSoundDataPacket:
     server_sound_handle: ServerSoundHandle
     sound_event: SoundDataEvent = field(type=str)
+
+
+@packet(id=123, until=1001)
+class LevelSoundEventPacket:
+    """Most sounds are launched on the server and replicated to clients; a handful of
+    player-initiated ones are launched on the client and replicated from there."""
+
+    event_id: LevelSoundEvent
+    pos: Vec3
+    data: varint32
+    actor_identifier: str
+    is_baby: bool
+    is_global: bool
+    actor: ActorUniqueID = field(type=int64)
+    fire_at_position: Vec3 | None
+
+
+@packet(id=123, since=1001)
+class LevelSoundEventPacket:
+    """Most sounds are launched on the server and replicated to clients; a handful of
+    player-initiated ones are launched on the client and replicated from there."""
+
+    sound_event: str
+    pos: Vec3
+    data: varint32
+    actor_identifier: str
+    is_baby: bool
+    is_global: bool
+    actor: ActorUniqueID = field(type=int64)
+    fire_at_position: Vec3 | None

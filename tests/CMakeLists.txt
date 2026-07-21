@@ -5,6 +5,7 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_032_mob_armor_equipment.cpp
         test_074_boss_event.cpp
         test_122_biome_definition_list.cpp
+        test_123_level_sound_event.cpp
         test_175_sub_chunk_request.cpp
         test_315_serverbound_diagnostics.cpp
         test_328_primitive_shapes.cpp
