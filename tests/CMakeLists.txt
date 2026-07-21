@@ -8,6 +8,7 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_175_sub_chunk_request.cpp
         test_315_serverbound_diagnostics.cpp
         test_328_primitive_shapes.cpp
+        test_331_graphics_override_parameter.cpp
         test_345_attribute_layer_sync.cpp
         test_347_server_presence_info.cpp
         test_348_update_sound_data.cpp
