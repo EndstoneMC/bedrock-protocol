@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Optional
 
-from protocol import int8, packet, uint8, uint16, uint32, uvarint32, varint32
+from protocol import field, int8, int16, packet, type, uint8, uint16, uint32, uvarint32, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 
@@ -110,6 +110,22 @@ class ItemStackLegacyRequestId:
 type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
 
 
+@type(until=1001)
+class SerializedNetworkItemStackDescriptor:
+    """NetworkItemStackDescriptor::write. An air item (id 0) is a lone zero
+    byte: the write returns early, so nothing else reaches the wire."""
+
+    id: varint32
+
+    with field(when=lambda d: d.id != 0):
+        stack_size: uint16
+        aux_value: uvarint32
+        net_id: ItemStackNetId | None
+        block_runtime_id: varint32
+        user_data_buffer: bytes
+
+
+@type(since=1001)
 class SerializedNetworkItemStackDescriptor:
     """cerealizer<NetworkItemStackDescriptor>::SerializedData. The extra data
     (NBT, can-place-on / can-break, shield blocking tick) rides in a single
@@ -129,10 +145,23 @@ class LegacySetSlot:
     slots: bytes
 
 
+@type(until=1001)
+class InventorySource:
+    source_type: InventorySourceType
+    container_id: ContainerID = field(
+        type=varint32,
+        when=lambda s: (
+            s.source_type in {InventorySourceType.CONTAINER_INVENTORY, InventorySourceType.NON_IMPLEMENTED_FEATURE_TODO}
+        ),
+    )
+    flags: InventorySourceFlags = field(when=lambda s: s.source_type == InventorySourceType.WORLD_INTERACTION)
+
+
 # container_id and flags are cereal dynamic members: the composite-member loop
 # writes an always-true member-present marker bool ahead of the value's own
 # std::optional has-value bool -- two bools, but one std::optional in memory.
 # The outer Optional models the marker; the inner is the real value.
+@type(since=1001)
 class InventorySource:
     source_type: InventorySourceType
     container_id: Optional[Optional[ContainerID]]
@@ -146,6 +175,12 @@ class InventoryAction:
     to_item: SerializedNetworkItemStackDescriptor
 
 
+@type(until=1001)
+class InventoryTransaction:
+    actions: list[InventoryAction]
+
+
+@type(since=1001)
 class InventoryTransaction:
     actions: list[InventoryAction] | None
 
@@ -181,6 +216,23 @@ class ItemUseInventoryTransactionClientCooldownState(IntEnum, uint8):
     ON = 1
 
 
+@type(until=1001)
+class ItemUseInventoryTransaction:
+    actions: InventoryTransaction
+    action_type: ItemUseInventoryTransactionActionType
+    trigger_type: ItemUseInventoryTransactionTriggerType
+    pos: BlockPos
+    face: varint32
+    slot: varint32
+    item: SerializedNetworkItemStackDescriptor
+    from_pos: Vec3
+    click_pos: Vec3
+    target_block_id: uvarint32
+    client_predicted_result: ItemUseInventoryTransactionPredictedResult = field(type=uvarint32)
+    client_cooldown_state: ItemUseInventoryTransactionClientCooldownState
+
+
+@type(since=1001)
 class ItemUseInventoryTransaction:
     actions: InventoryTransaction
     action_type: ItemUseInventoryTransactionActionType
@@ -231,6 +283,13 @@ type TransactionData = (
     | ItemUseOnActorInventoryTransaction
     | ItemReleaseInventoryTransaction
 )
+
+
+@packet(id=30, until=1001)
+class InventoryTransactionPacket:
+    legacy_request_id: varint32
+    legacy_set_item_slots: list[LegacySetSlot] = field(when=lambda p: p.legacy_request_id != 0)
+    transaction: TransactionData
 
 
 @packet(id=30, since=1001)
