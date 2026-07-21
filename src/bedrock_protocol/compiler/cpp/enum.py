@@ -24,7 +24,9 @@ class EnumGenerator:
         p.print(f"enum class {self._enum.name} : {ctype} {{\n")
         p.indent()
         for v in self._enum.values:
-            p.print(f"{v.name} = {v.number},\n")
+            # a negative member of an unsigned enum wraps; C++ needs that spelled out
+            number = f"static_cast<{ctype}>({v.number})" if v.number < 0 and ctype.startswith("std::uint") else v.number
+            p.print(f"{v.name} = {number},\n")
         p.outdent()
         p.print("};\n")
 

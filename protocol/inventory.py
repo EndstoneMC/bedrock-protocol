@@ -12,7 +12,7 @@ type ContainerID = int8
 
 
 class InventorySourceType(IntEnum, uint32):
-    INVALID_INVENTORY = 4294967295
+    INVALID_INVENTORY = -1
     CONTAINER_INVENTORY = 0
     GLOBAL_INVENTORY = 1
     WORLD_INTERACTION = 2
