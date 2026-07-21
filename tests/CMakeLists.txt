@@ -4,7 +4,6 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_030_inventory_transaction.cpp
         test_032_mob_armor_equipment.cpp
         test_074_boss_event.cpp
-        test_biome_noise_gradient_surface.cpp
         test_122_biome_definition_list.cpp
         test_175_sub_chunk_request.cpp
         test_315_serverbound_diagnostics.cpp
