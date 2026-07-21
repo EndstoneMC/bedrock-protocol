@@ -68,9 +68,10 @@ def field(
       absent as 0.
     - `since`: protocol version that introduced the field.
     - `until`: first protocol version where the field is removed (exclusive),
-      so the field is present in `[since, until)`. Redeclaring the same field
-      name with adjacent `since` / `until` ranges and differing annotations
-      models a field whose type or wire shape changed across versions.
+      so the field is present in `[since, until)`. These gate a field that is
+      simply absent over part of the range; a field whose *type* moved is a
+      reshape, and the class is redeclared over adjacent ranges instead (see
+      `type` and `packet`).
     - `when`: a one-argument lambda gating the field on the value of earlier
       fields in the same struct, e.g. `when=lambda p: p.action == Foo.BAR`.
       Unlike `X | None`, nothing marks presence on the wire -- both serialize

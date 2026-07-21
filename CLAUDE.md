@@ -115,6 +115,12 @@ additive and touches no call site.
 
 ## A reshaped type is redeclared, not patched
 
+**A reshape is redeclared; `field()` covers a field coming or going.** A
+cerealisation is a reshape, and so is any change to a field's *type* -- retyping a
+field in place would leave one declaration claiming two shapes. Redeclare the whole
+class at the change point instead, and keep `field(since=)` / `field(until=)` for a
+field that is simply present over part of the range.
+
 Declare it twice over adjacent ranges, each body holding its era's plain types:
 
 ```python
@@ -126,10 +132,12 @@ class SubChunkRequestPacket:         class SubChunkRequestPacket:
         = field(prefix=uint32)
 ```
 
-Only this form can express a **reorder** — each declaration's fields carry its
-range. Field-level `field(since=)` adds or drops a trailing field but cannot move
-one. Redeclarations must tile one range: same id, each `until` meeting the next
-`since`, only the last left open. An enum cannot be redeclared — gate its members.
+Only this form can express a **reorder**, a **rename**, or a field whose type moved
+— each declaration's fields carry its range, so a snapshot narrows to exactly one
+shape. `field(since=)` / `field(until=)` adds or drops a field, wherever it sits in
+the body; it never restates one under a second type. Redeclarations must tile one
+range: same id, each `until` meeting the next `since`, only the last left open. An
+enum cannot be redeclared — gate its members.
 
 ## A cerealisation is the highest-risk change
 
