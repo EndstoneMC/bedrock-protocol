@@ -95,6 +95,11 @@ class ContainerEnumName(IntEnum, uint8):
     RECIPE_FURNACE_ITEMS_CONTAINER = 66
 
 
+class FullContainerName:
+    name: ContainerEnumName
+    dynamic_id: uint32 | None
+
+
 class ItemStackNetId:
     id: varint32
 
@@ -297,3 +302,11 @@ class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
     transaction: TransactionData | None
+
+
+@packet(id=49)
+class InventoryContentPacket:
+    inventory_id: ContainerID = field(type=uvarint32)
+    slots: list[SerializedNetworkItemStackDescriptor]
+    full_container_name: FullContainerName
+    storage_item: SerializedNetworkItemStackDescriptor
