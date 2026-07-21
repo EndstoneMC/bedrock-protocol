@@ -21,6 +21,7 @@ from bedrock_protocol.descriptor import (
     RepeatedType,
     ResolvedFile,
     Struct,
+    TypeAlias,
     VariantType,
 )
 
@@ -52,6 +53,7 @@ class FileGenerator:
             string_coded_enums=_string_coded_enums(resolved),
         )
         self._header_includes: set[str] = set()
+        self._versioned_alias_cache: tuple[TypeAlias, ...] | None = None
 
     # --- public driver ------------------------------------------------------
 
@@ -201,12 +203,13 @@ class FileGenerator:
             p.print("\n")
 
     def _emit_type_aliases(self, p: Printer) -> None:
-        for a in self._file.type_aliases:
+        plain = [a for a in self._file.type_aliases if a not in self._versioned_aliases()]
+        for a in plain:
             ctype = cpp_type(a.target, self._ctx)
             assert ctype is not None
             p.add_includes(*type_includes(a.target))
             p.print(f"using {a.name} = {ctype};\n")
-        if self._file.type_aliases:
+        if plain:
             p.print("\n")
 
     def _emit_versioned_namespaces(self, p: Printer) -> None:
@@ -226,6 +229,16 @@ class FileGenerator:
                 else:
                     p.print(f"using {name} = {snapshot_namespace(view.concrete)}::{name};\n")
                 p.print("\n")
+            # An alias over versioned types lands in the namespace too: its
+            # spelling changes with the snapshot its cases resolve to.
+            for a in self._versioned_aliases():
+                view = self._alias_view(a, snap)
+                if view is None:
+                    continue
+                spelling, concrete = view
+                p.add_includes(*type_includes(a.target))
+                target = spelling if concrete == snap else f"{snapshot_namespace(concrete)}::{a.name}"
+                p.print(f"using {a.name} = {target};\n\n")
             p.print(f"}}  // namespace {ns}\n\n")
 
     def _emit_definition(self, p: Printer, t: Enum | Struct | None) -> None:
@@ -239,39 +252,36 @@ class FileGenerator:
     def _emit_traits(self, p: Printer) -> None:
         if not self._has_namespaces():
             return
+        entries = self._versioned_entries()
         p.print("namespace detail {\n")
-        by_name = self._by_name()
-        for name in self._versioned_names():
-            fresh = self._resolved.fresh_snapshots(name)
+        for name, los, until in entries:
             p.print("\n")
             p.print("template <int V>\n")
             p.print(f"struct {name}_;\n")
-            for j, s in enumerate(fresh):
-                hi = fresh[j + 1].lo if j + 1 < len(fresh) else getattr(by_name.get(name), "until", None)
+            for j, lo in enumerate(los):
+                hi = los[j + 1] if j + 1 < len(los) else until
                 p.print("\n")
-                p.print(f"template <int V> requires ({requires_clause(s.lo, hi)})\n")
-                p.print(f"struct {name}_<V> {{ using type = {snapshot_namespace(s.lo)}::{name}; }};\n")
+                p.print(f"template <int V> requires ({requires_clause(lo, hi)})\n")
+                p.print(f"struct {name}_<V> {{ using type = {snapshot_namespace(lo)}::{name}; }};\n")
         p.print("\n}  // namespace detail\n\n")
         venum = self._version_enum()
         vparam = venum.name if venum is not None else "int"
         varg = "static_cast<int>(V)" if venum is not None else "V"
-        for name in self._versioned_names():
+        for name, _, _ in entries:
             p.print(f"template <{vparam} V> using {name}_ = typename detail::{name}_<{varg}>::type;\n")
         p.print("\n")
 
     def _emit_latest_aliases(self, p: Printer, latest_version: int) -> None:
-        names = self._versioned_names()
-        if not names:
+        entries = self._versioned_entries()
+        if not entries:
             return
-        by_name = self._by_name()
         venum = self._version_enum()
         latest_arg = str(latest_version)
         if venum is not None:
             member = next((v.name for v in venum.values if v.number == latest_version), None)
             if member is not None:
                 latest_arg = f"{venum.name}::{member}"
-        for name in names:
-            until = getattr(by_name.get(name), "until", None)
+        for name, _, until in entries:
             if until is not None and latest_version >= until:
                 continue
             p.print(f"using {name} = {name}_<{latest_arg}>;\n")
@@ -299,9 +309,17 @@ class FileGenerator:
                 p.print("\n")
                 self._emit_struct_serializer(p, t, None, name, mode)
         for a in self._file.type_aliases:
-            if isinstance(a.target, VariantType):
+            if not isinstance(a.target, VariantType):
+                continue
+            if a in self._versioned_aliases():
+                for lo, _, concrete in self._alias_plan(a):
+                    if concrete != lo:
+                        continue
+                    p.print("\n")
+                    self._emit_variant_alias_serializer(p, f"{snapshot_namespace(lo)}::{a.name}", a.target, mode, lo)
+            else:
                 p.print("\n")
-                self._emit_variant_alias_serializer(p, a.name, a.target, mode)
+                self._emit_variant_alias_serializer(p, a.name, a.target, mode, None)
 
     def _emit_enum_serializer(self, p: Printer, enum: Enum, mode: str) -> None:
         gen = EnumGenerator(enum)
@@ -319,7 +337,9 @@ class FileGenerator:
         else:
             gen.generate_serializer_definition(p)
 
-    def _emit_variant_alias_serializer(self, p: Printer, name: str, target: VariantType, mode: str) -> None:
+    def _emit_variant_alias_serializer(
+        self, p: Printer, name: str, target: VariantType, mode: str, snapshot: int | None
+    ) -> None:
         if mode == "decl":
             p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
             p.print("template <>\n")
@@ -331,7 +351,7 @@ class FileGenerator:
             p.print("};\n")
             return
         p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
-        gen = make_field_generator(target, GenContext(self._ctx, None))
+        gen = make_field_generator(target, GenContext(self._ctx, snapshot))
         p.print(f"void Serializer<{name}>::serialize(BinaryWriter &stream, const {name} &value)\n")
         with p.block():
             gen.generate_serialize(p, "value")
@@ -360,6 +380,58 @@ class FileGenerator:
 
     def _versioned_names(self) -> list[str]:
         return [n for n in self._resolved.declaration_order if self._resolved.is_versioned(n)]
+
+    def _versioned_aliases(self) -> tuple[TypeAlias, ...]:
+        """Aliases whose target reaches a versioned type, so the alias is itself
+        one shape per snapshot."""
+        if self._versioned_alias_cache is None:
+            self._versioned_alias_cache = tuple(
+                a
+                for a in self._file.type_aliases
+                if any(self._resolved.is_versioned(r.split(".", 1)[0]) for r in a.target.referenced)
+            )
+        return self._versioned_alias_cache
+
+    def _alias_plan(self, alias: TypeAlias) -> tuple[tuple[int, str, int], ...]:
+        """`(snapshot, spelling, concrete)` per snapshot the alias is spellable
+        at. Two snapshots spelling the same C++ type share one definition -- a
+        `using` names a type rather than making one, so a second definition
+        would redeclare that type's `Serializer`."""
+        plan: list[tuple[int, str, int]] = []
+        first: dict[str, int] = {}
+        roots = {r.split(".", 1)[0] for r in alias.target.referenced}
+        for snap in self._resolved.snapshots:
+            if any(self._resolved.is_versioned(r) and self._resolved.present_at(r, snap) is None for r in roots):
+                continue
+            spelling = cpp_type(alias.target, self._ctx, snap)
+            if spelling is None:
+                continue
+            plan.append((snap, spelling, first.setdefault(spelling, snap)))
+        return tuple(plan)
+
+    def _alias_view(self, alias: TypeAlias, snapshot: int) -> tuple[str, int] | None:
+        for lo, spelling, concrete in self._alias_plan(alias):
+            if lo == snapshot:
+                return spelling, concrete
+        return None
+
+    def _versioned_entries(self) -> list[tuple[str, tuple[int, ...], int | None]]:
+        """Every versioned name with the snapshots holding a fresh definition and
+        the version it disappears at, for the `_<V>` selector."""
+        by_name = self._by_name()
+        entries = [
+            (
+                name,
+                tuple(s.lo for s in self._resolved.fresh_snapshots(name)),
+                getattr(by_name.get(name), "until", None),
+            )
+            for name in self._versioned_names()
+        ]
+        for a in self._versioned_aliases():
+            los = tuple(lo for lo, _, concrete in self._alias_plan(a) if lo == concrete)
+            if los:
+                entries.append((a.name, los, None))
+        return entries
 
     def _has_namespaces(self) -> bool:
         return any(self._snapshot_has_entries(s) for s in self._resolved.snapshots)
