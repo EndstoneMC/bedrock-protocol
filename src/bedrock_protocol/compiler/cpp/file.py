@@ -232,10 +232,10 @@ class FileGenerator:
             # An alias over versioned types lands in the namespace too: its
             # spelling changes with the snapshot its cases resolve to.
             for a in self._versioned_aliases():
-                view = self._alias_view(a, snap)
-                if view is None:
+                alias_view = self._alias_view(a, snap)
+                if alias_view is None:
                     continue
-                spelling, concrete = view
+                spelling, concrete = alias_view
                 p.add_includes(*type_includes(a.target))
                 target = spelling if concrete == snap else f"{snapshot_namespace(concrete)}::{a.name}"
                 p.print(f"using {a.name} = {target};\n\n")
