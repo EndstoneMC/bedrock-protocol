@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import keyword
 from dataclasses import dataclass, field, replace
-from typing import Callable
+from typing import Callable, cast
 
 import griffe
 
@@ -21,6 +21,7 @@ from bedrock_protocol.descriptor import (
     PRIMITIVES,
     CompilerError,
     CondType,
+    Endian,
     Enum,
     EnumType,
     EnumValue,
@@ -372,7 +373,7 @@ class Parser:
     # ---- declared type references ------------------------------------------
 
     def _declared_type(
-        self, qualified: str, type_kw: str | None, field_name: str, endian: str | None
+        self, qualified: str, type_kw: str | None, field_name: str, endian: Endian | None
     ) -> FieldType | None:
         if qualified in self.enum_names:
             return EnumType(qualified, self._enum_scalar(type_kw, field_name, qualified, endian))
@@ -381,7 +382,7 @@ class Parser:
     # ---- enum wire type ----------------------------------------------------
 
     def _enum_scalar(
-        self, type_kw: str | None, field_name: str, enum_name: str, endian: str | None
+        self, type_kw: str | None, field_name: str, enum_name: str, endian: Endian | None
     ) -> PrimitiveType | None:
         """The wire encoding of an enum-typed field: `field(type=)` if given
         (`str` marks it name-coded), else derived from the enum's underlying type."""
@@ -417,7 +418,7 @@ class Parser:
         field_name: str,
         type_kw: str | None,
         prefix: PrimitiveType,
-        endian: str | None,
+        endian: Endian | None,
         scope: str,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
@@ -441,7 +442,7 @@ class Parser:
         type_kw: str | None,
         prefix: PrimitiveType,
         field_name: str,
-        endian: str | None,
+        endian: Endian | None,
         scope: str = "",
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
@@ -754,17 +755,17 @@ def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
     return PrimitiveType(name=name)
 
 
-def _endian_kwarg(call: _Ann, field_name: str) -> str | None:
+def _endian_kwarg(call: _Ann, field_name: str) -> Endian | None:
     value = _call_arg(call, "field", "endian")
     if value is None:
         return None
     order = str(value).strip("'\"")
     if order not in ("big", "little"):
         raise CompilerError(f'{field_name}: field(endian=...) must be "big" or "little", got {order!r}')
-    return order
+    return cast(Endian, order)
 
 
-def _with_endian(prim: PrimitiveType, endian: str | None, field_name: str) -> PrimitiveType:
+def _with_endian(prim: PrimitiveType, endian: Endian | None, field_name: str) -> PrimitiveType:
     """Applies `field(endian=...)` to a primitive, rejecting an encoding whose
     bytes carry no order."""
     if endian is None:

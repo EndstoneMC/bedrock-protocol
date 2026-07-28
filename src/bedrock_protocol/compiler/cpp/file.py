@@ -11,6 +11,8 @@ out-of-line serializer bodies, compiled once into the static lib.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 from bedrock_protocol.descriptor import (
     Enum,
     EnumType,
@@ -538,7 +540,7 @@ def _has_wire_shape(struct: Struct) -> bool:
     return bool(struct.fields) or not struct.nested
 
 
-def _nested_names(struct: Struct, prefix: str):
+def _nested_names(struct: Struct, prefix: str) -> Iterator[str]:
     """Every dotted name declared inside `struct`, at any depth."""
     for inner in struct.nested:
         qualified = f"{prefix}.{inner.name}"
@@ -547,7 +549,7 @@ def _nested_names(struct: Struct, prefix: str):
             yield from _nested_names(inner, qualified)
 
 
-def _collect_nested(struct: Struct, dotted: str, qualified: str, snapshot: int | None, out: list) -> None:
+def _collect_nested(struct: Struct, dotted: str, qualified: str, snapshot: int | None, out: list[NestedView]) -> None:
     """Append `struct`'s nested types innermost-first, so a serializer emitted
     in this order always follows the ones its body calls into."""
     for inner in struct.nested:

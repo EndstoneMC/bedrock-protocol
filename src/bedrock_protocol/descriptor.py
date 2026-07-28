@@ -63,6 +63,9 @@ BUILTIN_ANNOTATIONS: dict[str, str] = {"uuid.UUID": "UUID"}
 #: Primitives that may length-prefix a list or string.
 INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({"str", "bytes", "bool", "float", "double"})
 
+#: Byte order of a fixed-width encoding.
+Endian = Literal["little", "big"]
+
 
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
@@ -113,7 +116,7 @@ class PrimitiveType:
     name: str
     alias: str | None = None
     wire: str | None = None
-    endian: Literal["little", "big"] = "little"
+    endian: Endian = "little"
     kind: Literal["primitive"] = "primitive"
 
     @property
