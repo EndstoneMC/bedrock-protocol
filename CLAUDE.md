@@ -106,19 +106,12 @@ underlying. Spell `field(type=)` for everything else — `str` (name-coded),
 a fixed primitive (uncompressed), or `endian="big"`. An enum with neither an
 underlying base nor `field(type=)` is a compile error; the compiler never guesses.
 
-Width and signedness do follow the underlying, so the derived default matches the
-wire. **Compression does not** — it is a per-field cereal trait, so two one-byte
-enums disagree: `BossEventUpdateType : uint8_t` dumps `uvarint32` where
-`PlayerPermissionLevel : int8_t` dumps `int8`. Spell `field(type=)` only where the
-dump and the derived default **diverge on a real value** — drop it where the enum's
-range keeps them byte-equal, since the annotation then only adds noise.
-
-> **A dump taken before 2026-07-28 stamped every enum field unsigned.**
-> protocol-dumper read the sign from entt's `is_signed`, which is
-> `std::is_signed_v<Type>` and therefore false for every enum, so `GameType : int`
-> dumped `uvarint32` where the wire is `varint32` (fixed in protocol-dumper
-> `11a6c46`; every protocol-docs branch regenerated). Treat a `uvarint32` on an enum
-> field in an older dump — or a schema comment citing one — as unverified.
+Width, signedness and compression all follow the underlying, so the derived default
+matches the dump and `field(type=)` is noise on a plain enum field. A one-byte enum
+reaches the wire as one byte whatever cereal Compression trait the member carries —
+`BossEventUpdateType : uint8_t` and `PlayerPermissionLevel : int8_t` both dump their
+own width. Spell `field(type=)` only where the encoding is genuinely something else:
+`str`, a fixed primitive against a wider underlying, or `endian="big"`.
 
 **Placeholder with stub enumerators, never with the primitive.** A `category: uint8`
 throws the type away — the field stops saying what it is and every call site loses
@@ -242,13 +235,17 @@ means one side is wrong about the wire, and the golden cannot say which. Patch i
 the suite still says what the schema encodes, mark the bytes
 `// TODO: patched, confirm against BDS`, and open the comment above with
 `// TODO: confirm against BDS` naming what the reference wrote, what the dump says, and
-which side has to give -- the same marker a doubted wire type earns in the DSL. One is
-open today, patched toward the dump: gophertunnel writes `BoolAttributeData`'s operation
-as an optional `int32` where the r26_u3 dump has a name-coded string.
+which side has to give -- the same marker a doubted wire type earns in the DSL. None are
+open today.
 
-The dump is not the tiebreaker by default -- `InventorySource`'s container id closed the
-other way. A `signed char` member reads as varint-compressed, but `ContainerID` reaches
-the wire as a plain `int8`, so the reference was right and the dump's trait was misread.
+The dump is not the tiebreaker by default; the header is, and a third-party codec breaks
+a tie the header cannot. `BoolAttributeData`'s operation closed toward the dump --
+gophertunnel wrote an optional `int32` where the dump has a name-coded string, and
+`BoolEnvironmentAttribute::mOperation` is a cereal-bound enum, which Cloudburst
+ProtocolLib and Nukkit-MOT both write name-coded. `InventorySource`'s container id closed
+toward gophertunnel's plain `int8`: `ContainerID` is a `signed char`, and a one-byte member
+reaches the wire as one byte whatever Compression trait it carries. The dump reads `int8`
+there too, so neither disagreement stands today.
 
 ## The compiler mirrors protoc
 
