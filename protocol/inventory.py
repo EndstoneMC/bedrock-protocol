@@ -180,7 +180,7 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     source_type: InventorySourceType
-    container_id: Optional[Optional[ContainerID]] = field(type=varint32)
+    container_id: Optional[Optional[ContainerID]]
     flags: Optional[Optional[InventorySourceFlags]]
 
 

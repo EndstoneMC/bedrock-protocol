@@ -242,14 +242,13 @@ means one side is wrong about the wire, and the golden cannot say which. Patch i
 the suite still says what the schema encodes, mark the bytes
 `// TODO: patched, confirm against BDS`, and open the comment above with
 `// TODO: confirm against BDS` naming what the reference wrote, what the dump says, and
-which side has to give -- the same marker a doubted wire type earns in the DSL. Two are
-open today, both patched toward the dump: gophertunnel writes `BoolAttributeData`'s
-operation as an optional `int32` where the r26_u3 dump has a name-coded string, and it
-writes `InventorySource`'s container id as an `int8` where the dump has `varint32`. Read
-the container id carefully -- it is a `signed char`, so the Compression trait it carries
-is what makes a varint of it at all, and gophertunnel flattens `InventorySource` into
-`InventoryAction` and calls the field a window id, so it is easy to look for under the
-wrong name.
+which side has to give -- the same marker a doubted wire type earns in the DSL. One is
+open today, patched toward the dump: gophertunnel writes `BoolAttributeData`'s operation
+as an optional `int32` where the r26_u3 dump has a name-coded string.
+
+The dump is not the tiebreaker by default -- `InventorySource`'s container id closed the
+other way. A `signed char` member reads as varint-compressed, but `ContainerID` reaches
+the wire as a plain `int8`, so the reference was right and the dump's trait was misread.
 
 ## The compiler mirrors protoc
 
