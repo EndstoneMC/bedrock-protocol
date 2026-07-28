@@ -14,7 +14,7 @@ and confirm against a second source before acting:
 
 Never take a *name* from gophertunnel or CloudburstMC — they date and shape
 symbols, they do not name them. Mojang/bedrock-protocol-docs is a last resort and
-always earns a `# TODO: confirm against BDS`. **Do not trust `main`**: it has real
+always earns a `# TODO: confirm against BDS`. **Do not trust `prototype`**: it has real
 bugs (its StartGame `game_type` is `uvarint32` where the wire is `varint32`).
 
 **A ref is only as good as its consumer's coverage.** CloudburstMC/Protocol is
@@ -259,7 +259,7 @@ where protoc defers them to `DescriptorBuilder`, which is why `SymbolTable` exis
 Refactors must be **output-identical**: regenerate the whole schema before and after
 and diff. Behaviour changes ride in their own commit.
 
-**`main` is an unrelated history — a reference, never a base.** It has its own root
+**`prototype` is an unrelated history — a reference, never a base.** It has its own root
 commit, so nothing merges or rebases between the two. It carries a much fuller
 compiler (`MappingType`, `TupleType`, `CondType`, `BitsetType`) and a wider schema,
 which makes it the first place to read when adding a feature — but port the *idea*
