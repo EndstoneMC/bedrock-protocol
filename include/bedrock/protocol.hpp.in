@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bedrock/enum.hpp"
 #include "bedrock/serializer.hpp"
 #include "bedrock/stream.hpp"
 

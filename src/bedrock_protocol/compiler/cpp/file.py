@@ -67,6 +67,7 @@ class FileGenerator:
         self._emit_type_aliases(body)
         self._emit_versioned_namespaces(body)
         self._emit_traits(body)
+        self._emit_enum_reflections(body)
         self._emit_serializers(body, mode="decl")
         self._emit_latest_aliases(body, latest_version)
         self._emit_namespace_close(body)
@@ -270,6 +271,30 @@ class FileGenerator:
             if until is not None and latest_version >= until:
                 continue
             p.print(f"using {name} = {name}_<{latest_version}>;\n")
+
+    # --- reflection ---------------------------------------------------------
+
+    def _emit_enum_reflections(self, p: Printer) -> None:
+        by_name = self._by_name()
+        views: list[tuple[Enum, str]] = []
+        for name in self._resolved.declaration_order:
+            t = by_name[name]
+            if not isinstance(t, Enum):
+                continue
+            if self._resolved.is_versioned(name):
+                for s in self._resolved.fresh_snapshots(name):
+                    assert s.enum is not None
+                    views.append((s.enum, f"{snapshot_namespace(s.lo)}::{name}"))
+            else:
+                views.append((t, name))
+        views = [(e, q) for e, q in views if e.values]  # the empty primary already covers a memberless enum
+        if not views:
+            return
+        p.print("namespace detail {\n")
+        for enum, qualified in views:
+            p.print("\n")
+            EnumGenerator(enum).generate_reflection(p, qualified)
+        p.print("\n}  // namespace detail\n\n")
 
     # --- serializers --------------------------------------------------------
 

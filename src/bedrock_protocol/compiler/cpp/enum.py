@@ -30,6 +30,29 @@ class EnumGenerator:
         p.outdent()
         p.print("};\n")
 
+    # --- reflection (magic_enum-like name <-> value tables) -----------------
+
+    def generate_reflection(self, p: Printer, qualified: str) -> None:
+        p.add_includes("<bedrock/enum.hpp>", "<array>", "<string_view>")
+        values = self._enum.values
+        n = len(values)
+        p.print("template <>\n")
+        p.print(f"inline constexpr std::array<{qualified}, {n}> values_v<{qualified}>{{{{\n")
+        p.indent()
+        for v in values:
+            p.print(f"{qualified}::{v.name},\n")
+        p.outdent()
+        p.print("}};\n\n")
+        p.print("template <>\n")
+        p.print(f"inline constexpr std::array<std::string_view, {n}> names_v<{qualified}>{{{{\n")
+        p.indent()
+        for v in values:
+            p.print(f'"{v.name}",\n')
+        p.outdent()
+        p.print("}};\n\n")
+        p.print("template <>\n")
+        p.print(f'inline constexpr std::string_view type_name_v<{qualified}>{{"{self._enum.name}"}};\n')
+
     # --- serializer (name-coded: verbatim member name on the wire) ----------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
