@@ -27,7 +27,7 @@ from bedrock_protocol.descriptor import (
     TypeAlias,
 )
 
-from .parser import Parser, SymbolTable, enum_underlying_of, is_int_enum
+from .parser import Parser, SymbolTable, enum_underlying_of, is_int_enum, nested_declarations
 
 
 class _DeclarationCollector(griffe.Extension):
@@ -255,14 +255,21 @@ class Importer:
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
         type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
 
+        def register(decls: list[griffe.Class], scope: str) -> None:
+            """Record one declared type under its dotted path, then recurse into
+            whatever it nests."""
+            name = f"{scope}.{decls[0].name}" if scope else decls[0].name
+            if is_int_enum(decls[0]):
+                enum_names.add(name)
+                enum_underlying[name] = enum_underlying_of(decls[0])
+                return
+            struct_names.add(name)
+            for group in nested_declarations(decls):
+                register(group, name)
+
         for mod_name in loaded:
             for decls in self._source_tree.declarations_of(mod_name):
-                cls = decls[0]
-                if is_int_enum(cls):
-                    enum_names.add(cls.name)
-                    enum_underlying[cls.name] = enum_underlying_of(cls)
-                else:
-                    struct_names.add(cls.name)
+                register(decls, "")
 
         # Alias pass — after classification, since an alias may reference any
         # class. Declaration order is the resolution order.

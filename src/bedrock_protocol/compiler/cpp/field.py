@@ -35,7 +35,7 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 
-from .helpers import PRIMITIVE_TYPES, snapshot_namespace
+from .helpers import PRIMITIVE_TYPES, cpp_name, outermost, snapshot_namespace
 from .printer import Printer
 
 
@@ -63,11 +63,12 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
     if isinstance(t, (StructType, EnumType)):
         if t.name not in ctx.known:
             return None
-        if snapshot is not None and ctx.resolved.is_versioned(t.name):
-            view = ctx.resolved.present_at(t.name, snapshot)
+        root = outermost(t.name)
+        if snapshot is not None and ctx.resolved.is_versioned(root):
+            view = ctx.resolved.present_at(root, snapshot)
             if view is not None:
-                return f"{snapshot_namespace(view.concrete)}::{t.name}"
-        return t.name
+                return f"{snapshot_namespace(view.concrete)}::{cpp_name(t.name)}"
+        return cpp_name(t.name)
     if isinstance(t, OptionalType):
         # A nested optional is a cereal presence wrapper: the outer marker collapses
         # away, leaving a single std::optional (the wire still carries both bools).
@@ -123,12 +124,12 @@ def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int
 def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
     """Qualified spelling of a struct/enum ref from inside a serializer at
     `snapshot` (emitted at namespace scope, so versioned refs need the `vN::`)."""
-    if ctx.resolved.is_versioned(name):
+    if ctx.resolved.is_versioned(outermost(name)):
         assert snapshot is not None
-        view = ctx.resolved.present_at(name, snapshot)
+        view = ctx.resolved.present_at(outermost(name), snapshot)
         assert view is not None
-        return f"{snapshot_namespace(view.concrete)}::{name}"
-    return name
+        return f"{snapshot_namespace(view.concrete)}::{cpp_name(name)}"
+    return cpp_name(name)
 
 
 # --- primitive wire helpers ---------------------------------------------------

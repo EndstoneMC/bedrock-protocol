@@ -27,9 +27,13 @@ from bedrock_protocol.descriptor import (
 
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .helpers import BUILTIN_HEADERS, PRIMITIVE_TYPES, requires_clause, snapshot_namespace
+from .helpers import BUILTIN_HEADERS, PRIMITIVE_TYPES, outermost, requires_clause, snapshot_namespace
 from .message import MessageGenerator
 from .printer import Printer
+
+#: One nested type as the backend needs it: its descriptor, its dotted IR name,
+#: its C++ spelling, and the snapshot its serializer body should be built at.
+NestedView = tuple[Enum | Struct, str, str, int | None]
 
 
 class FileGenerator:
@@ -43,6 +47,7 @@ class FileGenerator:
             for name in (
                 *(e.name for e in f.enums),
                 *(s.name for s in f.structs),
+                *(n for s in f.structs for n in _nested_names(s, s.name)),
                 *(a.name for a in f.primitive_aliases),
                 *(a.name for a in f.type_aliases),
             )
@@ -220,7 +225,7 @@ class FileGenerator:
                 if view is None:
                     continue
                 if view.is_fresh:
-                    self._emit_definition(p, view.enum or view.struct)
+                    self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap))
                 else:
                     p.print(f"using {name} = {snapshot_namespace(view.concrete)}::{name};\n")
                 p.print("\n")
@@ -236,11 +241,60 @@ class FileGenerator:
                 p.print(f"using {a.name} = {target};\n\n")
             p.print(f"}}  // namespace {ns}\n\n")
 
-    def _emit_definition(self, p: Printer, t: Enum | Struct | None) -> None:
+    def _emit_definition(self, p: Printer, t: Enum | Struct | None, nested_anchor: int | None = None) -> None:
         if isinstance(t, Enum):
             EnumGenerator(t).generate_definition(p)
         elif isinstance(t, Struct):
-            MessageGenerator(t, self._ctx).generate_class_definition(p)
+            MessageGenerator(t, self._ctx, nested_anchor=nested_anchor).generate_class_definition(p)
+
+    # --- nested types -------------------------------------------------------
+
+    def _nested_anchor(self, name: str, snapshot: int) -> int | None:
+        """The snapshot whose namespace owns `name`'s nested definitions, or
+        None when this snapshot must define them itself. A nested type that
+        neither version-gates itself nor reaches a versioned type has one shape
+        across the owner's snapshots, so the first one defines it and the rest
+        alias it -- and it stays a single C++ type."""
+        fresh = self._resolved.fresh_snapshots(name)
+        if not fresh or fresh[0].lo == snapshot:
+            return None
+        t = self._by_name().get(name)
+        if not isinstance(t, Struct) or self._nested_is_versioned(t, name):
+            return None
+        return fresh[0].lo
+
+    def _nested_is_versioned(self, struct: Struct, owner: str) -> bool:
+        """Whether any of `struct`'s nested types changes shape across
+        snapshots -- by its own `since=` / `until=`, or by reaching a versioned
+        type. References back into `owner` are its own snapshots, not a change."""
+        for inner in struct.nested:
+            if inner.change_points:
+                return True
+            if isinstance(inner, Struct):
+                refs = {outermost(r) for r in inner.referenced} - {owner}
+                if any(self._resolved.is_versioned(r) for r in refs):
+                    return True
+                if self._nested_is_versioned(inner, owner):
+                    return True
+        return False
+
+    def _nested_views(self, name: str) -> list[NestedView]:
+        """Every type nested in `name`, innermost first, once per distinct C++
+        type: one pass for an unversioned or anchored owner, one per fresh
+        snapshot when the nested shapes disagree across them."""
+        t = self._by_name().get(name)
+        if not isinstance(t, Struct) or not t.nested:
+            return []
+        out: list[NestedView] = []
+        if not self._resolved.is_versioned(name):
+            _collect_nested(t, name, name, None, out)
+            return out
+        fresh = self._resolved.fresh_snapshots(name)
+        heads = fresh if self._nested_is_versioned(t, name) else fresh[:1]
+        for s in heads:
+            assert s.struct is not None
+            _collect_nested(s.struct, name, f"{snapshot_namespace(s.lo)}::{name}", s.lo, out)
+        return out
 
     # --- versioning traits + selector --------------------------------------
 
@@ -276,24 +330,30 @@ class FileGenerator:
 
     def _emit_enum_reflections(self, p: Printer) -> None:
         by_name = self._by_name()
-        views: list[tuple[Enum, str]] = []
+        views: list[tuple[Enum, str, str]] = []
         for name in self._resolved.declaration_order:
             t = by_name[name]
-            if not isinstance(t, Enum):
+            if isinstance(t, Struct):
+                views += [
+                    (inner, qualified, _cpp_name(dotted))
+                    for inner, dotted, qualified, _ in self._nested_views(name)
+                    if isinstance(inner, Enum)
+                ]
                 continue
             if self._resolved.is_versioned(name):
                 for s in self._resolved.fresh_snapshots(name):
                     assert s.enum is not None
-                    views.append((s.enum, f"{snapshot_namespace(s.lo)}::{name}"))
+                    views.append((s.enum, f"{snapshot_namespace(s.lo)}::{name}", name))
             else:
-                views.append((t, name))
-        views = [(e, q) for e, q in views if e.values]  # the empty primary already covers a memberless enum
+                views.append((t, name, name))
+        # the empty primary already covers a memberless enum
+        views = [v for v in views if v[0].values]
         if not views:
             return
         p.print("namespace detail {\n")
-        for enum, qualified in views:
+        for enum, qualified, type_name in views:
             p.print("\n")
-            EnumGenerator(enum).generate_reflection(p, qualified)
+            EnumGenerator(enum).generate_reflection(p, qualified, type_name)
         p.print("\n}  // namespace detail\n\n")
 
     # --- serializers --------------------------------------------------------
@@ -307,7 +367,18 @@ class FileGenerator:
             if isinstance(t, Enum):
                 if name in self._ctx.string_coded_enums:
                     p.print("\n")
-                    self._emit_enum_serializer(p, t, mode)
+                    self._emit_enum_serializer(p, t, name, mode)
+                continue
+            # Nested types first, so the owner's body sees them already declared.
+            for inner, dotted, qualified, snapshot in self._nested_views(name):
+                if isinstance(inner, Enum):
+                    if dotted in self._ctx.string_coded_enums:
+                        p.print("\n")
+                        self._emit_enum_serializer(p, inner, qualified, mode)
+                elif _has_wire_shape(inner):
+                    p.print("\n")
+                    self._emit_struct_serializer(p, inner, snapshot, qualified, mode)
+            if not _has_wire_shape(t):
                 continue
             if self._resolved.is_versioned(name):
                 for s in self._resolved.fresh_snapshots(name):
@@ -331,8 +402,8 @@ class FileGenerator:
                 p.print("\n")
                 self._emit_variant_alias_serializer(p, a.name, a.target, mode, None)
 
-    def _emit_enum_serializer(self, p: Printer, enum: Enum, mode: str) -> None:
-        gen = EnumGenerator(enum)
+    def _emit_enum_serializer(self, p: Printer, enum: Enum, qualified: str, mode: str) -> None:
+        gen = EnumGenerator(enum, qualified)
         if mode == "decl":
             gen.generate_serializer_declaration(p)
         else:
@@ -456,9 +527,39 @@ class FileGenerator:
 # --- module-free helpers ------------------------------------------------------
 
 
+def _cpp_name(dotted: str) -> str:
+    return dotted.replace(".", "::")
+
+
+def _has_wire_shape(struct: Struct) -> bool:
+    """A struct declared only to scope its nested types carries nothing on the
+    wire, so it gets no `Serializer`. A leaf with no fields and no nesting still
+    does -- it can stand as a zero-byte variant alternative."""
+    return bool(struct.fields) or not struct.nested
+
+
+def _nested_names(struct: Struct, prefix: str):
+    """Every dotted name declared inside `struct`, at any depth."""
+    for inner in struct.nested:
+        qualified = f"{prefix}.{inner.name}"
+        yield qualified
+        if isinstance(inner, Struct):
+            yield from _nested_names(inner, qualified)
+
+
+def _collect_nested(struct: Struct, dotted: str, qualified: str, snapshot: int | None, out: list) -> None:
+    """Append `struct`'s nested types innermost-first, so a serializer emitted
+    in this order always follows the ones its body calls into."""
+    for inner in struct.nested:
+        inner_dotted, inner_qualified = f"{dotted}.{inner.name}", f"{qualified}::{inner.name}"
+        if isinstance(inner, Struct):
+            _collect_nested(inner, inner_dotted, inner_qualified, snapshot, out)
+        out.append((inner, inner_dotted, inner_qualified, snapshot))
+
+
 def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:
-    """Module-scope enums encoded by name — they need a `Serializer`
-    specialization at namespace scope."""
+    """Enums encoded by name — they need a `Serializer` specialization at
+    namespace scope. Keyed by dotted IR name, so a nested one is distinct."""
     out: set[str] = set()
 
     def walk(t: FieldType | None) -> None:
@@ -474,10 +575,16 @@ def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:
             for c in t.cases:
                 walk(c)
 
-    for struct in resolved.file.structs:
+    def walk_struct(struct: Struct) -> None:
         for f in struct.fields:
             for version in f.versions:
                 walk(version.type)
+        for inner in struct.nested:
+            if isinstance(inner, Struct):
+                walk_struct(inner)
+
+    for struct in resolved.file.structs:
+        walk_struct(struct)
     for a in resolved.file.type_aliases:
         walk(a.target)
     return frozenset(out)

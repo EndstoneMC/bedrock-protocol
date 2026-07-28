@@ -12,8 +12,14 @@ from .printer import Printer
 
 
 class EnumGenerator:
-    def __init__(self, enum: Enum) -> None:
+    """One `Enum` descriptor → its C++ definition and, for a name-coded enum,
+    its `Serializer`. `qualified` is the spelling used outside the enum's own
+    scope -- `v1001::Owner::ActionType` for a nested enum, the bare name
+    otherwise; the definition itself always emits unqualified."""
+
+    def __init__(self, enum: Enum, qualified: str | None = None) -> None:
         self._enum = enum
+        self._qualified = qualified if qualified is not None else enum.name
 
     # --- type definition ----------------------------------------------------
 
@@ -32,7 +38,7 @@ class EnumGenerator:
 
     # --- reflection (magic_enum-like name <-> value tables) -----------------
 
-    def generate_reflection(self, p: Printer, qualified: str) -> None:
+    def generate_reflection(self, p: Printer, qualified: str, type_name: str | None = None) -> None:
         p.add_includes("<bedrock/enum.hpp>", "<array>", "<string_view>")
         values = self._enum.values
         n = len(values)
@@ -51,13 +57,14 @@ class EnumGenerator:
         p.outdent()
         p.print("}};\n\n")
         p.print("template <>\n")
-        p.print(f'inline constexpr std::string_view type_name_v<{qualified}>{{"{self._enum.name}"}};\n')
+        spelled = type_name if type_name is not None else self._enum.name
+        p.print(f'inline constexpr std::string_view type_name_v<{qualified}>{{"{spelled}"}};\n')
 
     # --- serializer (name-coded: verbatim member name on the wire) ----------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
         p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
-        q = self._enum.name
+        q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
         p.indent()
@@ -77,7 +84,7 @@ class EnumGenerator:
             "<string_view>",
             "<unordered_map>",
         )
-        q = self._enum.name
+        q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
             p.print(f"using E = {q};\n")

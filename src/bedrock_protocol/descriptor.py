@@ -331,7 +331,10 @@ class Field:
 class Struct:
     """`builtin` marks a type the compiler must not define: it emits no struct and
     no serializer, references the name as-is, and trusts a hand-written definition
-    plus `Serializer` specialization in the matching `<bedrock/*.hpp>` header."""
+    plus `Serializer` specialization in the matching `<bedrock/*.hpp>` header.
+
+    `nested` holds the types BDS declares inside the class, in source order; a
+    reference to one carries the dotted `Owner.Inner` name."""
 
     name: str
     fields: tuple[Field, ...]
@@ -339,12 +342,16 @@ class Struct:
     since: int | None = None
     until: int | None = None
     builtin: bool = False
+    nested: tuple["Enum | Struct", ...] = ()
 
     @property
     def referenced(self) -> frozenset[str]:
-        return frozenset().union(
+        own = frozenset().union(
             *(version.type.referenced for f in self.fields for version in f.versions if version.type is not None)
         )
+        # A nested type's own references are the owner's too, so cross-file
+        # includes and topological order treat them like any other field type.
+        return own.union(*(t.referenced for t in self.nested))
 
     @property
     def change_points(self) -> frozenset[int]:
@@ -359,6 +366,8 @@ class Struct:
                     points.add(version.since)
                 if version.until is not None:
                     points.add(version.until)
+        for t in self.nested:
+            points |= t.change_points
         return frozenset(points)
 
     #: Change points affecting the on-wire shape (same as change_points here).

@@ -34,6 +34,18 @@ def snapshot_namespace(version: int) -> str:
     return "base" if version == 0 else f"v{version}"
 
 
+def cpp_name(declared: str) -> str:
+    """A declared type's C++ spelling. A nested type is dotted in the IR
+    (`Owner.Inner`) and scope-resolved in C++ (`Owner::Inner`)."""
+    return declared.replace(".", "::")
+
+
+def outermost(declared: str) -> str:
+    """The module-scope type a (possibly nested) name belongs to -- the only
+    level versioning, topological order and cross-file includes work at."""
+    return declared.split(".", 1)[0]
+
+
 def requires_clause(lo: int, hi: int | None) -> str:
     parts: list[str] = []
     if lo:

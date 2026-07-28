@@ -9,9 +9,11 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CondType, Field, Predicate, Struct
+from bedrock_protocol.descriptor import CondType, Enum, Field, Predicate, Struct
 
+from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
+from .helpers import snapshot_namespace
 from .printer import Printer
 
 
@@ -20,7 +22,13 @@ class MessageGenerator:
 
     `qualified` is the `Serializer<...>` target spelling (`Foo` when
     unversioned, `v1001::Foo` for a snapshot); `snapshot` drives the
-    snapshot-qualified references inside the serializer bodies."""
+    snapshot-qualified references inside the serializer bodies.
+
+    `nested_anchor` is the snapshot whose namespace holds the canonical
+    definitions of this struct's nested types. When set, the body aliases them
+    (`using ActionType = base::Owner::ActionType;`) instead of defining them
+    again, so a nested type stays one C++ type across every snapshot of its
+    owner."""
 
     def __init__(
         self,
@@ -29,18 +37,20 @@ class MessageGenerator:
         *,
         snapshot: int | None = None,
         qualified: str | None = None,
+        nested_anchor: int | None = None,
     ) -> None:
         self._struct = struct
         self._ctx = ctx
         self._snapshot = snapshot
         self._qualified = qualified if qualified is not None else struct.name
+        self._anchor = nested_anchor
         self._field_generators = FieldGeneratorMap(struct, ctx, snapshot)
 
     # --- type definition ----------------------------------------------------
 
     def generate_class_definition(self, p: Printer) -> None:
-        """`struct Name { [static constexpr int Id;] fields... };`. Emitted
-        inside the type's own namespace, so field types are unqualified."""
+        """`struct Name { nested... [static constexpr int Id;] fields... };`.
+        Emitted inside the type's own namespace, so field types are unqualified."""
         rendered: list[tuple[str, str]] = []
         for f in self._struct.fields:
             (version,) = f.versions
@@ -52,12 +62,29 @@ class MessageGenerator:
             rendered.append((ctype, f.name))
         p.print(f"struct {self._struct.name} {{\n")
         p.indent()
+        has_body = self._struct.packet_id is not None or bool(rendered)
+        for i, inner in enumerate(self._struct.nested):
+            self._generate_nested(p, inner)
+            # Definitions stand apart; a run of `using` aliases reads as one block.
+            if self._anchor is None and i + 1 < len(self._struct.nested):
+                p.print("\n")
+        if self._struct.nested and has_body:
+            p.print("\n")
         if self._struct.packet_id is not None:
             p.print(f"static constexpr int Id = {self._struct.packet_id};\n")
         for ctype, fname in rendered:
             p.print(f"{ctype} {fname}{{}};\n")
         p.outdent()
         p.print("};\n")
+
+    def _generate_nested(self, p: Printer, inner: Enum | Struct) -> None:
+        if self._anchor is not None:
+            ns = snapshot_namespace(self._anchor)
+            p.print(f"using {inner.name} = {ns}::{self._struct.name}::{inner.name};\n")
+        elif isinstance(inner, Enum):
+            EnumGenerator(inner).generate_definition(p)
+        else:
+            MessageGenerator(inner, self._ctx, snapshot=self._snapshot).generate_class_definition(p)
 
     # --- serializer ---------------------------------------------------------
 

@@ -47,7 +47,10 @@ _Ann = griffe.Expr | str | None
 class SymbolTable:
     """Every name a schema declares, across all its files. protoc resolves type
     references in `DescriptorBuilder` and lets the parser record a bare name; we
-    resolve while parsing, so the parser needs the whole table up front."""
+    resolve while parsing, so the parser needs the whole table up front.
+
+    A nested type is keyed by its dotted path (`Owner.Inner`); a reference
+    spelled inside `Owner` finds it by walking the enclosing scopes outward."""
 
     enum_names: frozenset[str]
     enum_underlying: dict[str, PrimitiveType | None]
@@ -82,6 +85,17 @@ class Parser:
     @property
     def aliases(self) -> dict[str, PrimitiveAlias | TypeAlias]:
         return self._symbols.aliases_by_name
+
+    def lookup(self, name: str, scope: str) -> str | None:
+        """The declared name a reference resolves to, or None. Mirrors C++
+        unqualified lookup: try the reference inside `scope`, then each
+        enclosing scope outward, and finally at module scope."""
+        parts = scope.split(".") if scope else []
+        for cut in range(len(parts), -1, -1):
+            candidate = ".".join([*parts[:cut], name])
+            if candidate in self.enum_names or candidate in self.struct_names:
+                return candidate
+        return None
 
     def parse_file(
         self,
@@ -151,18 +165,19 @@ class Parser:
             previous = number
         return Enum(cls.name, tuple(values), enum_underlying_of(cls))
 
-    def struct(self, decls: list[griffe.Class]) -> Struct:
+    def struct(self, decls: list[griffe.Class], scope: str = "") -> Struct:
         """One struct from every declaration of its name. A type redeclared over
         adjacent ranges models a wire reshape: each declaration's fields carry that
         declaration's range, so a snapshot narrows to exactly one shape -- including
         its field *order*, which a reshaped packet may change."""
         _check_redeclaration(decls)
+        qualified = f"{scope}.{decls[0].name}" if scope else decls[0].name
         fields: list[Field] = []
         for decl in decls:
             lo, hi = _decl_since(decl), _decl_until(decl)
             earlier: set[str] = set()
             for attr in decl.attributes.values():
-                (version,) = self.field(attr, frozenset(earlier)).versions
+                (version,) = self.field(attr, qualified, frozenset(earlier)).versions
                 earlier.add(_field_name(attr.name))
                 narrowed = FieldVersion(
                     type=version.type,
@@ -177,11 +192,31 @@ class Parser:
             since=_decl_since(decls[0]),
             until=_decl_until(decls[-1]),
             builtin=any(_has_decorator(d, "builtin") for d in decls),
+            nested=self._nested(decls, qualified),
         )
 
-    def field(self, attr: griffe.Attribute, earlier: frozenset[str] = frozenset()) -> Field:
+    def _nested(self, decls: list[griffe.Class], qualified: str) -> tuple[Enum | Struct, ...]:
+        """The types declared inside the class, in source order. A redeclared
+        owner repeats each nested type in every body -- Python needs the name in
+        scope to annotate against it -- so identical repeats collapse to one;
+        bodies that disagree are a version-redeclared nested type."""
+        out: list[Enum | Struct] = []
+        for group in nested_declarations(decls):
+            if is_int_enum(group[0]):
+                parsed = [self.enum(c) for c in group]
+                if any(e != parsed[0] for e in parsed[1:]):
+                    raise CompilerError(
+                        f"{qualified}.{group[0].name}: an enum cannot be redeclared; version-gate its members"
+                    )
+                out.append(parsed[0])
+            else:
+                one = [self.struct([c], qualified) for c in group]
+                out.append(one[0] if all(s == one[0] for s in one) else self.struct(group, qualified))
+        return tuple(out)
+
+    def field(self, attr: griffe.Attribute, scope: str = "", earlier: frozenset[str] = frozenset()) -> Field:
         call = attr.value
-        t = self._counted(self.type(attr.name, attr.annotation, call), call, attr.name, earlier)
+        t = self._counted(self.type(attr.name, attr.annotation, call, scope), call, attr.name, scope, earlier)
         guard = self._guard(attr.name, call)
         if guard is not None and t is not None:
             if _call_arg(call, "field", "when") is not None and isinstance(t, (OptionalType, VariantType)):
@@ -189,7 +224,7 @@ class Parser:
                     f"{attr.name}: field(when=...) gates a bare payload -- it cannot also be optional or a union; "
                     "wrap it in a with field(when=...) block instead"
                 )
-            t = CondType(t, self._predicate(guard, attr.name, earlier), _int_kwarg(call, "field", "_group_id"))
+            t = CondType(t, self._predicate(guard, attr.name, scope, earlier), _int_kwarg(call, "field", "_group_id"))
         version = FieldVersion(
             type=t,
             since=_int_kwarg(call, "field", "since"),
@@ -204,6 +239,7 @@ class Parser:
         t: FieldType | None,
         call: _Ann,
         field_name: str,
+        scope: str,
         earlier: frozenset[str],
     ) -> FieldType | None:
         """`field(count=...)`: the element count is an expression over earlier
@@ -218,7 +254,7 @@ class Parser:
                 f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- "
                 "a counted list carries no length prefix on the wire"
             )
-        return replace(t, count=self._predicate(lam, field_name, earlier))
+        return replace(t, count=self._predicate(lam, field_name, scope, earlier))
 
     # ---- when= predicates --------------------------------------------------
 
@@ -233,22 +269,23 @@ class Parser:
             )
         return own if own is not None else group
 
-    def _predicate(self, lam: _Ann, field_name: str, earlier: frozenset[str]) -> Predicate:
+    def _predicate(self, lam: _Ann, field_name: str, scope: str, earlier: frozenset[str]) -> Predicate:
         if not isinstance(lam, griffe.ExprLambda):
             raise CompilerError(f"{field_name}: field(when=...) must be a lambda predicate")
         if len(lam.parameters) != 1:
             raise CompilerError(f"{field_name}: field(when=...) lambda takes exactly one parameter")
-        return self._pred_node(lam.body, lam.parameters[0].name, field_name, earlier)
+        return self._pred_node(lam.body, lam.parameters[0].name, field_name, scope, earlier)
 
     def _pred_node(
         self,
         node: griffe.Expr | str,
         param: str,
         field_name: str,
+        scope: str,
         earlier: frozenset[str],
     ) -> Predicate:
         def child(n: griffe.Expr | str) -> Predicate:
-            return self._pred_node(n, param, field_name, earlier)
+            return self._pred_node(n, param, field_name, scope, earlier)
 
         if isinstance(node, griffe.ExprBoolOp):
             return Predicate(node.operator, operands=tuple(child(v) for v in node.values))
@@ -262,14 +299,14 @@ class Parser:
                 )
             op = str(node.operators[0])
             if op in ("in", "not in"):
-                return self._pred_membership(node, op, param, field_name, earlier)
+                return self._pred_membership(node, op, param, field_name, scope, earlier)
             if op not in ("==", "!=", "<", ">", "<=", ">="):
                 raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
             return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
         if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
             return Predicate(node.operator, operands=(child(node.left), child(node.right)))
         if isinstance(node, griffe.ExprAttribute):
-            return self._pred_attr(node, param, field_name, earlier)
+            return self._pred_attr(node, param, field_name, scope, earlier)
         literal = _as_int(node)
         if literal is not None:
             return Predicate("int", text=str(literal))
@@ -281,6 +318,7 @@ class Parser:
         op: str,
         param: str,
         field_name: str,
+        scope: str,
         earlier: frozenset[str],
     ) -> Predicate:
         """Desugar set membership into a chain of equalities: `x in {a, b, c}`
@@ -294,10 +332,10 @@ class Parser:
         elements = list(container.elements)
         if not elements:
             raise CompilerError(f"{field_name}: field(when=...) `{op}` needs a non-empty set literal")
-        left = self._pred_node(node.left, param, field_name, earlier)
+        left = self._pred_node(node.left, param, field_name, scope, earlier)
         compare, join = ("==", "or") if op == "in" else ("!=", "and")
         clauses = tuple(
-            Predicate(compare, operands=(left, self._pred_node(e, param, field_name, earlier))) for e in elements
+            Predicate(compare, operands=(left, self._pred_node(e, param, field_name, scope, earlier))) for e in elements
         )
         return clauses[0] if len(clauses) == 1 else Predicate(join, operands=clauses)
 
@@ -306,27 +344,39 @@ class Parser:
         node: griffe.ExprAttribute,
         param: str,
         field_name: str,
+        scope: str,
         earlier: frozenset[str],
     ) -> Predicate:
         parts = [str(v) for v in node.values]
         spelled = ".".join(parts)
-        if len(parts) != 2:
-            raise CompilerError(
-                f"{field_name}: field(when=...) reference {spelled!r} must be `{param}.field` or `Enum.MEMBER`"
-            )
-        head, tail = parts
-        if head == param:
-            name = _field_name(tail)
+        if parts[0] == param:
+            if len(parts) != 2:
+                raise CompilerError(
+                    f"{field_name}: field(when=...) reference {spelled!r} must be `{param}.field` or `Enum.MEMBER`"
+                )
+            name = _field_name(parts[1])
             if name not in earlier:
                 raise CompilerError(
-                    f"{field_name}: field(when=...) references {tail!r}, which is not a field declared before it"
+                    f"{field_name}: field(when=...) references {parts[1]!r}, which is not a field declared before it"
                 )
             return Predicate("field", text=name)
-        if head in self.enum_names:
-            return Predicate("enum", text=spelled)
+        # Everything but the last component names the enum, so a nested one is
+        # reachable both bare (`ActionType.PLACE`) and qualified (`Owner.ActionType.PLACE`).
+        enum = self.lookup(".".join(parts[:-1]), scope)
+        if enum is not None and enum in self.enum_names:
+            return Predicate("enum", text=f"{enum}.{parts[-1]}")
         raise CompilerError(
             f"{field_name}: field(when=...) reference {spelled!r} is neither `{param}.field` nor `Enum.MEMBER`"
         )
+
+    # ---- declared type references ------------------------------------------
+
+    def _declared_type(
+        self, qualified: str, type_kw: str | None, field_name: str, endian: str | None
+    ) -> FieldType | None:
+        if qualified in self.enum_names:
+            return EnumType(qualified, self._enum_scalar(type_kw, field_name, qualified, endian))
+        return StructType(qualified)
 
     # ---- enum wire type ----------------------------------------------------
 
@@ -352,14 +402,14 @@ class Parser:
 
     # ---- field-type walker -------------------------------------------------
 
-    def type(self, field_name: str, ann: _Ann, call: _Ann) -> FieldType | None:
+    def type(self, field_name: str, ann: _Ann, call: _Ann, scope: str = "") -> FieldType | None:
         type_kw = _name_kwarg(call, "field", "type")
         prefix = _repeat_prefix(call, field_name)
         endian = _endian_kwarg(call, field_name)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian)
-        return self._base_type(ann, type_kw, prefix, field_name, endian)
+            return self._union_type(cases, field_name, type_kw, prefix, endian, scope)
+        return self._base_type(ann, type_kw, prefix, field_name, endian, scope)
 
     def _union_type(
         self,
@@ -368,17 +418,18 @@ class Parser:
         type_kw: str | None,
         prefix: PrimitiveType,
         endian: str | None,
+        scope: str,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
-            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian)
+            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope)
             return None if base is None else OptionalType(base)
         types: list[FieldType | None] = []
         for case in cases:
             if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(case, type_kw, prefix, field_name, endian)
+            t = self._base_type(case, type_kw, prefix, field_name, endian, scope)
             if t is None:
                 return None
             types.append(t)
@@ -391,37 +442,42 @@ class Parser:
         prefix: PrimitiveType,
         field_name: str,
         endian: str | None,
+        scope: str = "",
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
             opt = _optional_element(ann)
             if opt is not None:
-                inner = self._base_type(opt, type_kw, prefix, field_name, endian)
+                inner = self._base_type(opt, type_kw, prefix, field_name, endian, scope)
                 return None if inner is None else OptionalType(inner)
             elem = _list_element(ann, field_name)
             if elem is not None:
-                inner = self._base_type(elem, type_kw, prefix, field_name, endian)
+                inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope)
                 return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
-            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian)
-            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian)
+            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian, scope)
+            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian, scope)
             if key is None or value is None:
                 return None
             return MappingType(key=key, value=value, prefix=prefix)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian)
+            return self._union_type(cases, field_name, type_kw, prefix, endian, scope)
         dotted = _dotted_name(ann)
-        if dotted is not None and dotted in BUILTIN_ANNOTATIONS:
-            return StructType(BUILTIN_ANNOTATIONS[dotted])
+        if dotted is not None:
+            if dotted in BUILTIN_ANNOTATIONS:
+                return StructType(BUILTIN_ANNOTATIONS[dotted])
+            # `Owner.Inner` names a nested type from outside its owner.
+            qualified = self.lookup(dotted, scope)
+            if qualified is not None:
+                return self._declared_type(qualified, type_kw, field_name, endian)
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
-        if name in self.enum_names:
-            return EnumType(name, self._enum_scalar(type_kw, field_name, name, endian))
-        if name in self.struct_names:
-            return StructType(name)
+        resolved = self.lookup(name, scope)
+        if resolved is not None:
+            return self._declared_type(resolved, type_kw, field_name, endian)
         if name in PRIMITIVES:
             return _with_endian(
                 PrimitiveType(name=name, wire=_wire_override(type_kw, name, field_name)), endian, field_name
@@ -462,6 +518,19 @@ def _base_name(base: griffe.Expr | str) -> str | None:
 
 def is_int_enum(cls: griffe.Class) -> bool:
     return any(_base_name(b) in ("IntEnum", "IntFlag") for b in cls.bases)
+
+
+def nested_declarations(decls: list[griffe.Class]) -> list[list[griffe.Class]]:
+    """The classes declared inside `decls`, grouped by name in source order --
+    `SourceTree.declarations_of` one level down. A redeclared owner contributes
+    each of its bodies, so a name declared in several lands in one group."""
+    groups: dict[str, list[griffe.Class]] = {}
+    for decl in decls:
+        for cls in decl.classes.values():
+            if cls.is_alias:
+                continue
+            groups.setdefault(cls.name, []).append(cls)
+    return list(groups.values())
 
 
 #: DSL primitive an enum may declare as its C++ underlying type -> (size in bytes,

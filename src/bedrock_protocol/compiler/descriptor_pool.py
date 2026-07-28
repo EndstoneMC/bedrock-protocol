@@ -264,4 +264,19 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
             continue
         narrowed.append(Field(f.name, (version,)))
         key_parts.append((f.name, version.type))
-    return None, replace(t, fields=tuple(narrowed)), tuple(key_parts)
+    nested: list[Enum | Struct] = []
+    for inner in t.nested:
+        if not _present_at(inner, snapshot):
+            continue
+        inner_enum, inner_struct, inner_key = _snapshot_view(inner, snapshot)
+        view = inner_enum if inner_enum is not None else inner_struct
+        assert view is not None
+        nested.append(view)
+        key_parts.append((inner.name, inner_key))
+    return None, replace(t, fields=tuple(narrowed), nested=tuple(nested)), tuple(key_parts)
+
+
+def _present_at(t: Enum | Struct, snapshot: int) -> bool:
+    since = getattr(t, "since", None)
+    until = getattr(t, "until", None)
+    return (since is None or snapshot >= since) and (until is None or snapshot < until)
