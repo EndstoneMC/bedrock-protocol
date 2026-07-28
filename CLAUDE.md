@@ -244,8 +244,11 @@ the suite still says what the schema encodes, mark the bytes
 `// TODO: confirm against BDS` naming what the reference wrote, what the dump says, and
 which side has to give -- the same marker a doubted wire type earns in the DSL. One is
 open today: gophertunnel writes `BoolAttributeData`'s operation as an optional `int32`
-where the r26_u3 dump has a name-coded string. `InventoryAction`'s window id is the
-next to check, `int8` in gophertunnel against `varint32` in the dump.
+where the r26_u3 dump has a name-coded string. `InventorySource`'s container id at 1001
+is the next to check -- the schema follows gophertunnel's `int8` there, where the dump
+has `varint32` and the pre-cereal declaration already writes one. gophertunnel flattens
+`InventorySource` into `InventoryAction` and calls the field a window id, so it is easy
+to look for under the wrong name.
 
 ## The compiler mirrors protoc
 
