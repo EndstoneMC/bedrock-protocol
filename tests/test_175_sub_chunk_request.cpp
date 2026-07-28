@@ -31,14 +31,7 @@ std::string bytes(std::initializer_list<int> raw)
 // three Varint32 -- then protocol.SliceUint32Length(Offsets), whose count is a
 // fixed LE uint32. Each SubChunkOffset is three io.Int8.
 const std::string golden_v975 = bytes({
-    0x00,                    // dimension_type = 0 (varint32)
-    0x02,                    // center_pos.x = 1 (varint32)
-    0x04,                    // center_pos.y = 2 (varint32)
-    0x06,                    // center_pos.z = 3 (varint32)
-    0x01, 0x00, 0x00, 0x00,  // sub_chunk_pos_offsets: count = 1 (fixed uint32)
-    0xff,                    //   [0].x = -1 (int8)
-    0x00,                    //   [0].y = 0 (int8)
-    0x01,                    //   [0].z = 1 (int8)
+    0x00, 0x02, 0x04, 0x06, 0x01, 0x00, 0x00, 0x00, 0xff, 0x00, 0x01,
 });
 
 // The 979 cerealisation, gated at the 1001 snapshot. Golden from gophertunnel's
@@ -46,14 +39,8 @@ const std::string golden_v975 = bytes({
 // -- now a varuint32 count -- then three io.Int32 for Position, fixed LE. So the
 // migration both reordered the packet and reshaped two of its three fields.
 const std::string golden_v1001 = bytes({
-    0x00,                    // dimension_type = 0 (varint32)
-    0x01,                    // sub_chunk_pos_offsets: count = 1 (uvarint32)
-    0xff,                    //   [0].x = -1 (int8)
-    0x00,                    //   [0].y = 0 (int8)
-    0x01,                    //   [0].z = 1 (int8)
-    0x01, 0x00, 0x00, 0x00,  // center_pos.x = 1 (int32 LE)
-    0x02, 0x00, 0x00, 0x00,  // center_pos.y = 2 (int32 LE)
-    0x03, 0x00, 0x00, 0x00,  // center_pos.z = 3 (int32 LE)
+    0x00, 0x01, 0xff, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
+    0x00, 0x03, 0x00, 0x00, 0x00,
 });
 
 }  // namespace

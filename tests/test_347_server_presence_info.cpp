@@ -31,9 +31,7 @@ std::string bytes(std::initializer_list<int> raw)
 // the payload, whose Marshal was r.String(ExperienceName), r.String(WorldName) --
 // each a varuint32 length + bytes.
 const std::string golden_v975 = bytes({
-    0x01,                                // presence_configuration present (bool)
-    0x04, 0x44, 0x65, 0x6d, 0x6f,        // experience_name "Demo"
-    0x05, 0x57, 0x6f, 0x72, 0x6c, 0x64,  // world_name "World"
+    0x01, 0x04, 0x44, 0x65, 0x6d, 0x6f, 0x05, 0x57, 0x6f, 0x72, 0x6c, 0x64,
 });
 
 // 999 and 980 gated at the 1001 snapshot. Golden from gophertunnel's current
@@ -41,12 +39,8 @@ const std::string golden_v975 = bytes({
 // OptionalFunc(r.String), putting a bool flag ahead of each, and
 // r.String(RichPresenceID) was appended.
 const std::string golden_v1001 = bytes({
-    0x01,                                // presence_configuration present (bool)
-    0x01,                                // experience_name present (bool)
-    0x04, 0x44, 0x65, 0x6d, 0x6f,        //   "Demo"
-    0x01,                                // world_name present (bool)
-    0x05, 0x57, 0x6f, 0x72, 0x6c, 0x64,  //   "World"
-    0x03, 0x72, 0x70, 0x31,              // rich_presence_id "rp1"
+    0x01, 0x01, 0x04, 0x44, 0x65, 0x6d, 0x6f, 0x01, 0x05, 0x57, 0x6f, 0x72,
+    0x6c, 0x64, 0x03, 0x72, 0x70, 0x31,
 });
 
 }  // namespace
@@ -110,11 +104,8 @@ TEST_CASE("the 1001 form encodes an absent name as a bare flag")
     packet.presence_configuration = bp::v1001::PresenceConfiguration{
         .experience_name = std::nullopt, .world_name = std::nullopt, .rich_presence_id = "rp1"};
     REQUIRE(encode(packet) == bytes({
-                                  0x01,                    // presence_configuration present
-                                  0x00,                    // experience_name absent
-                                  0x00,                    // world_name absent
-                                  0x03, 0x72, 0x70, 0x31,  // rich_presence_id "rp1"
-                              }));
+    0x01, 0x00, 0x00, 0x03, 0x72, 0x70, 0x31,
+}));
 }
 
 // The added flags shift every byte after the first, so the two forms are a wire

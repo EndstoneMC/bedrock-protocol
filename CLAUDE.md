@@ -230,16 +230,22 @@ re-run, or assert the old form structurally (size delta plus round-trip). Never 
 one by deleting bytes from the newer literal.
 
 **A golden is bare bytes.** The comment above it names the source and the packet
-literal, and that is the whole annotation: never label the bytes field by field. A
-per-byte comment is a hand-derived reading of an executed dump, it rots the moment a
-field moves, and it invites patching the bytes to match the label. Say what the
-packet was, not what each byte means.
+literal, and that is the whole annotation: never label the bytes field by field.
+Labelling them is hand-derivation smuggled back in. The labels rot the moment a field
+moves, and they invite patching the bytes to match the label. Say what the packet was,
+not what each byte means.
 
-**The only golden a patch may touch is a name-coded enum's casing**, since BDS
-lowercases before the lookup. Everything else that disagrees is a finding: the schema
-is wrong, or the reference is (gophertunnel writes `InventoryAction`'s window id as
-`int8` and `BoolAttributeData`'s operation as an optional `int32`, where the r26_u3
-dump has `varint32` and a name-coded string). Take it to the dump, not to the bytes.
+**A patch is a TODO, not a fix.** Casing is the one settled patch: a name-coded enum
+reaches the wire in whatever case BDS spells, and BDS lowercases before the lookup, so
+the golden takes the DSL's spelling and its comment says so. Any other disagreement
+means one side is wrong about the wire, and the golden cannot say which. Patch it so
+the suite still says what the schema encodes, mark the bytes
+`// TODO: patched, confirm against BDS`, and open the comment above with
+`// TODO: confirm against BDS` naming what the reference wrote, what the dump says, and
+which side has to give -- the same marker a doubted wire type earns in the DSL. One is
+open today: gophertunnel writes `BoolAttributeData`'s operation as an optional `int32`
+where the r26_u3 dump has a name-coded string. `InventoryAction`'s window id is the
+next to check, `int8` in gophertunnel against `varint32` in the dump.
 
 ## The compiler mirrors protoc
 
