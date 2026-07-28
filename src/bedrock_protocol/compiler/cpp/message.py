@@ -9,7 +9,7 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CondType, Enum, Field, Predicate, Struct
+from bedrock_protocol.descriptor import CondType, Enum, Field, LiteralType, Predicate, Struct
 
 from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
@@ -54,6 +54,8 @@ class MessageGenerator:
         rendered: list[tuple[str, str]] = []
         for f in self._struct.fields:
             (version,) = f.versions
+            if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
+                continue
             ctype = cpp_type(version.type, self._ctx) if version.type is not None else None
             if ctype is None:
                 p.print(f"struct {self._struct.name} {{}};\n")

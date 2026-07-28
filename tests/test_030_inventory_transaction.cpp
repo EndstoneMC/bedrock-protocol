@@ -154,9 +154,8 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
     REQUIRE(back->transaction->index() == 0);
 }
 
-// A container source exercises the double-bool presence wrapper: the wire carries
-// an always-true marker plus the optional's own flag, but the C++ collapses to a
-// single std::optional. container_id is engaged (12); flags is absent.
+// A container source carries two bools per member: the always-true marker, then
+// the optional's own flag. container_id is engaged (12); flags is absent.
 TEST_CASE("inventory-transaction normal with a container action round-trips")
 {
     bp::InventoryAction action;
@@ -181,12 +180,23 @@ TEST_CASE("inventory-transaction normal with a container action round-trips")
     REQUIRE(normal_back.actions.actions.has_value());
     const auto &actions = *normal_back.actions.actions;
     REQUIRE(actions.size() == 1);
-    // one std::optional each: container_id engaged at 12, flags absent
     REQUIRE(actions[0].source.container_id.has_value());
     REQUIRE(*actions[0].source.container_id == static_cast<bp::ContainerID>(12));
     REQUIRE_FALSE(actions[0].source.flags.has_value());
     REQUIRE(actions[0].to_item.id == 1);
     REQUIRE(actions[0].to_item.block_runtime_id == 7);
+}
+
+// The marker is declared Literal[True], so a false in its place is a shape the
+// schema does not describe: the read fails instead of taking it for the
+// optional's flag and sliding a byte out of step.
+TEST_CASE("inventory-transaction rejects a container source whose marker reads false")
+{
+    std::string patched = golden_normal_action;
+    patched[7] = '\0';  // the container-id member-present marker
+
+    bp::BinaryReader reader{patched};
+    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader).has_value());
 }
 
 TEST_CASE("inventory-transaction use-item round-trips against the golden")

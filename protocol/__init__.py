@@ -3,6 +3,14 @@
 A field name may carry a single trailing underscore to escape a Python keyword
 (PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
 the BDS name.
+
+A `typing.Literal[V, ...]` field is a constant the wire carries and the C++
+does not: no member is generated, the write emits the first value, and the read
+rejects anything the annotation does not list. Bools take the one-byte wire on
+their own; an integer literal needs `field(type=<integer primitive>)` for its
+width. Use it where BDS writes a fixed byte nobody models -- cereal prefixes a
+dynamic member with an always-true member-present marker, so an optional member
+reads `_unused: Literal[True]` then `x: T | None`.
 """
 
 from enum import auto

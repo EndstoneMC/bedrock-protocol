@@ -24,6 +24,7 @@ from bedrock_protocol.descriptor import (
     EnumType,
     Field,
     FieldType,
+    LiteralType,
     MappingType,
     OptionalType,
     Predicate,
@@ -69,11 +70,10 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
             if view is not None:
                 return f"{snapshot_namespace(view.concrete)}::{cpp_name(t.name)}"
         return cpp_name(t.name)
+    if isinstance(t, LiteralType):
+        # A constant lives on the wire only -- no member spells it in C++.
+        return None
     if isinstance(t, OptionalType):
-        # A nested optional is a cereal presence wrapper: the outer marker collapses
-        # away, leaving a single std::optional (the wire still carries both bools).
-        if isinstance(t.inner, OptionalType):
-            return cpp_type(t.inner, ctx, snapshot)
         inner = cpp_type(t.inner, ctx, snapshot)
         return None if inner is None else f"std::optional<{inner}>"
     if isinstance(t, RepeatedType):
@@ -163,6 +163,13 @@ def _read_verb(prim: PrimitiveType) -> str:
     if prim.encoding in VARINT_PRIMITIVES:
         return f"readVarInt<{u}>"
     return f"read<{u}{_order_argument(prim)}>"
+
+
+def _literal_value(value: bool | int) -> str:
+    """A `Literal[...]` member as a C++ literal."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
 
 
 def _codec_includes(prim: PrimitiveType) -> set[str]:
@@ -319,27 +326,25 @@ class OptionalFieldGenerator(FieldGenerator):
             p.print(f"{target} = std::move(staged);\n")
 
 
-class PresenceWrapperGenerator(FieldGenerator):
-    """The outer optional of a nested `Optional[Optional[T]]`. A cereal dynamic
-    member is prefixed by an always-true member-present marker bool (the generic
-    `writeAdditionalData` the composite-member loop emits), ahead of the value's
-    own `std::optional` has-value bool -- two bools on the wire. The marker never
-    varies, so the C++ type collapses to a single `std::optional<T>` (`cpp_type`
-    unwraps one level); this emits the marker and delegates the real optional to
-    `inner`, which owns the C++ value."""
+class LiteralFieldGenerator(FieldGenerator):
+    """`Literal[V, ...]` — a constant on the wire and nothing in memory, so both
+    halves ignore the struct: the write emits the value, and the read rejects
+    anything the annotation does not list."""
 
-    def __init__(self, inner: FieldGenerator) -> None:
-        self._inner = inner
+    def __init__(self, literal: LiteralType) -> None:
+        self._literal = literal
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
-        p.print("stream.write<bool>(true);\n")
-        self._inner.generate_serialize(p, var, depth)
+        p.add_includes(*_codec_includes(self._literal.wire))
+        p.print(_primitive_write(self._literal.wire, _literal_value(self._literal.written)) + "\n")
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<expected>")
-        p.print("auto marker = stream.read<bool>();\n")
-        p.print("if (!marker) return std::unexpected(marker.error());\n")
-        self._inner.generate_deserialize(p, target, depth)
+        p.add_includes("<expected>", "<system_error>", *_codec_includes(self._literal.wire))
+        p.print(_primitive_read(self._literal.wire) + "\n")
+        p.print("if (!v) return std::unexpected(v.error());\n")
+        accepted = " && ".join(f"*v != {_literal_value(value)}" for value in self._literal.values)
+        with p.block(f"if ({accepted})"):
+            p.print("return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
 
 
 class RepeatedFieldGenerator(FieldGenerator):
@@ -490,9 +495,9 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         return EnumFieldGenerator(t, gc)
     if isinstance(t, StructType):
         return ClassFieldGenerator(t, gc)
+    if isinstance(t, LiteralType):
+        return LiteralFieldGenerator(t)
     if isinstance(t, OptionalType):
-        if isinstance(t.inner, OptionalType):
-            return PresenceWrapperGenerator(make_field_generator(t.inner, gc))
         value_type = cpp_type(t.inner, gc.ctx, gc.snapshot)
         assert value_type is not None
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), value_type, gc)

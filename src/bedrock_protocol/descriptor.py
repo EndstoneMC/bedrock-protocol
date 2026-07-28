@@ -157,6 +157,28 @@ class EnumType:
 
 
 @dataclass(frozen=True)
+class LiteralType:
+    """`Literal[V, ...]` — a constant on the wire and no member in memory. The
+    write emits `written`; the read accepts any member of `values` and rejects
+    anything else, since another value means the wire is not this shape. For a
+    field BDS always writes the same way, such as cereal's member-present
+    marker ahead of a dynamic member."""
+
+    values: tuple[bool | int, ...]
+    wire: PrimitiveType
+    kind: Literal["literal"] = "literal"
+
+    @property
+    def written(self) -> bool | int:
+        """The value serialize emits — the first one the annotation lists."""
+        return self.values[0]
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset()
+
+
+@dataclass(frozen=True)
 class OptionalType:
     """`T | None` → a one-byte bool presence flag followed by the payload."""
 
@@ -238,7 +260,17 @@ class CondType:
         return self.inner.referenced | self.predicate.referenced
 
 
-FieldType = PrimitiveType | StructType | EnumType | OptionalType | RepeatedType | MappingType | VariantType | CondType
+FieldType = (
+    PrimitiveType
+    | StructType
+    | EnumType
+    | LiteralType
+    | OptionalType
+    | RepeatedType
+    | MappingType
+    | VariantType
+    | CondType
+)
 
 
 # --- declarations ------------------------------------------------------------

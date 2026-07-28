@@ -29,6 +29,7 @@ from bedrock_protocol.descriptor import (
     FieldType,
     FieldVersion,
     File,
+    LiteralType,
     MappingType,
     OptionalType,
     Predicate,
@@ -407,10 +408,29 @@ class Parser:
         type_kw = _name_kwarg(call, "field", "type")
         prefix = _repeat_prefix(call, field_name)
         endian = _endian_kwarg(call, field_name)
+        values = _literal_values(ann, field_name)
+        if values is not None:
+            return self._literal_type(values, field_name, type_kw, endian)
         cases = _flatten_union(ann)
         if cases is not None:
             return self._union_type(cases, field_name, type_kw, prefix, endian, scope)
         return self._base_type(ann, type_kw, prefix, field_name, endian, scope)
+
+    def _literal_type(
+        self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
+    ) -> LiteralType:
+        """`Literal[V, ...]`: the wire carries a constant the read checks against.
+        A bool takes the one-byte wire by itself; an integer needs `field(type=)`
+        to say how wide it is."""
+        if all(isinstance(v, bool) for v in values):
+            wire = PrimitiveType(name="bool")
+        elif type_kw is not None and type_kw in INTEGER_PRIMITIVES:
+            wire = PrimitiveType(name=type_kw)
+        else:
+            raise CompilerError(
+                f"{field_name}: an integer Literal[...] needs its wire width -- spell field(type=<integer primitive>)"
+            )
+        return LiteralType(values, _with_endian(wire, endian, field_name))
 
     def _union_type(
         self,
@@ -446,10 +466,6 @@ class Parser:
         scope: str = "",
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
-            opt = _optional_element(ann)
-            if opt is not None:
-                inner = self._base_type(opt, type_kw, prefix, field_name, endian, scope)
-                return None if inner is None else OptionalType(inner)
             elem = _list_element(ann, field_name)
             if elem is not None:
                 inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope)
@@ -712,18 +728,33 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
     return cases
 
 
+def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None:
+    """The values of a `Literal[...]` annotation, or None for anything else. They
+    are the set the read accepts, so several may be listed; all take one type."""
+    if not (isinstance(ann, griffe.ExprSubscript) and isinstance(ann.left, griffe.ExprName)):
+        return None
+    if ann.left.name != "Literal":
+        return None
+    slice_ = ann.slice
+    spelled = slice_.elements if isinstance(slice_, griffe.ExprTuple) else [slice_]
+    values: list[bool | int] = []
+    for element in spelled:
+        text = str(element)
+        number = _as_int(text)
+        if text in ("True", "False"):
+            values.append(text == "True")
+        elif number is not None:
+            values.append(number)
+        else:
+            raise CompilerError(f"{field_name}: Literal[...] takes bool or integer values, got {text}")
+    if len({isinstance(v, bool) for v in values}) != 1:
+        raise CompilerError(f"{field_name}: Literal[...] values must all take one type")
+    return tuple(values)
+
+
 def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | str | None:
     """The element annotation of a `list[T]` subscript, or None for anything else."""
     if isinstance(ann.left, griffe.ExprName) and ann.left.name == "list":
-        return ann.slice
-    return None
-
-
-def _optional_element(ann: griffe.ExprSubscript) -> griffe.Expr | str | None:
-    """The `T` of an `Optional[T]` subscript, or None. An explicit spelling of
-    `T | None` that, unlike the union form, nests: `Optional[Optional[T]]` is a
-    two-level optional, which `| None` cannot express (it flattens)."""
-    if isinstance(ann.left, griffe.ExprName) and ann.left.name == "Optional":
         return ann.slice
     return None
 

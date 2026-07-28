@@ -1,11 +1,12 @@
 from enum import IntEnum
-from typing import Optional
+from typing import Literal
 
 from protocol import field, int8, int16, packet, type, uint8, uint16, uint32, uvarint32, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 
 package = "bedrock.protocol"
+
 
 class ContainerID(IntEnum, int8):
     NONE = -1
@@ -169,10 +170,6 @@ class InventorySource:
     flags: InventorySourceFlags = field(when=lambda s: s.source_type == InventorySourceType.WORLD_INTERACTION)
 
 
-# container_id and flags are cereal dynamic members: the composite-member loop
-# writes an always-true member-present marker bool ahead of the value's own
-# std::optional has-value bool -- two bools, but one std::optional in memory.
-# The outer Optional models the marker; the inner is the real value.
 @type(since=1001)
 class InventorySource:
     class InventorySourceFlags(IntEnum, uint32):
@@ -180,8 +177,10 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     source_type: InventorySourceType
-    container_id: Optional[Optional[ContainerID]]
-    flags: Optional[Optional[InventorySourceFlags]]
+    _true_1: Literal[True]  # blameMojang: why, uhhh?
+    container_id: ContainerID | None
+    _true_2: Literal[True]  # blameMojang: hello?
+    flags: InventorySourceFlags | None
 
 
 class InventoryAction:
