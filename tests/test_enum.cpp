@@ -1,5 +1,6 @@
 #include <optional>
 #include <string_view>
+#include <type_traits>
 
 #include <bedrock/protocol.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -50,6 +51,22 @@ TEST_CASE("declaration order", "[enum]")
 {
     STATIC_REQUIRE(bp::enum_value<bp::MovementEffectType>(0) == bp::MovementEffectType::INVALID);
     STATIC_REQUIRE(bp::enum_integer(bp::enum_value<bp::MovementEffectType>(0)) == -1);
+}
+
+// An enum BDS declares inside a class is nested in C++ too, and reflects under
+// its qualified name. A versioned owner shares one definition across snapshots,
+// so the nested type is the same C++ type at every one.
+TEST_CASE("nested enum", "[enum]")
+{
+    using Transaction = bp::ItemUseInventoryTransaction;
+    STATIC_REQUIRE(bp::enum_type_name<Transaction::ActionType>() == "ItemUseInventoryTransaction::ActionType");
+    STATIC_REQUIRE(bp::enum_count<Transaction::TriggerType>() == 3);
+    STATIC_REQUIRE(bp::enum_name(Transaction::ActionType::USE_AS_ATTACK) == "USE_AS_ATTACK");
+    STATIC_REQUIRE(bp::enum_cast<Transaction::PredictedResult>("SUCCESS") == Transaction::PredictedResult::SUCCESS);
+    STATIC_REQUIRE(std::is_same_v<bp::base::ItemUseInventoryTransaction::ActionType,
+                                  bp::v1001::ItemUseInventoryTransaction::ActionType>);
+    STATIC_REQUIRE(bp::enum_type_name<bp::InventorySource::InventorySourceFlags>() ==
+                   "InventorySource::InventorySourceFlags");
 }
 
 // A versioned enum reflects the member set of the snapshot it is spelled at.

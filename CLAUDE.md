@@ -41,6 +41,14 @@ headers. Never fold an enclosing namespace into a class name:
 A BDS `Outer::Inner` stays nested, never flattened to `OuterInner`. A
 `FooPacketPayload` maps onto `@packet FooPacket`, dropping the `Payload` suffix.
 
+**Nesting is a `class` inside a `class`**, enum or struct, and a body references
+its own nested names bare (`action_type: ActionType`) — lookup walks outward to
+module scope, so `Owner.Inner` reaches one from elsewhere. A redeclared owner
+repeats each nested type verbatim in every body; identical repeats collapse to a
+single C++ type, and bodies that disagree version it. Where only the nested type
+is modelled, declare the owner with no fields: it scopes the name and gets no
+`Serializer` (`SubChunkPacket` exists solely to hold `SubChunkPosOffset`).
+
 Grep bedrock-headers **case-insensitively**: BDS spells these `Serverbound` /
 `Clientbound` with a lowercase `b`, so a `ServerBound` search wrongly concludes the
 type is absent.
@@ -64,10 +72,10 @@ its header is not a wire source; protocol-docs still is.
 
 ## Reference widths are byte-aliased
 
-cereal writes variant discriminators and most small enums as `uvarint32`;
-gophertunnel and CloudburstMC model the same field as `uint8`. For 0..127 both
-encode to the identical byte, so a community lib showing a byte carries **no width
-information** and no golden will catch a wrong choice. Only BDS and protocol-docs
+cereal writes variant discriminators as `uvarint32`, and compresses many small enums
+to a varint; gophertunnel and CloudburstMC model the same field as `uint8`. For
+0..127 both encode to the identical byte, so a community lib showing a byte carries
+**no width information** and no golden will catch a wrong choice. Only BDS and protocol-docs
 answer width. Field order, presence, and wide fixed-width prefixes remain
 trustworthy in those refs.
 
@@ -98,14 +106,19 @@ underlying. Spell `field(type=)` for everything else — `str` (name-coded),
 a fixed primitive (uncompressed), or `endian="big"`. An enum with neither an
 underlying base nor `field(type=)` is a compile error; the compiler never guesses.
 
-> **Deferred bug:** this default is wrong for *cerealised* enums. cereal writes
-> enums **unsigned** regardless of underlying (`GameType : int` dumps `uvarint32`),
-> and compression is **per field, not per width** (`PlayerPermissionLevel : int8_t`
-> dumps `uvarint32`, `ChatRestrictionLevel : uint8_t` dumps `uint8`); a narrowed
-> underlying need not move the wire (BossEvent stayed `uvarint32` after `: int` →
-> `: uint8_t`). Until it is fixed, spell `field(type=)` only where the true wire and
-> the derived default **diverge on a real value** — drop it where the enum's range
-> keeps them byte-equal, since the annotation then only adds noise.
+Width and signedness do follow the underlying, so the derived default matches the
+wire. **Compression does not** — it is a per-field cereal trait, so two one-byte
+enums disagree: `BossEventUpdateType : uint8_t` dumps `uvarint32` where
+`PlayerPermissionLevel : int8_t` dumps `int8`. Spell `field(type=)` only where the
+dump and the derived default **diverge on a real value** — drop it where the enum's
+range keeps them byte-equal, since the annotation then only adds noise.
+
+> **A dump taken before 2026-07-28 stamped every enum field unsigned.**
+> protocol-dumper read the sign from entt's `is_signed`, which is
+> `std::is_signed_v<Type>` and therefore false for every enum, so `GameType : int`
+> dumped `uvarint32` where the wire is `varint32` (fixed in protocol-dumper
+> `11a6c46`; every protocol-docs branch regenerated). Treat a `uvarint32` on an enum
+> field in an older dump — or a schema comment citing one — as unverified.
 
 **Placeholder with stub enumerators, never with the primitive.** A `category: uint8`
 throws the type away — the field stops saying what it is and every call site loses
@@ -216,6 +229,18 @@ be generated the same way. Either check gophertunnel out at the matching commit 
 re-run, or assert the old form structurally (size delta plus round-trip). Never fake
 one by deleting bytes from the newer literal.
 
+**A golden is bare bytes.** The comment above it names the source and the packet
+literal, and that is the whole annotation: never label the bytes field by field. A
+per-byte comment is a hand-derived reading of an executed dump, it rots the moment a
+field moves, and it invites patching the bytes to match the label. Say what the
+packet was, not what each byte means.
+
+**The only golden a patch may touch is a name-coded enum's casing**, since BDS
+lowercases before the lookup. Everything else that disagrees is a finding: the schema
+is wrong, or the reference is (gophertunnel writes `InventoryAction`'s window id as
+`int8` and `BoolAttributeData`'s operation as an optional `int32`, where the r26_u3
+dump has `varint32` and a name-coded string). Take it to the dump, not to the bytes.
+
 ## The compiler mirrors protoc
 
 `src/bedrock_protocol/` follows protoc's architecture, names, and call shapes —
@@ -236,7 +261,7 @@ protoc-faithfully into this architecture rather than lifting the code, and re-ve
 any wire detail against the sources of truth above.
 
 The rewrite **deliberately dropped** every path the MVP did not use — `bitset`,
-`count=`, `tuple`, nested types, `tag=IntEnum`, deprecation. A missing
+`count=`, `tuple`, `tag=IntEnum`, deprecation. A missing
 feature is therefore a deferral, not an oversight: when a packet first needs one,
-re-add it as its own reviewable change (as `@builtin`, `dict[K, V]`, `when=` and
-`endian=` were), with a test that exercises it.
+re-add it as its own reviewable change (as `@builtin`, `dict[K, V]`, `when=`,
+`endian=` and nested types were), with a test that exercises it.

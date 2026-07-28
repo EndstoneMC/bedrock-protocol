@@ -254,8 +254,8 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
 {
     bp::ItemUseInventoryTransaction use;
     use.actions.actions = std::vector<bp::InventoryAction>{};
-    use.action_type = bp::ItemUseInventoryTransactionActionType::PLACE;
-    use.trigger_type = bp::ItemUseInventoryTransactionTriggerType::PLAYER_INPUT;
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
     use.slot = 5;
@@ -275,7 +275,7 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     REQUIRE(use_back.pos.x == 1);
     REQUIRE(use_back.pos.z == 3);
     REQUIRE(use_back.target_block_id == 9);
-    REQUIRE(use_back.trigger_type == bp::ItemUseInventoryTransactionTriggerType::PLAYER_INPUT);
+    REQUIRE(use_back.trigger_type == bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT);
 }
 
 TEST_CASE("packet id is 30 at v975")
@@ -334,8 +334,8 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
 TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
 {
     bp::base::ItemUseInventoryTransaction use;
-    use.action_type = bp::ItemUseInventoryTransactionActionType::PLACE;
-    use.trigger_type = bp::ItemUseInventoryTransactionTriggerType::PLAYER_INPUT;
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
     use.slot = 5;

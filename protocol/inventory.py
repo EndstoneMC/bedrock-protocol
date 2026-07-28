@@ -20,11 +20,6 @@ class InventorySourceType(IntEnum, uint32):
     NON_IMPLEMENTED_FEATURE_TODO = 99999
 
 
-class InventorySourceFlags(IntEnum, uint32):
-    NO_FLAG = 0
-    WORLD_INTERACTION_RANDOM = 1
-
-
 class ContainerEnumName(IntEnum, uint8):
     ANVIL_INPUT_CONTAINER = 0
     ANVIL_MATERIAL_CONTAINER = 1
@@ -152,6 +147,10 @@ class LegacySetSlot:
 
 @type(until=1001)
 class InventorySource:
+    class InventorySourceFlags(IntEnum, uint32):
+        NO_FLAG = 0
+        WORLD_INTERACTION_RANDOM = 1
+
     source_type: InventorySourceType
     container_id: ContainerID = field(
         type=varint32,
@@ -168,6 +167,10 @@ class InventorySource:
 # The outer Optional models the marker; the inner is the real value.
 @type(since=1001)
 class InventorySource:
+    class InventorySourceFlags(IntEnum, uint32):
+        NO_FLAG = 0
+        WORLD_INTERACTION_RANDOM = 1
+
     source_type: InventorySourceType
     container_id: Optional[Optional[ContainerID]]
     flags: Optional[Optional[InventorySourceFlags]]
@@ -198,34 +201,30 @@ class InventoryMismatchData:
     actions: InventoryTransaction
 
 
-class ItemUseInventoryTransactionActionType(IntEnum, uint32):
-    PLACE = 0
-    USE = 1
-    DESTROY = 2
-    USE_AS_ATTACK = 3
-
-
-class ItemUseInventoryTransactionTriggerType(IntEnum, uint32):
-    UNKNOWN = 0
-    PLAYER_INPUT = 1
-    SIMULATION_TICK = 2
-
-
-class ItemUseInventoryTransactionPredictedResult(IntEnum, uint8):
-    FAILURE = 0
-    SUCCESS = 1
-
-
-class ItemUseInventoryTransactionClientCooldownState(IntEnum, uint8):
-    OFF = 0
-    ON = 1
-
-
 @type(until=1001)
 class ItemUseInventoryTransaction:
+    class ActionType(IntEnum, int):
+        PLACE = 0
+        USE = 1
+        DESTROY = 2
+        USE_AS_ATTACK = 3
+
+    class TriggerType(IntEnum, uint8):
+        UNKNOWN = 0
+        PLAYER_INPUT = 1
+        SIMULATION_TICK = 2
+
+    class PredictedResult(IntEnum, uint8):
+        FAILURE = 0
+        SUCCESS = 1
+
+    class ClientCooldownState(IntEnum, uint8):
+        OFF = 0
+        ON = 1
+
     actions: InventoryTransaction
-    action_type: ItemUseInventoryTransactionActionType
-    trigger_type: ItemUseInventoryTransactionTriggerType
+    action_type: ActionType
+    trigger_type: TriggerType
     pos: BlockPos
     face: varint32
     slot: varint32
@@ -233,15 +232,34 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: uvarint32
-    client_predicted_result: ItemUseInventoryTransactionPredictedResult = field(type=uvarint32)
-    client_cooldown_state: ItemUseInventoryTransactionClientCooldownState
+    client_predicted_result: PredictedResult = field(type=uvarint32)
+    client_cooldown_state: ClientCooldownState
 
 
 @type(since=1001)
 class ItemUseInventoryTransaction:
+    class ActionType(IntEnum, int):
+        PLACE = 0
+        USE = 1
+        DESTROY = 2
+        USE_AS_ATTACK = 3
+
+    class TriggerType(IntEnum, uint8):
+        UNKNOWN = 0
+        PLAYER_INPUT = 1
+        SIMULATION_TICK = 2
+
+    class PredictedResult(IntEnum, uint8):
+        FAILURE = 0
+        SUCCESS = 1
+
+    class ClientCooldownState(IntEnum, uint8):
+        OFF = 0
+        ON = 1
+
     actions: InventoryTransaction
-    action_type: ItemUseInventoryTransactionActionType
-    trigger_type: ItemUseInventoryTransactionTriggerType
+    action_type: ActionType
+    trigger_type: TriggerType
     pos: BlockPos
     face: uvarint32
     slot: varint32
@@ -249,33 +267,31 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: uvarint32
-    client_predicted_result: ItemUseInventoryTransactionPredictedResult
-    client_cooldown_state: ItemUseInventoryTransactionClientCooldownState
-
-
-class ItemUseOnActorInventoryTransactionActionType(IntEnum, uint32):
-    INTERACT = 0
-    ATTACK = 1
+    client_predicted_result: PredictedResult
+    client_cooldown_state: ClientCooldownState
 
 
 class ItemUseOnActorInventoryTransaction:
+    class ActionType(IntEnum, int):
+        INTERACT = 0
+        ATTACK = 1
+
     actions: InventoryTransaction
     target_runtime_id: ActorRuntimeID
-    action_type: ItemUseOnActorInventoryTransactionActionType
+    action_type: ActionType
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     hit_pos: Vec3
 
 
-class ItemReleaseInventoryTransactionActionType(IntEnum, uint32):
-    RELEASE = 0
-    CONSUME = 1
-
-
 class ItemReleaseInventoryTransaction:
+    class ActionType(IntEnum, int):
+        RELEASE = 0
+        CONSUME = 1
+
     actions: InventoryTransaction
-    action_type: ItemReleaseInventoryTransactionActionType
+    action_type: ActionType
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3

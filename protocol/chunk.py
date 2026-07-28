@@ -18,21 +18,23 @@ class SubChunkPos:
     z: int32
 
 
-class SubChunkPosOffset:
-    x: int8
-    y: int8
-    z: int8
+# Only the nested type is modelled; SubChunkPacket's own wire shape is not.
+class SubChunkPacket:
+    class SubChunkPosOffset:
+        x: int8
+        y: int8
+        z: int8
 
 
 @packet(id=175, until=1001)
 class SubChunkRequestPacket:
     dimension_type: DimensionType
     center_pos: SubChunkPos
-    sub_chunk_pos_offsets: list[SubChunkPosOffset] = field(prefix=uint32)
+    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset] = field(prefix=uint32)
 
 
 @packet(id=175, since=1001)
 class SubChunkRequestPacket:
     dimension_type: DimensionType
-    sub_chunk_pos_offsets: list[SubChunkPosOffset]
+    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset]
     center_pos: SubChunkPos
