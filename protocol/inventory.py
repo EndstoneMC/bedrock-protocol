@@ -7,8 +7,16 @@ from protocol.common import BlockPos, Vec3
 
 package = "bedrock.protocol"
 
-# ContainerID is signed-char in BDS (SharedTypes::Legacy::ContainerID).
-type ContainerID = int8
+class ContainerID(IntEnum, int8):
+    NONE = -1
+    INVENTORY = 0
+    FIRST = 1
+    LAST = 100
+    OFFHAND = 119
+    ARMOR = 120
+    SELECTION_SLOTS = 122
+    PLAYER_ONLY_UI = 124
+    REGISTRY = 125
 
 
 class InventorySourceType(IntEnum, uint32):
@@ -172,7 +180,7 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     source_type: InventorySourceType
-    container_id: Optional[Optional[ContainerID]]
+    container_id: Optional[Optional[ContainerID]] = field(type=varint32)
     flags: Optional[Optional[InventorySourceFlags]]
 
 
