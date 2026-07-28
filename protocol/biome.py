@@ -69,8 +69,6 @@ class SerializedNoiseBlockSpecifier:
     block_runtime_id: uint32
 
 
-# TODO: confirm against BDS -- the 975 shape's names come from EndstoneMC/protocol-docs
-# r26_u2; bedrock-headers only carries the post-981 shape.
 @type(until=1001)
 class BiomeNoiseGradientSurfaceData:
     non_replaceable_blocks: list[uint32]
