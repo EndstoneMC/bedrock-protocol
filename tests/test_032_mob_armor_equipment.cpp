@@ -25,8 +25,8 @@ std::string bytes(std::initializer_list<int> raw)
     return out;
 }
 
-using PacketV975 = bp::MobArmorEquipmentPacket_<bp::ProtocolVersion::V975>;
-using PacketV1001 = bp::MobArmorEquipmentPacket_<bp::ProtocolVersion::V1001>;
+using PacketV975 = bp::MobArmorEquipmentPacket_<975>;
+using PacketV1001 = bp::MobArmorEquipmentPacket_<1001>;
 
 std::string empty_item_blob()
 {

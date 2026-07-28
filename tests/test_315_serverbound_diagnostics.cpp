@@ -94,13 +94,13 @@ void fill_base(Packet &packet)
 
 TEST_CASE("packet id is 315")
 {
-    STATIC_REQUIRE(bp::ServerboundDiagnosticsPacket_<bp::ProtocolVersion::V975>::Id == 315);
-    STATIC_REQUIRE(bp::ServerboundDiagnosticsPacket_<bp::ProtocolVersion::V1001>::Id == 315);
+    STATIC_REQUIRE(bp::ServerboundDiagnosticsPacket_<975>::Id == 315);
+    STATIC_REQUIRE(bp::ServerboundDiagnosticsPacket_<1001>::Id == 315);
 }
 
 TEST_CASE("serverbound-diagnostics round-trips against the golden")
 {
-    using Packet = bp::ServerboundDiagnosticsPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::ServerboundDiagnosticsPacket_<1001>;
 
     Packet packet;
     fill_base(packet);
@@ -132,7 +132,7 @@ TEST_CASE("serverbound-diagnostics round-trips against the golden")
 
 TEST_CASE("before v1001 the whisker scopes are absent from the wire")
 {
-    using Packet = bp::ServerboundDiagnosticsPacket_<bp::ProtocolVersion::V975>;
+    using Packet = bp::ServerboundDiagnosticsPacket_<975>;
 
     Packet packet;
     fill_base(packet);

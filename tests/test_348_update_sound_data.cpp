@@ -46,12 +46,12 @@ const std::string golden_bds_casing = bytes({
 
 TEST_CASE("packet id is 348")
 {
-    STATIC_REQUIRE(bp::ClientboundUpdateSoundDataPacket_<bp::ProtocolVersion::V1001>::Id == 348);
+    STATIC_REQUIRE(bp::ClientboundUpdateSoundDataPacket_<1001>::Id == 348);
 }
 
 TEST_CASE("update-sound-data round-trips against the golden")
 {
-    using Packet = bp::ClientboundUpdateSoundDataPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::ClientboundUpdateSoundDataPacket_<1001>;
 
     Packet packet;
     packet.server_sound_handle.value = 42;
@@ -68,7 +68,7 @@ TEST_CASE("update-sound-data round-trips against the golden")
 
 TEST_CASE("the name-code read is case-insensitive")
 {
-    using Packet = bp::ClientboundUpdateSoundDataPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::ClientboundUpdateSoundDataPacket_<1001>;
 
     bp::BinaryReader reader{golden_bds_casing};
     auto back = bp::Serializer<Packet>::deserialize(reader);

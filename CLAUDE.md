@@ -181,10 +181,10 @@ value: None | bool | uvarint32 | float
 
 ## Version gating
 
-`since=` / `until=` must land on a declared `ProtocolVersion` snapshot
-(`protocol/version.py`), never a raw changelog number. Gate a change at the next
-snapshot at or after it: a field the changelog dates to 977 gates `since=1001`. Only
-975 and 1001 are materialized, so an off-snapshot boundary buys nothing.
+`since=` / `until=` are raw protocol version numbers, but must land on a modelled
+snapshot, never an arbitrary changelog number. Gate a change at the next snapshot at
+or after it: a field the changelog dates to 977 gates `since=1001`. Only 975 and 1001
+are materialized, so an off-snapshot boundary buys nothing.
 
 **Diff the type closure across protocol-docs branches before modelling a packet.**
 Walk the packet's transitive types on the old and new branch and diff the two dumps:
@@ -236,7 +236,7 @@ protoc-faithfully into this architecture rather than lifting the code, and re-ve
 any wire detail against the sources of truth above.
 
 The rewrite **deliberately dropped** every path the MVP did not use — `bitset`,
-`count=`, `tuple`, `endian`, nested types, `tag=IntEnum`, deprecation. A missing
+`count=`, `tuple`, nested types, `tag=IntEnum`, deprecation. A missing
 feature is therefore a deferral, not an oversight: when a packet first needs one,
-re-add it as its own reviewable change (as `@builtin`, `dict[K, V]` and `when=`
-were), with a test that exercises it.
+re-add it as its own reviewable change (as `@builtin`, `dict[K, V]`, `when=` and
+`endian=` were), with a test that exercises it.

@@ -25,8 +25,8 @@ std::string bytes(std::initializer_list<int> raw)
     return out;
 }
 
-using PacketV975 = bp::LevelSoundEventPacket_<bp::ProtocolVersion::V975>;
-using PacketV1001 = bp::LevelSoundEventPacket_<bp::ProtocolVersion::V1001>;
+using PacketV975 = bp::LevelSoundEventPacket_<975>;
+using PacketV1001 = bp::LevelSoundEventPacket_<1001>;
 
 // Everything the two eras share, which is every field but the sound itself.
 template <class Packet>
@@ -87,14 +87,14 @@ TEST_CASE("packet id is 123 at both eras")
 TEST_CASE("level-sound-event v975 round-trips against the golden")
 {
     auto packet = sample<PacketV975>();
-    packet.event_id = bp::LevelSoundEvent_<bp::ProtocolVersion::V975>::BELL;
+    packet.event_id = bp::LevelSoundEvent_<975>::BELL;
     REQUIRE(encode(packet) == golden_v975);
 
     bp::BinaryReader reader{golden_v975};
     auto back = bp::Serializer<PacketV975>::deserialize(reader);
     REQUIRE(back.has_value());
     REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->event_id == bp::LevelSoundEvent_<bp::ProtocolVersion::V975>::BELL);
+    REQUIRE(back->event_id == bp::LevelSoundEvent_<975>::BELL);
     REQUIRE(back->data == -1);
     REQUIRE(back->actor_identifier == "minecraft:pig");
     REQUIRE(back->actor == static_cast<bp::ActorUniqueID>(7));

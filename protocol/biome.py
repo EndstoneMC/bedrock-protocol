@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, varint32
+from protocol import field, int32, packet, type, uint8, uint16, uint32, varint32
 from protocol.molang import ExpressionOp
 
 package = "bedrock.protocol"
@@ -136,15 +136,12 @@ class BiomeCoordinateData:
     max_value: BiomeStringIndex
     grid_offset: uint32
     grid_step_size: uint32
-    # The dump annotates this one as an enum and cereal writes those unsigned;
-    # gophertunnel spells it Varint32, on a path it never exercises.
-    distribution: RandomDistributionType = field(type=uvarint32)
+    distribution: RandomDistributionType
 
 
 class BiomeScatterParamData:
     coordinates: list[BiomeCoordinateData]
-    # Unsigned for the same reason as BiomeCoordinateData.distribution.
-    eval_order: CoordinateEvaluationOrder = field(type=uvarint32)
+    eval_order: CoordinateEvaluationOrder
     chance_percent_type: ExpressionOp = field(type=varint32)
     chance_percent: BiomeStringIndex
     chance_numerator: int32

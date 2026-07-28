@@ -4,9 +4,9 @@ protoc analog: `compiler/cpp/cpp_file.{h,cc}`. Routes each section through a
 `Printer`, delegating type definitions and serializers to `EnumGenerator` /
 `MessageGenerator` and the `FieldGenerator` codec.
 
-The `.hpp` holds type definitions, the DSL-owned `ProtocolVersion` `_<V>`
-selector, and declaration-only `Serializer<T>` specializations; the `.cpp`
-holds the out-of-line serializer bodies, compiled once into the static lib.
+The `.hpp` holds type definitions, the raw-`int` `_<V>` version selector, and
+declaration-only `Serializer<T>` specializations; the `.cpp` holds the
+out-of-line serializer bodies, compiled once into the static lib.
 """
 
 from __future__ import annotations
@@ -112,17 +112,11 @@ class FileGenerator:
                 p.print(f"#include {inc}\n")
 
     def _emit_generated_includes(self, p: Printer) -> None:
-        """Headers this file's own header needs: the `ProtocolVersion` one when it
-        spells the `_<V>` selector, plus the owner of every type it references but
-        another file declares. The umbrella header includes every generated header,
-        but in sorted order, so a header that leans on it compiles only by luck of
-        the alphabet -- and never standalone."""
+        """Headers this file's own header needs: the owner of every type it
+        references but another file declares. The umbrella header includes every
+        generated header, but in sorted order, so a header that leans on it compiles
+        only by luck of the alphabet -- and never standalone."""
         needed: set[str] = set()
-        for name, f in self._file_set.files.items():
-            if f is self._file:
-                continue
-            if self._has_namespaces() and any(e.name == "ProtocolVersion" for e in f.enums):
-                needed.add(name)
         owners = self._type_owners()
         for ref in self._referenced_names():
             owner = owners.get(ref)
@@ -264,27 +258,18 @@ class FileGenerator:
                 p.print(f"template <int V> requires ({requires_clause(lo, hi)})\n")
                 p.print(f"struct {name}_<V> {{ using type = {snapshot_namespace(lo)}::{name}; }};\n")
         p.print("\n}  // namespace detail\n\n")
-        venum = self._version_enum()
-        vparam = venum.name if venum is not None else "int"
-        varg = "static_cast<int>(V)" if venum is not None else "V"
         for name, _, _ in entries:
-            p.print(f"template <{vparam} V> using {name}_ = typename detail::{name}_<{varg}>::type;\n")
+            p.print(f"template <int V> using {name}_ = typename detail::{name}_<V>::type;\n")
         p.print("\n")
 
     def _emit_latest_aliases(self, p: Printer, latest_version: int) -> None:
         entries = self._versioned_entries()
         if not entries:
             return
-        venum = self._version_enum()
-        latest_arg = str(latest_version)
-        if venum is not None:
-            member = next((v.name for v in venum.values if v.number == latest_version), None)
-            if member is not None:
-                latest_arg = f"{venum.name}::{member}"
         for name, _, until in entries:
             if until is not None and latest_version >= until:
                 continue
-            p.print(f"using {name} = {name}_<{latest_arg}>;\n")
+            p.print(f"using {name} = {name}_<{latest_version}>;\n")
 
     # --- serializers --------------------------------------------------------
 
@@ -441,13 +426,6 @@ class FileGenerator:
             if self._resolved.is_versioned(name) and self._resolved.present_at(name, snap) is not None:
                 return True
         return False
-
-    def _version_enum(self) -> Enum | None:
-        for f in self._file_set.files.values():
-            for e in f.enums:
-                if e.name == "ProtocolVersion":
-                    return e
-        return None
 
 
 # --- module-free helpers ------------------------------------------------------

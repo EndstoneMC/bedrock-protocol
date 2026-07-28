@@ -27,8 +27,8 @@ std::string bytes(std::initializer_list<int> raw)
     return out;
 }
 
-using PacketV975 = bp::PrimitiveShapesPacket_<bp::ProtocolVersion::V975>;
-using PacketV1001 = bp::PrimitiveShapesPacket_<bp::ProtocolVersion::V1001>;
+using PacketV975 = bp::PrimitiveShapesPacket_<975>;
+using PacketV1001 = bp::PrimitiveShapesPacket_<1001>;
 
 // mce::Color packs ARGB into an int32: A=0x44, R=0x55, G=0x66, B=0x77.
 constexpr auto argb = static_cast<bp::Color>(0x44556677);

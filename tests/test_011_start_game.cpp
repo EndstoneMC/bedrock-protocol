@@ -106,13 +106,13 @@ void fill(Packet &packet)
 
 TEST_CASE("StartGamePacket: id")
 {
-    STATIC_REQUIRE(bp::StartGamePacket_<bp::ProtocolVersion::V975>::Id == 11);
-    STATIC_REQUIRE(bp::StartGamePacket_<bp::ProtocolVersion::V1001>::Id == 11);
+    STATIC_REQUIRE(bp::StartGamePacket_<975>::Id == 11);
+    STATIC_REQUIRE(bp::StartGamePacket_<1001>::Id == 11);
 }
 
 TEST_CASE("StartGamePacket: v1001 round-trip")
 {
-    using Packet = bp::StartGamePacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::StartGamePacket_<1001>;
 
     Packet pkt;
     fill(pkt);
@@ -170,13 +170,13 @@ TEST_CASE("StartGamePacket: v1001 round-trip")
 // the 975 body is the 1001 one minus exactly those three bytes.
 TEST_CASE("StartGamePacket: v975 is the v1001 body less the 995 and 997 fields")
 {
-    using Packet = bp::StartGamePacket_<bp::ProtocolVersion::V975>;
+    using Packet = bp::StartGamePacket_<975>;
 
     Packet pkt;
     fill(pkt);
     const auto encoded = encode(pkt);
 
-    using Packet1001 = bp::StartGamePacket_<bp::ProtocolVersion::V1001>;
+    using Packet1001 = bp::StartGamePacket_<1001>;
     Packet1001 newer;
     fill(newer);
     newer.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MATCH_WORLD_TYPE;

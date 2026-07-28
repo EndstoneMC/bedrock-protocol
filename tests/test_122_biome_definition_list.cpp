@@ -208,7 +208,7 @@ TEST_CASE("the biome definition map writes ascending key/value pairs")
 
 TEST_CASE("biome definition list v975 carries the pre-981 noise gradient")
 {
-    using Packet = bp::BiomeDefinitionListPacket_<bp::ProtocolVersion::V975>;
+    using Packet = bp::BiomeDefinitionListPacket_<975>;
 
     bp::base::BiomeNoiseGradientSurfaceData gradient;
     gradient.non_replaceable_blocks = {7};
@@ -251,7 +251,7 @@ TEST_CASE("biome definition list v975 carries the pre-981 noise gradient")
 
 TEST_CASE("biome definition list v1001 carries the reshaped noise gradient")
 {
-    using Packet = bp::BiomeDefinitionListPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::BiomeDefinitionListPacket_<1001>;
 
     bp::v1001::BiomeNoiseGradientSurfaceData gradient;
     gradient.non_replaceable_blocks = {7};

@@ -53,13 +53,13 @@ const std::string golden_v1001 = bytes({
 
 TEST_CASE("packet id is 347 at both versions")
 {
-    STATIC_REQUIRE(bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V975>::Id == 347);
-    STATIC_REQUIRE(bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V1001>::Id == 347);
+    STATIC_REQUIRE(bp::ServerPresenceInfoPacket_<975>::Id == 347);
+    STATIC_REQUIRE(bp::ServerPresenceInfoPacket_<1001>::Id == 347);
 }
 
 TEST_CASE("server-presence-info v975 form round-trips against the golden")
 {
-    using Packet = bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V975>;
+    using Packet = bp::ServerPresenceInfoPacket_<975>;
 
     Packet packet;
     packet.presence_configuration = bp::base::PresenceConfiguration{.experience_name = "Demo", .world_name = "World"};
@@ -76,7 +76,7 @@ TEST_CASE("server-presence-info v975 form round-trips against the golden")
 
 TEST_CASE("server-presence-info v1001 form round-trips against the golden")
 {
-    using Packet = bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::ServerPresenceInfoPacket_<1001>;
 
     Packet packet;
     packet.presence_configuration =
@@ -96,15 +96,15 @@ TEST_CASE("server-presence-info v1001 form round-trips against the golden")
 // The packet-level optional is version-shared: only the payload changed.
 TEST_CASE("an absent presence configuration is a lone flag at both versions")
 {
-    REQUIRE(encode(bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V975>{}) == bytes({0x00}));
-    REQUIRE(encode(bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V1001>{}) == bytes({0x00}));
+    REQUIRE(encode(bp::ServerPresenceInfoPacket_<975>{}) == bytes({0x00}));
+    REQUIRE(encode(bp::ServerPresenceInfoPacket_<1001>{}) == bytes({0x00}));
 }
 
 // 999's optionality is a shape the 975 form cannot express: there, a name is always
 // on the wire, so "no name" and the empty string are the same bytes.
 TEST_CASE("the 1001 form encodes an absent name as a bare flag")
 {
-    using Packet = bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::ServerPresenceInfoPacket_<1001>;
 
     Packet packet;
     packet.presence_configuration = bp::v1001::PresenceConfiguration{
@@ -124,6 +124,6 @@ TEST_CASE("a v975 body does not decode as a v1001 one")
     REQUIRE(golden_v975 != golden_v1001);
 
     bp::BinaryReader reader{golden_v975};
-    auto wrong = bp::Serializer<bp::ServerPresenceInfoPacket_<bp::ProtocolVersion::V1001>>::deserialize(reader);
+    auto wrong = bp::Serializer<bp::ServerPresenceInfoPacket_<1001>>::deserialize(reader);
     REQUIRE_FALSE(wrong.has_value());
 }

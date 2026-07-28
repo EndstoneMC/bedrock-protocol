@@ -60,13 +60,13 @@ const std::string golden_v1001 = bytes({
 
 TEST_CASE("packet id is 175 at both versions")
 {
-    STATIC_REQUIRE(bp::SubChunkRequestPacket_<bp::ProtocolVersion::V975>::Id == 175);
-    STATIC_REQUIRE(bp::SubChunkRequestPacket_<bp::ProtocolVersion::V1001>::Id == 175);
+    STATIC_REQUIRE(bp::SubChunkRequestPacket_<975>::Id == 175);
+    STATIC_REQUIRE(bp::SubChunkRequestPacket_<1001>::Id == 175);
 }
 
 TEST_CASE("sub-chunk-request v975 form round-trips against the golden")
 {
-    using Packet = bp::SubChunkRequestPacket_<bp::ProtocolVersion::V975>;
+    using Packet = bp::SubChunkRequestPacket_<975>;
 
     Packet packet;
     packet.dimension_type = static_cast<bp::DimensionType>(0);
@@ -86,7 +86,7 @@ TEST_CASE("sub-chunk-request v975 form round-trips against the golden")
 
 TEST_CASE("sub-chunk-request v1001 form round-trips against the golden")
 {
-    using Packet = bp::SubChunkRequestPacket_<bp::ProtocolVersion::V1001>;
+    using Packet = bp::SubChunkRequestPacket_<1001>;
 
     Packet packet;
     packet.dimension_type = static_cast<bp::DimensionType>(0);
@@ -116,6 +116,6 @@ TEST_CASE("the cerealisation reshapes the wire, not just the field order")
     // A v975 body must not decode as a v1001 one: the fixed uint32 offset count
     // reads as a varint, so the frame desynchronises rather than reading short.
     bp::BinaryReader reader{golden_v975};
-    auto wrong = bp::Serializer<bp::SubChunkRequestPacket_<bp::ProtocolVersion::V1001>>::deserialize(reader);
+    auto wrong = bp::Serializer<bp::SubChunkRequestPacket_<1001>>::deserialize(reader);
     REQUIRE_FALSE(wrong.has_value());
 }

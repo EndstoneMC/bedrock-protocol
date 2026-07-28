@@ -6,9 +6,8 @@ files to open and drives the other two. This module holds the first and third.
 
 The DSL has no `import` statement of its own, so `Importer` reads Python's: it
 follows `from X.Y import ...` between modules, and additionally pulls in each
-input's owning package (where `__version__` lives) and the `version` submodule
-(which declares the compiler-owned `ProtocolVersion`), neither of which a schema
-file necessarily names.
+input's owning package (where `__version__` lives), which a schema file does not
+necessarily name.
 """
 
 from __future__ import annotations
@@ -184,7 +183,6 @@ class Importer:
             stems[name] = src.stem
             output_names.append(name)
         self._load_owning_packages(griffe_modules, output_names)
-        self._load_version_module(griffe_modules, output_names)
         self._follow_imports(griffe_modules, output_names)
         symbols = self._classify(griffe_modules)
         parser = Parser(symbols)
@@ -219,25 +217,6 @@ class Importer:
                     if ip.joinpath(*parts[:cut], "__init__.py").is_file():
                         loaded[parent] = self._source_tree.open(parent, ip)
                         break
-
-    def _load_version_module(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
-        """Always load the DSL's `version` submodule (which declares the
-        compiler-owned `ProtocolVersion` enum) so any file with versioned types
-        can spell the typed `_<ProtocolVersion V>` selector without importing
-        it. The enum stays DSL-owned; the import is just no longer boilerplate."""
-        for name in seed:
-            parts = name.split(".")
-            for cut in range(len(parts) - 1, 0, -1):
-                mod_name = ".".join(parts[:cut] + ["version"])
-                if mod_name in loaded:
-                    break
-                for ip in self._source_tree.import_paths:
-                    if ip.joinpath(*parts[:cut], "version.py").is_file():
-                        loaded[mod_name] = self._source_tree.open(mod_name, ip)
-                        break
-                else:
-                    continue
-                break
 
     def _follow_imports(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
         pending = list(seed)

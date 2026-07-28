@@ -29,7 +29,7 @@ std::string bytes(std::initializer_list<int> raw)
     return out;
 }
 
-using Packet = bp::InventoryTransactionPacket_<bp::ProtocolVersion::V1001>;
+using Packet = bp::InventoryTransactionPacket_<1001>;
 
 // The cerealised item extra-data blob: Int16(0) NBT-length, then two empty
 // uint32-counted string lists (can-place-on / can-break). All zero.
@@ -110,7 +110,7 @@ const std::string golden_use_item = bytes({
     0x00,              //   client_cooldown_state = OFF (uint8)
 });
 
-using PacketV975 = bp::InventoryTransactionPacket_<bp::ProtocolVersion::V975>;
+using PacketV975 = bp::InventoryTransactionPacket_<975>;
 
 bp::base::SerializedNetworkItemStackDescriptor air_v975()
 {

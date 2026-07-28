@@ -1,5 +1,6 @@
 add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
+        test_001_login.cpp
         test_011_start_game.cpp
         test_030_inventory_transaction.cpp
         test_032_mob_armor_equipment.cpp
@@ -8,7 +9,9 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_122_biome_definition_list.cpp
         test_123_level_sound_event.cpp
         test_135_client_cache_blob_status.cpp
+        test_156_packet_violation_warning.cpp
         test_175_sub_chunk_request.cpp
+        test_193_request_network_settings.cpp
         test_315_serverbound_diagnostics.cpp
         test_328_primitive_shapes.cpp
         test_331_graphics_override_parameter.cpp

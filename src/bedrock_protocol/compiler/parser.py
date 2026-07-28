@@ -330,7 +330,9 @@ class Parser:
 
     # ---- enum wire type ----------------------------------------------------
 
-    def _enum_scalar(self, type_kw: str | None, field_name: str, enum_name: str) -> PrimitiveType | None:
+    def _enum_scalar(
+        self, type_kw: str | None, field_name: str, enum_name: str, endian: str | None
+    ) -> PrimitiveType | None:
         """The wire encoding of an enum-typed field: `field(type=)` if given
         (`str` marks it name-coded), else derived from the enum's underlying type."""
         if type_kw == "str":
@@ -338,7 +340,7 @@ class Parser:
         if type_kw is not None:
             if type_kw not in PRIMITIVES:
                 raise CompilerError(f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}")
-            return PrimitiveType(name=type_kw)
+            return _with_endian(PrimitiveType(name=type_kw), endian, field_name)
         underlying = self.enum_underlying.get(enum_name)
         if underlying is None:
             raise CompilerError(
@@ -346,17 +348,18 @@ class Parser:
                 f"cannot be derived -- give the enum one as a second base "
                 f"(class {enum_name}(IntEnum, uint8)) or pass field(type=...)"
             )
-        return _default_enum_wire(underlying)
+        return _with_endian(_default_enum_wire(underlying), endian, field_name)
 
     # ---- field-type walker -------------------------------------------------
 
     def type(self, field_name: str, ann: _Ann, call: _Ann) -> FieldType | None:
         type_kw = _name_kwarg(call, "field", "type")
         prefix = _repeat_prefix(call, field_name)
+        endian = _endian_kwarg(call, field_name)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix)
-        return self._base_type(ann, type_kw, prefix, field_name)
+            return self._union_type(cases, field_name, type_kw, prefix, endian)
+        return self._base_type(ann, type_kw, prefix, field_name, endian)
 
     def _union_type(
         self,
@@ -364,17 +367,18 @@ class Parser:
         field_name: str,
         type_kw: str | None,
         prefix: PrimitiveType,
+        endian: str | None,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
-            base = self._base_type(inner_ann, type_kw, prefix, field_name)
+            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian)
             return None if base is None else OptionalType(base)
         types: list[FieldType | None] = []
         for case in cases:
             if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(case, type_kw, prefix, field_name)
+            t = self._base_type(case, type_kw, prefix, field_name, endian)
             if t is None:
                 return None
             types.append(t)
@@ -386,27 +390,28 @@ class Parser:
         type_kw: str | None,
         prefix: PrimitiveType,
         field_name: str,
+        endian: str | None,
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
             opt = _optional_element(ann)
             if opt is not None:
-                inner = self._base_type(opt, type_kw, prefix, field_name)
+                inner = self._base_type(opt, type_kw, prefix, field_name, endian)
                 return None if inner is None else OptionalType(inner)
             elem = _list_element(ann, field_name)
             if elem is not None:
-                inner = self._base_type(elem, type_kw, prefix, field_name)
+                inner = self._base_type(elem, type_kw, prefix, field_name, endian)
                 return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
-            key = self._base_type(mapping[0], type_kw, prefix, field_name)
-            value = self._base_type(mapping[1], type_kw, prefix, field_name)
+            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian)
+            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian)
             if key is None or value is None:
                 return None
             return MappingType(key=key, value=value, prefix=prefix)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix)
+            return self._union_type(cases, field_name, type_kw, prefix, endian)
         dotted = _dotted_name(ann)
         if dotted is not None and dotted in BUILTIN_ANNOTATIONS:
             return StructType(BUILTIN_ANNOTATIONS[dotted])
@@ -414,17 +419,23 @@ class Parser:
             return None
         name = ann.name
         if name in self.enum_names:
-            return EnumType(name, self._enum_scalar(type_kw, field_name, name))
+            return EnumType(name, self._enum_scalar(type_kw, field_name, name, endian))
         if name in self.struct_names:
             return StructType(name)
         if name in PRIMITIVES:
-            return PrimitiveType(name=name, wire=_wire_override(type_kw, name, field_name))
+            return _with_endian(
+                PrimitiveType(name=name, wire=_wire_override(type_kw, name, field_name)), endian, field_name
+            )
         alias = self.aliases.get(name)
         if isinstance(alias, PrimitiveAlias):
-            return PrimitiveType(
-                name=alias.primitive,
-                alias=alias.name,
-                wire=_wire_override(type_kw, alias.primitive, field_name),
+            return _with_endian(
+                PrimitiveType(
+                    name=alias.primitive,
+                    alias=alias.name,
+                    wire=_wire_override(type_kw, alias.primitive, field_name),
+                ),
+                endian,
+                field_name,
             )
         if isinstance(alias, TypeAlias):
             return alias.target
@@ -468,6 +479,10 @@ _INT_WIDTHS: dict[str, tuple[int, bool]] = {
     "int64": (8, True),
     "uint64": (8, False),
 }
+
+
+#: Primitive encoding -> size in bytes, for the encodings whose bytes have an order.
+_FIXED_WIDTHS: dict[str, int] = {name: size for name, (size, _) in _INT_WIDTHS.items()} | {"float": 4, "double": 8}
 
 
 def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
@@ -668,6 +683,30 @@ def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
     if name not in PRIMITIVES:
         raise CompilerError(f"{field_name}: field(prefix=...) must be an integer primitive, got {name!r}")
     return PrimitiveType(name=name)
+
+
+def _endian_kwarg(call: _Ann, field_name: str) -> str | None:
+    value = _call_arg(call, "field", "endian")
+    if value is None:
+        return None
+    order = str(value).strip("'\"")
+    if order not in ("big", "little"):
+        raise CompilerError(f'{field_name}: field(endian=...) must be "big" or "little", got {order!r}')
+    return order
+
+
+def _with_endian(prim: PrimitiveType, endian: str | None, field_name: str) -> PrimitiveType:
+    """Applies `field(endian=...)` to a primitive, rejecting an encoding whose
+    bytes carry no order."""
+    if endian is None:
+        return prim
+    if prim.encoding not in _FIXED_WIDTHS:
+        raise CompilerError(
+            f"{field_name}: field(endian=...) applies to a fixed-width primitive, got {prim.encoding!r}"
+        )
+    if _FIXED_WIDTHS[prim.encoding] == 1:
+        raise CompilerError(f"{field_name}: field(endian=...) on a one-byte {prim.encoding} has no effect")
+    return replace(prim, endian=endian)
 
 
 def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:

@@ -134,13 +134,18 @@ def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
 # --- primitive wire helpers ---------------------------------------------------
 
 
+def _order_argument(prim: PrimitiveType) -> str:
+    """The stream's explicit byte-order template argument, empty for the default."""
+    return ", std::endian::big" if prim.endian == "big" else ""
+
+
 def _primitive_write(prim: PrimitiveType, expr: str) -> str:
     if prim.encoding in ("str", "bytes"):
         return f"stream.write({expr});"
     u = PRIMITIVE_TYPES[prim.encoding]
     if prim.encoding in VARINT_PRIMITIVES:
         return f"stream.writeVarInt<{u}>({expr});"
-    return f"stream.write<{u}>({expr});"
+    return f"stream.write<{u}{_order_argument(prim)}>({expr});"
 
 
 def _primitive_read(prim: PrimitiveType) -> str:
@@ -149,12 +154,21 @@ def _primitive_read(prim: PrimitiveType) -> str:
     u = PRIMITIVE_TYPES[prim.encoding]
     if prim.encoding in VARINT_PRIMITIVES:
         return f"auto v = stream.readVarInt<{u}>();"
-    return f"auto v = stream.read<{u}>();"
+    return f"auto v = stream.read<{u}{_order_argument(prim)}>();"
 
 
 def _read_verb(prim: PrimitiveType) -> str:
     u = PRIMITIVE_TYPES[prim.encoding]
-    return f"readVarInt<{u}>" if prim.encoding in VARINT_PRIMITIVES else f"read<{u}>"
+    if prim.encoding in VARINT_PRIMITIVES:
+        return f"readVarInt<{u}>"
+    return f"read<{u}{_order_argument(prim)}>"
+
+
+def _codec_includes(prim: PrimitiveType) -> set[str]:
+    """Headers a primitive's read / write needs — its own, plus `<bit>` where the
+    call spells a byte order."""
+    own = {"<bit>"} if prim.endian == "big" else set()
+    return type_includes(prim) | own
 
 
 def type_includes(t: FieldType | None) -> set[str]:
@@ -214,11 +228,11 @@ class PrimitiveFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
-        p.add_includes(*type_includes(self._prim))
+        p.add_includes(*_codec_includes(self._prim))
         p.print(_primitive_write(self._prim, var) + "\n")
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<expected>", *type_includes(self._prim))
+        p.add_includes("<expected>", *_codec_includes(self._prim))
         p.print(_primitive_read(self._prim) + "\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
         if self._prim.name in ("str", "bytes") and self._prim.alias is None:
@@ -241,7 +255,7 @@ class EnumFieldGenerator(FieldGenerator):
             p.add_includes("<bedrock/serializer.hpp>")
             p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
         else:
-            p.add_includes(*type_includes(self._enum.scalar))
+            p.add_includes(*_codec_includes(self._enum.scalar))
             p.print(_primitive_write(self._enum.scalar, var) + "\n")
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
@@ -252,7 +266,7 @@ class EnumFieldGenerator(FieldGenerator):
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = *v;\n")
         else:
-            p.add_includes(*type_includes(self._enum.scalar))
+            p.add_includes(*_codec_includes(self._enum.scalar))
             p.print(_primitive_read(self._enum.scalar) + "\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")

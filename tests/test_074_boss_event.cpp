@@ -78,8 +78,8 @@ const std::string golden_v1001 = bytes({
     0x01,                    // overlay = NOTCHED_6 (uint8)
 });
 
-using V975 = bp::BossEventPacket_<bp::ProtocolVersion::V975>;
-using V1001 = bp::BossEventPacket_<bp::ProtocolVersion::V1001>;
+using V975 = bp::BossEventPacket_<975>;
+using V1001 = bp::BossEventPacket_<1001>;
 
 V975 sample_v975(bp::BossEventUpdateType event_type)
 {

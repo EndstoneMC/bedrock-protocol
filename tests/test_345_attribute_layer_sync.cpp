@@ -29,7 +29,7 @@ std::string bytes(std::initializer_list<int> raw)
 // A case-2 (UpdateEnvironmentAttributes) packet carrying one bool attribute.
 // The only version-varying part is EnvironmentAttributeData, which gains
 // local_transition_ticks + noise_transition at the 976 step.
-template <bp::ProtocolVersion V>
+template <int V>
 bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
 {
     bp::EnvironmentAttributeData_<V> env;
@@ -38,7 +38,7 @@ bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
     env.current_transition_ticks = 0;
     env.total_transition_ticks = 0;
     env.easing = "linear";
-    if constexpr (V == bp::ProtocolVersion::V1001) {
+    if constexpr (V == 1001) {
         env.local_transition_ticks = 0;
         env.noise_transition = false;
     }
@@ -97,14 +97,14 @@ const std::string golden_v1001 = bytes({
 
 TEST_CASE("packet id is 345")
 {
-    STATIC_REQUIRE(bp::ClientboundAttributeLayerSyncPacket_<bp::ProtocolVersion::V975>::Id == 345);
-    STATIC_REQUIRE(bp::ClientboundAttributeLayerSyncPacket_<bp::ProtocolVersion::V1001>::Id == 345);
+    STATIC_REQUIRE(bp::ClientboundAttributeLayerSyncPacket_<975>::Id == 345);
+    STATIC_REQUIRE(bp::ClientboundAttributeLayerSyncPacket_<1001>::Id == 345);
 }
 
 TEST_CASE("v975 form round-trips against the golden")
 {
-    using Packet = bp::ClientboundAttributeLayerSyncPacket_<bp::ProtocolVersion::V975>;
-    REQUIRE(encode(make_packet<bp::ProtocolVersion::V975>()) == golden_v975);
+    using Packet = bp::ClientboundAttributeLayerSyncPacket_<975>;
+    REQUIRE(encode(make_packet<975>()) == golden_v975);
 
     bp::BinaryReader reader{golden_v975};
     auto back = bp::Serializer<Packet>::deserialize(reader);
@@ -115,8 +115,8 @@ TEST_CASE("v975 form round-trips against the golden")
 
 TEST_CASE("v1001 form round-trips against the golden")
 {
-    using Packet = bp::ClientboundAttributeLayerSyncPacket_<bp::ProtocolVersion::V1001>;
-    REQUIRE(encode(make_packet<bp::ProtocolVersion::V1001>()) == golden_v1001);
+    using Packet = bp::ClientboundAttributeLayerSyncPacket_<1001>;
+    REQUIRE(encode(make_packet<1001>()) == golden_v1001);
 
     bp::BinaryReader reader{golden_v1001};
     auto back = bp::Serializer<Packet>::deserialize(reader);

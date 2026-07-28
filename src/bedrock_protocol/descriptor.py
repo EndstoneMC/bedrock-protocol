@@ -105,11 +105,15 @@ class PrimitiveType:
 
     `wire` is set by `field(type=<integer primitive>)`: `name` keeps owning the
     in-memory type and `wire` takes over the encoding, so a BDS member declared
-    narrow but written as a varint keeps both halves."""
+    narrow but written as a varint keeps both halves.
+
+    `endian` is the byte order of a fixed-width encoding, set by
+    `field(endian="big")` for the few fields Bedrock sends big-endian."""
 
     name: str
     alias: str | None = None
     wire: str | None = None
+    endian: Literal["little", "big"] = "little"
     kind: Literal["primitive"] = "primitive"
 
     @property
