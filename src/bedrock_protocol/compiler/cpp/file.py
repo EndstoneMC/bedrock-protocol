@@ -74,6 +74,7 @@ class FileGenerator:
         self._emit_type_aliases(body)
         self._emit_versioned_namespaces(body)
         self._emit_traits(body)
+        self._emit_packet_traits(body)
         self._emit_enum_reflections(body)
         self._emit_serializers(body, mode="decl")
         self._emit_latest_aliases(body, latest_version)
@@ -318,6 +319,37 @@ class FileGenerator:
         for name, _, _ in entries:
             p.print(f"template <int V> using {name}_ = typename detail::{name}_<V>::type;\n")
         p.print("\n")
+
+    def _emit_packet_traits(self, p: Printer) -> None:
+        """`packet_of<V, Id>` for every packet declared here, so a caller can
+        reach a packet by wire id without naming the type. The primary in
+        <bedrock/packet.hpp> answers `void`, so the constraint has to be the
+        packet's whole `[since, until)` range -- outside it the packet is not on
+        the wire and must not resolve."""
+        entries = self._packet_entries()
+        if not entries:
+            return
+        p.add_includes("<bedrock/packet.hpp>")
+        for packet_id, spelling, clause in entries:
+            p.print(f"template <int V>{f' requires ({clause})' if clause else ''}\n")
+            p.print(f"struct packet_of<V, {packet_id}> {{ using type = {spelling}; }};\n\n")
+
+    def _packet_entries(self) -> list[tuple[int, str, str]]:
+        """`(id, type spelling, requires clause)` per packet, by id. A versioned
+        packet hands back its `_<V>` selector rather than one specialization per
+        snapshot -- the selector already dispatches within the range."""
+        by_name = self._by_name()
+        out: list[tuple[int, str, str]] = []
+        for name in self._resolved.declaration_order:
+            t = by_name.get(name)
+            if not isinstance(t, Struct) or t.packet_id is None:
+                continue
+            if self._resolved.is_versioned(name):
+                fresh = self._resolved.fresh_snapshots(name)
+                out.append((t.packet_id, f"{name}_<V>", requires_clause(fresh[0].lo, t.until)))
+            else:
+                out.append((t.packet_id, name, ""))
+        return sorted(out)
 
     def _emit_latest_aliases(self, p: Printer, latest_version: int) -> None:
         entries = self._versioned_entries()

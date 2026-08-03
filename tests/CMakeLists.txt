@@ -1,6 +1,7 @@
 add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         test_enum.cpp
+        test_packet.cpp
         test_001_login.cpp
         test_011_start_game.cpp
         test_030_inventory_transaction.cpp
