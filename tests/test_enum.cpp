@@ -81,3 +81,21 @@ TEST_CASE("versioned enum", "[enum]")
     STATIC_REQUIRE(bp::enum_integer(bp::MovementEffectType_<975>::COUNT) == 2);
     STATIC_REQUIRE(bp::enum_integer(bp::MovementEffectType_<1001>::COUNT) == 3);
 }
+
+// A trailing sentinel written `auto()` re-resolves against the members present at each
+// snapshot, so the three sound events added at 2168 push UNDEFINED from 611 to 614.
+TEST_CASE("level sound event trailing sentinel", "[enum]")
+{
+    STATIC_REQUIRE(bp::enum_cast<bp::LevelSoundEvent_<975>>("MOUNT") == std::nullopt);
+    STATIC_REQUIRE(bp::enum_cast<bp::LevelSoundEvent_<1001>>("MOUNT") == std::nullopt);
+    STATIC_REQUIRE(bp::enum_cast<bp::LevelSoundEvent_<1001>>("DISMOUNT") == std::nullopt);
+    STATIC_REQUIRE(bp::enum_cast<bp::LevelSoundEvent_<1001>>("STRAW_BED_BREAK_LEAVE") == std::nullopt);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<2168>::MOUNT) == 611);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<2168>::DISMOUNT) == 612);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<2168>::STRAW_BED_BREAK_LEAVE) == 613);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<975>::UNDEFINED) == 601);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<1001>::UNDEFINED) == 611);
+    STATIC_REQUIRE(bp::enum_integer(bp::LevelSoundEvent_<2168>::UNDEFINED) == 614);
+    STATIC_REQUIRE(bp::enum_count<bp::LevelSoundEvent_<2168>>() ==
+                   bp::enum_count<bp::LevelSoundEvent_<1001>>() + 3);
+}

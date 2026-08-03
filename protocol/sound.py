@@ -580,6 +580,10 @@ class LevelSoundEvent(IntEnum, uint32):
     BUCKET_EMPTY_LAND_ANIMAL = value(608, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_START = value(609, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_ACTIVE = value(610, since=1001)
+    # TODO: confirm against BDS -- named from Mojang's changelog; bedrock-headers stops at r26_u3.
+    MOUNT = value(611, since=2168)
+    DISMOUNT = value(612, since=2168)
+    STRAW_BED_BREAK_LEAVE = value(613, since=2168)
     UNDEFINED = auto()
 
 
