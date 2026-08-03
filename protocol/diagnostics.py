@@ -1,10 +1,12 @@
 from enum import IntEnum
 
-from protocol import auto, field, packet, uint8, uint64
+from protocol import auto, field, packet, type, uint8, uint64
 
 package = "bedrock.protocol"
 
 
+# TODO: this is the 1001 numbering. The r26_u4 dump inserts Blobs at 7 and shifts 104 slots
+# by one, which value(since=)/value(until=) cannot express; there is no 2168 form for it.
 class MemoryCategory(IntEnum, uint8):
     UNKNOWN = 0
     INVALID_SIZE_UNKNOWN = 1
@@ -120,6 +122,13 @@ class SystemDiagnosticTimingInfo:
     percent_of_total: uint8
 
 
+# TODO: confirm against BDS -- named from the r26_u4 dump; bedrock-headers stops at r26_u3.
+@type(since=2168)
+class SystemCategory:
+    category_name: str
+    system_index: uint64
+
+
 class ScopeDataSummary:
     label: str
     indentation: str
@@ -142,4 +151,7 @@ class ServerboundDiagnosticsPacket:
     memory_category_values: list[MemoryCategoryCounter]
     entity_diagnostics: list[EntityDiagnosticTimingInfo]
     system_diagnostics: list[SystemDiagnosticTimingInfo]
+    # TODO: confirm against BDS -- the dump marks this optional, CloudburstMC v2168 writes
+    # the array with no presence flag at all.
+    system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_scopes: list[ScopeDataSummary] = field(since=1001)
