@@ -11,11 +11,16 @@ class PresenceConfiguration:
     world_name: str
 
 
-@type(since=1001)
+@type(since=1001, until=2168)
 class PresenceConfiguration:
     experience_name: str | None
     world_name: str | None
     rich_presence_id: str
+
+
+@type(since=2168)
+class PresenceConfiguration:
+    rich_presence_id: str | None
 
 
 class GatheringsConfigurationJoinInfo:
