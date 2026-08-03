@@ -134,7 +134,7 @@ class SerializedNetworkItemStackDescriptor:
         user_data_buffer: bytes
 
 
-@type(since=1001)
+@type(since=1001, until=2168)
 class SerializedNetworkItemStackDescriptor:
     """cerealizer<NetworkItemStackDescriptor>::SerializedData. The extra data
     (NBT, can-place-on / can-break, shield blocking tick) rides in a single
@@ -145,6 +145,22 @@ class SerializedNetworkItemStackDescriptor:
     stack_size: uint16
     aux_value: uvarint32
     net_id_variant: ItemStackNetIdVariant | None
+    block_runtime_id: uvarint32
+    user_data_buffer: bytes
+
+
+@type(since=2168)
+class SerializedNetworkItemStackDescriptor:
+    """cerealizer<NetworkItemStackDescriptor>::SerializedData. ItemStackNetIdVariant's
+    binding projects its three alternatives onto one signed varint: non-negative
+    is an ItemStackNetId, negative-odd an ItemStackRequestId, negative-even an
+    ItemStackLegacyRequestId. The tag is gone, so the case is read back from the
+    sign and parity."""
+
+    id: int16
+    stack_size: uint16
+    aux_value: uvarint32
+    net_id_variant: varint32 | None
     block_runtime_id: uvarint32
     user_data_buffer: bytes
 

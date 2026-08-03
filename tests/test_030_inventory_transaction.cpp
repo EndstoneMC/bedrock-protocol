@@ -38,14 +38,14 @@ std::string empty_item_blob()
     return std::string(10, '\0');
 }
 
-bp::SerializedNetworkItemStackDescriptor air()
+bp::v1001::SerializedNetworkItemStackDescriptor air()
 {
     return {};  // id 0 -> the whole descriptor is 8 zero bytes
 }
 
-bp::SerializedNetworkItemStackDescriptor stone()
+bp::v1001::SerializedNetworkItemStackDescriptor stone()
 {
-    bp::SerializedNetworkItemStackDescriptor item;
+    bp::v1001::SerializedNetworkItemStackDescriptor item;
     item.id = 1;
     item.stack_size = 64;
     item.block_runtime_id = 7;
@@ -130,6 +130,23 @@ const std::string golden_v975_legacy_request = bytes({
     0x0e, 0x01, 0x0c, 0x02, 0x03, 0x04, 0x00, 0x00,
 });
 
+using PacketV2168 = bp::InventoryTransactionPacket_<2168>;
+
+bp::v2168::SerializedNetworkItemStackDescriptor air_v2168()
+{
+    return {};
+}
+
+bp::v2168::SerializedNetworkItemStackDescriptor stone_v2168()
+{
+    bp::v2168::SerializedNetworkItemStackDescriptor item;
+    item.id = 1;
+    item.stack_size = 64;
+    item.block_runtime_id = 7;
+    item.user_data_buffer = empty_item_blob();
+    return item;
+}
+
 }  // namespace
 
 TEST_CASE("packet id is 30 at v1001")
@@ -141,8 +158,8 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
 {
     Packet packet;
     packet.legacy_request_id = 0;
-    bp::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::InventoryAction>{};  // present, empty
+    bp::v1001::NormalTransactionData normal;
+    normal.actions.actions = std::vector<bp::v1001::InventoryAction>{};  // present, empty
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_empty);
 
@@ -158,7 +175,7 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
 // the optional's own flag. container_id is engaged (12); flags is absent.
 TEST_CASE("inventory-transaction normal with a container action round-trips")
 {
-    bp::InventoryAction action;
+    bp::v1001::InventoryAction action;
     action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
@@ -166,8 +183,8 @@ TEST_CASE("inventory-transaction normal with a container action round-trips")
     action.to_item = stone();
 
     Packet packet;
-    bp::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::InventoryAction>{action};
+    bp::v1001::NormalTransactionData normal;
+    normal.actions.actions = std::vector<bp::v1001::InventoryAction>{action};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_action);
 
@@ -201,8 +218,8 @@ TEST_CASE("inventory-transaction rejects a container source whose marker reads f
 
 TEST_CASE("inventory-transaction use-item round-trips against the golden")
 {
-    bp::ItemUseInventoryTransaction use;
-    use.actions.actions = std::vector<bp::InventoryAction>{};
+    bp::v1001::ItemUseInventoryTransaction use;
+    use.actions.actions = std::vector<bp::v1001::InventoryAction>{};
     use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
     use.pos = {.x = 1, .y = 2, .z = 3};
@@ -225,6 +242,78 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     REQUIRE(use_back.pos.z == 3);
     REQUIRE(use_back.target_block_id == 9);
     REQUIRE(use_back.trigger_type == bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT);
+}
+
+TEST_CASE("packet id is 30 at v2168")
+{
+    STATIC_REQUIRE(PacketV2168::Id == 30);
+}
+
+// 2168 moved only the item's net id, and neither of these stacks carries one, so
+// the gophertunnel 1001 golden is still the whole packet.
+TEST_CASE("inventory-transaction v2168 reproduces the 1001 golden when no item carries a net id")
+{
+    bp::v2168::InventoryAction action;
+    action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.container_id = static_cast<bp::ContainerID>(12);
+    action.slot = 3;
+    action.from_item = air_v2168();
+    action.to_item = stone_v2168();
+
+    PacketV2168 packet;
+    bp::v2168::NormalTransactionData normal;
+    normal.actions.actions = std::vector<bp::v2168::InventoryAction>{action};
+    packet.transaction = normal;
+    REQUIRE(encode(packet) == golden_normal_action);
+
+    bp::BinaryReader reader{golden_normal_action};
+    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
+    REQUIRE(back.has_value());
+    REQUIRE(reader.getUnreadLength() == 0);
+
+    const auto &actions = *std::get<0>(*back->transaction).actions.actions;
+    REQUIRE(actions.size() == 1);
+    REQUIRE(actions[0].to_item.id == 1);
+    REQUIRE_FALSE(actions[0].to_item.net_id_variant.has_value());
+}
+
+// No golden: CloudburstMC models packet 30 in its pre-cereal shape, so the two
+// eras are compared against each other instead. The tag byte is the difference.
+TEST_CASE("inventory-transaction an engaged net id is one byte shorter at v2168")
+{
+    bp::v1001::InventoryAction old_action;
+    old_action.slot = 3;
+    old_action.from_item = air();
+    old_action.to_item = stone();
+    old_action.to_item.net_id_variant = bp::ItemStackNetId{.id = 9};
+
+    Packet old_packet;
+    bp::v1001::NormalTransactionData old_normal;
+    old_normal.actions.actions = std::vector<bp::v1001::InventoryAction>{old_action};
+    old_packet.transaction = old_normal;
+
+    bp::v2168::InventoryAction action;
+    action.slot = 3;
+    action.from_item = air_v2168();
+    action.to_item = stone_v2168();
+    action.to_item.net_id_variant = 9;
+
+    PacketV2168 packet;
+    bp::v2168::NormalTransactionData normal;
+    normal.actions.actions = std::vector<bp::v2168::InventoryAction>{action};
+    packet.transaction = normal;
+
+    const auto encoded = encode(packet);
+    REQUIRE(encoded.size() + 1 == encode(old_packet).size());
+
+    bp::BinaryReader reader{encoded};
+    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
+    REQUIRE(back.has_value());
+    REQUIRE(reader.getUnreadLength() == 0);
+    REQUIRE(*(*std::get<0>(*back->transaction).actions.actions)[0].to_item.net_id_variant == 9);
+
+    bp::BinaryReader wrong{encoded};
+    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(wrong).has_value());
 }
 
 TEST_CASE("packet id is 30 at v975")
