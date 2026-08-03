@@ -16,7 +16,7 @@ reads `_unused: Literal[True]` then `x: T | None`.
 from enum import auto
 from typing import Any, TypeAliasType, Union
 
-__version__ = 1001
+__version__ = 2168
 
 
 def _identity(cls):

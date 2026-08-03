@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int16, int32, int64, packet, uint8, uint32, uint64, uvarint32, varint32
+from protocol import field, int8, int16, int32, int64, packet, type, uint8, uint32, uint64, uvarint32, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.attributes import DimensionType
 from protocol.common import BlockPos, Vec2, Vec3
@@ -108,6 +108,20 @@ class ExperimentData:
     enabled: bool
 
 
+class GameRulesChangedPacketData:
+    rules: list[GameRule]
+
+
+class ExperimentToggle:
+    name: str
+    enabled: bool
+
+
+class Experiments:
+    toggles: list[ExperimentToggle] = field(prefix=uint32)
+    experiments_ever_toggled: bool
+
+
 class SyncedPlayerMovementSettings:
     rewind_history_size: varint32
     server_authoritative_block_breaking: bool
@@ -122,6 +136,15 @@ class BlockEntry:
     properties: CompoundTag
 
 
+# TODO: confirm against BDS -- bedrock-headers has no r26_u4 branch, so this type and
+# its two field names come from the dump alone.
+@type(since=2168)
+class ServerBlockProperty:
+    block_name: str
+    block_definition: CompoundTag
+
+
+@type(until=2168)
 class LevelSettings:
     seed: int64
     spawn_settings: SpawnSettings
@@ -176,7 +199,61 @@ class LevelSettings:
     allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
 
 
-@packet(id=11)
+@type(since=2168)
+class LevelSettings:
+    seed: uint64
+    spawn_settings: SpawnSettings
+    generator: GeneratorType
+    game_type: GameType
+    is_hardcore: bool
+    game_difficulty: Difficulty
+    default_spawn: BlockPos
+    achievements_disabled: bool
+    editor_world_type: EditorWorldType
+    is_created_in_editor: bool
+    is_exported_from_editor: bool
+    time: varint32
+    education_edition_offer: EducationEditionOffer
+    education_features_enabled: bool
+    education_product_id: str
+    rain_level: float
+    lightning_level: float
+    confirmed_platform_locked_content: bool
+    multiplayer_game_intent: bool
+    lan_broadcast_intent: bool
+    xbl_broadcast_intent: GamePublishSetting
+    platform_broadcast_intent: GamePublishSetting
+    commands_enabled: bool
+    texture_packs_required: bool
+    rule_data: GameRulesChangedPacketData
+    experiments: Experiments
+    bonus_chest_enabled: bool
+    start_with_map_enabled: bool
+    default_permissions: PlayerPermissionLevel
+    server_chunk_tick_range: int32
+    has_locked_behavior_pack: bool
+    has_locked_resource_pack: bool
+    is_from_locked_template: bool
+    use_msa_gamertags_only: bool
+    is_from_world_template: bool
+    is_world_template_option_locked: bool
+    spawn_v1_villagers: bool
+    persona_disabled: bool
+    custom_skins_disabled: bool
+    emote_chat_muted: bool
+    base_game_version: str
+    limited_world_width: int32
+    limited_world_depth: int32
+    nether_type: NetherWorldType
+    edu_shared_uri_resource: EduSharedUriResource
+    override_force_experimental_gameplay: bool | None
+    chat_restriction_level: ChatRestrictionLevel
+    disable_player_interactions: bool
+    server_editor_connection_policy: ServerEditorConnectionPolicy
+    allow_anonymous_block_drops_in_editor_worlds: bool
+
+
+@packet(id=11, until=2168)
 class StartGamePacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
@@ -202,5 +279,34 @@ class StartGamePacket:
     block_network_ids_are_hashes: bool
     network_permissions: NetworkPermissions
     is_chat_logging: bool = field(since=1001)
+    server_configuration_join_info: ServerConfigurationJoinInfo | None
+    server_telemetry_data: ServerTelemetryData
+
+
+@packet(id=11, since=2168)
+class StartGamePacket:
+    entity_id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    entity_game_type: GameType
+    pos: Vec3
+    rot: Vec2
+    settings: LevelSettings
+    level_id: str
+    level_name: str
+    template_content_identity: str
+    is_trial: bool
+    movement_settings: SyncedPlayerMovementSettings
+    level_current_time: uint64
+    enchantment_seed: varint32
+    block_properties: list[ServerBlockProperty]
+    multiplayer_correlation_id: str
+    enable_item_stack_net_manager: bool
+    server_version: str
+    player_property_data: CompoundTag
+    server_block_type_registry_checksum: uint64
+    world_template_id: uuid.UUID
+    server_enabled_client_side_generation: bool
+    block_network_ids_are_hashes: bool
+    network_permissions: NetworkPermissions
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData

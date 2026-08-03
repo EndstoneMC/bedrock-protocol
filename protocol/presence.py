@@ -23,6 +23,7 @@ class PresenceConfiguration:
     rich_presence_id: str | None
 
 
+@type(until=2168)
 class GatheringsConfigurationJoinInfo:
     experience_id: uuid.UUID
     experience_name: str
@@ -32,6 +33,18 @@ class GatheringsConfigurationJoinInfo:
     target_id: uuid.UUID
     scenario_id: str
     server_id: str
+
+
+@type(since=2168)
+class GatheringsConfigurationJoinInfo:
+    experience_id: uuid.UUID
+    experience_name: str
+    experience_world_id: uuid.UUID | None
+    experience_world_name: str | None
+    creator_id: str
+    target_id: uuid.UUID | None
+    scenario_id: str | None
+    server_id: str | None
 
 
 class ClientStoreEntryPointConfiguration:
