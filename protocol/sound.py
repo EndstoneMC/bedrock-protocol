@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import field, int64, packet, uint32, uint64, value, varint32
+from protocol import field, int64, packet, type, uint32, uint64, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec3
 
@@ -583,6 +583,7 @@ class LevelSoundEvent(IntEnum, uint32):
     UNDEFINED = auto()
 
 
+@type(until=2168)
 class SoundDataEvent(IntEnum):
     STOP = 0
 
@@ -591,10 +592,54 @@ class ServerSoundHandle:
     value: uint64
 
 
-@packet(id=348, since=1001)
+@packet(id=348, since=1001, until=2168)
 class ClientboundUpdateSoundDataPacket:
     server_sound_handle: ServerSoundHandle
     sound_event: SoundDataEvent = field(type=str)
+
+
+# TODO: confirm against BDS -- the dump spells these SoundDataEvent::Stop and so on;
+# with no r26_u4 headers, whether that scope is a namespace or a class is unchecked.
+@type(since=2168)
+class Stop:
+    pass
+
+
+@type(since=2168)
+class SetVolume:
+    volume: float
+
+
+@type(since=2168)
+class SetPitch:
+    pitch: float
+
+
+@type(since=2168)
+class Fade:
+    duration: float
+    target_volume: float
+
+
+@type(since=2168)
+class SeekTo:
+    seconds: float
+
+
+@type(since=2168)
+class Pause:
+    pass
+
+
+@type(since=2168)
+class Resume:
+    pass
+
+
+@packet(id=348, since=2168)
+class ClientboundUpdateSoundDataPacket:
+    server_sound_handle: ServerSoundHandle
+    sound_event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
 
 
 @packet(id=123, until=1001)
