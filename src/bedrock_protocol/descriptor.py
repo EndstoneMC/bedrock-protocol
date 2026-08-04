@@ -307,8 +307,8 @@ class EnumValue:
     #: Spelled `auto()`: the number is `previous + 1` within whichever snapshot the
     #: member appears in, so a trailing sentinel tracks the members present there.
     is_auto: bool = False
-    #: `value(name=)`: the exact string BDS puts on the wire, where it is not the
-    #: member's own spelling.
+    #: `MEMBER = 3, "Spelling"`: the exact string BDS puts on the wire, where it is
+    #: not the member's own spelling.
     wire: str | None = None
 
     def present_at(self, snapshot: int) -> bool:
@@ -323,8 +323,9 @@ class EnumValue:
         The DSL spells members PEP 8, and BDS does not: `DownloadingFinished`
         has no separator to map back to, and the read lowercases without
         stripping one, so `DOWNLOADING_FINISHED` would reject BDS's own string
-        and the length prefix would be one byte long. `value(name=)` says the
-        wire string outright, leaving the C++ spelling free to follow PEP 8."""
+        and the length prefix would be one byte long. Pairing the member with
+        its wire string -- `DOWNLOADING_FINISHED = 3, "DownloadingFinished"` --
+        says it outright, leaving the C++ spelling free to follow PEP 8."""
         return self.wire if self.wire is not None else self.name
 
 

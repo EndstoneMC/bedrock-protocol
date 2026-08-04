@@ -28,7 +28,7 @@ from bedrock_protocol.descriptor import (
     TypeAlias,
 )
 
-from .parser import Parser, SymbolTable, enum_underlying_of, is_int_enum, nested_declarations
+from .parser import Parser, SymbolTable, enum_underlying_of, is_enum, nested_declarations
 
 
 class _DeclarationCollector(griffe.Extension):
@@ -269,7 +269,7 @@ class Importer:
             """Record one declared type under its dotted path, then recurse into
             whatever it nests."""
             name = f"{scope}.{decls[0].name}" if scope else decls[0].name
-            if is_int_enum(decls[0]):
+            if is_enum(decls[0]):
                 enum_names.add(name)
                 enum_underlying[name] = enum_underlying_of(decls[0])
                 return

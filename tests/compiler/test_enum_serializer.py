@@ -83,8 +83,14 @@ class ThingPacket:
         )
         self.assertIn("struct Serializer<base::Kind> {", header)
         self.assertIn("struct Serializer<v2168::Kind> {", header)
-        self.assertIn('{E::BETA, "BETA"}', self.body(source, "void Serializer<v2168::Kind>::serialize"))
-        self.assertNotIn("BETA", self.body(source, "void Serializer<base::Kind>::serialize"))
+        # each shape carries its own members, in the reflected table the write
+        # reads and in the read's own keyed one
+        new = header.index("names_v<v2168::Kind>")
+        self.assertIn('"BETA",', header[new : header.index("}};", new)])
+        old = header.index("names_v<base::Kind>")
+        self.assertNotIn('"BETA",', header[old : header.index("}};", old)])
+        self.assertIn('{"beta", E::BETA}', self.body(source, "auto Serializer<v2168::Kind>::deserialize"))
+        self.assertNotIn("BETA", self.body(source, "auto Serializer<base::Kind>::deserialize"))
 
     def test_an_unversioned_enum_is_unqualified(self) -> None:
         header, source = self.compile(
@@ -103,6 +109,113 @@ class ThingPacket:
         self.assertIn("struct Serializer<Kind> {", header)
         self.assertIn("void Serializer<Kind>::serialize", source)
         self.assertNotIn("v2168::Kind", source)
+
+
+class ReadIsAKeyedLookup(CompilerCase):
+    """The read keys a table of its own.
+
+    `enum_count` / `enum_names` / `enum_values` are the reflection API
+    downstream projects consume; a codec must not be built on them. A scan over
+    them is also linear, with a case-insensitive compare per candidate, and
+    `LevelSoundEvent` runs to 600+ members on a hot path.
+    """
+
+    SCHEMA = """
+from enum import IntEnum
+
+from protocol import field, packet, uint8, value
+
+package = "bedrock.protocol"
+
+
+class Kind(IntEnum, uint8):
+    ALPHA = 0
+    BRAVO = 1
+
+
+@packet(id=7)
+class ThingPacket:
+    kind: Kind = field(type=str)
+"""
+
+    def read(self, source: str) -> str:
+        return self.body(source, "auto Serializer<Kind>::deserialize")
+
+    def test_the_read_is_a_map_lookup(self) -> None:
+        _, source = self.compile(self.SCHEMA)
+        read = self.read(source)
+        self.assertIn("static const std::unordered_map<std::string_view, E> values{", read)
+        self.assertIn('{"alpha", E::ALPHA}', read)
+        self.assertIn('{"bravo", E::BRAVO}', read)
+        self.assertIn("auto it = values.find(*v);", read)
+
+    def test_the_read_names_no_reflection_helper(self) -> None:
+        _, source = self.compile(self.SCHEMA)
+        read = self.read(source)
+        for helper in ("enum_count", "enum_names", "enum_values", "std::equal"):
+            self.assertNotIn(helper, read)
+
+    def test_the_write_still_uses_enum_name(self) -> None:
+        """Reflection in the write is fine and stays: one lookup, no scan."""
+        _, source = self.compile(self.SCHEMA)
+        write = self.body(source, "void Serializer<Kind>::serialize")
+        self.assertIn("enum_name(value)", write)
+
+    def test_the_map_carries_the_snapshots_members_only(self) -> None:
+        _, source = self.compile(
+            """
+from enum import IntEnum
+
+from protocol import field, packet, uint8, value
+
+package = "bedrock.protocol"
+
+
+class Kind(IntEnum, uint8):
+    ALPHA = 0
+    BRAVO = value(1, since=2168)
+
+
+@packet(id=7)
+class ThingPacket:
+    kind: Kind = field(type=str)
+"""
+        )
+        base = self.body(source, "auto Serializer<base::Kind>::deserialize")
+        later = self.body(source, "auto Serializer<v2168::Kind>::deserialize")
+        self.assertNotIn("BRAVO", base)
+        self.assertIn('{"bravo", E::BRAVO}', later)
+        self.assertIn("using E = v2168::Kind;", later)
+
+    def test_a_versioned_read_keys_the_qualified_enum(self) -> None:
+        _, source = self.compile(GATED_ENUM)
+        read = self.body(source, "auto Serializer<v2168::ScorePacketEntryAction>::deserialize")
+        self.assertIn("using E = v2168::ScorePacketEntryAction;", read)
+        self.assertIn('{"remove", E::REMOVE}', read)
+
+    def test_members_colliding_once_lowercased_are_rejected(self) -> None:
+        """The map would keep one of them and say nothing."""
+        message = self.rejects(
+            """
+from enum import Enum
+
+from protocol import field, packet, uint8
+
+package = "bedrock.protocol"
+
+
+class Kind(Enum, uint8):
+    ALPHA = 0, "Alpha"
+    ALPHA_TOO = 1, "ALPHA"
+
+
+@packet(id=7)
+class ThingPacket:
+    kind: Kind = field(type=str)
+"""
+        )
+        self.assertIn("collide once lowercased", message)
+        self.assertIn("ALPHA, ALPHA_TOO", message)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import Enum
+from bedrock_protocol.descriptor import CompilerError, Enum, EnumValue
 
 from .field import type_includes
 from .helpers import PRIMITIVE_TYPES
@@ -53,7 +53,7 @@ class EnumGenerator:
         p.print(f"inline constexpr std::array<std::string_view, {n}> names_v<{qualified}>{{{{\n")
         p.indent()
         for v in values:
-            p.print(f'"{v.name}",\n')
+            p.print(f'"{v.wire_name}",\n')
         p.outdent()
         p.print("}};\n\n")
         p.print("template <>\n")
@@ -75,36 +75,31 @@ class EnumGenerator:
 
     def generate_serializer_definition(self, p: Printer) -> None:
         p.add_includes(
+            "<bedrock/enum.hpp>",
             "<bedrock/serializer.hpp>",
             "<bedrock/stream.hpp>",
-            "<expected>",
-            "<system_error>",
             "<cctype>",
+            "<expected>",
             "<string>",
             "<string_view>",
+            "<system_error>",
             "<unordered_map>",
         )
         q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
-            p.print(f"using E = {q};\n")
-            p.print("static const std::unordered_map<E, std::string_view> names{\n")
-            p.indent()
-            for v in self._enum.values:
-                p.print(f'{{E::{v.name}, "{v.wire_name}"}},\n')
-            p.outdent()
-            p.print("};\n")
-            p.print("auto it = names.find(value);\n")
-            p.print("if (it != names.end()) stream.write(it->second);\n")
+            p.print("if (const auto name = enum_name(value); !name.empty()) stream.write(name);\n")
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
             p.print(f"using E = {q};\n")
-            # BDS lowercases the incoming string before the enum lookup, so the
-            # read is case-insensitive; the keys are lowercased to match.
+            # BDS lowercases the incoming string before its own lookup, so the keys
+            # are lowercased to match. The codec keys its own table rather than
+            # scanning the reflection helpers: those are the downstream API, and a
+            # scan is linear over an enum that runs to 600 members on a hot path.
             p.print("static const std::unordered_map<std::string_view, E> values{\n")
             p.indent()
-            for v in self._enum.values:
+            for v in self._keyed_values():
                 p.print(f'{{"{v.wire_name.lower()}", E::{v.name}}},\n')
             p.outdent()
             p.print("};\n")
@@ -117,3 +112,19 @@ class EnumGenerator:
                 "return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n"
             )
             p.print("return it->second;\n")
+
+    def _keyed_values(self) -> tuple[EnumValue, ...]:
+        """The members the read keys on, rejecting a collision. Two members whose
+        wire names differ only by case would land on one key, and the map would
+        keep whichever came first without a word."""
+        by_key: dict[str, list[str]] = {}
+        for v in self._enum.values:
+            by_key.setdefault(v.wire_name.lower(), []).append(v.name)
+        clashes = {k: names for k, names in by_key.items() if len(names) > 1}
+        if clashes:
+            spelled = "; ".join(f"{', '.join(names)} -> {key!r}" for key, names in sorted(clashes.items()))
+            raise CompilerError(
+                f"{self._qualified}: name-coded members collide once lowercased, so the read cannot tell "
+                f"them apart -- {spelled}"
+            )
+        return self._enum.values

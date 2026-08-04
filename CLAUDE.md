@@ -87,8 +87,23 @@ transform, so the DSL spelling *is* the C++ spelling. BDS has no single conventi
 `JsonUI_ControlTree_PopulateTTS` → `JSON_UI_CONTROL_TREE_POPULATE_TTS`. This is the
 one exception to *Names mirror BDS*; class names still match exactly.
 
-Name-coded enums (`field(type=str)`) are PEP 8 too: BDS lowercases before lookup, so
-casing is not load-bearing. Patch the golden and say so in its comment.
+Name-coded enums (`field(type=str)`) are PEP 8 too, and **casing alone is free** —
+BDS lowercases before lookup, so patch the golden and say so in its comment. A
+**separator** is not free: BDS's `DownloadingFinished` has none to map back to, so
+`DOWNLOADING_FINISHED` would reject BDS's own string and add a byte behind the
+length prefix. Pair the member with the string BDS writes, the way `enum` itself
+spells `MONDAY = 1, "Mon"`:
+
+```python
+class ResourcePackResponse(Enum, int8):
+    DOWNLOADING_FINISHED = 3, "DownloadingFinished"
+```
+
+The pair needs a plain **`Enum`** base: `IntEnum` and `StrEnum` coerce a member to
+their own type, so a pair is not a value there. Where the base cannot take one, or
+the member is also version-gated, `value()` carries the string as its second
+positional — `SECOND = value(7, "Second", since=1001)`. Never mangle the member to
+match the wire (`DOWNLOADINGFINISHED`); the C++ spelling stays PEP 8.
 
 **Values are int literals or `auto()`** (previous + 1) — use `auto()` where the
 number is derived, typically a trailing count sentinel (`COUNT = auto()` for BDS's

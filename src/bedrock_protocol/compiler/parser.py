@@ -118,7 +118,7 @@ class Parser:
         structs: list[Struct] = []
         order: list[str] = []
         for decls in declarations:
-            if is_int_enum(decls[0]):
+            if is_enum(decls[0]):
                 e = self.enum(decls)
                 enums.append(e)
                 order.append(e.name)
@@ -161,16 +161,17 @@ class Parser:
             for name, attr in decl.attributes.items():
                 if attr.value is None:
                     continue
-                _check_keywords(attr.value, "value", _VALUE_KEYWORDS, f"{decl.name}.{name}", positional=1)
-                number = _enum_number(decl.name, name, attr.value, previous)
+                spelled, wire = _split_wire_name(attr.value, decl.name, name, _takes_paired_value(decl))
+                _check_keywords(spelled, "value", _VALUE_KEYWORDS, f"{decl.name}.{name}", positional=2)
+                number = _enum_number(decl.name, name, spelled, previous)
                 values.append(
                     EnumValue(
                         name,
                         number,
-                        is_auto=_is_auto(attr.value),
-                        since=_tighten(_int_kwarg(attr.value, "value", "since"), lo, max),
-                        until=_tighten(_int_kwarg(attr.value, "value", "until"), hi, min),
-                        wire=_wire_name(attr.value, decl.name, name),
+                        is_auto=_is_auto(spelled),
+                        since=_tighten(_int_kwarg(spelled, "value", "since"), lo, max),
+                        until=_tighten(_int_kwarg(spelled, "value", "until"), hi, min),
+                        wire=wire,
                     )
                 )
                 previous = number
@@ -220,7 +221,7 @@ class Parser:
         bodies that disagree are a version-redeclared nested type."""
         out: list[Enum | Struct] = []
         for group in nested_declarations(decls):
-            if is_int_enum(group[0]):
+            if is_enum(group[0]):
                 each = [self.enum([c]) for c in group]
                 out.append(each[0] if all(e == each[0] for e in each) else self.enum(group))
             else:
@@ -634,8 +635,17 @@ def _base_name(base: griffe.Expr | str) -> str | None:
     return base.name if isinstance(base, griffe.ExprName) else None
 
 
-def is_int_enum(cls: griffe.Class) -> bool:
-    return any(_base_name(b) in ("IntEnum", "IntFlag") for b in cls.bases)
+#: The enum bases the DSL recognises. Only a plain `Enum` takes a `3, "Wire"` member:
+#: `IntEnum` and `StrEnum` coerce a member to their own type and a pair is not one.
+_ENUM_BASES = ("Enum", "IntEnum", "IntFlag", "StrEnum")
+
+
+def is_enum(cls: griffe.Class) -> bool:
+    return any(_base_name(b) in _ENUM_BASES for b in cls.bases)
+
+
+def _takes_paired_value(cls: griffe.Class) -> bool:
+    return any(_base_name(b) == "Enum" for b in cls.bases)
 
 
 def nested_declarations(decls: list[griffe.Class]) -> list[list[griffe.Class]]:
@@ -720,7 +730,7 @@ def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
     (`class MemoryCategory(IntEnum, uint8)`). None means the C++ default, `int`."""
     for base in cls.bases:
         name = _base_name(base)
-        if name is None or name in ("IntEnum", "IntFlag"):
+        if name is None or name in _ENUM_BASES:
             continue
         if name not in _INT_WIDTHS:
             raise CompilerError(
@@ -819,14 +829,14 @@ def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: 
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "auto":
         return 0 if previous is None else previous + 1
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "value":
-        # value(N, since=, until=): N is positional, and mandatory when gated --
-        # auto-numbering a member that is absent at some snapshot would shift its
-        # siblings' wire numbers.
-        for arg in value.arguments:
-            if not isinstance(arg, griffe.ExprKeyword):
-                explicit = _as_int(arg)
-                if explicit is not None:
-                    return explicit
+        # value(N, since=, until=): N is the first positional, and mandatory when
+        # gated -- auto-numbering a member that is absent at some snapshot would
+        # shift its siblings' wire numbers.
+        positionals = _positionals(value)
+        if positionals:
+            explicit = _as_int(positionals[0])
+            if explicit is not None:
+                return explicit
         raise CompilerError(f"{enum_name}.{name}: value() needs an explicit wire number, e.g. value(601, since=1001)")
     number = _as_int(value)
     if number is None:
@@ -834,15 +844,46 @@ def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: 
     return number
 
 
-def _wire_name(value: griffe.Expr | str, enum_name: str, member: str) -> str | None:
-    """`value(name="DownloadingFinished")` — the exact string BDS writes, for a
-    member whose PEP 8 spelling does not map back onto it."""
-    spelled = _call_arg(value, "value", "name")
-    if spelled is None:
-        return None
-    text = str(spelled).strip("'\"")
+def _positionals(call: griffe.ExprCall) -> list[_Ann]:
+    return [a for a in call.arguments if not isinstance(a, griffe.ExprKeyword)]
+
+
+def _split_wire_name(value: _Ann, enum_name: str, member: str, paired: bool) -> tuple[_Ann, str | None]:
+    """The member's value, then the exact string BDS writes for a member whose PEP 8
+    spelling does not map back onto it.
+
+    A plain `Enum` pairs the two the way `enum` itself does —
+    `DOWNLOADING_FINISHED = 3, "DownloadingFinished"`. `IntEnum` and `StrEnum` coerce a
+    member to their own type, so a pair is not a value there and `value()` takes the
+    string as its second positional instead."""
+    if isinstance(value, griffe.ExprTuple):
+        if not paired:
+            raise CompilerError(
+                f"{enum_name}.{member}: only a plain Enum pairs a value with a wire name -- declare "
+                f'`class {enum_name}(Enum, ...)`, or spell it value({member.lower()}_number, "WireName")'
+            )
+        if len(value.elements) != 2:
+            raise CompilerError(
+                f"{enum_name}.{member}: an enum member is a value or a (value, wire name) pair, "
+                f"got {len(value.elements)} elements"
+            )
+        return value.elements[0], _wire_text(value.elements[1], enum_name, member)
+    if _is_call(value, "value"):
+        positionals = _positionals(cast(griffe.ExprCall, value))
+        if len(positionals) > 1:
+            return value, _wire_text(positionals[1], enum_name, member)
+        spelled = _call_arg(value, "value", "name")
+        if spelled is not None:
+            return value, _wire_text(spelled, enum_name, member)
+    return value, None
+
+
+def _wire_text(spelled: _Ann, enum_name: str, member: str) -> str:
+    if not isinstance(spelled, str) or spelled[:1] not in "'\"":
+        raise CompilerError(f"{enum_name}.{member}: the wire name must be a string literal, got {spelled}")
+    text = spelled.strip("'\"")
     if not text:
-        raise CompilerError(f"{enum_name}.{member}: value(name=...) must be a non-empty string literal")
+        raise CompilerError(f"{enum_name}.{member}: the wire name must be a non-empty string literal")
     return text
 
 
@@ -1004,7 +1045,7 @@ _FIELD_KEYWORDS: _Keywords = (
     },
 )
 
-_VALUE_KEYWORDS: _Keywords = (frozenset({"since", "until", "name"}), {"deprecated": _NO_DEPRECATION})
+_VALUE_KEYWORDS: _Keywords = (frozenset({"name", "since", "until"}), {"deprecated": _NO_DEPRECATION})
 
 _PACKET_KEYWORDS: _Keywords = (frozenset({"id", "since", "until"}), {})
 

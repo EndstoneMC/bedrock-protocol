@@ -4,6 +4,16 @@ A field name may carry a single trailing underscore to escape a Python keyword
 (PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
 the BDS name.
 
+An enum member may pair its value with the exact string BDS writes,
+`DOWNLOADING_FINISHED = 3, "DownloadingFinished"`, the way `enum.Enum` spells
+`MONDAY = 1, "Mon"`. A name-coded enum otherwise reaches the wire as the
+member's own spelling: casing is free, since BDS lowercases before the lookup,
+but the separator is not, so a PEP 8 member whose BDS name carries none would
+both reject BDS's own string and put an extra byte behind the length prefix.
+The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
+member to their own type and a pair is not one; a member spelled `value()`
+takes the string as its second positional instead.
+
 A `typing.Literal[V, ...]` field is a constant the wire carries and the C++
 does not: no member is generated, the write emits the first value, and the read
 rejects anything the annotation does not list. Bools take the one-byte wire on
@@ -25,9 +35,9 @@ def _identity(cls):
 
 def value(
     v: int | None = None,
+    name: str | None = None,
     since: int | None = None,
     until: int | None = None,
-    name: str | None = None,
 ) -> int:
     """Mark a member's wire value, optionally gated by protocol version.
 
@@ -35,17 +45,12 @@ def value(
       mirroring `enum.auto()` but allowing the version-gating kwargs below.
       For an auto-numbered member with no other options, prefer plain
       `enum.auto()` -- shorter and more idiomatic.
+    - `name`: the string BDS writes, for a member a plain `Enum` would spell
+      `MEMBER = 3, "WireName"`. Spelled here so the escape reaches an `IntEnum`
+      or `StrEnum` member, which cannot carry a pair.
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
-    - `name`: the exact string a name-coded enum puts on the wire, where BDS
-      does not spell the member the way PEP 8 does. Casing is free -- BDS
-      lowercases before the lookup -- but the separator is not: BDS writes
-      `DownloadingFinished`, and a PEP 8 `DOWNLOADING_FINISHED` would both
-      reject BDS's own string and put one extra byte behind the length prefix.
-      Spell `value(3, name="DownloadingFinished")` and the C++ member keeps its
-      PEP 8 spelling. BDS is not consistent about this, so snake_case wire
-      names are equally spellable.
 
     An enum whose members were renumbered is redeclared over adjacent ranges,
     like a reshaped struct; `since` / `until` here cover a member simply
