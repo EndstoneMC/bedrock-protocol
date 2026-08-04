@@ -3,6 +3,14 @@ from protocol import field, packet, uint64, uvarint32
 package = "bedrock.protocol"
 
 
+@packet(id=94)
+class SubClientLoginPacket:
+    """Split-screen: a second player joining over the main client's connection sends
+    the same connection request blob the LoginPacket carries."""
+
+    connection_request: bytes
+
+
 @packet(id=135, until=1001)
 class ClientCacheBlobStatusPacket:
     """Sent periodically by the client to update the server on which blobs it has
