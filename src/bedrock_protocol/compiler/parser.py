@@ -233,7 +233,6 @@ class Parser:
         call = attr.value
         _check_keywords(call, "field", _FIELD_KEYWORDS, attr.name)
         t = self._counted(self.type(attr.name, attr.annotation, call, scope), call, attr.name, scope, earlier)
-        t = _pinned(t, _int_kwarg(call, "field", "snapshot"), attr.name)
         guard = self._guard(attr.name, call)
         if guard is not None and t is not None:
             if _call_arg(call, "field", "when") is not None and isinstance(t, (OptionalType, VariantType)):
@@ -881,35 +880,6 @@ def _split_wire_name(
     return value, None
 
 
-def _pinned(t: FieldType | None, snapshot: int | None, field_name: str) -> FieldType | None:
-    """`field(snapshot=)` — resolve this reference at a fixed snapshot rather than
-    at the declaring context's.
-
-    BDS cerealised packets one at a time, so one class name meant two wire shapes
-    at one protocol version, chosen by the packet that contained it. Where BDS gave
-    the two forms separate names they are separate declarations; where it reused the
-    name, the older shape is still declared -- gated to the era before the migration
-    -- and only unreachable. This names it."""
-    if snapshot is None or t is None:
-        return t
-    pinned = _pin(t, snapshot)
-    if pinned is None:
-        raise CompilerError(
-            f"{field_name}: field(snapshot=...) pins a struct or enum reference, got {t.kind}"
-        )
-    return pinned
-
-
-def _pin(t: FieldType, snapshot: int) -> FieldType | None:
-    """The type with its struct/enum leaf pinned, or None if it has none."""
-    if isinstance(t, (StructType, EnumType)):
-        return replace(t, pin=snapshot)
-    if isinstance(t, (OptionalType, RepeatedType)):
-        inner = _pin(t.inner, snapshot)
-        return None if inner is None else replace(t, inner=inner)
-    return None
-
-
 def _wire_text(spelled: _Ann, enum_name: str, member: str) -> str:
     if not isinstance(spelled, str) or spelled[:1] not in "'\"":
         raise CompilerError(f"{enum_name}.{member}: the wire name must be a string literal, got {spelled}")
@@ -1067,9 +1037,7 @@ _Keywords = tuple[frozenset[str], Mapping[str, str]]
 _NO_DEPRECATION = "the compiler emits no [[deprecated]] attribute; drop the keyword or say it in the commit message"
 
 _FIELD_KEYWORDS: _Keywords = (
-    frozenset(
-        {"type", "since", "until", "when", "endian", "prefix", "count", "snapshot", "_group_when", "_group_id"}
-    ),
+    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "_group_when", "_group_id"}),
     {
         "tag": (
             "a union is always prefixed by a uvarint32 index over its cases in declaration order -- "

@@ -136,9 +136,6 @@ class StructType:
 
     name: str
     kind: Literal["struct"] = "struct"
-    #: `field(snapshot=)`: resolve the reference at this snapshot instead of the
-    #: declaring context's, for a name BDS gave two shapes at one version.
-    pin: int | None = None
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -153,8 +150,6 @@ class EnumType:
     name: str
     scalar: PrimitiveType | None
     kind: Literal["enum"] = "enum"
-    #: `field(snapshot=)`, as on `StructType`.
-    pin: int | None = None
 
     @property
     def referenced(self) -> frozenset[str]:

@@ -66,9 +66,8 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
         if t.name not in ctx.known:
             return None
         root = outermost(t.name)
-        at = t.pin if t.pin is not None else snapshot
-        if at is not None and ctx.resolved.is_versioned(root):
-            view = ctx.resolved.present_at(root, at)
+        if snapshot is not None and ctx.resolved.is_versioned(root):
+            view = ctx.resolved.present_at(root, snapshot)
             if view is not None:
                 return f"{snapshot_namespace(view.concrete)}::{cpp_name(t.name)}"
         return cpp_name(t.name)
@@ -129,14 +128,12 @@ def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int
     return go(pred)
 
 
-def qualified_at(name: str, ctx: FileContext, snapshot: int | None, pin: int | None = None) -> str:
+def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
     """Qualified spelling of a struct/enum ref from inside a serializer at
-    `snapshot` (emitted at namespace scope, so versioned refs need the `vN::`).
-    `pin` is `field(snapshot=)`, resolving the reference at its own version."""
-    at = pin if pin is not None else snapshot
+    `snapshot` (emitted at namespace scope, so versioned refs need the `vN::`)."""
     if ctx.resolved.is_versioned(outermost(name)):
-        assert at is not None
-        view = ctx.resolved.present_at(outermost(name), at)
+        assert snapshot is not None
+        view = ctx.resolved.present_at(outermost(name), snapshot)
         assert view is not None
         return f"{snapshot_namespace(view.concrete)}::{cpp_name(name)}"
     return cpp_name(name)
@@ -268,7 +265,7 @@ class EnumFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def _qualified(self) -> str:
-        return qualified_at(self._enum.name, self._gc.ctx, self._gc.snapshot, self._enum.pin)
+        return qualified_at(self._enum.name, self._gc.ctx, self._gc.snapshot)
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         if self._enum.scalar is None:
@@ -298,7 +295,7 @@ class ClassFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def _qualified(self) -> str:
-        return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot, self._struct.pin)
+        return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot)
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes("<bedrock/serializer.hpp>")
