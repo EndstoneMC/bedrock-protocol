@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from protocol import field, int32, packet, type, uint8, varint64
 from protocol.actor import ActorUniqueID
@@ -27,16 +27,12 @@ class ScorePacketType(IntEnum, uint8):
     REMOVE = 1
 
 
-# TODO: confirm against BDS -- this reaches the wire name-coded, in the PEP 8
-# spelling, so CHANGE_PLAYER lowercases to change_player where CloudburstMC v2168
-# writes "changeplayer". Casing is not load-bearing but the inserted underscore is,
-# and persona::PieceType shows BDS does use snake_case wire names elsewhere.
 @type(since=2168)
-class ScorePacketEntryAction(IntEnum, uint8):
-    REMOVE = 0
-    CHANGE_PLAYER = 1
-    CHANGE_ENTITY = 2
-    CHANGE_FAKE_PLAYER = 3
+class ScorePacketEntryAction(Enum, uint8):
+    REMOVE = 0, "Remove"
+    CHANGE_PLAYER = 1, "ChangePlayer"
+    CHANGE_ENTITY = 2, "ChangeEntity"
+    CHANGE_FAKE_PLAYER = 3, "ChangeFakePlayer"
 
 
 class ScoreboardIdentityPacketType(IntEnum, uint8):
