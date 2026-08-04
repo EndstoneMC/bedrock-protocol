@@ -1,5 +1,5 @@
 import uuid
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from protocol import field, int8, packet, uint32, uint8
 from protocol.common import Color
@@ -12,34 +12,34 @@ class ArmSizeType(IntEnum, uint8):
     WIDE = 1
 
 
-class PieceType(IntEnum, uint32):
-    SKELETON = 1
-    BODY = 2
-    SKIN = 3
-    BOTTOM = 4
-    FEET = 5
-    DRESS = 6
-    TOP = 7
-    HIGH_PANTS = 8
-    HANDS = 9
-    OUTERWEAR = 10
-    FACIAL_HAIR = 11
-    MOUTH = 12
-    EYES = 13
-    HAIR = 14
-    HOOD = 15
-    BACK = 16
-    FACE_ACCESSORY = 17
-    HEAD = 18
-    LEGS = 19
-    LEFT_LEG = 20
-    RIGHT_LEG = 21
-    ARMS = 22
-    LEFT_ARM = 23
-    RIGHT_ARM = 24
-    CAPES = 25
-    CLASSIC_SKIN = 26
-    EMOTE = 27
+class PieceType(Enum, uint32):
+    SKELETON = 1, "Skeleton"
+    BODY = 2, "Body"
+    SKIN = 3, "Skin"
+    BOTTOM = 4, "Bottom"
+    FEET = 5, "Feet"
+    DRESS = 6, "Dress"
+    TOP = 7, "Top"
+    HIGH_PANTS = 8, "High_Pants"
+    HANDS = 9, "Hands"
+    OUTERWEAR = 10, "Outerwear"
+    FACIAL_HAIR = 11, "FacialHair"
+    MOUTH = 12, "Mouth"
+    EYES = 13, "Eyes"
+    HAIR = 14, "Hair"
+    HOOD = 15, "Hood"
+    BACK = 16, "Back"
+    FACE_ACCESSORY = 17, "FaceAccessory"
+    HEAD = 18, "Head"
+    LEGS = 19, "Legs"
+    LEFT_LEG = 20, "LeftLeg"
+    RIGHT_LEG = 21, "RightLeg"
+    ARMS = 22, "Arms"
+    LEFT_ARM = 23, "LeftArm"
+    RIGHT_ARM = 24, "RightArm"
+    CAPES = 25, "Capes"
+    CLASSIC_SKIN = 26, "ClassicSkin"
+    EMOTE = 27, "Emote"
 
 
 class AnimatedTextureType(IntEnum, uint32):
