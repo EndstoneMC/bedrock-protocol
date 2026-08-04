@@ -19,6 +19,12 @@ add_subdirectory(third_party)
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
+# CMake's default Windows flags define WIN32, which collides with BuildPlatform's
+# WIN32 enumerator. The enum mirrors BDS, so the macro gives way -- and it gives way
+# for consumers too, since the collision is in a header they include.
+if (MSVC)
+    target_compile_options(bedrock_protocol PUBLIC /UWIN32)
+endif ()
 target_include_directories(bedrock_protocol PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}/include
