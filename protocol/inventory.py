@@ -254,7 +254,7 @@ class ItemUseInventoryTransaction:
         ON = 1
 
     actions: InventoryTransaction
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     trigger_type: TriggerType
     pos: BlockPos
     face: varint32
@@ -289,7 +289,7 @@ class ItemUseInventoryTransaction:
         ON = 1
 
     actions: InventoryTransaction
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     trigger_type: TriggerType
     pos: BlockPos
     face: uint8
@@ -302,6 +302,43 @@ class ItemUseInventoryTransaction:
     client_cooldown_state: ClientCooldownState
 
 
+# TODO: confirm against BDS -- BDS calls this ItemUseInventoryTransaction too. The name is
+# invented to hold the shape PlayerAuthInputPacket writes: that packet did not cerealise
+# until 2168, so its transaction keeps the pre-cereal framing -- the action list carries no
+# member-present marker and `face` stays a varint32 -- while its leaves cerealise at 1001
+# with everything else. One BDS name, two wire shapes at 1001, told apart by the call site.
+@type(until=1001)
+class LegacyItemUseInventoryTransaction:
+    actions: list[InventoryAction]
+    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
+    trigger_type: ItemUseInventoryTransaction.TriggerType
+    pos: BlockPos
+    face: varint32
+    slot: varint32
+    item: NetworkItemStackDescriptor
+    from_pos: Vec3
+    click_pos: Vec3
+    target_block_id: uvarint32
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
+    client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
+
+
+@type(since=1001)
+class LegacyItemUseInventoryTransaction:
+    actions: list[InventoryAction]
+    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
+    trigger_type: ItemUseInventoryTransaction.TriggerType
+    pos: BlockPos
+    face: varint32
+    slot: varint32
+    item: SerializedNetworkItemStackDescriptor
+    from_pos: Vec3
+    click_pos: Vec3
+    target_block_id: uvarint32
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
+    client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
+
+
 @type(until=1001)
 class ItemUseOnActorInventoryTransaction:
     class ActionType(IntEnum, int):
@@ -310,7 +347,7 @@ class ItemUseOnActorInventoryTransaction:
 
     actions: InventoryTransaction
     target_runtime_id: ActorRuntimeID
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: NetworkItemStackDescriptor
     from_pos: Vec3
@@ -325,7 +362,7 @@ class ItemUseOnActorInventoryTransaction:
 
     actions: InventoryTransaction
     target_runtime_id: ActorRuntimeID
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
@@ -339,7 +376,7 @@ class ItemReleaseInventoryTransaction:
         CONSUME = 1
 
     actions: InventoryTransaction
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: NetworkItemStackDescriptor
     from_pos: Vec3
@@ -352,7 +389,7 @@ class ItemReleaseInventoryTransaction:
         CONSUME = 1
 
     actions: InventoryTransaction
-    action_type: ActionType
+    action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3

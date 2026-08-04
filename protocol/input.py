@@ -4,7 +4,12 @@ from typing import Literal
 from protocol import bitset, field, packet, type, uint32, uvarint32, value, varint32
 from protocol.actor import ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
-from protocol.inventory import ItemStackLegacyRequestId, ItemUseInventoryTransaction, LegacySetSlot
+from protocol.inventory import (
+    ItemStackLegacyRequestId,
+    ItemUseInventoryTransaction,
+    LegacyItemUseInventoryTransaction,
+    LegacySetSlot,
+)
 from protocol.item_stack import ItemStackRequestCereal, ItemStackRequestData
 
 package = "bedrock.protocol"
@@ -110,6 +115,16 @@ class PlayerBlockActionData:
     facing: varint32
 
 
+# TODO: confirm against BDS -- the slot gate is gophertunnel's, which reads the id as the
+# ItemStackNetIdVariant projection: only a negative-even id is a legacy request. Packet 30's
+# pre-cereal body gates the same slots on `!= 0`, and the two part company below -1.
+@type(until=2168)
+class PackedItemUseLegacyInventoryTransaction:
+    id: varint32
+    slots: list[LegacySetSlot] = field(when=lambda t: t.id < -1 and t.id & 1 == 0)
+    transaction: LegacyItemUseInventoryTransaction
+
+
 @type(since=2168)
 class PackedItemUseLegacyInventoryTransaction:
     id: ItemStackLegacyRequestId
@@ -199,14 +214,9 @@ class PlayerAuthInputPacket:
     interact_rotation: Vec2
     client_tick: PlayerInputTick
     pos_delta: Vec3
-    # TODO: `item_use_transaction` belongs here, gated on
-    # `input_data.test(InputData.PERFORM_ITEM_INTERACTION)`. It is a
-    # PackedItemUseLegacyInventoryTransaction wrapping the PRE-CEREAL
-    # ItemUseInventoryTransaction, whose InventoryAction / InventorySource closure snapshot
-    # 1001 resolves to the cerealised form -- one BDS name, two wire shapes at one snapshot.
-    # Unlike the descriptor, BDS has no second name to split these under, so this needs a
-    # compiler answer. Until then a 1001 body with that bit set is outside what this
-    # declaration describes and will not decode.
+    item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
+        when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_INTERACTION)
+    )
     item_stack_request: ItemStackRequestData = field(
         when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_STACK_REQUEST)
     )
