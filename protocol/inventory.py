@@ -284,7 +284,7 @@ class ItemUseInventoryTransaction:
     action_type: ActionType
     trigger_type: TriggerType
     pos: BlockPos
-    face: uvarint32
+    face: uint8
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
