@@ -53,6 +53,7 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_345_attribute_layer_sync.cpp
         test_347_server_presence_info.cpp
         test_348_update_sound_data.cpp
+        test_072_game_rules_changed.cpp
 )
 target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)
 

@@ -106,12 +106,11 @@ class GameRule:
 
 @type(since=2168)
 class GameRule:
-    """2168 widened the integer case to a fixed uint32. The bool and float cases are
-    unchanged, so a world whose rules are all bools reads the same either way."""
+    """2168 widened the integer case to a fixed uint32."""
 
     name: str
     can_be_modified_by_player: bool
-    value: None | bool | uint32 | float
+    value: None | bool | int32 | float
 
 
 class ExperimentData:
@@ -292,6 +291,11 @@ class StartGamePacket:
     is_chat_logging: bool = field(since=1001)
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData
+
+
+@packet(id=72)
+class GameRulesChangedPacket:
+    rule_data: GameRulesChangedPacketData
 
 
 @packet(id=11, since=2168)
