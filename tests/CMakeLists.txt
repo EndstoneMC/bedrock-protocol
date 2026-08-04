@@ -2,6 +2,8 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_112_set_scoreboard_identity.cpp
+        test_108_set_score.cpp
         test_093_player_skin.cpp
         test_039_set_actor_data.cpp
         test_013_add_actor.cpp
