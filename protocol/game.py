@@ -97,20 +97,21 @@ class SpawnSettings:
     dimension: DimensionType
 
 
-@type(until=2168)
 class GameRule:
-    name: str
-    can_be_modified_by_player: bool
-    value: None | bool | uvarint32 | float
-
-
-@type(since=2168)
-class GameRule:
-    """2168 widened the integer case to a fixed uint32."""
-
     name: str
     can_be_modified_by_player: bool
     value: None | bool | int32 | float
+
+
+# TODO: confirm against BDS -- BDS calls this GameRule too. The name is invented to hold
+# the shape StartGame wrote before it cerealised at 2168, with the integer case as a
+# varint; packet 72 wrote the fixed one throughout. One BDS name, two wire shapes below
+# 2168, told apart by the call site.
+@type(until=2168)
+class LegacyGameRule:
+    name: str
+    can_be_modified_by_player: bool
+    value: None | bool | uvarint32 | float
 
 
 class ExperimentData:
@@ -180,7 +181,7 @@ class LevelSettings:
     platform_broadcast_intent: GamePublishSetting
     commands_enabled: bool
     texture_packs_required: bool
-    game_rules: list[GameRule]
+    game_rules: list[LegacyGameRule]
     experiments: list[ExperimentData] = field(prefix=uint32)
     experiments_previously_toggled: bool
     bonus_chest_enabled: bool

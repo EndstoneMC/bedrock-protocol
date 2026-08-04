@@ -135,7 +135,7 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
     s.rule_data.rules.push_back({.name = "dodaylightcycle", .can_be_modified_by_player = false, .value = true});
     // An integer rule, whose value is the one part of a rule the two eras write differently.
     s.rule_data.rules.push_back(
-        {.name = "maxcommandchainlength", .can_be_modified_by_player = false, .value = std::uint32_t{131070}});
+        {.name = "maxcommandchainlength", .can_be_modified_by_player = false, .value = std::int32_t{131070}});
     s.experiments = {.toggles = {}, .experiments_ever_toggled = false};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
