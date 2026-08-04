@@ -1,6 +1,6 @@
 import uuid
 
-from protocol import packet, type
+from protocol import field, packet, type, uint16
 
 package = "bedrock.protocol"
 
@@ -68,3 +68,11 @@ class ServerTelemetryData:
 @packet(id=347)
 class ServerPresenceInfoPacket:
     presence_configuration: PresenceConfiguration | None
+
+
+@packet(id=85)
+class TransferPacket:
+    destination: str
+    destination_port: uint16
+    reload_world: bool
+    gatherings_configuration: GatheringsConfigurationJoinInfo | None = field(since=2168)
