@@ -848,7 +848,9 @@ def _positionals(call: griffe.ExprCall) -> list[_Ann]:
     return [a for a in call.arguments if not isinstance(a, griffe.ExprKeyword)]
 
 
-def _split_wire_name(value: _Ann, enum_name: str, member: str, paired: bool) -> tuple[_Ann, str | None]:
+def _split_wire_name(
+    value: griffe.Expr | str, enum_name: str, member: str, paired: bool
+) -> tuple[griffe.Expr | str, str | None]:
     """The member's value, then the exact string BDS writes for a member whose PEP 8
     spelling does not map back onto it.
 
