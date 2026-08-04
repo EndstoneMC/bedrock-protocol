@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from protocol import field, int32, packet, uint8, uvarint32
 from protocol.actor import ActorUniqueID
@@ -7,11 +7,11 @@ from protocol.common import Vec3
 package = "bedrock.protocol"
 
 
-class UpdateType(IntEnum, uint8):
-    CLEAR_OVERRIDES = 0
-    REMOVE_OVERRIDE = 1
-    SET_INT_OVERRIDE = 2
-    SET_FLOAT_OVERRIDE = 3
+class UpdateType(Enum, uint8):
+    CLEAR_OVERRIDES = 0, "ClearOverrides"
+    REMOVE_OVERRIDE = 1, "RemoveOverride"
+    SET_INT_OVERRIDE = 2, "SetIntOverride"
+    SET_FLOAT_OVERRIDE = 3, "SetFloatOverride"
 
 
 @packet(id=325, until=2168)
@@ -26,9 +26,7 @@ class PlayerUpdateEntityOverridesPacket:
 @packet(id=325, since=2168)
 class PlayerUpdateEntityOverridesPacket:
     # TODO: confirm against BDS -- the dump name-codes these; CloudburstMC
-    # PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte instead. The
-    # name-code also reaches the wire in the PEP 8 spelling, where BDS writes
-    # SetIntOverride.
+    # PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte instead.
     class ClearOverride:
         update_type: UpdateType = field(type=str)
 

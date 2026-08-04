@@ -33,6 +33,10 @@ const std::string golden_v1001_float = bytes({
 // 0x0e 0x02 0x02 0x02 0x2a 00 00 00 for the int case -- so it cannot serve as a
 // golden for this shape. The dump wins; the assertions below are structural, and
 // the leading two bytes are the ones the v1001 goldens above prove.
+//
+// The strings themselves are settled: r26_u4's enums/UpdateType.json spells them
+// ClearOverrides / RemoveOverride / SetIntOverride / SetFloatOverride, so the sizes
+// below are exact.
 const std::string prefix_v2168 = golden_v1001_clear.substr(0, 2);
 
 }  // namespace
@@ -92,6 +96,9 @@ TEST_CASE("player-update-entity-overrides v2168 round-trips through its own seri
     const auto encoded = encode(packet);
     REQUIRE(encoded.substr(0, 2) == prefix_v2168);
     REQUIRE(encoded[2] == '\x02');
+    // "SetIntOverride" behind a one-byte length, then the int: two bytes shorter
+    // than SET_INT_OVERRIDE would have been.
+    REQUIRE(encoded.size() == 22);
 
     const auto back = decode<Packet>(encoded);
     REQUIRE(back.id == static_cast<bp::ActorUniqueID>(7));
@@ -112,11 +119,14 @@ TEST_CASE("player-update-entity-overrides v2168 keeps a payload-less case in the
 
     const auto encoded = encode(packet);
     REQUIRE(encoded[2] == '\x00');
+    // "ClearOverrides" and nothing after it.
+    REQUIRE(encoded.size() == 18);
     REQUIRE(std::holds_alternative<ClearOverride>(decode<Packet>(encoded).update));
 
     packet.update = FloatOverride{.update_type = bp::UpdateType::SET_FLOAT_OVERRIDE, .value = 0.5F};
     const auto floats = encode(packet);
     REQUIRE(floats[2] == '\x03');
+    REQUIRE(floats.size() == 24);
     REQUIRE(std::get<FloatOverride>(decode<Packet>(floats).update).value == 0.5F);
 }
 
