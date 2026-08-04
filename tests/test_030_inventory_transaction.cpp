@@ -4,39 +4,11 @@
 #include <variant>
 #include <vector>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
 
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
-
 using Packet = bp::InventoryTransactionPacket_<1001>;
-
-// The cerealised item extra-data blob: Int16(0) NBT-length, then two empty
-// uint32-counted string lists (can-place-on / can-break). All zero.
-std::string empty_item_blob()
-{
-    return std::string(10, '\0');
-}
 
 bp::v1001::SerializedNetworkItemStackDescriptor air()
 {
@@ -163,12 +135,9 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_empty);
 
-    bp::BinaryReader reader{golden_normal_empty};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->transaction.has_value());
-    REQUIRE(back->transaction->index() == 0);
+    const auto back = decode<Packet>(golden_normal_empty);
+    REQUIRE(back.transaction.has_value());
+    REQUIRE(back.transaction->index() == 0);
 }
 
 // A container source carries two bools per member: the always-true marker, then
@@ -188,12 +157,8 @@ TEST_CASE("inventory-transaction normal with a container action round-trips")
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_action);
 
-    bp::BinaryReader reader{golden_normal_action};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-
-    const auto &normal_back = std::get<0>(*back->transaction);
+    const auto back = decode<Packet>(golden_normal_action);
+    const auto &normal_back = std::get<0>(*back.transaction);
     REQUIRE(normal_back.actions.actions.has_value());
     const auto &actions = *normal_back.actions.actions;
     REQUIRE(actions.size() == 1);
@@ -212,8 +177,7 @@ TEST_CASE("inventory-transaction rejects a container source whose marker reads f
     std::string patched = golden_normal_action;
     patched[7] = '\0';  // the container-id member-present marker
 
-    bp::BinaryReader reader{patched};
-    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader).has_value());
+    REQUIRE(rejects<Packet>(patched));
 }
 
 TEST_CASE("inventory-transaction use-item round-trips against the golden")
@@ -232,12 +196,9 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     packet.transaction = use;
     REQUIRE(encode(packet) == golden_use_item);
 
-    bp::BinaryReader reader{golden_use_item};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->transaction->index() == 2);
-    const auto &use_back = std::get<2>(*back->transaction);
+    const auto back = decode<Packet>(golden_use_item);
+    REQUIRE(back.transaction->index() == 2);
+    const auto &use_back = std::get<2>(*back.transaction);
     REQUIRE(use_back.pos.x == 1);
     REQUIRE(use_back.pos.z == 3);
     REQUIRE(use_back.target_block_id == 9);
@@ -266,12 +227,8 @@ TEST_CASE("inventory-transaction v2168 reproduces the 1001 golden when no item c
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_action);
 
-    bp::BinaryReader reader{golden_normal_action};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-
-    const auto &actions = *std::get<0>(*back->transaction).actions.actions;
+    const auto back = decode<PacketV2168>(golden_normal_action);
+    const auto &actions = *std::get<0>(*back.transaction).actions.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].to_item.id == 1);
     REQUIRE_FALSE(actions[0].to_item.net_id_variant.has_value());
@@ -306,14 +263,10 @@ TEST_CASE("inventory-transaction an engaged net id is one byte shorter at v2168"
     const auto encoded = encode(packet);
     REQUIRE(encoded.size() + 1 == encode(old_packet).size());
 
-    bp::BinaryReader reader{encoded};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(*(*std::get<0>(*back->transaction).actions.actions)[0].to_item.net_id_variant == 9);
+    const auto back = decode<PacketV2168>(encoded);
+    REQUIRE(*(*std::get<0>(*back.transaction).actions.actions)[0].to_item.net_id_variant == 9);
 
-    bp::BinaryReader wrong{encoded};
-    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(wrong).has_value());
+    REQUIRE(rejects<Packet>(encoded));
 }
 
 TEST_CASE("packet id is 30 at v975")
@@ -330,12 +283,9 @@ TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against th
     packet.transaction = bp::base::NormalTransactionData{};
     REQUIRE(encode(packet) == golden_v975_normal_empty);
 
-    bp::BinaryReader reader{golden_v975_normal_empty};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->transaction.index() == 0);
-    REQUIRE(std::get<0>(back->transaction).actions.actions.empty());
+    const auto back = decode<PacketV975>(golden_v975_normal_empty);
+    REQUIRE(back.transaction.index() == 0);
+    REQUIRE(std::get<0>(back.transaction).actions.actions.empty());
 }
 
 // The 975 source is a switch, not a pair of presence bools: a container source
@@ -355,12 +305,8 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_v975_normal_action);
 
-    bp::BinaryReader reader{golden_v975_normal_action};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-
-    const auto &actions = std::get<0>(back->transaction).actions.actions;
+    const auto back = decode<PacketV975>(golden_v975_normal_action);
+    const auto &actions = std::get<0>(back.transaction).actions.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].source.container_id == static_cast<bp::ContainerID>(12));
     REQUIRE(actions[0].to_item.id == 1);
@@ -384,12 +330,9 @@ TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
     packet.transaction = use;
     REQUIRE(encode(packet) == golden_v975_use_item);
 
-    bp::BinaryReader reader{golden_v975_use_item};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->transaction.index() == 2);
-    const auto &use_back = std::get<2>(back->transaction);
+    const auto back = decode<PacketV975>(golden_v975_use_item);
+    REQUIRE(back.transaction.index() == 2);
+    const auto &use_back = std::get<2>(back.transaction);
     REQUIRE(use_back.pos.x == 1);
     REQUIRE(use_back.face == 4);
     REQUIRE(use_back.target_block_id == 9);
@@ -407,11 +350,8 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     packet.transaction = bp::base::NormalTransactionData{};
     REQUIRE(encode(packet) == golden_v975_legacy_request);
 
-    bp::BinaryReader reader{golden_v975_legacy_request};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->legacy_set_item_slots.size() == 1);
-    REQUIRE(back->legacy_set_item_slots[0].slots == "\x03\x04");
-    REQUIRE(std::get<0>(back->transaction).actions.actions.empty());
+    const auto back = decode<PacketV975>(golden_v975_legacy_request);
+    REQUIRE(back.legacy_set_item_slots.size() == 1);
+    REQUIRE(back.legacy_set_item_slots[0].slots == "\x03\x04");
+    REQUIRE(std::get<0>(back.transaction).actions.actions.empty());
 }

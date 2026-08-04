@@ -2,30 +2,9 @@
 #include <string>
 #include <vector>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 // Golden derived from gophertunnel's ServerBoundDiagnostics.Marshal: nine
 // io.Float32 (fixed LE), then protocol.Slice over MemoryCategoryCounter,
@@ -109,23 +88,20 @@ TEST_CASE("serverbound-diagnostics round-trips against the golden")
                                      .total_low_cost_ns = 300});
     REQUIRE(encode(packet) == golden);
 
-    bp::BinaryReader reader{golden};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->avg_fps == 60.0f);
-    REQUIRE(back->memory_category_values.size() == 1);
-    REQUIRE(back->memory_category_values[0].category == bp::MemoryCategory::ACTOR);
-    REQUIRE(back->memory_category_values[0].current_bytes == 1024);
-    REQUIRE(back->entity_diagnostics.size() == 1);
-    REQUIRE(back->entity_diagnostics[0].entity == "minecraft:zombie");
-    REQUIRE(back->system_diagnostics.size() == 1);
-    REQUIRE(back->system_diagnostics[0].system_index == 3);
-    REQUIRE(back->whisker_scopes.size() == 1);
-    REQUIRE(back->whisker_scopes[0].label == "Frame");
-    REQUIRE(back->whisker_scopes[0].total_high_cost_ns == 900);
-    REQUIRE(back->whisker_scopes[0].total_mid_cost_ns == 600);
-    REQUIRE(back->whisker_scopes[0].total_low_cost_ns == 300);
+    const auto back = decode<Packet>(golden);
+    REQUIRE(back.avg_fps == 60.0f);
+    REQUIRE(back.memory_category_values.size() == 1);
+    REQUIRE(back.memory_category_values[0].category == bp::MemoryCategory::ACTOR);
+    REQUIRE(back.memory_category_values[0].current_bytes == 1024);
+    REQUIRE(back.entity_diagnostics.size() == 1);
+    REQUIRE(back.entity_diagnostics[0].entity == "minecraft:zombie");
+    REQUIRE(back.system_diagnostics.size() == 1);
+    REQUIRE(back.system_diagnostics[0].system_index == 3);
+    REQUIRE(back.whisker_scopes.size() == 1);
+    REQUIRE(back.whisker_scopes[0].label == "Frame");
+    REQUIRE(back.whisker_scopes[0].total_high_cost_ns == 900);
+    REQUIRE(back.whisker_scopes[0].total_mid_cost_ns == 600);
+    REQUIRE(back.whisker_scopes[0].total_low_cost_ns == 300);
 }
 
 TEST_CASE("serverbound-diagnostics v2168 form round-trips against the golden")
@@ -142,16 +118,13 @@ TEST_CASE("serverbound-diagnostics v2168 form round-trips against the golden")
                                      .total_low_cost_ns = 300});
     REQUIRE(encode(packet) == golden_v2168);
 
-    bp::BinaryReader reader{golden_v2168};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->system_categories.has_value());
-    REQUIRE(back->system_categories->size() == 1);
-    REQUIRE((*back->system_categories)[0].category_name == "Movement");
-    REQUIRE((*back->system_categories)[0].system_index == 3);
-    REQUIRE(back->whisker_scopes.size() == 1);
-    REQUIRE(back->whisker_scopes[0].label == "Frame");
+    const auto back = decode<Packet>(golden_v2168);
+    REQUIRE(back.system_categories.has_value());
+    REQUIRE(back.system_categories->size() == 1);
+    REQUIRE((*back.system_categories)[0].category_name == "Movement");
+    REQUIRE((*back.system_categories)[0].system_index == 3);
+    REQUIRE(back.whisker_scopes.size() == 1);
+    REQUIRE(back.whisker_scopes[0].label == "Frame");
 }
 
 TEST_CASE("absent system categories are a lone flag ahead of the whisker scopes")
@@ -168,14 +141,8 @@ TEST_CASE("absent system categories are a lone flag ahead of the whisker scopes"
 TEST_CASE("a v1001 diagnostics body does not decode as a v2168 one")
 {
     REQUIRE(golden != golden_v2168);
-
-    bp::BinaryReader reader{golden};
-    auto wrong = bp::Serializer<bp::ServerboundDiagnosticsPacket_<2168>>::deserialize(reader);
-    REQUIRE_FALSE(wrong.has_value());
-
-    bp::BinaryReader back{golden_v2168};
-    auto other_way = bp::Serializer<bp::ServerboundDiagnosticsPacket_<1001>>::deserialize(back);
-    REQUIRE_FALSE(other_way.has_value());
+    REQUIRE(rejects<bp::ServerboundDiagnosticsPacket_<2168>>(golden));
+    REQUIRE(rejects<bp::ServerboundDiagnosticsPacket_<1001>>(golden_v2168));
 }
 
 TEST_CASE("before v1001 the whisker scopes are absent from the wire")
@@ -186,10 +153,7 @@ TEST_CASE("before v1001 the whisker scopes are absent from the wire")
     fill_base(packet);
     REQUIRE(encode(packet) == golden_base);
 
-    bp::BinaryReader reader{golden_base};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->system_diagnostics.size() == 1);
-    REQUIRE(back->system_diagnostics[0].display_name == "Physics");
+    const auto back = decode<Packet>(golden_base);
+    REQUIRE(back.system_diagnostics.size() == 1);
+    REQUIRE(back.system_diagnostics[0].display_name == "Physics");
 }

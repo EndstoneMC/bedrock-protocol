@@ -1,38 +1,12 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::InventoryContentPacket_<975>;
 using PacketV1001 = bp::InventoryContentPacket_<1001>;
 using PacketV2168 = bp::InventoryContentPacket_<2168>;
-
-std::string empty_item_blob()
-{
-    return std::string(10, '\0');
-}
 
 // A dynamic cursor container holding one stone stack and one empty slot.
 template <class Packet, class Item>
@@ -105,17 +79,14 @@ TEST_CASE("inventory-content v975 round-trips against the golden")
     auto packet = sample<PacketV975, bp::base::SerializedNetworkItemStackDescriptor>();
     REQUIRE(encode(packet) == golden_v975);
 
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->inventory_id == static_cast<bp::ContainerID>(12));
-    REQUIRE(back->slots.size() == 2);
-    REQUIRE(back->slots[0].block_runtime_id == 7);
-    REQUIRE(back->slots[1].id == 0);
-    REQUIRE(back->full_container_name.name == bp::ContainerEnumName::CURSOR_CONTAINER);
-    REQUIRE(back->full_container_name.dynamic_id == 3);
-    REQUIRE(back->storage_item.id == 0);
+    const auto back = decode<PacketV975>(golden_v975);
+    REQUIRE(back.inventory_id == static_cast<bp::ContainerID>(12));
+    REQUIRE(back.slots.size() == 2);
+    REQUIRE(back.slots[0].block_runtime_id == 7);
+    REQUIRE(back.slots[1].id == 0);
+    REQUIRE(back.full_container_name.name == bp::ContainerEnumName::CURSOR_CONTAINER);
+    REQUIRE(back.full_container_name.dynamic_id == 3);
+    REQUIRE(back.storage_item.id == 0);
 }
 
 // 1001 cerealised the packet, but its own shape held still: only the item form under
@@ -125,14 +96,11 @@ TEST_CASE("inventory-content v1001 round-trips against the golden")
     auto packet = sample<PacketV1001, bp::v1001::SerializedNetworkItemStackDescriptor>();
     REQUIRE(encode(packet) == golden_v1001);
 
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->slots.size() == 2);
-    REQUIRE(back->slots[0].id == 1);
-    REQUIRE(back->slots[0].block_runtime_id == 7);
-    REQUIRE(back->full_container_name.dynamic_id == 3);
+    const auto back = decode<PacketV1001>(golden_v1001);
+    REQUIRE(back.slots.size() == 2);
+    REQUIRE(back.slots[0].id == 1);
+    REQUIRE(back.slots[0].block_runtime_id == 7);
+    REQUIRE(back.full_container_name.dynamic_id == 3);
 }
 
 // 2168 dropped the item's net-id tag, so a slot that carries no id is the same
@@ -143,15 +111,12 @@ TEST_CASE("inventory-content v2168 round-trips against the golden")
     REQUIRE(encode(packet) == golden_v2168);
     REQUIRE(golden_v2168 == golden_v1001);
 
-    bp::BinaryReader reader{golden_v2168};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->slots.size() == 2);
-    REQUIRE(back->slots[0].id == 1);
-    REQUIRE(back->slots[0].block_runtime_id == 7);
-    REQUIRE_FALSE(back->slots[0].net_id_variant.has_value());
-    REQUIRE(back->full_container_name.dynamic_id == 3);
+    const auto back = decode<PacketV2168>(golden_v2168);
+    REQUIRE(back.slots.size() == 2);
+    REQUIRE(back.slots[0].id == 1);
+    REQUIRE(back.slots[0].block_runtime_id == 7);
+    REQUIRE_FALSE(back.slots[0].net_id_variant.has_value());
+    REQUIRE(back.full_container_name.dynamic_id == 3);
 }
 
 TEST_CASE("inventory-content v2168 writes an engaged net id as a bare signed varint")
@@ -170,15 +135,10 @@ TEST_CASE("inventory-content v2168 writes an engaged net id as a bare signed var
     packet.full_container_name.dynamic_id = 3;
     REQUIRE(encode(packet) == golden_v2168_net_id);
 
-    bp::BinaryReader reader{golden_v2168_net_id};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(*back->slots[0].net_id_variant == 9);
+    REQUIRE(*decode<PacketV2168>(golden_v2168_net_id).slots[0].net_id_variant == 9);
 
     // The 1001 reader takes the zigzagged 9 for a variant index that names no case.
-    bp::BinaryReader wrong{golden_v2168_net_id};
-    REQUIRE_FALSE(bp::Serializer<PacketV1001>::deserialize(wrong).has_value());
+    REQUIRE(rejects<PacketV1001>(golden_v2168_net_id));
 }
 
 // A non-dynamic container leaves the id absent, one byte either era.

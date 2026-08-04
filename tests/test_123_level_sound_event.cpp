@@ -1,29 +1,8 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::LevelSoundEventPacket_<975>;
 using PacketV1001 = bp::LevelSoundEventPacket_<1001>;
@@ -82,15 +61,12 @@ TEST_CASE("level-sound-event v975 round-trips against the golden")
     packet.event_id = bp::LevelSoundEvent_<975>::BELL;
     REQUIRE(encode(packet) == golden_v975);
 
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->event_id == bp::LevelSoundEvent_<975>::BELL);
-    REQUIRE(back->data == -1);
-    REQUIRE(back->actor_identifier == "minecraft:pig");
-    REQUIRE(back->actor == static_cast<bp::ActorUniqueID>(7));
-    REQUIRE(back->fire_at_position->z == 6.0f);
+    const auto back = decode<PacketV975>(golden_v975);
+    REQUIRE(back.event_id == bp::LevelSoundEvent_<975>::BELL);
+    REQUIRE(back.data == -1);
+    REQUIRE(back.actor_identifier == "minecraft:pig");
+    REQUIRE(back.actor == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.fire_at_position->z == 6.0f);
 }
 
 TEST_CASE("level-sound-event v1001 round-trips against the golden")
@@ -99,14 +75,11 @@ TEST_CASE("level-sound-event v1001 round-trips against the golden")
     packet.sound_event = "block.bell.hit";
     REQUIRE(encode(packet) == golden_v1001);
 
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->sound_event == "block.bell.hit");
-    REQUIRE(back->is_baby);
-    REQUIRE_FALSE(back->is_global);
-    REQUIRE(back->actor == static_cast<bp::ActorUniqueID>(7));
+    const auto back = decode<PacketV1001>(golden_v1001);
+    REQUIRE(back.sound_event == "block.bell.hit");
+    REQUIRE(back.is_baby);
+    REQUIRE_FALSE(back.is_global);
+    REQUIRE(back.actor == static_cast<bp::ActorUniqueID>(7));
 }
 
 // Only the leading sound moved, so both eras share the rest of the body byte for byte.

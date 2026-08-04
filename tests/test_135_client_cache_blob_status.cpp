@@ -2,30 +2,9 @@
 #include <string>
 #include <vector>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::ClientCacheBlobStatusPacket_<975>;
 using PacketV1001 = bp::ClientCacheBlobStatusPacket_<1001>;
@@ -68,12 +47,9 @@ TEST_CASE("client-cache-blob-status v975 round-trips against the golden")
     packet.found_ids = {3};
     REQUIRE(encode(packet) == golden_v975);
 
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->missing_ids == std::vector<std::uint64_t>{1, 2});
-    REQUIRE(back->found_ids == std::vector<std::uint64_t>{3});
+    const auto back = decode<PacketV975>(golden_v975);
+    REQUIRE(back.missing_ids == std::vector<std::uint64_t>{1, 2});
+    REQUIRE(back.found_ids == std::vector<std::uint64_t>{3});
 }
 
 TEST_CASE("client-cache-blob-status v1001 round-trips against the golden")
@@ -83,12 +59,9 @@ TEST_CASE("client-cache-blob-status v1001 round-trips against the golden")
     packet.found_ids = {3};
     REQUIRE(encode(packet) == golden_v1001);
 
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->missing_ids == std::vector<std::uint64_t>{1, 2});
-    REQUIRE(back->found_ids == std::vector<std::uint64_t>{3});
+    const auto back = decode<PacketV1001>(golden_v1001);
+    REQUIRE(back.missing_ids == std::vector<std::uint64_t>{1, 2});
+    REQUIRE(back.found_ids == std::vector<std::uint64_t>{3});
 }
 
 // Two empty lists are two zeroes either way, so an idle client's packet is the one

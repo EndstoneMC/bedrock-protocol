@@ -1,22 +1,8 @@
-#include <cstdint>
 #include <string>
-#include <vector>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::vector<std::uint8_t> encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return {buffer.begin(), buffer.end()};
-}
 
 // StartGamePacket is still hand-written at 1001, so protocol-docs cannot describe
 // it: r26_u3 IS network version 1001 and carries no StartGamePacket.json. The
@@ -214,7 +200,7 @@ TEST_CASE("StartGamePacket: v1001 round-trip")
     //   PlayerMovementSettings: {RewindHistorySize: 40}, Time: 100,
     //   ServerAuthoritativeInventory: true, GameVersion: "1.21.0",
     //   PropertyData: map[string]any{}, UseBlockNetworkIDHashes: true}
-    const std::vector<std::uint8_t> golden{
+    const std::string golden = bytes({
     0x02, 0x02, 0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x00, 0x40, 0x00,
     0x00, 0x40, 0x40, 0x00, 0x00, 0x80, 0x40, 0x00, 0x00, 0xA0, 0x40, 0x07,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
@@ -232,20 +218,16 @@ TEST_CASE("StartGamePacket: v1001 round-trip")
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+});
 
     REQUIRE(encode(pkt) == golden);
 
-    const std::string body{golden.begin(), golden.end()};
-    bp::BinaryReader in{body};
-    auto rt = bp::Serializer<Packet>::deserialize(in);
-    REQUIRE(rt.has_value());
-    REQUIRE(in.getUnreadLength() == 0);
-    REQUIRE(rt->settings.seed == 7);
-    REQUIRE(rt->settings.game_rules.size() == 1);
-    REQUIRE(std::get<1>(rt->settings.game_rules[0].value) == true);
-    REQUIRE(rt->level_name == "world");
-    REQUIRE(rt->is_chat_logging == false);
+    const auto rt = decode<Packet>(golden);
+    REQUIRE(rt.settings.seed == 7);
+    REQUIRE(rt.settings.game_rules.size() == 1);
+    REQUIRE(std::get<1>(rt.settings.game_rules[0].value) == true);
+    REQUIRE(rt.level_name == "world");
+    REQUIRE(rt.is_chat_logging == false);
 }
 
 // 995 added is_chat_logging and 997 the two editor fields; nothing else moved, so
@@ -266,13 +248,9 @@ TEST_CASE("StartGamePacket: v975 is the v1001 body less the 995 and 997 fields")
     newer.is_chat_logging = false;
     REQUIRE(encoded.size() + 3 == encode(newer).size());
 
-    const std::string body{encoded.begin(), encoded.end()};
-    bp::BinaryReader in{body};
-    auto rt = bp::Serializer<Packet>::deserialize(in);
-    REQUIRE(rt.has_value());
-    REQUIRE(in.getUnreadLength() == 0);
-    REQUIRE(rt->settings.seed == 7);
-    REQUIRE(rt->level_name == "world");
+    const auto rt = decode<Packet>(encoded);
+    REQUIRE(rt.settings.seed == 7);
+    REQUIRE(rt.level_name == "world");
 }
 
 TEST_CASE("StartGamePacket: v2168 round-trip")
@@ -299,7 +277,7 @@ TEST_CASE("StartGamePacket: v2168 round-trip")
     //   worldTemplateId: 0-0, blockNetworkIdsHashed: true,
     //   networkPermissions: DEFAULT, serverConfigurationJoinInfo: null,
     //   serverId: "", scenarioId: "", worldId: "", ownerId: ""}
-    const std::vector<std::uint8_t> golden{
+    const std::string golden = bytes({
     0x02, 0x02, 0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x00, 0x40, 0x00,
     0x00, 0x40, 0x40, 0x00, 0x00, 0x80, 0x40, 0x00, 0x00, 0xA0, 0x40, 0x07,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
@@ -317,23 +295,19 @@ TEST_CASE("StartGamePacket: v2168 round-trip")
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+});
 
     REQUIRE(encode(pkt) == golden);
 
-    const std::string body{golden.begin(), golden.end()};
-    bp::BinaryReader in{body};
-    auto rt = bp::Serializer<Packet>::deserialize(in);
-    REQUIRE(rt.has_value());
-    REQUIRE(in.getUnreadLength() == 0);
-    REQUIRE(rt->settings.seed == 7);
-    REQUIRE(rt->settings.rule_data.rules.size() == 1);
-    REQUIRE(std::get<1>(rt->settings.rule_data.rules[0].value) == true);
-    REQUIRE(rt->settings.experiments.toggles.empty());
-    REQUIRE(rt->settings.experiments.experiments_ever_toggled == false);
-    REQUIRE(rt->settings.default_permissions == bp::PlayerPermissionLevel::MEMBER);
-    REQUIRE(rt->level_name == "world");
-    REQUIRE(rt->block_properties.empty());
+    const auto rt = decode<Packet>(golden);
+    REQUIRE(rt.settings.seed == 7);
+    REQUIRE(rt.settings.rule_data.rules.size() == 1);
+    REQUIRE(std::get<1>(rt.settings.rule_data.rules[0].value) == true);
+    REQUIRE(rt.settings.experiments.toggles.empty());
+    REQUIRE(rt.settings.experiments.experiments_ever_toggled == false);
+    REQUIRE(rt.settings.default_permissions == bp::PlayerPermissionLevel::MEMBER);
+    REQUIRE(rt.level_name == "world");
+    REQUIRE(rt.block_properties.empty());
 }
 
 // The cerealisation dropped is_chat_logging and narrowed default_permissions from a
@@ -355,10 +329,6 @@ TEST_CASE("StartGamePacket: a v1001 body does not decode as a v2168 one")
     const auto old_bytes = encode(older);
     REQUIRE(old_bytes.size() == encode(newer).size() + 1);
 
-    const std::string body{old_bytes.begin(), old_bytes.end()};
-    bp::BinaryReader in{body};
-    auto wrong = bp::Serializer<bp::StartGamePacket_<2168>>::deserialize(in);
-    REQUIRE(wrong.has_value());
-    REQUIRE(wrong->settings.default_permissions == bp::PlayerPermissionLevel::OPERATOR);
-    REQUIRE(in.getUnreadLength() != 0);
+    const auto wrong = decode_partial<bp::StartGamePacket_<2168>>(old_bytes);
+    REQUIRE(wrong.settings.default_permissions == bp::PlayerPermissionLevel::OPERATOR);
 }

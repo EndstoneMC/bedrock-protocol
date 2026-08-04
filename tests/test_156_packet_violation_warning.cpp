@@ -1,29 +1,8 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 template <int V>
 bp::PacketViolationWarningPacket_<V> terminating()
@@ -64,14 +43,11 @@ TEST_CASE("packet-violation-warning round-trips against the golden")
 
     REQUIRE(encode(terminating<1001>()) == golden);
 
-    bp::BinaryReader reader{golden};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->violation_type == bp::PacketViolationType::PACKET_MALFORMED);
-    REQUIRE(back->violation_severity == bp::PacketViolationSeverity::TERMINATING_CONNECTION);
-    REQUIRE(back->violating_packet_id == bp::MinecraftPacketIds_<1001>::INVENTORY_TRANSACTION);
-    REQUIRE(back->violation_context == "malformed packet");
+    const auto back = decode<Packet>(golden);
+    REQUIRE(back.violation_type == bp::PacketViolationType::PACKET_MALFORMED);
+    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::TERMINATING_CONNECTION);
+    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::INVENTORY_TRANSACTION);
+    REQUIRE(back.violation_context == "malformed packet");
 }
 
 // MinecraftPacketIds gained three members at 1001, which splits the packet's C++
@@ -97,21 +73,16 @@ TEST_CASE("the unknown sentinel round-trips")
     packet.violating_packet_id = bp::MinecraftPacketIds_<1001>::PACKET_VIOLATION_WARNING;
     REQUIRE(encode(packet) == golden_unknown);
 
-    bp::BinaryReader reader{golden_unknown};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->violation_type == bp::PacketViolationType::UNKNOWN);
-    REQUIRE(back->violation_severity == bp::PacketViolationSeverity::UNKNOWN);
-    REQUIRE(back->violating_packet_id == bp::MinecraftPacketIds_<1001>::PACKET_VIOLATION_WARNING);
-    REQUIRE(back->violation_context.empty());
+    const auto back = decode<Packet>(golden_unknown);
+    REQUIRE(back.violation_type == bp::PacketViolationType::UNKNOWN);
+    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::UNKNOWN);
+    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::PACKET_VIOLATION_WARNING);
+    REQUIRE(back.violation_context.empty());
 }
 
 TEST_CASE("packet-violation-warning rejects a truncated context")
 {
     using Packet = bp::PacketViolationWarningPacket_<1001>;
 
-    const std::string truncated = golden.substr(0, golden.size() - 1);
-    bp::BinaryReader reader{truncated};
-    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader).has_value());
+    REQUIRE(rejects<Packet>(golden.substr(0, golden.size() - 1)));
 }

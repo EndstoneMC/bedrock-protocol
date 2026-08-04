@@ -1,29 +1,8 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using Packet = bp::RequestNetworkSettingsPacket;
 
@@ -52,16 +31,11 @@ TEST_CASE("request-network-settings round-trips against the golden")
     REQUIRE(encode(Packet{.client_network_version = 1001}) == golden_1001);
     REQUIRE(encode(Packet{.client_network_version = 975}) == golden_975);
 
-    bp::BinaryReader reader{golden_1001};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->client_network_version == 1001);
+    const auto back = decode<Packet>(golden_1001);
+    REQUIRE(back.client_network_version == 1001);
 }
 
 TEST_CASE("request-network-settings rejects a truncated version")
 {
-    const std::string truncated = golden_1001.substr(0, 3);
-    bp::BinaryReader reader{truncated};
-    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader).has_value());
+    REQUIRE(rejects<Packet>(golden_1001.substr(0, 3)));
 }

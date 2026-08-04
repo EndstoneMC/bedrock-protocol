@@ -1,29 +1,8 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::GraphicsOverrideParameterPacket_<975>;
 using PacketV1001 = bp::GraphicsOverrideParameterPacket_<1001>;
@@ -73,17 +52,14 @@ TEST_CASE("graphics-override-parameter v975 round-trips against the golden")
 {
     REQUIRE(encode(sample<PacketV975>()) == golden_v975);
 
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->keyframes.size() == 1);
-    REQUIRE(back->keyframes.at(0.5f).z == 3.0f);
-    REQUIRE(back->float_value == 0.25f);
-    REQUIRE_FALSE(back->vec3_value.has_value());
-    REQUIRE(back->biome_id == "plains");
-    REQUIRE(back->parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
-    REQUIRE(back->reset_parameter);
+    const auto back = decode<PacketV975>(golden_v975);
+    REQUIRE(back.keyframes.size() == 1);
+    REQUIRE(back.keyframes.at(0.5f).z == 3.0f);
+    REQUIRE(back.float_value == 0.25f);
+    REQUIRE_FALSE(back.vec3_value.has_value());
+    REQUIRE(back.biome_id == "plains");
+    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
+    REQUIRE(back.reset_parameter);
 }
 
 TEST_CASE("graphics-override-parameter v1001 round-trips against the golden")
@@ -92,13 +68,10 @@ TEST_CASE("graphics-override-parameter v1001 round-trips against the golden")
     packet.player_id = "steve";
     REQUIRE(encode(packet) == golden_v1001);
 
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->player_id == "steve");
-    REQUIRE(back->parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
-    REQUIRE(back->reset_parameter);
+    const auto back = decode<PacketV1001>(golden_v1001);
+    REQUIRE(back.player_id == "steve");
+    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
+    REQUIRE(back.reset_parameter);
 }
 
 // A per-player override leaves the id absent, which costs one byte.

@@ -1,38 +1,12 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::MobArmorEquipmentPacket_<975>;
 using PacketV1001 = bp::MobArmorEquipmentPacket_<1001>;
 using PacketV2168 = bp::MobArmorEquipmentPacket_<2168>;
-
-std::string empty_item_blob()
-{
-    return std::string(10, '\0');
-}
 
 // The helmet carries a stack net id, so the net-id branch is on the wire -- the
 // one place the two item forms differ beyond the id's width.
@@ -131,14 +105,11 @@ TEST_CASE("mob-armor-equipment v975 round-trips against the goldens")
     packet.head.net_id = bp::ItemStackNetId{.id = 9};
     REQUIRE(encode(packet) == golden_v975_helmet);
 
-    bp::BinaryReader reader{golden_v975_helmet};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->head.id == 5);
-    REQUIRE(back->head.net_id.has_value());
-    REQUIRE(back->head.net_id->id == 9);
-    REQUIRE(back->torso.id == 0);
+    const auto back = decode<PacketV975>(golden_v975_helmet);
+    REQUIRE(back.head.id == 5);
+    REQUIRE(back.head.net_id.has_value());
+    REQUIRE(back.head.net_id->id == 9);
+    REQUIRE(back.torso.id == 0);
 }
 
 TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
@@ -151,14 +122,11 @@ TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
     packet.head.net_id_variant = bp::ItemStackNetId{.id = 9};
     REQUIRE(encode(packet) == golden_v1001_helmet);
 
-    bp::BinaryReader reader{golden_v1001_helmet};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->head.id == 5);
-    REQUIRE(back->head.net_id_variant.has_value());
-    REQUIRE(std::get<0>(*back->head.net_id_variant).id == 9);
-    REQUIRE(back->torso.id == 0);
+    const auto back = decode<PacketV1001>(golden_v1001_helmet);
+    REQUIRE(back.head.id == 5);
+    REQUIRE(back.head.net_id_variant.has_value());
+    REQUIRE(std::get<0>(*back.head.net_id_variant).id == 9);
+    REQUIRE(back.torso.id == 0);
 }
 
 TEST_CASE("mob-armor-equipment v2168 round-trips against the goldens")
@@ -171,14 +139,11 @@ TEST_CASE("mob-armor-equipment v2168 round-trips against the goldens")
     packet.head.net_id_variant = 9;
     REQUIRE(encode(packet) == golden_v2168_helmet);
 
-    bp::BinaryReader reader{golden_v2168_helmet};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->head.id == 5);
-    REQUIRE(back->head.net_id_variant.has_value());
-    REQUIRE(*back->head.net_id_variant == 9);
-    REQUIRE(back->torso.id == 0);
+    const auto back = decode<PacketV2168>(golden_v2168_helmet);
+    REQUIRE(back.head.id == 5);
+    REQUIRE(back.head.net_id_variant.has_value());
+    REQUIRE(*back.head.net_id_variant == 9);
+    REQUIRE(back.torso.id == 0);
 }
 
 // The sign and parity say which id it is where 1001 spelled a tag: negative-odd
@@ -191,11 +156,7 @@ TEST_CASE("mob-armor-equipment v2168 carries a client request id as a negative n
     packet.head.net_id_variant = -3;
     REQUIRE(encode(packet) == golden_v2168_helmet_negative);
 
-    bp::BinaryReader reader{golden_v2168_helmet_negative};
-    auto back = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(*back->head.net_id_variant == -3);
+    REQUIRE(*decode<PacketV2168>(golden_v2168_helmet_negative).head.net_id_variant == -3);
 }
 
 // Only the tag byte went, so an all-air packet is the same bytes either era --
@@ -211,15 +172,11 @@ TEST_CASE("mob-armor-equipment agrees across 1001 and 2168 when no stack carries
 // later field slides one byte forward.
 TEST_CASE("mob-armor-equipment a v1001 body does not decode as a v2168 one")
 {
-    bp::BinaryReader reader{golden_v1001_helmet};
-    auto wrong = bp::Serializer<PacketV2168>::deserialize(reader);
-    REQUIRE(wrong.has_value());
-    REQUIRE(*wrong->head.net_id_variant == 0);
-    REQUIRE(wrong->head.block_runtime_id == 18);
-    REQUIRE(reader.getUnreadLength() != 0);
+    const auto wrong = decode_partial<PacketV2168>(golden_v1001_helmet);
+    REQUIRE(*wrong.head.net_id_variant == 0);
+    REQUIRE(wrong.head.block_runtime_id == 18);
 
     // The other way the zigzagged net id lands where the variant index is read,
     // and 18 names no case.
-    bp::BinaryReader back{golden_v2168_helmet};
-    REQUIRE_FALSE(bp::Serializer<PacketV1001>::deserialize(back).has_value());
+    REQUIRE(rejects<PacketV1001>(golden_v2168_helmet));
 }

@@ -1,30 +1,9 @@
 #include <cstdint>
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 // Golden derived from gophertunnel's BiomeDefinitionList.Marshal (654cd5f):
 // protocol.Slice writes a varuint32 count then each BiomeDefinition, whose Marshal
@@ -102,13 +81,10 @@ TEST_CASE("biome definition list round-trips against the golden")
     packet.string_list.strings = {"plains", "tag"};
     REQUIRE(encode(packet) == golden);
 
-    bp::BinaryReader reader{golden};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->biome_data.size() == 1);
+    const auto back = decode<Packet>(golden);
+    REQUIRE(back.biome_data.size() == 1);
 
-    const auto &definition = back->biome_data.at(static_cast<bp::BiomeStringIndex>(0));
+    const auto &definition = back.biome_data.at(static_cast<bp::BiomeStringIndex>(0));
     REQUIRE(definition.id == 1);
     REQUIRE(definition.temperature == 0.5f);
     REQUIRE(definition.map_water_color_argb == 0x44556677);
@@ -116,7 +92,7 @@ TEST_CASE("biome definition list round-trips against the golden")
     REQUIRE(definition.tags.has_value());
     REQUIRE(definition.tags->tags == std::vector<std::uint16_t>{2, 3});
     REQUIRE_FALSE(definition.chunk_gen_data.has_value());
-    REQUIRE(back->string_list.strings == std::vector<std::string>{"plains", "tag"});
+    REQUIRE(back.string_list.strings == std::vector<std::string>{"plains", "tag"});
 }
 
 // Each key immediately precedes its own value, and std::map orders the entries by
@@ -168,12 +144,8 @@ TEST_CASE("biome definition list v975 carries the pre-981 noise gradient")
     packet.string_list.strings = {"plains", "tag"};
     REQUIRE(encode(packet) == golden_gradient_v975);
 
-    bp::BinaryReader reader{golden_gradient_v975};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-
-    const auto &read_back = back->biome_data.at(static_cast<bp::BiomeStringIndex>(0))
+    const auto back = decode<Packet>(golden_gradient_v975);
+    const auto &read_back = back.biome_data.at(static_cast<bp::BiomeStringIndex>(0))
                                 .chunk_gen_data->surface_builder_data->noise_gradient_surface;
     REQUIRE(read_back.has_value());
     REQUIRE(read_back->gradient_blocks == std::vector<std::uint32_t>{9});
@@ -212,12 +184,8 @@ TEST_CASE("biome definition list v1001 carries the reshaped noise gradient")
     packet.string_list.strings = {"plains", "tag"};
     REQUIRE(encode(packet) == golden_gradient_v1001);
 
-    bp::BinaryReader reader{golden_gradient_v1001};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-
-    const auto &read_back = back->biome_data.at(static_cast<bp::BiomeStringIndex>(0))
+    const auto back = decode<Packet>(golden_gradient_v1001);
+    const auto &read_back = back.biome_data.at(static_cast<bp::BiomeStringIndex>(0))
                                 .chunk_gen_data->surface_builder_data->noise_gradient_surface;
     REQUIRE(read_back.has_value());
     REQUIRE(read_back->gradient_block_ranges.size() == 1);

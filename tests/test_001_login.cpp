@@ -1,29 +1,8 @@
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using Packet = bp::LoginPacket;
 
@@ -46,16 +25,12 @@ TEST_CASE("login round-trips against the golden")
 {
     REQUIRE(encode(Packet{.client_network_version = 1001, .connection_request = "abc"}) == golden);
 
-    bp::BinaryReader reader{golden};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->client_network_version == 1001);
-    REQUIRE(back->connection_request == "abc");
+    const auto back = decode<Packet>(golden);
+    REQUIRE(back.client_network_version == 1001);
+    REQUIRE(back.connection_request == "abc");
 }
 
 TEST_CASE("login rejects a connection request shorter than its prefix claims")
 {
-    bp::BinaryReader reader{golden.substr(0, golden.size() - 1)};
-    REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader).has_value());
+    REQUIRE(rejects<Packet>(golden.substr(0, golden.size() - 1)));
 }

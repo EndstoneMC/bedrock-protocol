@@ -1,30 +1,9 @@
 #include <cstdint>
 #include <string>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 // A case-2 (UpdateEnvironmentAttributes) packet carrying one bool attribute.
 // The only version-varying part is EnvironmentAttributeData, which gains
@@ -90,22 +69,12 @@ TEST_CASE("v975 form round-trips against the golden")
 {
     using Packet = bp::ClientboundAttributeLayerSyncPacket_<975>;
     REQUIRE(encode(make_packet<975>()) == golden_v975);
-
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->data.index() == 2);
+    REQUIRE(decode<Packet>(golden_v975).data.index() == 2);
 }
 
 TEST_CASE("v1001 form round-trips against the golden")
 {
     using Packet = bp::ClientboundAttributeLayerSyncPacket_<1001>;
     REQUIRE(encode(make_packet<1001>()) == golden_v1001);
-
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->data.index() == 2);
+    REQUIRE(decode<Packet>(golden_v1001).data.index() == 2);
 }

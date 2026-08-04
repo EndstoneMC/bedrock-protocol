@@ -2,30 +2,9 @@
 #include <string>
 #include <variant>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 // Golden derived from gophertunnel's ClientboundUpdateSoundData.Marshal:
 // io.Uint64(ServerSoundHandle) then io.String(SoundEvent) -- a fixed LE uint64
@@ -69,23 +48,16 @@ TEST_CASE("update-sound-data round-trips against the golden")
     packet.sound_event = bp::SoundDataEvent::STOP;
     REQUIRE(encode(packet) == golden);
 
-    bp::BinaryReader reader{golden};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->server_sound_handle.value == 42);
-    REQUIRE(back->sound_event == bp::SoundDataEvent::STOP);
+    const auto back = decode<Packet>(golden);
+    REQUIRE(back.server_sound_handle.value == 42);
+    REQUIRE(back.sound_event == bp::SoundDataEvent::STOP);
 }
 
 TEST_CASE("the name-code read is case-insensitive")
 {
     using Packet = bp::ClientboundUpdateSoundDataPacket_<1001>;
 
-    bp::BinaryReader reader{golden_bds_casing};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->sound_event == bp::SoundDataEvent::STOP);
+    REQUIRE(decode<Packet>(golden_bds_casing).sound_event == bp::SoundDataEvent::STOP);
 }
 
 TEST_CASE("a v2168 payload-less case is the handle plus its bare index")
@@ -102,13 +74,9 @@ TEST_CASE("a v2168 payload-less case is the handle plus its bare index")
     resume.sound_event = bp::v2168::Resume{};
     REQUIRE(encode(resume) == handle_42 + bytes({0x06}));
 
-    const std::string wire = encode(resume);
-    bp::BinaryReader reader{wire};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->server_sound_handle.value == 42);
-    REQUIRE(std::holds_alternative<bp::v2168::Resume>(back->sound_event));
+    const auto back = decode<Packet>(encode(resume));
+    REQUIRE(back.server_sound_handle.value == 42);
+    REQUIRE(std::holds_alternative<bp::v2168::Resume>(back.sound_event));
 }
 
 TEST_CASE("a v2168 case with a payload writes it flat behind the index")
@@ -126,13 +94,9 @@ TEST_CASE("a v2168 case with a payload writes it flat behind the index")
     REQUIRE(encode(fade) ==
             handle_42 + bytes({0x03, 0x00, 0x00, 0xc0, 0x3f, 0x00, 0x00, 0x80, 0x3e}));
 
-    const std::string wire = encode(fade);
-    bp::BinaryReader reader{wire};
-    auto back = bp::Serializer<Packet>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(std::get<bp::v2168::Fade>(back->sound_event).duration == 1.5F);
-    REQUIRE(std::get<bp::v2168::Fade>(back->sound_event).target_volume == 0.25F);
+    const auto back = decode<Packet>(encode(fade));
+    REQUIRE(std::get<bp::v2168::Fade>(back.sound_event).duration == 1.5F);
+    REQUIRE(std::get<bp::v2168::Fade>(back.sound_event).target_volume == 0.25F);
 }
 
 // The name code became a variant index, so the two forms share only the handle.
@@ -143,8 +107,5 @@ TEST_CASE("a v2168 body does not decode as a v1001 one")
     stop.sound_event = bp::v2168::Stop{};
     const std::string wire = encode(stop);
     REQUIRE(wire != golden);
-
-    bp::BinaryReader reader{wire};
-    auto wrong = bp::Serializer<bp::ClientboundUpdateSoundDataPacket_<1001>>::deserialize(reader);
-    REQUIRE_FALSE(wrong.has_value());
+    REQUIRE(rejects<bp::ClientboundUpdateSoundDataPacket_<1001>>(wire));
 }

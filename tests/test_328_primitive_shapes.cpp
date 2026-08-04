@@ -2,30 +2,9 @@
 #include <string>
 #include <variant>
 
-#include <bedrock/protocol.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-namespace bp = bedrock::protocol;
+#include "fixture.hpp"
 
 namespace {
-
-template <class T>
-std::string encode(const T &value)
-{
-    std::string buffer;
-    bp::BinaryWriter writer{buffer};
-    bp::Serializer<T>::serialize(writer, value);
-    return buffer;
-}
-
-std::string bytes(std::initializer_list<int> raw)
-{
-    std::string out;
-    for (int b : raw) {
-        out.push_back(static_cast<char>(b));
-    }
-    return out;
-}
 
 using PacketV975 = bp::PrimitiveShapesPacket_<975>;
 using PacketV1001 = bp::PrimitiveShapesPacket_<1001>;
@@ -140,17 +119,14 @@ TEST_CASE("primitive shapes v975 round-trips against the golden")
     packet.shapes = {cleared_shape<Payload>(), sphere_shape<Payload>(), text_shape<Payload>()};
     REQUIRE(encode(packet) == golden_v975);
 
-    bp::BinaryReader reader{golden_v975};
-    auto back = bp::Serializer<PacketV975>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->shapes.size() == 3);
-    REQUIRE(back->shapes[0].extra_data_payload.index() == 0);  // monostate: shape cleared
-    REQUIRE_FALSE(back->shapes[0].shape_type.has_value());
-    REQUIRE(back->shapes[1].attached_to_id == static_cast<bp::ActorUniqueID>(-7));
-    REQUIRE(back->shapes[1].color == argb);
-    REQUIRE(std::get<5>(back->shapes[1].extra_data_payload).num_segments == 12);
-    REQUIRE(std::get<2>(back->shapes[2].extra_data_payload).text == "hi");
+    const auto back = decode<PacketV975>(golden_v975);
+    REQUIRE(back.shapes.size() == 3);
+    REQUIRE(back.shapes[0].extra_data_payload.index() == 0);  // monostate: shape cleared
+    REQUIRE_FALSE(back.shapes[0].shape_type.has_value());
+    REQUIRE(back.shapes[1].attached_to_id == static_cast<bp::ActorUniqueID>(-7));
+    REQUIRE(back.shapes[1].color == argb);
+    REQUIRE(std::get<5>(back.shapes[1].extra_data_payload).num_segments == 12);
+    REQUIRE(std::get<2>(back.shapes[2].extra_data_payload).text == "hi");
 }
 
 // 989 appended Cylinder, Pyramid, Ellipsoid and Cone to the variant. They take indices
@@ -178,20 +154,17 @@ TEST_CASE("primitive shapes v1001 round-trips against the golden")
     packet.shapes = {cleared_shape<Payload>(), sphere_shape<Payload>(), text_shape<Payload>(), cylinder, pyramid};
     REQUIRE(encode(packet) == golden_v1001);
 
-    bp::BinaryReader reader{golden_v1001};
-    auto back = bp::Serializer<PacketV1001>::deserialize(reader);
-    REQUIRE(back.has_value());
-    REQUIRE(reader.getUnreadLength() == 0);
-    REQUIRE(back->shapes.size() == 5);
-    REQUIRE(std::get<5>(back->shapes[1].extra_data_payload).num_segments == 12);
+    const auto back = decode<PacketV1001>(golden_v1001);
+    REQUIRE(back.shapes.size() == 5);
+    REQUIRE(std::get<5>(back.shapes[1].extra_data_payload).num_segments == 12);
 
-    const auto &read_cylinder = std::get<6>(back->shapes[3].extra_data_payload);
+    const auto &read_cylinder = std::get<6>(back.shapes[3].extra_data_payload);
     REQUIRE(read_cylinder.radius_x.x == 1.0f);
     REQUIRE(read_cylinder.radius_z.y == 1.0f);
     REQUIRE(read_cylinder.height == 3.0f);
     REQUIRE(read_cylinder.num_segments == 8);
 
-    const auto &read_pyramid = std::get<7>(back->shapes[4].extra_data_payload);
+    const auto &read_pyramid = std::get<7>(back.shapes[4].extra_data_payload);
     REQUIRE(read_pyramid.width == 2.0f);
     REQUIRE(read_pyramid.depth == 4.0f);
     REQUIRE(read_pyramid.height == 6.0f);
