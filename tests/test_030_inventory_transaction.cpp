@@ -53,14 +53,14 @@ const std::string golden_use_item = bytes({
 
 using PacketV975 = bp::InventoryTransactionPacket_<975>;
 
-bp::base::SerializedNetworkItemStackDescriptor air_v975()
+bp::NetworkItemStackDescriptor air_v975()
 {
     return {};  // id 0 -> the write returns early, so air is a lone zero byte
 }
 
-bp::base::SerializedNetworkItemStackDescriptor stone_v975()
+bp::NetworkItemStackDescriptor stone_v975()
 {
-    bp::base::SerializedNetworkItemStackDescriptor item;
+    bp::NetworkItemStackDescriptor item;
     item.id = 1;
     item.stack_size = 64;
     item.block_runtime_id = 7;

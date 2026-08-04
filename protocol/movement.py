@@ -12,7 +12,7 @@ from protocol.actor import (
 )
 from protocol.common import Vec2, Vec3
 from protocol.game import GameType, PlayerPermissionLevel
-from protocol.inventory import SerializedNetworkItemStackDescriptor
+from protocol.inventory import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.player_list import BuildPlatform
 
 package = "bedrock.protocol"
@@ -93,7 +93,7 @@ class MoveActorDeltaData:
     force_completion: bool
 
 
-@packet(id=12)
+@packet(id=12, until=2168)
 class AddPlayerPacket:
     uuid: uuid.UUID
     name: str
@@ -103,11 +103,26 @@ class AddPlayerPacket:
     velocity: Vec3
     rot: Vec2
     y_head_rot: float
-    # TODO: confirm against BDS -- this packet does not cerealise until 2168, so below 2168 BDS
-    # writes NetworkItemStackDescriptor::write, not cerealizer<...>::SerializedData. At the 1001
-    # snapshot the shared declaration (inventory.py:137) resolves to the cerealised body instead.
-    # gophertunnel add_player.go uses io.ItemInstance and CloudburstMC v1001 inherits writeItem
-    # from v431; both write the legacy form. Needs the two bodies split under their own BDS names.
+    carried_item: NetworkItemStackDescriptor
+    player_game_type: GameType
+    unpack: SynchedActorData.CopyableDataList
+    synched_properties: PropertySyncData
+    abilities: SerializedAbilitiesData
+    links: list[ActorLink]
+    device_id: str
+    build_platform: BuildPlatform = field(type=int32)
+
+
+@packet(id=12, since=2168)
+class AddPlayerPacket:
+    uuid: uuid.UUID
+    name: str
+    runtime_id: ActorRuntimeID
+    platform_online_id: str
+    pos: Vec3
+    velocity: Vec3
+    rot: Vec2
+    y_head_rot: float
     carried_item: SerializedNetworkItemStackDescriptor
     player_game_type: GameType
     unpack: SynchedActorData.CopyableDataList
@@ -118,13 +133,21 @@ class AddPlayerPacket:
     build_platform: BuildPlatform = field(type=int32)
 
 
-@packet(id=15)
+@packet(id=15, until=2168)
 class AddItemActorPacket:
     id: ActorUniqueID
     runtime_id: ActorRuntimeID
-    # TODO: confirm against BDS -- same split as AddPlayerPacket.carried_item above: below 2168
-    # this is NetworkItemStackDescriptor::write, and gophertunnel add_item_actor.go plus
-    # CloudburstMC v1001 both write that legacy form.
+    item: NetworkItemStackDescriptor
+    pos: Vec3
+    velocity: Vec3
+    data: SynchedActorData.CopyableDataList
+    is_from_fishing: bool
+
+
+@packet(id=15, since=2168)
+class AddItemActorPacket:
+    id: ActorUniqueID
+    runtime_id: ActorRuntimeID
     item: SerializedNetworkItemStackDescriptor
     pos: Vec3
     velocity: Vec3

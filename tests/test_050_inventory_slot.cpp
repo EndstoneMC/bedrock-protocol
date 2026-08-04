@@ -1,9 +1,11 @@
 #include <string>
+#include <type_traits>
 
 #include "fixture.hpp"
 
 namespace {
 
+using PacketV975 = bp::InventorySlotPacket_<975>;
 using PacketV1001 = bp::InventorySlotPacket_<1001>;
 using PacketV2168 = bp::InventorySlotPacket_<2168>;
 
@@ -73,10 +75,25 @@ const std::string golden_v2168_present = bytes({
 
 }  // namespace
 
-TEST_CASE("packet id is 50 at both modelled versions")
+TEST_CASE("packet id is 50 at every modelled version")
 {
+    STATIC_REQUIRE(PacketV975::Id == 50);
     STATIC_REQUIRE(PacketV1001::Id == 50);
     STATIC_REQUIRE(PacketV2168::Id == 50);
+}
+
+// 975 already carried the cerealised item: r26_u2's InventorySlotPacket.json is identical
+// to r26_u3's, closure included, and gophertunnel wrote the same ItemInstanceNew at the
+// last pre-1.26.30 commit. One shape covers both snapshots.
+TEST_CASE("inventory-slot is one shape across 975 and 1001")
+{
+    STATIC_REQUIRE(bp::has_packet_v<975, 50>);
+    STATIC_REQUIRE(std::is_same_v<PacketV975, PacketV1001>);
+
+    PacketV975 absent;
+    absent.inventory_id = static_cast<bp::ContainerID>(12);
+    absent.slot = 3;
+    REQUIRE(encode(absent) == golden_v1001_absent);
 }
 
 // Each of the two optionals costs exactly one flag byte, and no cereal member-present

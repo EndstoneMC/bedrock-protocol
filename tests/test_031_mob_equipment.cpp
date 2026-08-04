@@ -1,9 +1,11 @@
 #include <string>
+#include <type_traits>
 
 #include "fixture.hpp"
 
 namespace {
 
+using PacketV975 = bp::MobEquipmentPacket_<975>;
 using PacketV1001 = bp::MobEquipmentPacket_<1001>;
 using PacketV2168 = bp::MobEquipmentPacket_<2168>;
 
@@ -62,10 +64,22 @@ const std::string golden_v2168_helmet = bytes({
 
 }  // namespace
 
-TEST_CASE("packet id is 31 at both modelled versions")
+TEST_CASE("packet id is 31 at every modelled version")
 {
+    STATIC_REQUIRE(PacketV975::Id == 31);
     STATIC_REQUIRE(PacketV1001::Id == 31);
     STATIC_REQUIRE(PacketV2168::Id == 31);
+}
+
+// 975 already carried the cerealised item: r26_u2's MobEquipmentPacket.json is identical
+// to r26_u3's, closure included, and gophertunnel wrote the same ItemInstanceNew at the
+// last pre-1.26.30 commit. One shape covers both snapshots.
+TEST_CASE("mob-equipment is one shape across 975 and 1001")
+{
+    STATIC_REQUIRE(bp::has_packet_v<975, 31>);
+    STATIC_REQUIRE(std::is_same_v<PacketV975, PacketV1001>);
+
+    REQUIRE(encode(sample<PacketV975>()) == golden_v1001_air);
 }
 
 TEST_CASE("mob-equipment v1001 round-trips against the goldens")

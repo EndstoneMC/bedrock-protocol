@@ -119,10 +119,9 @@ class ItemStackLegacyRequestId:
 type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
 
 
-@type(until=1001)
-class SerializedNetworkItemStackDescriptor:
-    """NetworkItemStackDescriptor::write. An air item (id 0) is a lone zero
-    byte: the write returns early, so nothing else reaches the wire."""
+class NetworkItemStackDescriptor:
+    """An air item (id 0) is a lone zero byte: the write returns early, so
+    nothing else reaches the wire."""
 
     id: varint32
 
@@ -134,7 +133,7 @@ class SerializedNetworkItemStackDescriptor:
         user_data_buffer: bytes
 
 
-@type(since=1001, until=2168)
+@type(until=2168)
 class SerializedNetworkItemStackDescriptor:
     """cerealizer<NetworkItemStackDescriptor>::SerializedData. The extra data
     (NBT, can-place-on / can-break, shield blocking tick) rides in a single
@@ -199,6 +198,15 @@ class InventorySource:
     flags: InventorySourceFlags | None
 
 
+@type(until=1001)
+class InventoryAction:
+    source: InventorySource
+    slot: uvarint32
+    from_item: NetworkItemStackDescriptor
+    to_item: NetworkItemStackDescriptor
+
+
+@type(since=1001)
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
@@ -251,7 +259,7 @@ class ItemUseInventoryTransaction:
     pos: BlockPos
     face: varint32
     slot: varint32
-    item: SerializedNetworkItemStackDescriptor
+    item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: uvarint32
@@ -294,6 +302,22 @@ class ItemUseInventoryTransaction:
     client_cooldown_state: ClientCooldownState
 
 
+@type(until=1001)
+class ItemUseOnActorInventoryTransaction:
+    class ActionType(IntEnum, int):
+        INTERACT = 0
+        ATTACK = 1
+
+    actions: InventoryTransaction
+    target_runtime_id: ActorRuntimeID
+    action_type: ActionType
+    slot: varint32
+    item: NetworkItemStackDescriptor
+    from_pos: Vec3
+    hit_pos: Vec3
+
+
+@type(since=1001)
 class ItemUseOnActorInventoryTransaction:
     class ActionType(IntEnum, int):
         INTERACT = 0
@@ -308,6 +332,20 @@ class ItemUseOnActorInventoryTransaction:
     hit_pos: Vec3
 
 
+@type(until=1001)
+class ItemReleaseInventoryTransaction:
+    class ActionType(IntEnum, int):
+        RELEASE = 0
+        CONSUME = 1
+
+    actions: InventoryTransaction
+    action_type: ActionType
+    slot: varint32
+    item: NetworkItemStackDescriptor
+    from_pos: Vec3
+
+
+@type(since=1001)
 class ItemReleaseInventoryTransaction:
     class ActionType(IntEnum, int):
         RELEASE = 0
@@ -343,7 +381,15 @@ class InventoryTransactionPacket:
     transaction: TransactionData | None
 
 
-@packet(id=49)
+@packet(id=49, until=1001)
+class InventoryContentPacket:
+    inventory_id: ContainerID = field(type=uvarint32)
+    slots: list[NetworkItemStackDescriptor]
+    full_container_name: FullContainerName
+    storage_item: NetworkItemStackDescriptor
+
+
+@packet(id=49, since=1001)
 class InventoryContentPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slots: list[SerializedNetworkItemStackDescriptor]
@@ -354,11 +400,7 @@ class InventoryContentPacket:
 # TODO: confirm against BDS -- the dump reads the container id as one byte here and as a
 # uvarint32 on packet 49, while gophertunnel and CloudburstMC write a uvarint32 on both.
 # The two agree below 128 and part company on ContainerID::NONE.
-# TODO: the 975 form is known and equal to this one -- protocol-docs r26_u2 dumps the packet
-# cerealised with the same fields -- but SerializedNetworkItemStackDescriptor resolves to the
-# pre-cereal shape at 975, which packets 30/32/49 still needed there. Modelling 975 needs the
-# pre-cereal descriptor under its own name.
-@packet(id=50, since=1001)
+@packet(id=50)
 class InventorySlotPacket:
     inventory_id: ContainerID
     slot: uvarint32

@@ -202,10 +202,11 @@ class PlayerAuthInputPacket:
     # TODO: `item_use_transaction` belongs here, gated on
     # `input_data.test(InputData.PERFORM_ITEM_INTERACTION)`. It is a
     # PackedItemUseLegacyInventoryTransaction wrapping the PRE-CEREAL
-    # ItemUseInventoryTransaction, whose InventoryAction / InventorySource /
-    # SerializedNetworkItemStackDescriptor closure snapshot 1001 resolves to the cerealised
-    # form -- one BDS name, two wire shapes at one snapshot. Until those are split, a 1001
-    # body with that bit set is outside what this declaration describes and will not decode.
+    # ItemUseInventoryTransaction, whose InventoryAction / InventorySource closure snapshot
+    # 1001 resolves to the cerealised form -- one BDS name, two wire shapes at one snapshot.
+    # Unlike the descriptor, BDS has no second name to split these under, so this needs a
+    # compiler answer. Until then a 1001 body with that bit set is outside what this
+    # declaration describes and will not decode.
     item_stack_request: ItemStackRequestData = field(
         when=lambda p: p.input_data.test(InputData.PERFORM_ITEM_STACK_REQUEST)
     )

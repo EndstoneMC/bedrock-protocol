@@ -1,15 +1,11 @@
 from protocol import field, int32, packet, uint8
 from protocol.actor import ActorRuntimeID
-from protocol.inventory import ContainerID, SerializedNetworkItemStackDescriptor
+from protocol.inventory import ContainerID, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 
 package = "bedrock.protocol"
 
 
-# TODO: the 975 form is known and equal to this one -- protocol-docs r26_u2 dumps the packet
-# cerealised with the same fields -- but SerializedNetworkItemStackDescriptor resolves to the
-# pre-cereal shape at 975, which packets 30/32/49 still needed there. Modelling 975 needs the
-# pre-cereal descriptor under its own name.
-@packet(id=31, since=1001)
+@packet(id=31)
 class MobEquipmentPacket:
     """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
 
@@ -20,7 +16,19 @@ class MobEquipmentPacket:
     container_id: ContainerID
 
 
-@packet(id=32)
+@packet(id=32, until=1001)
+class MobArmorEquipmentPacket:
+    """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
+
+    runtime_id: ActorRuntimeID
+    head: NetworkItemStackDescriptor
+    torso: NetworkItemStackDescriptor
+    legs: NetworkItemStackDescriptor
+    feet: NetworkItemStackDescriptor
+    body: NetworkItemStackDescriptor
+
+
+@packet(id=32, since=1001)
 class MobArmorEquipmentPacket:
     """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
 

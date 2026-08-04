@@ -76,7 +76,7 @@ TEST_CASE("packet id is 49 at every version")
 
 TEST_CASE("inventory-content v975 round-trips against the golden")
 {
-    auto packet = sample<PacketV975, bp::base::SerializedNetworkItemStackDescriptor>();
+    auto packet = sample<PacketV975, bp::NetworkItemStackDescriptor>();
     REQUIRE(encode(packet) == golden_v975);
 
     const auto back = decode<PacketV975>(golden_v975);
