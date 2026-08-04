@@ -62,8 +62,8 @@ TEST_CASE("a packet resolves only inside its version range", "[packet]")
 
 TEST_CASE("the registry is walkable by id", "[packet]")
 {
-    STATIC_REQUIRE(modelled<975>(std::make_integer_sequence<int, end_id<975>>{}) == 17);
-    STATIC_REQUIRE(modelled<1001>(std::make_integer_sequence<int, end_id<1001>>{}) == 18);
-    STATIC_REQUIRE(modelled<2168>(std::make_integer_sequence<int, end_id<2168>>{}) == 18);
+    STATIC_REQUIRE(modelled<975>(std::make_integer_sequence<int, end_id<975>>{}) == 18);
+    STATIC_REQUIRE(modelled<1001>(std::make_integer_sequence<int, end_id<1001>>{}) == 19);
+    STATIC_REQUIRE(modelled<2168>(std::make_integer_sequence<int, end_id<2168>>{}) == 19);
     STATIC_REQUIRE(ids_agree<1001>(std::make_integer_sequence<int, end_id<1001>>{}));
 }

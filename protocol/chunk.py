@@ -1,7 +1,12 @@
-from protocol import field, int8, int32, packet, type, uint32, varint32
+from protocol import field, int8, int32, packet, type, uint16, uint32, uint64, uvarint32, varint32
 from protocol.attributes import DimensionType
 
 package = "bedrock.protocol"
+
+
+class ChunkPos:
+    x: varint32
+    z: varint32
 
 
 @type(until=1001)
@@ -18,7 +23,37 @@ class SubChunkPos:
     z: int32
 
 
-# Only the nested type is modelled; SubChunkPacket's own wire shape is not.
+@packet(id=58, until=2168)
+class LevelChunkPacket:
+    class SubChunkMetadata:
+        blob_id: uint64
+
+    pos: ChunkPos
+    dimension_id: DimensionType
+    sub_chunks_count: uvarint32
+    client_request_sub_chunk_limit: uint16 = field(when=lambda p: p.sub_chunks_count == 4294967294)
+    cache_enabled: bool
+    cache_metadata: list[SubChunkMetadata] = field(when=lambda p: p.cache_enabled)
+    serialized_chunk: str
+
+
+@packet(id=58, since=2168)
+class LevelChunkPacket:
+    class SubChunkMetadata:
+        blob_id: uint64
+
+    pos: ChunkPos
+    dimension_id: DimensionType
+    sub_chunks_count: uvarint32
+    client_request_sub_chunk_limit: varint32 | None
+    cache_enabled: bool
+    cache_metadata: list[SubChunkMetadata]
+    serialized_chunk: str
+
+
+# TODO: packet 174 is unmodelled. Its 2168 form needs field(count=) inside an
+# optional, and its 1001 form needs field(when=) to reach the enclosing packet's
+# cache_enabled. Only the nested type below is modelled.
 class SubChunkPacket:
     class SubChunkPosOffset:
         x: int8
