@@ -97,10 +97,21 @@ class SpawnSettings:
     dimension: DimensionType
 
 
+@type(until=2168)
 class GameRule:
     name: str
     can_be_modified_by_player: bool
     value: None | bool | uvarint32 | float
+
+
+@type(since=2168)
+class GameRule:
+    """2168 widened the integer case to a fixed uint32. The bool and float cases are
+    unchanged, so a world whose rules are all bools reads the same either way."""
+
+    name: str
+    can_be_modified_by_player: bool
+    value: None | bool | uint32 | float
 
 
 class ExperimentData:
