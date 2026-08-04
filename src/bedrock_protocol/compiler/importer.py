@@ -21,6 +21,7 @@ import griffe
 
 from bedrock_protocol.descriptor import (
     PRIMITIVES,
+    CompilerError,
     FileSet,
     PrimitiveAlias,
     PrimitiveType,
@@ -53,7 +54,7 @@ class _DeclarationCollector(griffe.Extension):
         body: list[ast.stmt] = []
         group = 0
         for stmt in node.body:
-            guard = _with_guard(stmt)
+            guard = _with_guard(stmt, node.name)
             if guard is None:
                 body.append(stmt)
                 continue
@@ -70,17 +71,26 @@ class _DeclarationCollector(griffe.Extension):
             self.by_module.setdefault(parent.path, []).append(cls)
 
 
-def _with_guard(stmt: ast.stmt) -> tuple[ast.With, ast.expr] | None:
-    """A `with field(when=...):` block paired with its predicate, or None."""
+def _with_guard(stmt: ast.stmt, owner: str) -> tuple[ast.With, ast.expr] | None:
+    """A `with field(when=...):` block paired with its predicate, or None.
+
+    A guard block takes exactly `when=`. Anything else has to be an error: an
+    unrecognised keyword would leave the block unhoisted, and its fields would
+    reach the wire ungated without a word said."""
     if not isinstance(stmt, ast.With) or len(stmt.items) != 1:
         return None
     ctx = stmt.items[0].context_expr
     if not (isinstance(ctx, ast.Call) and isinstance(ctx.func, ast.Name) and ctx.func.id == "field"):
         return None
+    predicate: ast.expr | None = None
     for kw in ctx.keywords:
         if kw.arg == "when":
-            return stmt, kw.value
-    return None
+            predicate = kw.value
+        else:
+            raise CompilerError(f"{owner}: a with field(...) guard block takes no {kw.arg!r} keyword, only when=")
+    if predicate is None or ctx.args:
+        raise CompilerError(f"{owner}: a with field(...) guard block takes exactly field(when=<lambda>)")
+    return stmt, predicate
 
 
 def _merge_guard(stmt: ast.stmt, predicate: ast.expr, group: int) -> None:

@@ -179,6 +179,24 @@ class LiteralType:
 
 
 @dataclass(frozen=True)
+class BitsetType:
+    """`bitset[N]` — a fixed-width `std::bitset<N>`.
+
+    The wire form is a base-128 little-endian dump of the bitset's numeric
+    value: seven payload bits per byte, the top bit a continuation flag, and a
+    lone `0x00` byte for the empty bitset. `size` may exceed 64
+    (`PlayerAuthInputPacket`'s is 65+), so the codec never routes the value
+    through an integer -- it walks the bits."""
+
+    size: int
+    kind: Literal["bitset"] = "bitset"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return frozenset()
+
+
+@dataclass(frozen=True)
 class OptionalType:
     """`T | None` → a one-byte bool presence flag followed by the payload."""
 
@@ -265,6 +283,7 @@ FieldType = (
     | StructType
     | EnumType
     | LiteralType
+    | BitsetType
     | OptionalType
     | RepeatedType
     | MappingType
@@ -288,6 +307,9 @@ class EnumValue:
     #: Spelled `auto()`: the number is `previous + 1` within whichever snapshot the
     #: member appears in, so a trailing sentinel tracks the members present there.
     is_auto: bool = False
+    #: `value(name=)`: the exact string BDS puts on the wire, where it is not the
+    #: member's own spelling.
+    wire: str | None = None
 
     def present_at(self, snapshot: int) -> bool:
         return (self.since is None or snapshot >= self.since) and (self.until is None or snapshot < self.until)
@@ -296,18 +318,31 @@ class EnumValue:
     def wire_name(self) -> str:
         """The string a name-coded enum puts on the wire. BDS cereal serializes
         an enum by its verbatim member name (confirmed in the 1.26.20 binary:
-        BoolAttributeOperation binds "OVERRIDE"/"ALPHA_BLEND"/... unchanged)."""
-        return self.name
+        BoolAttributeOperation binds "OVERRIDE"/"ALPHA_BLEND"/... unchanged).
+
+        The DSL spells members PEP 8, and BDS does not: `DownloadingFinished`
+        has no separator to map back to, and the read lowercases without
+        stripping one, so `DOWNLOADING_FINISHED` would reject BDS's own string
+        and the length prefix would be one byte long. `value(name=)` says the
+        wire string outright, leaving the C++ spelling free to follow PEP 8."""
+        return self.wire if self.wire is not None else self.name
 
 
 @dataclass(frozen=True)
 class Enum:
     """`underlying` is the enum's C++ underlying type, spelled as a second base
-    (`class MemoryCategory(IntEnum, uint8)`); `None` means the C++ default, `int`."""
+    (`class MemoryCategory(IntEnum, uint8)`); `None` means the C++ default, `int`.
+
+    `since` / `until` bound the whole enum, as they do a struct. An enum
+    redeclared over adjacent ranges models a renumbering: each declaration's
+    members carry that declaration's range, so a member that moved appears once
+    per range holding its era's value."""
 
     name: str
     values: tuple[EnumValue, ...]
     underlying: PrimitiveType | None = None
+    since: int | None = None
+    until: int | None = None
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -318,6 +353,10 @@ class Enum:
         """Versions where a member appears or disappears, so an enum whose members
         are gated is versioned like a struct whose fields are."""
         points: set[int] = set()
+        if self.since is not None:
+            points.add(self.since)
+        if self.until is not None:
+            points.add(self.until)
         for v in self.values:
             if v.since is not None:
                 points.add(v.since)

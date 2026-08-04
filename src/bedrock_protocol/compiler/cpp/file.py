@@ -399,7 +399,17 @@ class FileGenerator:
             if isinstance(t, Struct) and t.builtin:
                 continue  # Serializer<T> is hand-written alongside the type
             if isinstance(t, Enum):
-                if name in self._ctx.string_coded_enums:
+                # One specialization per distinct C++ type, as for a struct: a
+                # versioned enum is a type per fresh snapshot, and its users
+                # spell it snapshot-qualified.
+                if name not in self._ctx.string_coded_enums:
+                    continue
+                if self._resolved.is_versioned(name):
+                    for s in self._resolved.fresh_snapshots(name):
+                        assert s.enum is not None
+                        p.print("\n")
+                        self._emit_enum_serializer(p, s.enum, f"{snapshot_namespace(s.lo)}::{name}", mode)
+                else:
                     p.print("\n")
                     self._emit_enum_serializer(p, t, name, mode)
                 continue

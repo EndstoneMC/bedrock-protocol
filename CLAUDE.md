@@ -142,8 +142,16 @@ Only this form can express a **reorder**, a **rename**, or a field whose type mo
 — each declaration's fields carry its range, so a snapshot narrows to exactly one
 shape. `field(since=)` / `field(until=)` adds or drops a field, wherever it sits in
 the body; it never restates one under a second type. Redeclarations must tile one
-range: same id, each `until` meeting the next `since`, only the last left open. An
-enum cannot be redeclared — gate its members.
+range: same id, each `until` meeting the next `since`, only the last left open.
+
+**An enum is redeclared the same way when it is renumbered.** `value(N, since=)` /
+`value(N, until=)` covers a member arriving or going, but it cannot give one member
+two values, so a wholesale renumbering — `Memory::MemoryCategory` at 2168 dropped
+one member, added twenty, and shifted most survivors — declares the enum twice over
+adjacent ranges, each body holding its era's numbers. Every declaration shares one
+underlying type. `@type(since=, until=)` gates the enum itself as it does a struct,
+so outside its range the type is absent and a reference from that era needs the
+snapshot namespace (`v1001::SoundDataEvent`).
 
 ## A cerealisation is the highest-risk change
 

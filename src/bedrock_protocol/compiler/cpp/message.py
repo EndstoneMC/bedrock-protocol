@@ -17,6 +17,10 @@ from .helpers import snapshot_namespace
 from .printer import Printer
 
 
+def _has_kind(pred: Predicate, kind: str) -> bool:
+    return pred.kind == kind or any(_has_kind(o, kind) for o in pred.operands)
+
+
 class MessageGenerator:
     """One (possibly snapshot-narrowed) `Struct` → its C++ struct + serializer.
 
@@ -112,7 +116,7 @@ class MessageGenerator:
                     (f,) = group
                     self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
                     continue
-                with p.block(f"if ({self._condition(guard, 'value')})"):
+                with p.block(f"if ({self._condition(p, guard, 'value')})"):
                     for f in group:
                         self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
         p.print("\n")
@@ -125,7 +129,7 @@ class MessageGenerator:
                     with p.block():  # scope each field's read locals (v, present, len, tag, ...)
                         self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
                     continue
-                with p.block(f"if ({self._condition(guard, 'out')})"):
+                with p.block(f"if ({self._condition(p, guard, 'out')})"):
                     for f in group:
                         with p.block():
                             self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
@@ -133,7 +137,11 @@ class MessageGenerator:
 
     # --- gated fields -------------------------------------------------------
 
-    def _condition(self, guard: Predicate, base: str) -> str:
+    def _condition(self, p: Printer, guard: Predicate, base: str) -> str:
+        # `.test(...)` spells a std::size_t cast; nothing else in the condition
+        # names a header of its own.
+        if _has_kind(guard, "bittest"):
+            p.add_includes("<cstddef>")
         return render_predicate(guard, base, self._ctx, self._snapshot)
 
     def _groups(self) -> list[tuple[Predicate | None, list[Field]]]:

@@ -27,7 +27,7 @@ def value(
     v: int | None = None,
     since: int | None = None,
     until: int | None = None,
-    deprecated: int | None = None,
+    name: str | None = None,
 ) -> int:
     """Mark a member's wire value, optionally gated by protocol version.
 
@@ -38,10 +38,18 @@ def value(
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
-    - `deprecated`: protocol version where Mojang marked the member deprecated.
-      Acts like `until=` but the member stays on the wire: every snapshot from
-      this version on emits the value with `[[deprecated("since vN")]]`, so a
-      downstream `-Wdeprecated-declarations` build flags any new use.
+    - `name`: the exact string a name-coded enum puts on the wire, where BDS
+      does not spell the member the way PEP 8 does. Casing is free -- BDS
+      lowercases before the lookup -- but the separator is not: BDS writes
+      `DownloadingFinished`, and a PEP 8 `DOWNLOADING_FINISHED` would both
+      reject BDS's own string and put one extra byte behind the length prefix.
+      Spell `value(3, name="DownloadingFinished")` and the C++ member keeps its
+      PEP 8 spelling. BDS is not consistent about this, so snake_case wire
+      names are equally spellable.
+
+    An enum whose members were renumbered is redeclared over adjacent ranges,
+    like a reshaped struct; `since` / `until` here cover a member simply
+    arriving or going inside one range.
     """
     return auto() if v is None else v
 
@@ -55,7 +63,6 @@ def field(
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
     count: Any = None,
-    tag: TypeAliasType | type | None = None,
 ) -> Any:
     """Mark a struct field.
 
@@ -90,7 +97,10 @@ def field(
       Foo.B}`, desugaring to an `or` chain of `==`; `not in` to an `and`
       chain of `!=`), `and`/`or`, `not`, and bitwise `&` (handy for testing
       bits in a fixed-width flags field, e.g. `p.flags & FLAG_HAS_X != 0`).
-      It may only reference fields declared before this one.
+      It may only reference fields declared before this one. `len(p.xs)` of an
+      earlier list, map or string is allowed, as is `p.flags.test(<bit>)` on an
+      earlier `bitset[N]` field, where the bit is an integer literal or an
+      `Enum.MEMBER`.
     - `endian`: byte order for a fixed-width primitive or integer-coded enum
       field, `"big"` or `"little"` (the default). Bedrock sends primitives
       little-endian or as varints almost everywhere, the rare exceptions
@@ -106,42 +116,31 @@ def field(
       field of its struct.
     - `count`: a one-argument lambda whose body is an integer expression
       over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
-      valid on a `list[T]` field. The wire has no length prefix -- both
+      valid on a `list[T]` field, or on a `list[T] | None` whose presence
+      flag is a separate matter. The wire has no length prefix -- both
       serialize and deserialize compute the element count by evaluating the
       expression against the surrounding struct. Setting `count=` suppresses
       the default `prefix=`; passing an explicit `prefix=` together with
       `count=` is an error. The expression may reference earlier fields
-      (`p.<name>`), integer literals, and arithmetic operators `*`, `+`,
-      `-`. Use this for inline arrays sized by sibling fields (BDS's shaped
-      recipe grid, for instance, is `width * height` ingredients with no
-      separate count on the wire).
-    - `tag`: the discriminator for a multi-case union. A `T1 | T2 | T3 | ...`
-      annotation -- including an inline union inside a `list[T1 | T2 | T3]`,
-      where each element carries its own tag -- is always prefixed on the wire
-      by a `uvarint32` active-case index. That width is fixed, so a plain
-      `std::variant` field needs no `tag=` at all: leave it off and the union
-      takes the default. Do not pass an integer primitive to set the width.
-      `tag=uvarint32` is redundant and `tag=uint8` (or any other width) is not
-      a real Bedrock variant encoding. The parser still accepts an integer
-      primitive for flexibility, but a bare union is the idiom.
+      (`p.<name>`), `len(p.<name>)` of an earlier list, map or string,
+      integer literals, and arithmetic operators `*`, `+`, `-`. Use this for
+      inline arrays sized by sibling fields (BDS's shaped recipe grid, for
+      instance, is `width * height` ingredients with no separate count on the
+      wire) and for parallel runs sharing one count (`len(p.entries)`).
 
-      Pass an `IntEnum` for the one job `tag=` still does: an enum-discriminated
-      union, where the wire form defaults to `varint32` (zigzag, matching BDS's
-      recipe / action enums) and the enum's members supply the C++ case labels
-      (`EnumName::MEMBER`), one-to-one with the union alternatives in
-      declaration order. Pair it with `type=<integer primitive>` to choose the
-      tag's wire width instead of the `varint32` default -- e.g.
-      `field(tag=Type, type=uvarint32)` for an unsigned discriminator such as
-      SynchedActorData's data-item type. On an enum-tagged union, `type=`
-      describes the tag, not the cases (each case keeps its own wire type).
+    A `T1 | T2 | T3` union carries no `tag=`: it is always prefixed on the wire
+    by a `uvarint32` index over its cases in declaration order. An
+    enum-discriminated union is not implemented -- declare the discriminator as
+    a real field and gate each arm on it with `when=`.
 
-      `tag=` has no effect on a `T | None` optional, and the field's resolved
-      type must contain a multi-case union or `tag=` is an error.
+    Any keyword this signature does not list is a compile error, as is one the
+    compiler does not read. It never silently drops one.
 
     `with field(when=lambda p: ...):` may also be written as a statement in a
     struct body: every field declared inside the block is gated by the shared
     predicate, as if each carried that `when=`. Unlike a per-field `when=`, a
-    guard block may enclose optional and union fields.
+    guard block may enclose optional and union fields, and it takes no keyword
+    but `when=`.
     """
     return None
 
@@ -150,26 +149,22 @@ def type(
     *,
     since: int | None = None,
     until: int | None = None,
-    deprecated: int | None = None,
 ):
     """Class decorator: version-gate a type. `since=N` is the protocol version
-    that introduced it -- the generated type is absent from snapshots below N.
+    that introduced it -- the generated type is absent from snapshots below N,
+    so a reference from an earlier era has to name the snapshot namespace.
     Applies to an enum or a non-packet struct; a packet carries its own
     `since` on `@packet`.
 
-    A struct may be declared more than once, each declaration carrying an
-    adjacent `[since, until)` range, to model a type whose shape changed across
-    protocol versions; the compiler merges the declarations into one versioned
-    type. `until` is the first protocol version where that declaration's shape
-    no longer applies (exclusive). The declarations must be contiguous (each
-    `until` equal to the next `since`) and only the last omits `until`. `until`
-    is meaningful only on such a redeclared class.
-
-    `deprecated`: the protocol version where Mojang marked the type deprecated.
-    The generated type stays emittable (so a `std::variant` index that pins
-    the type to a wire-tag value keeps its slot), but the C++ definition
-    carries `[[deprecated("since vN")]]` so a downstream
-    `-Wdeprecated-declarations` build flags any new use.
+    A struct or an enum may be declared more than once, each declaration
+    carrying an adjacent `[since, until)` range, to model a type whose shape
+    changed across protocol versions; the compiler merges the declarations into
+    one versioned type. For an enum that means a renumbering: each body holds
+    its era's values, a member that moved appears in both, and one that went
+    away simply stops. Every declaration of an enum shares one underlying type.
+    `until` is the first protocol version where that declaration's shape no
+    longer applies (exclusive). The declarations must be contiguous (each
+    `until` equal to the next `since`) and only the last omits `until`.
     """
     return _identity
 

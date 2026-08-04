@@ -2,6 +2,7 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_bitset.cpp
         test_063_player_list.cpp
         test_090_structure_block_update.cpp
         test_112_set_scoreboard_identity.cpp

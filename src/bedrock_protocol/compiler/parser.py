@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import keyword
 from dataclasses import dataclass, field, replace
-from typing import Callable, cast
+from typing import Callable, Mapping, cast
 
 import griffe
 
@@ -19,6 +19,7 @@ from bedrock_protocol.descriptor import (
     BUILTIN_ANNOTATIONS,
     INTEGER_PRIMITIVES,
     PRIMITIVES,
+    BitsetType,
     CompilerError,
     CondType,
     Endian,
@@ -118,11 +119,7 @@ class Parser:
         order: list[str] = []
         for decls in declarations:
             if is_int_enum(decls[0]):
-                if len(decls) > 1:
-                    raise CompilerError(
-                        f"{decls[0].name}: an enum cannot be redeclared; version-gate its members with value(since=)"
-                    )
-                e = self.enum(decls[0])
+                e = self.enum(decls)
                 enums.append(e)
                 order.append(e.name)
             else:
@@ -148,24 +145,42 @@ class Parser:
         target = self.type(name, value, None)
         return None if target is None else TypeAlias(name, target)
 
-    def enum(self, cls: griffe.Class) -> Enum:
+    def enum(self, decls: list[griffe.Class]) -> Enum:
+        """One enum from every declaration of its name. A renumbering is a
+        reshape, so it is redeclared over adjacent ranges the way a struct is:
+        each declaration's members carry that declaration's range, so a member
+        that moved holds its era's value in each, and one that went away simply
+        stops. `value(since=)` still covers a member arriving inside a range."""
+        _check_redeclaration(decls)
+        underlying = _one_underlying(decls)
         values: list[EnumValue] = []
-        previous: int | None = None
-        for name, attr in cls.attributes.items():
-            if attr.value is None:
-                continue
-            number = _enum_number(cls.name, name, attr.value, previous)
-            values.append(
-                EnumValue(
-                    name,
-                    number,
-                    is_auto=_is_auto(attr.value),
-                    since=_int_kwarg(attr.value, "value", "since"),
-                    until=_int_kwarg(attr.value, "value", "until"),
+        for decl in decls:
+            _check_decorators(decl)
+            lo, hi = _decl_since(decl), _decl_until(decl)
+            previous: int | None = None
+            for name, attr in decl.attributes.items():
+                if attr.value is None:
+                    continue
+                _check_keywords(attr.value, "value", _VALUE_KEYWORDS, f"{decl.name}.{name}", positional=1)
+                number = _enum_number(decl.name, name, attr.value, previous)
+                values.append(
+                    EnumValue(
+                        name,
+                        number,
+                        is_auto=_is_auto(attr.value),
+                        since=_tighten(_int_kwarg(attr.value, "value", "since"), lo, max),
+                        until=_tighten(_int_kwarg(attr.value, "value", "until"), hi, min),
+                        wire=_wire_name(attr.value, decl.name, name),
+                    )
                 )
-            )
-            previous = number
-        return Enum(cls.name, tuple(values), enum_underlying_of(cls))
+                previous = number
+        return Enum(
+            name=decls[0].name,
+            values=tuple(values),
+            underlying=underlying,
+            since=_decl_since(decls[0]),
+            until=_decl_until(decls[-1]),
+        )
 
     def struct(self, decls: list[griffe.Class], scope: str = "") -> Struct:
         """One struct from every declaration of its name. A type redeclared over
@@ -176,11 +191,12 @@ class Parser:
         qualified = f"{scope}.{decls[0].name}" if scope else decls[0].name
         fields: list[Field] = []
         for decl in decls:
+            _check_decorators(decl)
             lo, hi = _decl_since(decl), _decl_until(decl)
-            earlier: set[str] = set()
+            earlier: dict[str, FieldType | None] = {}
             for attr in decl.attributes.values():
-                (version,) = self.field(attr, qualified, frozenset(earlier)).versions
-                earlier.add(_field_name(attr.name))
+                (version,) = self.field(attr, qualified, earlier).versions
+                earlier[_field_name(attr.name)] = version.type
                 narrowed = FieldVersion(
                     type=version.type,
                     since=_tighten(version.since, lo, max),
@@ -205,19 +221,16 @@ class Parser:
         out: list[Enum | Struct] = []
         for group in nested_declarations(decls):
             if is_int_enum(group[0]):
-                parsed = [self.enum(c) for c in group]
-                if any(e != parsed[0] for e in parsed[1:]):
-                    raise CompilerError(
-                        f"{qualified}.{group[0].name}: an enum cannot be redeclared; version-gate its members"
-                    )
-                out.append(parsed[0])
+                each = [self.enum([c]) for c in group]
+                out.append(each[0] if all(e == each[0] for e in each) else self.enum(group))
             else:
                 one = [self.struct([c], qualified) for c in group]
                 out.append(one[0] if all(s == one[0] for s in one) else self.struct(group, qualified))
         return tuple(out)
 
-    def field(self, attr: griffe.Attribute, scope: str = "", earlier: frozenset[str] = frozenset()) -> Field:
+    def field(self, attr: griffe.Attribute, scope: str = "", earlier: Mapping[str, FieldType | None] = {}) -> Field:
         call = attr.value
+        _check_keywords(call, "field", _FIELD_KEYWORDS, attr.name)
         t = self._counted(self.type(attr.name, attr.annotation, call, scope), call, attr.name, scope, earlier)
         guard = self._guard(attr.name, call)
         if guard is not None and t is not None:
@@ -242,21 +255,26 @@ class Parser:
         call: _Ann,
         field_name: str,
         scope: str,
-        earlier: frozenset[str],
+        earlier: Mapping[str, FieldType | None],
     ) -> FieldType | None:
         """`field(count=...)`: the element count is an expression over earlier
-        fields rather than a wire prefix."""
+        fields rather than a wire prefix. Presence is a separate axis, so the
+        count applies to the list inside an optional as readily as to a bare
+        one -- a cerealised member is flagged present and still has its length
+        written somewhere else."""
         lam = _call_arg(call, "field", "count")
         if lam is None or t is None:
             return t
-        if not isinstance(t, RepeatedType):
-            raise CompilerError(f"{field_name}: field(count=...) applies to a list[T] field, got {t.kind}")
+        inner: FieldType = t.inner if isinstance(t, OptionalType) else t
+        if not isinstance(inner, RepeatedType):
+            raise CompilerError(f"{field_name}: field(count=...) applies to a list[T] field, got {inner.kind}")
         if _call_arg(call, "field", "prefix") is not None:
             raise CompilerError(
                 f"{field_name}: field(count=...) and field(prefix=...) are mutually exclusive -- "
                 "a counted list carries no length prefix on the wire"
             )
-        return replace(t, count=self._predicate(lam, field_name, scope, earlier))
+        counted: FieldType = replace(inner, count=self._predicate(lam, field_name, scope, earlier))
+        return OptionalType(counted) if isinstance(t, OptionalType) else counted
 
     # ---- when= predicates --------------------------------------------------
 
@@ -271,7 +289,7 @@ class Parser:
             )
         return own if own is not None else group
 
-    def _predicate(self, lam: _Ann, field_name: str, scope: str, earlier: frozenset[str]) -> Predicate:
+    def _predicate(self, lam: _Ann, field_name: str, scope: str, earlier: Mapping[str, FieldType | None]) -> Predicate:
         if not isinstance(lam, griffe.ExprLambda):
             raise CompilerError(f"{field_name}: field(when=...) must be a lambda predicate")
         if len(lam.parameters) != 1:
@@ -284,7 +302,7 @@ class Parser:
         param: str,
         field_name: str,
         scope: str,
-        earlier: frozenset[str],
+        earlier: Mapping[str, FieldType | None],
     ) -> Predicate:
         def child(n: griffe.Expr | str) -> Predicate:
             return self._pred_node(n, param, field_name, scope, earlier)
@@ -305,14 +323,94 @@ class Parser:
             if op not in ("==", "!=", "<", ">", "<=", ">="):
                 raise CompilerError(f"{field_name}: field(when=...) comparison {op!r} is unsupported")
             return Predicate(op, operands=(child(node.left), child(node.comparators[0])))
-        if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-"):
+        if isinstance(node, griffe.ExprBinOp) and node.operator in ("*", "+", "-", "&"):
             return Predicate(node.operator, operands=(child(node.left), child(node.right)))
+        if isinstance(node, griffe.ExprCall):
+            return self._pred_call(node, param, field_name, scope, earlier)
         if isinstance(node, griffe.ExprAttribute):
             return self._pred_attr(node, param, field_name, scope, earlier)
         literal = _as_int(node)
         if literal is not None:
             return Predicate("int", text=str(literal))
         raise CompilerError(f"{field_name}: field(when=...) contains an unsupported expression: {node}")
+
+    def _pred_call(
+        self,
+        node: griffe.ExprCall,
+        param: str,
+        field_name: str,
+        scope: str,
+        earlier: Mapping[str, FieldType | None],
+    ) -> Predicate:
+        """The two calls a predicate may make: `len(p.<field>)` and
+        `p.<field>.test(<bit>)`."""
+        if isinstance(node.function, griffe.ExprName) and node.function.name == "len":
+            return self._pred_len(node, param, field_name, scope, earlier)
+        if isinstance(node.function, griffe.ExprAttribute) and str(node.function.values[-1]) == "test":
+            return self._pred_bittest(node, param, field_name, scope, earlier)
+        raise CompilerError(
+            f"{field_name}: a predicate calls only len(<field>) or <field>.test(<bit>), got {node}"
+        )
+
+    def _pred_len(
+        self,
+        node: griffe.ExprCall,
+        param: str,
+        field_name: str,
+        scope: str,
+        earlier: Mapping[str, FieldType | None],
+    ) -> Predicate:
+        """`len(p.<field>)` — the element count of an earlier list, map or
+        string. BDS writes several parallel runs behind one count, so the
+        second run's length is the first run's and nothing on the wire repeats
+        it."""
+        args = _positional(node)
+        if len(args) != 1:
+            raise CompilerError(f"{field_name}: len(...) takes exactly one argument, got {node}")
+        operand = self._pred_node(args[0], param, field_name, scope, earlier)
+        if operand.kind != "field" or not _is_sized(earlier.get(operand.text)):
+            raise CompilerError(
+                f"{field_name}: len(...) applies to an earlier list, map or string field, got {args[0]}"
+            )
+        return Predicate("len", operands=(operand,))
+
+    def _pred_bittest(
+        self,
+        node: griffe.ExprCall,
+        param: str,
+        field_name: str,
+        scope: str,
+        earlier: Mapping[str, FieldType | None],
+    ) -> Predicate:
+        """`p.<field>.test(<bit>)` — one bit of an earlier `bitset[N]` field.
+
+        BDS packs PlayerAuthInput's input flags into a `std::bitset<65>` and
+        gates the rest of the packet on individual bits, so the predicate has
+        to reach a bit rather than compare a whole value. The bit is an integer
+        literal or an `Enum.MEMBER` naming the flag."""
+        receiver = node.function
+        assert isinstance(receiver, griffe.ExprAttribute)
+        parts = [str(v) for v in receiver.values]
+        if len(parts) != 3 or parts[0] != param:
+            raise CompilerError(
+                f"{field_name}: a bit test reads `{param}.<earlier-field>.test(<bit>)`, got {receiver}"
+            )
+        target = _field_name(parts[1])
+        if target not in earlier:
+            raise CompilerError(
+                f"{field_name}: .test(...) references {parts[1]!r}, which is not a field declared before it"
+            )
+        if not isinstance(_unwrapped(earlier[target]), BitsetType):
+            raise CompilerError(f"{field_name}: .test(...) applies to an earlier bitset[N] field, got {parts[1]!r}")
+        args = _positional(node)
+        if len(args) != 1:
+            raise CompilerError(f"{field_name}: .test(...) takes exactly one bit index, got {node}")
+        operand = self._pred_node(args[0], param, field_name, scope, earlier)
+        if operand.kind not in ("int", "enum"):
+            raise CompilerError(
+                f"{field_name}: .test(...) takes an integer literal or Enum.MEMBER bit index, got {args[0]}"
+            )
+        return Predicate("bittest", text=target, operands=(operand,))
 
     def _pred_membership(
         self,
@@ -321,7 +419,7 @@ class Parser:
         param: str,
         field_name: str,
         scope: str,
-        earlier: frozenset[str],
+        earlier: Mapping[str, FieldType | None],
     ) -> Predicate:
         """Desugar set membership into a chain of equalities: `x in {a, b, c}`
         to `x == a or x == b or x == c`, `x not in {a, b}` to `x != a and
@@ -347,7 +445,7 @@ class Parser:
         param: str,
         field_name: str,
         scope: str,
-        earlier: frozenset[str],
+        earlier: Mapping[str, FieldType | None],
     ) -> Predicate:
         parts = [str(v) for v in node.values]
         spelled = ".".join(parts)
@@ -466,6 +564,9 @@ class Parser:
         scope: str = "",
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
+            bits = _bitset_size(ann, field_name)
+            if bits is not None:
+                return BitsetType(size=bits)
             elem = _list_element(ann, field_name)
             if elem is not None:
                 inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope)
@@ -580,6 +681,38 @@ def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
         return underlying
     width = 64 if size == 8 else 32
     return PrimitiveType(name=f"{'' if signed else 'u'}varint{width}")
+
+
+def _positional(node: griffe.ExprCall) -> list[griffe.Expr | str]:
+    return [a for a in node.arguments if not isinstance(a, griffe.ExprKeyword)]
+
+
+def _unwrapped(t: FieldType | None) -> FieldType | None:
+    """A gated field is spelled as its bare payload, so a predicate reading it
+    sees through the `when=`."""
+    return _unwrapped(t.inner) if isinstance(t, CondType) else t
+
+
+def _is_sized(t: FieldType | None) -> bool:
+    """Whether the field's C++ spelling has a `.size()`. An optional is a
+    `std::optional`, which has none."""
+    t = _unwrapped(t)
+    if isinstance(t, (RepeatedType, MappingType)):
+        return True
+    return isinstance(t, PrimitiveType) and t.name in ("str", "bytes")
+
+
+def _one_underlying(decls: list[griffe.Class]) -> PrimitiveType | None:
+    """The underlying type every declaration of an enum shares. A redeclaration
+    renumbers members; changing the C++ type under them would change the wire
+    encoding of every field that names the enum, silently."""
+    underlying = [enum_underlying_of(d) for d in decls]
+    if any(u != underlying[0] for u in underlying):
+        spelled = sorted({"int" if u is None else u.name for u in underlying})
+        raise CompilerError(
+            f"{decls[0].name}: every redeclaration must share one underlying type, got {', '.join(spelled)}"
+        )
+    return underlying[0]
 
 
 def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
@@ -701,6 +834,18 @@ def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: 
     return number
 
 
+def _wire_name(value: griffe.Expr | str, enum_name: str, member: str) -> str | None:
+    """`value(name="DownloadingFinished")` — the exact string BDS writes, for a
+    member whose PEP 8 spelling does not map back onto it."""
+    spelled = _call_arg(value, "value", "name")
+    if spelled is None:
+        return None
+    text = str(spelled).strip("'\"")
+    if not text:
+        raise CompilerError(f"{enum_name}.{member}: value(name=...) must be a non-empty string literal")
+    return text
+
+
 def _as_int(value: object) -> int | None:
     if isinstance(value, str):
         try:
@@ -750,6 +895,17 @@ def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None
     if len({isinstance(v, bool) for v in values}) != 1:
         raise CompilerError(f"{field_name}: Literal[...] values must all take one type")
     return tuple(values)
+
+
+def _bitset_size(ann: griffe.ExprSubscript, field_name: str) -> int | None:
+    """The width of a `bitset[N]` subscript, or None for anything else. The
+    width is baked into the C++ type, so it has to be an int literal."""
+    if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
+        return None
+    size = _as_int(ann.slice)
+    if size is None or size <= 0:
+        raise CompilerError(f"{field_name}: bitset[...] needs a positive integer width, got {ann.slice}")
+    return size
 
 
 def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | str | None:
@@ -810,17 +966,78 @@ def _with_endian(prim: PrimitiveType, endian: Endian | None, field_name: str) ->
     return replace(prim, endian=endian)
 
 
-def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
-    if not (
+def _is_call(expr: _Ann, fn_name: str) -> bool:
+    return (
         isinstance(expr, griffe.ExprCall)
         and isinstance(expr.function, griffe.ExprName)
         and expr.function.name == fn_name
-    ):
+    )
+
+
+def _call_arg(expr: _Ann, fn_name: str, kw: str) -> _Ann:
+    if not _is_call(expr, fn_name):
         return None
+    assert isinstance(expr, griffe.ExprCall)
     for arg in expr.arguments:
         if isinstance(arg, griffe.ExprKeyword) and arg.name == kw:
             return arg.value
     return None
+
+
+#: What each DSL callable accepts: the keywords the compiler reads, and the
+#: ones it does not implement paired with what to do instead. A keyword dropped
+#: in silence is this compiler's worst failure -- the modeller believes the wire
+#: changed and nothing did, and no golden can catch it -- so an unread keyword
+#: is a parse error, the way protoc rejects an unknown field option.
+_Keywords = tuple[frozenset[str], Mapping[str, str]]
+
+_NO_DEPRECATION = "the compiler emits no [[deprecated]] attribute; drop the keyword or say it in the commit message"
+
+_FIELD_KEYWORDS: _Keywords = (
+    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "_group_when", "_group_id"}),
+    {
+        "tag": (
+            "a union is always prefixed by a uvarint32 index over its cases in declaration order -- "
+            "for an enum-discriminated one, declare the discriminator as a real field and gate each "
+            "arm on it with field(when=...)"
+        ),
+    },
+)
+
+_VALUE_KEYWORDS: _Keywords = (frozenset({"since", "until", "name"}), {"deprecated": _NO_DEPRECATION})
+
+_PACKET_KEYWORDS: _Keywords = (frozenset({"id", "since", "until"}), {})
+
+_TYPE_KEYWORDS: _Keywords = (frozenset({"since", "until"}), {"deprecated": _NO_DEPRECATION})
+
+
+def _check_keywords(expr: _Ann, fn_name: str, keywords: _Keywords, where: str, positional: int = 0) -> None:
+    """Reject a call the compiler cannot honour as written."""
+    if not _is_call(expr, fn_name):
+        return
+    assert isinstance(expr, griffe.ExprCall)
+    known, unimplemented = keywords
+    seen = 0
+    for arg in expr.arguments:
+        if not isinstance(arg, griffe.ExprKeyword):
+            seen += 1
+            if seen > positional:
+                allowed = "keyword arguments only" if positional == 0 else f"{positional} positional argument(s)"
+                raise CompilerError(f"{where}: {fn_name}() takes {allowed}, got {arg}")
+            continue
+        if arg.name in unimplemented:
+            raise CompilerError(
+                f"{where}: {fn_name}({arg.name}=...) is documented but not implemented -- {unimplemented[arg.name]}"
+            )
+        if arg.name not in known:
+            spellable = ", ".join(sorted(k for k in known if not k.startswith("_")))
+            raise CompilerError(f"{where}: {fn_name}() has no {arg.name!r} keyword; valid: {spellable}")
+
+
+def _check_decorators(cls: griffe.Class) -> None:
+    for dec in cls.decorators:
+        _check_keywords(dec.value, "packet", _PACKET_KEYWORDS, cls.name)
+        _check_keywords(dec.value, "type", _TYPE_KEYWORDS, cls.name)
 
 
 def _int_kwarg(expr: _Ann, fn_name: str, kw: str) -> int | None:

@@ -19,6 +19,7 @@ from dataclasses import dataclass
 
 from bedrock_protocol.descriptor import (
     VARINT_PRIMITIVES,
+    BitsetType,
     CompilerError,
     CondType,
     EnumType,
@@ -73,6 +74,8 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
     if isinstance(t, LiteralType):
         # A constant lives on the wire only -- no member spells it in C++.
         return None
+    if isinstance(t, BitsetType):
+        return f"std::bitset<{t.size}>"
     if isinstance(t, OptionalType):
         inner = cpp_type(t.inner, ctx, snapshot)
         return None if inner is None else f"std::optional<{inner}>"
@@ -113,6 +116,10 @@ def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int
         if node.kind == "enum":
             enum, member = node.text.rsplit(".", 1)
             return f"{qualified_at(enum, ctx, snapshot)}::{member}"
+        if node.kind == "len":
+            return f"{go(node.operands[0])}.size()"
+        if node.kind == "bittest":
+            return f"{base}.{node.text}.test(static_cast<std::size_t>({go(node.operands[0])}))"
         if node.kind == "not":
             return f"!({go(node.operands[0])})"
         op = {"and": "&&", "or": "||"}.get(node.kind, node.kind)
@@ -190,6 +197,8 @@ def type_includes(t: FieldType | None) -> set[str]:
         if any(PRIMITIVE_TYPES[n].startswith("std::") for n in (t.name, t.encoding)):
             return {"<cstdint>"}
         return set()
+    if isinstance(t, BitsetType):
+        return {"<bitset>"}
     if isinstance(t, OptionalType):
         return {"<optional>"} | type_includes(t.inner)
     if isinstance(t, RepeatedType):
@@ -299,6 +308,32 @@ class ClassFieldGenerator(FieldGenerator):
         p.print(f"{target} = *v;\n")
 
 
+class BitsetFieldGenerator(FieldGenerator):
+    """`bitset[N]` — the base-128 dump. The codec is hand-written in
+    <bedrock/bitset.hpp> rather than emitted here: N may exceed any integer's
+    width, so the loop is over bits and there is nothing per-schema about it."""
+
+    def __init__(self, bits: BitsetType) -> None:
+        self._bits = bits
+
+    @property
+    def _spelling(self) -> str:
+        return f"std::bitset<{self._bits.size}>"
+
+    def _includes(self) -> tuple[str, ...]:
+        return ("<bitset>", "<bedrock/bitset.hpp>", "<bedrock/serializer.hpp>")
+
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
+        p.add_includes(*self._includes())
+        p.print(f"Serializer<{self._spelling}>::serialize(stream, {var});\n")
+
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+        p.add_includes("<expected>", *self._includes())
+        p.print(f"auto v = Serializer<{self._spelling}>::deserialize(stream);\n")
+        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"{target} = *v;\n")
+
+
 class OptionalFieldGenerator(FieldGenerator):
     """`T | None` — a bool presence flag then the payload. The read stages through
     a temporary of the payload type: a container payload fills itself via
@@ -374,7 +409,10 @@ class RepeatedFieldGenerator(FieldGenerator):
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         if self._count is not None:
-            count = render_predicate(self._count, target.rsplit(".", 1)[0], self._gc.ctx, self._gc.snapshot)
+            # The count reads the surrounding struct's earlier fields, which
+            # `MessageGenerator` names `out` -- not `target`, which is a staging
+            # temporary whenever the list sits inside another combinator.
+            count = render_predicate(self._count, "out", self._gc.ctx, self._gc.snapshot)
             p.print(f"{target}.clear();\n")
             with p.block(f"for (auto rep{depth} = {count}; rep{depth} > 0; --rep{depth})"):
                 p.print(f"{target}.emplace_back();\n")
@@ -497,6 +535,8 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         return ClassFieldGenerator(t, gc)
     if isinstance(t, LiteralType):
         return LiteralFieldGenerator(t)
+    if isinstance(t, BitsetType):
+        return BitsetFieldGenerator(t)
     if isinstance(t, OptionalType):
         value_type = cpp_type(t.inner, gc.ctx, gc.snapshot)
         assert value_type is not None
