@@ -1,5 +1,5 @@
 import uuid
-from enum import IntEnum
+from enum import Enum
 
 from protocol import field, int8, packet, uint16, uint64
 
@@ -31,15 +31,11 @@ class PackInfoData:
     cdn_url: str
 
 
-# TODO: the members drop the PEP 8 separator on purpose -- BDS spells them Cancel /
-# Downloading / DownloadingFinished / ResourcePackStackFinished, and the compiler lowercases
-# a name-coded enum without stripping separators, so DOWNLOADING_FINISHED would reject BDS's
-# "DownloadingFinished". Needs a wire-name escape in the compiler to spell both.
-class ResourcePackResponse(IntEnum, int8):
-    CANCEL = 1
-    DOWNLOADING = 2
-    DOWNLOADINGFINISHED = 3
-    RESOURCEPACKSTACKFINISHED = 4
+class ResourcePackResponse(Enum, int8):
+    CANCEL = 1, "Cancel"
+    DOWNLOADING = 2, "Downloading"
+    DOWNLOADING_FINISHED = 3, "DownloadingFinished"
+    RESOURCE_PACK_STACK_FINISHED = 4, "ResourcePackStackFinished"
 
 
 @packet(id=6, until=2168)
