@@ -2,6 +2,7 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_180_dimension_data.cpp
         test_302_trim_data.cpp
         test_085_transfer.cpp
         test_086_play_sound.cpp
