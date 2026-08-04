@@ -2,6 +2,8 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_145_creative_content.cpp
+        test_052_crafting_data.cpp
         test_326_player_location.cpp
         test_325_player_update_entity_overrides.cpp
         test_180_dimension_data.cpp
