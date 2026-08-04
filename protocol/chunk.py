@@ -1,4 +1,6 @@
-from protocol import field, int8, int32, packet, type, uint16, uint32, uint64, uvarint32, varint32
+from enum import IntEnum
+
+from protocol import field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
 from protocol.attributes import DimensionType
 
 package = "bedrock.protocol"
@@ -51,14 +53,116 @@ class LevelChunkPacket:
     serialized_chunk: str
 
 
-# TODO: packet 174 is unmodelled. Its 2168 form needs field(count=) inside an
-# optional, and its 1001 form needs field(when=) to reach the enclosing packet's
-# cache_enabled. Only the nested type below is modelled.
+@packet(id=174, until=2168)
 class SubChunkPacket:
+    class HeightMapDataType(IntEnum, uint8):
+        NO_DATA = 0
+        HAS_DATA = 1
+        ALL_TOO_HIGH = 2
+        ALL_TOO_LOW = 3
+        ALL_COPIED = 4
+
+    class SubChunkRequestResult(IntEnum, uint8):
+        UNDEFINED = 0
+        SUCCESS = 1
+        LEVEL_CHUNK_DOESNT_EXIST = 2
+        WRONG_DIMENSION = 3
+        PLAYER_DOESNT_EXIST = 4
+        INDEX_OUT_OF_BOUNDS = 5
+        SUCCESS_ALL_AIR = 6
+
+    @type(until=2168)
+    class HeightmapData:
+        height_map_type: HeightMapDataType
+        subchunk_height_map: list[int8] = field(
+            count=lambda h: 256, when=lambda h: h.height_map_type == HeightMapDataType.HAS_DATA
+        )
+        render_height_map_type: HeightMapDataType
+        subchunk_render_height_map: list[int8] = field(
+            count=lambda h: 256, when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA
+        )
+
     class SubChunkPosOffset:
         x: int8
         y: int8
         z: int8
+
+    @type(until=2168)
+    class SubChunkPacketData:
+        sub_chunk_pos_offset: SubChunkPosOffset
+        result: SubChunkRequestResult
+        serialized_sub_chunk: str = field(when=lambda d: d.result != SubChunkRequestResult.SUCCESS_ALL_AIR)
+        height_map_data: HeightmapData
+        blob_id: uint64
+
+    @type(until=2168)
+    class UncachedSubChunkPacketData:
+        sub_chunk_pos_offset: SubChunkPosOffset
+        result: SubChunkRequestResult
+        serialized_sub_chunk: str
+        height_map_data: HeightmapData
+
+    cache_enabled: bool
+    dimension_type: DimensionType
+    # TODO: mCenterPos is a SubChunkPos, but this packet does not cerealise until 2168, so here
+    # it writes three varint32 where the cerealised SubChunkPos (chunk.py:20, reached by packet
+    # 175 from 1001 on) is three fixed int32. The DSL versions a type by protocol version, not
+    # by writer, so the components are spelled out. gophertunnel sub_chunk.go, CloudburstMC
+    # SubChunkSerializer_v486 and Nukkit-MOT all write varints here.
+    center_pos_x: varint32
+    center_pos_y: varint32
+    center_pos_z: varint32
+    # TODO: field(when=) cannot reach the enclosing packet, so BDS's single mSubChunkData is
+    # spelled as two whole-list gates on mCacheEnabled, and the uncached entry earns a name BDS
+    # does not have.
+    with field(when=lambda p: p.cache_enabled):
+        sub_chunk_data: list[SubChunkPacketData] = field(prefix=uint32)
+    with field(when=lambda p: not p.cache_enabled):
+        uncached_sub_chunk_data: list[UncachedSubChunkPacketData] = field(prefix=uint32)
+
+
+@packet(id=174, since=2168)
+class SubChunkPacket:
+    class HeightMapDataType(IntEnum, uint8):
+        NO_DATA = 0
+        HAS_DATA = 1
+        ALL_TOO_HIGH = 2
+        ALL_TOO_LOW = 3
+        ALL_COPIED = 4
+
+    class SubChunkRequestResult(IntEnum, uint8):
+        UNDEFINED = 0
+        SUCCESS = 1
+        LEVEL_CHUNK_DOESNT_EXIST = 2
+        WRONG_DIMENSION = 3
+        PLAYER_DOESNT_EXIST = 4
+        INDEX_OUT_OF_BOUNDS = 5
+        SUCCESS_ALL_AIR = 6
+
+    @type(since=2168)
+    class HeightmapData:
+        height_map_type: HeightMapDataType
+        subchunk_height_map: list[int8] | None = field(count=lambda h: 256)
+        render_height_map_type: HeightMapDataType
+        subchunk_render_height_map: list[int8] | None = field(count=lambda h: 256)
+
+    class SubChunkPosOffset:
+        x: int8
+        y: int8
+        z: int8
+
+    @type(since=2168)
+    class SubChunkPacketData:
+        sub_chunk_pos_offset: SubChunkPosOffset
+        result: SubChunkRequestResult
+        serialized_sub_chunk: str | None
+        height_map_data: HeightmapData
+        blob_id: uint64 | None
+
+    cache_enabled: bool
+    dimension_type: DimensionType
+    center_pos: SubChunkPos
+    sub_chunk_data: list[SubChunkPacketData]
 
 
 @packet(id=175, until=1001)

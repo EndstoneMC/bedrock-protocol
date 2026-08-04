@@ -2,6 +2,7 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_174_sub_chunk.cpp
         test_144_player_auth_input.cpp
         test_111_move_actor_delta.cpp
         test_019_move_player.cpp
