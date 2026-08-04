@@ -2,7 +2,7 @@ from enum import IntEnum, auto
 
 from protocol import field, int64, packet, type, uint32, uint64, value, varint32
 from protocol.actor import ActorUniqueID
-from protocol.common import Vec3
+from protocol.common import BlockPos, Vec3
 
 package = "bedrock.protocol"
 
@@ -594,6 +594,18 @@ class SoundDataEvent(IntEnum):
 
 class ServerSoundHandle:
     value: uint64
+
+
+@packet(id=86)
+class PlaySoundPacket:
+    name: str
+    pos: BlockPos
+    volume: float
+    pitch: float
+    # TODO: confirm against BDS -- the dump types this varint32; CloudburstMC
+    # PlaySoundSerializer_v2168 writes it as an unsigned varint.
+    loop_count: varint32 = field(since=2168)
+    server_sound_handle: ServerSoundHandle | None
 
 
 @packet(id=348, since=1001, until=2168)

@@ -2,6 +2,7 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_086_play_sound.cpp
         test_141_anvil_damage.cpp
         test_packet.cpp
         test_001_login.cpp
