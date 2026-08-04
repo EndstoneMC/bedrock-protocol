@@ -186,13 +186,13 @@ class PlayerAuthInputPacket:
         SNEAK_RELEASED_RAW = 62
         SNEAK_PRESSED_RAW = 63
         SNEAK_CURRENT_RAW = 64
-        INTERNAL_UPDATE = value(65, since=2168)
+        INPUT_NUM = auto()
 
     rot: Vec2
     pos: Vec3
     move: Vec2
     y_head_rot: float
-    input_data: bitset[65]
+    input_data: bitset[InputData.INPUT_NUM]
     input_mode: InputMode
     play_mode: ClientPlayMode
     new_interaction_model: NewInteractionModel = field(type=uvarint32)
@@ -291,17 +291,15 @@ class PlayerAuthInputPacket:
         SNEAK_RELEASED_RAW = 62
         SNEAK_PRESSED_RAW = 63
         SNEAK_CURRENT_RAW = 64
-        INTERNAL_UPDATE = value(65, since=2168)
+        INTERNAL_UPDATE = 65
+        INPUT_NUM = auto()
 
     rot: Vec2
     pos: Vec3
     move: Vec2
     y_head_rot: float
     _true_1: Literal[True]
-    # TODO: confirm against BDS -- the dump names the element type without a primitive and
-    # PlayerAuthInputPacket::InputData is `: unsigned int`, but CloudburstMC v2168 writes
-    # each entry as a zigzag varint32.
-    input_data: list[InputData]
+    input_data: bitset[InputData.INPUT_NUM]
     input_mode: InputMode
     play_mode: ClientPlayMode
     new_interaction_model: NewInteractionModel

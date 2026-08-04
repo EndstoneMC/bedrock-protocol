@@ -167,6 +167,62 @@ class ThingPacket:
         )
         self.assertIn("using Kind = base::ThingPacket::Kind;", header)
 
+    def test_disagreeing_nested_bodies_inherit_the_owner_range(self) -> None:
+        """The bodies carry no range of their own -- the owner declaration each
+        was written in says which snapshot it belongs to."""
+        header, _ = self.compile(
+            PREAMBLE
+            + """
+
+@packet(id=7, until=2168)
+class ThingPacket:
+    class Kind(IntEnum, uint8):
+        A = 0
+
+    kind: Kind
+
+
+@packet(id=7, since=2168)
+class ThingPacket:
+    class Kind(IntEnum, uint8):
+        A = 0
+        B = 1
+
+    kind: Kind
+"""
+        )
+        self.assertNotIn("B = 1,", self.namespace(header, "base"))
+        self.assertIn("B = 1,", self.namespace(header, "v2168"))
+
+    def test_a_nested_body_may_write_its_own_range(self) -> None:
+        """An explicit `@type(...)` on the nested class wins over the owner's,
+        for a nested type whose reshape lands somewhere else."""
+        header, _ = self.compile(
+            PREAMBLE
+            + """
+
+@packet(id=7, until=2168)
+class ThingPacket:
+    @type(until=1001)
+    class Kind(IntEnum, uint8):
+        A = 0
+
+    kind: Kind
+
+
+@packet(id=7, since=2168)
+class ThingPacket:
+    @type(since=1001)
+    class Kind(IntEnum, uint8):
+        A = 0
+        B = 1
+
+    kind: Kind
+"""
+        )
+        self.assertNotIn("B = 1,", self.namespace(header, "base"))
+        self.assertIn("B = 1,", self.namespace(header, "v1001"))
+
 
 if __name__ == "__main__":
     unittest.main()

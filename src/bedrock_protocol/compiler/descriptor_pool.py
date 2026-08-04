@@ -25,13 +25,20 @@ from dataclasses import replace
 from typing import Any, Iterable
 
 from bedrock_protocol.descriptor import (
+    BitsetType,
+    CondType,
     Enum,
     EnumValue,
     Field,
+    FieldType,
     File,
     FileSet,
+    MappingType,
+    OptionalType,
+    RepeatedType,
     ResolvedFile,
     Struct,
+    VariantType,
     VersionSnapshot,
 )
 
@@ -256,15 +263,11 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
         values = _renumber(tuple(v for v in t.values if v.present_at(snapshot)))
         key = tuple((v.name, v.number) for v in values)
         return Enum(t.name, values, t.underlying), None, key
-    narrowed: list[Field] = []
-    key_parts: list[Any] = []
-    for f in t.fields:
-        version = f.version_at(snapshot)
-        if version is None:
-            continue
-        narrowed.append(Field(f.name, (version,)))
-        key_parts.append((f.name, version.type))
+    # Nested first: a field's bitset width may name one of these enums, and it is
+    # this snapshot's numbering it has to follow.
     nested: list[Enum | Struct] = []
+    nested_keys: list[Any] = []
+    members: dict[str, dict[str, int]] = {}
     for inner in t.nested:
         if not _present_at(inner, snapshot):
             continue
@@ -272,8 +275,43 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
         view = inner_enum if inner_enum is not None else inner_struct
         assert view is not None
         nested.append(view)
-        key_parts.append((inner.name, inner_key))
-    return None, replace(t, fields=tuple(narrowed), nested=tuple(nested)), tuple(key_parts)
+        nested_keys.append((inner.name, inner_key))
+        if inner_enum is not None:
+            members[inner_enum.name] = {v.name: v.number for v in inner_enum.values}
+    narrowed: list[Field] = []
+    key_parts: list[Any] = []
+    for f in t.fields:
+        version = f.version_at(snapshot)
+        if version is None:
+            continue
+        bound = replace(version, type=_rebind_bitsets(version.type, members))
+        narrowed.append(Field(f.name, (bound,)))
+        key_parts.append((f.name, bound.type))
+    return None, replace(t, fields=tuple(narrowed), nested=tuple(nested)), tuple(key_parts + nested_keys)
+
+
+def _rebind_bitsets(t: FieldType | None, members: dict[str, dict[str, int]]) -> FieldType | None:
+    """Walk a field-type tree, resizing every `bitset[Enum.MEMBER]` to the
+    member's value at this snapshot. A width spelled as a literal, or naming an
+    enum this snapshot does not hold, is left alone."""
+    if isinstance(t, BitsetType):
+        if t.enum_member is None:
+            return t
+        enum_name, member_name = t.enum_member
+        size = members.get(enum_name, {}).get(member_name)
+        return t if size is None or size == t.size else replace(t, size=size)
+    if isinstance(t, (OptionalType, RepeatedType, CondType)):
+        inner = _rebind_bitsets(t.inner, members)
+        assert inner is not None
+        return t if inner is t.inner else replace(t, inner=inner)
+    if isinstance(t, MappingType):
+        key, value = _rebind_bitsets(t.key, members), _rebind_bitsets(t.value, members)
+        assert key is not None and value is not None
+        return t if key is t.key and value is t.value else replace(t, key=key, value=value)
+    if isinstance(t, VariantType):
+        cases = tuple(_rebind_bitsets(c, members) for c in t.cases)
+        return t if cases == t.cases else replace(t, cases=cases)
+    return t
 
 
 def _present_at(t: Enum | Struct, snapshot: int) -> bool:

@@ -186,9 +186,15 @@ class BitsetType:
     value: seven payload bits per byte, the top bit a continuation flag, and a
     lone `0x00` byte for the empty bitset. `size` may exceed 64
     (`PlayerAuthInputPacket`'s is 65+), so the codec never routes the value
-    through an integer -- it walks the bits."""
+    through an integer -- it walks the bits.
+
+    `enum_member` records the `(enum, member)` a width spelled
+    `bitset[Enum.MEMBER]` came from. The pool re-resolves it against each
+    snapshot's view of that enum, so a width named by a count sentinel widens
+    with the enum."""
 
     size: int
+    enum_member: tuple[str, str] | None = None
     kind: Literal["bitset"] = "bitset"
 
     @property

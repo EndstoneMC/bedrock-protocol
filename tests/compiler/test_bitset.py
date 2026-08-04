@@ -12,6 +12,27 @@ from protocol import bitset, field, packet, uvarint32
 package = "bedrock.protocol"
 """
 
+#: A packet whose bitset width is named by a member of its own nested enum.
+#: `members` are further enum members, `width` the subscript under test.
+COUNTED = """
+from enum import IntEnum, auto
+
+from protocol import bitset, field, packet, uint32, value
+
+package = "bedrock.protocol"
+
+
+@packet(id=7)
+class ThingPacket:
+    class Flag(IntEnum, uint32):
+        LOW = 0
+        HIGH = 1
+{members}
+        FLAG_NUM = auto()
+
+    flags: bitset[{width}]
+"""
+
 
 class Bitset(CompilerCase):
     def test_a_bitset_field_is_a_std_bitset(self) -> None:
@@ -135,6 +156,23 @@ class ThingPacket:
 """
         )
         self.assertIn("calls only len(<field>) or <field>.test(<bit>)", message)
+
+    def test_a_width_names_a_nested_enum_member(self) -> None:
+        """BDS sizes PlayerAuthInput's bitset by its own `INPUT_NUM` sentinel
+        rather than repeating the number."""
+        header, _ = self.compile(COUNTED.format(members="", width="Flag.FLAG_NUM"))
+        self.assertIn("std::bitset<2> flags{};", header)
+
+    def test_the_width_follows_the_member_per_snapshot(self) -> None:
+        header, _ = self.compile(
+            COUNTED.format(members="        EXTRA = value(2, since=2168)", width="Flag.FLAG_NUM")
+        )
+        self.assertIn("std::bitset<2> flags{};", self.namespace(header, "base"))
+        self.assertIn("std::bitset<3> flags{};", self.namespace(header, "v2168"))
+
+    def test_an_unknown_member_is_rejected(self) -> None:
+        message = self.rejects(COUNTED.format(members="", width="Flag.MISSING"))
+        self.assertIn("bitset[...] needs a positive integer width", message)
 
     def test_a_non_literal_width_is_rejected(self) -> None:
         message = self.rejects(

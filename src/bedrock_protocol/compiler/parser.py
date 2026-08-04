@@ -44,6 +44,8 @@ from bedrock_protocol.descriptor import (
 )
 
 _Ann = griffe.Expr | str | None
+#: The `[since, until)` range each declaration of a redeclared type covers.
+_Ranges = list[tuple[int | None, int | None]]
 
 
 @dataclass(frozen=True)
@@ -72,6 +74,9 @@ class Parser:
 
     def __init__(self, symbols: SymbolTable) -> None:
         self._symbols = symbols
+        #: Member values of the enums nested in the struct being parsed, so a
+        #: `bitset[Inner.MEMBER]` width resolves to an integer. Set by struct().
+        self._nested_enums: dict[str, dict[str, int]] = {}
 
     @property
     def enum_names(self) -> frozenset[str]:
@@ -145,18 +150,21 @@ class Parser:
         target = self.type(name, value, None)
         return None if target is None else TypeAlias(name, target)
 
-    def enum(self, decls: list[griffe.Class]) -> Enum:
+    def enum(self, decls: list[griffe.Class], ranges: _Ranges | None = None) -> Enum:
         """One enum from every declaration of its name. A renumbering is a
         reshape, so it is redeclared over adjacent ranges the way a struct is:
         each declaration's members carry that declaration's range, so a member
         that moved holds its era's value in each, and one that went away simply
-        stops. `value(since=)` still covers a member arriving inside a range."""
-        _check_redeclaration(decls)
+        stops. `value(since=)` still covers a member arriving inside a range.
+
+        `ranges` overrides the range each declaration takes, for a nested type
+        inheriting its owner's."""
+        spans = ranges if ranges is not None else _decl_ranges(decls)
+        _check_redeclaration(decls, spans)
         underlying = _one_underlying(decls)
         values: list[EnumValue] = []
-        for decl in decls:
+        for decl, (lo, hi) in zip(decls, spans):
             _check_decorators(decl)
-            lo, hi = _decl_since(decl), _decl_until(decl)
             previous: int | None = None
             for name, attr in decl.attributes.items():
                 if attr.value is None:
@@ -179,31 +187,41 @@ class Parser:
             name=decls[0].name,
             values=tuple(values),
             underlying=underlying,
-            since=_decl_since(decls[0]),
-            until=_decl_until(decls[-1]),
+            since=spans[0][0],
+            until=spans[-1][1],
         )
 
-    def struct(self, decls: list[griffe.Class], scope: str = "") -> Struct:
+    def struct(self, decls: list[griffe.Class], scope: str = "", ranges: _Ranges | None = None) -> Struct:
         """One struct from every declaration of its name. A type redeclared over
         adjacent ranges models a wire reshape: each declaration's fields carry that
         declaration's range, so a snapshot narrows to exactly one shape -- including
-        its field *order*, which a reshaped packet may change."""
-        _check_redeclaration(decls)
+        its field *order*, which a reshaped packet may change.
+
+        `ranges` overrides the range each declaration takes, for a nested type
+        inheriting its owner's."""
+        spans = ranges if ranges is not None else _decl_ranges(decls)
+        _check_redeclaration(decls, spans)
         qualified = f"{scope}.{decls[0].name}" if scope else decls[0].name
+        # Before the fields: one of them may name a nested enum member as its
+        # `bitset[...]` width.
+        nested = self._nested(decls, qualified)
+        outer, self._nested_enums = self._nested_enums, _member_values(nested)
         fields: list[Field] = []
-        for decl in decls:
-            _check_decorators(decl)
-            lo, hi = _decl_since(decl), _decl_until(decl)
-            earlier: dict[str, FieldType | None] = {}
-            for attr in decl.attributes.values():
-                (version,) = self.field(attr, qualified, earlier).versions
-                earlier[_field_name(attr.name)] = version.type
-                narrowed = FieldVersion(
-                    type=version.type,
-                    since=_tighten(version.since, lo, max),
-                    until=_tighten(version.until, hi, min),
-                )
-                fields.append(Field(_field_name(attr.name), (narrowed,)))
+        try:
+            for decl, (lo, hi) in zip(decls, spans):
+                _check_decorators(decl)
+                earlier: dict[str, FieldType | None] = {}
+                for attr in decl.attributes.values():
+                    (version,) = self.field(attr, qualified, earlier).versions
+                    earlier[_field_name(attr.name)] = version.type
+                    narrowed = FieldVersion(
+                        type=version.type,
+                        since=_tighten(version.since, lo, max),
+                        until=_tighten(version.until, hi, min),
+                    )
+                    fields.append(Field(_field_name(attr.name), (narrowed,)))
+        finally:
+            self._nested_enums = outer
         return Struct(
             name=decls[0].name,
             fields=tuple(fields),
@@ -211,22 +229,25 @@ class Parser:
             since=_decl_since(decls[0]),
             until=_decl_until(decls[-1]),
             builtin=any(_has_decorator(d, "builtin") for d in decls),
-            nested=self._nested(decls, qualified),
+            nested=nested,
         )
 
     def _nested(self, decls: list[griffe.Class], qualified: str) -> tuple[Enum | Struct, ...]:
         """The types declared inside the class, in source order. A redeclared
         owner repeats each nested type in every body -- Python needs the name in
         scope to annotate against it -- so identical repeats collapse to one;
-        bodies that disagree are a version-redeclared nested type."""
+        bodies that disagree are a version-redeclared nested type, taking the
+        range of the owner declaration each body was written in."""
+        owners = {id(cls): decl for decl in decls for cls in decl.classes.values()}
         out: list[Enum | Struct] = []
         for group in nested_declarations(decls):
+            ranges = [_decl_range(c, owners[id(c)]) for c in group]
             if is_enum(group[0]):
                 each = [self.enum([c]) for c in group]
-                out.append(each[0] if all(e == each[0] for e in each) else self.enum(group))
+                out.append(each[0] if all(e == each[0] for e in each) else self.enum(group, ranges))
             else:
                 one = [self.struct([c], qualified) for c in group]
-                out.append(one[0] if all(s == one[0] for s in one) else self.struct(group, qualified))
+                out.append(one[0] if all(s == one[0] for s in one) else self.struct(group, qualified, ranges))
         return tuple(out)
 
     def field(self, attr: griffe.Attribute, scope: str = "", earlier: Mapping[str, FieldType | None] = {}) -> Field:
@@ -501,6 +522,36 @@ class Parser:
             )
         return _with_endian(_default_enum_wire(underlying), endian, field_name)
 
+    # ---- bitset width ------------------------------------------------------
+
+    def _bitset(self, ann: griffe.ExprSubscript, field_name: str) -> BitsetType | None:
+        """A `bitset[N]` subscript, or None for anything else."""
+        if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
+            return None
+        size, member = self._bitset_width(ann.slice)
+        if size is None or size <= 0:
+            raise CompilerError(
+                f"{field_name}: bitset[...] needs a positive integer width -- an int literal or a "
+                f"member of an enum nested in the same class -- got {ann.slice}"
+            )
+        return BitsetType(size=size, enum_member=member)
+
+    def _bitset_width(self, expr: _Ann) -> tuple[int | None, tuple[str, str] | None]:
+        """The width baked into the C++ type and, where the DSL spelled it
+        `Enum.MEMBER`, the symbolic ref the pool re-resolves per snapshot. BDS
+        sizes PlayerAuthInput's bitset by its own `INPUT_NUM` sentinel, which
+        moves as inputs are added."""
+        literal = _as_int(expr)
+        if literal is not None:
+            return literal, None
+        if isinstance(expr, griffe.ExprAttribute):
+            parts = [str(v) for v in expr.values]
+            if len(parts) == 2:
+                members = self._nested_enums.get(parts[0])
+                if members is not None and parts[1] in members:
+                    return members[parts[1]], (parts[0], parts[1])
+        return None, None
+
     # ---- field-type walker -------------------------------------------------
 
     def type(self, field_name: str, ann: _Ann, call: _Ann, scope: str = "") -> FieldType | None:
@@ -565,9 +616,9 @@ class Parser:
         scope: str = "",
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
-            bits = _bitset_size(ann, field_name)
+            bits = self._bitset(ann, field_name)
             if bits is not None:
-                return BitsetType(size=bits)
+                return bits
             elem = _list_element(ann, field_name)
             if elem is not None:
                 inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope)
@@ -774,6 +825,20 @@ def _has_decorator(cls: griffe.Class, name: str) -> bool:
     return any(_base_name(d.value) == name for d in cls.decorators)
 
 
+def _decl_ranges(decls: list[griffe.Class]) -> _Ranges:
+    return [(_decl_since(d), _decl_until(d)) for d in decls]
+
+
+def _decl_range(cls: griffe.Class, owner: griffe.Class) -> tuple[int | None, int | None]:
+    """A nested declaration's range: its own if it carries one, else the range of
+    the owner body it was written in. A redeclared owner repeats its nested types
+    verbatim in every body, so the bodies say nothing about version themselves."""
+    since, until = _decl_since(cls), _decl_until(cls)
+    if since is None and until is None:
+        return _decl_since(owner), _decl_until(owner)
+    return since, until
+
+
 def _decl_since(cls: griffe.Class) -> int | None:
     since = _decorator_int(cls, "packet", "since")
     return since if since is not None else _decorator_int(cls, "type", "since")
@@ -794,7 +859,7 @@ def _tighten(own: int | None, decl: int | None, pick: Callable[[int, int], int])
     return pick(own, decl)
 
 
-def _check_redeclaration(decls: list[griffe.Class]) -> None:
+def _check_redeclaration(decls: list[griffe.Class], spans: _Ranges) -> None:
     """Redeclarations must tile one range: same id, each `until` meeting the next
     `since`, and only the last left open. Anything else silently drops or
     double-counts a shape at some snapshot."""
@@ -804,8 +869,7 @@ def _check_redeclaration(decls: list[griffe.Class]) -> None:
     ids = {_decorator_int(d, "packet", "id") for d in decls}
     if len(ids) > 1:
         raise CompilerError(f"{name}: every redeclaration must share one packet id, got {sorted(map(str, ids))}")
-    for current, following in zip(decls, decls[1:]):
-        until, since = _decl_until(current), _decl_since(following)
+    for (_, until), (since, _) in zip(spans, spans[1:]):
         if until is None:
             raise CompilerError(f"{name}: only the last declaration may omit until=; an earlier one leaves it open")
         if until != since:
@@ -940,15 +1004,11 @@ def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None
     return tuple(values)
 
 
-def _bitset_size(ann: griffe.ExprSubscript, field_name: str) -> int | None:
-    """The width of a `bitset[N]` subscript, or None for anything else. The
-    width is baked into the C++ type, so it has to be an int literal."""
-    if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
-        return None
-    size = _as_int(ann.slice)
-    if size is None or size <= 0:
-        raise CompilerError(f"{field_name}: bitset[...] needs a positive integer width, got {ann.slice}")
-    return size
+def _member_values(nested: tuple[Enum | Struct, ...]) -> dict[str, dict[str, int]]:
+    """Member values of the nested enums, by enum name. A redeclared enum holds
+    every range's members, so the last declaration wins -- the pool narrows the
+    width back per snapshot."""
+    return {t.name: {v.name: v.number for v in t.values} for t in nested if isinstance(t, Enum)}
 
 
 def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | str | None:
