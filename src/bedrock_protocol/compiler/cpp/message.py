@@ -54,13 +54,18 @@ class MessageGenerator:
 
     def generate_class_definition(self, p: Printer) -> None:
         """`struct Name { nested... [static constexpr int Id;] fields... };`.
-        Emitted inside the type's own namespace, so field types are unqualified."""
+
+        A member naming a versioned type is snapshot-qualified rather than left
+        to the enclosing namespace. A snapshot namespace holds only the types
+        its own file versions, and two files need not share a snapshot set, so
+        an unqualified name in a namespace the referenced file does not emit
+        escapes to file scope and binds the latest-version alias."""
         rendered: list[tuple[str, str]] = []
         for f in self._struct.fields:
             (version,) = f.versions
             if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
                 continue
-            ctype = cpp_type(version.type, self._ctx) if version.type is not None else None
+            ctype = cpp_type(version.type, self._ctx, self._snapshot) if version.type is not None else None
             if ctype is None:
                 p.print(f"struct {self._struct.name} {{}};\n")
                 return

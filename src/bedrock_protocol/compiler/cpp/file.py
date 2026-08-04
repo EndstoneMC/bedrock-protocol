@@ -228,7 +228,7 @@ class FileGenerator:
                 if view is None:
                     continue
                 if view.is_fresh:
-                    self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap))
+                    self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap), snap)
                 else:
                     p.print(f"using {name} = {snapshot_namespace(view.concrete)}::{name};\n")
                 p.print("\n")
@@ -244,11 +244,19 @@ class FileGenerator:
                 p.print(f"using {a.name} = {target};\n\n")
             p.print(f"}}  // namespace {ns}\n\n")
 
-    def _emit_definition(self, p: Printer, t: Enum | Struct | None, nested_anchor: int | None = None) -> None:
+    def _emit_definition(
+        self,
+        p: Printer,
+        t: Enum | Struct | None,
+        nested_anchor: int | None = None,
+        snapshot: int | None = None,
+    ) -> None:
         if isinstance(t, Enum):
             EnumGenerator(t).generate_definition(p)
         elif isinstance(t, Struct):
-            MessageGenerator(t, self._ctx, nested_anchor=nested_anchor).generate_class_definition(p)
+            MessageGenerator(
+                t, self._ctx, snapshot=snapshot, nested_anchor=nested_anchor
+            ).generate_class_definition(p)
 
     # --- nested types -------------------------------------------------------
 

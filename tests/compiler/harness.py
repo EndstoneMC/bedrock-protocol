@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Mapping
 
 from bedrock_protocol.compiler import DescriptorPool, Importer, SourceTree
 from bedrock_protocol.compiler.cpp.file import FileGenerator
@@ -27,13 +28,24 @@ DSL_SURFACE = Path(__file__).resolve().parents[2] / "protocol" / "__init__.py"
 
 
 class CompilerCase(unittest.TestCase):
-    def compile(self, source: str, module: str = "mod") -> tuple[str, str]:
-        """The `(header, source)` C++ text for one DSL module."""
+    def compile(
+        self,
+        source: str,
+        module: str = "mod",
+        imports: Mapping[str, str] | None = None,
+    ) -> tuple[str, str]:
+        """The `(header, source)` C++ text for one DSL module.
+
+        `imports` are further modules written alongside it, by name, for the
+        cases where what is being tested is a reference reaching across a
+        module boundary."""
         root = Path(tempfile.mkdtemp(prefix="bpc-test-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         package = root / "protocol"
         package.mkdir()
         shutil.copyfile(DSL_SURFACE, package / "__init__.py")
+        for name, text in (imports or {}).items():
+            (package / f"{name}.py").write_text(text, encoding="utf-8")
         target = package / f"{module}.py"
         target.write_text(source, encoding="utf-8")
 
