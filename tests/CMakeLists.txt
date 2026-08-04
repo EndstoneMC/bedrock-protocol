@@ -2,6 +2,8 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_039_set_actor_data.cpp
+        test_013_add_actor.cpp
         test_148_item_stack_response.cpp
         test_147_item_stack_request.cpp
         test_050_inventory_slot.cpp
