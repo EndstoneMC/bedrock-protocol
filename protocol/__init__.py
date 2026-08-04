@@ -68,6 +68,7 @@ def field(
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
     count: Any = None,
+    snapshot: int | None = None,
 ) -> Any:
     """Mark a struct field.
 
@@ -132,6 +133,16 @@ def field(
       inline arrays sized by sibling fields (BDS's shaped recipe grid, for
       instance, is `width * height` ingredients with no separate count on the
       wire) and for parallel runs sharing one count (`len(p.entries)`).
+    - `snapshot`: resolve this field's struct or enum reference at the given
+      protocol version instead of the declaring context's. BDS cerealised
+      packets one at a time, so one class name meant two wire shapes at one
+      version, chosen by whichever packet contained it: at 1001 packet 30
+      carries the cerealised `ItemUseInventoryTransaction` while packet 144
+      carries the pre-cereal one. Where BDS gave the two forms separate names
+      they are separate declarations; where it reused the name, the older shape
+      is still declared over the era before the migration and this is what
+      reaches it -- `field(snapshot=975)`. Pins through a `T | None` or
+      `list[T]` to the reference inside.
 
     A `T1 | T2 | T3` union carries no `tag=`: it is always prefixed on the wire
     by a `uvarint32` index over its cases in declaration order. An
