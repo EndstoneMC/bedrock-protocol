@@ -2,6 +2,7 @@ add_executable(bedrock_protocol_tests)
 target_sources(bedrock_protocol_tests PRIVATE
         fixture.hpp
         test_enum.cpp
+        test_050_inventory_slot.cpp
         test_031_mob_equipment.cpp
         test_094_sub_client_login.cpp
         test_008_resource_pack_client_response.cpp

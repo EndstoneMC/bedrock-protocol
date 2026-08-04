@@ -349,3 +349,19 @@ class InventoryContentPacket:
     slots: list[SerializedNetworkItemStackDescriptor]
     full_container_name: FullContainerName
     storage_item: SerializedNetworkItemStackDescriptor
+
+
+# TODO: confirm against BDS -- the dump reads the container id as one byte here and as a
+# uvarint32 on packet 49, while gophertunnel and CloudburstMC write a uvarint32 on both.
+# The two agree below 128 and part company on ContainerID::NONE.
+# TODO: the 975 form is known and equal to this one -- protocol-docs r26_u2 dumps the packet
+# cerealised with the same fields -- but SerializedNetworkItemStackDescriptor resolves to the
+# pre-cereal shape at 975, which packets 30/32/49 still needed there. Modelling 975 needs the
+# pre-cereal descriptor under its own name.
+@packet(id=50, since=1001)
+class InventorySlotPacket:
+    inventory_id: ContainerID
+    slot: uvarint32
+    full_container_name: FullContainerName | None
+    storage_item: SerializedNetworkItemStackDescriptor | None
+    item: SerializedNetworkItemStackDescriptor
