@@ -41,6 +41,7 @@ from bedrock_protocol.descriptor import (
     StructType,
     TypeAlias,
     VariantType,
+    scoped,
 )
 
 _Ann = griffe.Expr | str | None
@@ -94,13 +95,19 @@ class Parser:
     def aliases(self) -> dict[str, PrimitiveAlias | TypeAlias]:
         return self._symbols.aliases_by_name
 
-    def lookup(self, name: str, scope: str) -> str | None:
+    def lookup(self, name: str, scope: str, cereal: bool = True) -> str | None:
         """The declared name a reference resolves to, or None. Mirrors C++
         unqualified lookup: try the reference inside `scope`, then each
-        enclosing scope outward, and finally at module scope."""
+        enclosing scope outward, and finally at module scope.
+
+        `cereal` picks between the two declarations of a type BDS writes both
+        pre-cereal and cerealised. Only module scope carries a flavour, so a
+        nested type is reached through its owner's."""
         parts = scope.split(".") if scope else []
         for cut in range(len(parts), -1, -1):
             candidate = ".".join([*parts[:cut], name])
+            if cut == 0:
+                candidate = scoped(candidate, cereal)
             if candidate in self.enum_names or candidate in self.struct_names:
                 return candidate
         return None
@@ -126,11 +133,11 @@ class Parser:
             if is_enum(decls[0]):
                 e = self.enum(decls)
                 enums.append(e)
-                order.append(e.name)
+                order.append(e.key)
             else:
                 st = self.struct(decls)
                 structs.append(st)
-                order.append(st.name)
+                order.append(st.key)
         imports = tuple(sorted(d for d in raw_imports if d in loaded and d != name))
         return File(
             name=name,
@@ -189,6 +196,7 @@ class Parser:
             underlying=underlying,
             since=spans[0][0],
             until=spans[-1][1],
+            cereal=decl_is_cereal(decls[0]),
         )
 
     def struct(self, decls: list[griffe.Class], scope: str = "", ranges: _Ranges | None = None) -> Struct:
@@ -201,7 +209,8 @@ class Parser:
         inheriting its owner's."""
         spans = ranges if ranges is not None else _decl_ranges(decls)
         _check_redeclaration(decls, spans)
-        qualified = f"{scope}.{decls[0].name}" if scope else decls[0].name
+        cereal = decl_is_cereal(decls[0])
+        qualified = f"{scope}.{decls[0].name}" if scope else scoped(decls[0].name, cereal)
         # Before the fields: one of them may name a nested enum member as its
         # `bitset[...]` width.
         nested = self._nested(decls, qualified)
@@ -230,6 +239,7 @@ class Parser:
             until=_decl_until(decls[-1]),
             builtin=any(_has_decorator(d, "builtin") for d in decls),
             nested=nested,
+            cereal=cereal,
         )
 
     def _nested(self, decls: list[griffe.Class], qualified: str) -> tuple[Enum | Struct, ...]:
@@ -241,6 +251,12 @@ class Parser:
         owners = {id(cls): decl for decl in decls for cls in decl.classes.values()}
         out: list[Enum | Struct] = []
         for group in nested_declarations(decls):
+            for c in group:
+                if not decl_is_cereal(c):
+                    raise CompilerError(
+                        f"{qualified}.{c.name}: @type(cereal=False) marks a module-scope declaration; "
+                        "a nested type takes its owner's flavour"
+                    )
             ranges = [_decl_range(c, owners[id(c)]) for c in group]
             if is_enum(group[0]):
                 each = [self.enum([c]) for c in group]
@@ -493,6 +509,21 @@ class Parser:
 
     # ---- declared type references ------------------------------------------
 
+    def _check_flavour(self, name: str, scope: str, field_name: str, cereal: bool) -> None:
+        """A reference that resolves under the other flavour and not this one.
+        Falling through would leave the field untyped and the struct empty, with
+        nothing said -- and the two flavours differ precisely in wire shape."""
+        if self.lookup(name, scope, not cereal) is None:
+            return
+        if cereal:
+            raise CompilerError(
+                f"{field_name}: {name} is declared only as @type(cereal=False) -- "
+                "spell field(cereal=False) to reach BDS's pre-cereal encoding"
+            )
+        raise CompilerError(
+            f"{field_name}: field(cereal=False) names {name}, which has no @type(cereal=False) declaration"
+        )
+
     def _declared_type(
         self, qualified: str, type_kw: str | None, field_name: str, endian: Endian | None
     ) -> FieldType | None:
@@ -558,13 +589,16 @@ class Parser:
         type_kw = _name_kwarg(call, "field", "type")
         prefix = _repeat_prefix(call, field_name)
         endian = _endian_kwarg(call, field_name)
+        # The flavour applies to every declared type the annotation names, so a
+        # `list[T]` reaches its element with it, as `field(type=)` already does.
+        cereal = _bool_kwarg(call, "field", "cereal")
         values = _literal_values(ann, field_name)
         if values is not None:
             return self._literal_type(values, field_name, type_kw, endian)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian, scope)
-        return self._base_type(ann, type_kw, prefix, field_name, endian, scope)
+            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal)
+        return self._base_type(ann, type_kw, prefix, field_name, endian, scope, cereal)
 
     def _literal_type(
         self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
@@ -590,17 +624,18 @@ class Parser:
         prefix: PrimitiveType,
         endian: Endian | None,
         scope: str,
+        cereal: bool = True,
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
-            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope)
+            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope, cereal)
             return None if base is None else OptionalType(base)
         types: list[FieldType | None] = []
         for case in cases:
             if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(case, type_kw, prefix, field_name, endian, scope)
+            t = self._base_type(case, type_kw, prefix, field_name, endian, scope, cereal)
             if t is None:
                 return None
             types.append(t)
@@ -614,6 +649,7 @@ class Parser:
         field_name: str,
         endian: Endian | None,
         scope: str = "",
+        cereal: bool = True,
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
             bits = self._bitset(ann, field_name)
@@ -621,33 +657,35 @@ class Parser:
                 return bits
             elem = _list_element(ann, field_name)
             if elem is not None:
-                inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope)
+                inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope, cereal)
                 return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
-            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian, scope)
-            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian, scope)
+            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian, scope, cereal)
+            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian, scope, cereal)
             if key is None or value is None:
                 return None
             return MappingType(key=key, value=value, prefix=prefix)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian, scope)
+            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal)
         dotted = _dotted_name(ann)
         if dotted is not None:
             if dotted in BUILTIN_ANNOTATIONS:
                 return StructType(BUILTIN_ANNOTATIONS[dotted])
             # `Owner.Inner` names a nested type from outside its owner.
-            qualified = self.lookup(dotted, scope)
+            qualified = self.lookup(dotted, scope, cereal)
             if qualified is not None:
                 return self._declared_type(qualified, type_kw, field_name, endian)
+            self._check_flavour(dotted, scope, field_name, cereal)
         if not isinstance(ann, griffe.ExprName):
             return None
         name = ann.name
-        resolved = self.lookup(name, scope)
+        resolved = self.lookup(name, scope, cereal)
         if resolved is not None:
             return self._declared_type(resolved, type_kw, field_name, endian)
+        self._check_flavour(name, scope, field_name, cereal)
         if name in PRIMITIVES:
             return _with_endian(
                 PrimitiveType(name=name, wire=_wire_override(type_kw, name, field_name)), endian, field_name
@@ -1097,7 +1135,7 @@ _Keywords = tuple[frozenset[str], Mapping[str, str]]
 _NO_DEPRECATION = "the compiler emits no [[deprecated]] attribute; drop the keyword or say it in the commit message"
 
 _FIELD_KEYWORDS: _Keywords = (
-    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "_group_when", "_group_id"}),
+    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "cereal", "_group_when", "_group_id"}),
     {
         "tag": (
             "a union is always prefixed by a uvarint32 index over its cases in declaration order -- "
@@ -1109,9 +1147,18 @@ _FIELD_KEYWORDS: _Keywords = (
 
 _VALUE_KEYWORDS: _Keywords = (frozenset({"name", "since", "until"}), {"deprecated": _NO_DEPRECATION})
 
-_PACKET_KEYWORDS: _Keywords = (frozenset({"id", "since", "until"}), {})
+_PACKET_KEYWORDS: _Keywords = (
+    frozenset({"id", "since", "until"}),
+    {
+        "cereal": (
+            "a packet id has one wire shape per protocol version, so a cerealisation is a reshape like any "
+            "other -- redeclare the packet over adjacent since=/until= ranges, and spell field(cereal=False) "
+            "on the fields reaching a shared type BDS still writes pre-cereal"
+        ),
+    },
+)
 
-_TYPE_KEYWORDS: _Keywords = (frozenset({"since", "until"}), {"deprecated": _NO_DEPRECATION})
+_TYPE_KEYWORDS: _Keywords = (frozenset({"since", "until", "cereal"}), {"deprecated": _NO_DEPRECATION})
 
 
 def _check_keywords(expr: _Ann, fn_name: str, keywords: _Keywords, where: str, positional: int = 0) -> None:
@@ -1150,6 +1197,22 @@ def _int_kwarg(expr: _Ann, fn_name: str, kw: str) -> int | None:
 def _name_kwarg(expr: _Ann, fn_name: str, kw: str) -> str | None:
     value = _call_arg(expr, fn_name, kw)
     return value.name if isinstance(value, griffe.ExprName) else None
+
+
+def _bool_kwarg(expr: _Ann, fn_name: str, kw: str, default: bool = True) -> bool:
+    value = _call_arg(expr, fn_name, kw)
+    if value is None:
+        return default
+    text = str(value)
+    if text not in ("True", "False"):
+        raise CompilerError(f"{fn_name}({kw}=...) takes True or False, got {text}")
+    return text == "True"
+
+
+def decl_is_cereal(cls: griffe.Class) -> bool:
+    """Whether a declaration models BDS's cerealised encoding. False marks the
+    pre-cereal one, which shares the BDS name and needs its own IR name."""
+    return all(_bool_kwarg(dec.value, "type", "cereal") for dec in cls.decorators)
 
 
 def _decorator_int(cls: griffe.Class, decorator: str, kwarg: str) -> int | None:

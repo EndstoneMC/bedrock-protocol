@@ -68,6 +68,7 @@ def field(
     endian: str | None = None,
     prefix: TypeAliasType | None = None,
     count: Any = None,
+    cereal: bool = True,
 ) -> Any:
     """Mark a struct field.
 
@@ -132,6 +133,13 @@ def field(
       inline arrays sized by sibling fields (BDS's shaped recipe grid, for
       instance, is `width * height` ingredients with no separate count on the
       wire) and for parallel runs sharing one count (`len(p.entries)`).
+    - `cereal`: which declaration of the annotated type this reference reaches.
+      A shared type's wire form is per call site, so where BDS both cerealises a
+      type and writes it by hand, `cereal=False` picks the `@type(cereal=False)`
+      declaration. It flows through `list[T]`, `dict[K, V]` and `T | None` to the
+      element, the way `type=` does. Naming a flavour the type does not declare
+      is an error either way round, so a reference never silently resolves to the
+      other shape.
 
     A `T1 | T2 | T3` union carries no `tag=`: it is always prefixed on the wire
     by a `uvarint32` index over its cases in declaration order. An
@@ -154,6 +162,7 @@ def type(
     *,
     since: int | None = None,
     until: int | None = None,
+    cereal: bool = True,
 ):
     """Class decorator: version-gate a type. `since=N` is the protocol version
     that introduced it -- the generated type is absent from snapshots below N,
@@ -170,6 +179,23 @@ def type(
     `until` is the first protocol version where that declaration's shape no
     longer applies (exclusive). The declarations must be contiguous (each
     `until` equal to the next `since`) and only the last omits `until`.
+
+    `cereal=False` marks the declaration as BDS's *pre-cereal* encoding of a
+    type BDS also cerealises. This is a second axis, not a version range: both
+    encodings are live at the same protocol version and the call site picks
+    between them, so the two declarations tile nothing and each is
+    independently version-gated. A field reaches this one with
+    `field(cereal=False)`; a plain reference always gets the cerealised
+    declaration. `SerializedSkinRef` is the standing case -- packet 93 is
+    cerealised at 1001 while packet 63 writes the same class through
+    `SerializedSkinImpl::write` at that very version.
+
+    Use it only where BDS reuses one class name for two wire shapes. Where BDS
+    has a second name for the cerealised form, declare that name instead
+    (`cerealizer<NetworkItemStackDescriptor>::SerializedData`). It applies to a
+    module-scope declaration; a nested type takes its owner's flavour. A packet
+    never takes it: a packet id has one wire shape per protocol version, so its
+    cerealisation is an ordinary `since=` / `until=` reshape.
     """
     return _identity
 

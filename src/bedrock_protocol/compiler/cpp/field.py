@@ -37,7 +37,7 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 
-from .helpers import PRIMITIVE_TYPES, cpp_name, outermost, snapshot_namespace
+from .helpers import PRIMITIVE_TYPES, cpp_qualified, outermost
 from .printer import Printer
 
 
@@ -69,8 +69,8 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
         if snapshot is not None and ctx.resolved.is_versioned(root):
             view = ctx.resolved.present_at(root, snapshot)
             if view is not None:
-                return f"{snapshot_namespace(view.concrete)}::{cpp_name(t.name)}"
-        return cpp_name(t.name)
+                return cpp_qualified(t.name, view.concrete)
+        return cpp_qualified(t.name)
     if isinstance(t, LiteralType):
         # A constant lives on the wire only -- no member spells it in C++.
         return None
@@ -135,8 +135,8 @@ def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
         assert snapshot is not None
         view = ctx.resolved.present_at(outermost(name), snapshot)
         assert view is not None
-        return f"{snapshot_namespace(view.concrete)}::{cpp_name(name)}"
-    return cpp_name(name)
+        return cpp_qualified(name, view.concrete)
+    return cpp_qualified(name)
 
 
 # --- primitive wire helpers ---------------------------------------------------

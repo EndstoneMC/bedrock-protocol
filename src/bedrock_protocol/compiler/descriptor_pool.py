@@ -86,7 +86,7 @@ class DescriptorPool:
                 self.build_file(imp, deeper)
 
         all_types: tuple[Enum | Struct, ...] = (*file.enums, *file.structs)
-        by_name: dict[str, Enum | Struct] = {t.name: t for t in all_types}
+        by_name: dict[str, Enum | Struct] = {t.key: t for t in all_types}
         # Source declaration order, not enums-then-structs -- the C++ layout depends on it.
         types: tuple[Enum | Struct, ...] = tuple(by_name[n] for n in file.declaration_order if n in by_name)
         own = frozenset(by_name)
@@ -113,7 +113,7 @@ def _versioned_types(types: tuple[Enum | Struct, ...], file: File, pool: Descrip
     """Names that are versioned by their own change points or by a transitive
     reference to a versioned type. Folds in versioned names from resolved
     imports so a reference to an imported versioned type propagates back."""
-    versioned: set[str] = {t.name for t in types if t.change_points}
+    versioned: set[str] = {t.key for t in types if t.change_points}
     for imp in file.imports:
         other = pool.find_file_by_name(imp)
         if other is not None:
@@ -121,11 +121,11 @@ def _versioned_types(types: tuple[Enum | Struct, ...], file: File, pool: Descrip
     while True:
         grew = False
         for t in types:
-            if isinstance(t, Enum) or t.name in versioned:
+            if isinstance(t, Enum) or t.key in versioned:
                 continue
             refs = frozenset(_root_of(r) for r in t.referenced)
             if refs & versioned:
-                versioned.add(t.name)
+                versioned.add(t.key)
                 grew = True
         if not grew:
             return frozenset(versioned)
@@ -141,9 +141,9 @@ def _root_of(ref: str) -> str:
 def _topo_order(types: tuple[Enum | Struct, ...], own: frozenset[str]) -> list[str]:
     """Names ordered so a referenced type precedes its user. Ties keep
     declaration order; the reference graph is acyclic."""
-    decl = [t.name for t in types]
+    decl = [t.key for t in types]
     rank = {n: i for i, n in enumerate(decl)}
-    deps = {t.name: (frozenset(_root_of(r) for r in t.referenced) & own) - {t.name} for t in types}
+    deps = {t.key: (frozenset(_root_of(r) for r in t.referenced) & own) - {t.key} for t in types}
     order: list[str] = []
     state: dict[str, int] = {}
 
@@ -172,7 +172,7 @@ def _snapshot_points(
 ) -> list[int]:
     points = {0}
     for t in types:
-        if t.name in versioned:
+        if t.key in versioned:
             points |= t.change_points
     for imp in file.imports:
         other = pool.find_file_by_name(imp)
@@ -262,7 +262,7 @@ def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct
     if isinstance(t, Enum):
         values = _renumber(tuple(v for v in t.values if v.present_at(snapshot)))
         key = tuple((v.name, v.number) for v in values)
-        return Enum(t.name, values, t.underlying), None, key
+        return Enum(t.name, values, t.underlying, cereal=t.cereal), None, key
     # Nested first: a field's bitset width may name one of these enums, and it is
     # this snapshot's numbering it has to follow.
     nested: list[Enum | Struct] = []

@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from bedrock_protocol.descriptor import (
+    LEGACY_SCOPE,
     Enum,
     EnumType,
     FieldType,
@@ -25,11 +26,20 @@ from bedrock_protocol.descriptor import (
     Struct,
     TypeAlias,
     VariantType,
+    split_scope,
 )
 
 from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
-from .helpers import BUILTIN_HEADERS, PRIMITIVE_TYPES, outermost, requires_clause, snapshot_namespace
+from .helpers import (
+    BUILTIN_HEADERS,
+    PRIMITIVE_TYPES,
+    bare_name,
+    cpp_qualified,
+    outermost,
+    requires_clause,
+    snapshot_namespace,
+)
 from .message import MessageGenerator
 from .printer import Printer
 
@@ -47,9 +57,9 @@ class FileGenerator:
             name
             for f in resolved.pool.file_set.files.values()
             for name in (
-                *(e.name for e in f.enums),
-                *(s.name for s in f.structs),
-                *(n for s in f.structs for n in _nested_names(s, s.name)),
+                *(e.key for e in f.enums),
+                *(s.key for s in f.structs),
+                *(n for s in f.structs for n in _nested_names(s, s.key)),
                 *(a.name for a in f.primitive_aliases),
                 *(a.name for a in f.type_aliases),
             )
@@ -74,6 +84,7 @@ class FileGenerator:
         self._emit_type_aliases(body)
         self._emit_versioned_namespaces(body)
         self._emit_traits(body)
+        self._emit_legacy_traits(body, latest_version)
         self._emit_packet_traits(body)
         self._emit_enum_reflections(body)
         self._emit_serializers(body, mode="decl")
@@ -147,8 +158,8 @@ class FileGenerator:
             if f is self._file or not f.package:
                 continue
             for declared in (
-                *(e.name for e in f.enums),
-                *(s.name for s in f.structs if not s.builtin),
+                *(e.key for e in f.enums),
+                *(s.key for s in f.structs if not s.builtin),
                 *(a.name for a in f.primitive_aliases),
                 *(a.name for a in f.type_aliases),
             ):
@@ -165,7 +176,7 @@ class FileGenerator:
             # files named on the command line, and falls back to the dotted path.
             for struct in f.structs:
                 if struct.builtin:
-                    homes[struct.name] = name.rsplit(".", 1)[-1]
+                    homes[struct.key] = name.rsplit(".", 1)[-1]
         out = {f"<bedrock/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
         return out | {BUILTIN_HEADERS[r] for r in self._referenced_names() if r in BUILTIN_HEADERS}
 
@@ -198,12 +209,14 @@ class FileGenerator:
 
     def _emit_unversioned(self, p: Printer) -> None:
         by_name = self._by_name()
-        for name in self._unversioned_names():
-            t = by_name[name]
-            if isinstance(t, Struct) and t.builtin:
-                continue  # hand-written in <bedrock/*.hpp>
-            self._emit_definition(p, t)
-            p.print("\n")
+        with _FlavourScope(p) as scope:
+            for name in self._unversioned_names():
+                t = by_name[name]
+                if isinstance(t, Struct) and t.builtin:
+                    continue  # hand-written in <bedrock/*.hpp>
+                scope.enter(name)
+                self._emit_definition(p, t)
+                p.print("\n")
 
     def _emit_type_aliases(self, p: Printer) -> None:
         plain = [a for a in self._file.type_aliases if a not in self._versioned_aliases()]
@@ -216,33 +229,52 @@ class FileGenerator:
             p.print("\n")
 
     def _emit_versioned_namespaces(self, p: Printer) -> None:
+        """One namespace per snapshot, holding that snapshot's view of every
+        versioned type in topological order.
+
+        Pre-cereal declarations sit in `legacy::vN` rather than `vN::legacy`, so
+        a `legacy::` qualifier written from inside a snapshot namespace cannot
+        find the enclosing namespace itself. Order is what makes the two trees
+        work together: references cross both ways -- a cerealised LevelSettings
+        reaches the pre-cereal GameRule while a pre-cereal type may reach a
+        cerealised one -- so the walk follows the topological order and reopens
+        whichever namespace the next type belongs to."""
         for snap in self._resolved.snapshots:
-            if not self._snapshot_has_entries(snap):
-                continue
             ns = snapshot_namespace(snap)
-            p.print(f"namespace {ns} {{\n\n")
-            for name in self._resolved.declaration_order:
-                if not self._resolved.is_versioned(name):
-                    continue
-                view = self._resolved.present_at(name, snap)
-                if view is None:
-                    continue
-                if view.is_fresh:
-                    self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap), snap)
-                else:
-                    p.print(f"using {name} = {snapshot_namespace(view.concrete)}::{name};\n")
-                p.print("\n")
-            # An alias over versioned types lands in the namespace too: its
-            # spelling changes with the snapshot its cases resolve to.
-            for a in self._versioned_aliases():
-                alias_view = self._alias_view(a, snap)
-                if alias_view is None:
-                    continue
-                spelling, concrete = alias_view
-                p.add_includes(*type_includes(a.target))
-                target = spelling if concrete == snap else f"{snapshot_namespace(concrete)}::{a.name}"
-                p.print(f"using {a.name} = {target};\n\n")
-            p.print(f"}}  // namespace {ns}\n\n")
+            with _FlavourScope(p, ns) as scope:
+                for name in self._versioned_names():
+                    view = self._resolved.present_at(name, snap)
+                    if view is None:
+                        continue
+                    scope.enter(name)
+                    if view.is_fresh:
+                        self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap), snap)
+                    else:
+                        bare = bare_name(name)
+                        p.print(f"using {bare} = {snapshot_namespace(view.concrete)}::{bare};\n")
+                    p.print("\n")
+                # An alias over versioned types lands in the namespace too: its
+                # spelling changes with the snapshot its cases resolve to. An
+                # alias names no flavour, so it is always cerealised.
+                for a in self._versioned_aliases():
+                    alias_view = self._alias_view(a, snap)
+                    if alias_view is None:
+                        continue
+                    spelling, concrete = alias_view
+                    scope.enter(a.name)
+                    p.add_includes(*type_includes(a.target))
+                    target = spelling if concrete == snap else f"{snapshot_namespace(concrete)}::{a.name}"
+                    p.print(f"using {a.name} = {target};\n\n")
+
+    def _emit_legacy_traits(self, p: Printer, latest_version: int) -> None:
+        """The `_<V>` selectors over the pre-cereal declarations. They follow
+        every definition, and `packet_of` follows them."""
+        if not self._versioned_entries(cereal=False):
+            return
+        p.print(f"namespace {LEGACY_SCOPE} {{\n\n")
+        self._emit_traits(p, cereal=False)
+        self._emit_latest_aliases(p, latest_version, cereal=False)
+        p.print(f"}}  // namespace {LEGACY_SCOPE}\n\n")
 
     def _emit_definition(
         self,
@@ -298,34 +330,36 @@ class FileGenerator:
             return []
         out: list[NestedView] = []
         if not self._resolved.is_versioned(name):
-            _collect_nested(t, name, name, None, out)
+            _collect_nested(t, name, cpp_qualified(name), None, out)
             return out
         fresh = self._resolved.fresh_snapshots(name)
         heads = fresh if self._nested_is_versioned(t, name) else fresh[:1]
         for s in heads:
             assert s.struct is not None
-            _collect_nested(s.struct, name, f"{snapshot_namespace(s.lo)}::{name}", s.lo, out)
+            _collect_nested(s.struct, name, cpp_qualified(name, s.lo), s.lo, out)
         return out
 
     # --- versioning traits + selector --------------------------------------
 
-    def _emit_traits(self, p: Printer) -> None:
-        if not self._has_namespaces():
+    def _emit_traits(self, p: Printer, cereal: bool = True) -> None:
+        entries = self._versioned_entries(cereal)
+        if not entries:
             return
-        entries = self._versioned_entries()
         p.print("namespace detail {\n")
         for name, los, until in entries:
+            bare = bare_name(name)
             p.print("\n")
             p.print("template <int V>\n")
-            p.print(f"struct {name}_;\n")
+            p.print(f"struct {bare}_;\n")
             for j, lo in enumerate(los):
                 hi = los[j + 1] if j + 1 < len(los) else until
                 p.print("\n")
                 p.print(f"template <int V> requires ({requires_clause(lo, hi)})\n")
-                p.print(f"struct {name}_<V> {{ using type = {snapshot_namespace(lo)}::{name}; }};\n")
+                p.print(f"struct {bare}_<V> {{ using type = {snapshot_namespace(lo)}::{bare}; }};\n")
         p.print("\n}  // namespace detail\n\n")
         for name, _, _ in entries:
-            p.print(f"template <int V> using {name}_ = typename detail::{name}_<V>::type;\n")
+            bare = bare_name(name)
+            p.print(f"template <int V> using {bare}_ = typename detail::{bare}_<V>::type;\n")
         p.print("\n")
 
     def _emit_packet_traits(self, p: Printer) -> None:
@@ -354,19 +388,20 @@ class FileGenerator:
                 continue
             if self._resolved.is_versioned(name):
                 fresh = self._resolved.fresh_snapshots(name)
-                out.append((t.packet_id, f"{name}_<V>", requires_clause(fresh[0].lo, t.until)))
+                scope, _ = split_scope(name)
+                selector = f"{bare_name(name)}_<V>"
+                spelling = f"{scope}::{selector}" if scope is not None else selector
+                out.append((t.packet_id, spelling, requires_clause(fresh[0].lo, t.until)))
             else:
-                out.append((t.packet_id, name, ""))
+                out.append((t.packet_id, cpp_qualified(name), ""))
         return sorted(out)
 
-    def _emit_latest_aliases(self, p: Printer, latest_version: int) -> None:
-        entries = self._versioned_entries()
-        if not entries:
-            return
-        for name, _, until in entries:
+    def _emit_latest_aliases(self, p: Printer, latest_version: int, cereal: bool = True) -> None:
+        for name, _, until in self._versioned_entries(cereal):
             if until is not None and latest_version >= until:
                 continue
-            p.print(f"using {name} = {name}_<{latest_version}>;\n")
+            bare = bare_name(name)
+            p.print(f"using {bare} = {bare}_<{latest_version}>;\n")
 
     # --- reflection ---------------------------------------------------------
 
@@ -377,7 +412,7 @@ class FileGenerator:
             t = by_name[name]
             if isinstance(t, Struct):
                 views += [
-                    (inner, qualified, _cpp_name(dotted))
+                    (inner, qualified, bare_name(dotted))
                     for inner, dotted, qualified, _ in self._nested_views(name)
                     if isinstance(inner, Enum)
                 ]
@@ -385,9 +420,9 @@ class FileGenerator:
             if self._resolved.is_versioned(name):
                 for s in self._resolved.fresh_snapshots(name):
                     assert s.enum is not None
-                    views.append((s.enum, f"{snapshot_namespace(s.lo)}::{name}", name))
+                    views.append((s.enum, cpp_qualified(name, s.lo), bare_name(name)))
             else:
-                views.append((t, name, name))
+                views.append((t, cpp_qualified(name), bare_name(name)))
         # the empty primary already covers a memberless enum
         views = [v for v in views if v[0].values]
         if not views:
@@ -416,10 +451,10 @@ class FileGenerator:
                     for s in self._resolved.fresh_snapshots(name):
                         assert s.enum is not None
                         p.print("\n")
-                        self._emit_enum_serializer(p, s.enum, f"{snapshot_namespace(s.lo)}::{name}", mode)
+                        self._emit_enum_serializer(p, s.enum, cpp_qualified(name, s.lo), mode)
                 else:
                     p.print("\n")
-                    self._emit_enum_serializer(p, t, name, mode)
+                    self._emit_enum_serializer(p, t, cpp_qualified(name), mode)
                 continue
             # Nested types first, so the owner's body sees them already declared.
             for inner, dotted, qualified, snapshot in self._nested_views(name):
@@ -435,12 +470,11 @@ class FileGenerator:
             if self._resolved.is_versioned(name):
                 for s in self._resolved.fresh_snapshots(name):
                     assert s.struct is not None
-                    qualified = f"{snapshot_namespace(s.lo)}::{name}"
                     p.print("\n")
-                    self._emit_struct_serializer(p, s.struct, s.lo, qualified, mode)
+                    self._emit_struct_serializer(p, s.struct, s.lo, cpp_qualified(name, s.lo), mode)
             else:
                 p.print("\n")
-                self._emit_struct_serializer(p, t, None, name, mode)
+                self._emit_struct_serializer(p, t, None, cpp_qualified(name), mode)
         for a in self._file.type_aliases:
             if not isinstance(a.target, VariantType):
                 continue
@@ -503,16 +537,20 @@ class FileGenerator:
     def _by_name(self) -> dict[str, Enum | Struct]:
         out: dict[str, Enum | Struct] = {}
         for e in self._file.enums:
-            out[e.name] = e
+            out[e.key] = e
         for s in self._file.structs:
-            out[s.name] = s
+            out[s.key] = s
         return out
 
     def _unversioned_names(self) -> list[str]:
         return [n for n in self._resolved.declaration_order if not self._resolved.is_versioned(n)]
 
-    def _versioned_names(self) -> list[str]:
-        return [n for n in self._resolved.declaration_order if self._resolved.is_versioned(n)]
+    def _versioned_names(self, cereal: bool | None = None) -> list[str]:
+        return [
+            n
+            for n in self._resolved.declaration_order
+            if self._resolved.is_versioned(n) and (cereal is None or _is_legacy(n) != cereal)
+        ]
 
     def _versioned_aliases(self) -> tuple[TypeAlias, ...]:
         """Aliases whose target reaches a versioned type, so the alias is itself
@@ -548,7 +586,7 @@ class FileGenerator:
                 return spelling, concrete
         return None
 
-    def _versioned_entries(self) -> list[tuple[str, tuple[int, ...], int | None]]:
+    def _versioned_entries(self, cereal: bool = True) -> list[tuple[str, tuple[int, ...], int | None]]:
         """Every versioned name with the snapshots holding a fresh definition and
         the version it disappears at, for the `_<V>` selector."""
         by_name = self._by_name()
@@ -558,29 +596,61 @@ class FileGenerator:
                 tuple(s.lo for s in self._resolved.fresh_snapshots(name)),
                 getattr(by_name.get(name), "until", None),
             )
-            for name in self._versioned_names()
+            for name in self._versioned_names(cereal)
         ]
-        for a in self._versioned_aliases():
+        for a in self._versioned_aliases() if cereal else ():
             los = tuple(lo for lo, _, concrete in self._alias_plan(a) if lo == concrete)
             if los:
                 entries.append((a.name, los, None))
         return entries
 
-    def _has_namespaces(self) -> bool:
-        return any(self._snapshot_has_entries(s) for s in self._resolved.snapshots)
-
     def _snapshot_has_entries(self, snap: int) -> bool:
-        for name in self._resolved.declaration_order:
-            if self._resolved.is_versioned(name) and self._resolved.present_at(name, snap) is not None:
-                return True
-        return False
+        return any(self._resolved.present_at(n, snap) is not None for n in self._versioned_names())
 
 
 # --- module-free helpers ------------------------------------------------------
 
 
-def _cpp_name(dotted: str) -> str:
-    return dotted.replace(".", "::")
+def _is_legacy(name: str) -> bool:
+    return split_scope(name)[0] is not None
+
+
+class _FlavourScope:
+    """Opens and closes the namespace a declaration belongs to as a walk moves
+    between the cerealised and pre-cereal trees, so one topological pass can emit
+    both. Namespaces reopen freely in C++, so a run costs one pair of braces and
+    a schema with no pre-cereal declaration gets exactly one."""
+
+    def __init__(self, p: Printer, snapshot_ns: str | None = None) -> None:
+        self._p = p
+        self._ns = snapshot_ns
+        self._open: str | None = None
+
+    def __enter__(self) -> "_FlavourScope":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self._close()
+
+    def enter(self, name: str) -> None:
+        scope = LEGACY_SCOPE if _is_legacy(name) else ""
+        if self._open == scope:
+            return
+        self._close()
+        if scope:
+            self._p.print(f"namespace {scope} {{\n\n")
+        if self._ns is not None:
+            self._p.print(f"namespace {self._ns} {{\n\n")
+        self._open = scope
+
+    def _close(self) -> None:
+        if self._open is None:
+            return
+        if self._ns is not None:
+            self._p.print(f"}}  // namespace {self._ns}\n\n")
+        if self._open:
+            self._p.print(f"}}  // namespace {self._open}\n\n")
+        self._open = None
 
 
 def _has_wire_shape(struct: Struct) -> bool:

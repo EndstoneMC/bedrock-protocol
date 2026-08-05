@@ -66,6 +66,25 @@ INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({"str", "bytes", "bo
 #: Byte order of a fixed-width encoding.
 Endian = Literal["little", "big"]
 
+#: Scope marking an IR name as BDS's pre-cereal encoding of a type BDS also
+#: cerealises. Both encodings are live at one protocol version -- the call site
+#: picks, not the version -- so one BDS name needs two IR names. The separator is
+#: not `.`, which already nests (`Owner.Inner`).
+LEGACY_SCOPE = "legacy"
+_SCOPE_SEP = ":"
+
+
+def scoped(name: str, cereal: bool) -> str:
+    """`name` under its flavour scope. The cerealised declaration keeps the bare
+    BDS name, so a schema with no pre-cereal declaration is unaffected."""
+    return name if cereal else f"{LEGACY_SCOPE}{_SCOPE_SEP}{name}"
+
+
+def split_scope(name: str) -> tuple[str | None, str]:
+    """An IR name split into its flavour scope and the rest."""
+    scope, sep, rest = name.partition(_SCOPE_SEP)
+    return (scope, rest) if sep else (None, name)
+
 
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
@@ -350,6 +369,14 @@ class Enum:
     underlying: PrimitiveType | None = None
     since: int | None = None
     until: int | None = None
+    cereal: bool = True
+
+    @property
+    def key(self) -> str:
+        """The name the pool and the backends index this declaration by. Only
+        module-scope declarations carry a flavour; a nested one takes its
+        owner's, which reaches it through the owner's dotted path."""
+        return scoped(self.name, self.cereal)
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -415,7 +442,10 @@ class Struct:
     plus `Serializer` specialization in the matching `<bedrock/*.hpp>` header.
 
     `nested` holds the types BDS declares inside the class, in source order; a
-    reference to one carries the dotted `Owner.Inner` name."""
+    reference to one carries the dotted `Owner.Inner` name.
+
+    `cereal` is false on a declaration modelling BDS's pre-cereal encoding of a
+    type BDS also cerealises, which a field reaches with `field(cereal=False)`."""
 
     name: str
     fields: tuple[Field, ...]
@@ -424,6 +454,14 @@ class Struct:
     until: int | None = None
     builtin: bool = False
     nested: tuple["Enum | Struct", ...] = ()
+    cereal: bool = True
+
+    @property
+    def key(self) -> str:
+        """The name the pool and the backends index this declaration by. Only
+        module-scope declarations carry a flavour; a nested one takes its
+        owner's, which reaches it through the owner's dotted path."""
+        return scoped(self.name, self.cereal)
 
     @property
     def referenced(self) -> frozenset[str]:
@@ -533,20 +571,20 @@ class ResolvedFile:
 
     def lookup(self, name: str) -> Enum | Struct | None:
         for e in self.file.enums:
-            if e.name == name:
+            if e.key == name:
                 return e
         for s in self.file.structs:
-            if s.name == name:
+            if s.key == name:
                 return s
         for imp in self.file.imports:
             other = self.pool.file_set.files.get(imp)
             if other is None:
                 continue
             for e in other.enums:
-                if e.name == name:
+                if e.key == name:
                     return e
             for s in other.structs:
-                if s.name == name:
+                if s.key == name:
                     return s
         return None
 

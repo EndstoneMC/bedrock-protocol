@@ -26,9 +26,10 @@ from bedrock_protocol.descriptor import (
     PrimitiveAlias,
     PrimitiveType,
     TypeAlias,
+    scoped,
 )
 
-from .parser import Parser, SymbolTable, enum_underlying_of, is_enum, nested_declarations
+from .parser import Parser, SymbolTable, decl_is_cereal, enum_underlying_of, is_enum, nested_declarations
 
 
 class _DeclarationCollector(griffe.Extension):
@@ -147,13 +148,15 @@ class SourceTree:
         return module
 
     def declarations_of(self, module_name: str) -> list[list[griffe.Class]]:
-        """The module's classes grouped by name, each group in source order. A
-        group of more than one is a version-redeclared type."""
-        groups: dict[str, list[griffe.Class]] = {}
+        """The module's classes grouped by name and flavour, each group in source
+        order. A group of more than one is a version-redeclared type; the two
+        flavours of one BDS name are separate groups, since they tile no range
+        between them -- both are live at the same protocol version."""
+        groups: dict[tuple[str, bool], list[griffe.Class]] = {}
         for cls in self._declarations.get(module_name, []):
             if cls.is_alias:
                 continue
-            groups.setdefault(cls.name, []).append(cls)
+            groups.setdefault((cls.name, decl_is_cereal(cls)), []).append(cls)
         return list(groups.values())
 
     def module_name_and_root(self, path: Path) -> tuple[str, Path]:
@@ -268,7 +271,7 @@ class Importer:
         def register(decls: list[griffe.Class], scope: str) -> None:
             """Record one declared type under its dotted path, then recurse into
             whatever it nests."""
-            name = f"{scope}.{decls[0].name}" if scope else decls[0].name
+            name = f"{scope}.{decls[0].name}" if scope else scoped(decls[0].name, decl_is_cereal(decls[0]))
             if is_enum(decls[0]):
                 enum_names.add(name)
                 enum_underlying[name] = enum_underlying_of(decls[0])

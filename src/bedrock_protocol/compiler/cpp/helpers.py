@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from bedrock_protocol.descriptor import split_scope
+
 #: DSL primitive name → C++ type spelling.
 PRIMITIVE_TYPES: dict[str, str] = {
     "str": "std::string",
@@ -38,6 +40,27 @@ def cpp_name(declared: str) -> str:
     """A declared type's C++ spelling. A nested type is dotted in the IR
     (`Owner.Inner`) and scope-resolved in C++ (`Owner::Inner`)."""
     return declared.replace(".", "::")
+
+
+def cpp_qualified(declared: str, snapshot: int | None = None) -> str:
+    """A declared type's spelling from file-namespace scope:
+    `[legacy::][vN::]Owner::Inner`.
+
+    The flavour scope sits outside the snapshot rather than inside it. A
+    `legacy::` written from within `vN` would find the enclosing namespace
+    itself if the nesting went the other way, and bind the wrong type."""
+    scope, rest = split_scope(declared)
+    parts = [scope] if scope is not None else []
+    if snapshot is not None:
+        parts.append(snapshot_namespace(snapshot))
+    parts.append(cpp_name(rest))
+    return "::".join(parts)
+
+
+def bare_name(declared: str) -> str:
+    """A declared type's own spelling, unqualified by its flavour scope -- what
+    the definition inside that scope's namespace prints."""
+    return cpp_name(split_scope(declared)[1])
 
 
 def outermost(declared: str) -> str:
