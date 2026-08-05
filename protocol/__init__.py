@@ -81,7 +81,14 @@ def field(
       the annotation keeps owning the in-memory type -- `y: int32 = field(type=uvarint32)`
       gives `std::int32_t y` in C++ but reads / writes Y as `varint<uint32_t>`
       with a `static_cast` at the boundary (used for `NetworkBlockPos`,
-      where BDS keeps Y as `int` but the wire writes it unsigned). For
+      where BDS keeps Y as `int` but the wire writes it unsigned).
+      On a `dict[K, V]` field a lone `type=` reaches the key and the value
+      alike, which says one thing where only one half takes it -- a struct
+      value ignores it -- and nothing where both do. Spell
+      `type=dict[K, V]` there instead: one wire spec per half, each reading as
+      `type=` would on its own, and both spelled out
+      (`field(type=dict[str, uint8])`). Both halves taking a lone `type=` is a
+      compile error rather than a guess. For
       optional fields, defaults to a single-byte bool flag + payload;
       passing `typing.Union` switches to a varint union-index discriminator
       instead. The index follows the annotation order, so `X | None` encodes

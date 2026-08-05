@@ -587,6 +587,7 @@ class Parser:
 
     def type(self, field_name: str, ann: _Ann, call: _Ann, scope: str = "") -> FieldType | None:
         type_kw = _name_kwarg(call, "field", "type")
+        halves = _wire_map_kwarg(call, field_name)
         prefix = _repeat_prefix(call, field_name)
         endian = _endian_kwarg(call, field_name)
         # The flavour applies to every declared type the annotation names, so a
@@ -597,8 +598,15 @@ class Parser:
             return self._literal_type(values, field_name, type_kw, endian)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal)
-        return self._base_type(ann, type_kw, prefix, field_name, endian, scope, cereal)
+            t = self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal, halves)
+        else:
+            t = self._base_type(ann, type_kw, prefix, field_name, endian, scope, cereal, halves)
+        if halves != (None, None) and _mapping_of(t) is None:
+            raise CompilerError(
+                f"{field_name}: field(type=dict[K, V]) names the halves of a dict[K, V] field, "
+                f"and this one is not one"
+            )
+        return t
 
     def _literal_type(
         self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
@@ -625,17 +633,18 @@ class Parser:
         endian: Endian | None,
         scope: str,
         cereal: bool = True,
+        halves: tuple[str | None, str | None] = (None, None),
     ) -> FieldType | None:
         if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
-            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope, cereal)
+            base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope, cereal, halves)
             return None if base is None else OptionalType(base)
         types: list[FieldType | None] = []
         for case in cases:
             if _is_none(case):
                 types.append(None)
                 continue
-            t = self._base_type(case, type_kw, prefix, field_name, endian, scope, cereal)
+            t = self._base_type(case, type_kw, prefix, field_name, endian, scope, cereal, halves)
             if t is None:
                 return None
             types.append(t)
@@ -650,6 +659,7 @@ class Parser:
         endian: Endian | None,
         scope: str = "",
         cereal: bool = True,
+        halves: tuple[str | None, str | None] = (None, None),
     ) -> FieldType | None:
         if isinstance(ann, griffe.ExprSubscript):
             bits = self._bitset(ann, field_name)
@@ -657,19 +667,22 @@ class Parser:
                 return bits
             elem = _list_element(ann, field_name)
             if elem is not None:
-                inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope, cereal)
+                inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope, cereal, halves)
                 return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
-            key = self._base_type(mapping[0], type_kw, prefix, field_name, endian, scope, cereal)
-            value = self._base_type(mapping[1], type_kw, prefix, field_name, endian, scope, cereal)
+            key_kw, value_kw = (h if h is not None else type_kw for h in halves)
+            key = self._base_type(mapping[0], key_kw, prefix, field_name, endian, scope, cereal)
+            value = self._base_type(mapping[1], value_kw, prefix, field_name, endian, scope, cereal)
             if key is None or value is None:
                 return None
+            if type_kw is not None and all(h is None for h in halves):
+                _check_map_wire_type(key, value, type_kw, field_name)
             return MappingType(key=key, value=value, prefix=prefix)
         cases = _flatten_union(ann)
         if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal)
+            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal, halves)
         dotted = _dotted_name(ann)
         if dotted is not None:
             if dotted in BUILTIN_ANNOTATIONS:
@@ -828,6 +841,61 @@ def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
             )
         return PrimitiveType(name=name)
     return None
+
+
+def _mapping_of(t: FieldType | None) -> MappingType | None:
+    """The `dict[K, V]` inside a field's type tree, through whatever wraps it."""
+    if isinstance(t, MappingType):
+        return t
+    if isinstance(t, (OptionalType, RepeatedType, CondType)):
+        return _mapping_of(t.inner)
+    return None
+
+
+def _wire_map_kwarg(call: _Ann, field_name: str) -> tuple[str | None, str | None]:
+    """`field(type=dict[K, V])` — one wire spec per half, for a map whose key and
+    value would both take a lone `field(type=)`. Each half reads as `field(type=)`
+    does on its own, and both are spelled: a slot standing for "leave this one
+    alone" would put the reader back to working out which half the keyword
+    reached, which is the whole reason this spelling exists."""
+    value = _call_arg(call, "field", "type")
+    if not isinstance(value, griffe.ExprSubscript):
+        return (None, None)
+    parts = _map_parts(value, field_name)
+    if parts is None:
+        raise CompilerError(
+            f"{field_name}: field(type=...) takes a wire primitive, str, or dict[K, V], got {value}"
+        )
+    key, value_half = (_name_of(half, field_name) for half in parts)
+    return key, value_half
+
+
+def _name_of(ann: griffe.Expr | str, field_name: str) -> str:
+    if isinstance(ann, griffe.ExprName):
+        return ann.name
+    raise CompilerError(
+        f"{field_name}: each half of field(type=dict[K, V]) is a wire primitive or str, got {ann}"
+    )
+
+
+def _takes_wire_type(t: FieldType | None) -> bool:
+    """Whether `field(type=)` decided this node's encoding. An enum always takes
+    it -- with no `type=` the encoding falls out of the underlying instead -- and
+    a primitive only where it really overrode one. A struct ignores it."""
+    if isinstance(t, EnumType):
+        return True
+    return isinstance(t, PrimitiveType) and t.wire is not None
+
+
+def _check_map_wire_type(key: FieldType, value: FieldType, type_kw: str, field_name: str) -> None:
+    """`field(type=)` reaches both halves of a `dict[K, V]`. Where only one of
+    them takes it the field still says one thing; where both do, which was meant
+    is unsaid, and this compiler does not read a keyword twice and guess."""
+    if _takes_wire_type(key) and _takes_wire_type(value):
+        raise CompilerError(
+            f"{field_name}: field(type={type_kw}) on a dict[K, V] reaches the key and the value alike, "
+            f"and both take it here -- spell field(key_type=) / field(value_type=) to say which"
+        )
 
 
 def _wire_override(type_kw: str | None, own: str, field_name: str) -> str | None:
