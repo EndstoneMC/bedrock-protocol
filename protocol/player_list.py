@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int32, packet, uint8
+from protocol import field, int32, packet, type, uint8
 from protocol.actor import ActorUniqueID
 from protocol.common import Color
 from protocol.skin import SerializedSkinRef
@@ -55,12 +55,35 @@ class PlayerListPacketPayload:
         color: Color
 
 
-# TODO: the 1001 form is not modelled. It is one packet-level action byte, then one
-# uvarint32 count, then either full entries or bare UUIDs, then -- for ADD only -- a
-# trailing run of one bool per entry carrying the skin's trusted flag. Two blockers:
-# the legacy PlayerListEntry::write embeds a pre-cereal skin whose shape differs from
-# the cerealised SerializedSkinRef in protocol/skin.py, and the trailing bool run needs
-# a list whose count is an earlier list's length, which field(count=) cannot express.
+@type(until=2168)
+class PlayerListEntry:
+    uuid: uuid.UUID
+    id: ActorUniqueID
+    name: str
+    xuid: str
+    platform_online_id: str
+    build_platform: BuildPlatform = field(type=int32)
+    skin: SerializedSkinRef = field(cereal=False)
+    is_teacher: bool
+    is_host: bool
+    is_sub_client: bool
+    color: Color
+
+
+# BDS writes both cases out of one mEntries vector behind one count, so the two lists
+# stand for the same field and exactly one of them is ever present. `removed_entries` is
+# the compiler's name for the remove case; BDS has none, since writeRemove walks mEntries.
+@packet(id=63, until=2168)
+class PlayerListPacket:
+    action: PlayerListPacketType
+    entries: list[PlayerListEntry] = field(when=lambda p: p.action == PlayerListPacketType.ADD)
+    removed_entries: list[uuid.UUID] = field(when=lambda p: p.action == PlayerListPacketType.REMOVE)
+    trusted_skins: list[bool] = field(
+        when=lambda p: p.action == PlayerListPacketType.ADD,
+        count=lambda p: len(p.entries),
+    )
+
+
 @packet(id=63, since=2168)
 class PlayerListPacket:
     entries: list[PlayerListPacketPayload.RemoveEntry | PlayerListPacketPayload.AddEntry]

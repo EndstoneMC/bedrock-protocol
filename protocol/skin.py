@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import field, int8, packet, uint32, uint8
+from protocol import field, int8, packet, type, uint8, uint32
 from protocol.common import Color
 
 package = "bedrock.protocol"
@@ -72,6 +72,19 @@ class AnimatedImageData:
     animation_expression: AnimationExpression
 
 
+@type(cereal=False)
+class AnimatedImageData:
+    """SerializedSkinImpl::write writes the image inline rather than through a
+    SkinImage, and both enums uncompressed."""
+
+    image_width: uint32
+    image_height: uint32
+    image_bytes: bytes
+    type: AnimatedTextureType = field(type=uint32)
+    frames: float
+    animation_expression: AnimationExpression = field(type=uint32)
+
+
 class SerializedPersonaPieceHandle:
     piece_id: str
     piece_type: PieceType = field(type=uint32)
@@ -80,8 +93,65 @@ class SerializedPersonaPieceHandle:
     product_id: str
 
 
+# TODO: confirm against BDS -- the pre-cereal write name-codes the piece type through
+# persona::stringFromPieceType(type, false), where cereal writes the enumerator verbatim.
+# gophertunnel documents the former as `persona_skeleton`, `persona_body` and so on, which
+# is not the `Skeleton` / `Body` this enum pairs for the cerealised call site. If the two
+# really differ, one enum needs two name codings and this pairing is wrong here. No golden
+# reaches it yet: a classic skin carries no persona pieces.
+@type(cereal=False)
+class SerializedPersonaPieceHandle:
+    piece_id: str
+    piece_type: PieceType = field(type=str)
+    pack_id: str
+    is_default_piece: bool
+    product_id: str
+
+
 class TintMapColor:
     colors: list[Color] = field(count=lambda t: 4)
+
+
+@type(cereal=False)
+class TintMapColor:
+    """The pre-cereal write walks the map as a list, so each entry carries its own
+    key and the colours their own count."""
+
+    piece_type: PieceType = field(type=str)
+    colors: list[str] = field(prefix=uint32)
+
+
+@type(cereal=False)
+class SerializedSkinRef:
+    """SerializedSkinImpl::write. The arm size and skin colour go as strings
+    rather than as an enumerator and a packed colour, each list takes a fixed
+    count, and the trusted flag is absent -- PlayerListPacket writes it as a
+    trailing run of its own, one bool per entry."""
+
+    id: str
+    play_fab_id: str
+    resource_patch: str
+    image_width: uint32
+    image_height: uint32
+    image_bytes: bytes
+    animated_image_data: list[AnimatedImageData] = field(cereal=False, prefix=uint32)
+    cape_image_width: uint32
+    cape_image_height: uint32
+    cape_image_bytes: bytes
+    geometry_data: str
+    geometry_data_min_engine_version: str
+    animation_data: str
+    cape_id: str
+    full_id: str
+    arm_size: ArmSizeType = field(type=str)
+    skin_color: str
+    persona_pieces: list[SerializedPersonaPieceHandle] = field(cereal=False, prefix=uint32)
+    piece_tint_colors: list[TintMapColor] = field(cereal=False, prefix=uint32)
+    is_premium: bool
+    is_persona: bool
+    is_persona_cape_on_classic_skin: bool
+    is_primary_user: bool
+    overrides_player_appearance: bool
 
 
 class SerializedSkinRef:
