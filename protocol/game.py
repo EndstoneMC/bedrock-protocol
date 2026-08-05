@@ -103,12 +103,11 @@ class GameRule:
     value: None | bool | int32 | float
 
 
-# TODO: confirm against BDS -- BDS calls this GameRule too. The name is invented to hold
-# the shape StartGame wrote before it cerealised at 2168, with the integer case as a
-# varint; packet 72 wrote the fixed one throughout. One BDS name, two wire shapes below
-# 2168, told apart by the call site.
-@type(until=2168)
-class LegacyGameRule:
+@type(cereal=False, until=2168)
+class GameRule:
+    """The shape StartGame wrote before it cerealised at 2168, with the integer
+    case as a varint; packet 72 wrote the fixed one throughout."""
+
     name: str
     can_be_modified_by_player: bool
     value: None | bool | uvarint32 | float
@@ -181,7 +180,7 @@ class LevelSettings:
     platform_broadcast_intent: GamePublishSetting
     commands_enabled: bool
     texture_packs_required: bool
-    game_rules: list[LegacyGameRule]
+    game_rules: list[GameRule] = field(cereal=False)
     experiments: list[ExperimentData] = field(prefix=uint32)
     experiments_previously_toggled: bool
     bonus_chest_enabled: bool

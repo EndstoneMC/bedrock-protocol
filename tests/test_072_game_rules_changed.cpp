@@ -11,9 +11,9 @@ using PacketV1001 = bp::packet_of_t<1001, 72>;
 using PacketV2168 = bp::packet_of_t<2168, 72>;
 
 // This packet writes the fixed integer case at every version. Only StartGame ever carried
-// the varint form, and only until 2168, which is why LegacyGameRule stands apart from
-// GameRule. gophertunnel keeps the same pair: game_rules_changed.go calls Writer.GameRule
-// at every protocol, and start_game.go called Writer.GameRuleLegacy until 2168.
+// the varint form, and only until 2168, which is why the pre-cereal GameRule stands apart
+// from the cerealised one. gophertunnel keeps the same pair: game_rules_changed.go calls
+// Writer.GameRule at every protocol, and start_game.go called Writer.GameRuleLegacy until 2168.
 // CloudburstMC's v975, v1001 and v2168 codecs encode this packet identically. A live
 // 1.26.33 server settles it, since a schema writing varints here cannot read what it sends.
 PacketV2168 sample()
@@ -82,9 +82,9 @@ TEST_CASE("GameRulesChangedPacket: round-trips against the golden")
 // one, since 131070 costs three varint bytes against the four a fixed integer takes.
 TEST_CASE("GameRulesChangedPacket: the legacy rule is a shape of its own")
 {
-    STATIC_REQUIRE_FALSE(std::is_same_v<bp::LegacyGameRule_<1001>, bp::GameRule>);
+    STATIC_REQUIRE_FALSE(std::is_same_v<bp::legacy::GameRule_<1001>, bp::GameRule>);
 
-    const bp::LegacyGameRule_<1001> legacy{
+    const bp::legacy::GameRule_<1001> legacy{
         .name = "maxcommandchainlength", .can_be_modified_by_player = false, .value = std::uint32_t{131070}};
     const bp::GameRule fixed{
         .name = "maxcommandchainlength", .can_be_modified_by_player = false, .value = std::int32_t{131070}};
