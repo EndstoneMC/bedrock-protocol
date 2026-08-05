@@ -302,13 +302,13 @@ class ItemUseInventoryTransaction:
     client_cooldown_state: ClientCooldownState
 
 
-# TODO: confirm against BDS -- BDS calls this ItemUseInventoryTransaction too. The name is
-# invented to hold the shape PlayerAuthInputPacket writes: that packet did not cerealise
-# until 2168, so its transaction keeps the pre-cereal framing -- the action list carries no
-# member-present marker and `face` stays a varint32 -- while its leaves cerealise at 1001
-# with everything else. One BDS name, two wire shapes at 1001, told apart by the call site.
-@type(until=1001)
-class LegacyItemUseInventoryTransaction:
+@type(cereal=False, until=1001)
+class ItemUseInventoryTransaction:
+    """The shape PlayerAuthInputPacket writes: that packet did not cerealise until
+    2168, so its transaction keeps the pre-cereal framing -- the action list carries
+    no member-present marker and `face` stays a varint32 -- while its leaves
+    cerealise at 1001 with everything else."""
+
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
     trigger_type: ItemUseInventoryTransaction.TriggerType
@@ -323,8 +323,8 @@ class LegacyItemUseInventoryTransaction:
     client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
 
 
-@type(since=1001)
-class LegacyItemUseInventoryTransaction:
+@type(cereal=False, since=1001)
+class ItemUseInventoryTransaction:
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
     trigger_type: ItemUseInventoryTransaction.TriggerType

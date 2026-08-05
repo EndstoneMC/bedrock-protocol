@@ -49,15 +49,26 @@ class FileContext:
     known: frozenset[str]
     string_coded_enums: frozenset[str]
 
+    @property
+    def package(self) -> str | None:
+        """The namespace the file's declarations live in, which anchors a
+        reference out of the pre-cereal tree."""
+        return self.resolved.file.package
+
 
 # --- type spelling ------------------------------------------------------------
 
 
-def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None) -> str | None:
+def cpp_type(
+    t: FieldType | None, ctx: FileContext, snapshot: int | None = None, owner: str | None = None
+) -> str | None:
     """C++ spelling for a field-type node, or None if unresolvable. When
     `snapshot` is set, versioned struct / enum references are snapshot-qualified
     (`v1001::EnvironmentAttributeData`). Inside a namespace that already holds
-    the right view, pass `snapshot=None` and let unqualified lookup work."""
+    the right view, pass `snapshot=None` and let unqualified lookup work.
+
+    `owner` is the flavour scope of the declaration doing the referencing, which
+    decides whether a cross-tree reference needs qualifying."""
     if t is None:
         return None
     if isinstance(t, PrimitiveType):
@@ -69,22 +80,22 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
         if snapshot is not None and ctx.resolved.is_versioned(root):
             view = ctx.resolved.present_at(root, snapshot)
             if view is not None:
-                return cpp_qualified(t.name, view.concrete)
-        return cpp_qualified(t.name)
+                return cpp_qualified(t.name, view.concrete, owner=owner, package=ctx.package)
+        return cpp_qualified(t.name, owner=owner, package=ctx.package)
     if isinstance(t, LiteralType):
         # A constant lives on the wire only -- no member spells it in C++.
         return None
     if isinstance(t, BitsetType):
         return f"std::bitset<{t.size}>"
     if isinstance(t, OptionalType):
-        inner = cpp_type(t.inner, ctx, snapshot)
+        inner = cpp_type(t.inner, ctx, snapshot, owner)
         return None if inner is None else f"std::optional<{inner}>"
     if isinstance(t, RepeatedType):
-        inner = cpp_type(t.inner, ctx, snapshot)
+        inner = cpp_type(t.inner, ctx, snapshot, owner)
         return None if inner is None else f"std::vector<{inner}>"
     if isinstance(t, MappingType):
-        key = cpp_type(t.key, ctx, snapshot)
-        value = cpp_type(t.value, ctx, snapshot)
+        key = cpp_type(t.key, ctx, snapshot, owner)
+        value = cpp_type(t.value, ctx, snapshot, owner)
         return None if key is None or value is None else f"std::map<{key}, {value}>"
     if isinstance(t, VariantType):
         parts: list[str] = []
@@ -92,7 +103,7 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
             if case is None:
                 parts.append("std::monostate")
                 continue
-            spelled = cpp_type(case, ctx, snapshot)
+            spelled = cpp_type(case, ctx, snapshot, owner)
             if spelled is None:
                 return None
             parts.append(spelled)
@@ -100,11 +111,13 @@ def cpp_type(t: FieldType | None, ctx: FileContext, snapshot: int | None = None)
     if isinstance(t, CondType):
         # A gated field carries no presence marker: it is spelled as its bare
         # payload and left default-constructed when the predicate is false.
-        return cpp_type(t.inner, ctx, snapshot)
+        return cpp_type(t.inner, ctx, snapshot, owner)
     return None
 
 
-def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int | None) -> str:
+def render_predicate(
+    pred: Predicate, base: str, ctx: FileContext, snapshot: int | None, owner: str | None = None
+) -> str:
     """A `when=` predicate as a C++ boolean expression. `base` is the struct
     variable its field references hang off — `value` writing, `out` reading."""
 
@@ -115,7 +128,7 @@ def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int
             return node.text
         if node.kind == "enum":
             enum, member = node.text.rsplit(".", 1)
-            return f"{qualified_at(enum, ctx, snapshot)}::{member}"
+            return f"{qualified_at(enum, ctx, snapshot, owner)}::{member}"
         if node.kind == "len":
             return f"{go(node.operands[0])}.size()"
         if node.kind == "bittest":
@@ -128,15 +141,15 @@ def render_predicate(pred: Predicate, base: str, ctx: FileContext, snapshot: int
     return go(pred)
 
 
-def qualified_at(name: str, ctx: FileContext, snapshot: int | None) -> str:
+def qualified_at(name: str, ctx: FileContext, snapshot: int | None, owner: str | None = None) -> str:
     """Qualified spelling of a struct/enum ref from inside a serializer at
     `snapshot` (emitted at namespace scope, so versioned refs need the `vN::`)."""
     if ctx.resolved.is_versioned(outermost(name)):
         assert snapshot is not None
         view = ctx.resolved.present_at(outermost(name), snapshot)
         assert view is not None
-        return cpp_qualified(name, view.concrete)
-    return cpp_qualified(name)
+        return cpp_qualified(name, view.concrete, owner=owner, package=ctx.package)
+    return cpp_qualified(name, owner=owner, package=ctx.package)
 
 
 # --- primitive wire helpers ---------------------------------------------------
@@ -225,6 +238,7 @@ class GenContext:
 
     ctx: FileContext
     snapshot: int | None
+    owner: str | None = None
 
 
 class FieldGenerator(ABC):
@@ -265,7 +279,7 @@ class EnumFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def _qualified(self) -> str:
-        return qualified_at(self._enum.name, self._gc.ctx, self._gc.snapshot)
+        return qualified_at(self._enum.name, self._gc.ctx, self._gc.snapshot, self._gc.owner)
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         if self._enum.scalar is None:
@@ -295,7 +309,7 @@ class ClassFieldGenerator(FieldGenerator):
         self._gc = gc
 
     def _qualified(self) -> str:
-        return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot)
+        return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot, self._gc.owner)
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes("<bedrock/serializer.hpp>")
@@ -412,7 +426,7 @@ class RepeatedFieldGenerator(FieldGenerator):
             # The count reads the surrounding struct's earlier fields, which
             # `MessageGenerator` names `out` -- not `target`, which is a staging
             # temporary whenever the list sits inside another combinator.
-            count = render_predicate(self._count, "out", self._gc.ctx, self._gc.snapshot)
+            count = render_predicate(self._count, "out", self._gc.ctx, self._gc.snapshot, self._gc.owner)
             p.print(f"{target}.clear();\n")
             with p.block(f"for (auto rep{depth} = {count}; rep{depth} > 0; --rep{depth})"):
                 p.print(f"{target}.emplace_back();\n")
@@ -513,8 +527,8 @@ class FieldGeneratorMap:
 
     The struct must be a snapshot view, where each field name appears once."""
 
-    def __init__(self, struct: Struct, ctx: FileContext, snapshot: int | None) -> None:
-        gc = GenContext(ctx, snapshot)
+    def __init__(self, struct: Struct, ctx: FileContext, snapshot: int | None, owner: str | None = None) -> None:
+        gc = GenContext(ctx, snapshot, owner)
         self._by_name: dict[str, FieldGenerator] = {}
         for f in struct.fields:
             (version,) = f.versions
@@ -538,13 +552,13 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
     if isinstance(t, BitsetType):
         return BitsetFieldGenerator(t)
     if isinstance(t, OptionalType):
-        value_type = cpp_type(t.inner, gc.ctx, gc.snapshot)
+        value_type = cpp_type(t.inner, gc.ctx, gc.snapshot, gc.owner)
         assert value_type is not None
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), value_type, gc)
     if isinstance(t, RepeatedType):
         return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc, t.count)
     if isinstance(t, MappingType):
-        key_type = cpp_type(t.key, gc.ctx, gc.snapshot)
+        key_type = cpp_type(t.key, gc.ctx, gc.snapshot, gc.owner)
         assert key_type is not None
         return MapFieldGenerator(
             make_field_generator(t.key, gc),
@@ -555,7 +569,7 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         )
     if isinstance(t, VariantType):
         cases = [None if c is None else make_field_generator(c, gc) for c in t.cases]
-        variant_type = cpp_type(t, gc.ctx, gc.snapshot)
+        variant_type = cpp_type(t, gc.ctx, gc.snapshot, gc.owner)
         assert variant_type is not None
         return VariantFieldGenerator(cases, t.discriminator, variant_type, gc)
     if isinstance(t, CondType):

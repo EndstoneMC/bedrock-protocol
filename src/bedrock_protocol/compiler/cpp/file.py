@@ -215,7 +215,7 @@ class FileGenerator:
                 if isinstance(t, Struct) and t.builtin:
                     continue  # hand-written in <bedrock/*.hpp>
                 scope.enter(name)
-                self._emit_definition(p, t)
+                self._emit_definition(p, t, owner=_owner_of(name))
                 p.print("\n")
 
     def _emit_type_aliases(self, p: Printer) -> None:
@@ -248,7 +248,9 @@ class FileGenerator:
                         continue
                     scope.enter(name)
                     if view.is_fresh:
-                        self._emit_definition(p, view.enum or view.struct, self._nested_anchor(name, snap), snap)
+                        self._emit_definition(
+                            p, view.enum or view.struct, self._nested_anchor(name, snap), snap, _owner_of(name)
+                        )
                     else:
                         bare = bare_name(name)
                         p.print(f"using {bare} = {snapshot_namespace(view.concrete)}::{bare};\n")
@@ -282,12 +284,13 @@ class FileGenerator:
         t: Enum | Struct | None,
         nested_anchor: int | None = None,
         snapshot: int | None = None,
+        owner: str | None = None,
     ) -> None:
         if isinstance(t, Enum):
             EnumGenerator(t).generate_definition(p)
         elif isinstance(t, Struct):
             MessageGenerator(
-                t, self._ctx, snapshot=snapshot, nested_anchor=nested_anchor
+                t, self._ctx, snapshot=snapshot, nested_anchor=nested_anchor, owner=owner
             ).generate_class_definition(p)
 
     # --- nested types -------------------------------------------------------
@@ -613,6 +616,10 @@ class FileGenerator:
 
 def _is_legacy(name: str) -> bool:
     return split_scope(name)[0] is not None
+
+
+def _owner_of(name: str) -> str | None:
+    return split_scope(name)[0]
 
 
 class _FlavourScope:

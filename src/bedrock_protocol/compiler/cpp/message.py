@@ -32,7 +32,12 @@ class MessageGenerator:
     definitions of this struct's nested types. When set, the body aliases them
     (`using ActionType = base::Owner::ActionType;`) instead of defining them
     again, so a nested type stays one C++ type across every snapshot of its
-    owner."""
+    owner.
+
+    `owner` is the namespace the struct *definition* is emitted into, which
+    decides how a reference out of the pre-cereal tree is spelled there. The
+    serializer bodies are emitted at file scope whatever the struct is, so they
+    always spell a reference in full and carry no owner."""
 
     def __init__(
         self,
@@ -42,12 +47,14 @@ class MessageGenerator:
         snapshot: int | None = None,
         qualified: str | None = None,
         nested_anchor: int | None = None,
+        owner: str | None = None,
     ) -> None:
         self._struct = struct
         self._ctx = ctx
         self._snapshot = snapshot
         self._qualified = qualified if qualified is not None else struct.name
         self._anchor = nested_anchor
+        self._owner = owner
         self._field_generators = FieldGeneratorMap(struct, ctx, snapshot)
 
     # --- type definition ----------------------------------------------------
@@ -65,7 +72,7 @@ class MessageGenerator:
             (version,) = f.versions
             if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
                 continue
-            ctype = cpp_type(version.type, self._ctx, self._snapshot) if version.type is not None else None
+            ctype = cpp_type(version.type, self._ctx, self._snapshot, self._owner) if version.type is not None else None
             if ctype is None:
                 p.print(f"struct {self._struct.name} {{}};\n")
                 return
@@ -95,7 +102,9 @@ class MessageGenerator:
         elif isinstance(inner, Enum):
             EnumGenerator(inner).generate_definition(p)
         else:
-            MessageGenerator(inner, self._ctx, snapshot=self._snapshot).generate_class_definition(p)
+            MessageGenerator(
+                inner, self._ctx, snapshot=self._snapshot, owner=self._owner
+            ).generate_class_definition(p)
 
     # --- serializer ---------------------------------------------------------
 

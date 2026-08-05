@@ -162,7 +162,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with every modelled arm taken
 // carry their markers.
 TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with the item interaction arm taken")
 {
-    using Transaction = bp::LegacyItemUseInventoryTransaction_<1001>;
+    using Transaction = bp::legacy::ItemUseInventoryTransaction_<1001>;
     using Use = bp::ItemUseInventoryTransaction_<1001>;
 
     Older packet = fill_v1001();

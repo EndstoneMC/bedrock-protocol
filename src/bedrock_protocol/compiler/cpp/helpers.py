@@ -42,15 +42,29 @@ def cpp_name(declared: str) -> str:
     return declared.replace(".", "::")
 
 
-def cpp_qualified(declared: str, snapshot: int | None = None) -> str:
-    """A declared type's spelling from file-namespace scope:
-    `[legacy::][vN::]Owner::Inner`.
+def cpp_qualified(
+    declared: str,
+    snapshot: int | None = None,
+    *,
+    owner: str | None = None,
+    package: str | None = None,
+) -> str:
+    """A declared type's spelling as written from inside `owner`'s namespace
+    tree: `[legacy::][vN::]Owner::Inner`.
 
-    The flavour scope sits outside the snapshot rather than inside it. A
-    `legacy::` written from within `vN` would find the enclosing namespace
-    itself if the nesting went the other way, and bind the wrong type."""
+    The pre-cereal tree is `legacy::vN`, so both trees hold a namespace named
+    `vN`. A reference out of the pre-cereal tree into a versioned cerealised
+    type therefore anchors at `package`: spelled `vN::` it would find
+    `legacy::vN` first and bind the wrong type. Within one tree, and for an
+    unversioned type in either, the relative spelling is unambiguous."""
     scope, rest = split_scope(declared)
-    parts = [scope] if scope is not None else []
+    parts: list[str] = []
+    if scope == owner:
+        pass  # same tree; unqualified lookup walks out to it
+    elif scope is not None:
+        parts.append(scope)
+    elif snapshot is not None and package:
+        parts.append(package.replace(".", "::"))
     if snapshot is not None:
         parts.append(snapshot_namespace(snapshot))
     parts.append(cpp_name(rest))

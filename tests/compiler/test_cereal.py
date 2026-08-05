@@ -92,8 +92,6 @@ class Settings:
         self.assertLess(header.index("namespace legacy"), header.index("struct Settings"))
 
     def test_a_pre_cereal_type_may_reach_a_cerealised_one(self) -> None:
-        """Lookup never goes the other way, so the cerealised definitions can
-        always precede the pre-cereal block."""
         header, _ = self.compile(
             PREAMBLE
             + """
@@ -118,6 +116,46 @@ class ThingPacket:
         )
         self.assertLess(header.index("struct Shared"), header.index("namespace legacy"))
         self.assertIn("Shared shared{};", self.namespace(header, "legacy"))
+
+    def test_a_versioned_reference_out_of_the_pre_cereal_tree_is_anchored(self) -> None:
+        """Both trees hold a namespace named `vN`, so a bare `vN::` written from
+        inside `legacy::vN` would find that one and bind the wrong type."""
+        header, _ = self.compile(
+            PREAMBLE
+            + """
+
+@type(until=1001)
+class Shared:
+    n: uint32
+
+
+@type(since=1001)
+class Shared:
+    n: uvarint32
+
+
+@type(cereal=False, until=1001)
+class Rule:
+    shared: Shared
+
+
+@type(cereal=False, since=1001)
+class Rule:
+    shared: Shared
+    extra: uint32
+
+
+class Rule:
+    n: uint32
+
+
+@packet(id=7)
+class ThingPacket:
+    rule: Rule = field(cereal=False)
+"""
+        )
+        self.assertIn("bedrock::protocol::base::Shared shared{};", header)
+        self.assertIn("bedrock::protocol::v1001::Shared shared{};", header)
 
 
 class Rejections(CompilerCase):

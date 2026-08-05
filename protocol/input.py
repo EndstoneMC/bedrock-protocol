@@ -7,7 +7,6 @@ from protocol.common import BlockPos, Vec2, Vec3
 from protocol.inventory import (
     ItemStackLegacyRequestId,
     ItemUseInventoryTransaction,
-    LegacyItemUseInventoryTransaction,
     LegacySetSlot,
 )
 from protocol.item_stack import ItemStackRequestCereal, ItemStackRequestData
@@ -122,7 +121,7 @@ class PlayerBlockActionData:
 class PackedItemUseLegacyInventoryTransaction:
     id: varint32
     slots: list[LegacySetSlot] = field(when=lambda t: t.id < -1 and t.id & 1 == 0)
-    transaction: LegacyItemUseInventoryTransaction
+    transaction: ItemUseInventoryTransaction = field(cereal=False)
 
 
 @type(since=2168)
