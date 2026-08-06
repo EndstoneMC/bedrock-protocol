@@ -196,6 +196,35 @@ carrying its bedrock-headers underlying needs none; a small enum's byte falls ou
 either way). Annotation clutter on a cerealised form is a smell that you are
 modelling the pre-cereal shape.
 
+**A shared type's wire form is per call site; the dump gives you one of them.**
+protocol-docs describes a type once, from its cereal schema, and that describes the
+cerealised packets that embed it. A packet *missing* from that branch writes the same
+type through its own hand-written code and may encode it differently — the dump
+cannot show the second form and gives no hint it exists. So a type being in the dump
+licenses only the packets the dump also lists; it says nothing about a call site that
+is not there yet.
+
+`GameRule` is the standing case. `GameRulesChangedPacket` is in the dump from 975 on,
+and at 1001 its `write(BinaryStream&)` is confirmed to build a `ReflectionCtx`, call
+`cerealizer<GameRulesChangedPacket>::bind` and delegate — no legacy path — so the
+dump's fixed `int32` integer case is the wire there at 975, 1001 and 2168 alike. But
+StartGame was hand-written until 2168 and put the same `GameRule` on the wire through
+`std::function<void(BinaryStream&, const GameRule&)>` lambdas living in
+`GameRulesChangedPacketData.h`, with a varint integer. One type, two encodings, one
+dump entry. At 2168 StartGame cerealised and `LevelSettings` took a
+`GameRulesChangedPacketData` member, collapsing the two onto the cereal form — which
+is why both gophertunnel and CloudburstMC carried a second game-rule codec
+(`GameRuleLegacy`, `writeGameRuleInStartGame`) and deleted it at exactly that version.
+
+Model the encoding **per embedding type**, not on the shared type. A single
+`@type(until=N)` / `@type(since=N)` pair over the shared type forces both call sites
+to agree and silently mis-encodes whichever one the dump did not describe.
+
+Those two legacy codecs disagree with each other — Cloudburst writes a zigzag
+`varint32`, gophertunnel an unsigned `uvarint32`, which differ for every non-zero
+value — so anything modelling StartGame's game rules before 2168 earns a
+`# TODO: confirm against BDS` until BDS's hand-written path is read directly.
+
 ## A union spells its discriminator
 
 A `A | B | C` field is prefixed by a `uvarint32` index over the cases in declaration
