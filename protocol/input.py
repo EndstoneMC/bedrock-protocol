@@ -2,7 +2,7 @@ from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import bitset, field, packet, type, uint32, uvarint32, value, varint32
-from protocol.actor import ActorUniqueID, PlayerInputTick
+from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.inventory import (
     ItemStackLegacyRequestId,
@@ -328,3 +328,12 @@ class PlayerAuthInputPacket:
     analog_move_vector: Vec2
     camera_orientation: Vec3
     raw_move_vector: Vec2
+
+
+@packet(id=36)
+class PlayerActionPacket:
+    runtime_id: ActorRuntimeID
+    action: PlayerActionType
+    pos: BlockPos
+    result_pos: BlockPos
+    face: varint32
