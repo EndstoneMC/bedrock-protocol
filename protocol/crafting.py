@@ -145,7 +145,7 @@ class ShapedRecipePayload:
     height: varint32
     ingredients: list[SerializedRecipeIngredient] = field(count=lambda r: r.width * r.height)
     results: list[SerializedNetworkItemInstanceDescriptor]
-    recipe_uuid: uuid.UUID
+    uuid: uuid.UUID
     tag: str
     priority: varint32
     assume_symmetry: bool
@@ -163,7 +163,7 @@ class ShapedRecipePayload:
     height: varint32
     ingredients: list[SerializedRecipeIngredient]
     results: list[SerializedNetworkItemInstanceDescriptor]
-    recipe_uuid: uuid.UUID
+    uuid: uuid.UUID
     tag: str
     priority: varint32
     assume_symmetry: bool
@@ -176,7 +176,7 @@ class ShapelessRecipePayload:
     recipe_id: str
     ingredients: list[SerializedRecipeIngredient]
     results: list[SerializedNetworkItemInstanceDescriptor]
-    recipe_uuid: uuid.UUID
+    uuid: uuid.UUID
     tag: str
     priority: varint32
     # TODO: confirm against BDS -- CraftingDataSerializer_v748 skips this for
@@ -191,7 +191,7 @@ class ShapelessRecipePayload:
     recipe_id: str
     ingredients: list[SerializedRecipeIngredient]
     results: list[SerializedNetworkItemInstanceDescriptor]
-    recipe_uuid: uuid.UUID
+    uuid: uuid.UUID
     tag: str
     priority: varint32
     unlocking_requirement: SerializedRecipeUnlockingRequirement | None
@@ -199,7 +199,7 @@ class ShapelessRecipePayload:
 
 
 class MultiRecipePayload:
-    recipe_uuid: uuid.UUID
+    uuid: uuid.UUID
     net_id: RecipeNetId
 
 
@@ -290,29 +290,29 @@ class CraftingDataPacket:
     shaped_chemistry_recipes: list[ShapedRecipePayload]
     smithing_transform_recipes: list[SmithingTransformRecipePayload]
     smithing_trim_recipes: list[SmithingTrimRecipePayload]
-    potion_mixes: list[PotionMixDataEntry]
-    container_mixes: list[ContainerMixDataEntry]
-    material_reducers: list[MaterialReducerDataEntry]
+    potion_mix_entries: list[PotionMixDataEntry]
+    container_mix_entries: list[ContainerMixDataEntry]
+    material_reducer_entries: list[MaterialReducerDataEntry]
     clear_recipes: bool
 
 
 @type(until=2168)
 class CreativeGroupInfoPayload:
-    creative_category: CreativeItemCategory = field(type=int32)
+    creative_item_category: CreativeItemCategory = field(type=int32)
     name: str
-    group_icon_item: SerializedNetworkItemInstanceDescriptor
+    icon: SerializedNetworkItemInstanceDescriptor
 
 
 @type(since=2168)
 class CreativeGroupInfoPayload:
-    creative_category: CreativeItemCategory
+    creative_item_category: CreativeItemCategory
     name: str
-    group_icon_item: SerializedNetworkItemInstanceDescriptor
+    icon: SerializedNetworkItemInstanceDescriptor
 
 
 class CreativeItemEntryPayload:
-    creative_net_id: CreativeItemNetId
-    item_instance: SerializedNetworkItemInstanceDescriptor
+    creative_item_net_id: CreativeItemNetId
+    item_descriptor: SerializedNetworkItemInstanceDescriptor
     group_index: uvarint32
 
 

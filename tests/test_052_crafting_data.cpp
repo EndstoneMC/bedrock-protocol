@@ -56,7 +56,7 @@ bp::CraftingDataPacket_<1001> fill_1001()
     shaped.shaped_recipe.height = 1;
     shaped.shaped_recipe.ingredients = {stick_1001()};
     shaped.shaped_recipe.results = {plank_1001()};
-    shaped.shaped_recipe.recipe_uuid = {};
+    shaped.shaped_recipe.uuid = {};
     shaped.shaped_recipe.tag = "crafting_table";
     shaped.shaped_recipe.priority = 3;
     shaped.shaped_recipe.assume_symmetry = true;
@@ -70,7 +70,7 @@ bp::CraftingDataPacket_<1001> fill_1001()
     shapeless.shapeless_recipe.recipe_id = "r2";
     shapeless.shapeless_recipe.ingredients = {stick_1001()};
     shapeless.shapeless_recipe.results = {plank_1001()};
-    shapeless.shapeless_recipe.recipe_uuid = {};
+    shapeless.shapeless_recipe.uuid = {};
     shapeless.shapeless_recipe.tag = "crafting_table";
     shapeless.shapeless_recipe.priority = 0;
     shapeless.shapeless_recipe.unlocking_requirement.context =
@@ -81,7 +81,7 @@ bp::CraftingDataPacket_<1001> fill_1001()
 
     bp::CraftingDataEntry_<1001> multi;
     multi.entry_type = bp::CraftingDataEntryType::MULTI_RECIPE;
-    multi.multi_recipe.recipe_uuid = {};
+    multi.multi_recipe.uuid = {};
     multi.multi_recipe.net_id = {.raw_id = 13};
     pkt.crafting_entries.push_back(multi);
 
@@ -129,7 +129,7 @@ bp::CraftingDataPacket_<2168> fill_2168()
     shaped.height = 1;
     shaped.ingredients = {stick_2168()};
     shaped.results = {plank_2168()};
-    shaped.recipe_uuid = {};
+    shaped.uuid = {};
     shaped.tag = "crafting_table";
     shaped.priority = 3;
     shaped.assume_symmetry = true;
@@ -143,7 +143,7 @@ bp::CraftingDataPacket_<2168> fill_2168()
     shapeless.recipe_id = "r2";
     shapeless.ingredients = {stick_2168()};
     shapeless.results = {plank_2168()};
-    shapeless.recipe_uuid = {};
+    shapeless.uuid = {};
     shapeless.tag = "crafting_table";
     shapeless.priority = 0;
     shapeless.unlocking_requirement = bp::SerializedRecipeUnlockingRequirement_<2168>{
@@ -152,7 +152,7 @@ bp::CraftingDataPacket_<2168> fill_2168()
     shapeless.net_id = {.raw_id = 12};
     pkt.shapeless_recipes.push_back(shapeless);
 
-    pkt.multi_recipes.push_back({.recipe_uuid = {}, .net_id = {.raw_id = 13}});
+    pkt.multi_recipes.push_back({.uuid = {}, .net_id = {.raw_id = 13}});
 
     bp::SmithingTransformRecipePayload_<2168> transform;
     transform.recipe_id = "r4";
@@ -173,14 +173,14 @@ bp::CraftingDataPacket_<2168> fill_2168()
     trim.net_id = {.raw_id = 15};
     pkt.smithing_trim_recipes.push_back(trim);
 
-    pkt.potion_mixes.push_back({.from_item_id = 1,
-                                .from_item_aux = 2,
-                                .reagent_item_id = 3,
-                                .reagent_item_aux = 4,
-                                .to_item_id = 5,
-                                .to_item_aux = 6});
-    pkt.container_mixes.push_back({.from_item_id = 7, .reagent_item_id = 8, .to_item_id = 9});
-    pkt.material_reducers.push_back(
+    pkt.potion_mix_entries.push_back({.from_item_id = 1,
+                                      .from_item_aux = 2,
+                                      .reagent_item_id = 3,
+                                      .reagent_item_aux = 4,
+                                      .to_item_id = 5,
+                                      .to_item_aux = 6});
+    pkt.container_mix_entries.push_back({.from_item_id = 7, .reagent_item_id = 8, .to_item_id = 9});
+    pkt.material_reducer_entries.push_back(
         {.from_item_key = 20, .to_item_ids_and_counts = {{.item_id = 21, .item_count = 22}}});
     pkt.clear_recipes = true;
     return pkt;

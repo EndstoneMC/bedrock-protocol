@@ -149,7 +149,7 @@ class ClientboundMapItemDataPacket:
     dimension: uint8
     locked: bool
     map_origin: BlockPos
-    map_ids: list[ActorUniqueID] | None
+    creation_map_ids: list[ActorUniqueID] | None
     scale: int8 | None
     unique_ids: list[MapItemTrackedActor.UniqueId] | None
     decorations: list[MapDecoration] | None

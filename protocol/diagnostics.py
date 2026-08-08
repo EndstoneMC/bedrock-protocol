@@ -5,9 +5,6 @@ from protocol import auto, field, packet, type, uint8, uint64
 package = "bedrock.protocol"
 
 
-# TODO: confirm against BDS -- both community lists disagree with the dumps and are
-# followed nowhere here. CloudburstMC adds a Balancer at 5 and a trailing VR and omits
-# LightVolumeManager; gophertunnel adds VR at 68 and omits Rendering_RenderRegistry.
 @type(until=2168)
 class MemoryCategory(IntEnum, uint8):
     UNKNOWN = 0
@@ -240,7 +237,6 @@ class SystemDiagnosticTimingInfo:
     percent_of_total: uint8
 
 
-# TODO: confirm against BDS -- named from the r26_u4 dump; bedrock-headers stops at r26_u3.
 @type(since=2168)
 class SystemCategory:
     category_name: str
@@ -266,12 +262,12 @@ class ServerboundDiagnosticsPacket:
     avg_end_frame_time_ms: float
     avg_remainder_time_percent: float
     avg_unaccounted_time_percent: float
-    memory_category_values: list[MemoryCategoryCounter]
-    entity_diagnostics: list[EntityDiagnosticTimingInfo]
-    system_diagnostics: list[SystemDiagnosticTimingInfo]
+    category_counters: list[MemoryCategoryCounter]
+    entity_timings: list[EntityDiagnosticTimingInfo]
+    system_timings: list[SystemDiagnosticTimingInfo]
     # TODO: confirm against BDS -- the dump marks this optional, CloudburstMC v2168 writes
     # the array with no presence flag at all. The dump reports cereal's always-true
     # member-present marker for 7 of its 565 files, so a second framing byte is not ruled
     # out either; no codec models the flag, so no golden can settle 0 against 1 against 2.
     system_categories: list[SystemCategory] | None = field(since=2168)
-    whisker_scopes: list[ScopeDataSummary] = field(since=1001)
+    whisker_data: list[ScopeDataSummary] = field(since=1001)

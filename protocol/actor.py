@@ -183,7 +183,7 @@ class ActorLink:
 class AddActorPacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
-    type: str
+    actor_type: str
     pos: Vec3
     velocity: Vec3
     rot: Vec2
@@ -202,9 +202,7 @@ class SetActorDataPacket:
     synched_properties: PropertySyncData
     tick: PlayerInputTick
 
-# TODO: confirm against BDS -- bedrock-headers stops at r26_u3, so CUSHION and SULFUR_CUBE's
-# new value come from the 2168 dump. Every other member is the r26_u3 header, which the 1001
-# dump agrees with exactly.
+
 @type(until=2168)
 class ActorType(IntEnum, int):
     UNDEFINED = 1

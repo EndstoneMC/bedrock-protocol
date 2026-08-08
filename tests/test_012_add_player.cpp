@@ -38,15 +38,16 @@ void fill(Packet &packet)
     packet.player_game_type = bp::GameType::SURVIVAL;
     packet.synched_properties.int_entries.push_back({.property_index = 1, .data = -2});
     packet.synched_properties.float_entries.push_back({.property_index = 2, .data = 0.5f});
-    packet.abilities.target_player = static_cast<bp::ActorUniqueID>(1);
-    packet.abilities.player_permissions = bp::PlayerPermissionLevel::MEMBER;
-    packet.abilities.command_permissions = bp::CommandPermissionLevel::ANY;
-    packet.abilities.layers.push_back({.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::BASE,
-                                       .abilities_set = 0,
-                                       .ability_values = 0,
-                                       .fly_speed = 0.05f,
-                                       .vertical_fly_speed = 1.0f,
-                                       .walk_speed = 0.1f});
+    packet.abilities_data.target_player = static_cast<bp::ActorUniqueID>(1);
+    packet.abilities_data.player_permissions = bp::PlayerPermissionLevel::MEMBER;
+    packet.abilities_data.command_permissions = bp::CommandPermissionLevel::ANY;
+    packet.abilities_data.layers.push_back(
+        {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::BASE,
+         .abilities_set = 0,
+         .ability_values = 0,
+         .fly_speed = 0.05f,
+         .vertical_fly_speed = 1.0f,
+         .walk_speed = 0.1f});
     packet.links.push_back({.a = static_cast<bp::ActorUniqueID>(1),
                             .b = static_cast<bp::ActorUniqueID>(2),
                             .type = bp::ActorLinkType::RIDING,
@@ -110,9 +111,9 @@ TEST_CASE("AddPlayerPacket: v2168 round-trip")
     REQUIRE_FALSE(rt.carried_item.net_id_variant.has_value());
     REQUIRE(rt.unpack.data.size() == 1);
     REQUIRE(std::get<3>(rt.unpack.data[0].payload).type == bp::DataItemType::FLOAT);
-    REQUIRE(rt.abilities.target_player == static_cast<bp::ActorUniqueID>(1));
-    REQUIRE(rt.abilities.layers.size() == 1);
-    REQUIRE(rt.abilities.layers[0].walk_speed == 0.1f);
+    REQUIRE(rt.abilities_data.target_player == static_cast<bp::ActorUniqueID>(1));
+    REQUIRE(rt.abilities_data.layers.size() == 1);
+    REQUIRE(rt.abilities_data.layers[0].walk_speed == 0.1f);
     REQUIRE(rt.device_id == "dev");
     REQUIRE(rt.build_platform == bp::BuildPlatform::WIN32);
 }
@@ -158,7 +159,7 @@ TEST_CASE("AddPlayerPacket: v1001 round-trip")
     REQUIRE_FALSE(rt.carried_item.net_id.has_value());
     REQUIRE(rt.unpack.data.size() == 1);
     REQUIRE(std::get<3>(rt.unpack.data[0].payload).value == 0.5f);
-    REQUIRE(rt.abilities.command_permissions == bp::CommandPermissionLevel::ANY);
+    REQUIRE(rt.abilities_data.command_permissions == bp::CommandPermissionLevel::ANY);
     REQUIRE(rt.build_platform == bp::BuildPlatform::WIN32);
 
     bp::AddPlayerPacket_<2168> newer;

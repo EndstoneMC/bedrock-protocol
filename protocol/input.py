@@ -19,7 +19,7 @@ class InputMode(IntEnum, uint32):
     MOUSE = 1
     TOUCH = 2
     GAME_PAD = 3
-    MOTION_CONTROLLER = 4
+    MOTION_CONTROLLER_DEPRECATED = 4
     COUNT = auto()
 
 
@@ -27,12 +27,12 @@ class ClientPlayMode(IntEnum, uint32):
     NORMAL = 0
     TEASER = 1
     SCREEN = 2
-    VIEWER = 3
-    REALITY = 4
-    PLACEMENT = 5
-    LIVING_ROOM = 6
+    VIEWER_DEPRECATED = 3
+    REALITY_DEPRECATED = 4
+    PLACEMENT_DEPRECATED = 5
+    LIVING_ROOM_DEPRECATED = 6
     EXIT_LEVEL = 7
-    EXIT_LEVEL_LIVING_ROOM = 8
+    EXIT_LEVEL_LIVING_ROOM_DEPRECATED = 8
     NUM_MODES = auto()
 
 
@@ -65,7 +65,7 @@ class PlayerActionType(IntEnum, int):
     DENY_DESTROY_BLOCK = 17
     CRACK_BLOCK = 18
     CHANGE_SKIN = 19
-    UPDATED_ENCHANTING_SEED = 20
+    DEPRECATED_UPDATED_ENCHANTING_SEED = 20
     START_SWIMMING = 21
     STOP_SWIMMING = 22
     START_SPIN_ATTACK = 23
@@ -81,7 +81,7 @@ class PlayerActionType(IntEnum, int):
     STOP_CRAWLING = 33
     START_FLYING = 34
     STOP_FLYING = 35
-    CLIENT_ACK_SERVER_DATA = 36
+    DEPRECATED_CLIENT_ACK_SERVER_DATA = 36
     START_USING_ITEM = 37
     INTERNAL_UPDATE = value(38, since=2168)
     COUNT = auto()
@@ -137,7 +137,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, uint32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP = 2
+        NORTH_JUMP_DEPRECATED = 2
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -189,8 +189,8 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
         START_USING_ITEM = 53
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = 54
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = 55
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
         START_SPIN_ATTACK = 56
         STOP_SPIN_ATTACK = 57
         IS_HOTBAR_ONLY_TOUCH = 58
@@ -237,7 +237,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, uint32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP = 2
+        NORTH_JUMP_DEPRECATED = 2
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -289,8 +289,8 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
         START_USING_ITEM = 53
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED = 54
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION = 55
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
         START_SPIN_ATTACK = 56
         STOP_SPIN_ATTACK = 57
         IS_HOTBAR_ONLY_TOUCH = 58

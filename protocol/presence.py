@@ -43,7 +43,7 @@ class GatheringsConfigurationJoinInfo:
     experience_world_name: str | None
     creator_id: str
     target_id: uuid.UUID | None
-    scenario_id: str | None
+    mpsas_scenario_id: str | None
     server_id: str | None
 
 
@@ -53,8 +53,8 @@ class ClientStoreEntryPointConfiguration:
 
 
 class ServerConfigurationJoinInfo:
-    gatherings_configuration_join_info: GatheringsConfigurationJoinInfo | None
-    client_store_entrypoint_configuration: ClientStoreEntryPointConfiguration | None
+    gatherings_configuration: GatheringsConfigurationJoinInfo | None
+    client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None
     presence_configuration: PresenceConfiguration | None
 
 

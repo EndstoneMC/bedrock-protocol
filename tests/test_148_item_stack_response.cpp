@@ -74,7 +74,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
     REQUIRE(back.responses[0].containers.size() == 1);
     REQUIRE(back.responses[0].containers[0].slots[0].item_stack_net_id.id == 9);
     REQUIRE(back.responses[0].containers[0].slots[0].amount == 64);
-    REQUIRE(back.responses[0].containers[0].slots[0].custom_name.unredacted.empty());
+    REQUIRE(back.responses[0].containers[0].slots[0].custom_name.unredacted_string.empty());
 }
 
 // Pre-cereal, nothing on the wire marks the container list present: a non-success result
@@ -107,7 +107,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
     slot.requested_slot = 3;
     slot.slot = 3;
     slot.amount = 64;
-    slot.item_stack_net_id = bp::ItemStackNetId{.id = 9};
+    slot.item_stack_net_id = bp::ItemStackNetId{.raw_id = 9};
 
     bp::v2168::ItemStackResponseContainerInfo container;
     container.full_container_name.name = bp::ContainerEnumName::LEVEL_ENTITY_CONTAINER;
@@ -127,7 +127,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
     const auto &slot_back = (*back.responses[0].containers)[0].slots[0];
     REQUIRE(slot_back.item_stack_net_id.has_value());
     REQUIRE(slot_back.item_stack_net_id->id == 9);
-    REQUIRE_FALSE(slot_back.custom_name.redacted.has_value());
+    REQUIRE_FALSE(slot_back.custom_name.redacted_string.has_value());
 }
 
 // The result no longer gates the containers -- an error response carries the marker and

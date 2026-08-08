@@ -38,7 +38,7 @@ bp::PlayerListPacket_<2168> fill()
     bp::PlayerListPacketPayload_<2168>::AddEntry add;
     add.action = bp::PlayerListPacketType::ADD;
     add.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
-    add.actor_unique_id = static_cast<bp::ActorUniqueID>(7);
+    add.id = static_cast<bp::ActorUniqueID>(7);
     add.name = "Steve";
     add.xuid = "xuid";
     add.platform_online_id = "pcid";

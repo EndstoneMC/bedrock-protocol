@@ -172,7 +172,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with the item interaction arm
         {.container_enum = bp::ContainerEnumName::COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, .slots = "\x01\x02\x03"}};
 
     bp::InventoryAction_<1001> action;
-    action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
     action.source.container_id = static_cast<bp::ContainerID>(7);
     action.slot = 5;
 

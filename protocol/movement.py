@@ -62,8 +62,8 @@ class PlayerPositionModeComponent:
 
 @type(since=2168)
 class MovePlayerTeleportData:
-    teleportation_cause: int32
-    source_actor_type: int32
+    cause: int32
+    source_entity_type: int32
 
 
 @type(until=2168)
@@ -107,7 +107,7 @@ class AddPlayerPacket:
     player_game_type: GameType
     unpack: SynchedActorData.CopyableDataList
     synched_properties: PropertySyncData
-    abilities: SerializedAbilitiesData
+    abilities_data: SerializedAbilitiesData
     links: list[ActorLink]
     device_id: str
     build_platform: BuildPlatform = field(type=int32)
@@ -127,7 +127,7 @@ class AddPlayerPacket:
     player_game_type: GameType
     unpack: SynchedActorData.CopyableDataList
     synched_properties: PropertySyncData
-    abilities: SerializedAbilitiesData
+    abilities_data: SerializedAbilitiesData
     links: list[ActorLink]
     device_id: str
     build_platform: BuildPlatform = field(type=int32)

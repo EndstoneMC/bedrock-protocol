@@ -105,15 +105,15 @@ class FullContainerName:
 
 
 class ItemStackNetId:
-    id: varint32
+    raw_id: varint32
 
 
 class ItemStackRequestId:
-    id: varint32
+    raw_id: varint32
 
 
 class ItemStackLegacyRequestId:
-    id: varint32
+    raw_id: varint32
 
 
 type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
@@ -175,14 +175,14 @@ class InventorySource:
         NO_FLAG = 0
         WORLD_INTERACTION_RANDOM = 1
 
-    source_type: InventorySourceType
+    type: InventorySourceType
     container_id: ContainerID = field(
         type=varint32,
         when=lambda s: (
-            s.source_type in {InventorySourceType.CONTAINER_INVENTORY, InventorySourceType.NON_IMPLEMENTED_FEATURE_TODO}
+            s.type in {InventorySourceType.CONTAINER_INVENTORY, InventorySourceType.NON_IMPLEMENTED_FEATURE_TODO}
         ),
     )
-    flags: InventorySourceFlags = field(when=lambda s: s.source_type == InventorySourceType.WORLD_INTERACTION)
+    flags: InventorySourceFlags = field(when=lambda s: s.type == InventorySourceType.WORLD_INTERACTION)
 
 
 @type(since=1001)
@@ -191,7 +191,7 @@ class InventorySource:
         NO_FLAG = 0
         WORLD_INTERACTION_RANDOM = 1
 
-    source_type: InventorySourceType
+    type: InventorySourceType
     _true_1: Literal[True]  # blameMojang: why, uhhh?
     container_id: ContainerID | None
     _true_2: Literal[True]  # blameMojang: hello?
@@ -202,16 +202,16 @@ class InventorySource:
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
-    from_item: NetworkItemStackDescriptor
-    to_item: NetworkItemStackDescriptor
+    from_item_descriptor: NetworkItemStackDescriptor
+    to_item_descriptor: NetworkItemStackDescriptor
 
 
 @type(since=1001)
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
-    from_item: SerializedNetworkItemStackDescriptor
-    to_item: SerializedNetworkItemStackDescriptor
+    from_item_descriptor: SerializedNetworkItemStackDescriptor
+    to_item_descriptor: SerializedNetworkItemStackDescriptor
 
 
 @type(until=1001)
@@ -225,11 +225,11 @@ class InventoryTransaction:
 
 
 class NormalTransactionData:
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
 
 
 class InventoryMismatchData:
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
 
 
 @type(until=1001)
@@ -253,7 +253,7 @@ class ItemUseInventoryTransaction:
         OFF = 0
         ON = 1
 
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
     trigger_type: TriggerType
     pos: BlockPos
@@ -288,7 +288,7 @@ class ItemUseInventoryTransaction:
         OFF = 0
         ON = 1
 
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
     trigger_type: TriggerType
     pos: BlockPos
@@ -344,9 +344,10 @@ class ItemUseOnActorInventoryTransaction:
     class ActionType(IntEnum, int):
         INTERACT = 0
         ATTACK = 1
+        ITEM_INTERACT = 2
 
-    actions: InventoryTransaction
-    target_runtime_id: ActorRuntimeID
+    transaction: InventoryTransaction
+    runtime_id: ActorRuntimeID
     action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: NetworkItemStackDescriptor
@@ -359,9 +360,10 @@ class ItemUseOnActorInventoryTransaction:
     class ActionType(IntEnum, int):
         INTERACT = 0
         ATTACK = 1
+        ITEM_INTERACT = 2
 
-    actions: InventoryTransaction
-    target_runtime_id: ActorRuntimeID
+    transaction: InventoryTransaction
+    runtime_id: ActorRuntimeID
     action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
@@ -373,9 +375,9 @@ class ItemUseOnActorInventoryTransaction:
 class ItemReleaseInventoryTransaction:
     class ActionType(IntEnum, int):
         RELEASE = 0
-        CONSUME = 1
+        USE = 1
 
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: NetworkItemStackDescriptor
@@ -386,9 +388,9 @@ class ItemReleaseInventoryTransaction:
 class ItemReleaseInventoryTransaction:
     class ActionType(IntEnum, int):
         RELEASE = 0
-        CONSUME = 1
+        USE = 1
 
-    actions: InventoryTransaction
+    transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
     slot: varint32
     item: SerializedNetworkItemStackDescriptor

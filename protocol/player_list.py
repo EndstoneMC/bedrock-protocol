@@ -43,7 +43,7 @@ class PlayerListPacketPayload:
     class AddEntry:
         action: PlayerListPacketType
         uuid: uuid.UUID
-        actor_unique_id: ActorUniqueID
+        id: ActorUniqueID
         name: str
         xuid: str
         platform_online_id: str

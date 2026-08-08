@@ -83,7 +83,7 @@ TEST_CASE("player-location v2168 form round-trips against the golden")
 
     Packet packet;
     packet.id = static_cast<bp::ActorUniqueID>(7);
-    packet.location = CoordinatesLocation{.packet_type = Packet::Type::PLAYER_LOCATION_COORDINATES,
+    packet.location = CoordinatesLocation{.type = Packet::Type::PLAYER_LOCATION_COORDINATES,
                                           .pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F}};
     REQUIRE(encode(packet) == golden_v2168_coordinates);
 
@@ -100,7 +100,7 @@ TEST_CASE("player-location v2168 carries the hidden case as its own alternative"
 
     Packet packet;
     packet.id = static_cast<bp::ActorUniqueID>(7);
-    packet.location = HiddenLocation{.packet_type = Packet::Type::PLAYER_LOCATION_HIDE};
+    packet.location = HiddenLocation{.type = Packet::Type::PLAYER_LOCATION_HIDE};
     REQUIRE(encode(packet) == golden_v2168_hidden);
     REQUIRE(std::holds_alternative<HiddenLocation>(decode<Packet>(golden_v2168_hidden).location));
 }

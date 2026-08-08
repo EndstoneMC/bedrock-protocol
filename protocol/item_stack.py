@@ -149,8 +149,8 @@ class TextProcessingEventOrigin(IntEnum, int):
 
 @type(until=2168)
 class RedactableString:
-    unredacted: str
-    redacted: str
+    unredacted_string: str
+    redacted_string: str
 
 
 # TODO: confirm against BDS -- the dump marks Redacted optional, CloudburstMC v2168 reads a
@@ -158,8 +158,8 @@ class RedactableString:
 # separates them; only a response carrying a redacted name does.
 @type(since=2168)
 class RedactableString:
-    unredacted: str
-    redacted: str | None
+    unredacted_string: str
+    redacted_string: str | None
 
 
 @type(until=2168)
@@ -356,10 +356,9 @@ class ItemStackRequestData:
     strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
 
 
-# TODO: confirm against BDS -- the dump spells these ItemStackRequestCereal::TakeActionData
-# and so on; with no r26_u4 headers, whether that scope is a namespace or a class is
-# unchecked. The dump also spells RequestData ItemStackRequestPacketData::RequestData,
-# with a body identical to the ItemStackRequestCereal one modelled here.
+# TODO: ItemStackRequestCereal is a BDS namespace, and the packet's element type is
+# ItemStackRequestPacketData::RequestData, an identically-bodied struct in a second
+# namespace. The DSL has no namespace, so both collapse onto this one scoping class.
 class ItemStackRequestCereal:
     class ItemDescriptorType(IntEnum, uint8):
         EMPTY = 0

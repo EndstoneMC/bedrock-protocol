@@ -66,17 +66,17 @@ TEST_CASE("a v2168 payload-less case is the handle plus its bare index")
 
     Packet stop;
     stop.server_sound_handle.value = 42;
-    stop.sound_event = bp::v2168::Stop{};
+    stop.event = bp::v2168::Stop{};
     REQUIRE(encode(stop) == handle_42 + bytes({0x00}));
 
     Packet resume;
     resume.server_sound_handle.value = 42;
-    resume.sound_event = bp::v2168::Resume{};
+    resume.event = bp::v2168::Resume{};
     REQUIRE(encode(resume) == handle_42 + bytes({0x06}));
 
     const auto back = decode<Packet>(encode(resume));
     REQUIRE(back.server_sound_handle.value == 42);
-    REQUIRE(std::holds_alternative<bp::v2168::Resume>(back.sound_event));
+    REQUIRE(std::holds_alternative<bp::v2168::Resume>(back.event));
 }
 
 TEST_CASE("a v2168 case with a payload writes it flat behind the index")
@@ -85,18 +85,18 @@ TEST_CASE("a v2168 case with a payload writes it flat behind the index")
 
     Packet volume;
     volume.server_sound_handle.value = 42;
-    volume.sound_event = bp::v2168::SetVolume{.volume = 0.5F};
+    volume.event = bp::v2168::SetVolume{.volume = 0.5F};
     REQUIRE(encode(volume) == handle_42 + bytes({0x01, 0x00, 0x00, 0x00, 0x3f}));
 
     Packet fade;
     fade.server_sound_handle.value = 42;
-    fade.sound_event = bp::v2168::Fade{.duration = 1.5F, .target_volume = 0.25F};
+    fade.event = bp::v2168::Fade{.duration = 1.5F, .target_volume = 0.25F};
     REQUIRE(encode(fade) ==
             handle_42 + bytes({0x03, 0x00, 0x00, 0xc0, 0x3f, 0x00, 0x00, 0x80, 0x3e}));
 
     const auto back = decode<Packet>(encode(fade));
-    REQUIRE(std::get<bp::v2168::Fade>(back.sound_event).duration == 1.5F);
-    REQUIRE(std::get<bp::v2168::Fade>(back.sound_event).target_volume == 0.25F);
+    REQUIRE(std::get<bp::v2168::Fade>(back.event).duration == 1.5F);
+    REQUIRE(std::get<bp::v2168::Fade>(back.event).target_volume == 0.25F);
 }
 
 // The name code became a variant index, so the two forms share only the handle.
@@ -104,7 +104,7 @@ TEST_CASE("a v2168 body does not decode as a v1001 one")
 {
     bp::ClientboundUpdateSoundDataPacket_<2168> stop;
     stop.server_sound_handle.value = 42;
-    stop.sound_event = bp::v2168::Stop{};
+    stop.event = bp::v2168::Stop{};
     const std::string wire = encode(stop);
     REQUIRE(wire != golden);
     REQUIRE(rejects<bp::ClientboundUpdateSoundDataPacket_<1001>>(wire));

@@ -63,7 +63,7 @@ class ChangePlayerScore:
     scoreboard_id: ScoreboardId
     objective_name: str
     score_value: int32
-    player_unique_id: PlayerScoreboardId
+    player_id: PlayerScoreboardId
 
 
 @type(since=2168)
@@ -72,7 +72,7 @@ class ChangeEntityScore:
     scoreboard_id: ScoreboardId
     objective_name: str
     score_value: int32
-    actor_id: ActorUniqueID
+    entity_id: ActorUniqueID
 
 
 @type(since=2168)

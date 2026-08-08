@@ -106,7 +106,7 @@ TEST_CASE("inventory-slot v1001 round-trips against the goldens")
     REQUIRE(encode(absent) == golden_v1001_absent);
 
     auto packet = sample<PacketV1001, bp::v1001::SerializedNetworkItemStackDescriptor>();
-    packet.item.net_id_variant = bp::ItemStackNetId{.id = 9};
+    packet.item.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_present);
 
     const auto back = decode<PacketV1001>(golden_v1001_present);

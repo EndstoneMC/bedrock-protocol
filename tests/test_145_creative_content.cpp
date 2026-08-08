@@ -21,14 +21,14 @@ bp::CreativeContentPacket_<1001> fill_1001()
     bp::CreativeContentPacket_<1001> pkt;
 
     bp::CreativeGroupInfoPayload_<1001> group;
-    group.creative_category = bp::CreativeItemCategory::NATURE;
+    group.creative_item_category = bp::CreativeItemCategory::NATURE;
     group.name = "itemGroup.name.planks";
-    group.group_icon_item = plank<bp::SerializedNetworkItemInstanceDescriptor_<1001>>();
+    group.icon = plank<bp::SerializedNetworkItemInstanceDescriptor_<1001>>();
     pkt.groups.push_back(group);
 
     bp::CreativeItemEntryPayload_<1001> entry;
-    entry.creative_net_id = {.raw_id = 1};
-    entry.item_instance = plank<bp::SerializedNetworkItemInstanceDescriptor_<1001>>();
+    entry.creative_item_net_id = {.raw_id = 1};
+    entry.item_descriptor = plank<bp::SerializedNetworkItemInstanceDescriptor_<1001>>();
     entry.group_index = 0;
     pkt.entries.push_back(entry);
     return pkt;
@@ -39,14 +39,14 @@ bp::CreativeContentPacket_<2168> fill_2168()
     bp::CreativeContentPacket_<2168> pkt;
 
     bp::CreativeGroupInfoPayload_<2168> group;
-    group.creative_category = bp::CreativeItemCategory::NATURE;
+    group.creative_item_category = bp::CreativeItemCategory::NATURE;
     group.name = "itemGroup.name.planks";
-    group.group_icon_item = plank<bp::SerializedNetworkItemInstanceDescriptor_<2168>>();
+    group.icon = plank<bp::SerializedNetworkItemInstanceDescriptor_<2168>>();
     pkt.groups.push_back(group);
 
     bp::CreativeItemEntryPayload_<2168> entry;
-    entry.creative_net_id = {.raw_id = 1};
-    entry.item_instance = plank<bp::SerializedNetworkItemInstanceDescriptor_<2168>>();
+    entry.creative_item_net_id = {.raw_id = 1};
+    entry.item_descriptor = plank<bp::SerializedNetworkItemInstanceDescriptor_<2168>>();
     entry.group_index = 0;
     pkt.entries.push_back(entry);
     return pkt;
@@ -87,10 +87,10 @@ TEST_CASE("CreativeContentPacket: v1001 round-trip")
 
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.groups.size() == 1);
-    REQUIRE(rt.groups[0].creative_category == bp::CreativeItemCategory::NATURE);
+    REQUIRE(rt.groups[0].creative_item_category == bp::CreativeItemCategory::NATURE);
     REQUIRE(rt.groups[0].name == "itemGroup.name.planks");
-    REQUIRE(rt.entries[0].creative_net_id.raw_id == 1);
-    REQUIRE(rt.entries[0].item_instance.block_runtime_id == 9);
+    REQUIRE(rt.entries[0].creative_item_net_id.raw_id == 1);
+    REQUIRE(rt.entries[0].item_descriptor.block_runtime_id == 9);
 }
 
 TEST_CASE("CreativeContentPacket: v2168 round-trip")
@@ -117,10 +117,10 @@ TEST_CASE("CreativeContentPacket: v2168 round-trip")
 
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.groups.size() == 1);
-    REQUIRE(rt.groups[0].creative_category == bp::CreativeItemCategory::NATURE);
+    REQUIRE(rt.groups[0].creative_item_category == bp::CreativeItemCategory::NATURE);
     REQUIRE(rt.groups[0].name == "itemGroup.name.planks");
-    REQUIRE(rt.entries[0].creative_net_id.raw_id == 1);
-    REQUIRE(rt.entries[0].item_instance.block_runtime_id == 9);
+    REQUIRE(rt.entries[0].creative_item_net_id.raw_id == 1);
+    REQUIRE(rt.entries[0].item_descriptor.block_runtime_id == 9);
 }
 
 // The only wire break is the group category: a fixed int32 at 1001, its uint8_t

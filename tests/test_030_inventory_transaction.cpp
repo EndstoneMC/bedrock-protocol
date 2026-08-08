@@ -131,7 +131,7 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
     Packet packet;
     packet.legacy_request_id = 0;
     bp::v1001::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::v1001::InventoryAction>{};  // present, empty
+    normal.transaction.actions = std::vector<bp::v1001::InventoryAction>{};  // present, empty
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_empty);
 
@@ -145,28 +145,28 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
 TEST_CASE("inventory-transaction normal with a container action round-trips")
 {
     bp::v1001::InventoryAction action;
-    action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
-    action.from_item = air();
-    action.to_item = stone();
+    action.from_item_descriptor = air();
+    action.to_item_descriptor = stone();
 
     Packet packet;
     bp::v1001::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::v1001::InventoryAction>{action};
+    normal.transaction.actions = std::vector<bp::v1001::InventoryAction>{action};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_action);
 
     const auto back = decode<Packet>(golden_normal_action);
     const auto &normal_back = std::get<0>(*back.transaction);
-    REQUIRE(normal_back.actions.actions.has_value());
-    const auto &actions = *normal_back.actions.actions;
+    REQUIRE(normal_back.transaction.actions.has_value());
+    const auto &actions = *normal_back.transaction.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].source.container_id.has_value());
     REQUIRE(*actions[0].source.container_id == static_cast<bp::ContainerID>(12));
     REQUIRE_FALSE(actions[0].source.flags.has_value());
-    REQUIRE(actions[0].to_item.id == 1);
-    REQUIRE(actions[0].to_item.block_runtime_id == 7);
+    REQUIRE(actions[0].to_item_descriptor.id == 1);
+    REQUIRE(actions[0].to_item_descriptor.block_runtime_id == 7);
 }
 
 // The marker is declared Literal[True], so a false in its place is a shape the
@@ -183,7 +183,7 @@ TEST_CASE("inventory-transaction rejects a container source whose marker reads f
 TEST_CASE("inventory-transaction use-item round-trips against the golden")
 {
     bp::v1001::ItemUseInventoryTransaction use;
-    use.actions.actions = std::vector<bp::v1001::InventoryAction>{};
+    use.transaction.actions = std::vector<bp::v1001::InventoryAction>{};
     use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
     use.pos = {.x = 1, .y = 2, .z = 3};
@@ -215,23 +215,23 @@ TEST_CASE("packet id is 30 at v2168")
 TEST_CASE("inventory-transaction v2168 reproduces the 1001 golden when no item carries a net id")
 {
     bp::v2168::InventoryAction action;
-    action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
-    action.from_item = air_v2168();
-    action.to_item = stone_v2168();
+    action.from_item_descriptor = air_v2168();
+    action.to_item_descriptor = stone_v2168();
 
     PacketV2168 packet;
     bp::v2168::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::v2168::InventoryAction>{action};
+    normal.transaction.actions = std::vector<bp::v2168::InventoryAction>{action};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_action);
 
     const auto back = decode<PacketV2168>(golden_normal_action);
-    const auto &actions = *std::get<0>(*back.transaction).actions.actions;
+    const auto &actions = *std::get<0>(*back.transaction).transaction.actions;
     REQUIRE(actions.size() == 1);
-    REQUIRE(actions[0].to_item.id == 1);
-    REQUIRE_FALSE(actions[0].to_item.net_id_variant.has_value());
+    REQUIRE(actions[0].to_item_descriptor.id == 1);
+    REQUIRE_FALSE(actions[0].to_item_descriptor.net_id_variant.has_value());
 }
 
 // No golden: CloudburstMC models packet 30 in its pre-cereal shape, so the two
@@ -240,31 +240,31 @@ TEST_CASE("inventory-transaction an engaged net id is one byte shorter at v2168"
 {
     bp::v1001::InventoryAction old_action;
     old_action.slot = 3;
-    old_action.from_item = air();
-    old_action.to_item = stone();
-    old_action.to_item.net_id_variant = bp::ItemStackNetId{.id = 9};
+    old_action.from_item_descriptor = air();
+    old_action.to_item_descriptor = stone();
+    old_action.to_item_descriptor.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
 
     Packet old_packet;
     bp::v1001::NormalTransactionData old_normal;
-    old_normal.actions.actions = std::vector<bp::v1001::InventoryAction>{old_action};
+    old_normal.transaction.actions = std::vector<bp::v1001::InventoryAction>{old_action};
     old_packet.transaction = old_normal;
 
     bp::v2168::InventoryAction action;
     action.slot = 3;
-    action.from_item = air_v2168();
-    action.to_item = stone_v2168();
-    action.to_item.net_id_variant = 9;
+    action.from_item_descriptor = air_v2168();
+    action.to_item_descriptor = stone_v2168();
+    action.to_item_descriptor.net_id_variant = 9;
 
     PacketV2168 packet;
     bp::v2168::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::v2168::InventoryAction>{action};
+    normal.transaction.actions = std::vector<bp::v2168::InventoryAction>{action};
     packet.transaction = normal;
 
     const auto encoded = encode(packet);
     REQUIRE(encoded.size() + 1 == encode(old_packet).size());
 
     const auto back = decode<PacketV2168>(encoded);
-    REQUIRE(*(*std::get<0>(*back.transaction).actions.actions)[0].to_item.net_id_variant == 9);
+    REQUIRE(*(*std::get<0>(*back.transaction).transaction.actions)[0].to_item_descriptor.net_id_variant == 9);
 
     REQUIRE(rejects<Packet>(encoded));
 }
@@ -285,7 +285,7 @@ TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against th
 
     const auto back = decode<PacketV975>(golden_v975_normal_empty);
     REQUIRE(back.transaction.index() == 0);
-    REQUIRE(std::get<0>(back.transaction).actions.actions.empty());
+    REQUIRE(std::get<0>(back.transaction).transaction.actions.empty());
 }
 
 // The 975 source is a switch, not a pair of presence bools: a container source
@@ -293,26 +293,26 @@ TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against th
 TEST_CASE("inventory-transaction v975 normal with a container action round-trips")
 {
     bp::base::InventoryAction action;
-    action.source.source_type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
-    action.from_item = air_v975();
-    action.to_item = stone_v975();
+    action.from_item_descriptor = air_v975();
+    action.to_item_descriptor = stone_v975();
 
     PacketV975 packet;
     bp::base::NormalTransactionData normal;
-    normal.actions.actions = std::vector<bp::base::InventoryAction>{action};
+    normal.transaction.actions = std::vector<bp::base::InventoryAction>{action};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_v975_normal_action);
 
     const auto back = decode<PacketV975>(golden_v975_normal_action);
-    const auto &actions = std::get<0>(back.transaction).actions.actions;
+    const auto &actions = std::get<0>(back.transaction).transaction.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].source.container_id == static_cast<bp::ContainerID>(12));
-    REQUIRE(actions[0].to_item.id == 1);
-    REQUIRE(actions[0].to_item.block_runtime_id == 7);
-    REQUIRE(actions[0].from_item.id == 0);  // air: nothing past the id was read
-    REQUIRE(actions[0].from_item.user_data_buffer.empty());
+    REQUIRE(actions[0].to_item_descriptor.id == 1);
+    REQUIRE(actions[0].to_item_descriptor.block_runtime_id == 7);
+    REQUIRE(actions[0].from_item_descriptor.id == 0);  // air: nothing past the id was read
+    REQUIRE(actions[0].from_item_descriptor.user_data_buffer.empty());
 }
 
 TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
@@ -353,5 +353,5 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     const auto back = decode<PacketV975>(golden_v975_legacy_request);
     REQUIRE(back.legacy_set_item_slots.size() == 1);
     REQUIRE(back.legacy_set_item_slots[0].slots == "\x03\x04");
-    REQUIRE(std::get<0>(back.transaction).actions.actions.empty());
+    REQUIRE(std::get<0>(back.transaction).transaction.actions.empty());
 }

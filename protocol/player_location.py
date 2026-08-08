@@ -64,11 +64,11 @@ class PlayerLocationPacket:
         PLAYER_LOCATION_HIDE = 1
 
     class CoordinatesLocation:
-        packet_type: Type
+        type: Type
         pos: Vec3
 
     class HiddenLocation:
-        packet_type: Type
+        type: Type
 
     id: ActorUniqueID
     location: CoordinatesLocation | HiddenLocation

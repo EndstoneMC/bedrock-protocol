@@ -50,7 +50,7 @@ class SpawnBiomeType(IntEnum, int16):
     USER_DEFINED = 1
 
 
-class EditorWorldType(IntEnum, int):
+class WorldType(IntEnum, int):
     NON_EDITOR = 0
     EDITOR_PROJECT = 1
     EDITOR_TEST_LEVEL = 2
@@ -60,7 +60,7 @@ class EditorWorldType(IntEnum, int):
 class EducationEditionOffer(IntEnum, uint32):
     NONE = 0
     REST_OF_WORLD = 1
-    CHINA = 2
+    CHINA_DEPRECATED = 2
 
 
 class GamePublishSetting(IntEnum, int):
@@ -134,7 +134,7 @@ class Experiments:
 
 class SyncedPlayerMovementSettings:
     rewind_history_size: varint32
-    server_authoritative_block_breaking: bool
+    server_auth_block_breaking: bool
 
 
 class NetworkPermissions:
@@ -146,12 +146,10 @@ class BlockEntry:
     properties: CompoundTag
 
 
-# TODO: confirm against BDS -- bedrock-headers has no r26_u4 branch, so this type and
-# its two field names come from the dump alone.
 @type(since=2168)
 class ServerBlockProperty:
-    block_name: str
-    block_definition: CompoundTag
+    name: str
+    tag: CompoundTag
 
 
 @type(until=2168)
@@ -164,7 +162,7 @@ class LevelSettings:
     game_difficulty: Difficulty
     default_spawn: BlockPos
     achievements_disabled: bool
-    editor_world_type: EditorWorldType
+    editor_world_type: WorldType
     is_created_in_editor: bool
     is_exported_from_editor: bool
     time: varint32
@@ -182,7 +180,7 @@ class LevelSettings:
     texture_packs_required: bool
     game_rules: list[GameRule] = field(cereal=False)
     experiments: list[ExperimentData] = field(prefix=uint32)
-    experiments_previously_toggled: bool
+    experiments_ever_toggled: bool
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
     default_permissions: PlayerPermissionLevel = field(type=varint32)
@@ -219,7 +217,7 @@ class LevelSettings:
     game_difficulty: Difficulty
     default_spawn: BlockPos
     achievements_disabled: bool
-    editor_world_type: EditorWorldType
+    editor_world_type: WorldType
     is_created_in_editor: bool
     is_exported_from_editor: bool
     time: varint32
@@ -288,7 +286,7 @@ class StartGamePacket:
     server_enabled_client_side_generation: bool
     block_network_ids_are_hashes: bool
     network_permissions: NetworkPermissions
-    is_chat_logging: bool = field(since=1001)
+    is_logging_chat: bool = field(since=1001)
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData
 

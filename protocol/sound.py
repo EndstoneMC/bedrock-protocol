@@ -580,7 +580,6 @@ class LevelSoundEvent(IntEnum, uint32):
     BUCKET_EMPTY_LAND_ANIMAL = value(608, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_START = value(609, since=1001)
     GEYSER_CONTINUOUS_ERUPTION_ACTIVE = value(610, since=1001)
-    # TODO: confirm against BDS -- named from Mojang's changelog; bedrock-headers stops at r26_u3.
     MOUNT = value(611, since=2168)
     DISMOUNT = value(612, since=2168)
     STRAW_BED_BREAK_LEAVE = value(613, since=2168)
@@ -614,8 +613,6 @@ class ClientboundUpdateSoundDataPacket:
     sound_event: SoundDataEvent = field(type=str)
 
 
-# TODO: confirm against BDS -- the dump spells these SoundDataEvent::Stop and so on;
-# with no r26_u4 headers, whether that scope is a namespace or a class is unchecked.
 @type(since=2168)
 class Stop:
     pass
@@ -655,7 +652,7 @@ class Resume:
 @packet(id=348, since=2168)
 class ClientboundUpdateSoundDataPacket:
     server_sound_handle: ServerSoundHandle
-    sound_event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
+    event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
 
 
 @packet(id=123, until=1001)

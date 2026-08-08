@@ -88,7 +88,7 @@ TEST_CASE("mob-equipment v1001 round-trips against the goldens")
     REQUIRE(encode(packet) == golden_v1001_air);
 
     packet.item = helmet<bp::v1001::SerializedNetworkItemStackDescriptor>();
-    packet.item.net_id_variant = bp::ItemStackNetId{.id = 9};
+    packet.item.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_helmet);
 
     const auto back = decode<PacketV1001>(golden_v1001_helmet);

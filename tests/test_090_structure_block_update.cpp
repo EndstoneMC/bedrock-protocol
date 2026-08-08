@@ -30,7 +30,7 @@ Packet1001 fill_v1001()
 {
     Packet1001 packet;
     packet.block_pos = {.x = 1, .y = 2, .z = 3};
-    packet.data = {.structure_name = {.unredacted = "name", .redacted = ""},
+    packet.data = {.structure_name = {.unredacted_string = "name", .redacted_string = ""},
                    .data_field = "df",
                    .include_players = true,
                    .show_bounding_box = false,
@@ -46,7 +46,7 @@ Packet2168 fill_v2168()
 {
     Packet2168 packet;
     packet.block_pos = {.x = 1, .y = 2, .z = 3};
-    packet.data = {.structure_name = {.unredacted = "name", .redacted = std::nullopt},
+    packet.data = {.structure_name = {.unredacted_string = "name", .redacted_string = std::nullopt},
                    .data_field = "df",
                    .include_players = true,
                    .show_bounding_box = false,
@@ -113,7 +113,7 @@ TEST_CASE("StructureBlockUpdatePacket: v1001 round-trip")
     REQUIRE(encode(fill_v1001()) == golden_v1001);
 
     const auto rt = decode<Packet1001>(golden_v1001);
-    REQUIRE(rt.data.structure_name.unredacted == "name");
+    REQUIRE(rt.data.structure_name.unredacted_string == "name");
     REQUIRE(rt.data.settings.palette_name == "default");
     REQUIRE(rt.data.settings.rotation == bp::Rotation::ROTATE_90);
     REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SAVES_TO_DISK);
@@ -125,8 +125,8 @@ TEST_CASE("StructureBlockUpdatePacket: v2168 round-trip")
     REQUIRE(encode(fill_v2168()) == golden_v2168);
 
     const auto rt = decode<Packet2168>(golden_v2168);
-    REQUIRE(rt.data.structure_name.unredacted == "name");
-    REQUIRE_FALSE(rt.data.structure_name.redacted.has_value());
+    REQUIRE(rt.data.structure_name.unredacted_string == "name");
+    REQUIRE_FALSE(rt.data.structure_name.redacted_string.has_value());
     REQUIRE(rt.data.settings.integrity_seed == static_cast<bp::RandomSeed>(9));
     REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SAVES_TO_DISK);
 }
@@ -138,11 +138,11 @@ TEST_CASE("StructureBlockUpdatePacket: v2168 round-trip")
 TEST_CASE("StructureBlockUpdatePacket: a present v2168 redacted name costs its own string")
 {
     auto packet = fill_v2168();
-    packet.data.structure_name.redacted = "redacted";
+    packet.data.structure_name.redacted_string = "redacted";
     REQUIRE(encode(packet).size() == golden_v2168.size() + 9);
 
     const auto rt = decode<Packet2168>(encode(packet));
-    REQUIRE(rt.data.structure_name.redacted == "redacted");
+    REQUIRE(rt.data.structure_name.redacted_string == "redacted");
 }
 
 // The cerealisation narrowed the redstone save mode from a varint32 to its uint8_t

@@ -102,7 +102,7 @@ TEST_CASE("mob-armor-equipment v975 round-trips against the goldens")
     REQUIRE(encode(packet) == golden_v975_empty);
 
     packet.head = helmet<bp::NetworkItemStackDescriptor>();
-    packet.head.net_id = bp::ItemStackNetId{.id = 9};
+    packet.head.net_id = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v975_helmet);
 
     const auto back = decode<PacketV975>(golden_v975_helmet);
@@ -119,7 +119,7 @@ TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
     REQUIRE(encode(packet) == golden_v1001_empty);
 
     packet.head = helmet<bp::v1001::SerializedNetworkItemStackDescriptor>();
-    packet.head.net_id_variant = bp::ItemStackNetId{.id = 9};
+    packet.head.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_helmet);
 
     const auto back = decode<PacketV1001>(golden_v1001_helmet);

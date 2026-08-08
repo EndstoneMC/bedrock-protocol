@@ -85,7 +85,7 @@ TEST_CASE("transfer v2168 form round-trips against the golden")
         .experience_world_name = std::nullopt,
         .creator_id = "creator",
         .target_id = std::nullopt,
-        .scenario_id = std::nullopt,
+        .mpsas_scenario_id = std::nullopt,
         .server_id = std::nullopt,
     };
     REQUIRE(encode(packet) == golden_v2168_gathering);

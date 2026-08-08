@@ -45,7 +45,7 @@ Packet2168 fill_v2168()
     packet.dimension = 0;
     packet.locked = true;
     packet.map_origin = {.x = 1, .y = 2, .z = 3};
-    packet.map_ids = std::vector<bp::ActorUniqueID>{static_cast<bp::ActorUniqueID>(7)};
+    packet.creation_map_ids = std::vector<bp::ActorUniqueID>{static_cast<bp::ActorUniqueID>(7)};
     packet.scale = 4;
     packet.unique_ids = std::vector<bp::v2168::MapItemTrackedActor::UniqueId>{
         {.type = bp::v2168::MapItemTrackedActor::Type::ENTITY, .key_entity_id = static_cast<bp::ActorUniqueID>(9)},
@@ -126,7 +126,7 @@ TEST_CASE("ClientboundMapItemDataPacket: v2168 round-trip")
     REQUIRE(encode(fill_v2168()) == golden_v2168);
 
     const auto rt = decode<Packet2168>(golden_v2168);
-    REQUIRE(rt.map_ids.has_value());
+    REQUIRE(rt.creation_map_ids.has_value());
     REQUIRE(rt.scale == 4);
     REQUIRE(rt.unique_ids.has_value());
     REQUIRE(rt.unique_ids->at(0).key_entity_id.has_value());

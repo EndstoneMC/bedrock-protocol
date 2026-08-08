@@ -14,7 +14,7 @@ void fill(Packet &packet)
 {
     packet.entity_id = static_cast<bp::ActorUniqueID>(1);
     packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
-    packet.type = "minecraft:pig";
+    packet.actor_type = "minecraft:pig";
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.velocity = {.x = 4.0f, .y = 5.0f, .z = 6.0f};
     packet.rot = {.x = 7.0f, .y = 8.0f};
@@ -74,7 +74,7 @@ TEST_CASE("AddActorPacket: v1001 round-trip")
     REQUIRE(encode(pkt) == golden);
 
     const auto rt = decode<Packet>(golden);
-    REQUIRE(rt.type == "minecraft:pig");
+    REQUIRE(rt.actor_type == "minecraft:pig");
     REQUIRE(rt.y_body_rotation == 10.0f);
     REQUIRE(rt.attributes.size() == 1);
     REQUIRE(rt.attributes[0].name == "minecraft:health");
@@ -117,7 +117,7 @@ TEST_CASE("AddActorPacket: v2168 round-trip")
     REQUIRE(encode(pkt) == golden);
 
     const auto rt = decode<Packet>(golden);
-    REQUIRE(rt.type == "minecraft:pig");
+    REQUIRE(rt.actor_type == "minecraft:pig");
     REQUIRE(rt.data.data.size() == 1);
     REQUIRE(std::get<3>(rt.data.data[0].payload).type == bp::DataItemType::FLOAT);
     REQUIRE(std::get<3>(rt.data.data[0].payload).value == 0.5f);
