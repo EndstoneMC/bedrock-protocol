@@ -52,6 +52,7 @@ V975 sample_v975(bp::BossEventUpdateType event_type)
     packet.filtered_name = "bo**";
     packet.health_percent = 0.5F;
     packet.darken_screen = 2;
+    packet.create_world_fog = 0;
     packet.color = bp::BossBarColor::GREEN;
     packet.overlay = bp::BossBarOverlay::NOTCHED_6;
     return packet;
