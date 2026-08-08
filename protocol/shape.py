@@ -49,6 +49,10 @@ class SphereDataPayload:
     num_segments: uint8
 
 
+# TODO: confirm against BDS -- PrimitiveShapesPacket.h declares a single Vec2 mRadii at both
+# r26_u3 and r26_u4, but the r26_u3 dump and gophertunnel both write two Vec2s. ConeDataPayload
+# has the identical header shape and there the dump agrees on one Vec2, so the split is unlikely
+# to be a dumper artifact. Needs cerealizer<CylinderDataPayload>::bind read directly.
 @type(since=1001)
 class CylinderDataPayload:
     radius_x: Vec2
