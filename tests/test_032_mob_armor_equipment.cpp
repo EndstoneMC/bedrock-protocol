@@ -108,7 +108,7 @@ TEST_CASE("mob-armor-equipment v975 round-trips against the goldens")
     const auto back = decode<PacketV975>(golden_v975_helmet);
     REQUIRE(back.head.id == 5);
     REQUIRE(back.head.net_id.has_value());
-    REQUIRE(back.head.net_id->id == 9);
+    REQUIRE(back.head.net_id->raw_id == 9);
     REQUIRE(back.torso.id == 0);
 }
 
@@ -125,7 +125,7 @@ TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
     const auto back = decode<PacketV1001>(golden_v1001_helmet);
     REQUIRE(back.head.id == 5);
     REQUIRE(back.head.net_id_variant.has_value());
-    REQUIRE(std::get<0>(*back.head.net_id_variant).id == 9);
+    REQUIRE(std::get<0>(*back.head.net_id_variant).raw_id == 9);
     REQUIRE(back.torso.id == 0);
 }
 

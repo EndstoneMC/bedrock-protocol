@@ -112,7 +112,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with every modelled arm taken
     packet.input_data =
         flags<65>({OldFlag::ASCEND, OldFlag::PERFORM_BLOCK_ACTIONS, OldFlag::PERFORM_ITEM_STACK_REQUEST,
                    OldFlag::IS_IN_CLIENT_PREDICTED_VEHICLE, OldFlag::SNEAK_CURRENT_RAW});
-    packet.item_stack_request.client_request_id = {.id = -2};
+    packet.item_stack_request.client_request_id = {.raw_id = -2};
     packet.player_block_actions = {{.player_action_type = bp::PlayerActionType_<1001>::START_DESTROY_BLOCK,
                                     .pos = {.x = 21, .y = 22, .z = 23},
                                     .facing = 4}};
@@ -150,7 +150,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with every modelled arm taken
     const auto back = decode<Older>(golden);
     REQUIRE(back.input_data.test(static_cast<std::size_t>(OldFlag::SNEAK_CURRENT_RAW)));
     REQUIRE(back.input_data.count() == 5);
-    REQUIRE(back.item_stack_request.client_request_id.id == -2);
+    REQUIRE(back.item_stack_request.client_request_id.raw_id == -2);
     REQUIRE(back.player_block_actions.size() == 1);
     REQUIRE(back.player_block_actions[0].facing == 4);
     REQUIRE(back.client_predicted_vehicle == 26);

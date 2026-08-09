@@ -93,7 +93,7 @@ TEST_CASE("mob-equipment v1001 round-trips against the goldens")
 
     const auto back = decode<PacketV1001>(golden_v1001_helmet);
     REQUIRE(back.item.id == 5);
-    REQUIRE(std::get<0>(*back.item.net_id_variant).id == 9);
+    REQUIRE(std::get<0>(*back.item.net_id_variant).raw_id == 9);
     REQUIRE(back.slot == 2);
     REQUIRE(back.selected_slot == 2);
     REQUIRE(back.container_id == bp::ContainerID::INVENTORY);

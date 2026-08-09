@@ -54,7 +54,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
     slot.requested_slot = 3;
     slot.slot = 3;
     slot.amount = 64;
-    slot.item_stack_net_id.id = 9;
+    slot.item_stack_net_id.raw_id = 9;
 
     bp::v1001::ItemStackResponseContainerInfo container;
     container.full_container_name.name = bp::ContainerEnumName::COMBINED_HOTBAR_AND_INVENTORY_CONTAINER;
@@ -62,7 +62,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
 
     bp::v1001::ItemStackResponseInfo response;
     response.result = bp::ItemStackNetResult::SUCCESS;
-    response.client_request_id.id = -1;
+    response.client_request_id.raw_id = -1;
     response.containers = {container};
 
     Packet packet;
@@ -72,7 +72,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
     const auto back = decode<Packet>(golden_ok);
     REQUIRE(back.responses.size() == 1);
     REQUIRE(back.responses[0].containers.size() == 1);
-    REQUIRE(back.responses[0].containers[0].slots[0].item_stack_net_id.id == 9);
+    REQUIRE(back.responses[0].containers[0].slots[0].item_stack_net_id.raw_id == 9);
     REQUIRE(back.responses[0].containers[0].slots[0].amount == 64);
     REQUIRE(back.responses[0].containers[0].slots[0].custom_name.unredacted_string.empty());
 }
@@ -83,7 +83,7 @@ TEST_CASE("item-stack-response v1001 drops the containers on a non-success resul
 {
     bp::v1001::ItemStackResponseInfo response;
     response.result = bp::ItemStackNetResult::ERROR;
-    response.client_request_id.id = -1;
+    response.client_request_id.raw_id = -1;
 
     Packet packet;
     packet.responses = {response};
@@ -115,7 +115,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
 
     bp::v2168::ItemStackResponseInfo response;
     response.result = bp::ItemStackNetResult::SUCCESS;
-    response.client_request_id.id = -1;
+    response.client_request_id.raw_id = -1;
     response.containers = std::vector<bp::v2168::ItemStackResponseContainerInfo>{container};
 
     PacketV2168 packet;
@@ -126,7 +126,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
     REQUIRE(back.responses[0].containers.has_value());
     const auto &slot_back = (*back.responses[0].containers)[0].slots[0];
     REQUIRE(slot_back.item_stack_net_id.has_value());
-    REQUIRE(slot_back.item_stack_net_id->id == 9);
+    REQUIRE(slot_back.item_stack_net_id->raw_id == 9);
     REQUIRE_FALSE(slot_back.custom_name.redacted_string.has_value());
 }
 
@@ -136,7 +136,7 @@ TEST_CASE("item-stack-response v2168 writes an absent container list on an error
 {
     bp::v2168::ItemStackResponseInfo response;
     response.result = bp::ItemStackNetResult::ERROR;
-    response.client_request_id.id = -1;
+    response.client_request_id.raw_id = -1;
 
     PacketV2168 packet;
     packet.responses = {response};

@@ -86,7 +86,7 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
     take.dst = slot(bp::ContainerEnumName::CURSOR_CONTAINER, 0, 0);
 
     bp::v1001::ItemStackRequestData request;
-    request.client_request_id.id = -1;
+    request.client_request_id.raw_id = -1;
     request.actions = {take};
     request.strings_to_filter_origin = bp::TextProcessingEventOrigin::SERVER_CHAT_PUBLIC;
 
@@ -96,7 +96,7 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
 
     const auto back = decode<Packet>(golden_take);
     REQUIRE(back.requests.size() == 1);
-    REQUIRE(back.requests[0].client_request_id.id == -1);
+    REQUIRE(back.requests[0].client_request_id.raw_id == -1);
     REQUIRE(back.requests[0].actions.size() == 1);
     REQUIRE(back.requests[0].actions[0].index() == 0);
     const auto &take_back = std::get<0>(back.requests[0].actions[0]);
@@ -117,7 +117,7 @@ TEST_CASE("item-stack-request v1001 tags lab-table 9 and craft-creative 14")
     creative.num_crafts = 1;
 
     bp::v1001::ItemStackRequestData request;
-    request.client_request_id.id = -3;
+    request.client_request_id.raw_id = -3;
     request.actions = {bp::v1001::ItemStackRequestActionLabTableCombine{}, creative};
     request.strings_to_filter = {"anvil name"};
     request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ANVIL_TEXT;
@@ -152,7 +152,7 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
     take.destination = slot_v2168(bp::ContainerEnumName::CURSOR_CONTAINER, 0, 0);
 
     bp::v2168::ItemStackRequestCereal::RequestData request;
-    request.client_request_id.id = -1;
+    request.client_request_id.raw_id = -1;
     request.actions = {take};
     request.strings_to_filter_origin = bp::TextProcessingEventOrigin::SERVER_CHAT_PUBLIC;
 
@@ -178,7 +178,7 @@ TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type st
     creative.num_crafts = 1;
 
     bp::v2168::ItemStackRequestCereal::RequestData request;
-    request.client_request_id.id = -3;
+    request.client_request_id.raw_id = -3;
     request.actions = {lab, creative};
     request.strings_to_filter = {"anvil name"};
     request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ANVIL_TEXT;

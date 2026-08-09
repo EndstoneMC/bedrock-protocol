@@ -115,7 +115,7 @@ TEST_CASE("inventory-slot v1001 round-trips against the goldens")
     REQUIRE(back.full_container_name->name == bp::ContainerEnumName::CURSOR_CONTAINER);
     REQUIRE(back.full_container_name->dynamic_id == 3);
     REQUIRE(back.storage_item->id == 0);
-    REQUIRE(std::get<0>(*back.item.net_id_variant).id == 9);
+    REQUIRE(std::get<0>(*back.item.net_id_variant).raw_id == 9);
 }
 
 TEST_CASE("inventory-slot v2168 round-trips against the goldens")
