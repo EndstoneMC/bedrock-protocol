@@ -50,10 +50,6 @@ class SphereDataPayload:
     num_segments: uint8
 
 
-# PrimitiveShapesPacket.h declares a single Vec2 mRadii here, member for member identical to
-# ConeDataPayload, but BDS binds it under two reflection names: 1.26.33 registers "Radius X" and
-# "Radius Z" back to back in the shape cerealizer, where Cone's single "Radii" is registered
-# elsewhere in the same function. Two Vec2s reach the wire.
 @type(since=1001)
 class CylinderDataPayload:
     radius_x: Vec2

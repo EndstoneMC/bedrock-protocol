@@ -221,7 +221,8 @@ class InventoryTransaction:
 
 @type(since=1001)
 class InventoryTransaction:
-    actions: list[InventoryAction] | None
+    _true: Literal[True]
+    actions: list[InventoryAction]
 
 
 class NormalTransactionData:
@@ -417,7 +418,8 @@ class InventoryTransactionPacket:
 class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
-    transaction: TransactionData | None
+    _true: Literal[True]
+    transaction: TransactionData
 
 
 @packet(id=49, until=1001)

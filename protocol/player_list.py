@@ -47,9 +47,6 @@ class PlayerListEntry:
     color: Color
 
 
-# BDS writes both cases out of one mEntries vector behind one count, so the two lists
-# stand for the same field and exactly one of them is ever present. `removed_entries` is
-# the compiler's name for the remove case; BDS has none, since writeRemove walks mEntries.
 @packet(id=63, until=2168)
 class PlayerListPacket:
     action: PlayerListPacketType

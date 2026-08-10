@@ -131,7 +131,7 @@ class PackedItemUseLegacyInventoryTransaction:
 
 @packet(id=144, until=2168)
 class PlayerAuthInputPacket:
-    class InputData(IntEnum, uint32):
+    class InputData(IntEnum, int):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2
@@ -231,10 +231,7 @@ class PlayerAuthInputPacket:
 
 @packet(id=144, since=2168)
 class PlayerAuthInputPacket:
-    # BDS narrows this to `enum InputData : int` at r26_u4 where r26_u3 has `unsigned int`,
-    # but a redeclaration cannot carry its own underlying type. The enum only ever sizes the
-    # bitset, so neither spelling reaches the wire.
-    class InputData(IntEnum, uint32):
+    class InputData(IntEnum, int):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2
@@ -308,7 +305,7 @@ class PlayerAuthInputPacket:
     move: Vec2
     y_head_rot: float
     _true_1: Literal[True]
-    input_data: bitset[InputData.INPUT_NUM]
+    input_data: list[InputData]
     input_mode: InputMode
     play_mode: ClientPlayMode
     new_interaction_model: NewInteractionModel

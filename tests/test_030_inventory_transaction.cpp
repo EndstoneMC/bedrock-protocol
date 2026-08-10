@@ -131,13 +131,12 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
     Packet packet;
     packet.legacy_request_id = 0;
     bp::v1001::NormalTransactionData normal;
-    normal.transaction.actions = std::vector<bp::v1001::InventoryAction>{};  // present, empty
+    normal.transaction.actions = std::vector<bp::v1001::InventoryAction>{};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_normal_empty);
 
     const auto back = decode<Packet>(golden_normal_empty);
-    REQUIRE(back.transaction.has_value());
-    REQUIRE(back.transaction->index() == 0);
+    REQUIRE(back.transaction.index() == 0);
 }
 
 // A container source carries two bools per member: the always-true marker, then
@@ -158,9 +157,8 @@ TEST_CASE("inventory-transaction normal with a container action round-trips")
     REQUIRE(encode(packet) == golden_normal_action);
 
     const auto back = decode<Packet>(golden_normal_action);
-    const auto &normal_back = std::get<0>(*back.transaction);
-    REQUIRE(normal_back.transaction.actions.has_value());
-    const auto &actions = *normal_back.transaction.actions;
+    const auto &normal_back = std::get<0>(back.transaction);
+    const auto &actions = normal_back.transaction.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].source.container_id.has_value());
     REQUIRE(*actions[0].source.container_id == static_cast<bp::ContainerID>(12));
@@ -197,8 +195,8 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     REQUIRE(encode(packet) == golden_use_item);
 
     const auto back = decode<Packet>(golden_use_item);
-    REQUIRE(back.transaction->index() == 2);
-    const auto &use_back = std::get<2>(*back.transaction);
+    REQUIRE(back.transaction.index() == 2);
+    const auto &use_back = std::get<2>(back.transaction);
     REQUIRE(use_back.pos.x == 1);
     REQUIRE(use_back.pos.z == 3);
     REQUIRE(use_back.target_block_id == 9);
@@ -228,7 +226,7 @@ TEST_CASE("inventory-transaction v2168 reproduces the 1001 golden when no item c
     REQUIRE(encode(packet) == golden_normal_action);
 
     const auto back = decode<PacketV2168>(golden_normal_action);
-    const auto &actions = *std::get<0>(*back.transaction).transaction.actions;
+    const auto &actions = std::get<0>(back.transaction).transaction.actions;
     REQUIRE(actions.size() == 1);
     REQUIRE(actions[0].to_item_descriptor.id == 1);
     REQUIRE_FALSE(actions[0].to_item_descriptor.net_id_variant.has_value());
@@ -264,7 +262,7 @@ TEST_CASE("inventory-transaction an engaged net id is one byte shorter at v2168"
     REQUIRE(encoded.size() + 1 == encode(old_packet).size());
 
     const auto back = decode<PacketV2168>(encoded);
-    REQUIRE(*(*std::get<0>(*back.transaction).transaction.actions)[0].to_item_descriptor.net_id_variant == 9);
+    REQUIRE(*std::get<0>(back.transaction).transaction.actions[0].to_item_descriptor.net_id_variant == 9);
 
     REQUIRE(rejects<Packet>(encoded));
 }

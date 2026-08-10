@@ -5,7 +5,6 @@ from protocol import int16
 package = "bedrock.protocol"
 
 
-# BDS: util/molang/ExpressionOp.h.
 class ExpressionOp(IntEnum, int16):
     UNKNOWN = -1
     LEFT_BRACE = 0

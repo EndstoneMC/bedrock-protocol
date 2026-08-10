@@ -6,11 +6,9 @@ from protocol.molang import ExpressionOp
 package = "bedrock.protocol"
 
 
-# BDS BiomeStringList::BiomeStringIndex -- an index into the packet's string pool.
 type BiomeStringIndex = uint16
 
 
-# BDS: SharedTypes::VillageType.
 class VillageType(IntEnum, uint8):
     DESERT = 0
     ICE = 1
@@ -28,7 +26,6 @@ class BiomeTemperatureCategory(IntEnum, uint8):
     COUNT = auto()
 
 
-# BDS: SharedTypes::v1_21_10::CoordinateEvaluationOrder.
 class CoordinateEvaluationOrder(IntEnum, int):
     XYZ = 0
     XZY = 1
@@ -38,7 +35,6 @@ class CoordinateEvaluationOrder(IntEnum, int):
     ZYX = 5
 
 
-# BDS: SharedTypes::v1_21_10::RandomDistributionType.
 class RandomDistributionType(IntEnum, int):
     SINGLE_VALUED = 0
     UNIFORM = 1
@@ -196,7 +192,6 @@ class BiomeConditionalTransformationData:
 
 
 class BiomeWeightedTemperatureData:
-    # uint8 underlying would derive uint8; cereal compresses this one.
     temperature: BiomeTemperatureCategory = field(type=varint32)
     weight: uint32
 
@@ -268,11 +263,9 @@ class BiomeDefinitionData:
 
 
 class BiomeStringList:
-    # BDS also carries mAllStrings, the reverse index; only mStrings is on the wire.
     strings: list[str]
 
 
-# Cerealised at 975, the floor snapshot, so no pre-cereal shape is left to gate.
 @packet(id=122)
 class BiomeDefinitionListPacket:
     biome_data: dict[BiomeStringIndex, BiomeDefinitionData]
