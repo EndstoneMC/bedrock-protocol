@@ -262,7 +262,7 @@ class Importer:
 
     def _classify(self, loaded: dict[str, griffe.Module]) -> SymbolTable:
         enum_names: set[str] = set()
-        enum_underlying: dict[str, PrimitiveType | None] = {}
+        enum_underlying: dict[str, PrimitiveType] = {}
         struct_names: set[str] = set()
         aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}

@@ -5,7 +5,7 @@ from protocol import value
 package = "bedrock.protocol"
 
 
-class MovementEffectType(IntEnum, int):
+class MovementEffectType(IntEnum):
     INVALID = -1
     GLIDE_BOOST = 0
     DOLPHIN_BOOST = 1

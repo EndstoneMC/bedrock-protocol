@@ -14,7 +14,7 @@ class PlayerListPacketType(IntEnum, uint8):
     REMOVE = 1
 
 
-class BuildPlatform(IntEnum, int):
+class BuildPlatform(IntEnum):
     UNKNOWN = -1
     GOOGLE = 1
     IOS = 2

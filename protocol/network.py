@@ -5,7 +5,7 @@ from protocol import field, int32, packet, value
 package = "bedrock.protocol"
 
 
-class MinecraftPacketIds(IntEnum, int):
+class MinecraftPacketIds(IntEnum):
     KEEP_ALIVE = 0
     LOGIN = 1
     PLAY_STATUS = 2
@@ -262,12 +262,12 @@ class MinecraftPacketIds(IntEnum, int):
     END_ID = auto()
 
 
-class PacketViolationType(IntEnum, int):
+class PacketViolationType(IntEnum):
     UNKNOWN = -1
     PACKET_MALFORMED = 0
 
 
-class PacketViolationSeverity(IntEnum, int):
+class PacketViolationSeverity(IntEnum):
     UNKNOWN = -1
     WARNING = 0
     FINAL_WARNING = 1

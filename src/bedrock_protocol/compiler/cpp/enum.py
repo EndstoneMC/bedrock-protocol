@@ -24,9 +24,9 @@ class EnumGenerator:
     # --- type definition ----------------------------------------------------
 
     def generate_definition(self, p: Printer) -> None:
-        underlying = self._enum.underlying
+        underlying = self._enum.sole_underlying
         p.add_includes(*type_includes(underlying))
-        ctype = "int" if underlying is None else PRIMITIVE_TYPES[underlying.name]
+        ctype = PRIMITIVE_TYPES[underlying.name]
         p.print(f"enum class {self._enum.name} : {ctype} {{\n")
         p.indent()
         for v in self._enum.values:

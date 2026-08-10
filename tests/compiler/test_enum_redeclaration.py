@@ -124,8 +124,10 @@ class Kind(IntEnum, uint8):
         )
         self.assertIn("only the last declaration may omit until=", message)
 
-    def test_the_underlying_type_may_not_change(self) -> None:
-        message = self.rejects(
+    def test_the_underlying_type_may_change(self) -> None:
+        """BDS reopened PlayerAuthInput's InputData as `int` having written it
+        `unsigned int` before, so each era takes its own underlying type."""
+        header, _ = self.compile(
             PREAMBLE
             + """
 
@@ -135,11 +137,49 @@ class Kind(IntEnum, uint8):
 
 
 @type(since=2168)
-class Kind(IntEnum, int):
-    A = 1
+class Kind(IntEnum, uint32):
+    A = 0
 """
         )
-        self.assertIn("one underlying type", message)
+        self.assertIn("enum class Kind : std::uint8_t", header)
+        self.assertIn("enum class Kind : std::uint32_t", header)
+
+    def test_a_field_follows_an_underlying_type_that_moved(self) -> None:
+        """The wire encoding is derived from the underlying type, so a field that
+        did not spell one re-derives it per era rather than freezing the first."""
+        _, source = self.compile(
+            PREAMBLE
+            + """
+
+@type(until=2168)
+class Kind(IntEnum, uint8):
+    A = 0
+
+
+@type(since=2168)
+class Kind(IntEnum, uint32):
+    A = 0
+
+
+@packet(id=1)
+class P:
+    kind: Kind
+"""
+        )
+        self.assertIn("stream.write<std::uint8_t>(value.kind);", source)
+        self.assertIn("stream.writeVarInt<std::uint32_t>(value.kind);", source)
+
+    def test_the_default_underlying_type_is_not_spelled(self) -> None:
+        message = self.rejects(
+            PREAMBLE
+            + """
+
+@type()
+class Kind(IntEnum, int):
+    A = 0
+"""
+        )
+        self.assertIn("write `class Kind(IntEnum)`", message)
 
     def test_a_repeated_nested_enum_still_collapses(self) -> None:
         """A redeclared owner has to repeat each nested type verbatim in every

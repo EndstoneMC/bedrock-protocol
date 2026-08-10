@@ -17,6 +17,7 @@ import griffe
 
 from bedrock_protocol.descriptor import (
     BUILTIN_ANNOTATIONS,
+    INT_WIDTHS,
     INTEGER_PRIMITIVES,
     PRIMITIVES,
     BitsetType,
@@ -25,6 +26,7 @@ from bedrock_protocol.descriptor import (
     Endian,
     Enum,
     EnumType,
+    EnumUnderlying,
     EnumValue,
     Field,
     FieldType,
@@ -41,6 +43,7 @@ from bedrock_protocol.descriptor import (
     StructType,
     TypeAlias,
     VariantType,
+    default_enum_wire,
     scoped,
 )
 
@@ -59,7 +62,7 @@ class SymbolTable:
     spelled inside `Owner` finds it by walking the enclosing scopes outward."""
 
     enum_names: frozenset[str]
-    enum_underlying: dict[str, PrimitiveType | None]
+    enum_underlying: dict[str, PrimitiveType]
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
     primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = field(default_factory=dict)
@@ -88,7 +91,7 @@ class Parser:
         return self._symbols.struct_names
 
     @property
-    def enum_underlying(self) -> dict[str, PrimitiveType | None]:
+    def enum_underlying(self) -> dict[str, PrimitiveType]:
         return self._symbols.enum_underlying
 
     @property
@@ -168,7 +171,7 @@ class Parser:
         inheriting its owner's."""
         spans = ranges if ranges is not None else _decl_ranges(decls)
         _check_redeclaration(decls, spans)
-        underlying = _one_underlying(decls)
+        underlying = _underlying_spans(decls, spans)
         values: list[EnumValue] = []
         for decl, (lo, hi) in zip(decls, spans):
             _check_decorators(decl)
@@ -528,7 +531,8 @@ class Parser:
         self, qualified: str, type_kw: str | None, field_name: str, endian: Endian | None
     ) -> FieldType | None:
         if qualified in self.enum_names:
-            return EnumType(qualified, self._enum_scalar(type_kw, field_name, qualified, endian))
+            scalar = self._enum_scalar(type_kw, field_name, qualified, endian)
+            return EnumType(qualified, scalar, derived=type_kw is None)
         return StructType(qualified)
 
     # ---- enum wire type ----------------------------------------------------
@@ -544,14 +548,10 @@ class Parser:
             if type_kw not in PRIMITIVES:
                 raise CompilerError(f"{field_name}: unknown wire primitive {type_kw!r}; valid: {sorted(PRIMITIVES)}")
             return _with_endian(PrimitiveType(name=type_kw), endian, field_name)
-        underlying = self.enum_underlying.get(enum_name)
-        if underlying is None:
-            raise CompilerError(
-                f"{field_name}: {enum_name} declares no underlying type, so its wire encoding "
-                f"cannot be derived -- give the enum one as a second base "
-                f"(class {enum_name}(IntEnum, uint8)) or pass field(type=...)"
-            )
-        return _with_endian(_default_enum_wire(underlying), endian, field_name)
+        # The first declaration's type. Where a redeclaration moved it, the pool
+        # re-derives this per snapshot off the `derived` marker.
+        underlying = self.enum_underlying[enum_name]
+        return _with_endian(default_enum_wire(underlying), endian, field_name)
 
     # ---- bitset width ------------------------------------------------------
 
@@ -765,34 +765,8 @@ def nested_declarations(decls: list[griffe.Class]) -> list[list[griffe.Class]]:
 
 #: DSL primitive an enum may declare as its C++ underlying type -> (size in bytes,
 #: signed). A varint is an encoding, not a type, so it is not among them. `bool` is:
-#: BDS really does declare `enum class NetherWorldType : bool`.
-_INT_WIDTHS: dict[str, tuple[int, bool]] = {
-    "bool": (1, False),
-    "int8": (1, True),
-    "uint8": (1, False),
-    "int16": (2, True),
-    "uint16": (2, False),
-    "int": (4, True),
-    "int32": (4, True),
-    "uint32": (4, False),
-    "int64": (8, True),
-    "uint64": (8, False),
-}
-
-
 #: Primitive encoding -> size in bytes, for the encodings whose bytes have an order.
-_FIXED_WIDTHS: dict[str, int] = {name: size for name, (size, _) in _INT_WIDTHS.items()} | {"float": 4, "double": 8}
-
-
-def _default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
-    """The default wire encoding: underlying type, enum-as-value and compression.
-    One byte has nothing to compress and goes as-is; wider compresses to
-    `[u]varint32`, or `[u]varint64` at eight, signedness following the underlying."""
-    size, signed = _INT_WIDTHS[underlying.name]
-    if size == 1:
-        return underlying
-    width = 64 if size == 8 else 32
-    return PrimitiveType(name=f"{'' if signed else 'u'}varint{width}")
+_FIXED_WIDTHS: dict[str, int] = {name: size for name, (size, _) in INT_WIDTHS.items()} | {"float": 4, "double": 8}
 
 
 def _positional(node: griffe.ExprCall) -> list[griffe.Expr | str]:
@@ -814,33 +788,39 @@ def _is_sized(t: FieldType | None) -> bool:
     return isinstance(t, PrimitiveType) and t.name in ("str", "bytes")
 
 
-def _one_underlying(decls: list[griffe.Class]) -> PrimitiveType | None:
-    """The underlying type every declaration of an enum shares. A redeclaration
-    renumbers members; changing the C++ type under them would change the wire
-    encoding of every field that names the enum, silently."""
-    underlying = [enum_underlying_of(d) for d in decls]
-    if any(u != underlying[0] for u in underlying):
-        spelled = sorted({"int" if u is None else u.name for u in underlying})
-        raise CompilerError(
-            f"{decls[0].name}: every redeclaration must share one underlying type, got {', '.join(spelled)}"
-        )
-    return underlying[0]
+def _underlying_spans(decls: list[griffe.Class], spans: _Ranges) -> tuple[EnumUnderlying, ...]:
+    """The underlying type each declaration of an enum carries, over that
+    declaration's range. Adjacent ranges agreeing collapse into one entry, so an
+    enum redeclared only to renumber reads as having one underlying type."""
+    out: list[EnumUnderlying] = []
+    for decl, (lo, hi) in zip(decls, spans):
+        underlying = enum_underlying_of(decl)
+        if out and out[-1].type == underlying and out[-1].until == lo:
+            out[-1] = replace(out[-1], until=hi)
+            continue
+        out.append(EnumUnderlying(underlying, since=lo, until=hi))
+    return tuple(out)
 
 
-def enum_underlying_of(cls: griffe.Class) -> PrimitiveType | None:
+def enum_underlying_of(cls: griffe.Class) -> PrimitiveType:
     """The enum's C++ underlying type, written as a second base
-    (`class MemoryCategory(IntEnum, uint8)`). None means the C++ default, `int`."""
+    (`class MemoryCategory(IntEnum, uint8)`). Bare `IntEnum` is `int`, C++'s own
+    default, so the redundant base is left unwritten rather than spelled."""
     for base in cls.bases:
         name = _base_name(base)
         if name is None or name in _ENUM_BASES:
             continue
-        if name not in _INT_WIDTHS:
+        if name not in INT_WIDTHS:
             raise CompilerError(
                 f"{cls.name}: enum underlying type must be a fixed-width primitive, got {name!r}; "
-                f"valid: {sorted(_INT_WIDTHS)}"
+                f"valid: {sorted(INT_WIDTHS)}"
+            )
+        if name in ("int", "int32"):
+            raise CompilerError(
+                f"{cls.name}: {name!r} is the default underlying type -- write `class {cls.name}(IntEnum)`"
             )
         return PrimitiveType(name=name)
-    return None
+    return PrimitiveType(name="int")
 
 
 def _mapping_of(t: FieldType | None) -> MappingType | None:

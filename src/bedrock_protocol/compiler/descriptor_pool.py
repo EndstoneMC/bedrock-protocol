@@ -28,6 +28,8 @@ from bedrock_protocol.descriptor import (
     BitsetType,
     CondType,
     Enum,
+    EnumType,
+    EnumUnderlying,
     EnumValue,
     Field,
     FieldType,
@@ -35,11 +37,13 @@ from bedrock_protocol.descriptor import (
     FileSet,
     MappingType,
     OptionalType,
+    PrimitiveType,
     RepeatedType,
     ResolvedFile,
     Struct,
     VariantType,
     VersionSnapshot,
+    default_enum_wire,
 )
 
 
@@ -194,6 +198,14 @@ def _plan_snapshots(
     result: dict[str, tuple[VersionSnapshot, ...]] = {}
     keys: dict[str, dict[int, tuple[Any, ...]]] = {}
     concrete: dict[str, dict[int, int]] = {}
+    module_underlyings: dict[int, dict[str, PrimitiveType]] = {}
+
+    def underlyings_at(snapshot: int) -> dict[str, PrimitiveType]:
+        cached = module_underlyings.get(snapshot)
+        if cached is None:
+            cached = _module_underlyings(by_name, snapshot, file, pool)
+            module_underlyings[snapshot] = cached
+        return cached
 
     def dep_concrete(name: str, snapshot: int) -> int | None:
         own = concrete.get(name)
@@ -225,7 +237,7 @@ def _plan_snapshots(
             present = (since is None or s >= since) and (until is None or s < until)
             if not present:
                 continue
-            enum_view, struct_view, key = _snapshot_view(t, s)
+            enum_view, struct_view, key = _snapshot_view(t, s, underlyings_at(s))
             keys[name][s] = key
             if previous is None:
                 fresh = True
@@ -256,60 +268,104 @@ def _renumber(values: tuple[EnumValue, ...]) -> tuple[EnumValue, ...]:
     return tuple(out)
 
 
-def _snapshot_view(t: Enum | Struct, snapshot: int) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
+def _module_underlyings(
+    by_name: dict[str, Enum | Struct],
+    snapshot: int,
+    file: File,
+    pool: DescriptorPool,
+) -> dict[str, PrimitiveType]:
+    """Every module-scope enum's underlying type at `snapshot`, this file's and
+    its imports'. A field naming one derives its wire encoding from this, so an
+    underlying type that moved reaches the field rather than freezing."""
+    out: dict[str, PrimitiveType] = {}
+    for imp in file.imports:
+        other = pool.find_file_by_name(imp)
+        if other is not None:
+            for e in other.file.enums:
+                out[e.key] = e.underlying_at(snapshot)
+    for t in by_name.values():
+        if isinstance(t, Enum):
+            out[t.key] = t.underlying_at(snapshot)
+    return out
+
+
+def _snapshot_view(
+    t: Enum | Struct,
+    snapshot: int,
+    module_underlyings: dict[str, PrimitiveType] | None = None,
+) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
     """A narrowed-to-snapshot view of `t`, plus an identity key that determines
     whether two snapshots share one definition."""
     if isinstance(t, Enum):
         values = _renumber(tuple(v for v in t.values if v.present_at(snapshot)))
-        key = tuple((v.name, v.number) for v in values)
-        return Enum(t.name, values, t.underlying, cereal=t.cereal), None, key
+        underlying = t.underlying_at(snapshot)
+        # The underlying type is part of the identity: two snapshots numbering their
+        # members alike still need separate definitions when it moved under them.
+        key = (underlying.name, tuple((v.name, v.number) for v in values))
+        return Enum(t.name, values, (EnumUnderlying(underlying),), cereal=t.cereal), None, key
     # Nested first: a field's bitset width may name one of these enums, and it is
     # this snapshot's numbering it has to follow.
     nested: list[Enum | Struct] = []
     nested_keys: list[Any] = []
     members: dict[str, dict[str, int]] = {}
+    # A nested enum shadows a module-scope one of the same name, the way lookup does.
+    underlyings: dict[str, PrimitiveType] = dict(module_underlyings or {})
     for inner in t.nested:
         if not _present_at(inner, snapshot):
             continue
-        inner_enum, inner_struct, inner_key = _snapshot_view(inner, snapshot)
+        inner_enum, inner_struct, inner_key = _snapshot_view(inner, snapshot, module_underlyings)
         view = inner_enum if inner_enum is not None else inner_struct
         assert view is not None
         nested.append(view)
         nested_keys.append((inner.name, inner_key))
         if inner_enum is not None:
             members[inner_enum.name] = {v.name: v.number for v in inner_enum.values}
+            underlyings[inner_enum.name] = inner_enum.sole_underlying
     narrowed: list[Field] = []
     key_parts: list[Any] = []
     for f in t.fields:
         version = f.version_at(snapshot)
         if version is None:
             continue
-        bound = replace(version, type=_rebind_bitsets(version.type, members))
+        bound = replace(version, type=_rebind(version.type, members, underlyings))
         narrowed.append(Field(f.name, (bound,)))
         key_parts.append((f.name, bound.type))
     return None, replace(t, fields=tuple(narrowed), nested=tuple(nested)), tuple(key_parts + nested_keys)
 
 
-def _rebind_bitsets(t: FieldType | None, members: dict[str, dict[str, int]]) -> FieldType | None:
-    """Walk a field-type tree, resizing every `bitset[Enum.MEMBER]` to the
-    member's value at this snapshot. A width spelled as a literal, or naming an
-    enum this snapshot does not hold, is left alone."""
+def _rebind(
+    t: FieldType | None,
+    members: dict[str, dict[str, int]],
+    underlyings: dict[str, PrimitiveType],
+) -> FieldType | None:
+    """Walk a field-type tree, re-resolving everything a nested enum's snapshot
+    view decides: a `bitset[Enum.MEMBER]` width, and the wire encoding a field
+    derived from an enum's underlying type. Anything naming an enum this snapshot
+    does not hold is left alone."""
     if isinstance(t, BitsetType):
         if t.enum_member is None:
             return t
         enum_name, member_name = t.enum_member
         size = members.get(enum_name, {}).get(member_name)
         return t if size is None or size == t.size else replace(t, size=size)
+    if isinstance(t, EnumType):
+        if not t.derived:
+            return t
+        underlying = underlyings.get(t.name) or underlyings.get(t.name.rpartition(".")[2])
+        if underlying is None:
+            return t
+        scalar = default_enum_wire(underlying)
+        return t if scalar == t.scalar else replace(t, scalar=scalar)
     if isinstance(t, (OptionalType, RepeatedType, CondType)):
-        inner = _rebind_bitsets(t.inner, members)
+        inner = _rebind(t.inner, members, underlyings)
         assert inner is not None
         return t if inner is t.inner else replace(t, inner=inner)
     if isinstance(t, MappingType):
-        key, value = _rebind_bitsets(t.key, members), _rebind_bitsets(t.value, members)
+        key, value = _rebind(t.key, members, underlyings), _rebind(t.value, members, underlyings)
         assert key is not None and value is not None
         return t if key is t.key and value is t.value else replace(t, key=key, value=value)
     if isinstance(t, VariantType):
-        cases = tuple(_rebind_bitsets(c, members) for c in t.cases)
+        cases = tuple(_rebind(c, members, underlyings) for c in t.cases)
         return t if cases == t.cases else replace(t, cases=cases)
     return t
 

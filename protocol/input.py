@@ -36,14 +36,14 @@ class ClientPlayMode(IntEnum, uint32):
     NUM_MODES = auto()
 
 
-class NewInteractionModel(IntEnum, int):
+class NewInteractionModel(IntEnum):
     TOUCH = 0
     CROSSHAIR = 1
     CLASSIC = 2
     COUNT = auto()
 
 
-class PlayerActionType(IntEnum, int):
+class PlayerActionType(IntEnum):
     UNKNOWN = -1
     START_DESTROY_BLOCK = 0
     ABORT_DESTROY_BLOCK = 1
@@ -131,7 +131,7 @@ class PackedItemUseLegacyInventoryTransaction:
 
 @packet(id=144, until=2168)
 class PlayerAuthInputPacket:
-    class InputData(IntEnum, int):
+    class InputData(IntEnum, uint32):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2
@@ -231,7 +231,7 @@ class PlayerAuthInputPacket:
 
 @packet(id=144, since=2168)
 class PlayerAuthInputPacket:
-    class InputData(IntEnum, int):
+    class InputData(IntEnum):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2

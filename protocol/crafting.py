@@ -17,7 +17,7 @@ class CreativeItemCategory(IntEnum, uint8):
     NUM_CATEGORIES = auto()
 
 
-class CraftingDataEntryType(IntEnum, int):
+class CraftingDataEntryType(IntEnum):
     SHAPELESS_RECIPE = 0
     SHAPED_RECIPE = 1
     MULTI_RECIPE = 4
@@ -116,7 +116,7 @@ class SerializedRecipeIngredient:
 
 @type(until=2168)
 class SerializedRecipeUnlockingRequirement:
-    class UnlockingContext(IntEnum, int):
+    class UnlockingContext(IntEnum):
         NONE = 0
         ALWAYS_UNLOCKED = 1
         PLAYER_IN_WATER = 2
@@ -128,7 +128,7 @@ class SerializedRecipeUnlockingRequirement:
 
 @type(since=2168)
 class SerializedRecipeUnlockingRequirement:
-    class UnlockingContext(IntEnum, int):
+    class UnlockingContext(IntEnum):
         NONE = 0
         ALWAYS_UNLOCKED = 1
         PLAYER_IN_WATER = 2

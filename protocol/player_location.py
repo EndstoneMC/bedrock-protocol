@@ -52,7 +52,7 @@ class PlayerUpdateEntityOverridesPacket:
 
 @packet(id=326, until=2168)
 class PlayerLocationPacket:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         PLAYER_LOCATION_COORDINATES = 0
         PLAYER_LOCATION_HIDE = 1
 
@@ -63,7 +63,7 @@ class PlayerLocationPacket:
 
 @packet(id=326, since=2168)
 class PlayerLocationPacket:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         PLAYER_LOCATION_COORDINATES = 0
         PLAYER_LOCATION_HIDE = 1
 

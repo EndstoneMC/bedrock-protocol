@@ -12,7 +12,7 @@ from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
 package = "bedrock.protocol"
 
 
-class GameType(IntEnum, int):
+class GameType(IntEnum):
     UNDEFINED = -1
     SURVIVAL = 0
     CREATIVE = 1
@@ -21,7 +21,7 @@ class GameType(IntEnum, int):
     SPECTATOR = 6
 
 
-class Difficulty(IntEnum, int):
+class Difficulty(IntEnum):
     PEACEFUL = 0
     EASY = 1
     NORMAL = 2
@@ -30,7 +30,7 @@ class Difficulty(IntEnum, int):
     UNKNOWN = 5
 
 
-class GeneratorType(IntEnum, int):
+class GeneratorType(IntEnum):
     LEGACY = 0
     OVERWORLD = 1
     FLAT = 2
@@ -50,7 +50,7 @@ class SpawnBiomeType(IntEnum, int16):
     USER_DEFINED = 1
 
 
-class WorldType(IntEnum, int):
+class WorldType(IntEnum):
     NON_EDITOR = 0
     EDITOR_PROJECT = 1
     EDITOR_TEST_LEVEL = 2
@@ -63,7 +63,7 @@ class EducationEditionOffer(IntEnum, uint32):
     CHINA_DEPRECATED = 2
 
 
-class GamePublishSetting(IntEnum, int):
+class GamePublishSetting(IntEnum):
     NO_MULTI_PLAY = 0
     INVITE_ONLY = 1
     FRIENDS_ONLY = 2
@@ -84,7 +84,7 @@ class ChatRestrictionLevel(IntEnum, uint8):
     DISABLED = 2
 
 
-class ServerEditorConnectionPolicy(IntEnum, int):
+class ServerEditorConnectionPolicy(IntEnum):
     MATCH_WORLD_TYPE = 0
     EDITOR_ONLY = 1
     VANILLA_ONLY = 2

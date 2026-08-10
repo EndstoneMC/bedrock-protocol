@@ -9,7 +9,7 @@ package = "bedrock.protocol"
 
 @type(until=2168)
 class MapItemTrackedActor:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         ENTITY = 0
         BLOCK_ENTITY = 1
         OTHER = 2
@@ -23,7 +23,7 @@ class MapItemTrackedActor:
 
 @type(since=2168)
 class MapItemTrackedActor:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         ENTITY = 0
         BLOCK_ENTITY = 1
         OTHER = 2
@@ -113,7 +113,7 @@ class MapDecoration:
 
 @packet(id=67, until=2168)
 class ClientboundMapItemDataPacket:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         INVALID = 0
         TEXTURE_UPDATE = 2
         DECORATION_UPDATE = 4
@@ -139,7 +139,7 @@ class ClientboundMapItemDataPacket:
 
 @packet(id=67, since=2168)
 class ClientboundMapItemDataPacket:
-    class Type(IntEnum, int32):
+    class Type(IntEnum):
         INVALID = 0
         TEXTURE_UPDATE = 2
         DECORATION_UPDATE = 4

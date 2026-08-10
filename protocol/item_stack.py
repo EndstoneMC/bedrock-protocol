@@ -126,7 +126,7 @@ class MolangVersion(IntEnum, int16):
     NUM_VALID_VERSIONS = 14
 
 
-class TextProcessingEventOrigin(IntEnum, int):
+class TextProcessingEventOrigin(IntEnum):
     UNKNOWN = -1
     SERVER_CHAT_PUBLIC = 0
     SERVER_CHAT_WHISPER = 1

@@ -349,7 +349,7 @@ class SetActorDataPacket:
 
 
 @type(until=2168)
-class ActorType(IntEnum, int):
+class ActorType(IntEnum):
     UNDEFINED = 1
     TYPE_MASK = 255
     MOB = 256
@@ -513,7 +513,7 @@ class ActorType(IntEnum, int):
 
 
 @type(since=2168)
-class ActorType(IntEnum, int):
+class ActorType(IntEnum):
     UNDEFINED = 1
     TYPE_MASK = 255
     MOB = 256

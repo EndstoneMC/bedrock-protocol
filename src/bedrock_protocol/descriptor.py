@@ -63,6 +63,21 @@ BUILTIN_ANNOTATIONS: dict[str, str] = {"uuid.UUID": "UUID"}
 #: Primitives that may length-prefix a list or string.
 INTEGER_PRIMITIVES: frozenset[str] = PRIMITIVES - frozenset({"str", "bytes", "bool", "float", "double"})
 
+#: Integer encoding -> (size in bytes, signed). Valid as an enum's underlying type.
+#: BDS really does declare `enum class NetherWorldType : bool`.
+INT_WIDTHS: dict[str, tuple[int, bool]] = {
+    "bool": (1, False),
+    "int8": (1, True),
+    "uint8": (1, False),
+    "int16": (2, True),
+    "uint16": (2, False),
+    "int": (4, True),
+    "int32": (4, True),
+    "uint32": (4, False),
+    "int64": (8, True),
+    "uint64": (8, False),
+}
+
 #: Byte order of a fixed-width encoding.
 Endian = Literal["little", "big"]
 
@@ -149,6 +164,17 @@ class PrimitiveType:
         return frozenset({self.alias}) if self.alias is not None else frozenset()
 
 
+def default_enum_wire(underlying: PrimitiveType) -> PrimitiveType:
+    """The default wire encoding: underlying type, enum-as-value and compression.
+    One byte has nothing to compress and goes as-is; wider compresses to
+    `[u]varint32`, or `[u]varint64` at eight, signedness following the underlying."""
+    size, signed = INT_WIDTHS[underlying.name]
+    if size == 1:
+        return underlying
+    width = 64 if size == 8 else 32
+    return PrimitiveType(name=f"{'' if signed else 'u'}varint{width}")
+
+
 @dataclass(frozen=True)
 class StructType:
     """A reference to a user-defined struct."""
@@ -164,10 +190,15 @@ class StructType:
 @dataclass(frozen=True)
 class EnumType:
     """A reference to a user-defined enum. `scalar=None` means name-coded
-    (string on the wire); `scalar` set means integer-coded over that primitive."""
+    (string on the wire); `scalar` set means integer-coded over that primitive.
+
+    `derived` marks a `scalar` the field did not spell, taken from the enum's
+    underlying type instead. The pool re-derives it against each snapshot's view
+    of that enum, so a field follows an underlying type that moved."""
 
     name: str
     scalar: PrimitiveType | None
+    derived: bool = False
     kind: Literal["enum"] = "enum"
 
     @property
@@ -355,9 +386,24 @@ class EnumValue:
 
 
 @dataclass(frozen=True)
+class EnumUnderlying:
+    """The enum's C++ underlying type over `[since, until)`, spelled as a second
+    base (`class MemoryCategory(IntEnum, uint8)`). A redeclaration may change it:
+    BDS reopened PlayerAuthInput's `InputData` as `int` at 1.26.40 having written
+    it `unsigned int` before, and the signedness reaches the wire."""
+
+    type: PrimitiveType
+    since: int | None = None
+    until: int | None = None
+
+    def present_at(self, snapshot: int) -> bool:
+        return (self.since is None or snapshot >= self.since) and (self.until is None or snapshot < self.until)
+
+
+@dataclass(frozen=True)
 class Enum:
-    """`underlying` is the enum's C++ underlying type, spelled as a second base
-    (`class MemoryCategory(IntEnum, uint8)`); `None` means the C++ default, `int`.
+    """`underlying` carries the C++ underlying type per range, one entry per
+    declaration. An enum nobody redeclares has exactly one, unbounded.
 
     `since` / `until` bound the whole enum, as they do a struct. An enum
     redeclared over adjacent ranges models a renumbering: each declaration's
@@ -366,10 +412,23 @@ class Enum:
 
     name: str
     values: tuple[EnumValue, ...]
-    underlying: PrimitiveType | None = None
+    underlying: tuple[EnumUnderlying, ...] = ()
     since: int | None = None
     until: int | None = None
     cereal: bool = True
+
+    def underlying_at(self, snapshot: int) -> PrimitiveType:
+        """The underlying type in force at `snapshot`. Falls back to the last
+        declaration, so a snapshot below the first `since` still has a type."""
+        for u in self.underlying:
+            if u.present_at(snapshot):
+                return u.type
+        return self.underlying[-1].type
+
+    @property
+    def sole_underlying(self) -> PrimitiveType:
+        """The underlying type of a view narrowed to one snapshot."""
+        return self.underlying[0].type
 
     @property
     def key(self) -> str:
@@ -384,8 +443,9 @@ class Enum:
 
     @property
     def change_points(self) -> frozenset[int]:
-        """Versions where a member appears or disappears, so an enum whose members
-        are gated is versioned like a struct whose fields are."""
+        """Versions where a member appears or disappears, or the underlying type
+        moves, so an enum whose members are gated is versioned like a struct whose
+        fields are."""
         points: set[int] = set()
         if self.since is not None:
             points.add(self.since)
@@ -396,6 +456,11 @@ class Enum:
                 points.add(v.since)
             if v.until is not None:
                 points.add(v.until)
+        for u in self.underlying:
+            if u.since is not None:
+                points.add(u.since)
+            if u.until is not None:
+                points.add(u.until)
         return frozenset(points)
 
     #: Change points affecting the on-wire shape (same as change_points here).

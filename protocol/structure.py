@@ -11,7 +11,7 @@ package = "bedrock.protocol"
 type RandomSeed = uint32
 
 
-class StructureBlockType(IntEnum, int32):
+class StructureBlockType(IntEnum):
     DATA = 0
     SAVE = 1
     LOAD = 2

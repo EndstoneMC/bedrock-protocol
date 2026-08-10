@@ -235,7 +235,7 @@ class InventoryMismatchData:
 
 @type(until=1001)
 class ItemUseInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         PLACE = 0
         USE = 1
         DESTROY = 2
@@ -270,7 +270,7 @@ class ItemUseInventoryTransaction:
 
 @type(since=1001)
 class ItemUseInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         PLACE = 0
         USE = 1
         DESTROY = 2
@@ -342,7 +342,7 @@ class ItemUseInventoryTransaction:
 
 @type(until=1001)
 class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         INTERACT = 0
         ATTACK = 1
         ITEM_INTERACT = 2
@@ -358,7 +358,7 @@ class ItemUseOnActorInventoryTransaction:
 
 @type(since=1001)
 class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         INTERACT = 0
         ATTACK = 1
         ITEM_INTERACT = 2
@@ -374,7 +374,7 @@ class ItemUseOnActorInventoryTransaction:
 
 @type(until=1001)
 class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         RELEASE = 0
         USE = 1
 
@@ -387,7 +387,7 @@ class ItemReleaseInventoryTransaction:
 
 @type(since=1001)
 class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum, int):
+    class ActionType(IntEnum):
         RELEASE = 0
         USE = 1
 
