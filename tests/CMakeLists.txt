@@ -37,6 +37,7 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_141_anvil_damage.cpp
         test_packet.cpp
         test_001_login.cpp
+        test_005_disconnect.cpp
         test_011_start_game.cpp
         test_030_inventory_transaction.cpp
         test_032_mob_armor_equipment.cpp
