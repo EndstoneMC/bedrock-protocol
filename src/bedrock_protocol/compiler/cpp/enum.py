@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CompilerError, Enum, EnumValue
+from bedrock_protocol.descriptor import CompilerError, Enum
 
 from .field import type_includes
 from .helpers import PRIMITIVE_TYPES
@@ -78,13 +78,11 @@ class EnumGenerator:
             "<bedrock/enum.hpp>",
             "<bedrock/serializer.hpp>",
             "<bedrock/stream.hpp>",
-            "<cctype>",
             "<expected>",
             "<string>",
-            "<string_view>",
             "<system_error>",
-            "<unordered_map>",
         )
+        self._reject_case_collisions()
         q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
@@ -92,31 +90,18 @@ class EnumGenerator:
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
-            p.print(f"using E = {q};\n")
-            # BDS lowercases the incoming string before its own lookup, so the keys
-            # are lowercased to match. The codec keys its own table rather than
-            # scanning the reflection helpers: those are the downstream API, and a
-            # scan is linear over an enum that runs to 600 members on a hot path.
-            p.print("static const std::unordered_map<std::string_view, E> values{\n")
-            p.indent()
-            for v in self._keyed_values():
-                p.print(f'{{"{v.wire_name.lower()}", E::{v.name}}},\n')
-            p.outdent()
-            p.print("};\n")
+            # BDS lowercases the incoming string before its own lookup, so the read is
+            # case-insensitive to match. enum_cast keys an unordered_map per enum on first
+            # use, which the collision check below keeps unambiguous.
             p.print("auto v = stream.read<std::string>();\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
-            p.print("for (auto &c : *v) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));\n")
-            p.print("auto it = values.find(*v);\n")
-            p.print(
-                "if (it == values.end()) "
-                "return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n"
-            )
-            p.print("return it->second;\n")
+            p.print(f"const auto value = enum_cast<{q}>(*v, case_insensitive{{}});\n")
+            p.print("if (!value) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+            p.print("return *value;\n")
 
-    def _keyed_values(self) -> tuple[EnumValue, ...]:
-        """The members the read keys on, rejecting a collision. Two members whose
-        wire names differ only by case would land on one key, and the map would
-        keep whichever came first without a word."""
+    def _reject_case_collisions(self) -> None:
+        """Two members whose wire names differ only by case land on one key, and the
+        read keeps whichever came first without a word."""
         by_key: dict[str, list[str]] = {}
         for v in self._enum.values:
             by_key.setdefault(v.wire_name.lower(), []).append(v.name)
@@ -127,4 +112,3 @@ class EnumGenerator:
                 f"{self._qualified}: name-coded members collide once lowercased, so the read cannot tell "
                 f"them apart -- {spelled}"
             )
-        return self._enum.values
