@@ -14,9 +14,13 @@ constexpr auto argb = static_cast<bp::Color>(0x44556677);
 
 // The three shapes below are shaped identically at both eras, so each is built once
 // against whichever snapshot's payload the caller wants. The type enum gained members
-// at 1001, so it is versioned alongside the payload and comes from it.
+// at 1001 and the text payload a field at 2181, so both are versioned alongside the
+// payload and come from it.
 template <class Payload>
 using ShapeTypeOf = typename decltype(Payload::shape_type)::value_type;
+
+template <class Payload>
+using TextPayloadOf = std::variant_alternative_t<2, decltype(Payload::extra_data_payload)>;
 
 // Every optional left empty: the shape is cleared, and the variant sits on its
 // std::monostate case.
@@ -52,7 +56,7 @@ Payload text_shape()
     Payload shape;
     shape.network_id = 4;
     shape.shape_type = ShapeTypeOf<Payload>::TEXT;
-    shape.extra_data_payload = bp::TextDataPayload{
+    shape.extra_data_payload = TextPayloadOf<Payload>{
         .text = "hi",
         .use_rotation = true,
         .background_color = argb,

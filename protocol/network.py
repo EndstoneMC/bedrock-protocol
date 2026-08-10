@@ -259,6 +259,7 @@ class MinecraftPacketIds(IntEnum):
     CLIENTBOUND_UPDATE_SOUND_DATA = value(348, since=1001)
     SEND_PARTY_DESTINATION_COOKIE = value(349, since=1001)
     PARTY_DESTINATION_COOKIE_RESPONSE = value(350, since=1001)
+    SET_PLAYER_FURNACE_OPTIONS = value(351, since=2181)
     END_ID = auto()
 
 

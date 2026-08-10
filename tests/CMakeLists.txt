@@ -49,12 +49,14 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_156_packet_violation_warning.cpp
         test_175_sub_chunk_request.cpp
         test_193_request_network_settings.cpp
+        test_198_camera_presets.cpp
         test_315_serverbound_diagnostics.cpp
         test_328_primitive_shapes.cpp
         test_331_graphics_override_parameter.cpp
         test_345_attribute_layer_sync.cpp
         test_347_server_presence_info.cpp
         test_348_update_sound_data.cpp
+        test_351_set_player_furnace_options.cpp
         test_072_game_rules_changed.cpp
 )
 target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)

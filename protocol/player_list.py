@@ -26,7 +26,7 @@ class BuildPlatform(IntEnum):
     DEDICATED = 9
     TV_OS_DEPRECATED = 10
     SONY = 11
-    NX = 12
+    NINTENDO = 12
     XBOX = 13
     WINDOWS_PHONE_DEPRECATED = 14
     LINUX = 15

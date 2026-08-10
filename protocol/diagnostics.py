@@ -1,6 +1,7 @@
 from enum import IntEnum
 
-from protocol import auto, field, packet, type, uint8, uint64
+from protocol import auto, field, packet, type, uint8, uint64, value
+from protocol.common import Vec3
 
 package = "bedrock.protocol"
 
@@ -162,59 +163,59 @@ class MemoryCategory(IntEnum, uint8):
     ORE_UI_CLIENT = 55
     PERSONA_PIECES = 56
     PERSONA_ANIMATIONS = 57
-    PERSONA_TEXTURES = 58
-    PERSONA_CHARACTERS = 59
-    PERSONA_SKIN_PACKS = 60
-    PERSONA_REPO = 61
-    PLAYER = 62
-    RENDER_CHUNK = 63
-    RENDER_CHUNK_INDEX_BUFFER = 64
-    RENDER_CHUNK_VERTEX_BUFFER = 65
-    RENDERING = 66
-    RENDERING_BGFX_INIT = 67
-    RENDERING_BGFX_START_FRAME = 68
-    RENDERING_BLOCK_TESSELLATOR = 69
-    RENDERING_END_FRAME = 70
-    RENDERING_GRAPHICS_TASKS_INIT = 71
-    RENDERING_LIBRARY = 72
-    RENDERING_POLYGON_OPERATOR_POOL = 73
-    RENDERING_PBR_TEXTURE_DATA = 74
-    RENDERING_RENDER_REGISTRY = 75
-    RENDERING_SETUP = 76
-    RENDERING_VERTICES = 77
-    REQUEST_LOG = 78
-    RESOURCE_PACKS = 79
-    SOUND = 80
-    SUB_CHUNK_BIOME_DATA = 81
-    SUB_CHUNK_BLOCK_DATA = 82
-    SUB_CHUNK_LIGHT_DATA = 83
-    TEXTURES = 84
-    WEATHER_RENDERER = 85
-    WORLD_GENERATOR = 86
-    TASKS = 87
-    TEST = 88
-    TEST_LOAD_TEST_TAGS = 89
-    SCRIPTING = 90
-    SCRIPTING_RUNTIME = 91
-    SCRIPTING_CONTEXT = 92
-    SCRIPTING_CONTEXT_BINDINGS_MC = 93
-    SCRIPTING_CONTEXT_BINDINGS_GT = 94
-    SCRIPTING_CONTEXT_RUN = 95
-    DATA_DRIVEN_UI = 96
-    DATA_DRIVEN_UI_DEFS = 97
-    GAMEFACE = 98
-    GAMEFACE_SYSTEM = 99
-    GAMEFACE_DOM = 100
-    GAMEFACE_CSS = 101
-    GAMEFACE_DISPLAY = 102
-    GAMEFACE_TEMP_ALLOCATOR = 103
-    GAMEFACE_POOL_ALLOCATOR = 104
-    GAMEFACE_DUMP = 105
-    GAMEFACE_MEDIA = 106
-    GAMEFACE_JSON = 107
-    GAMEFACE_SCRIPT_ENGINE = 108
-    GAMEFACE_SCRIPT = 109
-    GAMEFACE_LAYOUT = 110
+    PERSONA_TEXTURES = value(58, until=2181)
+    PERSONA_CHARACTERS = auto()
+    PERSONA_SKIN_PACKS = auto()
+    PERSONA_REPO = auto()
+    PLAYER = auto()
+    RENDER_CHUNK = auto()
+    RENDER_CHUNK_INDEX_BUFFER = auto()
+    RENDER_CHUNK_VERTEX_BUFFER = auto()
+    RENDERING = auto()
+    RENDERING_BGFX_INIT = auto()
+    RENDERING_BGFX_START_FRAME = auto()
+    RENDERING_BLOCK_TESSELLATOR = auto()
+    RENDERING_END_FRAME = auto()
+    RENDERING_GRAPHICS_TASKS_INIT = auto()
+    RENDERING_LIBRARY = auto()
+    RENDERING_POLYGON_OPERATOR_POOL = auto()
+    RENDERING_PBR_TEXTURE_DATA = auto()
+    RENDERING_RENDER_REGISTRY = auto()
+    RENDERING_SETUP = auto()
+    RENDERING_VERTICES = auto()
+    REQUEST_LOG = auto()
+    RESOURCE_PACKS = auto()
+    SOUND = auto()
+    SUB_CHUNK_BIOME_DATA = auto()
+    SUB_CHUNK_BLOCK_DATA = auto()
+    SUB_CHUNK_LIGHT_DATA = auto()
+    TEXTURES = auto()
+    WEATHER_RENDERER = auto()
+    WORLD_GENERATOR = auto()
+    TASKS = auto()
+    TEST = auto()
+    TEST_LOAD_TEST_TAGS = auto()
+    SCRIPTING = auto()
+    SCRIPTING_RUNTIME = auto()
+    SCRIPTING_CONTEXT = auto()
+    SCRIPTING_CONTEXT_BINDINGS_MC = auto()
+    SCRIPTING_CONTEXT_BINDINGS_GT = auto()
+    SCRIPTING_CONTEXT_RUN = auto()
+    DATA_DRIVEN_UI = auto()
+    DATA_DRIVEN_UI_DEFS = auto()
+    GAMEFACE = auto()
+    GAMEFACE_SYSTEM = auto()
+    GAMEFACE_DOM = auto()
+    GAMEFACE_CSS = auto()
+    GAMEFACE_DISPLAY = auto()
+    GAMEFACE_TEMP_ALLOCATOR = auto()
+    GAMEFACE_POOL_ALLOCATOR = auto()
+    GAMEFACE_DUMP = auto()
+    GAMEFACE_MEDIA = auto()
+    GAMEFACE_JSON = auto()
+    GAMEFACE_SCRIPT_ENGINE = auto()
+    GAMEFACE_SCRIPT = auto()
+    GAMEFACE_LAYOUT = auto()
     COUNT = auto()
 
 
@@ -228,6 +229,8 @@ class EntityDiagnosticTimingInfo:
     entity: str
     time_in_ns: uint64
     percent_of_total: uint8
+    position: Vec3 | None = field(since=2181)
+    dimension: str | None = field(since=2181)
 
 
 class SystemDiagnosticTimingInfo:

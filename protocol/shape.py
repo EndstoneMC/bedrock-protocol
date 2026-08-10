@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import packet, type, uint8, uvarint64, value
+from protocol import field, packet, type, uint8, uvarint64, value
 from protocol.actor import ActorUniqueID
 from protocol.attributes import DimensionType
 from protocol.common import Color, Vec2, Vec3
@@ -33,6 +33,7 @@ class TextDataPayload:
     text: str
     use_rotation: bool
     background_color: Color | None
+    line_gap_height: float = field(since=2181)
     depth_test: bool
     show_backface: bool
     show_text_backface: bool

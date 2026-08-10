@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32
+from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
 from protocol.actor import (
     ActorLink,
     ActorRuntimeID,
@@ -89,6 +89,7 @@ class MoveActorDeltaData:
     force_move: bool
     force_move_local_entity: bool
     force_completion: bool
+    ticks: uvarint64 = field(since=2181)
 
 
 @packet(id=12, until=2168)

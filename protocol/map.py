@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, packet, type, uint8, uint32, uvarint32, varint32
+from protocol import field, int8, int32, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Color
 
@@ -101,6 +101,11 @@ class MapDecoration:
         JUNGLE_TEMPLE = 22
         WITCH_HUT = 23
         TRIAL_CHAMBERS = 24
+        ABANDONED_CAMP = value(25, since=2181)
+        BURIED_ANCIENT_CITY = value(26, since=2181)
+        BURIED_MINESHAFT = value(27, since=2181)
+        DESERT_PYRAMID = value(28, since=2181)
+        WARM_OCEAN_RUINS = value(29, since=2181)
         COUNT = auto()
 
     image: Type

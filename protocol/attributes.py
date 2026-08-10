@@ -1,6 +1,6 @@
 from enum import Enum, IntEnum
 
-from protocol import field, int32, packet, uint32, varint32
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32, varint32
 
 package = "bedrock.protocol"
 
@@ -79,6 +79,17 @@ class EasingType(Enum, uint32):
     IN_OUT_ELASTIC = 31
 
 
+@type(since=2181)
+class NoiseAlignmentType(IntEnum, uint8):
+    MIN_LOCAL_TRANSITION_END = 0
+
+
+@type(since=2181)
+class NoiseAlignment:
+    type: NoiseAlignmentType
+    value: uvarint32
+
+
 class BoolAttributeData:
     value: bool
     operation: BoolAttributeOperation = field(type=str)
@@ -109,6 +120,7 @@ class EnvironmentAttributeData:
     easing: EasingType = field(type=str)
     local_transition_ticks: uint32 = field(since=1001)
     noise_transition: bool = field(since=1001)
+    noise_alignment: NoiseAlignment = field(since=2181)
 
 
 class AttributeLayerSettings:
