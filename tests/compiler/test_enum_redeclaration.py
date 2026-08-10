@@ -8,9 +8,14 @@ removed, twenty added, and most survivors shifted by one of six amounts.
 
 from __future__ import annotations
 
+import re
 import unittest
 
-from harness import CompilerCase
+from harness import DSL_SURFACE, CompilerCase
+
+#: The alias the unsuffixed name resolves to. Read off the DSL surface the
+#: harness copies, so bumping the schema's latest version does not rot this.
+LATEST = int(re.search(r"^__version__ = (\d+)", DSL_SURFACE.read_text(), re.M).group(1))
 
 PREAMBLE = """
 from enum import IntEnum, auto
@@ -70,7 +75,7 @@ class RedeclaredEnum(CompilerCase):
         header, _ = self.compile(RENUMBERED)
         self.assertIn("struct MemoryCategory_<V> { using type = base::MemoryCategory; };", header)
         self.assertIn("struct MemoryCategory_<V> { using type = v2168::MemoryCategory; };", header)
-        self.assertIn("using MemoryCategory = MemoryCategory_<2168>;", header)
+        self.assertIn(f"using MemoryCategory = MemoryCategory_<{LATEST}>;", header)
 
     def test_a_user_of_the_enum_is_versioned_with_it(self) -> None:
         _, source = self.compile(RENUMBERED)
