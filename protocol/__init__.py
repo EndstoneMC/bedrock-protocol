@@ -88,12 +88,9 @@ def field(
       `type=dict[K, V]` there instead: one wire spec per half, each reading as
       `type=` would on its own, and both spelled out
       (`field(type=dict[str, uint8])`). Both halves taking a lone `type=` is a
-      compile error rather than a guess. For
-      optional fields, defaults to a single-byte bool flag + payload;
-      passing `typing.Union` switches to a varint union-index discriminator
-      instead. The index follows the annotation order, so `X | None` encodes
-      present as 0 / absent as 1, while `None | X` encodes present as 1 /
-      absent as 0.
+      compile error rather than a guess. An optional field takes a
+      single-byte presence flag and then the payload; see the union note below
+      for the form that carries a case index instead.
     - `since`: protocol version that introduced the field.
     - `until`: first protocol version where the field is removed (exclusive),
       so the field is present in `[since, until)`. These gate a field that is
@@ -152,6 +149,14 @@ def field(
     by a `uvarint32` index over its cases in declaration order. An
     enum-discriminated union is not implemented -- declare the discriminator as
     a real field and gate each arm on it with `when=`.
+
+    Two cases where one is `None` are an optional instead, since that is what
+    BDS writes almost everywhere: a presence byte, then the payload. Spell the
+    union `typing.Union[T, None]` where BDS really did cerealise a two-case
+    variant -- the wire then carries the case index over the cases in
+    declaration order, which is the *inverse* of the presence byte
+    (`Union[T, None]` writes 0 for the payload, an optional writes 1).
+    DisconnectPacket's messages are the live case.
 
     Any keyword this signature does not list is a compile error, as is one the
     compiler does not read. It never silently drops one.

@@ -596,9 +596,9 @@ class Parser:
         values = _literal_values(ann, field_name)
         if values is not None:
             return self._literal_type(values, field_name, type_kw, endian)
-        cases = _flatten_union(ann)
+        cases, tagged = _union_cases(ann)
         if cases is not None:
-            t = self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal, halves)
+            t = self._union_type(cases, tagged, field_name, type_kw, prefix, endian, scope, cereal, halves)
         else:
             t = self._base_type(ann, type_kw, prefix, field_name, endian, scope, cereal, halves)
         if halves != (None, None) and _mapping_of(t) is None:
@@ -627,6 +627,7 @@ class Parser:
     def _union_type(
         self,
         cases: list[griffe.Expr | str],
+        tagged: bool,
         field_name: str,
         type_kw: str | None,
         prefix: PrimitiveType,
@@ -635,7 +636,12 @@ class Parser:
         cereal: bool = True,
         halves: tuple[str | None, str | None] = (None, None),
     ) -> FieldType | None:
-        if len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
+        # A two-case `X | None` is an optional -- a presence byte then the payload.
+        # `Union[X, None]` stays a union, carrying the uvarint32 case index over the
+        # cases in declaration order. The two are not one encoding spelled twice:
+        # they invert, present being index 0 in `Union[X, None]` and a true byte as
+        # an optional.
+        if not tagged and len(cases) == 2 and sum(_is_none(a) for a in cases) == 1:
             inner_ann = next(a for a in cases if not _is_none(a))
             base = self._base_type(inner_ann, type_kw, prefix, field_name, endian, scope, cereal, halves)
             return None if base is None else OptionalType(base)
@@ -661,6 +667,9 @@ class Parser:
         cereal: bool = True,
         halves: tuple[str | None, str | None] = (None, None),
     ) -> FieldType | None:
+        cases, tagged = _union_cases(ann)
+        if cases is not None:
+            return self._union_type(cases, tagged, field_name, type_kw, prefix, endian, scope, cereal, halves)
         if isinstance(ann, griffe.ExprSubscript):
             bits = self._bitset(ann, field_name)
             if bits is not None:
@@ -680,9 +689,6 @@ class Parser:
             if type_kw is not None and all(h is None for h in halves):
                 _check_map_wire_type(key, value, type_kw, field_name)
             return MappingType(key=key, value=value, prefix=prefix)
-        cases = _flatten_union(ann)
-        if cases is not None:
-            return self._union_type(cases, field_name, type_kw, prefix, endian, scope, cereal, halves)
         dotted = _dotted_name(ann)
         if dotted is not None:
             if dotted in BUILTIN_ANNOTATIONS:
@@ -1049,6 +1055,19 @@ def _as_int(value: object) -> int | None:
         inner = _as_int(value.value)
         return None if inner is None else -inner
     return None
+
+
+def _union_cases(ann: _Ann) -> tuple[list[griffe.Expr | str] | None, bool]:
+    """A union annotation's cases, and whether it is spelled `Union[...]`.
+
+    `A | B` is the ordinary form, and its two-case-with-`None` shape is an
+    optional. `Union[A, None]` is the tagged one: it says the wire carries the
+    case index even where the `|` form would have carried a presence byte."""
+    if isinstance(ann, griffe.ExprSubscript) and _base_name(ann.left) == "Union":
+        inner = ann.slice
+        cases = list(inner.elements) if isinstance(inner, griffe.ExprTuple) else [inner]
+        return cases, True
+    return _flatten_union(ann), False
 
 
 def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
