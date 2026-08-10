@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint32, uint8, varint32
+from protocol import field, packet, type, uint8, uint32, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.item_stack import RedactableString

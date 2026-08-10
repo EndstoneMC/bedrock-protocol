@@ -318,8 +318,10 @@ which makes it the first place to read when adding a feature — but port the *i
 protoc-faithfully into this architecture rather than lifting the code, and re-verify
 any wire detail against the sources of truth above.
 
-The rewrite **deliberately dropped** every path the MVP did not use — `bitset`,
-`count=`, `tuple`, `tag=IntEnum`, deprecation. A missing
+The rewrite **deliberately dropped** every path the MVP did not use, and a missing
 feature is therefore a deferral, not an oversight: when a packet first needs one,
-re-add it as its own reviewable change (as `@builtin`, `dict[K, V]`, `when=`,
-`endian=` and nested types were), with a test that exercises it.
+re-add it as its own reviewable change, with a test that exercises it. `@builtin`,
+`dict[K, V]`, `when=`, `endian=`, nested types, `bitset` (`input.py`'s
+`bitset[InputData.INPUT_NUM]`) and `count=` (`chunk.py`'s fixed 256-entry
+heightmaps, `login.py`'s counted id lists) have all come back that way. Still gone:
+`tuple` and deprecation.

@@ -601,8 +601,6 @@ class PlaySoundPacket:
     pos: BlockPos
     volume: float
     pitch: float
-    # TODO: confirm against BDS -- the dump types this varint32; CloudburstMC
-    # PlaySoundSerializer_v2168 writes it as an unsigned varint.
     loop_count: varint32 = field(since=2168)
     server_sound_handle: ServerSoundHandle | None
 

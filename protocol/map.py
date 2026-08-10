@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, packet, type, uint32, uint8, uvarint32, varint32
+from protocol import field, int8, int32, packet, type, uint8, uint32, uvarint32, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Color
 

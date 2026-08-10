@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import packet, type, uint8, uvarint64, value
 from protocol.actor import ActorUniqueID
@@ -19,6 +19,7 @@ class ScriptPrimitiveShapeType(IntEnum, uint8):
     PYRAMID = value(7, since=1001)
     ELLIPSOID = value(8, since=1001)
     CONE = value(9, since=1001)
+    NUM_SHAPE_TYPES = auto()
 
 
 class ArrowDataPayload:
@@ -49,10 +50,10 @@ class SphereDataPayload:
     num_segments: uint8
 
 
-# TODO: confirm against BDS -- PrimitiveShapesPacket.h declares a single Vec2 mRadii at both
-# r26_u3 and r26_u4, but the r26_u3 dump and gophertunnel both write two Vec2s. ConeDataPayload
-# has the identical header shape and there the dump agrees on one Vec2, so the split is unlikely
-# to be a dumper artifact. Needs cerealizer<CylinderDataPayload>::bind read directly.
+# PrimitiveShapesPacket.h declares a single Vec2 mRadii here, member for member identical to
+# ConeDataPayload, but BDS binds it under two reflection names: 1.26.33 registers "Radius X" and
+# "Radius Z" back to back in the shape cerealizer, where Cone's single "Radii" is registered
+# elsewhere in the same function. Two Vec2s reach the wire.
 @type(since=1001)
 class CylinderDataPayload:
     radius_x: Vec2

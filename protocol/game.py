@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int16, int32, int64, packet, type, uint8, uint32, uint64, uvarint32, varint32
+from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.attributes import DimensionType
 from protocol.common import BlockPos, Vec2, Vec3
@@ -113,11 +113,6 @@ class GameRule:
     value: None | bool | uvarint32 | float
 
 
-class ExperimentData:
-    name: str
-    enabled: bool
-
-
 class GameRulesChangedPacketData:
     rules: list[GameRule]
 
@@ -154,7 +149,7 @@ class ServerBlockProperty:
 
 @type(until=2168)
 class LevelSettings:
-    seed: int64
+    seed: uint64
     spawn_settings: SpawnSettings
     generator: GeneratorType
     game_type: GameType
@@ -179,7 +174,7 @@ class LevelSettings:
     commands_enabled: bool
     texture_packs_required: bool
     game_rules: list[GameRule] = field(cereal=False)
-    experiments: list[ExperimentData] = field(prefix=uint32)
+    experiments: list[ExperimentToggle] = field(prefix=uint32)
     experiments_ever_toggled: bool
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
@@ -274,7 +269,7 @@ class StartGamePacket:
     template_content_identity: str
     is_trial: bool
     movement_settings: SyncedPlayerMovementSettings
-    level_current_time: int64
+    level_current_time: uint64
     enchantment_seed: varint32
     block_properties: list[BlockEntry]
     multiplayer_correlation_id: str

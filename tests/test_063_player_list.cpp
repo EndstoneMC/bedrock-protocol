@@ -35,7 +35,7 @@ bp::PlayerListPacket_<2168> fill()
 {
     bp::PlayerListPacket_<2168> pkt;
 
-    bp::PlayerListPacketPayload_<2168>::AddEntry add;
+    bp::PlayerListPacket_<2168>::AddEntry add;
     add.action = bp::PlayerListPacketType::ADD;
     add.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
     add.id = static_cast<bp::ActorUniqueID>(7);
@@ -50,7 +50,7 @@ bp::PlayerListPacket_<2168> fill()
     add.color = static_cast<bp::Color>(0x05060708);
     pkt.entries.emplace_back(add);
 
-    bp::PlayerListPacketPayload_<2168>::RemoveEntry remove;
+    bp::PlayerListPacket_<2168>::RemoveEntry remove;
     remove.action = bp::PlayerListPacketType::REMOVE;
     remove.uuid = {.most_significant_bits = 0, .least_significant_bits = 2};
     pkt.entries.emplace_back(remove);
@@ -259,13 +259,13 @@ TEST_CASE("PlayerListPacket: v2168 round-trip")
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.entries.size() == 2);
 
-    const auto &add = std::get<bp::PlayerListPacketPayload_<2168>::AddEntry>(rt.entries[0]);
+    const auto &add = std::get<bp::PlayerListPacket_<2168>::AddEntry>(rt.entries[0]);
     REQUIRE(add.action == bp::PlayerListPacketType::ADD);
     REQUIRE(add.name == "Steve");
     REQUIRE(add.build_platform == bp::BuildPlatform::WIN32);
     REQUIRE(add.skin.profile_hash == "hash");
 
-    const auto &remove = std::get<bp::PlayerListPacketPayload_<2168>::RemoveEntry>(rt.entries[1]);
+    const auto &remove = std::get<bp::PlayerListPacket_<2168>::RemoveEntry>(rt.entries[1]);
     REQUIRE(remove.action == bp::PlayerListPacketType::REMOVE);
     REQUIRE(remove.uuid.least_significant_bits == 2);
 }
@@ -276,7 +276,7 @@ TEST_CASE("PlayerListPacket: v2168 round-trip")
 TEST_CASE("PlayerListPacket: the variant index is not the action value")
 {
     bp::PlayerListPacket_<2168> pkt;
-    bp::PlayerListPacketPayload_<2168>::RemoveEntry remove;
+    bp::PlayerListPacket_<2168>::RemoveEntry remove;
     remove.action = bp::PlayerListPacketType::REMOVE;
     remove.uuid = {};
     pkt.entries.emplace_back(remove);

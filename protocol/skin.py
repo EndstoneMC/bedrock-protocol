@@ -42,7 +42,42 @@ class PieceType(Enum, uint32):
     EMOTE = 27, "Emote"
 
 
+@type(cereal=False)
+class PieceType(Enum, uint32):
+    """persona::stringFromPieceType name-codes the piece type for the pre-cereal
+    write, where cereal binds the enumerator verbatim."""
+
+    SKELETON = 1, "persona_skeleton"
+    BODY = 2, "persona_body"
+    SKIN = 3, "persona_skin"
+    BOTTOM = 4, "persona_bottom"
+    FEET = 5, "persona_feet"
+    DRESS = 6, "persona_dress"
+    TOP = 7, "persona_top"
+    HIGH_PANTS = 8, "persona_high_pants"
+    HANDS = 9, "persona_hand"
+    OUTERWEAR = 10, "persona_outerwear"
+    FACIAL_HAIR = 11, "persona_facial_hair"
+    MOUTH = 12, "persona_mouth"
+    EYES = 13, "persona_eyes"
+    HAIR = 14, "persona_hair"
+    HOOD = 15, "persona_hood"
+    BACK = 16, "persona_back"
+    FACE_ACCESSORY = 17, "persona_face_accessory"
+    HEAD = 18, "persona_head"
+    LEGS = 19, "persona_legs"
+    LEFT_LEG = 20, "persona_left_leg"
+    RIGHT_LEG = 21, "persona_right_leg"
+    ARMS = 22, "persona_arms"
+    LEFT_ARM = 23, "persona_left_arm"
+    RIGHT_ARM = 24, "persona_right_arm"
+    CAPES = 25, "persona_capes"
+    CLASSIC_SKIN = 26, "persona_classic_skin"
+    EMOTE = 27, "persona_emote"
+
+
 class AnimatedTextureType(IntEnum, uint32):
+    NONE = 0
     FACE = 1
     BODY_32X32 = 2
     BODY_128X128 = 3
@@ -93,16 +128,10 @@ class SerializedPersonaPieceHandle:
     product_id: str
 
 
-# TODO: confirm against BDS -- the pre-cereal write name-codes the piece type through
-# persona::stringFromPieceType(type, false), where cereal writes the enumerator verbatim.
-# gophertunnel documents the former as `persona_skeleton`, `persona_body` and so on, which
-# is not the `Skeleton` / `Body` this enum pairs for the cerealised call site. If the two
-# really differ, one enum needs two name codings and this pairing is wrong here. No golden
-# reaches it yet: a classic skin carries no persona pieces.
 @type(cereal=False)
 class SerializedPersonaPieceHandle:
     piece_id: str
-    piece_type: PieceType = field(type=str)
+    piece_type: PieceType = field(type=str, cereal=False)
     pack_id: str
     is_default_piece: bool
     product_id: str
@@ -117,7 +146,7 @@ class TintMapColor:
     """The pre-cereal write walks the map as a list, so each entry carries its own
     key and the colours their own count."""
 
-    piece_type: PieceType = field(type=str)
+    piece_type: PieceType = field(type=str, cereal=False)
     colors: list[str] = field(prefix=uint32)
 
 
@@ -179,9 +208,6 @@ class SerializedSkinRef:
     profile_hash: str = field(since=2168)
 
 
-# TODO: confirm against BDS -- CloudburstMC PlayerSkinSerializer_v390 appends a
-# trailing bool isTrustedSkin here and its v2168 override drops it again; neither
-# dump has that field, and both carry TrustedSkinFlag inside the skin instead.
 @packet(id=93)
 class PlayerSkinPacket:
     uuid: uuid.UUID

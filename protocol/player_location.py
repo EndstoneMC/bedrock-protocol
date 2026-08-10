@@ -25,8 +25,12 @@ class PlayerUpdateEntityOverridesPacket:
 
 @packet(id=325, since=2168)
 class PlayerUpdateEntityOverridesPacket:
-    # TODO: confirm against BDS -- the dump name-codes these; CloudburstMC
-    # PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte instead.
+    # TODO: confirm against BDS -- PlayerUpdateEntityOverridesPacket.h gives these payloads no
+    # tag member at all (ClearOverride and RemoveOverride are empty structs and the type comes
+    # from getUpdateType()), so the header settles nothing beyond UpdateType being uint8_t. The
+    # r26_u4 dump name-codes the tag inside each payload while typing the variant's own switch
+    # uint8; CloudburstMC PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte.
+    # Needs cerealizer<PlayerUpdateEntityOverridesPacketPayload>::bind read directly.
     class ClearOverride:
         update_type: UpdateType = field(type=str)
 

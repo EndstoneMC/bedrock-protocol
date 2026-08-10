@@ -289,7 +289,7 @@ class ItemUseInventoryTransaction:
         ON = 1
 
     transaction: InventoryTransaction
-    action_type: ActionType = field(type=uvarint32)
+    action_type: ActionType
     trigger_type: TriggerType
     pos: BlockPos
     face: uint8
@@ -364,7 +364,7 @@ class ItemUseOnActorInventoryTransaction:
 
     transaction: InventoryTransaction
     runtime_id: ActorRuntimeID
-    action_type: ActionType = field(type=uvarint32)
+    action_type: ActionType
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
@@ -391,7 +391,7 @@ class ItemReleaseInventoryTransaction:
         USE = 1
 
     transaction: InventoryTransaction
-    action_type: ActionType = field(type=uvarint32)
+    action_type: ActionType
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
@@ -436,9 +436,6 @@ class InventoryContentPacket:
     storage_item: SerializedNetworkItemStackDescriptor
 
 
-# TODO: confirm against BDS -- the dump reads the container id as one byte here and as a
-# uvarint32 on packet 49, while gophertunnel and CloudburstMC write a uvarint32 on both.
-# The two agree below 128 and part company on ContainerID::NONE.
 @packet(id=50)
 class InventorySlotPacket:
     inventory_id: ContainerID

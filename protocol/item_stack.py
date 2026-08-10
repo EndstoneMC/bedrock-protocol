@@ -153,9 +153,6 @@ class RedactableString:
     redacted_string: str
 
 
-# TODO: confirm against BDS -- the dump marks Redacted optional, CloudburstMC v2168 reads a
-# second plain string. Both encode an absent/empty redaction as one zero byte, so no golden
-# separates them; only a response carrying a redacted name does.
 @type(since=2168)
 class RedactableString:
     unredacted_string: str

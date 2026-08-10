@@ -149,9 +149,6 @@ class ShapedRecipePayload:
     tag: str
     priority: varint32
     assume_symmetry: bool
-    # TODO: confirm against BDS -- CraftingDataSerializer_v748 skips this for
-    # SHAPED_CHEMISTRY_RECIPE, gophertunnel's marshalShaped writes it for every entry
-    # type that reaches this body.
     unlocking_requirement: SerializedRecipeUnlockingRequirement
     net_id: RecipeNetId
 
@@ -172,6 +169,20 @@ class ShapedRecipePayload:
 
 
 @type(until=2168)
+class ShapedChemistryRecipePayload:
+    recipe_id: str
+    width: varint32
+    height: varint32
+    ingredients: list[SerializedRecipeIngredient] = field(count=lambda r: r.width * r.height)
+    results: list[SerializedNetworkItemInstanceDescriptor]
+    uuid: uuid.UUID
+    tag: str
+    priority: varint32
+    assume_symmetry: bool
+    net_id: RecipeNetId
+
+
+@type(until=2168)
 class ShapelessRecipePayload:
     recipe_id: str
     ingredients: list[SerializedRecipeIngredient]
@@ -179,9 +190,6 @@ class ShapelessRecipePayload:
     uuid: uuid.UUID
     tag: str
     priority: varint32
-    # TODO: confirm against BDS -- CraftingDataSerializer_v748 skips this for
-    # SHAPELESS_CHEMISTRY_RECIPE, gophertunnel's marshalShapeless writes it for every
-    # entry type that reaches this body.
     unlocking_requirement: SerializedRecipeUnlockingRequirement
     net_id: RecipeNetId
 
@@ -195,6 +203,17 @@ class ShapelessRecipePayload:
     tag: str
     priority: varint32
     unlocking_requirement: SerializedRecipeUnlockingRequirement | None
+    net_id: RecipeNetId
+
+
+@type(until=2168)
+class ShapelessChemistryRecipePayload:
+    recipe_id: str
+    ingredients: list[SerializedRecipeIngredient]
+    results: list[SerializedNetworkItemInstanceDescriptor]
+    uuid: uuid.UUID
+    tag: str
+    priority: varint32
     net_id: RecipeNetId
 
 
@@ -230,12 +249,14 @@ class CraftingDataEntry:
         in {
             CraftingDataEntryType.SHAPELESS_RECIPE,
             CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-            CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
         }
     )
-    shaped_recipe: ShapedRecipePayload = field(
-        when=lambda e: e.entry_type
-        in {CraftingDataEntryType.SHAPED_RECIPE, CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE}
+    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE
+    )
+    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
+    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
     )
     multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
     smithing_transform_recipe: SmithingTransformRecipePayload = field(

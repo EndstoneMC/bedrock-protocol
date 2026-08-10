@@ -265,9 +265,5 @@ class ServerboundDiagnosticsPacket:
     category_counters: list[MemoryCategoryCounter]
     entity_timings: list[EntityDiagnosticTimingInfo]
     system_timings: list[SystemDiagnosticTimingInfo]
-    # TODO: confirm against BDS -- the dump marks this optional, CloudburstMC v2168 writes
-    # the array with no presence flag at all. The dump reports cereal's always-true
-    # member-present marker for 7 of its 565 files, so a second framing byte is not ruled
-    # out either; no codec models the flag, so no golden can settle 0 against 1 against 2.
     system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_data: list[ScopeDataSummary] = field(since=1001)

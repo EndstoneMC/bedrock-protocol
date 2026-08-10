@@ -93,7 +93,7 @@ class ScoreboardIdentityPacketInfo:
 @type(since=2168)
 class ScoreboardIdentityPacketInfo:
     scoreboard_id: ScoreboardId
-    player_id: PlayerScoreboardId | None
+    player_id: varint64 | None
 
 
 @packet(id=108, until=2168)

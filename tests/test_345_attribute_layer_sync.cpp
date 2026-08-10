@@ -16,7 +16,7 @@ bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
     env.attribute = bp::BoolAttributeData{true, bp::BoolAttributeOperation::OVERRIDE};
     env.current_transition_ticks = 0;
     env.total_transition_ticks = 0;
-    env.easing = "linear";
+    env.easing = bp::EasingType::LINEAR;
     if constexpr (V == 1001) {
         env.local_transition_ticks = 0;
         env.noise_transition = false;

@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import int8, int16, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
 from protocol.common import BlockPos, Vec2, Vec3
@@ -109,6 +109,7 @@ class ActorDataIDs(IntEnum, uint8):
     LAYING_AMOUNT = 93
     LAYING_AMOUNT_PREVIOUS = 94
     DATA_DURATION = 95
+    DATA_SPAWN_TIME_DEPRECATED = 96
     DATA_CHANGE_RATE = 97
     DATA_CHANGE_ON_PICKUP = 98
     DATA_PICKUP_COUNT = 99
@@ -153,6 +154,7 @@ class ActorDataIDs(IntEnum, uint8):
     AIM_ASSIST_PRIORITY_ACTOR_ID = 138
     RESERVED_139 = 139
     NAMEPLATE_RENDER_DISTANCE_MAX = 140
+    COUNT = auto()
 
 
 class DataItemType(IntEnum, uint8):

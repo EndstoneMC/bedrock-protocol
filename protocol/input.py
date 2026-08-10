@@ -114,9 +114,6 @@ class PlayerBlockActionData:
     facing: varint32
 
 
-# TODO: confirm against BDS -- the slot gate is gophertunnel's, which reads the id as the
-# ItemStackNetIdVariant projection: only a negative-even id is a legacy request. Packet 30's
-# pre-cereal body gates the same slots on `!= 0`, and the two part company below -1.
 @type(until=2168)
 class PackedItemUseLegacyInventoryTransaction:
     id: varint32
@@ -234,6 +231,9 @@ class PlayerAuthInputPacket:
 
 @packet(id=144, since=2168)
 class PlayerAuthInputPacket:
+    # BDS narrows this to `enum InputData : int` at r26_u4 where r26_u3 has `unsigned int`,
+    # but a redeclaration cannot carry its own underlying type. The enum only ever sizes the
+    # bitset, so neither spelling reaches the wire.
     class InputData(IntEnum, uint32):
         ASCEND = 0
         DESCEND = 1

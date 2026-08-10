@@ -107,8 +107,7 @@ class SubChunkPacket:
     # TODO: mCenterPos is a SubChunkPos, but this packet does not cerealise until 2168, so here
     # it writes three varint32 where the cerealised SubChunkPos (chunk.py:20, reached by packet
     # 175 from 1001 on) is three fixed int32. The DSL versions a type by protocol version, not
-    # by writer, so the components are spelled out. gophertunnel sub_chunk.go, CloudburstMC
-    # SubChunkSerializer_v486 and Nukkit-MOT all write varints here.
+    # by writer, so the components are spelled out.
     center_pos_x: varint32
     center_pos_y: varint32
     center_pos_z: varint32

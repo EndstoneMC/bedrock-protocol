@@ -47,8 +47,6 @@ class SerializedAbilitiesData:
     target_player: ActorUniqueID = field(type=int64)
     player_permissions: PlayerPermissionLevel
     command_permissions: CommandPermissionLevel
-    # TODO: confirm against BDS -- the dump length-prefixes Layers with a uvarint32,
-    # gophertunnel's AbilityData writes a fixed uint8 count (SliceUint8Length).
     layers: list[SerializedLayer]
 
 

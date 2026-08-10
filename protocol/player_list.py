@@ -32,29 +32,6 @@ class BuildPlatform(IntEnum, int):
     LINUX = 15
 
 
-class PlayerListPacketPayload:
-    """Each entry carries its action twice: once as the variant index over the two
-    payloads, then again as the payload's own member."""
-
-    class RemoveEntry:
-        action: PlayerListPacketType
-        uuid: uuid.UUID
-
-    class AddEntry:
-        action: PlayerListPacketType
-        uuid: uuid.UUID
-        id: ActorUniqueID
-        name: str
-        xuid: str
-        platform_online_id: str
-        build_platform: BuildPlatform = field(type=int32)
-        skin: SerializedSkinRef
-        is_teacher: bool
-        is_host: bool
-        is_sub_client: bool
-        color: Color
-
-
 @type(until=2168)
 class PlayerListEntry:
     uuid: uuid.UUID
@@ -86,4 +63,25 @@ class PlayerListPacket:
 
 @packet(id=63, since=2168)
 class PlayerListPacket:
-    entries: list[PlayerListPacketPayload.RemoveEntry | PlayerListPacketPayload.AddEntry]
+    """Each entry carries its action twice: once as the variant index over the two
+    payloads, then again as the payload's own member."""
+
+    class RemoveEntry:
+        action: PlayerListPacketType
+        uuid: uuid.UUID
+
+    class AddEntry:
+        action: PlayerListPacketType
+        uuid: uuid.UUID
+        id: ActorUniqueID
+        name: str
+        xuid: str
+        platform_online_id: str
+        build_platform: BuildPlatform = field(type=int32)
+        skin: SerializedSkinRef
+        is_teacher: bool
+        is_host: bool
+        is_sub_client: bool
+        color: Color
+
+    entries: list[RemoveEntry | AddEntry]
