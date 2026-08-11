@@ -251,7 +251,7 @@ class Parser:
         scope to annotate against it -- so identical repeats collapse to one;
         bodies that disagree are a version-redeclared nested type, taking the
         range of the owner declaration each body was written in."""
-        owners = {id(cls): decl for decl in decls for cls in decl.classes.values()}
+        owners = {id(cls): decl for decl in decls for cls in nested_of(decl)}
         out: list[Enum | Struct] = []
         for group in nested_declarations(decls):
             for c in group:
@@ -762,11 +762,20 @@ def nested_declarations(decls: list[griffe.Class]) -> list[list[griffe.Class]]:
     each of its bodies, so a name declared in several lands in one group."""
     groups: dict[str, list[griffe.Class]] = {}
     for decl in decls:
-        for cls in decl.classes.values():
+        for cls in nested_of(decl):
             if cls.is_alias:
                 continue
             groups.setdefault(cls.name, []).append(cls)
     return list(groups.values())
+
+
+def nested_of(decl: griffe.Class) -> list[griffe.Class]:
+    """The owner's nested classes in source order. griffe keys members by name,
+    so a nested type redeclared inside one body survives only as its last
+    declaration; `_DeclarationCollector` reattaches the ordered list, and this
+    reads it back. Falls back to the member dict where nothing was recovered."""
+    recovered = decl.extra.get(EXTRA_NAMESPACE, {}).get(NESTED_DECLARATIONS)
+    return list(recovered) if recovered else list(decl.classes.values())
 
 
 #: DSL primitive an enum may declare as its C++ underlying type -> (size in bytes,
@@ -915,6 +924,12 @@ def _dotted_name(ann: _Ann) -> str | None:
 def _has_decorator(cls: griffe.Class, name: str) -> bool:
     """A bare decorator like `@builtin`, which carries no call parentheses."""
     return any(_base_name(d.value) == name for d in cls.decorators)
+
+
+#: `extra` namespace, and the key under which an owner's ordered list of nested
+#: declarations is reattached -- see `nested_of`.
+EXTRA_NAMESPACE = "bpc"
+NESTED_DECLARATIONS = "nested_declarations"
 
 
 def _decl_ranges(decls: list[griffe.Class]) -> _Ranges:

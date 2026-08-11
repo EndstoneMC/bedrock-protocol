@@ -123,25 +123,25 @@ TEST_CASE("MoveActorDeltaPacket: the flags word and the presence bytes are a har
     REQUIRE(rejects<bp::MoveActorDeltaPacket_<2168>>(encode(older)));
 }
 
-// 2181 appended a uvarint64 tick count. It has no golden -- gophertunnel stops at
+// 2187 appended a uvarint64 tick count. It has no golden -- gophertunnel stops at
 // 2168 -- so the assertions are structural: the body grows by the varint, and a 2168
 // one runs short of it.
-TEST_CASE("MoveActorDeltaPacket: v2181 appends the tick count")
+TEST_CASE("MoveActorDeltaPacket: v2187 appends the tick count")
 {
     bp::MoveActorDeltaPacket_<2168> older;
     older.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
     older.move_data.new_position_x = 1.0f;
     older.move_data.is_on_ground = true;
 
-    bp::MoveActorDeltaPacket_<2181> newer;
+    bp::MoveActorDeltaPacket_<2187> newer;
     newer.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
     newer.move_data.new_position_x = 1.0f;
     newer.move_data.is_on_ground = true;
     newer.move_data.ticks = 7;
 
     REQUIRE(encode(newer).size() == encode(older).size() + 1);
-    REQUIRE(rejects<bp::MoveActorDeltaPacket_<2181>>(encode(older)));
-    REQUIRE(decode<bp::MoveActorDeltaPacket_<2181>>(encode(newer)).move_data.ticks == 7);
+    REQUIRE(rejects<bp::MoveActorDeltaPacket_<2187>>(encode(older)));
+    REQUIRE(decode<bp::MoveActorDeltaPacket_<2187>>(encode(newer)).move_data.ticks == 7);
 }
 
 // is_on_ground and the three force flags live in the 1001 header word rather than as

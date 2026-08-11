@@ -125,7 +125,7 @@ class PackedItemUseLegacyInventoryTransaction:
 class PackedItemUseLegacyInventoryTransaction:
     id: ItemStackLegacyRequestId
     slots: list[LegacySetSlot] | None
-    _true_1: Literal[True]
+    _true_1: Literal[True] = field(until=2187)
     transaction: ItemUseInventoryTransaction
 
 
@@ -304,7 +304,7 @@ class PlayerAuthInputPacket:
     pos: Vec3
     move: Vec2
     y_head_rot: float
-    _true_1: Literal[True]
+    _true_1: Literal[True] = field(until=2187)
     input_data: list[InputData]
     input_mode: InputMode
     play_mode: ClientPlayMode
@@ -312,15 +312,15 @@ class PlayerAuthInputPacket:
     interact_rotation: Vec2
     client_tick: PlayerInputTick
     pos_delta: Vec3
-    _true_2: Literal[True]
+    _true_2: Literal[True] = field(until=2187)
     item_use_transaction: PackedItemUseLegacyInventoryTransaction | None
-    _true_3: Literal[True]
+    _true_3: Literal[True] = field(until=2187)
     item_stack_request: ItemStackRequestCereal.RequestData | None
-    _true_4: Literal[True]
+    _true_4: Literal[True] = field(until=2187)
     player_block_actions: list[PlayerBlockActionData] | None
-    _true_5: Literal[True]
+    _true_5: Literal[True] = field(until=2187)
     vehicle_rot: Vec2 | None
-    _true_6: Literal[True]
+    _true_6: Literal[True] = field(until=2187)
     client_predicted_vehicle: ActorUniqueID | None
     analog_move_vector: Vec2
     camera_orientation: Vec3

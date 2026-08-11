@@ -163,7 +163,7 @@ class MemoryCategory(IntEnum, uint8):
     ORE_UI_CLIENT = 55
     PERSONA_PIECES = 56
     PERSONA_ANIMATIONS = 57
-    PERSONA_TEXTURES = value(58, until=2181)
+    PERSONA_TEXTURES = value(58, until=2187)
     PERSONA_CHARACTERS = auto()
     PERSONA_SKIN_PACKS = auto()
     PERSONA_REPO = auto()
@@ -229,8 +229,8 @@ class EntityDiagnosticTimingInfo:
     entity: str
     time_in_ns: uint64
     percent_of_total: uint8
-    position: Vec3 | None = field(since=2181)
-    dimension: str | None = field(since=2181)
+    position: Vec3 | None = field(since=2187)
+    dimension: str | None = field(since=2187)
 
 
 class SystemDiagnosticTimingInfo:

@@ -192,9 +192,9 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     type: InventorySourceType
-    _true_1: Literal[True]  # blameMojang: why, uhhh?
+    _true_1: Literal[True] = field(until=2187)  # blameMojang: why, uhhh?
     container_id: ContainerID | None
-    _true_2: Literal[True]  # blameMojang: hello?
+    _true_2: Literal[True] = field(until=2187)  # blameMojang: hello?
     flags: InventorySourceFlags | None
 
 
@@ -221,7 +221,7 @@ class InventoryTransaction:
 
 @type(since=1001)
 class InventoryTransaction:
-    _true: Literal[True]
+    _true: Literal[True] = field(until=2187)
     actions: list[InventoryAction]
 
 
@@ -418,7 +418,7 @@ class InventoryTransactionPacket:
 class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
-    _true: Literal[True]
+    _true: Literal[True] = field(until=2187)
     transaction: TransactionData
 
 

@@ -29,7 +29,16 @@ from bedrock_protocol.descriptor import (
     scoped,
 )
 
-from .parser import Parser, SymbolTable, decl_is_cereal, enum_underlying_of, is_enum, nested_declarations
+from .parser import (
+    EXTRA_NAMESPACE,
+    NESTED_DECLARATIONS,
+    Parser,
+    SymbolTable,
+    decl_is_cereal,
+    enum_underlying_of,
+    is_enum,
+    nested_declarations,
+)
 
 
 class _DeclarationCollector(griffe.Extension):
@@ -70,6 +79,11 @@ class _DeclarationCollector(griffe.Extension):
         parent = cls.parent
         if isinstance(parent, griffe.Module):
             self.by_module.setdefault(parent.path, []).append(cls)
+        elif isinstance(parent, griffe.Class):
+            # Same reason one level down: a nested type redeclared once per era
+            # would collapse onto its last body in the owner's member dict, so
+            # reattach the ordered list for `nested_of` to read back.
+            parent.extra[EXTRA_NAMESPACE].setdefault(NESTED_DECLARATIONS, []).append(cls)
 
 
 def _with_guard(stmt: ast.stmt, owner: str) -> tuple[ast.With, ast.expr] | None:

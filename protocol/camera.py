@@ -53,8 +53,8 @@ class CameraPreset:
     player_effects: bool | None
     aim_assist: CameraAimAssistCommandPresetDefinition | None
     control_scheme: Scheme | None
-    apply_inherited_starting_rotation: bool = field(since=2181)
-    starting_rotation: Vec2 | None = field(since=2181)
+    apply_inherited_starting_rotation: bool = field(since=2187)
+    starting_rotation: Vec2 | None = field(since=2187)
 
 
 class CameraPresets:

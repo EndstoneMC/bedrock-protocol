@@ -33,7 +33,7 @@ class TextDataPayload:
     text: str
     use_rotation: bool
     background_color: Color | None
-    line_gap_height: float = field(since=2181)
+    line_gap_height: float = field(since=2187)
     depth_test: bool
     show_backface: bool
     show_text_backface: bool
