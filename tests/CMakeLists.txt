@@ -59,6 +59,7 @@ target_sources(bedrock_protocol_tests PRIVATE
         test_348_update_sound_data.cpp
         test_351_set_player_furnace_options.cpp
         test_072_game_rules_changed.cpp
+        test_162_item_registry.cpp
 )
 target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)
 
