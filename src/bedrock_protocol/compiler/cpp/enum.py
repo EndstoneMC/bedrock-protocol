@@ -86,13 +86,18 @@ class EnumGenerator:
         q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
-            p.print("if (const auto name = enum_name(value); !name.empty()) stream.write(name);\n")
+            # A value with no name is unencodable, and the write path has no error to
+            # return. Skipping the field would take the length prefix with it and leave
+            # every later field one string out of step, which reads as a desync a long
+            # way from its cause. The empty name keeps the stream aligned and no reader
+            # accepts it, so the failure lands on the next deserialize.
+            p.print("stream.write(enum_name(value));\n")
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
             # BDS lowercases the incoming string before its own lookup, so the read is
             # case-insensitive to match. enum_cast keys an unordered_map per enum on first
-            # use, which the collision check below keeps unambiguous.
+            # use, which the collision check above keeps unambiguous.
             p.print("auto v = stream.read<std::string>();\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"const auto value = enum_cast<{q}>(*v, case_insensitive{{}});\n")
