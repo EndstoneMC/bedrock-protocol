@@ -260,8 +260,8 @@ class MinecraftPacketIds(IntEnum):
     CLIENTBOUND_UPDATE_SOUND_DATA = value(348, since=1001)
     SEND_PARTY_DESTINATION_COOKIE = value(349, since=1001)
     PARTY_DESTINATION_COOKIE_RESPONSE = value(350, since=1001)
-    SET_PLAYER_FURNACE_OPTIONS = value(351, since=2187)
-    RECORD_STARTED = value(352, since=2187)
+    SET_PLAYER_FURNACE_OPTIONS = value(351, since=2192)
+    RECORD_STARTED = value(352, since=2192)
     END_ID = auto()
 
 
@@ -414,8 +414,8 @@ class DisconnectFailReason(IntEnum):
     HOST_ACCEPTS_NO_TYPE_OF_AUTH = 145
     NOT_AUTHENTICATED_FAST_FAIL = 146
     EDITOR_NOT_ALLOWED = 147
-    MISSING_STRUCTURE_DATA = value(148, since=2187)
-    UNSUPPORTED_TRANSPORT = value(149, since=2187)
+    MISSING_STRUCTURE_DATA = value(148, since=2192)
+    UNSUPPORTED_TRANSPORT = value(149, since=2192)
     MAX_DISCONNECT_FAIL_REASON = auto()
 
 

@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int8, int16, packet, type, uint8, uint16, uint32, uvarint32, varint32
@@ -99,6 +99,12 @@ class ContainerEnumName(IntEnum, uint8):
     RECIPE_FURNACE_ITEMS_CONTAINER = 66
 
 
+class HandSlot(IntEnum, uint8):
+    MAINHAND = 0
+    OFFHAND = 1
+    COUNT = auto()
+
+
 class FullContainerName:
     name: ContainerEnumName
     dynamic_id: uint32 | None
@@ -192,9 +198,9 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     type: InventorySourceType
-    _true_1: Literal[True] = field(until=2187)  # blameMojang: why, uhhh?
+    _true_1: Literal[True] = field(until=2192)  # blameMojang: why, uhhh?
     container_id: ContainerID | None
-    _true_2: Literal[True] = field(until=2187)  # blameMojang: hello?
+    _true_2: Literal[True] = field(until=2192)  # blameMojang: hello?
     flags: InventorySourceFlags | None
 
 
@@ -221,7 +227,7 @@ class InventoryTransaction:
 
 @type(since=1001)
 class InventoryTransaction:
-    _true: Literal[True] = field(until=2187)
+    _true: Literal[True] = field(until=2192)
     actions: list[InventoryAction]
 
 
@@ -295,6 +301,7 @@ class ItemUseInventoryTransaction:
     pos: BlockPos
     face: uint8
     slot: varint32
+    hand: HandSlot = field(since=2192)
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
@@ -418,7 +425,7 @@ class InventoryTransactionPacket:
 class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
-    _true: Literal[True] = field(until=2187)
+    _true: Literal[True] = field(until=2192)
     transaction: TransactionData
 
 

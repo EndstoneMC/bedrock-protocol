@@ -5,7 +5,7 @@ from protocol import packet, type, uint8
 package = "bedrock.protocol"
 
 
-@type(since=2187)
+@type(since=2192)
 class FurnaceLeftTabIndex(IntEnum):
     NONE = 0
     RECIPE_FOOD = 1
@@ -15,21 +15,21 @@ class FurnaceLeftTabIndex(IntEnum):
     INVENTORY = 5
 
 
-@type(since=2187)
+@type(since=2192)
 class FurnaceLayout(IntEnum):
     NONE = 0
     INVENTORY_ONLY = 1
     DEFAULT = 2
 
 
-@type(since=2187)
+@type(since=2192)
 class FurnaceOptions:
     left_furnace_tab: FurnaceLeftTabIndex
     filtering: bool
     layout: FurnaceLayout
 
 
-@packet(id=351, since=2187)
+@packet(id=351, since=2192)
 class SetPlayerFurnaceOptionsPacket:
     """The player's screen options for one kind of furnace: which left-hand tab is
     open, whether the recipe list is filtered, and the layout it draws with."""

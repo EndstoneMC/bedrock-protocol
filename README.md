@@ -12,7 +12,7 @@ consumer names the version it wants and gets a compile error if it asks for a fi
 that era never had.
 
 Modelled today: protocol **975** (1.26.20), **1001** (1.26.30), **2168** (1.26.40) and
-**2187** (1.26.50).
+**2192** (1.26.50.26).
 
 ## Example
 

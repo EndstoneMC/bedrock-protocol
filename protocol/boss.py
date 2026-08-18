@@ -77,7 +77,7 @@ class BossEventPacket:
     """Sent when a boss gets updated"""
 
     boss_id: ActorUniqueID
-    player_id: ActorUniqueID
+    player_id: ActorUniqueID = field(until=2192)
     event_type: BossEventUpdateType
     name: str
     filtered_name: str

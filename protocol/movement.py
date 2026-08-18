@@ -89,7 +89,7 @@ class MoveActorDeltaData:
     force_move: bool
     force_move_local_entity: bool
     force_completion: bool
-    ticks: uvarint64 = field(since=2187)
+    ticks: uvarint64 = field(since=2192)
 
 
 @packet(id=12, until=2168)

@@ -65,6 +65,6 @@ TEST_CASE("the registry is walkable by id", "[packet]")
     STATIC_REQUIRE(modelled<975>(std::make_integer_sequence<int, end_id<975>>{}) == 54);
     STATIC_REQUIRE(modelled<1001>(std::make_integer_sequence<int, end_id<1001>>{}) == 55);
     STATIC_REQUIRE(modelled<2168>(std::make_integer_sequence<int, end_id<2168>>{}) == 55);
-    STATIC_REQUIRE(modelled<2187>(std::make_integer_sequence<int, end_id<2187>>{}) == 56);
+    STATIC_REQUIRE(modelled<2192>(std::make_integer_sequence<int, end_id<2192>>{}) == 56);
     STATIC_REQUIRE(ids_agree<1001>(std::make_integer_sequence<int, end_id<1001>>{}));
 }

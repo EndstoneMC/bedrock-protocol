@@ -602,9 +602,9 @@ class PlaySoundPacket:
     volume: float
     pitch: float
     loop_count: varint32 = field(since=2168)
-    bypass_listener_range_check: bool = field(since=2187)
+    bypass_listener_range_check: bool = field(since=2192)
     server_sound_handle: ServerSoundHandle | None
-    playback_position_seconds: float | None = field(since=2187)
+    playback_position_seconds: float | None = field(since=2192)
 
 
 @packet(id=348, since=1001, until=2168)

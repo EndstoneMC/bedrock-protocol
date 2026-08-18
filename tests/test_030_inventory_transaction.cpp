@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -352,4 +353,58 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     REQUIRE(back.legacy_set_item_slots.size() == 1);
     REQUIRE(back.legacy_set_item_slots[0].slots == "\x03\x04");
     REQUIRE(std::get<0>(back.transaction).transaction.actions.empty());
+}
+
+// 2192 inserts the hand between the slot and the item. No golden -- gophertunnel stops at
+// 2168 -- so the 2168 body is the reference, and three changes land in that delta at once:
+// the hand arrives, and the two always-true markers, one on the transaction and one on the
+// packet, go.
+TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
+{
+    bp::v2168::ItemUseInventoryTransaction older;
+    older.transaction.actions = std::vector<bp::v2168::InventoryAction>{};
+    older.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
+    older.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    older.pos = {.x = 1, .y = 2, .z = 3};
+    older.face = 4;
+    older.slot = 5;
+    older.target_block_id = 9;
+
+    bp::InventoryTransactionPacket_<2168> old_packet;
+    old_packet.transaction = older;
+
+    bp::v2192::ItemUseInventoryTransaction use;
+    use.transaction.actions = std::vector<bp::v2192::InventoryAction>{};
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    use.pos = {.x = 1, .y = 2, .z = 3};
+    use.face = 4;
+    use.slot = 5;
+    use.hand = bp::HandSlot::OFFHAND;
+    use.target_block_id = 9;
+
+    bp::InventoryTransactionPacket_<2192> packet;
+    packet.transaction = use;
+
+    const auto off_hand = encode(packet);
+    REQUIRE(off_hand.size() + 1 == encode(old_packet).size());
+
+    const auto back = decode<bp::InventoryTransactionPacket_<2192>>(off_hand);
+    REQUIRE(std::get<2>(back.transaction).hand == bp::HandSlot::OFFHAND);
+    REQUIRE(std::get<2>(back.transaction).slot == 5);
+    REQUIRE(std::get<2>(back.transaction).target_block_id == 9);
+
+    // The hand is one byte of its own: switching hands moves that byte and no other.
+    use.hand = bp::HandSlot::MAINHAND;
+    packet.transaction = use;
+    const auto main_hand = encode(packet);
+    REQUIRE(main_hand.size() == off_hand.size());
+
+    std::size_t differing = 0;
+    for (std::size_t i = 0; i < main_hand.size(); ++i) {
+        if (main_hand[i] != off_hand[i]) {
+            ++differing;
+        }
+    }
+    REQUIRE(differing == 1);
 }

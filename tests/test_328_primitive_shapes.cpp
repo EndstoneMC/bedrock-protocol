@@ -14,7 +14,7 @@ constexpr auto argb = static_cast<bp::Color>(0x44556677);
 
 // The three shapes below are shaped identically at both eras, so each is built once
 // against whichever snapshot's payload the caller wants. The type enum gained members
-// at 1001 and the text payload a field at 2187, so both are versioned alongside the
+// at 1001 and the text payload a field at 2192, so both are versioned alongside the
 // payload and come from it.
 template <class Payload>
 using ShapeTypeOf = typename decltype(Payload::shape_type)::value_type;
