@@ -38,6 +38,8 @@ list(FILTER BEDROCK_PROTOCOL_SOURCES EXCLUDE REGEX "/_[^/]*\\.py$")
 bedrock_protocol_generate(
         TARGET bedrock_protocol
         INPUTS ${BEDROCK_PROTOCOL_SOURCES}
+        # The DSL surface is not an input, but every generated file reads __version__ off it.
+        DEPENDENCIES ${CMAKE_CURRENT_SOURCE_DIR}/protocol/__init__.py
         IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         COMPILER_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
         OUT_VAR BEDROCK_PROTOCOL_GENERATED
