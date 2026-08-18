@@ -14,7 +14,7 @@ so a roll is a wholesale renumber of that era's gates plus the wire changes the
 new dump added.
 
 `~/endweave` consumes this schema. After landing here, roll it too - its
-`follow-protocol` skill covers that half and is the other end of this
+`add-protocol` skill covers that half and is the other end of this
 one.
 
 ---
