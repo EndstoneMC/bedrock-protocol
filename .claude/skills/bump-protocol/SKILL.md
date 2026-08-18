@@ -1,5 +1,5 @@
 ---
-name: model-protocol-version
+name: bump-protocol
 description: Model a new rolling preview network version in the schema - establish the number, diff the protocol-docs dumps, renumber the superseded preview's gates onto it, and model the wire changes it added. Use when a new BDS preview dump lands or the schema should follow it ("add 2192 support", "bump the protocol to the latest preview", "follow 1.26.50.x to protocol N", "model the new network version").
 ---
 
@@ -14,7 +14,7 @@ so a roll is a wholesale renumber of that era's gates plus the wire changes the
 new dump added.
 
 `~/endweave` consumes this schema. After landing here, roll it too - its
-`follow-protocol-version` skill covers that half and is the other end of this
+`follow-protocol` skill covers that half and is the other end of this
 one.
 
 ---
