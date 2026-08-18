@@ -35,5 +35,6 @@ __pycache__/
 # Stray bpc scratch output
 .bpc_scratch/
 
-# Agent working dir
-.claude/
+# Agent working dir, less the skills, which ship with the repo
+.claude/*
+!.claude/skills/
