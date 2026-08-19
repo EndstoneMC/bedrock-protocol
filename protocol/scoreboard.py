@@ -1,4 +1,5 @@
 from enum import Enum, IntEnum
+from typing import Literal
 
 from protocol import field, int32, packet, type, uint8, varint64
 from protocol.actor import ActorUniqueID
@@ -54,6 +55,7 @@ class ScorePacketInfo:
 class RemoveScore:
     action: ScorePacketEntryAction = field(type=str)
     scoreboard_id: ScoreboardId
+    _true: Literal[True] = field(since=2169, until=2192)
     objective_name: str | None
 
 
