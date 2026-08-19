@@ -15,6 +15,8 @@ from collections.abc import Iterator
 
 from bedrock_protocol.descriptor import (
     LEGACY_SCOPE,
+    ArrayType,
+    CondType,
     Enum,
     EnumType,
     FieldType,
@@ -741,7 +743,7 @@ def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:
         if isinstance(t, EnumType):
             if t.scalar is None:
                 out.add(t.name)
-        elif isinstance(t, (OptionalType, RepeatedType)):
+        elif isinstance(t, (OptionalType, RepeatedType, ArrayType, CondType)):
             walk(t.inner)
         elif isinstance(t, MappingType):
             walk(t.key)

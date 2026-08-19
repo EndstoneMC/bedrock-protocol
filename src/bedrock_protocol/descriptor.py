@@ -6,8 +6,8 @@ produces a `File`; the resolver (`compiler.resolver`) refines it into a
 
 Every dataclass is frozen. Each field carries one `FieldType` tree describing
 both the shape the user wrote (`X | None` → `OptionalType`, `list[T]` →
-`RepeatedType`, `dict[K, V]` → `MappingType`, `A | B` → `VariantType`) and the
-encoding it takes on the wire.
+`RepeatedType`, `array[T, N]` → `ArrayType`, `dict[K, V]` → `MappingType`,
+`A | B` → `VariantType`) and the encoding it takes on the wire.
 """
 
 from __future__ import annotations
@@ -145,12 +145,17 @@ class PrimitiveType:
     narrow but written as a varint keeps both halves.
 
     `endian` is the byte order of a fixed-width encoding, set by
-    `field(endian="big")` for the few fields Bedrock sends big-endian."""
+    `field(endian="big")` for the few fields Bedrock sends big-endian.
+
+    `trailing` is set by `field(prefix=None)` on a `bytes` field: the wire
+    leaves the length off and the frame boundary terminates the read, so the
+    field has to be the last of its struct."""
 
     name: str
     alias: str | None = None
     wire: str | None = None
     endian: Endian = "little"
+    trailing: bool = False
     kind: Literal["primitive"] = "primitive"
 
     @property
@@ -285,6 +290,28 @@ class RepeatedType:
 
 
 @dataclass(frozen=True)
+class ArrayType:
+    """`array[T, N]` — exactly `N` elements, with nothing on the wire marking
+    the count, for a BDS member declared `std::array<T, N>`. `list[T]` writes a
+    length prefix and `field(count=)` recomputes one off earlier fields; this
+    size is part of the type, so neither side has anything to work out.
+
+    `enum_member` records the `(enum, member)` a size spelled
+    `array[T, Enum.MEMBER]` came from, as a `bitset[N]` width does. The pool
+    re-resolves it against each snapshot's view of that enum, so a size named by
+    a count sentinel follows the enum."""
+
+    inner: "FieldType"
+    size: int
+    enum_member: tuple[str, str] | None = None
+    kind: Literal["array"] = "array"
+
+    @property
+    def referenced(self) -> frozenset[str]:
+        return self.inner.referenced
+
+
+@dataclass(frozen=True)
 class MappingType:
     """`dict[K, V]` — a length prefix (`prefix`, default `uvarint32`) followed
     by that many key/value pairs, each key immediately preceding its value."""
@@ -342,6 +369,7 @@ FieldType = (
     | BitsetType
     | OptionalType
     | RepeatedType
+    | ArrayType
     | MappingType
     | VariantType
     | CondType

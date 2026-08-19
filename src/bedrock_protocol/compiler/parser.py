@@ -20,6 +20,7 @@ from bedrock_protocol.descriptor import (
     INT_WIDTHS,
     INTEGER_PRIMITIVES,
     PRIMITIVES,
+    ArrayType,
     BitsetType,
     CompilerError,
     CondType,
@@ -307,6 +308,11 @@ class Parser:
         if lam is None or t is None:
             return t
         inner: FieldType = t.inner if isinstance(t, OptionalType) else t
+        if isinstance(inner, ArrayType):
+            raise CompilerError(
+                f"{field_name}: field(count=...) applies to a list[T] field -- an array[T, N] "
+                "already carries its size in its type"
+            )
         if not isinstance(inner, RepeatedType):
             raise CompilerError(f"{field_name}: field(count=...) applies to a list[T] field, got {inner.kind}")
         if _call_arg(call, "field", "prefix") is not None:
@@ -553,13 +559,13 @@ class Parser:
         underlying = self.enum_underlying[enum_name]
         return _with_endian(default_enum_wire(underlying), endian, field_name)
 
-    # ---- bitset width ------------------------------------------------------
+    # ---- fixed widths ------------------------------------------------------
 
     def _bitset(self, ann: griffe.ExprSubscript, field_name: str) -> BitsetType | None:
         """A `bitset[N]` subscript, or None for anything else."""
         if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
             return None
-        size, member = self._bitset_width(ann.slice)
+        size, member = self._fixed_width(ann.slice)
         if size is None or size <= 0:
             raise CompilerError(
                 f"{field_name}: bitset[...] needs a positive integer width -- an int literal or a "
@@ -567,7 +573,17 @@ class Parser:
             )
         return BitsetType(size=size, enum_member=member)
 
-    def _bitset_width(self, expr: _Ann) -> tuple[int | None, tuple[str, str] | None]:
+    def _array(self, inner: FieldType, size_ann: _Ann, field_name: str) -> ArrayType:
+        """The `array[T, N]` node for an already-parsed element type."""
+        size, member = self._fixed_width(size_ann)
+        if size is None or size <= 0:
+            raise CompilerError(
+                f"{field_name}: array[...] needs a positive integer size -- an int literal or a "
+                f"member of an enum nested in the same class -- got {size_ann}"
+            )
+        return ArrayType(inner=inner, size=size, enum_member=member)
+
+    def _fixed_width(self, expr: _Ann) -> tuple[int | None, tuple[str, str] | None]:
         """The width baked into the C++ type and, where the DSL spelled it
         `Enum.MEMBER`, the symbolic ref the pool re-resolves per snapshot. BDS
         sizes PlayerAuthInput's bitset by its own `INPUT_NUM` sentinel, which
@@ -593,6 +609,7 @@ class Parser:
         # The flavour applies to every declared type the annotation names, so a
         # `list[T]` reaches its element with it, as `field(type=)` already does.
         cereal = _bool_kwarg(call, "field", "cereal")
+        trailing = _trailing(call)
         values = _literal_values(ann, field_name)
         if values is not None:
             return self._literal_type(values, field_name, type_kw, endian)
@@ -606,7 +623,7 @@ class Parser:
                 f"{field_name}: field(type=dict[K, V]) names the halves of a dict[K, V] field, "
                 f"and this one is not one"
             )
-        return t
+        return _as_trailing(t, field_name) if trailing else t
 
     def _literal_type(
         self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
@@ -678,6 +695,10 @@ class Parser:
             if elem is not None:
                 inner = self._base_type(elem, type_kw, prefix, field_name, endian, scope, cereal, halves)
                 return None if inner is None else RepeatedType(inner=inner, prefix=prefix)
+            fixed = _array_parts(ann, field_name)
+            if fixed is not None:
+                inner = self._base_type(fixed[0], type_kw, prefix, field_name, endian, scope, cereal, halves)
+                return None if inner is None else self._array(inner, fixed[1], field_name)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
@@ -798,7 +819,7 @@ def _is_sized(t: FieldType | None) -> bool:
     """Whether the field's C++ spelling has a `.size()`. An optional is a
     `std::optional`, which has none."""
     t = _unwrapped(t)
-    if isinstance(t, (RepeatedType, MappingType)):
+    if isinstance(t, (RepeatedType, ArrayType, MappingType)):
         return True
     return isinstance(t, PrimitiveType) and t.name in ("str", "bytes")
 
@@ -842,7 +863,7 @@ def _mapping_of(t: FieldType | None) -> MappingType | None:
     """The `dict[K, V]` inside a field's type tree, through whatever wraps it."""
     if isinstance(t, MappingType):
         return t
-    if isinstance(t, (OptionalType, RepeatedType, CondType)):
+    if isinstance(t, (OptionalType, RepeatedType, ArrayType, CondType)):
         return _mapping_of(t.inner)
     return None
 
@@ -1138,6 +1159,17 @@ def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | s
     return None
 
 
+def _array_parts(ann: griffe.ExprSubscript, field_name: str) -> tuple[griffe.Expr | str, _Ann] | None:
+    """The element annotation and size of an `array[T, N]` subscript, or None
+    for anything else. The two read in `std::array`'s order."""
+    if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "array"):
+        return None
+    slice_ = ann.slice
+    if not isinstance(slice_, griffe.ExprTuple) or len(slice_.elements) != 2:
+        raise CompilerError(f"{field_name}: array[...] needs exactly an element type and a size")
+    return slice_.elements[0], slice_.elements[1]
+
+
 def _field_name(name: str) -> str:
     """The emitted name of a DSL field. A single trailing underscore escapes a
     Python keyword (PEP 8's `pass_`) and is dropped, so a BDS `mPass` field can
@@ -1157,12 +1189,33 @@ def _map_parts(ann: griffe.ExprSubscript, field_name: str) -> tuple[griffe.Expr 
 
 
 def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
-    name = _name_kwarg(call, "field", "prefix")
-    if name is None:
+    """The length prefix a `list[T]` / `dict[K, V]` carries. `prefix=None` is the
+    trailing marker rather than a prefix, and leaves the default in place for the
+    container path that never sees it."""
+    spelled = _call_arg(call, "field", "prefix")
+    if spelled is None or _is_none(spelled):
         return PrimitiveType(name="uvarint32")
-    if name not in PRIMITIVES:
-        raise CompilerError(f"{field_name}: field(prefix=...) must be an integer primitive, got {name!r}")
+    name = _name_kwarg(call, "field", "prefix")
+    if name is None or name not in PRIMITIVES:
+        raise CompilerError(f"{field_name}: field(prefix=...) must be an integer primitive, got {spelled}")
     return PrimitiveType(name=name)
+
+
+def _trailing(call: _Ann) -> bool:
+    """`field(prefix=None)` — the wire carries no length marker and the frame
+    boundary terminates the read."""
+    return _is_none(_call_arg(call, "field", "prefix"))
+
+
+def _as_trailing(t: FieldType | None, field_name: str) -> FieldType | None:
+    if t is None:
+        return None
+    if not (isinstance(t, PrimitiveType) and t.name == "bytes"):
+        raise CompilerError(
+            f"{field_name}: field(prefix=None) marks a bare bytes field as trailing -- "
+            f"every other wire form carries its own length"
+        )
+    return replace(t, trailing=True)
 
 
 def _endian_kwarg(call: _Ann, field_name: str) -> Endian | None:

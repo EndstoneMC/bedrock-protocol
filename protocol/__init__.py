@@ -14,6 +14,10 @@ The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
 member to their own type and a pair is not one; a member spelled `value()`
 takes the string as its second positional instead.
 
+A fixed-length member BDS declares `std::array<T, N>` is spelled `array[T, N]`
+in a field annotation: exactly N elements, with no length prefix and nothing to
+recompute, nesting as `array[array[int8, 16], 16]` for a two-dimensional one.
+
 A `typing.Literal[V, ...]` field is a constant the wire carries and the C++
 does not: no member is generated, the write emits the first value, and the read
 rejects anything the annotation does not list. Bools take the one-byte wire on
@@ -118,18 +122,19 @@ def field(
     - `prefix`: for a `list[T]` or `dict[K, V]` field, the integer primitive
       that length-prefixes the elements on the wire (default `uvarint32`). A
       `list[T]` annotation is a length-prefixed sequence and `dict[K, V]` a
-      length-prefixed map of key/value pairs; a `tuple[T, ...]` annotation of
-      N identical types is a fixed-length array of exactly N elements and
-      carries no prefix. On a bare `bytes` field, `prefix=None` marks the
-      field as trailing -- the wire form has no length marker and the frame
-      boundary terminates the read. A trailing field must be the last
-      field of its struct.
+      length-prefixed map of key/value pairs; an `array[T, N]` annotation is a
+      fixed-length run of exactly N elements and carries no prefix at all. On
+      a bare `bytes` field, `prefix=None` marks the field as trailing -- the
+      wire form has no length marker and the frame boundary terminates the
+      read. A trailing field must be the last field of its struct.
     - `count`: a one-argument lambda whose body is an integer expression
       over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
       valid on a `list[T]` field, or on a `list[T] | None` whose presence
-      flag is a separate matter. The wire has no length prefix -- both
-      serialize and deserialize compute the element count by evaluating the
-      expression against the surrounding struct. Setting `count=` suppresses
+      flag is a separate matter. A length that is a constant is a size rather
+      than an expression -- spell that `array[T, N]` and let the type carry
+      it. The wire has no length prefix -- both serialize and deserialize
+      compute the element count by evaluating the expression against the
+      surrounding struct. Setting `count=` suppresses
       the default `prefix=`; passing an explicit `prefix=` together with
       `count=` is an error. The expression may reference earlier fields
       (`p.<name>`), `len(p.<name>)` of an earlier list, map or string,
@@ -252,6 +257,23 @@ class bitset:
     """
 
     def __class_getitem__(cls, _n: int):
+        return cls
+
+
+@builtin
+class array:
+    """A fixed-length `std::array<T, N>` on the wire.
+
+    Spell as `array[T, N]` in a field annotation, in `std::array`'s own order:
+    exactly N elements go out back to back, and nothing on the wire marks the
+    count. Reach for it where BDS declares the member `std::array` and both
+    sides therefore already know how many elements there are; `list[T]` stays
+    the length-prefixed sequence. It nests, so BDS's sixteen rows of sixteen
+    are `array[array[int8, 16], 16]`. N is an integer literal or a member of
+    an enum nested in the same class, as a `bitset[N]` width is.
+    """
+
+    def __class_getitem__(cls, _item: tuple[Any, int]):
         return cls
 
 

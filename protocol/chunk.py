@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
+from protocol import array, field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
 from protocol.attributes import DimensionType
 
 package = "bedrock.protocol"
@@ -74,12 +74,12 @@ class SubChunkPacket:
     @type(until=2168)
     class HeightmapData:
         height_map_type: HeightMapDataType
-        subchunk_height_map: list[int8] = field(
-            count=lambda h: 256, when=lambda h: h.height_map_type == HeightMapDataType.HAS_DATA
+        subchunk_height_map: array[array[int8, 16], 16] = field(
+            when=lambda h: h.height_map_type == HeightMapDataType.HAS_DATA
         )
         render_height_map_type: HeightMapDataType
-        subchunk_render_height_map: list[int8] = field(
-            count=lambda h: 256, when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA
+        subchunk_render_height_map: array[array[int8, 16], 16] = field(
+            when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA
         )
 
     class SubChunkPosOffset:
@@ -141,16 +141,16 @@ class SubChunkPacket:
     @type(since=2168, until=2192)
     class HeightmapData:
         height_map_type: HeightMapDataType
-        subchunk_height_map: list[int8] | None = field(count=lambda h: 256)
+        subchunk_height_map: array[array[int8, 16], 16] | None
         render_height_map_type: HeightMapDataType
-        subchunk_render_height_map: list[int8] | None = field(count=lambda h: 256)
+        subchunk_render_height_map: array[array[int8, 16], 16] | None
 
     @type(since=2192)
     class HeightmapData:
         height_map_type: HeightMapDataType
-        subchunk_height_map: list[list[int8]] | None = field(count=lambda h: 16)
+        subchunk_height_map: array[list[int8], 16] | None
         render_height_map_type: HeightMapDataType
-        subchunk_render_height_map: list[list[int8]] | None = field(count=lambda h: 16)
+        subchunk_render_height_map: array[list[int8], 16] | None
 
     class SubChunkPosOffset:
         x: int8

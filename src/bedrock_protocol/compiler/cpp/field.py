@@ -19,6 +19,7 @@ from dataclasses import dataclass
 
 from bedrock_protocol.descriptor import (
     VARINT_PRIMITIVES,
+    ArrayType,
     BitsetType,
     CompilerError,
     CondType,
@@ -93,6 +94,9 @@ def cpp_type(
     if isinstance(t, RepeatedType):
         inner = cpp_type(t.inner, ctx, snapshot, owner)
         return None if inner is None else f"std::vector<{inner}>"
+    if isinstance(t, ArrayType):
+        inner = cpp_type(t.inner, ctx, snapshot, owner)
+        return None if inner is None else f"std::array<{inner}, {t.size}>"
     if isinstance(t, MappingType):
         key = cpp_type(t.key, ctx, snapshot, owner)
         value = cpp_type(t.value, ctx, snapshot, owner)
@@ -216,6 +220,8 @@ def type_includes(t: FieldType | None) -> set[str]:
         return {"<optional>"} | type_includes(t.inner)
     if isinstance(t, RepeatedType):
         return {"<vector>"} | type_includes(t.inner)
+    if isinstance(t, ArrayType):
+        return {"<array>"} | type_includes(t.inner)
     if isinstance(t, MappingType):
         return {"<map>"} | type_includes(t.key) | type_includes(t.value)
     if isinstance(t, VariantType):
@@ -441,6 +447,25 @@ class RepeatedFieldGenerator(FieldGenerator):
             self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
 
 
+class ArrayFieldGenerator(FieldGenerator):
+    """`array[T, N]`: the elements alone, with no length anywhere on the wire.
+    The read indexes rather than appending -- a `std::array` is already its full
+    size and has no `emplace_back`."""
+
+    def __init__(self, inner: FieldGenerator, size: int) -> None:
+        self._inner = inner
+        self._size = size
+
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
+        with p.block(f"for (const auto &e{depth} : {var})"):
+            self._inner.generate_serialize(p, f"e{depth}", depth + 1)
+
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+        p.add_includes("<cstddef>", "<expected>")
+        with p.block(f"for (std::size_t i{depth} = 0; i{depth} < {self._size}; ++i{depth})"):
+            self._inner.generate_deserialize(p, f"{target}[i{depth}]", depth + 1)
+
+
 class MapFieldGenerator(FieldGenerator):
     """`dict[K, V]`: a length prefix then that many key/value pairs. The key
     read is brace-scoped so its temporary cannot collide with the value's."""
@@ -557,6 +582,8 @@ def make_field_generator(t: FieldType, gc: GenContext) -> FieldGenerator:
         return OptionalFieldGenerator(make_field_generator(t.inner, gc), value_type, gc)
     if isinstance(t, RepeatedType):
         return RepeatedFieldGenerator(make_field_generator(t.inner, gc), t.prefix, gc, t.count)
+    if isinstance(t, ArrayType):
+        return ArrayFieldGenerator(make_field_generator(t.inner, gc), t.size)
     if isinstance(t, MappingType):
         key_type = cpp_type(t.key, gc.ctx, gc.snapshot, gc.owner)
         assert key_type is not None

@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import field, int8, packet, type, uint8, uint32
+from protocol import array, field, int8, packet, type, uint8, uint32
 from protocol.common import Color
 
 package = "bedrock.protocol"
@@ -138,7 +138,7 @@ class SerializedPersonaPieceHandle:
 
 
 class TintMapColor:
-    colors: list[Color] = field(count=lambda t: 4)
+    colors: array[Color, 4]
 
 
 @type(cereal=False)

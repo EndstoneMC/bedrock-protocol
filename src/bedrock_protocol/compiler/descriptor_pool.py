@@ -25,6 +25,7 @@ from dataclasses import replace
 from typing import Any, Iterable
 
 from bedrock_protocol.descriptor import (
+    ArrayType,
     BitsetType,
     CondType,
     Enum,
@@ -339,15 +340,23 @@ def _rebind(
     underlyings: dict[str, PrimitiveType],
 ) -> FieldType | None:
     """Walk a field-type tree, re-resolving everything a nested enum's snapshot
-    view decides: a `bitset[Enum.MEMBER]` width, and the wire encoding a field
-    derived from an enum's underlying type. Anything naming an enum this snapshot
-    does not hold is left alone."""
+    view decides: a `bitset[Enum.MEMBER]` width, an `array[T, Enum.MEMBER]` size,
+    and the wire encoding a field derived from an enum's underlying type.
+    Anything naming an enum this snapshot does not hold is left alone."""
     if isinstance(t, BitsetType):
         if t.enum_member is None:
             return t
         enum_name, member_name = t.enum_member
         size = members.get(enum_name, {}).get(member_name)
         return t if size is None or size == t.size else replace(t, size=size)
+    if isinstance(t, ArrayType):
+        inner = _rebind(t.inner, members, underlyings)
+        assert inner is not None
+        size = t.size
+        if t.enum_member is not None:
+            enum_name, member_name = t.enum_member
+            size = members.get(enum_name, {}).get(member_name, size)
+        return t if inner is t.inner and size == t.size else replace(t, inner=inner, size=size)
     if isinstance(t, EnumType):
         if not t.derived:
             return t

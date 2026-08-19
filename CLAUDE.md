@@ -345,6 +345,22 @@ takes index 0:
 value: None | bool | uvarint32 | float
 ```
 
+## A fixed length is a size, not a count
+
+`array[T, N]` is the member BDS declares `std::array<T, N>`: exactly N elements,
+nothing on the wire marking the count, and the size sitting in the type where both
+sides can read it. `list[T]` is the length-prefixed sequence, and `field(count=)`
+covers a length BDS wrote somewhere else — an expression over earlier fields, never
+a constant. A constant `count=` and an `array[T, N]` put the same bytes out, but the
+count spells `std::vector` in C++ and lets a wrong-sized one reach the wire, where
+an array cannot be the wrong size. `SubChunkPacket`'s height maps are the pattern:
+`array[array[int8, 16], 16]`, which is `SubChunkPacketPayload::HeightMapArray`
+verbatim at every era bedrock-headers covers.
+
+BDS's alias for it is nested (`SubChunkPacketPayload::HeightMapArray`) and the DSL
+has only module-scope `type X = Y`, so the array is spelled inline rather than
+hoisted out of its owner.
+
 ## Version gating
 
 `since=` / `until=` are raw protocol version numbers, but must land on a modelled
@@ -443,6 +459,6 @@ The rewrite **deliberately dropped** every path the MVP did not use, and a missi
 feature is therefore a deferral, not an oversight: when a packet first needs one,
 re-add it as its own reviewable change, with a test that exercises it. `@builtin`,
 `dict[K, V]`, `when=`, `endian=`, nested types, `bitset` (`input.py`'s
-`bitset[InputData.INPUT_NUM]`) and `count=` (`chunk.py`'s fixed 256-entry
-heightmaps, `login.py`'s counted id lists) have all come back that way. Still gone:
+`bitset[InputData.INPUT_NUM]`), `count=` (`login.py`'s counted id lists) and
+`array[T, N]` (`chunk.py`'s height maps) have all come back that way. Still gone:
 `tuple` and deprecation.

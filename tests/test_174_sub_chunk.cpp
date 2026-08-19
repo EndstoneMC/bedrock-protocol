@@ -1,6 +1,6 @@
+#include <array>
 #include <cstdint>
 #include <string>
-#include <vector>
 
 #include "fixture.hpp"
 
@@ -98,7 +98,15 @@ const std::string golden_v2168_cached = bytes({
     0x00,
 });
 
-const std::vector<std::int8_t> full_height_map(256, 7);
+using HeightMap = std::array<std::array<std::int8_t, 16>, 16>;
+
+const HeightMap full_height_map = [] {
+    HeightMap map{};
+    for (auto &row : map) {
+        row.fill(7);
+    }
+    return map;
+}();
 
 }  // namespace
 
@@ -165,8 +173,8 @@ TEST_CASE("sub-chunk v1001 cache-on form round-trips against the golden")
     REQUIRE(back.uncached_sub_chunk_data.empty());
     REQUIRE(back.sub_chunk_data.size() == 1);
     REQUIRE(back.sub_chunk_data[0].serialized_sub_chunk.empty());
-    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_height_map.size() == 256);
-    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_render_height_map.empty());
+    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_height_map == full_height_map);
+    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_render_height_map == HeightMap{});
     REQUIRE(back.sub_chunk_data[0].blob_id == 9);
 }
 
@@ -239,7 +247,7 @@ TEST_CASE("sub-chunk v2168 cache-on form round-trips against the golden")
     const auto back = decode<PacketV2168>(golden_v2168_cached);
     REQUIRE(back.sub_chunk_data.size() == 1);
     REQUIRE(back.sub_chunk_data[0].serialized_sub_chunk.has_value() == false);
-    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_height_map->size() == 256);
+    REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_height_map == full_height_map);
     REQUIRE(back.sub_chunk_data[0].height_map_data.subchunk_render_height_map.has_value() == false);
     REQUIRE(back.sub_chunk_data[0].blob_id == 9);
 }
