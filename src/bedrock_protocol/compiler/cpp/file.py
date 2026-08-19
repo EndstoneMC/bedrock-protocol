@@ -291,39 +291,52 @@ class FileGenerator:
             EnumGenerator(t).generate_definition(p)
         elif isinstance(t, Struct):
             MessageGenerator(
-                t, self._ctx, snapshot=snapshot, nested_anchor=nested_anchor, owner=owner
+                t,
+                self._ctx,
+                snapshot=snapshot,
+                nested_anchor=nested_anchor,
+                owner=owner,
+                fresh_nested=self._fresh_nested(t.key),
             ).generate_class_definition(p)
 
     # --- nested types -------------------------------------------------------
 
     def _nested_anchor(self, name: str, snapshot: int) -> int | None:
-        """The snapshot whose namespace owns `name`'s nested definitions, or
-        None when this snapshot must define them itself. A nested type that
-        neither version-gates itself nor reaches a versioned type has one shape
-        across the owner's snapshots, so the first one defines it and the rest
-        alias it -- and it stays a single C++ type."""
+        """The snapshot whose namespace owns `name`'s unchanging nested
+        definitions, or None where this snapshot owns them itself. The first
+        fresh snapshot defines them and the rest alias it, so a nested type that
+        neither version-gates itself nor reaches a versioned type stays a single
+        C++ type however often its owner is redefined around it."""
         fresh = self._resolved.fresh_snapshots(name)
         if not fresh or fresh[0].lo == snapshot:
             return None
         t = self._by_name().get(name)
-        if not isinstance(t, Struct) or self._nested_is_versioned(t, name):
+        if not isinstance(t, Struct):
             return None
         return fresh[0].lo
 
-    def _nested_is_versioned(self, struct: Struct, owner: str) -> bool:
-        """Whether any of `struct`'s nested types changes shape across
+    def _inner_is_versioned(self, inner: Enum | Struct, owner: str) -> bool:
+        """Whether this one nested type changes shape across its owner's
         snapshots -- by its own `since=` / `until=`, or by reaching a versioned
-        type. References back into `owner` are its own snapshots, not a change."""
-        for inner in struct.nested:
-            if inner.change_points:
+        type. References back into `owner` are its own snapshots, not a change.
+        Asked per type rather than per group: a sibling that changes says
+        nothing about this one, and answering for the group would hand every
+        nested type a fresh identity whenever any one of them moved."""
+        if inner.change_points:
+            return True
+        if isinstance(inner, Struct):
+            refs = {outermost(r) for r in inner.referenced} - {owner}
+            if any(self._resolved.is_versioned(r) for r in refs):
                 return True
-            if isinstance(inner, Struct):
-                refs = {outermost(r) for r in inner.referenced} - {owner}
-                if any(self._resolved.is_versioned(r) for r in refs):
-                    return True
-                if self._nested_is_versioned(inner, owner):
-                    return True
+            return any(self._inner_is_versioned(i, owner) for i in inner.nested)
         return False
+
+    def _fresh_nested(self, name: str) -> frozenset[str]:
+        """The nested types a later snapshot has to define rather than alias."""
+        t = self._by_name().get(name)
+        if not isinstance(t, Struct):
+            return frozenset()
+        return frozenset(i.name for i in t.nested if self._inner_is_versioned(i, name))
 
     def _nested_views(self, name: str) -> list[NestedView]:
         """Every type nested in `name`, innermost first, once per distinct C++
@@ -337,10 +350,13 @@ class FileGenerator:
             _collect_nested(t, name, cpp_qualified(name), None, out)
             return out
         fresh = self._resolved.fresh_snapshots(name)
-        heads = fresh if self._nested_is_versioned(t, name) else fresh[:1]
-        for s in heads:
+        for i, s in enumerate(fresh):
             assert s.struct is not None
-            _collect_nested(s.struct, name, cpp_qualified(name, s.lo), s.lo, out)
+            collected: list[NestedView] = []
+            _collect_nested(s.struct, name, cpp_qualified(name, s.lo), s.lo, collected)
+            # The first snapshot defines them all; a later one repeats only what it redefines,
+            # since the rest alias it and a second serializer would specialize the same type twice.
+            out += [v for v in collected if i == 0 or self._inner_is_versioned(v[0], name)]
         return out
 
     # --- versioning traits + selector --------------------------------------

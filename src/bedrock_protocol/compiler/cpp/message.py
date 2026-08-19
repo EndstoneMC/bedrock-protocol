@@ -32,7 +32,9 @@ class MessageGenerator:
     definitions of this struct's nested types. When set, the body aliases them
     (`using ActionType = base::Owner::ActionType;`) instead of defining them
     again, so a nested type stays one C++ type across every snapshot of its
-    owner.
+    owner. `fresh_nested` names the ones that do change, which are defined here
+    even under an anchor -- a sibling moving must not cost the others their
+    identity.
 
     `owner` is the namespace the struct *definition* is emitted into, which
     decides how a reference out of the pre-cereal tree is spelled there. The
@@ -48,12 +50,14 @@ class MessageGenerator:
         qualified: str | None = None,
         nested_anchor: int | None = None,
         owner: str | None = None,
+        fresh_nested: frozenset[str] = frozenset(),
     ) -> None:
         self._struct = struct
         self._ctx = ctx
         self._snapshot = snapshot
         self._qualified = qualified if qualified is not None else struct.name
         self._anchor = nested_anchor
+        self._fresh_nested = fresh_nested
         self._owner = owner
         self._field_generators = FieldGeneratorMap(struct, ctx, snapshot)
 
@@ -148,7 +152,7 @@ class MessageGenerator:
         p.print("};\n")
 
     def _generate_nested(self, p: Printer, inner: Enum | Struct) -> None:
-        if self._anchor is not None:
+        if self._anchor is not None and inner.name not in self._fresh_nested:
             ns = snapshot_namespace(self._anchor)
             p.print(f"using {inner.name} = {ns}::{self._struct.name}::{inner.name};\n")
         elif isinstance(inner, Enum):
