@@ -9,7 +9,7 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CondType, Enum, Field, LiteralType, Predicate, Struct
+from bedrock_protocol.descriptor import CondType, Enum, Field, FieldType, LiteralType, Predicate, Struct
 
 from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
@@ -39,7 +39,11 @@ class MessageGenerator:
     `owner` is the namespace the struct *definition* is emitted into, which
     decides how a reference out of the pre-cereal tree is spelled there. The
     serializer bodies are emitted at file scope whatever the struct is, so they
-    always spell a reference in full and carry no owner."""
+    always spell a reference in full and carry no owner.
+
+    `nested_of` is set on the generator for a nested type and names the owner
+    whose nested namespace the definition lands in, so a sibling reference is
+    spelled bare -- the owner class that would qualify it is not open yet."""
 
     def __init__(
         self,
@@ -51,6 +55,7 @@ class MessageGenerator:
         nested_anchor: int | None = None,
         owner: str | None = None,
         fresh_nested: frozenset[str] = frozenset(),
+        nested_of: str | None = None,
     ) -> None:
         self._struct = struct
         self._ctx = ctx
@@ -59,6 +64,7 @@ class MessageGenerator:
         self._anchor = nested_anchor
         self._fresh_nested = fresh_nested
         self._owner = owner
+        self._nested_of = nested_of
         self._field_generators = FieldGeneratorMap(struct, ctx, snapshot)
 
     # --- type definition ----------------------------------------------------
@@ -76,20 +82,18 @@ class MessageGenerator:
             (version,) = f.versions
             if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
                 continue
-            ctype = cpp_type(version.type, self._ctx, self._snapshot, self._owner) if version.type is not None else None
+            ctype = self._spell(version.type)
             if ctype is None:
                 p.print(f"struct {self._struct.name} {{}};\n")
                 return
             p.add_includes(*type_includes(version.type))
             rendered.append((ctype, f.name))
+        self._generate_nested_namespace(p)
         p.print(f"struct {self._struct.name} {{\n")
         p.indent()
         has_body = self._struct.packet_id is not None or bool(rendered)
-        for i, inner in enumerate(self._struct.nested):
-            self._generate_nested(p, inner)
-            # Definitions stand apart; a run of `using` aliases reads as one block.
-            if self._anchor is None and i + 1 < len(self._struct.nested):
-                p.print("\n")
+        for inner in self._struct.nested:
+            p.print(f"using {inner.name} = {self._nested_namespace}::{inner.name};\n")
         if self._struct.nested and has_body:
             p.print("\n")
         if self._struct.packet_id is not None:
@@ -108,8 +112,7 @@ class MessageGenerator:
             (version,) = f.versions
             if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
                 continue
-            ctype = cpp_type(version.type, self._ctx, self._snapshot, self._owner) if version.type is not None else None
-            if ctype is None:
+            if self._spell(version.type) is None:
                 return None
             names.append(f.name)
         return names
@@ -151,15 +154,57 @@ class MessageGenerator:
         p.outdent()
         p.print("};\n")
 
+    def _spell(self, t: FieldType | None) -> str | None:
+        if t is None:
+            return None
+        return cpp_type(t, self._ctx, self._snapshot, self._owner, self._nested_of)
+
+    @property
+    def _dotted(self) -> str:
+        """This struct's own dotted IR name, which its nested types hang off."""
+        return f"{self._nested_of}.{self._struct.name}" if self._nested_of else self._struct.key
+
+    @property
+    def _nested_namespace(self) -> str:
+        return f"{self._struct.name}_nested"
+
+    def _generate_nested_namespace(self, p: Printer) -> None:
+        """BDS's nested types, defined in a namespace ahead of their owner and
+        aliased back into it, so `Owner::Inner` still names them everywhere.
+
+        Defining them in the class body is the obvious spelling and libc++ and
+        MSVC take it, but libstdc++ does not: a default member initializer is
+        parsed only once the outermost enclosing class is complete, so while the
+        owner is still open a sibling nested type reads as not
+        default-constructible, and a `std::variant` over one instantiates with
+        its default constructor deleted for good -- at the member that spells it
+        and again at every later `emplace_back` in the serializer."""
+        if not self._struct.nested:
+            return
+        p.print(f"namespace {self._nested_namespace} {{\n\n")
+        for i, inner in enumerate(self._struct.nested):
+            self._generate_nested(p, inner)
+            # Definitions stand apart; a run of `using` aliases reads as one block.
+            following = self._struct.nested[i + 1 : i + 2]
+            run_of_aliases = following and self._aliases(inner) and self._aliases(following[0])
+            if following and not run_of_aliases:
+                p.print("\n")
+        p.print(f"\n}}  // namespace {self._nested_namespace}\n\n")
+
+    def _aliases(self, inner: Enum | Struct) -> bool:
+        """Whether this nested type is emitted as an alias to an earlier
+        snapshot's definition rather than defined here."""
+        return self._anchor is not None and inner.name not in self._fresh_nested
+
     def _generate_nested(self, p: Printer, inner: Enum | Struct) -> None:
-        if self._anchor is not None and inner.name not in self._fresh_nested:
+        if self._anchor is not None and self._aliases(inner):
             ns = snapshot_namespace(self._anchor)
             p.print(f"using {inner.name} = {ns}::{self._struct.name}::{inner.name};\n")
         elif isinstance(inner, Enum):
             EnumGenerator(inner).generate_definition(p)
         else:
             MessageGenerator(
-                inner, self._ctx, snapshot=self._snapshot, owner=self._owner
+                inner, self._ctx, snapshot=self._snapshot, owner=self._owner, nested_of=self._dotted
             ).generate_class_definition(p)
 
     # --- serializer ---------------------------------------------------------
