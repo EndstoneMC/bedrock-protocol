@@ -87,6 +87,7 @@ class FileGenerator:
         self._emit_legacy_traits(body, latest_version)
         self._emit_packet_traits(body)
         self._emit_enum_reflections(body)
+        self._emit_struct_reflections(body)
         self._emit_serializers(body, mode="decl")
         self._emit_latest_aliases(body, latest_version)
         self._emit_namespace_close(body)
@@ -434,6 +435,35 @@ class FileGenerator:
         for enum, qualified, type_name in views:
             p.print("\n")
             EnumGenerator(enum).generate_reflection(p, qualified, type_name)
+        p.print("\n}  // namespace detail\n\n")
+
+    def _emit_struct_reflections(self, p: Printer) -> None:
+        by_name = self._by_name()
+        views: list[tuple[Struct, int | None, str, str]] = []
+        for name in self._resolved.declaration_order:
+            t = by_name[name]
+            # A builtin's definition is hand-written, so its members are not ours to name.
+            if isinstance(t, Enum) or t.builtin:
+                continue
+            views += [
+                (inner, snapshot, qualified, bare_name(dotted))
+                for inner, dotted, qualified, snapshot in self._nested_views(name)
+                if isinstance(inner, Struct)
+            ]
+            if self._resolved.is_versioned(name):
+                for s in self._resolved.fresh_snapshots(name):
+                    assert s.struct is not None
+                    views.append((s.struct, s.lo, cpp_qualified(name, s.lo), bare_name(name)))
+            else:
+                views.append((t, None, cpp_qualified(name), bare_name(name)))
+        if not views:
+            return
+        p.print("namespace detail {\n")
+        for struct, snapshot, qualified, type_name in views:
+            p.print("\n")
+            MessageGenerator(struct, self._ctx, snapshot=snapshot, qualified=qualified).generate_reflection(
+                p, qualified, type_name
+            )
         p.print("\n}  // namespace detail\n\n")
 
     # --- serializers --------------------------------------------------------

@@ -95,6 +95,58 @@ class MessageGenerator:
         p.outdent()
         p.print("};\n")
 
+    def _member_names(self) -> list[str] | None:
+        """The members `generate_class_definition` emits, in order, or None where
+        it emits an empty struct. Mirrors that walk exactly: reflection that
+        disagreed with the definition would be worse than none."""
+        names: list[str] = []
+        for f in self._struct.fields:
+            (version,) = f.versions
+            if isinstance(version.type, LiteralType):  # a wire-only constant declares no member
+                continue
+            ctype = cpp_type(version.type, self._ctx, self._snapshot, self._owner) if version.type is not None else None
+            if ctype is None:
+                return None
+            names.append(f.name)
+        return names
+
+    # --- reflection (Boost.PFR-like member names and access) ----------------
+
+    def generate_reflection(self, p: Printer, qualified: str, type_name: str | None = None) -> None:
+        p.add_includes("<bedrock/reflect.hpp>", "<array>", "<cstddef>", "<string_view>")
+        names = self._member_names() or []
+        spelled = type_name if type_name is not None else self._struct.name
+        p.print("template <>\n")
+        p.print(f"inline constexpr bool is_reflected_struct_v<{qualified}> = true;\n\n")
+        p.print("template <>\n")
+        p.print(f'inline constexpr std::string_view struct_name_v<{qualified}>{{"{spelled}"}};\n\n')
+        p.print("template <>\n")
+        p.print(f"inline constexpr std::array<std::string_view, {len(names)}> field_names_v<{qualified}>{{{{\n")
+        p.indent()
+        for name in names:
+            p.print(f'"{name}",\n')
+        p.outdent()
+        p.print("}};\n")
+        if not names:
+            return
+        p.print("\ntemplate <>\n")
+        p.print(f"struct field_accessor<{qualified}> {{\n")
+        p.indent()
+        p.print("template <std::size_t I, typename S>\n")
+        p.print("static constexpr auto &get(S &value) noexcept\n")
+        with p.block():
+            if len(names) == 1:
+                p.print(f"return value.{names[0]};\n")
+            else:
+                for i, name in enumerate(names[:-1]):
+                    head = "if constexpr" if i == 0 else "else if constexpr"
+                    with p.block(f"{head} (I == {i})"):
+                        p.print(f"return value.{name};\n")
+                with p.block("else"):
+                    p.print(f"return value.{names[-1]};\n")
+        p.outdent()
+        p.print("};\n")
+
     def _generate_nested(self, p: Printer, inner: Enum | Struct) -> None:
         if self._anchor is not None:
             ns = snapshot_namespace(self._anchor)
