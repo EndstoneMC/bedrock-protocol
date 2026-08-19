@@ -92,3 +92,17 @@ class ResourcePackClientResponsePacket:
         response_type: ResourcePackResponse = field(type=str)
 
     response: Cancel | Downloading | DownloadingFinished | ResourcePackStackFinished
+
+
+@packet(id=329, until=2192)
+class ServerboundPackSettingChangePacket:
+    pack_id: uuid.UUID
+    pack_setting_name: str
+    pack_setting_value: float | bool | str
+
+
+@packet(id=329, since=2192)
+class ServerboundPackSettingChangePacket:
+    pack_id: uuid.UUID
+    pack_setting_name: str
+    pack_setting_value: float | bool | str | list[str]

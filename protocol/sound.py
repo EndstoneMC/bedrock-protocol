@@ -683,3 +683,11 @@ class LevelSoundEventPacket:
     is_global: bool
     actor: ActorUniqueID = field(type=int64)
     fire_at_position: Vec3 | None
+
+
+@packet(id=352, since=2192)
+class RecordStartedPacket:
+    """A jukebox began playing, so the client can show the record's name."""
+
+    pos: BlockPos
+    server_sound_handle: ServerSoundHandle
