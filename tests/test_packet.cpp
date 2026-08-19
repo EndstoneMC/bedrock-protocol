@@ -18,16 +18,30 @@ constexpr bool id_agrees()
     }
 }
 
+// The pack is one entry per packet id, which is far past Clang's 256-deep
+// expression nesting limit as a fold. Expanding into an array and walking it
+// keeps the pack one level deep.
 template <int V, int... Id>
 constexpr int modelled(std::integer_sequence<int, Id...>)
 {
-    return (0 + ... + (bp::has_packet_v<V, Id> ? 1 : 0));
+    const bool present[] = {bp::has_packet_v<V, Id>...};
+    int count = 0;
+    for (const bool one : present) {
+        count += one ? 1 : 0;
+    }
+    return count;
 }
 
 template <int V, int... Id>
 constexpr bool ids_agree(std::integer_sequence<int, Id...>)
 {
-    return (id_agrees<V, Id>() && ...);
+    const bool agrees[] = {id_agrees<V, Id>()...};
+    for (const bool one : agrees) {
+        if (!one) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template <int V>
