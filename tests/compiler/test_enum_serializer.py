@@ -92,6 +92,28 @@ class ThingPacket:
         self.assertIn('{"beta", E::BETA}', self.body(source, "auto Serializer<v2168::Kind>::deserialize"))
         self.assertNotIn("BETA", self.body(source, "auto Serializer<base::Kind>::deserialize"))
 
+    def test_a_gated_field_still_reaches_its_enum(self) -> None:
+        """A `when=` gate wraps the field's type, and the walk collecting
+        name-coded enums used to stop at it: the body called a `Serializer`
+        specialization the header never declared."""
+        header, source = self.compile(
+            PREAMBLE
+            + """
+
+class Kind(IntEnum, uint8):
+    A = 0
+    B = 1
+
+
+@packet(id=7)
+class ThingPacket:
+    flag: bool
+    kind: Kind = field(type=str, when=lambda p: p.flag)
+"""
+        )
+        self.assertIn("struct Serializer<Kind> {", header)
+        self.assertIn("void Serializer<Kind>::serialize", source)
+
     def test_an_unversioned_enum_is_unqualified(self) -> None:
         header, source = self.compile(
             PREAMBLE
