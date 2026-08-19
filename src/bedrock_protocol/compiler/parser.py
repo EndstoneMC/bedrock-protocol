@@ -609,7 +609,6 @@ class Parser:
         # The flavour applies to every declared type the annotation names, so a
         # `list[T]` reaches its element with it, as `field(type=)` already does.
         cereal = _bool_kwarg(call, "field", "cereal")
-        trailing = _trailing(call)
         values = _literal_values(ann, field_name)
         if values is not None:
             return self._literal_type(values, field_name, type_kw, endian)
@@ -623,7 +622,7 @@ class Parser:
                 f"{field_name}: field(type=dict[K, V]) names the halves of a dict[K, V] field, "
                 f"and this one is not one"
             )
-        return _as_trailing(t, field_name) if trailing else t
+        return t
 
     def _literal_type(
         self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
@@ -1189,33 +1188,16 @@ def _map_parts(ann: griffe.ExprSubscript, field_name: str) -> tuple[griffe.Expr 
 
 
 def _repeat_prefix(call: _Ann, field_name: str) -> PrimitiveType:
-    """The length prefix a `list[T]` / `dict[K, V]` carries. `prefix=None` is the
-    trailing marker rather than a prefix, and leaves the default in place for the
-    container path that never sees it."""
+    """The length prefix a `list[T]` / `dict[K, V]` carries. Anything spelled
+    here that is not an integer primitive is an error rather than a fallback to
+    the default: a prefix silently replaced is a wire change nobody said."""
     spelled = _call_arg(call, "field", "prefix")
-    if spelled is None or _is_none(spelled):
+    if spelled is None:
         return PrimitiveType(name="uvarint32")
     name = _name_kwarg(call, "field", "prefix")
     if name is None or name not in PRIMITIVES:
         raise CompilerError(f"{field_name}: field(prefix=...) must be an integer primitive, got {spelled}")
     return PrimitiveType(name=name)
-
-
-def _trailing(call: _Ann) -> bool:
-    """`field(prefix=None)` — the wire carries no length marker and the frame
-    boundary terminates the read."""
-    return _is_none(_call_arg(call, "field", "prefix"))
-
-
-def _as_trailing(t: FieldType | None, field_name: str) -> FieldType | None:
-    if t is None:
-        return None
-    if not (isinstance(t, PrimitiveType) and t.name == "bytes"):
-        raise CompilerError(
-            f"{field_name}: field(prefix=None) marks a bare bytes field as trailing -- "
-            f"every other wire form carries its own length"
-        )
-    return replace(t, trailing=True)
 
 
 def _endian_kwarg(call: _Ann, field_name: str) -> Endian | None:

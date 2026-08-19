@@ -123,10 +123,9 @@ def field(
       that length-prefixes the elements on the wire (default `uvarint32`). A
       `list[T]` annotation is a length-prefixed sequence and `dict[K, V]` a
       length-prefixed map of key/value pairs; an `array[T, N]` annotation is a
-      fixed-length run of exactly N elements and carries no prefix at all. On
-      a bare `bytes` field, `prefix=None` marks the field as trailing -- the
-      wire form has no length marker and the frame boundary terminates the
-      read. A trailing field must be the last field of its struct.
+      fixed-length run of exactly N elements and carries no prefix at all.
+      Anything else spelled here is a compile error rather than a silent
+      fallback to the default.
     - `count`: a one-argument lambda whose body is an integer expression
       over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
       valid on a `list[T]` field, or on a `list[T] | None` whose presence

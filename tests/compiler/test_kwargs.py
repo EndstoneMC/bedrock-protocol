@@ -53,6 +53,35 @@ class ThingPacket:
         self.assertIn("field(tag=...)", message)
         self.assertIn("not implemented", message)
 
+    def test_a_prefix_the_compiler_cannot_read_is_rejected(self) -> None:
+        """`prefix=` fell back to the default whenever the value was not a bare
+        name, so a spelling the compiler does not understand went out as a
+        uvarint32 with nothing said."""
+        message = self.rejects(
+            PREAMBLE
+            + """
+
+@packet(id=7)
+class ThingPacket:
+    entries: list[uint8] = field(prefix=3)
+"""
+        )
+        self.assertIn("field(prefix=...) must be an integer primitive", message)
+
+    def test_prefix_none_is_rejected_rather_than_ignored(self) -> None:
+        """A length-less trailing field is one of the paths the rewrite dropped,
+        so `prefix=None` has nothing to mean until a packet needs one."""
+        message = self.rejects(
+            PREAMBLE
+            + """
+
+@packet(id=7)
+class ThingPacket:
+    body: bytes = field(prefix=None)
+"""
+        )
+        self.assertIn("field(prefix=...) must be an integer primitive", message)
+
     def test_a_positional_argument_is_rejected(self) -> None:
         message = self.rejects(
             PREAMBLE

@@ -145,17 +145,12 @@ class PrimitiveType:
     narrow but written as a varint keeps both halves.
 
     `endian` is the byte order of a fixed-width encoding, set by
-    `field(endian="big")` for the few fields Bedrock sends big-endian.
-
-    `trailing` is set by `field(prefix=None)` on a `bytes` field: the wire
-    leaves the length off and the frame boundary terminates the read, so the
-    field has to be the last of its struct."""
+    `field(endian="big")` for the few fields Bedrock sends big-endian."""
 
     name: str
     alias: str | None = None
     wire: str | None = None
     endian: Endian = "little"
-    trailing: bool = False
     kind: Literal["primitive"] = "primitive"
 
     @property
