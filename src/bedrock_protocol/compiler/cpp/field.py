@@ -38,7 +38,7 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 
-from .helpers import PRIMITIVE_TYPES, cpp_qualified, outermost
+from .helpers import PRIMITIVE_TYPES, cpp_name, cpp_qualified, outermost
 from .printer import Printer
 
 
@@ -61,7 +61,11 @@ class FileContext:
 
 
 def cpp_type(
-    t: FieldType | None, ctx: FileContext, snapshot: int | None = None, owner: str | None = None
+    t: FieldType | None,
+    ctx: FileContext,
+    snapshot: int | None = None,
+    owner: str | None = None,
+    nested_of: str | None = None,
 ) -> str | None:
     """C++ spelling for a field-type node, or None if unresolvable. When
     `snapshot` is set, versioned struct / enum references are snapshot-qualified
@@ -69,7 +73,11 @@ def cpp_type(
     the right view, pass `snapshot=None` and let unqualified lookup work.
 
     `owner` is the flavour scope of the declaration doing the referencing, which
-    decides whether a cross-tree reference needs qualifying."""
+    decides whether a cross-tree reference needs qualifying.
+
+    `nested_of` is the dotted name of the owner whose nested namespace this
+    spelling is emitted into: a sibling there is reached bare, since the owner
+    class that would qualify it is not declared yet."""
     if t is None:
         return None
     if isinstance(t, PrimitiveType):
@@ -77,6 +85,8 @@ def cpp_type(
     if isinstance(t, (StructType, EnumType)):
         if t.name not in ctx.known:
             return None
+        if nested_of is not None and t.name.startswith(f"{nested_of}."):
+            return cpp_name(t.name[len(nested_of) + 1 :])
         root = outermost(t.name)
         if snapshot is not None and ctx.resolved.is_versioned(root):
             view = ctx.resolved.present_at(root, snapshot)
@@ -89,17 +99,17 @@ def cpp_type(
     if isinstance(t, BitsetType):
         return f"std::bitset<{t.size}>"
     if isinstance(t, OptionalType):
-        inner = cpp_type(t.inner, ctx, snapshot, owner)
+        inner = cpp_type(t.inner, ctx, snapshot, owner, nested_of)
         return None if inner is None else f"std::optional<{inner}>"
     if isinstance(t, RepeatedType):
-        inner = cpp_type(t.inner, ctx, snapshot, owner)
+        inner = cpp_type(t.inner, ctx, snapshot, owner, nested_of)
         return None if inner is None else f"std::vector<{inner}>"
     if isinstance(t, ArrayType):
-        inner = cpp_type(t.inner, ctx, snapshot, owner)
+        inner = cpp_type(t.inner, ctx, snapshot, owner, nested_of)
         return None if inner is None else f"std::array<{inner}, {t.size}>"
     if isinstance(t, MappingType):
-        key = cpp_type(t.key, ctx, snapshot, owner)
-        value = cpp_type(t.value, ctx, snapshot, owner)
+        key = cpp_type(t.key, ctx, snapshot, owner, nested_of)
+        value = cpp_type(t.value, ctx, snapshot, owner, nested_of)
         return None if key is None or value is None else f"std::map<{key}, {value}>"
     if isinstance(t, VariantType):
         parts: list[str] = []
@@ -107,7 +117,7 @@ def cpp_type(
             if case is None:
                 parts.append("std::monostate")
                 continue
-            spelled = cpp_type(case, ctx, snapshot, owner)
+            spelled = cpp_type(case, ctx, snapshot, owner, nested_of)
             if spelled is None:
                 return None
             parts.append(spelled)
@@ -115,7 +125,7 @@ def cpp_type(
     if isinstance(t, CondType):
         # A gated field carries no presence marker: it is spelled as its bare
         # payload and left default-constructed when the predicate is false.
-        return cpp_type(t.inner, ctx, snapshot, owner)
+        return cpp_type(t.inner, ctx, snapshot, owner, nested_of)
     return None
 
 
