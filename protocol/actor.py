@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import int8, int16, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
+from protocol import int8, int16, int64, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.nbt import CompoundTag
 
@@ -685,3 +685,10 @@ class SetLastHurtByPacket:
 @packet(id=14, since=2168)
 class RemoveActorPacket:
     entity_id: ActorUniqueID
+
+
+@packet(id=35, since=2168)
+class ActorPickRequestPacket:
+    id: int64
+    max_slots: uint8
+    with_data: bool
