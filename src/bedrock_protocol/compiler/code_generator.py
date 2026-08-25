@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from io import StringIO
 from pathlib import Path
 from typing import Iterator, Protocol, TextIO, runtime_checkable
 
@@ -84,8 +85,20 @@ class FilesystemContext:
     def open(self, relative_path: str) -> Iterator[TextIO]:
         target = self.out_dir / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
+        buffer = StringIO()
+        yield buffer
+        content = buffer.getvalue()
+        # An unchanged file keeps its mtime, so a rebuild recompiles only the
+        # modules whose output actually moved.
+        try:
+            if target.read_text(encoding="utf-8") == content:
+                if self._verbose:
+                    print(f"unchanged {target}")
+                return
+        except OSError:
+            pass
         with target.open("w", encoding="utf-8", newline="\n") as fh:
-            yield fh
+            fh.write(content)
         if self._verbose:
             print(f"wrote {target}")
 
