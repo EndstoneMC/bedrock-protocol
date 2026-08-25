@@ -692,3 +692,8 @@ class ActorPickRequestPacket:
     id: int64
     max_slots: uint8
     with_data: bool
+
+
+@packet(id=89, since=2168)
+class AddBehaviorTreePacket:
+    json_input: str
