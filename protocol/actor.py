@@ -843,3 +843,8 @@ class AnimatePacket:
 class SpawnExperienceOrbPacket:
     pos: Vec3
     xp_value: varint32
+
+
+@packet(id=119, since=2168)
+class AvailableActorIdentifiersPacket:
+    identifier_list: CompoundTag
