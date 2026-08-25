@@ -2,7 +2,8 @@ from enum import IntEnum
 
 from protocol import int32, packet, uint8, uvarint64, varint32
 from protocol.actor import ActorRuntimeID
-from protocol.common import Vec3
+from protocol.attributes import DimensionType
+from protocol.common import BlockPos, Vec3
 
 package = "bedrock.protocol"
 
@@ -89,3 +90,16 @@ class InteractPacket:
     action: Action
     target_id: ActorRuntimeID
     pos: Vec3 | None
+
+
+class SpawnPositionType(IntEnum):
+    PLAYER_RESPAWN = 0
+    WORLD_SPAWN = 1
+
+
+@packet(id=43, since=2168)
+class SetSpawnPositionPacket:
+    spawn_pos_type: SpawnPositionType
+    pos: BlockPos
+    dimension_type: DimensionType
+    spawn_block_pos: BlockPos
