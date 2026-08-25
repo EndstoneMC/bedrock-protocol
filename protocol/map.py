@@ -173,3 +173,9 @@ class MapInfoRequestPacket:
 
     map_id: ActorUniqueID
     client_pixels: list[ClientPixelsProxy] = field(prefix=uint32)
+
+
+@packet(id=131, since=2168)
+class MapCreateLockedCopyPacket:
+    original_map_id: ActorUniqueID
+    new_map_id: ActorUniqueID
