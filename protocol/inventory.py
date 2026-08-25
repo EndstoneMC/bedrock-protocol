@@ -522,3 +522,9 @@ class GuiDataPickItemPacket:
     item_name: str
     item_effect_name: str
     slot: int32
+
+
+@packet(id=142, since=2168)
+class CompletedUsingItemPacket:
+    item_id: int16
+    item_use_method: int32
