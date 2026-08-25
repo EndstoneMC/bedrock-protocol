@@ -29,3 +29,36 @@ class ItemRegistryPacket:
 class PlayerStartItemCooldownPacket:
     item_category: str
     duration_ticks: varint32
+
+
+class ReplacePage:
+    page_index: varint32
+    page_text: str
+    photo_name: str
+
+
+class AddPage:
+    page_index: varint32
+    page_text: str
+    photo_name: str
+
+
+class DeletePage:
+    page_index: varint32
+
+
+class SwapPages:
+    page_index: varint32
+    swap_with_index: varint32
+
+
+class Finalize:
+    title: str
+    author: str
+    xuid: str
+
+
+@packet(id=97, since=2168)
+class BookEditPacket:
+    book_slot: varint32
+    operation: ReplacePage | AddPage | DeletePage | SwapPages | Finalize
