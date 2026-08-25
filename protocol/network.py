@@ -440,6 +440,11 @@ class LoginPacket:
     connection_request: bytes
 
 
+@packet(id=3, since=2168)
+class ServerToClientHandshakePacket:
+    token: str
+
+
 class DisconnectPacketMessages:
     message: str
     filtered_message: str
