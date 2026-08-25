@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import packet
+from protocol import packet, uint32
 
 package = "bedrock.protocol"
 
@@ -35,3 +35,15 @@ class HudVisibility(IntEnum):
 class SetHudPacket:
     hud_element: list[HudElement]
     hud_visible: HudVisibility
+
+
+class ServerboundLoadingScreenPacketType(IntEnum):
+    UNKNOWN = 0
+    START_LOADING_SCREEN = 1
+    END_LOADING_SCREEN = 2
+
+
+@packet(id=312, since=2168)
+class ServerboundLoadingScreenPacket:
+    loading_screen_packet_type: ServerboundLoadingScreenPacketType
+    loading_screen_id: uint32 | None
