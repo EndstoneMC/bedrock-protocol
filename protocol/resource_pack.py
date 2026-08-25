@@ -152,3 +152,14 @@ class ResourcePackDataInfoPacket:
     file_hash: str
     is_premium: bool
     pack_type: PackType
+
+
+@packet(id=83, since=2168)
+class ResourcePackChunkDataPacket:
+    """One chunk of a pack the client is downloading: the pack the chunk belongs to,
+    the chunk's index in the sequence, and its offset into the pack file."""
+
+    resource_name: str
+    chunk_id: uint32
+    byte_offset: uint64
+    data: bytes
