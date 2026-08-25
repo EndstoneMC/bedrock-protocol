@@ -528,3 +528,15 @@ class ServerStatsPacket:
 
     server_time: float
     network_time: float
+
+
+class WebSocketPacketData:
+    ip: str
+
+
+@packet(id=95, since=2168)
+class AutomationClientConnectPacket:
+    """Tells the client to open a websocket connection to the given server, which may
+    then run commands on the client's behalf and listen for the events it fires."""
+
+    web_socket_data: WebSocketPacketData
