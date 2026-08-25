@@ -10,16 +10,17 @@ namespace {
 
 // Golden derived from gophertunnel's ClientboundUpdateSoundData.Marshal:
 // io.Uint64(ServerSoundHandle) then io.String(SoundEvent) -- a fixed LE uint64
-// followed by a varuint32-length-prefixed string. One patch: the name-code is the
-// PEP 8 member (STOP) where gophertunnel spells the constant "Stop". BDS lowercases
-// the string before the enum lookup, so the casing is not load-bearing on the wire.
+// followed by a varuint32-length-prefixed string. The name-code is "stop": BDS binds
+// the enumerator `Stop` -- gophertunnel's spelling for the constant -- and cereal folds
+// it at bind time, so the fold is what goes out.
 const std::string golden = bytes({
-    0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x53, 0x54, 0x4f,
-    0x50,
+    0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x73, 0x74, 0x6f,
+    0x70,
 });
 
-// gophertunnel / BDS spell it "Stop"; the read lowercases, so it still resolves.
-const std::string golden_bds_casing = bytes({
+// The binding's own casing, which nothing sends; the read folds the input, so it
+// still resolves.
+const std::string golden_binding_casing = bytes({
     0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x53, 0x74, 0x6f,
     0x70,
 });
@@ -59,7 +60,7 @@ TEST_CASE("the name-code read is case-insensitive")
 {
     using Packet = bp::ClientboundUpdateSoundDataPacket_<1001>;
 
-    REQUIRE(decode<Packet>(golden_bds_casing).sound_event == bp::v1001::SoundDataEvent::STOP);
+    REQUIRE(decode<Packet>(golden_binding_casing).sound_event == bp::v1001::SoundDataEvent::STOP);
 }
 
 TEST_CASE("a v2168 payload-less case is the handle plus its bare index")

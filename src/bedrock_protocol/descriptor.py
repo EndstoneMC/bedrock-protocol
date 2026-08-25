@@ -386,8 +386,8 @@ class EnumValue:
     #: Spelled `auto()`: the number is `previous + 1` within whichever snapshot the
     #: member appears in, so a trailing sentinel tracks the members present there.
     is_auto: bool = False
-    #: `MEMBER = 3, "Spelling"`: the exact string BDS puts on the wire, where it is
-    #: not the member's own spelling.
+    #: `MEMBER = 3, "Spelling"`: how BDS spells the member when the DSL's own
+    #: spelling does not fold onto it. Not the wire string -- see `wire_name`.
     wire: str | None = None
 
     def present_at(self, snapshot: int) -> bool:
@@ -395,17 +395,28 @@ class EnumValue:
 
     @property
     def wire_name(self) -> str:
-        """The string a name-coded enum puts on the wire. BDS cereal serializes
-        an enum by its verbatim member name (confirmed in the 1.26.20 binary:
-        BoolAttributeOperation binds "OVERRIDE"/"ALPHA_BLEND"/... unchanged).
+        """The string a name-coded enum puts on the wire: BDS's spelling for the
+        member, lowercased.
 
-        The DSL spells members PEP 8, and BDS does not: `DownloadingFinished`
-        has no separator to map back to, and the read lowercases without
-        stripping one, so `DOWNLOADING_FINISHED` would reject BDS's own string
-        and the length prefix would be one byte long. Pairing the member with
-        its wire string -- `DOWNLOADING_FINISHED = 3, "DownloadingFinished"` --
-        says it outright, leaving the C++ spelling free to follow PEP 8."""
-        return self.wire if self.wire is not None else self.name
+        cereal keeps two spellings per enumerator. `BasicFactory<E>::memberDescriptorFor`
+        lowercases the bound name into `MemberDescriptor::mName` and keeps the
+        original in `mNameExt`; the write hands out `mName` and the entt lookup id
+        hashes it, so `TextPacketType::JukeboxPopup`, bound "jukeboxPopup", goes out
+        `jukeboxpopup`. gophertunnel folds the same way at both ends of
+        `CommandOriginType` -- `CommandBlock` writes and reads as "commandblock",
+        and its reader has no fallback, so BDS cannot be sending anything else.
+
+        Folding alone does not always reach BDS's string, because the DSL spells
+        members PEP 8 and BDS does not: `DOWNLOADING_FINISHED` folds to
+        `downloading_finished` where BDS writes `downloadingfinished`, one byte
+        shorter and no separator to map back to. Pairing the member with BDS's
+        spelling -- `DOWNLOADING_FINISHED = 3, "DownloadingFinished"` -- says it
+        outright, and the fold to the wire form is ours to apply.
+
+        The backend folds every enum's reflected name, not just a name-coded one, so
+        there is a single spelling per enum and `enum_cast` can fold its input onto it
+        rather than take a case-insensitive predicate."""
+        return (self.wire if self.wire is not None else self.name).lower()
 
 
 @dataclass(frozen=True)

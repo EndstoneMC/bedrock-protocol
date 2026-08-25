@@ -71,6 +71,7 @@ codec is what disagreed.
 | `CylinderDataPayload` | **two** `Vec2`s, not the header's one | 1.26.33 registers `"Radius X"` and `"Radius Z"` back to back in the shape cerealizer; Cone's single `"Radii"` is registered elsewhere in the same function |
 | chemistry recipes and the unlocking requirement | they do **not** write it | `serialize<ShapedChemistryRecipe>::write` ends at Assume Symmetry, `serialize<ShapelessChemistryRecipe>::write` at Priority; the four non-chemistry writers do write it |
 | `ContainerID` width per call site | packet 49 `uvarint32`, packet 50 `int8` — deliberately different | they part company at `NONE = -1`; unifying corrupts every `NONE` |
+| a name-coded enum's casing on the wire | **lowercased**, and the read matches nothing else | `BasicFactory<E>::memberDescriptorFor` runs `tolower` over the bound name into `mName` (+0x30) and keeps the original in `mNameExt` (+0x10); `TypeSchema<E>::doSave` writes `mName`, and the meta_data id hashes it. Confirmed against gophertunnel's lowercase-both-ways `CommandOriginType` table. Reading the *bind site's* string literal is what got this backwards once — that literal is `mNameExt`, which never reaches the wire |
 
 ## Names mirror BDS
 
@@ -151,26 +152,38 @@ transform, so the DSL spelling *is* the C++ spelling. BDS has no single conventi
 `JsonUI_ControlTree_PopulateTTS` → `JSON_UI_CONTROL_TREE_POPULATE_TTS`. This is the
 one exception to *Names mirror BDS*; class names still match exactly.
 
-Name-coded enums (`field(type=str)`) are PEP 8 too, and **casing alone is free** —
-BDS lowercases before lookup, so patch the golden and say so in its comment. A
-**separator** is not free: BDS's `DownloadingFinished` has none to map back to, so
-`DOWNLOADING_FINISHED` would reject BDS's own string and add a byte behind the
-length prefix. Pair the member with the string BDS writes, the way `enum` itself
-spells `MONDAY = 1, "Mon"`:
+**The reflected name is lowercased, for every enum** — `enum_name(BossBarColor::PINK)`
+is `"pink"`. The table doubles as the wire table for a name-coded enum, where BDS's
+own string is the folded one, and one spelling per enum is what lets `enum_cast`
+fold its input and be case-insensitive with no predicate to pass. The C++ enumerator
+stays `UPPER_CASE`.
+
+Name-coded enums (`field(type=str)`) are PEP 8 too, and **the wire is lowercased,
+always** — never patch a golden to a mixed-case spelling. `BasicFactory<E>::memberDescriptorFor`
+folds the bound name into `MemberDescriptor::mName` at bind time and keeps the
+original in `mNameExt`; the write hands out `mName` and the entt lookup id hashes
+it, so `TextPacketType::JukeboxPopup`, bound `"jukeboxPopup"`, goes out
+`jukeboxpopup` and BDS's own reader resolves nothing else. gophertunnel's
+`commandOriginToString` / `commandOriginFromString` is the end-to-end confirmation:
+lowercase both ways, no fallback on the read. The compiler applies the fold, so
+the DSL records BDS's spelling and never the wire's.
+
+A **separator** is not free: BDS's `DownloadingFinished` has none to map back to,
+so `DOWNLOADING_FINISHED` would fold to `downloading_finished` — one byte longer
+than BDS's string, and resolving to nothing. Pair the member with BDS's spelling,
+the way `enum` itself spells `MONDAY = 1, "Mon"`:
 
 ```python
 class ResourcePackResponse(Enum, int8):
-    DOWNLOADING_FINISHED = 3, "DownloadingFinished"
+    DOWNLOADING_FINISHED = 3, "DownloadingFinished"   # on the wire: downloadingfinished
 ```
 
 **Pair only the members whose spelling BDS does not already give you.**
-Lowercasing never removes an underscore, so a snake_case BDS name is reached by
-the PEP 8 member outright: `IN_QUAD` *is* `in_quad`, and pairing it says nothing.
-`EasingType` was written with all 32 pairs and every one was redundant — it is
-the only enum in the schema where that was true, and it disagreed with
-`BoolAttributeOperation` in its own packet, which goes out as the DSL's
-`OVERRIDE`. Pairs are earned by a dropped separator (`FacialHair`) or an added
-prefix (`persona_skeleton`).
+Folding never removes an underscore, so a snake_case BDS name is reached by
+the PEP 8 member outright: `IN_QUAD` folds to `in_quad`, and pairing it says
+nothing. `EasingType` was written with all 32 pairs and every one was redundant.
+Pairs are earned by a dropped separator (`FacialHair`) or an added prefix
+(`persona_skeleton`).
 
 The pair needs a plain **`Enum`** base: `IntEnum` and `StrEnum` coerce a member to
 their own type, so a pair is not a value there. Where the base cannot take one, or

@@ -39,6 +39,9 @@ class EnumGenerator:
     # --- reflection (magic_enum-like name <-> value tables) -----------------
 
     def generate_reflection(self, p: Printer, qualified: str, type_name: str | None = None) -> None:
+        """The name table is lowercased for every enum, name-coded or not. It is the
+        wire table for the ones that need one, and `enum_cast` folds its input, so a
+        single spelling makes every name lookup case-insensitive by construction."""
         p.add_includes("<bedrock/enum.hpp>", "<array>", "<string_view>")
         values = self._enum.values
         n = len(values)
@@ -60,7 +63,7 @@ class EnumGenerator:
         spelled = type_name if type_name is not None else self._enum.name
         p.print(f'inline constexpr std::string_view type_name_v<{qualified}>{{"{spelled}"}};\n')
 
-    # --- serializer (name-coded: verbatim member name on the wire) ----------
+    # --- serializer (name-coded: BDS's spelling, lowercased, on the wire) ---
 
     def generate_serializer_declaration(self, p: Printer) -> None:
         p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
@@ -95,25 +98,27 @@ class EnumGenerator:
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
-            # BDS lowercases the incoming string before its own lookup, so the read is
-            # case-insensitive to match. enum_cast keys an unordered_map per enum on first
-            # use, which the collision check above keeps unambiguous.
+            # BDS folds at bind time, not at lookup: it matches the lowercased name and
+            # nothing else. The table is lowercased to match, and enum_cast folds its
+            # input against it, so a peer sending BDS's binding casing still resolves --
+            # and never onto a different member, which the check above guarantees.
+            # enum_cast keys an unordered_map per enum on first use.
             p.print("auto v = stream.read<std::string>();\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
-            p.print(f"const auto value = enum_cast<{q}>(*v, case_insensitive{{}});\n")
+            p.print(f"const auto value = enum_cast<{q}>(*v);\n")
             p.print("if (!value) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
             p.print("return *value;\n")
 
     def _reject_case_collisions(self) -> None:
-        """Two members whose wire names differ only by case land on one key, and the
-        read keeps whichever came first without a word."""
+        """Two members BDS spells apart only by case fold onto one wire string, and
+        the read keeps whichever came first without a word."""
         by_key: dict[str, list[str]] = {}
         for v in self._enum.values:
-            by_key.setdefault(v.wire_name.lower(), []).append(v.name)
+            by_key.setdefault(v.wire_name, []).append(v.name)
         clashes = {k: names for k, names in by_key.items() if len(names) > 1}
         if clashes:
             spelled = "; ".join(f"{', '.join(names)} -> {key!r}" for key, names in sorted(clashes.items()))
             raise CompilerError(
-                f"{self._qualified}: name-coded members collide once lowercased, so the read cannot tell "
-                f"them apart -- {spelled}"
+                f"{self._qualified}: name-coded members share a wire name once folded, so the read cannot "
+                f"tell them apart -- {spelled}"
             )

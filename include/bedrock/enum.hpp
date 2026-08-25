@@ -18,9 +18,11 @@
 // the gate -- spelled as a `requires` clause where magic_enum, being C++17,
 // spells `enable_if_t` plus a `static_assert`.
 //
-// The one visible divergence: magic_enum's arrays are sorted by value because
-// reflection walks a range. These are in declaration order, matching the enum
-// as generated. `min_v` / `max_v` are therefore absent.
+// Two visible divergences. magic_enum's arrays are sorted by value because
+// reflection walks a range; these are in declaration order, matching the enum as
+// generated, so `min_v` / `max_v` are absent. And the name tables are lowercased,
+// because a name-coded enum's wire string is BDS's folded one -- so `enum_cast`
+// folds what it is given and there is no `case_insensitive` predicate to pass.
 
 namespace bedrock::protocol {
 
@@ -64,7 +66,8 @@ constexpr char to_lower(char c) noexcept
 
 // The lookups below are linear under constant evaluation, matching magic_enum, and go
 // through these at runtime. Built on first use, one per enum: a name-coded enum runs to
-// 600 members and its codec reads one on every packet that carries it.
+// 600 members and its codec reads one on every packet that carries it. `names_v` is
+// lowercased, so these keys are too and a folded probe hits them directly.
 template <typename E>
 const std::unordered_map<std::string_view, E> &name_index()
 {
@@ -88,22 +91,6 @@ inline std::string lowered(std::string_view value)
     return out;
 }
 
-// Two names that differ only by case collapse onto one key. `emplace` keeps the first,
-// which is declaration order -- the same member a linear scan would have found.
-template <typename E>
-const std::unordered_map<std::string, E> &lowered_name_index()
-{
-    static const auto index = [] {
-        std::unordered_map<std::string, E> built;
-        built.reserve(count_v<E>);
-        for (std::size_t i = 0; i < count_v<E>; ++i) {
-            built.emplace(lowered(names_v<E>[i]), values_v<E>[i]);
-        }
-        return built;
-    }();
-    return index;
-}
-
 template <typename E>
 const std::unordered_map<std::underlying_type_t<E>, std::size_t> &value_index()
 {
@@ -118,14 +105,26 @@ const std::unordered_map<std::underlying_type_t<E>, std::size_t> &value_index()
     return index;
 }
 
-template <typename BinaryPredicate>
-constexpr bool name_equal(std::string_view lhs, std::string_view rhs, BinaryPredicate p)
+// A name straight off the wire is already folded, so the probe borrows it and the
+// common read allocates nothing.
+constexpr bool is_lowered(std::string_view value) noexcept
+{
+    for (const char c : value) {
+        if (c >= 'A' && c <= 'Z') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// `rhs` comes from `names_v` and is lowercased already.
+constexpr bool equal_folded(std::string_view lhs, std::string_view rhs) noexcept
 {
     if (lhs.size() != rhs.size()) {
         return false;
     }
     for (std::size_t i = 0; i < lhs.size(); ++i) {
-        if (!p(lhs[i], rhs[i])) {
+        if (to_lower(lhs[i]) != rhs[i]) {
             return false;
         }
     }
@@ -133,16 +132,6 @@ constexpr bool name_equal(std::string_view lhs, std::string_view rhs, BinaryPred
 }
 
 }  // namespace detail
-
-// Character comparator for the `enum_cast` and `enum_contains` overloads that take one.
-// @see magic_enum::case_insensitive.
-struct case_insensitive {
-    template <typename L, typename R>
-    [[nodiscard]] constexpr bool operator()(L lhs, R rhs) const noexcept
-    {
-        return detail::to_lower(static_cast<char>(lhs)) == detail::to_lower(static_cast<char>(rhs));
-    }
-};
 
 // Returns type name of enum.
 template <typename E>
@@ -286,7 +275,8 @@ template <typename E>
     return std::nullopt;
 }
 
-// Returns enum value from name.
+// Returns enum value from name, whatever its casing: the tables are lowercased and
+// the name given is folded onto them.
 // Returns optional with enum value.
 template <typename E>
     requires detail::is_reflected_v<E>
@@ -294,39 +284,14 @@ template <typename E>
 {
     if !consteval {
         const auto &index = detail::name_index<E>();
-        const auto it = index.find(value);
+        const auto it = detail::is_lowered(value) ? index.find(value) : index.find(detail::lowered(value));
         if (it == index.end()) {
             return std::nullopt;
         }
         return it->second;
     }
     for (std::size_t i = 0; i < detail::count_v<E>; ++i) {
-        if (detail::names_v<E>[i] == value) {
-            return detail::values_v<E>[i];
-        }
-    }
-    return std::nullopt;
-}
-
-// Returns enum value from name, comparing characters with the predicate passed.
-// `case_insensitive` is the one this library uses; any other predicate is a linear scan.
-// Returns optional with enum value.
-template <typename E, typename BinaryPredicate>
-    requires detail::is_reflected_v<E> && std::is_invocable_r_v<bool, BinaryPredicate, char, char>
-[[nodiscard]] constexpr std::optional<E> enum_cast(std::string_view value, BinaryPredicate p) noexcept
-{
-    if constexpr (std::is_same_v<std::remove_cvref_t<BinaryPredicate>, case_insensitive>) {
-        if !consteval {
-            const auto &index = detail::lowered_name_index<E>();
-            const auto it = index.find(detail::lowered(value));
-            if (it == index.end()) {
-                return std::nullopt;
-            }
-            return it->second;
-        }
-    }
-    for (std::size_t i = 0; i < detail::count_v<E>; ++i) {
-        if (detail::name_equal(value, detail::names_v<E>[i], p)) {
+        if (detail::equal_folded(value, detail::names_v<E>[i])) {
             return detail::values_v<E>[i];
         }
     }
@@ -355,15 +320,6 @@ template <typename E>
 [[nodiscard]] constexpr bool enum_contains(std::string_view value) noexcept
 {
     return enum_cast<E>(value).has_value();
-}
-
-// Returns true if enum contains enumerator with such name, comparing characters with the
-// predicate passed.
-template <typename E, typename BinaryPredicate>
-    requires detail::is_reflected_v<E> && std::is_invocable_r_v<bool, BinaryPredicate, char, char>
-[[nodiscard]] constexpr bool enum_contains(std::string_view value, BinaryPredicate p) noexcept
-{
-    return enum_cast<E>(value, p).has_value();
 }
 
 }  // namespace bedrock::protocol

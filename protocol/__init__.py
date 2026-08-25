@@ -4,12 +4,16 @@ A field name may carry a single trailing underscore to escape a Python keyword
 (PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
 the BDS name.
 
-An enum member may pair its value with the exact string BDS writes,
+An enum member may pair its value with the way BDS spells that member,
 `DOWNLOADING_FINISHED = 3, "DownloadingFinished"`, the way `enum.Enum` spells
-`MONDAY = 1, "Mon"`. A name-coded enum otherwise reaches the wire as the
-member's own spelling: casing is free, since BDS lowercases before the lookup,
-but the separator is not, so a PEP 8 member whose BDS name carries none would
-both reject BDS's own string and put an extra byte behind the length prefix.
+`MONDAY = 1, "Mon"`. cereal folds an enumerator's bound name at bind time, so a
+name-coded enum reaches the wire lowercased and the compiler applies the fold:
+casing is never the schema's to carry, but the separator is, so a PEP 8 member
+whose BDS name carries none would both reject BDS's own string and put an extra
+byte behind the length prefix. Pair only those members -- one whose folded PEP 8
+spelling already is BDS's string earns nothing by being paired. The fold reaches
+every enum's reflected name, name-coded or not, so `enum_name` is lowercase and
+`enum_cast` folds what it is given.
 The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
 member to their own type and a pair is not one; a member spelled `value()`
 takes the string as its second positional instead.

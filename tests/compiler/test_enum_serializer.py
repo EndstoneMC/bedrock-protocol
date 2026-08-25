@@ -215,7 +215,7 @@ class ThingPacket:
         self.assertIn("using E = v2168::ScorePacketEntryAction;", read)
         self.assertIn('{"remove", E::REMOVE}', read)
 
-    def test_members_colliding_once_lowercased_are_rejected(self) -> None:
+    def test_members_sharing_a_folded_wire_name_are_rejected(self) -> None:
         """The map would keep one of them and say nothing."""
         message = self.rejects(
             """
@@ -236,7 +236,7 @@ class ThingPacket:
     kind: Kind = field(type=str)
 """
         )
-        self.assertIn("collide once lowercased", message)
+        self.assertIn("share a wire name once folded", message)
         self.assertIn("ALPHA, ALPHA_TOO", message)
 
 
