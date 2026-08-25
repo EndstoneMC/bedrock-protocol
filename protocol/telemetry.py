@@ -1,6 +1,7 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
-from protocol import uint8, value
+from protocol import int16, int32, packet, uint8, uvarint32, value, varint32, varint64
+from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
 
@@ -137,3 +138,165 @@ class MinecraftEventing:
         DISENCHANT = 23
         REPAIR = 24
         DISENCHANT_AND_REPAIR = 25
+
+
+@packet(id=65, since=2168)
+class LegacyTelemetryEventPacket:
+    class Type(IntEnum):
+        ACHIEVEMENT = 0
+        INTERACTION = 1
+        PORTAL_CREATED = 2
+        PORTAL_USED = 3
+        MOB_KILLED = 4
+        CAULDRON_USED = 5
+        PLAYER_DIED = 6
+        BOSS_KILLED = 7
+        AGENT_COMMAND_OBSOLETE = 8
+        AGENT_CREATED = 9
+        PATTERN_REMOVED_OBSOLETE = 10
+        SLASH_COMMAND = 11
+        FISH_BUCKETED_OBSOLETE = 12
+        MOB_BORN = 13
+        PET_DIED_OBSOLETE = 14
+        POI_CAULDRON_USED = 15
+        COMPOSTER_USED = 16
+        BELL_USED = 17
+        ACTOR_DEFINITION = 18
+        RAID_UPDATE = 19
+        PLAYER_MOVEMENT_ANOMALY_OBSOLETE = 20
+        PLAYER_MOVEMENT_CORRECTED_OBSOLETE = 21
+        HONEY_HARVESTED = 22
+        TARGET_BLOCK_HIT = 23
+        PIGLIN_BARTER = 24
+        PLAYER_WAXED_OR_UNWAXED_COPPER = 25
+        CODE_BUILDER_RUNTIME_ACTION = 26
+        CODE_BUILDER_SCOREBOARD = 27
+        STRIDER_RIDDEN_IN_LAVA_IN_OVERWORLD = 28
+        SNEAK_CLOSE_TO_SCULK_SENSOR = 29
+        CAREFUL_RESTORATION = 30
+        ITEM_USED = 31
+
+    class Achievement:
+        achievement_id: MinecraftEventing.AchievementIds
+
+    class Interaction:
+        interacted_entity_id: varint64
+        interaction_type: MinecraftEventing.InteractionType
+        interacted_entity_type: varint32
+        interacted_entity_variant: varint32
+        interacted_entity_color: uint8
+
+    class PortalCreated:
+        built_in_dimension: varint32
+
+    class PortalUsed:
+        from_dimension: varint32
+        to_dimension: varint32
+
+    class MobKilled:
+        killer_entity_id: varint64
+        killed_mob_id: varint64
+        damage_child_type: ActorType
+        damage_source: varint32
+        trader_tier: varint32
+        trader_name: str
+
+    class CauldronUsed:
+        contents_color: uvarint32
+        contents_type: varint32
+        fill_level: varint32
+
+    class PlayerDied:
+        killer_id: varint32
+        killer_variant: varint32
+        damage_source: varint32
+        in_raid: bool
+
+    class BossKilled:
+        boss_unique_id: varint64
+        party_size: varint32
+        boss_type: varint32
+
+    class SlashCommand:
+        success_count: varint32
+        error_count: varint32
+        command_name: str
+        error_list: str
+
+    class MobBorn:
+        baby_type: varint32
+        baby_variant: varint32
+        baby_color: uint8
+
+    class POICauldronUsed:
+        interaction_type: MinecraftEventing.POIBlockInteractionType
+        item_id: varint32
+
+    class ComposterUsed:
+        interaction_type: MinecraftEventing.POIBlockInteractionType
+        item_id: varint32
+
+    class BellUsed:
+        item_id: varint32
+
+    class ActorDefinition:
+        event_name: str
+
+    class RaidUpdate:
+        current_wave: varint32
+        total_waves: varint32
+        success: bool
+
+    class TargetBlockHit:
+        redstone_level: varint32
+
+    class PiglinBarter:
+        item_id: varint32
+        was_targeting_bartering_player: bool
+
+    class PlayerWaxedOrUnwaxedCopper:
+        block_id: varint32
+
+    class CodeBuilderRuntimeAction:
+        runtime_action: str
+
+    class CodeBuilderScoreboard:
+        objective_name: str
+        score: varint32
+
+    class ItemUsed:
+        item_id: int16
+        item_aux: int32
+        use_method: int32
+        count: int32
+
+    class Empty:
+        pass
+
+    player_unique_id: ActorUniqueID
+    type: Type
+    use_player_id: bool
+    event_data: (
+        Achievement
+        | Interaction
+        | PortalCreated
+        | PortalUsed
+        | MobKilled
+        | CauldronUsed
+        | PlayerDied
+        | BossKilled
+        | SlashCommand
+        | MobBorn
+        | POICauldronUsed
+        | ComposterUsed
+        | BellUsed
+        | ActorDefinition
+        | RaidUpdate
+        | TargetBlockHit
+        | PiglinBarter
+        | PlayerWaxedOrUnwaxedCopper
+        | CodeBuilderRuntimeAction
+        | CodeBuilderScoreboard
+        | ItemUsed
+        | Empty
+    )
