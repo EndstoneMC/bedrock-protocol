@@ -103,3 +103,18 @@ class TickingAreasLoadStatusPacket:
 @packet(id=314, since=2168)
 class CurrentStructureFeaturePacket:
     current_structure_feature: str
+
+
+class StructureTemplateRequestOperation(IntEnum, uint8):
+    NONE = 0
+    EXPORT_FROM_SAVE_MODE = 1
+    EXPORT_FROM_LOAD_MODE = 2
+    QUERY_SAVED_STRUCTURE = 3
+
+
+@packet(id=132, since=2168)
+class StructureTemplateDataRequestPacket:
+    structure_name: str
+    structure_block_pos: BlockPos
+    structure_settings: StructureSettings
+    request_operation: StructureTemplateRequestOperation
