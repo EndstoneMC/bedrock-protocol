@@ -103,3 +103,8 @@ class SetSpawnPositionPacket:
     pos: BlockPos
     dimension_type: DimensionType
     spawn_block_pos: BlockPos
+
+
+@packet(id=113, since=2168)
+class SetLocalPlayerAsInitializedPacket:
+    player_id: ActorRuntimeID
