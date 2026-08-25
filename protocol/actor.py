@@ -837,3 +837,9 @@ class AnimatePacket:
     runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
+
+
+@packet(id=66, since=2168)
+class SpawnExperienceOrbPacket:
+    pos: Vec3
+    xp_value: varint32
