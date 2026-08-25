@@ -73,3 +73,21 @@ class CameraPresetsPacket:
 class CameraPacket:
     camera_id: ActorUniqueID
     target_player_id: ActorUniqueID
+
+
+class CameraShakeType(IntEnum, uint8):
+    POSITIONAL = 0
+    ROTATIONAL = 1
+
+
+class CameraShakeAction(IntEnum, uint8):
+    ADD = 0
+    STOP = 1
+
+
+@packet(id=159, since=2168)
+class CameraShakePacket:
+    intensity: float
+    seconds: float
+    shake_type: CameraShakeType
+    shake_action: CameraShakeAction
