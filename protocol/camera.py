@@ -104,3 +104,15 @@ class CameraAimAssistActorPriority:
 @packet(id=339, since=2168)
 class CameraAimAssistActorPriorityPacket:
     camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
+
+
+class ClientCameraAimAssistPacketAction(IntEnum, uint8):
+    SET_FROM_CAMERA_PRESET = 0
+    CLEAR = 1
+
+
+@packet(id=321, since=2168)
+class ClientCameraAimAssistPacket:
+    camera_preset_id: str
+    action: ClientCameraAimAssistPacketAction
+    allow_aim_assist: bool
