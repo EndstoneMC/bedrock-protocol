@@ -431,6 +431,19 @@ class PacketViolationSeverity(IntEnum):
     TERMINATING_CONNECTION = 2
 
 
+class PlayStatus(IntEnum):
+    LOGIN_SUCCESS = 0
+    LOGIN_FAILED_CLIENT_OLD = 1
+    LOGIN_FAILED_SERVER_OLD = 2
+    PLAYER_SPAWN = 3
+    LOGIN_FAILED_INVALID_TENANT = 4
+    LOGIN_FAILED_EDITION_MISMATCH_EDU_TO_VANILLA = 5
+    LOGIN_FAILED_EDITION_MISMATCH_VANILLA_TO_EDU = 6
+    LOGIN_FAILED_SERVER_FULL_SUB_CLIENT = 7
+    LOGIN_FAILED_EDITOR_MISMATCH_EDITOR_TO_VANILLA = 8
+    LOGIN_FAILED_EDITOR_MISMATCH_VANILLA_TO_EDITOR = 9
+
+
 @packet(id=1)
 class LoginPacket:
     """The client's login, repeating the protocol version it speaks and carrying the
@@ -438,6 +451,15 @@ class LoginPacket:
 
     client_network_version: int32 = field(endian="big")
     connection_request: bytes
+
+
+@packet(id=2, since=2168)
+class PlayStatusPacket:
+    """The server's answer to a login or a sub-client authentication: either the
+    status that carries the handshake through to the spawn, or the reason the
+    connection is about to be dropped."""
+
+    status: PlayStatus = field(type=int32, endian="big")
 
 
 @packet(id=3, since=2168)
