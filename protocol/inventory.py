@@ -1,7 +1,7 @@
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import field, int8, int16, packet, type, uint8, uint16, uint32, uvarint32, varint32
+from protocol import field, int8, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 
@@ -515,3 +515,10 @@ class ContainerSetDataPacket:
     container_id: ContainerID
     id: varint32
     value: varint32
+
+
+@packet(id=54, since=2168)
+class GuiDataPickItemPacket:
+    item_name: str
+    item_effect_name: str
+    slot: int32
