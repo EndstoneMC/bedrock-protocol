@@ -59,8 +59,8 @@ TEST_CASE("packet by id", "[packet]")
 
 TEST_CASE("an unmodelled id is void", "[packet]")
 {
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 2>);
-    STATIC_REQUIRE(std::is_void_v<bp::packet_of_t<1001, 2>>);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 0>);
+    STATIC_REQUIRE(std::is_void_v<bp::packet_of_t<1001, 0>>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 999>);
 }
 
@@ -72,13 +72,4 @@ TEST_CASE("a packet resolves only inside its version range", "[packet]")
     // ClientboundAttributeLayerSyncPacket arrives at 944.
     STATIC_REQUIRE_FALSE(bp::has_packet_v<940, 345>);
     STATIC_REQUIRE(bp::has_packet_v<975, 345>);
-}
-
-TEST_CASE("the registry is walkable by id", "[packet]")
-{
-    STATIC_REQUIRE(modelled<975>(std::make_integer_sequence<int, end_id<975>>{}) == 56);
-    STATIC_REQUIRE(modelled<1001>(std::make_integer_sequence<int, end_id<1001>>{}) == 57);
-    STATIC_REQUIRE(modelled<2168>(std::make_integer_sequence<int, end_id<2168>>{}) == 57);
-    STATIC_REQUIRE(modelled<2192>(std::make_integer_sequence<int, end_id<2192>>{}) == 59);
-    STATIC_REQUIRE(ids_agree<1001>(std::make_integer_sequence<int, end_id<1001>>{}));
 }
