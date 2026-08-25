@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import packet, uint8
+from protocol import packet, uint8, varint32
 
 package = "bedrock.protocol"
 
@@ -47,3 +47,26 @@ class TextPacket:
 class ToastRequestPacket:
     title: str
     content: str
+
+
+@packet(id=88, since=2168)
+class SetTitlePacket:
+    class TitleType(IntEnum):
+        CLEAR = 0
+        RESET = 1
+        TITLE = 2
+        SUBTITLE = 3
+        ACTIONBAR = 4
+        TIMES = 5
+        TITLE_TEXT_OBJECT = 6
+        SUBTITLE_TEXT_OBJECT = 7
+        ACTIONBAR_TEXT_OBJECT = 8
+
+    type: TitleType
+    title_text: str
+    fade_in_time: varint32
+    stay_time: varint32
+    fade_out_time: varint32
+    xuid: str
+    platform_online_id: str
+    filtered_title_text: str
