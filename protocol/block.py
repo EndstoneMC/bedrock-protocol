@@ -57,3 +57,10 @@ class UpdateBlockSyncedPacket:
     layer: uvarint32
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
     message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
+
+
+@packet(id=125, since=2168)
+class LecternUpdatePacket:
+    page: int32 = field(type=uint8)
+    total_pages: int32 = field(type=uint8)
+    pos: BlockPos
