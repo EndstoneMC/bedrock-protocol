@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum, IntEnum, auto
 
-from protocol import field, int8, packet, uint16, uint32, uint64
+from protocol import field, int8, int32, packet, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
@@ -163,3 +163,9 @@ class ResourcePackChunkDataPacket:
     chunk_id: uint32
     byte_offset: uint64
     data: bytes
+
+
+@packet(id=84, since=2168)
+class ResourcePackChunkRequestPacket:
+    resource_name: str
+    chunk: int32
