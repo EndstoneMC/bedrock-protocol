@@ -2,6 +2,7 @@ import uuid
 from enum import IntEnum, auto
 
 from protocol import packet, uint8
+from protocol.presence import ClientStoreEntryPointConfiguration
 
 package = "bedrock.protocol"
 
@@ -32,3 +33,8 @@ class ShowStoreOfferPacket:
 @packet(id=92, since=2168)
 class PurchaseReceiptPacket:
     purchase_receipts: list[str]
+
+
+@packet(id=346, since=2168)
+class ServerStoreInfoPacket:
+    client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None
