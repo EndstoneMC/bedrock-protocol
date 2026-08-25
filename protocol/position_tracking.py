@@ -20,3 +20,12 @@ class PositionTrackingDBServerBroadcastPacket:
     action: Action
     id: PositionTrackingId
     data: CompoundTag
+
+
+@packet(id=154, since=2168)
+class PositionTrackingDBClientRequestPacket:
+    class Action(IntEnum, uint8):
+        QUERY = 0
+
+    action: Action
+    id: PositionTrackingId
