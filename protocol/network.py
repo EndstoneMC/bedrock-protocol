@@ -520,3 +520,11 @@ class ClientCacheStatusPacket:
     client blob cache protocol."""
 
     enabled: bool
+
+
+@packet(id=192, since=2168)
+class ServerStatsPacket:
+    """Server-side timing statistics the server reports to the client."""
+
+    server_time: float
+    network_time: float
