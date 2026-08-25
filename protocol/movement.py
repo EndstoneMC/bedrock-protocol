@@ -187,3 +187,8 @@ class MovePlayerPacket:
 @packet(id=111)
 class MoveActorDeltaPacket:
     move_data: MoveActorDeltaData
+
+
+@packet(id=16, since=2168)
+class ServerPlayerPostMovePositionPacket:
+    pos: Vec3
