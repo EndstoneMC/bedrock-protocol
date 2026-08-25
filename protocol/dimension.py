@@ -1,7 +1,8 @@
 import uuid
 
-from protocol import field, packet, type, varint32
+from protocol import field, packet, type, uint32, varint32
 from protocol.attributes import DimensionType
+from protocol.common import Vec3
 from protocol.game import GeneratorType
 
 package = "bedrock.protocol"
@@ -31,3 +32,11 @@ class DimensionDefinitionGroup:
 @packet(id=180)
 class DimensionDataPacket:
     dimension_definitions: dict[str, DimensionDefinitionGroup.DimensionDefinition]
+
+
+@packet(id=61, since=2168)
+class ChangeDimensionPacket:
+    dimension_id: DimensionType
+    pos: Vec3
+    respawn: bool
+    loading_screen_id: uint32 | None
