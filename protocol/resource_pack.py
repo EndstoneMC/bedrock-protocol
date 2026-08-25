@@ -1,7 +1,7 @@
 import uuid
-from enum import Enum
+from enum import Enum, IntEnum, auto
 
-from protocol import field, int8, packet, uint16, uint64
+from protocol import field, int8, packet, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
@@ -125,3 +125,30 @@ class ResourcePackStackPacket:
     base_game_version: str
     experiments: Experiments
     include_editor_packs: bool
+
+
+class PackType(IntEnum, int8):
+    INVALID = 0
+    ADDON = 1
+    CACHED = 2
+    COPY_PROTECTED = 3
+    BEHAVIOR = 4
+    PERSONA_PIECE = 5
+    RESOURCES = 6
+    SKINS = 7
+    WORLD_TEMPLATE = 8
+    COUNT = auto()
+
+
+@packet(id=82, since=2168)
+class ResourcePackDataInfoPacket:
+    """The header for one pack's download: how its bytes will be chunked, how large the
+    archive is, and the hash the client checks the reassembled file against."""
+
+    resource_name: str
+    chunk_size: uint32
+    nb_chunks: uint32
+    file_size: uint64
+    file_hash: str
+    is_premium: bool
+    pack_type: PackType
