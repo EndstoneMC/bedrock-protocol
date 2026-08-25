@@ -2,7 +2,7 @@ import uuid
 from enum import IntEnum
 
 from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, varint32
-from protocol.actor import ActorRuntimeID, ActorUniqueID
+from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.attributes import DimensionType
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.edu import EduSharedUriResource
@@ -369,3 +369,10 @@ class MultiplayerSettingsPacketType(IntEnum):
 @packet(id=139, since=2168)
 class MultiplayerSettingsPacket:
     packet_type: MultiplayerSettingsPacketType
+
+
+@packet(id=151, since=2168)
+class UpdatePlayerGameTypePacket:
+    player_game_type: GameType
+    target_player: ActorUniqueID
+    tick: PlayerInputTick
