@@ -1,4 +1,7 @@
-from protocol import field, int32, packet, uint8, uvarint32, varint32
+from enum import IntEnum
+
+from protocol import field, int32, packet, uint8, uint32, uvarint32, uvarint64, varint32
+from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos
 from protocol.nbt import CompoundTag
 
@@ -37,3 +40,20 @@ class BlockPickRequestPacket:
 class BlockActorDataPacket:
     pos: BlockPos
     data: CompoundTag
+
+
+class ActorBlockSyncMessage:
+    class MessageId(IntEnum, uint32):
+        NONE = 0
+        CREATE = 1
+        DESTROY = 2
+
+
+@packet(id=110, since=2168)
+class UpdateBlockSyncedPacket:
+    pos: BlockPos
+    runtime_id: uvarint32
+    update_flags: uint8 = field(type=uvarint32)
+    layer: uvarint32
+    entity_unique_id: ActorUniqueID = field(type=uvarint64)
+    message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
