@@ -93,3 +93,8 @@ class StructureBlockUpdatePacket:
     data: StructureEditorData
     trigger: bool
     is_waterlogged: bool
+
+
+@packet(id=179, since=2168)
+class TickingAreasLoadStatusPacket:
+    waiting_for_preload: bool
