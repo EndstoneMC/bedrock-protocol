@@ -23,3 +23,10 @@ class BlockEventPacket:
     pos: BlockPos
     b0: varint32
     b1: varint32
+
+
+@packet(id=34, since=2168)
+class BlockPickRequestPacket:
+    pos: BlockPos
+    with_data: bool
+    max_slots: uint8
