@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 from protocol import field, packet, uint8
+from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
 
 package = "bedrock.protocol"
@@ -66,3 +67,9 @@ class CameraPresetsPacket:
     """The camera presets the level defines, sent during the join sequence."""
 
     camera_presets: CameraPresets
+
+
+@packet(id=73, since=2168)
+class CameraPacket:
+    camera_id: ActorUniqueID
+    target_player_id: ActorUniqueID
