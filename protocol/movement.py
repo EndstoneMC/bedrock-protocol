@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64, value
+from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
 from protocol.actor import (
     ActorLink,
     ActorRuntimeID,
@@ -10,21 +10,13 @@ from protocol.actor import (
     PropertySyncData,
     SynchedActorData,
 )
+from protocol.command import CommandPermissionLevel
 from protocol.common import Vec2, Vec3
 from protocol.game import GameType, PlayerPermissionLevel
 from protocol.inventory import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.player_list import BuildPlatform
 
 package = "bedrock.protocol"
-
-
-class CommandPermissionLevel(IntEnum, uint8):
-    ANY = 0
-    GAME_DIRECTORS = value(1, "GameDirectors")
-    ADMIN = 2
-    HOST = 3
-    OWNER = 4
-    INTERNAL = 5
 
 
 class SerializedAbilitiesData:
