@@ -169,3 +169,8 @@ class ResourcePackChunkDataPacket:
 class ResourcePackChunkRequestPacket:
     resource_name: str
     chunk: int32
+
+
+@packet(id=340, since=2168)
+class ResourcePacksReadyForValidationPacket:
+    pass
