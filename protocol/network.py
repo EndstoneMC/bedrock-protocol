@@ -1,7 +1,7 @@
 from enum import IntEnum, auto
 from typing import Union
 
-from protocol import field, int32, packet, value
+from protocol import field, int32, packet, uint64, value
 
 package = "bedrock.protocol"
 
@@ -503,3 +503,12 @@ class RequestNetworkSettingsPacket:
 @packet(id=4, since=2168)
 class ClientToServerHandshakePacket:
     pass
+
+
+@packet(id=115, since=2168)
+class NetworkStackLatencyPacket:
+    """Deprecated round-trip probe over the whole network stack, feeding the in-game
+    debug graph's ping and the realms latency telemetry. Sent by both sides."""
+
+    create_time: uint64
+    from_server: bool
