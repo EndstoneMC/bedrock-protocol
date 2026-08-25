@@ -501,3 +501,10 @@ class ContainerClosePacket:
     container_id: ContainerID
     container_type: ContainerType
     server_initiated_close: bool
+
+
+@packet(id=48, since=2168)
+class PlayerHotbarPacket:
+    selected_slot: uvarint32
+    container_id: ContainerID
+    should_select_slot: bool
