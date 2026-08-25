@@ -697,3 +697,9 @@ class ActorPickRequestPacket:
 @packet(id=89, since=2168)
 class AddBehaviorTreePacket:
     json_input: str
+
+
+@packet(id=17, since=2168)
+class TakeItemActorPacket:
+    item_id: ActorRuntimeID
+    actor_id: ActorRuntimeID
