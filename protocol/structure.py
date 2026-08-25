@@ -137,3 +137,14 @@ class StructureTemplateDataResponsePacket:
 @packet(id=313, since=2168)
 class JigsawStructureDataPacket:
     jigsaw_structure_data_tag: CompoundTag
+
+
+class FeatureRegistry:
+    class FeatureBinaryJsonFormat:
+        feature_name: str
+        binary_json_output: str
+
+
+@packet(id=191, since=2168)
+class FeatureRegistryPacket:
+    features_data_list: list[FeatureRegistry.FeatureBinaryJsonFormat]
