@@ -59,3 +59,8 @@ class EducationLevelSettings:
 @packet(id=137, since=2168)
 class EducationSettingsPacket:
     education_level_settings: EducationLevelSettings
+
+
+@packet(id=170, since=2168)
+class EduUriResourcePacket:
+    edu_shared_uri_resource: EduSharedUriResource
