@@ -1,4 +1,5 @@
 from enum import IntEnum
+from typing import Literal
 
 from protocol import field, int8, packet, varint32
 
@@ -27,3 +28,34 @@ class LessonProgressPacket:
     action: LessonAction = field(type=varint32)
     score: varint32
     activity_id: str
+
+
+class AgentCapabilities:
+    can_modify_blocks: bool | None
+
+
+class EducationLocalLevelSettings:
+    code_builder_override_uri: str | None
+
+
+class ExternalLinkSettings:
+    url: str
+    display_name: str
+
+
+class EducationLevelSettings:
+    code_builder_default_uri: str
+    code_builder_title: str
+    can_resize_code_builder: bool
+    disable_legacy_title_bar: bool
+    post_process_filter: str
+    screenshot_border_resource_path: str
+    agent_capabilities: AgentCapabilities | None
+    local_settings: EducationLocalLevelSettings
+    _deprecated: Literal[False]
+    external_link_settings: ExternalLinkSettings | None
+
+
+@packet(id=137, since=2168)
+class EducationSettingsPacket:
+    education_level_settings: EducationLevelSettings
