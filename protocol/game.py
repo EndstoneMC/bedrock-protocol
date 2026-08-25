@@ -358,3 +358,14 @@ class ShowCreditsPacket:
 @packet(id=105, since=2168)
 class SetDefaultGameTypePacket:
     default_game_type: GameType
+
+
+class MultiplayerSettingsPacketType(IntEnum):
+    ENABLE_MULTIPLAYER = 0
+    DISABLE_MULTIPLAYER = 1
+    REFRESH_JOINCODE = 2
+
+
+@packet(id=139, since=2168)
+class MultiplayerSettingsPacket:
+    packet_type: MultiplayerSettingsPacketType
