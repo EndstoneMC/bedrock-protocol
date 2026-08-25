@@ -128,3 +128,8 @@ class ArmorSlotAndDamagePair:
 @packet(id=149, since=2168)
 class PlayerArmorDamagePacket:
     slot_and_damage_pairs: list[ArmorSlotAndDamagePair]
+
+
+@packet(id=160, since=2168)
+class PlayerFogPacket:
+    fog_stack: list[str]
