@@ -338,3 +338,8 @@ class SetDifficultyPacket:
 @packet(id=196, since=2168)
 class UpdateClientInputLocksPacket:
     input_lock_component_data: uvarint32
+
+
+@packet(id=62, since=2168)
+class SetPlayerGameTypePacket:
+    player_game_type: GameType
