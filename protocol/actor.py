@@ -855,3 +855,9 @@ class MotionPredictionHintsPacket:
     runtime_id: ActorRuntimeID
     motion: Vec3
     on_ground: bool
+
+
+@packet(id=189, since=2168)
+class DeathInfoPacket:
+    death_cause_attack_name: str
+    death_cause_message_list: list[str]
