@@ -323,3 +323,8 @@ class StartGamePacket:
 @packet(id=10, since=2168)
 class SetTimePacket:
     time: varint32
+
+
+@packet(id=59, since=2168)
+class SetCommandsEnabledPacket:
+    commands_enabled: bool
