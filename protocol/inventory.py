@@ -528,3 +528,12 @@ class GuiDataPickItemPacket:
 class CompletedUsingItemPacket:
     item_id: int16
     item_use_method: int32
+
+
+@packet(id=306, since=2168)
+class PlayerToggleCrafterSlotRequestPacket:
+    pos_x: int32
+    pos_y: int32
+    pos_z: int32
+    slot_index: int32 = field(type=uint8)
+    is_disabled: bool
