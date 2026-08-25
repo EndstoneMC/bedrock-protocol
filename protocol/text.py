@@ -41,3 +41,9 @@ class TextPacket:
     xuid: str
     platform_id: str
     filtered_message: str | None
+
+
+@packet(id=186, since=2168)
+class ToastRequestPacket:
+    title: str
+    content: str
