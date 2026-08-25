@@ -540,3 +540,13 @@ class AutomationClientConnectPacket:
     then run commands on the client's behalf and listen for the events it fires."""
 
     web_socket_data: WebSocketPacketData
+
+
+class MissingBlobData:
+    blob_id: uint64
+    blob_data: str
+
+
+@packet(id=136, since=2168)
+class ClientCacheMissResponsePacket:
+    blobs: list[MissingBlobData]
