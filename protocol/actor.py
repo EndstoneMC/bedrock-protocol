@@ -848,3 +848,10 @@ class SpawnExperienceOrbPacket:
 @packet(id=119, since=2168)
 class AvailableActorIdentifiersPacket:
     identifier_list: CompoundTag
+
+
+@packet(id=157, since=2168)
+class MotionPredictionHintsPacket:
+    runtime_id: ActorRuntimeID
+    motion: Vec3
+    on_ground: bool
