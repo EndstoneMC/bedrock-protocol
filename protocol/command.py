@@ -1,6 +1,8 @@
 from enum import IntEnum
 
 from protocol import field, int32, packet, uint8, uint16, uint32, uvarint32, value
+from protocol.actor import ActorRuntimeID
+from protocol.common import BlockPos
 
 package = "bedrock.protocol"
 
@@ -70,3 +72,30 @@ class AvailableCommandsPacket:
     commands: list[CommandData]
     soft_enums: list[SoftEnumData]
     constraints: list[ConstrainedValueData]
+
+
+class CommandBlockMode(IntEnum, uint16):
+    NORMAL = 0
+    REPEATING = 1
+    CHAIN = 2
+
+
+@packet(id=78, since=2168)
+class CommandBlockUpdatePacket:
+    class EntityCommandTarget:
+        entity_id: ActorRuntimeID
+
+    class BlockCommandData:
+        block_pos: BlockPos
+        mode: CommandBlockMode
+        redstone_mode: bool
+        is_conditional: bool
+
+    target: EntityCommandTarget | BlockCommandData
+    command: str
+    last_output: str
+    name: str
+    filtered_name: str
+    track_output: bool
+    tick_delay: int32
+    execute_on_first_tick: bool
