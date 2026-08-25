@@ -680,3 +680,8 @@ class ActorType(IntEnum):
 @packet(id=96)
 class SetLastHurtByPacket:
     last_hurt_by: ActorType
+
+
+@packet(id=14, since=2168)
+class RemoveActorPacket:
+    entity_id: ActorUniqueID
