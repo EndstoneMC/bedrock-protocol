@@ -798,3 +798,10 @@ class ActorEventPacket:
     event_id: ActorEvent
     data: varint32
     fire_at_position: Vec3 | None
+
+
+@packet(id=40, since=2168)
+class SetActorMotionPacket:
+    runtime_id: ActorRuntimeID
+    motion: Vec3
+    tick: PlayerInputTick
