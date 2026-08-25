@@ -22,3 +22,8 @@ class ServerSettingsResponsePacket:
 
     form_id: uvarint32
     form_json: str
+
+
+@packet(id=310, since=2168)
+class ClientboundCloseFormPacket:
+    pass
