@@ -186,3 +186,30 @@ class CommandRequestPacket:
     origin: CommandOriginData
     internal_source: bool
     version: CurrentCmdVersion = field(type=str)
+
+
+class CommandOutputType(Enum):
+    NONE = 0
+    LAST_OUTPUT = 1, "LastOutput"
+    SILENT = 2
+    ALL_OUTPUT = 3, "AllOutput"
+    DATA_SET = 4, "DataSet"
+
+
+class CommandOutputMessage:
+    message_id: str
+    successful: bool
+    params: list[str]
+
+
+class CommandOutput:
+    type: CommandOutputType = field(type=str)
+    success_count: uint32
+    messages: list[CommandOutputMessage]
+    data: str | None
+
+
+@packet(id=79, since=2168)
+class CommandOutputPacket:
+    origin_data: CommandOriginData
+    output: CommandOutput
