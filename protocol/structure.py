@@ -98,3 +98,8 @@ class StructureBlockUpdatePacket:
 @packet(id=179, since=2168)
 class TickingAreasLoadStatusPacket:
     waiting_for_preload: bool
+
+
+@packet(id=314, since=2168)
+class CurrentStructureFeaturePacket:
+    current_structure_feature: str
