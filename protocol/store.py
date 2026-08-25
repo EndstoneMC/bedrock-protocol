@@ -27,3 +27,8 @@ class ShowStoreOfferRedirectType(IntEnum, uint8):
 class ShowStoreOfferPacket:
     offer_id: uuid.UUID
     redirect_type: ShowStoreOfferRedirectType
+
+
+@packet(id=92, since=2168)
+class PurchaseReceiptPacket:
+    purchase_receipts: list[str]
