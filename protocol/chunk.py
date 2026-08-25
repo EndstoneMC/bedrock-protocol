@@ -189,3 +189,8 @@ class SubChunkRequestPacket:
 class RequestChunkRadiusPacket:
     chunk_radius: varint32
     max_chunk_radius: uint8
+
+
+@packet(id=70, since=2168)
+class ChunkRadiusUpdatedPacket:
+    chunk_radius: varint32
