@@ -1,7 +1,7 @@
 from enum import IntEnum, auto
 from typing import Union
 
-from protocol import field, int32, packet, uint64, value
+from protocol import field, int32, packet, uint8, uint16, uint64, value
 
 package = "bedrock.protocol"
 
@@ -550,3 +550,23 @@ class MissingBlobData:
 @packet(id=136, since=2168)
 class ClientCacheMissResponsePacket:
     blobs: list[MissingBlobData]
+
+
+class PacketCompressionAlgorithm(IntEnum, uint16):
+    ZLIB = 0
+    SNAPPY = 1
+    NONE = 65535
+
+
+@packet(id=143, since=2168)
+class NetworkSettingsPacket:
+    """The server's answer to a network settings request, naming the compression
+    algorithm and the packet size above which it kicks in for the rest of the
+    connection, plus the render distance throttle the client applies to other
+    players."""
+
+    compression_threshold: uint16
+    compression_algorithm: PacketCompressionAlgorithm = field(type=uint16)
+    client_throttle_enabled: bool
+    client_throttle_threshold: uint8
+    client_throttle_scalar: float
