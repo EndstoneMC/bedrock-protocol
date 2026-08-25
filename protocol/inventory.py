@@ -2,7 +2,7 @@ from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int8, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, varint32
-from protocol.actor import ActorRuntimeID
+from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos, Vec3
 
 package = "bedrock.protocol"
@@ -537,3 +537,11 @@ class PlayerToggleCrafterSlotRequestPacket:
     pos_z: int32
     slot_index: int32 = field(type=uint8)
     is_disabled: bool
+
+
+@packet(id=46, since=2168)
+class ContainerOpenPacket:
+    container_id: ContainerID
+    type: ContainerType
+    pos: BlockPos
+    entity_unique_id: ActorUniqueID
