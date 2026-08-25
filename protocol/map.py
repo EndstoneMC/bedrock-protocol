@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, packet, type, uint8, uint32, uvarint32, value, varint32
+from protocol import field, int8, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Color
 
@@ -163,3 +163,13 @@ class ClientboundMapItemDataPacket:
     start_x: varint32 | None
     start_y: varint32 | None
     map_pixels: list[uint32] | None
+
+
+@packet(id=68, since=2168)
+class MapInfoRequestPacket:
+    class ClientPixelsProxy:
+        pixel: uint32
+        index: uint16
+
+    map_id: ActorUniqueID
+    client_pixels: list[ClientPixelsProxy] = field(prefix=uint32)
