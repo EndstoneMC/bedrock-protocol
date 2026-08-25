@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import int16, packet
+from protocol import int16, packet, varint32
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -23,3 +23,9 @@ class ItemData:
 @packet(id=162)
 class ItemRegistryPacket:
     items: list[ItemData]
+
+
+@packet(id=176, since=2168)
+class PlayerStartItemCooldownPacket:
+    item_category: str
+    duration_ticks: varint32
