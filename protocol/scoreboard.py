@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 from typing import Literal
 
-from protocol import field, int32, packet, type, uint8, varint64
+from protocol import field, int32, packet, type, uint8, varint32, varint64
 from protocol.actor import ActorUniqueID
 
 package = "bedrock.protocol"
@@ -140,3 +140,17 @@ class SetScoreboardIdentityPacket:
 @packet(id=106, since=2168)
 class RemoveObjectivePacket:
     objective_name: str
+
+
+class ObjectiveSortOrder(IntEnum, uint8):
+    ASCENDING = 0
+    DESCENDING = 1
+
+
+@packet(id=107, since=2168)
+class SetDisplayObjectivePacket:
+    display_slot_name: str
+    objective_name: str
+    objective_display_name: str
+    criteria_name: str
+    sort_order: ObjectiveSortOrder = field(type=varint32)
