@@ -861,3 +861,8 @@ class MotionPredictionHintsPacket:
 class DeathInfoPacket:
     death_cause_attack_name: str
     death_cause_message_list: list[str]
+
+
+@packet(id=165, since=2168)
+class SyncActorPropertyPacket:
+    property_data: CompoundTag
