@@ -333,3 +333,8 @@ class SetCommandsEnabledPacket:
 @packet(id=60, since=2168)
 class SetDifficultyPacket:
     difficulty: Difficulty = field(type=uvarint32)
+
+
+@packet(id=196, since=2168)
+class UpdateClientInputLocksPacket:
+    input_lock_component_data: uvarint32
