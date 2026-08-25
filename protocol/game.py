@@ -328,3 +328,8 @@ class SetTimePacket:
 @packet(id=59, since=2168)
 class SetCommandsEnabledPacket:
     commands_enabled: bool
+
+
+@packet(id=60, since=2168)
+class SetDifficultyPacket:
+    difficulty: Difficulty = field(type=uvarint32)
