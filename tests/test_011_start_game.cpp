@@ -1,6 +1,10 @@
 #include <cstdint>
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/attributes.h>
+#include <protocol/game.h>
+
 #include "fixture.hpp"
 
 namespace {

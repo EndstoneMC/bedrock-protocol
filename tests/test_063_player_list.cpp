@@ -2,6 +2,11 @@
 #include <type_traits>
 #include <variant>
 
+#include <protocol/actor.h>
+#include <protocol/common.h>
+#include <protocol/player_list.h>
+#include <protocol/skin.h>
+
 #include "fixture.hpp"
 
 namespace {

@@ -5,6 +5,7 @@
 
 #include <bedrock/bitset.hpp>
 
+
 #include "fixture.hpp"
 
 namespace {

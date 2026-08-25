@@ -3,6 +3,9 @@
 #include <variant>
 #include <vector>
 
+#include <protocol/inventory.h>
+#include <protocol/item_stack.h>
+
 #include "fixture.hpp"
 
 namespace {

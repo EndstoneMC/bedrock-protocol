@@ -1,66 +1,6 @@
 add_executable(bedrock_protocol_tests)
-target_sources(bedrock_protocol_tests PRIVATE
-        fixture.hpp
-        test_enum.cpp
-        test_036_player_action.cpp
-        test_096_set_last_hurt_by.cpp
-        test_174_sub_chunk.cpp
-        test_144_player_auth_input.cpp
-        test_111_move_actor_delta.cpp
-        test_019_move_player.cpp
-        test_015_add_item_actor.cpp
-        test_012_add_player.cpp
-        test_067_clientbound_map_item_data.cpp
-        test_bitset.cpp
-        test_063_player_list.cpp
-        test_090_structure_block_update.cpp
-        test_112_set_scoreboard_identity.cpp
-        test_108_set_score.cpp
-        test_093_player_skin.cpp
-        test_039_set_actor_data.cpp
-        test_013_add_actor.cpp
-        test_148_item_stack_response.cpp
-        test_147_item_stack_request.cpp
-        test_050_inventory_slot.cpp
-        test_031_mob_equipment.cpp
-        test_094_sub_client_login.cpp
-        test_008_resource_pack_client_response.cpp
-        test_006_resource_packs_info.cpp
-        test_145_creative_content.cpp
-        test_052_crafting_data.cpp
-        test_326_player_location.cpp
-        test_325_player_update_entity_overrides.cpp
-        test_180_dimension_data.cpp
-        test_302_trim_data.cpp
-        test_085_transfer.cpp
-        test_086_play_sound.cpp
-        test_141_anvil_damage.cpp
-        test_packet.cpp
-        test_001_login.cpp
-        test_005_disconnect.cpp
-        test_011_start_game.cpp
-        test_030_inventory_transaction.cpp
-        test_032_mob_armor_equipment.cpp
-        test_049_inventory_content.cpp
-        test_058_level_chunk.cpp
-        test_074_boss_event.cpp
-        test_122_biome_definition_list.cpp
-        test_123_level_sound_event.cpp
-        test_135_client_cache_blob_status.cpp
-        test_156_packet_violation_warning.cpp
-        test_175_sub_chunk_request.cpp
-        test_193_request_network_settings.cpp
-        test_198_camera_presets.cpp
-        test_315_serverbound_diagnostics.cpp
-        test_328_primitive_shapes.cpp
-        test_331_graphics_override_parameter.cpp
-        test_345_attribute_layer_sync.cpp
-        test_347_server_presence_info.cpp
-        test_348_update_sound_data.cpp
-        test_351_set_player_furnace_options.cpp
-        test_072_game_rules_changed.cpp
-        test_162_item_registry.cpp
-)
+file(GLOB _test_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp")
+target_sources(bedrock_protocol_tests PRIVATE fixture.hpp ${_test_sources})
 target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::Catch2WithMain)
 
 include(Catch)

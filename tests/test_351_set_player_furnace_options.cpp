@@ -1,5 +1,7 @@
 #include <string>
 
+#include <protocol/furnace.h>
+
 #include "fixture.hpp"
 
 // 2192 added the packet, so there is no golden: gophertunnel and CloudburstMC both stop

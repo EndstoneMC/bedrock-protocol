@@ -1,6 +1,11 @@
 #include <optional>
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/game.h>
+#include <protocol/movement.h>
+#include <protocol/player_list.h>
+
 #include "fixture.hpp"
 
 namespace {

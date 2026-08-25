@@ -1,6 +1,8 @@
 #include <string>
 #include <type_traits>
 
+#include <protocol/inventory.h>
+
 #include "fixture.hpp"
 
 namespace {

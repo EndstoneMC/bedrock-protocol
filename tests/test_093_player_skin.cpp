@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+#include <protocol/common.h>
+#include <protocol/skin.h>
+
 #include "fixture.hpp"
 
 namespace {

@@ -1,6 +1,8 @@
 #include <string>
 #include <type_traits>
 
+#include <protocol/trim.h>
+
 #include "fixture.hpp"
 
 namespace {

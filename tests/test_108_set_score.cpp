@@ -1,5 +1,8 @@
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/scoreboard.h>
+
 #include "fixture.hpp"
 
 namespace {

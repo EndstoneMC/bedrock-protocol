@@ -1,6 +1,8 @@
 #include <string>
 #include <variant>
 
+#include <protocol/resource_pack.h>
+
 #include "fixture.hpp"
 
 namespace {

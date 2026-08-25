@@ -1,5 +1,9 @@
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/common.h>
+#include <protocol/sound.h>
+
 #include "fixture.hpp"
 
 namespace {

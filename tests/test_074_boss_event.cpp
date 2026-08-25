@@ -1,6 +1,9 @@
 #include <cstdint>
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/boss.h>
+
 #include "fixture.hpp"
 
 namespace {

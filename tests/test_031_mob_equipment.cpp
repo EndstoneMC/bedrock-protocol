@@ -1,6 +1,10 @@
 #include <string>
 #include <type_traits>
 
+#include <protocol/actor.h>
+#include <protocol/equipment.h>
+#include <protocol/inventory.h>
+
 #include "fixture.hpp"
 
 namespace {

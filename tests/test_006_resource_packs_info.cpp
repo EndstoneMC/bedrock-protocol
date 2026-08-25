@@ -1,5 +1,7 @@
 #include <string>
 
+#include <protocol/resource_pack.h>
+
 #include "fixture.hpp"
 
 namespace {

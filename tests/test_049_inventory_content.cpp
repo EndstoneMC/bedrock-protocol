@@ -1,5 +1,7 @@
 #include <string>
 
+#include <protocol/inventory.h>
+
 #include "fixture.hpp"
 
 namespace {

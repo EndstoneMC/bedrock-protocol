@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 
+#include <protocol/actor.h>
+#include <protocol/common.h>
+#include <protocol/map.h>
+
 #include "fixture.hpp"
 
 namespace {

@@ -2,6 +2,11 @@
 #include <string>
 #include <variant>
 
+#include <protocol/actor.h>
+#include <protocol/attributes.h>
+#include <protocol/common.h>
+#include <protocol/shape.h>
+
 #include "fixture.hpp"
 
 namespace {

@@ -2,6 +2,8 @@
 #include <string>
 #include <type_traits>
 
+#include <protocol/game.h>
+
 #include "fixture.hpp"
 
 namespace {

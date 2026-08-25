@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <protocol/diagnostics.h>
+
 #include "fixture.hpp"
 
 namespace {

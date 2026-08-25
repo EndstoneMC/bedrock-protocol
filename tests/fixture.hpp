@@ -4,7 +4,11 @@
 #include <string>
 #include <string_view>
 
-#include <bedrock/protocol.hpp>
+#include <bedrock/enum.hpp>
+#include <bedrock/nbt.hpp>
+#include <bedrock/packet.hpp>
+#include <bedrock/serializer.hpp>
+#include <bedrock/stream.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 namespace bp = bedrock::protocol;

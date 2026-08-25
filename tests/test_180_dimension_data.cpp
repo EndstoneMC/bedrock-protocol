@@ -1,5 +1,9 @@
 #include <string>
 
+#include <protocol/attributes.h>
+#include <protocol/dimension.h>
+#include <protocol/game.h>
+
 #include "fixture.hpp"
 
 namespace {

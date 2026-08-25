@@ -1,5 +1,8 @@
 #include <string>
 
+#include <protocol/camera.h>
+#include <protocol/common.h>
+
 #include "fixture.hpp"
 
 namespace {

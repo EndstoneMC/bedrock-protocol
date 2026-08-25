@@ -1,6 +1,9 @@
 #include <string>
 #include <variant>
 
+#include <protocol/actor.h>
+#include <protocol/player_location.h>
+
 #include "fixture.hpp"
 
 namespace {

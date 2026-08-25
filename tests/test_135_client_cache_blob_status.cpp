@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+#include <protocol/login.h>
+
 #include "fixture.hpp"
 
 namespace {

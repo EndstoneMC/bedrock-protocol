@@ -1,6 +1,8 @@
 #include <optional>
 #include <string>
 
+#include <protocol/presence.h>
+
 #include "fixture.hpp"
 
 namespace {

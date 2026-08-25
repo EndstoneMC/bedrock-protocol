@@ -1,5 +1,8 @@
 #include <string>
 
+#include <protocol/attributes.h>
+#include <protocol/chunk.h>
+
 #include "fixture.hpp"
 
 namespace {

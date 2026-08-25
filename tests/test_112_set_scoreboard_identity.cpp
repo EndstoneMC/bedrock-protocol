@@ -1,6 +1,8 @@
 #include <optional>
 #include <string>
 
+#include <protocol/scoreboard.h>
+
 #include "fixture.hpp"
 
 namespace {

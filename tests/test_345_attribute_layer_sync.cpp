@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <string>
 
+#include <protocol/attributes.h>
+
 #include "fixture.hpp"
 
 namespace {

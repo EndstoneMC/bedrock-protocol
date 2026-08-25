@@ -1,5 +1,7 @@
 #include <string>
 
+#include <protocol/crafting.h>
+
 #include "fixture.hpp"
 
 namespace {

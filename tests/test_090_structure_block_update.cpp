@@ -1,6 +1,9 @@
 #include <optional>
 #include <string>
 
+#include <protocol/actor.h>
+#include <protocol/structure.h>
+
 #include "fixture.hpp"
 
 namespace {

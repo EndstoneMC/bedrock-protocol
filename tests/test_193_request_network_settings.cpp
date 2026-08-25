@@ -1,5 +1,7 @@
 #include <string>
 
+#include <protocol/network.h>
+
 #include "fixture.hpp"
 
 namespace {

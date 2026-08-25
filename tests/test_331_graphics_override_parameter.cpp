@@ -1,5 +1,8 @@
 #include <string>
 
+#include <protocol/common.h>
+#include <protocol/graphics.h>
+
 #include "fixture.hpp"
 
 namespace {
