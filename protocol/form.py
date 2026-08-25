@@ -7,3 +7,8 @@ package = "bedrock.protocol"
 class ModalFormRequestPacket:
     form_id: uvarint32
     form_json: str
+
+
+@packet(id=102, since=2168)
+class ServerSettingsRequestPacket:
+    pass
