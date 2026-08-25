@@ -1,6 +1,6 @@
-from enum import IntEnum, auto
+from enum import Enum, IntEnum, auto
 
-from protocol import int8, int16, int64, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
+from protocol import field, int8, int16, int64, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.nbt import CompoundTag
 
@@ -810,3 +810,30 @@ class SetActorMotionPacket:
 @packet(id=41, since=2168)
 class SetActorLinkPacket:
     link: ActorLink
+
+
+class ActorSwingSource(Enum, uint8):
+    NONE = 0
+    BUILD = 1
+    MINE = 2
+    INTERACT = 3
+    ATTACK = 4
+    USE_ITEM = 5, "UseItem"
+    THROW_ITEM = 6, "ThrowItem"
+    DROP_ITEM = 7, "DropItem"
+    EVENT = 8
+
+
+@packet(id=44, since=2168)
+class AnimatePacket:
+    class Action(IntEnum, uint8):
+        NO_ACTION = 0
+        SWING = 1
+        WAKE_UP = 3
+        CRITICAL_HIT = 4
+        MAGIC_CRITICAL_HIT = 5
+
+    action: Action
+    runtime_id: ActorRuntimeID
+    data: float
+    swing_source: ActorSwingSource | None = field(type=str)
