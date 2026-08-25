@@ -135,3 +135,8 @@ class SetScoreboardIdentityPacket:
 class SetScoreboardIdentityPacket:
     type: ScoreboardIdentityPacketType
     identity_info: list[ScoreboardIdentityPacketInfo]
+
+
+@packet(id=106, since=2168)
+class RemoveObjectivePacket:
+    objective_name: str
