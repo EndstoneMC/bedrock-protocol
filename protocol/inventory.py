@@ -545,3 +545,8 @@ class ContainerOpenPacket:
     type: ContainerType
     pos: BlockPos
     entity_unique_id: ActorUniqueID
+
+
+@packet(id=317, since=2168)
+class ContainerRegistryCleanupPacket:
+    removed_containers: list[FullContainerName]
