@@ -28,3 +28,16 @@ class RequestPermissionsPacket:
 @packet(id=327, since=2168)
 class ClientboundControlSchemeSetPacket:
     control_scheme: Scheme
+
+
+class AdventureSettings:
+    no_pv_m: bool
+    no_mv_p: bool
+    immutable_world: bool
+    show_name_tags: bool
+    auto_jump: bool
+
+
+@packet(id=188, since=2168)
+class UpdateAdventureSettingsPacket:
+    adventure_settings: AdventureSettings
