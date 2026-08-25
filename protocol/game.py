@@ -353,3 +353,8 @@ class ShowCreditsPacket:
 
     player_id: ActorRuntimeID
     credits_state: CreditsState
+
+
+@packet(id=105, since=2168)
+class SetDefaultGameTypePacket:
+    default_game_type: GameType
