@@ -2,6 +2,7 @@ from enum import IntEnum
 
 from protocol import field, int64, packet, uint16, varint32
 from protocol.actor import ActorUniqueID
+from protocol.camera import Scheme
 from protocol.game import PlayerPermissionLevel
 
 package = "bedrock.protocol"
@@ -22,3 +23,8 @@ class RequestPermissionsPacket:
     target_player_id: ActorUniqueID = field(type=int64)
     player_permissions: PlayerPermissionLevel = field(type=varint32)
     custom_permission_flags: uint16
+
+
+@packet(id=327, since=2168)
+class ClientboundControlSchemeSetPacket:
+    control_scheme: Scheme
