@@ -508,3 +508,10 @@ class PlayerHotbarPacket:
     selected_slot: uvarint32
     container_id: ContainerID
     should_select_slot: bool
+
+
+@packet(id=51, since=2168)
+class ContainerSetDataPacket:
+    container_id: ContainerID
+    id: varint32
+    value: varint32
