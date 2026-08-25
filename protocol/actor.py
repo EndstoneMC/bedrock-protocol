@@ -717,3 +717,12 @@ class MoveActorAbsoluteData:
 @packet(id=18, since=2168)
 class MoveActorAbsolutePacket:
     move_data: MoveActorAbsoluteData
+
+
+@packet(id=22, since=2168)
+class AddPaintingPacket:
+    entity_id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    pos: Vec3
+    dir: varint32
+    motif: str
