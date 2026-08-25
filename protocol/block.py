@@ -1,5 +1,6 @@
 from protocol import field, int32, packet, uint8, uvarint32, varint32
 from protocol.common import BlockPos
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -30,3 +31,9 @@ class BlockPickRequestPacket:
     pos: BlockPos
     with_data: bool
     max_slots: uint8
+
+
+@packet(id=56, since=2168)
+class BlockActorDataPacket:
+    pos: BlockPos
+    data: CompoundTag
