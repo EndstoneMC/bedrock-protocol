@@ -64,3 +64,9 @@ class LecternUpdatePacket:
     page: int32 = field(type=uint8)
     total_pages: int32 = field(type=uint8)
     pos: BlockPos
+
+
+@packet(id=303, since=2168)
+class OpenSignPacket:
+    pos: BlockPos
+    is_front_side: bool
