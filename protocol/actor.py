@@ -703,3 +703,17 @@ class AddBehaviorTreePacket:
 class TakeItemActorPacket:
     item_id: ActorRuntimeID
     actor_id: ActorRuntimeID
+
+
+class MoveActorAbsoluteData:
+    runtime_id: ActorRuntimeID
+    header: uint8
+    pos: Vec3
+    rot_x: uint8
+    rot_y: uint8
+    rot_y_head: uint8
+
+
+@packet(id=18, since=2168)
+class MoveActorAbsolutePacket:
+    move_data: MoveActorAbsoluteData
