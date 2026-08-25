@@ -4,6 +4,7 @@ from protocol import field, packet, type, uint8, uint32, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.item_stack import RedactableString
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -118,3 +119,16 @@ class StructureTemplateDataRequestPacket:
     structure_block_pos: BlockPos
     structure_settings: StructureSettings
     request_operation: StructureTemplateRequestOperation
+
+
+class StructureTemplateResponseType(IntEnum, uint8):
+    NONE = 0
+    EXPORT = 1
+    QUERY = 2
+
+
+@packet(id=133, since=2168)
+class StructureTemplateDataResponsePacket:
+    structure_name: str
+    structure_tag: CompoundTag | None
+    response_type: StructureTemplateResponseType
