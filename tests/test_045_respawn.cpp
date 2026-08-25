@@ -18,19 +18,20 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 45")
 {
-    STATIC_REQUIRE(bp::RespawnPacket::Id == 45);
-    STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<975, 45>, bp::packet_of_t<2192, 45>>);
+    STATIC_REQUIRE(bp::RespawnPacket_<2168>::Id == 45);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 45>);
+    STATIC_REQUIRE(bp::has_packet_v<2168, 45>);
 }
 
 TEST_CASE("respawn round-trips against the golden")
 {
-    bp::RespawnPacket packet;
+    bp::RespawnPacket_<2168> packet;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.state = bp::PlayerRespawnState::READY_TO_SPAWN;
     packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RespawnPacket>(golden);
+    const auto back = decode<bp::RespawnPacket_<2168>>(golden);
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
@@ -40,10 +41,10 @@ TEST_CASE("respawn round-trips against the golden")
 
 TEST_CASE("the state byte does not absorb the runtime id's varint")
 {
-    bp::RespawnPacket packet;
+    bp::RespawnPacket_<2168> packet;
     packet.state = bp::PlayerRespawnState::CLIENT_READY_TO_SPAWN;
     packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 15);
-    REQUIRE(decode<bp::RespawnPacket>(wire).runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(decode<bp::RespawnPacket_<2168>>(wire).runtime_id == static_cast<bp::ActorRuntimeID>(300));
 }
