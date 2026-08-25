@@ -1,6 +1,6 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
-from protocol import int32, packet, uint8, uvarint64, varint32
+from protocol import int16, int32, packet, uint8, uvarint64, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.attributes import DimensionType
 from protocol.common import BlockPos, Vec3
@@ -108,3 +108,23 @@ class SetSpawnPositionPacket:
 @packet(id=113, since=2168)
 class SetLocalPlayerAsInitializedPacket:
     player_id: ActorRuntimeID
+
+
+class ArmorSlot(IntEnum):
+    HEAD = 0
+    TORSO = 1
+    LEGS = 2
+    FEET = 3
+    BODY = 4
+    HUMANOID_COUNT = 4
+    COUNT = auto()
+
+
+class ArmorSlotAndDamagePair:
+    armor_slot: ArmorSlot
+    damage: int16
+
+
+@packet(id=149, since=2168)
+class PlayerArmorDamagePacket:
+    slot_and_damage_pairs: list[ArmorSlotAndDamagePair]
