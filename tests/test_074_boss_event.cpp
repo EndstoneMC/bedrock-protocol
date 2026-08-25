@@ -12,8 +12,6 @@ namespace {
 // packet.BossEvent{BossEntityUniqueID: -3, PlayerUniqueID: 7, EventType: <ev>,
 // BossBarTitle: "boss", FilteredBossBarTitle: "bo**", HealthPercentage: 0.5,
 // ScreenDarkening: 2, Colour: 3, Overlay: 1}
-// Every field past EventType sat behind a switch, so each event type had its own
-// wire length -- 2 bytes for Hide up to 20 for Show.
 const std::string golden_v975_add = bytes({
     0x05, 0x00, 0x04, 0x62, 0x6f, 0x73, 0x73, 0x04, 0x62, 0x6f, 0x2a, 0x2a,
     0x00, 0x00, 0x00, 0x3f, 0x02, 0x00, 0x03, 0x01,
@@ -35,8 +33,6 @@ const std::string golden_v975_update_style = bytes({
 // packet.BossEvent{BossEntityUniqueID: -3, PlayerUniqueID: 7, EventType: 0,
 // BossBarTitle: "boss", FilteredBossBarTitle: "bo**", HealthPercentage: 0.5,
 // Colour: 3, Overlay: 1}
-// The 984 cerealisation flattened the switch away: every field is now written
-// unconditionally, so all eight event types encode to these same 19 bytes.
 const std::string golden_v1001 = bytes({
     0x05, 0x0e, 0x00, 0x04, 0x62, 0x6f, 0x73, 0x73, 0x04, 0x62, 0x6f, 0x2a,
     0x2a, 0x00, 0x00, 0x00, 0x3f, 0x03, 0x01,

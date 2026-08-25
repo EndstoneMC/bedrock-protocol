@@ -149,8 +149,6 @@ TEST_CASE("PlayerListPacket: v1001 add round-trip")
     //     SkinColour: "#010203", PremiumSkin: true, PersonaSkin: false,
     //     PersonaCapeOnClassicSkin: false, PrimaryUser: true,
     //     OverrideAppearance: false, Trusted: true}}]}
-    // The arm size is name-coded, so the four bytes at offset 108 read "wide": cereal
-    // folds the bound name, and SLIM / WIDE carry no separator for the fold to drop.
     const std::string golden = bytes({
     0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x05, 0x53, 0x74, 0x65, 0x76,

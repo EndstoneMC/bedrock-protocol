@@ -11,10 +11,6 @@ namespace {
 // []protocol.TrimPattern{{ItemName: "item_a", PatternID: "pat_a"}},
 // Materials: []protocol.TrimMaterial{{MaterialID: "mat_a", Colour: "c",
 // ItemName: "item_b"}}}
-//
-// CloudburstMC Bedrock_v2168 emits the identical bytes for the same packet
-// (TrimPattern("item_a", "pat_a"), TrimMaterial("mat_a", "c", "item_b")): the
-// packet cerealised at 2168 without changing its wire form.
 const std::string golden = bytes({
     0x01, 0x06, 0x69, 0x74, 0x65, 0x6d, 0x5f, 0x61, 0x05, 0x70, 0x61, 0x74,
     0x5f, 0x61, 0x01, 0x05, 0x6d, 0x61, 0x74, 0x5f, 0x61, 0x01, 0x63, 0x06,
