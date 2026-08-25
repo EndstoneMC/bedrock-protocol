@@ -805,3 +805,8 @@ class SetActorMotionPacket:
     runtime_id: ActorRuntimeID
     motion: Vec3
     tick: PlayerInputTick
+
+
+@packet(id=41, since=2168)
+class SetActorLinkPacket:
+    link: ActorLink
