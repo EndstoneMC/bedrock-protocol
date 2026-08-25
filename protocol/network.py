@@ -512,3 +512,11 @@ class NetworkStackLatencyPacket:
 
     create_time: uint64
     from_server: bool
+
+
+@packet(id=129, since=2168)
+class ClientCacheStatusPacket:
+    """Sent once at login, telling the server whether the client supports the
+    client blob cache protocol."""
+
+    enabled: bool
