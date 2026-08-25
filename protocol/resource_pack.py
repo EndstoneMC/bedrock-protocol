@@ -2,6 +2,7 @@ import uuid
 from enum import Enum
 
 from protocol import field, int8, packet, uint16, uint64
+from protocol.game import Experiments
 
 package = "bedrock.protocol"
 
@@ -106,3 +107,21 @@ class ServerboundPackSettingChangePacket:
     pack_id: uuid.UUID
     pack_setting_name: str
     pack_setting_value: float | bool | str | list[str]
+
+
+class PackInstanceId:
+    pack_id: str
+    version: str
+    subpack_name: str
+
+
+@packet(id=7, since=2168)
+class ResourcePackStackPacket:
+    """The order the client applies the accepted texture packs in, with the base game
+    version its stack falls back to and the experiments the world runs."""
+
+    texture_pack_required: bool
+    texture_pack_ids_and_versions: list[PackInstanceId]
+    base_game_version: str
+    experiments: Experiments
+    include_editor_packs: bool
