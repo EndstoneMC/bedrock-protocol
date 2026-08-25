@@ -65,3 +65,8 @@ class HurtArmorPacket:
     cause: ActorDamageCause
     dmg: varint32
     armor_slots: uvarint64
+
+
+@packet(id=42, since=2168)
+class SetHealthPacket:
+    health: varint32
