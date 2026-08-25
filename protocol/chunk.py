@@ -2,6 +2,7 @@ from enum import IntEnum
 
 from protocol import array, field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
 from protocol.attributes import DimensionType
+from protocol.common import BlockPos
 
 package = "bedrock.protocol"
 
@@ -194,3 +195,10 @@ class RequestChunkRadiusPacket:
 @packet(id=70, since=2168)
 class ChunkRadiusUpdatedPacket:
     chunk_radius: varint32
+
+
+@packet(id=121, since=2168)
+class NetworkChunkPublisherUpdatePacket:
+    position: BlockPos
+    radius: uvarint32
+    server_built_chunks: list[ChunkPos] = field(prefix=uint32)
