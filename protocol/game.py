@@ -376,3 +376,15 @@ class UpdatePlayerGameTypePacket:
     player_game_type: GameType
     target_player: ActorUniqueID
     tick: PlayerInputTick
+
+
+class SimulationType(IntEnum, uint8):
+    GAME = 0
+    EDITOR = 1
+    TEST = 2
+    INVALID = 3
+
+
+@packet(id=168, since=2168)
+class SimulationTypePacket:
+    sim_type: SimulationType
