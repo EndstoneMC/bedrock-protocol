@@ -30,3 +30,11 @@ class MobEffectPacket:
     effect_duration_ticks: varint32
     tick: PlayerInputTick
     ambient: bool
+
+
+@packet(id=318, since=2168)
+class MovementEffectPacket:
+    target_runtime_id: ActorRuntimeID
+    effect_id: MovementEffectType
+    effect_duration: varint32
+    tick: PlayerInputTick
