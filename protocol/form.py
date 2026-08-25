@@ -1,4 +1,6 @@
-from protocol import packet, uvarint32
+from enum import IntEnum
+
+from protocol import packet, uint8, uvarint32
 
 package = "bedrock.protocol"
 
@@ -27,3 +29,15 @@ class ServerSettingsResponsePacket:
 @packet(id=310, since=2168)
 class ClientboundCloseFormPacket:
     pass
+
+
+class ModalFormCancelReason(IntEnum, uint8):
+    USER_CLOSED = 0
+    USER_BUSY = 1
+
+
+@packet(id=101, since=2168)
+class ModalFormResponsePacket:
+    form_id: uvarint32
+    json_response: str | None
+    form_cancel_reason: ModalFormCancelReason | None
