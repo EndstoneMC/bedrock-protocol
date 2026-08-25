@@ -132,3 +132,8 @@ class StructureTemplateDataResponsePacket:
     structure_name: str
     structure_tag: CompoundTag | None
     response_type: StructureTemplateResponseType
+
+
+@packet(id=313, since=2168)
+class JigsawStructureDataPacket:
+    jigsaw_structure_data_tag: CompoundTag
