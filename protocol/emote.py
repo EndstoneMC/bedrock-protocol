@@ -1,3 +1,4 @@
+import uuid
 from enum import IntEnum
 
 from protocol import packet, uint8, uvarint32
@@ -18,3 +19,9 @@ class EmotePacket:
     xuid: str
     platform_id: str
     flags: uint8
+
+
+@packet(id=152, since=2168)
+class EmoteListPacket:
+    runtime_id: ActorRuntimeID
+    emote_piece_ids: list[uuid.UUID]
