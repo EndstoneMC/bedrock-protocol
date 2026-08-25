@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import packet, uint8, uvarint64, varint32
+from protocol import int32, packet, uint8, uvarint64, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import Vec3
 
@@ -70,3 +70,8 @@ class HurtArmorPacket:
 @packet(id=42, since=2168)
 class SetHealthPacket:
     health: varint32
+
+
+@packet(id=309, since=2168)
+class AwardAchievementPacket:
+    achievement_id: int32
