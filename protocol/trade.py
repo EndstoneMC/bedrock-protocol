@@ -18,3 +18,12 @@ class UpdateTradePacket:
     use_new_trade_screen: bool
     using_economy_trade: bool
     data: CompoundTag
+
+
+@packet(id=81, since=2168)
+class UpdateEquipPacket:
+    container_id: ContainerID
+    type: ContainerType
+    size: varint32
+    entity_unique_id: ActorUniqueID
+    data: CompoundTag
