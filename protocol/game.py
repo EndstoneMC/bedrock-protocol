@@ -318,3 +318,8 @@ class StartGamePacket:
     network_permissions: NetworkPermissions
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData
+
+
+@packet(id=10, since=2168)
+class SetTimePacket:
+    time: varint32
