@@ -183,3 +183,9 @@ class SubChunkRequestPacket:
     dimension_type: DimensionType
     sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset]
     center_pos: SubChunkPos
+
+
+@packet(id=69, since=2168)
+class RequestChunkRadiusPacket:
+    chunk_radius: varint32
+    max_chunk_radius: uint8
