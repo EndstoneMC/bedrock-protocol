@@ -213,3 +213,16 @@ class CommandOutput:
 class CommandOutputPacket:
     origin_data: CommandOriginData
     output: CommandOutput
+
+
+class SoftEnumUpdateType(IntEnum, uint8):
+    ADD = 0
+    REMOVE = 1
+    REPLACE = 2
+
+
+@packet(id=114, since=2168)
+class UpdateSoftEnumPacket:
+    enum_name: str
+    values: list[str]
+    type: SoftEnumUpdateType
