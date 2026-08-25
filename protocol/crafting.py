@@ -2,6 +2,7 @@ import uuid
 from enum import IntEnum, auto
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
+from protocol.common import BlockPos
 
 package = "bedrock.protocol"
 
@@ -341,3 +342,31 @@ class CreativeItemEntryPayload:
 class CreativeContentPacket:
     groups: list[CreativeGroupInfoPayload]
     entries: list[CreativeItemEntryPayload]
+
+
+class LabTableReactionType(IntEnum, uint8):
+    NONE = 0
+    ICE_BOMB = 1
+    BLEACH = 2
+    ELEPHANT_TOOTHPASTE = 3
+    FERTILIZER = 4
+    HEAT_BLOCK = 5
+    MAGNESIUM_SALTS = 6
+    MISC_FIRE = 7
+    MISC_EXPLOSION = 8
+    MISC_LAVA = 9
+    MISC_MYSTICAL = 10
+    MISC_SMOKE = 11
+    MISC_LARGE_SMOKE = 12
+
+
+@packet(id=109, since=2168)
+class LabTablePacket:
+    class Type(IntEnum, uint8):
+        START_COMBINE = 0
+        START_REACTION = 1
+        RESET = 2
+
+    type: Type
+    pos: BlockPos
+    reaction: LabTableReactionType
