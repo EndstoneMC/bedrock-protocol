@@ -691,3 +691,10 @@ class RecordStartedPacket:
 
     pos: BlockPos
     server_sound_handle: ServerSoundHandle
+
+
+@packet(id=87, since=2168)
+class StopSoundPacket:
+    name: str
+    stop_all: bool
+    stop_music_legacy: bool
