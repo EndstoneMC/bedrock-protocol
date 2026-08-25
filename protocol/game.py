@@ -343,3 +343,13 @@ class UpdateClientInputLocksPacket:
 @packet(id=62, since=2168)
 class SetPlayerGameTypePacket:
     player_game_type: GameType
+
+
+@packet(id=75, since=2168)
+class ShowCreditsPacket:
+    class CreditsState(IntEnum):
+        START = 0
+        FINISHED = 1
+
+    player_id: ActorRuntimeID
+    credits_state: CreditsState
