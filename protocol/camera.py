@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, packet, uint8
+from protocol import field, int32, packet, uint8
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
 
@@ -91,3 +91,16 @@ class CameraShakePacket:
     seconds: float
     shake_type: CameraShakeType
     shake_action: CameraShakeAction
+
+
+class CameraAimAssistActorPriority:
+    class PriorityData:
+        preset_index: int32
+        category_index: int32
+        actor_index: int32
+        priority_value: int32
+
+
+@packet(id=339, since=2168)
+class CameraAimAssistActorPriorityPacket:
+    camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
