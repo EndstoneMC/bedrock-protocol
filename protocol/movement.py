@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
+from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64, value
 from protocol.actor import (
     ActorLink,
     ActorRuntimeID,
@@ -20,7 +20,7 @@ package = "bedrock.protocol"
 
 class CommandPermissionLevel(IntEnum, uint8):
     ANY = 0
-    GAME_DIRECTORS = 1
+    GAME_DIRECTORS = value(1, "GameDirectors")
     ADMIN = 2
     HOST = 3
     OWNER = 4
