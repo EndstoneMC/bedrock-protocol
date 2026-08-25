@@ -498,3 +498,8 @@ class RequestNetworkSettingsPacket:
     the server can answer with its network settings."""
 
     client_network_version: int32 = field(endian="big")
+
+
+@packet(id=4, since=2168)
+class ClientToServerHandshakePacket:
+    pass
