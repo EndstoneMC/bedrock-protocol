@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <string>
 
-#include <protocol/ability.h>
-#include <protocol/game.h>
+#include <bedrock/protocol/ability.h>
+#include <bedrock/protocol/game.h>
 
 #include "fixture.hpp"
 

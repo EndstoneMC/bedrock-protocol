@@ -1,7 +1,7 @@
 #include <optional>
 #include <string>
 
-#include <protocol/presence.h>
+#include <bedrock/protocol/presence.h>
 
 #include "fixture.hpp"
 

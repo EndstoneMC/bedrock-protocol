@@ -35,6 +35,8 @@ from .enum import EnumGenerator
 from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
 from .helpers import (
     BUILTIN_HEADERS,
+    INCLUDE_PREFIX,
+    MACRO_ENUMERATORS,
     PRIMITIVE_TYPES,
     bare_name,
     cpp_qualified,
@@ -110,7 +112,7 @@ class FileGenerator:
         self._emit_namespace_close(body)
 
         p = Printer()
-        p.print(f'#include "{self._file.stem}.h"\n')
+        p.print(f"#include <{INCLUDE_PREFIX}/{self._file.stem}.h>\n")
         # Only what the bodies need beyond what the header already pulls in.
         extra = body.includes - self._header_includes
         if extra:
@@ -124,8 +126,8 @@ class FileGenerator:
 
     def _emit_includes(self, p: Printer, includes: set[str]) -> None:
         """Emit `includes` in two sorted groups: stdlib then bedrock headers."""
-        std = sorted(i for i in includes if not i.startswith("<bedrock/"))
-        project = sorted(i for i in includes if i.startswith("<bedrock/"))
+        std = sorted(i for i in includes if not i.startswith(f"<{INCLUDE_PREFIX}/"))
+        project = sorted(i for i in includes if i.startswith(f"<{INCLUDE_PREFIX}/"))
         for inc in std:
             p.print(f"#include {inc}\n")
         if project:
@@ -149,7 +151,7 @@ class FileGenerator:
             return
         p.print("\n")
         for name in sorted(needed):
-            p.print(f'#include "{name.replace(".", "/")}.h"\n')
+            p.print(f"#include <{INCLUDE_PREFIX}/{name.rsplit('.', 1)[-1]}.h>\n")
 
     def _type_owners(self) -> dict[str, str]:
         """Type name -> the module declaring it, for every file but this one. Only
@@ -170,7 +172,7 @@ class FileGenerator:
         return owners
 
     def _builtin_includes(self) -> set[str]:
-        """`<bedrock/<stem>.hpp>` for every builtin this file references: the
+        """`<bedrock/protocol/<stem>.hpp>` for every builtin this file references: the
         compiler emits no definition for those, so the hand-written header that
         does define them has to come in."""
         homes: dict[str, str] = {}
@@ -180,7 +182,7 @@ class FileGenerator:
             for struct in f.structs:
                 if struct.builtin:
                     homes[struct.key] = name.rsplit(".", 1)[-1]
-        out = {f"<bedrock/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
+        out = {f"<{INCLUDE_PREFIX}/{homes[r]}.hpp>" for r in self._referenced_names() if r in homes}
         return out | {BUILTIN_HEADERS[r] for r in self._referenced_names() if r in BUILTIN_HEADERS}
 
     def _referenced_names(self) -> set[str]:
@@ -194,12 +196,26 @@ class FileGenerator:
     # --- namespace ----------------------------------------------------------
 
     def _emit_namespace_open(self, p: Printer) -> None:
+        shadowed = self._shadowed_macros()
+        for name in shadowed:
+            p.print(f'#pragma push_macro("{name}")\n#undef {name}\n')
+        if shadowed:
+            p.print("\n")
         if self._file.package:
             p.print(f"namespace {self._file.package.replace('.', '::')} {{\n\n")
 
     def _emit_namespace_close(self, p: Printer) -> None:
         if self._file.package:
             p.print(f"\n}}  // namespace {self._file.package.replace('.', '::')}\n")
+        for name in self._shadowed_macros():
+            p.print(f'\n#pragma pop_macro("{name}")\n')
+
+    def _shadowed_macros(self) -> tuple[str, ...]:
+        """Enumerator names this file spells that a platform header also defines as a
+        macro. Bracketing the namespace with push_macro/undef/pop_macro keeps the enum
+        valid without asking every consumer to compile with the macro undefined."""
+        spelled = {v.name for e in self._file.enums for v in e.values}
+        return tuple(sorted(spelled & MACRO_ENUMERATORS))
 
     # --- type declarations --------------------------------------------------
 
@@ -230,7 +246,7 @@ class FileGenerator:
             for name in self._unversioned_names():
                 t = by_name[name]
                 if isinstance(t, Struct) and t.builtin:
-                    continue  # hand-written in <bedrock/*.hpp>
+                    continue  # hand-written in <bedrock/protocol/*.hpp>
                 scope.enter(name)
                 self._emit_definition(p, t, owner=_owner_of(name))
                 p.print("\n")
@@ -401,13 +417,13 @@ class FileGenerator:
     def _emit_packet_traits(self, p: Printer) -> None:
         """`packet_of<V, Id>` for every packet declared here, so a caller can
         reach a packet by wire id without naming the type. The primary in
-        <bedrock/packet.hpp> answers `void`, so the constraint has to be the
+        <bedrock/protocol/packet.hpp> answers `void`, so the constraint has to be the
         packet's whole `[since, until)` range -- outside it the packet is not on
         the wire and must not resolve."""
         entries = self._packet_entries()
         if not entries:
             return
-        p.add_includes("<bedrock/packet.hpp>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/packet.hpp>")
         for packet_id, spelling, clause in entries:
             p.print(f"template <int V>{f' requires ({clause})' if clause else ''}\n")
             p.print(f"struct packet_of<V, {packet_id}> {{ using type = {spelling}; }};\n\n")
@@ -573,7 +589,12 @@ class FileGenerator:
         self, p: Printer, name: str, target: VariantType, mode: str, snapshot: int | None
     ) -> None:
         if mode == "decl":
-            p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
+            p.add_includes(
+                f"<{INCLUDE_PREFIX}/serializer.hpp>",
+                f"<{INCLUDE_PREFIX}/stream.hpp>",
+                "<expected>",
+                "<system_error>",
+            )
             p.print("template <>\n")
             p.print(f"struct Serializer<{name}> {{\n")
             p.indent()
@@ -582,7 +603,7 @@ class FileGenerator:
             p.outdent()
             p.print("};\n")
             return
-        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>")
         gen = make_field_generator(target, GenContext(self._ctx, snapshot))
         p.print(f"void Serializer<{name}>::serialize(BinaryWriter &stream, const {name} &value)\n")
         with p.block():

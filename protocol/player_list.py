@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8
+from protocol import field, int32, packet, type, uint8, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color
 from protocol.skin import SerializedSkinRef
@@ -22,7 +22,7 @@ class BuildPlatform(IntEnum):
     AMAZON = 4
     GEAR_VR_DEPRECATED = 5
     UWP_DEPRECATED = 7
-    WIN32 = 8
+    WINDOWS = value(8, "Win32")
     DEDICATED = 9
     TV_OS_DEPRECATED = 10
     SONY = 11

@@ -52,7 +52,7 @@ class ThingPacket:
         self.assertIn("Serializer<std::bitset<65>>::serialize(stream, value.input_data);", write)
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
         self.assertIn("Serializer<std::bitset<65>>::deserialize(stream);", read)
-        self.assertIn("#include <bedrock/bitset.hpp>", source)
+        self.assertIn("#include <bedrock/protocol/detail/bitset.hpp>", source)
 
     def test_a_width_over_64_is_kept_verbatim(self) -> None:
         """The codec must never stage the value in an integer: bit 64 of

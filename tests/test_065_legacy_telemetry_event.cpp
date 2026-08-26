@@ -1,8 +1,8 @@
 #include <string>
 #include <variant>
 
-#include <protocol/actor.h>
-#include <protocol/telemetry.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/telemetry.h>
 
 #include "fixture.hpp"
 

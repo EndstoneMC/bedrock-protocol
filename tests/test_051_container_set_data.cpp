@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/inventory.h>
+#include <bedrock/protocol/inventory.h>
 
 #include "fixture.hpp"
 

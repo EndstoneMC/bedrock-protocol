@@ -139,32 +139,14 @@ function(bedrock_protocol_generate)
     # One custom_command per input keeps the per-file output path simple.
     set(_generated)
     foreach(p IN LISTS _abs_inputs)
-        # Shortest valid subpath under any import_dir wins; otherwise use the
-        # basename so the input still produces something.
-        set(_rel "")
-        foreach(d IN LISTS _import_dirs)
-            file(RELATIVE_PATH _cand "${d}" "${p}")
-            if(NOT _cand MATCHES "^\\.\\.")
-                if(_rel STREQUAL "")
-                    set(_rel "${_cand}")
-                else()
-                    string(LENGTH "${_cand}" _cand_len)
-                    string(LENGTH "${_rel}"  _rel_len)
-                    if(_cand_len LESS _rel_len)
-                        set(_rel "${_cand}")
-                    endif()
-                endif()
-            endif()
-        endforeach()
-        if(_rel STREQUAL "")
-            get_filename_component(_rel "${p}" NAME)
-        endif()
-        string(REGEX REPLACE "\\.py$" "" _stem "${_rel}")
+        # Every input lands directly in COMPILER_OUT_DIR, which is the one
+        # directory the emitted `#include <bedrock/protocol/...>` lines name.
+        get_filename_component(_stem "${p}" NAME_WE)
         # The generated header pairs with a compiled .cpp, so it is `.h`, not
         # `.hpp` (which is reserved for the header-only runtime support).
         set(_out_hdr "${BP_COMPILER_OUT_DIR}/${_stem}.h")
         set(_out_cpp "${BP_COMPILER_OUT_DIR}/${_stem}.cpp")
-        get_filename_component(_out_dir "${_out_hdr}" DIRECTORY)
+        set(_out_dir "${BP_COMPILER_OUT_DIR}")
 
         # One bpc invocation emits both the declaration header and the
         # out-of-line definition source; declare both as OUTPUTs.

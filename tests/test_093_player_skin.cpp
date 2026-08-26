@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include <protocol/common.h>
-#include <protocol/skin.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/skin.h>
 
 #include "fixture.hpp"
 

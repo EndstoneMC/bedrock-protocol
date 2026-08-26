@@ -1,10 +1,10 @@
 #include <optional>
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/game.h>
-#include <protocol/movement.h>
-#include <protocol/player_list.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/game.h>
+#include <bedrock/protocol/movement.h>
+#include <bedrock/protocol/player_list.h>
 
 #include "fixture.hpp"
 
@@ -60,7 +60,7 @@ void fill(Packet &packet)
                             .passenger_initiated = false,
                             .vehicle_angular_velocity = 1.5f});
     packet.device_id = "dev";
-    packet.build_platform = bp::BuildPlatform::WIN32;
+    packet.build_platform = bp::BuildPlatform::WINDOWS;
 }
 
 }  // namespace
@@ -90,7 +90,7 @@ TEST_CASE("AddPlayerPacket: v2168 round-trip")
     //   playerPermission: MEMBER, commandPermission: ANY,
     //   abilityLayers: [AbilityLayer(BASE, {}, {}, fly 0.05, verticalFly 1.0, walk 0.1)],
     //   entityLinks: [EntityLinkData(1, 2, RIDER, true, false, 1.5)],
-    //   deviceId: "dev", buildPlatform: WIN32}
+    //   deviceId: "dev", buildPlatform: WINDOWS}
     const std::string golden = bytes({
         0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x05, 0x53, 0x74, 0x65, 0x76, 0x65, 0x02, 0x04,
@@ -120,7 +120,7 @@ TEST_CASE("AddPlayerPacket: v2168 round-trip")
     REQUIRE(rt.abilities_data.layers.size() == 1);
     REQUIRE(rt.abilities_data.layers[0].walk_speed == 0.1f);
     REQUIRE(rt.device_id == "dev");
-    REQUIRE(rt.build_platform == bp::BuildPlatform::WIN32);
+    REQUIRE(rt.build_platform == bp::BuildPlatform::WINDOWS);
 }
 
 TEST_CASE("AddPlayerPacket: v1001 round-trip")
@@ -165,7 +165,7 @@ TEST_CASE("AddPlayerPacket: v1001 round-trip")
     REQUIRE(rt.unpack.data.size() == 1);
     REQUIRE(std::get<3>(rt.unpack.data[0].payload).value == 0.5f);
     REQUIRE(rt.abilities_data.command_permissions == bp::CommandPermissionLevel::ANY);
-    REQUIRE(rt.build_platform == bp::BuildPlatform::WIN32);
+    REQUIRE(rt.build_platform == bp::BuildPlatform::WINDOWS);
 
     bp::AddPlayerPacket_<2168> newer;
     fill(newer);

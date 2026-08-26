@@ -2,8 +2,8 @@
 #include <string>
 #include <type_traits>
 
-#include <protocol/actor.h>
-#include <protocol/attributes.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/attributes.h>
 
 #include "fixture.hpp"
 

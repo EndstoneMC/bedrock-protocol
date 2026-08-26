@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/camera.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/camera.h>
 
 #include "fixture.hpp"
 

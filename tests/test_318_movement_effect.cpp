@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/effect.h>
+#include <bedrock/protocol/effect.h>
 
 #include "fixture.hpp"
 

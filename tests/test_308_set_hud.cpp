@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/ui.h>
+#include <bedrock/protocol/ui.h>
 
 #include "fixture.hpp"
 

@@ -1,7 +1,7 @@
 #include <string>
 #include <type_traits>
 
-#include <protocol/player.h>
+#include <bedrock/protocol/player.h>
 
 #include "fixture.hpp"
 

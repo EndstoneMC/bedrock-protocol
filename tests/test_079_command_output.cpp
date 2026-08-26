@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include <protocol/command.h>
+#include <bedrock/protocol/command.h>
 
 #include "fixture.hpp"
 

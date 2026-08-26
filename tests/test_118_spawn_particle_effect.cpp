@@ -1,8 +1,8 @@
 #include <optional>
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/level_event.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/level_event.h>
 
 #include "fixture.hpp"
 

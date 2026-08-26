@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <protocol/diagnostics.h>
+#include <bedrock/protocol/diagnostics.h>
 
 #include "fixture.hpp"
 

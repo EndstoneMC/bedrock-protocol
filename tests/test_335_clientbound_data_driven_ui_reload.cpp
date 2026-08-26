@@ -1,7 +1,7 @@
 #include <string>
 #include <string_view>
 
-#include <protocol/ui.h>
+#include <bedrock/protocol/ui.h>
 
 #include "fixture.hpp"
 

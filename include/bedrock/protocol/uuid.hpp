@@ -3,8 +3,8 @@
 #include <cstdint>
 
 #include <expected>
-#include "serializer.hpp"
-#include "stream.hpp"
+#include <bedrock/protocol/serializer.hpp>
+#include <bedrock/protocol/stream.hpp>
 
 namespace bedrock::protocol {
 

@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/boss.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/boss.h>
 
 #include "fixture.hpp"
 

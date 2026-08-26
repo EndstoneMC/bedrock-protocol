@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/crafting.h>
+#include <bedrock/protocol/crafting.h>
 
 #include "fixture.hpp"
 

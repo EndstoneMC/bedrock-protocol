@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/attributes.h>
-#include <protocol/volume.h>
+#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/volume.h>
 
 #include "fixture.hpp"
 

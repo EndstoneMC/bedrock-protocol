@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/scoreboard.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/scoreboard.h>
 
 #include "fixture.hpp"
 

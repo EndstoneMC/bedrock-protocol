@@ -7,7 +7,7 @@ from __future__ import annotations
 from bedrock_protocol.descriptor import CompilerError, Enum
 
 from .field import type_includes
-from .helpers import PRIMITIVE_TYPES
+from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES
 from .printer import Printer
 
 
@@ -42,7 +42,7 @@ class EnumGenerator:
         """The name table is lowercased for every enum, name-coded or not. It is the
         wire table for the ones that need one, and `enum_cast` folds its input, so a
         single spelling makes every name lookup case-insensitive by construction."""
-        p.add_includes("<bedrock/enum.hpp>", "<array>", "<string_view>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/enum.hpp>", "<array>", "<string_view>")
         values = self._enum.values
         n = len(values)
         p.print("template <>\n")
@@ -66,7 +66,9 @@ class EnumGenerator:
     # --- serializer (name-coded: BDS's spelling, lowercased, on the wire) ---
 
     def generate_serializer_declaration(self, p: Printer) -> None:
-        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
+        p.add_includes(
+            f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>", "<system_error>"
+        )
         q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
@@ -78,9 +80,9 @@ class EnumGenerator:
 
     def generate_serializer_definition(self, p: Printer) -> None:
         p.add_includes(
-            "<bedrock/enum.hpp>",
-            "<bedrock/serializer.hpp>",
-            "<bedrock/stream.hpp>",
+            f"<{INCLUDE_PREFIX}/enum.hpp>",
+            f"<{INCLUDE_PREFIX}/serializer.hpp>",
+            f"<{INCLUDE_PREFIX}/stream.hpp>",
             "<expected>",
             "<string>",
             "<system_error>",

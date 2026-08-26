@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string>
 
-#include <protocol/emote.h>
+#include <bedrock/protocol/emote.h>
 
 #include "fixture.hpp"
 

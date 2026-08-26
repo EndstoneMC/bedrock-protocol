@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-#include <protocol/inventory.h>
+#include <bedrock/protocol/inventory.h>
 
 #include "fixture.hpp"
 

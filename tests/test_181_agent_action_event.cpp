@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/agent.h>
+#include <bedrock/protocol/agent.h>
 
 #include "fixture.hpp"
 

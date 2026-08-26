@@ -1,7 +1,7 @@
 #include <string>
 #include <type_traits>
 
-#include <protocol/inventory.h>
+#include <bedrock/protocol/inventory.h>
 
 #include "fixture.hpp"
 

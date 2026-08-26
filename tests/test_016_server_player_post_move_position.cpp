@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/movement.h>
+#include <bedrock/protocol/movement.h>
 
 #include "fixture.hpp"
 

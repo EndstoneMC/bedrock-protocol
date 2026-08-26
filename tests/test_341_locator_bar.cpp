@@ -1,10 +1,10 @@
 #include <optional>
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/attributes.h>
-#include <protocol/common.h>
-#include <protocol/ui.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/ui.h>
 
 #include "fixture.hpp"
 

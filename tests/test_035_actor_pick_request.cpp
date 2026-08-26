@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/actor.h>
+#include <bedrock/protocol/actor.h>
 
 #include "fixture.hpp"
 

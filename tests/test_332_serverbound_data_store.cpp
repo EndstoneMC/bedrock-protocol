@@ -1,7 +1,7 @@
 #include <string>
 #include <variant>
 
-#include <protocol/data_store.h>
+#include <bedrock/protocol/data_store.h>
 
 #include "fixture.hpp"
 

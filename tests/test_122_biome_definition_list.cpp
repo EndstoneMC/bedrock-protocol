@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string>
 
-#include <protocol/biome.h>
+#include <bedrock/protocol/biome.h>
 
 #include "fixture.hpp"
 

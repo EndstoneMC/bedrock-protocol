@@ -3,7 +3,7 @@
 #include <initializer_list>
 #include <string>
 
-#include <bedrock/bitset.hpp>
+#include <bedrock/protocol/detail/bitset.hpp>
 
 
 #include "fixture.hpp"

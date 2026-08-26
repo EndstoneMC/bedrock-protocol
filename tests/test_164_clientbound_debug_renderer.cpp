@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/common.h>
-#include <protocol/debug.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/debug.h>
 
 #include "fixture.hpp"
 

@@ -2,7 +2,7 @@
 #include <string>
 #include <variant>
 
-#include <protocol/sound.h>
+#include <bedrock/protocol/sound.h>
 
 #include "fixture.hpp"
 

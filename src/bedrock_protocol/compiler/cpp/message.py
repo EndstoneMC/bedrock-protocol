@@ -13,7 +13,7 @@ from bedrock_protocol.descriptor import CondType, Enum, Field, FieldType, Litera
 
 from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
-from .helpers import snapshot_namespace
+from .helpers import INCLUDE_PREFIX, snapshot_namespace
 from .printer import Printer
 
 
@@ -120,7 +120,7 @@ class MessageGenerator:
     # --- reflection (Boost.PFR-like member names and access) ----------------
 
     def generate_reflection(self, p: Printer, qualified: str, type_name: str | None = None) -> None:
-        p.add_includes("<bedrock/reflect.hpp>", "<array>", "<cstddef>", "<string_view>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/detail/reflect.hpp>", "<array>", "<cstddef>", "<string_view>")
         names = self._member_names() or []
         spelled = type_name if type_name is not None else self._struct.name
         p.print("template <>\n")
@@ -210,7 +210,9 @@ class MessageGenerator:
     # --- serializer ---------------------------------------------------------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
-        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>", "<expected>", "<system_error>")
+        p.add_includes(
+            f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>", "<system_error>"
+        )
         q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
@@ -221,7 +223,7 @@ class MessageGenerator:
         p.print("};\n")
 
     def generate_serializer_definition(self, p: Printer) -> None:
-        p.add_includes("<bedrock/serializer.hpp>", "<bedrock/stream.hpp>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>")
         q = self._qualified
 
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, const {q} &value)\n")

@@ -1,10 +1,10 @@
 #include <string>
 
-#include <protocol/ability.h>
-#include <protocol/actor.h>
-#include <protocol/command.h>
-#include <protocol/game.h>
-#include <protocol/movement.h>
+#include <bedrock/protocol/ability.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/command.h>
+#include <bedrock/protocol/game.h>
+#include <bedrock/protocol/movement.h>
 
 #include "fixture.hpp"
 

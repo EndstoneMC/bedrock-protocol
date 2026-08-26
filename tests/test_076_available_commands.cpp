@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
-#include <protocol/command.h>
-#include <protocol/movement.h>
+#include <bedrock/protocol/command.h>
+#include <bedrock/protocol/movement.h>
 
 #include "fixture.hpp"
 

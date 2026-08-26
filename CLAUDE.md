@@ -475,3 +475,38 @@ re-add it as its own reviewable change, with a test that exercises it. `@builtin
 `bitset[InputData.INPUT_NUM]`), `count=` (`login.py`'s counted id lists) and
 `array[T, N]` (`chunk.py`'s height maps) have all come back that way. Still gone:
 `tuple` and deprecation.
+
+## The include tree is `bedrock/protocol/`
+
+`<bedrock/protocol.hpp>` is the umbrella and everything else sits one level down, so
+the install tree and the build tree name a header the same way:
+
+- `bedrock/protocol/<family>.h` — emitted, one per schema module, each paired with a
+  `.cpp` compiled into the archive.
+- `bedrock/protocol/<name>.hpp` — hand-written and header-only: streams, `Serializer`,
+  NBT, UUID, `packet_of`, enum reflection, and the configured `version.hpp`.
+- `bedrock/protocol/detail/<name>.hpp` — plumbing the emitted code leans on and a
+  consumer never includes directly.
+
+The extension is the rule, not decoration: `.h` has a `.cpp` next to it, `.hpp` does
+not. That is also what lets `nbt.py`'s emitted `nbt.h` sit beside the hand-written
+`nbt.hpp` without a collision.
+
+`INCLUDE_PREFIX` in `compiler/cpp/helpers.py` is the single spelling of that
+directory; every emitted `#include` is built from it, and CMake writes the generated
+tree into a matching path. Change it in one place or not at all.
+
+**An enumerator that a platform header also defines as a macro is bracketed, not
+compiled around.** `MACRO_ENUMERATORS` lists the names (`ERROR`, `TRUE`, `VOID`, …);
+a file spelling one wraps its whole namespace in `push_macro`/`#undef`/`pop_macro`,
+which keeps the fix inside the header instead of a `/U` flag every consumer inherits.
+Renaming away from the macro is better still where BDS's spelling survives as a wire
+pair — `WINDOWS = value(8, "Win32")` still goes out as `win32`.
+
+## A release ships the emitted C++
+
+CI packages `generated/` next to `include/` and the top-level `CMakeLists.txt` builds
+from it when it finds one, so nothing downstream needs uv or `bpc`. Anything the
+build needs at *consume* time therefore has to be inside that archive: a new
+`configure_file` template must be stamped during generation, never resolved lazily,
+or a source build will look for a `.in` that was never shipped.

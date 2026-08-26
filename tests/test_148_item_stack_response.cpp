@@ -1,8 +1,8 @@
 #include <string>
 #include <vector>
 
-#include <protocol/inventory.h>
-#include <protocol/item_stack.h>
+#include <bedrock/protocol/inventory.h>
+#include <bedrock/protocol/item_stack.h>
 
 #include "fixture.hpp"
 

@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include <protocol/actor.h>
-#include <protocol/common.h>
-#include <protocol/map.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/map.h>
 
 #include "fixture.hpp"
 

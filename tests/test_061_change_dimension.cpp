@@ -1,8 +1,8 @@
 #include <optional>
 #include <string>
 
-#include <protocol/attributes.h>
-#include <protocol/dimension.h>
+#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/dimension.h>
 
 #include "fixture.hpp"
 

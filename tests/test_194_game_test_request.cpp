@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/gametest.h>
-#include <protocol/structure.h>
+#include <bedrock/protocol/gametest.h>
+#include <bedrock/protocol/structure.h>
 
 #include "fixture.hpp"
 

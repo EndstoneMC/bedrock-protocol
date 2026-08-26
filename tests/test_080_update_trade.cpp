@@ -1,8 +1,8 @@
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/inventory.h>
-#include <protocol/trade.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/inventory.h>
+#include <bedrock/protocol/trade.h>
 
 #include "fixture.hpp"
 

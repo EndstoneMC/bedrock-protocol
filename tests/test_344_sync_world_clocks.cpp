@@ -1,7 +1,7 @@
 #include <string>
 #include <variant>
 
-#include <protocol/game.h>
+#include <bedrock/protocol/game.h>
 
 #include "fixture.hpp"
 

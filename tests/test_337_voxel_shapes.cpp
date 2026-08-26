@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/volume.h>
+#include <bedrock/protocol/volume.h>
 
 #include "fixture.hpp"
 

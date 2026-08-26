@@ -38,7 +38,7 @@ from bedrock_protocol.descriptor import (
     VariantType,
 )
 
-from .helpers import PRIMITIVE_TYPES, cpp_name, cpp_qualified, outermost
+from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES, cpp_name, cpp_qualified, outermost
 from .printer import Printer
 
 
@@ -299,7 +299,7 @@ class EnumFieldGenerator(FieldGenerator):
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         if self._enum.scalar is None:
-            p.add_includes("<bedrock/serializer.hpp>")
+            p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
             p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
         else:
             p.add_includes(*_codec_includes(self._enum.scalar))
@@ -308,7 +308,7 @@ class EnumFieldGenerator(FieldGenerator):
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         if self._enum.scalar is None:
-            p.add_includes("<bedrock/serializer.hpp>")
+            p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
             p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = *v;\n")
@@ -328,11 +328,11 @@ class ClassFieldGenerator(FieldGenerator):
         return qualified_at(self._struct.name, self._gc.ctx, self._gc.snapshot, self._gc.owner)
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/serializer.hpp>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
         p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<bedrock/serializer.hpp>", "<expected>")
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", "<expected>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
         p.print(f"{target} = *v;\n")
@@ -340,7 +340,7 @@ class ClassFieldGenerator(FieldGenerator):
 
 class BitsetFieldGenerator(FieldGenerator):
     """`bitset[N]` — the base-128 dump. The codec is hand-written in
-    <bedrock/bitset.hpp> rather than emitted here: N may exceed any integer's
+    <bedrock/protocol/detail/bitset.hpp> rather than emitted here: N may exceed any integer's
     width, so the loop is over bits and there is nothing per-schema about it."""
 
     def __init__(self, bits: BitsetType) -> None:
@@ -351,7 +351,7 @@ class BitsetFieldGenerator(FieldGenerator):
         return f"std::bitset<{self._bits.size}>"
 
     def _includes(self) -> tuple[str, ...]:
-        return ("<bitset>", "<bedrock/bitset.hpp>", "<bedrock/serializer.hpp>")
+        return ("<bitset>", f"<{INCLUDE_PREFIX}/detail/bitset.hpp>", f"<{INCLUDE_PREFIX}/serializer.hpp>")
 
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
         p.add_includes(*self._includes())

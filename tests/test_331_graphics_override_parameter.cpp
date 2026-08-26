@@ -1,7 +1,7 @@
 #include <string>
 
-#include <protocol/common.h>
-#include <protocol/graphics.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/graphics.h>
 
 #include "fixture.hpp"
 

@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/party.h>
+#include <bedrock/protocol/party.h>
 
 #include "fixture.hpp"
 

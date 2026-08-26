@@ -538,7 +538,7 @@ class Field:
 class Struct:
     """`builtin` marks a type the compiler must not define: it emits no struct and
     no serializer, references the name as-is, and trusts a hand-written definition
-    plus `Serializer` specialization in the matching `<bedrock/*.hpp>` header.
+    plus `Serializer` specialization in the matching `<bedrock/protocol/*.hpp>` header.
 
     `nested` holds the types BDS declares inside the class, in source order; a
     reference to one carries the dotted `Owner.Inner` name.

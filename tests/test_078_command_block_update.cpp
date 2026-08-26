@@ -1,9 +1,9 @@
 #include <string>
 #include <variant>
 
-#include <protocol/actor.h>
-#include <protocol/command.h>
-#include <protocol/common.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/command.h>
+#include <bedrock/protocol/common.h>
 
 #include "fixture.hpp"
 

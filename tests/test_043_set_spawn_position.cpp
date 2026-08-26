@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <string>
 
-#include <protocol/attributes.h>
-#include <protocol/player.h>
+#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/player.h>
 
 #include "fixture.hpp"
 

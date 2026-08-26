@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/form.h>
+#include <bedrock/protocol/form.h>
 
 #include "fixture.hpp"
 

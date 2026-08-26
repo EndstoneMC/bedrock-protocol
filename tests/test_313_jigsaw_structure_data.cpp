@@ -1,7 +1,7 @@
 #include <string>
 
-#include <bedrock/nbt.hpp>
-#include <protocol/structure.h>
+#include <bedrock/protocol/nbt.hpp>
+#include <bedrock/protocol/structure.h>
 
 #include "fixture.hpp"
 

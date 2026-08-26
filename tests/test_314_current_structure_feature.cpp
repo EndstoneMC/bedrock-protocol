@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/structure.h>
+#include <bedrock/protocol/structure.h>
 
 #include "fixture.hpp"
 

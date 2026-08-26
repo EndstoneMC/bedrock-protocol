@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/script.h>
+#include <bedrock/protocol/script.h>
 
 #include "fixture.hpp"
 

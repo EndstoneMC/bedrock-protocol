@@ -1,8 +1,8 @@
 #include <string>
 
-#include <protocol/actor.h>
-#include <protocol/common.h>
-#include <protocol/player.h>
+#include <bedrock/protocol/actor.h>
+#include <bedrock/protocol/common.h>
+#include <bedrock/protocol/player.h>
 
 #include "fixture.hpp"
 

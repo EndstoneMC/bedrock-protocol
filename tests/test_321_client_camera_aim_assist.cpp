@@ -1,6 +1,6 @@
 #include <string>
 
-#include <protocol/camera.h>
+#include <bedrock/protocol/camera.h>
 
 #include "fixture.hpp"
 
