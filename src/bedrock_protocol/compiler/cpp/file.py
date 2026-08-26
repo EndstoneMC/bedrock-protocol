@@ -204,11 +204,25 @@ class FileGenerator:
     # --- type declarations --------------------------------------------------
 
     def _emit_primitive_aliases(self, p: Printer) -> None:
+        """A `type X = <primitive>` alias is its own type, not a spelling of the
+        primitive. It holds the value privately and only an explicit construction puts
+        one in, so an id cannot be built out of an unrelated integer by accident; it
+        converts back implicitly and compares against the primitive directly, so every
+        read site keeps reading as if it were the number."""
         for a in self._file.primitive_aliases:
             p.add_includes(*type_includes(PrimitiveType(name=a.primitive)))
-            p.print(f"enum {a.name} : {PRIMITIVE_TYPES[a.primitive]} {{}};\n")
-        if self._file.primitive_aliases:
+            p.add_includes("<compare>")
+            underlying = PRIMITIVE_TYPES[a.primitive]
+            p.print(f"struct {a.name} {{\n")
+            p.print(f"    constexpr {a.name}() = default;\n")
+            p.print(f"    explicit constexpr {a.name}({underlying} value) : value_(value) {{}}\n")
+            p.print(f"    constexpr operator {underlying}() const {{ return value_; }}\n")
+            p.print(f"    friend constexpr bool operator==(const {a.name} &, const {a.name} &) = default;\n")
+            p.print(f"    friend constexpr auto operator<=>(const {a.name} &, const {a.name} &) = default;\n")
             p.print("\n")
+            p.print("  private:\n")
+            p.print(f"    {underlying} value_{{}};\n")
+            p.print("};\n\n")
 
     def _emit_unversioned(self, p: Printer) -> None:
         by_name = self._by_name()
