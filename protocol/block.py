@@ -70,3 +70,22 @@ class LecternUpdatePacket:
 class OpenSignPacket:
     pos: BlockPos
     is_front_side: bool
+
+
+class UpdateSubChunkNetworkBlockInfo:
+    pos: BlockPos
+    runtime_id: uvarint32
+    update_flags: uint8 = field(type=uvarint32)
+    entity_unique_id: ActorUniqueID = field(type=uvarint64)
+    message: ActorBlockSyncMessage.MessageId
+
+
+class UpdateSubChunkBlocksChangedInfo:
+    standards: list[UpdateSubChunkNetworkBlockInfo]
+    extras: list[UpdateSubChunkNetworkBlockInfo]
+
+
+@packet(id=172, since=2168)
+class UpdateSubChunkBlocksPacket:
+    sub_chunk_block_position: BlockPos
+    blocks_changed: UpdateSubChunkBlocksChangedInfo
