@@ -201,3 +201,19 @@ class ClientMovementPredictionSyncPacket:
     movement_attributes: array[float, 9]
     actor_id: ActorUniqueID
     is_flying: bool
+
+
+class RewindType(IntEnum, uint8):
+    PLAYER = 0
+    VEHICLE = 1
+
+
+@packet(id=161, since=2168)
+class CorrectPlayerMovePredictionPacket:
+    prediction_type: RewindType
+    pos: Vec3
+    pos_delta: Vec3
+    vehicle_rotation: Vec2
+    vehicle_angular_velocity: float | None
+    on_ground: bool
+    tick: PlayerInputTick
