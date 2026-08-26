@@ -1,6 +1,7 @@
 from protocol import packet, uint8, uint32, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec3
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -15,6 +16,12 @@ class LevelEventPacket:
     event_id: varint32
     pos: Vec3
     data: varint32
+
+
+@packet(id=124, since=2168)
+class LevelEventGenericPacket:
+    event_id: varint32
+    data: CompoundTag
 
 
 @packet(id=118, since=2168)
