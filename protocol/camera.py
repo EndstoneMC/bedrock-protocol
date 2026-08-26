@@ -116,3 +116,21 @@ class ClientCameraAimAssistPacket:
     camera_preset_id: str
     action: ClientCameraAimAssistPacketAction
     allow_aim_assist: bool
+
+
+@packet(id=316, since=2168)
+class CameraAimAssistPacket:
+    class Action(IntEnum, uint8):
+        SET = 0
+        CLEAR = 1
+
+    class TargetMode(IntEnum, uint8):
+        ANGLE = 0
+        DISTANCE = 1
+
+    preset_id: str
+    view_angle: Vec2
+    distance: float
+    target_mode: TargetMode
+    action: Action
+    show_debug_render: bool
