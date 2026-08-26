@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, varint32
+from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, uvarint64, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.attributes import DimensionType
 from protocol.common import BlockPos, Vec2, Vec3
@@ -388,3 +388,43 @@ class SimulationType(IntEnum, uint8):
 @packet(id=168, since=2168)
 class SimulationTypePacket:
     sim_type: SimulationType
+
+
+class SyncWorldClockStateData:
+    clock_id: uvarint64
+    time: varint32
+    is_paused: bool
+
+
+class TimeMarkerData:
+    id: uvarint64
+    name: str
+    time: varint32
+    period: int32 | None
+
+
+class WorldClockData:
+    id: uvarint64
+    name: str
+    time: varint32
+    is_paused: bool
+    time_markers: list[TimeMarkerData]
+
+
+@packet(id=344, since=2168)
+class SyncWorldClocksPacket:
+    class SyncStateData:
+        clock_data: list[SyncWorldClockStateData]
+
+    class InitializeRegistryData:
+        clock_data: list[WorldClockData]
+
+    class AddTimeMarkerData:
+        clock_id: uvarint64
+        time_markers: list[TimeMarkerData]
+
+    class RemoveTimeMarkerData:
+        clock_id: uvarint64
+        time_marker_ids: list[uvarint64]
+
+    data: SyncStateData | InitializeRegistryData | AddTimeMarkerData | RemoveTimeMarkerData
