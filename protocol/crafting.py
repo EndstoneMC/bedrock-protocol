@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum, auto
 
-from protocol import array, field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
+from protocol import array, field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
 from protocol.common import BlockPos
 
 package = "bedrock.protocol"
@@ -441,3 +441,16 @@ class ItemEnchantOption:
 @packet(id=146, since=2168)
 class PlayerEnchantOptionsPacket:
     options: list[ItemEnchantOption]
+
+
+@packet(id=199, since=2168)
+class UnlockedRecipesPacket:
+    class PacketType(IntEnum, uint32):
+        EMPTY = 0
+        INITIALLY_UNLOCKED_RECIPES = 1
+        NEWLY_UNLOCKED_RECIPES = 2
+        REMOVE_UNLOCKED_RECIPES = 3
+        REMOVE_ALL_UNLOCKED_RECIPES = 4
+
+    packet_type: PacketType = field(type=uint32)
+    unlocked_recipes: list[str]
