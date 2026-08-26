@@ -200,12 +200,20 @@ def _plan_snapshots(
     keys: dict[str, dict[int, tuple[Any, ...]]] = {}
     concrete: dict[str, dict[int, int]] = {}
     module_underlyings: dict[int, dict[str, PrimitiveType]] = {}
+    module_members: dict[int, dict[str, dict[str, int]]] = {}
 
     def underlyings_at(snapshot: int) -> dict[str, PrimitiveType]:
         cached = module_underlyings.get(snapshot)
         if cached is None:
             cached = _module_underlyings(by_name, snapshot, file, pool)
             module_underlyings[snapshot] = cached
+        return cached
+
+    def members_at(snapshot: int) -> dict[str, dict[str, int]]:
+        cached = module_members.get(snapshot)
+        if cached is None:
+            cached = _module_members(by_name, snapshot, file, pool)
+            module_members[snapshot] = cached
         return cached
 
     def dep_concrete(name: str, snapshot: int) -> int | None:
@@ -238,7 +246,7 @@ def _plan_snapshots(
             present = (since is None or s >= since) and (until is None or s < until)
             if not present:
                 continue
-            enum_view, struct_view, key = _snapshot_view(t, s, underlyings_at(s))
+            enum_view, struct_view, key = _snapshot_view(t, s, underlyings_at(s), members_at(s))
             keys[name][s] = key
             if previous is None:
                 fresh = True
@@ -290,10 +298,36 @@ def _module_underlyings(
     return out
 
 
+def _module_members(
+    by_name: dict[str, Enum | Struct],
+    snapshot: int,
+    file: File,
+    pool: DescriptorPool,
+) -> dict[str, dict[str, int]]:
+    """Every module-scope enum's member values at `snapshot`, this file's and its
+    imports'. A `bitset[Enum.MEMBER]` width naming one follows this, so a count
+    sentinel that moved reaches the width rather than freezing at parse time."""
+    out: dict[str, dict[str, int]] = {}
+    for imp in file.imports:
+        other = pool.find_file_by_name(imp)
+        if other is not None:
+            for e in other.file.enums:
+                out[e.key] = _member_numbers(e, snapshot)
+    for t in by_name.values():
+        if isinstance(t, Enum):
+            out[t.key] = _member_numbers(t, snapshot)
+    return out
+
+
+def _member_numbers(e: Enum, snapshot: int) -> dict[str, int]:
+    return {v.name: v.number for v in _renumber(tuple(v for v in e.values if v.present_at(snapshot)))}
+
+
 def _snapshot_view(
     t: Enum | Struct,
     snapshot: int,
     module_underlyings: dict[str, PrimitiveType] | None = None,
+    module_members: dict[str, dict[str, int]] | None = None,
 ) -> tuple[Enum | None, Struct | None, tuple[Any, ...]]:
     """A narrowed-to-snapshot view of `t`, plus an identity key that determines
     whether two snapshots share one definition."""
@@ -308,13 +342,13 @@ def _snapshot_view(
     # this snapshot's numbering it has to follow.
     nested: list[Enum | Struct] = []
     nested_keys: list[Any] = []
-    members: dict[str, dict[str, int]] = {}
     # A nested enum shadows a module-scope one of the same name, the way lookup does.
+    members: dict[str, dict[str, int]] = dict(module_members or {})
     underlyings: dict[str, PrimitiveType] = dict(module_underlyings or {})
     for inner in t.nested:
         if not _present_at(inner, snapshot):
             continue
-        inner_enum, inner_struct, inner_key = _snapshot_view(inner, snapshot, module_underlyings)
+        inner_enum, inner_struct, inner_key = _snapshot_view(inner, snapshot, module_underlyings, module_members)
         view = inner_enum if inner_enum is not None else inner_struct
         assert view is not None
         nested.append(view)

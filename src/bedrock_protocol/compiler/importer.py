@@ -277,6 +277,8 @@ class Importer:
     def _classify(self, loaded: dict[str, griffe.Module]) -> SymbolTable:
         enum_names: set[str] = set()
         enum_underlying: dict[str, PrimitiveType] = {}
+        enum_members: dict[str, dict[str, int]] = {}
+        enum_decls: list[tuple[str, list[griffe.Class]]] = []
         struct_names: set[str] = set()
         aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
@@ -289,6 +291,11 @@ class Importer:
             if is_enum(decls[0]):
                 enum_names.add(name)
                 enum_underlying[name] = enum_underlying_of(decls[0])
+                # Module scope only: a nested enum takes its owner's ranges, which
+                # only struct() knows, and a reference inside the owner already
+                # reaches it through the parser's nested map.
+                if not scope:
+                    enum_decls.append((name, decls))
                 return
             struct_names.add(name)
             for group in nested_declarations(decls):
@@ -297,6 +304,21 @@ class Importer:
         for mod_name in loaded:
             for decls in self._source_tree.declarations_of(mod_name):
                 register(decls, "")
+
+        # Member values, so a `bitset[Enum.MEMBER]` width reaches an enum the
+        # reference does not nest inside. A redeclared enum holds every range's
+        # members and the last wins; the pool narrows the width back per snapshot.
+        reader = Parser(
+            SymbolTable(
+                enum_names=frozenset(enum_names),
+                enum_underlying=enum_underlying,
+                enum_members={},
+                struct_names=frozenset(struct_names),
+                aliases_by_name={},
+            )
+        )
+        for name, decls in enum_decls:
+            enum_members[name] = {v.name: v.number for v in reader.enum(decls).values}
 
         # Alias pass — after classification, since an alias may reference any
         # class. Declaration order is the resolution order.
@@ -307,6 +329,7 @@ class Importer:
                 SymbolTable(
                     enum_names=frozenset(enum_names),
                     enum_underlying=enum_underlying,
+                    enum_members=enum_members,
                     struct_names=frozenset(struct_names),
                     aliases_by_name=aliases_by_name,
                 )
@@ -330,6 +353,7 @@ class Importer:
         return SymbolTable(
             enum_names=frozenset(enum_names),
             enum_underlying=enum_underlying,
+            enum_members=enum_members,
             struct_names=frozenset(struct_names),
             aliases_by_name=aliases_by_name,
             primitive_aliases_by_module=primitive_aliases_by_module,

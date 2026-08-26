@@ -33,6 +33,27 @@ class ThingPacket:
     flags: bitset[{width}]
 """
 
+#: The same, with the enum at module scope rather than nested in the packet.
+MODULE_COUNTED = """
+from enum import IntEnum, auto
+
+from protocol import bitset, field, packet, uint32, value
+
+package = "bedrock.protocol"
+
+
+class Flag(IntEnum, uint32):
+    LOW = 0
+    HIGH = 1
+{members}
+    FLAG_NUM = auto()
+
+
+@packet(id=7)
+class ThingPacket:
+    flags: bitset[{width}]
+"""
+
 
 class Bitset(CompilerCase):
     def test_a_bitset_field_is_a_std_bitset(self) -> None:
@@ -173,6 +194,77 @@ class ThingPacket:
     def test_an_unknown_member_is_rejected(self) -> None:
         message = self.rejects(COUNTED.format(members="", width="Flag.MISSING"))
         self.assertIn("bitset[...] needs a positive integer width", message)
+
+    def test_a_width_names_a_module_scope_enum_member(self) -> None:
+        """BDS declares ActorFlags beside the types that size a bitset by its
+        count sentinel, not inside any one of them."""
+        header, _ = self.compile(MODULE_COUNTED.format(members="", width="Flag.FLAG_NUM"))
+        self.assertIn("std::bitset<2> flags{};", header)
+
+    def test_a_module_scope_width_follows_the_member_per_snapshot(self) -> None:
+        header, _ = self.compile(
+            MODULE_COUNTED.format(members="    EXTRA = value(2, since=2168)", width="Flag.FLAG_NUM")
+        )
+        self.assertIn("std::bitset<2> flags{};", self.namespace(header, "base"))
+        self.assertIn("std::bitset<3> flags{};", self.namespace(header, "v2168"))
+
+    def test_a_type_alias_carries_a_module_scope_width(self) -> None:
+        """The alias is the whole reason the enum sits at module scope: it is
+        declared once and every packet spells the alias."""
+        header, _ = self.compile(
+            """
+from enum import IntEnum, auto
+
+from protocol import bitset, packet, uint32
+
+package = "bedrock.protocol"
+
+
+class Flag(IntEnum, uint32):
+    LOW = 0
+    HIGH = 1
+    FLAG_NUM = auto()
+
+
+type FlagBitset = bitset[Flag.FLAG_NUM]
+
+
+@packet(id=7)
+class ThingPacket:
+    flags: FlagBitset
+"""
+        )
+        self.assertIn("std::bitset<2> flags{};", header)
+
+    def test_a_nested_enum_shadows_a_module_scope_one(self) -> None:
+        """Lookup walks outward, so the nested declaration wins -- the same
+        order `lookup` gives a type reference."""
+        header, _ = self.compile(
+            """
+from enum import IntEnum, auto
+
+from protocol import bitset, packet, uint32
+
+package = "bedrock.protocol"
+
+
+class Flag(IntEnum, uint32):
+    ONLY = 0
+    FLAG_NUM = auto()
+
+
+@packet(id=7)
+class ThingPacket:
+    class Flag(IntEnum, uint32):
+        LOW = 0
+        MIDDLE = 1
+        HIGH = 2
+        FLAG_NUM = auto()
+
+    flags: bitset[Flag.FLAG_NUM]
+"""
+        )
+        self.assertIn("std::bitset<3> flags{};", header)
 
     def test_a_non_literal_width_is_rejected(self) -> None:
         message = self.rejects(

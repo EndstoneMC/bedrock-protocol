@@ -249,7 +249,7 @@ class BitsetType:
 
     @property
     def referenced(self) -> frozenset[str]:
-        return frozenset()
+        return frozenset() if self.enum_member is None else frozenset({self.enum_member[0]})
 
 
 @dataclass(frozen=True)
@@ -303,7 +303,8 @@ class ArrayType:
 
     @property
     def referenced(self) -> frozenset[str]:
-        return self.inner.referenced
+        own = frozenset() if self.enum_member is None else frozenset({self.enum_member[0]})
+        return self.inner.referenced | own
 
 
 @dataclass(frozen=True)

@@ -64,6 +64,7 @@ class SymbolTable:
 
     enum_names: frozenset[str]
     enum_underlying: dict[str, PrimitiveType]
+    enum_members: dict[str, dict[str, int]]
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
     primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = field(default_factory=dict)
@@ -94,6 +95,10 @@ class Parser:
     @property
     def enum_underlying(self) -> dict[str, PrimitiveType]:
         return self._symbols.enum_underlying
+
+    @property
+    def enum_members(self) -> dict[str, dict[str, int]]:
+        return self._symbols.enum_members
 
     @property
     def aliases(self) -> dict[str, PrimitiveAlias | TypeAlias]:
@@ -561,33 +566,36 @@ class Parser:
 
     # ---- fixed widths ------------------------------------------------------
 
-    def _bitset(self, ann: griffe.ExprSubscript, field_name: str) -> BitsetType | None:
+    def _bitset(self, ann: griffe.ExprSubscript, field_name: str, scope: str = "") -> BitsetType | None:
         """A `bitset[N]` subscript, or None for anything else."""
         if not (isinstance(ann.left, griffe.ExprName) and ann.left.name == "bitset"):
             return None
-        size, member = self._fixed_width(ann.slice)
+        size, member = self._fixed_width(ann.slice, scope)
         if size is None or size <= 0:
             raise CompilerError(
                 f"{field_name}: bitset[...] needs a positive integer width -- an int literal or a "
-                f"member of an enum nested in the same class -- got {ann.slice}"
+                f"member of an enum in scope -- got {ann.slice}"
             )
         return BitsetType(size=size, enum_member=member)
 
-    def _array(self, inner: FieldType, size_ann: _Ann, field_name: str) -> ArrayType:
+    def _array(self, inner: FieldType, size_ann: _Ann, field_name: str, scope: str = "") -> ArrayType:
         """The `array[T, N]` node for an already-parsed element type."""
-        size, member = self._fixed_width(size_ann)
+        size, member = self._fixed_width(size_ann, scope)
         if size is None or size <= 0:
             raise CompilerError(
                 f"{field_name}: array[...] needs a positive integer size -- an int literal or a "
-                f"member of an enum nested in the same class -- got {size_ann}"
+                f"member of an enum in scope -- got {size_ann}"
             )
         return ArrayType(inner=inner, size=size, enum_member=member)
 
-    def _fixed_width(self, expr: _Ann) -> tuple[int | None, tuple[str, str] | None]:
+    def _fixed_width(self, expr: _Ann, scope: str = "") -> tuple[int | None, tuple[str, str] | None]:
         """The width baked into the C++ type and, where the DSL spelled it
         `Enum.MEMBER`, the symbolic ref the pool re-resolves per snapshot. BDS
         sizes PlayerAuthInput's bitset by its own `INPUT_NUM` sentinel, which
-        moves as inputs are added."""
+        moves as inputs are added.
+
+        A nested enum is tried first, so it shadows a module-scope one of the
+        same name the way `lookup` does."""
         literal = _as_int(expr)
         if literal is not None:
             return literal, None
@@ -597,6 +605,11 @@ class Parser:
                 members = self._nested_enums.get(parts[0])
                 if members is not None and parts[1] in members:
                     return members[parts[1]], (parts[0], parts[1])
+                resolved = self.lookup(parts[0], scope)
+                if resolved is not None:
+                    members = self.enum_members.get(resolved)
+                    if members is not None and parts[1] in members:
+                        return members[parts[1]], (resolved, parts[1])
         return None, None
 
     # ---- field-type walker -------------------------------------------------
@@ -687,7 +700,7 @@ class Parser:
         if cases is not None:
             return self._union_type(cases, tagged, field_name, type_kw, prefix, endian, scope, cereal, halves)
         if isinstance(ann, griffe.ExprSubscript):
-            bits = self._bitset(ann, field_name)
+            bits = self._bitset(ann, field_name, scope)
             if bits is not None:
                 return bits
             elem = _list_element(ann, field_name)
@@ -697,7 +710,7 @@ class Parser:
             fixed = _array_parts(ann, field_name)
             if fixed is not None:
                 inner = self._base_type(fixed[0], type_kw, prefix, field_name, endian, scope, cereal, halves)
-                return None if inner is None else self._array(inner, fixed[1], field_name)
+                return None if inner is None else self._array(inner, fixed[1], field_name, scope)
             mapping = _map_parts(ann, field_name)
             if mapping is None:
                 return None
