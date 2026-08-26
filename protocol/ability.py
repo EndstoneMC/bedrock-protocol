@@ -4,6 +4,7 @@ from protocol import field, int8, int64, packet, uint8, uint16, varint32
 from protocol.actor import ActorUniqueID
 from protocol.camera import Scheme
 from protocol.game import PlayerPermissionLevel
+from protocol.movement import SerializedAbilitiesData
 
 package = "bedrock.protocol"
 
@@ -79,3 +80,8 @@ class RequestAbilityPacket:
     value_type: Type
     bool_: bool
     float_: float
+
+
+@packet(id=187, since=2168)
+class UpdateAbilitiesPacket:
+    data: SerializedAbilitiesData
