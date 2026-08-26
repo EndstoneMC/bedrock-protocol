@@ -128,3 +128,7 @@ Wire shapes are taken from [protocol-docs](https://github.com/EndstoneMC/protoco
 names and C++ types from reverse-engineered BDS headers, and golden bytes from
 [gophertunnel](https://github.com/Sandertv/gophertunnel). `CLAUDE.md` documents those
 sources and the conventions the schema follows.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

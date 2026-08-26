@@ -127,7 +127,7 @@ jobs:
           version=$(sed -n 's/^project(bedrock-protocol VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
           name=bedrock-protocol-${version}-${GITHUB_SHA::7}-src
           mkdir -p stage/$name/cmake
-          cp CMakeLists.txt README.md stage/$name/
+          cp CMakeLists.txt LICENSE README.md stage/$name/
           cp cmake/bedrock-protocol-config.cmake.in stage/$name/cmake/
           cp -r include stage/$name/include
           cp -r build/generated stage/$name/generated

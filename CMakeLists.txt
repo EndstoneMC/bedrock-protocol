@@ -115,6 +115,9 @@ if (BEDROCK_PROTOCOL_INSTALL)
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
             FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+            DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}")
+
     install(EXPORT bedrock-protocol-targets
             FILE bedrock-protocol-targets.cmake
             NAMESPACE bedrock::

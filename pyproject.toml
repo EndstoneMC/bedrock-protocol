@@ -3,6 +3,8 @@ name = "bedrock-protocol"
 version = "0.1.0"
 description = "Bedrock protocol compiler -- reads protocol/*.py DSL and emits C++ headers."
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "click",
     "griffe",
