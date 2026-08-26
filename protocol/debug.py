@@ -1,5 +1,8 @@
-from protocol import packet
+from enum import Enum
+
+from protocol import field, packet, uint8, uint64
 from protocol.actor import ActorUniqueID
+from protocol.common import Color, Vec3
 
 package = "bedrock.protocol"
 
@@ -15,3 +18,20 @@ class EditorNetworkPacket:
 class DebugInfoPacket:
     actor_id: ActorUniqueID
     data: str
+
+
+@packet(id=164, since=2168)
+class ClientboundDebugRendererPacket:
+    class PayloadType(Enum, uint8):
+        INVALID = 0
+        CLEAR_DEBUG_MARKERS = 1, "ClearDebugMarkers"
+        ADD_DEBUG_MARKER_CUBE = 2, "AddDebugMarkerCube"
+
+    class DebugMarkerData:
+        text: str
+        position: Vec3
+        color: Color
+        duration_ms: uint64
+
+    type: PayloadType = field(type=str)
+    debug_marker_data: DebugMarkerData | None
