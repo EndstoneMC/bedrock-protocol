@@ -133,3 +133,16 @@ class PlayerArmorDamagePacket:
 @packet(id=160, since=2168)
 class PlayerFogPacket:
     fog_stack: list[str]
+
+
+class GraphicsMode(IntEnum, uint8):
+    SIMPLE = 0
+    FANCY = 1
+    ADVANCED = 2
+    RAY_TRACED = 3
+
+
+@packet(id=323, since=2168)
+class UpdateClientOptionsPacket:
+    graphics_mode: GraphicsMode | None
+    filter_profanity: bool | None
