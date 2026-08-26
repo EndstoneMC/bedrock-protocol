@@ -883,7 +883,6 @@ class AnimateEntityPacket:
     animation: str
     next_state: str
     stop_expression: str
-    # TODO: confirm against BDS -- the header types this member MolangVersion
     stop_expression_version: int32
     controller: str
     blend_out_time: float

@@ -9,6 +9,7 @@ from protocol.crafting import (
     SerializedRecipeIngredient,
 )
 from protocol.inventory import FullContainerName, ItemStackNetId, ItemStackRequestId
+from protocol.molang import MolangVersion
 
 package = "bedrock.protocol"
 
@@ -105,25 +106,6 @@ class ItemStackNetResult(IntEnum, uint8):
     CANNOT_REMOVE_ITEM = 65
     CANNOT_CONSUME_ITEM = 66
     SCREEN_STACK_ERROR = 67
-
-
-class MolangVersion(IntEnum, int16):
-    INVALID = -1
-    BEFORE_VERSIONING = 0
-    INITIAL = 1
-    FIXED_ITEM_REMAINING_USE_DURATION_QUERY = 2
-    EXPRESSION_ERROR_MESSAGES = 3
-    UNEXPECTED_OPERATOR_ERRORS = 4
-    CONDITIONAL_OPERATOR_ASSOCIATIVITY = 5
-    COMPARISON_AND_LOGICAL_OPERATOR_PRECEDENCE = 6
-    DIVIDE_BY_NEGATIVE_VALUE = 7
-    FIXED_CAPE_FLAP_AMOUNT_QUERY = 8
-    QUERY_BLOCK_PROPERTY_RENAMED_TO_STATE = 9
-    DEPRECATE_OLD_BLOCK_QUERY_NAMES = 10
-    DEPRECATED_SNIFFER_AND_CAMEL_QUERIES = 11
-    LEAF_SUPPORTING_IN_FIRST_SOLID_BLOCK_BELOW = 12
-    CARRYING_BLOCK_QUERY_ALL_ACTORS = 13
-    NUM_VALID_VERSIONS = 14
 
 
 class TextProcessingEventOrigin(IntEnum):
