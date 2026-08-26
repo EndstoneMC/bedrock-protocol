@@ -1,9 +1,9 @@
 import uuid
 from enum import IntEnum
 
-from protocol import array, field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
+from protocol import array, bitset, field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
 from protocol.actor import (
-    ActorFlagsBitset,
+    ActorFlags,
     ActorLink,
     ActorRuntimeID,
     ActorUniqueID,
@@ -188,7 +188,7 @@ class ServerPlayerPostMovePositionPacket:
 
 
 class ActorDataFlagComponent:
-    value: ActorFlagsBitset
+    value: bitset[ActorFlags.COUNT]
 
 
 class ActorDataBoundingBoxComponent:

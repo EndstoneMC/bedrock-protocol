@@ -1,7 +1,6 @@
 from enum import Enum, IntEnum, auto
 
 from protocol import (
-    bitset,
     field,
     int8,
     int16,
@@ -12,6 +11,7 @@ from protocol import (
     uint8,
     uvarint32,
     uvarint64,
+    value,
     varint32,
     varint64,
 )
@@ -157,11 +157,8 @@ class ActorFlags(IntEnum):
     USES_LEGACY_FRICTION = 127
     USES_UNIFORM_AIR_DRAG = 128
     NAMEPLATE_DEPTH_TESTED = 129
-    NOT_PICKABLE_FROM_INSIDE = 130
+    NOT_PICKABLE_FROM_INSIDE = value(130, since=2168)
     COUNT = auto()
-
-
-type ActorFlagsBitset = bitset[ActorFlags.COUNT]
 
 
 class ActorDataIDs(IntEnum, uint8):
