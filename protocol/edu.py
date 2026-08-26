@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int8, packet, varint32
+from protocol import field, int8, packet, uint8, varint32
 
 package = "bedrock.protocol"
 
@@ -64,3 +64,32 @@ class EducationSettingsPacket:
 @packet(id=170, since=2168)
 class EduUriResourcePacket:
     edu_shared_uri_resource: EduSharedUriResource
+
+
+class Operation(IntEnum, uint8):
+    NONE = 0
+    GET = 1
+    SET = 2
+    RESET = 3
+
+
+class Category(IntEnum, uint8):
+    NONE = 0
+    CODE_STATUS = 1
+    INSTANTIATION = 2
+
+
+class CodeStatus(IntEnum, uint8):
+    NONE = 0
+    NOT_STARTED = 1
+    IN_PROGRESS = 2
+    PAUSED = 3
+    ERROR = 4
+    SUCCEEDED = 5
+
+
+@packet(id=178, since=2168)
+class CodeBuilderSourcePacket:
+    operation: Operation
+    category: Category
+    code_status: CodeStatus
