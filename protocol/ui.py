@@ -52,3 +52,10 @@ class ServerboundLoadingScreenPacket:
 @packet(id=334, since=2168)
 class ClientboundDataDrivenUICloseScreenPacket:
     form_id: uint32 | None
+
+
+@packet(id=333, since=2168)
+class ClientboundDataDrivenUIShowScreenPacket:
+    screen_id: str
+    form_id: uint32
+    data_instance_id: uint32 | None
