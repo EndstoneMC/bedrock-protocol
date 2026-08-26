@@ -550,3 +550,43 @@ class ContainerOpenPacket:
 @packet(id=317, since=2168)
 class ContainerRegistryCleanupPacket:
     removed_containers: list[FullContainerName]
+
+
+class InventoryLayout(IntEnum):
+    NONE = 0
+    INVENTORY_ONLY = 1
+    DEFAULT = 2
+    RECIPE_BOOK_ONLY = 3
+    COUNT = auto()
+
+
+class InventoryLeftTabIndex(IntEnum):
+    NONE = 0
+    RECIPE_CONSTRUCTION = 1
+    RECIPE_EQUIPMENT = 2
+    RECIPE_ITEMS = 3
+    RECIPE_NATURE = 4
+    RECIPE_SEARCH = 5
+    SURVIVAL = 6
+    COUNT = auto()
+
+
+class InventoryRightTabIndex(IntEnum):
+    NONE = 0
+    FULL_SCREEN = 1
+    CRAFTING = 2
+    ARMOR = 3
+    COUNT = auto()
+
+
+class InventoryOptions:
+    left_inventory_tab: InventoryLeftTabIndex
+    right_inventory_tab: InventoryRightTabIndex
+    filtering: bool
+    layout_inv: InventoryLayout
+    layout_craft: InventoryLayout
+
+
+@packet(id=307, since=2168)
+class SetPlayerInventoryOptionsPacket:
+    inventory_options: InventoryOptions
