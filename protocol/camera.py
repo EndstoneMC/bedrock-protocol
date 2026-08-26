@@ -281,3 +281,33 @@ class CameraInstruction:
 @packet(id=300, since=2168)
 class CameraInstructionPacket:
     camera_instruction: CameraInstruction
+
+
+class CameraSplineControlPoint:
+    position: Vec3
+
+
+class CameraSplineProgressKeyFrame:
+    alpha: float
+    time_seconds: float
+    easing_type: EasingType | None = field(type=str)
+
+
+class CameraSplineRotationKeyFrame:
+    rotation: Vec3
+    time_seconds: float
+    easing_type: EasingType | None = field(type=str)
+
+
+class CameraSplineDefinition:
+    name: str
+    total_time: float
+    spline_type: str
+    spline_control_points: list[CameraSplineControlPoint]
+    spline_progress_frames: list[CameraSplineProgressKeyFrame]
+    spline_rotation_frames: list[CameraSplineRotationKeyFrame]
+
+
+@packet(id=338, since=2168)
+class CameraSplinePacket:
+    splines: list[CameraSplineDefinition]
