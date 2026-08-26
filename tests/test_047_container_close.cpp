@@ -31,13 +31,13 @@ TEST_CASE("container-close round-trips against the golden")
 {
     bp::ContainerClosePacket_<2168> packet;
     packet.container_id = bp::ContainerID::ARMOR;
-    packet.container_type = bp::ContainerType::ARMOR;
+    packet.container_type = bp::ContainerType_<2168>::ARMOR;
     packet.server_initiated_close = true;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ContainerClosePacket_<2168>>(golden);
     REQUIRE(back.container_id == bp::ContainerID::ARMOR);
-    REQUIRE(back.container_type == bp::ContainerType::ARMOR);
+    REQUIRE(back.container_type == bp::ContainerType_<2168>::ARMOR);
     REQUIRE(back.server_initiated_close);
 }
 
@@ -45,12 +45,12 @@ TEST_CASE("each negative sentinel costs one signed byte, not a varint")
 {
     bp::ContainerClosePacket_<2168> packet;
     packet.container_id = bp::ContainerID::NONE;
-    packet.container_type = bp::ContainerType::NONE;
+    packet.container_type = bp::ContainerType_<2168>::NONE;
     packet.server_initiated_close = false;
     REQUIRE(encode(packet) == golden_none);
 
     const auto back = decode<bp::ContainerClosePacket_<2168>>(golden_none);
     REQUIRE(back.container_id == bp::ContainerID::NONE);
-    REQUIRE(back.container_type == bp::ContainerType::NONE);
+    REQUIRE(back.container_type == bp::ContainerType_<2168>::NONE);
     REQUIRE_FALSE(back.server_initiated_close);
 }

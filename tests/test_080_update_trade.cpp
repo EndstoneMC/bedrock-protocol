@@ -53,7 +53,7 @@ TEST_CASE("update-trade round-trips against the golden")
 {
     bp::UpdateTradePacket_<2168> packet;
     packet.container_id = bp::ContainerID::FIRST;
-    packet.type = bp::ContainerType::TRADE;
+    packet.type = bp::ContainerType_<2168>::TRADE;
     packet.size = 3;
     packet.trader_tier = 2;
     packet.entity_unique_id = bp::ActorUniqueID{42};
@@ -66,7 +66,7 @@ TEST_CASE("update-trade round-trips against the golden")
 
     const auto back = decode<bp::UpdateTradePacket_<2168>>(golden);
     REQUIRE(back.container_id == bp::ContainerID::FIRST);
-    REQUIRE(back.type == bp::ContainerType::TRADE);
+    REQUIRE(back.type == bp::ContainerType_<2168>::TRADE);
     REQUIRE(back.size == 3);
     REQUIRE(back.trader_tier == 2);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{42});
@@ -81,7 +81,7 @@ TEST_CASE("a trade with no container writes one signed byte per sentinel and zig
 {
     bp::UpdateTradePacket_<2168> packet;
     packet.container_id = bp::ContainerID::NONE;
-    packet.type = bp::ContainerType::NONE;
+    packet.type = bp::ContainerType_<2168>::NONE;
     packet.size = -1;
     packet.trader_tier = -1;
     packet.entity_unique_id = bp::ActorUniqueID{-1};
@@ -93,7 +93,7 @@ TEST_CASE("a trade with no container writes one signed byte per sentinel and zig
 
     const auto back = decode<bp::UpdateTradePacket_<2168>>(golden_none);
     REQUIRE(back.container_id == bp::ContainerID::NONE);
-    REQUIRE(back.type == bp::ContainerType::NONE);
+    REQUIRE(back.type == bp::ContainerType_<2168>::NONE);
     REQUIRE(back.size == -1);
     REQUIRE(back.trader_tier == -1);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{-1});
@@ -108,7 +108,7 @@ TEST_CASE("a trade size above 127 widens to a two-byte varint")
 {
     bp::UpdateTradePacket_<2168> packet;
     packet.container_id = bp::ContainerID::FIRST;
-    packet.type = bp::ContainerType::TRADE;
+    packet.type = bp::ContainerType_<2168>::TRADE;
     packet.size = 300;
     REQUIRE(encode(packet) == golden_wide);
 

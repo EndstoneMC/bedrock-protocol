@@ -36,7 +36,7 @@ TEST_CASE("update-equip round-trips against the golden")
 {
     bp::UpdateEquipPacket_<2168> packet;
     packet.container_id = bp::ContainerID::FIRST;
-    packet.type = bp::ContainerType::HORSE;
+    packet.type = bp::ContainerType_<2168>::HORSE;
     packet.size = 2;
     packet.entity_unique_id = bp::ActorUniqueID{7};
     packet.data = bp::CompoundTag{{"Size", bp::IntTag{2}}};
@@ -44,7 +44,7 @@ TEST_CASE("update-equip round-trips against the golden")
 
     const auto back = decode<bp::UpdateEquipPacket_<2168>>(golden);
     REQUIRE(back.container_id == bp::ContainerID::FIRST);
-    REQUIRE(back.type == bp::ContainerType::HORSE);
+    REQUIRE(back.type == bp::ContainerType_<2168>::HORSE);
     REQUIRE(back.size == 2);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{7});
     REQUIRE(back.data.size() == 1);
@@ -55,14 +55,14 @@ TEST_CASE("update-equip keeps its container id and type to one signed byte")
 {
     bp::UpdateEquipPacket_<2168> packet;
     packet.container_id = bp::ContainerID::NONE;
-    packet.type = bp::ContainerType::NONE;
+    packet.type = bp::ContainerType_<2168>::NONE;
     packet.size = 300;
     packet.entity_unique_id = bp::ActorUniqueID{-1};
     REQUIRE(encode(packet) == golden_none);
 
     const auto back = decode<bp::UpdateEquipPacket_<2168>>(golden_none);
     REQUIRE(back.container_id == bp::ContainerID::NONE);
-    REQUIRE(back.type == bp::ContainerType::NONE);
+    REQUIRE(back.type == bp::ContainerType_<2168>::NONE);
     REQUIRE(back.size == 300);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{-1});
     REQUIRE(back.data.empty());
