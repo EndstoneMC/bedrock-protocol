@@ -1,6 +1,10 @@
+import uuid
 from enum import IntEnum
 
 from protocol import packet, uint8, uint32, uvarint64
+from protocol.actor import ActorUniqueID
+from protocol.attributes import DimensionType
+from protocol.common import Color, Vec2, Vec3
 
 package = "bedrock.protocol"
 
@@ -78,3 +82,44 @@ class ClientboundTextureShiftPacket:
     current_length_in_ticks: uvarint64
     total_length_in_ticks: uvarint64
     enabled: bool
+
+
+class WorldPosition:
+    pos: Vec3
+    dimension_type: DimensionType
+
+
+class WaypointGroup:
+    class WaypointHandle:
+        uuid: uuid.UUID
+
+
+class ServerWaypoint:
+    class Payload:
+        update_flag: uint32
+        is_visible: bool | None
+        world_position: WorldPosition | None
+        texture_path: str | None
+        icon_size: Vec2 | None
+        color: Color | None
+        client_position_authority: bool | None
+        actor_id: ActorUniqueID | None
+
+
+class ServerWaypointGroup:
+    class Action(IntEnum, uint8):
+        NONE = 0
+        ADD = 1
+        REMOVE = 2
+        UPDATE = 3
+
+
+class LocatorBarWaypointPayload:
+    handle: WaypointGroup.WaypointHandle
+    payload: ServerWaypoint.Payload
+    action: ServerWaypointGroup.Action
+
+
+@packet(id=341, since=2168)
+class LocatorBarPacket:
+    waypoints: list[LocatorBarWaypointPayload]
