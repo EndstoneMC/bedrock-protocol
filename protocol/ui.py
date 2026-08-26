@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import packet, uint32
+from protocol import packet, uint8, uint32, uvarint64
 
 package = "bedrock.protocol"
 
@@ -59,3 +59,22 @@ class ClientboundDataDrivenUIShowScreenPacket:
     screen_id: str
     form_id: uint32
     data_instance_id: uint32 | None
+
+
+@packet(id=336, since=2168)
+class ClientboundTextureShiftPacket:
+    class Action(IntEnum, uint8):
+        INVALID = 0
+        INITIALIZE = 1
+        START = 2
+        SET_ENABLED = 3
+        SYNC = 4
+
+    action: Action
+    collection_name: str
+    from_step: str
+    to_step: str
+    all_steps: list[str]
+    current_length_in_ticks: uvarint64
+    total_length_in_ticks: uvarint64
+    enabled: bool
