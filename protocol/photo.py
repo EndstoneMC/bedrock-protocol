@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from protocol import field, int64, packet, uint8, uint64
+from protocol import field, int64, packet, uint8, uint32, uint64
 from protocol.actor import ActorUniqueID
 
 package = "bedrock.protocol"
@@ -28,3 +28,16 @@ class PhotoTransferPacket:
     source_type: PhotoType
     owner_id: ActorUniqueID = field(type=int64)
     new_photo_name: str
+
+
+@packet(id=324, since=2168)
+class PlayerVideoCapturePacket:
+    class StartVideoCapture:
+        frame_rate: uint32
+        file_prefix: str
+
+    class StopVideoCapture:
+        pass
+
+    start_video_capture: StartVideoCapture | StopVideoCapture
+    stop_video_capture: StartVideoCapture | StopVideoCapture
