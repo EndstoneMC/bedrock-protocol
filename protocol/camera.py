@@ -134,3 +134,45 @@ class CameraAimAssistPacket:
     target_mode: TargetMode
     action: Action
     show_debug_render: bool
+
+
+class CameraAimAssistCategoryPriorities:
+    entities: dict[str, int32]
+    blocks: dict[str, int32]
+    block_tags: dict[str, int32]
+    entity_type_families: dict[str, int32]
+    entity_default: int32 | None
+    block_default: int32 | None
+
+
+class CameraAimAssistCategoryDefinition:
+    name: str
+    priorities: CameraAimAssistCategoryPriorities
+
+
+class CameraAimAssistPresetExclusionDefinition:
+    block_exclusion_list: list[str]
+    actor_exclusion_list: list[str]
+    block_tag_exclusion_list: list[str]
+    entity_type_family_exclusion_list: list[str]
+
+
+class CameraAimAssistPresetDefinition:
+    identifier: str
+    exclusion_settings: CameraAimAssistPresetExclusionDefinition
+    liquid_targeting_list: list[str]
+    item_settings: dict[str, str]
+    default_item_settings: str | None
+    hand_settings: str | None
+
+
+class CameraAimAssistPresetsPacketOperation(IntEnum, uint8):
+    SET = 0
+    ADD_TO_EXISTING = 1
+
+
+@packet(id=320, since=2168)
+class CameraAimAssistPresetsPacket:
+    categories: list[CameraAimAssistCategoryDefinition]
+    presets: list[CameraAimAssistPresetDefinition]
+    operation: CameraAimAssistPresetsPacketOperation
