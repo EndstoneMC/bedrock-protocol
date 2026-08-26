@@ -866,3 +866,13 @@ class DeathInfoPacket:
 @packet(id=165, since=2168)
 class SyncActorPropertyPacket:
     property_data: CompoundTag
+
+
+@packet(id=182, since=2168)
+class ChangeMobPropertyPacket:
+    actor_id: ActorUniqueID
+    prop_name: str
+    bool_component_val: bool
+    string_component_val: str
+    int_component_val: varint32
+    float_component_val: float
