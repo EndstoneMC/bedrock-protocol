@@ -126,9 +126,7 @@ class SetScoreboardIdentityPacket:
     identity_info: list[ScoreboardIdentityPacketInfo] = field(
         when=lambda p: p.type == ScoreboardIdentityPacketType.UPDATE
     )
-    removed_identity_info: list[ScoreboardId] = field(
-        when=lambda p: p.type == ScoreboardIdentityPacketType.REMOVE
-    )
+    removed_identity_info: list[ScoreboardId] = field(when=lambda p: p.type == ScoreboardIdentityPacketType.REMOVE)
 
 
 @packet(id=112, since=2168)

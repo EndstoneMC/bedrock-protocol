@@ -83,18 +83,21 @@ class ItemDescriptor:
     internal_type: InternalType
     id: int16 = field(when=lambda d: d.internal_type == InternalType.DEFAULT)
     name: str = field(
-        when=lambda d: d.internal_type
-        in {
-            InternalType.MOLANG,
-            InternalType.ITEM_TAG,
-            InternalType.DEFERRED,
-            InternalType.COMPLEX_ALIAS,
-        }
+        when=lambda d: (
+            d.internal_type
+            in {
+                InternalType.MOLANG,
+                InternalType.ITEM_TAG,
+                InternalType.DEFERRED,
+                InternalType.COMPLEX_ALIAS,
+            }
+        )
     )
     molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
     aux_value: int16 = field(
-        when=lambda d: d.internal_type == InternalType.DEFERRED
-        or (d.internal_type == InternalType.DEFAULT and d.id != 0)
+        when=lambda d: (
+            d.internal_type == InternalType.DEFERRED or (d.internal_type == InternalType.DEFAULT and d.id != 0)
+        )
     )
 
 
@@ -246,11 +249,13 @@ class SmithingTrimRecipePayload:
 class CraftingDataEntry:
     entry_type: CraftingDataEntryType
     shapeless_recipe: ShapelessRecipePayload = field(
-        when=lambda e: e.entry_type
-        in {
-            CraftingDataEntryType.SHAPELESS_RECIPE,
-            CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-        }
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.SHAPELESS_RECIPE,
+                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
+            }
+        )
     )
     shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
         when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE

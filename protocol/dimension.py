@@ -19,8 +19,6 @@ class DimensionDefinitionGroup:
 
     @type(since=2192)
     class DimensionDefinition:
-        # BDS renamed both leading members at 2192, and they do not name what they used to:
-        # the pair went from a maximum and a minimum to a floor and the span above it.
         minimum_y: varint32
         height_range: varint32
         generator_type: GeneratorType
