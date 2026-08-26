@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import field, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
+from protocol import auto, field, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos
 
@@ -150,34 +150,63 @@ class CurrentCmdVersion(Enum):
     FUNCTION_EXECUTE_ORDER_AND_CHEST_SLOT_FIX = 18, "FunctionExecuteOrderAndChestSlotFix"
     NON_TICKING_AREAS_NO_LONGER_CONSIDERED_LOADED = 19, "NonTickingAreasNoLongerConsideredLoaded"
     SPREADPLAYERS_HAZARD_AND_RESOLVE_PLAYER_BY_NAME_FIX = 20, "SpreadplayersHazardAndResolvePlayerByNameFix"
-    NEW_EXECUTE_COMMAND_SYNTAX_EXPERIMENT_AND_CHEST_LOOT_TABLE_FIX_AND_TELEPORT_FACING_VERTICAL_UNCLAMPED_AND_LOCATE_BIOME_AND_FEATURE_MERGED = 21, "NewExecuteCommandSyntaxExperimentAndChestLootTableFixAndTeleportFacingVerticalUnclampedAndLocateBiomeAndFeatureMerged"  # noqa: E501
+    NEW_EXECUTE_COMMAND_SYNTAX_EXPERIMENT_AND_CHEST_LOOT_TABLE_FIX_AND_TELEPORT_FACING_VERTICAL_UNCLAMPED_AND_LOCATE_BIOME_AND_FEATURE_MERGED = (  # noqa: E501
+        21,
+        "NewExecuteCommandSyntaxExperimentAndChestLootTableFixAndTeleportFacingVerticalUnclampedAndLocateBiomeAndFeatureMerged",
+    )
     WATERLOGGING_ADDED_TO_STRUCTURE_COMMAND = 22, "WaterloggingAddedToStructureCommand"
     SELECTOR_DISTANCE_FILTERED_AND_RELATIVE_ROTATION_FIX = 23, "SelectorDistanceFilteredAndRelativeRotationFix"
-    NEW_SUMMON_COMMAND_ADDED_ROTATION_OPTIONS_AND_BUBBLE_COLUMN_CLONE_FIX_AND_EXECUTE_IN_DIMENSION_TELEPORT_FIX_AND_NEW_EXECUTE_ROTATION_FIX = 24, "NewSummonCommandAddedRotationOptionsAndBubbleColumnCloneFixAndExecuteInDimensionTeleportFixAndNewExecuteRotationFix"  # noqa: E501
-    NEW_EXECUTE_COMMAND_RELEASE_ENCHANT_COMMAND_LEVEL_FIX_AND_HAS_ITEM_DATA_FIX_AND_COMMAND_DEFERRAL = 25, "NewExecuteCommandReleaseEnchantCommandLevelFixAndHasItemDataFixAndCommandDeferral"  # noqa: E501
+    NEW_SUMMON_COMMAND_ADDED_ROTATION_OPTIONS_AND_BUBBLE_COLUMN_CLONE_FIX_AND_EXECUTE_IN_DIMENSION_TELEPORT_FIX_AND_NEW_EXECUTE_ROTATION_FIX = (  # noqa: E501
+        24,
+        "NewSummonCommandAddedRotationOptionsAndBubbleColumnCloneFixAndExecuteInDimensionTeleportFixAndNewExecuteRotationFix",
+    )
+    NEW_EXECUTE_COMMAND_RELEASE_ENCHANT_COMMAND_LEVEL_FIX_AND_HAS_ITEM_DATA_FIX_AND_COMMAND_DEFERRAL = (
+        25,
+        "NewExecuteCommandReleaseEnchantCommandLevelFixAndHasItemDataFixAndCommandDeferral",
+    )
     EXECUTE_IF_SCORE_FIXES = 26, "ExecuteIfScoreFixes"
-    REPLACE_ITEM_AND_LOOT_REPLACE_BLOCK_COMMANDS_DO_NOT_PLACE_ITEMS_INTO_CAULDRONS_FIX = 27, "ReplaceItemAndLootReplaceBlockCommandsDoNotPlaceItemsIntoCauldronsFix"  # noqa: E501
+    REPLACE_ITEM_AND_LOOT_REPLACE_BLOCK_COMMANDS_DO_NOT_PLACE_ITEMS_INTO_CAULDRONS_FIX = (
+        27,
+        "ReplaceItemAndLootReplaceBlockCommandsDoNotPlaceItemsIntoCauldronsFix",
+    )
     CHANGES_TO_COMMAND_ORIGIN_ROTATION = 28, "ChangesToCommandOriginRotation"
     REMOVE_AUX_VALUE_PARAMETER_FROM_BLOCK_COMMANDS = 29, "RemoveAuxValueParameterFromBlockCommands"
     VOLUME_SELECTOR_FIXES = 30, "VolumeSelectorFixes"
     ENABLE_SUMMON_ROTATION = 31, "EnableSummonRotation"
     SUMMON_COMMAND_DEFAULT_ROTATION = 32, "SummonCommandDefaultRotation"
     POSITIONAL_DIMENSION_FILTERING = 33, "PositionalDimensionFiltering"
-    COMMAND_SELECTOR_HAS_ITEM_FILTER_NO_LONGER_CALLS_SAME_ITEM_FUNCTION = 34, "CommandSelectorHasItemFilterNoLongerCallsSameItemFunction"  # noqa: E501
+    COMMAND_SELECTOR_HAS_ITEM_FILTER_NO_LONGER_CALLS_SAME_ITEM_FUNCTION = (
+        34,
+        "CommandSelectorHasItemFilterNoLongerCallsSameItemFunction",
+    )
     AGENT_SWEEPING_BLOCK_TEST = 34, "AgentSweepingBlockTest"
     BLOCK_STATE_EQUALS = 35, "BlockStateEquals"
     COMMAND_POSITION_FIX = 35, "CommandPositionFix"
-    COMMAND_SELECTOR_HAS_ITEM_FILTER_USES_DATA_AS_DAMAGE_FOR_SELECTING_DAMAGEABLE_ITEMS = 36, "CommandSelectorHasItemFilterUsesDataAsDamageForSelectingDamageableItems"  # noqa: E501
-    EXECUTE_DETECT_CONDITION_SUBCOMMAND_NOT_ALLOW_NON_LOADED_BLOCKS = 37, "ExecuteDetectConditionSubcommandNotAllowNonLoadedBlocks"  # noqa: E501
+    COMMAND_SELECTOR_HAS_ITEM_FILTER_USES_DATA_AS_DAMAGE_FOR_SELECTING_DAMAGEABLE_ITEMS = (
+        36,
+        "CommandSelectorHasItemFilterUsesDataAsDamageForSelectingDamageableItems",
+    )
+    EXECUTE_DETECT_CONDITION_SUBCOMMAND_NOT_ALLOW_NON_LOADED_BLOCKS = (
+        37,
+        "ExecuteDetectConditionSubcommandNotAllowNonLoadedBlocks",
+    )
     REMOVE_SUICIDE_KEYWORD = 38, "RemoveSuicideKeyword"
     CLONE_CONTAINER_BLOCK_ENTITY_REMOVAL_FIX = 39, "CloneContainerBlockEntityRemovalFix"
     STOP_SOUND_MUSIC_FIX = 40, "StopSoundMusicFix"
-    SPREAD_PLAYERS_STUCK_IN_GROUND_FIX_AND_MAX_HEIGHT_PARAMETER = 41, "SpreadPlayersStuckInGroundFixAndMaxHeightParameter"  # noqa: E501
+    SPREAD_PLAYERS_STUCK_IN_GROUND_FIX_AND_MAX_HEIGHT_PARAMETER = (
+        41,
+        "SpreadPlayersStuckInGroundFixAndMaxHeightParameter",
+    )
     LOCATE_STRUCTURE_OUTPUT = 42, "LocateStructureOutput"
     POST_BLOCK_FLATTENING = 43, "PostBlockFlattening"
     TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE = 44, "TestForBlockCommandDoesNotIgnoreBlockState"
-    COUNT = 51
-    LATEST = 50
+    CLONE_EXTRA_BLOCK_FILTER_FIX = 45, "CloneExtraBlockFilterFix"
+    FILL_COMMAND_UNFILLABLE_ERROR_OUTPUT = 46, "FillCommandUnfillableErrorOutput"
+    STOP_SOUND_OUTPUT_FIX = 47, "StopSoundOutputFix"
+    PLAY_SOUND_OUTPUT_FIX = 48, "PlaySoundOutputFix"
+    PLAYER_WAYPOINTS_GAMERULE = 49, "PlayerWaypointsGamerule"
+    CLONE_PARTIAL_BED_BLOCK_FIX = 50, "ClonePartialBedBlockFix"
+    COUNT = auto()
 
 
 @packet(id=77, since=2168)
