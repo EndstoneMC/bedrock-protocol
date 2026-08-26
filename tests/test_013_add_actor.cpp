@@ -14,8 +14,8 @@ namespace {
 template <class Packet>
 void fill(Packet &packet)
 {
-    packet.entity_id = static_cast<bp::ActorUniqueID>(1);
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.entity_id = bp::ActorUniqueID{1};
+    packet.runtime_id = bp::ActorRuntimeID{2};
     packet.actor_type = "minecraft:pig";
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.velocity = {.x = 4.0f, .y = 5.0f, .z = 6.0f};
@@ -26,8 +26,8 @@ void fill(Packet &packet)
         {.name = "minecraft:health", .min_value = 0.0f, .current_value = 20.0f, .max_value = 20.0f});
     packet.synched_properties.int_entries.push_back({.property_index = 1, .data = -2});
     packet.synched_properties.float_entries.push_back({.property_index = 2, .data = 0.5f});
-    packet.links.push_back({.a = static_cast<bp::ActorUniqueID>(1),
-                            .b = static_cast<bp::ActorUniqueID>(2),
+    packet.links.push_back({.a = bp::ActorUniqueID{1},
+                            .b = bp::ActorUniqueID{2},
                             .type = bp::ActorLinkType::RIDING,
                             .immediate = true,
                             .passenger_initiated = false,

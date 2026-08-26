@@ -33,7 +33,7 @@ TEST_CASE("container-open round-trips against the golden")
     packet.container_id = bp::ContainerID::ARMOR;
     packet.type = bp::ContainerType::HORSE;
     packet.pos = {.x = 1, .y = 70, .z = -3};
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(300);
+    packet.entity_unique_id = bp::ActorUniqueID{300};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ContainerOpenPacket_<2168>>(golden);
@@ -42,7 +42,7 @@ TEST_CASE("container-open round-trips against the golden")
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == 70);
     REQUIRE(back.pos.z == -3);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(300));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{300});
 }
 
 TEST_CASE("container-open's sentinels and target actor id each cost one byte")
@@ -51,13 +51,13 @@ TEST_CASE("container-open's sentinels and target actor id each cost one byte")
     packet.container_id = bp::ContainerID::NONE;
     packet.type = bp::ContainerType::NONE;
     packet.pos = {.x = 0, .y = 0, .z = 0};
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(-1);
+    packet.entity_unique_id = bp::ActorUniqueID{-1};
     REQUIRE(encode(packet) == golden_none);
 
     const auto back = decode<bp::ContainerOpenPacket_<2168>>(golden_none);
     REQUIRE(back.container_id == bp::ContainerID::NONE);
     REQUIRE(back.type == bp::ContainerType::NONE);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{-1});
 }
 
 TEST_CASE("container-open's target actor id is mandatory")

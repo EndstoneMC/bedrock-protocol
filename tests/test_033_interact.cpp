@@ -34,13 +34,13 @@ TEST_CASE("interact round-trips against the golden")
 {
     bp::InteractPacket_<2168> packet;
     packet.action = bp::InteractPacket_<2168>::Action::INTERACT_UPDATE;
-    packet.target_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.target_id = bp::ActorRuntimeID{300};
     packet.pos = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::InteractPacket_<2168>>(golden);
     REQUIRE(back.action == bp::InteractPacket_<2168>::Action::INTERACT_UPDATE);
-    REQUIRE(back.target_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.target_id == bp::ActorRuntimeID{300});
     REQUIRE(back.pos.has_value());
     REQUIRE(back.pos->x == 1.0F);
     REQUIRE(back.pos->y == 2.0F);
@@ -51,12 +51,12 @@ TEST_CASE("an absent position costs one byte and no coordinates")
 {
     bp::InteractPacket_<2168> packet;
     packet.action = bp::InteractPacket_<2168>::Action::OPEN_INVENTORY;
-    packet.target_id = static_cast<bp::ActorRuntimeID>(0);
+    packet.target_id = bp::ActorRuntimeID{0};
     REQUIRE(encode(packet) == golden_no_pos);
     REQUIRE(encode(packet).size() == 3);
 
     const auto back = decode<bp::InteractPacket_<2168>>(golden_no_pos);
     REQUIRE(back.action == bp::InteractPacket_<2168>::Action::OPEN_INVENTORY);
-    REQUIRE(back.target_id == static_cast<bp::ActorRuntimeID>(0));
+    REQUIRE(back.target_id == bp::ActorRuntimeID{0});
     REQUIRE_FALSE(back.pos.has_value());
 }

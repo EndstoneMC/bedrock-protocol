@@ -62,7 +62,7 @@ TEST_CASE("clientbound debug renderer add-cube round-trips against the golden")
     packet.debug_marker_data = bp::ClientboundDebugRendererPacket_<2168>::DebugMarkerData{
         .text = "marker",
         .position = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F},
-        .color = static_cast<bp::Color>(0x44556677),
+        .color = bp::Color{0x44556677},
         .duration_ms = 1500,
     };
     REQUIRE(encode(packet) == golden_add_cube);
@@ -74,7 +74,7 @@ TEST_CASE("clientbound debug renderer add-cube round-trips against the golden")
     REQUIRE(back.debug_marker_data->position.x == 1.0F);
     REQUIRE(back.debug_marker_data->position.y == 2.0F);
     REQUIRE(back.debug_marker_data->position.z == 3.0F);
-    REQUIRE(back.debug_marker_data->color == static_cast<bp::Color>(0x44556677));
+    REQUIRE(back.debug_marker_data->color == bp::Color{0x44556677});
     REQUIRE(back.debug_marker_data->duration_ms == 1500);
 }
 
@@ -96,7 +96,7 @@ TEST_CASE("the debug marker's presence is not gated on the payload type")
     packet.debug_marker_data = bp::ClientboundDebugRendererPacket_<2168>::DebugMarkerData{
         .text = "",
         .position = bp::Vec3{.x = 0.0F, .y = 0.0F, .z = 0.0F},
-        .color = static_cast<bp::Color>(-1),
+        .color = bp::Color{-1},
         .duration_ms = 255,
     };
     REQUIRE(encode(packet) == golden_clear_with_marker);
@@ -105,6 +105,6 @@ TEST_CASE("the debug marker's presence is not gated on the payload type")
     REQUIRE(back.type == bp::ClientboundDebugRendererPacket_<2168>::PayloadType::CLEAR_DEBUG_MARKERS);
     REQUIRE(back.debug_marker_data.has_value());
     REQUIRE(back.debug_marker_data->text.empty());
-    REQUIRE(back.debug_marker_data->color == static_cast<bp::Color>(-1));
+    REQUIRE(back.debug_marker_data->color == bp::Color{-1});
     REQUIRE(back.debug_marker_data->duration_ms == 255);
 }

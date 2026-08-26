@@ -42,7 +42,7 @@ TEST_CASE("dimension-data v1001 form round-trips against the golden")
         .height_maximum = 320,
         .height_minimum = -64,
         .generator_type = bp::GeneratorType::OVERWORLD,
-        .dimension_type = static_cast<bp::DimensionType>(1000),
+        .dimension_type = bp::DimensionType{1000},
     };
     REQUIRE(encode(packet) == golden_v1001);
 
@@ -52,7 +52,7 @@ TEST_CASE("dimension-data v1001 form round-trips against the golden")
     REQUIRE(definition.height_maximum == 320);
     REQUIRE(definition.height_minimum == -64);
     REQUIRE(definition.generator_type == bp::GeneratorType::OVERWORLD);
-    REQUIRE(definition.dimension_type == static_cast<bp::DimensionType>(1000));
+    REQUIRE(definition.dimension_type == bp::DimensionType{1000});
 }
 
 TEST_CASE("dimension-data v2168 form round-trips against the golden")
@@ -64,7 +64,7 @@ TEST_CASE("dimension-data v2168 form round-trips against the golden")
         .height_maximum = 320,
         .height_minimum = -64,
         .generator_type = bp::GeneratorType::OVERWORLD,
-        .dimension_type = static_cast<bp::DimensionType>(1000),
+        .dimension_type = bp::DimensionType{1000},
         .pack_id = {0x0102030405060708ULL, 0x090a0b0c0d0e0f10ULL},
     };
     REQUIRE(encode(packet) == golden_v2168);

@@ -42,14 +42,14 @@ TEST_CASE("packet id is 61")
 TEST_CASE("change-dimension round-trips against the golden")
 {
     bp::ChangeDimensionPacket_<2168> packet;
-    packet.dimension_id = static_cast<bp::DimensionType>(2);
+    packet.dimension_id = bp::DimensionType{2};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.respawn = true;
     packet.loading_screen_id = 300U;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ChangeDimensionPacket_<2168>>(golden);
-    REQUIRE(back.dimension_id == static_cast<bp::DimensionType>(2));
+    REQUIRE(back.dimension_id == bp::DimensionType{2});
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
@@ -61,14 +61,14 @@ TEST_CASE("change-dimension round-trips against the golden")
 TEST_CASE("an absent change-dimension loading screen id is one zero byte, not five")
 {
     bp::ChangeDimensionPacket_<2168> packet;
-    packet.dimension_id = static_cast<bp::DimensionType>(-1);
+    packet.dimension_id = bp::DimensionType{-1};
     packet.pos = {.x = -1.0F, .y = 0.0F, .z = 0.5F};
     packet.respawn = false;
     packet.loading_screen_id = std::nullopt;
     REQUIRE(encode(packet) == golden_without_loading_screen_id);
 
     const auto back = decode<bp::ChangeDimensionPacket_<2168>>(golden_without_loading_screen_id);
-    REQUIRE(back.dimension_id == static_cast<bp::DimensionType>(-1));
+    REQUIRE(back.dimension_id == bp::DimensionType{-1});
     REQUIRE(back.pos.x == -1.0F);
     REQUIRE(back.pos.y == 0.0F);
     REQUIRE(back.pos.z == 0.5F);
@@ -79,7 +79,7 @@ TEST_CASE("an absent change-dimension loading screen id is one zero byte, not fi
 TEST_CASE("a change-dimension respawn flag and loading-screen presence byte are distinct bytes")
 {
     bp::ChangeDimensionPacket_<2168> packet;
-    packet.dimension_id = static_cast<bp::DimensionType>(0);
+    packet.dimension_id = bp::DimensionType{0};
     packet.pos = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.respawn = false;
     packet.loading_screen_id = 0xdeadbeefU;

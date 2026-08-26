@@ -44,7 +44,7 @@ TEST_CASE("packet id is 29")
 TEST_CASE("update attributes round-trips against the golden")
 {
     bp::UpdateAttributesPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.attribute_data.push_back({
         .min_value = 0.0F,
         .max_value = 20.0F,
@@ -71,12 +71,12 @@ TEST_CASE("update attributes round-trips against the golden")
         .default_value = 0.5F,
         .name = "minecraft:movement",
     });
-    packet.tick = static_cast<bp::PlayerInputTick>(1000);
+    packet.tick = bp::PlayerInputTick{1000};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::UpdateAttributesPacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(1000));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
+    REQUIRE(back.tick == bp::PlayerInputTick{1000});
     REQUIRE(back.attribute_data.size() == 2);
 
     REQUIRE(back.attribute_data[0].min_value == 0.0F);
@@ -108,14 +108,14 @@ TEST_CASE("update attributes round-trips against the golden")
 TEST_CASE("an empty attribute list still carries its count byte and the tick")
 {
     bp::UpdateAttributesPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(0);
-    packet.tick = static_cast<bp::PlayerInputTick>(300);
+    packet.runtime_id = bp::ActorRuntimeID{0};
+    packet.tick = bp::PlayerInputTick{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);
 
     const auto back = decode<bp::UpdateAttributesPacket_<2168>>(wire);
     REQUIRE(back.attribute_data.empty());
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(300));
+    REQUIRE(back.tick == bp::PlayerInputTick{300});
 }
 
 TEST_CASE("the operation and operand sentinels survive their duplicate values")

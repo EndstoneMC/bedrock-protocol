@@ -15,7 +15,7 @@ using PacketV975 = bp::PrimitiveShapesPacket_<975>;
 using PacketV1001 = bp::PrimitiveShapesPacket_<1001>;
 
 // mce::Color packs ARGB into an int32: A=0x44, R=0x55, G=0x66, B=0x77.
-constexpr auto argb = static_cast<bp::Color>(0x44556677);
+constexpr auto argb = bp::Color{0x44556677};
 
 // The three shapes below are shaped identically at both eras, so each is built once
 // against whichever snapshot's payload the caller wants. The type enum gained members
@@ -49,8 +49,8 @@ Payload sphere_shape()
     shape.time_left_total_sec = 2.0f;
     shape.max_render_distance = 64.0f;
     shape.color = argb;
-    shape.dimension_id = static_cast<bp::DimensionType>(1);
-    shape.attached_to_id = static_cast<bp::ActorUniqueID>(-7);
+    shape.dimension_id = bp::DimensionType{1};
+    shape.attached_to_id = bp::ActorUniqueID{-7};
     shape.extra_data_payload = bp::SphereDataPayload{.num_segments = 12};
     return shape;
 }
@@ -132,7 +132,7 @@ TEST_CASE("primitive shapes v975 round-trips against the golden")
     REQUIRE(back.shapes.size() == 3);
     REQUIRE(back.shapes[0].extra_data_payload.index() == 0);  // monostate: shape cleared
     REQUIRE_FALSE(back.shapes[0].shape_type.has_value());
-    REQUIRE(back.shapes[1].attached_to_id == static_cast<bp::ActorUniqueID>(-7));
+    REQUIRE(back.shapes[1].attached_to_id == bp::ActorUniqueID{-7});
     REQUIRE(back.shapes[1].color == argb);
     REQUIRE(std::get<5>(back.shapes[1].extra_data_payload).num_segments == 12);
     REQUIRE(std::get<2>(back.shapes[2].extra_data_payload).text == "hi");

@@ -26,7 +26,7 @@ bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
 
     bp::UpdateEnvironmentAttributesData_<V> inner;
     inner.layer_name = "wet";
-    inner.layer_dimension_id = static_cast<bp::DimensionType>(0);
+    inner.layer_dimension_id = bp::DimensionType{0};
     inner.attributes = {env};
 
     bp::ClientboundAttributeLayerSyncPacket_<V> packet;

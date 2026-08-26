@@ -52,7 +52,7 @@ TEST_CASE("client movement prediction sync round-trips against the golden")
     packet.actor_data_flag.value.set(129);
     packet.actor_bounding_box.value = {0.5F, 0.75F, 1.875F};
     packet.movement_attributes = {4.5F, 0.25F, 0.125F, 6.5F, 20.0F, 17.5F, 1.25F, 0.0625F, 0.5F};
-    packet.actor_id = static_cast<bp::ActorUniqueID>(-300);
+    packet.actor_id = bp::ActorUniqueID{-300};
     packet.is_flying = true;
     REQUIRE(encode(packet) == golden);
 
@@ -64,7 +64,7 @@ TEST_CASE("client movement prediction sync round-trips against the golden")
     REQUIRE(back.actor_bounding_box.value == std::array<float, 3>{0.5F, 0.75F, 1.875F});
     REQUIRE(back.movement_attributes ==
             std::array<float, 9>{4.5F, 0.25F, 0.125F, 6.5F, 20.0F, 17.5F, 1.25F, 0.0625F, 0.5F});
-    REQUIRE(back.actor_id == static_cast<bp::ActorUniqueID>(-300));
+    REQUIRE(back.actor_id == bp::ActorUniqueID{-300});
     REQUIRE(back.is_flying);
 }
 
@@ -75,18 +75,18 @@ TEST_CASE("a cleared movement-prediction flag bitset is one byte, not seventeen"
 
     const auto back = decode<bp::ClientMovementPredictionSyncPacket_<2168>>(golden_cleared);
     REQUIRE(back.actor_data_flag.value.none());
-    REQUIRE(back.actor_id == static_cast<bp::ActorUniqueID>(0));
+    REQUIRE(back.actor_id == bp::ActorUniqueID{0});
     REQUIRE_FALSE(back.is_flying);
 }
 
 TEST_CASE("the movement-prediction actor id is a 64-bit varint")
 {
     bp::ClientMovementPredictionSyncPacket_<2168> packet;
-    packet.actor_id = static_cast<bp::ActorUniqueID>(8589934592);
+    packet.actor_id = bp::ActorUniqueID{8589934592};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 55);
     REQUIRE(decode<bp::ClientMovementPredictionSyncPacket_<2168>>(wire).actor_id ==
-            static_cast<bp::ActorUniqueID>(8589934592));
+            bp::ActorUniqueID{8589934592});
 }
 
 TEST_CASE("a movement-prediction flag past bit 130 is rejected")

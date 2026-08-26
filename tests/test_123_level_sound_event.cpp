@@ -21,7 +21,7 @@ Packet sample()
     packet.actor_identifier = "minecraft:pig";
     packet.is_baby = true;
     packet.is_global = false;
-    packet.actor = static_cast<bp::ActorUniqueID>(7);
+    packet.actor = bp::ActorUniqueID{7};
     packet.fire_at_position = bp::Vec3{.x = 4.0f, .y = 5.0f, .z = 6.0f};
     return packet;
 }
@@ -67,7 +67,7 @@ TEST_CASE("level-sound-event v975 round-trips against the golden")
     REQUIRE(back.event_id == bp::LevelSoundEvent_<975>::BELL);
     REQUIRE(back.data == -1);
     REQUIRE(back.actor_identifier == "minecraft:pig");
-    REQUIRE(back.actor == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.actor == bp::ActorUniqueID{7});
     REQUIRE(back.fire_at_position->z == 6.0f);
 }
 
@@ -81,7 +81,7 @@ TEST_CASE("level-sound-event v1001 round-trips against the golden")
     REQUIRE(back.sound_event == "block.bell.hit");
     REQUIRE(back.is_baby);
     REQUIRE_FALSE(back.is_global);
-    REQUIRE(back.actor == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.actor == bp::ActorUniqueID{7});
 }
 
 // Only the leading sound moved, so both eras share the rest of the body byte for byte.

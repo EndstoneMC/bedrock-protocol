@@ -21,8 +21,8 @@ namespace {
 template <class Packet>
 void fill(Packet &packet)
 {
-    packet.entity_id = static_cast<bp::ActorUniqueID>(1);
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.entity_id = bp::ActorUniqueID{1};
+    packet.runtime_id = bp::ActorRuntimeID{2};
     packet.entity_game_type = bp::GameType::SURVIVAL;
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.rot = {.x = 4.0f, .y = 5.0f};
@@ -31,7 +31,7 @@ void fill(Packet &packet)
     s.seed = 7;
     s.spawn_settings = {.type = bp::SpawnBiomeType::DEFAULT,
                         .user_defined_biome_name = "",
-                        .dimension = static_cast<bp::DimensionType>(0)};
+                        .dimension = bp::DimensionType{0}};
     s.generator = bp::GeneratorType::OVERWORLD;
     s.game_type = bp::GameType::SURVIVAL;
     s.is_hardcore = false;
@@ -103,8 +103,8 @@ void fill(Packet &packet)
 
 void fill_v2168(bp::StartGamePacket_<2168> &packet)
 {
-    packet.entity_id = static_cast<bp::ActorUniqueID>(1);
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.entity_id = bp::ActorUniqueID{1};
+    packet.runtime_id = bp::ActorRuntimeID{2};
     packet.entity_game_type = bp::GameType::SURVIVAL;
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.rot = {.x = 4.0f, .y = 5.0f};
@@ -113,7 +113,7 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
     s.seed = 7;
     s.spawn_settings = {.type = bp::SpawnBiomeType::DEFAULT,
                         .user_defined_biome_name = "",
-                        .dimension = static_cast<bp::DimensionType>(0)};
+                        .dimension = bp::DimensionType{0}};
     s.generator = bp::GeneratorType::OVERWORLD;
     s.game_type = bp::GameType::SURVIVAL;
     s.is_hardcore = false;

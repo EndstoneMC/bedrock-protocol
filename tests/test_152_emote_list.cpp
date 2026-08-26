@@ -32,14 +32,14 @@ TEST_CASE("packet id is 152")
 TEST_CASE("emote list round-trips against the golden")
 {
     bp::EmoteListPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.emote_piece_ids.push_back(
         {.most_significant_bits = 0x0102030405060708ULL, .least_significant_bits = 0x090a0b0c0d0e0f10ULL});
     packet.emote_piece_ids.push_back({.most_significant_bits = 0, .least_significant_bits = 2});
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::EmoteListPacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.emote_piece_ids.size() == 2);
     REQUIRE(back.emote_piece_ids[0].most_significant_bits == 0x0102030405060708ULL);
     REQUIRE(back.emote_piece_ids[0].least_significant_bits == 0x090a0b0c0d0e0f10ULL);
@@ -50,11 +50,11 @@ TEST_CASE("emote list round-trips against the golden")
 TEST_CASE("an emote list carrying no pieces is a runtime id and a zero count")
 {
     bp::EmoteListPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_empty);
 
     const auto back = decode<bp::EmoteListPacket_<2168>>(golden_empty);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE(back.emote_piece_ids.empty());
 }
 

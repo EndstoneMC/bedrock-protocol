@@ -33,7 +33,7 @@ TEST_CASE("MoveActorDeltaPacket: v1001 round-trip")
     using Packet = bp::MoveActorDeltaPacket_<1001>;
 
     Packet pkt;
-    pkt.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    pkt.move_data.runtime_id = bp::ActorRuntimeID{2};
     pkt.move_data.header = MOVED;
     pkt.move_data.new_position_x = 1.0f;
     pkt.move_data.new_position_z = 3.0f;
@@ -67,7 +67,7 @@ TEST_CASE("MoveActorDeltaPacket: v2168 round-trip")
     using Packet = bp::MoveActorDeltaPacket_<2168>;
 
     Packet pkt;
-    pkt.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    pkt.move_data.runtime_id = bp::ActorRuntimeID{2};
     pkt.move_data.new_position_x = 1.0f;
     pkt.move_data.new_position_z = 3.0f;
     pkt.move_data.rot_y = static_cast<std::int8_t>(64);
@@ -100,22 +100,22 @@ TEST_CASE("MoveActorDeltaPacket: v2168 round-trip")
 TEST_CASE("MoveActorDeltaPacket: the flags word and the presence bytes are a hard break")
 {
     bp::MoveActorDeltaPacket_<1001> empty_older;
-    empty_older.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    empty_older.move_data.runtime_id = bp::ActorRuntimeID{2};
     REQUIRE(encode(empty_older).size() == 3);
 
     bp::MoveActorDeltaPacket_<2168> empty_newer;
-    empty_newer.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    empty_newer.move_data.runtime_id = bp::ActorRuntimeID{2};
     REQUIRE(encode(empty_newer).size() == 11);
 
     bp::MoveActorDeltaPacket_<1001> older;
-    older.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    older.move_data.runtime_id = bp::ActorRuntimeID{2};
     older.move_data.header = MOVED;
     older.move_data.new_position_x = 1.0f;
     older.move_data.new_position_z = 3.0f;
     older.move_data.rot_y = 64;
 
     bp::MoveActorDeltaPacket_<2168> newer;
-    newer.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    newer.move_data.runtime_id = bp::ActorRuntimeID{2};
     newer.move_data.new_position_x = 1.0f;
     newer.move_data.new_position_z = 3.0f;
     newer.move_data.rot_y = 64;
@@ -132,12 +132,12 @@ TEST_CASE("MoveActorDeltaPacket: the flags word and the presence bytes are a har
 TEST_CASE("MoveActorDeltaPacket: v2192 appends the tick count")
 {
     bp::MoveActorDeltaPacket_<2168> older;
-    older.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    older.move_data.runtime_id = bp::ActorRuntimeID{2};
     older.move_data.new_position_x = 1.0f;
     older.move_data.is_on_ground = true;
 
     bp::MoveActorDeltaPacket_<2192> newer;
-    newer.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    newer.move_data.runtime_id = bp::ActorRuntimeID{2};
     newer.move_data.new_position_x = 1.0f;
     newer.move_data.is_on_ground = true;
     newer.move_data.ticks = 7;
@@ -153,7 +153,7 @@ TEST_CASE("MoveActorDeltaPacket: v2192 appends the tick count")
 TEST_CASE("MoveActorDeltaPacket: the 1001 booleans are header bits")
 {
     bp::MoveActorDeltaPacket_<1001> pkt;
-    pkt.move_data.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    pkt.move_data.runtime_id = bp::ActorRuntimeID{2};
     pkt.move_data.header = ON_GROUND;
 
     const auto encoded = encode(pkt);

@@ -56,8 +56,8 @@ TEST_CASE("update-trade round-trips against the golden")
     packet.type = bp::ContainerType::TRADE;
     packet.size = 3;
     packet.trader_tier = 2;
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(42);
-    packet.last_trading_player = static_cast<bp::ActorUniqueID>(7);
+    packet.entity_unique_id = bp::ActorUniqueID{42};
+    packet.last_trading_player = bp::ActorUniqueID{7};
     packet.display_name = "entity.villager.farmer";
     packet.use_new_trade_screen = true;
     packet.using_economy_trade = false;
@@ -69,8 +69,8 @@ TEST_CASE("update-trade round-trips against the golden")
     REQUIRE(back.type == bp::ContainerType::TRADE);
     REQUIRE(back.size == 3);
     REQUIRE(back.trader_tier == 2);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(42));
-    REQUIRE(back.last_trading_player == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{42});
+    REQUIRE(back.last_trading_player == bp::ActorUniqueID{7});
     REQUIRE(back.display_name == "entity.villager.farmer");
     REQUIRE(back.use_new_trade_screen);
     REQUIRE_FALSE(back.using_economy_trade);
@@ -84,8 +84,8 @@ TEST_CASE("a trade with no container writes one signed byte per sentinel and zig
     packet.type = bp::ContainerType::NONE;
     packet.size = -1;
     packet.trader_tier = -1;
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(-1);
-    packet.last_trading_player = static_cast<bp::ActorUniqueID>(-1);
+    packet.entity_unique_id = bp::ActorUniqueID{-1};
+    packet.last_trading_player = bp::ActorUniqueID{-1};
     packet.display_name = "";
     packet.use_new_trade_screen = false;
     packet.using_economy_trade = true;
@@ -96,8 +96,8 @@ TEST_CASE("a trade with no container writes one signed byte per sentinel and zig
     REQUIRE(back.type == bp::ContainerType::NONE);
     REQUIRE(back.size == -1);
     REQUIRE(back.trader_tier == -1);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(-1));
-    REQUIRE(back.last_trading_player == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{-1});
+    REQUIRE(back.last_trading_player == bp::ActorUniqueID{-1});
     REQUIRE(back.display_name.empty());
     REQUIRE_FALSE(back.use_new_trade_screen);
     REQUIRE(back.using_economy_trade);

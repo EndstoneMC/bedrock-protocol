@@ -31,23 +31,23 @@ TEST_CASE("packet id is 73")
 TEST_CASE("camera round-trips against the golden")
 {
     bp::CameraPacket_<2168> packet;
-    packet.camera_id = static_cast<bp::ActorUniqueID>(300);
-    packet.target_player_id = static_cast<bp::ActorUniqueID>(-1);
+    packet.camera_id = bp::ActorUniqueID{300};
+    packet.target_player_id = bp::ActorUniqueID{-1};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::CameraPacket_<2168>>(golden);
-    REQUIRE(back.camera_id == static_cast<bp::ActorUniqueID>(300));
-    REQUIRE(back.target_player_id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.camera_id == bp::ActorUniqueID{300});
+    REQUIRE(back.target_player_id == bp::ActorUniqueID{-1});
 }
 
 TEST_CASE("a camera unique id keeps its full 64-bit range")
 {
     bp::CameraPacket_<2168> packet;
-    packet.camera_id = static_cast<bp::ActorUniqueID>(-8589934592);
-    packet.target_player_id = static_cast<bp::ActorUniqueID>(0);
+    packet.camera_id = bp::ActorUniqueID{-8589934592};
+    packet.target_player_id = bp::ActorUniqueID{0};
     REQUIRE(encode(packet) == golden_wide);
 
     const auto back = decode<bp::CameraPacket_<2168>>(golden_wide);
-    REQUIRE(back.camera_id == static_cast<bp::ActorUniqueID>(-8589934592));
-    REQUIRE(back.target_player_id == static_cast<bp::ActorUniqueID>(0));
+    REQUIRE(back.camera_id == bp::ActorUniqueID{-8589934592});
+    REQUIRE(back.target_player_id == bp::ActorUniqueID{0});
 }

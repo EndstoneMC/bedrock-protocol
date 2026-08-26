@@ -24,18 +24,18 @@ TEST_CASE("agent animation round-trips against the golden")
 {
     bp::AgentAnimationPacket_<2168> packet;
     packet.anim = bp::AgentAnimation::SHRUG;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::AgentAnimationPacket_<2168>>(golden);
     REQUIRE(back.anim == bp::AgentAnimation::SHRUG);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
 }
 
 TEST_CASE("the animation byte does not absorb the runtime id's varint")
 {
     bp::AgentAnimationPacket_<2168> packet;
     packet.anim = bp::AgentAnimation::ARM_SWING;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(0);
+    packet.runtime_id = bp::ActorRuntimeID{0};
     REQUIRE(encode(packet).size() == 2);
 }

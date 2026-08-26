@@ -34,7 +34,7 @@ TEST_CASE("player-action v1001 form round-trips against the golden")
     using Packet = bp::PlayerActionPacket_<1001>;
 
     Packet packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.action = bp::PlayerActionType_<1001>::START_USING_ITEM;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.result_pos = {.x = 4, .y = 5, .z = 6};
@@ -42,7 +42,7 @@ TEST_CASE("player-action v1001 form round-trips against the golden")
     REQUIRE(encode(packet) == golden_start_using_item);
 
     const auto back = decode<Packet>(golden_start_using_item);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE(back.action == bp::PlayerActionType_<1001>::START_USING_ITEM);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.result_pos.z == 6);
@@ -54,7 +54,7 @@ TEST_CASE("player-action v2168 form round-trips against the golden")
     using Packet = bp::PlayerActionPacket_<2168>;
 
     Packet packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.action = bp::PlayerActionType_<2168>::INTERNAL_UPDATE;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.result_pos = {.x = 4, .y = 5, .z = 6};

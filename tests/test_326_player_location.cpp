@@ -57,13 +57,13 @@ TEST_CASE("player-location v1001 form round-trips against the golden")
 
     Packet packet;
     packet.type = Packet::Type::PLAYER_LOCATION_COORDINATES;
-    packet.id = static_cast<bp::ActorUniqueID>(7);
+    packet.id = bp::ActorUniqueID{7};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     REQUIRE(encode(packet) == golden_v1001_coordinates);
 
     const auto back = decode<Packet>(golden_v1001_coordinates);
     REQUIRE(back.type == Packet::Type::PLAYER_LOCATION_COORDINATES);
-    REQUIRE(back.id == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.id == bp::ActorUniqueID{7});
     REQUIRE(back.pos.z == 3.0F);
 }
 
@@ -73,7 +73,7 @@ TEST_CASE("player-location v1001 drops the position when the player is hidden")
 
     Packet packet;
     packet.type = Packet::Type::PLAYER_LOCATION_HIDE;
-    packet.id = static_cast<bp::ActorUniqueID>(7);
+    packet.id = bp::ActorUniqueID{7};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     REQUIRE(encode(packet) == golden_v1001_hidden);
     REQUIRE(decode<Packet>(golden_v1001_hidden).type == Packet::Type::PLAYER_LOCATION_HIDE);
@@ -85,13 +85,13 @@ TEST_CASE("player-location v2168 form round-trips against the golden")
     using CoordinatesLocation = bp::v2168::PlayerLocationPacket::CoordinatesLocation;
 
     Packet packet;
-    packet.id = static_cast<bp::ActorUniqueID>(7);
+    packet.id = bp::ActorUniqueID{7};
     packet.location = CoordinatesLocation{.type = Packet::Type::PLAYER_LOCATION_COORDINATES,
                                           .pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F}};
     REQUIRE(encode(packet) == golden_v2168_coordinates);
 
     const auto back = decode<Packet>(golden_v2168_coordinates);
-    REQUIRE(back.id == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.id == bp::ActorUniqueID{7});
     REQUIRE(std::holds_alternative<CoordinatesLocation>(back.location));
     REQUIRE(std::get<CoordinatesLocation>(back.location).pos.z == 3.0F);
 }
@@ -102,7 +102,7 @@ TEST_CASE("player-location v2168 carries the hidden case as its own alternative"
     using HiddenLocation = bp::v2168::PlayerLocationPacket::HiddenLocation;
 
     Packet packet;
-    packet.id = static_cast<bp::ActorUniqueID>(7);
+    packet.id = bp::ActorUniqueID{7};
     packet.location = HiddenLocation{.type = Packet::Type::PLAYER_LOCATION_HIDE};
     REQUIRE(encode(packet) == golden_v2168_hidden);
     REQUIRE(std::holds_alternative<HiddenLocation>(decode<Packet>(golden_v2168_hidden).location));

@@ -28,8 +28,8 @@ Item stone()
 template <class Packet>
 void fill(Packet &packet)
 {
-    packet.id = static_cast<bp::ActorUniqueID>(1);
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.id = bp::ActorUniqueID{1};
+    packet.runtime_id = bp::ActorRuntimeID{2};
     packet.item = stone<decltype(packet.item)>();
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.velocity = {.x = 4.0f, .y = 5.0f, .z = 6.0f};
@@ -69,7 +69,7 @@ TEST_CASE("AddItemActorPacket: v2168 round-trip")
     REQUIRE(encode(pkt) == golden);
 
     const auto rt = decode<Packet>(golden);
-    REQUIRE(rt.id == static_cast<bp::ActorUniqueID>(1));
+    REQUIRE(rt.id == bp::ActorUniqueID{1});
     REQUIRE(rt.item.id == 5);
     REQUIRE(rt.item.stack_size == 1);
     REQUIRE(rt.item.user_data_buffer == empty_item_blob());

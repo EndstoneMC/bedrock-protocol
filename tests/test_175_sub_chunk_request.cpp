@@ -38,7 +38,7 @@ TEST_CASE("sub-chunk-request v975 form round-trips against the golden")
     using Packet = bp::SubChunkRequestPacket_<975>;
 
     Packet packet;
-    packet.dimension_type = static_cast<bp::DimensionType>(0);
+    packet.dimension_type = bp::DimensionType{0};
     packet.center_pos = {.x = 1, .y = 2, .z = 3};
     packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
     REQUIRE(encode(packet) == golden_v975);
@@ -55,7 +55,7 @@ TEST_CASE("sub-chunk-request v1001 form round-trips against the golden")
     using Packet = bp::SubChunkRequestPacket_<1001>;
 
     Packet packet;
-    packet.dimension_type = static_cast<bp::DimensionType>(0);
+    packet.dimension_type = bp::DimensionType{0};
     packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
     packet.center_pos = {.x = 1, .y = 2, .z = 3};
     REQUIRE(encode(packet) == golden_v1001);

@@ -28,7 +28,7 @@ TEST_CASE("respawn round-trips against the golden")
     bp::RespawnPacket_<2168> packet;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.state = bp::PlayerRespawnState::READY_TO_SPAWN;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::RespawnPacket_<2168>>(golden);
@@ -36,15 +36,15 @@ TEST_CASE("respawn round-trips against the golden")
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
     REQUIRE(back.state == bp::PlayerRespawnState::READY_TO_SPAWN);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
 }
 
 TEST_CASE("the state byte does not absorb the runtime id's varint")
 {
     bp::RespawnPacket_<2168> packet;
     packet.state = bp::PlayerRespawnState::CLIENT_READY_TO_SPAWN;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 15);
-    REQUIRE(decode<bp::RespawnPacket_<2168>>(wire).runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(decode<bp::RespawnPacket_<2168>>(wire).runtime_id == bp::ActorRuntimeID{300});
 }

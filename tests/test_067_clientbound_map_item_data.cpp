@@ -17,15 +17,15 @@ using Packet2168 = bp::ClientboundMapItemDataPacket_<2168>;
 Packet1001 fill_v1001()
 {
     Packet1001 packet;
-    packet.map_id = static_cast<bp::ActorUniqueID>(1);
+    packet.map_id = bp::ActorUniqueID{1};
     packet.type = 2 | 4 | 8;
     packet.dimension = 0;
     packet.locked = true;
     packet.map_origin = {.x = 1, .y = 2, .z = 3};
-    packet.map_ids = {static_cast<bp::ActorUniqueID>(7)};
+    packet.map_ids = {bp::ActorUniqueID{7}};
     packet.scale = 4;
     packet.unique_ids = {
-        {.type = bp::base::MapItemTrackedActor::Type::ENTITY, .key_entity_id = static_cast<bp::ActorUniqueID>(9)},
+        {.type = bp::base::MapItemTrackedActor::Type::ENTITY, .key_entity_id = bp::ActorUniqueID{9}},
         {.type = bp::base::MapItemTrackedActor::Type::BLOCK_ENTITY, .key_block_pos = {.x = 4, .y = 5, .z = 6}},
     };
     packet.decorations = {{.image = bp::base::MapDecoration::Type::MARKER_RED,
@@ -33,7 +33,7 @@ Packet1001 fill_v1001()
                            .x = 4,
                            .y = 5,
                            .label = "hi",
-                           .color = static_cast<bp::Color>(0x04030201)}};
+                           .color = bp::Color{0x04030201}}};
     packet.width = 2;
     packet.height = 2;
     packet.start_x = 0;
@@ -45,14 +45,14 @@ Packet1001 fill_v1001()
 Packet2168 fill_v2168()
 {
     Packet2168 packet;
-    packet.map_id = static_cast<bp::ActorUniqueID>(1);
+    packet.map_id = bp::ActorUniqueID{1};
     packet.dimension = 0;
     packet.locked = true;
     packet.map_origin = {.x = 1, .y = 2, .z = 3};
-    packet.creation_map_ids = std::vector<bp::ActorUniqueID>{static_cast<bp::ActorUniqueID>(7)};
+    packet.creation_map_ids = std::vector<bp::ActorUniqueID>{bp::ActorUniqueID{7}};
     packet.scale = 4;
     packet.unique_ids = std::vector<bp::v2168::MapItemTrackedActor::UniqueId>{
-        {.type = bp::v2168::MapItemTrackedActor::Type::ENTITY, .key_entity_id = static_cast<bp::ActorUniqueID>(9)},
+        {.type = bp::v2168::MapItemTrackedActor::Type::ENTITY, .key_entity_id = bp::ActorUniqueID{9}},
         {.type = bp::v2168::MapItemTrackedActor::Type::BLOCK_ENTITY, .key_block_pos = bp::BlockPos{.x = 4, .y = 5, .z = 6}},
     };
     packet.decorations = std::vector<bp::v2168::MapDecoration>{{.image = bp::v2168::MapDecoration::Type::MARKER_RED,
@@ -60,7 +60,7 @@ Packet2168 fill_v2168()
                                                                 .x = 4,
                                                                 .y = 5,
                                                                 .label = "hi",
-                                                                .color = static_cast<bp::Color>(0x04030201)}};
+                                                                .color = bp::Color{0x04030201}}};
     packet.width = 2;
     packet.height = 2;
     packet.start_x = 0;
@@ -145,7 +145,7 @@ TEST_CASE("ClientboundMapItemDataPacket: v2168 round-trip")
 TEST_CASE("ClientboundMapItemDataPacket: an absent v2168 group is a single flag")
 {
     Packet2168 packet;
-    packet.map_id = static_cast<bp::ActorUniqueID>(0);
+    packet.map_id = bp::ActorUniqueID{0};
 
     const auto encoded = encode(packet);
     REQUIRE(encoded.size() == 6 + 9);

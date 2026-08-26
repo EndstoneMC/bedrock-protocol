@@ -41,7 +41,7 @@ TEST_CASE("spawn-particle-effect round-trips against the golden")
 {
     bp::SpawnParticleEffectPacket_<2168> packet;
     packet.vanilla_dimension_id = 2;
-    packet.actor_id = static_cast<bp::ActorUniqueID>(-1);
+    packet.actor_id = bp::ActorUniqueID{-1};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.effect_name = "minecraft:heart_particle";
     packet.molang_variables = R"({"x":1})";
@@ -49,7 +49,7 @@ TEST_CASE("spawn-particle-effect round-trips against the golden")
 
     const auto back = decode<bp::SpawnParticleEffectPacket_<2168>>(golden);
     REQUIRE(back.vanilla_dimension_id == 2);
-    REQUIRE(back.actor_id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.actor_id == bp::ActorUniqueID{-1});
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
@@ -61,13 +61,13 @@ TEST_CASE("an absent molang variable map ends a spawn-particle-effect body in on
 {
     bp::SpawnParticleEffectPacket_<2168> packet;
     packet.vanilla_dimension_id = 200;
-    packet.actor_id = static_cast<bp::ActorUniqueID>(12345);
+    packet.actor_id = bp::ActorUniqueID{12345};
     packet.effect_name = "minecraft:heart_particle";
     REQUIRE(encode(packet) == golden_no_variables);
 
     const auto back = decode<bp::SpawnParticleEffectPacket_<2168>>(golden_no_variables);
     REQUIRE(back.vanilla_dimension_id == 200);
-    REQUIRE(back.actor_id == static_cast<bp::ActorUniqueID>(12345));
+    REQUIRE(back.actor_id == bp::ActorUniqueID{12345});
     REQUIRE_FALSE(back.molang_variables.has_value());
 }
 

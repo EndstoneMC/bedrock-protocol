@@ -37,7 +37,7 @@ TEST_CASE("set-spawn-position round-trips against the golden")
     bp::SetSpawnPositionPacket_<2168> packet;
     packet.spawn_pos_type = bp::SpawnPositionType::WORLD_SPAWN;
     packet.pos = {.x = 1, .y = 2, .z = 3};
-    packet.dimension_type = static_cast<bp::DimensionType>(1);
+    packet.dimension_type = bp::DimensionType{1};
     packet.spawn_block_pos = {.x = 4, .y = 5, .z = 6};
     REQUIRE(encode(packet) == golden);
 
@@ -46,7 +46,7 @@ TEST_CASE("set-spawn-position round-trips against the golden")
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == 2);
     REQUIRE(back.pos.z == 3);
-    REQUIRE(back.dimension_type == static_cast<bp::DimensionType>(1));
+    REQUIRE(back.dimension_type == bp::DimensionType{1});
     REQUIRE(back.spawn_block_pos.x == 4);
     REQUIRE(back.spawn_block_pos.y == 5);
     REQUIRE(back.spawn_block_pos.z == 6);
@@ -57,7 +57,7 @@ TEST_CASE("set-spawn-position writes every block coordinate as a signed varint")
     bp::SetSpawnPositionPacket_<2168> packet;
     packet.spawn_pos_type = bp::SpawnPositionType::PLAYER_RESPAWN;
     packet.pos = {.x = -1, .y = -64, .z = 300};
-    packet.dimension_type = static_cast<bp::DimensionType>(2);
+    packet.dimension_type = bp::DimensionType{2};
     packet.spawn_block_pos = {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN};
     REQUIRE(encode(packet) == golden_negative);
 
@@ -65,7 +65,7 @@ TEST_CASE("set-spawn-position writes every block coordinate as a signed varint")
     REQUIRE(back.pos.x == -1);
     REQUIRE(back.pos.y == -64);
     REQUIRE(back.pos.z == 300);
-    REQUIRE(back.dimension_type == static_cast<bp::DimensionType>(2));
+    REQUIRE(back.dimension_type == bp::DimensionType{2});
     REQUIRE(back.spawn_block_pos.x == INT32_MIN);
     REQUIRE(back.spawn_block_pos.z == INT32_MIN);
 }

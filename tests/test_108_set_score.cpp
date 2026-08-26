@@ -24,7 +24,7 @@ Packet1001 fill_v1001_change()
          .objective_name = "obj",
          .score_value = 6,
          .identity_type = bp::IdentityDefinition::Type::ENTITY,
-         .entity_id = static_cast<bp::ActorUniqueID>(11)},
+         .entity_id = bp::ActorUniqueID{11}},
         {.scoreboard_id = {.raw_id = 3},
          .objective_name = "obj",
          .score_value = 7,
@@ -50,7 +50,7 @@ Packet2168 fill_v2168()
                                      .scoreboard_id = {.raw_id = 3},
                                      .objective_name = "obj",
                                      .score_value = 6,
-                                     .entity_id = static_cast<bp::ActorUniqueID>(11)},
+                                     .entity_id = bp::ActorUniqueID{11}},
         bp::v2168::ChangeFakePlayerScore{.action = bp::ScorePacketEntryAction::CHANGE_FAKE_PLAYER,
                                          .scoreboard_id = {.raw_id = 4},
                                          .objective_name = "obj",
@@ -143,7 +143,7 @@ TEST_CASE("SetScorePacket: v2168 round-trip")
     REQUIRE(rt.score_info[0].index() == 0);
     REQUIRE(std::get<0>(rt.score_info[0]).objective_name == "rm");
     REQUIRE(std::get<1>(rt.score_info[1]).player_id.actor_unique_id == 9);
-    REQUIRE(std::get<2>(rt.score_info[2]).entity_id == static_cast<bp::ActorUniqueID>(11));
+    REQUIRE(std::get<2>(rt.score_info[2]).entity_id == bp::ActorUniqueID{11});
     REQUIRE(std::get<3>(rt.score_info[3]).fake_player_name == "fake");
 }
 

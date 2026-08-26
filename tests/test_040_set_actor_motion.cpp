@@ -32,28 +32,28 @@ TEST_CASE("packet id is 40")
 TEST_CASE("set-actor-motion round-trips against the golden")
 {
     bp::SetActorMotionPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.motion = {.x = -0.5F, .y = 1.25F, .z = 2.0F};
-    packet.tick = static_cast<bp::PlayerInputTick>(130);
+    packet.tick = bp::PlayerInputTick{130};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::SetActorMotionPacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.motion.x == -0.5F);
     REQUIRE(back.motion.y == 1.25F);
     REQUIRE(back.motion.z == 2.0F);
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(130));
+    REQUIRE(back.tick == bp::PlayerInputTick{130});
 }
 
 TEST_CASE("neither the runtime id nor the tick narrows to 32 bits")
 {
     bp::SetActorMotionPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(4294967297ULL);
+    packet.runtime_id = bp::ActorRuntimeID{4294967297ULL};
     packet.motion = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
-    packet.tick = static_cast<bp::PlayerInputTick>(4294967296ULL);
+    packet.tick = bp::PlayerInputTick{4294967296ULL};
     REQUIRE(encode(packet) == golden_wide);
 
     const auto back = decode<bp::SetActorMotionPacket_<2168>>(golden_wide);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(4294967297ULL));
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(4294967296ULL));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{4294967297ULL});
+    REQUIRE(back.tick == bp::PlayerInputTick{4294967296ULL});
 }

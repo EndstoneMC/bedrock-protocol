@@ -77,7 +77,7 @@ TEST_CASE("level-chunk v1001 full form round-trips against the golden")
 {
     PacketV1001 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(0);
+    packet.dimension_id = bp::DimensionType{0};
     packet.sub_chunks_count = 5;
     packet.cache_enabled = false;
     packet.serialized_chunk = payload_ab;
@@ -99,7 +99,7 @@ TEST_CASE("level-chunk v1001 partial-request form round-trips against the golden
 {
     PacketV1001 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(1);
+    packet.dimension_id = bp::DimensionType{1};
     packet.sub_chunks_count = 0xfffffffe;
     packet.client_request_sub_chunk_limit = 7;
     packet.cache_enabled = true;
@@ -122,7 +122,7 @@ TEST_CASE("level-chunk v1001 unlimited-request form round-trips against the gold
 {
     PacketV1001 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(0);
+    packet.dimension_id = bp::DimensionType{0};
     packet.sub_chunks_count = 0xffffffff;
     packet.cache_enabled = false;
     packet.serialized_chunk = payload_a;
@@ -137,7 +137,7 @@ TEST_CASE("level-chunk is unchanged between v975 and v1001")
 {
     PacketV975 older;
     older.pos = {.x = 2, .z = 3};
-    older.dimension_id = static_cast<bp::DimensionType>(0);
+    older.dimension_id = bp::DimensionType{0};
     older.sub_chunks_count = 5;
     older.cache_enabled = false;
     older.serialized_chunk = payload_ab;
@@ -148,7 +148,7 @@ TEST_CASE("level-chunk v2168 full form round-trips against the golden")
 {
     PacketV2168 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(0);
+    packet.dimension_id = bp::DimensionType{0};
     packet.sub_chunks_count = 5;
     packet.cache_enabled = false;
     packet.serialized_chunk = payload_ab;
@@ -167,7 +167,7 @@ TEST_CASE("level-chunk v2168 partial-request form round-trips against the golden
 {
     PacketV2168 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(1);
+    packet.dimension_id = bp::DimensionType{1};
     packet.sub_chunks_count = 0;
     packet.client_request_sub_chunk_limit = 7;
     packet.cache_enabled = true;
@@ -190,7 +190,7 @@ TEST_CASE("level-chunk v2168 unlimited-request form round-trips against the gold
 {
     PacketV2168 packet;
     packet.pos = {.x = 2, .z = 3};
-    packet.dimension_id = static_cast<bp::DimensionType>(0);
+    packet.dimension_id = bp::DimensionType{0};
     packet.sub_chunks_count = 0;
     packet.client_request_sub_chunk_limit = -1;
     packet.cache_enabled = false;

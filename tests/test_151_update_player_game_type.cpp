@@ -39,28 +39,28 @@ TEST_CASE("update-player-game-type round-trips against the golden")
 {
     bp::UpdatePlayerGameTypePacket_<2168> packet;
     packet.player_game_type = bp::GameType::ADVENTURE;
-    packet.target_player = static_cast<bp::ActorUniqueID>(7);
-    packet.tick = static_cast<bp::PlayerInputTick>(200);
+    packet.target_player = bp::ActorUniqueID{7};
+    packet.tick = bp::PlayerInputTick{200};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden);
     REQUIRE(back.player_game_type == bp::GameType::ADVENTURE);
-    REQUIRE(back.target_player == static_cast<bp::ActorUniqueID>(7));
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(200));
+    REQUIRE(back.target_player == bp::ActorUniqueID{7});
+    REQUIRE(back.tick == bp::PlayerInputTick{200});
 }
 
 TEST_CASE("an Undefined game type and a negative target player each zigzag into one byte")
 {
     bp::UpdatePlayerGameTypePacket_<2168> packet;
     packet.player_game_type = bp::GameType::UNDEFINED;
-    packet.target_player = static_cast<bp::ActorUniqueID>(-5);
-    packet.tick = static_cast<bp::PlayerInputTick>(0);
+    packet.target_player = bp::ActorUniqueID{-5};
+    packet.tick = bp::PlayerInputTick{0};
     REQUIRE(encode(packet) == golden_negative);
 
     const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden_negative);
     REQUIRE(back.player_game_type == bp::GameType::UNDEFINED);
-    REQUIRE(back.target_player == static_cast<bp::ActorUniqueID>(-5));
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(0));
+    REQUIRE(back.target_player == bp::ActorUniqueID{-5});
+    REQUIRE(back.tick == bp::PlayerInputTick{0});
     REQUIRE(rejects<bp::UpdatePlayerGameTypePacket_<2168>>(std::string{}));
 }
 
@@ -68,11 +68,11 @@ TEST_CASE("the update-player-game-type target player and tick both survive past 
 {
     bp::UpdatePlayerGameTypePacket_<2168> packet;
     packet.player_game_type = bp::GameType::SPECTATOR;
-    packet.target_player = static_cast<bp::ActorUniqueID>(-9007199254740993LL);
-    packet.tick = static_cast<bp::PlayerInputTick>(4294967296ULL);
+    packet.target_player = bp::ActorUniqueID{-9007199254740993LL};
+    packet.tick = bp::PlayerInputTick{4294967296ULL};
     REQUIRE(encode(packet) == golden_wide);
 
     const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden_wide);
-    REQUIRE(back.target_player == static_cast<bp::ActorUniqueID>(-9007199254740993LL));
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(4294967296ULL));
+    REQUIRE(back.target_player == bp::ActorUniqueID{-9007199254740993LL});
+    REQUIRE(back.tick == bp::PlayerInputTick{4294967296ULL});
 }

@@ -30,7 +30,7 @@ template <class Packet>
 Packet sample()
 {
     Packet packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.slot = 2;
     packet.selected_slot = 2;
     packet.container_id = bp::ContainerID::INVENTORY;

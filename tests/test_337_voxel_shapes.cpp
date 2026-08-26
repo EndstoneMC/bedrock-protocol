@@ -43,7 +43,7 @@ TEST_CASE("voxel-shapes round-trips against the golden")
         .y_coords = {0.0F, 1.0F},
         .z_coords = {0.0F, 0.25F, 0.75F, 1.0F},
     });
-    packet.name_map["minecraft:slab"] = static_cast<bp::RegistryHandle>(258);
+    packet.name_map["minecraft:slab"] = bp::RegistryHandle{258};
     packet.custom_shape_count = 300;
     REQUIRE(encode(packet) == golden);
 
@@ -64,7 +64,7 @@ TEST_CASE("voxel-shapes round-trips against the golden")
     REQUIRE(shape.z_coords.at(1) == 0.25F);
     REQUIRE(shape.z_coords.at(2) == 0.75F);
     REQUIRE(back.name_map.size() == 1);
-    REQUIRE(back.name_map.at("minecraft:slab") == static_cast<bp::RegistryHandle>(258));
+    REQUIRE(back.name_map.at("minecraft:slab") == bp::RegistryHandle{258});
     REQUIRE(back.custom_shape_count == 300);
 }
 

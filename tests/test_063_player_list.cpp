@@ -25,7 +25,7 @@ bp::SerializedSkinRef_<2168> skin()
     out.cape_id = "cid";
     out.full_id = "fid";
     out.arm_size = bp::ArmSizeType::WIDE;
-    out.skin_color = static_cast<bp::Color>(0x01020304);
+    out.skin_color = bp::Color{0x01020304};
     out.is_premium = true;
     out.is_persona = false;
     out.is_persona_cape_on_classic_skin = false;
@@ -43,7 +43,7 @@ bp::PlayerListPacket_<2168> fill()
     bp::PlayerListPacket_<2168>::AddEntry add;
     add.action = bp::PlayerListPacketType::ADD;
     add.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
-    add.id = static_cast<bp::ActorUniqueID>(7);
+    add.id = bp::ActorUniqueID{7};
     add.name = "Steve";
     add.xuid = "xuid";
     add.platform_online_id = "pcid";
@@ -52,7 +52,7 @@ bp::PlayerListPacket_<2168> fill()
     add.is_teacher = false;
     add.is_host = true;
     add.is_sub_client = false;
-    add.color = static_cast<bp::Color>(0x05060708);
+    add.color = bp::Color{0x05060708};
     pkt.entries.emplace_back(add);
 
     bp::PlayerListPacket_<2168>::RemoveEntry remove;
@@ -97,7 +97,7 @@ bp::PlayerListPacket_<1001> fill_v1001()
 
     bp::PlayerListEntry_<1001> entry;
     entry.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
-    entry.id = static_cast<bp::ActorUniqueID>(7);
+    entry.id = bp::ActorUniqueID{7};
     entry.name = "Steve";
     entry.xuid = "xuid";
     entry.platform_online_id = "pcid";
@@ -106,7 +106,7 @@ bp::PlayerListPacket_<1001> fill_v1001()
     entry.is_teacher = false;
     entry.is_host = true;
     entry.is_sub_client = false;
-    entry.color = static_cast<bp::Color>(0x05060708);
+    entry.color = bp::Color{0x05060708};
     pkt.entries.push_back(entry);
     pkt.trusted_skins.push_back(true);
 

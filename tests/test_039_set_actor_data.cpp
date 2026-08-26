@@ -12,10 +12,10 @@ namespace {
 template <class Packet>
 void fill(Packet &packet)
 {
-    packet.id = static_cast<bp::ActorRuntimeID>(2);
+    packet.id = bp::ActorRuntimeID{2};
     packet.synched_properties.int_entries.push_back({.property_index = 1, .data = -2});
     packet.synched_properties.float_entries.push_back({.property_index = 2, .data = 0.5f});
-    packet.tick = static_cast<bp::PlayerInputTick>(100);
+    packet.tick = bp::PlayerInputTick{100};
 }
 
 }  // namespace
@@ -53,7 +53,7 @@ TEST_CASE("SetActorDataPacket: v1001 round-trip")
     REQUIRE(rt.packed_items.data[0].id == 38);
     REQUIRE(std::get<3>(rt.packed_items.data[0].payload).value == 0.5f);
     REQUIRE(rt.synched_properties.float_entries[0].property_index == 2);
-    REQUIRE(rt.tick == static_cast<bp::PlayerInputTick>(100));
+    REQUIRE(rt.tick == bp::PlayerInputTick{100});
 }
 
 TEST_CASE("SetActorDataPacket: v2168 round-trip")
@@ -78,7 +78,7 @@ TEST_CASE("SetActorDataPacket: v2168 round-trip")
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.packed_items.data.size() == 1);
     REQUIRE(std::get<3>(rt.packed_items.data[0].payload).type == bp::DataItemType::FLOAT);
-    REQUIRE(rt.tick == static_cast<bp::PlayerInputTick>(100));
+    REQUIRE(rt.tick == bp::PlayerInputTick{100});
 }
 
 // One extra byte per data item, and nothing else. Cloudburst's v2168 reader compares

@@ -28,7 +28,7 @@ TEST_CASE("packet id is 68")
 TEST_CASE("map-info-request round-trips against the golden")
 {
     bp::MapInfoRequestPacket_<2168> packet;
-    packet.map_id = static_cast<bp::ActorUniqueID>(-5);
+    packet.map_id = bp::ActorUniqueID{-5};
     packet.client_pixels = {
         {.pixel = 0x01020304, .index = 0x0102},
         {.pixel = 0xffffffff, .index = 7},
@@ -36,7 +36,7 @@ TEST_CASE("map-info-request round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::MapInfoRequestPacket_<2168>>(golden);
-    REQUIRE(back.map_id == static_cast<bp::ActorUniqueID>(-5));
+    REQUIRE(back.map_id == bp::ActorUniqueID{-5});
     REQUIRE(back.client_pixels.size() == 2);
     REQUIRE(back.client_pixels[0].pixel == 0x01020304);
     REQUIRE(back.client_pixels[0].index == 0x0102);
@@ -47,7 +47,7 @@ TEST_CASE("map-info-request round-trips against the golden")
 TEST_CASE("an empty map-info-request pixel list still writes a four-byte count")
 {
     bp::MapInfoRequestPacket_<2168> packet;
-    packet.map_id = static_cast<bp::ActorUniqueID>(0);
+    packet.map_id = bp::ActorUniqueID{0};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 5);
     REQUIRE(decode<bp::MapInfoRequestPacket_<2168>>(wire).client_pixels.empty());

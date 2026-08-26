@@ -48,7 +48,7 @@ TEST_CASE("correct-player-move-prediction round-trips against the golden")
     packet.vehicle_rotation = {.x = 45.0F, .y = 90.0F};
     packet.vehicle_angular_velocity = 1.5F;
     packet.on_ground = true;
-    packet.tick = static_cast<bp::PlayerInputTick>(300);
+    packet.tick = bp::PlayerInputTick{300};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::CorrectPlayerMovePredictionPacket_<2168>>(golden);
@@ -64,7 +64,7 @@ TEST_CASE("correct-player-move-prediction round-trips against the golden")
     REQUIRE(back.vehicle_angular_velocity.has_value());
     REQUIRE(*back.vehicle_angular_velocity == 1.5F);
     REQUIRE(back.on_ground);
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(300));
+    REQUIRE(back.tick == bp::PlayerInputTick{300});
 }
 
 TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
@@ -76,7 +76,7 @@ TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
     packet.vehicle_rotation = {.x = 45.0F, .y = 90.0F};
     packet.vehicle_angular_velocity = std::nullopt;
     packet.on_ground = false;
-    packet.tick = static_cast<bp::PlayerInputTick>(300);
+    packet.tick = bp::PlayerInputTick{300};
     REQUIRE(encode(packet) == golden_without_angular_velocity);
     REQUIRE(golden.size() - golden_without_angular_velocity.size() == 4);
 
@@ -84,7 +84,7 @@ TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
     REQUIRE(back.prediction_type == bp::RewindType::PLAYER);
     REQUIRE_FALSE(back.vehicle_angular_velocity.has_value());
     REQUIRE_FALSE(back.on_ground);
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(300));
+    REQUIRE(back.tick == bp::PlayerInputTick{300});
 }
 
 TEST_CASE("the correct-player-move-prediction tick survives past 32 bits")
@@ -96,10 +96,10 @@ TEST_CASE("the correct-player-move-prediction tick survives past 32 bits")
     packet.vehicle_rotation = {.x = 0.0F, .y = 0.0F};
     packet.vehicle_angular_velocity = std::nullopt;
     packet.on_ground = false;
-    packet.tick = static_cast<bp::PlayerInputTick>(1ULL << 32U);
+    packet.tick = bp::PlayerInputTick{1ULL << 32U};
 
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 40);
     REQUIRE(decode<bp::CorrectPlayerMovePredictionPacket_<2168>>(wire).tick ==
-            static_cast<bp::PlayerInputTick>(1ULL << 32U));
+            bp::PlayerInputTick{1ULL << 32U});
 }

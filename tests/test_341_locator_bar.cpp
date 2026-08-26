@@ -54,13 +54,13 @@ TEST_CASE("locator bar round-trips against the golden")
     full.payload.is_visible = true;
     full.payload.world_position = bp::WorldPosition{
         .pos = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F},
-        .dimension_type = static_cast<bp::DimensionType>(1),
+        .dimension_type = bp::DimensionType{1},
     };
     full.payload.texture_path = "textures/ui/waypoint";
     full.payload.icon_size = bp::Vec2{.x = 16.0F, .y = 16.0F};
-    full.payload.color = static_cast<bp::Color>(16744767);
+    full.payload.color = bp::Color{16744767};
     full.payload.client_position_authority = false;
-    full.payload.actor_id = static_cast<bp::ActorUniqueID>(300);
+    full.payload.actor_id = bp::ActorUniqueID{300};
     full.action = bp::ServerWaypointGroup::Action::UPDATE;
 
     bp::LocatorBarWaypointPayload bare;
@@ -85,18 +85,18 @@ TEST_CASE("locator bar round-trips against the golden")
     REQUIRE(back.waypoints[0].payload.world_position->pos.x == 1.0F);
     REQUIRE(back.waypoints[0].payload.world_position->pos.y == 2.0F);
     REQUIRE(back.waypoints[0].payload.world_position->pos.z == 3.0F);
-    REQUIRE(back.waypoints[0].payload.world_position->dimension_type == static_cast<bp::DimensionType>(1));
+    REQUIRE(back.waypoints[0].payload.world_position->dimension_type == bp::DimensionType{1});
     REQUIRE(back.waypoints[0].payload.texture_path.has_value());
     REQUIRE(*back.waypoints[0].payload.texture_path == "textures/ui/waypoint");
     REQUIRE(back.waypoints[0].payload.icon_size.has_value());
     REQUIRE(back.waypoints[0].payload.icon_size->x == 16.0F);
     REQUIRE(back.waypoints[0].payload.icon_size->y == 16.0F);
     REQUIRE(back.waypoints[0].payload.color.has_value());
-    REQUIRE(*back.waypoints[0].payload.color == static_cast<bp::Color>(16744767));
+    REQUIRE(*back.waypoints[0].payload.color == bp::Color{16744767});
     REQUIRE(back.waypoints[0].payload.client_position_authority.has_value());
     REQUIRE_FALSE(*back.waypoints[0].payload.client_position_authority);
     REQUIRE(back.waypoints[0].payload.actor_id.has_value());
-    REQUIRE(*back.waypoints[0].payload.actor_id == static_cast<bp::ActorUniqueID>(300));
+    REQUIRE(*back.waypoints[0].payload.actor_id == bp::ActorUniqueID{300});
     REQUIRE(back.waypoints[0].action == bp::ServerWaypointGroup::Action::UPDATE);
 
     REQUIRE(back.waypoints[1].handle.uuid.most_significant_bits == 1ULL);

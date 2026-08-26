@@ -43,7 +43,7 @@ TEST_CASE("packet id is 187")
 TEST_CASE("update-abilities round-trips against the golden")
 {
     bp::UpdateAbilitiesPacket_<2168> packet;
-    packet.data.target_player = static_cast<bp::ActorUniqueID>(7);
+    packet.data.target_player = bp::ActorUniqueID{7};
     packet.data.player_permissions = bp::PlayerPermissionLevel::OPERATOR;
     packet.data.command_permissions = bp::CommandPermissionLevel::OWNER;
     packet.data.layers.push_back(
@@ -63,7 +63,7 @@ TEST_CASE("update-abilities round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::UpdateAbilitiesPacket_<2168>>(golden);
-    REQUIRE(back.data.target_player == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.data.target_player == bp::ActorUniqueID{7});
     REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::OPERATOR);
     REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::OWNER);
     REQUIRE(back.data.layers.size() == 2);
@@ -82,13 +82,13 @@ TEST_CASE("update-abilities round-trips against the golden")
 TEST_CASE("an empty ability layer list is a lone zero count")
 {
     bp::UpdateAbilitiesPacket_<2168> packet;
-    packet.data.target_player = static_cast<bp::ActorUniqueID>(-1);
+    packet.data.target_player = bp::ActorUniqueID{-1};
     packet.data.player_permissions = bp::PlayerPermissionLevel::VISITOR;
     packet.data.command_permissions = bp::CommandPermissionLevel::ANY;
     REQUIRE(encode(packet) == golden_no_layers);
 
     const auto back = decode<bp::UpdateAbilitiesPacket_<2168>>(golden_no_layers);
-    REQUIRE(back.data.target_player == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.data.target_player == bp::ActorUniqueID{-1});
     REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::VISITOR);
     REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::ANY);
     REQUIRE(back.data.layers.empty());
@@ -97,7 +97,7 @@ TEST_CASE("an empty ability layer list is a lone zero count")
 TEST_CASE("the ability layer count is a varint, not a byte")
 {
     bp::UpdateAbilitiesPacket_<2168> packet;
-    packet.data.target_player = static_cast<bp::ActorUniqueID>(0);
+    packet.data.target_player = bp::ActorUniqueID{0};
     packet.data.player_permissions = bp::PlayerPermissionLevel::VISITOR;
     packet.data.command_permissions = bp::CommandPermissionLevel::ANY;
     for (int i = 0; i < 128; ++i) {

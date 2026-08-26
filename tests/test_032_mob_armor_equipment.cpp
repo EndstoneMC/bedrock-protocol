@@ -102,7 +102,7 @@ TEST_CASE("packet id is 32 at every version")
 TEST_CASE("mob-armor-equipment v975 round-trips against the goldens")
 {
     PacketV975 packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_v975_empty);
 
     packet.head = helmet<bp::NetworkItemStackDescriptor>();
@@ -119,7 +119,7 @@ TEST_CASE("mob-armor-equipment v975 round-trips against the goldens")
 TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
 {
     PacketV1001 packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_v1001_empty);
 
     packet.head = helmet<bp::v1001::SerializedNetworkItemStackDescriptor>();
@@ -136,7 +136,7 @@ TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
 TEST_CASE("mob-armor-equipment v2168 round-trips against the goldens")
 {
     PacketV2168 packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_v2168_empty);
 
     packet.head = helmet<bp::v2168::SerializedNetworkItemStackDescriptor>();
@@ -155,7 +155,7 @@ TEST_CASE("mob-armor-equipment v2168 round-trips against the goldens")
 TEST_CASE("mob-armor-equipment v2168 carries a client request id as a negative net id")
 {
     PacketV2168 packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.head = helmet<bp::v2168::SerializedNetworkItemStackDescriptor>();
     packet.head.net_id_variant = -3;
     REQUIRE(encode(packet) == golden_v2168_helmet_negative);

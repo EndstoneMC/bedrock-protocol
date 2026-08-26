@@ -77,7 +77,7 @@ TEST_CASE("CommandBlockUpdatePacket: a block target round-trips against the gold
 TEST_CASE("CommandBlockUpdatePacket: an entity target takes case index 0 and no block data")
 {
     bp::CommandBlockUpdatePacket_<2168>::EntityCommandTarget entity;
-    entity.entity_id = static_cast<bp::ActorRuntimeID>(300);
+    entity.entity_id = bp::ActorRuntimeID{300};
 
     bp::CommandBlockUpdatePacket_<2168> packet;
     packet.target = entity;
@@ -88,7 +88,7 @@ TEST_CASE("CommandBlockUpdatePacket: an entity target takes case index 0 and no 
     const auto back = decode<bp::CommandBlockUpdatePacket_<2168>>(golden_entity);
     REQUIRE(back.target.index() == 0);
     REQUIRE(std::get<bp::CommandBlockUpdatePacket_<2168>::EntityCommandTarget>(back.target).entity_id ==
-            static_cast<bp::ActorRuntimeID>(300));
+            bp::ActorRuntimeID{300});
     REQUIRE(back.command.empty());
     REQUIRE(back.last_output.empty());
     REQUIRE(back.name.empty());
@@ -101,7 +101,7 @@ TEST_CASE("CommandBlockUpdatePacket: an entity target takes case index 0 and no 
 TEST_CASE("CommandBlockUpdatePacket: the tick delay is four fixed bytes, not a varint")
 {
     bp::CommandBlockUpdatePacket_<2168>::EntityCommandTarget entity;
-    entity.entity_id = static_cast<bp::ActorRuntimeID>(0);
+    entity.entity_id = bp::ActorRuntimeID{0};
 
     bp::CommandBlockUpdatePacket_<2168> packet;
     packet.target = entity;

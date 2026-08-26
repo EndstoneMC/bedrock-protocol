@@ -33,7 +33,7 @@ void fill(Packet &packet)
 {
     packet.uuid = {.most_significant_bits = 1, .least_significant_bits = 2};
     packet.name = "Steve";
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.runtime_id = bp::ActorRuntimeID{2};
     packet.platform_online_id = "chat";
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.velocity = {.x = 4.0f, .y = 5.0f, .z = 6.0f};
@@ -43,7 +43,7 @@ void fill(Packet &packet)
     packet.player_game_type = bp::GameType::SURVIVAL;
     packet.synched_properties.int_entries.push_back({.property_index = 1, .data = -2});
     packet.synched_properties.float_entries.push_back({.property_index = 2, .data = 0.5f});
-    packet.abilities_data.target_player = static_cast<bp::ActorUniqueID>(1);
+    packet.abilities_data.target_player = bp::ActorUniqueID{1};
     packet.abilities_data.player_permissions = bp::PlayerPermissionLevel::MEMBER;
     packet.abilities_data.command_permissions = bp::CommandPermissionLevel::ANY;
     packet.abilities_data.layers.push_back(
@@ -53,8 +53,8 @@ void fill(Packet &packet)
          .fly_speed = 0.05f,
          .vertical_fly_speed = 1.0f,
          .walk_speed = 0.1f});
-    packet.links.push_back({.a = static_cast<bp::ActorUniqueID>(1),
-                            .b = static_cast<bp::ActorUniqueID>(2),
+    packet.links.push_back({.a = bp::ActorUniqueID{1},
+                            .b = bp::ActorUniqueID{2},
                             .type = bp::ActorLinkType::RIDING,
                             .immediate = true,
                             .passenger_initiated = false,
@@ -116,7 +116,7 @@ TEST_CASE("AddPlayerPacket: v2168 round-trip")
     REQUIRE_FALSE(rt.carried_item.net_id_variant.has_value());
     REQUIRE(rt.unpack.data.size() == 1);
     REQUIRE(std::get<3>(rt.unpack.data[0].payload).type == bp::DataItemType::FLOAT);
-    REQUIRE(rt.abilities_data.target_player == static_cast<bp::ActorUniqueID>(1));
+    REQUIRE(rt.abilities_data.target_player == bp::ActorUniqueID{1});
     REQUIRE(rt.abilities_data.layers.size() == 1);
     REQUIRE(rt.abilities_data.layers[0].walk_speed == 0.1f);
     REQUIRE(rt.device_id == "dev");

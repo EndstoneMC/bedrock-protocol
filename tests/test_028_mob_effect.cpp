@@ -33,37 +33,37 @@ TEST_CASE("packet id is 28")
 TEST_CASE("mob effect round-trips against the golden")
 {
     bp::MobEffectPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.event_id = bp::MobEffectPacket_<2168>::Event::ADD;
     packet.effect_id = 19;
     packet.effect_amplifier = 2;
     packet.show_particles = true;
     packet.effect_duration_ticks = 600;
-    packet.tick = static_cast<bp::PlayerInputTick>(128);
+    packet.tick = bp::PlayerInputTick{128};
     packet.ambient = false;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::MobEffectPacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.event_id == bp::MobEffectPacket_<2168>::Event::ADD);
     REQUIRE(back.effect_id == 19);
     REQUIRE(back.effect_amplifier == 2);
     REQUIRE(back.show_particles);
     REQUIRE(back.effect_duration_ticks == 600);
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(128));
+    REQUIRE(back.tick == bp::PlayerInputTick{128});
     REQUIRE_FALSE(back.ambient);
 }
 
 TEST_CASE("an infinite duration and a negative amplifier survive the zigzag")
 {
     bp::MobEffectPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(1);
+    packet.runtime_id = bp::ActorRuntimeID{1};
     packet.event_id = bp::MobEffectPacket_<2168>::Event::REMOVE;
     packet.effect_id = 1;
     packet.effect_amplifier = -1;
     packet.show_particles = false;
     packet.effect_duration_ticks = -1;
-    packet.tick = static_cast<bp::PlayerInputTick>(0);
+    packet.tick = bp::PlayerInputTick{0};
     packet.ambient = true;
     REQUIRE(encode(packet) == golden_infinite);
 
@@ -77,14 +77,14 @@ TEST_CASE("an infinite duration and a negative amplifier survive the zigzag")
 TEST_CASE("the event byte does not absorb the runtime id's varint")
 {
     bp::MobEffectPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.event_id = bp::MobEffectPacket_<2168>::Event::UPDATE;
-    packet.tick = static_cast<bp::PlayerInputTick>(300);
+    packet.tick = bp::PlayerInputTick{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
 
     const auto back = decode<bp::MobEffectPacket_<2168>>(wire);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.event_id == bp::MobEffectPacket_<2168>::Event::UPDATE);
-    REQUIRE(back.tick == static_cast<bp::PlayerInputTick>(300));
+    REQUIRE(back.tick == bp::PlayerInputTick{300});
 }

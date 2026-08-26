@@ -33,7 +33,7 @@ TEST_CASE("packet id is 182")
 TEST_CASE("change-mob-property round-trips against the golden")
 {
     bp::ChangeMobPropertyPacket_<2168> packet;
-    packet.actor_id = static_cast<bp::ActorUniqueID>(-5);
+    packet.actor_id = bp::ActorUniqueID{-5};
     packet.prop_name = "minecraft:has_nectar";
     packet.bool_component_val = true;
     packet.string_component_val = "variant_b";
@@ -42,7 +42,7 @@ TEST_CASE("change-mob-property round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ChangeMobPropertyPacket_<2168>>(golden);
-    REQUIRE(back.actor_id == static_cast<bp::ActorUniqueID>(-5));
+    REQUIRE(back.actor_id == bp::ActorUniqueID{-5});
     REQUIRE(back.prop_name == "minecraft:has_nectar");
     REQUIRE(back.bool_component_val);
     REQUIRE(back.string_component_val == "variant_b");
@@ -53,7 +53,7 @@ TEST_CASE("change-mob-property round-trips against the golden")
 TEST_CASE("a negative int component is one zigzag byte and both empty strings still write a length")
 {
     bp::ChangeMobPropertyPacket_<2168> packet;
-    packet.actor_id = static_cast<bp::ActorUniqueID>(0);
+    packet.actor_id = bp::ActorUniqueID{0};
     packet.bool_component_val = false;
     packet.int_component_val = -1;
     packet.float_component_val = 0.0F;

@@ -34,7 +34,7 @@ TEST_CASE("packet id is 138")
 TEST_CASE("emote round-trips against the golden")
 {
     bp::EmotePacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.piece_id = "emote.happy";
     packet.emote_ticks = 20;
     packet.xuid = "2535413418839840";
@@ -43,7 +43,7 @@ TEST_CASE("emote round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::EmotePacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE(back.piece_id == "emote.happy");
     REQUIRE(back.emote_ticks == 20);
     REQUIRE(back.xuid == "2535413418839840");
@@ -54,7 +54,7 @@ TEST_CASE("emote round-trips against the golden")
 TEST_CASE("the emote ticks widen to a varint between the two strings while the flags stay one byte")
 {
     bp::EmotePacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.piece_id = "e";
     packet.emote_ticks = 200;
     packet.xuid = "x";
@@ -63,7 +63,7 @@ TEST_CASE("the emote ticks widen to a varint between the two strings while the f
     REQUIRE(encode(packet) == golden_wide);
 
     const auto back = decode<bp::EmotePacket_<2168>>(golden_wide);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.piece_id == "e");
     REQUIRE(back.emote_ticks == 200);
     REQUIRE(back.xuid == "x");

@@ -25,8 +25,8 @@ TEST_CASE("packet id is 41")
 TEST_CASE("set actor link round-trips against the golden")
 {
     bp::SetActorLinkPacket_<2168> packet;
-    packet.link.a = static_cast<bp::ActorUniqueID>(-1);
-    packet.link.b = static_cast<bp::ActorUniqueID>(300);
+    packet.link.a = bp::ActorUniqueID{-1};
+    packet.link.b = bp::ActorUniqueID{300};
     packet.link.type = bp::ActorLinkType::PASSENGER;
     packet.link.immediate = false;
     packet.link.passenger_initiated = true;
@@ -34,8 +34,8 @@ TEST_CASE("set actor link round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::SetActorLinkPacket_<2168>>(golden);
-    REQUIRE(back.link.a == static_cast<bp::ActorUniqueID>(-1));
-    REQUIRE(back.link.b == static_cast<bp::ActorUniqueID>(300));
+    REQUIRE(back.link.a == bp::ActorUniqueID{-1});
+    REQUIRE(back.link.b == bp::ActorUniqueID{300});
     REQUIRE(back.link.type == bp::ActorLinkType::PASSENGER);
     REQUIRE_FALSE(back.link.immediate);
     REQUIRE(back.link.passenger_initiated);
@@ -45,8 +45,8 @@ TEST_CASE("set actor link round-trips against the golden")
 TEST_CASE("the target ids are 64-bit varints")
 {
     bp::SetActorLinkPacket_<2168> packet;
-    packet.link.a = static_cast<bp::ActorUniqueID>(4294967296LL);
-    packet.link.b = static_cast<bp::ActorUniqueID>(0);
+    packet.link.a = bp::ActorUniqueID{4294967296LL};
+    packet.link.b = bp::ActorUniqueID{0};
     packet.link.type = bp::ActorLinkType::NONE;
     packet.link.immediate = false;
     packet.link.passenger_initiated = false;
@@ -54,6 +54,6 @@ TEST_CASE("the target ids are 64-bit varints")
 
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 13);
-    REQUIRE(decode<bp::SetActorLinkPacket_<2168>>(wire).link.a == static_cast<bp::ActorUniqueID>(4294967296LL));
+    REQUIRE(decode<bp::SetActorLinkPacket_<2168>>(wire).link.a == bp::ActorUniqueID{4294967296LL});
 }
 

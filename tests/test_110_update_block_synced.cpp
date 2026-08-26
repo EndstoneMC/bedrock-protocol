@@ -37,7 +37,7 @@ TEST_CASE("update-block-synced round-trips against the golden")
     packet.runtime_id = 300;
     packet.update_flags = 3;
     packet.layer = 1;
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(4294967297);
+    packet.entity_unique_id = bp::ActorUniqueID{4294967297};
     packet.message = bp::ActorBlockSyncMessage::MessageId::DESTROY;
     REQUIRE(encode(packet) == golden);
 
@@ -48,7 +48,7 @@ TEST_CASE("update-block-synced round-trips against the golden")
     REQUIRE(back.runtime_id == 300);
     REQUIRE(back.update_flags == 3);
     REQUIRE(back.layer == 1);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(4294967297));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{4294967297});
     REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::DESTROY);
 }
 
@@ -59,12 +59,12 @@ TEST_CASE("the block-sync actor id does not zigzag and the update flags are not 
     packet.runtime_id = 0;
     packet.update_flags = 200;
     packet.layer = 0;
-    packet.entity_unique_id = static_cast<bp::ActorUniqueID>(64);
+    packet.entity_unique_id = bp::ActorUniqueID{64};
     packet.message = bp::ActorBlockSyncMessage::MessageId::NONE;
     REQUIRE(encode(packet) == golden_none);
 
     const auto back = decode<bp::UpdateBlockSyncedPacket_<2168>>(golden_none);
     REQUIRE(back.update_flags == 200);
-    REQUIRE(back.entity_unique_id == static_cast<bp::ActorUniqueID>(64));
+    REQUIRE(back.entity_unique_id == bp::ActorUniqueID{64});
     REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::NONE);
 }

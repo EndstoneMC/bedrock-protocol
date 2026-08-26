@@ -32,7 +32,7 @@ TEST_CASE("packet id is 185")
 TEST_CASE("request-permissions round-trips against the golden")
 {
     bp::RequestPermissionsPacket_<2168> packet;
-    packet.target_player_id = static_cast<bp::ActorUniqueID>(7);
+    packet.target_player_id = bp::ActorUniqueID{7};
     packet.player_permissions = bp::PlayerPermissionLevel::OPERATOR;
     packet.custom_permission_flags =
         static_cast<std::uint16_t>(bp::RequestPermissionsPacket_<2168>::CustomPermissions::OPERATOR_COMMANDS) |
@@ -40,7 +40,7 @@ TEST_CASE("request-permissions round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::RequestPermissionsPacket_<2168>>(golden);
-    REQUIRE(back.target_player_id == static_cast<bp::ActorUniqueID>(7));
+    REQUIRE(back.target_player_id == bp::ActorUniqueID{7});
     REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::OPERATOR);
     REQUIRE(back.custom_permission_flags == 192);
 }
@@ -48,13 +48,13 @@ TEST_CASE("request-permissions round-trips against the golden")
 TEST_CASE("the target player id is a fixed int64, not the alias's varint")
 {
     bp::RequestPermissionsPacket_<2168> packet;
-    packet.target_player_id = static_cast<bp::ActorUniqueID>(-1);
+    packet.target_player_id = bp::ActorUniqueID{-1};
     packet.player_permissions = bp::PlayerPermissionLevel::CUSTOM;
     packet.custom_permission_flags = 255;
     REQUIRE(encode(packet) == golden_negative);
 
     const auto back = decode<bp::RequestPermissionsPacket_<2168>>(golden_negative);
-    REQUIRE(back.target_player_id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.target_player_id == bp::ActorUniqueID{-1});
     REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::CUSTOM);
     REQUIRE(back.custom_permission_flags == 255);
 }
@@ -62,7 +62,7 @@ TEST_CASE("the target player id is a fixed int64, not the alias's varint")
 TEST_CASE("the permission flags stay a fixed little-endian uint16")
 {
     bp::RequestPermissionsPacket_<2168> packet;
-    packet.target_player_id = static_cast<bp::ActorUniqueID>(0);
+    packet.target_player_id = bp::ActorUniqueID{0};
     packet.player_permissions = bp::PlayerPermissionLevel::VISITOR;
     packet.custom_permission_flags = 0x0100;
     const auto wire = encode(packet);

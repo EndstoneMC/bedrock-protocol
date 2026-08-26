@@ -41,8 +41,8 @@ std::vector<bp::SerializedPersonaPieceHandle> pieces()
 std::map<bp::PieceType, bp::TintMapColor> tints()
 {
     return {{bp::PieceType::SKELETON,
-             bp::TintMapColor{.colors = {static_cast<bp::Color>(1), static_cast<bp::Color>(2),
-                                         static_cast<bp::Color>(3), static_cast<bp::Color>(4)}}}};
+             bp::TintMapColor{.colors = {bp::Color{1}, bp::Color{2},
+                                         bp::Color{3}, bp::Color{4}}}}};
 }
 
 Packet1001 fill_v1001()
@@ -61,7 +61,7 @@ Packet1001 fill_v1001()
                    .cape_id = "cape",
                    .full_id = "full",
                    .arm_size = bp::ArmSizeType::WIDE,
-                   .skin_color = static_cast<bp::Color>(0x04030201),
+                   .skin_color = bp::Color{0x04030201},
                    .persona_pieces = pieces(),
                    .piece_tint_colors = tints(),
                    .is_premium = true,
@@ -91,7 +91,7 @@ Packet2168 fill_v2168()
                    .cape_id = "cape",
                    .full_id = "full",
                    .arm_size = bp::ArmSizeType::WIDE,
-                   .skin_color = static_cast<bp::Color>(0x04030201),
+                   .skin_color = bp::Color{0x04030201},
                    .persona_pieces = pieces(),
                    .piece_tint_colors = tints(),
                    .is_premium = true,

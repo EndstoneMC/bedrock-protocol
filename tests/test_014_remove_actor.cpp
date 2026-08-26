@@ -23,27 +23,27 @@ TEST_CASE("packet id is 14")
 TEST_CASE("remove-actor round-trips against the golden")
 {
     bp::RemoveActorPacket_<2168> packet;
-    packet.entity_id = static_cast<bp::ActorUniqueID>(-8589934592);
+    packet.entity_id = bp::ActorUniqueID{-8589934592};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::RemoveActorPacket_<2168>>(golden);
-    REQUIRE(back.entity_id == static_cast<bp::ActorUniqueID>(-8589934592));
+    REQUIRE(back.entity_id == bp::ActorUniqueID{-8589934592});
 }
 
 TEST_CASE("a negative unique id zigzags instead of sign-extending")
 {
     bp::RemoveActorPacket_<2168> packet;
-    packet.entity_id = static_cast<bp::ActorUniqueID>(-1);
+    packet.entity_id = bp::ActorUniqueID{-1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 1);
-    REQUIRE(decode<bp::RemoveActorPacket_<2168>>(wire).entity_id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(decode<bp::RemoveActorPacket_<2168>>(wire).entity_id == bp::ActorUniqueID{-1});
 }
 
 TEST_CASE("a unique id above 127 is a varint, not a fixed 64-bit field")
 {
     bp::RemoveActorPacket_<2168> packet;
-    packet.entity_id = static_cast<bp::ActorUniqueID>(300);
+    packet.entity_id = bp::ActorUniqueID{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 2);
-    REQUIRE(decode<bp::RemoveActorPacket_<2168>>(wire).entity_id == static_cast<bp::ActorUniqueID>(300));
+    REQUIRE(decode<bp::RemoveActorPacket_<2168>>(wire).entity_id == bp::ActorUniqueID{300});
 }

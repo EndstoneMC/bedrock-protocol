@@ -35,7 +35,7 @@ TEST_CASE("packet id is 169")
 TEST_CASE("npc-dialogue round-trips against the golden")
 {
     bp::NpcDialoguePacket_<2168> packet;
-    packet.npc_id = static_cast<bp::ActorUniqueID>(258);
+    packet.npc_id = bp::ActorUniqueID{258};
     packet.npc_dialogue_action_type = bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::CLOSE;
     packet.dialogue = "Hello";
     packet.scene_name = "greeting";
@@ -44,7 +44,7 @@ TEST_CASE("npc-dialogue round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::NpcDialoguePacket_<2168>>(golden);
-    REQUIRE(back.npc_id == static_cast<bp::ActorUniqueID>(258));
+    REQUIRE(back.npc_id == bp::ActorUniqueID{258});
     REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::CLOSE);
     REQUIRE(back.dialogue == "Hello");
     REQUIRE(back.scene_name == "greeting");
@@ -55,13 +55,13 @@ TEST_CASE("npc-dialogue round-trips against the golden")
 TEST_CASE("an npc-dialogue npc id spends eight bytes on a value a varint would fit in five")
 {
     bp::NpcDialoguePacket_<2168> packet;
-    packet.npc_id = static_cast<bp::ActorUniqueID>(4294967296LL);
+    packet.npc_id = bp::ActorUniqueID{4294967296LL};
     packet.npc_dialogue_action_type = bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::OPEN;
     REQUIRE(encode(packet) == golden_empty_strings);
     REQUIRE(encode(packet).size() == 13);
 
     const auto back = decode<bp::NpcDialoguePacket_<2168>>(golden_empty_strings);
-    REQUIRE(back.npc_id == static_cast<bp::ActorUniqueID>(4294967296LL));
+    REQUIRE(back.npc_id == bp::ActorUniqueID{4294967296LL});
     REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::OPEN);
     REQUIRE(back.dialogue.empty());
     REQUIRE(back.scene_name.empty());

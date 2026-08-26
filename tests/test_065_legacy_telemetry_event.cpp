@@ -53,7 +53,7 @@ TEST_CASE("packet id is 65")
 TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
-    packet.player_unique_id = static_cast<bp::ActorUniqueID>(-5);
+    packet.player_unique_id = bp::ActorUniqueID{-5};
     packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::MOB_KILLED;
     packet.use_player_id = true;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::MobKilled{
@@ -67,7 +67,7 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
     REQUIRE(encode(packet) == golden_mob_killed);
 
     const auto back = decode<bp::LegacyTelemetryEventPacket_<2168>>(golden_mob_killed);
-    REQUIRE(back.player_unique_id == static_cast<bp::ActorUniqueID>(-5));
+    REQUIRE(back.player_unique_id == bp::ActorUniqueID{-5});
     REQUIRE(back.type == bp::LegacyTelemetryEventPacket_<2168>::Type::MOB_KILLED);
     REQUIRE(back.use_player_id);
     REQUIRE(back.event_data.index() == 4);
@@ -84,7 +84,7 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
 TEST_CASE("legacy-telemetry-event item-used writes four numbers uncompressed")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
-    packet.player_unique_id = static_cast<bp::ActorUniqueID>(7);
+    packet.player_unique_id = bp::ActorUniqueID{7};
     packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::ITEM_USED;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::ItemUsed{
@@ -109,7 +109,7 @@ TEST_CASE("legacy-telemetry-event item-used writes four numbers uncompressed")
 TEST_CASE("legacy-telemetry-event poi-cauldron-used compresses its item id")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
-    packet.player_unique_id = static_cast<bp::ActorUniqueID>(7);
+    packet.player_unique_id = bp::ActorUniqueID{7};
     packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::POI_CAULDRON_USED;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::POICauldronUsed{
@@ -131,7 +131,7 @@ TEST_CASE("legacy-telemetry-event poi-cauldron-used compresses its item id")
 TEST_CASE("legacy-telemetry-event's payload-free arm is the last case and writes nothing")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
-    packet.player_unique_id = static_cast<bp::ActorUniqueID>(7);
+    packet.player_unique_id = bp::ActorUniqueID{7};
     packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::HONEY_HARVESTED;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::Empty{};

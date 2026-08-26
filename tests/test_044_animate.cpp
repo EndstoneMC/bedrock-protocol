@@ -47,14 +47,14 @@ TEST_CASE("animate round-trips against the golden")
 {
     bp::AnimatePacket_<2168> packet;
     packet.action = bp::AnimatePacket_<2168>::Action::SWING;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.data = 1.5F;
     packet.swing_source = bp::ActorSwingSource::ATTACK;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::AnimatePacket_<2168>>(golden);
     REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::SWING);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.data == 1.5F);
     REQUIRE(back.swing_source.has_value());
     REQUIRE(*back.swing_source == bp::ActorSwingSource::ATTACK);
@@ -64,7 +64,7 @@ TEST_CASE("an absent swing source is one zero byte, not a name")
 {
     bp::AnimatePacket_<2168> packet;
     packet.action = bp::AnimatePacket_<2168>::Action::CRITICAL_HIT;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.data = 0.0F;
     packet.swing_source = std::nullopt;
     REQUIRE(encode(packet) == golden_without_swing_source);
@@ -72,7 +72,7 @@ TEST_CASE("an absent swing source is one zero byte, not a name")
 
     const auto back = decode<bp::AnimatePacket_<2168>>(golden_without_swing_source);
     REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::CRITICAL_HIT);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE_FALSE(back.swing_source.has_value());
 }
 
@@ -80,14 +80,14 @@ TEST_CASE("a NONE swing source is present, and the animate runtime id survives p
 {
     bp::AnimatePacket_<2168> packet;
     packet.action = bp::AnimatePacket_<2168>::Action::NO_ACTION;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(1ULL << 32U);
+    packet.runtime_id = bp::ActorRuntimeID{1ULL << 32U};
     packet.data = 0.0F;
     packet.swing_source = bp::ActorSwingSource::NONE;
     REQUIRE(encode(packet) == golden_none_swing_source);
 
     const auto back = decode<bp::AnimatePacket_<2168>>(golden_none_swing_source);
     REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::NO_ACTION);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(1ULL << 32U));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{1ULL << 32U});
     REQUIRE(back.swing_source.has_value());
     REQUIRE(*back.swing_source == bp::ActorSwingSource::NONE);
 }
@@ -96,7 +96,7 @@ TEST_CASE("the use-item swing source reaches the wire without its underscore")
 {
     bp::AnimatePacket_<2168> packet;
     packet.action = bp::AnimatePacket_<2168>::Action::MAGIC_CRITICAL_HIT;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(1);
+    packet.runtime_id = bp::ActorRuntimeID{1};
     packet.data = -1.0F;
     packet.swing_source = bp::ActorSwingSource::USE_ITEM;
     REQUIRE(encode(packet) == golden_use_item_swing_source);

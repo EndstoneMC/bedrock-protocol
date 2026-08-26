@@ -33,7 +33,7 @@ TEST_CASE("packet id is 98")
 TEST_CASE("npc-request round-trips against the golden")
 {
     bp::NpcRequestPacket_<2168> packet;
-    packet.id = static_cast<bp::ActorRuntimeID>(7);
+    packet.id = bp::ActorRuntimeID{7};
     packet.type = bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_ACTION;
     packet.actions = "/say hi";
     packet.action_index = 2;
@@ -41,7 +41,7 @@ TEST_CASE("npc-request round-trips against the golden")
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::NpcRequestPacket_<2168>>(golden);
-    REQUIRE(back.id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.id == bp::ActorRuntimeID{7});
     REQUIRE(back.type == bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_ACTION);
     REQUIRE(back.actions == "/say hi");
     REQUIRE(back.action_index == 2);
@@ -51,14 +51,14 @@ TEST_CASE("npc-request round-trips against the golden")
 TEST_CASE("an npc-request action index above 127 stays one byte while the runtime id grows")
 {
     bp::NpcRequestPacket_<2168> packet;
-    packet.id = static_cast<bp::ActorRuntimeID>(300);
+    packet.id = bp::ActorRuntimeID{300};
     packet.type = bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_OPENING_COMMANDS;
     packet.action_index = 200;
     REQUIRE(encode(packet) == golden_empty_strings);
     REQUIRE(encode(packet).size() == 6);
 
     const auto back = decode<bp::NpcRequestPacket_<2168>>(golden_empty_strings);
-    REQUIRE(back.id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.id == bp::ActorRuntimeID{300});
     REQUIRE(back.type == bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_OPENING_COMMANDS);
     REQUIRE(back.actions.empty());
     REQUIRE(back.action_index == 200);

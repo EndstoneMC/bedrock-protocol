@@ -126,7 +126,7 @@ TEST_CASE("sub-chunk v1001 cache-off form round-trips against the golden")
 {
     PacketV1001 packet;
     packet.cache_enabled = false;
-    packet.dimension_type = static_cast<bp::DimensionType>(1);
+    packet.dimension_type = bp::DimensionType{1};
     packet.center_pos_x = 1;
     packet.center_pos_y = 2;
     packet.center_pos_z = 3;
@@ -156,7 +156,7 @@ TEST_CASE("sub-chunk v1001 cache-on form round-trips against the golden")
 {
     PacketV1001 packet;
     packet.cache_enabled = true;
-    packet.dimension_type = static_cast<bp::DimensionType>(1);
+    packet.dimension_type = bp::DimensionType{1};
     packet.center_pos_x = 1;
     packet.center_pos_y = 2;
     packet.center_pos_z = 3;
@@ -185,7 +185,7 @@ TEST_CASE("sub-chunk is unchanged between v975 and v1001")
 {
     PacketV975 older;
     older.cache_enabled = false;
-    older.dimension_type = static_cast<bp::DimensionType>(1);
+    older.dimension_type = bp::DimensionType{1};
     older.center_pos_x = 1;
     older.center_pos_y = 2;
     older.center_pos_z = 3;
@@ -207,7 +207,7 @@ TEST_CASE("sub-chunk v2168 cache-off form round-trips against the golden")
 {
     PacketV2168 packet;
     packet.cache_enabled = false;
-    packet.dimension_type = static_cast<bp::DimensionType>(1);
+    packet.dimension_type = bp::DimensionType{1};
     packet.center_pos = {.x = 1, .y = 2, .z = 3};
 
     PacketV2168::SubChunkPacketData entry;
@@ -233,7 +233,7 @@ TEST_CASE("sub-chunk v2168 cache-on form round-trips against the golden")
 {
     PacketV2168 packet;
     packet.cache_enabled = true;
-    packet.dimension_type = static_cast<bp::DimensionType>(1);
+    packet.dimension_type = bp::DimensionType{1};
     packet.center_pos = {.x = 1, .y = 2, .z = 3};
 
     PacketV2168::SubChunkPacketData entry;

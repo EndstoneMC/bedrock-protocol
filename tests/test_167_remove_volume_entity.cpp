@@ -24,20 +24,20 @@ TEST_CASE("packet id is 167")
 TEST_CASE("remove volume entity round-trips against the golden")
 {
     bp::RemoveVolumeEntityPacket_<2168> packet;
-    packet.entity_net_id = static_cast<bp::EntityNetId>(7);
-    packet.dimension_type = static_cast<bp::DimensionType>(-1);
+    packet.entity_net_id = bp::EntityNetId{7};
+    packet.dimension_type = bp::DimensionType{-1};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::RemoveVolumeEntityPacket_<2168>>(golden);
-    REQUIRE(back.entity_net_id == static_cast<bp::EntityNetId>(7));
-    REQUIRE(back.dimension_type == static_cast<bp::DimensionType>(-1));
+    REQUIRE(back.entity_net_id == bp::EntityNetId{7});
+    REQUIRE(back.dimension_type == bp::DimensionType{-1});
 }
 
 TEST_CASE("the net id is unsigned and the dimension zigzags, so they differ at -1")
 {
     bp::RemoveVolumeEntityPacket_<2168> packet;
-    packet.entity_net_id = static_cast<bp::EntityNetId>(300);
-    packet.dimension_type = static_cast<bp::DimensionType>(2);
+    packet.entity_net_id = bp::EntityNetId{300};
+    packet.dimension_type = bp::DimensionType{2};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 3);
     REQUIRE(wire.back() == '\x04');

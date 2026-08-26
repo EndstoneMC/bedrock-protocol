@@ -46,18 +46,18 @@ TEST_CASE("packet id is 166")
 TEST_CASE("add volume entity round-trips against the golden")
 {
     bp::AddVolumeEntityPacket_<2168> packet;
-    packet.entity_net_id = static_cast<bp::EntityNetId>(7);
+    packet.entity_net_id = bp::EntityNetId{7};
     packet.components = bp::CompoundTag{{"minecraft:fog", bp::StringTag{"spooky"}}};
     packet.json_identifier = "endstone:volume";
     packet.instance_name = "instance";
     packet.min_bounds = {.x = 1, .y = 2, .z = 3};
     packet.max_bounds = {.x = 4, .y = 5, .z = 6};
-    packet.dimension_type = static_cast<bp::DimensionType>(-1);
+    packet.dimension_type = bp::DimensionType{-1};
     packet.min_engine_version = "1.21.0";
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::AddVolumeEntityPacket_<2168>>(golden);
-    REQUIRE(back.entity_net_id == static_cast<bp::EntityNetId>(7));
+    REQUIRE(back.entity_net_id == bp::EntityNetId{7});
     REQUIRE(back.components.size() == 1);
     REQUIRE(back.components.at("minecraft:fog").get<bp::StringTag>().value() == "spooky");
     REQUIRE(back.json_identifier == "endstone:volume");
@@ -68,7 +68,7 @@ TEST_CASE("add volume entity round-trips against the golden")
     REQUIRE(back.max_bounds.x == 4);
     REQUIRE(back.max_bounds.y == 5);
     REQUIRE(back.max_bounds.z == 6);
-    REQUIRE(back.dimension_type == static_cast<bp::DimensionType>(-1));
+    REQUIRE(back.dimension_type == bp::DimensionType{-1});
     REQUIRE(back.min_engine_version == "1.21.0");
 }
 
@@ -87,16 +87,16 @@ TEST_CASE("an empty volume component tag does not swallow the two identifiers")
 TEST_CASE("the volume net id is unsigned while the bounds and the dimension zigzag")
 {
     bp::AddVolumeEntityPacket_<2168> packet;
-    packet.entity_net_id = static_cast<bp::EntityNetId>(300);
+    packet.entity_net_id = bp::EntityNetId{300};
     packet.min_bounds = {.x = -1, .y = -1, .z = -1};
-    packet.dimension_type = static_cast<bp::DimensionType>(-1);
+    packet.dimension_type = bp::DimensionType{-1};
     REQUIRE(encode(packet) == golden_wide);
 
     const auto back = decode<bp::AddVolumeEntityPacket_<2168>>(golden_wide);
-    REQUIRE(back.entity_net_id == static_cast<bp::EntityNetId>(300));
+    REQUIRE(back.entity_net_id == bp::EntityNetId{300});
     REQUIRE(back.min_bounds.x == -1);
     REQUIRE(back.min_bounds.y == -1);
     REQUIRE(back.min_bounds.z == -1);
     REQUIRE(back.max_bounds.x == 0);
-    REQUIRE(back.dimension_type == static_cast<bp::DimensionType>(-1));
+    REQUIRE(back.dimension_type == bp::DimensionType{-1});
 }

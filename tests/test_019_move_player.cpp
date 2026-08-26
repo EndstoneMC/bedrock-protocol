@@ -16,13 +16,13 @@ namespace {
 template <class Packet>
 void fill(Packet &packet)
 {
-    packet.player_id = static_cast<bp::ActorRuntimeID>(2);
+    packet.player_id = bp::ActorRuntimeID{2};
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.rot = {.x = 4.0f, .y = 5.0f};
     packet.y_head_rot = 6.0f;
     packet.on_ground = true;
-    packet.riding_id = static_cast<bp::ActorRuntimeID>(0);
-    packet.tick = static_cast<bp::PlayerInputTick>(100);
+    packet.riding_id = bp::ActorRuntimeID{0};
+    packet.tick = bp::PlayerInputTick{100};
 }
 
 }  // namespace
@@ -60,7 +60,7 @@ TEST_CASE("MovePlayerPacket: v1001 teleport round-trip")
     REQUIRE(rt.reset_position == bp::PlayerPositionModeComponent::PositionMode::TELEPORT);
     REQUIRE(rt.cause == 3);
     REQUIRE(rt.source_entity_type == 42);
-    REQUIRE(rt.tick == static_cast<bp::PlayerInputTick>(100));
+    REQUIRE(rt.tick == bp::PlayerInputTick{100});
 }
 
 TEST_CASE("MovePlayerPacket: v1001 leaves the teleport pair off the wire in any other mode")
@@ -90,7 +90,7 @@ TEST_CASE("MovePlayerPacket: v1001 leaves the teleport pair off the wire in any 
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.cause == 0);
     REQUIRE(rt.source_entity_type == 0);
-    REQUIRE(rt.tick == static_cast<bp::PlayerInputTick>(100));
+    REQUIRE(rt.tick == bp::PlayerInputTick{100});
 }
 
 TEST_CASE("MovePlayerPacket: v2168 teleport round-trip")
@@ -144,7 +144,7 @@ TEST_CASE("MovePlayerPacket: v2168 spends a presence byte even in normal mode")
 
     const auto rt = decode<Packet>(golden);
     REQUIRE_FALSE(rt.teleport_data.has_value());
-    REQUIRE(rt.tick == static_cast<bp::PlayerInputTick>(100));
+    REQUIRE(rt.tick == bp::PlayerInputTick{100});
 }
 
 // The presence byte is the whole break, and it cuts both ways: a mode-gated body is
@@ -172,5 +172,5 @@ TEST_CASE("MovePlayerPacket: the mode-gated body and the optional body are one b
     const auto wrong = decode_partial<bp::MovePlayerPacket_<1001>>(encode(newer));
     REQUIRE(wrong.cause != 3);
     REQUIRE(wrong.source_entity_type != 42);
-    REQUIRE(wrong.tick == static_cast<bp::PlayerInputTick>(0));
+    REQUIRE(wrong.tick == bp::PlayerInputTick{0});
 }

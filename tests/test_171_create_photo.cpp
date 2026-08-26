@@ -27,13 +27,13 @@ TEST_CASE("packet id is 171")
 TEST_CASE("create-photo round-trips against the golden")
 {
     bp::CreatePhotoPacket_<2168> packet;
-    packet.id = static_cast<bp::ActorUniqueID>(0x1122334455667788);
+    packet.id = bp::ActorUniqueID{0x1122334455667788};
     packet.photo_name = "photo.png";
     packet.photo_item_name = "Snapshot";
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::CreatePhotoPacket_<2168>>(golden);
-    REQUIRE(back.id == static_cast<bp::ActorUniqueID>(0x1122334455667788));
+    REQUIRE(back.id == bp::ActorUniqueID{0x1122334455667788});
     REQUIRE(back.photo_name == "photo.png");
     REQUIRE(back.photo_item_name == "Snapshot");
 }
@@ -41,13 +41,13 @@ TEST_CASE("create-photo round-trips against the golden")
 TEST_CASE("the unique id is eight fixed bytes, not a varint")
 {
     bp::CreatePhotoPacket_<2168> packet;
-    packet.id = static_cast<bp::ActorUniqueID>(-1);
+    packet.id = bp::ActorUniqueID{-1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
     REQUIRE(wire == bytes({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}));
 
     const auto back = decode<bp::CreatePhotoPacket_<2168>>(wire);
-    REQUIRE(back.id == static_cast<bp::ActorUniqueID>(-1));
+    REQUIRE(back.id == bp::ActorUniqueID{-1});
     REQUIRE(back.photo_name.empty());
     REQUIRE(back.photo_item_name.empty());
 }

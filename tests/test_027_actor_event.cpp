@@ -40,14 +40,14 @@ TEST_CASE("packet id is 27")
 TEST_CASE("actor-event round-trips against the golden")
 {
     bp::ActorEventPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.runtime_id = bp::ActorRuntimeID{300};
     packet.event_id = bp::ActorEvent::HURT;
     packet.data = -3;
     packet.fire_at_position = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ActorEventPacket_<2168>>(golden);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.event_id == bp::ActorEvent::HURT);
     REQUIRE(back.data == -3);
     REQUIRE(back.fire_at_position.has_value());
@@ -59,14 +59,14 @@ TEST_CASE("actor-event round-trips against the golden")
 TEST_CASE("an absent fire-at position is one zero byte, not twelve")
 {
     bp::ActorEventPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(7);
+    packet.runtime_id = bp::ActorRuntimeID{7};
     packet.event_id = bp::ActorEvent::HURT_WITHOUT_RECEIVING_DAMAGE;
     packet.data = 0;
     packet.fire_at_position = std::nullopt;
     REQUIRE(encode(packet) == golden_without_position);
 
     const auto back = decode<bp::ActorEventPacket_<2168>>(golden_without_position);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(7));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE(back.event_id == bp::ActorEvent::HURT_WITHOUT_RECEIVING_DAMAGE);
     REQUIRE_FALSE(back.fire_at_position.has_value());
 }
@@ -74,12 +74,12 @@ TEST_CASE("an absent fire-at position is one zero byte, not twelve")
 TEST_CASE("the runtime id survives past 32 bits and the data stays zigzagged")
 {
     bp::ActorEventPacket_<2168> packet;
-    packet.runtime_id = static_cast<bp::ActorRuntimeID>(1ULL << 32U);
+    packet.runtime_id = bp::ActorRuntimeID{1ULL << 32U};
     packet.event_id = bp::ActorEvent::DEPRECATED_ADD_PLAYER_LEVELS;
     packet.data = -1;
     REQUIRE(encode(packet) == golden_wide_runtime_id);
 
     const auto back = decode<bp::ActorEventPacket_<2168>>(golden_wide_runtime_id);
-    REQUIRE(back.runtime_id == static_cast<bp::ActorRuntimeID>(1ULL << 32U));
+    REQUIRE(back.runtime_id == bp::ActorRuntimeID{1ULL << 32U});
     REQUIRE(back.data == -1);
 }

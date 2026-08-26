@@ -28,18 +28,18 @@ TEST_CASE("packet id is 113")
 TEST_CASE("set-local-player-as-initialized round-trips against the golden")
 {
     bp::SetLocalPlayerAsInitializedPacket_<2168> packet;
-    packet.player_id = static_cast<bp::ActorRuntimeID>(300);
+    packet.player_id = bp::ActorRuntimeID{300};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::SetLocalPlayerAsInitializedPacket_<2168>>(golden);
-    REQUIRE(back.player_id == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.player_id == bp::ActorRuntimeID{300});
 }
 
 TEST_CASE("the initialized-player id is a 64-bit varint")
 {
     bp::SetLocalPlayerAsInitializedPacket_<2168> packet;
-    packet.player_id = static_cast<bp::ActorRuntimeID>(4294967303ULL);
+    packet.player_id = bp::ActorRuntimeID{4294967303ULL};
     REQUIRE(encode(packet) == golden_wide);
     REQUIRE(decode<bp::SetLocalPlayerAsInitializedPacket_<2168>>(golden_wide).player_id ==
-            static_cast<bp::ActorRuntimeID>(4294967303ULL));
+            bp::ActorRuntimeID{4294967303ULL});
 }

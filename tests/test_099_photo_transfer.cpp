@@ -44,7 +44,7 @@ TEST_CASE("photo-transfer round-trips against the golden")
     packet.book_id = "book-7";
     packet.type = bp::PhotoType::PHOTO_ITEM;
     packet.source_type = bp::PhotoType::BOOK;
-    packet.owner_id = static_cast<bp::ActorUniqueID>(-12345);
+    packet.owner_id = bp::ActorUniqueID{-12345};
     packet.new_photo_name = "copy.jpeg";
     REQUIRE(encode(packet) == golden);
 
@@ -54,7 +54,7 @@ TEST_CASE("photo-transfer round-trips against the golden")
     REQUIRE(back.book_id == "book-7");
     REQUIRE(back.type == bp::PhotoType::PHOTO_ITEM);
     REQUIRE(back.source_type == bp::PhotoType::BOOK);
-    REQUIRE(back.owner_id == static_cast<bp::ActorUniqueID>(-12345));
+    REQUIRE(back.owner_id == bp::ActorUniqueID{-12345});
     REQUIRE(back.new_photo_name == "copy.jpeg");
 }
 
@@ -69,7 +69,7 @@ TEST_CASE("an empty photo transfer keeps four length prefixes, two type bytes an
     REQUIRE(back.book_id.empty());
     REQUIRE(back.type == bp::PhotoType::PORTFOLIO);
     REQUIRE(back.source_type == bp::PhotoType::PORTFOLIO);
-    REQUIRE(back.owner_id == static_cast<bp::ActorUniqueID>(0));
+    REQUIRE(back.owner_id == bp::ActorUniqueID{0});
     REQUIRE(back.new_photo_name.empty());
 }
 

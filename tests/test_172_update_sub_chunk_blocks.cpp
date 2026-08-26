@@ -38,14 +38,14 @@ TEST_CASE("update-sub-chunk-blocks round-trips against the golden")
         .pos = {.x = 1, .y = 2, .z = 3},
         .runtime_id = 300,
         .update_flags = 200,
-        .entity_unique_id = static_cast<bp::ActorUniqueID>(9),
+        .entity_unique_id = bp::ActorUniqueID{9},
         .message = bp::ActorBlockSyncMessage::MessageId::DESTROY,
     });
     packet.blocks_changed.extras.push_back({
         .pos = {.x = -1, .y = 0, .z = 1},
         .runtime_id = 5,
         .update_flags = 0,
-        .entity_unique_id = static_cast<bp::ActorUniqueID>(0),
+        .entity_unique_id = bp::ActorUniqueID{0},
         .message = bp::ActorBlockSyncMessage::MessageId::NONE,
     });
     REQUIRE(encode(packet) == golden);
@@ -60,7 +60,7 @@ TEST_CASE("update-sub-chunk-blocks round-trips against the golden")
     REQUIRE(back.blocks_changed.standards.at(0).pos.z == 3);
     REQUIRE(back.blocks_changed.standards.at(0).runtime_id == 300);
     REQUIRE(back.blocks_changed.standards.at(0).update_flags == 200);
-    REQUIRE(back.blocks_changed.standards.at(0).entity_unique_id == static_cast<bp::ActorUniqueID>(9));
+    REQUIRE(back.blocks_changed.standards.at(0).entity_unique_id == bp::ActorUniqueID{9});
     REQUIRE(back.blocks_changed.standards.at(0).message == bp::ActorBlockSyncMessage::MessageId::DESTROY);
     REQUIRE(back.blocks_changed.extras.size() == 1);
     REQUIRE(back.blocks_changed.extras.at(0).pos.x == -1);

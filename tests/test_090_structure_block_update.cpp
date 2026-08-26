@@ -19,13 +19,13 @@ bp::StructureSettings settings()
             .allow_non_ticking_player_and_ticking_area_chunks = true,
             .structure_size = {.x = 1, .y = 2, .z = 3},
             .structure_offset = {.x = 4, .y = 5, .z = 6},
-            .last_touched_by_player = static_cast<bp::ActorUniqueID>(7),
+            .last_touched_by_player = bp::ActorUniqueID{7},
             .rotation = bp::Rotation::ROTATE_90,
             .mirror = bp::Mirror::X,
             .animation_mode = bp::AnimationMode::BLOCKS,
             .animation_seconds = 0.5f,
             .integrity_value = 1.0f,
-            .integrity_seed = static_cast<bp::RandomSeed>(9),
+            .integrity_seed = bp::RandomSeed{9},
             .pivot = {.x = 0.0f, .y = 1.0f, .z = 2.0f}};
 }
 
@@ -130,7 +130,7 @@ TEST_CASE("StructureBlockUpdatePacket: v2168 round-trip")
     const auto rt = decode<Packet2168>(golden_v2168);
     REQUIRE(rt.data.structure_name.unredacted_string == "name");
     REQUIRE_FALSE(rt.data.structure_name.redacted_string.has_value());
-    REQUIRE(rt.data.settings.integrity_seed == static_cast<bp::RandomSeed>(9));
+    REQUIRE(rt.data.settings.integrity_seed == bp::RandomSeed{9});
     REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SAVES_TO_DISK);
 }
 

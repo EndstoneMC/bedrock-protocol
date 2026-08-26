@@ -52,13 +52,13 @@ TEST_CASE("structure-template-data-request round-trips against the golden")
                                  .allow_non_ticking_player_and_ticking_area_chunks = true,
                                  .structure_size = {.x = 5, .y = 6, .z = 7},
                                  .structure_offset = {.x = -1, .y = 0, .z = 1},
-                                 .last_touched_by_player = static_cast<bp::ActorUniqueID>(300),
+                                 .last_touched_by_player = bp::ActorUniqueID{300},
                                  .rotation = bp::Rotation::ROTATE_90,
                                  .mirror = bp::Mirror::Z,
                                  .animation_mode = bp::AnimationMode::BLOCKS,
                                  .animation_seconds = 0.5F,
                                  .integrity_value = 1.0F,
-                                 .integrity_seed = static_cast<bp::RandomSeed>(0xdeadbeefU),
+                                 .integrity_seed = bp::RandomSeed{0xdeadbeefU},
                                  .pivot = {.x = 0.5F, .y = 1.5F, .z = 2.5F}};
     packet.request_operation = bp::StructureTemplateRequestOperation::QUERY_SAVED_STRUCTURE;
     REQUIRE(encode(packet) == golden);
@@ -78,13 +78,13 @@ TEST_CASE("structure-template-data-request round-trips against the golden")
     REQUIRE(back.structure_settings.structure_offset.x == -1);
     REQUIRE(back.structure_settings.structure_offset.y == 0);
     REQUIRE(back.structure_settings.structure_offset.z == 1);
-    REQUIRE(back.structure_settings.last_touched_by_player == static_cast<bp::ActorUniqueID>(300));
+    REQUIRE(back.structure_settings.last_touched_by_player == bp::ActorUniqueID{300});
     REQUIRE(back.structure_settings.rotation == bp::Rotation::ROTATE_90);
     REQUIRE(back.structure_settings.mirror == bp::Mirror::Z);
     REQUIRE(back.structure_settings.animation_mode == bp::AnimationMode::BLOCKS);
     REQUIRE(back.structure_settings.animation_seconds == 0.5F);
     REQUIRE(back.structure_settings.integrity_value == 1.0F);
-    REQUIRE(back.structure_settings.integrity_seed == static_cast<bp::RandomSeed>(0xdeadbeefU));
+    REQUIRE(back.structure_settings.integrity_seed == bp::RandomSeed{0xdeadbeefU});
     REQUIRE(back.structure_settings.pivot.x == 0.5F);
     REQUIRE(back.structure_settings.pivot.y == 1.5F);
     REQUIRE(back.structure_settings.pivot.z == 2.5F);
@@ -102,13 +102,13 @@ TEST_CASE("a zeroed structure-template-data-request body carries no presence byt
                                  .allow_non_ticking_player_and_ticking_area_chunks = false,
                                  .structure_size = {.x = 0, .y = 0, .z = 0},
                                  .structure_offset = {.x = 0, .y = 0, .z = 0},
-                                 .last_touched_by_player = static_cast<bp::ActorUniqueID>(0),
+                                 .last_touched_by_player = bp::ActorUniqueID{0},
                                  .rotation = bp::Rotation::NONE,
                                  .mirror = bp::Mirror::NONE,
                                  .animation_mode = bp::AnimationMode::NONE,
                                  .animation_seconds = 0.0F,
                                  .integrity_value = 0.0F,
-                                 .integrity_seed = static_cast<bp::RandomSeed>(0),
+                                 .integrity_seed = bp::RandomSeed{0},
                                  .pivot = {.x = 0.0F, .y = 0.0F, .z = 0.0F}};
     packet.request_operation = bp::StructureTemplateRequestOperation::NONE;
 

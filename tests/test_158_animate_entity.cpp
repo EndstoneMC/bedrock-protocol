@@ -47,7 +47,7 @@ TEST_CASE("animate-entity round-trips against the golden")
     packet.stop_expression_version = 13;
     packet.controller = "controller.animation.creeper_swelling";
     packet.blend_out_time = 0.5F;
-    packet.runtime_ids = {static_cast<bp::ActorRuntimeID>(7), static_cast<bp::ActorRuntimeID>(300)};
+    packet.runtime_ids = {bp::ActorRuntimeID{7}, bp::ActorRuntimeID{300}};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::AnimateEntityPacket_<2168>>(golden);
@@ -58,8 +58,8 @@ TEST_CASE("animate-entity round-trips against the golden")
     REQUIRE(back.controller == "controller.animation.creeper_swelling");
     REQUIRE(back.blend_out_time == 0.5F);
     REQUIRE(back.runtime_ids.size() == 2);
-    REQUIRE(back.runtime_ids[0] == static_cast<bp::ActorRuntimeID>(7));
-    REQUIRE(back.runtime_ids[1] == static_cast<bp::ActorRuntimeID>(300));
+    REQUIRE(back.runtime_ids[0] == bp::ActorRuntimeID{7});
+    REQUIRE(back.runtime_ids[1] == bp::ActorRuntimeID{300});
 }
 
 TEST_CASE("an empty animate-entity actor list leaves the stop expression version four fixed bytes")
