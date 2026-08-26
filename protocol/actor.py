@@ -1,6 +1,6 @@
 from enum import Enum, IntEnum, auto
 
-from protocol import field, int8, int16, int64, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
+from protocol import field, int8, int16, int32, int64, packet, type, uint8, uvarint32, uvarint64, varint32, varint64
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.nbt import CompoundTag
 
@@ -876,3 +876,15 @@ class ChangeMobPropertyPacket:
     string_component_val: str
     int_component_val: varint32
     float_component_val: float
+
+
+@packet(id=158, since=2168)
+class AnimateEntityPacket:
+    animation: str
+    next_state: str
+    stop_expression: str
+    # TODO: confirm against BDS -- the header types this member MolangVersion
+    stop_expression_version: int32
+    controller: str
+    blend_out_time: float
+    runtime_ids: list[ActorRuntimeID]
