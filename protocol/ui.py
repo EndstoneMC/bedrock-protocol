@@ -47,3 +47,8 @@ class ServerboundLoadingScreenPacketType(IntEnum):
 class ServerboundLoadingScreenPacket:
     loading_screen_packet_type: ServerboundLoadingScreenPacketType
     loading_screen_id: uint32 | None
+
+
+@packet(id=334, since=2168)
+class ClientboundDataDrivenUICloseScreenPacket:
+    form_id: uint32 | None
