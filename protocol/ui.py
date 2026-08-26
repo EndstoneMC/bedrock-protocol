@@ -1,7 +1,7 @@
 import uuid
-from enum import IntEnum
+from enum import Enum, IntEnum
 
-from protocol import packet, uint8, uint32, uvarint64
+from protocol import field, packet, uint8, uint32, uvarint64
 from protocol.actor import ActorUniqueID
 from protocol.attributes import DimensionType
 from protocol.common import Color, Vec2, Vec3
@@ -123,3 +123,17 @@ class LocatorBarWaypointPayload:
 @packet(id=341, since=2168)
 class LocatorBarPacket:
     waypoints: list[LocatorBarWaypointPayload]
+
+
+class DataDrivenScreenClosedReason(Enum, uint8):
+    PROGRAMMATIC_CLOSE = 0, "ProgrammaticClose"
+    PROGRAMMATIC_CLOSE_ALL = 1, "ProgrammaticCloseAll"
+    CLIENT_CANCELED = 2, "ClientCanceled"
+    USER_BUSY = 3, "UserBusy"
+    INVALID_FORM = 4, "InvalidForm"
+
+
+@packet(id=343, since=2168)
+class ServerboundDataDrivenScreenClosedPacket:
+    form_id: uint32
+    close_reason: DataDrivenScreenClosedReason = field(type=str)
