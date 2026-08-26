@@ -1,7 +1,7 @@
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
+from protocol import array, bitset, field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
 from protocol.actor import (
     ActorLink,
     ActorRuntimeID,
@@ -184,3 +184,20 @@ class MoveActorDeltaPacket:
 @packet(id=16, since=2168)
 class ServerPlayerPostMovePositionPacket:
     pos: Vec3
+
+
+class ActorDataFlagComponent:
+    value: bitset[131]
+
+
+class ActorDataBoundingBoxComponent:
+    value: array[float, 3]
+
+
+@packet(id=322, since=2168)
+class ClientMovementPredictionSyncPacket:
+    actor_data_flag: ActorDataFlagComponent
+    actor_bounding_box: ActorDataBoundingBoxComponent
+    movement_attributes: array[float, 9]
+    actor_id: ActorUniqueID
+    is_flying: bool
