@@ -74,6 +74,7 @@ class _DeclarationCollector(griffe.Extension):
                 body.append(inner)
             group += 1
         node.body = body
+        _unshadow_repeated_members(node)
 
     def on_class_members(self, *, node: object, cls: griffe.Class, agent: object, **kwargs: object) -> None:
         parent = cls.parent
@@ -84,6 +85,40 @@ class _DeclarationCollector(griffe.Extension):
             # would collapse onto its last body in the owner's member dict, so
             # reattach the ordered list for `nested_of` to read back.
             parent.extra[EXTRA_NAMESPACE].setdefault(NESTED_DECLARATIONS, []).append(cls)
+
+
+def _unshadow_repeated_members(node: ast.ClassDef) -> None:
+    """Give a member declared more than once a unique attribute name, carrying its
+    real one as `value(_member_of=...)`.
+
+    An enum member that *moves* between eras cannot be expressed by gates alone --
+    a declaration has one member order, so the same name has to appear twice over
+    disjoint ranges, once at each position. griffe keeps attributes in a dict, so
+    the second would silently overwrite the first exactly as a redeclared class
+    would; renaming here is the member-level analogue of that fix, and the parser
+    reads `_member_of` back."""
+    seen: dict[str, int] = {}
+    for stmt in node.body:
+        if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1:
+            continue
+        target = stmt.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        name = target.id
+        if name.startswith("_"):
+            continue
+        count = seen.get(name, 0)
+        seen[name] = count + 1
+        if count == 0:
+            continue
+        keyword = ast.keyword(arg="_member_of", value=ast.Constant(value=name))
+        if isinstance(stmt.value, ast.Call):
+            stmt.value.keywords.append(keyword)
+        else:
+            stmt.value = ast.Call(func=ast.Name(id="value", ctx=ast.Load()), args=[stmt.value], keywords=[keyword])
+        target.id = f"{name}__{count}"
+        ast.copy_location(stmt.value, stmt)
+        ast.fix_missing_locations(stmt)
 
 
 def _with_guard(stmt: ast.stmt, owner: str) -> tuple[ast.With, ast.expr] | None:

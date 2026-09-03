@@ -189,6 +189,7 @@ class Parser:
                     continue
                 spelled, wire = _split_wire_name(attr.value, decl.name, name, _takes_paired_value(decl))
                 _check_keywords(spelled, "value", _VALUE_KEYWORDS, f"{decl.name}.{name}", positional=2)
+                name = _str_kwarg(spelled, "value", "_member_of") or name
                 number, derived = _enum_number(decl.name, name, spelled, previous, seen)
                 values.append(
                     EnumValue(
@@ -1042,16 +1043,15 @@ def _enum_number(
     if derived is not None:
         return derived
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "value":
-        # value(N, since=, until=): N is the first positional, and mandatory when
-        # gated -- auto-numbering a member that is absent at some snapshot would
-        # shift its siblings' wire numbers.
+        # value(N, ...) pins the wire number; value(cpp_name=...) and value(since=/until=)
+        # number like auto(), which the pool re-resolves per snapshot over the members
+        # present there -- so a gated member's own number falls out at each era it exists.
         positionals = _positionals(value)
         if positionals:
             explicit = _as_int(positionals[0])
             if explicit is not None:
                 return explicit, None
-        elif not _is_gated(value):
-            # value(cpp_name=...) numbers like auto(); only a gate needs the number spelled out
+        else:
             return (0 if previous is None else previous + 1), None
         raise CompilerError(f"{enum_name}.{name}: value() needs an explicit wire number, e.g. value(601, since=1001)")
     number = _as_int(value)
@@ -1061,10 +1061,6 @@ def _enum_number(
             f"above it optionally offset by a literal, got {value!r}"
         )
     return number, None
-
-
-def _is_gated(call: griffe.ExprCall) -> bool:
-    return any(isinstance(a, griffe.ExprKeyword) and a.name in ("since", "until") for a in call.arguments)
 
 
 def _derived_number(
@@ -1140,6 +1136,15 @@ def _cpp_name(value: griffe.Expr | str, enum_name: str, member: str) -> str | No
             f"{text!r} is not a case variant of {pascal(member)!r}"
         )
     return text
+
+
+def _str_kwarg(expr: _Ann, fn_name: str, kw: str) -> str | None:
+    """A string-literal keyword, or None. Used for the compiler-injected
+    `_member_of`, which carries a repeated member's real name."""
+    spelled = _call_arg(expr, fn_name, kw)
+    if not isinstance(spelled, str) or spelled[:1] not in "'\"":
+        return None
+    return spelled.strip("'\"") or None
 
 
 def _wire_text(spelled: _Ann, enum_name: str, member: str) -> str:
@@ -1333,7 +1338,10 @@ _FIELD_KEYWORDS: _Keywords = (
     },
 )
 
-_VALUE_KEYWORDS: _Keywords = (frozenset({"name", "cpp_name", "since", "until"}), {"deprecated": _NO_DEPRECATION})
+_VALUE_KEYWORDS: _Keywords = (
+    frozenset({"name", "cpp_name", "since", "until", "_member_of"}),
+    {"deprecated": _NO_DEPRECATION},
+)
 
 _PACKET_KEYWORDS: _Keywords = (
     frozenset({"id", "since", "until"}),
