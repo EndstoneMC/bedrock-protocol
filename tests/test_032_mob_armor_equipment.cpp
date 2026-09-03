@@ -121,7 +121,7 @@ TEST_CASE("mob-armor-equipment v1001 round-trips against the goldens")
     packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_v1001_empty);
 
-    packet.head = helmet<bp::v1001::SerializedNetworkItemStackDescriptor>();
+    packet.head = helmet<bp::SerializedNetworkItemStackDescriptor_<1001>>();
     packet.head.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_helmet);
 

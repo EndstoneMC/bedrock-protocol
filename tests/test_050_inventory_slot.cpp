@@ -107,7 +107,7 @@ TEST_CASE("inventory-slot v1001 round-trips against the goldens")
     absent.slot = 3;
     REQUIRE(encode(absent) == golden_v1001_absent);
 
-    auto packet = sample<PacketV1001, bp::v1001::SerializedNetworkItemStackDescriptor>();
+    auto packet = sample<PacketV1001, bp::SerializedNetworkItemStackDescriptor_<1001>>();
     packet.item.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_present);
 

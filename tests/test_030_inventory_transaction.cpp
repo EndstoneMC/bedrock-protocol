@@ -13,14 +13,14 @@ namespace {
 
 using Packet = bp::InventoryTransactionPacket_<1001>;
 
-bp::v1001::SerializedNetworkItemStackDescriptor air()
+bp::SerializedNetworkItemStackDescriptor_<1001> air()
 {
     return {};  // id 0 -> the whole descriptor is 8 zero bytes
 }
 
-bp::v1001::SerializedNetworkItemStackDescriptor stone()
+bp::SerializedNetworkItemStackDescriptor_<1001> stone()
 {
-    bp::v1001::SerializedNetworkItemStackDescriptor item;
+    bp::SerializedNetworkItemStackDescriptor_<1001> item;
     item.id = 1;
     item.stack_size = 64;
     item.block_runtime_id = 7;

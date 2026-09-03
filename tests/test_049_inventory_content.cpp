@@ -95,7 +95,7 @@ TEST_CASE("inventory-content v975 round-trips against the golden")
 // the slots and the storage item moved.
 TEST_CASE("inventory-content v1001 round-trips against the golden")
 {
-    auto packet = sample<PacketV1001, bp::v1001::SerializedNetworkItemStackDescriptor>();
+    auto packet = sample<PacketV1001, bp::SerializedNetworkItemStackDescriptor_<1001>>();
     REQUIRE(encode(packet) == golden_v1001);
 
     const auto back = decode<PacketV1001>(golden_v1001);

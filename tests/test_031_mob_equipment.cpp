@@ -90,7 +90,7 @@ TEST_CASE("mob-equipment v1001 round-trips against the goldens")
     auto packet = sample<PacketV1001>();
     REQUIRE(encode(packet) == golden_v1001_air);
 
-    packet.item = helmet<bp::v1001::SerializedNetworkItemStackDescriptor>();
+    packet.item = helmet<bp::SerializedNetworkItemStackDescriptor_<1001>>();
     packet.item.net_id_variant = bp::ItemStackNetId{.raw_id = 9};
     REQUIRE(encode(packet) == golden_v1001_helmet);
 
