@@ -16,14 +16,14 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 188")
 {
-    STATIC_REQUIRE(bp::UpdateAdventureSettingsPacket_<2168>::Id == 188);
+    STATIC_REQUIRE(bp::UpdateAdventureSettingsPacket::Id == 188);
     STATIC_REQUIRE(bp::has_packet_v<1001, 188>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 188>);
 }
 
 TEST_CASE("adventure settings round-trip against the golden")
 {
-    bp::UpdateAdventureSettingsPacket_<2168> packet;
+    bp::UpdateAdventureSettingsPacket packet;
     packet.adventure_settings = {.no_pv_m = true,
                                  .no_mv_p = false,
                                  .immutable_world = true,
@@ -31,7 +31,7 @@ TEST_CASE("adventure settings round-trip against the golden")
                                  .auto_jump = true};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateAdventureSettingsPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateAdventureSettingsPacket>(golden);
     REQUIRE(back.adventure_settings.no_pv_m);
     REQUIRE_FALSE(back.adventure_settings.no_mv_p);
     REQUIRE(back.adventure_settings.auto_jump);
@@ -39,5 +39,5 @@ TEST_CASE("adventure settings round-trip against the golden")
 
 TEST_CASE("all five flags are separate bytes, not a bitfield")
 {
-    REQUIRE(encode(bp::UpdateAdventureSettingsPacket_<2168>{}) == bytes({0, 0, 0, 0, 0}));
+    REQUIRE(encode(bp::UpdateAdventureSettingsPacket{}) == bytes({0, 0, 0, 0, 0}));
 }

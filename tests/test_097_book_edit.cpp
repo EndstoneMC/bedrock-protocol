@@ -47,20 +47,20 @@ const std::string golden_finalize = bytes({
 
 TEST_CASE("packet id is 97")
 {
-    STATIC_REQUIRE(bp::BookEditPacket_<2168>::Id == 97);
+    STATIC_REQUIRE(bp::BookEditPacket::Id == 97);
     STATIC_REQUIRE(bp::has_packet_v<1001, 97>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 97>);
 }
 
 TEST_CASE("book-edit replace-page round-trips against the golden")
 {
-    bp::BookEditPacket_<2168> packet;
+    bp::BookEditPacket packet;
     packet.book_slot = 3;
     packet.operation =
         bp::ReplacePage{.page_index = 200, .page_text = "hello", .photo_name = "photo.png"};
     REQUIRE(encode(packet) == golden_replace_page);
 
-    const auto back = decode<bp::BookEditPacket_<2168>>(golden_replace_page);
+    const auto back = decode<bp::BookEditPacket>(golden_replace_page);
     REQUIRE(back.book_slot == 3);
     const auto &page = std::get<bp::ReplacePage>(back.operation);
     REQUIRE(page.page_index == 200);
@@ -70,46 +70,46 @@ TEST_CASE("book-edit replace-page round-trips against the golden")
 
 TEST_CASE("the book-edit add-page arm differs from replace-page in its index alone")
 {
-    bp::BookEditPacket_<2168> packet;
+    bp::BookEditPacket packet;
     packet.book_slot = 3;
     packet.operation =
         bp::AddPage{.page_index = 200, .page_text = "hello", .photo_name = "photo.png"};
     REQUIRE(encode(packet) == golden_add_page);
     REQUIRE(golden_add_page.substr(2) == golden_replace_page.substr(2));
 
-    const auto add = decode<bp::BookEditPacket_<2168>>(golden_add_page);
+    const auto add = decode<bp::BookEditPacket>(golden_add_page);
     REQUIRE(std::holds_alternative<bp::AddPage>(add.operation));
-    const auto replace = decode<bp::BookEditPacket_<2168>>(golden_replace_page);
+    const auto replace = decode<bp::BookEditPacket>(golden_replace_page);
     REQUIRE(std::holds_alternative<bp::ReplacePage>(replace.operation));
 }
 
 TEST_CASE("book-edit delete-page reads one index where swap-pages reads two")
 {
-    bp::BookEditPacket_<2168> del;
+    bp::BookEditPacket del;
     del.book_slot = 3;
     del.operation = bp::DeletePage{.page_index = 1};
     REQUIRE(encode(del) == golden_delete_page);
-    REQUIRE(decode<bp::BookEditPacket_<2168>>(golden_delete_page).book_slot == 3);
+    REQUIRE(decode<bp::BookEditPacket>(golden_delete_page).book_slot == 3);
 
-    bp::BookEditPacket_<2168> swap;
+    bp::BookEditPacket swap;
     swap.book_slot = 3;
     swap.operation = bp::SwapPages{.page_index = 1, .swap_with_index = 2};
     REQUIRE(encode(swap) == golden_swap_pages);
 
-    const auto back = decode<bp::BookEditPacket_<2168>>(golden_swap_pages);
+    const auto back = decode<bp::BookEditPacket>(golden_swap_pages);
     REQUIRE(std::get<bp::SwapPages>(back.operation).page_index == 1);
     REQUIRE(std::get<bp::SwapPages>(back.operation).swap_with_index == 2);
-    REQUIRE(rejects<bp::BookEditPacket_<2168>>(golden_swap_pages.substr(0, 3)));
+    REQUIRE(rejects<bp::BookEditPacket>(golden_swap_pages.substr(0, 3)));
 }
 
 TEST_CASE("book-edit finalize takes the last case index and a signed book slot")
 {
-    bp::BookEditPacket_<2168> packet;
+    bp::BookEditPacket packet;
     packet.book_slot = -1;
     packet.operation = bp::Finalize{.title = "Diary", .author = "Steve", .xuid = "2535465"};
     REQUIRE(encode(packet) == golden_finalize);
 
-    const auto back = decode<bp::BookEditPacket_<2168>>(golden_finalize);
+    const auto back = decode<bp::BookEditPacket>(golden_finalize);
     REQUIRE(back.book_slot == -1);
     const auto &finalize = std::get<bp::Finalize>(back.operation);
     REQUIRE(finalize.title == "Diary");

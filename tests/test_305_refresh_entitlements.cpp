@@ -13,23 +13,23 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 305")
 {
-    STATIC_REQUIRE(bp::RefreshEntitlementsPacket_<2168>::Id == 305);
+    STATIC_REQUIRE(bp::RefreshEntitlementsPacket::Id == 305);
     STATIC_REQUIRE(bp::has_packet_v<1001, 305>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 305>);
 }
 
 TEST_CASE("refresh-entitlements round-trips against the golden")
 {
-    bp::RefreshEntitlementsPacket_<2168> packet;
+    bp::RefreshEntitlementsPacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::RefreshEntitlementsPacket_<2168>>(golden);
+    const auto back = decode<bp::RefreshEntitlementsPacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
 TEST_CASE("the body writes no cereal marker, so a byte behind it survives the read")
 {
-    const auto back = decode_partial<bp::RefreshEntitlementsPacket_<2168>>(bytes({0x01}));
+    const auto back = decode_partial<bp::RefreshEntitlementsPacket>(bytes({0x01}));
     REQUIRE(encode(back).empty());
 }

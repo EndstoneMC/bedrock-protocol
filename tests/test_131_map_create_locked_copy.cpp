@@ -16,37 +16,37 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 131")
 {
-    STATIC_REQUIRE(bp::MapCreateLockedCopyPacket_<2168>::Id == 131);
+    STATIC_REQUIRE(bp::MapCreateLockedCopyPacket::Id == 131);
     STATIC_REQUIRE(bp::has_packet_v<1001, 131>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 131>);
 }
 
 TEST_CASE("map-create-locked-copy round-trips against the golden")
 {
-    bp::MapCreateLockedCopyPacket_<2168> packet;
+    bp::MapCreateLockedCopyPacket packet;
     packet.original_map_id = bp::ActorUniqueID{300};
     packet.new_map_id = bp::ActorUniqueID{-5};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::MapCreateLockedCopyPacket_<2168>>(golden);
+    const auto back = decode<bp::MapCreateLockedCopyPacket>(golden);
     REQUIRE(back.original_map_id == bp::ActorUniqueID{300});
     REQUIRE(back.new_map_id == bp::ActorUniqueID{-5});
 }
 
 TEST_CASE("both locked-copy map ids are 64-bit zigzag varints")
 {
-    bp::MapCreateLockedCopyPacket_<2168> packet;
+    bp::MapCreateLockedCopyPacket packet;
     packet.original_map_id = bp::ActorUniqueID{-8589934592};
     packet.new_map_id = bp::ActorUniqueID{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 7);
 
-    const auto back = decode<bp::MapCreateLockedCopyPacket_<2168>>(wire);
+    const auto back = decode<bp::MapCreateLockedCopyPacket>(wire);
     REQUIRE(back.original_map_id == bp::ActorUniqueID{-8589934592});
     REQUIRE(back.new_map_id == bp::ActorUniqueID{300});
 }
 
 TEST_CASE("a zeroed locked-copy body is two bytes, so neither map id carries a presence flag")
 {
-    REQUIRE(encode(bp::MapCreateLockedCopyPacket_<2168>{}) == bytes({0x00, 0x00}));
+    REQUIRE(encode(bp::MapCreateLockedCopyPacket{}) == bytes({0x00, 0x00}));
 }

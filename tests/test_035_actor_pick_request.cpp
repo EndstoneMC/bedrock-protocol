@@ -22,20 +22,20 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 35")
 {
-    STATIC_REQUIRE(bp::ActorPickRequestPacket_<2168>::Id == 35);
+    STATIC_REQUIRE(bp::ActorPickRequestPacket::Id == 35);
     STATIC_REQUIRE(bp::has_packet_v<1001, 35>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 35>);
 }
 
 TEST_CASE("actor-pick-request round-trips against the golden")
 {
-    bp::ActorPickRequestPacket_<2168> packet;
+    bp::ActorPickRequestPacket packet;
     packet.id = 4294967298LL;
     packet.max_slots = 200;
     packet.with_data = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ActorPickRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::ActorPickRequestPacket>(golden);
     REQUIRE(back.id == 4294967298LL);
     REQUIRE(back.max_slots == 200);
     REQUIRE(back.with_data);
@@ -43,11 +43,11 @@ TEST_CASE("actor-pick-request round-trips against the golden")
 
 TEST_CASE("a negative actor id still occupies eight fixed bytes")
 {
-    bp::ActorPickRequestPacket_<2168> packet;
+    bp::ActorPickRequestPacket packet;
     packet.id = -1;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::ActorPickRequestPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::ActorPickRequestPacket>(golden_negative);
     REQUIRE(back.id == -1);
     REQUIRE(back.max_slots == 0);
     REQUIRE_FALSE(back.with_data);

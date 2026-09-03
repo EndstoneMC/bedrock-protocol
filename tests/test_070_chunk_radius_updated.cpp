@@ -25,29 +25,29 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 70")
 {
-    STATIC_REQUIRE(bp::ChunkRadiusUpdatedPacket_<2168>::Id == 70);
+    STATIC_REQUIRE(bp::ChunkRadiusUpdatedPacket::Id == 70);
     STATIC_REQUIRE(bp::has_packet_v<1001, 70>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 70>);
 }
 
 TEST_CASE("chunk-radius-updated round-trips against the golden")
 {
-    bp::ChunkRadiusUpdatedPacket_<2168> packet;
+    bp::ChunkRadiusUpdatedPacket packet;
     packet.chunk_radius = 12;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ChunkRadiusUpdatedPacket_<2168>>(golden);
+    const auto back = decode<bp::ChunkRadiusUpdatedPacket>(golden);
     REQUIRE(back.chunk_radius == 12);
 }
 
 TEST_CASE("the radius is a zigzag varint, neither a byte nor unsigned")
 {
-    bp::ChunkRadiusUpdatedPacket_<2168> packet;
+    bp::ChunkRadiusUpdatedPacket packet;
     packet.chunk_radius = -1;
     REQUIRE(encode(packet) == golden_negative);
-    REQUIRE(decode<bp::ChunkRadiusUpdatedPacket_<2168>>(golden_negative).chunk_radius == -1);
+    REQUIRE(decode<bp::ChunkRadiusUpdatedPacket>(golden_negative).chunk_radius == -1);
 
     packet.chunk_radius = 200;
     REQUIRE(encode(packet) == golden_wide);
-    REQUIRE(decode<bp::ChunkRadiusUpdatedPacket_<2168>>(golden_wide).chunk_radius == 200);
+    REQUIRE(decode<bp::ChunkRadiusUpdatedPacket>(golden_wide).chunk_radius == 200);
 }

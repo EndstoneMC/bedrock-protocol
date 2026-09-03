@@ -17,23 +17,23 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 170")
 {
-    STATIC_REQUIRE(bp::EduUriResourcePacket_<2168>::Id == 170);
+    STATIC_REQUIRE(bp::EduUriResourcePacket::Id == 170);
     STATIC_REQUIRE(bp::has_packet_v<1001, 170>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 170>);
 }
 
 TEST_CASE("edu uri resource round-trips against the golden")
 {
-    bp::EduUriResourcePacket_<2168> packet;
+    bp::EduUriResourcePacket packet;
     packet.edu_shared_uri_resource = {.button_name = "btn", .link_uri = "https://x"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::EduUriResourcePacket_<2168>>(golden);
+    const auto back = decode<bp::EduUriResourcePacket>(golden);
     REQUIRE(back.edu_shared_uri_resource.button_name == "btn");
     REQUIRE(back.edu_shared_uri_resource.link_uri == "https://x");
 }
 
 TEST_CASE("both strings are length-prefixed, so an empty resource is two zero bytes")
 {
-    REQUIRE(encode(bp::EduUriResourcePacket_<2168>{}) == bytes({0x00, 0x00}));
+    REQUIRE(encode(bp::EduUriResourcePacket{}) == bytes({0x00, 0x00}));
 }

@@ -23,19 +23,19 @@ const std::string golden_negative_xp = bytes({
 
 TEST_CASE("packet id is 66")
 {
-    STATIC_REQUIRE(bp::SpawnExperienceOrbPacket_<2168>::Id == 66);
+    STATIC_REQUIRE(bp::SpawnExperienceOrbPacket::Id == 66);
     STATIC_REQUIRE(bp::has_packet_v<1001, 66>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 66>);
 }
 
 TEST_CASE("spawn-experience-orb round-trips against the golden")
 {
-    bp::SpawnExperienceOrbPacket_<2168> packet;
+    bp::SpawnExperienceOrbPacket packet;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.xp_value = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SpawnExperienceOrbPacket_<2168>>(golden);
+    const auto back = decode<bp::SpawnExperienceOrbPacket>(golden);
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
@@ -44,11 +44,11 @@ TEST_CASE("spawn-experience-orb round-trips against the golden")
 
 TEST_CASE("a negative xp value is a zigzag varint sitting behind three fixed floats")
 {
-    bp::SpawnExperienceOrbPacket_<2168> packet;
+    bp::SpawnExperienceOrbPacket packet;
     packet.xp_value = -1;
     REQUIRE(encode(packet) == golden_negative_xp);
 
-    const auto back = decode<bp::SpawnExperienceOrbPacket_<2168>>(golden_negative_xp);
+    const auto back = decode<bp::SpawnExperienceOrbPacket>(golden_negative_xp);
     REQUIRE(back.pos.x == 0.0F);
     REQUIRE(back.pos.y == 0.0F);
     REQUIRE(back.pos.z == 0.0F);

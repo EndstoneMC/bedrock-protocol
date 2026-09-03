@@ -36,14 +36,14 @@ const std::string golden_zeroed = bytes({
 
 TEST_CASE("packet id is 132")
 {
-    STATIC_REQUIRE(bp::StructureTemplateDataRequestPacket_<2168>::Id == 132);
+    STATIC_REQUIRE(bp::StructureTemplateDataRequestPacket::Id == 132);
     STATIC_REQUIRE(bp::has_packet_v<1001, 132>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 132>);
 }
 
 TEST_CASE("structure-template-data-request round-trips against the golden")
 {
-    bp::StructureTemplateDataRequestPacket_<2168> packet;
+    bp::StructureTemplateDataRequestPacket packet;
     packet.structure_name = "mystructure";
     packet.structure_block_pos = {.x = 1, .y = -2, .z = 3};
     packet.structure_settings = {.palette_name = "default",
@@ -53,17 +53,17 @@ TEST_CASE("structure-template-data-request round-trips against the golden")
                                  .structure_size = {.x = 5, .y = 6, .z = 7},
                                  .structure_offset = {.x = -1, .y = 0, .z = 1},
                                  .last_touched_by_player = bp::ActorUniqueID{300},
-                                 .rotation = bp::Rotation::ROTATE_90,
+                                 .rotation = bp::Rotation::Rotate90,
                                  .mirror = bp::Mirror::Z,
-                                 .animation_mode = bp::AnimationMode::BLOCKS,
+                                 .animation_mode = bp::AnimationMode::Blocks,
                                  .animation_seconds = 0.5F,
                                  .integrity_value = 1.0F,
                                  .integrity_seed = bp::RandomSeed{0xdeadbeefU},
                                  .pivot = {.x = 0.5F, .y = 1.5F, .z = 2.5F}};
-    packet.request_operation = bp::StructureTemplateRequestOperation::QUERY_SAVED_STRUCTURE;
+    packet.request_operation = bp::StructureTemplateRequestOperation::QuerySavedStructure;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::StructureTemplateDataRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::StructureTemplateDataRequestPacket>(golden);
     REQUIRE(back.structure_name == "mystructure");
     REQUIRE(back.structure_block_pos.x == 1);
     REQUIRE(back.structure_block_pos.y == -2);
@@ -79,21 +79,21 @@ TEST_CASE("structure-template-data-request round-trips against the golden")
     REQUIRE(back.structure_settings.structure_offset.y == 0);
     REQUIRE(back.structure_settings.structure_offset.z == 1);
     REQUIRE(back.structure_settings.last_touched_by_player == bp::ActorUniqueID{300});
-    REQUIRE(back.structure_settings.rotation == bp::Rotation::ROTATE_90);
+    REQUIRE(back.structure_settings.rotation == bp::Rotation::Rotate90);
     REQUIRE(back.structure_settings.mirror == bp::Mirror::Z);
-    REQUIRE(back.structure_settings.animation_mode == bp::AnimationMode::BLOCKS);
+    REQUIRE(back.structure_settings.animation_mode == bp::AnimationMode::Blocks);
     REQUIRE(back.structure_settings.animation_seconds == 0.5F);
     REQUIRE(back.structure_settings.integrity_value == 1.0F);
     REQUIRE(back.structure_settings.integrity_seed == bp::RandomSeed{0xdeadbeefU});
     REQUIRE(back.structure_settings.pivot.x == 0.5F);
     REQUIRE(back.structure_settings.pivot.y == 1.5F);
     REQUIRE(back.structure_settings.pivot.z == 2.5F);
-    REQUIRE(back.request_operation == bp::StructureTemplateRequestOperation::QUERY_SAVED_STRUCTURE);
+    REQUIRE(back.request_operation == bp::StructureTemplateRequestOperation::QuerySavedStructure);
 }
 
 TEST_CASE("a zeroed structure-template-data-request body carries no presence byte")
 {
-    bp::StructureTemplateDataRequestPacket_<2168> packet;
+    bp::StructureTemplateDataRequestPacket packet;
     packet.structure_name = "";
     packet.structure_block_pos = {.x = 0, .y = 0, .z = 0};
     packet.structure_settings = {.palette_name = "",
@@ -103,17 +103,17 @@ TEST_CASE("a zeroed structure-template-data-request body carries no presence byt
                                  .structure_size = {.x = 0, .y = 0, .z = 0},
                                  .structure_offset = {.x = 0, .y = 0, .z = 0},
                                  .last_touched_by_player = bp::ActorUniqueID{0},
-                                 .rotation = bp::Rotation::NONE,
-                                 .mirror = bp::Mirror::NONE,
-                                 .animation_mode = bp::AnimationMode::NONE,
+                                 .rotation = bp::Rotation::None,
+                                 .mirror = bp::Mirror::None,
+                                 .animation_mode = bp::AnimationMode::None,
                                  .animation_seconds = 0.0F,
                                  .integrity_value = 0.0F,
                                  .integrity_seed = bp::RandomSeed{0},
                                  .pivot = {.x = 0.0F, .y = 0.0F, .z = 0.0F}};
-    packet.request_operation = bp::StructureTemplateRequestOperation::NONE;
+    packet.request_operation = bp::StructureTemplateRequestOperation::None;
 
     const auto wire = encode(packet);
     REQUIRE(wire == golden_zeroed);
     REQUIRE(wire.size() == 43);
-    REQUIRE(decode<bp::StructureTemplateDataRequestPacket_<2168>>(wire).structure_name.empty());
+    REQUIRE(decode<bp::StructureTemplateDataRequestPacket>(wire).structure_name.empty());
 }

@@ -24,14 +24,14 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 121")
 {
-    STATIC_REQUIRE(bp::NetworkChunkPublisherUpdatePacket_<2168>::Id == 121);
+    STATIC_REQUIRE(bp::NetworkChunkPublisherUpdatePacket::Id == 121);
     STATIC_REQUIRE(bp::has_packet_v<1001, 121>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 121>);
 }
 
 TEST_CASE("network-chunk-publisher-update round-trips against the golden")
 {
-    bp::NetworkChunkPublisherUpdatePacket_<2168> packet;
+    bp::NetworkChunkPublisherUpdatePacket packet;
     packet.position = {.x = 1, .y = -2, .z = 3};
     packet.radius = 160;
     packet.server_built_chunks = {
@@ -40,7 +40,7 @@ TEST_CASE("network-chunk-publisher-update round-trips against the golden")
     };
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::NetworkChunkPublisherUpdatePacket_<2168>>(golden);
+    const auto back = decode<bp::NetworkChunkPublisherUpdatePacket>(golden);
     REQUIRE(back.position.x == 1);
     REQUIRE(back.position.y == -2);
     REQUIRE(back.position.z == 3);
@@ -54,12 +54,12 @@ TEST_CASE("network-chunk-publisher-update round-trips against the golden")
 
 TEST_CASE("an empty server-built chunk list still writes a four-byte count")
 {
-    bp::NetworkChunkPublisherUpdatePacket_<2168> packet;
+    bp::NetworkChunkPublisherUpdatePacket packet;
     packet.position = {.x = 0, .y = 0, .z = 0};
     packet.radius = 0;
     const auto wire = encode(packet);
     REQUIRE(wire == golden_empty);
     REQUIRE(wire.size() == 8);
-    REQUIRE(decode<bp::NetworkChunkPublisherUpdatePacket_<2168>>(golden_empty).server_built_chunks.empty());
-    REQUIRE(rejects<bp::NetworkChunkPublisherUpdatePacket_<2168>>(golden_empty.substr(0, 5)));
+    REQUIRE(decode<bp::NetworkChunkPublisherUpdatePacket>(golden_empty).server_built_chunks.empty());
+    REQUIRE(rejects<bp::NetworkChunkPublisherUpdatePacket>(golden_empty.substr(0, 5)));
 }

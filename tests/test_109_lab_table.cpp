@@ -22,36 +22,36 @@ const std::string golden_reset = bytes({
 
 TEST_CASE("packet id is 109")
 {
-    STATIC_REQUIRE(bp::LabTablePacket_<2168>::Id == 109);
+    STATIC_REQUIRE(bp::LabTablePacket::Id == 109);
     STATIC_REQUIRE(bp::has_packet_v<1001, 109>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 109>);
 }
 
 TEST_CASE("lab-table round-trips against the golden")
 {
-    bp::LabTablePacket_<2168> packet;
-    packet.type = bp::LabTablePacket_<2168>::Type::START_REACTION;
+    bp::LabTablePacket packet;
+    packet.type = bp::LabTablePacket::Type::StartReaction;
     packet.pos = {.x = 1, .y = -2, .z = 300};
-    packet.reaction = bp::LabTableReactionType::MISC_LARGE_SMOKE;
+    packet.reaction = bp::LabTableReactionType::MiscLargeSmoke;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LabTablePacket_<2168>>(golden);
-    REQUIRE(back.type == bp::LabTablePacket_<2168>::Type::START_REACTION);
+    const auto back = decode<bp::LabTablePacket>(golden);
+    REQUIRE(back.type == bp::LabTablePacket::Type::StartReaction);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == -2);
     REQUIRE(back.pos.z == 300);
-    REQUIRE(back.reaction == bp::LabTableReactionType::MISC_LARGE_SMOKE);
+    REQUIRE(back.reaction == bp::LabTableReactionType::MiscLargeSmoke);
 }
 
 TEST_CASE("a lab-table reset still writes the reaction byte it does not use")
 {
-    bp::LabTablePacket_<2168> packet;
-    packet.type = bp::LabTablePacket_<2168>::Type::RESET;
+    bp::LabTablePacket packet;
+    packet.type = bp::LabTablePacket::Type::Reset;
     packet.pos = {.x = 0, .y = 0, .z = 0};
-    packet.reaction = bp::LabTableReactionType::NONE;
+    packet.reaction = bp::LabTableReactionType::None;
     REQUIRE(encode(packet) == golden_reset);
 
-    const auto back = decode<bp::LabTablePacket_<2168>>(golden_reset);
-    REQUIRE(back.type == bp::LabTablePacket_<2168>::Type::RESET);
-    REQUIRE(back.reaction == bp::LabTableReactionType::NONE);
+    const auto back = decode<bp::LabTablePacket>(golden_reset);
+    REQUIRE(back.type == bp::LabTablePacket::Type::Reset);
+    REQUIRE(back.reaction == bp::LabTableReactionType::None);
 }

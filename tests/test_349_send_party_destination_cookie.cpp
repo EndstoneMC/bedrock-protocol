@@ -36,25 +36,25 @@ TEST_CASE("send-party-destination-cookie round-trips against the golden")
 {
     bp::SendPartyDestinationCookiePacket_<2168> packet;
     packet.cookie = "party-cookie";
-    packet.intent = bp::PartyDestinationCookieIntent::OPT_IN;
+    packet.intent = bp::PartyDestinationCookieIntent::OptIn;
     packet.destination_name = "Nether Hub";
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::SendPartyDestinationCookiePacket_<2168>>(golden);
     REQUIRE(back.cookie == "party-cookie");
-    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::OPT_IN);
+    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::OptIn);
     REQUIRE(back.destination_name == "Nether Hub");
 }
 
 TEST_CASE("an empty party cookie and destination name are still length-prefixed")
 {
     bp::SendPartyDestinationCookiePacket_<2168> packet;
-    packet.intent = bp::PartyDestinationCookieIntent::NOTIFY;
+    packet.intent = bp::PartyDestinationCookieIntent::Notify;
     REQUIRE(encode(packet) == golden_empty);
 
     const auto back = decode<bp::SendPartyDestinationCookiePacket_<2168>>(golden_empty);
     REQUIRE(back.cookie.empty());
-    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::NOTIFY);
+    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::Notify);
     REQUIRE(back.destination_name.empty());
 }
 
@@ -62,7 +62,7 @@ TEST_CASE("a party cookie longer than 127 bytes takes a two-byte length prefix")
 {
     bp::SendPartyDestinationCookiePacket_<2168> packet;
     packet.cookie = std::string(130, 'x');
-    packet.intent = bp::PartyDestinationCookieIntent::OPT_OUT;
+    packet.intent = bp::PartyDestinationCookieIntent::OptOut;
     packet.destination_name = "d";
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 141);
@@ -71,6 +71,6 @@ TEST_CASE("a party cookie longer than 127 bytes takes a two-byte length prefix")
 
     const auto back = decode<bp::SendPartyDestinationCookiePacket_<2168>>(wire);
     REQUIRE(back.cookie.size() == 130);
-    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::OPT_OUT);
+    REQUIRE(back.intent == bp::PartyDestinationCookieIntent::OptOut);
     REQUIRE(back.destination_name == "d");
 }

@@ -42,7 +42,7 @@ Payload sphere_shape()
 {
     Payload shape;
     shape.network_id = 3;
-    shape.shape_type = ShapeTypeOf<Payload>::SPHERE;
+    shape.shape_type = ShapeTypeOf<Payload>::Sphere;
     shape.location = bp::Vec3{.x = 1.0f, .y = 2.0f, .z = 3.0f};
     shape.scale = 0.5f;
     shape.rotation = bp::Vec3{.x = 0.0f, .y = 0.25f, .z = 0.0f};
@@ -60,7 +60,7 @@ Payload text_shape()
 {
     Payload shape;
     shape.network_id = 4;
-    shape.shape_type = ShapeTypeOf<Payload>::TEXT;
+    shape.shape_type = ShapeTypeOf<Payload>::Text;
     shape.extra_data_payload = TextPayloadOf<Payload>{
         .text = "hi",
         .use_rotation = true,
@@ -122,7 +122,7 @@ TEST_CASE("packet id is 328 at both eras")
 
 TEST_CASE("primitive shapes v975 round-trips against the golden")
 {
-    using Payload = bp::base::PrimitiveShapeDataPayload;
+    using Payload = bp::v975::PrimitiveShapeDataPayload;
 
     PacketV975 packet;
     packet.shapes = {cleared_shape<Payload>(), sphere_shape<Payload>(), text_shape<Payload>()};
@@ -146,7 +146,7 @@ TEST_CASE("primitive shapes v1001 round-trips against the golden")
 
     Payload cylinder;
     cylinder.network_id = 5;
-    cylinder.shape_type = bp::ScriptPrimitiveShapeType::CYLINDER;
+    cylinder.shape_type = bp::ScriptPrimitiveShapeType::Cylinder;
     cylinder.extra_data_payload = bp::CylinderDataPayload{
         .radius_x = {.x = 1.0f, .y = 0.0f},
         .radius_z = {.x = 0.0f, .y = 1.0f},
@@ -156,7 +156,7 @@ TEST_CASE("primitive shapes v1001 round-trips against the golden")
 
     Payload pyramid;
     pyramid.network_id = 6;
-    pyramid.shape_type = bp::ScriptPrimitiveShapeType::PYRAMID;
+    pyramid.shape_type = bp::ScriptPrimitiveShapeType::Pyramid;
     pyramid.extra_data_payload = bp::PyramidDataPayload{.width = 2.0f, .depth = 4.0f, .height = 6.0f};
 
     PacketV1001 packet;

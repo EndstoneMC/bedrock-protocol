@@ -16,26 +16,26 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 167")
 {
-    STATIC_REQUIRE(bp::RemoveVolumeEntityPacket_<2168>::Id == 167);
+    STATIC_REQUIRE(bp::RemoveVolumeEntityPacket::Id == 167);
     STATIC_REQUIRE(bp::has_packet_v<1001, 167>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 167>);
 }
 
 TEST_CASE("remove volume entity round-trips against the golden")
 {
-    bp::RemoveVolumeEntityPacket_<2168> packet;
+    bp::RemoveVolumeEntityPacket packet;
     packet.entity_net_id = bp::EntityNetId{7};
     packet.dimension_type = bp::DimensionType{-1};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RemoveVolumeEntityPacket_<2168>>(golden);
+    const auto back = decode<bp::RemoveVolumeEntityPacket>(golden);
     REQUIRE(back.entity_net_id == bp::EntityNetId{7});
     REQUIRE(back.dimension_type == bp::DimensionType{-1});
 }
 
 TEST_CASE("the net id is unsigned and the dimension zigzags, so they differ at -1")
 {
-    bp::RemoveVolumeEntityPacket_<2168> packet;
+    bp::RemoveVolumeEntityPacket packet;
     packet.entity_net_id = bp::EntityNetId{300};
     packet.dimension_type = bp::DimensionType{2};
     const auto wire = encode(packet);

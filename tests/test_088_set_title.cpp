@@ -25,15 +25,15 @@ const std::string golden_durations = bytes({
 
 TEST_CASE("packet id is 88")
 {
-    STATIC_REQUIRE(bp::SetTitlePacket_<2168>::Id == 88);
+    STATIC_REQUIRE(bp::SetTitlePacket::Id == 88);
     STATIC_REQUIRE(bp::has_packet_v<1001, 88>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 88>);
 }
 
 TEST_CASE("set-title round-trips against the golden")
 {
-    bp::SetTitlePacket_<2168> packet;
-    packet.type = bp::SetTitlePacket_<2168>::TitleType::SUBTITLE;
+    bp::SetTitlePacket packet;
+    packet.type = bp::SetTitlePacket::TitleType::Subtitle;
     packet.title_text = "hello";
     packet.fade_in_time = 10;
     packet.stay_time = 300;
@@ -43,8 +43,8 @@ TEST_CASE("set-title round-trips against the golden")
     packet.filtered_title_text = "hi";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetTitlePacket_<2168>>(golden);
-    REQUIRE(back.type == bp::SetTitlePacket_<2168>::TitleType::SUBTITLE);
+    const auto back = decode<bp::SetTitlePacket>(golden);
+    REQUIRE(back.type == bp::SetTitlePacket::TitleType::Subtitle);
     REQUIRE(back.title_text == "hello");
     REQUIRE(back.fade_in_time == 10);
     REQUIRE(back.stay_time == 300);
@@ -56,15 +56,15 @@ TEST_CASE("set-title round-trips against the golden")
 
 TEST_CASE("the set-title durations are signed varints and its empty strings still write a length")
 {
-    bp::SetTitlePacket_<2168> packet;
-    packet.type = bp::SetTitlePacket_<2168>::TitleType::TIMES;
+    bp::SetTitlePacket packet;
+    packet.type = bp::SetTitlePacket::TitleType::Times;
     packet.fade_in_time = -1;
     packet.stay_time = 64;
     packet.fade_out_time = 1000;
     REQUIRE(encode(packet) == golden_durations);
 
-    const auto back = decode<bp::SetTitlePacket_<2168>>(golden_durations);
-    REQUIRE(back.type == bp::SetTitlePacket_<2168>::TitleType::TIMES);
+    const auto back = decode<bp::SetTitlePacket>(golden_durations);
+    REQUIRE(back.type == bp::SetTitlePacket::TitleType::Times);
     REQUIRE(back.fade_in_time == -1);
     REQUIRE(back.stay_time == 64);
     REQUIRE(back.fade_out_time == 1000);

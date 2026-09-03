@@ -133,10 +133,10 @@ TEST_CASE("sub-chunk v1001 cache-off form round-trips against the golden")
 
     PacketV1001::UncachedSubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
-    entry.result = PacketV1001::SubChunkRequestResult::SUCCESS;
+    entry.result = PacketV1001::SubChunkRequestResult::Success;
     entry.serialized_sub_chunk = payload_a;
-    entry.height_map_data.height_map_type = PacketV1001::HeightMapDataType::NO_DATA;
-    entry.height_map_data.render_height_map_type = PacketV1001::HeightMapDataType::NO_DATA;
+    entry.height_map_data.height_map_type = PacketV1001::HeightMapDataType::NoData;
+    entry.height_map_data.render_height_map_type = PacketV1001::HeightMapDataType::NoData;
     packet.uncached_sub_chunk_data.push_back(entry);
 
     REQUIRE(encode(packet) == golden_v1001_uncached);
@@ -163,10 +163,10 @@ TEST_CASE("sub-chunk v1001 cache-on form round-trips against the golden")
 
     PacketV1001::SubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
-    entry.result = PacketV1001::SubChunkRequestResult::SUCCESS_ALL_AIR;
-    entry.height_map_data.height_map_type = PacketV1001::HeightMapDataType::HAS_DATA;
+    entry.result = PacketV1001::SubChunkRequestResult::SuccessAllAir;
+    entry.height_map_data.height_map_type = PacketV1001::HeightMapDataType::HasData;
     entry.height_map_data.subchunk_height_map = full_height_map;
-    entry.height_map_data.render_height_map_type = PacketV1001::HeightMapDataType::NO_DATA;
+    entry.height_map_data.render_height_map_type = PacketV1001::HeightMapDataType::NoData;
     entry.blob_id = 9;
     packet.sub_chunk_data.push_back(entry);
 
@@ -192,10 +192,10 @@ TEST_CASE("sub-chunk is unchanged between v975 and v1001")
 
     PacketV975::UncachedSubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
-    entry.result = PacketV975::SubChunkRequestResult::SUCCESS;
+    entry.result = PacketV975::SubChunkRequestResult::Success;
     entry.serialized_sub_chunk = payload_a;
-    entry.height_map_data.height_map_type = PacketV975::HeightMapDataType::NO_DATA;
-    entry.height_map_data.render_height_map_type = PacketV975::HeightMapDataType::NO_DATA;
+    entry.height_map_data.height_map_type = PacketV975::HeightMapDataType::NoData;
+    entry.height_map_data.render_height_map_type = PacketV975::HeightMapDataType::NoData;
     older.uncached_sub_chunk_data.push_back(entry);
 
     REQUIRE(encode(older) == golden_v1001_uncached);
@@ -212,10 +212,10 @@ TEST_CASE("sub-chunk v2168 cache-off form round-trips against the golden")
 
     PacketV2168::SubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
-    entry.result = PacketV2168::SubChunkRequestResult::SUCCESS;
+    entry.result = PacketV2168::SubChunkRequestResult::Success;
     entry.serialized_sub_chunk = payload_a;
-    entry.height_map_data.height_map_type = PacketV2168::HeightMapDataType::NO_DATA;
-    entry.height_map_data.render_height_map_type = PacketV2168::HeightMapDataType::NO_DATA;
+    entry.height_map_data.height_map_type = PacketV2168::HeightMapDataType::NoData;
+    entry.height_map_data.render_height_map_type = PacketV2168::HeightMapDataType::NoData;
     packet.sub_chunk_data.push_back(entry);
 
     REQUIRE(encode(packet) == golden_v2168_uncached);
@@ -238,10 +238,10 @@ TEST_CASE("sub-chunk v2168 cache-on form round-trips against the golden")
 
     PacketV2168::SubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
-    entry.result = PacketV2168::SubChunkRequestResult::SUCCESS_ALL_AIR;
-    entry.height_map_data.height_map_type = PacketV2168::HeightMapDataType::HAS_DATA;
+    entry.result = PacketV2168::SubChunkRequestResult::SuccessAllAir;
+    entry.height_map_data.height_map_type = PacketV2168::HeightMapDataType::HasData;
     entry.height_map_data.subchunk_height_map = full_height_map;
-    entry.height_map_data.render_height_map_type = PacketV2168::HeightMapDataType::NO_DATA;
+    entry.height_map_data.render_height_map_type = PacketV2168::HeightMapDataType::NoData;
     entry.blob_id = 9;
     packet.sub_chunk_data.push_back(entry);
 

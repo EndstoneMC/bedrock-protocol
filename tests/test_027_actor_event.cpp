@@ -32,23 +32,23 @@ const std::string golden_wide_runtime_id = bytes({
 
 TEST_CASE("packet id is 27")
 {
-    STATIC_REQUIRE(bp::ActorEventPacket_<2168>::Id == 27);
+    STATIC_REQUIRE(bp::ActorEventPacket::Id == 27);
     STATIC_REQUIRE(bp::has_packet_v<1001, 27>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 27>);
 }
 
 TEST_CASE("actor-event round-trips against the golden")
 {
-    bp::ActorEventPacket_<2168> packet;
+    bp::ActorEventPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
-    packet.event_id = bp::ActorEvent::HURT;
+    packet.event_id = bp::ActorEvent::Hurt;
     packet.data = -3;
     packet.fire_at_position = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ActorEventPacket_<2168>>(golden);
+    const auto back = decode<bp::ActorEventPacket>(golden);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
-    REQUIRE(back.event_id == bp::ActorEvent::HURT);
+    REQUIRE(back.event_id == bp::ActorEvent::Hurt);
     REQUIRE(back.data == -3);
     REQUIRE(back.fire_at_position.has_value());
     REQUIRE(back.fire_at_position->x == 1.0F);
@@ -58,28 +58,28 @@ TEST_CASE("actor-event round-trips against the golden")
 
 TEST_CASE("an absent fire-at position is one zero byte, not twelve")
 {
-    bp::ActorEventPacket_<2168> packet;
+    bp::ActorEventPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{7};
-    packet.event_id = bp::ActorEvent::HURT_WITHOUT_RECEIVING_DAMAGE;
+    packet.event_id = bp::ActorEvent::HurtWithoutReceivingDamage;
     packet.data = 0;
     packet.fire_at_position = std::nullopt;
     REQUIRE(encode(packet) == golden_without_position);
 
-    const auto back = decode<bp::ActorEventPacket_<2168>>(golden_without_position);
+    const auto back = decode<bp::ActorEventPacket>(golden_without_position);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
-    REQUIRE(back.event_id == bp::ActorEvent::HURT_WITHOUT_RECEIVING_DAMAGE);
+    REQUIRE(back.event_id == bp::ActorEvent::HurtWithoutReceivingDamage);
     REQUIRE_FALSE(back.fire_at_position.has_value());
 }
 
 TEST_CASE("the runtime id survives past 32 bits and the data stays zigzagged")
 {
-    bp::ActorEventPacket_<2168> packet;
+    bp::ActorEventPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{1ULL << 32U};
-    packet.event_id = bp::ActorEvent::DEPRECATED_ADD_PLAYER_LEVELS;
+    packet.event_id = bp::ActorEvent::DeprecatedAddPlayerLevels;
     packet.data = -1;
     REQUIRE(encode(packet) == golden_wide_runtime_id);
 
-    const auto back = decode<bp::ActorEventPacket_<2168>>(golden_wide_runtime_id);
+    const auto back = decode<bp::ActorEventPacket>(golden_wide_runtime_id);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{1ULL << 32U});
     REQUIRE(back.data == -1);
 }

@@ -22,44 +22,44 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 176")
 {
-    STATIC_REQUIRE(bp::PlayerStartItemCooldownPacket_<2168>::Id == 176);
+    STATIC_REQUIRE(bp::PlayerStartItemCooldownPacket::Id == 176);
     STATIC_REQUIRE(bp::has_packet_v<1001, 176>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 176>);
 }
 
 TEST_CASE("player-start-item-cooldown round-trips against the golden")
 {
-    bp::PlayerStartItemCooldownPacket_<2168> packet;
+    bp::PlayerStartItemCooldownPacket packet;
     packet.item_category = "minecraft:shield";
     packet.duration_ticks = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerStartItemCooldownPacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerStartItemCooldownPacket>(golden);
     REQUIRE(back.item_category == "minecraft:shield");
     REQUIRE(back.duration_ticks == 300);
 }
 
 TEST_CASE("an empty category and a negative duration round-trip against the golden")
 {
-    bp::PlayerStartItemCooldownPacket_<2168> packet;
+    bp::PlayerStartItemCooldownPacket packet;
     packet.item_category = "";
     packet.duration_ticks = -1;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::PlayerStartItemCooldownPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::PlayerStartItemCooldownPacket>(golden_negative);
     REQUIRE(back.item_category.empty());
     REQUIRE(back.duration_ticks == -1);
 }
 
 TEST_CASE("a category over 127 bytes takes a two-byte length prefix")
 {
-    bp::PlayerStartItemCooldownPacket_<2168> packet;
+    bp::PlayerStartItemCooldownPacket packet;
     packet.item_category = std::string(200, 'a');
     packet.duration_ticks = 1;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 203);
 
-    const auto back = decode<bp::PlayerStartItemCooldownPacket_<2168>>(wire);
+    const auto back = decode<bp::PlayerStartItemCooldownPacket>(wire);
     REQUIRE(back.item_category.size() == 200);
     REQUIRE(back.duration_ticks == 1);
 }

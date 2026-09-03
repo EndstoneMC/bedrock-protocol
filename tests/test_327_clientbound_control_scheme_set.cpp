@@ -15,24 +15,24 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 327")
 {
-    STATIC_REQUIRE(bp::ClientboundControlSchemeSetPacket_<2168>::Id == 327);
+    STATIC_REQUIRE(bp::ClientboundControlSchemeSetPacket::Id == 327);
     STATIC_REQUIRE(bp::has_packet_v<1001, 327>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 327>);
 }
 
 TEST_CASE("control scheme round-trips against the golden")
 {
-    bp::ClientboundControlSchemeSetPacket_<2168> packet;
-    packet.control_scheme = bp::Scheme::PLAYER_RELATIVE;
+    bp::ClientboundControlSchemeSetPacket packet;
+    packet.control_scheme = bp::Scheme::PlayerRelative;
     REQUIRE(encode(packet) == golden);
-    REQUIRE(decode<bp::ClientboundControlSchemeSetPacket_<2168>>(golden).control_scheme
-            == bp::Scheme::PLAYER_RELATIVE);
+    REQUIRE(decode<bp::ClientboundControlSchemeSetPacket>(golden).control_scheme
+            == bp::Scheme::PlayerRelative);
 }
 
 TEST_CASE("the scheme is one byte, so the whole body is one byte")
 {
-    bp::ClientboundControlSchemeSetPacket_<2168> packet;
-    packet.control_scheme = bp::Scheme::PLAYER_RELATIVE_STRAFE;
+    bp::ClientboundControlSchemeSetPacket packet;
+    packet.control_scheme = bp::Scheme::PlayerRelativeStrafe;
     REQUIRE(encode(packet) == bytes({0x04}));
-    REQUIRE(rejects<bp::ClientboundControlSchemeSetPacket_<2168>>(""));
+    REQUIRE(rejects<bp::ClientboundControlSchemeSetPacket>(""));
 }

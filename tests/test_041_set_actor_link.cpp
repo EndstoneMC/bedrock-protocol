@@ -17,26 +17,26 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 41")
 {
-    STATIC_REQUIRE(bp::SetActorLinkPacket_<2168>::Id == 41);
+    STATIC_REQUIRE(bp::SetActorLinkPacket::Id == 41);
     STATIC_REQUIRE(bp::has_packet_v<1001, 41>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 41>);
 }
 
 TEST_CASE("set actor link round-trips against the golden")
 {
-    bp::SetActorLinkPacket_<2168> packet;
+    bp::SetActorLinkPacket packet;
     packet.link.a = bp::ActorUniqueID{-1};
     packet.link.b = bp::ActorUniqueID{300};
-    packet.link.type = bp::ActorLinkType::PASSENGER;
+    packet.link.type = bp::ActorLinkType::Passenger;
     packet.link.immediate = false;
     packet.link.passenger_initiated = true;
     packet.link.vehicle_angular_velocity = -2.5F;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetActorLinkPacket_<2168>>(golden);
+    const auto back = decode<bp::SetActorLinkPacket>(golden);
     REQUIRE(back.link.a == bp::ActorUniqueID{-1});
     REQUIRE(back.link.b == bp::ActorUniqueID{300});
-    REQUIRE(back.link.type == bp::ActorLinkType::PASSENGER);
+    REQUIRE(back.link.type == bp::ActorLinkType::Passenger);
     REQUIRE_FALSE(back.link.immediate);
     REQUIRE(back.link.passenger_initiated);
     REQUIRE(back.link.vehicle_angular_velocity == -2.5F);
@@ -44,16 +44,16 @@ TEST_CASE("set actor link round-trips against the golden")
 
 TEST_CASE("the target ids are 64-bit varints")
 {
-    bp::SetActorLinkPacket_<2168> packet;
+    bp::SetActorLinkPacket packet;
     packet.link.a = bp::ActorUniqueID{4294967296LL};
     packet.link.b = bp::ActorUniqueID{0};
-    packet.link.type = bp::ActorLinkType::NONE;
+    packet.link.type = bp::ActorLinkType::None;
     packet.link.immediate = false;
     packet.link.passenger_initiated = false;
     packet.link.vehicle_angular_velocity = 0.0F;
 
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 13);
-    REQUIRE(decode<bp::SetActorLinkPacket_<2168>>(wire).link.a == bp::ActorUniqueID{4294967296LL});
+    REQUIRE(decode<bp::SetActorLinkPacket>(wire).link.a == bp::ActorUniqueID{4294967296LL});
 }
 

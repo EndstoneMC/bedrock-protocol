@@ -20,28 +20,28 @@ const std::string golden_not_waiting = bytes({
 
 TEST_CASE("packet id is 179")
 {
-    STATIC_REQUIRE(bp::TickingAreasLoadStatusPacket_<2168>::Id == 179);
+    STATIC_REQUIRE(bp::TickingAreasLoadStatusPacket::Id == 179);
     STATIC_REQUIRE(bp::has_packet_v<1001, 179>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 179>);
 }
 
 TEST_CASE("ticking-areas load status round-trips against the golden")
 {
-    bp::TickingAreasLoadStatusPacket_<2168> packet;
+    bp::TickingAreasLoadStatusPacket packet;
     packet.waiting_for_preload = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::TickingAreasLoadStatusPacket_<2168>>(golden);
+    const auto back = decode<bp::TickingAreasLoadStatusPacket>(golden);
     REQUIRE(back.waiting_for_preload);
 }
 
 TEST_CASE("the flag is the whole body, with no marker byte in front of it")
 {
-    bp::TickingAreasLoadStatusPacket_<2168> packet;
+    bp::TickingAreasLoadStatusPacket packet;
     packet.waiting_for_preload = false;
     REQUIRE(encode(packet) == golden_not_waiting);
     REQUIRE(encode(packet).size() == 1);
 
-    REQUIRE_FALSE(decode<bp::TickingAreasLoadStatusPacket_<2168>>(golden_not_waiting).waiting_for_preload);
-    REQUIRE(rejects<bp::TickingAreasLoadStatusPacket_<2168>>(""));
+    REQUIRE_FALSE(decode<bp::TickingAreasLoadStatusPacket>(golden_not_waiting).waiting_for_preload);
+    REQUIRE(rejects<bp::TickingAreasLoadStatusPacket>(""));
 }

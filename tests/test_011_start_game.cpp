@@ -23,26 +23,26 @@ void fill(Packet &packet)
 {
     packet.entity_id = bp::ActorUniqueID{1};
     packet.runtime_id = bp::ActorRuntimeID{2};
-    packet.entity_game_type = bp::GameType::SURVIVAL;
+    packet.entity_game_type = bp::GameType::Survival;
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.rot = {.x = 4.0f, .y = 5.0f};
 
     auto &s = packet.settings;
     s.seed = 7;
-    s.spawn_settings = {.type = bp::SpawnBiomeType::DEFAULT,
+    s.spawn_settings = {.type = bp::SpawnBiomeType::Default,
                         .user_defined_biome_name = "",
                         .dimension = bp::DimensionType{0}};
-    s.generator = bp::GeneratorType::OVERWORLD;
-    s.game_type = bp::GameType::SURVIVAL;
+    s.generator = bp::GeneratorType::Overworld;
+    s.game_type = bp::GameType::Survival;
     s.is_hardcore = false;
-    s.game_difficulty = bp::Difficulty::NORMAL;
+    s.game_difficulty = bp::Difficulty::Normal;
     s.default_spawn = {.x = 0, .y = 64, .z = 0};
     s.achievements_disabled = true;
-    s.editor_world_type = bp::WorldType::NON_EDITOR;
+    s.editor_world_type = bp::WorldType::NonEditor;
     s.is_created_in_editor = false;
     s.is_exported_from_editor = false;
     s.time = 0;
-    s.education_edition_offer = bp::EducationEditionOffer::NONE;
+    s.education_edition_offer = bp::EducationEditionOffer::None;
     s.education_features_enabled = false;
     s.education_product_id = "";
     s.rain_level = 0.0f;
@@ -50,8 +50,8 @@ void fill(Packet &packet)
     s.confirmed_platform_locked_content = false;
     s.multiplayer_game_intent = true;
     s.lan_broadcast_intent = true;
-    s.xbl_broadcast_intent = bp::GamePublishSetting::FRIENDS_ONLY;
-    s.platform_broadcast_intent = bp::GamePublishSetting::FRIENDS_ONLY;
+    s.xbl_broadcast_intent = bp::GamePublishSetting::FriendsOnly;
+    s.platform_broadcast_intent = bp::GamePublishSetting::FriendsOnly;
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.game_rules.push_back({.name = "dodaylightcycle", .can_be_modified_by_player = false, .value = true});
@@ -61,7 +61,7 @@ void fill(Packet &packet)
     s.experiments_ever_toggled = false;
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
-    s.default_permissions = bp::PlayerPermissionLevel::MEMBER;
+    s.default_permissions = bp::PlayerPermissionLevel::Member;
     s.server_chunk_tick_range = 4;
     s.has_locked_behavior_pack = false;
     s.has_locked_resource_pack = false;
@@ -76,10 +76,10 @@ void fill(Packet &packet)
     s.base_game_version = "1.21.0";
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
-    s.nether_type = bp::NetherWorldType::NORMAL;
+    s.nether_type = bp::NetherWorldType::Normal;
     s.edu_shared_uri_resource = {.button_name = "", .link_uri = ""};
     s.override_force_experimental_gameplay = std::nullopt;
-    s.chat_restriction_level = bp::ChatRestrictionLevel::NONE;
+    s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
 
     packet.level_id = "lvl";
@@ -105,26 +105,26 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
 {
     packet.entity_id = bp::ActorUniqueID{1};
     packet.runtime_id = bp::ActorRuntimeID{2};
-    packet.entity_game_type = bp::GameType::SURVIVAL;
+    packet.entity_game_type = bp::GameType::Survival;
     packet.pos = {.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.rot = {.x = 4.0f, .y = 5.0f};
 
     auto &s = packet.settings;
     s.seed = 7;
-    s.spawn_settings = {.type = bp::SpawnBiomeType::DEFAULT,
+    s.spawn_settings = {.type = bp::SpawnBiomeType::Default,
                         .user_defined_biome_name = "",
                         .dimension = bp::DimensionType{0}};
-    s.generator = bp::GeneratorType::OVERWORLD;
-    s.game_type = bp::GameType::SURVIVAL;
+    s.generator = bp::GeneratorType::Overworld;
+    s.game_type = bp::GameType::Survival;
     s.is_hardcore = false;
-    s.game_difficulty = bp::Difficulty::NORMAL;
+    s.game_difficulty = bp::Difficulty::Normal;
     s.default_spawn = {.x = 0, .y = 64, .z = 0};
     s.achievements_disabled = true;
-    s.editor_world_type = bp::WorldType::NON_EDITOR;
+    s.editor_world_type = bp::WorldType::NonEditor;
     s.is_created_in_editor = false;
     s.is_exported_from_editor = false;
     s.time = 0;
-    s.education_edition_offer = bp::EducationEditionOffer::NONE;
+    s.education_edition_offer = bp::EducationEditionOffer::None;
     s.education_features_enabled = false;
     s.education_product_id = "";
     s.rain_level = 0.0f;
@@ -132,8 +132,8 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
     s.confirmed_platform_locked_content = false;
     s.multiplayer_game_intent = true;
     s.lan_broadcast_intent = true;
-    s.xbl_broadcast_intent = bp::GamePublishSetting::FRIENDS_ONLY;
-    s.platform_broadcast_intent = bp::GamePublishSetting::FRIENDS_ONLY;
+    s.xbl_broadcast_intent = bp::GamePublishSetting::FriendsOnly;
+    s.platform_broadcast_intent = bp::GamePublishSetting::FriendsOnly;
     s.commands_enabled = true;
     s.texture_packs_required = false;
     s.rule_data.rules.push_back({.name = "dodaylightcycle", .can_be_modified_by_player = false, .value = true});
@@ -143,7 +143,7 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
     s.experiments = {.toggles = {}, .experiments_ever_toggled = false};
     s.bonus_chest_enabled = false;
     s.start_with_map_enabled = false;
-    s.default_permissions = bp::PlayerPermissionLevel::MEMBER;
+    s.default_permissions = bp::PlayerPermissionLevel::Member;
     s.server_chunk_tick_range = 4;
     s.has_locked_behavior_pack = false;
     s.has_locked_resource_pack = false;
@@ -158,12 +158,12 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
     s.base_game_version = "1.21.0";
     s.limited_world_width = 0;
     s.limited_world_depth = 0;
-    s.nether_type = bp::NetherWorldType::NORMAL;
+    s.nether_type = bp::NetherWorldType::Normal;
     s.edu_shared_uri_resource = {.button_name = "", .link_uri = ""};
     s.override_force_experimental_gameplay = std::nullopt;
-    s.chat_restriction_level = bp::ChatRestrictionLevel::NONE;
+    s.chat_restriction_level = bp::ChatRestrictionLevel::None;
     s.disable_player_interactions = false;
-    s.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MATCH_WORLD_TYPE;
+    s.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MatchWorldType;
     s.allow_anonymous_block_drops_in_editor_worlds = false;
 
     packet.level_id = "lvl";
@@ -200,7 +200,7 @@ TEST_CASE("StartGamePacket: v1001 round-trip")
 
     Packet pkt;
     fill(pkt);
-    pkt.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MATCH_WORLD_TYPE;
+    pkt.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MatchWorldType;
     pkt.settings.allow_anonymous_block_drops_in_editor_worlds = false;
     pkt.is_logging_chat = false;
 
@@ -263,7 +263,7 @@ TEST_CASE("StartGamePacket: v975 is the v1001 body less the 995 and 997 fields")
     using Packet1001 = bp::StartGamePacket_<1001>;
     Packet1001 newer;
     fill(newer);
-    newer.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MATCH_WORLD_TYPE;
+    newer.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MatchWorldType;
     newer.settings.allow_anonymous_block_drops_in_editor_worlds = false;
     newer.is_logging_chat = false;
     REQUIRE(encoded.size() + 3 == encode(newer).size());
@@ -329,7 +329,7 @@ TEST_CASE("StartGamePacket: v2168 round-trip")
     REQUIRE(std::get<2>(rt.settings.rule_data.rules[1].value) == 131070);
     REQUIRE(rt.settings.experiments.toggles.empty());
     REQUIRE(rt.settings.experiments.experiments_ever_toggled == false);
-    REQUIRE(rt.settings.default_permissions == bp::PlayerPermissionLevel::MEMBER);
+    REQUIRE(rt.settings.default_permissions == bp::PlayerPermissionLevel::Member);
     REQUIRE(rt.level_name == "world");
     REQUIRE(rt.block_properties.empty());
 }
@@ -346,7 +346,7 @@ TEST_CASE("StartGamePacket: a v1001 body does not decode as a v2168 one")
 
     Packet1001 older;
     fill(older);
-    older.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MATCH_WORLD_TYPE;
+    older.settings.server_editor_connection_policy = bp::ServerEditorConnectionPolicy::MatchWorldType;
     older.settings.allow_anonymous_block_drops_in_editor_worlds = false;
     older.is_logging_chat = false;
 

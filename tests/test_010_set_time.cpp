@@ -21,25 +21,25 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 10")
 {
-    STATIC_REQUIRE(bp::SetTimePacket_<2168>::Id == 10);
+    STATIC_REQUIRE(bp::SetTimePacket::Id == 10);
     STATIC_REQUIRE(bp::has_packet_v<1001, 10>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 10>);
 }
 
 TEST_CASE("set-time round-trips against the golden")
 {
-    bp::SetTimePacket_<2168> packet;
+    bp::SetTimePacket packet;
     packet.time = 12000;
     REQUIRE(encode(packet) == golden);
 
-    REQUIRE(decode<bp::SetTimePacket_<2168>>(golden).time == 12000);
+    REQUIRE(decode<bp::SetTimePacket>(golden).time == 12000);
 }
 
 TEST_CASE("the time is a zigzag varint, not a fixed int32 or an unsigned varint")
 {
-    bp::SetTimePacket_<2168> packet;
+    bp::SetTimePacket packet;
     packet.time = -1;
     REQUIRE(encode(packet) == golden_negative);
 
-    REQUIRE(decode<bp::SetTimePacket_<2168>>(golden_negative).time == -1);
+    REQUIRE(decode<bp::SetTimePacket>(golden_negative).time == -1);
 }

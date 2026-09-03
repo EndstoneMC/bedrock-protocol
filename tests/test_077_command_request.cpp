@@ -39,31 +39,31 @@ TEST_CASE("a command request round-trips against the golden")
 {
     bp::CommandRequestPacket_<2168> packet;
     packet.command = "/say hi";
-    packet.origin.type = bp::CommandOriginType::AUTOMATION_PLAYER;
+    packet.origin.type = bp::CommandOriginType::AutomationPlayer;
     packet.origin.uuid = {.most_significant_bits = 0x0123456789abcdefULL,
                           .least_significant_bits = 0xfedcba9876543210ULL};
     packet.origin.request_id = "req-1";
     packet.origin.player_id = -2;
     packet.internal_source = true;
-    packet.version = bp::CurrentCmdVersion_<2168>::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE;
+    packet.version = bp::CurrentCmdVersion_<2168>::TestForBlockCommandDoesNotIgnoreBlockState;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::CommandRequestPacket_<2168>>(golden);
     REQUIRE(back.command == "/say hi");
-    REQUIRE(back.origin.type == bp::CommandOriginType::AUTOMATION_PLAYER);
+    REQUIRE(back.origin.type == bp::CommandOriginType::AutomationPlayer);
     REQUIRE(back.origin.uuid.most_significant_bits == 0x0123456789abcdefULL);
     REQUIRE(back.origin.uuid.least_significant_bits == 0xfedcba9876543210ULL);
     REQUIRE(back.origin.request_id == "req-1");
     REQUIRE(back.origin.player_id == -2);
     REQUIRE(back.internal_source);
-    REQUIRE(back.version == bp::CurrentCmdVersion_<2168>::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE);
+    REQUIRE(back.version == bp::CurrentCmdVersion_<2168>::TestForBlockCommandDoesNotIgnoreBlockState);
 }
 
 TEST_CASE("a command request's command line takes a varint length prefix")
 {
     bp::CommandRequestPacket_<2168> packet;
-    packet.origin.type = bp::CommandOriginType::PLAYER;
-    packet.version = bp::CurrentCmdVersion_<2168>::INITIAL;
+    packet.origin.type = bp::CommandOriginType::Player;
+    packet.version = bp::CurrentCmdVersion_<2168>::Initial;
 
     packet.command = std::string(127, 'a');
     const auto shorter = encode(packet);
@@ -77,8 +77,8 @@ TEST_CASE("a command request's command line takes a varint length prefix")
 TEST_CASE("a command request's player id is eight fixed bytes below zero")
 {
     bp::CommandRequestPacket_<2168> packet;
-    packet.origin.type = bp::CommandOriginType::PLAYER;
-    packet.version = bp::CurrentCmdVersion_<2168>::INITIAL;
+    packet.origin.type = bp::CommandOriginType::Player;
+    packet.version = bp::CurrentCmdVersion_<2168>::Initial;
 
     packet.origin.player_id = 0;
     const auto zero = encode(packet);

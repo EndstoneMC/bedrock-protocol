@@ -21,27 +21,27 @@ const std::string golden_absent = bytes({
 
 TEST_CASE("packet id is 312")
 {
-    STATIC_REQUIRE(bp::ServerboundLoadingScreenPacket_<2168>::Id == 312);
+    STATIC_REQUIRE(bp::ServerboundLoadingScreenPacket::Id == 312);
     STATIC_REQUIRE(bp::has_packet_v<1001, 312>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 312>);
 }
 
 TEST_CASE("serverbound loading screen round-trips against the golden")
 {
-    bp::ServerboundLoadingScreenPacket_<2168> packet;
-    packet.loading_screen_packet_type = bp::ServerboundLoadingScreenPacketType::START_LOADING_SCREEN;
+    bp::ServerboundLoadingScreenPacket packet;
+    packet.loading_screen_packet_type = bp::ServerboundLoadingScreenPacketType::StartLoadingScreen;
     packet.loading_screen_id = 9;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerboundLoadingScreenPacket_<2168>>(golden);
-    REQUIRE(back.loading_screen_packet_type == bp::ServerboundLoadingScreenPacketType::START_LOADING_SCREEN);
+    const auto back = decode<bp::ServerboundLoadingScreenPacket>(golden);
+    REQUIRE(back.loading_screen_packet_type == bp::ServerboundLoadingScreenPacketType::StartLoadingScreen);
     REQUIRE(back.loading_screen_id == 9);
 }
 
 TEST_CASE("an absent screen id is one zero byte, and the type still zigzags")
 {
-    bp::ServerboundLoadingScreenPacket_<2168> packet;
-    packet.loading_screen_packet_type = bp::ServerboundLoadingScreenPacketType::END_LOADING_SCREEN;
+    bp::ServerboundLoadingScreenPacket packet;
+    packet.loading_screen_packet_type = bp::ServerboundLoadingScreenPacketType::EndLoadingScreen;
     REQUIRE(encode(packet) == golden_absent);
-    REQUIRE_FALSE(decode<bp::ServerboundLoadingScreenPacket_<2168>>(golden_absent).loading_screen_id.has_value());
+    REQUIRE_FALSE(decode<bp::ServerboundLoadingScreenPacket>(golden_absent).loading_screen_id.has_value());
 }

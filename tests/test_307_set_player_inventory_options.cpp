@@ -18,44 +18,44 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 307")
 {
-    STATIC_REQUIRE(bp::SetPlayerInventoryOptionsPacket_<2168>::Id == 307);
+    STATIC_REQUIRE(bp::SetPlayerInventoryOptionsPacket::Id == 307);
     STATIC_REQUIRE(bp::has_packet_v<1001, 307>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 307>);
 }
 
 TEST_CASE("set-player-inventory-options round-trips against the golden")
 {
-    bp::SetPlayerInventoryOptionsPacket_<2168> packet;
-    packet.inventory_options.left_inventory_tab = bp::InventoryLeftTabIndex::SURVIVAL;
-    packet.inventory_options.right_inventory_tab = bp::InventoryRightTabIndex::ARMOR;
+    bp::SetPlayerInventoryOptionsPacket packet;
+    packet.inventory_options.left_inventory_tab = bp::InventoryLeftTabIndex::Survival;
+    packet.inventory_options.right_inventory_tab = bp::InventoryRightTabIndex::Armor;
     packet.inventory_options.filtering = true;
-    packet.inventory_options.layout_inv = bp::InventoryLayout::DEFAULT;
-    packet.inventory_options.layout_craft = bp::InventoryLayout::INVENTORY_ONLY;
+    packet.inventory_options.layout_inv = bp::InventoryLayout::Default;
+    packet.inventory_options.layout_craft = bp::InventoryLayout::InventoryOnly;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetPlayerInventoryOptionsPacket_<2168>>(golden);
-    REQUIRE(back.inventory_options.left_inventory_tab == bp::InventoryLeftTabIndex::SURVIVAL);
-    REQUIRE(back.inventory_options.right_inventory_tab == bp::InventoryRightTabIndex::ARMOR);
+    const auto back = decode<bp::SetPlayerInventoryOptionsPacket>(golden);
+    REQUIRE(back.inventory_options.left_inventory_tab == bp::InventoryLeftTabIndex::Survival);
+    REQUIRE(back.inventory_options.right_inventory_tab == bp::InventoryRightTabIndex::Armor);
     REQUIRE(back.inventory_options.filtering);
-    REQUIRE(back.inventory_options.layout_inv == bp::InventoryLayout::DEFAULT);
-    REQUIRE(back.inventory_options.layout_craft == bp::InventoryLayout::INVENTORY_ONLY);
+    REQUIRE(back.inventory_options.layout_inv == bp::InventoryLayout::Default);
+    REQUIRE(back.inventory_options.layout_craft == bp::InventoryLayout::InventoryOnly);
 }
 
 TEST_CASE("the inventory-options tabs and layouts are zigzag varints, not bytes and not unsigned")
 {
-    bp::SetPlayerInventoryOptionsPacket_<2168> packet;
+    bp::SetPlayerInventoryOptionsPacket packet;
     packet.inventory_options.left_inventory_tab = static_cast<bp::InventoryLeftTabIndex>(100);
-    packet.inventory_options.right_inventory_tab = bp::InventoryRightTabIndex::NONE;
+    packet.inventory_options.right_inventory_tab = bp::InventoryRightTabIndex::None;
     packet.inventory_options.filtering = false;
     packet.inventory_options.layout_inv = static_cast<bp::InventoryLayout>(-1);
-    packet.inventory_options.layout_craft = bp::InventoryLayout::NONE;
+    packet.inventory_options.layout_craft = bp::InventoryLayout::None;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 6);
 
-    const auto back = decode<bp::SetPlayerInventoryOptionsPacket_<2168>>(wire);
+    const auto back = decode<bp::SetPlayerInventoryOptionsPacket>(wire);
     REQUIRE(back.inventory_options.left_inventory_tab == static_cast<bp::InventoryLeftTabIndex>(100));
-    REQUIRE(back.inventory_options.right_inventory_tab == bp::InventoryRightTabIndex::NONE);
+    REQUIRE(back.inventory_options.right_inventory_tab == bp::InventoryRightTabIndex::None);
     REQUIRE_FALSE(back.inventory_options.filtering);
     REQUIRE(back.inventory_options.layout_inv == static_cast<bp::InventoryLayout>(-1));
-    REQUIRE(back.inventory_options.layout_craft == bp::InventoryLayout::NONE);
+    REQUIRE(back.inventory_options.layout_craft == bp::InventoryLayout::None);
 }

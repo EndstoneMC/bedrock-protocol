@@ -26,20 +26,20 @@ const std::string golden_remove_all = bytes({
 
 TEST_CASE("packet id is 199")
 {
-    STATIC_REQUIRE(bp::UnlockedRecipesPacket_<2168>::Id == 199);
+    STATIC_REQUIRE(bp::UnlockedRecipesPacket::Id == 199);
     STATIC_REQUIRE(bp::has_packet_v<1001, 199>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 199>);
 }
 
 TEST_CASE("unlocked recipes round-trips against the golden")
 {
-    bp::UnlockedRecipesPacket_<2168> packet;
-    packet.packet_type = bp::UnlockedRecipesPacket_<2168>::PacketType::NEWLY_UNLOCKED_RECIPES;
+    bp::UnlockedRecipesPacket packet;
+    packet.packet_type = bp::UnlockedRecipesPacket::PacketType::NewlyUnlockedRecipes;
     packet.unlocked_recipes = {"minecraft:stick", "minecraft:torch"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UnlockedRecipesPacket_<2168>>(golden);
-    REQUIRE(back.packet_type == bp::UnlockedRecipesPacket_<2168>::PacketType::NEWLY_UNLOCKED_RECIPES);
+    const auto back = decode<bp::UnlockedRecipesPacket>(golden);
+    REQUIRE(back.packet_type == bp::UnlockedRecipesPacket::PacketType::NewlyUnlockedRecipes);
     REQUIRE(back.unlocked_recipes.size() == 2);
     REQUIRE(back.unlocked_recipes[0] == "minecraft:stick");
     REQUIRE(back.unlocked_recipes[1] == "minecraft:torch");
@@ -47,12 +47,12 @@ TEST_CASE("unlocked recipes round-trips against the golden")
 
 TEST_CASE("the unlocked-recipes packet type is four fixed bytes ahead of an empty list")
 {
-    bp::UnlockedRecipesPacket_<2168> packet;
-    packet.packet_type = bp::UnlockedRecipesPacket_<2168>::PacketType::REMOVE_ALL_UNLOCKED_RECIPES;
+    bp::UnlockedRecipesPacket packet;
+    packet.packet_type = bp::UnlockedRecipesPacket::PacketType::RemoveAllUnlockedRecipes;
     REQUIRE(encode(packet) == golden_remove_all);
     REQUIRE(encode(packet).size() == 5);
 
-    const auto back = decode<bp::UnlockedRecipesPacket_<2168>>(golden_remove_all);
-    REQUIRE(back.packet_type == bp::UnlockedRecipesPacket_<2168>::PacketType::REMOVE_ALL_UNLOCKED_RECIPES);
+    const auto back = decode<bp::UnlockedRecipesPacket>(golden_remove_all);
+    REQUIRE(back.packet_type == bp::UnlockedRecipesPacket::PacketType::RemoveAllUnlockedRecipes);
     REQUIRE(back.unlocked_recipes.empty());
 }

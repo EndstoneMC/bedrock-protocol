@@ -27,54 +27,54 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 324")
 {
-    STATIC_REQUIRE(bp::PlayerVideoCapturePacket_<2168>::Id == 324);
+    STATIC_REQUIRE(bp::PlayerVideoCapturePacket::Id == 324);
     STATIC_REQUIRE(bp::has_packet_v<1001, 324>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 324>);
 }
 
 TEST_CASE("player-video-capture round-trips against the golden")
 {
-    bp::PlayerVideoCapturePacket_<2168> packet;
+    bp::PlayerVideoCapturePacket packet;
     packet.start_video_capture =
-        bp::v2168::PlayerVideoCapturePacket::StartVideoCapture{.frame_rate = 60, .file_prefix = "clip"};
-    packet.stop_video_capture = bp::v2168::PlayerVideoCapturePacket::StopVideoCapture{};
+        bp::PlayerVideoCapturePacket::StartVideoCapture{.frame_rate = 60, .file_prefix = "clip"};
+    packet.stop_video_capture = bp::PlayerVideoCapturePacket::StopVideoCapture{};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerVideoCapturePacket_<2168>>(golden);
-    REQUIRE(std::holds_alternative<bp::v2168::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture));
-    REQUIRE(std::get<bp::v2168::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture).frame_rate ==
+    const auto back = decode<bp::PlayerVideoCapturePacket>(golden);
+    REQUIRE(std::holds_alternative<bp::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture));
+    REQUIRE(std::get<bp::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture).frame_rate ==
             60);
-    REQUIRE(std::get<bp::v2168::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture).file_prefix ==
+    REQUIRE(std::get<bp::PlayerVideoCapturePacket::StartVideoCapture>(back.start_video_capture).file_prefix ==
             "clip");
-    REQUIRE(std::holds_alternative<bp::v2168::PlayerVideoCapturePacket::StopVideoCapture>(back.stop_video_capture));
+    REQUIRE(std::holds_alternative<bp::PlayerVideoCapturePacket::StopVideoCapture>(back.stop_video_capture));
 }
 
 TEST_CASE("both player-video-capture variant fields reach the wire")
 {
-    bp::PlayerVideoCapturePacket_<2168> packet;
-    packet.start_video_capture = bp::v2168::PlayerVideoCapturePacket::StopVideoCapture{};
-    packet.stop_video_capture = bp::v2168::PlayerVideoCapturePacket::StopVideoCapture{};
+    bp::PlayerVideoCapturePacket packet;
+    packet.start_video_capture = bp::PlayerVideoCapturePacket::StopVideoCapture{};
+    packet.stop_video_capture = bp::PlayerVideoCapturePacket::StopVideoCapture{};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 2);
 
-    const auto back = decode<bp::PlayerVideoCapturePacket_<2168>>(wire);
-    REQUIRE(std::holds_alternative<bp::v2168::PlayerVideoCapturePacket::StopVideoCapture>(back.start_video_capture));
-    REQUIRE(std::holds_alternative<bp::v2168::PlayerVideoCapturePacket::StopVideoCapture>(back.stop_video_capture));
+    const auto back = decode<bp::PlayerVideoCapturePacket>(wire);
+    REQUIRE(std::holds_alternative<bp::PlayerVideoCapturePacket::StopVideoCapture>(back.start_video_capture));
+    REQUIRE(std::holds_alternative<bp::PlayerVideoCapturePacket::StopVideoCapture>(back.stop_video_capture));
 }
 
 TEST_CASE("a player-video-capture frame rate above 127 keeps its four fixed bytes")
 {
-    bp::PlayerVideoCapturePacket_<2168> packet;
-    packet.start_video_capture = bp::v2168::PlayerVideoCapturePacket::StopVideoCapture{};
+    bp::PlayerVideoCapturePacket packet;
+    packet.start_video_capture = bp::PlayerVideoCapturePacket::StopVideoCapture{};
     packet.stop_video_capture =
-        bp::v2168::PlayerVideoCapturePacket::StartVideoCapture{.frame_rate = 300, .file_prefix = ""};
+        bp::PlayerVideoCapturePacket::StartVideoCapture{.frame_rate = 300, .file_prefix = ""};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 7);
 
-    const auto back = decode<bp::PlayerVideoCapturePacket_<2168>>(wire);
-    REQUIRE(std::holds_alternative<bp::v2168::PlayerVideoCapturePacket::StopVideoCapture>(back.start_video_capture));
-    REQUIRE(std::get<bp::v2168::PlayerVideoCapturePacket::StartVideoCapture>(back.stop_video_capture).frame_rate ==
+    const auto back = decode<bp::PlayerVideoCapturePacket>(wire);
+    REQUIRE(std::holds_alternative<bp::PlayerVideoCapturePacket::StopVideoCapture>(back.start_video_capture));
+    REQUIRE(std::get<bp::PlayerVideoCapturePacket::StartVideoCapture>(back.stop_video_capture).frame_rate ==
             300);
     REQUIRE(
-        std::get<bp::v2168::PlayerVideoCapturePacket::StartVideoCapture>(back.stop_video_capture).file_prefix.empty());
+        std::get<bp::PlayerVideoCapturePacket::StartVideoCapture>(back.stop_video_capture).file_prefix.empty());
 }

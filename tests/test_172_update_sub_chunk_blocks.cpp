@@ -25,32 +25,32 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 172")
 {
-    STATIC_REQUIRE(bp::UpdateSubChunkBlocksPacket_<2168>::Id == 172);
+    STATIC_REQUIRE(bp::UpdateSubChunkBlocksPacket::Id == 172);
     STATIC_REQUIRE(bp::has_packet_v<1001, 172>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 172>);
 }
 
 TEST_CASE("update-sub-chunk-blocks round-trips against the golden")
 {
-    bp::UpdateSubChunkBlocksPacket_<2168> packet;
+    bp::UpdateSubChunkBlocksPacket packet;
     packet.sub_chunk_block_position = {.x = 4, .y = -5, .z = 6};
     packet.blocks_changed.standards.push_back({
         .pos = {.x = 1, .y = 2, .z = 3},
         .runtime_id = 300,
         .update_flags = 200,
         .entity_unique_id = bp::ActorUniqueID{9},
-        .message = bp::ActorBlockSyncMessage::MessageId::DESTROY,
+        .message = bp::ActorBlockSyncMessage::MessageId::Destroy,
     });
     packet.blocks_changed.extras.push_back({
         .pos = {.x = -1, .y = 0, .z = 1},
         .runtime_id = 5,
         .update_flags = 0,
         .entity_unique_id = bp::ActorUniqueID{0},
-        .message = bp::ActorBlockSyncMessage::MessageId::NONE,
+        .message = bp::ActorBlockSyncMessage::MessageId::None,
     });
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateSubChunkBlocksPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateSubChunkBlocksPacket>(golden);
     REQUIRE(back.sub_chunk_block_position.x == 4);
     REQUIRE(back.sub_chunk_block_position.y == -5);
     REQUIRE(back.sub_chunk_block_position.z == 6);
@@ -61,22 +61,22 @@ TEST_CASE("update-sub-chunk-blocks round-trips against the golden")
     REQUIRE(back.blocks_changed.standards.at(0).runtime_id == 300);
     REQUIRE(back.blocks_changed.standards.at(0).update_flags == 200);
     REQUIRE(back.blocks_changed.standards.at(0).entity_unique_id == bp::ActorUniqueID{9});
-    REQUIRE(back.blocks_changed.standards.at(0).message == bp::ActorBlockSyncMessage::MessageId::DESTROY);
+    REQUIRE(back.blocks_changed.standards.at(0).message == bp::ActorBlockSyncMessage::MessageId::Destroy);
     REQUIRE(back.blocks_changed.extras.size() == 1);
     REQUIRE(back.blocks_changed.extras.at(0).pos.x == -1);
     REQUIRE(back.blocks_changed.extras.at(0).pos.y == 0);
     REQUIRE(back.blocks_changed.extras.at(0).pos.z == 1);
     REQUIRE(back.blocks_changed.extras.at(0).runtime_id == 5);
-    REQUIRE(back.blocks_changed.extras.at(0).message == bp::ActorBlockSyncMessage::MessageId::NONE);
+    REQUIRE(back.blocks_changed.extras.at(0).message == bp::ActorBlockSyncMessage::MessageId::None);
 }
 
 TEST_CASE("empty update-sub-chunk-blocks layers are two zero length prefixes")
 {
-    bp::UpdateSubChunkBlocksPacket_<2168> packet;
+    bp::UpdateSubChunkBlocksPacket packet;
     packet.sub_chunk_block_position = {.x = 0, .y = 64, .z = 0};
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::UpdateSubChunkBlocksPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::UpdateSubChunkBlocksPacket>(golden_empty);
     REQUIRE(back.sub_chunk_block_position.y == 64);
     REQUIRE(back.blocks_changed.standards.empty());
     REQUIRE(back.blocks_changed.extras.empty());
@@ -84,6 +84,6 @@ TEST_CASE("empty update-sub-chunk-blocks layers are two zero length prefixes")
 
 TEST_CASE("an update-sub-chunk-blocks body missing its extras list is rejected")
 {
-    REQUIRE(rejects<bp::UpdateSubChunkBlocksPacket_<2168>>(golden.substr(0, 13)));
-    REQUIRE(rejects<bp::UpdateSubChunkBlocksPacket_<2168>>(golden.substr(0, 4)));
+    REQUIRE(rejects<bp::UpdateSubChunkBlocksPacket>(golden.substr(0, 13)));
+    REQUIRE(rejects<bp::UpdateSubChunkBlocksPacket>(golden.substr(0, 4)));
 }

@@ -10,9 +10,9 @@ template <int V>
 bp::PacketViolationWarningPacket_<V> terminating()
 {
     return {
-        .violation_type = bp::PacketViolationType::PACKET_MALFORMED,
-        .violation_severity = bp::PacketViolationSeverity::TERMINATING_CONNECTION,
-        .violating_packet_id = bp::MinecraftPacketIds_<V>::INVENTORY_TRANSACTION,
+        .violation_type = bp::PacketViolationType::PacketMalformed,
+        .violation_severity = bp::PacketViolationSeverity::TerminatingConnection,
+        .violating_packet_id = bp::MinecraftPacketIds_<V>::InventoryTransaction,
         .violation_context = "malformed packet",
     };
 }
@@ -46,9 +46,9 @@ TEST_CASE("packet-violation-warning round-trips against the golden")
     REQUIRE(encode(terminating<1001>()) == golden);
 
     const auto back = decode<Packet>(golden);
-    REQUIRE(back.violation_type == bp::PacketViolationType::PACKET_MALFORMED);
-    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::TERMINATING_CONNECTION);
-    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::INVENTORY_TRANSACTION);
+    REQUIRE(back.violation_type == bp::PacketViolationType::PacketMalformed);
+    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::TerminatingConnection);
+    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::InventoryTransaction);
     REQUIRE(back.violation_context == "malformed packet");
 }
 
@@ -59,8 +59,8 @@ TEST_CASE("the wire form is unchanged across the version split")
     REQUIRE(encode(terminating<975>()) == golden);
     REQUIRE(encode(terminating<1001>()) == golden);
 
-    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<975>::END_ID) == 348);
-    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<1001>::END_ID) == 351);
+    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<975>::EndId) == 348);
+    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<1001>::EndId) == 351);
 }
 
 // Both enums carry an Unknown = -1 sentinel, which only survives the round trip
@@ -70,15 +70,15 @@ TEST_CASE("the unknown sentinel round-trips")
     using Packet = bp::PacketViolationWarningPacket_<1001>;
 
     Packet packet;
-    packet.violation_type = bp::PacketViolationType::UNKNOWN;
-    packet.violation_severity = bp::PacketViolationSeverity::UNKNOWN;
-    packet.violating_packet_id = bp::MinecraftPacketIds_<1001>::PACKET_VIOLATION_WARNING;
+    packet.violation_type = bp::PacketViolationType::Unknown;
+    packet.violation_severity = bp::PacketViolationSeverity::Unknown;
+    packet.violating_packet_id = bp::MinecraftPacketIds_<1001>::PacketViolationWarning;
     REQUIRE(encode(packet) == golden_unknown);
 
     const auto back = decode<Packet>(golden_unknown);
-    REQUIRE(back.violation_type == bp::PacketViolationType::UNKNOWN);
-    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::UNKNOWN);
-    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::PACKET_VIOLATION_WARNING);
+    REQUIRE(back.violation_type == bp::PacketViolationType::Unknown);
+    REQUIRE(back.violation_severity == bp::PacketViolationSeverity::Unknown);
+    REQUIRE(back.violating_packet_id == bp::MinecraftPacketIds_<1001>::PacketViolationWarning);
     REQUIRE(back.violation_context.empty());
 }
 

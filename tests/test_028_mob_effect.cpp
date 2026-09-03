@@ -25,16 +25,16 @@ const std::string golden_infinite = bytes({
 
 TEST_CASE("packet id is 28")
 {
-    STATIC_REQUIRE(bp::MobEffectPacket_<2168>::Id == 28);
+    STATIC_REQUIRE(bp::MobEffectPacket::Id == 28);
     STATIC_REQUIRE(bp::has_packet_v<1001, 28>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 28>);
 }
 
 TEST_CASE("mob effect round-trips against the golden")
 {
-    bp::MobEffectPacket_<2168> packet;
+    bp::MobEffectPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
-    packet.event_id = bp::MobEffectPacket_<2168>::Event::ADD;
+    packet.event_id = bp::MobEffectPacket::Event::Add;
     packet.effect_id = 19;
     packet.effect_amplifier = 2;
     packet.show_particles = true;
@@ -43,9 +43,9 @@ TEST_CASE("mob effect round-trips against the golden")
     packet.ambient = false;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::MobEffectPacket_<2168>>(golden);
+    const auto back = decode<bp::MobEffectPacket>(golden);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
-    REQUIRE(back.event_id == bp::MobEffectPacket_<2168>::Event::ADD);
+    REQUIRE(back.event_id == bp::MobEffectPacket::Event::Add);
     REQUIRE(back.effect_id == 19);
     REQUIRE(back.effect_amplifier == 2);
     REQUIRE(back.show_particles);
@@ -56,9 +56,9 @@ TEST_CASE("mob effect round-trips against the golden")
 
 TEST_CASE("an infinite duration and a negative amplifier survive the zigzag")
 {
-    bp::MobEffectPacket_<2168> packet;
+    bp::MobEffectPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{1};
-    packet.event_id = bp::MobEffectPacket_<2168>::Event::REMOVE;
+    packet.event_id = bp::MobEffectPacket::Event::Remove;
     packet.effect_id = 1;
     packet.effect_amplifier = -1;
     packet.show_particles = false;
@@ -67,8 +67,8 @@ TEST_CASE("an infinite duration and a negative amplifier survive the zigzag")
     packet.ambient = true;
     REQUIRE(encode(packet) == golden_infinite);
 
-    const auto back = decode<bp::MobEffectPacket_<2168>>(golden_infinite);
-    REQUIRE(back.event_id == bp::MobEffectPacket_<2168>::Event::REMOVE);
+    const auto back = decode<bp::MobEffectPacket>(golden_infinite);
+    REQUIRE(back.event_id == bp::MobEffectPacket::Event::Remove);
     REQUIRE(back.effect_amplifier == -1);
     REQUIRE(back.effect_duration_ticks == -1);
     REQUIRE(back.ambient);
@@ -76,15 +76,15 @@ TEST_CASE("an infinite duration and a negative amplifier survive the zigzag")
 
 TEST_CASE("the event byte does not absorb the runtime id's varint")
 {
-    bp::MobEffectPacket_<2168> packet;
+    bp::MobEffectPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
-    packet.event_id = bp::MobEffectPacket_<2168>::Event::UPDATE;
+    packet.event_id = bp::MobEffectPacket::Event::Update;
     packet.tick = bp::PlayerInputTick{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
 
-    const auto back = decode<bp::MobEffectPacket_<2168>>(wire);
+    const auto back = decode<bp::MobEffectPacket>(wire);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
-    REQUIRE(back.event_id == bp::MobEffectPacket_<2168>::Event::UPDATE);
+    REQUIRE(back.event_id == bp::MobEffectPacket::Event::Update);
     REQUIRE(back.tick == bp::PlayerInputTick{300});
 }

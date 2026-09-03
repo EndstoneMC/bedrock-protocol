@@ -23,31 +23,31 @@ const std::string golden_wide_id = bytes({
 
 TEST_CASE("show-credits packet id is 75")
 {
-    STATIC_REQUIRE(bp::ShowCreditsPacket_<2168>::Id == 75);
+    STATIC_REQUIRE(bp::ShowCreditsPacket::Id == 75);
     STATIC_REQUIRE(bp::has_packet_v<1001, 75>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 75>);
 }
 
 TEST_CASE("show-credits round-trips against the golden")
 {
-    bp::ShowCreditsPacket_<2168> packet;
+    bp::ShowCreditsPacket packet;
     packet.player_id = bp::ActorRuntimeID{300};
-    packet.credits_state = bp::ShowCreditsPacket_<2168>::CreditsState::FINISHED;
+    packet.credits_state = bp::ShowCreditsPacket::CreditsState::Finished;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ShowCreditsPacket_<2168>>(golden);
+    const auto back = decode<bp::ShowCreditsPacket>(golden);
     REQUIRE(back.player_id == bp::ActorRuntimeID{300});
-    REQUIRE(back.credits_state == bp::ShowCreditsPacket_<2168>::CreditsState::FINISHED);
+    REQUIRE(back.credits_state == bp::ShowCreditsPacket::CreditsState::Finished);
 }
 
 TEST_CASE("a show-credits player id above 2^32 keeps its high bits")
 {
-    bp::ShowCreditsPacket_<2168> packet;
+    bp::ShowCreditsPacket packet;
     packet.player_id = bp::ActorRuntimeID{0x1'0000'0007};
-    packet.credits_state = bp::ShowCreditsPacket_<2168>::CreditsState::START;
+    packet.credits_state = bp::ShowCreditsPacket::CreditsState::Start;
     REQUIRE(encode(packet) == golden_wide_id);
 
-    const auto back = decode<bp::ShowCreditsPacket_<2168>>(golden_wide_id);
+    const auto back = decode<bp::ShowCreditsPacket>(golden_wide_id);
     REQUIRE(back.player_id == bp::ActorRuntimeID{0x1'0000'0007});
-    REQUIRE(back.credits_state == bp::ShowCreditsPacket_<2168>::CreditsState::START);
+    REQUIRE(back.credits_state == bp::ShowCreditsPacket::CreditsState::Start);
 }

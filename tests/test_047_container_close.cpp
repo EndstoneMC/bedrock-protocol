@@ -30,27 +30,27 @@ TEST_CASE("packet id is 47")
 TEST_CASE("container-close round-trips against the golden")
 {
     bp::ContainerClosePacket_<2168> packet;
-    packet.container_id = bp::ContainerID::ARMOR;
-    packet.container_type = bp::ContainerType_<2168>::ARMOR;
+    packet.container_id = bp::ContainerID::Armor;
+    packet.container_type = bp::ContainerType_<2168>::Armor;
     packet.server_initiated_close = true;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ContainerClosePacket_<2168>>(golden);
-    REQUIRE(back.container_id == bp::ContainerID::ARMOR);
-    REQUIRE(back.container_type == bp::ContainerType_<2168>::ARMOR);
+    REQUIRE(back.container_id == bp::ContainerID::Armor);
+    REQUIRE(back.container_type == bp::ContainerType_<2168>::Armor);
     REQUIRE(back.server_initiated_close);
 }
 
 TEST_CASE("each negative sentinel costs one signed byte, not a varint")
 {
     bp::ContainerClosePacket_<2168> packet;
-    packet.container_id = bp::ContainerID::NONE;
-    packet.container_type = bp::ContainerType_<2168>::NONE;
+    packet.container_id = bp::ContainerID::None;
+    packet.container_type = bp::ContainerType_<2168>::None;
     packet.server_initiated_close = false;
     REQUIRE(encode(packet) == golden_none);
 
     const auto back = decode<bp::ContainerClosePacket_<2168>>(golden_none);
-    REQUIRE(back.container_id == bp::ContainerID::NONE);
-    REQUIRE(back.container_type == bp::ContainerType_<2168>::NONE);
+    REQUIRE(back.container_id == bp::ContainerID::None);
+    REQUIRE(back.container_type == bp::ContainerType_<2168>::None);
     REQUIRE_FALSE(back.server_initiated_close);
 }

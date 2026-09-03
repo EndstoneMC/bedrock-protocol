@@ -20,27 +20,27 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 42")
 {
-    STATIC_REQUIRE(bp::SetHealthPacket_<2168>::Id == 42);
+    STATIC_REQUIRE(bp::SetHealthPacket::Id == 42);
     STATIC_REQUIRE(bp::has_packet_v<1001, 42>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 42>);
 }
 
 TEST_CASE("set-health round-trips against the golden")
 {
-    bp::SetHealthPacket_<2168> packet;
+    bp::SetHealthPacket packet;
     packet.health = 20;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetHealthPacket_<2168>>(golden);
+    const auto back = decode<bp::SetHealthPacket>(golden);
     REQUIRE(back.health == 20);
 }
 
 TEST_CASE("a negative health is a zigzag varint, not a fixed or unsigned one")
 {
-    bp::SetHealthPacket_<2168> packet;
+    bp::SetHealthPacket packet;
     packet.health = -300;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::SetHealthPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::SetHealthPacket>(golden_negative);
     REQUIRE(back.health == -300);
 }

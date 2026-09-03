@@ -30,18 +30,18 @@ const std::string golden_empty_info = bytes({
 
 TEST_CASE("packet id is 342")
 {
-    STATIC_REQUIRE(bp::PartyChangedPacket_<2168>::Id == 342);
+    STATIC_REQUIRE(bp::PartyChangedPacket::Id == 342);
     STATIC_REQUIRE(bp::has_packet_v<1001, 342>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 342>);
 }
 
 TEST_CASE("party changed round-trips against the golden")
 {
-    bp::PartyChangedPacket_<2168> packet;
+    bp::PartyChangedPacket packet;
     packet.party_info = bp::PlayerPartyInfo{.party_id = "d1e2f3a4-5b6c-7d8e-9f01-234567890abc", .is_leader = true};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PartyChangedPacket_<2168>>(golden);
+    const auto back = decode<bp::PartyChangedPacket>(golden);
     REQUIRE(back.party_info.has_value());
     REQUIRE(back.party_info->party_id == "d1e2f3a4-5b6c-7d8e-9f01-234567890abc");
     REQUIRE(back.party_info->is_leader);
@@ -49,19 +49,19 @@ TEST_CASE("party changed round-trips against the golden")
 
 TEST_CASE("an absent party info is a lone zero byte, and a lone true byte is not a body")
 {
-    bp::PartyChangedPacket_<2168> packet;
+    bp::PartyChangedPacket packet;
     REQUIRE(encode(packet) == golden_absent);
-    REQUIRE_FALSE(decode<bp::PartyChangedPacket_<2168>>(golden_absent).party_info.has_value());
-    REQUIRE(rejects<bp::PartyChangedPacket_<2168>>(golden.substr(0, 1)));
+    REQUIRE_FALSE(decode<bp::PartyChangedPacket>(golden_absent).party_info.has_value());
+    REQUIRE(rejects<bp::PartyChangedPacket>(golden.substr(0, 1)));
 }
 
 TEST_CASE("a present party info keeps a presence byte ahead of its own empty id")
 {
-    bp::PartyChangedPacket_<2168> packet;
+    bp::PartyChangedPacket packet;
     packet.party_info = bp::PlayerPartyInfo{.party_id = "", .is_leader = false};
     REQUIRE(encode(packet) == golden_empty_info);
 
-    const auto back = decode<bp::PartyChangedPacket_<2168>>(golden_empty_info);
+    const auto back = decode<bp::PartyChangedPacket>(golden_empty_info);
     REQUIRE(back.party_info.has_value());
     REQUIRE(back.party_info->party_id.empty());
     REQUIRE_FALSE(back.party_info->is_leader);

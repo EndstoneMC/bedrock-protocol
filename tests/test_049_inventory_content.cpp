@@ -23,7 +23,7 @@ Packet sample()
     Packet packet;
     packet.inventory_id = static_cast<bp::ContainerID>(12);
     packet.slots = {stone, Item{}};
-    packet.full_container_name.name = bp::ContainerEnumName::CURSOR_CONTAINER;
+    packet.full_container_name.name = bp::ContainerEnumName::CursorContainer;
     packet.full_container_name.dynamic_id = 3;
     return packet;
 }
@@ -86,7 +86,7 @@ TEST_CASE("inventory-content v975 round-trips against the golden")
     REQUIRE(back.slots.size() == 2);
     REQUIRE(back.slots[0].block_runtime_id == 7);
     REQUIRE(back.slots[1].id == 0);
-    REQUIRE(back.full_container_name.name == bp::ContainerEnumName::CURSOR_CONTAINER);
+    REQUIRE(back.full_container_name.name == bp::ContainerEnumName::CursorContainer);
     REQUIRE(back.full_container_name.dynamic_id == 3);
     REQUIRE(back.storage_item.id == 0);
 }
@@ -133,7 +133,7 @@ TEST_CASE("inventory-content v2168 writes an engaged net id as a bare signed var
     PacketV2168 packet;
     packet.inventory_id = static_cast<bp::ContainerID>(12);
     packet.slots = {helmet, bp::v2168::SerializedNetworkItemStackDescriptor{}};
-    packet.full_container_name.name = bp::ContainerEnumName::CURSOR_CONTAINER;
+    packet.full_container_name.name = bp::ContainerEnumName::CursorContainer;
     packet.full_container_name.dynamic_id = 3;
     REQUIRE(encode(packet) == golden_v2168_net_id);
 
@@ -147,7 +147,7 @@ TEST_CASE("inventory-content v2168 writes an engaged net id as a bare signed var
 TEST_CASE("inventory-content omits an absent dynamic container id")
 {
     PacketV1001 packet;
-    packet.full_container_name.name = bp::ContainerEnumName::INVENTORY_CONTAINER;
+    packet.full_container_name.name = bp::ContainerEnumName::InventoryContainer;
     REQUIRE(encode(packet) == bytes({
     0x00, 0x00, 0x1d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 }));

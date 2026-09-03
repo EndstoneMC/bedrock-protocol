@@ -45,23 +45,23 @@ const std::string golden_no_params = bytes({
 
 TEST_CASE("packet id is 9")
 {
-    STATIC_REQUIRE(bp::TextPacket_<2168>::Id == 9);
+    STATIC_REQUIRE(bp::TextPacket::Id == 9);
     STATIC_REQUIRE(bp::has_packet_v<1001, 9>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 9>);
 }
 
 TEST_CASE("text round-trips against the goldens")
 {
-    bp::TextPacket_<2168> message_only;
-    message_only.body = bp::TextPacket_<2168>::MessageOnly{
-        .type = bp::TextPacketType::TEXT_OBJECT_ANNOUNCEMENT,
+    bp::TextPacket message_only;
+    message_only.body = bp::TextPacket::MessageOnly{
+        .type = bp::TextPacketType::TextObjectAnnouncement,
         .message = "{}",
     };
     REQUIRE(encode(message_only) == golden_message_only);
 
-    bp::TextPacket_<2168> author_and_message;
-    author_and_message.body = bp::TextPacket_<2168>::AuthorAndMessage{
-        .type = bp::TextPacketType::CHAT,
+    bp::TextPacket author_and_message;
+    author_and_message.body = bp::TextPacket::AuthorAndMessage{
+        .type = bp::TextPacketType::Chat,
         .author = "Steve",
         .message = "hello",
     };
@@ -70,68 +70,68 @@ TEST_CASE("text round-trips against the goldens")
     author_and_message.filtered_message = "h***o";
     REQUIRE(encode(author_and_message) == golden_author_and_message);
 
-    bp::TextPacket_<2168> message_and_params;
+    bp::TextPacket message_and_params;
     message_and_params.localize = true;
-    message_and_params.body = bp::TextPacket_<2168>::MessageAndParams{
-        .type = bp::TextPacketType::TRANSLATE,
+    message_and_params.body = bp::TextPacket::MessageAndParams{
+        .type = bp::TextPacketType::Translate,
         .message = "chat.type.text",
         .params = {"Alex", "hi"},
     };
     REQUIRE(encode(message_and_params) == golden_message_and_params);
 
-    const auto raw = decode<bp::TextPacket_<2168>>(golden_message_only);
+    const auto raw = decode<bp::TextPacket>(golden_message_only);
     REQUIRE_FALSE(raw.localize);
     REQUIRE(raw.body.index() == 0);
-    REQUIRE(std::get<0>(raw.body).type == bp::TextPacketType::TEXT_OBJECT_ANNOUNCEMENT);
+    REQUIRE(std::get<0>(raw.body).type == bp::TextPacketType::TextObjectAnnouncement);
     REQUIRE(std::get<0>(raw.body).message == "{}");
     REQUIRE(raw.xuid.empty());
     REQUIRE(raw.platform_id.empty());
     REQUIRE_FALSE(raw.filtered_message.has_value());
 
-    const auto chat = decode<bp::TextPacket_<2168>>(golden_author_and_message);
+    const auto chat = decode<bp::TextPacket>(golden_author_and_message);
     REQUIRE_FALSE(chat.localize);
     REQUIRE(chat.body.index() == 1);
-    REQUIRE(std::get<1>(chat.body).type == bp::TextPacketType::CHAT);
+    REQUIRE(std::get<1>(chat.body).type == bp::TextPacketType::Chat);
     REQUIRE(std::get<1>(chat.body).author == "Steve");
     REQUIRE(std::get<1>(chat.body).message == "hello");
     REQUIRE(chat.xuid == "2535400000000000");
     REQUIRE(chat.platform_id == "switch-1");
     REQUIRE(chat.filtered_message == "h***o");
 
-    const auto translated = decode<bp::TextPacket_<2168>>(golden_message_and_params);
+    const auto translated = decode<bp::TextPacket>(golden_message_and_params);
     REQUIRE(translated.localize);
     REQUIRE(translated.body.index() == 2);
-    REQUIRE(std::get<2>(translated.body).type == bp::TextPacketType::TRANSLATE);
+    REQUIRE(std::get<2>(translated.body).type == bp::TextPacketType::Translate);
     REQUIRE(std::get<2>(translated.body).message == "chat.type.text");
     REQUIRE(std::get<2>(translated.body).params == std::vector<std::string>{"Alex", "hi"});
 }
 
 TEST_CASE("an empty parameter list still writes its count")
 {
-    bp::TextPacket_<2168> packet;
-    packet.body = bp::TextPacket_<2168>::MessageAndParams{
-        .type = bp::TextPacketType::POPUP,
+    bp::TextPacket packet;
+    packet.body = bp::TextPacket::MessageAndParams{
+        .type = bp::TextPacketType::Popup,
         .message = "popup",
     };
     REQUIRE(encode(packet) == golden_no_params);
 
-    const auto back = decode<bp::TextPacket_<2168>>(golden_no_params);
+    const auto back = decode<bp::TextPacket>(golden_no_params);
     REQUIRE(back.body.index() == 2);
     REQUIRE(std::get<2>(back.body).params.empty());
 }
 
 TEST_CASE("an empty filtered message is not an absent one")
 {
-    bp::TextPacket_<2168> absent;
-    absent.body = bp::TextPacket_<2168>::MessageOnly{
-        .type = bp::TextPacketType::RAW,
+    bp::TextPacket absent;
+    absent.body = bp::TextPacket::MessageOnly{
+        .type = bp::TextPacketType::Raw,
         .message = "x",
     };
 
-    bp::TextPacket_<2168> empty = absent;
+    bp::TextPacket empty = absent;
     empty.filtered_message = "";
 
     REQUIRE(encode(empty).size() == encode(absent).size() + 1);
-    REQUIRE(decode<bp::TextPacket_<2168>>(encode(empty)).filtered_message == "");
-    REQUIRE_FALSE(decode<bp::TextPacket_<2168>>(encode(absent)).filtered_message.has_value());
+    REQUIRE(decode<bp::TextPacket>(encode(empty)).filtered_message == "");
+    REQUIRE_FALSE(decode<bp::TextPacket>(encode(absent)).filtered_message.has_value());
 }

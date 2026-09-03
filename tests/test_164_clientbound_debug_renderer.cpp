@@ -50,16 +50,16 @@ const std::string golden_clear_with_marker = bytes({
 
 TEST_CASE("packet id is 164")
 {
-    STATIC_REQUIRE(bp::ClientboundDebugRendererPacket_<2168>::Id == 164);
+    STATIC_REQUIRE(bp::ClientboundDebugRendererPacket::Id == 164);
     STATIC_REQUIRE(bp::has_packet_v<1001, 164>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 164>);
 }
 
 TEST_CASE("clientbound debug renderer add-cube round-trips against the golden")
 {
-    bp::ClientboundDebugRendererPacket_<2168> packet;
-    packet.type = bp::ClientboundDebugRendererPacket_<2168>::PayloadType::ADD_DEBUG_MARKER_CUBE;
-    packet.debug_marker_data = bp::ClientboundDebugRendererPacket_<2168>::DebugMarkerData{
+    bp::ClientboundDebugRendererPacket packet;
+    packet.type = bp::ClientboundDebugRendererPacket::PayloadType::AddDebugMarkerCube;
+    packet.debug_marker_data = bp::ClientboundDebugRendererPacket::DebugMarkerData{
         .text = "marker",
         .position = bp::Vec3{.x = 1.0F, .y = 2.0F, .z = 3.0F},
         .color = bp::Color{0x44556677},
@@ -67,8 +67,8 @@ TEST_CASE("clientbound debug renderer add-cube round-trips against the golden")
     };
     REQUIRE(encode(packet) == golden_add_cube);
 
-    const auto back = decode<bp::ClientboundDebugRendererPacket_<2168>>(golden_add_cube);
-    REQUIRE(back.type == bp::ClientboundDebugRendererPacket_<2168>::PayloadType::ADD_DEBUG_MARKER_CUBE);
+    const auto back = decode<bp::ClientboundDebugRendererPacket>(golden_add_cube);
+    REQUIRE(back.type == bp::ClientboundDebugRendererPacket::PayloadType::AddDebugMarkerCube);
     REQUIRE(back.debug_marker_data.has_value());
     REQUIRE(back.debug_marker_data->text == "marker");
     REQUIRE(back.debug_marker_data->position.x == 1.0F);
@@ -80,20 +80,20 @@ TEST_CASE("clientbound debug renderer add-cube round-trips against the golden")
 
 TEST_CASE("an absent debug marker spends a presence byte and nothing after it")
 {
-    bp::ClientboundDebugRendererPacket_<2168> packet;
-    packet.type = bp::ClientboundDebugRendererPacket_<2168>::PayloadType::INVALID;
+    bp::ClientboundDebugRendererPacket packet;
+    packet.type = bp::ClientboundDebugRendererPacket::PayloadType::Invalid;
     REQUIRE(encode(packet) == golden_invalid);
 
-    const auto back = decode<bp::ClientboundDebugRendererPacket_<2168>>(golden_invalid);
-    REQUIRE(back.type == bp::ClientboundDebugRendererPacket_<2168>::PayloadType::INVALID);
+    const auto back = decode<bp::ClientboundDebugRendererPacket>(golden_invalid);
+    REQUIRE(back.type == bp::ClientboundDebugRendererPacket::PayloadType::Invalid);
     REQUIRE_FALSE(back.debug_marker_data.has_value());
 }
 
 TEST_CASE("the debug marker's presence is not gated on the payload type")
 {
-    bp::ClientboundDebugRendererPacket_<2168> packet;
-    packet.type = bp::ClientboundDebugRendererPacket_<2168>::PayloadType::CLEAR_DEBUG_MARKERS;
-    packet.debug_marker_data = bp::ClientboundDebugRendererPacket_<2168>::DebugMarkerData{
+    bp::ClientboundDebugRendererPacket packet;
+    packet.type = bp::ClientboundDebugRendererPacket::PayloadType::ClearDebugMarkers;
+    packet.debug_marker_data = bp::ClientboundDebugRendererPacket::DebugMarkerData{
         .text = "",
         .position = bp::Vec3{.x = 0.0F, .y = 0.0F, .z = 0.0F},
         .color = bp::Color{-1},
@@ -101,8 +101,8 @@ TEST_CASE("the debug marker's presence is not gated on the payload type")
     };
     REQUIRE(encode(packet) == golden_clear_with_marker);
 
-    const auto back = decode<bp::ClientboundDebugRendererPacket_<2168>>(golden_clear_with_marker);
-    REQUIRE(back.type == bp::ClientboundDebugRendererPacket_<2168>::PayloadType::CLEAR_DEBUG_MARKERS);
+    const auto back = decode<bp::ClientboundDebugRendererPacket>(golden_clear_with_marker);
+    REQUIRE(back.type == bp::ClientboundDebugRendererPacket::PayloadType::ClearDebugMarkers);
     REQUIRE(back.debug_marker_data.has_value());
     REQUIRE(back.debug_marker_data->text.empty());
     REQUIRE(back.debug_marker_data->color == bp::Color{-1});

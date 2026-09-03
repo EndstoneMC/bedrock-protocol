@@ -16,26 +16,26 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 321")
 {
-    STATIC_REQUIRE(bp::ClientCameraAimAssistPacket_<2168>::Id == 321);
+    STATIC_REQUIRE(bp::ClientCameraAimAssistPacket::Id == 321);
     STATIC_REQUIRE(bp::has_packet_v<1001, 321>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 321>);
 }
 
 TEST_CASE("client camera aim assist round-trips against the golden")
 {
-    bp::ClientCameraAimAssistPacket_<2168> packet;
+    bp::ClientCameraAimAssistPacket packet;
     packet.camera_preset_id = "preset";
-    packet.action = bp::ClientCameraAimAssistPacketAction::CLEAR;
+    packet.action = bp::ClientCameraAimAssistPacketAction::Clear;
     packet.allow_aim_assist = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientCameraAimAssistPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientCameraAimAssistPacket>(golden);
     REQUIRE(back.camera_preset_id == "preset");
-    REQUIRE(back.action == bp::ClientCameraAimAssistPacketAction::CLEAR);
+    REQUIRE(back.action == bp::ClientCameraAimAssistPacketAction::Clear);
     REQUIRE(back.allow_aim_assist);
 }
 
 TEST_CASE("an empty preset id is a lone zero length prefix")
 {
-    REQUIRE(encode(bp::ClientCameraAimAssistPacket_<2168>{}) == bytes({0x00, 0x00, 0x00}));
+    REQUIRE(encode(bp::ClientCameraAimAssistPacket{}) == bytes({0x00, 0x00, 0x00}));
 }

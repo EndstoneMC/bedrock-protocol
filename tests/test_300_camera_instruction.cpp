@@ -75,18 +75,18 @@ const std::string golden_spline = bytes({
 
 TEST_CASE("packet id is 300")
 {
-    STATIC_REQUIRE(bp::CameraInstructionPacket_<2168>::Id == 300);
+    STATIC_REQUIRE(bp::CameraInstructionPacket::Id == 300);
     STATIC_REQUIRE(bp::has_packet_v<1001, 300>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 300>);
 }
 
 TEST_CASE("a camera instruction round-trips against the golden")
 {
-    bp::CameraInstructionPacket_<2168> packet;
+    bp::CameraInstructionPacket packet;
     packet.camera_instruction.set = bp::CameraInstructionOptions::SetInstruction{
         .preset_index = 3,
         .ease = bp::CameraInstructionOptions::SetInstruction::EaseOption{
-            .easing_type = bp::EasingType::IN_OUT_QUAD, .easing_time = 1.5F},
+            .easing_type = bp::EasingType::InOutQuad, .easing_time = 1.5F},
         .pos = bp::CameraInstructionOptions::SetInstruction::PosOption{.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F}},
         .rot = bp::CameraInstructionOptions::SetInstruction::RotOption{.rot_x = 4.0F, .rot_y = 5.0F},
         .facing = bp::CameraInstructionOptions::SetInstruction::FacingOption{
@@ -111,15 +111,15 @@ TEST_CASE("a camera instruction round-trips against the golden")
     };
     packet.camera_instruction.remove_target = false;
     packet.camera_instruction.field_of_view = bp::CameraInstructionOptions::FovInstruction{
-        .fov = 70.0F, .fov_ease_time = 2.0F, .fov_ease_type = bp::EasingType::OUT_BACK, .fov_clear = false};
+        .fov = 70.0F, .fov_ease_time = 2.0F, .fov_ease_type = bp::EasingType::OutBack, .fov_clear = false};
     packet.camera_instruction.attach_to_entity =
         bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = -5};
     packet.camera_instruction.detach_from_entity = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraInstructionPacket_<2168>>(golden);
+    const auto back = decode<bp::CameraInstructionPacket>(golden);
     REQUIRE(back.camera_instruction.set->preset_index == 3);
-    REQUIRE(back.camera_instruction.set->ease->easing_type == bp::EasingType::IN_OUT_QUAD);
+    REQUIRE(back.camera_instruction.set->ease->easing_type == bp::EasingType::InOutQuad);
     REQUIRE(back.camera_instruction.set->ease->easing_time == 1.5F);
     REQUIRE(back.camera_instruction.set->pos->pos.z == 3.0F);
     REQUIRE(back.camera_instruction.set->rot->rot_y == 5.0F);
@@ -140,7 +140,7 @@ TEST_CASE("a camera instruction round-trips against the golden")
     REQUIRE(back.camera_instruction.remove_target == false);
     REQUIRE(back.camera_instruction.field_of_view->fov == 70.0F);
     REQUIRE(back.camera_instruction.field_of_view->fov_ease_time == 2.0F);
-    REQUIRE(back.camera_instruction.field_of_view->fov_ease_type == bp::EasingType::OUT_BACK);
+    REQUIRE(back.camera_instruction.field_of_view->fov_ease_type == bp::EasingType::OutBack);
     REQUIRE_FALSE(back.camera_instruction.field_of_view->fov_clear);
     REQUIRE_FALSE(back.camera_instruction.spline.has_value());
     REQUIRE(back.camera_instruction.attach_to_entity->attach_to_entity_id == -5);
@@ -149,10 +149,10 @@ TEST_CASE("a camera instruction round-trips against the golden")
 
 TEST_CASE("a camera instruction with every option absent is nine presence bytes")
 {
-    bp::CameraInstructionPacket_<2168> packet;
+    bp::CameraInstructionPacket packet;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::CameraInstructionPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::CameraInstructionPacket>(golden_empty);
     REQUIRE_FALSE(back.camera_instruction.set.has_value());
     REQUIRE_FALSE(back.camera_instruction.clear.has_value());
     REQUIRE_FALSE(back.camera_instruction.fade.has_value());
@@ -166,48 +166,48 @@ TEST_CASE("a camera instruction with every option absent is nine presence bytes"
 
 TEST_CASE("a camera spline instruction writes its curve type, identifier and load flag bare")
 {
-    bp::CameraInstructionPacket_<2168> packet;
+    bp::CameraInstructionPacket packet;
     packet.camera_instruction.spline = bp::CameraInstructionOptions::SplineInstruction{
         .total_time = 2.5F,
-        .curve_type = bp::SplineType::LINEAR,
+        .curve_type = bp::SplineType::Linear,
         .curve = {{.x = 1.0F, .y = 2.0F, .z = 3.0F}, {.x = 4.0F, .y = 5.0F, .z = 6.0F}},
         .progress_key_frames = {{.progress_key_frame_value = 0.25F,
                                  .progress_key_frame_time = 0.5F,
-                                 .progress_key_frames_easing_func = bp::EasingType::IN_QUAD}},
+                                 .progress_key_frames_easing_func = bp::EasingType::InQuad}},
         .spline_rotation_option = {{.rotation_key_frame_value = {.x = 7.0F, .y = 8.0F, .z = 9.0F},
                                     .rotation_key_frame_time = 1.25F,
-                                    .rotation_key_frames_easing_func = bp::EasingType::OUT_BACK}},
+                                    .rotation_key_frames_easing_func = bp::EasingType::OutBack}},
         .spline_identifier = "minecraft:orbit",
         .load_from_json = true,
     };
     REQUIRE(encode(packet) == golden_spline);
 
-    const auto back = decode<bp::CameraInstructionPacket_<2168>>(golden_spline);
+    const auto back = decode<bp::CameraInstructionPacket>(golden_spline);
     REQUIRE(back.camera_instruction.spline->total_time == 2.5F);
-    REQUIRE(back.camera_instruction.spline->curve_type == bp::SplineType::LINEAR);
+    REQUIRE(back.camera_instruction.spline->curve_type == bp::SplineType::Linear);
     REQUIRE(back.camera_instruction.spline->curve.size() == 2);
     REQUIRE(back.camera_instruction.spline->curve[1].z == 6.0F);
     REQUIRE(back.camera_instruction.spline->progress_key_frames.size() == 1);
     REQUIRE(back.camera_instruction.spline->progress_key_frames[0].progress_key_frame_value == 0.25F);
     REQUIRE(back.camera_instruction.spline->progress_key_frames[0].progress_key_frames_easing_func ==
-            bp::EasingType::IN_QUAD);
+            bp::EasingType::InQuad);
     REQUIRE(back.camera_instruction.spline->spline_rotation_option.size() == 1);
     REQUIRE(back.camera_instruction.spline->spline_rotation_option[0].rotation_key_frame_value.x == 7.0F);
     REQUIRE(back.camera_instruction.spline->spline_rotation_option[0].rotation_key_frames_easing_func ==
-            bp::EasingType::OUT_BACK);
+            bp::EasingType::OutBack);
     REQUIRE(back.camera_instruction.spline->spline_identifier == "minecraft:orbit");
     REQUIRE(back.camera_instruction.spline->load_from_json);
 }
 
 TEST_CASE("a camera spline instruction with an empty curve still writes the three list prefixes")
 {
-    bp::CameraInstructionPacket_<2168> packet;
+    bp::CameraInstructionPacket packet;
     packet.camera_instruction.spline = bp::CameraInstructionOptions::SplineInstruction{
-        .total_time = 0.0F, .curve_type = bp::SplineType::CATMULL_ROM, .load_from_json = false};
+        .total_time = 0.0F, .curve_type = bp::SplineType::CatmullRom, .load_from_json = false};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 9 + 4 + 1 + 3 + 1 + 1);
 
-    const auto back = decode<bp::CameraInstructionPacket_<2168>>(wire);
+    const auto back = decode<bp::CameraInstructionPacket>(wire);
     REQUIRE(back.camera_instruction.spline->curve.empty());
     REQUIRE(back.camera_instruction.spline->progress_key_frames.empty());
     REQUIRE(back.camera_instruction.spline->spline_rotation_option.empty());
@@ -216,11 +216,11 @@ TEST_CASE("a camera spline instruction with an empty curve still writes the thre
 
 TEST_CASE("a camera instruction's attach-to-entity id is a fixed eight-byte int64")
 {
-    bp::CameraInstructionPacket_<2168> packet;
+    bp::CameraInstructionPacket packet;
     packet.camera_instruction.attach_to_entity =
         bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = -1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 17);
-    REQUIRE(decode<bp::CameraInstructionPacket_<2168>>(wire).camera_instruction.attach_to_entity->attach_to_entity_id ==
+    REQUIRE(decode<bp::CameraInstructionPacket>(wire).camera_instruction.attach_to_entity->attach_to_entity_id ==
             -1);
 }

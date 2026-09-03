@@ -23,14 +23,14 @@ const std::string golden_zero = bytes({
 
 TEST_CASE("packet id is 306")
 {
-    STATIC_REQUIRE(bp::PlayerToggleCrafterSlotRequestPacket_<2168>::Id == 306);
+    STATIC_REQUIRE(bp::PlayerToggleCrafterSlotRequestPacket::Id == 306);
     STATIC_REQUIRE(bp::has_packet_v<1001, 306>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 306>);
 }
 
 TEST_CASE("player-toggle-crafter-slot-request round-trips against the golden")
 {
-    bp::PlayerToggleCrafterSlotRequestPacket_<2168> packet;
+    bp::PlayerToggleCrafterSlotRequestPacket packet;
     packet.pos_x = 1;
     packet.pos_y = -2;
     packet.pos_z = 300;
@@ -38,7 +38,7 @@ TEST_CASE("player-toggle-crafter-slot-request round-trips against the golden")
     packet.is_disabled = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerToggleCrafterSlotRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerToggleCrafterSlotRequestPacket>(golden);
     REQUIRE(back.pos_x == 1);
     REQUIRE(back.pos_y == -2);
     REQUIRE(back.pos_z == 300);
@@ -48,7 +48,7 @@ TEST_CASE("player-toggle-crafter-slot-request round-trips against the golden")
 
 TEST_CASE("the position is three fixed int32s and the slot index one byte")
 {
-    bp::PlayerToggleCrafterSlotRequestPacket_<2168> packet;
+    bp::PlayerToggleCrafterSlotRequestPacket packet;
     packet.pos_x = 0;
     packet.pos_y = 0;
     packet.pos_z = 0;
@@ -57,9 +57,9 @@ TEST_CASE("the position is three fixed int32s and the slot index one byte")
     REQUIRE(encode(packet) == golden_zero);
 
     const auto varint_body = bytes({0x02, 0x03, 0xa8, 0x04, 0xc8, 0x01, 0x01});
-    REQUIRE(rejects<bp::PlayerToggleCrafterSlotRequestPacket_<2168>>(varint_body));
+    REQUIRE(rejects<bp::PlayerToggleCrafterSlotRequestPacket>(varint_body));
 
-    const auto back = decode<bp::PlayerToggleCrafterSlotRequestPacket_<2168>>(golden_zero);
+    const auto back = decode<bp::PlayerToggleCrafterSlotRequestPacket>(golden_zero);
     REQUIRE(back.slot_index == 0);
     REQUIRE_FALSE(back.is_disabled);
 }

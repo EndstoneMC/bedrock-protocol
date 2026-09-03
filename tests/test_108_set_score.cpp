@@ -13,22 +13,22 @@ using Packet2168 = bp::SetScorePacket_<2168>;
 Packet1001 fill_v1001_change()
 {
     Packet1001 packet;
-    packet.type = bp::ScorePacketType::CHANGE;
+    packet.type = bp::ScorePacketType::Change;
     packet.score_info = {
         {.scoreboard_id = {.raw_id = 1},
          .objective_name = "obj",
          .score_value = 5,
-         .identity_type = bp::IdentityDefinition::Type::PLAYER,
+         .identity_type = bp::IdentityDefinition::Type::Player,
          .player_id = {.actor_unique_id = 9}},
         {.scoreboard_id = {.raw_id = 2},
          .objective_name = "obj",
          .score_value = 6,
-         .identity_type = bp::IdentityDefinition::Type::ENTITY,
+         .identity_type = bp::IdentityDefinition::Type::Entity,
          .entity_id = bp::ActorUniqueID{11}},
         {.scoreboard_id = {.raw_id = 3},
          .objective_name = "obj",
          .score_value = 7,
-         .identity_type = bp::IdentityDefinition::Type::FAKE_PLAYER,
+         .identity_type = bp::IdentityDefinition::Type::FakePlayer,
          .fake_player_name = "fake"},
     };
     return packet;
@@ -38,20 +38,20 @@ Packet2168 fill_v2168()
 {
     Packet2168 packet;
     packet.score_info = {
-        bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::REMOVE,
+        bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::Remove,
                                .scoreboard_id = {.raw_id = 1},
                                .objective_name = "rm"},
-        bp::v2168::ChangePlayerScore{.action = bp::ScorePacketEntryAction::CHANGE_PLAYER,
+        bp::v2168::ChangePlayerScore{.action = bp::ScorePacketEntryAction::ChangePlayer,
                                      .scoreboard_id = {.raw_id = 2},
                                      .objective_name = "obj",
                                      .score_value = 5,
                                      .player_id = {.actor_unique_id = 9}},
-        bp::v2168::ChangeEntityScore{.action = bp::ScorePacketEntryAction::CHANGE_ENTITY,
+        bp::v2168::ChangeEntityScore{.action = bp::ScorePacketEntryAction::ChangeEntity,
                                      .scoreboard_id = {.raw_id = 3},
                                      .objective_name = "obj",
                                      .score_value = 6,
                                      .entity_id = bp::ActorUniqueID{11}},
-        bp::v2168::ChangeFakePlayerScore{.action = bp::ScorePacketEntryAction::CHANGE_FAKE_PLAYER,
+        bp::v2168::ChangeFakePlayerScore{.action = bp::ScorePacketEntryAction::ChangeFakePlayer,
                                          .scoreboard_id = {.raw_id = 4},
                                          .objective_name = "obj",
                                          .score_value = 7,
@@ -113,7 +113,7 @@ TEST_CASE("SetScorePacket: v1001 change round-trip")
     REQUIRE(encode(fill_v1001_change()) == golden_v1001_change);
 
     const auto rt = decode<Packet1001>(golden_v1001_change);
-    REQUIRE(rt.type == bp::ScorePacketType::CHANGE);
+    REQUIRE(rt.type == bp::ScorePacketType::Change);
     REQUIRE(rt.score_info.size() == 3);
     REQUIRE(rt.score_info[0].player_id.actor_unique_id == 9);
     REQUIRE(rt.score_info[2].fake_player_name == "fake");
@@ -123,12 +123,12 @@ TEST_CASE("SetScorePacket: v1001 change round-trip")
 TEST_CASE("SetScorePacket: v1001 remove round-trip")
 {
     Packet1001 packet;
-    packet.type = bp::ScorePacketType::REMOVE;
+    packet.type = bp::ScorePacketType::Remove;
     packet.removed_score_info = {{.scoreboard_id = {.raw_id = 1}, .objective_name = "rm", .score_value = 0}};
     REQUIRE(encode(packet) == golden_v1001_remove);
 
     const auto rt = decode<Packet1001>(golden_v1001_remove);
-    REQUIRE(rt.type == bp::ScorePacketType::REMOVE);
+    REQUIRE(rt.type == bp::ScorePacketType::Remove);
     REQUIRE(rt.score_info.empty());
     REQUIRE(rt.removed_score_info.size() == 1);
     REQUIRE(rt.removed_score_info[0].objective_name == "rm");
@@ -152,7 +152,7 @@ TEST_CASE("SetScorePacket: v2168 round-trip")
 TEST_CASE("SetScorePacket: a v2168 remove entry may drop its objective name")
 {
     Packet2168 packet;
-    packet.score_info = {bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::REMOVE,
+    packet.score_info = {bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::Remove,
                                                 .scoreboard_id = {.raw_id = 1},
                                                 .objective_name = std::nullopt}};
 

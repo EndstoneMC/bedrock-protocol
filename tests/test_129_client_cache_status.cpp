@@ -20,32 +20,32 @@ const std::string golden_disabled = bytes({
 
 TEST_CASE("packet id is 129")
 {
-    STATIC_REQUIRE(bp::ClientCacheStatusPacket_<2168>::Id == 129);
+    STATIC_REQUIRE(bp::ClientCacheStatusPacket::Id == 129);
     STATIC_REQUIRE(bp::has_packet_v<1001, 129>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 129>);
 }
 
 TEST_CASE("client-cache-status round-trips against the golden")
 {
-    bp::ClientCacheStatusPacket_<2168> packet;
+    bp::ClientCacheStatusPacket packet;
     packet.enabled = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientCacheStatusPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientCacheStatusPacket>(golden);
     REQUIRE(back.enabled);
 }
 
 TEST_CASE("a disabled cache is one zero byte, not an absent field")
 {
-    bp::ClientCacheStatusPacket_<2168> packet;
+    bp::ClientCacheStatusPacket packet;
     packet.enabled = false;
     const auto wire = encode(packet);
     REQUIRE(wire == golden_disabled);
     REQUIRE(wire.size() == 1);
-    REQUIRE_FALSE(decode<bp::ClientCacheStatusPacket_<2168>>(golden_disabled).enabled);
+    REQUIRE_FALSE(decode<bp::ClientCacheStatusPacket>(golden_disabled).enabled);
 }
 
 TEST_CASE("an empty body is not a client-cache-status")
 {
-    REQUIRE(rejects<bp::ClientCacheStatusPacket_<2168>>(""));
+    REQUIRE(rejects<bp::ClientCacheStatusPacket>(""));
 }

@@ -35,7 +35,7 @@ TEST_CASE("player-action v1001 form round-trips against the golden")
 
     Packet packet;
     packet.runtime_id = bp::ActorRuntimeID{7};
-    packet.action = bp::PlayerActionType_<1001>::START_USING_ITEM;
+    packet.action = bp::PlayerActionType_<1001>::StartUsingItem;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.result_pos = {.x = 4, .y = 5, .z = 6};
     packet.face = 2;
@@ -43,7 +43,7 @@ TEST_CASE("player-action v1001 form round-trips against the golden")
 
     const auto back = decode<Packet>(golden_start_using_item);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
-    REQUIRE(back.action == bp::PlayerActionType_<1001>::START_USING_ITEM);
+    REQUIRE(back.action == bp::PlayerActionType_<1001>::StartUsingItem);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.result_pos.z == 6);
     REQUIRE(back.face == 2);
@@ -55,14 +55,14 @@ TEST_CASE("player-action v2168 form round-trips against the golden")
 
     Packet packet;
     packet.runtime_id = bp::ActorRuntimeID{7};
-    packet.action = bp::PlayerActionType_<2168>::INTERNAL_UPDATE;
+    packet.action = bp::PlayerActionType_<2168>::InternalUpdate;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.result_pos = {.x = 4, .y = 5, .z = 6};
     packet.face = 2;
     REQUIRE(encode(packet) == golden_internal_update);
 
     const auto back = decode<Packet>(golden_internal_update);
-    REQUIRE(back.action == bp::PlayerActionType_<2168>::INTERNAL_UPDATE);
+    REQUIRE(back.action == bp::PlayerActionType_<2168>::InternalUpdate);
     REQUIRE(back.face == 2);
 }
 
@@ -72,15 +72,15 @@ TEST_CASE("player-action v2168 form round-trips against the golden")
 // other. Nothing in the framing can catch it.
 TEST_CASE("the two forms share a wire shape and part company on action 38 alone")
 {
-    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<1001>::COUNT) == 38);
-    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<2168>::INTERNAL_UPDATE) == 38);
-    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<2168>::COUNT) == 39);
+    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<1001>::Count) == 38);
+    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<2168>::InternalUpdate) == 38);
+    STATIC_REQUIRE(static_cast<int>(bp::PlayerActionType_<2168>::Count) == 39);
 
     REQUIRE(golden_start_using_item.size() == golden_internal_update.size());
 
     const auto as_v1001 = decode<bp::PlayerActionPacket_<1001>>(golden_internal_update);
-    REQUIRE(as_v1001.action == bp::PlayerActionType_<1001>::COUNT);
+    REQUIRE(as_v1001.action == bp::PlayerActionType_<1001>::Count);
 
     const auto as_v2168 = decode<bp::PlayerActionPacket_<2168>>(golden_start_using_item);
-    REQUIRE(as_v2168.action == bp::PlayerActionType_<2168>::START_USING_ITEM);
+    REQUIRE(as_v2168.action == bp::PlayerActionType_<2168>::StartUsingItem);
 }

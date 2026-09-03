@@ -29,19 +29,19 @@ const std::string golden_empty_response = bytes({
 
 TEST_CASE("packet id is 101")
 {
-    STATIC_REQUIRE(bp::ModalFormResponsePacket_<2168>::Id == 101);
+    STATIC_REQUIRE(bp::ModalFormResponsePacket::Id == 101);
     STATIC_REQUIRE(bp::has_packet_v<1001, 101>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 101>);
 }
 
 TEST_CASE("modal-form response round-trips against the golden")
 {
-    bp::ModalFormResponsePacket_<2168> packet;
+    bp::ModalFormResponsePacket packet;
     packet.form_id = 300;
     packet.json_response = "[true]";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ModalFormResponsePacket_<2168>>(golden);
+    const auto back = decode<bp::ModalFormResponsePacket>(golden);
     REQUIRE(back.form_id == 300);
     REQUIRE(back.json_response.has_value());
     REQUIRE(*back.json_response == "[true]");
@@ -50,30 +50,30 @@ TEST_CASE("modal-form response round-trips against the golden")
 
 TEST_CASE("a cancelled modal-form response carries the reason and no json")
 {
-    bp::ModalFormResponsePacket_<2168> packet;
+    bp::ModalFormResponsePacket packet;
     packet.form_id = 1;
-    packet.form_cancel_reason = bp::ModalFormCancelReason::USER_BUSY;
+    packet.form_cancel_reason = bp::ModalFormCancelReason::UserBusy;
     REQUIRE(encode(packet) == golden_cancelled);
 
-    const auto back = decode<bp::ModalFormResponsePacket_<2168>>(golden_cancelled);
+    const auto back = decode<bp::ModalFormResponsePacket>(golden_cancelled);
     REQUIRE(back.form_id == 1);
     REQUIRE_FALSE(back.json_response.has_value());
     REQUIRE(back.form_cancel_reason.has_value());
-    REQUIRE(*back.form_cancel_reason == bp::ModalFormCancelReason::USER_BUSY);
+    REQUIRE(*back.form_cancel_reason == bp::ModalFormCancelReason::UserBusy);
 }
 
 TEST_CASE("an empty json response is present, not absent")
 {
-    bp::ModalFormResponsePacket_<2168> packet;
+    bp::ModalFormResponsePacket packet;
     packet.form_id = 7;
     packet.json_response = "";
-    packet.form_cancel_reason = bp::ModalFormCancelReason::USER_CLOSED;
+    packet.form_cancel_reason = bp::ModalFormCancelReason::UserClosed;
     REQUIRE(encode(packet) == golden_empty_response);
     REQUIRE(encode(packet).size() == 5);
 
-    const auto back = decode<bp::ModalFormResponsePacket_<2168>>(golden_empty_response);
+    const auto back = decode<bp::ModalFormResponsePacket>(golden_empty_response);
     REQUIRE(back.json_response.has_value());
     REQUIRE(back.json_response->empty());
     REQUIRE(back.form_cancel_reason.has_value());
-    REQUIRE(*back.form_cancel_reason == bp::ModalFormCancelReason::USER_CLOSED);
+    REQUIRE(*back.form_cancel_reason == bp::ModalFormCancelReason::UserClosed);
 }

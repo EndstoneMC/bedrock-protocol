@@ -24,18 +24,18 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 160")
 {
-    STATIC_REQUIRE(bp::PlayerFogPacket_<2168>::Id == 160);
+    STATIC_REQUIRE(bp::PlayerFogPacket::Id == 160);
     STATIC_REQUIRE(bp::has_packet_v<1001, 160>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 160>);
 }
 
 TEST_CASE("player fog round-trips against the golden")
 {
-    bp::PlayerFogPacket_<2168> packet;
+    bp::PlayerFogPacket packet;
     packet.fog_stack = {"minecraft:fog_ocean", "minecraft:fog_hell"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerFogPacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerFogPacket>(golden);
     REQUIRE(back.fog_stack.size() == 2);
     REQUIRE(back.fog_stack[0] == "minecraft:fog_ocean");
     REQUIRE(back.fog_stack[1] == "minecraft:fog_hell");
@@ -43,6 +43,6 @@ TEST_CASE("player fog round-trips against the golden")
 
 TEST_CASE("an empty fog stack is a lone zero count")
 {
-    REQUIRE(encode(bp::PlayerFogPacket_<2168>{}) == golden_empty);
-    REQUIRE(decode<bp::PlayerFogPacket_<2168>>(golden_empty).fog_stack.empty());
+    REQUIRE(encode(bp::PlayerFogPacket{}) == golden_empty);
+    REQUIRE(decode<bp::PlayerFogPacket>(golden_empty).fog_stack.empty());
 }

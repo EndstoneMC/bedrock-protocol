@@ -60,11 +60,11 @@ TEST_CASE("packet id is 123 at both eras")
 TEST_CASE("level-sound-event v975 round-trips against the golden")
 {
     auto packet = sample<PacketV975>();
-    packet.event_id = bp::LevelSoundEvent_<975>::BELL;
+    packet.event_id = bp::LevelSoundEvent_<975>::Bell;
     REQUIRE(encode(packet) == golden_v975);
 
     const auto back = decode<PacketV975>(golden_v975);
-    REQUIRE(back.event_id == bp::LevelSoundEvent_<975>::BELL);
+    REQUIRE(back.event_id == bp::LevelSoundEvent_<975>::Bell);
     REQUIRE(back.data == -1);
     REQUIRE(back.actor_identifier == "minecraft:pig");
     REQUIRE(back.actor == bp::ActorUniqueID{7});

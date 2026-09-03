@@ -23,20 +23,20 @@ const std::string golden_empty_name = bytes({
 
 TEST_CASE("packet id is 87")
 {
-    STATIC_REQUIRE(bp::StopSoundPacket_<2168>::Id == 87);
+    STATIC_REQUIRE(bp::StopSoundPacket::Id == 87);
     STATIC_REQUIRE(bp::has_packet_v<1001, 87>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 87>);
 }
 
 TEST_CASE("stop-sound round-trips against the golden")
 {
-    bp::StopSoundPacket_<2168> packet;
+    bp::StopSoundPacket packet;
     packet.name = "record.pigstep";
     packet.stop_all = false;
     packet.stop_music_legacy = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::StopSoundPacket_<2168>>(golden);
+    const auto back = decode<bp::StopSoundPacket>(golden);
     REQUIRE(back.name == "record.pigstep");
     REQUIRE_FALSE(back.stop_all);
     REQUIRE(back.stop_music_legacy);
@@ -44,13 +44,13 @@ TEST_CASE("stop-sound round-trips against the golden")
 
 TEST_CASE("an empty sound name still writes its length prefix and both flags")
 {
-    bp::StopSoundPacket_<2168> packet;
+    bp::StopSoundPacket packet;
     packet.name = "";
     packet.stop_all = true;
     packet.stop_music_legacy = false;
     REQUIRE(encode(packet) == golden_empty_name);
 
-    const auto back = decode<bp::StopSoundPacket_<2168>>(golden_empty_name);
+    const auto back = decode<bp::StopSoundPacket>(golden_empty_name);
     REQUIRE(back.name.empty());
     REQUIRE(back.stop_all);
     REQUIRE_FALSE(back.stop_music_legacy);
@@ -58,11 +58,11 @@ TEST_CASE("an empty sound name still writes its length prefix and both flags")
 
 TEST_CASE("the sound name's length prefix is a varint")
 {
-    bp::StopSoundPacket_<2168> packet;
+    bp::StopSoundPacket packet;
     packet.name = std::string(200, 'a');
     packet.stop_all = true;
     packet.stop_music_legacy = true;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 204);
-    REQUIRE(decode<bp::StopSoundPacket_<2168>>(wire).name.size() == 200);
+    REQUIRE(decode<bp::StopSoundPacket>(wire).name.size() == 200);
 }

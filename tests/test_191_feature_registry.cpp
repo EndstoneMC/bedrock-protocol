@@ -17,18 +17,18 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 191")
 {
-    STATIC_REQUIRE(bp::FeatureRegistryPacket_<2168>::Id == 191);
+    STATIC_REQUIRE(bp::FeatureRegistryPacket::Id == 191);
     STATIC_REQUIRE(bp::has_packet_v<1001, 191>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 191>);
 }
 
 TEST_CASE("feature registry round-trips against the golden")
 {
-    bp::FeatureRegistryPacket_<2168> packet;
+    bp::FeatureRegistryPacket packet;
     packet.features_data_list.push_back({.feature_name = "minecraft:oak", .binary_json_output = "{}"});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::FeatureRegistryPacket_<2168>>(golden);
+    const auto back = decode<bp::FeatureRegistryPacket>(golden);
     REQUIRE(back.features_data_list.size() == 1);
     REQUIRE(back.features_data_list[0].feature_name == "minecraft:oak");
     REQUIRE(back.features_data_list[0].binary_json_output == "{}");
@@ -36,5 +36,5 @@ TEST_CASE("feature registry round-trips against the golden")
 
 TEST_CASE("an empty feature list is a lone zero count")
 {
-    REQUIRE(encode(bp::FeatureRegistryPacket_<2168>{}) == bytes({0x00}));
+    REQUIRE(encode(bp::FeatureRegistryPacket{}) == bytes({0x00}));
 }

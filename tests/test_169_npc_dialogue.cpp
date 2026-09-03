@@ -26,25 +26,25 @@ const std::string golden_empty_strings = bytes({
 
 TEST_CASE("packet id is 169")
 {
-    STATIC_REQUIRE(bp::NpcDialoguePacket_<2168>::Id == 169);
+    STATIC_REQUIRE(bp::NpcDialoguePacket::Id == 169);
     STATIC_REQUIRE(bp::has_packet_v<1001, 169>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 169>);
 }
 
 TEST_CASE("npc-dialogue round-trips against the golden")
 {
-    bp::NpcDialoguePacket_<2168> packet;
+    bp::NpcDialoguePacket packet;
     packet.npc_id = bp::ActorUniqueID{258};
-    packet.npc_dialogue_action_type = bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::CLOSE;
+    packet.npc_dialogue_action_type = bp::NpcDialoguePacket::NpcDialogueActionType::Close;
     packet.dialogue = "Hello";
     packet.scene_name = "greeting";
     packet.npc_name = "Guide";
     packet.action_json = "[]";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::NpcDialoguePacket_<2168>>(golden);
+    const auto back = decode<bp::NpcDialoguePacket>(golden);
     REQUIRE(back.npc_id == bp::ActorUniqueID{258});
-    REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::CLOSE);
+    REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket::NpcDialogueActionType::Close);
     REQUIRE(back.dialogue == "Hello");
     REQUIRE(back.scene_name == "greeting");
     REQUIRE(back.npc_name == "Guide");
@@ -53,15 +53,15 @@ TEST_CASE("npc-dialogue round-trips against the golden")
 
 TEST_CASE("an npc-dialogue npc id spends eight bytes on a value a varint would fit in five")
 {
-    bp::NpcDialoguePacket_<2168> packet;
+    bp::NpcDialoguePacket packet;
     packet.npc_id = bp::ActorUniqueID{4294967296LL};
-    packet.npc_dialogue_action_type = bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::OPEN;
+    packet.npc_dialogue_action_type = bp::NpcDialoguePacket::NpcDialogueActionType::Open;
     REQUIRE(encode(packet) == golden_empty_strings);
     REQUIRE(encode(packet).size() == 13);
 
-    const auto back = decode<bp::NpcDialoguePacket_<2168>>(golden_empty_strings);
+    const auto back = decode<bp::NpcDialoguePacket>(golden_empty_strings);
     REQUIRE(back.npc_id == bp::ActorUniqueID{4294967296LL});
-    REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket_<2168>::NpcDialogueActionType::OPEN);
+    REQUIRE(back.npc_dialogue_action_type == bp::NpcDialoguePacket::NpcDialogueActionType::Open);
     REQUIRE(back.dialogue.empty());
     REQUIRE(back.scene_name.empty());
     REQUIRE(back.npc_name.empty());

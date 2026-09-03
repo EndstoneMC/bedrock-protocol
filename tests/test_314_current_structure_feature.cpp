@@ -22,36 +22,36 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 314")
 {
-    STATIC_REQUIRE(bp::CurrentStructureFeaturePacket_<2168>::Id == 314);
+    STATIC_REQUIRE(bp::CurrentStructureFeaturePacket::Id == 314);
     STATIC_REQUIRE(bp::has_packet_v<1001, 314>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 314>);
 }
 
 TEST_CASE("current-structure-feature round-trips against the golden")
 {
-    bp::CurrentStructureFeaturePacket_<2168> packet;
+    bp::CurrentStructureFeaturePacket packet;
     packet.current_structure_feature = "minecraft:ancient_city";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CurrentStructureFeaturePacket_<2168>>(golden);
+    const auto back = decode<bp::CurrentStructureFeaturePacket>(golden);
     REQUIRE(back.current_structure_feature == "minecraft:ancient_city");
 }
 
 TEST_CASE("a player in no structure is a lone length prefix")
 {
-    bp::CurrentStructureFeaturePacket_<2168> packet;
+    bp::CurrentStructureFeaturePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::CurrentStructureFeaturePacket_<2168>>(golden_empty).current_structure_feature.empty());
+    REQUIRE(decode<bp::CurrentStructureFeaturePacket>(golden_empty).current_structure_feature.empty());
 }
 
 TEST_CASE("the feature name's length prefix is a varint, not a byte")
 {
-    bp::CurrentStructureFeaturePacket_<2168> packet;
+    bp::CurrentStructureFeaturePacket packet;
     packet.current_structure_feature = std::string(200, 'a');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
-    REQUIRE(decode<bp::CurrentStructureFeaturePacket_<2168>>(wire).current_structure_feature ==
+    REQUIRE(decode<bp::CurrentStructureFeaturePacket>(wire).current_structure_feature ==
             packet.current_structure_feature);
 }

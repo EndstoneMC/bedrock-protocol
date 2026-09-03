@@ -14,18 +14,18 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 335")
 {
-    STATIC_REQUIRE(bp::ClientboundDataDrivenUIReloadPacket_<2168>::Id == 335);
+    STATIC_REQUIRE(bp::ClientboundDataDrivenUIReloadPacket::Id == 335);
     STATIC_REQUIRE(bp::has_packet_v<1001, 335>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 335>);
 }
 
 TEST_CASE("clientbound-data-driven-ui-reload round-trips against the golden")
 {
-    bp::ClientboundDataDrivenUIReloadPacket_<2168> packet;
+    bp::ClientboundDataDrivenUIReloadPacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::ClientboundDataDrivenUIReloadPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientboundDataDrivenUIReloadPacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
@@ -33,7 +33,7 @@ TEST_CASE("the body leaves every byte of a frame that carries some")
 {
     const std::string frame = bytes({0xff, 0x7f, 0x01});
     bp::BinaryReader reader{std::string_view{frame}};
-    const auto value = bp::Serializer<bp::ClientboundDataDrivenUIReloadPacket_<2168>>::deserialize(reader);
+    const auto value = bp::Serializer<bp::ClientboundDataDrivenUIReloadPacket>::deserialize(reader);
     REQUIRE(value.has_value());
     REQUIRE(reader.getUnreadLength() == frame.size());
 }

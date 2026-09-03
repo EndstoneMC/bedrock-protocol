@@ -20,26 +20,26 @@ const std::string golden_undefined = bytes({
 
 TEST_CASE("packet id is 62")
 {
-    STATIC_REQUIRE(bp::SetPlayerGameTypePacket_<2168>::Id == 62);
+    STATIC_REQUIRE(bp::SetPlayerGameTypePacket::Id == 62);
     STATIC_REQUIRE(bp::has_packet_v<1001, 62>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 62>);
 }
 
 TEST_CASE("set-player-game-type round-trips against the golden")
 {
-    bp::SetPlayerGameTypePacket_<2168> packet;
-    packet.player_game_type = bp::GameType::SPECTATOR;
+    bp::SetPlayerGameTypePacket packet;
+    packet.player_game_type = bp::GameType::Spectator;
     REQUIRE(encode(packet) == golden);
 
-    REQUIRE(decode<bp::SetPlayerGameTypePacket_<2168>>(golden).player_game_type == bp::GameType::SPECTATOR);
+    REQUIRE(decode<bp::SetPlayerGameTypePacket>(golden).player_game_type == bp::GameType::Spectator);
 }
 
 TEST_CASE("the game type is a zigzag varint, so Undefined is one byte and not five")
 {
-    bp::SetPlayerGameTypePacket_<2168> packet;
-    packet.player_game_type = bp::GameType::UNDEFINED;
+    bp::SetPlayerGameTypePacket packet;
+    packet.player_game_type = bp::GameType::Undefined;
     REQUIRE(encode(packet) == golden_undefined);
 
-    REQUIRE(decode<bp::SetPlayerGameTypePacket_<2168>>(golden_undefined).player_game_type == bp::GameType::UNDEFINED);
-    REQUIRE(rejects<bp::SetPlayerGameTypePacket_<2168>>(std::string{}));
+    REQUIRE(decode<bp::SetPlayerGameTypePacket>(golden_undefined).player_game_type == bp::GameType::Undefined);
+    REQUIRE(rejects<bp::SetPlayerGameTypePacket>(std::string{}));
 }

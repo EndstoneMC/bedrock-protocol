@@ -24,14 +24,14 @@ const std::string golden_wide_runtime_id = bytes({
 
 TEST_CASE("packet id is 18")
 {
-    STATIC_REQUIRE(bp::MoveActorAbsolutePacket_<2168>::Id == 18);
+    STATIC_REQUIRE(bp::MoveActorAbsolutePacket::Id == 18);
     STATIC_REQUIRE(bp::has_packet_v<1001, 18>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 18>);
 }
 
 TEST_CASE("move-actor-absolute round-trips against the golden")
 {
-    bp::MoveActorAbsolutePacket_<2168> packet;
+    bp::MoveActorAbsolutePacket packet;
     packet.move_data.runtime_id = bp::ActorRuntimeID{300};
     packet.move_data.header = 0x8d;
     packet.move_data.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
@@ -40,7 +40,7 @@ TEST_CASE("move-actor-absolute round-trips against the golden")
     packet.move_data.rot_y_head = 0x91;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::MoveActorAbsolutePacket_<2168>>(golden);
+    const auto back = decode<bp::MoveActorAbsolutePacket>(golden);
     REQUIRE(back.move_data.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.move_data.header == 0x8d);
     REQUIRE(back.move_data.pos.x == 1.0F);
@@ -53,10 +53,10 @@ TEST_CASE("move-actor-absolute round-trips against the golden")
 
 TEST_CASE("the runtime id is a 64-bit varint")
 {
-    bp::MoveActorAbsolutePacket_<2168> packet;
+    bp::MoveActorAbsolutePacket packet;
     packet.move_data.runtime_id = bp::ActorRuntimeID{4294967298ULL};
     REQUIRE(encode(packet) == golden_wide_runtime_id);
 
-    const auto back = decode<bp::MoveActorAbsolutePacket_<2168>>(golden_wide_runtime_id);
+    const auto back = decode<bp::MoveActorAbsolutePacket>(golden_wide_runtime_id);
     REQUIRE(back.move_data.runtime_id == bp::ActorRuntimeID{4294967298ULL});
 }

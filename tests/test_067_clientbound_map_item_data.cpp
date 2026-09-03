@@ -25,10 +25,10 @@ Packet1001 fill_v1001()
     packet.map_ids = {bp::ActorUniqueID{7}};
     packet.scale = 4;
     packet.unique_ids = {
-        {.type = bp::base::MapItemTrackedActor::Type::ENTITY, .key_entity_id = bp::ActorUniqueID{9}},
-        {.type = bp::base::MapItemTrackedActor::Type::BLOCK_ENTITY, .key_block_pos = {.x = 4, .y = 5, .z = 6}},
+        {.type = bp::base::MapItemTrackedActor::Type::Entity, .key_entity_id = bp::ActorUniqueID{9}},
+        {.type = bp::base::MapItemTrackedActor::Type::BlockEntity, .key_block_pos = {.x = 4, .y = 5, .z = 6}},
     };
-    packet.decorations = {{.image = bp::base::MapDecoration::Type::MARKER_RED,
+    packet.decorations = {{.image = bp::base::MapDecoration::Type::MarkerRed,
                            .rotation = 3,
                            .x = 4,
                            .y = 5,
@@ -52,10 +52,10 @@ Packet2168 fill_v2168()
     packet.creation_map_ids = std::vector<bp::ActorUniqueID>{bp::ActorUniqueID{7}};
     packet.scale = 4;
     packet.unique_ids = std::vector<bp::v2168::MapItemTrackedActor::UniqueId>{
-        {.type = bp::v2168::MapItemTrackedActor::Type::ENTITY, .key_entity_id = bp::ActorUniqueID{9}},
-        {.type = bp::v2168::MapItemTrackedActor::Type::BLOCK_ENTITY, .key_block_pos = bp::BlockPos{.x = 4, .y = 5, .z = 6}},
+        {.type = bp::v2168::MapItemTrackedActor::Type::Entity, .key_entity_id = bp::ActorUniqueID{9}},
+        {.type = bp::v2168::MapItemTrackedActor::Type::BlockEntity, .key_block_pos = bp::BlockPos{.x = 4, .y = 5, .z = 6}},
     };
-    packet.decorations = std::vector<bp::v2168::MapDecoration>{{.image = bp::v2168::MapDecoration::Type::MARKER_RED,
+    packet.decorations = std::vector<bp::v2168::MapDecoration>{{.image = bp::v2168::MapDecoration::Type::MarkerRed,
                                                                 .rotation = 3,
                                                                 .x = 4,
                                                                 .y = 5,

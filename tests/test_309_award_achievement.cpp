@@ -20,27 +20,27 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 309")
 {
-    STATIC_REQUIRE(bp::AwardAchievementPacket_<2168>::Id == 309);
+    STATIC_REQUIRE(bp::AwardAchievementPacket::Id == 309);
     STATIC_REQUIRE(bp::has_packet_v<1001, 309>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 309>);
 }
 
 TEST_CASE("award-achievement round-trips against the golden")
 {
-    bp::AwardAchievementPacket_<2168> packet;
+    bp::AwardAchievementPacket packet;
     packet.achievement_id = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AwardAchievementPacket_<2168>>(golden);
+    const auto back = decode<bp::AwardAchievementPacket>(golden);
     REQUIRE(back.achievement_id == 300);
 }
 
 TEST_CASE("the achievement id is a signed fixed int32, not a varint")
 {
-    bp::AwardAchievementPacket_<2168> packet;
+    bp::AwardAchievementPacket packet;
     packet.achievement_id = -1;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::AwardAchievementPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::AwardAchievementPacket>(golden_negative);
     REQUIRE(back.achievement_id == -1);
 }

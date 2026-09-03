@@ -20,33 +20,33 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 106")
 {
-    STATIC_REQUIRE(bp::RemoveObjectivePacket_<2168>::Id == 106);
+    STATIC_REQUIRE(bp::RemoveObjectivePacket::Id == 106);
     STATIC_REQUIRE(bp::has_packet_v<1001, 106>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 106>);
 }
 
 TEST_CASE("remove-objective round-trips against the golden")
 {
-    bp::RemoveObjectivePacket_<2168> packet;
+    bp::RemoveObjectivePacket packet;
     packet.objective_name = "kills";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RemoveObjectivePacket_<2168>>(golden);
+    const auto back = decode<bp::RemoveObjectivePacket>(golden);
     REQUIRE(back.objective_name == "kills");
 }
 
 TEST_CASE("an empty objective name is a bare length byte")
 {
-    bp::RemoveObjectivePacket_<2168> packet;
+    bp::RemoveObjectivePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::RemoveObjectivePacket_<2168>>(golden_empty).objective_name.empty());
+    REQUIRE(decode<bp::RemoveObjectivePacket>(golden_empty).objective_name.empty());
 }
 
 TEST_CASE("a 200-byte objective name takes a two-byte varint length")
 {
-    bp::RemoveObjectivePacket_<2168> packet;
+    bp::RemoveObjectivePacket packet;
     packet.objective_name = std::string(200, 'o');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
-    REQUIRE(decode<bp::RemoveObjectivePacket_<2168>>(wire).objective_name == packet.objective_name);
+    REQUIRE(decode<bp::RemoveObjectivePacket>(wire).objective_name == packet.objective_name);
 }

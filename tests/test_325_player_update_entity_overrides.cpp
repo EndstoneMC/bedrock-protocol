@@ -57,7 +57,7 @@ TEST_CASE("player-update-entity-overrides v1001 writes no payload for a clear")
     Packet packet;
     packet.id = bp::ActorUniqueID{7};
     packet.property_index = 2;
-    packet.update_type = bp::UpdateType::CLEAR_OVERRIDES;
+    packet.update_type = bp::UpdateType::ClearOverrides;
     packet.int_value = 42;
     packet.float_value = 0.5F;
     REQUIRE(encode(packet) == golden_v1001_clear);
@@ -65,7 +65,7 @@ TEST_CASE("player-update-entity-overrides v1001 writes no payload for a clear")
     const auto back = decode<Packet>(golden_v1001_clear);
     REQUIRE(back.id == bp::ActorUniqueID{7});
     REQUIRE(back.property_index == 2);
-    REQUIRE(back.update_type == bp::UpdateType::CLEAR_OVERRIDES);
+    REQUIRE(back.update_type == bp::UpdateType::ClearOverrides);
 }
 
 TEST_CASE("player-update-entity-overrides v1001 gates the payload on the update type")
@@ -75,13 +75,13 @@ TEST_CASE("player-update-entity-overrides v1001 gates the payload on the update 
     Packet packet;
     packet.id = bp::ActorUniqueID{7};
     packet.property_index = 2;
-    packet.update_type = bp::UpdateType::SET_INT_OVERRIDE;
+    packet.update_type = bp::UpdateType::SetIntOverride;
     packet.int_value = 42;
     packet.float_value = 0.5F;
     REQUIRE(encode(packet) == golden_v1001_int);
     REQUIRE(decode<Packet>(golden_v1001_int).int_value == 42);
 
-    packet.update_type = bp::UpdateType::SET_FLOAT_OVERRIDE;
+    packet.update_type = bp::UpdateType::SetFloatOverride;
     REQUIRE(encode(packet) == golden_v1001_float);
     REQUIRE(decode<Packet>(golden_v1001_float).float_value == 0.5F);
 }
@@ -94,7 +94,7 @@ TEST_CASE("player-update-entity-overrides v2168 round-trips through its own seri
     Packet packet;
     packet.id = bp::ActorUniqueID{7};
     packet.property_index = 2;
-    packet.update = IntOverride{.update_type = bp::UpdateType::SET_INT_OVERRIDE, .value = 42};
+    packet.update = IntOverride{.update_type = bp::UpdateType::SetIntOverride, .value = 42};
 
     const auto encoded = encode(packet);
     REQUIRE(encoded.substr(0, 2) == prefix_v2168);
@@ -118,7 +118,7 @@ TEST_CASE("player-update-entity-overrides v2168 keeps a payload-less case in the
     Packet packet;
     packet.id = bp::ActorUniqueID{7};
     packet.property_index = 2;
-    packet.update = ClearOverride{.update_type = bp::UpdateType::CLEAR_OVERRIDES};
+    packet.update = ClearOverride{.update_type = bp::UpdateType::ClearOverrides};
 
     const auto encoded = encode(packet);
     REQUIRE(encoded[2] == '\x00');
@@ -126,7 +126,7 @@ TEST_CASE("player-update-entity-overrides v2168 keeps a payload-less case in the
     REQUIRE(encoded.size() == 18);
     REQUIRE(std::holds_alternative<ClearOverride>(decode<Packet>(encoded).update));
 
-    packet.update = FloatOverride{.update_type = bp::UpdateType::SET_FLOAT_OVERRIDE, .value = 0.5F};
+    packet.update = FloatOverride{.update_type = bp::UpdateType::SetFloatOverride, .value = 0.5F};
     const auto floats = encode(packet);
     REQUIRE(floats[2] == '\x03');
     REQUIRE(floats.size() == 24);
@@ -144,7 +144,7 @@ TEST_CASE("a v1001 entity-overrides body does not decode as a v2168 one")
     packet.id = bp::ActorUniqueID{7};
     packet.property_index = 2;
     packet.update = bp::v2168::PlayerUpdateEntityOverridesPacket::ClearOverride{
-        .update_type = bp::UpdateType::CLEAR_OVERRIDES};
+        .update_type = bp::UpdateType::ClearOverrides};
     REQUIRE(encode(packet).size() > golden_v1001_clear.size());
     REQUIRE(decode_partial<bp::PlayerUpdateEntityOverridesPacket_<1001>>(encode(packet)).property_index == 2);
 }

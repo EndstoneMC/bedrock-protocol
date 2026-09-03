@@ -22,19 +22,19 @@ const std::string golden_empty_tag = bytes({
 
 TEST_CASE("packet id is 56")
 {
-    STATIC_REQUIRE(bp::BlockActorDataPacket_<2168>::Id == 56);
+    STATIC_REQUIRE(bp::BlockActorDataPacket::Id == 56);
     STATIC_REQUIRE(bp::has_packet_v<1001, 56>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 56>);
 }
 
 TEST_CASE("block-actor-data round-trips against the golden")
 {
-    bp::BlockActorDataPacket_<2168> packet;
+    bp::BlockActorDataPacket packet;
     packet.pos = {.x = -1, .y = 320, .z = 3};
     packet.data = bp::CompoundTag{{"id", bp::StringTag{"Chest"}}};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::BlockActorDataPacket_<2168>>(golden);
+    const auto back = decode<bp::BlockActorDataPacket>(golden);
     REQUIRE(back.pos.x == -1);
     REQUIRE(back.pos.y == 320);
     REQUIRE(back.pos.z == 3);
@@ -44,11 +44,11 @@ TEST_CASE("block-actor-data round-trips against the golden")
 
 TEST_CASE("an empty block-actor tag is a three-byte named compound")
 {
-    bp::BlockActorDataPacket_<2168> packet;
+    bp::BlockActorDataPacket packet;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     REQUIRE(encode(packet) == golden_empty_tag);
 
-    const auto back = decode<bp::BlockActorDataPacket_<2168>>(golden_empty_tag);
+    const auto back = decode<bp::BlockActorDataPacket>(golden_empty_tag);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == 2);
     REQUIRE(back.pos.z == 3);
@@ -57,12 +57,12 @@ TEST_CASE("an empty block-actor tag is a three-byte named compound")
 
 TEST_CASE("a negative block position zigzags instead of widening")
 {
-    bp::BlockActorDataPacket_<2168> packet;
+    bp::BlockActorDataPacket packet;
     packet.pos = {.x = -1, .y = -1, .z = -1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 6);
 
-    const auto back = decode<bp::BlockActorDataPacket_<2168>>(wire);
+    const auto back = decode<bp::BlockActorDataPacket>(wire);
     REQUIRE(back.pos.x == -1);
     REQUIRE(back.pos.y == -1);
     REQUIRE(back.pos.z == -1);

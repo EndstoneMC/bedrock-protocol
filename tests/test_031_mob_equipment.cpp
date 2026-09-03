@@ -32,7 +32,7 @@ Packet sample()
     packet.runtime_id = bp::ActorRuntimeID{7};
     packet.slot = 2;
     packet.selected_slot = 2;
-    packet.container_id = bp::ContainerID::INVENTORY;
+    packet.container_id = bp::ContainerID::Inventory;
     return packet;
 }
 
@@ -99,7 +99,7 @@ TEST_CASE("mob-equipment v1001 round-trips against the goldens")
     REQUIRE(std::get<0>(*back.item.net_id_variant).raw_id == 9);
     REQUIRE(back.slot == 2);
     REQUIRE(back.selected_slot == 2);
-    REQUIRE(back.container_id == bp::ContainerID::INVENTORY);
+    REQUIRE(back.container_id == bp::ContainerID::Inventory);
 }
 
 TEST_CASE("mob-equipment v2168 round-trips against the goldens")

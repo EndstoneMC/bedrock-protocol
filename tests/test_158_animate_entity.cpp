@@ -33,14 +33,14 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 158")
 {
-    STATIC_REQUIRE(bp::AnimateEntityPacket_<2168>::Id == 158);
+    STATIC_REQUIRE(bp::AnimateEntityPacket::Id == 158);
     STATIC_REQUIRE(bp::has_packet_v<1001, 158>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 158>);
 }
 
 TEST_CASE("animate-entity round-trips against the golden")
 {
-    bp::AnimateEntityPacket_<2168> packet;
+    bp::AnimateEntityPacket packet;
     packet.animation = "animation.creeper.swelling";
     packet.next_state = "default";
     packet.stop_expression = "query.any_animation_finished";
@@ -50,7 +50,7 @@ TEST_CASE("animate-entity round-trips against the golden")
     packet.runtime_ids = {bp::ActorRuntimeID{7}, bp::ActorRuntimeID{300}};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AnimateEntityPacket_<2168>>(golden);
+    const auto back = decode<bp::AnimateEntityPacket>(golden);
     REQUIRE(back.animation == "animation.creeper.swelling");
     REQUIRE(back.next_state == "default");
     REQUIRE(back.stop_expression == "query.any_animation_finished");
@@ -64,13 +64,13 @@ TEST_CASE("animate-entity round-trips against the golden")
 
 TEST_CASE("an empty animate-entity actor list leaves the stop expression version four fixed bytes")
 {
-    bp::AnimateEntityPacket_<2168> packet;
+    bp::AnimateEntityPacket packet;
     packet.stop_expression_version = -1;
     const auto wire = encode(packet);
     REQUIRE(wire == golden_empty);
     REQUIRE(wire.size() == 13);
 
-    const auto back = decode<bp::AnimateEntityPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::AnimateEntityPacket>(golden_empty);
     REQUIRE(back.stop_expression_version == -1);
     REQUIRE(back.runtime_ids.empty());
 }

@@ -41,7 +41,7 @@ TEST_CASE("CommandBlockUpdatePacket: a block target round-trips against the gold
 {
     bp::CommandBlockUpdatePacket_<2168>::BlockCommandData block;
     block.block_pos = {.x = 1, .y = -2, .z = 300};
-    block.mode = bp::CommandBlockMode::CHAIN;
+    block.mode = bp::CommandBlockMode::Chain;
     block.redstone_mode = true;
     block.is_conditional = false;
 
@@ -62,7 +62,7 @@ TEST_CASE("CommandBlockUpdatePacket: a block target round-trips against the gold
     REQUIRE(back_block.block_pos.x == 1);
     REQUIRE(back_block.block_pos.y == -2);
     REQUIRE(back_block.block_pos.z == 300);
-    REQUIRE(back_block.mode == bp::CommandBlockMode::CHAIN);
+    REQUIRE(back_block.mode == bp::CommandBlockMode::Chain);
     REQUIRE(back_block.redstone_mode);
     REQUIRE_FALSE(back_block.is_conditional);
     REQUIRE(back.command == "say hi");

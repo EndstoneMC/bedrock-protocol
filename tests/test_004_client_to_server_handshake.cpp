@@ -13,24 +13,24 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 4")
 {
-    STATIC_REQUIRE(bp::ClientToServerHandshakePacket_<2168>::Id == 4);
+    STATIC_REQUIRE(bp::ClientToServerHandshakePacket::Id == 4);
     STATIC_REQUIRE(bp::has_packet_v<1001, 4>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 4>);
 }
 
 TEST_CASE("client-to-server handshake round-trips against the golden")
 {
-    bp::ClientToServerHandshakePacket_<2168> packet;
+    bp::ClientToServerHandshakePacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::ClientToServerHandshakePacket_<2168>>(golden);
+    const auto back = decode<bp::ClientToServerHandshakePacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
 TEST_CASE("the body consumes nothing, so a byte behind it survives the read")
 {
     const std::string trailing = bytes({0x01});
-    const auto back = decode_partial<bp::ClientToServerHandshakePacket_<2168>>(trailing);
+    const auto back = decode_partial<bp::ClientToServerHandshakePacket>(trailing);
     REQUIRE(encode(back).empty());
 }

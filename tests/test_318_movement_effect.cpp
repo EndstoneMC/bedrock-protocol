@@ -25,13 +25,13 @@ TEST_CASE("movement effect round-trips against the golden")
 {
     bp::MovementEffectPacket_<2168> packet;
     packet.target_runtime_id = bp::ActorRuntimeID{7};
-    packet.effect_id = bp::MovementEffectType::DOLPHIN_BOOST;
+    packet.effect_id = bp::MovementEffectType::DolphinBoost;
     packet.effect_duration = 40;
     packet.tick = bp::PlayerInputTick{300};
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::MovementEffectPacket_<2168>>(golden);
-    REQUIRE(back.effect_id == bp::MovementEffectType::DOLPHIN_BOOST);
+    REQUIRE(back.effect_id == bp::MovementEffectType::DolphinBoost);
     REQUIRE(back.effect_duration == 40);
     REQUIRE(back.tick == bp::PlayerInputTick{300});
 }
@@ -39,7 +39,7 @@ TEST_CASE("movement effect round-trips against the golden")
 TEST_CASE("the effect type zigzags, so INVALID = -1 is one byte")
 {
     bp::MovementEffectPacket_<2168> packet;
-    packet.effect_id = bp::MovementEffectType::INVALID;
+    packet.effect_id = bp::MovementEffectType::Invalid;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);
     REQUIRE(wire[1] == '\x01');

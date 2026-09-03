@@ -25,23 +25,23 @@ const std::string golden_none = bytes({
 
 TEST_CASE("packet id is 110")
 {
-    STATIC_REQUIRE(bp::UpdateBlockSyncedPacket_<2168>::Id == 110);
+    STATIC_REQUIRE(bp::UpdateBlockSyncedPacket::Id == 110);
     STATIC_REQUIRE(bp::has_packet_v<1001, 110>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 110>);
 }
 
 TEST_CASE("update-block-synced round-trips against the golden")
 {
-    bp::UpdateBlockSyncedPacket_<2168> packet;
+    bp::UpdateBlockSyncedPacket packet;
     packet.pos = {.x = 1, .y = -2, .z = 3};
     packet.runtime_id = 300;
     packet.update_flags = 3;
     packet.layer = 1;
     packet.entity_unique_id = bp::ActorUniqueID{4294967297};
-    packet.message = bp::ActorBlockSyncMessage::MessageId::DESTROY;
+    packet.message = bp::ActorBlockSyncMessage::MessageId::Destroy;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateBlockSyncedPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateBlockSyncedPacket>(golden);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == -2);
     REQUIRE(back.pos.z == 3);
@@ -49,22 +49,22 @@ TEST_CASE("update-block-synced round-trips against the golden")
     REQUIRE(back.update_flags == 3);
     REQUIRE(back.layer == 1);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{4294967297});
-    REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::DESTROY);
+    REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::Destroy);
 }
 
 TEST_CASE("the block-sync actor id does not zigzag and the update flags are not one byte")
 {
-    bp::UpdateBlockSyncedPacket_<2168> packet;
+    bp::UpdateBlockSyncedPacket packet;
     packet.pos = {.x = 0, .y = 0, .z = 0};
     packet.runtime_id = 0;
     packet.update_flags = 200;
     packet.layer = 0;
     packet.entity_unique_id = bp::ActorUniqueID{64};
-    packet.message = bp::ActorBlockSyncMessage::MessageId::NONE;
+    packet.message = bp::ActorBlockSyncMessage::MessageId::None;
     REQUIRE(encode(packet) == golden_none);
 
-    const auto back = decode<bp::UpdateBlockSyncedPacket_<2168>>(golden_none);
+    const auto back = decode<bp::UpdateBlockSyncedPacket>(golden_none);
     REQUIRE(back.update_flags == 200);
     REQUIRE(back.entity_unique_id == bp::ActorUniqueID{64});
-    REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::NONE);
+    REQUIRE(back.message == bp::ActorBlockSyncMessage::MessageId::None);
 }

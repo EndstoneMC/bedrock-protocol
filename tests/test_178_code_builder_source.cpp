@@ -24,51 +24,51 @@ const std::string golden_all_none = bytes({
 
 TEST_CASE("packet id is 178")
 {
-    STATIC_REQUIRE(bp::CodeBuilderSourcePacket_<2168>::Id == 178);
+    STATIC_REQUIRE(bp::CodeBuilderSourcePacket::Id == 178);
     STATIC_REQUIRE(bp::has_packet_v<1001, 178>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 178>);
 }
 
 TEST_CASE("code-builder source round-trips against the golden")
 {
-    bp::CodeBuilderSourcePacket_<2168> packet;
-    packet.operation = bp::Operation::RESET;
-    packet.category = bp::Category::INSTANTIATION;
-    packet.code_status = bp::CodeStatus::SUCCEEDED;
+    bp::CodeBuilderSourcePacket packet;
+    packet.operation = bp::Operation::Reset;
+    packet.category = bp::Category::Instantiation;
+    packet.code_status = bp::CodeStatus::Succeeded;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CodeBuilderSourcePacket_<2168>>(golden);
-    REQUIRE(back.operation == bp::Operation::RESET);
-    REQUIRE(back.category == bp::Category::INSTANTIATION);
-    REQUIRE(back.code_status == bp::CodeStatus::SUCCEEDED);
+    const auto back = decode<bp::CodeBuilderSourcePacket>(golden);
+    REQUIRE(back.operation == bp::Operation::Reset);
+    REQUIRE(back.category == bp::Category::Instantiation);
+    REQUIRE(back.code_status == bp::CodeStatus::Succeeded);
 }
 
 TEST_CASE("a code-builder source body still writes three bytes with every field None")
 {
-    bp::CodeBuilderSourcePacket_<2168> packet;
-    packet.operation = bp::Operation::NONE;
-    packet.category = bp::Category::NONE;
-    packet.code_status = bp::CodeStatus::NONE;
+    bp::CodeBuilderSourcePacket packet;
+    packet.operation = bp::Operation::None;
+    packet.category = bp::Category::None;
+    packet.code_status = bp::CodeStatus::None;
     REQUIRE(encode(packet) == golden_all_none);
 
-    const auto back = decode<bp::CodeBuilderSourcePacket_<2168>>(golden_all_none);
-    REQUIRE(back.operation == bp::Operation::NONE);
-    REQUIRE(back.category == bp::Category::NONE);
-    REQUIRE(back.code_status == bp::CodeStatus::NONE);
+    const auto back = decode<bp::CodeBuilderSourcePacket>(golden_all_none);
+    REQUIRE(back.operation == bp::Operation::None);
+    REQUIRE(back.category == bp::Category::None);
+    REQUIRE(back.code_status == bp::CodeStatus::None);
 }
 
 TEST_CASE("a code-builder source operation above 127 stays a single byte")
 {
-    bp::CodeBuilderSourcePacket_<2168> packet;
+    bp::CodeBuilderSourcePacket packet;
     packet.operation = static_cast<bp::Operation>(200);
-    packet.category = bp::Category::CODE_STATUS;
-    packet.code_status = bp::CodeStatus::IN_PROGRESS;
+    packet.category = bp::Category::CodeStatus;
+    packet.code_status = bp::CodeStatus::InProgress;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 3);
 
-    const auto back = decode<bp::CodeBuilderSourcePacket_<2168>>(wire);
+    const auto back = decode<bp::CodeBuilderSourcePacket>(wire);
     REQUIRE(back.operation == static_cast<bp::Operation>(200));
-    REQUIRE(back.category == bp::Category::CODE_STATUS);
-    REQUIRE(back.code_status == bp::CodeStatus::IN_PROGRESS);
-    REQUIRE(rejects<bp::CodeBuilderSourcePacket_<2168>>(wire.substr(0, 2)));
+    REQUIRE(back.category == bp::Category::CodeStatus);
+    REQUIRE(back.code_status == bp::CodeStatus::InProgress);
+    REQUIRE(rejects<bp::CodeBuilderSourcePacket>(wire.substr(0, 2)));
 }

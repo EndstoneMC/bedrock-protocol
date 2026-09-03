@@ -35,21 +35,21 @@ const std::string golden_embedded_nul = bytes({
 
 TEST_CASE("packet id is 83")
 {
-    STATIC_REQUIRE(bp::ResourcePackChunkDataPacket_<2168>::Id == 83);
+    STATIC_REQUIRE(bp::ResourcePackChunkDataPacket::Id == 83);
     STATIC_REQUIRE(bp::has_packet_v<1001, 83>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 83>);
 }
 
 TEST_CASE("resource-pack chunk data round-trips against the golden")
 {
-    bp::ResourcePackChunkDataPacket_<2168> packet;
+    bp::ResourcePackChunkDataPacket packet;
     packet.resource_name = "24b1e0e7-4b3c-4bd2-9a5f-3e2c1f0a8d64_1.0.0";
     packet.chunk_id = 2;
     packet.byte_offset = 1048576;
     packet.data = bytes({0x50, 0x4b, 0x03, 0x04});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ResourcePackChunkDataPacket_<2168>>(golden);
+    const auto back = decode<bp::ResourcePackChunkDataPacket>(golden);
     REQUIRE(back.resource_name == "24b1e0e7-4b3c-4bd2-9a5f-3e2c1f0a8d64_1.0.0");
     REQUIRE(back.chunk_id == 2);
     REQUIRE(back.byte_offset == 1048576);
@@ -58,12 +58,12 @@ TEST_CASE("resource-pack chunk data round-trips against the golden")
 
 TEST_CASE("the chunk id and the byte offset are fixed-width, and an empty chunk keeps its length prefix")
 {
-    bp::ResourcePackChunkDataPacket_<2168> packet;
+    bp::ResourcePackChunkDataPacket packet;
     packet.chunk_id = 300;
     packet.byte_offset = 4096;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::ResourcePackChunkDataPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::ResourcePackChunkDataPacket>(golden_empty);
     REQUIRE(back.resource_name.empty());
     REQUIRE(back.chunk_id == 300);
     REQUIRE(back.byte_offset == 4096);
@@ -72,10 +72,10 @@ TEST_CASE("the chunk id and the byte offset are fixed-width, and an empty chunk 
 
 TEST_CASE("a chunk carrying a null byte survives the round trip")
 {
-    bp::ResourcePackChunkDataPacket_<2168> packet;
+    bp::ResourcePackChunkDataPacket packet;
     packet.resource_name = "p";
     packet.data = bytes({0x00, 0xff, 0x00});
     REQUIRE(encode(packet) == golden_embedded_nul);
 
-    REQUIRE(decode<bp::ResourcePackChunkDataPacket_<2168>>(golden_embedded_nul).data == bytes({0x00, 0xff, 0x00}));
+    REQUIRE(decode<bp::ResourcePackChunkDataPacket>(golden_embedded_nul).data == bytes({0x00, 0xff, 0x00}));
 }

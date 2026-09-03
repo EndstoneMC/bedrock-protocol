@@ -26,50 +26,50 @@ const std::string golden_invalid = bytes({
 
 TEST_CASE("packet id is 184")
 {
-    STATIC_REQUIRE(bp::RequestAbilityPacket_<2168>::Id == 184);
+    STATIC_REQUIRE(bp::RequestAbilityPacket::Id == 184);
     STATIC_REQUIRE(bp::has_packet_v<1001, 184>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 184>);
 }
 
 TEST_CASE("request-ability round-trips against the golden")
 {
-    bp::RequestAbilityPacket_<2168> packet;
-    packet.ability = bp::AbilitiesIndex::VERTICAL_FLY_SPEED;
-    packet.value_type = bp::RequestAbilityPacket_<2168>::Type::FLOAT;
+    bp::RequestAbilityPacket packet;
+    packet.ability = bp::AbilitiesIndex::VerticalFlySpeed;
+    packet.value_type = bp::RequestAbilityPacket::Type::Float;
     packet.bool_ = false;
     packet.float_ = 0.5F;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RequestAbilityPacket_<2168>>(golden);
-    REQUIRE(back.ability == bp::AbilitiesIndex::VERTICAL_FLY_SPEED);
-    REQUIRE(back.value_type == bp::RequestAbilityPacket_<2168>::Type::FLOAT);
+    const auto back = decode<bp::RequestAbilityPacket>(golden);
+    REQUIRE(back.ability == bp::AbilitiesIndex::VerticalFlySpeed);
+    REQUIRE(back.value_type == bp::RequestAbilityPacket::Type::Float);
     REQUIRE_FALSE(back.bool_);
     REQUIRE(back.float_ == 0.5F);
 }
 
 TEST_CASE("request-ability still writes four float bytes when the value type is bool")
 {
-    bp::RequestAbilityPacket_<2168> packet;
-    packet.ability = bp::AbilitiesIndex::FLYING;
-    packet.value_type = bp::RequestAbilityPacket_<2168>::Type::BOOL;
+    bp::RequestAbilityPacket packet;
+    packet.ability = bp::AbilitiesIndex::Flying;
+    packet.value_type = bp::RequestAbilityPacket::Type::Bool;
     packet.bool_ = true;
     packet.float_ = 0.0F;
     REQUIRE(encode(packet) == golden_bool);
 
-    const auto back = decode<bp::RequestAbilityPacket_<2168>>(golden_bool);
-    REQUIRE(back.ability == bp::AbilitiesIndex::FLYING);
-    REQUIRE(back.value_type == bp::RequestAbilityPacket_<2168>::Type::BOOL);
+    const auto back = decode<bp::RequestAbilityPacket>(golden_bool);
+    REQUIRE(back.ability == bp::AbilitiesIndex::Flying);
+    REQUIRE(back.value_type == bp::RequestAbilityPacket::Type::Bool);
     REQUIRE(back.bool_);
     REQUIRE(back.float_ == 0.0F);
 }
 
 TEST_CASE("the ability index is a zigzag varint, not the enum's signed byte")
 {
-    bp::RequestAbilityPacket_<2168> packet;
-    packet.ability = bp::AbilitiesIndex::INVALID;
-    packet.value_type = bp::RequestAbilityPacket_<2168>::Type::BOOL;
+    bp::RequestAbilityPacket packet;
+    packet.ability = bp::AbilitiesIndex::Invalid;
+    packet.value_type = bp::RequestAbilityPacket::Type::Bool;
     packet.bool_ = false;
     packet.float_ = 0.0F;
     REQUIRE(encode(packet) == golden_invalid);
-    REQUIRE(decode<bp::RequestAbilityPacket_<2168>>(golden_invalid).ability == bp::AbilitiesIndex::INVALID);
+    REQUIRE(decode<bp::RequestAbilityPacket>(golden_invalid).ability == bp::AbilitiesIndex::Invalid);
 }

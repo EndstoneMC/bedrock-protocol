@@ -20,26 +20,26 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 113")
 {
-    STATIC_REQUIRE(bp::SetLocalPlayerAsInitializedPacket_<2168>::Id == 113);
+    STATIC_REQUIRE(bp::SetLocalPlayerAsInitializedPacket::Id == 113);
     STATIC_REQUIRE(bp::has_packet_v<1001, 113>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 113>);
 }
 
 TEST_CASE("set-local-player-as-initialized round-trips against the golden")
 {
-    bp::SetLocalPlayerAsInitializedPacket_<2168> packet;
+    bp::SetLocalPlayerAsInitializedPacket packet;
     packet.player_id = bp::ActorRuntimeID{300};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetLocalPlayerAsInitializedPacket_<2168>>(golden);
+    const auto back = decode<bp::SetLocalPlayerAsInitializedPacket>(golden);
     REQUIRE(back.player_id == bp::ActorRuntimeID{300});
 }
 
 TEST_CASE("the initialized-player id is a 64-bit varint")
 {
-    bp::SetLocalPlayerAsInitializedPacket_<2168> packet;
+    bp::SetLocalPlayerAsInitializedPacket packet;
     packet.player_id = bp::ActorRuntimeID{4294967303ULL};
     REQUIRE(encode(packet) == golden_wide);
-    REQUIRE(decode<bp::SetLocalPlayerAsInitializedPacket_<2168>>(golden_wide).player_id ==
+    REQUIRE(decode<bp::SetLocalPlayerAsInitializedPacket>(golden_wide).player_id ==
             bp::ActorRuntimeID{4294967303ULL});
 }

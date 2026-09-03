@@ -23,35 +23,35 @@ const std::string golden_none = bytes({
 
 TEST_CASE("packet id is 48")
 {
-    STATIC_REQUIRE(bp::PlayerHotbarPacket_<2168>::Id == 48);
+    STATIC_REQUIRE(bp::PlayerHotbarPacket::Id == 48);
     STATIC_REQUIRE(bp::has_packet_v<1001, 48>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 48>);
 }
 
 TEST_CASE("player hotbar round-trips against the golden")
 {
-    bp::PlayerHotbarPacket_<2168> packet;
+    bp::PlayerHotbarPacket packet;
     packet.selected_slot = 300;
-    packet.container_id = bp::ContainerID::PLAYER_ONLY_UI;
+    packet.container_id = bp::ContainerID::PlayerOnlyUi;
     packet.should_select_slot = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerHotbarPacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerHotbarPacket>(golden);
     REQUIRE(back.selected_slot == 300);
-    REQUIRE(back.container_id == bp::ContainerID::PLAYER_ONLY_UI);
+    REQUIRE(back.container_id == bp::ContainerID::PlayerOnlyUi);
     REQUIRE(back.should_select_slot);
 }
 
 TEST_CASE("a NONE container id stays one signed byte")
 {
-    bp::PlayerHotbarPacket_<2168> packet;
+    bp::PlayerHotbarPacket packet;
     packet.selected_slot = 0;
-    packet.container_id = bp::ContainerID::NONE;
+    packet.container_id = bp::ContainerID::None;
     packet.should_select_slot = false;
     REQUIRE(encode(packet) == golden_none);
 
-    const auto back = decode<bp::PlayerHotbarPacket_<2168>>(golden_none);
+    const auto back = decode<bp::PlayerHotbarPacket>(golden_none);
     REQUIRE(back.selected_slot == 0);
-    REQUIRE(back.container_id == bp::ContainerID::NONE);
+    REQUIRE(back.container_id == bp::ContainerID::None);
     REQUIRE_FALSE(back.should_select_slot);
 }

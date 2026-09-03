@@ -44,7 +44,7 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 338")
 {
-    STATIC_REQUIRE(bp::CameraSplinePacket_<2168>::Id == 338);
+    STATIC_REQUIRE(bp::CameraSplinePacket::Id == 338);
     STATIC_REQUIRE(bp::has_packet_v<1001, 338>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 338>);
 }
@@ -60,12 +60,12 @@ TEST_CASE("camera spline round-trips against the golden")
     bp::CameraSplineProgressKeyFrame progress;
     progress.alpha = 0.5F;
     progress.time_seconds = 1.25F;
-    progress.easing_type = bp::EasingType::IN_OUT_QUAD;
+    progress.easing_type = bp::EasingType::InOutQuad;
 
     bp::CameraSplineRotationKeyFrame rotation;
     rotation.rotation = bp::Vec3{.x = 10.0F, .y = 20.0F, .z = 30.0F};
     rotation.time_seconds = 2.5F;
-    rotation.easing_type = bp::EasingType::LINEAR;
+    rotation.easing_type = bp::EasingType::Linear;
 
     bp::CameraSplineDefinition spline;
     spline.name = "mypack:flyby";
@@ -76,11 +76,11 @@ TEST_CASE("camera spline round-trips against the golden")
     spline.spline_progress_frames.push_back(progress);
     spline.spline_rotation_frames.push_back(rotation);
 
-    bp::CameraSplinePacket_<2168> packet;
+    bp::CameraSplinePacket packet;
     packet.splines.push_back(spline);
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraSplinePacket_<2168>>(golden);
+    const auto back = decode<bp::CameraSplinePacket>(golden);
     REQUIRE(back.splines.size() == 1);
     REQUIRE(back.splines.at(0).name == "mypack:flyby");
     REQUIRE(back.splines.at(0).total_time == 2.5F);
@@ -92,19 +92,19 @@ TEST_CASE("camera spline round-trips against the golden")
     REQUIRE(back.splines.at(0).spline_progress_frames.at(0).alpha == 0.5F);
     REQUIRE(back.splines.at(0).spline_progress_frames.at(0).time_seconds == 1.25F);
     REQUIRE(back.splines.at(0).spline_progress_frames.at(0).easing_type.has_value());
-    REQUIRE(*back.splines.at(0).spline_progress_frames.at(0).easing_type == bp::EasingType::IN_OUT_QUAD);
+    REQUIRE(*back.splines.at(0).spline_progress_frames.at(0).easing_type == bp::EasingType::InOutQuad);
     REQUIRE(back.splines.at(0).spline_rotation_frames.size() == 1);
     REQUIRE(back.splines.at(0).spline_rotation_frames.at(0).rotation.z == 30.0F);
     REQUIRE(back.splines.at(0).spline_rotation_frames.at(0).time_seconds == 2.5F);
     REQUIRE(back.splines.at(0).spline_rotation_frames.at(0).easing_type.has_value());
-    REQUIRE(*back.splines.at(0).spline_rotation_frames.at(0).easing_type == bp::EasingType::LINEAR);
+    REQUIRE(*back.splines.at(0).spline_rotation_frames.at(0).easing_type == bp::EasingType::Linear);
 }
 
 TEST_CASE("an empty camera spline list is a lone zero length prefix")
 {
-    bp::CameraSplinePacket_<2168> packet;
+    bp::CameraSplinePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::CameraSplinePacket_<2168>>(golden_empty).splines.empty());
+    REQUIRE(decode<bp::CameraSplinePacket>(golden_empty).splines.empty());
 }
 
 TEST_CASE("an absent camera spline easing is one zero byte, not a name")
@@ -112,7 +112,7 @@ TEST_CASE("an absent camera spline easing is one zero byte, not a name")
     bp::CameraSplineRotationKeyFrame rotation;
     rotation.rotation = bp::Vec3{.x = 0.0F, .y = 0.0F, .z = 0.0F};
     rotation.time_seconds = 1.0F;
-    rotation.easing_type = bp::EasingType::LINEAR;
+    rotation.easing_type = bp::EasingType::Linear;
 
     bp::CameraSplineDefinition spline;
     spline.name = "mypack:flyby";
@@ -120,7 +120,7 @@ TEST_CASE("an absent camera spline easing is one zero byte, not a name")
     spline.spline_type = "linear";
     spline.spline_rotation_frames.push_back(rotation);
 
-    bp::CameraSplinePacket_<2168> packet;
+    bp::CameraSplinePacket packet;
     packet.splines.push_back(spline);
     const auto with_easing = encode(packet);
 
@@ -129,7 +129,7 @@ TEST_CASE("an absent camera spline easing is one zero byte, not a name")
     REQUIRE(without_easing.size() + 7 == with_easing.size());
     REQUIRE(without_easing.back() == '\0');
 
-    const auto back = decode<bp::CameraSplinePacket_<2168>>(without_easing);
+    const auto back = decode<bp::CameraSplinePacket>(without_easing);
     REQUIRE(back.splines.at(0).spline_rotation_frames.size() == 1);
     REQUIRE_FALSE(back.splines.at(0).spline_rotation_frames.at(0).easing_type.has_value());
 }

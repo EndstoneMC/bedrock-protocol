@@ -37,9 +37,9 @@ Packet two_presets()
     loaded.radius = 16.0f;
     loaded.yaw_limit_min = -90.0f;
     loaded.yaw_limit_max = 90.0f;
-    loaded.listener = Preset::AudioListener::PLAYER;
+    loaded.listener = Preset::AudioListener::Player;
     loaded.player_effects = true;
-    loaded.control_scheme = bp::Scheme::CAMERA_RELATIVE_STRAFE;
+    loaded.control_scheme = bp::Scheme::CameraRelativeStrafe;
 
     Packet packet;
     packet.camera_presets.presets = {bare, loaded};
@@ -97,8 +97,8 @@ TEST_CASE("camera presets round-trip against the golden")
     REQUIRE(back.camera_presets.presets[1].inherit_from == "minecraft:free");
     REQUIRE(back.camera_presets.presets[1].tracking_radius == 8.0f);
     REQUIRE(back.camera_presets.presets[1].yaw_limit_min == -90.0f);
-    REQUIRE(back.camera_presets.presets[1].listener == bp::base::CameraPreset::AudioListener::PLAYER);
-    REQUIRE(back.camera_presets.presets[1].control_scheme == bp::Scheme::CAMERA_RELATIVE_STRAFE);
+    REQUIRE(back.camera_presets.presets[1].listener == bp::base::CameraPreset::AudioListener::Player);
+    REQUIRE(back.camera_presets.presets[1].control_scheme == bp::Scheme::CameraRelativeStrafe);
 }
 
 // 2192 appends a starting rotation and the flag that applies it, so each preset grows

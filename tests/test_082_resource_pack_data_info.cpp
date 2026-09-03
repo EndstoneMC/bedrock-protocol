@@ -30,50 +30,50 @@ const std::string golden_fixed_widths = bytes({
 
 TEST_CASE("packet id is 82")
 {
-    STATIC_REQUIRE(bp::ResourcePackDataInfoPacket_<2168>::Id == 82);
+    STATIC_REQUIRE(bp::ResourcePackDataInfoPacket::Id == 82);
     STATIC_REQUIRE(bp::has_packet_v<1001, 82>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 82>);
 }
 
 TEST_CASE("resource-pack-data-info round-trips against the golden")
 {
-    bp::ResourcePackDataInfoPacket_<2168> packet;
+    bp::ResourcePackDataInfoPacket packet;
     packet.resource_name = "0a0b0c0d-0e0f-1011-1213-141516171819";
     packet.chunk_size = 1048576;
     packet.nb_chunks = 16;
     packet.file_size = 15925248;
     packet.file_hash = bytes({0xde, 0xad, 0xbe, 0xef});
     packet.is_premium = true;
-    packet.pack_type = bp::PackType::RESOURCES;
+    packet.pack_type = bp::PackType::Resources;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ResourcePackDataInfoPacket_<2168>>(golden);
+    const auto back = decode<bp::ResourcePackDataInfoPacket>(golden);
     REQUIRE(back.resource_name == "0a0b0c0d-0e0f-1011-1213-141516171819");
     REQUIRE(back.chunk_size == 1048576);
     REQUIRE(back.nb_chunks == 16);
     REQUIRE(back.file_size == 15925248);
     REQUIRE(back.file_hash == bytes({0xde, 0xad, 0xbe, 0xef}));
     REQUIRE(back.is_premium);
-    REQUIRE(back.pack_type == bp::PackType::RESOURCES);
+    REQUIRE(back.pack_type == bp::PackType::Resources);
 }
 
 TEST_CASE("the sizes are fixed-width and the hash carries its own length")
 {
-    bp::ResourcePackDataInfoPacket_<2168> packet;
+    bp::ResourcePackDataInfoPacket packet;
     packet.chunk_size = 128;
     packet.nb_chunks = 300;
     packet.file_size = 0x0102030405060708ULL;
     packet.is_premium = false;
-    packet.pack_type = bp::PackType::WORLD_TEMPLATE;
+    packet.pack_type = bp::PackType::WorldTemplate;
     REQUIRE(encode(packet) == golden_fixed_widths);
     REQUIRE(encode(packet).size() == 20);
 
-    const auto back = decode<bp::ResourcePackDataInfoPacket_<2168>>(golden_fixed_widths);
+    const auto back = decode<bp::ResourcePackDataInfoPacket>(golden_fixed_widths);
     REQUIRE(back.resource_name.empty());
     REQUIRE(back.chunk_size == 128);
     REQUIRE(back.nb_chunks == 300);
     REQUIRE(back.file_size == 0x0102030405060708ULL);
     REQUIRE(back.file_hash.empty());
     REQUIRE_FALSE(back.is_premium);
-    REQUIRE(back.pack_type == bp::PackType::WORLD_TEMPLATE);
+    REQUIRE(back.pack_type == bp::PackType::WorldTemplate);
 }

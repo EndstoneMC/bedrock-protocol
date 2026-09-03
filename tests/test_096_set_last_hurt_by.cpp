@@ -29,11 +29,11 @@ TEST_CASE("set-last-hurt-by v1001 form round-trips against the golden")
     using Packet = bp::SetLastHurtByPacket_<1001>;
 
     Packet packet;
-    packet.last_hurt_by = bp::ActorType_<1001>::SULFUR_CUBE;
+    packet.last_hurt_by = bp::ActorType_<1001>::SulfurCube;
     REQUIRE(encode(packet) == golden_v1001);
 
     const auto back = decode<Packet>(golden_v1001);
-    REQUIRE(back.last_hurt_by == bp::ActorType_<1001>::SULFUR_CUBE);
+    REQUIRE(back.last_hurt_by == bp::ActorType_<1001>::SulfurCube);
 }
 
 TEST_CASE("set-last-hurt-by v2168 form round-trips against the golden")
@@ -41,11 +41,11 @@ TEST_CASE("set-last-hurt-by v2168 form round-trips against the golden")
     using Packet = bp::SetLastHurtByPacket_<2168>;
 
     Packet packet;
-    packet.last_hurt_by = bp::ActorType_<2168>::SULFUR_CUBE;
+    packet.last_hurt_by = bp::ActorType_<2168>::SulfurCube;
     REQUIRE(encode(packet) == golden_v2168);
 
     const auto back = decode<Packet>(golden_v2168);
-    REQUIRE(back.last_hurt_by == bp::ActorType_<2168>::SULFUR_CUBE);
+    REQUIRE(back.last_hurt_by == bp::ActorType_<2168>::SulfurCube);
 }
 
 // ActorType composes a category with a type index. 2168 recategorised the sulfur cube
@@ -53,17 +53,17 @@ TEST_CASE("set-last-hurt-by v2168 form round-trips against the golden")
 // different number and the wire shape never moves.
 TEST_CASE("the sulfur cube changes category, not shape")
 {
-    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<1001>::SULFUR_CUBE) == 2969);
-    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::SULFUR_CUBE) == 921);
-    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<1001>::MONSTER) + 153 == 2969);
-    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::PATHFINDER_MOB) + 153 == 921);
+    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<1001>::SulfurCube) == 2969);
+    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::SulfurCube) == 921);
+    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<1001>::Monster) + 153 == 2969);
+    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::PathfinderMob) + 153 == 921);
 
     const auto stale = decode<bp::SetLastHurtByPacket_<2168>>(golden_v1001);
-    REQUIRE(stale.last_hurt_by != bp::ActorType_<2168>::SULFUR_CUBE);
+    REQUIRE(stale.last_hurt_by != bp::ActorType_<2168>::SulfurCube);
 }
 
 // CUSHION arrives at 2168 and is absent below it.
 TEST_CASE("cushion is 2168 only")
 {
-    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::CUSHION) == 154);
+    STATIC_REQUIRE(static_cast<int>(bp::ActorType_<2168>::Cushion) == 154);
 }

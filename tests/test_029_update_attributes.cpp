@@ -36,14 +36,14 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 29")
 {
-    STATIC_REQUIRE(bp::UpdateAttributesPacket_<2168>::Id == 29);
+    STATIC_REQUIRE(bp::UpdateAttributesPacket::Id == 29);
     STATIC_REQUIRE(bp::has_packet_v<1001, 29>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 29>);
 }
 
 TEST_CASE("update attributes round-trips against the golden")
 {
-    bp::UpdateAttributesPacket_<2168> packet;
+    bp::UpdateAttributesPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.attribute_data.push_back({
         .min_value = 0.0F,
@@ -57,8 +57,8 @@ TEST_CASE("update attributes round-trips against the golden")
             .id = "00000000-0000-0000-0000-000000000001",
             .name = "buff",
             .amount = 2.5F,
-            .operation = bp::AttributeModifierOperation::OPERATION_MULTIPLY_BASE,
-            .operand = bp::AttributeOperands::OPERAND_CURRENT,
+            .operation = bp::AttributeModifierOperation::OperationMultiplyBase,
+            .operand = bp::AttributeOperands::OperandCurrent,
             .serialize = true,
         }},
     });
@@ -74,7 +74,7 @@ TEST_CASE("update attributes round-trips against the golden")
     packet.tick = bp::PlayerInputTick{1000};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateAttributesPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateAttributesPacket>(golden);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.tick == bp::PlayerInputTick{1000});
     REQUIRE(back.attribute_data.size() == 2);
@@ -91,8 +91,8 @@ TEST_CASE("update attributes round-trips against the golden")
     REQUIRE(back.attribute_data[0].modifiers[0].name == "buff");
     REQUIRE(back.attribute_data[0].modifiers[0].amount == 2.5F);
     REQUIRE(back.attribute_data[0].modifiers[0].operation ==
-            bp::AttributeModifierOperation::OPERATION_MULTIPLY_BASE);
-    REQUIRE(back.attribute_data[0].modifiers[0].operand == bp::AttributeOperands::OPERAND_CURRENT);
+            bp::AttributeModifierOperation::OperationMultiplyBase);
+    REQUIRE(back.attribute_data[0].modifiers[0].operand == bp::AttributeOperands::OperandCurrent);
     REQUIRE(back.attribute_data[0].modifiers[0].serialize);
 
     REQUIRE(back.attribute_data[1].min_value == 0.0F);
@@ -107,31 +107,31 @@ TEST_CASE("update attributes round-trips against the golden")
 
 TEST_CASE("an empty attribute list still carries its count byte and the tick")
 {
-    bp::UpdateAttributesPacket_<2168> packet;
+    bp::UpdateAttributesPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{0};
     packet.tick = bp::PlayerInputTick{300};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);
 
-    const auto back = decode<bp::UpdateAttributesPacket_<2168>>(wire);
+    const auto back = decode<bp::UpdateAttributesPacket>(wire);
     REQUIRE(back.attribute_data.empty());
     REQUIRE(back.tick == bp::PlayerInputTick{300});
 }
 
 TEST_CASE("the operation and operand sentinels survive their duplicate values")
 {
-    bp::UpdateAttributesPacket_<2168> packet;
+    bp::UpdateAttributesPacket packet;
     packet.attribute_data.push_back({
         .modifiers = {{
-            .operation = bp::AttributeModifierOperation::OPERATION_INVALID,
-            .operand = bp::AttributeOperands::OPERAND_INVALID,
+            .operation = bp::AttributeModifierOperation::OperationInvalid,
+            .operand = bp::AttributeOperands::OperandInvalid,
             .serialize = false,
         }},
     });
-    const auto back = decode<bp::UpdateAttributesPacket_<2168>>(encode(packet));
+    const auto back = decode<bp::UpdateAttributesPacket>(encode(packet));
     REQUIRE(back.attribute_data.size() == 1);
     REQUIRE(back.attribute_data[0].modifiers.size() == 1);
-    REQUIRE(back.attribute_data[0].modifiers[0].operation == bp::AttributeModifierOperation::TOTAL_OPERATIONS);
-    REQUIRE(back.attribute_data[0].modifiers[0].operand == bp::AttributeOperands::TOTAL_OPERANDS);
+    REQUIRE(back.attribute_data[0].modifiers[0].operation == bp::AttributeModifierOperation::TotalOperations);
+    REQUIRE(back.attribute_data[0].modifiers[0].operand == bp::AttributeOperands::TotalOperands);
     REQUIRE_FALSE(back.attribute_data[0].modifiers[0].serialize);
 }

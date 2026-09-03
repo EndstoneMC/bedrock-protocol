@@ -32,21 +32,21 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 153")
 {
-    STATIC_REQUIRE(bp::PositionTrackingDBServerBroadcastPacket_<2168>::Id == 153);
+    STATIC_REQUIRE(bp::PositionTrackingDBServerBroadcastPacket::Id == 153);
     STATIC_REQUIRE(bp::has_packet_v<1001, 153>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 153>);
 }
 
 TEST_CASE("position-tracking-db-server-broadcast round-trips against the golden")
 {
-    bp::PositionTrackingDBServerBroadcastPacket_<2168> packet;
-    packet.action = bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::UPDATE;
+    bp::PositionTrackingDBServerBroadcastPacket packet;
+    packet.action = bp::PositionTrackingDBServerBroadcastPacket::Action::Update;
     packet.id = {.raw_id = 7};
     packet.data = bp::CompoundTag{{"id", bp::StringTag{"00000007"}}};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket_<2168>>(golden);
-    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::UPDATE);
+    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket>(golden);
+    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket::Action::Update);
     REQUIRE(back.id.raw_id == 7);
     REQUIRE(back.data.size() == 1);
     REQUIRE(back.data.at("id").get<bp::StringTag>().value() == "00000007");
@@ -54,26 +54,26 @@ TEST_CASE("position-tracking-db-server-broadcast round-trips against the golden"
 
 TEST_CASE("a not-found broadcast zigzags its tracking id and writes a three-byte empty tag")
 {
-    bp::PositionTrackingDBServerBroadcastPacket_<2168> packet;
-    packet.action = bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::NOT_FOUND;
+    bp::PositionTrackingDBServerBroadcastPacket packet;
+    packet.action = bp::PositionTrackingDBServerBroadcastPacket::Action::NotFound;
     packet.id = {.raw_id = -1};
     REQUIRE(encode(packet) == golden_not_found);
     REQUIRE(encode(packet).size() == 5);
 
-    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket_<2168>>(golden_not_found);
-    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::NOT_FOUND);
+    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket>(golden_not_found);
+    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket::Action::NotFound);
     REQUIRE(back.id.raw_id == -1);
     REQUIRE(back.data.empty());
 }
 
 TEST_CASE("a tracking id above 127 widens without the action byte absorbing it")
 {
-    bp::PositionTrackingDBServerBroadcastPacket_<2168> packet;
-    packet.action = bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::DESTROY;
+    bp::PositionTrackingDBServerBroadcastPacket packet;
+    packet.action = bp::PositionTrackingDBServerBroadcastPacket::Action::Destroy;
     packet.id = {.raw_id = 300};
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket_<2168>>(golden_wide);
-    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket_<2168>::Action::DESTROY);
+    const auto back = decode<bp::PositionTrackingDBServerBroadcastPacket>(golden_wide);
+    REQUIRE(back.action == bp::PositionTrackingDBServerBroadcastPacket::Action::Destroy);
     REQUIRE(back.id.raw_id == 300);
 }

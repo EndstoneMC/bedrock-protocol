@@ -22,20 +22,20 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 26")
 {
-    STATIC_REQUIRE(bp::BlockEventPacket_<2168>::Id == 26);
+    STATIC_REQUIRE(bp::BlockEventPacket::Id == 26);
     STATIC_REQUIRE(bp::has_packet_v<1001, 26>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 26>);
 }
 
 TEST_CASE("block event round-trips against the golden")
 {
-    bp::BlockEventPacket_<2168> packet;
+    bp::BlockEventPacket packet;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.b0 = 1;
     packet.b1 = 0;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::BlockEventPacket_<2168>>(golden);
+    const auto back = decode<bp::BlockEventPacket>(golden);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == 2);
     REQUIRE(back.pos.z == 3);
@@ -45,13 +45,13 @@ TEST_CASE("block event round-trips against the golden")
 
 TEST_CASE("all five fields are zigzag varints, not bytes and not unsigned")
 {
-    bp::BlockEventPacket_<2168> packet;
+    bp::BlockEventPacket packet;
     packet.pos = {.x = -2, .y = 300, .z = 3};
     packet.b0 = -1;
     packet.b1 = 200;
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::BlockEventPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::BlockEventPacket>(golden_wide);
     REQUIRE(back.pos.x == -2);
     REQUIRE(back.pos.y == 300);
     REQUIRE(back.pos.z == 3);

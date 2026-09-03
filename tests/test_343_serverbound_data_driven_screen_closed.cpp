@@ -31,48 +31,48 @@ const std::string golden_close_all = bytes({
 
 TEST_CASE("packet id is 343")
 {
-    STATIC_REQUIRE(bp::ServerboundDataDrivenScreenClosedPacket_<2168>::Id == 343);
+    STATIC_REQUIRE(bp::ServerboundDataDrivenScreenClosedPacket::Id == 343);
     STATIC_REQUIRE(bp::has_packet_v<1001, 343>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 343>);
 }
 
 TEST_CASE("serverbound data-driven screen closed round-trips against the golden")
 {
-    bp::ServerboundDataDrivenScreenClosedPacket_<2168> packet;
+    bp::ServerboundDataDrivenScreenClosedPacket packet;
     packet.form_id = 7;
-    packet.close_reason = bp::DataDrivenScreenClosedReason::USER_BUSY;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::UserBusy;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerboundDataDrivenScreenClosedPacket_<2168>>(golden);
+    const auto back = decode<bp::ServerboundDataDrivenScreenClosedPacket>(golden);
     REQUIRE(back.form_id == 7);
-    REQUIRE(back.close_reason == bp::DataDrivenScreenClosedReason::USER_BUSY);
+    REQUIRE(back.close_reason == bp::DataDrivenScreenClosedReason::UserBusy);
 }
 
 TEST_CASE("a data-driven screen closed form id stays four bytes wide above 127")
 {
-    bp::ServerboundDataDrivenScreenClosedPacket_<2168> packet;
+    bp::ServerboundDataDrivenScreenClosedPacket packet;
     packet.form_id = 300;
-    packet.close_reason = bp::DataDrivenScreenClosedReason::PROGRAMMATIC_CLOSE_ALL;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::ProgrammaticCloseAll;
     REQUIRE(encode(packet) == golden_close_all);
-    REQUIRE(decode<bp::ServerboundDataDrivenScreenClosedPacket_<2168>>(golden_close_all).form_id == 300);
+    REQUIRE(decode<bp::ServerboundDataDrivenScreenClosedPacket>(golden_close_all).form_id == 300);
 }
 
 TEST_CASE("every data-driven screen close reason loses its separators on the wire")
 {
-    bp::ServerboundDataDrivenScreenClosedPacket_<2168> packet;
+    bp::ServerboundDataDrivenScreenClosedPacket packet;
 
-    packet.close_reason = bp::DataDrivenScreenClosedReason::PROGRAMMATIC_CLOSE;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::ProgrammaticClose;
     REQUIRE(encode(packet).ends_with("programmaticclose"));
 
-    packet.close_reason = bp::DataDrivenScreenClosedReason::PROGRAMMATIC_CLOSE_ALL;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::ProgrammaticCloseAll;
     REQUIRE(encode(packet).ends_with("programmaticcloseall"));
 
-    packet.close_reason = bp::DataDrivenScreenClosedReason::CLIENT_CANCELED;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::ClientCanceled;
     REQUIRE(encode(packet).ends_with("clientcanceled"));
 
-    packet.close_reason = bp::DataDrivenScreenClosedReason::USER_BUSY;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::UserBusy;
     REQUIRE(encode(packet).ends_with("userbusy"));
 
-    packet.close_reason = bp::DataDrivenScreenClosedReason::INVALID_FORM;
+    packet.close_reason = bp::DataDrivenScreenClosedReason::InvalidForm;
     REQUIRE(encode(packet).ends_with("invalidform"));
 }

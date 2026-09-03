@@ -20,32 +20,32 @@ const std::string golden_one = bytes({
 
 TEST_CASE("packet id is 130")
 {
-    STATIC_REQUIRE(bp::OnScreenTextureAnimationPacket_<2168>::Id == 130);
+    STATIC_REQUIRE(bp::OnScreenTextureAnimationPacket::Id == 130);
     STATIC_REQUIRE(bp::has_packet_v<1001, 130>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 130>);
 }
 
 TEST_CASE("on-screen texture animation round-trips against the golden")
 {
-    bp::OnScreenTextureAnimationPacket_<2168> packet;
+    bp::OnScreenTextureAnimationPacket packet;
     packet.effect_id = 0xdeadbeefU;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::OnScreenTextureAnimationPacket_<2168>>(golden);
+    const auto back = decode<bp::OnScreenTextureAnimationPacket>(golden);
     REQUIRE(back.effect_id == 0xdeadbeefU);
 }
 
 TEST_CASE("the effect id is a fixed four-byte field, not a varint")
 {
-    bp::OnScreenTextureAnimationPacket_<2168> packet;
+    bp::OnScreenTextureAnimationPacket packet;
     packet.effect_id = 1;
     const auto wire = encode(packet);
     REQUIRE(wire == golden_one);
     REQUIRE(wire.size() == 4);
-    REQUIRE(decode<bp::OnScreenTextureAnimationPacket_<2168>>(golden_one).effect_id == 1U);
+    REQUIRE(decode<bp::OnScreenTextureAnimationPacket>(golden_one).effect_id == 1U);
 }
 
 TEST_CASE("a short body is rejected")
 {
-    REQUIRE(rejects<bp::OnScreenTextureAnimationPacket_<2168>>(golden.substr(0, 3)));
+    REQUIRE(rejects<bp::OnScreenTextureAnimationPacket>(golden.substr(0, 3)));
 }

@@ -41,14 +41,14 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 320")
 {
-    STATIC_REQUIRE(bp::CameraAimAssistPresetsPacket_<2168>::Id == 320);
+    STATIC_REQUIRE(bp::CameraAimAssistPresetsPacket::Id == 320);
     STATIC_REQUIRE(bp::has_packet_v<1001, 320>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 320>);
 }
 
 TEST_CASE("camera aim-assist presets round-trips against the golden")
 {
-    bp::CameraAimAssistPresetsPacket_<2168> packet;
+    bp::CameraAimAssistPresetsPacket packet;
 
     bp::CameraAimAssistCategoryDefinition category;
     category.name = "cat";
@@ -67,10 +67,10 @@ TEST_CASE("camera aim-assist presets round-trips against the golden")
     preset.default_item_settings = "cat";
     packet.presets.push_back(preset);
 
-    packet.operation = bp::CameraAimAssistPresetsPacketOperation::ADD_TO_EXISTING;
+    packet.operation = bp::CameraAimAssistPresetsPacketOperation::AddToExisting;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraAimAssistPresetsPacket_<2168>>(golden);
+    const auto back = decode<bp::CameraAimAssistPresetsPacket>(golden);
     REQUIRE(back.categories.size() == 1);
     REQUIRE(back.categories[0].name == "cat");
     REQUIRE(back.categories[0].priorities.entities.size() == 2);
@@ -94,22 +94,22 @@ TEST_CASE("camera aim-assist presets round-trips against the golden")
     REQUIRE(back.presets[0].item_settings.at("minecraft:bow") == "cat");
     REQUIRE(back.presets[0].default_item_settings == "cat");
     REQUIRE_FALSE(back.presets[0].hand_settings.has_value());
-    REQUIRE(back.operation == bp::CameraAimAssistPresetsPacketOperation::ADD_TO_EXISTING);
+    REQUIRE(back.operation == bp::CameraAimAssistPresetsPacketOperation::AddToExisting);
 }
 
 TEST_CASE("an empty aim-assist registry is two counts and the operation byte")
 {
-    bp::CameraAimAssistPresetsPacket_<2168> packet;
-    packet.operation = bp::CameraAimAssistPresetsPacketOperation::SET;
+    bp::CameraAimAssistPresetsPacket packet;
+    packet.operation = bp::CameraAimAssistPresetsPacketOperation::Set;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::CameraAimAssistPresetsPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::CameraAimAssistPresetsPacket>(golden_empty);
     REQUIRE(back.categories.empty());
     REQUIRE(back.presets.empty());
-    REQUIRE(back.operation == bp::CameraAimAssistPresetsPacketOperation::SET);
+    REQUIRE(back.operation == bp::CameraAimAssistPresetsPacketOperation::Set);
 }
 
 TEST_CASE("the aim-assist operation byte is not optional on the frame")
 {
-    REQUIRE(rejects<bp::CameraAimAssistPresetsPacket_<2168>>(bytes({0x00, 0x00})));
+    REQUIRE(rejects<bp::CameraAimAssistPresetsPacket>(bytes({0x00, 0x00})));
 }

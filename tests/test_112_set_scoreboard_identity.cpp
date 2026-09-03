@@ -49,7 +49,7 @@ TEST_CASE("SetScoreboardIdentityPacket: id")
 TEST_CASE("SetScoreboardIdentityPacket: v1001 round-trip")
 {
     Packet1001 update;
-    update.type = bp::ScoreboardIdentityPacketType::UPDATE;
+    update.type = bp::ScoreboardIdentityPacketType::Update;
     update.identity_info = {
         {.scoreboard_id = {.raw_id = 1}, .player_id = {.actor_unique_id = 7}},
         {.scoreboard_id = {.raw_id = 2}, .player_id = {.actor_unique_id = 8}},
@@ -57,7 +57,7 @@ TEST_CASE("SetScoreboardIdentityPacket: v1001 round-trip")
     REQUIRE(encode(update) == golden_v1001_update);
 
     Packet1001 remove;
-    remove.type = bp::ScoreboardIdentityPacketType::REMOVE;
+    remove.type = bp::ScoreboardIdentityPacketType::Remove;
     remove.removed_identity_info = {{.raw_id = 1}};
     REQUIRE(encode(remove) == golden_v1001_remove);
 
@@ -70,7 +70,7 @@ TEST_CASE("SetScoreboardIdentityPacket: v1001 round-trip")
 TEST_CASE("SetScoreboardIdentityPacket: v2168 round-trip")
 {
     Packet2168 update;
-    update.type = bp::ScoreboardIdentityPacketType::UPDATE;
+    update.type = bp::ScoreboardIdentityPacketType::Update;
     update.identity_info = {
         {.scoreboard_id = {.raw_id = 1}, .player_id = 7},
         {.scoreboard_id = {.raw_id = 2}, .player_id = 8},
@@ -78,7 +78,7 @@ TEST_CASE("SetScoreboardIdentityPacket: v2168 round-trip")
     REQUIRE(encode(update) == golden_v2168_update);
 
     Packet2168 remove;
-    remove.type = bp::ScoreboardIdentityPacketType::REMOVE;
+    remove.type = bp::ScoreboardIdentityPacketType::Remove;
     remove.identity_info = {{.scoreboard_id = {.raw_id = 1}, .player_id = std::nullopt}};
     REQUIRE(encode(remove) == golden_v2168_remove);
 

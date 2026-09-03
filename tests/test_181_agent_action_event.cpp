@@ -22,33 +22,33 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 181")
 {
-    STATIC_REQUIRE(bp::AgentActionEventPacket_<2168>::Id == 181);
+    STATIC_REQUIRE(bp::AgentActionEventPacket::Id == 181);
     STATIC_REQUIRE(bp::has_packet_v<1001, 181>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 181>);
 }
 
 TEST_CASE("agent action event round-trips against the golden")
 {
-    bp::AgentActionEventPacket_<2168> packet;
+    bp::AgentActionEventPacket packet;
     packet.request_id = "req-1";
-    packet.action = bp::AgentActionType::TRANSFER_ITEM_TO;
+    packet.action = bp::AgentActionType::TransferItemTo;
     packet.response = R"({"ok":true})";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AgentActionEventPacket_<2168>>(golden);
+    const auto back = decode<bp::AgentActionEventPacket>(golden);
     REQUIRE(back.request_id == "req-1");
-    REQUIRE(back.action == bp::AgentActionType::TRANSFER_ITEM_TO);
+    REQUIRE(back.action == bp::AgentActionType::TransferItemTo);
     REQUIRE(back.response == R"({"ok":true})");
 }
 
 TEST_CASE("the agent action is four fixed bytes between two empty strings")
 {
-    bp::AgentActionEventPacket_<2168> packet;
-    packet.action = bp::AgentActionType::ATTACK;
+    bp::AgentActionEventPacket packet;
+    packet.action = bp::AgentActionType::Attack;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::AgentActionEventPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::AgentActionEventPacket>(golden_empty);
     REQUIRE(back.request_id.empty());
-    REQUIRE(back.action == bp::AgentActionType::ATTACK);
+    REQUIRE(back.action == bp::AgentActionType::Attack);
     REQUIRE(back.response.empty());
 }

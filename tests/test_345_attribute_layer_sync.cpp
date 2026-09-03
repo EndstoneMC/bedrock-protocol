@@ -16,10 +16,10 @@ bp::ClientboundAttributeLayerSyncPacket_<V> make_packet()
 {
     bp::EnvironmentAttributeData_<V> env;
     env.name = "temp";
-    env.attribute = bp::BoolAttributeData{true, bp::BoolAttributeOperation::OVERRIDE};
+    env.attribute = bp::BoolAttributeData{true, bp::BoolAttributeOperation::Override};
     env.current_transition_ticks = 0;
     env.total_transition_ticks = 0;
-    env.easing = bp::EasingType::LINEAR;
+    env.easing = bp::EasingType::Linear;
     if constexpr (V == 1001) {
         env.local_transition_ticks = 0;
         env.noise_transition = false;

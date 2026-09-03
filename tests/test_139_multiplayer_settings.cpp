@@ -20,27 +20,27 @@ const std::string golden_disable = bytes({
 
 TEST_CASE("packet id is 139")
 {
-    STATIC_REQUIRE(bp::MultiplayerSettingsPacket_<2168>::Id == 139);
+    STATIC_REQUIRE(bp::MultiplayerSettingsPacket::Id == 139);
     STATIC_REQUIRE(bp::has_packet_v<1001, 139>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 139>);
 }
 
 TEST_CASE("multiplayer-settings round-trips against the golden")
 {
-    bp::MultiplayerSettingsPacket_<2168> packet;
-    packet.packet_type = bp::MultiplayerSettingsPacketType::REFRESH_JOINCODE;
+    bp::MultiplayerSettingsPacket packet;
+    packet.packet_type = bp::MultiplayerSettingsPacketType::RefreshJoincode;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::MultiplayerSettingsPacket_<2168>>(golden);
-    REQUIRE(back.packet_type == bp::MultiplayerSettingsPacketType::REFRESH_JOINCODE);
+    const auto back = decode<bp::MultiplayerSettingsPacket>(golden);
+    REQUIRE(back.packet_type == bp::MultiplayerSettingsPacketType::RefreshJoincode);
 }
 
 TEST_CASE("the multiplayer-settings type is a zigzag varint, not a fixed int32")
 {
-    bp::MultiplayerSettingsPacket_<2168> packet;
-    packet.packet_type = bp::MultiplayerSettingsPacketType::DISABLE_MULTIPLAYER;
+    bp::MultiplayerSettingsPacket packet;
+    packet.packet_type = bp::MultiplayerSettingsPacketType::DisableMultiplayer;
     REQUIRE(encode(packet) == golden_disable);
 
-    const auto stray = decode_partial<bp::MultiplayerSettingsPacket_<2168>>(bytes({0x02, 0x00, 0x00, 0x00}));
-    REQUIRE(stray.packet_type == bp::MultiplayerSettingsPacketType::DISABLE_MULTIPLAYER);
+    const auto stray = decode_partial<bp::MultiplayerSettingsPacket>(bytes({0x02, 0x00, 0x00, 0x00}));
+    REQUIRE(stray.packet_type == bp::MultiplayerSettingsPacketType::DisableMultiplayer);
 }

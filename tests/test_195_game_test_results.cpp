@@ -17,20 +17,20 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 195")
 {
-    STATIC_REQUIRE(bp::GameTestResultsPacket_<2168>::Id == 195);
+    STATIC_REQUIRE(bp::GameTestResultsPacket::Id == 195);
     STATIC_REQUIRE(bp::has_packet_v<1001, 195>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 195>);
 }
 
 TEST_CASE("game-test results round-trips against the golden")
 {
-    bp::GameTestResultsPacket_<2168> packet;
+    bp::GameTestResultsPacket packet;
     packet.succeeded = true;
     packet.error = "boom";
     packet.test_name = "mytest";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::GameTestResultsPacket_<2168>>(golden);
+    const auto back = decode<bp::GameTestResultsPacket>(golden);
     REQUIRE(back.succeeded);
     REQUIRE(back.error == "boom");
     REQUIRE(back.test_name == "mytest");
@@ -38,14 +38,14 @@ TEST_CASE("game-test results round-trips against the golden")
 
 TEST_CASE("an empty error still carries its length prefix")
 {
-    bp::GameTestResultsPacket_<2168> packet;
+    bp::GameTestResultsPacket packet;
     packet.succeeded = true;
     packet.error = "";
     packet.test_name = "t";
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);
 
-    const auto back = decode<bp::GameTestResultsPacket_<2168>>(wire);
+    const auto back = decode<bp::GameTestResultsPacket>(wire);
     REQUIRE(back.error.empty());
     REQUIRE(back.test_name == "t");
 }
@@ -54,7 +54,7 @@ TEST_CASE("the test name length prefix is a varint")
 {
     const std::string name(200, 'n');
 
-    bp::GameTestResultsPacket_<2168> packet;
+    bp::GameTestResultsPacket packet;
     packet.succeeded = false;
     packet.error = "e";
     packet.test_name = name;
@@ -63,7 +63,7 @@ TEST_CASE("the test name length prefix is a varint")
     REQUIRE(static_cast<unsigned char>(wire[3]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[4]) == 0x01);
 
-    const auto back = decode<bp::GameTestResultsPacket_<2168>>(wire);
+    const auto back = decode<bp::GameTestResultsPacket>(wire);
     REQUIRE_FALSE(back.succeeded);
     REQUIRE(back.error == "e");
     REQUIRE(back.test_name == name);

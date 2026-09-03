@@ -56,7 +56,7 @@ const std::string golden_empty = bytes({
     0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 });
 
-bp::CommandOutputPacket_<2168> filled()
+bp::CommandOutputPacket filled()
 {
     bp::CommandOutputMessage ok;
     ok.message_id = "commands.tp.success";
@@ -67,13 +67,13 @@ bp::CommandOutputPacket_<2168> filled()
     failed.message_id = "commands.generic.syntax";
     failed.successful = false;
 
-    bp::CommandOutputPacket_<2168> packet;
-    packet.origin_data.type = bp::CommandOriginType::AUTOMATION_PLAYER;
+    bp::CommandOutputPacket packet;
+    packet.origin_data.type = bp::CommandOriginType::AutomationPlayer;
     packet.origin_data.uuid = {.most_significant_bits = 0x0102030405060708,
                                .least_significant_bits = 0x090a0b0c0d0e0f10};
     packet.origin_data.request_id = "req-1";
     packet.origin_data.player_id = -3;
-    packet.output.type = bp::CommandOutputType::DATA_SET;
+    packet.output.type = bp::CommandOutputType::DataSet;
     packet.output.success_count = 300;
     packet.output.messages = {ok, failed};
     packet.output.data = "{}";
@@ -84,7 +84,7 @@ bp::CommandOutputPacket_<2168> filled()
 
 TEST_CASE("packet id is 79")
 {
-    STATIC_REQUIRE(bp::CommandOutputPacket_<2168>::Id == 79);
+    STATIC_REQUIRE(bp::CommandOutputPacket::Id == 79);
     STATIC_REQUIRE(bp::has_packet_v<1001, 79>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 79>);
 }
@@ -93,13 +93,13 @@ TEST_CASE("command output round-trips against the golden")
 {
     REQUIRE(encode(filled()) == golden);
 
-    const auto back = decode<bp::CommandOutputPacket_<2168>>(golden);
-    REQUIRE(back.origin_data.type == bp::CommandOriginType::AUTOMATION_PLAYER);
+    const auto back = decode<bp::CommandOutputPacket>(golden);
+    REQUIRE(back.origin_data.type == bp::CommandOriginType::AutomationPlayer);
     REQUIRE(back.origin_data.uuid.most_significant_bits == 0x0102030405060708);
     REQUIRE(back.origin_data.uuid.least_significant_bits == 0x090a0b0c0d0e0f10);
     REQUIRE(back.origin_data.request_id == "req-1");
     REQUIRE(back.origin_data.player_id == -3);
-    REQUIRE(back.output.type == bp::CommandOutputType::DATA_SET);
+    REQUIRE(back.output.type == bp::CommandOutputType::DataSet);
     REQUIRE(back.output.success_count == 300);
     REQUIRE(back.output.messages.size() == 2);
     REQUIRE(back.output.messages[0].message_id == "commands.tp.success");
@@ -114,24 +114,24 @@ TEST_CASE("command output round-trips against the golden")
 
 TEST_CASE("the command-output name-codes read case-insensitively")
 {
-    const auto back = decode<bp::CommandOutputPacket_<2168>>(golden_binding_casing);
-    REQUIRE(back.origin_data.type == bp::CommandOriginType::AUTOMATION_PLAYER);
-    REQUIRE(back.output.type == bp::CommandOutputType::DATA_SET);
+    const auto back = decode<bp::CommandOutputPacket>(golden_binding_casing);
+    REQUIRE(back.origin_data.type == bp::CommandOriginType::AutomationPlayer);
+    REQUIRE(back.output.type == bp::CommandOutputType::DataSet);
 }
 
 TEST_CASE("an empty command output writes an empty message list and an absent data set")
 {
-    bp::CommandOutputPacket_<2168> packet;
-    packet.origin_data.type = bp::CommandOriginType::PLAYER;
+    bp::CommandOutputPacket packet;
+    packet.origin_data.type = bp::CommandOriginType::Player;
     packet.origin_data.uuid = {.most_significant_bits = 0, .least_significant_bits = 0};
     packet.origin_data.request_id = "";
     packet.origin_data.player_id = 0;
-    packet.output.type = bp::CommandOutputType::NONE;
+    packet.output.type = bp::CommandOutputType::None;
     packet.output.success_count = 0;
     packet.output.data = std::nullopt;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::CommandOutputPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::CommandOutputPacket>(golden_empty);
     REQUIRE(back.output.messages.empty());
     REQUIRE_FALSE(back.output.data.has_value());
 }
@@ -144,7 +144,7 @@ TEST_CASE("the command output's success count and player id are fixed-width")
     const auto wire = encode(packet);
     REQUIRE(wire.size() == golden.size());
 
-    const auto back = decode<bp::CommandOutputPacket_<2168>>(wire);
+    const auto back = decode<bp::CommandOutputPacket>(wire);
     REQUIRE(back.output.success_count == 0xdeadbeef);
     REQUIRE(back.origin_data.player_id == -1);
 }

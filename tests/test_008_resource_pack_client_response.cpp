@@ -63,7 +63,7 @@ TEST_CASE("packet id is 8 at every version")
 TEST_CASE("resource-pack-client-response v975 round-trips against the golden")
 {
     PacketV975 packet;
-    packet.response = bp::ResourcePackResponse::DOWNLOADING;
+    packet.response = bp::ResourcePackResponse::Downloading;
     packet.downloading_packs = {"pack_a", "pack_b"};
     REQUIRE(encode(packet) == golden_v1001_downloading);
 }
@@ -72,16 +72,16 @@ TEST_CASE("resource-pack-client-response v975 round-trips against the golden")
 TEST_CASE("resource-pack-client-response v1001 round-trips against the goldens")
 {
     PacketV1001 packet;
-    packet.response = bp::ResourcePackResponse::DOWNLOADING;
+    packet.response = bp::ResourcePackResponse::Downloading;
     packet.downloading_packs = {"pack_a", "pack_b"};
     REQUIRE(encode(packet) == golden_v1001_downloading);
 
     PacketV1001 finished;
-    finished.response = bp::ResourcePackResponse::RESOURCE_PACK_STACK_FINISHED;
+    finished.response = bp::ResourcePackResponse::ResourcePackStackFinished;
     REQUIRE(encode(finished) == golden_v1001_stack_finished);
 
     const auto back = decode<PacketV1001>(golden_v1001_downloading);
-    REQUIRE(back.response == bp::ResourcePackResponse::DOWNLOADING);
+    REQUIRE(back.response == bp::ResourcePackResponse::Downloading);
     REQUIRE(back.downloading_packs.size() == 2);
     REQUIRE(back.downloading_packs[1] == "pack_b");
 }
@@ -92,25 +92,25 @@ TEST_CASE("resource-pack-client-response v2168 round-trips against the goldens")
 {
     PacketV2168 packet;
     packet.response = PacketV2168::Downloading{
-        .response_type = bp::ResourcePackResponse::DOWNLOADING,
+        .response_type = bp::ResourcePackResponse::Downloading,
         .downloading_packs = {"pack_a", "pack_b"},
     };
     REQUIRE(encode(packet) == golden_v2168_downloading);
 
     PacketV2168 finished;
     finished.response = PacketV2168::ResourcePackStackFinished{
-        .response_type = bp::ResourcePackResponse::RESOURCE_PACK_STACK_FINISHED,
+        .response_type = bp::ResourcePackResponse::ResourcePackStackFinished,
     };
     REQUIRE(encode(finished) == golden_v2168_stack_finished);
 
     PacketV2168 cancel;
-    cancel.response = PacketV2168::Cancel{.response_type = bp::ResourcePackResponse::CANCEL};
+    cancel.response = PacketV2168::Cancel{.response_type = bp::ResourcePackResponse::Cancel};
     REQUIRE(encode(cancel) == golden_v2168_cancel);
 
     const auto back = decode<PacketV2168>(golden_v2168_downloading);
     REQUIRE(back.response.index() == 1);
     REQUIRE(std::get<1>(back.response).downloading_packs.size() == 2);
-    REQUIRE(std::get<1>(back.response).response_type == bp::ResourcePackResponse::DOWNLOADING);
+    REQUIRE(std::get<1>(back.response).response_type == bp::ResourcePackResponse::Downloading);
 }
 
 // The discriminator is the variant index at 2168 and the enum value at 1001, so every

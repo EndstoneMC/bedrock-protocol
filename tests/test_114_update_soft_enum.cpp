@@ -23,51 +23,51 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("UpdateSoftEnumPacket: packet id is 114")
 {
-    STATIC_REQUIRE(bp::UpdateSoftEnumPacket_<2168>::Id == 114);
+    STATIC_REQUIRE(bp::UpdateSoftEnumPacket::Id == 114);
     STATIC_REQUIRE(bp::has_packet_v<1001, 114>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 114>);
 }
 
 TEST_CASE("UpdateSoftEnumPacket: round-trips against the golden")
 {
-    bp::UpdateSoftEnumPacket_<2168> packet;
+    bp::UpdateSoftEnumPacket packet;
     packet.enum_name = "kits";
     packet.values = {"alpha", "beta"};
-    packet.type = bp::SoftEnumUpdateType::REMOVE;
+    packet.type = bp::SoftEnumUpdateType::Remove;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateSoftEnumPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateSoftEnumPacket>(golden);
     REQUIRE(back.enum_name == "kits");
     REQUIRE(back.values.size() == 2);
     REQUIRE(back.values[0] == "alpha");
     REQUIRE(back.values[1] == "beta");
-    REQUIRE(back.type == bp::SoftEnumUpdateType::REMOVE);
+    REQUIRE(back.type == bp::SoftEnumUpdateType::Remove);
 }
 
 TEST_CASE("UpdateSoftEnumPacket: an empty value list is a zero count the update type follows")
 {
-    bp::UpdateSoftEnumPacket_<2168> packet;
+    bp::UpdateSoftEnumPacket packet;
     packet.enum_name = "kits";
-    packet.type = bp::SoftEnumUpdateType::REPLACE;
+    packet.type = bp::SoftEnumUpdateType::Replace;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::UpdateSoftEnumPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::UpdateSoftEnumPacket>(golden_empty);
     REQUIRE(back.enum_name == "kits");
     REQUIRE(back.values.empty());
-    REQUIRE(back.type == bp::SoftEnumUpdateType::REPLACE);
+    REQUIRE(back.type == bp::SoftEnumUpdateType::Replace);
 }
 
 TEST_CASE("UpdateSoftEnumPacket: the value count is a varint, not a byte")
 {
-    bp::UpdateSoftEnumPacket_<2168> packet;
+    bp::UpdateSoftEnumPacket packet;
     packet.enum_name = "kits";
     packet.values.assign(200, "v");
-    packet.type = bp::SoftEnumUpdateType::ADD;
+    packet.type = bp::SoftEnumUpdateType::Add;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 408);
 
-    const auto back = decode<bp::UpdateSoftEnumPacket_<2168>>(wire);
+    const auto back = decode<bp::UpdateSoftEnumPacket>(wire);
     REQUIRE(back.values.size() == 200);
     REQUIRE(back.values[199] == "v");
-    REQUIRE(back.type == bp::SoftEnumUpdateType::ADD);
+    REQUIRE(back.type == bp::SoftEnumUpdateType::Add);
 }

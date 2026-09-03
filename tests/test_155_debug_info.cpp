@@ -22,38 +22,38 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 155")
 {
-    STATIC_REQUIRE(bp::DebugInfoPacket_<2168>::Id == 155);
+    STATIC_REQUIRE(bp::DebugInfoPacket::Id == 155);
     STATIC_REQUIRE(bp::has_packet_v<1001, 155>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 155>);
 }
 
 TEST_CASE("debug-info round-trips against the golden")
 {
-    bp::DebugInfoPacket_<2168> packet;
+    bp::DebugInfoPacket packet;
     packet.actor_id = bp::ActorUniqueID{-300};
     packet.data = "lag spike";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::DebugInfoPacket_<2168>>(golden);
+    const auto back = decode<bp::DebugInfoPacket>(golden);
     REQUIRE(back.actor_id == bp::ActorUniqueID{-300});
     REQUIRE(back.data == "lag spike");
 }
 
 TEST_CASE("an empty debug payload still writes its length prefix")
 {
-    bp::DebugInfoPacket_<2168> packet;
+    bp::DebugInfoPacket packet;
     packet.actor_id = bp::ActorUniqueID{7};
     packet.data = "";
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::DebugInfoPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::DebugInfoPacket>(golden_empty);
     REQUIRE(back.actor_id == bp::ActorUniqueID{7});
     REQUIRE(back.data.empty());
 }
 
 TEST_CASE("a debug payload longer than 127 bytes takes a two-byte length prefix")
 {
-    bp::DebugInfoPacket_<2168> packet;
+    bp::DebugInfoPacket packet;
     packet.actor_id = bp::ActorUniqueID{0};
     packet.data = std::string(200, 'x');
     const auto wire = encode(packet);
@@ -61,7 +61,7 @@ TEST_CASE("a debug payload longer than 127 bytes takes a two-byte length prefix"
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[2]) == 0x01);
 
-    const auto back = decode<bp::DebugInfoPacket_<2168>>(wire);
+    const auto back = decode<bp::DebugInfoPacket>(wire);
     REQUIRE(back.actor_id == bp::ActorUniqueID{0});
     REQUIRE(back.data == std::string(200, 'x'));
 }

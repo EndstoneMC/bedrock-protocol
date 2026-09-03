@@ -29,14 +29,14 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 337")
 {
-    STATIC_REQUIRE(bp::VoxelShapesPacket_<2168>::Id == 337);
+    STATIC_REQUIRE(bp::VoxelShapesPacket::Id == 337);
     STATIC_REQUIRE(bp::has_packet_v<1001, 337>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 337>);
 }
 
 TEST_CASE("voxel-shapes round-trips against the golden")
 {
-    bp::VoxelShapesPacket_<2168> packet;
+    bp::VoxelShapesPacket packet;
     packet.shapes.push_back({
         .cells = {.x_size = 2, .y_size = 1, .z_size = 3, .storage = {0x00, 0x01, 0x80, 0xff}},
         .x_coords = {0.0F, 0.5F, 1.0F},
@@ -47,7 +47,7 @@ TEST_CASE("voxel-shapes round-trips against the golden")
     packet.custom_shape_count = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::VoxelShapesPacket_<2168>>(golden);
+    const auto back = decode<bp::VoxelShapesPacket>(golden);
     REQUIRE(back.shapes.size() == 1);
     const auto &shape = back.shapes.at(0);
     REQUIRE(shape.cells.x_size == 2);
@@ -70,11 +70,11 @@ TEST_CASE("voxel-shapes round-trips against the golden")
 
 TEST_CASE("an empty voxel-shapes body keeps the custom shape count a fixed uint16")
 {
-    bp::VoxelShapesPacket_<2168> packet;
+    bp::VoxelShapesPacket packet;
     packet.custom_shape_count = 258;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::VoxelShapesPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::VoxelShapesPacket>(golden_empty);
     REQUIRE(back.shapes.empty());
     REQUIRE(back.name_map.empty());
     REQUIRE(back.custom_shape_count == 258);
@@ -82,7 +82,7 @@ TEST_CASE("an empty voxel-shapes body keeps the custom shape count a fixed uint1
 
 TEST_CASE("voxel-shape cell storage carries a uvarint32 length prefix")
 {
-    bp::VoxelShapesPacket_<2168> packet;
+    bp::VoxelShapesPacket packet;
     bp::SerializableVoxelShape shape;
     shape.cells.x_size = 1;
     shape.cells.y_size = 1;
@@ -97,5 +97,5 @@ TEST_CASE("voxel-shape cell storage carries a uvarint32 length prefix")
     REQUIRE(wire.size() == 224);
     REQUIRE(static_cast<unsigned char>(wire.at(4)) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire.at(5)) == 0x01);
-    REQUIRE(decode<bp::VoxelShapesPacket_<2168>>(wire).shapes.at(0).cells.storage.size() == 200);
+    REQUIRE(decode<bp::VoxelShapesPacket>(wire).shapes.at(0).cells.storage.size() == 200);
 }

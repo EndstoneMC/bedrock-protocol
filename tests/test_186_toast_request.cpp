@@ -24,29 +24,29 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 186")
 {
-    STATIC_REQUIRE(bp::ToastRequestPacket_<2168>::Id == 186);
+    STATIC_REQUIRE(bp::ToastRequestPacket::Id == 186);
     STATIC_REQUIRE(bp::has_packet_v<1001, 186>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 186>);
 }
 
 TEST_CASE("toast-request round-trips against the golden")
 {
-    bp::ToastRequestPacket_<2168> packet;
+    bp::ToastRequestPacket packet;
     packet.title = "Achievement";
     packet.content = "You earned Taking Inventory!";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ToastRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::ToastRequestPacket>(golden);
     REQUIRE(back.title == "Achievement");
     REQUIRE(back.content == "You earned Taking Inventory!");
 }
 
 TEST_CASE("both strings write a length prefix when empty")
 {
-    bp::ToastRequestPacket_<2168> packet;
+    bp::ToastRequestPacket packet;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::ToastRequestPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::ToastRequestPacket>(golden_empty);
     REQUIRE(back.title.empty());
     REQUIRE(back.content.empty());
 }
@@ -55,7 +55,7 @@ TEST_CASE("the content length prefix is a varint")
 {
     const std::string content(200, 'x');
 
-    bp::ToastRequestPacket_<2168> packet;
+    bp::ToastRequestPacket packet;
     packet.content = content;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 203);
@@ -63,7 +63,7 @@ TEST_CASE("the content length prefix is a varint")
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[2]) == 0x01);
 
-    const auto back = decode<bp::ToastRequestPacket_<2168>>(wire);
+    const auto back = decode<bp::ToastRequestPacket>(wire);
     REQUIRE(back.title.empty());
     REQUIRE(back.content == content);
 }

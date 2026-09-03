@@ -21,27 +21,27 @@ const std::string golden_absent = bytes({
 
 TEST_CASE("packet id is 334")
 {
-    STATIC_REQUIRE(bp::ClientboundDataDrivenUICloseScreenPacket_<2168>::Id == 334);
+    STATIC_REQUIRE(bp::ClientboundDataDrivenUICloseScreenPacket::Id == 334);
     STATIC_REQUIRE(bp::has_packet_v<1001, 334>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 334>);
 }
 
 TEST_CASE("clientbound-data-driven-ui-close-screen round-trips against the golden")
 {
-    bp::ClientboundDataDrivenUICloseScreenPacket_<2168> packet;
+    bp::ClientboundDataDrivenUICloseScreenPacket packet;
     packet.form_id = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientboundDataDrivenUICloseScreenPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientboundDataDrivenUICloseScreenPacket>(golden);
     REQUIRE(back.form_id == 300);
 }
 
 TEST_CASE("an absent close-screen form id is one zero byte, and a present one is five")
 {
-    bp::ClientboundDataDrivenUICloseScreenPacket_<2168> packet;
+    bp::ClientboundDataDrivenUICloseScreenPacket packet;
     REQUIRE(encode(packet) == golden_absent);
-    REQUIRE_FALSE(decode<bp::ClientboundDataDrivenUICloseScreenPacket_<2168>>(golden_absent).form_id.has_value());
+    REQUIRE_FALSE(decode<bp::ClientboundDataDrivenUICloseScreenPacket>(golden_absent).form_id.has_value());
 
     REQUIRE(golden.size() == 5);
-    REQUIRE(rejects<bp::ClientboundDataDrivenUICloseScreenPacket_<2168>>(bytes({0x01, 0x2c, 0x01})));
+    REQUIRE(rejects<bp::ClientboundDataDrivenUICloseScreenPacket>(bytes({0x01, 0x2c, 0x01})));
 }

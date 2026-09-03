@@ -48,19 +48,19 @@ TEST_CASE("update-sound-data round-trips against the golden")
 
     Packet packet;
     packet.server_sound_handle.value = 42;
-    packet.sound_event = bp::v1001::SoundDataEvent::STOP;
+    packet.sound_event = bp::v1001::SoundDataEvent::Stop;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<Packet>(golden);
     REQUIRE(back.server_sound_handle.value == 42);
-    REQUIRE(back.sound_event == bp::v1001::SoundDataEvent::STOP);
+    REQUIRE(back.sound_event == bp::v1001::SoundDataEvent::Stop);
 }
 
 TEST_CASE("the name-code read is case-insensitive")
 {
     using Packet = bp::ClientboundUpdateSoundDataPacket_<1001>;
 
-    REQUIRE(decode<Packet>(golden_binding_casing).sound_event == bp::v1001::SoundDataEvent::STOP);
+    REQUIRE(decode<Packet>(golden_binding_casing).sound_event == bp::v1001::SoundDataEvent::Stop);
 }
 
 TEST_CASE("a v2168 payload-less case is the handle plus its bare index")

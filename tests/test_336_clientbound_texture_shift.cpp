@@ -27,15 +27,15 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 336")
 {
-    STATIC_REQUIRE(bp::ClientboundTextureShiftPacket_<2168>::Id == 336);
+    STATIC_REQUIRE(bp::ClientboundTextureShiftPacket::Id == 336);
     STATIC_REQUIRE(bp::has_packet_v<1001, 336>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 336>);
 }
 
 TEST_CASE("clientbound texture shift round-trips against the golden")
 {
-    bp::ClientboundTextureShiftPacket_<2168> packet;
-    packet.action = bp::ClientboundTextureShiftPacket_<2168>::Action::START;
+    bp::ClientboundTextureShiftPacket packet;
+    packet.action = bp::ClientboundTextureShiftPacket::Action::Start;
     packet.collection_name = "shift";
     packet.from_step = "dawn";
     packet.to_step = "dusk";
@@ -45,8 +45,8 @@ TEST_CASE("clientbound texture shift round-trips against the golden")
     packet.enabled = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientboundTextureShiftPacket_<2168>>(golden);
-    REQUIRE(back.action == bp::ClientboundTextureShiftPacket_<2168>::Action::START);
+    const auto back = decode<bp::ClientboundTextureShiftPacket>(golden);
+    REQUIRE(back.action == bp::ClientboundTextureShiftPacket::Action::Start);
     REQUIRE(back.collection_name == "shift");
     REQUIRE(back.from_step == "dawn");
     REQUIRE(back.to_step == "dusk");
@@ -61,15 +61,15 @@ TEST_CASE("clientbound texture shift round-trips against the golden")
 
 TEST_CASE("a texture shift with no steps costs one byte per empty member")
 {
-    bp::ClientboundTextureShiftPacket_<2168> packet;
-    packet.action = bp::ClientboundTextureShiftPacket_<2168>::Action::SET_ENABLED;
+    bp::ClientboundTextureShiftPacket packet;
+    packet.action = bp::ClientboundTextureShiftPacket::Action::SetEnabled;
     packet.current_length_in_ticks = 0;
     packet.total_length_in_ticks = 0;
     packet.enabled = false;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::ClientboundTextureShiftPacket_<2168>>(golden_empty);
-    REQUIRE(back.action == bp::ClientboundTextureShiftPacket_<2168>::Action::SET_ENABLED);
+    const auto back = decode<bp::ClientboundTextureShiftPacket>(golden_empty);
+    REQUIRE(back.action == bp::ClientboundTextureShiftPacket::Action::SetEnabled);
     REQUIRE(back.collection_name.empty());
     REQUIRE(back.all_steps.empty());
     REQUIRE(back.current_length_in_ticks == 0);
@@ -79,15 +79,15 @@ TEST_CASE("a texture shift with no steps costs one byte per empty member")
 
 TEST_CASE("the texture shift tick counts are varints and keep their order")
 {
-    bp::ClientboundTextureShiftPacket_<2168> packet;
-    packet.action = bp::ClientboundTextureShiftPacket_<2168>::Action::SYNC;
+    bp::ClientboundTextureShiftPacket packet;
+    packet.action = bp::ClientboundTextureShiftPacket::Action::Sync;
     packet.current_length_in_ticks = 128;
     packet.total_length_in_ticks = 1;
     packet.enabled = true;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 9);
 
-    const auto back = decode<bp::ClientboundTextureShiftPacket_<2168>>(wire);
+    const auto back = decode<bp::ClientboundTextureShiftPacket>(wire);
     REQUIRE(back.current_length_in_ticks == 128);
     REQUIRE(back.total_length_in_ticks == 1);
     REQUIRE(back.enabled);

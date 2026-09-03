@@ -18,19 +18,19 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 339")
 {
-    STATIC_REQUIRE(bp::CameraAimAssistActorPriorityPacket_<2168>::Id == 339);
+    STATIC_REQUIRE(bp::CameraAimAssistActorPriorityPacket::Id == 339);
     STATIC_REQUIRE(bp::has_packet_v<1001, 339>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 339>);
 }
 
 TEST_CASE("camera aim-assist actor priority round-trips against the golden")
 {
-    bp::CameraAimAssistActorPriorityPacket_<2168> packet;
+    bp::CameraAimAssistActorPriorityPacket packet;
     packet.camera_aim_assist_actor_priority_list.push_back(
         {.preset_index = 1, .category_index = 2, .actor_index = 3, .priority_value = -4});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraAimAssistActorPriorityPacket_<2168>>(golden);
+    const auto back = decode<bp::CameraAimAssistActorPriorityPacket>(golden);
     REQUIRE(back.camera_aim_assist_actor_priority_list.size() == 1);
     REQUIRE(back.camera_aim_assist_actor_priority_list[0].actor_index == 3);
     REQUIRE(back.camera_aim_assist_actor_priority_list[0].priority_value == -4);
@@ -38,7 +38,7 @@ TEST_CASE("camera aim-assist actor priority round-trips against the golden")
 
 TEST_CASE("the indices are fixed int32, so a negative one stays four bytes")
 {
-    bp::CameraAimAssistActorPriorityPacket_<2168> packet;
+    bp::CameraAimAssistActorPriorityPacket packet;
     packet.camera_aim_assist_actor_priority_list.push_back(
         {.preset_index = -1, .category_index = 0, .actor_index = 0, .priority_value = 0});
     REQUIRE(encode(packet).size() == 17);

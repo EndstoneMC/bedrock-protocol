@@ -85,13 +85,13 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
 {
     bp::v1001::ItemStackRequestActionTake take;
     take.amount = 1;
-    take.src = slot(bp::ContainerEnumName::LEVEL_ENTITY_CONTAINER, 3, 9);
-    take.dst = slot(bp::ContainerEnumName::CURSOR_CONTAINER, 0, 0);
+    take.src = slot(bp::ContainerEnumName::LevelEntityContainer, 3, 9);
+    take.dst = slot(bp::ContainerEnumName::CursorContainer, 0, 0);
 
     bp::v1001::ItemStackRequestData request;
     request.client_request_id.raw_id = -1;
     request.actions = {take};
-    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::SERVER_CHAT_PUBLIC;
+    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ServerChatPublic;
 
     Packet packet;
     packet.requests = {request};
@@ -106,7 +106,7 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
     REQUIRE(take_back.amount == 1);
     REQUIRE(take_back.src.slot == 3);
     REQUIRE(take_back.src.net_id_variant == 9);
-    REQUIRE(take_back.dst.full_container_name.name == bp::ContainerEnumName::CURSOR_CONTAINER);
+    REQUIRE(take_back.dst.full_container_name.name == bp::ContainerEnumName::CursorContainer);
 }
 
 // Two slots of the action tag are dead at 1001: BDS declares
@@ -123,7 +123,7 @@ TEST_CASE("item-stack-request v1001 tags lab-table 9 and craft-creative 14")
     request.client_request_id.raw_id = -3;
     request.actions = {bp::v1001::ItemStackRequestActionLabTableCombine{}, creative};
     request.strings_to_filter = {"anvil name"};
-    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ANVIL_TEXT;
+    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::AnvilText;
 
     Packet packet;
     packet.requests = {request};
@@ -135,7 +135,7 @@ TEST_CASE("item-stack-request v1001 tags lab-table 9 and craft-creative 14")
     REQUIRE(back.requests[0].actions[1].index() == 14);
     REQUIRE(std::get<14>(back.requests[0].actions[1]).creative_item_net_id.raw_id == 5);
     REQUIRE(back.requests[0].strings_to_filter == std::vector<std::string>{"anvil name"});
-    REQUIRE(back.requests[0].strings_to_filter_origin == bp::TextProcessingEventOrigin::ANVIL_TEXT);
+    REQUIRE(back.requests[0].strings_to_filter_origin == bp::TextProcessingEventOrigin::AnvilText);
 }
 
 TEST_CASE("packet id is 147 at v2168")
@@ -149,15 +149,15 @@ TEST_CASE("packet id is 147 at v2168")
 TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 {
     bp::v2168::ItemStackRequestCereal::TakeActionData take;
-    take.action_type = bp::ItemStackRequestActionType::TAKE;
+    take.action_type = bp::ItemStackRequestActionType::Take;
     take.amount = 1;
-    take.source = slot_v2168(bp::ContainerEnumName::LEVEL_ENTITY_CONTAINER, 3, 9);
-    take.destination = slot_v2168(bp::ContainerEnumName::CURSOR_CONTAINER, 0, 0);
+    take.source = slot_v2168(bp::ContainerEnumName::LevelEntityContainer, 3, 9);
+    take.destination = slot_v2168(bp::ContainerEnumName::CursorContainer, 0, 0);
 
     bp::v2168::ItemStackRequestCereal::RequestData request;
     request.client_request_id.raw_id = -1;
     request.actions = {take};
-    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::SERVER_CHAT_PUBLIC;
+    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ServerChatPublic;
 
     PacketV2168 packet;
     packet.requests = {request};
@@ -165,7 +165,7 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 
     const auto back = decode<PacketV2168>(golden_take_v2168);
     const auto &take_back = std::get<0>(back.requests[0].actions[0]);
-    REQUIRE(take_back.action_type == bp::ItemStackRequestActionType::TAKE);
+    REQUIRE(take_back.action_type == bp::ItemStackRequestActionType::Take);
     REQUIRE(take_back.source.slot == 3);
     REQUIRE(take_back.source.net_id_variant == 9);
 }
@@ -173,10 +173,10 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type stays 9")
 {
     bp::v2168::ItemStackRequestCereal::LabTableCombineActionData lab;
-    lab.action_type = bp::ItemStackRequestActionType::SCREEN_LAB_TABLE_COMBINE;
+    lab.action_type = bp::ItemStackRequestActionType::ScreenLabTableCombine;
 
     bp::v2168::ItemStackRequestCereal::CraftCreativeActionData creative;
-    creative.action_type = bp::ItemStackRequestActionType::CRAFT_CREATIVE;
+    creative.action_type = bp::ItemStackRequestActionType::CraftCreative;
     creative.creative_item_net_id = 5;
     creative.num_crafts = 1;
 
@@ -184,7 +184,7 @@ TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type st
     request.client_request_id.raw_id = -3;
     request.actions = {lab, creative};
     request.strings_to_filter = {"anvil name"};
-    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::ANVIL_TEXT;
+    request.strings_to_filter_origin = bp::TextProcessingEventOrigin::AnvilText;
 
     PacketV2168 packet;
     packet.requests = {request};
@@ -193,9 +193,9 @@ TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type st
     const auto back = decode<PacketV2168>(golden_two_actions_v2168);
     REQUIRE(back.requests[0].actions[0].index() == 7);
     REQUIRE(std::get<7>(back.requests[0].actions[0]).action_type ==
-            bp::ItemStackRequestActionType::SCREEN_LAB_TABLE_COMBINE);
+            bp::ItemStackRequestActionType::ScreenLabTableCombine);
     REQUIRE(back.requests[0].actions[1].index() == 12);
-    REQUIRE(std::get<12>(back.requests[0].actions[1]).action_type == bp::ItemStackRequestActionType::CRAFT_CREATIVE);
+    REQUIRE(std::get<12>(back.requests[0].actions[1]).action_type == bp::ItemStackRequestActionType::CraftCreative);
 }
 
 // The 1001 body is the shorter of the two -- no action-type byte, and a varint32 slot net

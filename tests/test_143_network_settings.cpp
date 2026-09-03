@@ -23,24 +23,24 @@ const std::string golden_none = bytes({
 
 TEST_CASE("packet id is 143")
 {
-    STATIC_REQUIRE(bp::NetworkSettingsPacket_<2168>::Id == 143);
+    STATIC_REQUIRE(bp::NetworkSettingsPacket::Id == 143);
     STATIC_REQUIRE(bp::has_packet_v<1001, 143>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 143>);
 }
 
 TEST_CASE("network-settings round-trips against the golden")
 {
-    bp::NetworkSettingsPacket_<2168> packet;
+    bp::NetworkSettingsPacket packet;
     packet.compression_threshold = 1024;
-    packet.compression_algorithm = bp::PacketCompressionAlgorithm::SNAPPY;
+    packet.compression_algorithm = bp::PacketCompressionAlgorithm::Snappy;
     packet.client_throttle_enabled = true;
     packet.client_throttle_threshold = 200;
     packet.client_throttle_scalar = 0.5F;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::NetworkSettingsPacket_<2168>>(golden);
+    const auto back = decode<bp::NetworkSettingsPacket>(golden);
     REQUIRE(back.compression_threshold == 1024);
-    REQUIRE(back.compression_algorithm == bp::PacketCompressionAlgorithm::SNAPPY);
+    REQUIRE(back.compression_algorithm == bp::PacketCompressionAlgorithm::Snappy);
     REQUIRE(back.client_throttle_enabled);
     REQUIRE(back.client_throttle_threshold == 200);
     REQUIRE(back.client_throttle_scalar == 0.5F);
@@ -48,12 +48,12 @@ TEST_CASE("network-settings round-trips against the golden")
 
 TEST_CASE("the network-settings compression algorithm is two fixed bytes, not a varint")
 {
-    bp::NetworkSettingsPacket_<2168> packet;
-    packet.compression_algorithm = bp::PacketCompressionAlgorithm::NONE;
+    bp::NetworkSettingsPacket packet;
+    packet.compression_algorithm = bp::PacketCompressionAlgorithm::None;
     REQUIRE(encode(packet) == golden_none);
     REQUIRE(encode(packet).size() == 10);
 
-    const auto back = decode<bp::NetworkSettingsPacket_<2168>>(golden_none);
-    REQUIRE(back.compression_algorithm == bp::PacketCompressionAlgorithm::NONE);
+    const auto back = decode<bp::NetworkSettingsPacket>(golden_none);
+    REQUIRE(back.compression_algorithm == bp::PacketCompressionAlgorithm::None);
     REQUIRE(back.compression_threshold == 0);
 }

@@ -22,35 +22,35 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 95")
 {
-    STATIC_REQUIRE(bp::AutomationClientConnectPacket_<2168>::Id == 95);
+    STATIC_REQUIRE(bp::AutomationClientConnectPacket::Id == 95);
     STATIC_REQUIRE(bp::has_packet_v<1001, 95>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 95>);
 }
 
 TEST_CASE("automation-client-connect round-trips against the golden")
 {
-    bp::AutomationClientConnectPacket_<2168> packet;
+    bp::AutomationClientConnectPacket packet;
     packet.web_socket_data.ip = "ws://localhost:8000/ws";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AutomationClientConnectPacket_<2168>>(golden);
+    const auto back = decode<bp::AutomationClientConnectPacket>(golden);
     REQUIRE(back.web_socket_data.ip == "ws://localhost:8000/ws");
 }
 
 TEST_CASE("an empty websocket uri is a lone length prefix with no struct framing")
 {
-    bp::AutomationClientConnectPacket_<2168> packet;
+    bp::AutomationClientConnectPacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::AutomationClientConnectPacket_<2168>>(golden_empty).web_socket_data.ip.empty());
+    REQUIRE(decode<bp::AutomationClientConnectPacket>(golden_empty).web_socket_data.ip.empty());
 }
 
 TEST_CASE("the websocket uri length prefix is a varint, not a byte")
 {
-    bp::AutomationClientConnectPacket_<2168> packet;
+    bp::AutomationClientConnectPacket packet;
     packet.web_socket_data.ip = std::string(200, 'a');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
-    REQUIRE(decode<bp::AutomationClientConnectPacket_<2168>>(wire).web_socket_data.ip == packet.web_socket_data.ip);
+    REQUIRE(decode<bp::AutomationClientConnectPacket>(wire).web_socket_data.ip == packet.web_socket_data.ip);
 }

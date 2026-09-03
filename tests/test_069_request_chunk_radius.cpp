@@ -22,36 +22,36 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 69")
 {
-    STATIC_REQUIRE(bp::RequestChunkRadiusPacket_<2168>::Id == 69);
+    STATIC_REQUIRE(bp::RequestChunkRadiusPacket::Id == 69);
     STATIC_REQUIRE(bp::has_packet_v<1001, 69>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 69>);
 }
 
 TEST_CASE("request-chunk-radius round-trips against the golden")
 {
-    bp::RequestChunkRadiusPacket_<2168> packet;
+    bp::RequestChunkRadiusPacket packet;
     packet.chunk_radius = 12;
     packet.max_chunk_radius = 200;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RequestChunkRadiusPacket_<2168>>(golden);
+    const auto back = decode<bp::RequestChunkRadiusPacket>(golden);
     REQUIRE(back.chunk_radius == 12);
     REQUIRE(back.max_chunk_radius == 200);
 }
 
 TEST_CASE("a negative radius zigzags and the max radius stays one raw byte")
 {
-    bp::RequestChunkRadiusPacket_<2168> packet;
+    bp::RequestChunkRadiusPacket packet;
     packet.chunk_radius = -1;
     packet.max_chunk_radius = 255;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::RequestChunkRadiusPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::RequestChunkRadiusPacket>(golden_negative);
     REQUIRE(back.chunk_radius == -1);
     REQUIRE(back.max_chunk_radius == 255);
 }
 
 TEST_CASE("request-chunk-radius rejects a body carrying only the radius")
 {
-    REQUIRE(rejects<bp::RequestChunkRadiusPacket_<2168>>(golden.substr(0, 1)));
+    REQUIRE(rejects<bp::RequestChunkRadiusPacket>(golden.substr(0, 1)));
 }

@@ -21,10 +21,10 @@ TEST_CASE("SetPlayerFurnaceOptionsPacket: v2192 round-trip")
     using Packet = bp::SetPlayerFurnaceOptionsPacket_<2192>;
 
     Packet packet;
-    packet.furnace_type = Packet::FurnaceType::SMOKER;
-    packet.furnace_options.left_furnace_tab = bp::FurnaceLeftTabIndex::INVENTORY;
+    packet.furnace_type = Packet::FurnaceType::Smoker;
+    packet.furnace_options.left_furnace_tab = bp::FurnaceLeftTabIndex::Inventory;
     packet.furnace_options.filtering = true;
-    packet.furnace_options.layout = bp::FurnaceLayout::DEFAULT;
+    packet.furnace_options.layout = bp::FurnaceLayout::Default;
 
     // Every field is one byte at these values: the type byte, then a varint each side
     // of the flag.
@@ -32,8 +32,8 @@ TEST_CASE("SetPlayerFurnaceOptionsPacket: v2192 round-trip")
     REQUIRE(encoded.size() == 4);
 
     const auto back = decode<Packet>(encoded);
-    REQUIRE(back.furnace_type == Packet::FurnaceType::SMOKER);
-    REQUIRE(back.furnace_options.left_furnace_tab == bp::FurnaceLeftTabIndex::INVENTORY);
+    REQUIRE(back.furnace_type == Packet::FurnaceType::Smoker);
+    REQUIRE(back.furnace_options.left_furnace_tab == bp::FurnaceLeftTabIndex::Inventory);
     REQUIRE(back.furnace_options.filtering);
-    REQUIRE(back.furnace_options.layout == bp::FurnaceLayout::DEFAULT);
+    REQUIRE(back.furnace_options.layout == bp::FurnaceLayout::Default);
 }

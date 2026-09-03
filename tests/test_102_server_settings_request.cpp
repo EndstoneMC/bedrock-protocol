@@ -13,23 +13,23 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 102")
 {
-    STATIC_REQUIRE(bp::ServerSettingsRequestPacket_<2168>::Id == 102);
+    STATIC_REQUIRE(bp::ServerSettingsRequestPacket::Id == 102);
     STATIC_REQUIRE(bp::has_packet_v<1001, 102>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 102>);
 }
 
 TEST_CASE("server-settings-request round-trips against the golden")
 {
-    bp::ServerSettingsRequestPacket_<2168> packet;
+    bp::ServerSettingsRequestPacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::ServerSettingsRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::ServerSettingsRequestPacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
 TEST_CASE("the body reads no bytes off a frame that carries some")
 {
-    const auto back = decode_partial<bp::ServerSettingsRequestPacket_<2168>>(bytes({0x7f}));
+    const auto back = decode_partial<bp::ServerSettingsRequestPacket>(bytes({0x7f}));
     REQUIRE(encode(back).empty());
 }

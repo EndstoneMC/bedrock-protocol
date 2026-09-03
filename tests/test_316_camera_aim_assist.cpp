@@ -19,42 +19,42 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 316")
 {
-    STATIC_REQUIRE(bp::CameraAimAssistPacket_<2168>::Id == 316);
+    STATIC_REQUIRE(bp::CameraAimAssistPacket::Id == 316);
     STATIC_REQUIRE(bp::has_packet_v<1001, 316>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 316>);
 }
 
 TEST_CASE("camera aim assist round-trips against the golden")
 {
-    bp::CameraAimAssistPacket_<2168> packet;
+    bp::CameraAimAssistPacket packet;
     packet.preset_id = "aim_assist_preset";
     packet.view_angle = {.x = 30.0F, .y = 20.0F};
     packet.distance = 8.0F;
-    packet.target_mode = bp::CameraAimAssistPacket_<2168>::TargetMode::DISTANCE;
-    packet.action = bp::CameraAimAssistPacket_<2168>::Action::SET;
+    packet.target_mode = bp::CameraAimAssistPacket::TargetMode::Distance;
+    packet.action = bp::CameraAimAssistPacket::Action::Set;
     packet.show_debug_render = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraAimAssistPacket_<2168>>(golden);
+    const auto back = decode<bp::CameraAimAssistPacket>(golden);
     REQUIRE(back.preset_id == "aim_assist_preset");
     REQUIRE(back.view_angle.x == 30.0F);
     REQUIRE(back.view_angle.y == 20.0F);
     REQUIRE(back.distance == 8.0F);
-    REQUIRE(back.target_mode == bp::CameraAimAssistPacket_<2168>::TargetMode::DISTANCE);
-    REQUIRE(back.action == bp::CameraAimAssistPacket_<2168>::Action::SET);
+    REQUIRE(back.target_mode == bp::CameraAimAssistPacket::TargetMode::Distance);
+    REQUIRE(back.action == bp::CameraAimAssistPacket::Action::Set);
     REQUIRE(back.show_debug_render);
 }
 
 TEST_CASE("a 200-byte aim-assist preset id takes a two-byte varint length")
 {
-    bp::CameraAimAssistPacket_<2168> packet;
+    bp::CameraAimAssistPacket packet;
     packet.preset_id = std::string(200, 'p');
-    packet.action = bp::CameraAimAssistPacket_<2168>::Action::CLEAR;
+    packet.action = bp::CameraAimAssistPacket::Action::Clear;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 217);
     REQUIRE(wire.substr(0, 2) == bytes({0xc8, 0x01}));
 
-    const auto back = decode<bp::CameraAimAssistPacket_<2168>>(wire);
+    const auto back = decode<bp::CameraAimAssistPacket>(wire);
     REQUIRE(back.preset_id == std::string(200, 'p'));
-    REQUIRE(back.action == bp::CameraAimAssistPacket_<2168>::Action::CLEAR);
+    REQUIRE(back.action == bp::CameraAimAssistPacket::Action::Clear);
 }

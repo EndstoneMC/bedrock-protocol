@@ -24,20 +24,20 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 157")
 {
-    STATIC_REQUIRE(bp::MotionPredictionHintsPacket_<2168>::Id == 157);
+    STATIC_REQUIRE(bp::MotionPredictionHintsPacket::Id == 157);
     STATIC_REQUIRE(bp::has_packet_v<1001, 157>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 157>);
 }
 
 TEST_CASE("motion-prediction-hints round-trips against the golden")
 {
-    bp::MotionPredictionHintsPacket_<2168> packet;
+    bp::MotionPredictionHintsPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.motion = {.x = 0.5F, .y = -1.25F, .z = 2.0F};
     packet.on_ground = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::MotionPredictionHintsPacket_<2168>>(golden);
+    const auto back = decode<bp::MotionPredictionHintsPacket>(golden);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.motion.x == 0.5F);
     REQUIRE(back.motion.y == -1.25F);
@@ -47,13 +47,13 @@ TEST_CASE("motion-prediction-hints round-trips against the golden")
 
 TEST_CASE("the motion-prediction-hints runtime id does not narrow to 32 bits")
 {
-    bp::MotionPredictionHintsPacket_<2168> packet;
+    bp::MotionPredictionHintsPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{0x1234567890ULL};
     packet.motion = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.on_ground = false;
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::MotionPredictionHintsPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::MotionPredictionHintsPacket>(golden_wide);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{0x1234567890ULL});
     REQUIRE_FALSE(back.on_ground);
 }

@@ -34,15 +34,15 @@ const std::string golden_without_angular_velocity = bytes({
 
 TEST_CASE("packet id is 161")
 {
-    STATIC_REQUIRE(bp::CorrectPlayerMovePredictionPacket_<2168>::Id == 161);
+    STATIC_REQUIRE(bp::CorrectPlayerMovePredictionPacket::Id == 161);
     STATIC_REQUIRE(bp::has_packet_v<1001, 161>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 161>);
 }
 
 TEST_CASE("correct-player-move-prediction round-trips against the golden")
 {
-    bp::CorrectPlayerMovePredictionPacket_<2168> packet;
-    packet.prediction_type = bp::RewindType::VEHICLE;
+    bp::CorrectPlayerMovePredictionPacket packet;
+    packet.prediction_type = bp::RewindType::Vehicle;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.pos_delta = {.x = 0.5F, .y = -0.5F, .z = 0.25F};
     packet.vehicle_rotation = {.x = 45.0F, .y = 90.0F};
@@ -51,8 +51,8 @@ TEST_CASE("correct-player-move-prediction round-trips against the golden")
     packet.tick = bp::PlayerInputTick{300};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CorrectPlayerMovePredictionPacket_<2168>>(golden);
-    REQUIRE(back.prediction_type == bp::RewindType::VEHICLE);
+    const auto back = decode<bp::CorrectPlayerMovePredictionPacket>(golden);
+    REQUIRE(back.prediction_type == bp::RewindType::Vehicle);
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
     REQUIRE(back.pos.z == 3.0F);
@@ -69,8 +69,8 @@ TEST_CASE("correct-player-move-prediction round-trips against the golden")
 
 TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
 {
-    bp::CorrectPlayerMovePredictionPacket_<2168> packet;
-    packet.prediction_type = bp::RewindType::PLAYER;
+    bp::CorrectPlayerMovePredictionPacket packet;
+    packet.prediction_type = bp::RewindType::Player;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.pos_delta = {.x = 0.5F, .y = -0.5F, .z = 0.25F};
     packet.vehicle_rotation = {.x = 45.0F, .y = 90.0F};
@@ -80,8 +80,8 @@ TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
     REQUIRE(encode(packet) == golden_without_angular_velocity);
     REQUIRE(golden.size() - golden_without_angular_velocity.size() == 4);
 
-    const auto back = decode<bp::CorrectPlayerMovePredictionPacket_<2168>>(golden_without_angular_velocity);
-    REQUIRE(back.prediction_type == bp::RewindType::PLAYER);
+    const auto back = decode<bp::CorrectPlayerMovePredictionPacket>(golden_without_angular_velocity);
+    REQUIRE(back.prediction_type == bp::RewindType::Player);
     REQUIRE_FALSE(back.vehicle_angular_velocity.has_value());
     REQUIRE_FALSE(back.on_ground);
     REQUIRE(back.tick == bp::PlayerInputTick{300});
@@ -89,8 +89,8 @@ TEST_CASE("an absent vehicle angular velocity is one zero byte, not five")
 
 TEST_CASE("the correct-player-move-prediction tick survives past 32 bits")
 {
-    bp::CorrectPlayerMovePredictionPacket_<2168> packet;
-    packet.prediction_type = bp::RewindType::PLAYER;
+    bp::CorrectPlayerMovePredictionPacket packet;
+    packet.prediction_type = bp::RewindType::Player;
     packet.pos = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.pos_delta = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.vehicle_rotation = {.x = 0.0F, .y = 0.0F};
@@ -100,6 +100,6 @@ TEST_CASE("the correct-player-move-prediction tick survives past 32 bits")
 
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 40);
-    REQUIRE(decode<bp::CorrectPlayerMovePredictionPacket_<2168>>(wire).tick ==
+    REQUIRE(decode<bp::CorrectPlayerMovePredictionPacket>(wire).tick ==
             bp::PlayerInputTick{1ULL << 32U});
 }

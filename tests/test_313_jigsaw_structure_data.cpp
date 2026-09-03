@@ -16,21 +16,21 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 313")
 {
-    STATIC_REQUIRE(bp::JigsawStructureDataPacket_<2168>::Id == 313);
+    STATIC_REQUIRE(bp::JigsawStructureDataPacket::Id == 313);
     STATIC_REQUIRE(bp::has_packet_v<1001, 313>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 313>);
 }
 
 TEST_CASE("an empty jigsaw tag round-trips against the golden")
 {
-    REQUIRE(encode(bp::JigsawStructureDataPacket_<2168>{}) == golden_empty);
-    REQUIRE(decode<bp::JigsawStructureDataPacket_<2168>>(golden_empty).jigsaw_structure_data_tag.empty());
+    REQUIRE(encode(bp::JigsawStructureDataPacket{}) == golden_empty);
+    REQUIRE(decode<bp::JigsawStructureDataPacket>(golden_empty).jigsaw_structure_data_tag.empty());
 }
 
 TEST_CASE("a populated jigsaw tag carries its entries")
 {
-    bp::JigsawStructureDataPacket_<2168> packet;
+    bp::JigsawStructureDataPacket packet;
     packet.jigsaw_structure_data_tag = bp::CompoundTag{{"size", bp::IntTag{3}}};
-    const auto back = decode<bp::JigsawStructureDataPacket_<2168>>(encode(packet));
+    const auto back = decode<bp::JigsawStructureDataPacket>(encode(packet));
     REQUIRE(back.jigsaw_structure_data_tag.at("size").get<bp::IntTag>().value() == 3);
 }

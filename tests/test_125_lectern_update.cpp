@@ -22,20 +22,20 @@ const std::string golden_wide_pos = bytes({
 
 TEST_CASE("packet id is 125")
 {
-    STATIC_REQUIRE(bp::LecternUpdatePacket_<2168>::Id == 125);
+    STATIC_REQUIRE(bp::LecternUpdatePacket::Id == 125);
     STATIC_REQUIRE(bp::has_packet_v<1001, 125>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 125>);
 }
 
 TEST_CASE("lectern-update round-trips against the golden")
 {
-    bp::LecternUpdatePacket_<2168> packet;
+    bp::LecternUpdatePacket packet;
     packet.page = 200;
     packet.total_pages = 255;
     packet.pos = {.x = 1, .y = -2, .z = 3};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LecternUpdatePacket_<2168>>(golden);
+    const auto back = decode<bp::LecternUpdatePacket>(golden);
     REQUIRE(back.page == 200);
     REQUIRE(back.total_pages == 255);
     REQUIRE(back.pos.x == 1);
@@ -45,25 +45,25 @@ TEST_CASE("lectern-update round-trips against the golden")
 
 TEST_CASE("a lectern-update page counter above 127 stays one byte")
 {
-    bp::LecternUpdatePacket_<2168> packet;
+    bp::LecternUpdatePacket packet;
     packet.page = 200;
     packet.total_pages = 130;
     packet.pos = {.x = 0, .y = 0, .z = 0};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 5);
-    REQUIRE(decode<bp::LecternUpdatePacket_<2168>>(wire).page == 200);
-    REQUIRE(decode<bp::LecternUpdatePacket_<2168>>(wire).total_pages == 130);
+    REQUIRE(decode<bp::LecternUpdatePacket>(wire).page == 200);
+    REQUIRE(decode<bp::LecternUpdatePacket>(wire).total_pages == 130);
 }
 
 TEST_CASE("a lectern-update block position carries multi-byte varint coordinates")
 {
-    bp::LecternUpdatePacket_<2168> packet;
+    bp::LecternUpdatePacket packet;
     packet.page = 0;
     packet.total_pages = 1;
     packet.pos = {.x = -1, .y = 320, .z = -300};
     REQUIRE(encode(packet) == golden_wide_pos);
 
-    const auto back = decode<bp::LecternUpdatePacket_<2168>>(golden_wide_pos);
+    const auto back = decode<bp::LecternUpdatePacket>(golden_wide_pos);
     REQUIRE(back.page == 0);
     REQUIRE(back.total_pages == 1);
     REQUIRE(back.pos.x == -1);

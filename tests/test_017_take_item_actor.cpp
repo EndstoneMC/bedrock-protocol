@@ -22,31 +22,31 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 17")
 {
-    STATIC_REQUIRE(bp::TakeItemActorPacket_<2168>::Id == 17);
+    STATIC_REQUIRE(bp::TakeItemActorPacket::Id == 17);
     STATIC_REQUIRE(bp::has_packet_v<1001, 17>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 17>);
 }
 
 TEST_CASE("take-item-actor round-trips against the golden")
 {
-    bp::TakeItemActorPacket_<2168> packet;
+    bp::TakeItemActorPacket packet;
     packet.item_id = bp::ActorRuntimeID{300};
     packet.actor_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::TakeItemActorPacket_<2168>>(golden);
+    const auto back = decode<bp::TakeItemActorPacket>(golden);
     REQUIRE(back.item_id == bp::ActorRuntimeID{300});
     REQUIRE(back.actor_id == bp::ActorRuntimeID{7});
 }
 
 TEST_CASE("both ids are 64-bit varints")
 {
-    bp::TakeItemActorPacket_<2168> packet;
+    bp::TakeItemActorPacket packet;
     packet.item_id = bp::ActorRuntimeID{4294967296ULL};
     packet.actor_id = bp::ActorRuntimeID{1};
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::TakeItemActorPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::TakeItemActorPacket>(golden_wide);
     REQUIRE(back.item_id == bp::ActorRuntimeID{4294967296ULL});
     REQUIRE(back.actor_id == bp::ActorRuntimeID{1});
 }

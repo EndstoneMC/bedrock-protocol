@@ -27,22 +27,22 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 43")
 {
-    STATIC_REQUIRE(bp::SetSpawnPositionPacket_<2168>::Id == 43);
+    STATIC_REQUIRE(bp::SetSpawnPositionPacket::Id == 43);
     STATIC_REQUIRE(bp::has_packet_v<1001, 43>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 43>);
 }
 
 TEST_CASE("set-spawn-position round-trips against the golden")
 {
-    bp::SetSpawnPositionPacket_<2168> packet;
-    packet.spawn_pos_type = bp::SpawnPositionType::WORLD_SPAWN;
+    bp::SetSpawnPositionPacket packet;
+    packet.spawn_pos_type = bp::SpawnPositionType::WorldSpawn;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.dimension_type = bp::DimensionType{1};
     packet.spawn_block_pos = {.x = 4, .y = 5, .z = 6};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetSpawnPositionPacket_<2168>>(golden);
-    REQUIRE(back.spawn_pos_type == bp::SpawnPositionType::WORLD_SPAWN);
+    const auto back = decode<bp::SetSpawnPositionPacket>(golden);
+    REQUIRE(back.spawn_pos_type == bp::SpawnPositionType::WorldSpawn);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == 2);
     REQUIRE(back.pos.z == 3);
@@ -54,14 +54,14 @@ TEST_CASE("set-spawn-position round-trips against the golden")
 
 TEST_CASE("set-spawn-position writes every block coordinate as a signed varint")
 {
-    bp::SetSpawnPositionPacket_<2168> packet;
-    packet.spawn_pos_type = bp::SpawnPositionType::PLAYER_RESPAWN;
+    bp::SetSpawnPositionPacket packet;
+    packet.spawn_pos_type = bp::SpawnPositionType::PlayerRespawn;
     packet.pos = {.x = -1, .y = -64, .z = 300};
     packet.dimension_type = bp::DimensionType{2};
     packet.spawn_block_pos = {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN};
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::SetSpawnPositionPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::SetSpawnPositionPacket>(golden_negative);
     REQUIRE(back.pos.x == -1);
     REQUIRE(back.pos.y == -64);
     REQUIRE(back.pos.z == 300);

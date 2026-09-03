@@ -38,14 +38,14 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 166")
 {
-    STATIC_REQUIRE(bp::AddVolumeEntityPacket_<2168>::Id == 166);
+    STATIC_REQUIRE(bp::AddVolumeEntityPacket::Id == 166);
     STATIC_REQUIRE(bp::has_packet_v<1001, 166>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 166>);
 }
 
 TEST_CASE("add volume entity round-trips against the golden")
 {
-    bp::AddVolumeEntityPacket_<2168> packet;
+    bp::AddVolumeEntityPacket packet;
     packet.entity_net_id = bp::EntityNetId{7};
     packet.components = bp::CompoundTag{{"minecraft:fog", bp::StringTag{"spooky"}}};
     packet.json_identifier = "endstone:volume";
@@ -56,7 +56,7 @@ TEST_CASE("add volume entity round-trips against the golden")
     packet.min_engine_version = "1.21.0";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AddVolumeEntityPacket_<2168>>(golden);
+    const auto back = decode<bp::AddVolumeEntityPacket>(golden);
     REQUIRE(back.entity_net_id == bp::EntityNetId{7});
     REQUIRE(back.components.size() == 1);
     REQUIRE(back.components.at("minecraft:fog").get<bp::StringTag>().value() == "spooky");
@@ -74,10 +74,10 @@ TEST_CASE("add volume entity round-trips against the golden")
 
 TEST_CASE("an empty volume component tag does not swallow the two identifiers")
 {
-    bp::AddVolumeEntityPacket_<2168> packet;
+    bp::AddVolumeEntityPacket packet;
     REQUIRE(encode(packet) == golden_default);
 
-    const auto back = decode<bp::AddVolumeEntityPacket_<2168>>(golden_default);
+    const auto back = decode<bp::AddVolumeEntityPacket>(golden_default);
     REQUIRE(back.components.empty());
     REQUIRE(back.json_identifier.empty());
     REQUIRE(back.instance_name.empty());
@@ -86,13 +86,13 @@ TEST_CASE("an empty volume component tag does not swallow the two identifiers")
 
 TEST_CASE("the volume net id is unsigned while the bounds and the dimension zigzag")
 {
-    bp::AddVolumeEntityPacket_<2168> packet;
+    bp::AddVolumeEntityPacket packet;
     packet.entity_net_id = bp::EntityNetId{300};
     packet.min_bounds = {.x = -1, .y = -1, .z = -1};
     packet.dimension_type = bp::DimensionType{-1};
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::AddVolumeEntityPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::AddVolumeEntityPacket>(golden_wide);
     REQUIRE(back.entity_net_id == bp::EntityNetId{300});
     REQUIRE(back.min_bounds.x == -1);
     REQUIRE(back.min_bounds.y == -1);

@@ -24,15 +24,15 @@ bp::SkinImage image(const char *raw)
 std::vector<bp::AnimatedImageData> animations()
 {
     return {{.image = image("\x09\x0A\x0B\x0C"),
-             .type = bp::AnimatedTextureType::FACE,
+             .type = bp::AnimatedTextureType::Face,
              .frames = 1.0f,
-             .animation_expression = bp::AnimationExpression::LINEAR}};
+             .animation_expression = bp::AnimationExpression::Linear}};
 }
 
 std::vector<bp::SerializedPersonaPieceHandle> pieces()
 {
     return {{.piece_id = "p1",
-             .piece_type = bp::PieceType::SKELETON,
+             .piece_type = bp::PieceType::Skeleton,
              .pack_id = kPack,
              .is_default_piece = true,
              .product_id = "prod"}};
@@ -40,7 +40,7 @@ std::vector<bp::SerializedPersonaPieceHandle> pieces()
 
 std::map<bp::PieceType, bp::TintMapColor> tints()
 {
-    return {{bp::PieceType::SKELETON,
+    return {{bp::PieceType::Skeleton,
              bp::TintMapColor{.colors = {bp::Color{1}, bp::Color{2},
                                          bp::Color{3}, bp::Color{4}}}}};
 }
@@ -60,7 +60,7 @@ Packet1001 fill_v1001()
                    .animation_data = "anim",
                    .cape_id = "cape",
                    .full_id = "full",
-                   .arm_size = bp::ArmSizeType::WIDE,
+                   .arm_size = bp::ArmSizeType::Wide,
                    .skin_color = bp::Color{0x04030201},
                    .persona_pieces = pieces(),
                    .piece_tint_colors = tints(),
@@ -69,7 +69,7 @@ Packet1001 fill_v1001()
                    .is_persona_cape_on_classic_skin = false,
                    .is_primary_user = true,
                    .overrides_player_appearance = true,
-                   .trusted_skin_flag = bp::TrustedSkinFlag::FALSE};
+                   .trusted_skin_flag = bp::TrustedSkinFlag::False};
     packet.localized_new_skin_name = "new";
     packet.localized_old_skin_name = "old";
     return packet;
@@ -90,7 +90,7 @@ Packet2168 fill_v2168()
                    .animation_data = "anim",
                    .cape_id = "cape",
                    .full_id = "full",
-                   .arm_size = bp::ArmSizeType::WIDE,
+                   .arm_size = bp::ArmSizeType::Wide,
                    .skin_color = bp::Color{0x04030201},
                    .persona_pieces = pieces(),
                    .piece_tint_colors = tints(),
@@ -99,7 +99,7 @@ Packet2168 fill_v2168()
                    .is_persona_cape_on_classic_skin = false,
                    .is_primary_user = true,
                    .overrides_player_appearance = true,
-                   .trusted_skin_flag = bp::TrustedSkinFlag::FALSE,
+                   .trusted_skin_flag = bp::TrustedSkinFlag::False,
                    .profile_hash = "hash"};
     packet.localized_new_skin_name = "new";
     packet.localized_old_skin_name = "old";
@@ -160,10 +160,10 @@ TEST_CASE("PlayerSkinPacket: v2168 round-trip")
     const auto rt = decode<Packet2168>(golden_v2168);
     REQUIRE(rt.skin.id == "sid");
     REQUIRE(rt.skin.animated_image_data.size() == 1);
-    REQUIRE(rt.skin.animated_image_data[0].type == bp::AnimatedTextureType::FACE);
+    REQUIRE(rt.skin.animated_image_data[0].type == bp::AnimatedTextureType::Face);
     REQUIRE(rt.skin.persona_pieces[0].pack_id.least_significant_bits == kPack.least_significant_bits);
-    REQUIRE(rt.skin.piece_tint_colors.at(bp::PieceType::SKELETON).colors.size() == 4);
-    REQUIRE(rt.skin.trusted_skin_flag == bp::TrustedSkinFlag::FALSE);
+    REQUIRE(rt.skin.piece_tint_colors.at(bp::PieceType::Skeleton).colors.size() == 4);
+    REQUIRE(rt.skin.trusted_skin_flag == bp::TrustedSkinFlag::False);
     REQUIRE(rt.skin.profile_hash == "hash");
     REQUIRE(rt.localized_old_skin_name == "old");
 }
@@ -177,7 +177,7 @@ TEST_CASE("PlayerSkinPacket: the v1001 body is the v2168 one less the profile ha
 
     const auto rt = decode<Packet1001>(encoded);
     REQUIRE(rt.skin.id == "sid");
-    REQUIRE(rt.skin.arm_size == bp::ArmSizeType::WIDE);
+    REQUIRE(rt.skin.arm_size == bp::ArmSizeType::Wide);
     REQUIRE(rt.localized_new_skin_name == "new");
 }
 

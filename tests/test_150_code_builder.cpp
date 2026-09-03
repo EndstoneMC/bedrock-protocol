@@ -23,38 +23,38 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 150")
 {
-    STATIC_REQUIRE(bp::CodeBuilderPacket_<2168>::Id == 150);
+    STATIC_REQUIRE(bp::CodeBuilderPacket::Id == 150);
     STATIC_REQUIRE(bp::has_packet_v<1001, 150>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 150>);
 }
 
 TEST_CASE("code-builder round-trips against the golden")
 {
-    bp::CodeBuilderPacket_<2168> packet;
+    bp::CodeBuilderPacket packet;
     packet.url = "ws://localhost:8080/code";
     packet.should_open_code_builder = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CodeBuilderPacket_<2168>>(golden);
+    const auto back = decode<bp::CodeBuilderPacket>(golden);
     REQUIRE(back.url == "ws://localhost:8080/code");
     REQUIRE(back.should_open_code_builder);
 }
 
 TEST_CASE("an empty url still writes its length prefix and the flag byte")
 {
-    bp::CodeBuilderPacket_<2168> packet;
+    bp::CodeBuilderPacket packet;
     packet.url = "";
     packet.should_open_code_builder = false;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::CodeBuilderPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::CodeBuilderPacket>(golden_empty);
     REQUIRE(back.url.empty());
     REQUIRE_FALSE(back.should_open_code_builder);
 }
 
 TEST_CASE("the url length prefix is a varint, not a byte")
 {
-    bp::CodeBuilderPacket_<2168> packet;
+    bp::CodeBuilderPacket packet;
     packet.url = std::string(200, 'u');
     packet.should_open_code_builder = false;
     const auto wire = encode(packet);
@@ -62,7 +62,7 @@ TEST_CASE("the url length prefix is a varint, not a byte")
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
 
-    const auto back = decode<bp::CodeBuilderPacket_<2168>>(wire);
+    const auto back = decode<bp::CodeBuilderPacket>(wire);
     REQUIRE(back.url.size() == 200);
     REQUIRE_FALSE(back.should_open_code_builder);
 }

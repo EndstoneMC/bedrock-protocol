@@ -22,20 +22,20 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 34")
 {
-    STATIC_REQUIRE(bp::BlockPickRequestPacket_<2168>::Id == 34);
+    STATIC_REQUIRE(bp::BlockPickRequestPacket::Id == 34);
     STATIC_REQUIRE(bp::has_packet_v<1001, 34>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 34>);
 }
 
 TEST_CASE("block-pick-request round-trips against the golden")
 {
-    bp::BlockPickRequestPacket_<2168> packet;
+    bp::BlockPickRequestPacket packet;
     packet.pos = {.x = 1, .y = -2, .z = 300};
     packet.with_data = true;
     packet.max_slots = 200;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::BlockPickRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::BlockPickRequestPacket>(golden);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == -2);
     REQUIRE(back.pos.z == 300);
@@ -45,13 +45,13 @@ TEST_CASE("block-pick-request round-trips against the golden")
 
 TEST_CASE("a negative coordinate zigzags and a false flag still writes its byte")
 {
-    bp::BlockPickRequestPacket_<2168> packet;
+    bp::BlockPickRequestPacket packet;
     packet.pos = {.x = 0, .y = -1, .z = 0};
     packet.with_data = false;
     packet.max_slots = 0;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::BlockPickRequestPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::BlockPickRequestPacket>(golden_negative);
     REQUIRE(back.pos.x == 0);
     REQUIRE(back.pos.y == -1);
     REQUIRE(back.pos.z == 0);
@@ -61,5 +61,5 @@ TEST_CASE("a negative coordinate zigzags and a false flag still writes its byte"
 
 TEST_CASE("the trailing slot byte is mandatory")
 {
-    REQUIRE(rejects<bp::BlockPickRequestPacket_<2168>>(golden.substr(0, golden.size() - 1)));
+    REQUIRE(rejects<bp::BlockPickRequestPacket>(golden.substr(0, golden.size() - 1)));
 }

@@ -34,26 +34,26 @@ const std::string golden_no_layers = bytes({
 
 TEST_CASE("packet id is 187")
 {
-    STATIC_REQUIRE(bp::UpdateAbilitiesPacket_<2168>::Id == 187);
+    STATIC_REQUIRE(bp::UpdateAbilitiesPacket::Id == 187);
     STATIC_REQUIRE(bp::has_packet_v<1001, 187>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 187>);
 }
 
 TEST_CASE("update-abilities round-trips against the golden")
 {
-    bp::UpdateAbilitiesPacket_<2168> packet;
+    bp::UpdateAbilitiesPacket packet;
     packet.data.target_player = bp::ActorUniqueID{7};
-    packet.data.player_permissions = bp::PlayerPermissionLevel::OPERATOR;
-    packet.data.command_permissions = bp::CommandPermissionLevel::OWNER;
+    packet.data.player_permissions = bp::PlayerPermissionLevel::Operator;
+    packet.data.command_permissions = bp::CommandPermissionLevel::Owner;
     packet.data.layers.push_back(
-        {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::BASE,
+        {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::Base,
          .abilities_set = 0x600,
          .ability_values = 0x200,
          .fly_speed = 0.05f,
          .vertical_fly_speed = 1.0f,
          .walk_speed = 0.1f});
     packet.data.layers.push_back(
-        {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::COMMANDS,
+        {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::Commands,
          .abilities_set = 0x40,
          .ability_values = 0x40,
          .fly_speed = 0.0f,
@@ -61,18 +61,18 @@ TEST_CASE("update-abilities round-trips against the golden")
          .walk_speed = 0.0f});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateAbilitiesPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateAbilitiesPacket>(golden);
     REQUIRE(back.data.target_player == bp::ActorUniqueID{7});
-    REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::OPERATOR);
-    REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::OWNER);
+    REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::Operator);
+    REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::Owner);
     REQUIRE(back.data.layers.size() == 2);
-    REQUIRE(back.data.layers[0].serialized_layer == bp::SerializedAbilitiesData::SerializedAbilitiesLayer::BASE);
+    REQUIRE(back.data.layers[0].serialized_layer == bp::SerializedAbilitiesData::SerializedAbilitiesLayer::Base);
     REQUIRE(back.data.layers[0].abilities_set == 0x600);
     REQUIRE(back.data.layers[0].ability_values == 0x200);
     REQUIRE(back.data.layers[0].fly_speed == 0.05f);
     REQUIRE(back.data.layers[0].vertical_fly_speed == 1.0f);
     REQUIRE(back.data.layers[0].walk_speed == 0.1f);
-    REQUIRE(back.data.layers[1].serialized_layer == bp::SerializedAbilitiesData::SerializedAbilitiesLayer::COMMANDS);
+    REQUIRE(back.data.layers[1].serialized_layer == bp::SerializedAbilitiesData::SerializedAbilitiesLayer::Commands);
     REQUIRE(back.data.layers[1].abilities_set == 0x40);
     REQUIRE(back.data.layers[1].ability_values == 0x40);
     REQUIRE(back.data.layers[1].walk_speed == 0.0f);
@@ -80,28 +80,28 @@ TEST_CASE("update-abilities round-trips against the golden")
 
 TEST_CASE("an empty ability layer list is a lone zero count")
 {
-    bp::UpdateAbilitiesPacket_<2168> packet;
+    bp::UpdateAbilitiesPacket packet;
     packet.data.target_player = bp::ActorUniqueID{-1};
-    packet.data.player_permissions = bp::PlayerPermissionLevel::VISITOR;
-    packet.data.command_permissions = bp::CommandPermissionLevel::ANY;
+    packet.data.player_permissions = bp::PlayerPermissionLevel::Visitor;
+    packet.data.command_permissions = bp::CommandPermissionLevel::Any;
     REQUIRE(encode(packet) == golden_no_layers);
 
-    const auto back = decode<bp::UpdateAbilitiesPacket_<2168>>(golden_no_layers);
+    const auto back = decode<bp::UpdateAbilitiesPacket>(golden_no_layers);
     REQUIRE(back.data.target_player == bp::ActorUniqueID{-1});
-    REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::VISITOR);
-    REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::ANY);
+    REQUIRE(back.data.player_permissions == bp::PlayerPermissionLevel::Visitor);
+    REQUIRE(back.data.command_permissions == bp::CommandPermissionLevel::Any);
     REQUIRE(back.data.layers.empty());
 }
 
 TEST_CASE("the ability layer count is a varint, not a byte")
 {
-    bp::UpdateAbilitiesPacket_<2168> packet;
+    bp::UpdateAbilitiesPacket packet;
     packet.data.target_player = bp::ActorUniqueID{0};
-    packet.data.player_permissions = bp::PlayerPermissionLevel::VISITOR;
-    packet.data.command_permissions = bp::CommandPermissionLevel::ANY;
+    packet.data.player_permissions = bp::PlayerPermissionLevel::Visitor;
+    packet.data.command_permissions = bp::CommandPermissionLevel::Any;
     for (int i = 0; i < 128; ++i) {
         packet.data.layers.push_back(
-            {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::BASE,
+            {.serialized_layer = bp::SerializedAbilitiesData::SerializedAbilitiesLayer::Base,
              .abilities_set = 0,
              .ability_values = 0,
              .fly_speed = 0.0f,
@@ -111,5 +111,5 @@ TEST_CASE("the ability layer count is a varint, not a byte")
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10U + 2U + 128U * 22U);
     REQUIRE(wire.substr(10, 2) == bytes({0x80, 0x01}));
-    REQUIRE(decode<bp::UpdateAbilitiesPacket_<2168>>(wire).data.layers.size() == 128);
+    REQUIRE(decode<bp::UpdateAbilitiesPacket>(wire).data.layers.size() == 128);
 }

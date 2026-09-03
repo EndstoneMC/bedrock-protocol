@@ -27,35 +27,35 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 91")
 {
-    STATIC_REQUIRE(bp::ShowStoreOfferPacket_<2168>::Id == 91);
+    STATIC_REQUIRE(bp::ShowStoreOfferPacket::Id == 91);
     STATIC_REQUIRE(bp::has_packet_v<1001, 91>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 91>);
 }
 
 TEST_CASE("show store offer round-trips against the golden")
 {
-    bp::ShowStoreOfferPacket_<2168> packet;
+    bp::ShowStoreOfferPacket packet;
     packet.offer_id = {0x0575C61FA5DA4B7FULL, 0x9961FFDA2908861EULL};
-    packet.redirect_type = bp::ShowStoreOfferRedirectType::THIRD_PARTY_SERVER_PAGE;
+    packet.redirect_type = bp::ShowStoreOfferRedirectType::ThirdPartyServerPage;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ShowStoreOfferPacket_<2168>>(golden);
+    const auto back = decode<bp::ShowStoreOfferPacket>(golden);
     REQUIRE(back.offer_id.most_significant_bits == 0x0575C61FA5DA4B7FULL);
     REQUIRE(back.offer_id.least_significant_bits == 0x9961FFDA2908861EULL);
-    REQUIRE(back.redirect_type == bp::ShowStoreOfferRedirectType::THIRD_PARTY_SERVER_PAGE);
+    REQUIRE(back.redirect_type == bp::ShowStoreOfferRedirectType::ThirdPartyServerPage);
 }
 
 TEST_CASE("the offer id's two halves are eight fixed bytes each, not varints")
 {
-    bp::ShowStoreOfferPacket_<2168> packet;
+    bp::ShowStoreOfferPacket packet;
     packet.offer_id = {UINT64_MAX, 1ULL};
-    packet.redirect_type = bp::ShowStoreOfferRedirectType::MARKETPLACE_OFFER;
+    packet.redirect_type = bp::ShowStoreOfferRedirectType::MarketplaceOffer;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 17);
     REQUIRE(wire == golden_wide);
 
-    const auto back = decode<bp::ShowStoreOfferPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::ShowStoreOfferPacket>(golden_wide);
     REQUIRE(back.offer_id.most_significant_bits == UINT64_MAX);
     REQUIRE(back.offer_id.least_significant_bits == 1ULL);
-    REQUIRE(back.redirect_type == bp::ShowStoreOfferRedirectType::MARKETPLACE_OFFER);
+    REQUIRE(back.redirect_type == bp::ShowStoreOfferRedirectType::MarketplaceOffer);
 }

@@ -27,35 +27,35 @@ const std::string golden_max = bytes({
 
 TEST_CASE("packet id is 196")
 {
-    STATIC_REQUIRE(bp::UpdateClientInputLocksPacket_<2168>::Id == 196);
+    STATIC_REQUIRE(bp::UpdateClientInputLocksPacket::Id == 196);
     STATIC_REQUIRE(bp::has_packet_v<1001, 196>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 196>);
 }
 
 TEST_CASE("update-client-input-locks round-trips against the golden")
 {
-    bp::UpdateClientInputLocksPacket_<2168> packet;
+    bp::UpdateClientInputLocksPacket packet;
     packet.input_lock_component_data = 70;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateClientInputLocksPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateClientInputLocksPacket>(golden);
     REQUIRE(back.input_lock_component_data == 70);
 }
 
 TEST_CASE("the lock data is an unsigned varint, not a zigzag one or a fixed uint32")
 {
-    bp::UpdateClientInputLocksPacket_<2168> packet;
+    bp::UpdateClientInputLocksPacket packet;
     packet.input_lock_component_data = 8190;
     REQUIRE(encode(packet) == golden_all_categories);
 
-    REQUIRE(decode<bp::UpdateClientInputLocksPacket_<2168>>(golden_all_categories).input_lock_component_data == 8190);
+    REQUIRE(decode<bp::UpdateClientInputLocksPacket>(golden_all_categories).input_lock_component_data == 8190);
 }
 
 TEST_CASE("a lock set with the top bit set survives the round trip unsigned")
 {
-    bp::UpdateClientInputLocksPacket_<2168> packet;
+    bp::UpdateClientInputLocksPacket packet;
     packet.input_lock_component_data = 0xffffffff;
     REQUIRE(encode(packet) == golden_max);
 
-    REQUIRE(decode<bp::UpdateClientInputLocksPacket_<2168>>(golden_max).input_lock_component_data == 0xffffffff);
+    REQUIRE(decode<bp::UpdateClientInputLocksPacket>(golden_max).input_lock_component_data == 0xffffffff);
 }

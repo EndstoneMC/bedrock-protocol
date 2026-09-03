@@ -21,28 +21,28 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 64")
 {
-    STATIC_REQUIRE(bp::SimpleEventPacket_<2168>::Id == 64);
+    STATIC_REQUIRE(bp::SimpleEventPacket::Id == 64);
     STATIC_REQUIRE(bp::has_packet_v<1001, 64>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 64>);
 }
 
 TEST_CASE("simple-event round-trips against the golden")
 {
-    bp::SimpleEventPacket_<2168> packet;
-    packet.subtype = bp::SimpleEventPacket_<2168>::Subtype::UNLOCK_WORLD_TEMPLATE_SETTINGS;
+    bp::SimpleEventPacket packet;
+    packet.subtype = bp::SimpleEventPacket::Subtype::UnlockWorldTemplateSettings;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SimpleEventPacket_<2168>>(golden);
-    REQUIRE(back.subtype == bp::SimpleEventPacket_<2168>::Subtype::UNLOCK_WORLD_TEMPLATE_SETTINGS);
+    const auto back = decode<bp::SimpleEventPacket>(golden);
+    REQUIRE(back.subtype == bp::SimpleEventPacket::Subtype::UnlockWorldTemplateSettings);
 }
 
 TEST_CASE("the simple-event subtype is two fixed bytes, not a varint")
 {
-    bp::SimpleEventPacket_<2168> packet;
-    packet.subtype = static_cast<bp::SimpleEventPacket_<2168>::Subtype>(300);
+    bp::SimpleEventPacket packet;
+    packet.subtype = static_cast<bp::SimpleEventPacket::Subtype>(300);
     REQUIRE(encode(packet) == golden_wide);
     REQUIRE(encode(packet).size() == 2);
 
-    const auto back = decode<bp::SimpleEventPacket_<2168>>(golden_wide);
-    REQUIRE(back.subtype == static_cast<bp::SimpleEventPacket_<2168>::Subtype>(300));
+    const auto back = decode<bp::SimpleEventPacket>(golden_wide);
+    REQUIRE(back.subtype == static_cast<bp::SimpleEventPacket::Subtype>(300));
 }

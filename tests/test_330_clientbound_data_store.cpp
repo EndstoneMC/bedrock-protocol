@@ -56,7 +56,7 @@ bp::DynamicValue nested_state()
 
 TEST_CASE("packet id is 330")
 {
-    STATIC_REQUIRE(bp::ClientboundDataStorePacket_<2168>::Id == 330);
+    STATIC_REQUIRE(bp::ClientboundDataStorePacket::Id == 330);
     STATIC_REQUIRE(bp::has_packet_v<1001, 330>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 330>);
 }
@@ -78,11 +78,11 @@ TEST_CASE("every data store change type round-trips against the golden")
     bp::DataStoreRemoval removal;
     removal.data_store_name = "form";
 
-    bp::ClientboundDataStorePacket_<2168> packet;
+    bp::ClientboundDataStorePacket packet;
     packet.updates = {update, change, removal};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientboundDataStorePacket_<2168>>(golden);
+    const auto back = decode<bp::ClientboundDataStorePacket>(golden);
     REQUIRE(back.updates.size() == 3);
     REQUIRE(std::get<0>(back.updates[0]).property == "opacity");
     REQUIRE(std::get<0>(std::get<0>(back.updates[0]).data) == 0.5);
@@ -99,11 +99,11 @@ TEST_CASE("a dynamic value nests arrays and objects")
     change.update_count = 2;
     change.new_data = nested_state();
 
-    bp::ClientboundDataStorePacket_<2168> packet;
+    bp::ClientboundDataStorePacket packet;
     packet.updates = {change};
     REQUIRE(encode(packet) == golden_nested);
 
-    const auto back = decode<bp::ClientboundDataStorePacket_<2168>>(golden_nested);
+    const auto back = decode<bp::ClientboundDataStorePacket>(golden_nested);
     REQUIRE(std::get<1>(back.updates[0]).new_data == nested_state());
 }
 

@@ -9,53 +9,53 @@
 
 namespace {
 
-bp::AvailableCommandsPacket_<2168> fill()
+bp::AvailableCommandsPacket fill()
 {
-    bp::AvailableCommandsPacket_<2168> pkt;
+    bp::AvailableCommandsPacket pkt;
     pkt.enum_values = {"true", "false"};
     pkt.chained_subcommand_values = {"as"};
     pkt.postfixes = {"L"};
 
-    bp::AvailableCommandsPacket_<2168>::EnumData enum_data;
+    bp::AvailableCommandsPacket::EnumData enum_data;
     enum_data.name = "Boolean";
     enum_data.values = {0, 1};
     pkt.enums.push_back(enum_data);
 
-    bp::AvailableCommandsPacket_<2168>::ChainedSubcommandRelationship relationship;
+    bp::AvailableCommandsPacket::ChainedSubcommandRelationship relationship;
     relationship.sub_command_first_value = 0;
     relationship.sub_command_second_value = 300;
 
-    bp::AvailableCommandsPacket_<2168>::ChainedSubcommandData chained;
+    bp::AvailableCommandsPacket::ChainedSubcommandData chained;
     chained.name = "execute";
     chained.values.push_back(relationship);
     pkt.chained_subcommands.push_back(chained);
 
-    bp::AvailableCommandsPacket_<2168>::ParamData param;
+    bp::AvailableCommandsPacket::ParamData param;
     param.name = "arg";
     param.parse_symbol = 0x00100001;
     param.optional = true;
     param.param_options = 1;
 
-    bp::AvailableCommandsPacket_<2168>::OverloadData overload;
+    bp::AvailableCommandsPacket::OverloadData overload;
     overload.is_chaining = true;
     overload.params.push_back(param);
 
-    bp::AvailableCommandsPacket_<2168>::CommandData command;
+    bp::AvailableCommandsPacket::CommandData command;
     command.name = "test";
     command.description = "a test";
     command.flags = 0x0102;
-    command.permission = bp::CommandPermissionLevel::ADMIN;
+    command.permission = bp::CommandPermissionLevel::Admin;
     command.alias_enum = -1;
     command.chained_subcommand_indexes = {0};
     command.overloads.push_back(overload);
     pkt.commands.push_back(command);
 
-    bp::AvailableCommandsPacket_<2168>::SoftEnumData soft_enum;
+    bp::AvailableCommandsPacket::SoftEnumData soft_enum;
     soft_enum.name = "soft";
     soft_enum.values = {"a"};
     pkt.soft_enums.push_back(soft_enum);
 
-    bp::AvailableCommandsPacket_<2168>::ConstrainedValueData constraint;
+    bp::AvailableCommandsPacket::ConstrainedValueData constraint;
     constraint.enum_value_symbol = 1;
     constraint.enum_symbol = 0;
     constraint.constraints = {0x00, 0x02};
@@ -101,7 +101,7 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("AvailableCommandsPacket: packet id is 76")
 {
-    STATIC_REQUIRE(bp::AvailableCommandsPacket_<2168>::Id == 76);
+    STATIC_REQUIRE(bp::AvailableCommandsPacket::Id == 76);
     STATIC_REQUIRE(bp::has_packet_v<1001, 76>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 76>);
 }
@@ -110,7 +110,7 @@ TEST_CASE("AvailableCommandsPacket: round-trips against the golden")
 {
     REQUIRE(encode(fill()) == golden);
 
-    const auto back = decode<bp::AvailableCommandsPacket_<2168>>(golden);
+    const auto back = decode<bp::AvailableCommandsPacket>(golden);
     REQUIRE(back.enum_values == std::vector<std::string>{"true", "false"});
     REQUIRE(back.chained_subcommand_values == std::vector<std::string>{"as"});
     REQUIRE(back.postfixes == std::vector<std::string>{"L"});
@@ -129,7 +129,7 @@ TEST_CASE("AvailableCommandsPacket: round-trips against the golden")
     REQUIRE(back.commands[0].name == "test");
     REQUIRE(back.commands[0].description == "a test");
     REQUIRE(back.commands[0].flags == 0x0102);
-    REQUIRE(back.commands[0].permission == bp::CommandPermissionLevel::ADMIN);
+    REQUIRE(back.commands[0].permission == bp::CommandPermissionLevel::Admin);
     REQUIRE(back.commands[0].alias_enum == -1);
     REQUIRE(back.commands[0].chained_subcommand_indexes == std::vector<std::uint32_t>{0});
     REQUIRE(back.commands[0].overloads.size() == 1);
@@ -152,9 +152,9 @@ TEST_CASE("AvailableCommandsPacket: round-trips against the golden")
 
 TEST_CASE("AvailableCommandsPacket: eight empty lists are eight zero bytes")
 {
-    REQUIRE(encode(bp::AvailableCommandsPacket_<2168>{}) == golden_empty);
+    REQUIRE(encode(bp::AvailableCommandsPacket{}) == golden_empty);
 
-    const auto back = decode<bp::AvailableCommandsPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::AvailableCommandsPacket>(golden_empty);
     REQUIRE(back.enum_values.empty());
     REQUIRE(back.chained_subcommand_values.empty());
     REQUIRE(back.postfixes.empty());
@@ -167,24 +167,24 @@ TEST_CASE("AvailableCommandsPacket: eight empty lists are eight zero bytes")
 
 TEST_CASE("AvailableCommandsPacket: the subcommand relationship is varint where the enum indices are fixed")
 {
-    bp::AvailableCommandsPacket_<2168> pkt;
+    bp::AvailableCommandsPacket pkt;
 
-    bp::AvailableCommandsPacket_<2168>::EnumData enum_data;
+    bp::AvailableCommandsPacket::EnumData enum_data;
     enum_data.values = {300};
     pkt.enums.push_back(enum_data);
 
-    bp::AvailableCommandsPacket_<2168>::ChainedSubcommandRelationship relationship;
+    bp::AvailableCommandsPacket::ChainedSubcommandRelationship relationship;
     relationship.sub_command_first_value = 300;
     relationship.sub_command_second_value = 300;
 
-    bp::AvailableCommandsPacket_<2168>::ChainedSubcommandData chained;
+    bp::AvailableCommandsPacket::ChainedSubcommandData chained;
     chained.values.push_back(relationship);
     pkt.chained_subcommands.push_back(chained);
 
     const auto wire = encode(pkt);
     REQUIRE(wire.size() == 8 + (1 + 1 + 4) + (1 + 1 + 2 + 2));
 
-    const auto back = decode<bp::AvailableCommandsPacket_<2168>>(wire);
+    const auto back = decode<bp::AvailableCommandsPacket>(wire);
     REQUIRE(back.enums[0].values == std::vector<std::uint32_t>{300});
     REQUIRE(back.chained_subcommands[0].values[0].sub_command_first_value == 300);
     REQUIRE(back.chained_subcommands[0].values[0].sub_command_second_value == 300);

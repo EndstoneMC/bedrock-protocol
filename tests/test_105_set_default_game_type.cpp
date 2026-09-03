@@ -21,25 +21,25 @@ const std::string golden_undefined = bytes({
 
 TEST_CASE("packet id is 105")
 {
-    STATIC_REQUIRE(bp::SetDefaultGameTypePacket_<2168>::Id == 105);
+    STATIC_REQUIRE(bp::SetDefaultGameTypePacket::Id == 105);
     STATIC_REQUIRE(bp::has_packet_v<1001, 105>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 105>);
 }
 
 TEST_CASE("set-default-game-type round-trips against the golden")
 {
-    bp::SetDefaultGameTypePacket_<2168> packet;
-    packet.default_game_type = bp::GameType::SPECTATOR;
+    bp::SetDefaultGameTypePacket packet;
+    packet.default_game_type = bp::GameType::Spectator;
     REQUIRE(encode(packet) == golden);
 
-    REQUIRE(decode<bp::SetDefaultGameTypePacket_<2168>>(golden).default_game_type == bp::GameType::SPECTATOR);
+    REQUIRE(decode<bp::SetDefaultGameTypePacket>(golden).default_game_type == bp::GameType::Spectator);
 }
 
 TEST_CASE("the default game type is a zigzag varint, not an unsigned one or a fixed int32")
 {
-    bp::SetDefaultGameTypePacket_<2168> packet;
-    packet.default_game_type = bp::GameType::UNDEFINED;
+    bp::SetDefaultGameTypePacket packet;
+    packet.default_game_type = bp::GameType::Undefined;
     REQUIRE(encode(packet) == golden_undefined);
 
-    REQUIRE(decode<bp::SetDefaultGameTypePacket_<2168>>(golden_undefined).default_game_type == bp::GameType::UNDEFINED);
+    REQUIRE(decode<bp::SetDefaultGameTypePacket>(golden_undefined).default_game_type == bp::GameType::Undefined);
 }

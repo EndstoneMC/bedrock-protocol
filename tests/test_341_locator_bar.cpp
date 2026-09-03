@@ -41,7 +41,7 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 341")
 {
-    STATIC_REQUIRE(bp::LocatorBarPacket_<2168>::Id == 341);
+    STATIC_REQUIRE(bp::LocatorBarPacket::Id == 341);
     STATIC_REQUIRE(bp::has_packet_v<1001, 341>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 341>);
 }
@@ -61,19 +61,19 @@ TEST_CASE("locator bar round-trips against the golden")
     full.payload.color = bp::Color{16744767};
     full.payload.client_position_authority = false;
     full.payload.actor_id = bp::ActorUniqueID{300};
-    full.action = bp::ServerWaypointGroup::Action::UPDATE;
+    full.action = bp::ServerWaypointGroup::Action::Update;
 
     bp::LocatorBarWaypointPayload bare;
     bare.handle.uuid = {1ULL, 2ULL};
     bare.payload.update_flag = 0;
-    bare.action = bp::ServerWaypointGroup::Action::REMOVE;
+    bare.action = bp::ServerWaypointGroup::Action::Remove;
 
-    bp::LocatorBarPacket_<2168> packet;
+    bp::LocatorBarPacket packet;
     packet.waypoints.push_back(full);
     packet.waypoints.push_back(bare);
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LocatorBarPacket_<2168>>(golden);
+    const auto back = decode<bp::LocatorBarPacket>(golden);
     REQUIRE(back.waypoints.size() == 2);
 
     REQUIRE(back.waypoints[0].handle.uuid.most_significant_bits == 0x0123456789abcdefULL);
@@ -97,7 +97,7 @@ TEST_CASE("locator bar round-trips against the golden")
     REQUIRE_FALSE(*back.waypoints[0].payload.client_position_authority);
     REQUIRE(back.waypoints[0].payload.actor_id.has_value());
     REQUIRE(*back.waypoints[0].payload.actor_id == bp::ActorUniqueID{300});
-    REQUIRE(back.waypoints[0].action == bp::ServerWaypointGroup::Action::UPDATE);
+    REQUIRE(back.waypoints[0].action == bp::ServerWaypointGroup::Action::Update);
 
     REQUIRE(back.waypoints[1].handle.uuid.most_significant_bits == 1ULL);
     REQUIRE(back.waypoints[1].handle.uuid.least_significant_bits == 2ULL);
@@ -109,27 +109,27 @@ TEST_CASE("locator bar round-trips against the golden")
     REQUIRE_FALSE(back.waypoints[1].payload.color.has_value());
     REQUIRE_FALSE(back.waypoints[1].payload.client_position_authority.has_value());
     REQUIRE_FALSE(back.waypoints[1].payload.actor_id.has_value());
-    REQUIRE(back.waypoints[1].action == bp::ServerWaypointGroup::Action::REMOVE);
+    REQUIRE(back.waypoints[1].action == bp::ServerWaypointGroup::Action::Remove);
 }
 
 TEST_CASE("a locator bar carrying no waypoints is a lone count byte")
 {
-    bp::LocatorBarPacket_<2168> packet;
+    bp::LocatorBarPacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::LocatorBarPacket_<2168>>(golden_empty).waypoints.empty());
+    REQUIRE(decode<bp::LocatorBarPacket>(golden_empty).waypoints.empty());
 }
 
 TEST_CASE("the waypoint update flag is a fixed uint32, not a varint")
 {
-    bp::LocatorBarPacket_<2168> packet;
+    bp::LocatorBarPacket packet;
     packet.waypoints.emplace_back();
     packet.waypoints[0].handle.uuid = {1ULL, 2ULL};
     packet.waypoints[0].payload.update_flag = 63;
-    packet.waypoints[0].action = bp::ServerWaypointGroup::Action::REMOVE;
+    packet.waypoints[0].action = bp::ServerWaypointGroup::Action::Remove;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 29);
 
-    const auto back = decode<bp::LocatorBarPacket_<2168>>(wire);
+    const auto back = decode<bp::LocatorBarPacket>(wire);
     REQUIRE(back.waypoints[0].payload.update_flag == 63);
-    REQUIRE(back.waypoints[0].action == bp::ServerWaypointGroup::Action::REMOVE);
+    REQUIRE(back.waypoints[0].action == bp::ServerWaypointGroup::Action::Remove);
 }

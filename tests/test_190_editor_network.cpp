@@ -30,20 +30,20 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 190")
 {
-    STATIC_REQUIRE(bp::EditorNetworkPacket_<2168>::Id == 190);
+    STATIC_REQUIRE(bp::EditorNetworkPacket::Id == 190);
     STATIC_REQUIRE(bp::has_packet_v<1001, 190>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 190>);
 }
 
 TEST_CASE("editor-network round-trips against the golden")
 {
-    bp::EditorNetworkPacket_<2168> packet;
+    bp::EditorNetworkPacket packet;
     packet.route_to_manager = true;
     packet.raw_variant_name = "editor.variant";
     packet.raw_variant_data = "abc";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::EditorNetworkPacket_<2168>>(golden);
+    const auto back = decode<bp::EditorNetworkPacket>(golden);
     REQUIRE(back.route_to_manager == true);
     REQUIRE(back.raw_variant_name == "editor.variant");
     REQUIRE(back.raw_variant_data == "abc");
@@ -51,13 +51,13 @@ TEST_CASE("editor-network round-trips against the golden")
 
 TEST_CASE("an empty variant still writes both length prefixes")
 {
-    bp::EditorNetworkPacket_<2168> packet;
+    bp::EditorNetworkPacket packet;
     packet.route_to_manager = false;
     packet.raw_variant_name = "";
     packet.raw_variant_data = "";
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::EditorNetworkPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::EditorNetworkPacket>(golden_empty);
     REQUIRE(back.route_to_manager == false);
     REQUIRE(back.raw_variant_name.empty());
     REQUIRE(back.raw_variant_data.empty());
@@ -65,7 +65,7 @@ TEST_CASE("an empty variant still writes both length prefixes")
 
 TEST_CASE("a variant longer than 127 bytes takes a two-byte length prefix")
 {
-    bp::EditorNetworkPacket_<2168> packet;
+    bp::EditorNetworkPacket packet;
     packet.route_to_manager = false;
     packet.raw_variant_name = "";
     packet.raw_variant_data = std::string(200, 'x');
@@ -74,6 +74,6 @@ TEST_CASE("a variant longer than 127 bytes takes a two-byte length prefix")
     REQUIRE(static_cast<unsigned char>(wire[2]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[3]) == 0x01);
 
-    const auto back = decode<bp::EditorNetworkPacket_<2168>>(wire);
+    const auto back = decode<bp::EditorNetworkPacket>(wire);
     REQUIRE(back.raw_variant_data == std::string(200, 'x'));
 }

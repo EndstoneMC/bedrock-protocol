@@ -9,7 +9,7 @@ namespace {
 bp::SerializedRecipeIngredient_<1001> stick_1001()
 {
     bp::SerializedRecipeIngredient_<1001> out;
-    out.descriptor.internal_type = bp::ItemDescriptor_<1001>::InternalType::DEFAULT;
+    out.descriptor.internal_type = bp::ItemDescriptor_<1001>::InternalType::Default;
     out.descriptor.id = 5;
     out.descriptor.aux_value = 1;
     out.stack_size = 2;
@@ -52,7 +52,7 @@ bp::CraftingDataPacket_<1001> fill_1001()
     bp::CraftingDataPacket_<1001> pkt;
 
     bp::CraftingDataEntry_<1001> shaped;
-    shaped.entry_type = bp::CraftingDataEntryType::SHAPED_RECIPE;
+    shaped.entry_type = bp::CraftingDataEntryType::ShapedRecipe;
     shaped.shaped_recipe.recipe_id = "r1";
     shaped.shaped_recipe.width = 1;
     shaped.shaped_recipe.height = 1;
@@ -63,12 +63,12 @@ bp::CraftingDataPacket_<1001> fill_1001()
     shaped.shaped_recipe.priority = 3;
     shaped.shaped_recipe.assume_symmetry = true;
     shaped.shaped_recipe.unlocking_requirement.context =
-        bp::SerializedRecipeUnlockingRequirement_<1001>::UnlockingContext::ALWAYS_UNLOCKED;
+        bp::SerializedRecipeUnlockingRequirement_<1001>::UnlockingContext::AlwaysUnlocked;
     shaped.shaped_recipe.net_id = {.raw_id = 11};
     pkt.crafting_entries.push_back(shaped);
 
     bp::CraftingDataEntry_<1001> shapeless;
-    shapeless.entry_type = bp::CraftingDataEntryType::SHAPELESS_RECIPE;
+    shapeless.entry_type = bp::CraftingDataEntryType::ShapelessRecipe;
     shapeless.shapeless_recipe.recipe_id = "r2";
     shapeless.shapeless_recipe.ingredients = {stick_1001()};
     shapeless.shapeless_recipe.results = {plank_1001()};
@@ -76,19 +76,19 @@ bp::CraftingDataPacket_<1001> fill_1001()
     shapeless.shapeless_recipe.tag = "crafting_table";
     shapeless.shapeless_recipe.priority = 0;
     shapeless.shapeless_recipe.unlocking_requirement.context =
-        bp::SerializedRecipeUnlockingRequirement_<1001>::UnlockingContext::NONE;
+        bp::SerializedRecipeUnlockingRequirement_<1001>::UnlockingContext::None;
     shapeless.shapeless_recipe.unlocking_requirement.ingredients = {stick_1001()};
     shapeless.shapeless_recipe.net_id = {.raw_id = 12};
     pkt.crafting_entries.push_back(shapeless);
 
     bp::CraftingDataEntry_<1001> multi;
-    multi.entry_type = bp::CraftingDataEntryType::MULTI_RECIPE;
+    multi.entry_type = bp::CraftingDataEntryType::MultiRecipe;
     multi.multi_recipe.uuid = {};
     multi.multi_recipe.net_id = {.raw_id = 13};
     pkt.crafting_entries.push_back(multi);
 
     bp::CraftingDataEntry_<1001> transform;
-    transform.entry_type = bp::CraftingDataEntryType::SMITHING_TRANSFORM_RECIPE;
+    transform.entry_type = bp::CraftingDataEntryType::SmithingTransformRecipe;
     transform.smithing_transform_recipe.recipe_id = "r4";
     transform.smithing_transform_recipe.template_ingredient = stick_1001();
     transform.smithing_transform_recipe.base_ingredient = stick_1001();
@@ -99,7 +99,7 @@ bp::CraftingDataPacket_<1001> fill_1001()
     pkt.crafting_entries.push_back(transform);
 
     bp::CraftingDataEntry_<1001> trim;
-    trim.entry_type = bp::CraftingDataEntryType::SMITHING_TRIM_RECIPE;
+    trim.entry_type = bp::CraftingDataEntryType::SmithingTrimRecipe;
     trim.smithing_trim_recipe.recipe_id = "r5";
     trim.smithing_trim_recipe.template_ingredient = stick_1001();
     trim.smithing_trim_recipe.base_ingredient = stick_1001();
@@ -136,7 +136,7 @@ bp::CraftingDataPacket_<2168> fill_2168()
     shaped.priority = 3;
     shaped.assume_symmetry = true;
     shaped.unlocking_requirement = bp::SerializedRecipeUnlockingRequirement_<2168>{
-        .context = bp::SerializedRecipeUnlockingRequirement_<2168>::UnlockingContext::ALWAYS_UNLOCKED,
+        .context = bp::SerializedRecipeUnlockingRequirement_<2168>::UnlockingContext::AlwaysUnlocked,
         .ingredients = std::nullopt};
     shaped.net_id = {.raw_id = 11};
     pkt.shaped_recipes.push_back(shaped);
@@ -149,7 +149,7 @@ bp::CraftingDataPacket_<2168> fill_2168()
     shapeless.tag = "crafting_table";
     shapeless.priority = 0;
     shapeless.unlocking_requirement = bp::SerializedRecipeUnlockingRequirement_<2168>{
-        .context = bp::SerializedRecipeUnlockingRequirement_<2168>::UnlockingContext::NONE,
+        .context = bp::SerializedRecipeUnlockingRequirement_<2168>::UnlockingContext::None,
         .ingredients = std::vector<bp::SerializedRecipeIngredient_<2168>>{stick_2168()}};
     shapeless.net_id = {.raw_id = 12};
     pkt.shapeless_recipes.push_back(shapeless);
@@ -263,7 +263,7 @@ TEST_CASE("CraftingDataPacket: v1001 round-trip")
 
     const auto rt = decode<Packet>(golden);
     REQUIRE(rt.crafting_entries.size() == 5);
-    REQUIRE(rt.crafting_entries[0].entry_type == bp::CraftingDataEntryType::SHAPED_RECIPE);
+    REQUIRE(rt.crafting_entries[0].entry_type == bp::CraftingDataEntryType::ShapedRecipe);
     REQUIRE(rt.crafting_entries[0].shaped_recipe.ingredients.size() == 1);
     REQUIRE(rt.crafting_entries[1].shapeless_recipe.unlocking_requirement.ingredients.size() == 1);
     REQUIRE(rt.crafting_entries[2].multi_recipe.net_id.raw_id == 13);

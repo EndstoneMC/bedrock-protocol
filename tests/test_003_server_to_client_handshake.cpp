@@ -39,32 +39,32 @@ const std::string golden_long = bytes({
 
 TEST_CASE("packet id is 3")
 {
-    STATIC_REQUIRE(bp::ServerToClientHandshakePacket_<2168>::Id == 3);
+    STATIC_REQUIRE(bp::ServerToClientHandshakePacket::Id == 3);
     STATIC_REQUIRE(bp::has_packet_v<1001, 3>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 3>);
 }
 
 TEST_CASE("server-to-client handshake round-trips against the golden")
 {
-    bp::ServerToClientHandshakePacket_<2168> packet;
+    bp::ServerToClientHandshakePacket packet;
     packet.token = "eyJhbGciOiJFUzM4NCJ9.e30.c2ln";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerToClientHandshakePacket_<2168>>(golden);
+    const auto back = decode<bp::ServerToClientHandshakePacket>(golden);
     REQUIRE(back.token == "eyJhbGciOiJFUzM4NCJ9.e30.c2ln");
 }
 
 TEST_CASE("an empty token is a lone zero length prefix")
 {
-    bp::ServerToClientHandshakePacket_<2168> packet;
+    bp::ServerToClientHandshakePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::ServerToClientHandshakePacket_<2168>>(golden_empty).token.empty());
+    REQUIRE(decode<bp::ServerToClientHandshakePacket>(golden_empty).token.empty());
 }
 
 TEST_CASE("a token past 127 bytes takes a two-byte length prefix")
 {
-    bp::ServerToClientHandshakePacket_<2168> packet;
+    bp::ServerToClientHandshakePacket packet;
     packet.token = std::string(130, 'x');
     REQUIRE(encode(packet) == golden_long);
-    REQUIRE(decode<bp::ServerToClientHandshakePacket_<2168>>(golden_long).token == std::string(130, 'x'));
+    REQUIRE(decode<bp::ServerToClientHandshakePacket>(golden_long).token == std::string(130, 'x'));
 }

@@ -25,20 +25,20 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 51")
 {
-    STATIC_REQUIRE(bp::ContainerSetDataPacket_<2168>::Id == 51);
+    STATIC_REQUIRE(bp::ContainerSetDataPacket::Id == 51);
     STATIC_REQUIRE(bp::has_packet_v<1001, 51>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 51>);
 }
 
 TEST_CASE("container-set-data round-trips against the golden")
 {
-    bp::ContainerSetDataPacket_<2168> packet;
+    bp::ContainerSetDataPacket packet;
     packet.container_id = static_cast<bp::ContainerID>(5);
     packet.id = 1;
     packet.value = 200;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ContainerSetDataPacket_<2168>>(golden);
+    const auto back = decode<bp::ContainerSetDataPacket>(golden);
     REQUIRE(back.container_id == static_cast<bp::ContainerID>(5));
     REQUIRE(back.id == 1);
     REQUIRE(back.value == 200);
@@ -46,28 +46,28 @@ TEST_CASE("container-set-data round-trips against the golden")
 
 TEST_CASE("the container id keeps its sign in one byte and the value is a zigzag varint")
 {
-    bp::ContainerSetDataPacket_<2168> packet;
-    packet.container_id = bp::ContainerID::NONE;
+    bp::ContainerSetDataPacket packet;
+    packet.container_id = bp::ContainerID::None;
     packet.id = 4;
     packet.value = -1;
     REQUIRE(encode(packet) == golden_none);
 
-    const auto back = decode<bp::ContainerSetDataPacket_<2168>>(golden_none);
-    REQUIRE(back.container_id == bp::ContainerID::NONE);
+    const auto back = decode<bp::ContainerSetDataPacket>(golden_none);
+    REQUIRE(back.container_id == bp::ContainerID::None);
     REQUIRE(back.id == 4);
     REQUIRE(back.value == -1);
 }
 
 TEST_CASE("a negative id does not run into a two-byte value")
 {
-    bp::ContainerSetDataPacket_<2168> packet;
-    packet.container_id = bp::ContainerID::INVENTORY;
+    bp::ContainerSetDataPacket packet;
+    packet.container_id = bp::ContainerID::Inventory;
     packet.id = -1;
     packet.value = 300;
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::ContainerSetDataPacket_<2168>>(golden_wide);
-    REQUIRE(back.container_id == bp::ContainerID::INVENTORY);
+    const auto back = decode<bp::ContainerSetDataPacket>(golden_wide);
+    REQUIRE(back.container_id == bp::ContainerID::Inventory);
     REQUIRE(back.id == -1);
     REQUIRE(back.value == 300);
 }

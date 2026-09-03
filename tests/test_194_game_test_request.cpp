@@ -25,27 +25,27 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 194")
 {
-    STATIC_REQUIRE(bp::GameTestRequestPacket_<2168>::Id == 194);
+    STATIC_REQUIRE(bp::GameTestRequestPacket::Id == 194);
     STATIC_REQUIRE(bp::has_packet_v<1001, 194>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 194>);
 }
 
 TEST_CASE("game-test request round-trips against the golden")
 {
-    bp::GameTestRequestPacket_<2168> packet;
+    bp::GameTestRequestPacket packet;
     packet.max_tests_per_batch = 100;
     packet.repeat_count = 2;
-    packet.rotation = bp::Rotation::ROTATE_90;
+    packet.rotation = bp::Rotation::Rotate90;
     packet.stop_on_failure = true;
     packet.test_pos = {.x = 1, .y = -2, .z = 3};
     packet.tests_per_row = 5;
     packet.test_name = "mytest";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::GameTestRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::GameTestRequestPacket>(golden);
     REQUIRE(back.max_tests_per_batch == 100);
     REQUIRE(back.repeat_count == 2);
-    REQUIRE(back.rotation == bp::Rotation::ROTATE_90);
+    REQUIRE(back.rotation == bp::Rotation::Rotate90);
     REQUIRE(back.stop_on_failure);
     REQUIRE(back.test_pos.x == 1);
     REQUIRE(back.test_pos.y == -2);
@@ -56,20 +56,20 @@ TEST_CASE("game-test request round-trips against the golden")
 
 TEST_CASE("the game-test request counts are signed varints and the rotation stays one byte")
 {
-    bp::GameTestRequestPacket_<2168> packet;
+    bp::GameTestRequestPacket packet;
     packet.max_tests_per_batch = 300;
     packet.repeat_count = -1;
-    packet.rotation = bp::Rotation::ROTATE_270;
+    packet.rotation = bp::Rotation::Rotate270;
     packet.stop_on_failure = false;
     packet.test_pos = {.x = 0, .y = 0, .z = 0};
     packet.tests_per_row = 0;
     packet.test_name = "";
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::GameTestRequestPacket_<2168>>(golden_wide);
+    const auto back = decode<bp::GameTestRequestPacket>(golden_wide);
     REQUIRE(back.max_tests_per_batch == 300);
     REQUIRE(back.repeat_count == -1);
-    REQUIRE(back.rotation == bp::Rotation::ROTATE_270);
+    REQUIRE(back.rotation == bp::Rotation::Rotate270);
     REQUIRE_FALSE(back.stop_on_failure);
     REQUIRE(back.tests_per_row == 0);
     REQUIRE(back.test_name.empty());

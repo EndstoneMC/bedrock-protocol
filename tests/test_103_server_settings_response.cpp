@@ -23,35 +23,35 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 103")
 {
-    STATIC_REQUIRE(bp::ServerSettingsResponsePacket_<2168>::Id == 103);
+    STATIC_REQUIRE(bp::ServerSettingsResponsePacket::Id == 103);
     STATIC_REQUIRE(bp::has_packet_v<1001, 103>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 103>);
 }
 
 TEST_CASE("server-settings-response round-trips against the golden")
 {
-    bp::ServerSettingsResponsePacket_<2168> packet;
+    bp::ServerSettingsResponsePacket packet;
     packet.form_id = 300;
     packet.form_json = R"({"type":"custom_form"})";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerSettingsResponsePacket_<2168>>(golden);
+    const auto back = decode<bp::ServerSettingsResponsePacket>(golden);
     REQUIRE(back.form_id == 300);
     REQUIRE(back.form_json == R"({"type":"custom_form"})");
 }
 
 TEST_CASE("an empty form json is still a length prefix")
 {
-    bp::ServerSettingsResponsePacket_<2168> packet;
+    bp::ServerSettingsResponsePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::ServerSettingsResponsePacket_<2168>>(golden_empty).form_json.empty());
+    REQUIRE(decode<bp::ServerSettingsResponsePacket>(golden_empty).form_json.empty());
 }
 
 TEST_CASE("a form json longer than 127 bytes takes a two-byte length prefix")
 {
-    bp::ServerSettingsResponsePacket_<2168> packet;
+    bp::ServerSettingsResponsePacket packet;
     packet.form_json = std::string(200, 'a');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 203);
-    REQUIRE(decode<bp::ServerSettingsResponsePacket_<2168>>(wire).form_json == std::string(200, 'a'));
+    REQUIRE(decode<bp::ServerSettingsResponsePacket>(wire).form_json == std::string(200, 'a'));
 }

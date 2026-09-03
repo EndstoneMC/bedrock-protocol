@@ -33,52 +33,52 @@ const std::string golden_empty_tag = bytes({
 
 TEST_CASE("packet id is 133")
 {
-    STATIC_REQUIRE(bp::StructureTemplateDataResponsePacket_<2168>::Id == 133);
+    STATIC_REQUIRE(bp::StructureTemplateDataResponsePacket::Id == 133);
     STATIC_REQUIRE(bp::has_packet_v<1001, 133>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 133>);
 }
 
 TEST_CASE("structure-template-data-response round-trips against the golden")
 {
-    bp::StructureTemplateDataResponsePacket_<2168> packet;
+    bp::StructureTemplateDataResponsePacket packet;
     packet.structure_name = "mystructure";
     packet.structure_tag = bp::CompoundTag{{"format_version", bp::IntTag{1}}};
-    packet.response_type = bp::StructureTemplateResponseType::QUERY;
+    packet.response_type = bp::StructureTemplateResponseType::Query;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::StructureTemplateDataResponsePacket_<2168>>(golden);
+    const auto back = decode<bp::StructureTemplateDataResponsePacket>(golden);
     REQUIRE(back.structure_name == "mystructure");
     REQUIRE(back.structure_tag.has_value());
     REQUIRE(back.structure_tag->size() == 1);
     REQUIRE(back.structure_tag->at("format_version").get<bp::IntTag>().value() == 1);
-    REQUIRE(back.response_type == bp::StructureTemplateResponseType::QUERY);
+    REQUIRE(back.response_type == bp::StructureTemplateResponseType::Query);
 }
 
 TEST_CASE("an absent structure template leaves only its presence byte")
 {
-    bp::StructureTemplateDataResponsePacket_<2168> packet;
+    bp::StructureTemplateDataResponsePacket packet;
     packet.structure_name = "mystructure";
     packet.structure_tag = std::nullopt;
-    packet.response_type = bp::StructureTemplateResponseType::EXPORT;
+    packet.response_type = bp::StructureTemplateResponseType::Export;
     REQUIRE(encode(packet) == golden_absent_tag);
 
-    const auto back = decode<bp::StructureTemplateDataResponsePacket_<2168>>(golden_absent_tag);
+    const auto back = decode<bp::StructureTemplateDataResponsePacket>(golden_absent_tag);
     REQUIRE(back.structure_name == "mystructure");
     REQUIRE_FALSE(back.structure_tag.has_value());
-    REQUIRE(back.response_type == bp::StructureTemplateResponseType::EXPORT);
+    REQUIRE(back.response_type == bp::StructureTemplateResponseType::Export);
 }
 
 TEST_CASE("a present but empty structure template is not an absent one")
 {
-    bp::StructureTemplateDataResponsePacket_<2168> packet;
+    bp::StructureTemplateDataResponsePacket packet;
     packet.structure_tag = bp::CompoundTag{};
-    packet.response_type = bp::StructureTemplateResponseType::NONE;
+    packet.response_type = bp::StructureTemplateResponseType::None;
     REQUIRE(encode(packet) == golden_empty_tag);
     REQUIRE(golden_empty_tag.size() == 6);
 
-    const auto back = decode<bp::StructureTemplateDataResponsePacket_<2168>>(golden_empty_tag);
+    const auto back = decode<bp::StructureTemplateDataResponsePacket>(golden_empty_tag);
     REQUIRE(back.structure_name.empty());
     REQUIRE(back.structure_tag.has_value());
     REQUIRE(back.structure_tag->empty());
-    REQUIRE(back.response_type == bp::StructureTemplateResponseType::NONE);
+    REQUIRE(back.response_type == bp::StructureTemplateResponseType::None);
 }

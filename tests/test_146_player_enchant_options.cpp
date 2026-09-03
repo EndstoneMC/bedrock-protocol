@@ -27,7 +27,7 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 146")
 {
-    STATIC_REQUIRE(bp::PlayerEnchantOptionsPacket_<2168>::Id == 146);
+    STATIC_REQUIRE(bp::PlayerEnchantOptionsPacket::Id == 146);
     STATIC_REQUIRE(bp::has_packet_v<1001, 146>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 146>);
 }
@@ -38,11 +38,11 @@ TEST_CASE("player-enchant-options round-trips against the golden")
     first.cost = 200;
     first.enchants.slot = 2;
     first.enchants.item_enchants[0] = {
-        {.enchant_type = bp::Enchant::Type::SHARPNESS, .level = 5},
-        {.enchant_type = bp::Enchant::Type::SOUL_SPEED, .level = 1},
+        {.enchant_type = bp::Enchant::Type::Sharpness, .level = 5},
+        {.enchant_type = bp::Enchant::Type::SoulSpeed, .level = 1},
     };
     first.enchants.item_enchants[2] = {
-        {.enchant_type = bp::Enchant::Type::INVALID_ENCHANTMENT, .level = 255},
+        {.enchant_type = bp::Enchant::Type::InvalidEnchantment, .level = 255},
     };
     first.enchant_name = "animal imbue range";
     first.enchant_net_id = {.raw_id = 300};
@@ -52,22 +52,22 @@ TEST_CASE("player-enchant-options round-trips against the golden")
     second.enchant_name = "z";
     second.enchant_net_id = {.raw_id = 1};
 
-    bp::PlayerEnchantOptionsPacket_<2168> packet;
+    bp::PlayerEnchantOptionsPacket packet;
     packet.options = {first, second};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerEnchantOptionsPacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerEnchantOptionsPacket>(golden);
     REQUIRE(back.options.size() == 2);
     REQUIRE(back.options[0].cost == 200);
     REQUIRE(back.options[0].enchants.slot == 2);
     REQUIRE(back.options[0].enchants.item_enchants[0].size() == 2);
-    REQUIRE(back.options[0].enchants.item_enchants[0][0].enchant_type == bp::Enchant::Type::SHARPNESS);
+    REQUIRE(back.options[0].enchants.item_enchants[0][0].enchant_type == bp::Enchant::Type::Sharpness);
     REQUIRE(back.options[0].enchants.item_enchants[0][0].level == 5);
-    REQUIRE(back.options[0].enchants.item_enchants[0][1].enchant_type == bp::Enchant::Type::SOUL_SPEED);
+    REQUIRE(back.options[0].enchants.item_enchants[0][1].enchant_type == bp::Enchant::Type::SoulSpeed);
     REQUIRE(back.options[0].enchants.item_enchants[0][1].level == 1);
     REQUIRE(back.options[0].enchants.item_enchants[1].empty());
     REQUIRE(back.options[0].enchants.item_enchants[2].size() == 1);
-    REQUIRE(back.options[0].enchants.item_enchants[2][0].enchant_type == bp::Enchant::Type::INVALID_ENCHANTMENT);
+    REQUIRE(back.options[0].enchants.item_enchants[2][0].enchant_type == bp::Enchant::Type::InvalidEnchantment);
     REQUIRE(back.options[0].enchants.item_enchants[2][0].level == 255);
     REQUIRE(back.options[0].enchant_name == "animal imbue range");
     REQUIRE(back.options[0].enchant_net_id.raw_id == 300);
@@ -80,9 +80,9 @@ TEST_CASE("player-enchant-options round-trips against the golden")
 
 TEST_CASE("an empty player-enchant-options body is a lone zero count")
 {
-    bp::PlayerEnchantOptionsPacket_<2168> packet;
+    bp::PlayerEnchantOptionsPacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::PlayerEnchantOptionsPacket_<2168>>(golden_empty).options.empty());
+    REQUIRE(decode<bp::PlayerEnchantOptionsPacket>(golden_empty).options.empty());
 }
 
 TEST_CASE("an enchant option's cost is one byte and its slot a fixed int32")
@@ -91,13 +91,13 @@ TEST_CASE("an enchant option's cost is one byte and its slot a fixed int32")
     option.cost = 200;
     option.enchants.slot = -1;
 
-    bp::PlayerEnchantOptionsPacket_<2168> packet;
+    bp::PlayerEnchantOptionsPacket packet;
     packet.options = {option};
 
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 11);
 
-    const auto back = decode<bp::PlayerEnchantOptionsPacket_<2168>>(wire);
+    const auto back = decode<bp::PlayerEnchantOptionsPacket>(wire);
     REQUIRE(back.options[0].cost == 200);
     REQUIRE(back.options[0].enchants.slot == -1);
 }

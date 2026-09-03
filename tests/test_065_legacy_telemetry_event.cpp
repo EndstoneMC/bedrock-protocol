@@ -54,12 +54,12 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
     packet.player_unique_id = bp::ActorUniqueID{-5};
-    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::MOB_KILLED;
+    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::MobKilled;
     packet.use_player_id = true;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::MobKilled{
         .killer_entity_id = 1,
         .killed_mob_id = 2,
-        .damage_child_type = bp::ActorType_<2168>::PLAYER,
+        .damage_child_type = bp::ActorType_<2168>::Player,
         .damage_source = 2,
         .trader_tier = -1,
         .trader_name = "trader",
@@ -68,14 +68,14 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
 
     const auto back = decode<bp::LegacyTelemetryEventPacket_<2168>>(golden_mob_killed);
     REQUIRE(back.player_unique_id == bp::ActorUniqueID{-5});
-    REQUIRE(back.type == bp::LegacyTelemetryEventPacket_<2168>::Type::MOB_KILLED);
+    REQUIRE(back.type == bp::LegacyTelemetryEventPacket_<2168>::Type::MobKilled);
     REQUIRE(back.use_player_id);
     REQUIRE(back.event_data.index() == 4);
 
     const auto &killed = std::get<4>(back.event_data);
     REQUIRE(killed.killer_entity_id == 1);
     REQUIRE(killed.killed_mob_id == 2);
-    REQUIRE(killed.damage_child_type == bp::ActorType_<2168>::PLAYER);
+    REQUIRE(killed.damage_child_type == bp::ActorType_<2168>::Player);
     REQUIRE(killed.damage_source == 2);
     REQUIRE(killed.trader_tier == -1);
     REQUIRE(killed.trader_name == "trader");
@@ -85,7 +85,7 @@ TEST_CASE("legacy-telemetry-event item-used writes four numbers uncompressed")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
     packet.player_unique_id = bp::ActorUniqueID{7};
-    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::ITEM_USED;
+    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::ItemUsed;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::ItemUsed{
         .item_id = 300,
@@ -110,10 +110,10 @@ TEST_CASE("legacy-telemetry-event poi-cauldron-used compresses its item id")
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
     packet.player_unique_id = bp::ActorUniqueID{7};
-    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::POI_CAULDRON_USED;
+    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::POICauldronUsed;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::POICauldronUsed{
-        .interaction_type = bp::MinecraftEventing::POIBlockInteractionType::COOKING,
+        .interaction_type = bp::MinecraftEventing::POIBlockInteractionType::Cooking,
         .item_id = 300,
     };
     REQUIRE(encode(packet) == golden_poi_cauldron_used);
@@ -121,7 +121,7 @@ TEST_CASE("legacy-telemetry-event poi-cauldron-used compresses its item id")
     const auto back = decode<bp::LegacyTelemetryEventPacket_<2168>>(golden_poi_cauldron_used);
     REQUIRE(back.event_data.index() == 10);
     REQUIRE(std::get<10>(back.event_data).interaction_type ==
-            bp::MinecraftEventing::POIBlockInteractionType::COOKING);
+            bp::MinecraftEventing::POIBlockInteractionType::Cooking);
     REQUIRE(std::get<10>(back.event_data).item_id == 300);
 
     const auto stale = decode_partial<bp::LegacyTelemetryEventPacket_<2168>>(golden_poi_cauldron_used_gophertunnel);
@@ -132,7 +132,7 @@ TEST_CASE("legacy-telemetry-event's payload-free arm is the last case and writes
 {
     bp::LegacyTelemetryEventPacket_<2168> packet;
     packet.player_unique_id = bp::ActorUniqueID{7};
-    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::HONEY_HARVESTED;
+    packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::HoneyHarvested;
     packet.use_player_id = false;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::Empty{};
 
@@ -141,6 +141,6 @@ TEST_CASE("legacy-telemetry-event's payload-free arm is the last case and writes
     REQUIRE(static_cast<unsigned char>(wire.back()) == 21);
 
     const auto back = decode<bp::LegacyTelemetryEventPacket_<2168>>(wire);
-    REQUIRE(back.type == bp::LegacyTelemetryEventPacket_<2168>::Type::HONEY_HARVESTED);
+    REQUIRE(back.type == bp::LegacyTelemetryEventPacket_<2168>::Type::HoneyHarvested);
     REQUIRE(back.event_data.index() == 21);
 }

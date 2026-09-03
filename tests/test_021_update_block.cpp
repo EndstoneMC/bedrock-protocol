@@ -16,21 +16,21 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 21")
 {
-    STATIC_REQUIRE(bp::UpdateBlockPacket_<2168>::Id == 21);
+    STATIC_REQUIRE(bp::UpdateBlockPacket::Id == 21);
     STATIC_REQUIRE(bp::has_packet_v<1001, 21>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 21>);
 }
 
 TEST_CASE("update-block round-trips against the golden")
 {
-    bp::UpdateBlockPacket_<2168> packet;
+    bp::UpdateBlockPacket packet;
     packet.pos = {.x = 1, .y = -2, .z = 3};
     packet.runtime_id = 300;
     packet.update_flags = 3;
     packet.layer = 1;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateBlockPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateBlockPacket>(golden);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.y == -2);
     REQUIRE(back.pos.z == 3);
@@ -41,9 +41,9 @@ TEST_CASE("update-block round-trips against the golden")
 
 TEST_CASE("the update flags go out as a varint, not as the payload's byte")
 {
-    bp::UpdateBlockPacket_<2168> packet;
+    bp::UpdateBlockPacket packet;
     packet.update_flags = 200;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 7);
-    REQUIRE(decode<bp::UpdateBlockPacket_<2168>>(wire).update_flags == 200);
+    REQUIRE(decode<bp::UpdateBlockPacket>(wire).update_flags == 200);
 }

@@ -17,26 +17,26 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 177")
 {
-    STATIC_REQUIRE(bp::ScriptMessagePacket_<2168>::Id == 177);
+    STATIC_REQUIRE(bp::ScriptMessagePacket::Id == 177);
     STATIC_REQUIRE(bp::has_packet_v<1001, 177>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 177>);
 }
 
 TEST_CASE("script-message round-trips against the golden")
 {
-    bp::ScriptMessagePacket_<2168> packet;
+    bp::ScriptMessagePacket packet;
     packet.message_id = "endstone:ping";
     packet.message_value = "hello";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ScriptMessagePacket_<2168>>(golden);
+    const auto back = decode<bp::ScriptMessagePacket>(golden);
     REQUIRE(back.message_id == "endstone:ping");
     REQUIRE(back.message_value == "hello");
 }
 
 TEST_CASE("a 200-byte value takes a two-byte varint length prefix")
 {
-    bp::ScriptMessagePacket_<2168> packet;
+    bp::ScriptMessagePacket packet;
     packet.message_value = std::string(200, 'x');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 203);
@@ -44,7 +44,7 @@ TEST_CASE("a 200-byte value takes a two-byte varint length prefix")
     REQUIRE(wire[1] == static_cast<char>(0xc8));
     REQUIRE(wire[2] == static_cast<char>(0x01));
 
-    const auto back = decode<bp::ScriptMessagePacket_<2168>>(wire);
+    const auto back = decode<bp::ScriptMessagePacket>(wire);
     REQUIRE(back.message_id.empty());
     REQUIRE(back.message_value == std::string(200, 'x'));
 }

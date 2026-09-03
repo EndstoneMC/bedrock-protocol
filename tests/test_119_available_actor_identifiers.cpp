@@ -26,7 +26,7 @@ const std::string golden_empty_tag = bytes({
 
 TEST_CASE("packet id is 119")
 {
-    STATIC_REQUIRE(bp::AvailableActorIdentifiersPacket_<2168>::Id == 119);
+    STATIC_REQUIRE(bp::AvailableActorIdentifiersPacket::Id == 119);
     STATIC_REQUIRE(bp::has_packet_v<1001, 119>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 119>);
 }
@@ -36,11 +36,11 @@ TEST_CASE("available-actor-identifiers round-trips against the golden")
     bp::ListTag idlist;
     idlist.push_back(bp::CompoundTag{{"id", bp::StringTag{"minecraft:pig"}}, {"rid", bp::IntTag{200}}});
 
-    bp::AvailableActorIdentifiersPacket_<2168> packet;
+    bp::AvailableActorIdentifiersPacket packet;
     packet.identifier_list = bp::CompoundTag{{"idlist", idlist}};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AvailableActorIdentifiersPacket_<2168>>(golden);
+    const auto back = decode<bp::AvailableActorIdentifiersPacket>(golden);
     REQUIRE(back.identifier_list.size() == 1);
     const auto &back_idlist = back.identifier_list.at("idlist").get<bp::ListTag>();
     REQUIRE(back_idlist.size() == 1);
@@ -52,9 +52,9 @@ TEST_CASE("available-actor-identifiers round-trips against the golden")
 
 TEST_CASE("an empty actor-identifier list is a bare compound with no length prefix")
 {
-    bp::AvailableActorIdentifiersPacket_<2168> packet;
+    bp::AvailableActorIdentifiersPacket packet;
     REQUIRE(encode(packet) == golden_empty_tag);
 
-    const auto back = decode<bp::AvailableActorIdentifiersPacket_<2168>>(golden_empty_tag);
+    const auto back = decode<bp::AvailableActorIdentifiersPacket>(golden_empty_tag);
     REQUIRE(back.identifier_list.empty());
 }

@@ -16,22 +16,22 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 165")
 {
-    STATIC_REQUIRE(bp::SyncActorPropertyPacket_<2168>::Id == 165);
+    STATIC_REQUIRE(bp::SyncActorPropertyPacket::Id == 165);
     STATIC_REQUIRE(bp::has_packet_v<1001, 165>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 165>);
 }
 
 TEST_CASE("sync actor property round-trips against the golden")
 {
-    bp::SyncActorPropertyPacket_<2168> packet;
+    bp::SyncActorPropertyPacket packet;
     packet.property_data = bp::CompoundTag{{"id", bp::IntTag{7}}};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SyncActorPropertyPacket_<2168>>(golden);
+    const auto back = decode<bp::SyncActorPropertyPacket>(golden);
     REQUIRE(back.property_data.at("id").get<bp::IntTag>().value() == 7);
 }
 
 TEST_CASE("an empty property tag is a rooted three-byte compound")
 {
-    REQUIRE(encode(bp::SyncActorPropertyPacket_<2168>{}) == bytes({0x0a, 0x00, 0x00}));
+    REQUIRE(encode(bp::SyncActorPropertyPacket{}) == bytes({0x0a, 0x00, 0x00}));
 }

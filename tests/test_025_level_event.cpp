@@ -31,20 +31,20 @@ const std::string golden_legacy_particle = bytes({
 
 TEST_CASE("packet id is 25")
 {
-    STATIC_REQUIRE(bp::LevelEventPacket_<2168>::Id == 25);
+    STATIC_REQUIRE(bp::LevelEventPacket::Id == 25);
     STATIC_REQUIRE(bp::has_packet_v<1001, 25>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 25>);
 }
 
 TEST_CASE("level-event round-trips against the golden")
 {
-    bp::LevelEventPacket_<2168> packet;
+    bp::LevelEventPacket packet;
     packet.event_id = 3600;
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
     packet.data = -1;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LevelEventPacket_<2168>>(golden);
+    const auto back = decode<bp::LevelEventPacket>(golden);
     REQUIRE(back.event_id == 3600);
     REQUIRE(back.pos.x == 1.0F);
     REQUIRE(back.pos.y == 2.0F);
@@ -54,24 +54,24 @@ TEST_CASE("level-event round-trips against the golden")
 
 TEST_CASE("the event id and the data are both zigzag varints, not fixed or unsigned ones")
 {
-    bp::LevelEventPacket_<2168> packet;
+    bp::LevelEventPacket packet;
     packet.event_id = -1;
     packet.pos = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.data = 300;
     REQUIRE(encode(packet) == golden_signed);
 
-    const auto back = decode<bp::LevelEventPacket_<2168>>(golden_signed);
+    const auto back = decode<bp::LevelEventPacket>(golden_signed);
     REQUIRE(back.event_id == -1);
     REQUIRE(back.data == 300);
 }
 
 TEST_CASE("an event id past the last named LevelEvent still fits the field")
 {
-    bp::LevelEventPacket_<2168> packet;
+    bp::LevelEventPacket packet;
     packet.event_id = 16385;
     packet.pos = {.x = 0.0F, .y = 0.0F, .z = 0.0F};
     packet.data = 0;
     REQUIRE(encode(packet) == golden_legacy_particle);
     REQUIRE(golden_legacy_particle.size() == 16);
-    REQUIRE(decode<bp::LevelEventPacket_<2168>>(golden_legacy_particle).event_id == 16385);
+    REQUIRE(decode<bp::LevelEventPacket>(golden_legacy_particle).event_id == 16385);
 }

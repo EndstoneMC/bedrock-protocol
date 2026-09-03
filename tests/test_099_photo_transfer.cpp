@@ -31,44 +31,44 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 99")
 {
-    STATIC_REQUIRE(bp::PhotoTransferPacket_<2168>::Id == 99);
+    STATIC_REQUIRE(bp::PhotoTransferPacket::Id == 99);
     STATIC_REQUIRE(bp::has_packet_v<1001, 99>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 99>);
 }
 
 TEST_CASE("photo-transfer round-trips against the golden")
 {
-    bp::PhotoTransferPacket_<2168> packet;
+    bp::PhotoTransferPacket packet;
     packet.photo_name = "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg";
     packet.photo_data = bytes({0xff, 0xd8, 0xff, 0xe0});
     packet.book_id = "book-7";
-    packet.type = bp::PhotoType::PHOTO_ITEM;
-    packet.source_type = bp::PhotoType::BOOK;
+    packet.type = bp::PhotoType::PhotoItem;
+    packet.source_type = bp::PhotoType::Book;
     packet.owner_id = bp::ActorUniqueID{-12345};
     packet.new_photo_name = "copy.jpeg";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PhotoTransferPacket_<2168>>(golden);
+    const auto back = decode<bp::PhotoTransferPacket>(golden);
     REQUIRE(back.photo_name == "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg");
     REQUIRE(back.photo_data == bytes({0xff, 0xd8, 0xff, 0xe0}));
     REQUIRE(back.book_id == "book-7");
-    REQUIRE(back.type == bp::PhotoType::PHOTO_ITEM);
-    REQUIRE(back.source_type == bp::PhotoType::BOOK);
+    REQUIRE(back.type == bp::PhotoType::PhotoItem);
+    REQUIRE(back.source_type == bp::PhotoType::Book);
     REQUIRE(back.owner_id == bp::ActorUniqueID{-12345});
     REQUIRE(back.new_photo_name == "copy.jpeg");
 }
 
 TEST_CASE("an empty photo transfer keeps four length prefixes, two type bytes and eight owner-id bytes")
 {
-    bp::PhotoTransferPacket_<2168> packet;
+    bp::PhotoTransferPacket packet;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::PhotoTransferPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::PhotoTransferPacket>(golden_empty);
     REQUIRE(back.photo_name.empty());
     REQUIRE(back.photo_data.empty());
     REQUIRE(back.book_id.empty());
-    REQUIRE(back.type == bp::PhotoType::PORTFOLIO);
-    REQUIRE(back.source_type == bp::PhotoType::PORTFOLIO);
+    REQUIRE(back.type == bp::PhotoType::Portfolio);
+    REQUIRE(back.source_type == bp::PhotoType::Portfolio);
     REQUIRE(back.owner_id == bp::ActorUniqueID{0});
     REQUIRE(back.new_photo_name.empty());
 }
@@ -77,11 +77,11 @@ TEST_CASE("the photo data length prefix is a varint, not a byte")
 {
     const std::string data(200, '\x7f');
 
-    bp::PhotoTransferPacket_<2168> packet;
+    bp::PhotoTransferPacket packet;
     packet.photo_data = data;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 215);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[2]) == 0x01);
-    REQUIRE(decode<bp::PhotoTransferPacket_<2168>>(wire).photo_data == data);
+    REQUIRE(decode<bp::PhotoTransferPacket>(wire).photo_data == data);
 }

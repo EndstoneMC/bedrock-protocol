@@ -52,8 +52,8 @@ V975 sample_v975(bp::BossEventUpdateType event_type)
     packet.health_percent = 0.5F;
     packet.darken_screen = 2;
     packet.create_world_fog = 0;
-    packet.color = bp::BossBarColor::GREEN;
-    packet.overlay = bp::BossBarOverlay::NOTCHED_6;
+    packet.color = bp::BossBarColor::Green;
+    packet.overlay = bp::BossBarOverlay::Notched6;
     return packet;
 }
 
@@ -69,10 +69,10 @@ TEST_CASE("packet id is 74 at both versions")
 // the same field values encode to four different frames.
 TEST_CASE("boss-event v975 gating selects the payload per event type")
 {
-    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::ADD)) == golden_v975_add);
-    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::PLAYER_ADDED)) == golden_v975_player_added);
-    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::REMOVE)) == golden_v975_remove);
-    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::UPDATE_STYLE)) == golden_v975_update_style);
+    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::Add)) == golden_v975_add);
+    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::PlayerAdded)) == golden_v975_player_added);
+    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::Remove)) == golden_v975_remove);
+    REQUIRE(encode(sample_v975(bp::BossEventUpdateType::UpdateStyle)) == golden_v975_update_style);
 }
 
 TEST_CASE("boss-event v975 round-trips every gated shape")
@@ -90,7 +90,7 @@ TEST_CASE("boss-event v975 round-trips every gated shape")
 TEST_CASE("boss-event v975 leaves an excluded field default-constructed")
 {
     const auto back = decode<V975>(golden_v975_remove);
-    REQUIRE(back.event_type == bp::BossEventUpdateType::REMOVE);
+    REQUIRE(back.event_type == bp::BossEventUpdateType::Remove);
     REQUIRE(back.name.empty());
     REQUIRE(back.player_id == bp::ActorUniqueID{0});
     REQUIRE(back.health_percent == 0.0F);
@@ -101,18 +101,18 @@ TEST_CASE("boss-event v1001 form round-trips against the golden")
     V1001 packet;
     packet.boss_id = bp::ActorUniqueID{-3};
     packet.player_id = bp::ActorUniqueID{7};
-    packet.event_type = bp::BossEventUpdateType::ADD;
+    packet.event_type = bp::BossEventUpdateType::Add;
     packet.name = "boss";
     packet.filtered_name = "bo**";
     packet.health_percent = 0.5F;
-    packet.color = bp::BossBarColor::GREEN;
-    packet.overlay = bp::BossBarOverlay::NOTCHED_6;
+    packet.color = bp::BossBarColor::Green;
+    packet.overlay = bp::BossBarOverlay::Notched6;
     REQUIRE(encode(packet) == golden_v1001);
 
     const auto back = decode<V1001>(golden_v1001);
     REQUIRE(back.player_id == bp::ActorUniqueID{7});
     REQUIRE(back.filtered_name == "bo**");
-    REQUIRE(back.overlay == bp::BossBarOverlay::NOTCHED_6);
+    REQUIRE(back.overlay == bp::BossBarOverlay::Notched6);
 }
 
 // 984 is a wire break in both directions: the payload stopped depending on
@@ -125,12 +125,12 @@ TEST_CASE("the cerealisation drops the gating and darken_screen")
     packet.name = "boss";
     packet.filtered_name = "bo**";
     packet.health_percent = 0.5F;
-    packet.color = bp::BossBarColor::GREEN;
-    packet.overlay = bp::BossBarOverlay::NOTCHED_6;
+    packet.color = bp::BossBarColor::Green;
+    packet.overlay = bp::BossBarOverlay::Notched6;
 
     // Every event type now encodes to the same 19 bytes; only the type byte moves.
-    for (auto event_type : {bp::BossEventUpdateType::REMOVE, bp::BossEventUpdateType::UPDATE_STYLE,
-                            bp::BossEventUpdateType::QUERY}) {
+    for (auto event_type : {bp::BossEventUpdateType::Remove, bp::BossEventUpdateType::UpdateStyle,
+                            bp::BossEventUpdateType::Query}) {
         packet.event_type = event_type;
         REQUIRE(encode(packet).size() == golden_v1001.size());
     }
@@ -146,12 +146,12 @@ TEST_CASE("boss-event v2192 drops the player id")
 {
     bp::BossEventPacket_<2192> packet;
     packet.boss_id = bp::ActorUniqueID{-3};
-    packet.event_type = bp::BossEventUpdateType::ADD;
+    packet.event_type = bp::BossEventUpdateType::Add;
     packet.name = "boss";
     packet.filtered_name = "bo**";
     packet.health_percent = 0.5F;
-    packet.color = bp::BossBarColor::GREEN;
-    packet.overlay = bp::BossBarOverlay::NOTCHED_6;
+    packet.color = bp::BossBarColor::Green;
+    packet.overlay = bp::BossBarOverlay::Notched6;
 
     const auto encoded = encode(packet);
     REQUIRE(encoded.size() + 1 == golden_v1001.size());
@@ -160,9 +160,9 @@ TEST_CASE("boss-event v2192 drops the player id")
     REQUIRE(back.boss_id == bp::ActorUniqueID{-3});
     REQUIRE(back.filtered_name == "bo**");
     REQUIRE(back.health_percent == 0.5F);
-    REQUIRE(back.overlay == bp::BossBarOverlay::NOTCHED_6);
+    REQUIRE(back.overlay == bp::BossBarOverlay::Notched6);
 
     const auto misread = decode_partial<bp::BossEventPacket_<2192>>(golden_v1001);
-    REQUIRE(misread.event_type != bp::BossEventUpdateType::ADD);
+    REQUIRE(misread.event_type != bp::BossEventUpdateType::Add);
     REQUIRE(misread.name.empty());
 }

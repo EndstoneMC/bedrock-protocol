@@ -22,34 +22,34 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 149")
 {
-    STATIC_REQUIRE(bp::PlayerArmorDamagePacket_<2168>::Id == 149);
+    STATIC_REQUIRE(bp::PlayerArmorDamagePacket::Id == 149);
     STATIC_REQUIRE(bp::has_packet_v<1001, 149>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 149>);
 }
 
 TEST_CASE("player-armor-damage round-trips against the golden")
 {
-    bp::PlayerArmorDamagePacket_<2168> packet;
-    packet.slot_and_damage_pairs.push_back({.armor_slot = bp::ArmorSlot::TORSO, .damage = 3});
-    packet.slot_and_damage_pairs.push_back({.armor_slot = bp::ArmorSlot::BODY, .damage = -300});
+    bp::PlayerArmorDamagePacket packet;
+    packet.slot_and_damage_pairs.push_back({.armor_slot = bp::ArmorSlot::Torso, .damage = 3});
+    packet.slot_and_damage_pairs.push_back({.armor_slot = bp::ArmorSlot::Body, .damage = -300});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayerArmorDamagePacket_<2168>>(golden);
+    const auto back = decode<bp::PlayerArmorDamagePacket>(golden);
     REQUIRE(back.slot_and_damage_pairs.size() == 2);
-    REQUIRE(back.slot_and_damage_pairs.at(0).armor_slot == bp::ArmorSlot::TORSO);
+    REQUIRE(back.slot_and_damage_pairs.at(0).armor_slot == bp::ArmorSlot::Torso);
     REQUIRE(back.slot_and_damage_pairs.at(0).damage == 3);
-    REQUIRE(back.slot_and_damage_pairs.at(1).armor_slot == bp::ArmorSlot::BODY);
+    REQUIRE(back.slot_and_damage_pairs.at(1).armor_slot == bp::ArmorSlot::Body);
     REQUIRE(back.slot_and_damage_pairs.at(1).damage == -300);
 }
 
 TEST_CASE("an empty armor damage pair list is a lone zero length prefix")
 {
-    bp::PlayerArmorDamagePacket_<2168> packet;
+    bp::PlayerArmorDamagePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::PlayerArmorDamagePacket_<2168>>(golden_empty).slot_and_damage_pairs.empty());
+    REQUIRE(decode<bp::PlayerArmorDamagePacket>(golden_empty).slot_and_damage_pairs.empty());
 }
 
 TEST_CASE("an armor damage body running short of its declared pair count is rejected")
 {
-    REQUIRE(rejects<bp::PlayerArmorDamagePacket_<2168>>(golden.substr(0, 4)));
+    REQUIRE(rejects<bp::PlayerArmorDamagePacket>(golden.substr(0, 4)));
 }

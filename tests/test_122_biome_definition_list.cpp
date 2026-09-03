@@ -127,7 +127,7 @@ TEST_CASE("biome definition list v975 carries the pre-981 noise gradient")
 
     bp::base::BiomeSurfaceBuilderData surface;
     surface.noise_gradient_surface = gradient;
-    bp::base::BiomeDefinitionChunkGenData chunk_gen;
+    bp::v975::BiomeDefinitionChunkGenData chunk_gen;
     chunk_gen.surface_builder_data = surface;
 
     Packet packet;

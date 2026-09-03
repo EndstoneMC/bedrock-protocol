@@ -95,7 +95,7 @@ void fill_base(Packet &packet)
     packet.avg_end_frame_time_ms = 6.0f;
     packet.avg_remainder_time_percent = 7.0f;
     packet.avg_unaccounted_time_percent = 8.0f;
-    packet.category_counters.push_back({.category = Category::ORE_UI, .current_bytes = 1024});
+    packet.category_counters.push_back({.category = Category::OreUI, .current_bytes = 1024});
     packet.entity_timings.push_back(
         {.display_name = "Zombie", .entity = "minecraft:zombie", .time_in_ns = 500, .percent_of_total = 50});
     packet.system_timings.push_back(
@@ -116,30 +116,30 @@ TEST_CASE("the memory categories are renumbered at v2168")
     STATIC_REQUIRE(std::is_same_v<bp::MemoryCategory_<975>, bp::MemoryCategory_<1001>>);
     STATIC_REQUIRE(!std::is_same_v<bp::MemoryCategory_<1001>, bp::MemoryCategory_<2168>>);
 
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::COUNT) == 92);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::COUNT) == 111);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::Count) == 92);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::Count) == 111);
 
     // Only 0..6 survive unchanged; Blobs takes 7 and everything after it moves.
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::BIOME_STORAGE) == 6);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::BIOME_STORAGE) == 6);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::CEREAL) == 7);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::BLOBS) == 7);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::CEREAL) == 8);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::BiomeStorage) == 6);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::BiomeStorage) == 6);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::Cereal) == 7);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::Blobs) == 7);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::Cereal) == 8);
 
     // Persona is gone at v2168, replaced by six Persona_* members.
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::PERSONA) == 54);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::PERSONA_PIECES) == 56);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::PERSONA_REPO) == 61);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::Persona) == 54);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::PersonaPieces) == 56);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::PersonaRepo) == 61);
 
     // The Rendering block reorders as well: Library moves ahead of RenderRegistry.
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::RENDERING_RENDER_REGISTRY) == 60);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::RENDERING_LIBRARY) == 61);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::RENDERING_LIBRARY) == 72);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::RENDERING_RENDER_REGISTRY) == 75);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::RenderingRenderRegistry) == 60);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::RenderingLibrary) == 61);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::RenderingLibrary) == 72);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::RenderingRenderRegistry) == 75);
 
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::GAMEFACE_SCRIPT_ENGINE) == 91);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::GAMEFACE_SCRIPT_ENGINE) == 108);
-    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::GAMEFACE_LAYOUT) == 110);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<1001>::GamefaceScriptEngine) == 91);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::GamefaceScriptEngine) == 108);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2168>::GamefaceLayout) == 110);
 }
 
 TEST_CASE("serverbound-diagnostics round-trips against the golden")
@@ -158,7 +158,7 @@ TEST_CASE("serverbound-diagnostics round-trips against the golden")
     const auto back = decode<Packet>(golden);
     REQUIRE(back.avg_fps == 60.0f);
     REQUIRE(back.category_counters.size() == 1);
-    REQUIRE(back.category_counters[0].category == bp::MemoryCategory_<1001>::ORE_UI);
+    REQUIRE(back.category_counters[0].category == bp::MemoryCategory_<1001>::OreUI);
     REQUIRE(back.category_counters[0].current_bytes == 1024);
     REQUIRE(back.entity_timings.size() == 1);
     REQUIRE(back.entity_timings[0].entity == "minecraft:zombie");
@@ -186,7 +186,7 @@ TEST_CASE("serverbound-diagnostics v2168 form round-trips against the golden")
     REQUIRE(encode(packet) == golden_v2168);
 
     const auto back = decode<Packet>(golden_v2168);
-    REQUIRE(back.category_counters[0].category == bp::MemoryCategory_<2168>::ORE_UI);
+    REQUIRE(back.category_counters[0].category == bp::MemoryCategory_<2168>::OreUI);
     REQUIRE(back.system_categories.has_value());
     REQUIRE(back.system_categories->size() == 1);
     REQUIRE((*back.system_categories)[0].category_name == "Movement");
@@ -204,8 +204,8 @@ TEST_CASE("a v1001 category byte reads as another category at v2168")
 
     const auto back = decode<bp::ServerboundDiagnosticsPacket_<1001>>(golden);
     const auto category = back.category_counters[0].category;
-    REQUIRE(category == bp::MemoryCategory_<1001>::ORE_UI);
-    REQUIRE(static_cast<int>(category) == static_cast<int>(bp::MemoryCategory_<2168>::MOLANG));
+    REQUIRE(category == bp::MemoryCategory_<1001>::OreUI);
+    REQUIRE(static_cast<int>(category) == static_cast<int>(bp::MemoryCategory_<2168>::Molang));
 }
 
 TEST_CASE("absent system categories are a lone flag ahead of the whisker scopes")

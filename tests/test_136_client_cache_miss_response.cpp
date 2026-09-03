@@ -22,19 +22,19 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 136")
 {
-    STATIC_REQUIRE(bp::ClientCacheMissResponsePacket_<2168>::Id == 136);
+    STATIC_REQUIRE(bp::ClientCacheMissResponsePacket::Id == 136);
     STATIC_REQUIRE(bp::has_packet_v<1001, 136>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 136>);
 }
 
 TEST_CASE("client-cache-miss-response round-trips against the golden")
 {
-    bp::ClientCacheMissResponsePacket_<2168> packet;
+    bp::ClientCacheMissResponsePacket packet;
     packet.blobs.push_back({.blob_id = 0x0102030405060708ULL, .blob_data = "chunk"});
     packet.blobs.push_back({.blob_id = 300, .blob_data = ""});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientCacheMissResponsePacket_<2168>>(golden);
+    const auto back = decode<bp::ClientCacheMissResponsePacket>(golden);
     REQUIRE(back.blobs.size() == 2);
     REQUIRE(back.blobs[0].blob_id == 0x0102030405060708ULL);
     REQUIRE(back.blobs[0].blob_data == "chunk");
@@ -44,21 +44,21 @@ TEST_CASE("client-cache-miss-response round-trips against the golden")
 
 TEST_CASE("an empty client-cache-miss-response is a lone zero count")
 {
-    const auto wire = encode(bp::ClientCacheMissResponsePacket_<2168>{});
+    const auto wire = encode(bp::ClientCacheMissResponsePacket{});
     REQUIRE(wire == golden_empty);
-    REQUIRE(decode<bp::ClientCacheMissResponsePacket_<2168>>(golden_empty).blobs.empty());
+    REQUIRE(decode<bp::ClientCacheMissResponsePacket>(golden_empty).blobs.empty());
 }
 
 TEST_CASE("a blob payload past 127 bytes takes a two-byte length prefix")
 {
     const std::string payload(200, 'x');
 
-    bp::ClientCacheMissResponsePacket_<2168> packet;
+    bp::ClientCacheMissResponsePacket packet;
     packet.blobs.push_back({.blob_id = 300, .blob_data = payload});
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 211);
 
-    const auto back = decode<bp::ClientCacheMissResponsePacket_<2168>>(wire);
+    const auto back = decode<bp::ClientCacheMissResponsePacket>(wire);
     REQUIRE(back.blobs.size() == 1);
     REQUIRE(back.blobs[0].blob_id == 300);
     REQUIRE(back.blobs[0].blob_data == payload);

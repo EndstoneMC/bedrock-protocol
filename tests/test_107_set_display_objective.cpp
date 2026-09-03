@@ -30,51 +30,51 @@ const std::string golden_descending = bytes({
 
 TEST_CASE("packet id is 107")
 {
-    STATIC_REQUIRE(bp::SetDisplayObjectivePacket_<2168>::Id == 107);
+    STATIC_REQUIRE(bp::SetDisplayObjectivePacket::Id == 107);
     STATIC_REQUIRE(bp::has_packet_v<1001, 107>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 107>);
 }
 
 TEST_CASE("set display objective round-trips against the golden")
 {
-    bp::SetDisplayObjectivePacket_<2168> packet;
+    bp::SetDisplayObjectivePacket packet;
     packet.display_slot_name = "sidebar";
     packet.objective_name = "objective";
     packet.objective_display_name = "Scores";
     packet.criteria_name = "dummy";
-    packet.sort_order = bp::ObjectiveSortOrder::DESCENDING;
+    packet.sort_order = bp::ObjectiveSortOrder::Descending;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetDisplayObjectivePacket_<2168>>(golden);
+    const auto back = decode<bp::SetDisplayObjectivePacket>(golden);
     REQUIRE(back.display_slot_name == "sidebar");
     REQUIRE(back.objective_name == "objective");
     REQUIRE(back.objective_display_name == "Scores");
     REQUIRE(back.criteria_name == "dummy");
-    REQUIRE(back.sort_order == bp::ObjectiveSortOrder::DESCENDING);
+    REQUIRE(back.sort_order == bp::ObjectiveSortOrder::Descending);
 }
 
 TEST_CASE("the sort order is a zigzag varint, not the enum's byte")
 {
-    bp::SetDisplayObjectivePacket_<2168> ascending;
-    ascending.sort_order = bp::ObjectiveSortOrder::ASCENDING;
+    bp::SetDisplayObjectivePacket ascending;
+    ascending.sort_order = bp::ObjectiveSortOrder::Ascending;
     REQUIRE(encode(ascending) == golden_ascending);
 
-    bp::SetDisplayObjectivePacket_<2168> descending;
-    descending.sort_order = bp::ObjectiveSortOrder::DESCENDING;
+    bp::SetDisplayObjectivePacket descending;
+    descending.sort_order = bp::ObjectiveSortOrder::Descending;
     REQUIRE(encode(descending) == golden_descending);
 
-    REQUIRE(decode<bp::SetDisplayObjectivePacket_<2168>>(golden_descending).sort_order ==
-            bp::ObjectiveSortOrder::DESCENDING);
+    REQUIRE(decode<bp::SetDisplayObjectivePacket>(golden_descending).sort_order ==
+            bp::ObjectiveSortOrder::Descending);
 }
 
 TEST_CASE("a display name over 127 bytes takes a two-byte length prefix")
 {
-    bp::SetDisplayObjectivePacket_<2168> packet;
+    bp::SetDisplayObjectivePacket packet;
     packet.objective_display_name = std::string(200, 'x');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 206);
 
-    const auto back = decode<bp::SetDisplayObjectivePacket_<2168>>(wire);
+    const auto back = decode<bp::SetDisplayObjectivePacket>(wire);
     REQUIRE(back.objective_display_name == std::string(200, 'x'));
     REQUIRE(back.criteria_name.empty());
 }

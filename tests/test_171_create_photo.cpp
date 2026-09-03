@@ -19,20 +19,20 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 171")
 {
-    STATIC_REQUIRE(bp::CreatePhotoPacket_<2168>::Id == 171);
+    STATIC_REQUIRE(bp::CreatePhotoPacket::Id == 171);
     STATIC_REQUIRE(bp::has_packet_v<1001, 171>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 171>);
 }
 
 TEST_CASE("create-photo round-trips against the golden")
 {
-    bp::CreatePhotoPacket_<2168> packet;
+    bp::CreatePhotoPacket packet;
     packet.id = bp::ActorUniqueID{0x1122334455667788};
     packet.photo_name = "photo.png";
     packet.photo_item_name = "Snapshot";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CreatePhotoPacket_<2168>>(golden);
+    const auto back = decode<bp::CreatePhotoPacket>(golden);
     REQUIRE(back.id == bp::ActorUniqueID{0x1122334455667788});
     REQUIRE(back.photo_name == "photo.png");
     REQUIRE(back.photo_item_name == "Snapshot");
@@ -40,13 +40,13 @@ TEST_CASE("create-photo round-trips against the golden")
 
 TEST_CASE("the unique id is eight fixed bytes, not a varint")
 {
-    bp::CreatePhotoPacket_<2168> packet;
+    bp::CreatePhotoPacket packet;
     packet.id = bp::ActorUniqueID{-1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
     REQUIRE(wire == bytes({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}));
 
-    const auto back = decode<bp::CreatePhotoPacket_<2168>>(wire);
+    const auto back = decode<bp::CreatePhotoPacket>(wire);
     REQUIRE(back.id == bp::ActorUniqueID{-1});
     REQUIRE(back.photo_name.empty());
     REQUIRE(back.photo_item_name.empty());
@@ -54,10 +54,10 @@ TEST_CASE("the unique id is eight fixed bytes, not a varint")
 
 TEST_CASE("a photo name past 127 characters takes a two-byte length prefix")
 {
-    bp::CreatePhotoPacket_<2168> packet;
+    bp::CreatePhotoPacket packet;
     packet.photo_name = std::string(200, 'a');
     packet.photo_item_name = "x";
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 8 + 2 + 200 + 1 + 1);
-    REQUIRE(decode<bp::CreatePhotoPacket_<2168>>(wire).photo_name == std::string(200, 'a'));
+    REQUIRE(decode<bp::CreatePhotoPacket>(wire).photo_name == std::string(200, 'a'));
 }

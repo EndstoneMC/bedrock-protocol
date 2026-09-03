@@ -22,31 +22,31 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 154")
 {
-    STATIC_REQUIRE(bp::PositionTrackingDBClientRequestPacket_<2168>::Id == 154);
+    STATIC_REQUIRE(bp::PositionTrackingDBClientRequestPacket::Id == 154);
     STATIC_REQUIRE(bp::has_packet_v<1001, 154>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 154>);
 }
 
 TEST_CASE("a position-tracking-db client request round-trips against the golden")
 {
-    bp::PositionTrackingDBClientRequestPacket_<2168> packet;
-    packet.action = bp::PositionTrackingDBClientRequestPacket_<2168>::Action::QUERY;
+    bp::PositionTrackingDBClientRequestPacket packet;
+    packet.action = bp::PositionTrackingDBClientRequestPacket::Action::Query;
     packet.id = {.raw_id = 7};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PositionTrackingDBClientRequestPacket_<2168>>(golden);
-    REQUIRE(back.action == bp::PositionTrackingDBClientRequestPacket_<2168>::Action::QUERY);
+    const auto back = decode<bp::PositionTrackingDBClientRequestPacket>(golden);
+    REQUIRE(back.action == bp::PositionTrackingDBClientRequestPacket::Action::Query);
     REQUIRE(back.id.raw_id == 7);
 }
 
 TEST_CASE("a negative tracking id zigzags behind the action byte")
 {
-    bp::PositionTrackingDBClientRequestPacket_<2168> packet;
-    packet.action = bp::PositionTrackingDBClientRequestPacket_<2168>::Action::QUERY;
+    bp::PositionTrackingDBClientRequestPacket packet;
+    packet.action = bp::PositionTrackingDBClientRequestPacket::Action::Query;
     packet.id = {.raw_id = -300};
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::PositionTrackingDBClientRequestPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::PositionTrackingDBClientRequestPacket>(golden_negative);
     REQUIRE(back.id.raw_id == -300);
 }
 

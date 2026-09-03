@@ -24,21 +24,21 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 152")
 {
-    STATIC_REQUIRE(bp::EmoteListPacket_<2168>::Id == 152);
+    STATIC_REQUIRE(bp::EmoteListPacket::Id == 152);
     STATIC_REQUIRE(bp::has_packet_v<1001, 152>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 152>);
 }
 
 TEST_CASE("emote list round-trips against the golden")
 {
-    bp::EmoteListPacket_<2168> packet;
+    bp::EmoteListPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.emote_piece_ids.push_back(
         {.most_significant_bits = 0x0102030405060708ULL, .least_significant_bits = 0x090a0b0c0d0e0f10ULL});
     packet.emote_piece_ids.push_back({.most_significant_bits = 0, .least_significant_bits = 2});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::EmoteListPacket_<2168>>(golden);
+    const auto back = decode<bp::EmoteListPacket>(golden);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.emote_piece_ids.size() == 2);
     REQUIRE(back.emote_piece_ids[0].most_significant_bits == 0x0102030405060708ULL);
@@ -49,11 +49,11 @@ TEST_CASE("emote list round-trips against the golden")
 
 TEST_CASE("an emote list carrying no pieces is a runtime id and a zero count")
 {
-    bp::EmoteListPacket_<2168> packet;
+    bp::EmoteListPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{7};
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::EmoteListPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::EmoteListPacket>(golden_empty);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE(back.emote_piece_ids.empty());
 }
@@ -61,5 +61,5 @@ TEST_CASE("an emote list carrying no pieces is a runtime id and a zero count")
 TEST_CASE("an emote piece id is sixteen fixed bytes, not a pair of varints")
 {
     REQUIRE(golden.size() == 35);
-    REQUIRE(rejects<bp::EmoteListPacket_<2168>>(golden.substr(0, golden.size() - 1)));
+    REQUIRE(rejects<bp::EmoteListPacket>(golden.substr(0, golden.size() - 1)));
 }

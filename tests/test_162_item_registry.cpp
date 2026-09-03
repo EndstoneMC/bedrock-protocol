@@ -31,11 +31,11 @@ bp::ItemRegistryPacket make()
     packet.items.push_back({.name = "minecraft:stick",
                             .id = 320,
                             .is_component_based = false,
-                            .item_version = bp::ItemVersion::LEGACY});
+                            .item_version = bp::ItemVersion::Legacy});
     packet.items.push_back({.name = "custom:widget",
                             .id = -1,
                             .is_component_based = true,
-                            .item_version = bp::ItemVersion::DATA_DRIVEN,
+                            .item_version = bp::ItemVersion::DataDriven,
                             .component_data = bp::CompoundTag{{"minecraft:max_stack_size", bp::IntTag{16}}}});
     return packet;
 }
@@ -57,12 +57,12 @@ TEST_CASE("item-registry round-trips against the golden")
     REQUIRE(back.items[0].name == "minecraft:stick");
     REQUIRE(back.items[0].id == 320);
     REQUIRE_FALSE(back.items[0].is_component_based);
-    REQUIRE(back.items[0].item_version == bp::ItemVersion::LEGACY);
+    REQUIRE(back.items[0].item_version == bp::ItemVersion::Legacy);
     REQUIRE(back.items[0].component_data.empty());
     REQUIRE(back.items[1].name == "custom:widget");
     REQUIRE(back.items[1].id == -1);
     REQUIRE(back.items[1].is_component_based);
-    REQUIRE(back.items[1].item_version == bp::ItemVersion::DATA_DRIVEN);
+    REQUIRE(back.items[1].item_version == bp::ItemVersion::DataDriven);
     REQUIRE(back.items[1].component_data.at("minecraft:max_stack_size").get<bp::IntTag>().value() == 16);
 }
 

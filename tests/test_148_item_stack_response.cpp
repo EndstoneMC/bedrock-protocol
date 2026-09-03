@@ -60,11 +60,11 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
     slot.item_stack_net_id.raw_id = 9;
 
     bp::v1001::ItemStackResponseContainerInfo container;
-    container.full_container_name.name = bp::ContainerEnumName::COMBINED_HOTBAR_AND_INVENTORY_CONTAINER;
+    container.full_container_name.name = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer;
     container.slots = {slot};
 
     bp::v1001::ItemStackResponseInfo response;
-    response.result = bp::ItemStackNetResult::SUCCESS;
+    response.result = bp::ItemStackNetResult::Success;
     response.client_request_id.raw_id = -1;
     response.containers = {container};
 
@@ -85,7 +85,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
 TEST_CASE("item-stack-response v1001 drops the containers on a non-success result")
 {
     bp::v1001::ItemStackResponseInfo response;
-    response.result = bp::ItemStackNetResult::ERROR;
+    response.result = bp::ItemStackNetResult::Error;
     response.client_request_id.raw_id = -1;
 
     Packet packet;
@@ -93,7 +93,7 @@ TEST_CASE("item-stack-response v1001 drops the containers on a non-success resul
     REQUIRE(encode(packet) == golden_error);
 
     const auto back = decode<Packet>(golden_error);
-    REQUIRE(back.responses[0].result == bp::ItemStackNetResult::ERROR);
+    REQUIRE(back.responses[0].result == bp::ItemStackNetResult::Error);
     REQUIRE(back.responses[0].containers.empty());
 }
 
@@ -113,11 +113,11 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
     slot.item_stack_net_id = bp::ItemStackNetId{.raw_id = 9};
 
     bp::v2168::ItemStackResponseContainerInfo container;
-    container.full_container_name.name = bp::ContainerEnumName::LEVEL_ENTITY_CONTAINER;
+    container.full_container_name.name = bp::ContainerEnumName::LevelEntityContainer;
     container.slots = {slot};
 
     bp::v2168::ItemStackResponseInfo response;
-    response.result = bp::ItemStackNetResult::SUCCESS;
+    response.result = bp::ItemStackNetResult::Success;
     response.client_request_id.raw_id = -1;
     response.containers = std::vector<bp::v2168::ItemStackResponseContainerInfo>{container};
 
@@ -138,7 +138,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
 TEST_CASE("item-stack-response v2168 writes an absent container list on an error")
 {
     bp::v2168::ItemStackResponseInfo response;
-    response.result = bp::ItemStackNetResult::ERROR;
+    response.result = bp::ItemStackNetResult::Error;
     response.client_request_id.raw_id = -1;
 
     PacketV2168 packet;

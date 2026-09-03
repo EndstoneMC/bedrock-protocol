@@ -20,33 +20,33 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 192")
 {
-    STATIC_REQUIRE(bp::ServerStatsPacket_<2168>::Id == 192);
+    STATIC_REQUIRE(bp::ServerStatsPacket::Id == 192);
     STATIC_REQUIRE(bp::has_packet_v<1001, 192>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 192>);
 }
 
 TEST_CASE("server stats round-trips against the golden")
 {
-    bp::ServerStatsPacket_<2168> packet;
+    bp::ServerStatsPacket packet;
     packet.server_time = 12.5F;
     packet.network_time = 0.25F;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerStatsPacket_<2168>>(golden);
+    const auto back = decode<bp::ServerStatsPacket>(golden);
     REQUIRE(back.server_time == 12.5F);
     REQUIRE(back.network_time == 0.25F);
 }
 
 TEST_CASE("both times are single-precision and neither is a double")
 {
-    bp::ServerStatsPacket_<2168> packet;
+    bp::ServerStatsPacket packet;
     packet.server_time = -1.0F;
     packet.network_time = 2.5F;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 8);
     REQUIRE(wire == golden_negative);
 
-    const auto back = decode<bp::ServerStatsPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::ServerStatsPacket>(golden_negative);
     REQUIRE(back.server_time == -1.0F);
     REQUIRE(back.network_time == 2.5F);
 }

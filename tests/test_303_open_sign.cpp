@@ -15,19 +15,19 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 303")
 {
-    STATIC_REQUIRE(bp::OpenSignPacket_<2168>::Id == 303);
+    STATIC_REQUIRE(bp::OpenSignPacket::Id == 303);
     STATIC_REQUIRE(bp::has_packet_v<1001, 303>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 303>);
 }
 
 TEST_CASE("open sign round-trips against the golden")
 {
-    bp::OpenSignPacket_<2168> packet;
+    bp::OpenSignPacket packet;
     packet.pos = {.x = 1, .y = 2, .z = 3};
     packet.is_front_side = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::OpenSignPacket_<2168>>(golden);
+    const auto back = decode<bp::OpenSignPacket>(golden);
     REQUIRE(back.pos.x == 1);
     REQUIRE(back.pos.z == 3);
     REQUIRE(back.is_front_side);
@@ -35,7 +35,7 @@ TEST_CASE("open sign round-trips against the golden")
 
 TEST_CASE("a negative sign position zigzags rather than running long")
 {
-    bp::OpenSignPacket_<2168> packet;
+    bp::OpenSignPacket packet;
     packet.pos = {.x = -1, .y = 0, .z = 0};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);

@@ -22,20 +22,20 @@ const std::string golden_bare = bytes({
 
 TEST_CASE("packet id is 333")
 {
-    STATIC_REQUIRE(bp::ClientboundDataDrivenUIShowScreenPacket_<2168>::Id == 333);
+    STATIC_REQUIRE(bp::ClientboundDataDrivenUIShowScreenPacket::Id == 333);
     STATIC_REQUIRE(bp::has_packet_v<1001, 333>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 333>);
 }
 
 TEST_CASE("data-driven-ui show-screen round-trips against the golden")
 {
-    bp::ClientboundDataDrivenUIShowScreenPacket_<2168> packet;
+    bp::ClientboundDataDrivenUIShowScreenPacket packet;
     packet.screen_id = "my_screen";
     packet.form_id = 300;
     packet.data_instance_id = 70000;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket>(golden);
     REQUIRE(back.screen_id == "my_screen");
     REQUIRE(back.form_id == 300);
     REQUIRE(back.data_instance_id.has_value());
@@ -44,13 +44,13 @@ TEST_CASE("data-driven-ui show-screen round-trips against the golden")
 
 TEST_CASE("the show-screen ids stay four bytes wide rather than compressing")
 {
-    bp::ClientboundDataDrivenUIShowScreenPacket_<2168> packet;
+    bp::ClientboundDataDrivenUIShowScreenPacket packet;
     packet.form_id = 0xffffffff;
     packet.data_instance_id = 0xffffffff;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
 
-    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket_<2168>>(wire);
+    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket>(wire);
     REQUIRE(back.form_id == 0xffffffff);
     REQUIRE(back.data_instance_id.has_value());
     REQUIRE(*back.data_instance_id == 0xffffffff);
@@ -58,11 +58,11 @@ TEST_CASE("the show-screen ids stay four bytes wide rather than compressing")
 
 TEST_CASE("an empty screen id is a length, and an absent data instance id is one zero byte")
 {
-    bp::ClientboundDataDrivenUIShowScreenPacket_<2168> packet;
+    bp::ClientboundDataDrivenUIShowScreenPacket packet;
     packet.form_id = 1;
     REQUIRE(encode(packet) == golden_bare);
 
-    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket_<2168>>(golden_bare);
+    const auto back = decode<bp::ClientboundDataDrivenUIShowScreenPacket>(golden_bare);
     REQUIRE(back.screen_id.empty());
     REQUIRE(back.form_id == 1);
     REQUIRE_FALSE(back.data_instance_id.has_value());

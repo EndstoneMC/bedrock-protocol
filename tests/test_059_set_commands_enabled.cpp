@@ -20,26 +20,26 @@ const std::string golden_disabled = bytes({
 
 TEST_CASE("packet id is 59")
 {
-    STATIC_REQUIRE(bp::SetCommandsEnabledPacket_<2168>::Id == 59);
+    STATIC_REQUIRE(bp::SetCommandsEnabledPacket::Id == 59);
     STATIC_REQUIRE(bp::has_packet_v<1001, 59>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 59>);
 }
 
 TEST_CASE("set-commands-enabled round-trips against the golden")
 {
-    bp::SetCommandsEnabledPacket_<2168> packet;
+    bp::SetCommandsEnabledPacket packet;
     packet.commands_enabled = true;
     REQUIRE(encode(packet) == golden);
 
-    REQUIRE(decode<bp::SetCommandsEnabledPacket_<2168>>(golden).commands_enabled == true);
+    REQUIRE(decode<bp::SetCommandsEnabledPacket>(golden).commands_enabled == true);
 }
 
 TEST_CASE("the body is the bool alone, with no member-present byte in front of it")
 {
-    bp::SetCommandsEnabledPacket_<2168> packet;
+    bp::SetCommandsEnabledPacket packet;
     packet.commands_enabled = false;
     REQUIRE(encode(packet) == golden_disabled);
 
-    REQUIRE(decode<bp::SetCommandsEnabledPacket_<2168>>(golden_disabled).commands_enabled == false);
-    REQUIRE(rejects<bp::SetCommandsEnabledPacket_<2168>>(std::string{}));
+    REQUIRE(decode<bp::SetCommandsEnabledPacket>(golden_disabled).commands_enabled == false);
+    REQUIRE(rejects<bp::SetCommandsEnabledPacket>(std::string{}));
 }

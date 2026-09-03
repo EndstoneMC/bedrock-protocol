@@ -15,32 +15,32 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 2")
 {
-    STATIC_REQUIRE(bp::PlayStatusPacket_<2168>::Id == 2);
+    STATIC_REQUIRE(bp::PlayStatusPacket::Id == 2);
     STATIC_REQUIRE(bp::has_packet_v<1001, 2>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 2>);
 }
 
 TEST_CASE("play status round-trips against the golden")
 {
-    bp::PlayStatusPacket_<2168> packet;
-    packet.status = bp::PlayStatus::PLAYER_SPAWN;
+    bp::PlayStatusPacket packet;
+    packet.status = bp::PlayStatus::PlayerSpawn;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PlayStatusPacket_<2168>>(golden);
-    REQUIRE(back.status == bp::PlayStatus::PLAYER_SPAWN);
+    const auto back = decode<bp::PlayStatusPacket>(golden);
+    REQUIRE(back.status == bp::PlayStatus::PlayerSpawn);
 }
 
 TEST_CASE("the status is four fixed big-endian bytes, not a varint")
 {
-    bp::PlayStatusPacket_<2168> packet;
-    packet.status = bp::PlayStatus::LOGIN_SUCCESS;
+    bp::PlayStatusPacket packet;
+    packet.status = bp::PlayStatus::LoginSuccess;
     REQUIRE(encode(packet).size() == 4);
 
-    packet.status = bp::PlayStatus::LOGIN_FAILED_EDITOR_MISMATCH_VANILLA_TO_EDITOR;
+    packet.status = bp::PlayStatus::LoginFailedEditorMismatchVanillaToEditor;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 4);
     REQUIRE(wire.front() == '\0');
     REQUIRE(wire.back() == '\x09');
 
-    REQUIRE(rejects<bp::PlayStatusPacket_<2168>>(golden.substr(1)));
+    REQUIRE(rejects<bp::PlayStatusPacket>(golden.substr(1)));
 }

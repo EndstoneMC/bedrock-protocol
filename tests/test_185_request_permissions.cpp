@@ -24,49 +24,49 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 185")
 {
-    STATIC_REQUIRE(bp::RequestPermissionsPacket_<2168>::Id == 185);
+    STATIC_REQUIRE(bp::RequestPermissionsPacket::Id == 185);
     STATIC_REQUIRE(bp::has_packet_v<1001, 185>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 185>);
 }
 
 TEST_CASE("request-permissions round-trips against the golden")
 {
-    bp::RequestPermissionsPacket_<2168> packet;
+    bp::RequestPermissionsPacket packet;
     packet.target_player_id = bp::ActorUniqueID{7};
-    packet.player_permissions = bp::PlayerPermissionLevel::OPERATOR;
+    packet.player_permissions = bp::PlayerPermissionLevel::Operator;
     packet.custom_permission_flags =
-        static_cast<std::uint16_t>(bp::RequestPermissionsPacket_<2168>::CustomPermissions::OPERATOR_COMMANDS) |
-        static_cast<std::uint16_t>(bp::RequestPermissionsPacket_<2168>::CustomPermissions::TELEPORT);
+        static_cast<std::uint16_t>(bp::RequestPermissionsPacket::CustomPermissions::OperatorCommands) |
+        static_cast<std::uint16_t>(bp::RequestPermissionsPacket::CustomPermissions::Teleport);
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::RequestPermissionsPacket_<2168>>(golden);
+    const auto back = decode<bp::RequestPermissionsPacket>(golden);
     REQUIRE(back.target_player_id == bp::ActorUniqueID{7});
-    REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::OPERATOR);
+    REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::Operator);
     REQUIRE(back.custom_permission_flags == 192);
 }
 
 TEST_CASE("the target player id is a fixed int64, not the alias's varint")
 {
-    bp::RequestPermissionsPacket_<2168> packet;
+    bp::RequestPermissionsPacket packet;
     packet.target_player_id = bp::ActorUniqueID{-1};
-    packet.player_permissions = bp::PlayerPermissionLevel::CUSTOM;
+    packet.player_permissions = bp::PlayerPermissionLevel::Custom;
     packet.custom_permission_flags = 255;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::RequestPermissionsPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::RequestPermissionsPacket>(golden_negative);
     REQUIRE(back.target_player_id == bp::ActorUniqueID{-1});
-    REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::CUSTOM);
+    REQUIRE(back.player_permissions == bp::PlayerPermissionLevel::Custom);
     REQUIRE(back.custom_permission_flags == 255);
 }
 
 TEST_CASE("the permission flags stay a fixed little-endian uint16")
 {
-    bp::RequestPermissionsPacket_<2168> packet;
+    bp::RequestPermissionsPacket packet;
     packet.target_player_id = bp::ActorUniqueID{0};
-    packet.player_permissions = bp::PlayerPermissionLevel::VISITOR;
+    packet.player_permissions = bp::PlayerPermissionLevel::Visitor;
     packet.custom_permission_flags = 0x0100;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 11);
     REQUIRE(wire.substr(9) == bytes({0x00, 0x01}));
-    REQUIRE(decode<bp::RequestPermissionsPacket_<2168>>(wire).custom_permission_flags == 0x0100);
+    REQUIRE(decode<bp::RequestPermissionsPacket>(wire).custom_permission_flags == 0x0100);
 }

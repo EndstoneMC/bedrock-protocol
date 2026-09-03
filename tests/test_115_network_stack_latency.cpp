@@ -22,31 +22,31 @@ const std::string golden_small = bytes({
 
 TEST_CASE("packet id is 115")
 {
-    STATIC_REQUIRE(bp::NetworkStackLatencyPacket_<2168>::Id == 115);
+    STATIC_REQUIRE(bp::NetworkStackLatencyPacket::Id == 115);
     STATIC_REQUIRE(bp::has_packet_v<1001, 115>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 115>);
 }
 
 TEST_CASE("network-stack latency round-trips against the golden")
 {
-    bp::NetworkStackLatencyPacket_<2168> packet;
+    bp::NetworkStackLatencyPacket packet;
     packet.create_time = 0x0123456789abcdefULL;
     packet.from_server = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::NetworkStackLatencyPacket_<2168>>(golden);
+    const auto back = decode<bp::NetworkStackLatencyPacket>(golden);
     REQUIRE(back.create_time == 0x0123456789abcdefULL);
     REQUIRE(back.from_server);
 }
 
 TEST_CASE("the creation time is eight fixed bytes, not a varint")
 {
-    bp::NetworkStackLatencyPacket_<2168> packet;
+    bp::NetworkStackLatencyPacket packet;
     packet.create_time = 255;
     packet.from_server = false;
     REQUIRE(encode(packet) == golden_small);
 
-    const auto back = decode<bp::NetworkStackLatencyPacket_<2168>>(golden_small);
+    const auto back = decode<bp::NetworkStackLatencyPacket>(golden_small);
     REQUIRE(back.create_time == 255);
     REQUIRE_FALSE(back.from_server);
 }

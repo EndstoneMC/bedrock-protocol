@@ -24,35 +24,35 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 89")
 {
-    STATIC_REQUIRE(bp::AddBehaviorTreePacket_<2168>::Id == 89);
+    STATIC_REQUIRE(bp::AddBehaviorTreePacket::Id == 89);
     STATIC_REQUIRE(bp::has_packet_v<1001, 89>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 89>);
 }
 
 TEST_CASE("add-behavior-tree round-trips against the golden")
 {
-    bp::AddBehaviorTreePacket_<2168> packet;
+    bp::AddBehaviorTreePacket packet;
     packet.json_input = R"({"behaviors":["minecraft:behavior.float"]})";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AddBehaviorTreePacket_<2168>>(golden);
+    const auto back = decode<bp::AddBehaviorTreePacket>(golden);
     REQUIRE(back.json_input == R"({"behaviors":["minecraft:behavior.float"]})");
 }
 
 TEST_CASE("an empty behavior tree is a lone length prefix")
 {
-    bp::AddBehaviorTreePacket_<2168> packet;
+    bp::AddBehaviorTreePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::AddBehaviorTreePacket_<2168>>(golden_empty).json_input.empty());
+    REQUIRE(decode<bp::AddBehaviorTreePacket>(golden_empty).json_input.empty());
 }
 
 TEST_CASE("the length prefix is a varint, not a byte")
 {
-    bp::AddBehaviorTreePacket_<2168> packet;
+    bp::AddBehaviorTreePacket packet;
     packet.json_input = std::string(200, 'a');
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
-    REQUIRE(decode<bp::AddBehaviorTreePacket_<2168>>(wire).json_input == packet.json_input);
+    REQUIRE(decode<bp::AddBehaviorTreePacket>(wire).json_input == packet.json_input);
 }

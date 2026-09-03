@@ -30,49 +30,49 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 151")
 {
-    STATIC_REQUIRE(bp::UpdatePlayerGameTypePacket_<2168>::Id == 151);
+    STATIC_REQUIRE(bp::UpdatePlayerGameTypePacket::Id == 151);
     STATIC_REQUIRE(bp::has_packet_v<1001, 151>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 151>);
 }
 
 TEST_CASE("update-player-game-type round-trips against the golden")
 {
-    bp::UpdatePlayerGameTypePacket_<2168> packet;
-    packet.player_game_type = bp::GameType::ADVENTURE;
+    bp::UpdatePlayerGameTypePacket packet;
+    packet.player_game_type = bp::GameType::Adventure;
     packet.target_player = bp::ActorUniqueID{7};
     packet.tick = bp::PlayerInputTick{200};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden);
-    REQUIRE(back.player_game_type == bp::GameType::ADVENTURE);
+    const auto back = decode<bp::UpdatePlayerGameTypePacket>(golden);
+    REQUIRE(back.player_game_type == bp::GameType::Adventure);
     REQUIRE(back.target_player == bp::ActorUniqueID{7});
     REQUIRE(back.tick == bp::PlayerInputTick{200});
 }
 
 TEST_CASE("an Undefined game type and a negative target player each zigzag into one byte")
 {
-    bp::UpdatePlayerGameTypePacket_<2168> packet;
-    packet.player_game_type = bp::GameType::UNDEFINED;
+    bp::UpdatePlayerGameTypePacket packet;
+    packet.player_game_type = bp::GameType::Undefined;
     packet.target_player = bp::ActorUniqueID{-5};
     packet.tick = bp::PlayerInputTick{0};
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden_negative);
-    REQUIRE(back.player_game_type == bp::GameType::UNDEFINED);
+    const auto back = decode<bp::UpdatePlayerGameTypePacket>(golden_negative);
+    REQUIRE(back.player_game_type == bp::GameType::Undefined);
     REQUIRE(back.target_player == bp::ActorUniqueID{-5});
     REQUIRE(back.tick == bp::PlayerInputTick{0});
-    REQUIRE(rejects<bp::UpdatePlayerGameTypePacket_<2168>>(std::string{}));
+    REQUIRE(rejects<bp::UpdatePlayerGameTypePacket>(std::string{}));
 }
 
 TEST_CASE("the update-player-game-type target player and tick both survive past 32 bits")
 {
-    bp::UpdatePlayerGameTypePacket_<2168> packet;
-    packet.player_game_type = bp::GameType::SPECTATOR;
+    bp::UpdatePlayerGameTypePacket packet;
+    packet.player_game_type = bp::GameType::Spectator;
     packet.target_player = bp::ActorUniqueID{-9007199254740993LL};
     packet.tick = bp::PlayerInputTick{4294967296ULL};
     REQUIRE(encode(packet) == golden_wide);
 
-    const auto back = decode<bp::UpdatePlayerGameTypePacket_<2168>>(golden_wide);
+    const auto back = decode<bp::UpdatePlayerGameTypePacket>(golden_wide);
     REQUIRE(back.target_player == bp::ActorUniqueID{-9007199254740993LL});
     REQUIRE(back.tick == bp::PlayerInputTick{4294967296ULL});
 }

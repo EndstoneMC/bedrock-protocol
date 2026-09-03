@@ -45,7 +45,7 @@ constexpr bool ids_agree(std::integer_sequence<int, Id...>)
 }
 
 template <int V>
-constexpr int end_id = static_cast<int>(bp::MinecraftPacketIds_<V>::END_ID);
+constexpr int end_id = static_cast<int>(bp::MinecraftPacketIds_<V>::EndId);
 
 }  // namespace
 

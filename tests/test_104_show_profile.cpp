@@ -21,37 +21,37 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 104")
 {
-    STATIC_REQUIRE(bp::ShowProfilePacket_<2168>::Id == 104);
+    STATIC_REQUIRE(bp::ShowProfilePacket::Id == 104);
     STATIC_REQUIRE(bp::has_packet_v<1001, 104>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 104>);
 }
 
 TEST_CASE("show-profile round-trips against the golden")
 {
-    bp::ShowProfilePacket_<2168> packet;
+    bp::ShowProfilePacket packet;
     packet.player_xuid = "2535413830400711";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ShowProfilePacket_<2168>>(golden);
+    const auto back = decode<bp::ShowProfilePacket>(golden);
     REQUIRE(back.player_xuid == "2535413830400711");
 }
 
 TEST_CASE("an absent xuid is a single zero byte, not an omitted field")
 {
-    bp::ShowProfilePacket_<2168> packet;
+    bp::ShowProfilePacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::ShowProfilePacket_<2168>>(golden_empty).player_xuid.empty());
+    REQUIRE(decode<bp::ShowProfilePacket>(golden_empty).player_xuid.empty());
 }
 
 TEST_CASE("the xuid length prefix is a varint")
 {
     const std::string xuid(200, 'x');
 
-    bp::ShowProfilePacket_<2168> packet;
+    bp::ShowProfilePacket packet;
     packet.player_xuid = xuid;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
-    REQUIRE(decode<bp::ShowProfilePacket_<2168>>(wire).player_xuid == xuid);
+    REQUIRE(decode<bp::ShowProfilePacket>(wire).player_xuid == xuid);
 }

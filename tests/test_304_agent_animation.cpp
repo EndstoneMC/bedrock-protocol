@@ -15,27 +15,27 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 304")
 {
-    STATIC_REQUIRE(bp::AgentAnimationPacket_<2168>::Id == 304);
+    STATIC_REQUIRE(bp::AgentAnimationPacket::Id == 304);
     STATIC_REQUIRE(bp::has_packet_v<1001, 304>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 304>);
 }
 
 TEST_CASE("agent animation round-trips against the golden")
 {
-    bp::AgentAnimationPacket_<2168> packet;
-    packet.anim = bp::AgentAnimation::SHRUG;
+    bp::AgentAnimationPacket packet;
+    packet.anim = bp::AgentAnimation::Shrug;
     packet.runtime_id = bp::ActorRuntimeID{300};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AgentAnimationPacket_<2168>>(golden);
-    REQUIRE(back.anim == bp::AgentAnimation::SHRUG);
+    const auto back = decode<bp::AgentAnimationPacket>(golden);
+    REQUIRE(back.anim == bp::AgentAnimation::Shrug);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
 }
 
 TEST_CASE("the animation byte does not absorb the runtime id's varint")
 {
-    bp::AgentAnimationPacket_<2168> packet;
-    packet.anim = bp::AgentAnimation::ARM_SWING;
+    bp::AgentAnimationPacket packet;
+    packet.anim = bp::AgentAnimation::ArmSwing;
     packet.runtime_id = bp::ActorRuntimeID{0};
     REQUIRE(encode(packet).size() == 2);
 }

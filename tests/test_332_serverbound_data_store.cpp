@@ -41,14 +41,14 @@ const std::string golden_bool = bytes({
 
 TEST_CASE("packet id is 332")
 {
-    STATIC_REQUIRE(bp::ServerboundDataStorePacket_<2168>::Id == 332);
+    STATIC_REQUIRE(bp::ServerboundDataStorePacket::Id == 332);
     STATIC_REQUIRE(bp::has_packet_v<1001, 332>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 332>);
 }
 
 TEST_CASE("a serverbound data store update round-trips against the golden")
 {
-    bp::ServerboundDataStorePacket_<2168> packet;
+    bp::ServerboundDataStorePacket packet;
     packet.update.data_store_name = "inventory";
     packet.update.property = "hotbar";
     packet.update.path = "slots/0";
@@ -57,7 +57,7 @@ TEST_CASE("a serverbound data store update round-trips against the golden")
     packet.update.path_update_count = 4294967294U;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerboundDataStorePacket_<2168>>(golden);
+    const auto back = decode<bp::ServerboundDataStorePacket>(golden);
     REQUIRE(back.update.data_store_name == "inventory");
     REQUIRE(back.update.property == "hotbar");
     REQUIRE(back.update.path == "slots/0");
@@ -68,14 +68,14 @@ TEST_CASE("a serverbound data store update round-trips against the golden")
 
 TEST_CASE("a data store double is eight bytes where a data store bool is one")
 {
-    bp::ServerboundDataStorePacket_<2168> as_double;
+    bp::ServerboundDataStorePacket as_double;
     as_double.update.data_store_name = "hud";
     as_double.update.property = "opacity";
     as_double.update.data = 0.5;
     as_double.update.property_update_count = 1;
     REQUIRE(encode(as_double) == golden_double);
 
-    bp::ServerboundDataStorePacket_<2168> as_bool;
+    bp::ServerboundDataStorePacket as_bool;
     as_bool.update.data_store_name = "hud";
     as_bool.update.property = "visible";
     as_bool.update.data = true;
@@ -84,11 +84,11 @@ TEST_CASE("a data store double is eight bytes where a data store bool is one")
 
     REQUIRE(golden_double.size() == golden_bool.size() + 7);
 
-    const auto back_double = decode<bp::ServerboundDataStorePacket_<2168>>(golden_double);
+    const auto back_double = decode<bp::ServerboundDataStorePacket>(golden_double);
     REQUIRE(back_double.update.path.empty());
     REQUIRE(std::get<0>(back_double.update.data) == 0.5);
     REQUIRE(back_double.update.path_update_count == 0);
 
-    const auto back_bool = decode<bp::ServerboundDataStorePacket_<2168>>(golden_bool);
+    const auto back_bool = decode<bp::ServerboundDataStorePacket>(golden_bool);
     REQUIRE(std::get<1>(back_bool.update.data));
 }

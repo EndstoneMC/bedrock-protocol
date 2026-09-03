@@ -19,40 +19,40 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 38")
 {
-    STATIC_REQUIRE(bp::HurtArmorPacket_<2168>::Id == 38);
+    STATIC_REQUIRE(bp::HurtArmorPacket::Id == 38);
     STATIC_REQUIRE(bp::has_packet_v<1001, 38>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 38>);
 }
 
 TEST_CASE("hurt-armor round-trips against the golden")
 {
-    bp::HurtArmorPacket_<2168> packet;
-    packet.cause = bp::ActorDamageCause::MACE_SMASH;
+    bp::HurtArmorPacket packet;
+    packet.cause = bp::ActorDamageCause::MaceSmash;
     packet.dmg = 200;
     packet.armor_slots = 31U;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::HurtArmorPacket_<2168>>(golden);
-    REQUIRE(back.cause == bp::ActorDamageCause::MACE_SMASH);
+    const auto back = decode<bp::HurtArmorPacket>(golden);
+    REQUIRE(back.cause == bp::ActorDamageCause::MaceSmash);
     REQUIRE(back.dmg == 200);
     REQUIRE(back.armor_slots == 31U);
 }
 
 TEST_CASE("a negative cause is a signed varint")
 {
-    bp::HurtArmorPacket_<2168> packet;
-    packet.cause = bp::ActorDamageCause::NONE;
+    bp::HurtArmorPacket packet;
+    packet.cause = bp::ActorDamageCause::None;
     packet.dmg = 0;
     packet.armor_slots = 0U;
     const auto wire = encode(packet);
     REQUIRE(wire == bytes({0x01, 0x00, 0x00}));
-    REQUIRE(decode<bp::HurtArmorPacket_<2168>>(wire).cause == bp::ActorDamageCause::NONE);
+    REQUIRE(decode<bp::HurtArmorPacket>(wire).cause == bp::ActorDamageCause::None);
 }
 
 TEST_CASE("the armor slots do not zigzag")
 {
-    bp::HurtArmorPacket_<2168> packet;
-    packet.cause = bp::ActorDamageCause::OVERRIDE;
+    bp::HurtArmorPacket packet;
+    packet.cause = bp::ActorDamageCause::Override;
     packet.dmg = 0;
     packet.armor_slots = 1U;
     REQUIRE(encode(packet) == bytes({0x00, 0x00, 0x01}));

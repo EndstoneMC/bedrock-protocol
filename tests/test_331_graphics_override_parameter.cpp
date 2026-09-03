@@ -18,7 +18,7 @@ Packet sample()
     packet.keyframes[0.5f] = bp::Vec3{.x = 1.0f, .y = 2.0f, .z = 3.0f};
     packet.float_value = 0.25f;
     packet.biome_id = "plains";
-    packet.parameter_id = bp::GraphicsOverrideParameterType::WAVES_DEPTH;
+    packet.parameter_id = bp::GraphicsOverrideParameterType::WavesDepth;
     packet.reset_parameter = true;
     return packet;
 }
@@ -61,7 +61,7 @@ TEST_CASE("graphics-override-parameter v975 round-trips against the golden")
     REQUIRE(back.float_value == 0.25f);
     REQUIRE_FALSE(back.vec3_value.has_value());
     REQUIRE(back.biome_id == "plains");
-    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
+    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WavesDepth);
     REQUIRE(back.reset_parameter);
 }
 
@@ -73,7 +73,7 @@ TEST_CASE("graphics-override-parameter v1001 round-trips against the golden")
 
     const auto back = decode<PacketV1001>(golden_v1001);
     REQUIRE(back.player_id == "steve");
-    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WAVES_DEPTH);
+    REQUIRE(back.parameter_id == bp::GraphicsOverrideParameterType::WavesDepth);
     REQUIRE(back.reset_parameter);
 }
 

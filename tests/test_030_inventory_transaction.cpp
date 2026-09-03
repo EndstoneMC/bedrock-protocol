@@ -147,7 +147,7 @@ TEST_CASE("inventory-transaction normal (no actions) round-trips against the gol
 TEST_CASE("inventory-transaction normal with a container action round-trips")
 {
     bp::v1001::InventoryAction action;
-    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::ContainerInventory;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
     action.from_item_descriptor = air();
@@ -185,8 +185,8 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
 {
     bp::v1001::ItemUseInventoryTransaction use;
     use.transaction.actions = std::vector<bp::v1001::InventoryAction>{};
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
-    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
     use.slot = 5;
@@ -203,7 +203,7 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     REQUIRE(use_back.pos.x == 1);
     REQUIRE(use_back.pos.z == 3);
     REQUIRE(use_back.target_block_id == 9);
-    REQUIRE(use_back.trigger_type == bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT);
+    REQUIRE(use_back.trigger_type == bp::ItemUseInventoryTransaction::TriggerType::PlayerInput);
 }
 
 TEST_CASE("packet id is 30 at v2168")
@@ -216,7 +216,7 @@ TEST_CASE("packet id is 30 at v2168")
 TEST_CASE("inventory-transaction v2168 reproduces the 1001 golden when no item carries a net id")
 {
     bp::v2168::InventoryAction action;
-    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::ContainerInventory;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
     action.from_item_descriptor = air_v2168();
@@ -294,7 +294,7 @@ TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against th
 TEST_CASE("inventory-transaction v975 normal with a container action round-trips")
 {
     bp::base::InventoryAction action;
-    action.source.type = bp::InventorySourceType::CONTAINER_INVENTORY;
+    action.source.type = bp::InventorySourceType::ContainerInventory;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
     action.from_item_descriptor = air_v975();
@@ -319,8 +319,8 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
 TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
 {
     bp::base::ItemUseInventoryTransaction use;
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
-    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
     use.slot = 5;
@@ -346,7 +346,7 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     PacketV975 packet;
     packet.legacy_request_id = 7;
     packet.legacy_set_item_slots = {
-        {.container_enum = bp::ContainerEnumName::COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, .slots = "\x03\x04"},
+        {.container_enum = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer, .slots = "\x03\x04"},
     };
     packet.transaction = bp::base::NormalTransactionData{};
     REQUIRE(encode(packet) == golden_v975_legacy_request);
@@ -365,8 +365,8 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
 {
     bp::v2168::ItemUseInventoryTransaction older;
     older.transaction.actions = std::vector<bp::v2168::InventoryAction>{};
-    older.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
-    older.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    older.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    older.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     older.pos = {.x = 1, .y = 2, .z = 3};
     older.face = 4;
     older.slot = 5;
@@ -377,12 +377,12 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
 
     bp::v2192::ItemUseInventoryTransaction use;
     use.transaction.actions = std::vector<bp::v2192::InventoryAction>{};
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::PLACE;
-    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PLAYER_INPUT;
+    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
     use.slot = 5;
-    use.hand = bp::HandSlot::OFFHAND;
+    use.hand = bp::HandSlot::Offhand;
     use.target_block_id = 9;
 
     bp::InventoryTransactionPacket_<2192> packet;
@@ -392,12 +392,12 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
     REQUIRE(off_hand.size() + 1 == encode(old_packet).size());
 
     const auto back = decode<bp::InventoryTransactionPacket_<2192>>(off_hand);
-    REQUIRE(std::get<2>(back.transaction).hand == bp::HandSlot::OFFHAND);
+    REQUIRE(std::get<2>(back.transaction).hand == bp::HandSlot::Offhand);
     REQUIRE(std::get<2>(back.transaction).slot == 5);
     REQUIRE(std::get<2>(back.transaction).target_block_id == 9);
 
     // The hand is one byte of its own: switching hands moves that byte and no other.
-    use.hand = bp::HandSlot::MAINHAND;
+    use.hand = bp::HandSlot::Mainhand;
     packet.transaction = use;
     const auto main_hand = encode(packet);
     REQUIRE(main_hand.size() == off_hand.size());

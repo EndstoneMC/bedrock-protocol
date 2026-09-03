@@ -27,14 +27,14 @@ const std::string golden_empty_tag = bytes({
 
 TEST_CASE("packet id is 124")
 {
-    STATIC_REQUIRE(bp::LevelEventGenericPacket_<2168>::Id == 124);
+    STATIC_REQUIRE(bp::LevelEventGenericPacket::Id == 124);
     STATIC_REQUIRE(bp::has_packet_v<1001, 124>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 124>);
 }
 
 TEST_CASE("a generic level event round-trips against the golden")
 {
-    bp::LevelEventGenericPacket_<2168> packet;
+    bp::LevelEventGenericPacket packet;
     packet.event_id = 2026;
     packet.data = bp::CompoundTag{
         {"originX", bp::FloatTag{202.5F}},
@@ -44,7 +44,7 @@ TEST_CASE("a generic level event round-trips against the golden")
     };
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LevelEventGenericPacket_<2168>>(golden);
+    const auto back = decode<bp::LevelEventGenericPacket>(golden);
     REQUIRE(back.event_id == 2026);
     REQUIRE(back.data.size() == 4);
     REQUIRE(back.data.at("originX").get<bp::FloatTag>().value() == 202.5F);
@@ -53,12 +53,12 @@ TEST_CASE("a generic level event round-trips against the golden")
 
 TEST_CASE("a negative event id zigzags and an empty tag is a three-byte compound")
 {
-    bp::LevelEventGenericPacket_<2168> packet;
+    bp::LevelEventGenericPacket packet;
     packet.event_id = -1;
     REQUIRE(encode(packet) == golden_empty_tag);
     REQUIRE(golden_empty_tag.size() == 4);
 
-    const auto back = decode<bp::LevelEventGenericPacket_<2168>>(golden_empty_tag);
+    const auto back = decode<bp::LevelEventGenericPacket>(golden_empty_tag);
     REQUIRE(back.event_id == -1);
     REQUIRE(back.data.empty());
 }

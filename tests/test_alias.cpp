@@ -54,7 +54,7 @@ TEST_CASE("a signed alias keeps its sign", "[alias]")
 
 TEST_CASE("an alias still round-trips on the wire", "[alias]")
 {
-    bp::RemoveActorPacket_<2168> packet;
+    bp::RemoveActorPacket packet;
     packet.entity_id = bp::ActorUniqueID{-3};
-    REQUIRE(decode<bp::RemoveActorPacket_<2168>>(encode(packet)).entity_id == -3);
+    REQUIRE(decode<bp::RemoveActorPacket>(encode(packet)).entity_id == -3);
 }

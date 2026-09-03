@@ -19,19 +19,19 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 189")
 {
-    STATIC_REQUIRE(bp::DeathInfoPacket_<2168>::Id == 189);
+    STATIC_REQUIRE(bp::DeathInfoPacket::Id == 189);
     STATIC_REQUIRE(bp::has_packet_v<1001, 189>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 189>);
 }
 
 TEST_CASE("death info round-trips against the golden")
 {
-    bp::DeathInfoPacket_<2168> packet;
+    bp::DeathInfoPacket packet;
     packet.death_cause_attack_name = "fall";
     packet.death_cause_message_list = {"death.fell.accident.generic", "Steve"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::DeathInfoPacket_<2168>>(golden);
+    const auto back = decode<bp::DeathInfoPacket>(golden);
     REQUIRE(back.death_cause_attack_name == "fall");
     REQUIRE(back.death_cause_message_list.size() == 2);
     REQUIRE(back.death_cause_message_list[1] == "Steve");
@@ -39,7 +39,7 @@ TEST_CASE("death info round-trips against the golden")
 
 TEST_CASE("an empty message list is a lone zero count after the cause")
 {
-    bp::DeathInfoPacket_<2168> packet;
+    bp::DeathInfoPacket packet;
     packet.death_cause_attack_name = "";
     REQUIRE(encode(packet) == bytes({0x00, 0x00}));
 }

@@ -20,25 +20,25 @@ const std::string golden_wide = bytes({
 
 TEST_CASE("packet id is 60")
 {
-    STATIC_REQUIRE(bp::SetDifficultyPacket_<2168>::Id == 60);
+    STATIC_REQUIRE(bp::SetDifficultyPacket::Id == 60);
     STATIC_REQUIRE(bp::has_packet_v<1001, 60>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 60>);
 }
 
 TEST_CASE("set-difficulty round-trips against the golden")
 {
-    bp::SetDifficultyPacket_<2168> packet;
-    packet.difficulty = bp::Difficulty::HARD;
+    bp::SetDifficultyPacket packet;
+    packet.difficulty = bp::Difficulty::Hard;
     REQUIRE(encode(packet) == golden);
 
-    REQUIRE(decode<bp::SetDifficultyPacket_<2168>>(golden).difficulty == bp::Difficulty::HARD);
+    REQUIRE(decode<bp::SetDifficultyPacket>(golden).difficulty == bp::Difficulty::Hard);
 }
 
 TEST_CASE("the difficulty is an unsigned varint, not a zigzag one or a fixed int32")
 {
-    bp::SetDifficultyPacket_<2168> packet;
+    bp::SetDifficultyPacket packet;
     packet.difficulty = static_cast<bp::Difficulty>(200);
     REQUIRE(encode(packet) == golden_wide);
 
-    REQUIRE(decode<bp::SetDifficultyPacket_<2168>>(golden_wide).difficulty == static_cast<bp::Difficulty>(200));
+    REQUIRE(decode<bp::SetDifficultyPacket>(golden_wide).difficulty == static_cast<bp::Difficulty>(200));
 }

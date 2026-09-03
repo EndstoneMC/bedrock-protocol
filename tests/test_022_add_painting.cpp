@@ -23,14 +23,14 @@ const std::string golden_wide_runtime_id = bytes({
 
 TEST_CASE("packet id is 22")
 {
-    STATIC_REQUIRE(bp::AddPaintingPacket_<2168>::Id == 22);
+    STATIC_REQUIRE(bp::AddPaintingPacket::Id == 22);
     STATIC_REQUIRE(bp::has_packet_v<1001, 22>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 22>);
 }
 
 TEST_CASE("add-painting round-trips against the golden")
 {
-    bp::AddPaintingPacket_<2168> packet;
+    bp::AddPaintingPacket packet;
     packet.entity_id = bp::ActorUniqueID{-5};
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
@@ -38,7 +38,7 @@ TEST_CASE("add-painting round-trips against the golden")
     packet.motif = "kebab";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AddPaintingPacket_<2168>>(golden);
+    const auto back = decode<bp::AddPaintingPacket>(golden);
     REQUIRE(back.entity_id == bp::ActorUniqueID{-5});
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.pos.x == 1.0F);
@@ -50,11 +50,11 @@ TEST_CASE("add-painting round-trips against the golden")
 
 TEST_CASE("the runtime id is a 64-bit varint and an empty motif still writes its length")
 {
-    bp::AddPaintingPacket_<2168> packet;
+    bp::AddPaintingPacket packet;
     packet.runtime_id = bp::ActorRuntimeID{4294967296ULL};
     REQUIRE(encode(packet) == golden_wide_runtime_id);
 
-    const auto back = decode<bp::AddPaintingPacket_<2168>>(golden_wide_runtime_id);
+    const auto back = decode<bp::AddPaintingPacket>(golden_wide_runtime_id);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{4294967296ULL});
     REQUIRE(back.motif.empty());
 }

@@ -21,33 +21,33 @@ const std::string golden_negative = bytes({
 
 TEST_CASE("packet id is 142")
 {
-    STATIC_REQUIRE(bp::CompletedUsingItemPacket_<2168>::Id == 142);
+    STATIC_REQUIRE(bp::CompletedUsingItemPacket::Id == 142);
     STATIC_REQUIRE(bp::has_packet_v<1001, 142>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 142>);
 }
 
 TEST_CASE("completed-using-item round-trips against the golden")
 {
-    bp::CompletedUsingItemPacket_<2168> packet;
+    bp::CompletedUsingItemPacket packet;
     packet.item_id = 780;
     packet.item_use_method = 15;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CompletedUsingItemPacket_<2168>>(golden);
+    const auto back = decode<bp::CompletedUsingItemPacket>(golden);
     REQUIRE(back.item_id == 780);
     REQUIRE(back.item_use_method == 15);
 }
 
 TEST_CASE("both fields are fixed-width and signed, not varints")
 {
-    bp::CompletedUsingItemPacket_<2168> packet;
+    bp::CompletedUsingItemPacket packet;
     packet.item_id = -1;
     packet.item_use_method = -1;
     REQUIRE(encode(packet) == golden_negative);
 
-    const auto back = decode<bp::CompletedUsingItemPacket_<2168>>(golden_negative);
+    const auto back = decode<bp::CompletedUsingItemPacket>(golden_negative);
     REQUIRE(back.item_id == -1);
     REQUIRE(back.item_use_method == -1);
 
-    REQUIRE(rejects<bp::CompletedUsingItemPacket_<2168>>(golden.substr(0, 5)));
+    REQUIRE(rejects<bp::CompletedUsingItemPacket>(golden.substr(0, 5)));
 }

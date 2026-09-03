@@ -23,35 +23,35 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 183")
 {
-    STATIC_REQUIRE(bp::LessonProgressPacket_<2168>::Id == 183);
+    STATIC_REQUIRE(bp::LessonProgressPacket::Id == 183);
     STATIC_REQUIRE(bp::has_packet_v<1001, 183>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 183>);
 }
 
 TEST_CASE("lesson progress round-trips against the golden")
 {
-    bp::LessonProgressPacket_<2168> packet;
-    packet.action = bp::LessonAction::COMPLETE;
+    bp::LessonProgressPacket packet;
+    packet.action = bp::LessonAction::Complete;
     packet.score = 300;
     packet.activity_id = "chemistry.intro";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::LessonProgressPacket_<2168>>(golden);
-    REQUIRE(back.action == bp::LessonAction::COMPLETE);
+    const auto back = decode<bp::LessonProgressPacket>(golden);
+    REQUIRE(back.action == bp::LessonAction::Complete);
     REQUIRE(back.score == 300);
     REQUIRE(back.activity_id == "chemistry.intro");
 }
 
 TEST_CASE("the action and the score are zigzag varints, not raw bytes")
 {
-    bp::LessonProgressPacket_<2168> packet;
-    packet.action = bp::LessonAction::RESTART;
+    bp::LessonProgressPacket packet;
+    packet.action = bp::LessonAction::Restart;
     packet.score = -1;
     packet.activity_id = "";
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::LessonProgressPacket_<2168>>(golden_empty);
-    REQUIRE(back.action == bp::LessonAction::RESTART);
+    const auto back = decode<bp::LessonProgressPacket>(golden_empty);
+    REQUIRE(back.action == bp::LessonAction::Restart);
     REQUIRE(back.score == -1);
     REQUIRE(back.activity_id.empty());
 }

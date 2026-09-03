@@ -20,9 +20,9 @@ bp::StructureSettings settings()
             .structure_size = {.x = 1, .y = 2, .z = 3},
             .structure_offset = {.x = 4, .y = 5, .z = 6},
             .last_touched_by_player = bp::ActorUniqueID{7},
-            .rotation = bp::Rotation::ROTATE_90,
+            .rotation = bp::Rotation::Rotate90,
             .mirror = bp::Mirror::X,
-            .animation_mode = bp::AnimationMode::BLOCKS,
+            .animation_mode = bp::AnimationMode::Blocks,
             .animation_seconds = 0.5f,
             .integrity_value = 1.0f,
             .integrity_seed = bp::RandomSeed{9},
@@ -37,9 +37,9 @@ Packet1001 fill_v1001()
                    .data_field = "df",
                    .include_players = true,
                    .show_bounding_box = false,
-                   .type = bp::StructureBlockType::SAVE,
+                   .type = bp::StructureBlockType::Save,
                    .settings = settings(),
-                   .redstone_save_mode = bp::StructureRedstoneSaveMode::SAVES_TO_DISK};
+                   .redstone_save_mode = bp::StructureRedstoneSaveMode::SavesToDisk};
     packet.trigger = true;
     packet.is_waterlogged = false;
     return packet;
@@ -53,9 +53,9 @@ Packet2168 fill_v2168()
                    .data_field = "df",
                    .include_players = true,
                    .show_bounding_box = false,
-                   .type = bp::StructureBlockType::SAVE,
+                   .type = bp::StructureBlockType::Save,
                    .settings = settings(),
-                   .redstone_save_mode = bp::StructureRedstoneSaveMode::SAVES_TO_DISK};
+                   .redstone_save_mode = bp::StructureRedstoneSaveMode::SavesToDisk};
     packet.trigger = true;
     packet.is_waterlogged = false;
     return packet;
@@ -118,8 +118,8 @@ TEST_CASE("StructureBlockUpdatePacket: v1001 round-trip")
     const auto rt = decode<Packet1001>(golden_v1001);
     REQUIRE(rt.data.structure_name.unredacted_string == "name");
     REQUIRE(rt.data.settings.palette_name == "default");
-    REQUIRE(rt.data.settings.rotation == bp::Rotation::ROTATE_90);
-    REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SAVES_TO_DISK);
+    REQUIRE(rt.data.settings.rotation == bp::Rotation::Rotate90);
+    REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SavesToDisk);
     REQUIRE(rt.trigger);
 }
 
@@ -131,7 +131,7 @@ TEST_CASE("StructureBlockUpdatePacket: v2168 round-trip")
     REQUIRE(rt.data.structure_name.unredacted_string == "name");
     REQUIRE_FALSE(rt.data.structure_name.redacted_string.has_value());
     REQUIRE(rt.data.settings.integrity_seed == bp::RandomSeed{9});
-    REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SAVES_TO_DISK);
+    REQUIRE(rt.data.redstone_save_mode == bp::StructureRedstoneSaveMode::SavesToDisk);
 }
 
 // A present redacted name is a shape the 1001 form cannot express: there the

@@ -26,40 +26,40 @@ const std::string golden_unfiltered = bytes({
 
 TEST_CASE("packet id is 323")
 {
-    STATIC_REQUIRE(bp::UpdateClientOptionsPacket_<2168>::Id == 323);
+    STATIC_REQUIRE(bp::UpdateClientOptionsPacket::Id == 323);
     STATIC_REQUIRE(bp::has_packet_v<1001, 323>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 323>);
 }
 
 TEST_CASE("update-client-options round-trips against the golden")
 {
-    bp::UpdateClientOptionsPacket_<2168> packet;
-    packet.graphics_mode = bp::GraphicsMode::RAY_TRACED;
+    bp::UpdateClientOptionsPacket packet;
+    packet.graphics_mode = bp::GraphicsMode::RayTraced;
     packet.filter_profanity = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::UpdateClientOptionsPacket_<2168>>(golden);
+    const auto back = decode<bp::UpdateClientOptionsPacket>(golden);
     REQUIRE(back.graphics_mode.has_value());
-    REQUIRE(*back.graphics_mode == bp::GraphicsMode::RAY_TRACED);
+    REQUIRE(*back.graphics_mode == bp::GraphicsMode::RayTraced);
     REQUIRE(back.filter_profanity.has_value());
     REQUIRE(*back.filter_profanity);
 }
 
 TEST_CASE("an absent client option is not a present false one")
 {
-    bp::UpdateClientOptionsPacket_<2168> nothing_changed;
+    bp::UpdateClientOptionsPacket nothing_changed;
     REQUIRE(encode(nothing_changed) == golden_absent);
     REQUIRE(encode(nothing_changed).size() == 2);
 
-    bp::UpdateClientOptionsPacket_<2168> profanity_allowed;
+    bp::UpdateClientOptionsPacket profanity_allowed;
     profanity_allowed.filter_profanity = false;
     REQUIRE(encode(profanity_allowed) == golden_unfiltered);
 
-    const auto absent = decode<bp::UpdateClientOptionsPacket_<2168>>(golden_absent);
+    const auto absent = decode<bp::UpdateClientOptionsPacket>(golden_absent);
     REQUIRE_FALSE(absent.graphics_mode.has_value());
     REQUIRE_FALSE(absent.filter_profanity.has_value());
 
-    const auto unfiltered = decode<bp::UpdateClientOptionsPacket_<2168>>(golden_unfiltered);
+    const auto unfiltered = decode<bp::UpdateClientOptionsPacket>(golden_unfiltered);
     REQUIRE_FALSE(unfiltered.graphics_mode.has_value());
     REQUIRE(unfiltered.filter_profanity.has_value());
     REQUIRE_FALSE(*unfiltered.filter_profanity);

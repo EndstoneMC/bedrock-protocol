@@ -30,14 +30,14 @@ const std::string golden_editor_only = bytes({
 
 TEST_CASE("packet id is 7")
 {
-    STATIC_REQUIRE(bp::ResourcePackStackPacket_<2168>::Id == 7);
+    STATIC_REQUIRE(bp::ResourcePackStackPacket::Id == 7);
     STATIC_REQUIRE(bp::has_packet_v<1001, 7>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 7>);
 }
 
 TEST_CASE("resource-pack-stack round-trips against the golden")
 {
-    bp::ResourcePackStackPacket_<2168> packet;
+    bp::ResourcePackStackPacket packet;
     packet.texture_pack_required = true;
     packet.texture_pack_ids_and_versions = {
         {.pack_id = "5a1c", .version = "1.2.3", .subpack_name = "hd"},
@@ -52,7 +52,7 @@ TEST_CASE("resource-pack-stack round-trips against the golden")
     packet.include_editor_packs = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ResourcePackStackPacket_<2168>>(golden);
+    const auto back = decode<bp::ResourcePackStackPacket>(golden);
     REQUIRE(back.texture_pack_required);
     REQUIRE(back.texture_pack_ids_and_versions.size() == 2);
     REQUIRE(back.texture_pack_ids_and_versions[0].pack_id == "5a1c");
@@ -73,11 +73,11 @@ TEST_CASE("resource-pack-stack round-trips against the golden")
 
 TEST_CASE("an empty stack is nine bytes and does not swap its two trailing flags")
 {
-    bp::ResourcePackStackPacket_<2168> packet;
+    bp::ResourcePackStackPacket packet;
     packet.include_editor_packs = true;
     REQUIRE(encode(packet) == golden_editor_only);
 
-    const auto back = decode<bp::ResourcePackStackPacket_<2168>>(golden_editor_only);
+    const auto back = decode<bp::ResourcePackStackPacket>(golden_editor_only);
     REQUIRE_FALSE(back.texture_pack_required);
     REQUIRE(back.texture_pack_ids_and_versions.empty());
     REQUIRE(back.base_game_version.empty());
@@ -88,9 +88,9 @@ TEST_CASE("an empty stack is nine bytes and does not swap its two trailing flags
 
 TEST_CASE("the pack count is a varint")
 {
-    bp::ResourcePackStackPacket_<2168> packet;
+    bp::ResourcePackStackPacket packet;
     packet.texture_pack_ids_and_versions.resize(300);
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 910);
-    REQUIRE(decode<bp::ResourcePackStackPacket_<2168>>(wire).texture_pack_ids_and_versions.size() == 300);
+    REQUIRE(decode<bp::ResourcePackStackPacket>(wire).texture_pack_ids_and_versions.size() == 300);
 }

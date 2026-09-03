@@ -24,24 +24,24 @@ const std::string golden_empty_strings = bytes({
 
 TEST_CASE("packet id is 98")
 {
-    STATIC_REQUIRE(bp::NpcRequestPacket_<2168>::Id == 98);
+    STATIC_REQUIRE(bp::NpcRequestPacket::Id == 98);
     STATIC_REQUIRE(bp::has_packet_v<1001, 98>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 98>);
 }
 
 TEST_CASE("npc-request round-trips against the golden")
 {
-    bp::NpcRequestPacket_<2168> packet;
+    bp::NpcRequestPacket packet;
     packet.id = bp::ActorRuntimeID{7};
-    packet.type = bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_ACTION;
+    packet.type = bp::NpcRequestPacket::RequestType::ExecuteAction;
     packet.actions = "/say hi";
     packet.action_index = 2;
     packet.scene_name = "scene";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::NpcRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::NpcRequestPacket>(golden);
     REQUIRE(back.id == bp::ActorRuntimeID{7});
-    REQUIRE(back.type == bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_ACTION);
+    REQUIRE(back.type == bp::NpcRequestPacket::RequestType::ExecuteAction);
     REQUIRE(back.actions == "/say hi");
     REQUIRE(back.action_index == 2);
     REQUIRE(back.scene_name == "scene");
@@ -49,16 +49,16 @@ TEST_CASE("npc-request round-trips against the golden")
 
 TEST_CASE("an npc-request action index above 127 stays one byte while the runtime id grows")
 {
-    bp::NpcRequestPacket_<2168> packet;
+    bp::NpcRequestPacket packet;
     packet.id = bp::ActorRuntimeID{300};
-    packet.type = bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_OPENING_COMMANDS;
+    packet.type = bp::NpcRequestPacket::RequestType::ExecuteOpeningCommands;
     packet.action_index = 200;
     REQUIRE(encode(packet) == golden_empty_strings);
     REQUIRE(encode(packet).size() == 6);
 
-    const auto back = decode<bp::NpcRequestPacket_<2168>>(golden_empty_strings);
+    const auto back = decode<bp::NpcRequestPacket>(golden_empty_strings);
     REQUIRE(back.id == bp::ActorRuntimeID{300});
-    REQUIRE(back.type == bp::NpcRequestPacket_<2168>::RequestType::EXECUTE_OPENING_COMMANDS);
+    REQUIRE(back.type == bp::NpcRequestPacket::RequestType::ExecuteOpeningCommands);
     REQUIRE(back.actions.empty());
     REQUIRE(back.action_index == 200);
     REQUIRE(back.scene_name.empty());

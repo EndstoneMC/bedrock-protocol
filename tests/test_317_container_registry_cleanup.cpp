@@ -18,19 +18,19 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 317")
 {
-    STATIC_REQUIRE(bp::ContainerRegistryCleanupPacket_<2168>::Id == 317);
+    STATIC_REQUIRE(bp::ContainerRegistryCleanupPacket::Id == 317);
     STATIC_REQUIRE(bp::has_packet_v<1001, 317>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 317>);
 }
 
 TEST_CASE("container registry cleanup round-trips against the golden")
 {
-    bp::ContainerRegistryCleanupPacket_<2168> packet;
-    packet.removed_containers.push_back({.name = bp::ContainerEnumName::LEVEL_ENTITY_CONTAINER, .dynamic_id = 9});
-    packet.removed_containers.push_back({.name = bp::ContainerEnumName::ANVIL_RESULT_PREVIEW_CONTAINER, .dynamic_id = std::nullopt});
+    bp::ContainerRegistryCleanupPacket packet;
+    packet.removed_containers.push_back({.name = bp::ContainerEnumName::LevelEntityContainer, .dynamic_id = 9});
+    packet.removed_containers.push_back({.name = bp::ContainerEnumName::AnvilResultPreviewContainer, .dynamic_id = std::nullopt});
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ContainerRegistryCleanupPacket_<2168>>(golden);
+    const auto back = decode<bp::ContainerRegistryCleanupPacket>(golden);
     REQUIRE(back.removed_containers.size() == 2);
     REQUIRE(back.removed_containers[0].dynamic_id == 9);
     REQUIRE_FALSE(back.removed_containers[1].dynamic_id.has_value());
@@ -38,8 +38,8 @@ TEST_CASE("container registry cleanup round-trips against the golden")
 
 TEST_CASE("an absent dynamic id is one byte, a present one is five")
 {
-    bp::ContainerRegistryCleanupPacket_<2168> packet;
-    packet.removed_containers.push_back({.name = bp::ContainerEnumName::ANVIL_RESULT_PREVIEW_CONTAINER, .dynamic_id = std::nullopt});
+    bp::ContainerRegistryCleanupPacket packet;
+    packet.removed_containers.push_back({.name = bp::ContainerEnumName::AnvilResultPreviewContainer, .dynamic_id = std::nullopt});
     REQUIRE(encode(packet).size() == 3);
     packet.removed_containers[0].dynamic_id = 1;
     REQUIRE(encode(packet).size() == 7);

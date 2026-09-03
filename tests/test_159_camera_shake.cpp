@@ -15,34 +15,34 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 159")
 {
-    STATIC_REQUIRE(bp::CameraShakePacket_<2168>::Id == 159);
+    STATIC_REQUIRE(bp::CameraShakePacket::Id == 159);
     STATIC_REQUIRE(bp::has_packet_v<1001, 159>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 159>);
 }
 
 TEST_CASE("camera shake round-trips against the golden")
 {
-    bp::CameraShakePacket_<2168> packet;
+    bp::CameraShakePacket packet;
     packet.intensity = 0.5F;
     packet.seconds = 2.0F;
-    packet.shake_type = bp::CameraShakeType::ROTATIONAL;
-    packet.shake_action = bp::CameraShakeAction::ADD;
+    packet.shake_type = bp::CameraShakeType::Rotational;
+    packet.shake_action = bp::CameraShakeAction::Add;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::CameraShakePacket_<2168>>(golden);
+    const auto back = decode<bp::CameraShakePacket>(golden);
     REQUIRE(back.intensity == 0.5F);
     REQUIRE(back.seconds == 2.0F);
-    REQUIRE(back.shake_type == bp::CameraShakeType::ROTATIONAL);
-    REQUIRE(back.shake_action == bp::CameraShakeAction::ADD);
+    REQUIRE(back.shake_type == bp::CameraShakeType::Rotational);
+    REQUIRE(back.shake_action == bp::CameraShakeAction::Add);
 }
 
 TEST_CASE("both shake enums are one byte, so the body is a fixed ten")
 {
-    bp::CameraShakePacket_<2168> packet;
-    packet.shake_type = bp::CameraShakeType::POSITIONAL;
-    packet.shake_action = bp::CameraShakeAction::STOP;
+    bp::CameraShakePacket packet;
+    packet.shake_type = bp::CameraShakeType::Positional;
+    packet.shake_action = bp::CameraShakeAction::Stop;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 10);
     REQUIRE(wire.back() == '\x01');
-    REQUIRE(rejects<bp::CameraShakePacket_<2168>>(wire.substr(0, 9)));
+    REQUIRE(rejects<bp::CameraShakePacket>(wire.substr(0, 9)));
 }

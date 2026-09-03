@@ -44,7 +44,7 @@ const std::string golden_sync_state_empty = bytes({
 
 TEST_CASE("packet id is 344")
 {
-    STATIC_REQUIRE(bp::SyncWorldClocksPacket_<2168>::Id == 344);
+    STATIC_REQUIRE(bp::SyncWorldClocksPacket::Id == 344);
     STATIC_REQUIRE(bp::has_packet_v<1001, 344>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 344>);
 }
@@ -69,17 +69,17 @@ TEST_CASE("sync-world-clocks initialize-registry round-trips against the golden"
     clock.is_paused = true;
     clock.time_markers = {sunrise, noon};
 
-    bp::SyncWorldClocksPacket_<2168>::InitializeRegistryData registry;
+    bp::SyncWorldClocksPacket::InitializeRegistryData registry;
     registry.clock_data = {clock};
 
-    bp::SyncWorldClocksPacket_<2168> packet;
+    bp::SyncWorldClocksPacket packet;
     packet.data = registry;
     REQUIRE(encode(packet) == golden_initialize_registry);
 
-    const auto back = decode<bp::SyncWorldClocksPacket_<2168>>(golden_initialize_registry);
+    const auto back = decode<bp::SyncWorldClocksPacket>(golden_initialize_registry);
     REQUIRE(back.data.index() == 1);
 
-    const auto &data = std::get<bp::SyncWorldClocksPacket_<2168>::InitializeRegistryData>(back.data);
+    const auto &data = std::get<bp::SyncWorldClocksPacket::InitializeRegistryData>(back.data);
     REQUIRE(data.clock_data.size() == 1);
     REQUIRE(data.clock_data.at(0).id == 300);
     REQUIRE(data.clock_data.at(0).name == "overworld");
@@ -108,18 +108,18 @@ TEST_CASE("a time marker's period is four fixed bytes where its time is a varint
     marker.time = -1;
     marker.period = -1;
 
-    bp::SyncWorldClocksPacket_<2168>::AddTimeMarkerData add;
+    bp::SyncWorldClocksPacket::AddTimeMarkerData add;
     add.clock_id = 0;
     add.time_markers = {marker};
 
-    bp::SyncWorldClocksPacket_<2168> packet;
+    bp::SyncWorldClocksPacket packet;
     packet.data = add;
     REQUIRE(encode(packet) == golden_add_time_marker);
 
-    const auto back = decode<bp::SyncWorldClocksPacket_<2168>>(golden_add_time_marker);
+    const auto back = decode<bp::SyncWorldClocksPacket>(golden_add_time_marker);
     REQUIRE(back.data.index() == 2);
 
-    const auto &data = std::get<bp::SyncWorldClocksPacket_<2168>::AddTimeMarkerData>(back.data);
+    const auto &data = std::get<bp::SyncWorldClocksPacket::AddTimeMarkerData>(back.data);
     REQUIRE(data.clock_id == 0);
     REQUIRE(data.time_markers.size() == 1);
     REQUIRE(data.time_markers.at(0).time == -1);
@@ -129,18 +129,18 @@ TEST_CASE("a time marker's period is four fixed bytes where its time is a varint
 
 TEST_CASE("sync-world-clocks remove-time-marker round-trips against the golden")
 {
-    bp::SyncWorldClocksPacket_<2168>::RemoveTimeMarkerData remove;
+    bp::SyncWorldClocksPacket::RemoveTimeMarkerData remove;
     remove.clock_id = 300;
     remove.time_marker_ids = {1, 200};
 
-    bp::SyncWorldClocksPacket_<2168> packet;
+    bp::SyncWorldClocksPacket packet;
     packet.data = remove;
     REQUIRE(encode(packet) == golden_remove_time_marker);
 
-    const auto back = decode<bp::SyncWorldClocksPacket_<2168>>(golden_remove_time_marker);
+    const auto back = decode<bp::SyncWorldClocksPacket>(golden_remove_time_marker);
     REQUIRE(back.data.index() == 3);
 
-    const auto &data = std::get<bp::SyncWorldClocksPacket_<2168>::RemoveTimeMarkerData>(back.data);
+    const auto &data = std::get<bp::SyncWorldClocksPacket::RemoveTimeMarkerData>(back.data);
     REQUIRE(data.clock_id == 300);
     REQUIRE(data.time_marker_ids.size() == 2);
     REQUIRE(data.time_marker_ids.at(0) == 1);
@@ -149,11 +149,11 @@ TEST_CASE("sync-world-clocks remove-time-marker round-trips against the golden")
 
 TEST_CASE("an empty sync-world-clocks sync-state body is a case index and a zero count")
 {
-    bp::SyncWorldClocksPacket_<2168> packet;
-    packet.data = bp::SyncWorldClocksPacket_<2168>::SyncStateData{};
+    bp::SyncWorldClocksPacket packet;
+    packet.data = bp::SyncWorldClocksPacket::SyncStateData{};
     REQUIRE(encode(packet) == golden_sync_state_empty);
 
-    const auto back = decode<bp::SyncWorldClocksPacket_<2168>>(golden_sync_state_empty);
+    const auto back = decode<bp::SyncWorldClocksPacket>(golden_sync_state_empty);
     REQUIRE(back.data.index() == 0);
-    REQUIRE(std::get<bp::SyncWorldClocksPacket_<2168>::SyncStateData>(back.data).clock_data.empty());
+    REQUIRE(std::get<bp::SyncWorldClocksPacket::SyncStateData>(back.data).clock_data.empty());
 }

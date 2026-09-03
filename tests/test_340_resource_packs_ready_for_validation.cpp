@@ -13,23 +13,23 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 340")
 {
-    STATIC_REQUIRE(bp::ResourcePacksReadyForValidationPacket_<2168>::Id == 340);
+    STATIC_REQUIRE(bp::ResourcePacksReadyForValidationPacket::Id == 340);
     STATIC_REQUIRE(bp::has_packet_v<1001, 340>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 340>);
 }
 
 TEST_CASE("resource-packs-ready-for-validation round-trips against the golden")
 {
-    bp::ResourcePacksReadyForValidationPacket_<2168> packet;
+    bp::ResourcePacksReadyForValidationPacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::ResourcePacksReadyForValidationPacket_<2168>>(golden);
+    const auto back = decode<bp::ResourcePacksReadyForValidationPacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
 TEST_CASE("the validation-ready body reads none of the byte behind it")
 {
-    const auto back = decode_partial<bp::ResourcePacksReadyForValidationPacket_<2168>>(bytes({0x01}));
+    const auto back = decode_partial<bp::ResourcePacksReadyForValidationPacket>(bytes({0x01}));
     REQUIRE(encode(back).empty());
 }

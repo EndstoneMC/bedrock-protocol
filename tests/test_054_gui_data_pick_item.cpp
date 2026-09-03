@@ -24,20 +24,20 @@ const std::string golden_negative_slot = bytes({
 
 TEST_CASE("packet id is 54")
 {
-    STATIC_REQUIRE(bp::GuiDataPickItemPacket_<2168>::Id == 54);
+    STATIC_REQUIRE(bp::GuiDataPickItemPacket::Id == 54);
     STATIC_REQUIRE(bp::has_packet_v<1001, 54>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 54>);
 }
 
 TEST_CASE("gui data pick item round-trips against the golden")
 {
-    bp::GuiDataPickItemPacket_<2168> packet;
+    bp::GuiDataPickItemPacket packet;
     packet.item_name = "minecraft:diamond_sword";
     packet.item_effect_name = "Sharpness V";
     packet.slot = 300;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::GuiDataPickItemPacket_<2168>>(golden);
+    const auto back = decode<bp::GuiDataPickItemPacket>(golden);
     REQUIRE(back.item_name == "minecraft:diamond_sword");
     REQUIRE(back.item_effect_name == "Sharpness V");
     REQUIRE(back.slot == 300);
@@ -45,11 +45,11 @@ TEST_CASE("gui data pick item round-trips against the golden")
 
 TEST_CASE("the slot is four fixed bytes, not a varint, behind two empty strings")
 {
-    bp::GuiDataPickItemPacket_<2168> packet;
+    bp::GuiDataPickItemPacket packet;
     packet.slot = -1;
     REQUIRE(encode(packet) == golden_negative_slot);
 
-    const auto back = decode<bp::GuiDataPickItemPacket_<2168>>(golden_negative_slot);
+    const auto back = decode<bp::GuiDataPickItemPacket>(golden_negative_slot);
     REQUIRE(back.item_name.empty());
     REQUIRE(back.item_effect_name.empty());
     REQUIRE(back.slot == -1);

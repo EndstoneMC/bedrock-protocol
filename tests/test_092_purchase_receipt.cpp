@@ -23,18 +23,18 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 92")
 {
-    STATIC_REQUIRE(bp::PurchaseReceiptPacket_<2168>::Id == 92);
+    STATIC_REQUIRE(bp::PurchaseReceiptPacket::Id == 92);
     STATIC_REQUIRE(bp::has_packet_v<1001, 92>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 92>);
 }
 
 TEST_CASE("purchase-receipt round-trips against the golden")
 {
-    bp::PurchaseReceiptPacket_<2168> packet;
+    bp::PurchaseReceiptPacket packet;
     packet.purchase_receipts = {"receipt-a", "receipt-b"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::PurchaseReceiptPacket_<2168>>(golden);
+    const auto back = decode<bp::PurchaseReceiptPacket>(golden);
     REQUIRE(back.purchase_receipts.size() == 2);
     REQUIRE(back.purchase_receipts[0] == "receipt-a");
     REQUIRE(back.purchase_receipts[1] == "receipt-b");
@@ -42,18 +42,18 @@ TEST_CASE("purchase-receipt round-trips against the golden")
 
 TEST_CASE("an empty purchase-receipt list is a lone zero count")
 {
-    bp::PurchaseReceiptPacket_<2168> packet;
+    bp::PurchaseReceiptPacket packet;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::PurchaseReceiptPacket_<2168>>(golden_empty).purchase_receipts.empty());
+    REQUIRE(decode<bp::PurchaseReceiptPacket>(golden_empty).purchase_receipts.empty());
 }
 
 TEST_CASE("the purchase-receipt count prefix is a varint")
 {
-    bp::PurchaseReceiptPacket_<2168> packet;
+    bp::PurchaseReceiptPacket packet;
     packet.purchase_receipts.assign(200, std::string{});
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 202);
     REQUIRE(static_cast<unsigned char>(wire[0]) == 0xc8);
     REQUIRE(static_cast<unsigned char>(wire[1]) == 0x01);
-    REQUIRE(decode<bp::PurchaseReceiptPacket_<2168>>(wire).purchase_receipts.size() == 200);
+    REQUIRE(decode<bp::PurchaseReceiptPacket>(wire).purchase_receipts.size() == 200);
 }

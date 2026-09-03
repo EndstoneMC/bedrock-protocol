@@ -39,36 +39,36 @@ const std::string golden_long = bytes({
 
 TEST_CASE("packet id is 100")
 {
-    STATIC_REQUIRE(bp::ModalFormRequestPacket_<2168>::Id == 100);
+    STATIC_REQUIRE(bp::ModalFormRequestPacket::Id == 100);
     STATIC_REQUIRE(bp::has_packet_v<1001, 100>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 100>);
 }
 
 TEST_CASE("modal-form request round-trips against the golden")
 {
-    bp::ModalFormRequestPacket_<2168> packet;
+    bp::ModalFormRequestPacket packet;
     packet.form_id = 300;
     packet.form_json = R"({"type":"modal"})";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ModalFormRequestPacket_<2168>>(golden);
+    const auto back = decode<bp::ModalFormRequestPacket>(golden);
     REQUIRE(back.form_id == 300);
     REQUIRE(back.form_json == R"({"type":"modal"})");
 }
 
 TEST_CASE("an empty form json is a lone zero length prefix")
 {
-    bp::ModalFormRequestPacket_<2168> packet;
+    bp::ModalFormRequestPacket packet;
     packet.form_id = 1;
     REQUIRE(encode(packet) == golden_empty);
-    REQUIRE(decode<bp::ModalFormRequestPacket_<2168>>(golden_empty).form_json.empty());
+    REQUIRE(decode<bp::ModalFormRequestPacket>(golden_empty).form_json.empty());
 }
 
 TEST_CASE("a form json past 127 bytes takes a two-byte length prefix")
 {
-    bp::ModalFormRequestPacket_<2168> packet;
+    bp::ModalFormRequestPacket packet;
     packet.form_id = 1;
     packet.form_json = std::string(130, 'x');
     REQUIRE(encode(packet) == golden_long);
-    REQUIRE(decode<bp::ModalFormRequestPacket_<2168>>(golden_long).form_json == std::string(130, 'x'));
+    REQUIRE(decode<bp::ModalFormRequestPacket>(golden_long).form_json == std::string(130, 'x'));
 }

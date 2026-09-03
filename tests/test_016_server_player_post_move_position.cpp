@@ -23,18 +23,18 @@ const std::string golden_extremes = bytes({
 
 TEST_CASE("packet id is 16")
 {
-    STATIC_REQUIRE(bp::ServerPlayerPostMovePositionPacket_<2168>::Id == 16);
+    STATIC_REQUIRE(bp::ServerPlayerPostMovePositionPacket::Id == 16);
     STATIC_REQUIRE(bp::has_packet_v<1001, 16>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 16>);
 }
 
 TEST_CASE("server-player-post-move-position round-trips against the golden")
 {
-    bp::ServerPlayerPostMovePositionPacket_<2168> packet;
+    bp::ServerPlayerPostMovePositionPacket packet;
     packet.pos = {.x = -1.5F, .y = 0.25F, .z = 1024.5F};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerPlayerPostMovePositionPacket_<2168>>(golden);
+    const auto back = decode<bp::ServerPlayerPostMovePositionPacket>(golden);
     REQUIRE(back.pos.x == -1.5F);
     REQUIRE(back.pos.y == 0.25F);
     REQUIRE(back.pos.z == 1024.5F);
@@ -42,16 +42,16 @@ TEST_CASE("server-player-post-move-position round-trips against the golden")
 
 TEST_CASE("the body is three fixed float32s and nothing else")
 {
-    bp::ServerPlayerPostMovePositionPacket_<2168> packet;
+    bp::ServerPlayerPostMovePositionPacket packet;
     packet.pos = {.x = 3.4e38F, .y = -3.4e38F, .z = 1e-8F};
     const auto wire = encode(packet);
     REQUIRE(wire == golden_extremes);
     REQUIRE(wire.size() == 12);
 
-    const auto back = decode<bp::ServerPlayerPostMovePositionPacket_<2168>>(wire);
+    const auto back = decode<bp::ServerPlayerPostMovePositionPacket>(wire);
     REQUIRE(back.pos.x == 3.4e38F);
     REQUIRE(back.pos.y == -3.4e38F);
     REQUIRE(back.pos.z == 1e-8F);
 
-    REQUIRE(rejects<bp::ServerPlayerPostMovePositionPacket_<2168>>(golden.substr(0, 11)));
+    REQUIRE(rejects<bp::ServerPlayerPostMovePositionPacket>(golden.substr(0, 11)));
 }

@@ -32,14 +32,14 @@ const std::string golden_no_variables = bytes({
 
 TEST_CASE("packet id is 118")
 {
-    STATIC_REQUIRE(bp::SpawnParticleEffectPacket_<2168>::Id == 118);
+    STATIC_REQUIRE(bp::SpawnParticleEffectPacket::Id == 118);
     STATIC_REQUIRE(bp::has_packet_v<1001, 118>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 118>);
 }
 
 TEST_CASE("spawn-particle-effect round-trips against the golden")
 {
-    bp::SpawnParticleEffectPacket_<2168> packet;
+    bp::SpawnParticleEffectPacket packet;
     packet.vanilla_dimension_id = 2;
     packet.actor_id = bp::ActorUniqueID{-1};
     packet.pos = {.x = 1.0F, .y = 2.0F, .z = 3.0F};
@@ -47,7 +47,7 @@ TEST_CASE("spawn-particle-effect round-trips against the golden")
     packet.molang_variables = R"({"x":1})";
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SpawnParticleEffectPacket_<2168>>(golden);
+    const auto back = decode<bp::SpawnParticleEffectPacket>(golden);
     REQUIRE(back.vanilla_dimension_id == 2);
     REQUIRE(back.actor_id == bp::ActorUniqueID{-1});
     REQUIRE(back.pos.x == 1.0F);
@@ -59,13 +59,13 @@ TEST_CASE("spawn-particle-effect round-trips against the golden")
 
 TEST_CASE("an absent molang variable map ends a spawn-particle-effect body in one zero byte")
 {
-    bp::SpawnParticleEffectPacket_<2168> packet;
+    bp::SpawnParticleEffectPacket packet;
     packet.vanilla_dimension_id = 200;
     packet.actor_id = bp::ActorUniqueID{12345};
     packet.effect_name = "minecraft:heart_particle";
     REQUIRE(encode(packet) == golden_no_variables);
 
-    const auto back = decode<bp::SpawnParticleEffectPacket_<2168>>(golden_no_variables);
+    const auto back = decode<bp::SpawnParticleEffectPacket>(golden_no_variables);
     REQUIRE(back.vanilla_dimension_id == 200);
     REQUIRE(back.actor_id == bp::ActorUniqueID{12345});
     REQUIRE_FALSE(back.molang_variables.has_value());
@@ -73,13 +73,13 @@ TEST_CASE("an absent molang variable map ends a spawn-particle-effect body in on
 
 TEST_CASE("an empty molang variable map is not an absent one")
 {
-    bp::SpawnParticleEffectPacket_<2168> absent;
+    bp::SpawnParticleEffectPacket absent;
     absent.effect_name = "minecraft:heart_particle";
 
-    bp::SpawnParticleEffectPacket_<2168> empty = absent;
+    bp::SpawnParticleEffectPacket empty = absent;
     empty.molang_variables = "";
 
     REQUIRE(encode(empty).size() == encode(absent).size() + 1);
-    REQUIRE(decode<bp::SpawnParticleEffectPacket_<2168>>(encode(empty)).molang_variables == "");
-    REQUIRE_FALSE(decode<bp::SpawnParticleEffectPacket_<2168>>(encode(absent)).molang_variables.has_value());
+    REQUIRE(decode<bp::SpawnParticleEffectPacket>(encode(empty)).molang_variables == "");
+    REQUIRE_FALSE(decode<bp::SpawnParticleEffectPacket>(encode(absent)).molang_variables.has_value());
 }

@@ -38,71 +38,71 @@ const std::string golden_use_item_swing_source = bytes({
 
 TEST_CASE("packet id is 44")
 {
-    STATIC_REQUIRE(bp::AnimatePacket_<2168>::Id == 44);
+    STATIC_REQUIRE(bp::AnimatePacket::Id == 44);
     STATIC_REQUIRE(bp::has_packet_v<1001, 44>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 44>);
 }
 
 TEST_CASE("animate round-trips against the golden")
 {
-    bp::AnimatePacket_<2168> packet;
-    packet.action = bp::AnimatePacket_<2168>::Action::SWING;
+    bp::AnimatePacket packet;
+    packet.action = bp::AnimatePacket::Action::Swing;
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.data = 1.5F;
-    packet.swing_source = bp::ActorSwingSource::ATTACK;
+    packet.swing_source = bp::ActorSwingSource::Attack;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AnimatePacket_<2168>>(golden);
-    REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::SWING);
+    const auto back = decode<bp::AnimatePacket>(golden);
+    REQUIRE(back.action == bp::AnimatePacket::Action::Swing);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.data == 1.5F);
     REQUIRE(back.swing_source.has_value());
-    REQUIRE(*back.swing_source == bp::ActorSwingSource::ATTACK);
+    REQUIRE(*back.swing_source == bp::ActorSwingSource::Attack);
 }
 
 TEST_CASE("an absent swing source is one zero byte, not a name")
 {
-    bp::AnimatePacket_<2168> packet;
-    packet.action = bp::AnimatePacket_<2168>::Action::CRITICAL_HIT;
+    bp::AnimatePacket packet;
+    packet.action = bp::AnimatePacket::Action::CriticalHit;
     packet.runtime_id = bp::ActorRuntimeID{7};
     packet.data = 0.0F;
     packet.swing_source = std::nullopt;
     REQUIRE(encode(packet) == golden_without_swing_source);
     REQUIRE(encode(packet).size() == 7);
 
-    const auto back = decode<bp::AnimatePacket_<2168>>(golden_without_swing_source);
-    REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::CRITICAL_HIT);
+    const auto back = decode<bp::AnimatePacket>(golden_without_swing_source);
+    REQUIRE(back.action == bp::AnimatePacket::Action::CriticalHit);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE_FALSE(back.swing_source.has_value());
 }
 
 TEST_CASE("a NONE swing source is present, and the animate runtime id survives past 32 bits")
 {
-    bp::AnimatePacket_<2168> packet;
-    packet.action = bp::AnimatePacket_<2168>::Action::NO_ACTION;
+    bp::AnimatePacket packet;
+    packet.action = bp::AnimatePacket::Action::NoAction;
     packet.runtime_id = bp::ActorRuntimeID{1ULL << 32U};
     packet.data = 0.0F;
-    packet.swing_source = bp::ActorSwingSource::NONE;
+    packet.swing_source = bp::ActorSwingSource::None;
     REQUIRE(encode(packet) == golden_none_swing_source);
 
-    const auto back = decode<bp::AnimatePacket_<2168>>(golden_none_swing_source);
-    REQUIRE(back.action == bp::AnimatePacket_<2168>::Action::NO_ACTION);
+    const auto back = decode<bp::AnimatePacket>(golden_none_swing_source);
+    REQUIRE(back.action == bp::AnimatePacket::Action::NoAction);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{1ULL << 32U});
     REQUIRE(back.swing_source.has_value());
-    REQUIRE(*back.swing_source == bp::ActorSwingSource::NONE);
+    REQUIRE(*back.swing_source == bp::ActorSwingSource::None);
 }
 
 TEST_CASE("the use-item swing source reaches the wire without its underscore")
 {
-    bp::AnimatePacket_<2168> packet;
-    packet.action = bp::AnimatePacket_<2168>::Action::MAGIC_CRITICAL_HIT;
+    bp::AnimatePacket packet;
+    packet.action = bp::AnimatePacket::Action::MagicCriticalHit;
     packet.runtime_id = bp::ActorRuntimeID{1};
     packet.data = -1.0F;
-    packet.swing_source = bp::ActorSwingSource::USE_ITEM;
+    packet.swing_source = bp::ActorSwingSource::UseItem;
     REQUIRE(encode(packet) == golden_use_item_swing_source);
 
-    const auto back = decode<bp::AnimatePacket_<2168>>(golden_use_item_swing_source);
+    const auto back = decode<bp::AnimatePacket>(golden_use_item_swing_source);
     REQUIRE(back.data == -1.0F);
     REQUIRE(back.swing_source.has_value());
-    REQUIRE(*back.swing_source == bp::ActorSwingSource::USE_ITEM);
+    REQUIRE(*back.swing_source == bp::ActorSwingSource::UseItem);
 }

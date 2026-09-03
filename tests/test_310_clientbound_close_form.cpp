@@ -13,23 +13,23 @@ const std::string golden = bytes({});
 
 TEST_CASE("packet id is 310")
 {
-    STATIC_REQUIRE(bp::ClientboundCloseFormPacket_<2168>::Id == 310);
+    STATIC_REQUIRE(bp::ClientboundCloseFormPacket::Id == 310);
     STATIC_REQUIRE(bp::has_packet_v<1001, 310>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 310>);
 }
 
 TEST_CASE("clientbound-close-form round-trips against the golden")
 {
-    bp::ClientboundCloseFormPacket_<2168> packet;
+    bp::ClientboundCloseFormPacket packet;
     REQUIRE(encode(packet) == golden);
     REQUIRE(golden.empty());
 
-    const auto back = decode<bp::ClientboundCloseFormPacket_<2168>>(golden);
+    const auto back = decode<bp::ClientboundCloseFormPacket>(golden);
     REQUIRE(encode(back) == golden);
 }
 
 TEST_CASE("a close-form body reads no bytes off a frame that carries some")
 {
-    const auto back = decode_partial<bp::ClientboundCloseFormPacket_<2168>>(bytes({0x7f, 0xff}));
+    const auto back = decode_partial<bp::ClientboundCloseFormPacket>(bytes({0x7f, 0xff}));
     REQUIRE(encode(back).empty());
 }

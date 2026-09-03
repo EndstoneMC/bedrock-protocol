@@ -15,28 +15,28 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 308")
 {
-    STATIC_REQUIRE(bp::SetHudPacket_<2168>::Id == 308);
+    STATIC_REQUIRE(bp::SetHudPacket::Id == 308);
     STATIC_REQUIRE(bp::has_packet_v<1001, 308>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 308>);
 }
 
 TEST_CASE("set hud round-trips against the golden")
 {
-    bp::SetHudPacket_<2168> packet;
-    packet.hud_element = {bp::HudElement::PAPER_DOLL, bp::HudElement::HOT_BAR, bp::HudElement::ITEM_TEXT};
-    packet.hud_visible = bp::HudVisibility::RESET;
+    bp::SetHudPacket packet;
+    packet.hud_element = {bp::HudElement::PaperDoll, bp::HudElement::HotBar, bp::HudElement::ItemText};
+    packet.hud_visible = bp::HudVisibility::Reset;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SetHudPacket_<2168>>(golden);
+    const auto back = decode<bp::SetHudPacket>(golden);
     REQUIRE(back.hud_element.size() == 3);
-    REQUIRE(back.hud_element[2] == bp::HudElement::ITEM_TEXT);
-    REQUIRE(back.hud_visible == bp::HudVisibility::RESET);
+    REQUIRE(back.hud_element[2] == bp::HudElement::ItemText);
+    REQUIRE(back.hud_visible == bp::HudVisibility::Reset);
 }
 
 TEST_CASE("the elements zigzag, so element 12 is one byte 0x18 rather than 0x0c")
 {
-    bp::SetHudPacket_<2168> packet;
-    packet.hud_element = {bp::HudElement::ITEM_TEXT};
-    packet.hud_visible = bp::HudVisibility::HIDE;
+    bp::SetHudPacket packet;
+    packet.hud_element = {bp::HudElement::ItemText};
+    packet.hud_visible = bp::HudVisibility::Hide;
     REQUIRE(encode(packet) == bytes({0x01, 0x18, 0x00}));
 }

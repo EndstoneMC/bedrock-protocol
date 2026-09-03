@@ -38,14 +38,14 @@ const std::string golden_unset = bytes({
 
 TEST_CASE("packet id is 137")
 {
-    STATIC_REQUIRE(bp::EducationSettingsPacket_<2168>::Id == 137);
+    STATIC_REQUIRE(bp::EducationSettingsPacket::Id == 137);
     STATIC_REQUIRE(bp::has_packet_v<1001, 137>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 137>);
 }
 
 TEST_CASE("education settings round-trips against the golden")
 {
-    bp::EducationSettingsPacket_<2168> packet;
+    bp::EducationSettingsPacket packet;
     packet.education_level_settings.code_builder_default_uri = "https://code.builder/";
     packet.education_level_settings.code_builder_title = "Code Builder";
     packet.education_level_settings.can_resize_code_builder = true;
@@ -58,7 +58,7 @@ TEST_CASE("education settings round-trips against the golden")
         bp::ExternalLinkSettings{.url = "https://link/", .display_name = "Link"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::EducationSettingsPacket_<2168>>(golden);
+    const auto back = decode<bp::EducationSettingsPacket>(golden);
     REQUIRE(back.education_level_settings.code_builder_default_uri == "https://code.builder/");
     REQUIRE(back.education_level_settings.code_builder_title == "Code Builder");
     REQUIRE(back.education_level_settings.can_resize_code_builder);
@@ -77,12 +77,12 @@ TEST_CASE("education settings round-trips against the golden")
 
 TEST_CASE("an education settings body with nothing set is ten zero bytes")
 {
-    bp::EducationSettingsPacket_<2168> packet;
+    bp::EducationSettingsPacket packet;
     packet.education_level_settings.can_resize_code_builder = false;
     packet.education_level_settings.disable_legacy_title_bar = false;
     REQUIRE(encode(packet) == golden_unset);
 
-    const auto back = decode<bp::EducationSettingsPacket_<2168>>(golden_unset);
+    const auto back = decode<bp::EducationSettingsPacket>(golden_unset);
     REQUIRE(back.education_level_settings.code_builder_default_uri.empty());
     REQUIRE(back.education_level_settings.screenshot_border_resource_path.empty());
     REQUIRE_FALSE(back.education_level_settings.agent_capabilities.has_value());
@@ -91,12 +91,12 @@ TEST_CASE("an education settings body with nothing set is ten zero bytes")
 
     std::string deprecated_set = golden_unset;
     deprecated_set[8] = 0x01;
-    REQUIRE(rejects<bp::EducationSettingsPacket_<2168>>(deprecated_set));
+    REQUIRE(rejects<bp::EducationSettingsPacket>(deprecated_set));
 }
 
 TEST_CASE("agent capabilities carry a presence byte ahead of the can-modify-blocks flag")
 {
-    bp::EducationSettingsPacket_<2168> packet;
+    bp::EducationSettingsPacket packet;
     packet.education_level_settings.can_resize_code_builder = false;
     packet.education_level_settings.disable_legacy_title_bar = false;
     packet.education_level_settings.agent_capabilities = bp::AgentCapabilities{};
@@ -105,7 +105,7 @@ TEST_CASE("agent capabilities carry a presence byte ahead of the can-modify-bloc
     REQUIRE(wire[6] == 0x01);
     REQUIRE(wire[7] == 0x00);
 
-    const auto back = decode<bp::EducationSettingsPacket_<2168>>(wire);
+    const auto back = decode<bp::EducationSettingsPacket>(wire);
     REQUIRE(back.education_level_settings.agent_capabilities.has_value());
     REQUIRE_FALSE(back.education_level_settings.agent_capabilities->can_modify_blocks.has_value());
 }

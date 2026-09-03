@@ -22,25 +22,25 @@ const std::string golden_absent = bytes({
 
 TEST_CASE("packet id is 346")
 {
-    STATIC_REQUIRE(bp::ServerStoreInfoPacket_<2168>::Id == 346);
+    STATIC_REQUIRE(bp::ServerStoreInfoPacket::Id == 346);
     STATIC_REQUIRE(bp::has_packet_v<1001, 346>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 346>);
 }
 
 TEST_CASE("server store info round-trips against the golden")
 {
-    bp::ServerStoreInfoPacket_<2168> packet;
+    bp::ServerStoreInfoPacket packet;
     packet.client_store_entry_point_configuration = {.store_id = "sid", .store_name = "Store"};
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::ServerStoreInfoPacket_<2168>>(golden);
+    const auto back = decode<bp::ServerStoreInfoPacket>(golden);
     REQUIRE(back.client_store_entry_point_configuration.has_value());
     REQUIRE(back.client_store_entry_point_configuration->store_name == "Store");
 }
 
 TEST_CASE("an absent store configuration is a lone zero presence byte")
 {
-    REQUIRE(encode(bp::ServerStoreInfoPacket_<2168>{}) == golden_absent);
-    REQUIRE_FALSE(decode<bp::ServerStoreInfoPacket_<2168>>(golden_absent)
+    REQUIRE(encode(bp::ServerStoreInfoPacket{}) == golden_absent);
+    REQUIRE_FALSE(decode<bp::ServerStoreInfoPacket>(golden_absent)
                       .client_store_entry_point_configuration.has_value());
 }

@@ -15,23 +15,23 @@ const std::string golden = bytes({
 
 TEST_CASE("packet id is 168")
 {
-    STATIC_REQUIRE(bp::SimulationTypePacket_<2168>::Id == 168);
+    STATIC_REQUIRE(bp::SimulationTypePacket::Id == 168);
     STATIC_REQUIRE(bp::has_packet_v<1001, 168>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 168>);
 }
 
 TEST_CASE("simulation type round-trips against the golden")
 {
-    bp::SimulationTypePacket_<2168> packet;
-    packet.sim_type = bp::SimulationType::EDITOR;
+    bp::SimulationTypePacket packet;
+    packet.sim_type = bp::SimulationType::Editor;
     REQUIRE(encode(packet) == golden);
-    REQUIRE(decode<bp::SimulationTypePacket_<2168>>(golden).sim_type == bp::SimulationType::EDITOR);
+    REQUIRE(decode<bp::SimulationTypePacket>(golden).sim_type == bp::SimulationType::Editor);
 }
 
 TEST_CASE("the simulation type is one byte, so the whole body is one byte")
 {
-    bp::SimulationTypePacket_<2168> packet;
-    packet.sim_type = bp::SimulationType::INVALID;
+    bp::SimulationTypePacket packet;
+    packet.sim_type = bp::SimulationType::Invalid;
     REQUIRE(encode(packet).size() == 1);
-    REQUIRE(rejects<bp::SimulationTypePacket_<2168>>(""));
+    REQUIRE(rejects<bp::SimulationTypePacket>(""));
 }

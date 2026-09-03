@@ -24,43 +24,43 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 140")
 {
-    STATIC_REQUIRE(bp::SettingsCommandPacket_<2168>::Id == 140);
+    STATIC_REQUIRE(bp::SettingsCommandPacket::Id == 140);
     STATIC_REQUIRE(bp::has_packet_v<1001, 140>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 140>);
 }
 
 TEST_CASE("settings-command round-trips against the golden")
 {
-    bp::SettingsCommandPacket_<2168> packet;
+    bp::SettingsCommandPacket packet;
     packet.command_string = "gamerule showcoordinates true";
     packet.suppress_output = true;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::SettingsCommandPacket_<2168>>(golden);
+    const auto back = decode<bp::SettingsCommandPacket>(golden);
     REQUIRE(back.command_string == "gamerule showcoordinates true");
     REQUIRE(back.suppress_output);
 }
 
 TEST_CASE("an empty command line is a lone length prefix ahead of the flag")
 {
-    bp::SettingsCommandPacket_<2168> packet;
+    bp::SettingsCommandPacket packet;
     packet.suppress_output = false;
     REQUIRE(encode(packet) == golden_empty);
 
-    const auto back = decode<bp::SettingsCommandPacket_<2168>>(golden_empty);
+    const auto back = decode<bp::SettingsCommandPacket>(golden_empty);
     REQUIRE(back.command_string.empty());
     REQUIRE_FALSE(back.suppress_output);
 }
 
 TEST_CASE("the command line's length prefix is a varint")
 {
-    bp::SettingsCommandPacket_<2168> packet;
+    bp::SettingsCommandPacket packet;
     packet.command_string = std::string(200, 'a');
     packet.suppress_output = false;
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 203);
 
-    const auto back = decode<bp::SettingsCommandPacket_<2168>>(wire);
+    const auto back = decode<bp::SettingsCommandPacket>(wire);
     REQUIRE(back.command_string == std::string(200, 'a'));
     REQUIRE_FALSE(back.suppress_output);
 }
