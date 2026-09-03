@@ -36,10 +36,10 @@ class PackInfoData:
 
 
 class ResourcePackResponse(Enum, int8):
-    CANCEL = 1, "Cancel"
-    DOWNLOADING = 2, "Downloading"
-    DOWNLOADING_FINISHED = 3, "DownloadingFinished"
-    RESOURCE_PACK_STACK_FINISHED = 4, "ResourcePackStackFinished"
+    CANCEL = 1
+    DOWNLOADING = 2
+    DOWNLOADING_FINISHED = 3
+    RESOURCE_PACK_STACK_FINISHED = 4
 
 
 @packet(id=6, until=2168)

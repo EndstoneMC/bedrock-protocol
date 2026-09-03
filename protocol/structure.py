@@ -3,7 +3,7 @@ and gametest/ -- structure blocks, templates, jigsaws, features, ticking areas."
 
 from enum import IntEnum, auto
 
-from protocol import field, packet, type, uint8, uint32, varint32
+from protocol import field, packet, type, uint8, uint32, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.item_stack import RedactableString
@@ -45,7 +45,7 @@ class Mirror(IntEnum, uint8):
     NONE = 0
     X = 1
     Z = 2
-    XZ = 3
+    XZ = value(3, cpp_name="XZ")
 
 
 class AnimationMode(IntEnum, uint8):

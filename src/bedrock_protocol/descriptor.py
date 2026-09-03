@@ -101,6 +101,13 @@ def split_scope(name: str) -> tuple[str | None, str]:
     return (scope, rest) if sep else (None, name)
 
 
+def pascal(name: str) -> str:
+    """A PEP 8 enum member spelled the way C++ takes it. `REBECCA_PURPLE` is
+    `RebeccaPurple`, which is BDS's own spelling for 1990 of the 2200 members
+    protocol-docs describes, and is never a macro where the screaming form is."""
+    return "".join(part[:1].upper() + part[1:].lower() for part in name.split("_"))
+
+
 class CompilerError(Exception):
     """A schema-level error surfaced to the user without a traceback."""
 
@@ -387,12 +394,27 @@ class EnumValue:
     #: Spelled `auto()`: the number is `previous + 1` within whichever snapshot the
     #: member appears in, so a trailing sentinel tracks the members present there.
     is_auto: bool = False
-    #: `MEMBER = 3, "Spelling"`: how BDS spells the member when the DSL's own
+    #: `MEMBER = 3, "Spelling"`: the string BDS writes, for a member whose C++
     #: spelling does not fold onto it. Not the wire string -- see `wire_name`.
     wire: str | None = None
+    #: `value(3, cpp_name="NPCRequest")`: BDS's casing for an acronym `pascal`
+    #: flattens. A case variant of the derived name and nothing else, so it can
+    #: never move the wire.
+    cpp: str | None = None
+    #: `LATEST = NUM_VALID_VERSIONS - 1`: the sibling this member is defined against
+    #: and the offset from it, as `(member, offset)`. `number` still holds the value
+    #: the parser resolved -- this only keeps the arithmetic so the emitted C++ can
+    #: restate it instead of freezing a literal that BDS derives.
+    derived: tuple[str, int] | None = None
 
     def present_at(self, snapshot: int) -> bool:
         return (self.since is None or snapshot >= self.since) and (self.until is None or snapshot < self.until)
+
+    @property
+    def cpp_name(self) -> str:
+        """The C++ enumerator. `pascal` of the PEP 8 member, or the `cpp_name=`
+        correction where BDS keeps an acronym uppercase."""
+        return self.cpp if self.cpp is not None else pascal(self.name)
 
     @property
     def wire_name(self) -> str:
@@ -407,17 +429,16 @@ class EnumValue:
         `CommandOriginType` -- `CommandBlock` writes and reads as "commandblock",
         and its reader has no fallback, so BDS cannot be sending anything else.
 
-        Folding alone does not always reach BDS's string, because the DSL spells
-        members PEP 8 and BDS does not: `DOWNLOADING_FINISHED` folds to
-        `downloading_finished` where BDS writes `downloadingfinished`, one byte
-        shorter and no separator to map back to. Pairing the member with BDS's
-        spelling -- `DOWNLOADING_FINISHED = 3, "DownloadingFinished"` -- says it
-        outright, and the fold to the wire form is ours to apply.
+        The C++ spelling is BDS's spelling for all but a handful of members, so the
+        fold runs off it and the pair is needed only where BDS separates what
+        `pascal` joins: `EasingType` is snake all the way down (`in_out_quad`), the
+        EAS operations are screaming (`ALPHA_BLEND`), and persona's `High_Pants`
+        keeps one underscore its neighbours dropped.
 
         The backend folds every enum's reflected name, not just a name-coded one, so
         there is a single spelling per enum and `enum_cast` can fold its input onto it
         rather than take a case-insensitive predicate."""
-        return (self.wire if self.wire is not None else self.name).lower()
+        return (self.wire if self.wire is not None else self.cpp_name).lower()
 
 
 @dataclass(frozen=True)

@@ -4,7 +4,7 @@ EasingType lives here because this module name-codes it; moving it would not lin
 
 from enum import Enum, IntEnum
 
-from protocol import field, int32, packet, type, uint8, uint32, uvarint32
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32, value
 from protocol.common import DimensionType
 
 package = "bedrock.protocol"
@@ -19,7 +19,7 @@ class Color255RGBA:
 
 class BoolAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = 1
+    ALPHA_BLEND = value(1, "ALPHA_BLEND")
     AND = 2
     NAND = 3
     OR = 4
@@ -30,7 +30,7 @@ class BoolAttributeOperation(IntEnum):
 
 class FloatAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = 1
+    ALPHA_BLEND = value(1, "ALPHA_BLEND")
     ADD = 2
     SUBTRACT = 3
     MULTIPLY = 4
@@ -40,45 +40,45 @@ class FloatAttributeOperation(IntEnum):
 
 class ColorAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = 1
+    ALPHA_BLEND = value(1, "ALPHA_BLEND")
     ADD = 2
     SUBTRACT = 3
     MULTIPLY = 4
 
 
 class EasingType(Enum, uint32):
-    LINEAR = 0
-    SPRING = 1
-    IN_QUAD = 2
-    OUT_QUAD = 3
-    IN_OUT_QUAD = 4
-    IN_CUBIC = 5
-    OUT_CUBIC = 6
-    IN_OUT_CUBIC = 7
-    IN_QUART = 8
-    OUT_QUART = 9
-    IN_OUT_QUART = 10
-    IN_QUINT = 11
-    OUT_QUINT = 12
-    IN_OUT_QUINT = 13
-    IN_SINE = 14
-    OUT_SINE = 15
-    IN_OUT_SINE = 16
-    IN_EXPO = 17
-    OUT_EXPO = 18
-    IN_OUT_EXPO = 19
-    IN_CIRC = 20
-    OUT_CIRC = 21
-    IN_OUT_CIRC = 22
-    IN_BOUNCE = 23
-    OUT_BOUNCE = 24
-    IN_OUT_BOUNCE = 25
-    IN_BACK = 26
-    OUT_BACK = 27
-    IN_OUT_BACK = 28
-    IN_ELASTIC = 29
-    OUT_ELASTIC = 30
-    IN_OUT_ELASTIC = 31
+    LINEAR = 0, "linear"
+    SPRING = 1, "spring"
+    IN_QUAD = 2, "in_quad"
+    OUT_QUAD = 3, "out_quad"
+    IN_OUT_QUAD = 4, "in_out_quad"
+    IN_CUBIC = 5, "in_cubic"
+    OUT_CUBIC = 6, "out_cubic"
+    IN_OUT_CUBIC = 7, "in_out_cubic"
+    IN_QUART = 8, "in_quart"
+    OUT_QUART = 9, "out_quart"
+    IN_OUT_QUART = 10, "in_out_quart"
+    IN_QUINT = 11, "in_quint"
+    OUT_QUINT = 12, "out_quint"
+    IN_OUT_QUINT = 13, "in_out_quint"
+    IN_SINE = 14, "in_sine"
+    OUT_SINE = 15, "out_sine"
+    IN_OUT_SINE = 16, "in_out_sine"
+    IN_EXPO = 17, "in_expo"
+    OUT_EXPO = 18, "out_expo"
+    IN_OUT_EXPO = 19, "in_out_expo"
+    IN_CIRC = 20, "in_circ"
+    OUT_CIRC = 21, "out_circ"
+    IN_OUT_CIRC = 22, "in_out_circ"
+    IN_BOUNCE = 23, "in_bounce"
+    OUT_BOUNCE = 24, "out_bounce"
+    IN_OUT_BOUNCE = 25, "in_out_bounce"
+    IN_BACK = 26, "in_back"
+    OUT_BACK = 27, "out_back"
+    IN_OUT_BACK = 28, "in_out_back"
+    IN_ELASTIC = 29, "in_elastic"
+    OUT_ELASTIC = 30, "out_elastic"
+    IN_OUT_ELASTIC = 31, "in_out_elastic"
 
 
 @type(since=2192)

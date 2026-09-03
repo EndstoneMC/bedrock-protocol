@@ -23,31 +23,31 @@ class MemoryCategory(IntEnum, uint8):
     CIRCUIT_SYSTEM = 8
     CLIENT = 9
     COMMANDS = 10
-    DB_STORAGE = 11
+    DB_STORAGE = value(11, cpp_name="DBStorage")
     DEBUG = 12
     DOCUMENTATION = 13
-    ECS_SYSTEMS = 14
-    FMOD = 15
+    ECS_SYSTEMS = value(14, cpp_name="ECSSystems")
+    FMOD = value(15, cpp_name="FMOD")
     FONTS = 16
     IM_GUI = 17
     INPUT = 18
-    JSON_UI = 19
-    JSON_UI_CONTROL_FACTORY_JSON = 20
-    JSON_UI_CONTROL_TREE = 21
-    JSON_UI_CONTROL_TREE_CONTROL_ELEMENT = 22
-    JSON_UI_CONTROL_TREE_POPULATE_DATA_BINDING = 23
-    JSON_UI_CONTROL_TREE_POPULATE_FOCUS = 24
-    JSON_UI_CONTROL_TREE_POPULATE_LAYOUT = 25
-    JSON_UI_CONTROL_TREE_POPULATE_OTHER = 26
-    JSON_UI_CONTROL_TREE_POPULATE_SPRITE = 27
-    JSON_UI_CONTROL_TREE_POPULATE_TEXT = 28
-    JSON_UI_CONTROL_TREE_POPULATE_TTS = 29
-    JSON_UI_CONTROL_TREE_VISIBILITY = 30
-    JSON_UI_CREATE_UI = 31
-    JSON_UI_DEFS = 32
-    JSON_UI_LAYOUT_MANAGER = 33
-    JSON_UI_LAYOUT_MANAGER_REMOVE_DEPENDENCIES = 34
-    JSON_UI_LAYOUT_MANAGER_INIT_VARIABLE = 35
+    JSON_UI = value(19, cpp_name="JsonUI")
+    JSON_UI_CONTROL_FACTORY_JSON = value(20, cpp_name="JsonUIControlFactoryJson")
+    JSON_UI_CONTROL_TREE = value(21, cpp_name="JsonUIControlTree")
+    JSON_UI_CONTROL_TREE_CONTROL_ELEMENT = value(22, cpp_name="JsonUIControlTreeControlElement")
+    JSON_UI_CONTROL_TREE_POPULATE_DATA_BINDING = value(23, cpp_name="JsonUIControlTreePopulateDataBinding")
+    JSON_UI_CONTROL_TREE_POPULATE_FOCUS = value(24, cpp_name="JsonUIControlTreePopulateFocus")
+    JSON_UI_CONTROL_TREE_POPULATE_LAYOUT = value(25, cpp_name="JsonUIControlTreePopulateLayout")
+    JSON_UI_CONTROL_TREE_POPULATE_OTHER = value(26, cpp_name="JsonUIControlTreePopulateOther")
+    JSON_UI_CONTROL_TREE_POPULATE_SPRITE = value(27, cpp_name="JsonUIControlTreePopulateSprite")
+    JSON_UI_CONTROL_TREE_POPULATE_TEXT = value(28, cpp_name="JsonUIControlTreePopulateText")
+    JSON_UI_CONTROL_TREE_POPULATE_TTS = value(29, cpp_name="JsonUIControlTreePopulateTTS")
+    JSON_UI_CONTROL_TREE_VISIBILITY = value(30, cpp_name="JsonUIControlTreeVisibility")
+    JSON_UI_CREATE_UI = value(31, cpp_name="JsonUICreateUI")
+    JSON_UI_DEFS = value(32, cpp_name="JsonUIDefs")
+    JSON_UI_LAYOUT_MANAGER = value(33, cpp_name="JsonUILayoutManager")
+    JSON_UI_LAYOUT_MANAGER_REMOVE_DEPENDENCIES = value(34, cpp_name="JsonUILayoutManagerRemoveDependencies")
+    JSON_UI_LAYOUT_MANAGER_INIT_VARIABLE = value(35, cpp_name="JsonUILayoutManagerInitVariable")
     LANGUAGES = 36
     LEVEL = 37
     LEVEL_STRUCTURES = 38
@@ -65,7 +65,7 @@ class MemoryCategory(IntEnum, uint8):
     MATERIAL_RENDER_MATERIAL_GROUP = 50
     MATERIAL_VARIATION_MANAGER = 51
     MOLANG = 52
-    ORE_UI = 53
+    ORE_UI = value(53, cpp_name="OreUI")
     PERSONA = 54
     PLAYER = 55
     RENDER_CHUNK = 56
@@ -88,21 +88,21 @@ class MemoryCategory(IntEnum, uint8):
     SCRIPTING = 73
     SCRIPTING_RUNTIME = 74
     SCRIPTING_CONTEXT = 75
-    SCRIPTING_CONTEXT_BINDINGS_MC = 76
-    SCRIPTING_CONTEXT_BINDINGS_GT = 77
+    SCRIPTING_CONTEXT_BINDINGS_MC = value(76, cpp_name="ScriptingContextBindingsMC")
+    SCRIPTING_CONTEXT_BINDINGS_GT = value(77, cpp_name="ScriptingContextBindingsGT")
     SCRIPTING_CONTEXT_RUN = 78
-    DATA_DRIVEN_UI = 79
-    DATA_DRIVEN_UI_DEFS = 80
+    DATA_DRIVEN_UI = value(79, cpp_name="DataDrivenUI")
+    DATA_DRIVEN_UI_DEFS = value(80, cpp_name="DataDrivenUIDefs")
     GAMEFACE = 81
     GAMEFACE_SYSTEM = 82
-    GAMEFACE_DOM = 83
-    GAMEFACE_CSS = 84
+    GAMEFACE_DOM = value(83, cpp_name="GamefaceDOM")
+    GAMEFACE_CSS = value(84, cpp_name="GamefaceCSS")
     GAMEFACE_DISPLAY = 85
     GAMEFACE_TEMP_ALLOCATOR = 86
     GAMEFACE_POOL_ALLOCATOR = 87
     GAMEFACE_DUMP = 88
     GAMEFACE_MEDIA = 89
-    GAMEFACE_JSON = 90
+    GAMEFACE_JSON = value(90, cpp_name="GamefaceJSON")
     GAMEFACE_SCRIPT_ENGINE = 91
     COUNT = auto()
 
@@ -121,31 +121,31 @@ class MemoryCategory(IntEnum, uint8):
     CIRCUIT_SYSTEM = 9
     CLIENT = 10
     COMMANDS = 11
-    DB_STORAGE = 12
+    DB_STORAGE = value(12, cpp_name="DBStorage")
     DEBUG = 13
     DOCUMENTATION = 14
-    ECS_SYSTEMS = 15
-    FMOD = 16
+    ECS_SYSTEMS = value(15, cpp_name="ECSSystems")
+    FMOD = value(16, cpp_name="FMOD")
     FONTS = 17
     IM_GUI = 18
     INPUT = 19
-    JSON_UI = 20
-    JSON_UI_CONTROL_FACTORY_JSON = 21
-    JSON_UI_CONTROL_TREE = 22
-    JSON_UI_CONTROL_TREE_CONTROL_ELEMENT = 23
-    JSON_UI_CONTROL_TREE_POPULATE_DATA_BINDING = 24
-    JSON_UI_CONTROL_TREE_POPULATE_FOCUS = 25
-    JSON_UI_CONTROL_TREE_POPULATE_LAYOUT = 26
-    JSON_UI_CONTROL_TREE_POPULATE_OTHER = 27
-    JSON_UI_CONTROL_TREE_POPULATE_SPRITE = 28
-    JSON_UI_CONTROL_TREE_POPULATE_TEXT = 29
-    JSON_UI_CONTROL_TREE_POPULATE_TTS = 30
-    JSON_UI_CONTROL_TREE_VISIBILITY = 31
-    JSON_UI_CREATE_UI = 32
-    JSON_UI_DEFS = 33
-    JSON_UI_LAYOUT_MANAGER = 34
-    JSON_UI_LAYOUT_MANAGER_REMOVE_DEPENDENCIES = 35
-    JSON_UI_LAYOUT_MANAGER_INIT_VARIABLE = 36
+    JSON_UI = value(20, cpp_name="JsonUI")
+    JSON_UI_CONTROL_FACTORY_JSON = value(21, cpp_name="JsonUIControlFactoryJson")
+    JSON_UI_CONTROL_TREE = value(22, cpp_name="JsonUIControlTree")
+    JSON_UI_CONTROL_TREE_CONTROL_ELEMENT = value(23, cpp_name="JsonUIControlTreeControlElement")
+    JSON_UI_CONTROL_TREE_POPULATE_DATA_BINDING = value(24, cpp_name="JsonUIControlTreePopulateDataBinding")
+    JSON_UI_CONTROL_TREE_POPULATE_FOCUS = value(25, cpp_name="JsonUIControlTreePopulateFocus")
+    JSON_UI_CONTROL_TREE_POPULATE_LAYOUT = value(26, cpp_name="JsonUIControlTreePopulateLayout")
+    JSON_UI_CONTROL_TREE_POPULATE_OTHER = value(27, cpp_name="JsonUIControlTreePopulateOther")
+    JSON_UI_CONTROL_TREE_POPULATE_SPRITE = value(28, cpp_name="JsonUIControlTreePopulateSprite")
+    JSON_UI_CONTROL_TREE_POPULATE_TEXT = value(29, cpp_name="JsonUIControlTreePopulateText")
+    JSON_UI_CONTROL_TREE_POPULATE_TTS = value(30, cpp_name="JsonUIControlTreePopulateTTS")
+    JSON_UI_CONTROL_TREE_VISIBILITY = value(31, cpp_name="JsonUIControlTreeVisibility")
+    JSON_UI_CREATE_UI = value(32, cpp_name="JsonUICreateUI")
+    JSON_UI_DEFS = value(33, cpp_name="JsonUIDefs")
+    JSON_UI_LAYOUT_MANAGER = value(34, cpp_name="JsonUILayoutManager")
+    JSON_UI_LAYOUT_MANAGER_REMOVE_DEPENDENCIES = value(35, cpp_name="JsonUILayoutManagerRemoveDependencies")
+    JSON_UI_LAYOUT_MANAGER_INIT_VARIABLE = value(36, cpp_name="JsonUILayoutManagerInitVariable")
     LANGUAGES = 37
     LEVEL = 38
     LEVEL_STRUCTURES = 39
@@ -163,8 +163,8 @@ class MemoryCategory(IntEnum, uint8):
     MATERIAL_RENDER_MATERIAL_GROUP = 51
     MATERIAL_VARIATION_MANAGER = 52
     MOLANG = 53
-    ORE_UI = 54
-    ORE_UI_CLIENT = 55
+    ORE_UI = value(54, cpp_name="OreUI")
+    ORE_UI_CLIENT = value(55, cpp_name="OreUIClient")
     PERSONA_PIECES = 56
     PERSONA_ANIMATIONS = 57
     PERSONA_TEXTURES = value(58, until=2192)
@@ -183,7 +183,7 @@ class MemoryCategory(IntEnum, uint8):
     RENDERING_GRAPHICS_TASKS_INIT = auto()
     RENDERING_LIBRARY = auto()
     RENDERING_POLYGON_OPERATOR_POOL = auto()
-    RENDERING_PBR_TEXTURE_DATA = auto()
+    RENDERING_PBR_TEXTURE_DATA = value(cpp_name="RenderingPBRTextureData")
     RENDERING_RENDER_REGISTRY = auto()
     RENDERING_SETUP = auto()
     RENDERING_VERTICES = auto()
@@ -202,21 +202,21 @@ class MemoryCategory(IntEnum, uint8):
     SCRIPTING = auto()
     SCRIPTING_RUNTIME = auto()
     SCRIPTING_CONTEXT = auto()
-    SCRIPTING_CONTEXT_BINDINGS_MC = auto()
-    SCRIPTING_CONTEXT_BINDINGS_GT = auto()
+    SCRIPTING_CONTEXT_BINDINGS_MC = value(cpp_name="ScriptingContextBindingsMC")
+    SCRIPTING_CONTEXT_BINDINGS_GT = value(cpp_name="ScriptingContextBindingsGT")
     SCRIPTING_CONTEXT_RUN = auto()
-    DATA_DRIVEN_UI = auto()
-    DATA_DRIVEN_UI_DEFS = auto()
+    DATA_DRIVEN_UI = value(cpp_name="DataDrivenUI")
+    DATA_DRIVEN_UI_DEFS = value(cpp_name="DataDrivenUIDefs")
     GAMEFACE = auto()
     GAMEFACE_SYSTEM = auto()
-    GAMEFACE_DOM = auto()
-    GAMEFACE_CSS = auto()
+    GAMEFACE_DOM = value(cpp_name="GamefaceDOM")
+    GAMEFACE_CSS = value(cpp_name="GamefaceCSS")
     GAMEFACE_DISPLAY = auto()
     GAMEFACE_TEMP_ALLOCATOR = auto()
     GAMEFACE_POOL_ALLOCATOR = auto()
     GAMEFACE_DUMP = auto()
     GAMEFACE_MEDIA = auto()
-    GAMEFACE_JSON = auto()
+    GAMEFACE_JSON = value(cpp_name="GamefaceJSON")
     GAMEFACE_SCRIPT_ENGINE = auto()
     GAMEFACE_SCRIPT = auto()
     GAMEFACE_LAYOUT = auto()
@@ -293,8 +293,8 @@ class DebugInfoPacket:
 class ClientboundDebugRendererPacket:
     class PayloadType(Enum, uint8):
         INVALID = 0
-        CLEAR_DEBUG_MARKERS = 1, "ClearDebugMarkers"
-        ADD_DEBUG_MARKER_CUBE = 2, "AddDebugMarkerCube"
+        CLEAR_DEBUG_MARKERS = 1
+        ADD_DEBUG_MARKER_CUBE = 2
 
     class DebugMarkerData:
         text: str

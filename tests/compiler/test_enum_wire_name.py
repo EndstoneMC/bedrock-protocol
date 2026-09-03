@@ -1,16 +1,17 @@
-"""`MEMBER = 3, "DownloadingFinished"` — how BDS spells a member, where the DSL does not.
+"""`MEMBER = 8, "High_Pants"` — how BDS spells a member, where the C++ name does not.
 
-cereal folds an enumerator's bound name at bind time, so a name-coded enum
-reaches the wire lowercased: `DownloadingFinished` goes out "downloadingfinished".
-Casing is therefore never something the schema has to carry, but the *separator*
-is: a PEP 8 `DOWNLOADING_FINISHED` folds to "downloading_finished", which is one
-byte longer than BDS's string and resolves to nothing. BDS is not consistent
-either -- `persona::PieceType` really does use snake_case -- so the schema has to
-be able to say both, and the pair says it by naming BDS's spelling.
+A PEP 8 member reaches C++ as `pascal` of itself, and cereal folds an enumerator's
+bound name at bind time, so a name-coded enum reaches the wire as that spelling
+lowercased: `DownloadingFinished` goes out "downloadingfinished" with no pair
+needed. Casing is therefore never something the schema has to carry, and neither
+is the separator now that the C++ name has already dropped it. What the schema
+does have to say is where BDS keeps a separator the C++ name does not: `EasingType`
+is snake all the way down ("in_out_quad"), the EAS operations are screaming
+("ALPHA_BLEND"), and persona's `High_Pants` keeps one its neighbours dropped.
 
 Only a plain `Enum` pairs the two: `IntEnum` and `StrEnum` coerce a member to
-their own type, so `3, "DownloadingFinished"` is not a value there and the
-string goes to `value()` instead.
+their own type, so `8, "High_Pants"` is not a value there and the string goes to
+`value()` instead.
 
 The reflected `names_v` table is the one the wire uses, so the folded pair lands
 there -- for every enum, not just the name-coded ones, which is what lets
@@ -40,7 +41,8 @@ SCHEMA = (
 class ResourcePackResponse(Enum, uint8):
     NONE = 0
     REFUSED = 1
-    DOWNLOADING_FINISHED = 3, "DownloadingFinished"
+    DOWNLOADING_FINISHED = 3
+    HIGH_PANTS = 8, "High_Pants"
 
 
 @packet(id=8)
@@ -58,17 +60,20 @@ class WireNameCase(CompilerCase):
 
 
 class WireName(WireNameCase):
-    def test_the_cpp_spelling_stays_pep_8(self) -> None:
+    def test_the_cpp_spelling_is_derived_not_the_pair(self) -> None:
         header, _ = self.compile(SCHEMA)
-        self.assertIn("DOWNLOADING_FINISHED = 3,", header)
-        self.assertNotIn("DownloadingFinished = ", header)
+        self.assertIn("DownloadingFinished = 3,", header)
+        self.assertIn("HighPants = 8,", header)
+        self.assertNotIn("DOWNLOADING_FINISHED = ", header)
+        self.assertNotIn("High_Pants = ", header)
 
     def test_the_reflected_name_is_bds_s_string_folded(self) -> None:
         header, _ = self.compile(SCHEMA)
         names = self.names(header, "ResourcePackResponse")
         self.assertIn('"downloadingfinished",', names)
+        self.assertIn('"high_pants",', names)
         self.assertNotIn('"DownloadingFinished",', names)
-        self.assertNotIn('"DOWNLOADING_FINISHED",', names)
+        self.assertNotIn('"highpants",', names)
 
     def test_both_directions_carry_the_wire_name(self) -> None:
         """Neither body spells a name: both reach the one table."""
@@ -76,7 +81,7 @@ class WireName(WireNameCase):
         write = self.body(source, "void Serializer<ResourcePackResponse>::serialize")
         read = self.body(source, "auto Serializer<ResourcePackResponse>::deserialize")
         self.assertIn("enum_name(value)", write)
-        self.assertNotIn("DownloadingFinished", write)
+        self.assertNotIn("High_Pants", write)
         self.assertIn("enum_cast<ResourcePackResponse>(*v", read)
 
     def test_the_read_names_no_predicate(self) -> None:
@@ -99,7 +104,7 @@ class WireName(WireNameCase):
             + """
 
 class Kind(Enum, uint8):
-    FIRST = 0, "First"
+    FIRST_ONE = 0
 
 
 @packet(id=9)
@@ -107,7 +112,7 @@ class KindPacket:
     kind: Kind
 """
         )
-        self.assertIn('"first",', self.names(header, "Kind"))
+        self.assertIn('"firstone",', self.names(header, "Kind"))
 
     def test_a_snake_case_wire_name_is_spellable(self) -> None:
         """BDS is not consistent: persona::PieceType really is snake_case."""
@@ -116,7 +121,7 @@ class KindPacket:
             + """
 
 class PieceType(Enum, uint8):
-    PERSONA_SKELETON = 0, "persona_skeleton"
+    SKELETON = 0, "persona_skeleton"
 
 
 @packet(id=93)
@@ -132,8 +137,8 @@ class PlayerSkinPacket:
             + """
 
 class Kind(Enum, uint8):
-    FIRST = 0, "First"
-    SECOND = auto(), "Second"
+    FIRST = 0
+    SECOND_ONE = auto(), "Second_One"
 
 
 @packet(id=9)
@@ -141,8 +146,8 @@ class KindPacket:
     kind: Kind = field(type=str)
 """
         )
-        self.assertIn("SECOND = 1,", header)
-        self.assertIn('"second",', self.names(header, "Kind"))
+        self.assertIn("SecondOne = 1,", header)
+        self.assertIn('"second_one",', self.names(header, "Kind"))
 
 
 class ValueSpelling(WireNameCase):
@@ -155,7 +160,7 @@ class ValueSpelling(WireNameCase):
 
 class Kind(IntEnum, uint8):
     FIRST = 0
-    SECOND = value(7, "Second", since=1001)
+    SECOND_ONE = value(7, "Second_One", since=1001)
 
 
 @packet(id=9)
@@ -166,12 +171,12 @@ class KindPacket:
 
     def test_the_second_positional_is_the_wire_name(self) -> None:
         header, _ = self.compile(self.GATED)
-        self.assertIn("SECOND = 7,", header)
-        self.assertIn('"second",', self.names(header, "v1001::Kind"))
+        self.assertIn("SecondOne = 7,", header)
+        self.assertIn('"second_one",', self.names(header, "v1001::Kind"))
 
     def test_the_gate_still_applies(self) -> None:
         header, _ = self.compile(self.GATED)
-        self.assertNotIn('"second",', self.names(header, "base::Kind"))
+        self.assertNotIn('"second_one",', self.names(header, "base::Kind"))
 
     def test_the_keyword_spelling_works_too(self) -> None:
         header, _ = self.compile(
@@ -179,7 +184,7 @@ class KindPacket:
             + """
 
 class Kind(IntEnum, uint8):
-    FIRST = value(0, name="First")
+    FIRST_ONE = value(0, name="First_One")
 
 
 @packet(id=9)
@@ -187,7 +192,7 @@ class KindPacket:
     kind: Kind = field(type=str)
 """
         )
-        self.assertIn('"first",', self.names(header, "Kind"))
+        self.assertIn('"first_one",', self.names(header, "Kind"))
 
 
 class Rejections(CompilerCase):

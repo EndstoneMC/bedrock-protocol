@@ -108,7 +108,7 @@ class ThingPacket:
         """BDS packs a run of flags into a bitset and gates later fields on
         individual bits, so a predicate has to reach a bit rather than compare
         a whole value. Bit 64 is the one a `uint64_t` would lose."""
-        _, source = self.compile(
+        header, source = self.compile(
             """
 from enum import IntEnum
 
@@ -131,13 +131,14 @@ class ThingPacket:
         )
         write = self.body(source, "void Serializer<ThingPacket>::serialize")
         self.assertIn(
-            "if (value.flags.test(static_cast<std::size_t>(ThingPacket::Flag::MIDDLE)))",
+            "if (value.flags.test(static_cast<std::size_t>(ThingPacket::Flag::Middle)))",
             write,
         )
         self.assertIn("if (value.flags.test(static_cast<std::size_t>(64)))", write)
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
         self.assertIn("if (out.flags.test(static_cast<std::size_t>(64)))", read)
-        self.assertIn("#include <cstddef>", source)
+        # the size_t casts are declared in the header, which the source includes
+        self.assertIn("#include <cstddef>", header)
 
     def test_a_bit_test_needs_a_bitset(self) -> None:
         message = self.rejects(

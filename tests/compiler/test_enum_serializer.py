@@ -86,11 +86,15 @@ class ThingPacket:
         # each shape carries its own members, in the reflected table the write
         # reads and in the read's own keyed one
         new = header.index("names_v<v2168::Kind>")
-        self.assertIn('"BETA",', header[new : header.index("}};", new)])
+        self.assertIn('"beta",', header[new : header.index("}};", new)])
         old = header.index("names_v<base::Kind>")
-        self.assertNotIn('"BETA",', header[old : header.index("}};", old)])
-        self.assertIn('{"beta", E::BETA}', self.body(source, "auto Serializer<v2168::Kind>::deserialize"))
-        self.assertNotIn("BETA", self.body(source, "auto Serializer<base::Kind>::deserialize"))
+        self.assertNotIn('"beta",', header[old : header.index("}};", old)])
+        self.assertIn(
+            "enum_cast<v2168::Kind>(*v)", self.body(source, "auto Serializer<v2168::Kind>::deserialize")
+        )
+        self.assertIn(
+            "enum_cast<base::Kind>(*v)", self.body(source, "auto Serializer<base::Kind>::deserialize")
+        )
 
     def test_a_gated_field_still_reaches_its_enum(self) -> None:
         """A `when=` gate wraps the field's type, and the walk collecting
@@ -134,12 +138,15 @@ class ThingPacket:
 
 
 class ReadIsAKeyedLookup(CompilerCase):
-    """The read keys a table of its own.
+    """The read defers to `enum_cast`, which keys a table per enum on first use.
 
     `enum_count` / `enum_names` / `enum_values` are the reflection API
     downstream projects consume; a codec must not be built on them. A scan over
     them is also linear, with a case-insensitive compare per candidate, and
-    `LevelSoundEvent` runs to 600+ members on a hot path.
+    `LevelSoundEvent` runs to 600+ members on a hot path. The table used to be
+    emitted inline in each deserialize; it now lives behind `enum_cast` in
+    `enum.hpp`, so what the generated read must show is that it goes there and
+    keys the snapshot's own enum.
     """
 
     SCHEMA = """
@@ -163,13 +170,11 @@ class ThingPacket:
     def read(self, source: str) -> str:
         return self.body(source, "auto Serializer<Kind>::deserialize")
 
-    def test_the_read_is_a_map_lookup(self) -> None:
+    def test_the_read_defers_to_enum_cast(self) -> None:
         _, source = self.compile(self.SCHEMA)
         read = self.read(source)
-        self.assertIn("static const std::unordered_map<std::string_view, E> values{", read)
-        self.assertIn('{"alpha", E::ALPHA}', read)
-        self.assertIn('{"bravo", E::BRAVO}', read)
-        self.assertIn("auto it = values.find(*v);", read)
+        self.assertIn("auto v = stream.read<std::string>();", read)
+        self.assertIn("enum_cast<Kind>(*v)", read)
 
     def test_the_read_names_no_reflection_helper(self) -> None:
         _, source = self.compile(self.SCHEMA)
@@ -184,7 +189,7 @@ class ThingPacket:
         self.assertIn("enum_name(value)", write)
 
     def test_the_map_carries_the_snapshots_members_only(self) -> None:
-        _, source = self.compile(
+        header, source = self.compile(
             """
 from enum import IntEnum
 
@@ -205,15 +210,19 @@ class ThingPacket:
         )
         base = self.body(source, "auto Serializer<base::Kind>::deserialize")
         later = self.body(source, "auto Serializer<v2168::Kind>::deserialize")
-        self.assertNotIn("BRAVO", base)
-        self.assertIn('{"bravo", E::BRAVO}', later)
-        self.assertIn("using E = v2168::Kind;", later)
+        # each read casts its own snapshot's enum, and that enum's table is what
+        # decides which members resolve
+        self.assertIn("enum_cast<base::Kind>(*v)", base)
+        self.assertIn("enum_cast<v2168::Kind>(*v)", later)
+        new = header.index("names_v<v2168::Kind>")
+        self.assertIn('"bravo",', header[new : header.index("}};", new)])
+        old = header.index("names_v<base::Kind>")
+        self.assertNotIn('"bravo",', header[old : header.index("}};", old)])
 
     def test_a_versioned_read_keys_the_qualified_enum(self) -> None:
         _, source = self.compile(GATED_ENUM)
         read = self.body(source, "auto Serializer<v2168::ScorePacketEntryAction>::deserialize")
-        self.assertIn("using E = v2168::ScorePacketEntryAction;", read)
-        self.assertIn('{"remove", E::REMOVE}', read)
+        self.assertIn("enum_cast<v2168::ScorePacketEntryAction>(*v)", read)
 
     def test_members_sharing_a_folded_wire_name_are_rejected(self) -> None:
         """The map would keep one of them and say nothing."""

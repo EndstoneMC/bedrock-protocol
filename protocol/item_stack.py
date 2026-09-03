@@ -4,7 +4,7 @@ request actions, responses, and the cereal namespace carrier."""
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
+from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
 from protocol.crafting import (
     CreativeItemNetId,
     RecipeNetId,
@@ -30,7 +30,7 @@ class ItemStackRequestActionType(IntEnum, uint8):
     TAKE_FROM_ITEM_CONTAINER_DEPRECATED = 8
     SCREEN_LAB_TABLE_COMBINE = 9
     SCREEN_BEACON_PAYMENT = 10
-    SCREEN_HUD_MINE_BLOCK = 11
+    SCREEN_HUD_MINE_BLOCK = value(11, cpp_name="ScreenHUDMineBlock")
     CRAFT_RECIPE = 12
     CRAFT_RECIPE_AUTO = 13
     CRAFT_CREATIVE = 14
@@ -129,7 +129,7 @@ class TextProcessingEventOrigin(IntEnum):
     TITLE_COMMAND = 12
     SUMMON_COMMAND = 13
     SERVER_FORM = 14
-    DATA_DRIVEN_UI = 15
+    DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI")
     COUNT = auto()
 
 

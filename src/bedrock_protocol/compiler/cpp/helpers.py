@@ -30,13 +30,6 @@ PRIMITIVE_TYPES: dict[str, str] = {
 #: Directory every emitted header is included through, matching the install tree.
 INCLUDE_PREFIX = "bedrock/protocol"
 
-#: Enumerator names that windows.h also defines as macros. A file spelling one
-#: brackets its namespace with push_macro/undef/pop_macro, so neither the enum nor
-#: a consumer's later use of the macro depends on include order.
-MACRO_ENUMERATORS = frozenset(
-    {"ERROR", "FALSE", "IN", "NO_ERROR", "OPTIONAL", "OUT", "TRUE", "VOID", "WIN32"}
-)
-
 #: Compiler builtin -> the hand-written header defining it and its `Serializer`.
 #: The DSL names these through `BUILTIN_ANNOTATIONS`; this is the C++ mapping.
 BUILTIN_HEADERS: dict[str, str] = {"UUID": f"<{INCLUDE_PREFIX}/uuid.hpp>"}

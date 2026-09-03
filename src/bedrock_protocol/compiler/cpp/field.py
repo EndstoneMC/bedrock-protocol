@@ -23,6 +23,7 @@ from bedrock_protocol.descriptor import (
     BitsetType,
     CompilerError,
     CondType,
+    Enum,
     EnumType,
     Field,
     FieldType,
@@ -36,6 +37,7 @@ from bedrock_protocol.descriptor import (
     Struct,
     StructType,
     VariantType,
+    pascal,
 )
 
 from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES, cpp_name, cpp_qualified, outermost
@@ -142,7 +144,7 @@ def render_predicate(
             return node.text
         if node.kind == "enum":
             enum, member = node.text.rsplit(".", 1)
-            return f"{qualified_at(enum, ctx, snapshot, owner)}::{member}"
+            return f"{qualified_at(enum, ctx, snapshot, owner)}::{enumerator(enum, member, ctx)}"
         if node.kind == "len":
             return f"{go(node.operands[0])}.size()"
         if node.kind == "bittest":
@@ -153,6 +155,36 @@ def render_predicate(
         return f" {op} ".join(f"({go(o)})" for o in node.operands)
 
     return go(pred)
+
+
+def enumerator(enum: str, member: str, ctx: FileContext) -> str:
+    """A `when=` predicate names a member the way the DSL spells it; C++ takes the
+    derived spelling, or the `cpp_name=` the member declared."""
+    found = _find_enum(enum, ctx)
+    if found is not None:
+        for v in found.values:
+            if v.name == member:
+                return v.cpp_name
+    return pascal(member)
+
+
+def _find_enum(name: str, ctx: FileContext) -> Enum | None:
+    declared = ctx.resolved.lookup(name)
+    if isinstance(declared, Enum):
+        return declared
+    owner, _, inner = name.rpartition(".")
+    if not owner:
+        return None
+    holder = _find_enum_owner(owner, ctx)
+    for nested in holder.nested if holder is not None else ():
+        if isinstance(nested, Enum) and nested.name == inner:
+            return nested
+    return None
+
+
+def _find_enum_owner(name: str, ctx: FileContext) -> Struct | None:
+    declared = ctx.resolved.lookup(name)
+    return declared if isinstance(declared, Struct) else None
 
 
 def qualified_at(name: str, ctx: FileContext, snapshot: int | None, owner: str | None = None) -> str:

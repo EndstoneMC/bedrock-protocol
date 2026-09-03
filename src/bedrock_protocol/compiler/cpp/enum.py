@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CompilerError, Enum
+from collections.abc import Callable
+
+from bedrock_protocol.descriptor import CompilerError, Enum, EnumValue
 
 from .field import type_includes
 from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES
@@ -24,15 +26,17 @@ class EnumGenerator:
     # --- type definition ----------------------------------------------------
 
     def generate_definition(self, p: Printer) -> None:
+        self._reject_collisions()
         underlying = self._enum.sole_underlying
         p.add_includes(*type_includes(underlying))
         ctype = PRIMITIVE_TYPES[underlying.name]
         p.print(f"enum class {self._enum.name} : {ctype} {{\n")
         p.indent()
+        cpp_names = {v.name: v.cpp_name for v in self._enum.values}
         for v in self._enum.values:
             # a negative member of an unsigned enum wraps; C++ needs that spelled out
             number = f"static_cast<{ctype}>({v.number})" if v.number < 0 and ctype.startswith("std::uint") else v.number
-            p.print(f"{v.name} = {number},\n")
+            p.print(f"{v.cpp_name} = {self._spelled(v, cpp_names, number)},\n")
         p.outdent()
         p.print("};\n")
 
@@ -49,7 +53,7 @@ class EnumGenerator:
         p.print(f"inline constexpr std::array<{qualified}, {n}> values_v<{qualified}>{{{{\n")
         p.indent()
         for v in values:
-            p.print(f"{qualified}::{v.name},\n")
+            p.print(f"{qualified}::{v.cpp_name},\n")
         p.outdent()
         p.print("}};\n\n")
         p.print("template <>\n")
@@ -87,7 +91,6 @@ class EnumGenerator:
             "<string>",
             "<system_error>",
         )
-        self._reject_case_collisions()
         q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
         with p.block():
@@ -111,16 +114,33 @@ class EnumGenerator:
             p.print("if (!value) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
             p.print("return *value;\n")
 
-    def _reject_case_collisions(self) -> None:
-        """Two members BDS spells apart only by case fold onto one wire string, and
-        the read keeps whichever came first without a word."""
+    @staticmethod
+    def _spelled(v: EnumValue, cpp_names: dict[str, str], number: object) -> object:
+        """The member's value as the schema spelled it. A member defined against a
+        sibling keeps the arithmetic -- `Latest = NumValidVersions - 1` -- so the
+        header restates what BDS derives instead of freezing today's number.
+        Anything else is the resolved literal."""
+        if v.derived is None:
+            return number
+        ref, offset = v.derived
+        base = cpp_names[ref]
+        if offset == 0:
+            return base
+        return f"{base} {'+' if offset > 0 else '-'} {abs(offset)}"
+
+    def _reject_collisions(self) -> None:
+        """Two members the derived spelling maps onto one name. In C++ that is a
+        redefinition; on the wire the read keeps whichever came first without a word
+        and `detail::name_index` drops the rest -- so both run for every enum, not
+        only the name-coded ones whose table reaches the wire."""
+        self._reject_clashes("C++ enumerator", lambda v: v.cpp_name)
+        self._reject_clashes("wire name once folded", lambda v: v.wire_name)
+
+    def _reject_clashes(self, what: str, key: Callable[[EnumValue], str]) -> None:
         by_key: dict[str, list[str]] = {}
         for v in self._enum.values:
-            by_key.setdefault(v.wire_name, []).append(v.name)
-        clashes = {k: names for k, names in by_key.items() if len(names) > 1}
+            by_key.setdefault(key(v), []).append(v.name)
+        clashes = {k: names for k, names in by_key.items() if len(set(names)) > 1}
         if clashes:
-            spelled = "; ".join(f"{', '.join(names)} -> {key!r}" for key, names in sorted(clashes.items()))
-            raise CompilerError(
-                f"{self._qualified}: name-coded members share a wire name once folded, so the read cannot "
-                f"tell them apart -- {spelled}"
-            )
+            spelled = "; ".join(f"{', '.join(names)} -> {k!r}" for k, names in sorted(clashes.items()))
+            raise CompilerError(f"{self._qualified}: members share a {what} -- {spelled}")

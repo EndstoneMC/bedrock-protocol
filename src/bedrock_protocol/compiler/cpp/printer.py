@@ -33,7 +33,6 @@ class Printer:
     def includes(self) -> set[str]:
         return self._includes
 
-
     def print(self, *args: object) -> None:
         """`print(text)` or `print(vars, text)`. `$name$` markers in `text` are
         replaced from `vars`; `$$` emits a literal `$`."""

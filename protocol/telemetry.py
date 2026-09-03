@@ -160,7 +160,7 @@ class LegacyTelemetryEventPacket:
         FISH_BUCKETED_OBSOLETE = 12
         MOB_BORN = 13
         PET_DIED_OBSOLETE = 14
-        POI_CAULDRON_USED = 15
+        POI_CAULDRON_USED = value(15, cpp_name="POICauldronUsed")
         COMPOSTER_USED = 16
         BELL_USED = 17
         ACTOR_DEFINITION = 18

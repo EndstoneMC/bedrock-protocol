@@ -100,8 +100,8 @@ class PartyChangedPacket:
 
 class PartyDestinationCookieIntent(Enum, int8):
     NOTIFY = 0
-    OPT_IN = 1, "OptIn"
-    OPT_OUT = 2, "OptOut"
+    OPT_IN = 1
+    OPT_OUT = 2
 
 
 @packet(id=349, since=2168)

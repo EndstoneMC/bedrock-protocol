@@ -560,7 +560,7 @@ class ActorType(IntEnum):
     VEX = 2921
     MINECART_RIDEABLE = 524372
     MINECART_HOPPER = 524384
-    MINECART_TNT = 524385
+    MINECART_TNT = value(524385, cpp_name="MinecartTNT")
     MINECART_CHEST = 524386
     MINECART_FURNACE = 524387
     MINECART_COMMAND_BLOCK = 524388
@@ -724,7 +724,7 @@ class ActorType(IntEnum):
     VEX = 2921
     MINECART_RIDEABLE = 524372
     MINECART_HOPPER = 524384
-    MINECART_TNT = 524385
+    MINECART_TNT = value(524385, cpp_name="MinecartTNT")
     MINECART_CHEST = 524386
     MINECART_FURNACE = 524387
     MINECART_COMMAND_BLOCK = 524388
@@ -919,9 +919,9 @@ class ActorSwingSource(Enum, uint8):
     MINE = 2
     INTERACT = 3
     ATTACK = 4
-    USE_ITEM = 5, "UseItem"
-    THROW_ITEM = 6, "ThrowItem"
-    DROP_ITEM = 7, "DropItem"
+    USE_ITEM = 5
+    THROW_ITEM = 6
+    DROP_ITEM = 7
     EVENT = 8
 
 

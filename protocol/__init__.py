@@ -4,16 +4,21 @@ A field name may carry a single trailing underscore to escape a Python keyword
 (PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
 the BDS name.
 
-An enum member may pair its value with the way BDS spells that member,
-`DOWNLOADING_FINISHED = 3, "DownloadingFinished"`, the way `enum.Enum` spells
-`MONDAY = 1, "Mon"`. cereal folds an enumerator's bound name at bind time, so a
-name-coded enum reaches the wire lowercased and the compiler applies the fold:
-casing is never the schema's to carry, but the separator is, so a PEP 8 member
-whose BDS name carries none would both reject BDS's own string and put an extra
-byte behind the length prefix. Pair only those members -- one whose folded PEP 8
-spelling already is BDS's string earns nothing by being paired. The fold reaches
-every enum's reflected name, name-coded or not, so `enum_name` is lowercase and
-`enum_cast` folds what it is given.
+An enum member is spelled PEP 8 and reaches C++ as `CamelCase` --
+`REBECCA_PURPLE` is `RebeccaPurple`, which is BDS's own spelling for all but a
+handful of members and is never a macro where the screaming form is. Where BDS
+keeps an acronym uppercase, say so with `value(3, cpp_name="NPCRequest")`; only
+the casing is yours to give, since the wire folds off the C++ spelling.
+
+An enum member may also pair its value with the string BDS writes,
+`HIGH_PANTS = 8, "High_Pants"`, the way `enum.Enum` spells `MONDAY = 1, "Mon"`.
+cereal folds an enumerator's bound name at bind time, so a name-coded enum
+reaches the wire lowercased and the compiler applies the fold: casing is never
+the schema's to carry, but the separator is. Pair only the members BDS separates
+where the C++ spelling joins -- `EasingType` is snake all the way down
+(`in_out_quad`), the EAS operations are screaming (`ALPHA_BLEND`). The fold
+reaches every enum's reflected name, name-coded or not, so `enum_name` is
+lowercase and `enum_cast` folds what it is given.
 The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
 member to their own type and a pair is not one; a member spelled `value()`
 takes the string as its second positional instead.
@@ -44,6 +49,7 @@ def _identity(cls):
 def value(
     v: int | None = None,
     name: str | None = None,
+    cpp_name: str | None = None,
     since: int | None = None,
     until: int | None = None,
 ) -> int:
@@ -56,6 +62,9 @@ def value(
     - `name`: the string BDS writes, for a member a plain `Enum` would spell
       `MEMBER = 3, "WireName"`. Spelled here so the escape reaches an `IntEnum`
       or `StrEnum` member, which cannot carry a pair.
+    - `cpp_name`: BDS's casing for an acronym the C++ spelling flattens --
+      `NPC_REQUEST` derives `NpcRequest` where BDS writes `NPCRequest`. A case
+      variant of the derived spelling and nothing else, so it never moves the wire.
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.

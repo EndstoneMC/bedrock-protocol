@@ -131,11 +131,11 @@ class LocatorBarPacket:
 
 
 class DataDrivenScreenClosedReason(Enum, uint8):
-    PROGRAMMATIC_CLOSE = 0, "ProgrammaticClose"
-    PROGRAMMATIC_CLOSE_ALL = 1, "ProgrammaticCloseAll"
-    CLIENT_CANCELED = 2, "ClientCanceled"
-    USER_BUSY = 3, "UserBusy"
-    INVALID_FORM = 4, "InvalidForm"
+    PROGRAMMATIC_CLOSE = 0
+    PROGRAMMATIC_CLOSE_ALL = 1
+    CLIENT_CANCELED = 2
+    USER_BUSY = 3
+    INVALID_FORM = 4
 
 
 @packet(id=343, since=2168)

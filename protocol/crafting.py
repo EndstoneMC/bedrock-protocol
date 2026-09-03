@@ -5,7 +5,7 @@ the lab table, enchant options."""
 import uuid
 from enum import IntEnum, auto
 
-from protocol import array, field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
+from protocol import array, field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, varint32
 from protocol.common import BlockPos
 
 package = "bedrock.protocol"
@@ -405,7 +405,7 @@ class Enchant:
         POWER = 19
         PUNCH = 20
         FLAME = 21
-        INFINITY_ = value(22, "Infinity")
+        INFINITY = 22
         LUCK_OF_THE_SEA = 23
         LURE = 24
         FROST_WALKER = 25

@@ -164,14 +164,14 @@ class PlayerListPacketType(IntEnum, uint8):
 class BuildPlatform(IntEnum):
     UNKNOWN = -1
     GOOGLE = 1
-    IOS = 2
-    OSX = 3
+    IOS = value(2, cpp_name="IOS")
+    OSX = value(3, cpp_name="OSX")
     AMAZON = 4
-    GEAR_VR_DEPRECATED = 5
-    UWP_DEPRECATED = 7
-    WINDOWS = value(8, "Win32")
+    GEAR_VR_DEPRECATED = value(5, cpp_name="GearVRDeprecated")
+    UWP_DEPRECATED = value(7, cpp_name="UWPDeprecated")
+    WIN32 = 8
     DEDICATED = 9
-    TV_OS_DEPRECATED = 10
+    TV_OS_DEPRECATED = value(10, cpp_name="TvOSDeprecated")
     SONY = 11
     NINTENDO = 12
     XBOX = 13
@@ -232,10 +232,10 @@ class PlayerListPacket:
 
 
 class UpdateType(Enum, uint8):
-    CLEAR_OVERRIDES = 0, "ClearOverrides"
-    REMOVE_OVERRIDE = 1, "RemoveOverride"
-    SET_INT_OVERRIDE = 2, "SetIntOverride"
-    SET_FLOAT_OVERRIDE = 3, "SetFloatOverride"
+    CLEAR_OVERRIDES = 0
+    REMOVE_OVERRIDE = 1
+    SET_INT_OVERRIDE = 2
+    SET_FLOAT_OVERRIDE = 3
 
 
 @packet(id=325, until=2168)

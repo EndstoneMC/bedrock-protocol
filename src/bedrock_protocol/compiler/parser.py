@@ -45,6 +45,7 @@ from bedrock_protocol.descriptor import (
     TypeAlias,
     VariantType,
     default_enum_wire,
+    pascal,
     scoped,
 )
 
@@ -182,12 +183,13 @@ class Parser:
         for decl, (lo, hi) in zip(decls, spans):
             _check_decorators(decl)
             previous: int | None = None
+            seen: dict[str, int] = {}
             for name, attr in decl.attributes.items():
                 if attr.value is None:
                     continue
                 spelled, wire = _split_wire_name(attr.value, decl.name, name, _takes_paired_value(decl))
                 _check_keywords(spelled, "value", _VALUE_KEYWORDS, f"{decl.name}.{name}", positional=2)
-                number = _enum_number(decl.name, name, spelled, previous)
+                number, derived = _enum_number(decl.name, name, spelled, previous, seen)
                 values.append(
                     EnumValue(
                         name,
@@ -196,9 +198,12 @@ class Parser:
                         since=_tighten(_int_kwarg(spelled, "value", "since"), lo, max),
                         until=_tighten(_int_kwarg(spelled, "value", "until"), hi, min),
                         wire=wire,
+                        cpp=_cpp_name(spelled, decl.name, name),
+                        derived=derived,
                     )
                 )
                 previous = number
+                seen[name] = number
         return Enum(
             name=decls[0].name,
             values=tuple(values),
@@ -400,9 +405,7 @@ class Parser:
             return self._pred_len(node, param, field_name, scope, earlier)
         if isinstance(node.function, griffe.ExprAttribute) and str(node.function.values[-1]) == "test":
             return self._pred_bittest(node, param, field_name, scope, earlier)
-        raise CompilerError(
-            f"{field_name}: a predicate calls only len(<field>) or <field>.test(<bit>), got {node}"
-        )
+        raise CompilerError(f"{field_name}: a predicate calls only len(<field>) or <field>.test(<bit>), got {node}")
 
     def _pred_len(
         self,
@@ -444,9 +447,7 @@ class Parser:
         assert isinstance(receiver, griffe.ExprAttribute)
         parts = [str(v) for v in receiver.values]
         if len(parts) != 3 or parts[0] != param:
-            raise CompilerError(
-                f"{field_name}: a bit test reads `{param}.<earlier-field>.test(<bit>)`, got {receiver}"
-            )
+            raise CompilerError(f"{field_name}: a bit test reads `{param}.<earlier-field>.test(<bit>)`, got {receiver}")
         target = _field_name(parts[1])
         if target not in earlier:
             raise CompilerError(
@@ -632,8 +633,7 @@ class Parser:
             t = self._base_type(ann, type_kw, prefix, field_name, endian, scope, cereal, halves)
         if halves != (None, None) and _mapping_of(t) is None:
             raise CompilerError(
-                f"{field_name}: field(type=dict[K, V]) names the halves of a dict[K, V] field, "
-                f"and this one is not one"
+                f"{field_name}: field(type=dict[K, V]) names the halves of a dict[K, V] field, and this one is not one"
             )
         return t
 
@@ -891,9 +891,7 @@ def _wire_map_kwarg(call: _Ann, field_name: str) -> tuple[str | None, str | None
         return (None, None)
     parts = _map_parts(value, field_name)
     if parts is None:
-        raise CompilerError(
-            f"{field_name}: field(type=...) takes a wire primitive, str, or dict[K, V], got {value}"
-        )
+        raise CompilerError(f"{field_name}: field(type=...) takes a wire primitive, str, or dict[K, V], got {value}")
     key, value_half = (_name_of(half, field_name) for half in parts)
     return key, value_half
 
@@ -901,9 +899,7 @@ def _wire_map_kwarg(call: _Ann, field_name: str) -> tuple[str | None, str | None
 def _name_of(ann: griffe.Expr | str, field_name: str) -> str:
     if isinstance(ann, griffe.ExprName):
         return ann.name
-    raise CompilerError(
-        f"{field_name}: each half of field(type=dict[K, V]) is a wire primitive or str, got {ann}"
-    )
+    raise CompilerError(f"{field_name}: each half of field(type=dict[K, V]) is a wire primitive or str, got {ann}")
 
 
 def _takes_wire_type(t: FieldType | None) -> bool:
@@ -1028,10 +1024,23 @@ def _is_auto(value: griffe.Expr | str) -> bool:
     return name == "value" and not any(not isinstance(a, griffe.ExprKeyword) for a in value.arguments)
 
 
-def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: int | None) -> int:
-    """A member's wire number: an int literal, or `auto()` for previous + 1."""
+def _enum_number(
+    enum_name: str, name: str, value: griffe.Expr | str, previous: int | None, seen: dict[str, int]
+) -> tuple[int, tuple[str, int] | None]:
+    """A member's wire number, and the sibling arithmetic it was spelled with.
+
+    An int literal, `auto()` for previous + 1, or a sibling member optionally
+    offset by a literal -- `LATEST = NUM_VALID_VERSIONS - 1`, `HARDCODED_MOLANG =
+    LATEST`. BDS derives those two rather than numbering them, so the schema says
+    so and the backend restates the expression; the number is still resolved here,
+    because `auto()`, the reflection tables and the snapshot machinery all want a
+    value. Only a member already declared *above* this one resolves, which keeps
+    the pass single and forward references out."""
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "auto":
-        return 0 if previous is None else previous + 1
+        return (0 if previous is None else previous + 1), None
+    derived = _derived_number(enum_name, name, value, seen)
+    if derived is not None:
+        return derived
     if isinstance(value, griffe.ExprCall) and _base_name(value.function) == "value":
         # value(N, since=, until=): N is the first positional, and mandatory when
         # gated -- auto-numbering a member that is absent at some snapshot would
@@ -1040,12 +1049,44 @@ def _enum_number(enum_name: str, name: str, value: griffe.Expr | str, previous: 
         if positionals:
             explicit = _as_int(positionals[0])
             if explicit is not None:
-                return explicit
+                return explicit, None
+        elif not _is_gated(value):
+            # value(cpp_name=...) numbers like auto(); only a gate needs the number spelled out
+            return (0 if previous is None else previous + 1), None
         raise CompilerError(f"{enum_name}.{name}: value() needs an explicit wire number, e.g. value(601, since=1001)")
     number = _as_int(value)
     if number is None:
-        raise CompilerError(f"{enum_name}.{name}: enum member must be an int literal or auto(), got {value!r}")
-    return number
+        raise CompilerError(
+            f"{enum_name}.{name}: enum member must be an int literal, auto(), or a member declared "
+            f"above it optionally offset by a literal, got {value!r}"
+        )
+    return number, None
+
+
+def _is_gated(call: griffe.ExprCall) -> bool:
+    return any(isinstance(a, griffe.ExprKeyword) and a.name in ("since", "until") for a in call.arguments)
+
+
+def _derived_number(
+    enum_name: str, name: str, value: griffe.Expr | str, seen: dict[str, int]
+) -> tuple[int, tuple[str, int]] | None:
+    """`OTHER`, `OTHER + 1` or `OTHER - 1` resolved against the members already
+    declared, or None when the expression is not one of those."""
+    node, offset = value, 0
+    if isinstance(node, griffe.ExprBinOp) and node.operator in ("+", "-"):
+        step = _as_int(node.right)
+        if step is None:
+            return None
+        offset = step if node.operator == "+" else -step
+        node = node.left
+    if not isinstance(node, griffe.ExprName):
+        return None
+    if node.name not in seen:
+        raise CompilerError(
+            f"{enum_name}.{name}: {node.name} is not a member declared above it -- a member may only be "
+            f"defined against an earlier one, so the numbering stays a single forward pass"
+        )
+    return seen[node.name] + offset, (node.name, offset)
 
 
 def _positionals(call: griffe.ExprCall) -> list[_Ann]:
@@ -1082,6 +1123,23 @@ def _split_wire_name(
         if spelled is not None:
             return value, _wire_text(spelled, enum_name, member)
     return value, None
+
+
+def _cpp_name(value: griffe.Expr | str, enum_name: str, member: str) -> str | None:
+    """`value(3, cpp_name="NPCRequest")`: BDS's casing for an acronym the derived
+    spelling flattens. Only the casing is the schema's to give -- a `cpp_name` that
+    is not a case variant of the derived one would move the wire with it, silently,
+    since the reflected name folds off the C++ spelling."""
+    spelled = _call_arg(value, "value", "cpp_name")
+    if spelled is None:
+        return None
+    text = _wire_text(spelled, enum_name, member)
+    if text.lower() != pascal(member).lower():
+        raise CompilerError(
+            f"{enum_name}.{member}: cpp_name corrects an acronym's casing, not the spelling -- "
+            f"{text!r} is not a case variant of {pascal(member)!r}"
+        )
+    return text
 
 
 def _wire_text(spelled: _Ann, enum_name: str, member: str) -> str:
@@ -1275,7 +1333,7 @@ _FIELD_KEYWORDS: _Keywords = (
     },
 )
 
-_VALUE_KEYWORDS: _Keywords = (frozenset({"name", "since", "until"}), {"deprecated": _NO_DEPRECATION})
+_VALUE_KEYWORDS: _Keywords = (frozenset({"name", "cpp_name", "since", "until"}), {"deprecated": _NO_DEPRECATION})
 
 _PACKET_KEYWORDS: _Keywords = (
     frozenset({"id", "since", "until"}),

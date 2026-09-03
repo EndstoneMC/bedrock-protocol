@@ -58,18 +58,18 @@ class RedeclaredEnum(CompilerCase):
         base = self.namespace(header, "base")
         later = self.namespace(header, "v2168")
 
-        self.assertIn("PERSONA = 54,", base)
-        self.assertIn("RENDERING = 55,", base)
-        self.assertNotIn("SCRIPTING", base)
+        self.assertIn("Persona = 54,", base)
+        self.assertIn("Rendering = 55,", base)
+        self.assertNotIn("Scripting", base)
 
-        self.assertNotIn("PERSONA", later)
-        self.assertIn("RENDERING = 62,", later)
-        self.assertIn("SCRIPTING = 63,", later)
+        self.assertNotIn("Persona", later)
+        self.assertIn("Rendering = 62,", later)
+        self.assertIn("Scripting = 63,", later)
 
     def test_the_count_sentinel_follows_its_own_range(self) -> None:
         header, _ = self.compile(RENUMBERED)
-        self.assertIn("COUNT = 56,", header)
-        self.assertIn("COUNT = 64,", header)
+        self.assertIn("Count = 56,", header)
+        self.assertIn("Count = 64,", header)
 
     def test_the_selector_dispatches_on_the_version(self) -> None:
         header, _ = self.compile(RENUMBERED)

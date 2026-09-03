@@ -2,7 +2,7 @@
 
 from enum import IntEnum
 
-from protocol import field, packet, uint8
+from protocol import field, packet, uint8, value
 from protocol.common import Vec3
 
 package = "bedrock.protocol"
@@ -20,7 +20,7 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
     MOON_MIE_STRENGTH = 8
     SUN_GLARE_SHAPE = 9
     CHLOROPHYLL = 10
-    CDOM = 11
+    CDOM = value(11, cpp_name="CDOM")
     SUSPENDED_SEDIMENT = 12
     WAVES_DEPTH = 13
     WAVES_FREQUENCY = 14

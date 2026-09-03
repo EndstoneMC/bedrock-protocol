@@ -36,7 +36,6 @@ from .field import FileContext, GenContext, cpp_type, make_field_generator, type
 from .helpers import (
     BUILTIN_HEADERS,
     INCLUDE_PREFIX,
-    MACRO_ENUMERATORS,
     PRIMITIVE_TYPES,
     bare_name,
     cpp_qualified,
@@ -196,26 +195,12 @@ class FileGenerator:
     # --- namespace ----------------------------------------------------------
 
     def _emit_namespace_open(self, p: Printer) -> None:
-        shadowed = self._shadowed_macros()
-        for name in shadowed:
-            p.print(f'#pragma push_macro("{name}")\n#undef {name}\n')
-        if shadowed:
-            p.print("\n")
         if self._file.package:
             p.print(f"namespace {self._file.package.replace('.', '::')} {{\n\n")
 
     def _emit_namespace_close(self, p: Printer) -> None:
         if self._file.package:
             p.print(f"\n}}  // namespace {self._file.package.replace('.', '::')}\n")
-        for name in self._shadowed_macros():
-            p.print(f'\n#pragma pop_macro("{name}")\n')
-
-    def _shadowed_macros(self) -> tuple[str, ...]:
-        """Enumerator names this file spells that a platform header also defines as a
-        macro. Bracketing the namespace with push_macro/undef/pop_macro keeps the enum
-        valid without asking every consumer to compile with the macro undefined."""
-        spelled = {v.name for e in self._file.enums for v in e.values}
-        return tuple(sorted(spelled & MACRO_ENUMERATORS))
 
     # --- type declarations --------------------------------------------------
 

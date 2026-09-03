@@ -270,11 +270,27 @@ Five signatures in `enums/*.json`, each needing different DSL:
   member + 1. `CurrentCmdVersion`'s `Count` went 51 → 53 and `Latest` 50 → 52 with the last
   named member still at 44 and no new names in the diff. The absolute check is the one that
   mattered - six had already been unnamed for a version before anyone noticed.
+- **An unbound alias is noise; a bound sentinel on a name-coded enum is a gap.** Both look
+  like "a value the dump has and the DSL does not", and they are not the same finding. Sort
+  them by how the referencing field encodes. `MolangVersion`'s `Latest` and `HardcodedMolang`
+  are bound at every era but alias 13, and `item_stack.py` writes the enum
+  `field(type=int16)` - numeric, so carrying them changes nothing and they stay out.
+  `CurrentCmdVersion`'s `Latest` is bound at every era too, but `command.py` writes that enum
+  `field(type=str)`, so the folded name *is* the bytes: BDS puts `"latest"` on the wire and a
+  schema without the member cannot decode it. It is deliberately still absent, because its
+  value is era-dependent (49 at u3, 50 at u4, 53 at u6) while its name is not, and modelling
+  it means writing a number that is right for one era only. Revisit when a header branch above
+  1.26.40 lands. Until then: **a name-coded enum missing a bound member is a decode hole, and
+  worth saying out loud rather than leaving to a later reader to rediscover.**
 
 - **DO** give a real member an explicit numeric value.
 - **DO** reserve `auto()` for a count sentinel (`Count`, `Latest`, `MAX_X`, `NumX`) and for
-  a run shifting behind a gate. `auto()` means previous + 1, so it is correct only once
-  every member below it is named and dense.
+  a run shifting behind a gate. `auto()` means *the previous member's value* + 1 -- not the
+  maximum, and not the member count -- so what it needs is the line immediately above it
+  holding the right value, which is weaker than the whole run being dense. `Rotation` is the
+  case: `NONE`..`ROTATE_270` then the `CLOCKWISE_*` aliases repeat 1, 2, 3, so the run is not
+  dense, yet `TOTAL = auto()` still lands on 4 because `COUNTER_CLOCKWISE_90 = 3` precedes it.
+  Check the neighbour, not the histogram.
 - **DO** pin a sentinel with an explicit `value(N, since=)` and note the gap where the
   arithmetic says BDS ships enumerators the dump does not bind. Nothing available to you
   will name them, and `auto()` would silently lie about where the sentinel sits.

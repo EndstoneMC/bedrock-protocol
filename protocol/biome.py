@@ -2,7 +2,7 @@
 
 from enum import IntEnum, auto
 
-from protocol import field, int32, packet, type, uint8, uint16, uint32, varint32
+from protocol import field, int32, packet, type, uint8, uint16, uint32, value, varint32
 from protocol.molang import ExpressionOp
 
 package = "bedrock.protocol"
@@ -29,12 +29,12 @@ class BiomeTemperatureCategory(IntEnum, uint8):
 
 
 class CoordinateEvaluationOrder(IntEnum):
-    XYZ = 0
-    XZY = 1
-    YXZ = 2
-    YZX = 3
-    ZXY = 4
-    ZYX = 5
+    XYZ = value(0, cpp_name="XYZ")
+    XZY = value(1, cpp_name="XZY")
+    YXZ = value(2, cpp_name="YXZ")
+    YZX = value(3, cpp_name="YZX")
+    ZXY = value(4, cpp_name="ZXY")
+    ZYX = value(5, cpp_name="ZYX")
 
 
 class RandomDistributionType(IntEnum):
