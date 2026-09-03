@@ -176,18 +176,23 @@ exception is `RequestNetworkSettingsPacket`'s, which is the version.
 
 ### (1) Packet change
 
-`enums/MinecraftPacketIds.json` is the authority, not the file list.
+**Each `packets/*.json`'s own `id` field is the authority.** `enums/MinecraftPacketIds.json`
+is a convenience index and Mojang routinely forgets to bind values in it - r26_u6 ships
+`ServerboundStonecutterSetRecipePacket` (354) and `ClientboundStonecutterSetRecipePacket`
+(355) as dumped packets with no entry in that enum at all.
 
-- **DO** diff that file first. A packet added lands there *and* as a new `packets/*.json`;
-  a packet removed vanishes from both.
-- **DO** resolve an id in the enum with no matching `packets/*.json` - either the file is
-  named differently or the packet is not cerealised. Do not skip it.
+- **DO** take the id from the packet file. A packet added arrives as a new `packets/*.json`
+  carrying its id; a packet removed takes its file with it.
+- **DO** diff `MinecraftPacketIds.json` too, as a second view - it names ids the dump has no
+  file for, which are packets that are not cerealised.
+- **DO** reconcile the two as a **union**, never an intersection. Either source can miss a
+  packet, and each miss is a packet on the wire that nothing decodes.
 - **DO** treat an id that *moved* as a break for the packet that took it, not a rename.
 - **DO** model the body in the same commit as the id. `MinecraftPacketIds` in
   `protocol/network.py` lists ids the schema does not model, which is a standing backlog -
   but an id *you* gate `since=<new>` with no `@packet` body puts that id on the wire with
   nothing able to decode it.
-- **DO NOT** infer the packet list from `--diff-filter=A -- packets/` alone.
+- **DO NOT** treat the id enum as the packet list. It is the source that silently omits.
 
 ### (2) Type change
 
@@ -253,7 +258,13 @@ Five signatures in `enums/*.json`, each needing different DSL:
   if no other member moved, the value was already there and merely unbound, so the dump's
   *binding* changed rather than BDS. `persona::AnimatedTextureType` gained `None = 0` while
   `Face`, `Body32x32` and `Body128x128` kept 1, 2 and 3. Add it ungated - gating it would
-  claim the value did not exist before.
+  claim the value did not exist before. **Settle it in bedrock-headers, not the dump**: the
+  header lists every enumerator whether cereal binds it or not, so
+  `git show origin/android/r26_u3:<path>` against `r26_u4` says outright whether the value
+  is new. `persona::PieceType` gained `Unknown = 0` *and* `Unsupported = 28` between u3 and
+  u4, which reads like a renumber at both ends - but `PersonaTypes.h` at u3 already carried
+  the identical 29-value enum through `Count = 29`, so both were merely unbound and both are
+  ungated. Carry the sentinel over with them; it is the arithmetic that proves nothing moved.
 - **A sentinel that disagrees with the members** - check both arithmetics every time:
   `Δsentinel` must equal `added − removed`, **and** the sentinel must equal the last named
   member + 1. `CurrentCmdVersion`'s `Count` went 51 → 53 and `Latest` 50 → 52 with the last
