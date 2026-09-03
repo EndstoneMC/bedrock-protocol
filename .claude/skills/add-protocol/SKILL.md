@@ -51,6 +51,22 @@ That decides both the shape of the DSL and where the rule of four is discovered.
   pre-cereal shape.
 - **DO NOT** assume a packet's pre-2168 shape from its cerealised one, or the reverse.
 
+### 2168 is the template
+
+Whichever direction you are going, the shape the schema already models at 2168 is the
+baseline and the version you are adding is a delta against it. You are never modelling a
+packet from scratch.
+
+- **DO** start from the declaration in `protocol/*.py` and establish only what the target
+  version does *differently*. Forward, that delta lands on top of it; a back-port peels one
+  off it, as `until=` or as an earlier redeclaration tiling under the same id.
+- **DO** keep 2168's names, field order and type vocabulary except where the evidence names
+  a change - see **Naming**.
+- **DO NOT** re-derive a whole packet body from gophertunnel because the target is
+  pre-cereal. The `Marshal` walk answers what differed *then*, not what the packet is.
+- **DO NOT** let the template stand in for evidence. It is where you start reading and the
+  spine the names hang on, never a claim about the older wire.
+
 ## Sources
 
 | what it settles | source |
@@ -58,17 +74,37 @@ That decides both the shape of the DSL and where the rule of four is discovered.
 | wire type, order, prefix, presence | `github.com/EndstoneMC/protocol-docs` - one branch per update line |
 | golden bytes, pre-2168 wire | `github.com/Sandertv/gophertunnel` |
 | per-version dating | `github.com/CloudburstMC/Protocol`, `github.com/MemoriesOfTime/Nukkit-MOT` |
-| names | the schema itself, then the dump - see **Naming** |
+| names | **bedrock-headers**, at the era's branch - else the schema, then the dump. See **Naming** |
 | the arbiter, when refs disagree | the BDS binary |
 
-Commands below assume you have each repo cloned locally; substitute your own paths.
+Commands below assume you have each repo cloned locally; substitute your own paths. If one
+is missing, **clone it** rather than working around its absence - CloudburstMC needs only
+`--depth 1`, since every version's codec directory lives at HEAD.
 
-BDS headers are **not** a source here. They are access-restricted, and no header exists for
-a preview build in the first place - which is exactly what a new protocol is. Do not plan
-around having one.
+`bedrock-headers` is access-restricted. Read it, cite the branch you read, and paste none
+of it anywhere - see **Naming**.
 
 ### Naming
 
+**bedrock-headers** is the naming authority, per `CLAUDE.md`'s sources table, and it earns
+no `# TODO`. It is branched per release and read without a checkout -
+`git show origin/android/r26_u4:<path>` - from `android/r21_u4` (~786) up to
+`android/r26_u4` (1.26.40, 2168). Read `origin/<branch>`: a local branch goes stale, and a
+stale header does not read as stale, it reads as a finding.
+
+**Header coverage stops at 2168**, which is exactly where the forward work starts. So a
+back-port is named from the header, and a forward version is named heuristically for
+whatever is new above it.
+
+- **DO** settle a back-port name on the era's branch - a type's shape differs across them -
+  and say which branch you read in the commit message.
+- **DO** treat a `uN` as one update line with one wire shape. The same `uN` names different
+  builds in different repos - bedrock-headers' `android/r26_u3` is 1.26.32, protocol-docs'
+  `r26_u3` is 1.26.36.1 - and they still agree on the wire, so the era's branch and the
+  era's binary are valid arbiters for each other.
+- **DO** reach for the newest branch on forward work too. It cannot describe a field added
+  after 2168, but it settles anything that already existed at it: an enum carries its full
+  member list there whether or not cereal binds it.
 - **DO** keep the name already in the DSL when the dump labels the same field differently.
   The dump's labels are cereal display strings, not member names, and they drift. Renaming
   to chase a label churns every consumer for nothing.
@@ -82,6 +118,9 @@ around having one.
 - **DO NOT** rename an existing field as a side effect of a version bump. If a label change
   turns out to be a real BDS rename, that is category 2 and lands as a redeclaration on its
   own evidence, not because the dump's wording moved.
+- **DO NOT** paste bedrock-headers source into the schema, a commit message or this file.
+  Reading it to settle a name is the authorized use; reproducing it is not. Cite the branch
+  instead.
 
 ## 1. Establish the number
 
@@ -327,8 +366,10 @@ Five signatures in `enums/*.json`, each needing different DSL:
 
 ## 4. Back-port: below 2168
 
-The dump exists here but covers only the cerealised half, so the rule of four has two
-discovery paths and you run both. Presence in the dump at that version is the test:
+The dump exists here but covers only the cerealised half, so the four are discovered from
+three partial diffs instead of one - see **Discovering the four**. Which half a packet sits
+in decides which of those diffs can see it, and presence in the dump at that version is the
+test:
 
 | in the dump | cerealised - the dump is the wire, and a variant tag is **always `uvarint32`** over cases in declaration order |
 | --- | --- |
@@ -354,7 +395,128 @@ nothing about a reorder - see §5.
   `SharedTypes::v1_26_30::NoiseDescriptor` is new and gates, while
   `SharedTypes::versionless::FloatRange` only started being referenced and stays ungated.
 
+### Discovering the four
+
+§3 gets all four categories out of one diff. Here no single diff sees everything, so you
+run three - and you hold on to what each one can and cannot witness.
+
+**One step down, never a skip.** The two eras are the target and the nearest snapshot the
+schema *already models above it* - for 1001 that is 2168, never 975. A back-port is a delta
+peeled off the step above, so the interval always runs from the target up to its nearest
+modelled neighbour.
+
+**gophertunnel, between the two eras' commits.** Date each era by its `CurrentProtocol`
+bump, then diff the whole protocol tree between those commits, not just the packet you came
+for.
+
+```shell
+git log -S'CurrentProtocol = <old>' --oneline -- minecraft/protocol/info.go
+git log -S'CurrentProtocol = <new>' --oneline -- minecraft/protocol/info.go
+git diff <old-sha>..<new-sha> -- minecraft/protocol/
+```
+
+`-S` returns **two** commits per number, the one that introduced the constant and the one
+that removed it. Take the **introducing** commit from each pair.
+
+That diff carries all four - the id list is category 1, a `Marshal` body 2 and 3, the
+constant tables 4 - but it is the *candidate set*, not the changelog. The window holds three
+kinds of commit and only one of them dates to the new version:
+
+- **the bump itself** - the real delta.
+- **a retro-fix to the OLDER era** - a codec correction landing after the old bump, which
+  describes what the old version always did. `ServerboundDataDrivenScreenClosedPacket` took
+  two inside the 1001..2168 window - `CloseReason` retyped, `FormID` made non-optional - and
+  CloudburstMC re-declares no serializer for it at 2168 because nothing changed at 2168.
+  Dating these by the interval gates a 1001 correction at 2168.
+- **non-wire churn** - allocation and codec-performance refactors, transport plumbing, doc
+  fixes. They touch `writer.go` and read like wire changes.
+
+- **DO** classify every commit in the window before attributing any of it. In 1001..2168
+  that is 15 commits: one bump, ~5 retro-fixes, 5 non-wire, 2 doc-only.
+- **DO NOT** read the interval diff as the changelog.
+
+**CloudburstMC, between the two codec directories.** A serializer is re-declared under
+`codec/v<new>/` only when it changed - it otherwise just inherits `..._v<old>` - so the
+listing of that directory *is* the packet-level changelog, and `Bedrock_v<new>.java` against
+`Bedrock_v<old>.java` gives the id registrations. It is a directory comparison at HEAD, not a
+history walk.
+
+Cross-check that listing against gophertunnel's, and mind how you compare:
+
+- **DO** compare it against gophertunnel's **whole `minecraft/protocol/` tree**, never
+  `packet/` alone. A Cloudburst serializer inlines the closure where gophertunnel splits it
+  into `minecraft/protocol/*.go`, so a `packet/`-only comparison manufactures phantom
+  disagreements at exactly the packets whose *closure* moved - `CreativeContent`,
+  `ItemStackResponse` and `DimensionData` all read as Cloudburst-only until `creative.go`,
+  `item_stack.go` and `world.go` are in the set.
+- **DO** normalise the names before diffing the two lists. **The refs do not spell packets
+  the same way**, and a literal comparison reports correct code as missing:
+  - case - gophertunnel writes `ClientBoundMapItemData` and `ServerBoundDiagnostics`,
+    Cloudburst writes `Clientbound` and `Serverbound`.
+  - vocabulary - Cloudburst says **Entity** where BDS says **Actor**, so its
+    `MoveEntityDeltaPacket` is `MoveActorDeltaPacket`; gophertunnel spells `MobArmourEquipment`
+    where BDS spells `MobArmorEquipment`.
+  Resolve every name to the **BDS** spelling before comparing anything - to either ref's list,
+  or to the schema. A raw set difference manufactures phantom "not modelled" findings.
+
+**protocol-docs, as a hint - never as the diff.** The dump describes only what is fully
+cerealised at that version. A change inside a type BDS still writes by hand is not in it,
+so an empty dump diff is not a finding and a dump hunk is not a measurement.
+
+- **DO** check dump presence *first*, per packet. A packet present at **both** eras is
+  cerealised at both, so the dump **is** the wire for it and settles the question outright -
+  no ref adjudication needed. `InventoryContent`, `InventorySlot`, `MobEquipment` and
+  `MobArmorEquipment` are all in the dump at 1001 and 2168, and the dump names the one real
+  change between them where reading two refs against each other only raised a suspicion.
+- **DO** spend a dump hunk as a *pointer* where the packet is absent at either era: it says
+  which type is worth reading, and the reading then happens in bedrock-headers at the era's
+  branch and in the `Marshal` history.
+- **DO NOT** promote a dump hunk into a finding below 2168, and do not read dump silence as
+  "unchanged". They are the same laziness in opposite directions.
+
+**When gophertunnel and CloudburstMC disagree, read the binary.** They are independent
+codecs of the same bytes and should agree; a disagreement means one of them is wrong, and
+only the BDS build for that version settles which. A packet BDS has not fully cerealised
+keeps its own manual writer, so `<Packet>::write` is there to decompile in that version's
+IDA database - decompile it rather than reasoning from the refs.
+
+- **DO NOT** read the *presence* of `<Packet>::write` as proof a packet is hand-written.
+  Nearly every packet overrides it - 223 of them in the 1.26.32 PDB - because the cereal path
+  is driven from inside that override. Only the body answers the question.
+
+### Where the gate lands
+
+A delta lands in exactly one of three places, and **the packet declaration is only one of
+them**:
+
+- a **packet redeclaration** - `@packet(id=N, until=X)` / `@packet(id=N, since=X)` tiling one
+  id. Earned when the shape shifted, and earned again when the id *changed owner*: a version
+  can hand id N to a different packet, which is two classes tiling one id, not a rename.
+- a gate on a **closure type** - `@type(until=X)` / `@type(since=X)` on something the packet
+  contains. `ItemStackResponsePacket`, `CreativeContentPacket` and
+  `StructureBlockUpdatePacket` are each ungated at 2168 while `ItemStackResponseInfo`,
+  `CreativeGroupInfoPayload` and `StructureEditorData` carry the gate.
+- an **inline field gate** - `damage: int32 = field(type=uint8, until=2168)`.
+
+- **DO** read all three before calling a packet unhandled. An ungated `@packet` line is the
+  normal, correct outcome when the top-level field list did not move and the delta sits
+  lower in the closure.
+- **DO NOT** audit coverage by grepping the `@packet` line. It reports correct code as
+  broken, and the repair it invites - splitting a packet that should stay whole - is a real
+  wire break.
+
 ### The hand-written half
+
+gophertunnel and CloudburstMC are the main reference here, and **they do not decompose a
+packet the way BDS does**. They flatten a BDS struct into the packet, split one in two,
+inline a shared type, and name the pieces themselves. Take what they are good for - which
+bytes, in what order, at which version - and take the shape from elsewhere.
+
+- **DO** hold the type boundaries and names the 2168 declaration and the era's header
+  already give you, and land the ref's finding as a change *inside* that shape.
+- **DO NOT** introduce a type because a ref has one, or dissolve one because a ref does not.
+  A ref's struct boundary is an implementation detail of that codec - not wire, not
+  evidence, and adopting it renames types the schema already exports.
 
 ```shell
 git log -p -- minecraft/protocol/packet/<name>.go     # in a gophertunnel clone
@@ -368,6 +530,12 @@ git log -p -- minecraft/protocol/packet/<name>.go     # in a gophertunnel clone
   `bedrock-codec/.../codec/vNNN/serializer/<Packet>Serializer_vNNN.java`. A
   `Serializer_v1001` extending `Serializer_v975` and appending a field dates that field to
   1001; Nukkit-MOT annotates members `@since vNNN`.
+- **DO** collapse a ref's *shared-helper swap* to the one type it actually describes. A
+  helper swapped at a version rewrites every call site at once and reads as an N-packet wire
+  change: gophertunnel moved `InventoryContent`, `InventorySlot`, `MobEquipment` and
+  `MobArmorEquipment` from `ItemInstanceNew` to `ItemInstance` at 2168, and the whole of it is
+  one field on one shared type - `Net Id Variant` going from a tagged variant to a plain
+  `varint32` - which gates once on that type and leaves all four packets ungated.
 - **DO** verify any Cloudburst *shared helper* against gophertunnel's per-field method.
   Cloudburst's single `writeBlockPosition`, overridden at 944, made it look like every
   block-pos field switched; gophertunnel's distinct `Writer.BlockPos` vs `Writer.UBlockPos`
