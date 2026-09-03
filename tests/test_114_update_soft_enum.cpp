@@ -24,7 +24,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("UpdateSoftEnumPacket: packet id is 114")
 {
     STATIC_REQUIRE(bp::UpdateSoftEnumPacket_<2168>::Id == 114);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 114>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 114>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 114>);
 }
 

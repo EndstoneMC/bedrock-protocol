@@ -27,7 +27,7 @@ const std::string golden_invalid = bytes({
 TEST_CASE("packet id is 184")
 {
     STATIC_REQUIRE(bp::RequestAbilityPacket_<2168>::Id == 184);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 184>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 184>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 184>);
 }
 

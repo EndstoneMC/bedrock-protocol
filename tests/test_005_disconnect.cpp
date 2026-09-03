@@ -38,12 +38,12 @@ TEST_CASE("packet id is 5 at both eras")
 TEST_CASE("disconnect round-trips against the golden with its messages")
 {
     PacketV2168 packet;
-    packet.reason = bp::base::DisconnectFailReason::EDITOR_NOT_ALLOWED;
+    packet.reason = bp::v2168::DisconnectFailReason::EDITOR_NOT_ALLOWED;
     packet.messages = bp::DisconnectPacketMessages{.message = "bye", .filtered_message = "b**"};
     REQUIRE(encode(packet) == golden_shown);
 
     const auto back = decode<PacketV2168>(golden_shown);
-    REQUIRE(back.reason == bp::base::DisconnectFailReason::EDITOR_NOT_ALLOWED);
+    REQUIRE(back.reason == bp::v2168::DisconnectFailReason::EDITOR_NOT_ALLOWED);
     REQUIRE(back.messages.index() == 0);
     REQUIRE(std::get<0>(back.messages).message == "bye");
     REQUIRE(std::get<0>(back.messages).filtered_message == "b**");
@@ -52,7 +52,7 @@ TEST_CASE("disconnect round-trips against the golden with its messages")
 TEST_CASE("disconnect round-trips against the golden with no messages")
 {
     PacketV2168 packet;
-    packet.reason = bp::base::DisconnectFailReason::EDITOR_NOT_ALLOWED;
+    packet.reason = bp::v2168::DisconnectFailReason::EDITOR_NOT_ALLOWED;
     packet.messages = std::monostate{};
     REQUIRE(encode(packet) == golden_hidden);
 
@@ -65,7 +65,7 @@ TEST_CASE("disconnect round-trips against the golden with no messages")
 // is unmoved and the two eras share every body the golden covers.
 TEST_CASE("disconnect: 2192 appends two fail reasons")
 {
-    STATIC_REQUIRE(static_cast<int>(bp::base::DisconnectFailReason::MAX_DISCONNECT_FAIL_REASON) == 148);
+    STATIC_REQUIRE(static_cast<int>(bp::v2168::DisconnectFailReason::MAX_DISCONNECT_FAIL_REASON) == 148);
     STATIC_REQUIRE(static_cast<int>(bp::v2192::DisconnectFailReason::MISSING_STRUCTURE_DATA) == 148);
     STATIC_REQUIRE(static_cast<int>(bp::v2192::DisconnectFailReason::UNSUPPORTED_TRANSPORT) == 149);
     STATIC_REQUIRE(static_cast<int>(bp::v2192::DisconnectFailReason::MAX_DISCONNECT_FAIL_REASON) == 150);

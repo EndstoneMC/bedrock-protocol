@@ -31,7 +31,7 @@ const std::string golden_empty_info = bytes({
 TEST_CASE("packet id is 342")
 {
     STATIC_REQUIRE(bp::PartyChangedPacket_<2168>::Id == 342);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 342>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 342>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 342>);
 }
 

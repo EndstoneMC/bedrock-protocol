@@ -36,7 +36,7 @@ const std::string golden_embedded_nul = bytes({
 TEST_CASE("packet id is 83")
 {
     STATIC_REQUIRE(bp::ResourcePackChunkDataPacket_<2168>::Id == 83);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 83>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 83>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 83>);
 }
 

@@ -21,7 +21,7 @@ const std::string golden_undefined = bytes({
 TEST_CASE("packet id is 62")
 {
     STATIC_REQUIRE(bp::SetPlayerGameTypePacket_<2168>::Id == 62);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 62>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 62>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 62>);
 }
 

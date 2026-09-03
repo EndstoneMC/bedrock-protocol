@@ -27,7 +27,7 @@ const std::string golden_remove_all = bytes({
 TEST_CASE("packet id is 199")
 {
     STATIC_REQUIRE(bp::UnlockedRecipesPacket_<2168>::Id == 199);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 199>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 199>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 199>);
 }
 

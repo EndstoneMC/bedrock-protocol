@@ -18,7 +18,7 @@ class AnvilDamagePacket:
     position: BlockPos
 
 
-@packet(id=21, since=2168)
+@packet(id=21)
 class UpdateBlockPacket:
     pos: BlockPos
     runtime_id: uvarint32
@@ -26,21 +26,21 @@ class UpdateBlockPacket:
     layer: uvarint32
 
 
-@packet(id=26, since=2168)
+@packet(id=26)
 class BlockEventPacket:
     pos: BlockPos
     b0: varint32
     b1: varint32
 
 
-@packet(id=34, since=2168)
+@packet(id=34)
 class BlockPickRequestPacket:
     pos: BlockPos
     with_data: bool
     max_slots: uint8
 
 
-@packet(id=56, since=2168)
+@packet(id=56)
 class BlockActorDataPacket:
     pos: BlockPos
     data: CompoundTag
@@ -53,7 +53,7 @@ class ActorBlockSyncMessage:
         DESTROY = 2
 
 
-@packet(id=110, since=2168)
+@packet(id=110)
 class UpdateBlockSyncedPacket:
     pos: BlockPos
     runtime_id: uvarint32
@@ -63,14 +63,14 @@ class UpdateBlockSyncedPacket:
     message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
 
 
-@packet(id=125, since=2168)
+@packet(id=125)
 class LecternUpdatePacket:
     page: int32 = field(type=uint8)
     total_pages: int32 = field(type=uint8)
     pos: BlockPos
 
 
-@packet(id=303, since=2168)
+@packet(id=303)
 class OpenSignPacket:
     pos: BlockPos
     is_front_side: bool
@@ -89,7 +89,7 @@ class UpdateSubChunkBlocksChangedInfo:
     extras: list[UpdateSubChunkNetworkBlockInfo]
 
 
-@packet(id=172, since=2168)
+@packet(id=172)
 class UpdateSubChunkBlocksPacket:
     sub_chunk_block_position: BlockPos
     blocks_changed: UpdateSubChunkBlocksChangedInfo
@@ -98,13 +98,13 @@ class UpdateSubChunkBlocksPacket:
 type EntityNetId = uvarint32
 
 
-@packet(id=167, since=2168)
+@packet(id=167)
 class RemoveVolumeEntityPacket:
     entity_net_id: EntityNetId
     dimension_type: DimensionType
 
 
-@packet(id=166, since=2168)
+@packet(id=166)
 class AddVolumeEntityPacket:
     entity_net_id: EntityNetId
     components: CompoundTag
@@ -133,27 +133,27 @@ class SerializableVoxelShape:
     z_coords: list[float]
 
 
-@packet(id=337, since=2168)
+@packet(id=337)
 class VoxelShapesPacket:
     shapes: list[SerializableVoxelShape]
     name_map: dict[str, RegistryHandle]
     custom_shape_count: uint16
 
 
-@packet(id=25, since=2168)
+@packet(id=25)
 class LevelEventPacket:
     event_id: varint32
     pos: Vec3
     data: varint32
 
 
-@packet(id=124, since=2168)
+@packet(id=124)
 class LevelEventGenericPacket:
     event_id: varint32
     data: CompoundTag
 
 
-@packet(id=118, since=2168)
+@packet(id=118)
 class SpawnParticleEffectPacket:
     vanilla_dimension_id: uint8
     actor_id: ActorUniqueID

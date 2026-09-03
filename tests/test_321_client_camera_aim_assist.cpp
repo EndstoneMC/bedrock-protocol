@@ -17,7 +17,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 321")
 {
     STATIC_REQUIRE(bp::ClientCameraAimAssistPacket_<2168>::Id == 321);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 321>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 321>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 321>);
 }
 

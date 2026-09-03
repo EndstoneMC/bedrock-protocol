@@ -182,18 +182,18 @@ class SubChunkRequestPacket:
     center_pos: SubChunkPos
 
 
-@packet(id=69, since=2168)
+@packet(id=69)
 class RequestChunkRadiusPacket:
     chunk_radius: varint32
     max_chunk_radius: uint8
 
 
-@packet(id=70, since=2168)
+@packet(id=70)
 class ChunkRadiusUpdatedPacket:
     chunk_radius: varint32
 
 
-@packet(id=121, since=2168)
+@packet(id=121)
 class NetworkChunkPublisherUpdatePacket:
     position: BlockPos
     radius: uvarint32

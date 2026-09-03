@@ -410,14 +410,14 @@ class DisconnectFailReason(IntEnum):
     NONCE_NOT_FOUND = 137
     NONCE_EXPIRED = 138
     NONCE_NOT_VALID = 139
-    HOST_DISCONNECTED = 140
-    EDITOR_JOIN_INTENT_POLICY_FAILURE = 141
-    NETHER_NET_IDENTITY_NOT_ALLOWED = 142
-    INVALID_NAME = 143
-    EXPIRED_TOKEN = 144
-    HOST_ACCEPTS_NO_TYPE_OF_AUTH = 145
-    NOT_AUTHENTICATED_FAST_FAIL = 146
-    EDITOR_NOT_ALLOWED = 147
+    HOST_DISCONNECTED = value(140, since=1001)
+    EDITOR_JOIN_INTENT_POLICY_FAILURE = value(141, since=1001)
+    NETHER_NET_IDENTITY_NOT_ALLOWED = value(142, since=2168)
+    INVALID_NAME = value(143, since=2168)
+    EXPIRED_TOKEN = value(144, since=2168)
+    HOST_ACCEPTS_NO_TYPE_OF_AUTH = value(145, since=2168)
+    NOT_AUTHENTICATED_FAST_FAIL = value(146, since=2168)
+    EDITOR_NOT_ALLOWED = value(147, since=2168)
     MISSING_STRUCTURE_DATA = value(148, since=2192)
     UNSUPPORTED_TRANSPORT = value(149, since=2192)
     MAX_DISCONNECT_FAIL_REASON = auto()
@@ -457,7 +457,7 @@ class LoginPacket:
     connection_request: bytes
 
 
-@packet(id=2, since=2168)
+@packet(id=2)
 class PlayStatusPacket:
     """The server's answer to a login or a sub-client authentication: either the
     status that carries the handshake through to the spawn, or the reason the
@@ -466,7 +466,7 @@ class PlayStatusPacket:
     status: PlayStatus = field(type=int32, endian="big")
 
 
-@packet(id=3, since=2168)
+@packet(id=3)
 class ServerToClientHandshakePacket:
     token: str
 
@@ -504,12 +504,12 @@ class RequestNetworkSettingsPacket:
     client_network_version: int32 = field(endian="big")
 
 
-@packet(id=4, since=2168)
+@packet(id=4)
 class ClientToServerHandshakePacket:
     pass
 
 
-@packet(id=115, since=2168)
+@packet(id=115)
 class NetworkStackLatencyPacket:
     """Deprecated round-trip probe over the whole network stack, feeding the in-game
     debug graph's ping and the realms latency telemetry. Sent by both sides."""
@@ -518,7 +518,7 @@ class NetworkStackLatencyPacket:
     from_server: bool
 
 
-@packet(id=129, since=2168)
+@packet(id=129)
 class ClientCacheStatusPacket:
     """Sent once at login, telling the server whether the client supports the
     client blob cache protocol."""
@@ -526,7 +526,7 @@ class ClientCacheStatusPacket:
     enabled: bool
 
 
-@packet(id=192, since=2168)
+@packet(id=192)
 class ServerStatsPacket:
     """Server-side timing statistics the server reports to the client."""
 
@@ -538,7 +538,7 @@ class WebSocketPacketData:
     ip: str
 
 
-@packet(id=95, since=2168)
+@packet(id=95)
 class AutomationClientConnectPacket:
     """Tells the client to open a websocket connection to the given server, which may
     then run commands on the client's behalf and listen for the events it fires."""
@@ -551,7 +551,7 @@ class MissingBlobData:
     blob_data: str
 
 
-@packet(id=136, since=2168)
+@packet(id=136)
 class ClientCacheMissResponsePacket:
     blobs: list[MissingBlobData]
 
@@ -562,7 +562,7 @@ class PacketCompressionAlgorithm(IntEnum, uint16):
     NONE = 65535
 
 
-@packet(id=143, since=2168)
+@packet(id=143)
 class NetworkSettingsPacket:
     """The server's answer to a network settings request, naming the compression
     algorithm and the packet size above which it kicks in for the rest of the

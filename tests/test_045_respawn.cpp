@@ -19,7 +19,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 45")
 {
     STATIC_REQUIRE(bp::RespawnPacket_<2168>::Id == 45);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 45>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 45>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 45>);
 }
 

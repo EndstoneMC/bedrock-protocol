@@ -32,7 +32,7 @@ const std::string golden_close_all = bytes({
 TEST_CASE("packet id is 343")
 {
     STATIC_REQUIRE(bp::ServerboundDataDrivenScreenClosedPacket_<2168>::Id == 343);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 343>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 343>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 343>);
 }
 

@@ -33,7 +33,7 @@ const std::string golden_entity = bytes({
 TEST_CASE("CommandBlockUpdatePacket: packet id is 78")
 {
     STATIC_REQUIRE(bp::CommandBlockUpdatePacket_<2168>::Id == 78);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 78>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 78>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 78>);
 }
 

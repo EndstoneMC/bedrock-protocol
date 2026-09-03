@@ -26,7 +26,7 @@ const std::string golden_no_pos = bytes({
 TEST_CASE("packet id is 33")
 {
     STATIC_REQUIRE(bp::InteractPacket_<2168>::Id == 33);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 33>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 33>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 33>);
 }
 

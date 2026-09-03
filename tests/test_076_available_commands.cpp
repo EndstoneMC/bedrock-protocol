@@ -102,7 +102,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("AvailableCommandsPacket: packet id is 76")
 {
     STATIC_REQUIRE(bp::AvailableCommandsPacket_<2168>::Id == 76);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 76>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 76>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 76>);
 }
 

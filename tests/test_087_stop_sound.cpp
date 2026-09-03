@@ -24,7 +24,7 @@ const std::string golden_empty_name = bytes({
 TEST_CASE("packet id is 87")
 {
     STATIC_REQUIRE(bp::StopSoundPacket_<2168>::Id == 87);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 87>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 87>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 87>);
 }
 

@@ -21,7 +21,7 @@ const std::string golden_not_waiting = bytes({
 TEST_CASE("packet id is 179")
 {
     STATIC_REQUIRE(bp::TickingAreasLoadStatusPacket_<2168>::Id == 179);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 179>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 179>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 179>);
 }
 

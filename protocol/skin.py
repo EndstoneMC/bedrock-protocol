@@ -225,7 +225,7 @@ class PlayerSkinPacket:
     localized_old_skin_name: str
 
 
-@packet(id=138, since=2168)
+@packet(id=138)
 class EmotePacket:
     class Flags(IntEnum, uint8):
         SERVER_SIDE = 1
@@ -239,7 +239,7 @@ class EmotePacket:
     flags: uint8
 
 
-@packet(id=152, since=2168)
+@packet(id=152)
 class EmoteListPacket:
     runtime_id: ActorRuntimeID
     emote_piece_ids: list[uuid.UUID]

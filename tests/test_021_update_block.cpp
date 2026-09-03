@@ -17,7 +17,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 21")
 {
     STATIC_REQUIRE(bp::UpdateBlockPacket_<2168>::Id == 21);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 21>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 21>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 21>);
 }
 

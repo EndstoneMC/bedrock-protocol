@@ -27,7 +27,7 @@ const std::string golden_wide = bytes({
 TEST_CASE("packet id is 138")
 {
     STATIC_REQUIRE(bp::EmotePacket_<2168>::Id == 138);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 138>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 138>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 138>);
 }
 

@@ -300,22 +300,22 @@ class StartGamePacket:
     server_telemetry_data: ServerTelemetryData
 
 
-@packet(id=59, since=2168)
+@packet(id=59)
 class SetCommandsEnabledPacket:
     commands_enabled: bool
 
 
-@packet(id=60, since=2168)
+@packet(id=60)
 class SetDifficultyPacket:
     difficulty: Difficulty = field(type=uvarint32)
 
 
-@packet(id=62, since=2168)
+@packet(id=62)
 class SetPlayerGameTypePacket:
     player_game_type: GameType
 
 
-@packet(id=75, since=2168)
+@packet(id=75)
 class ShowCreditsPacket:
     class CreditsState(IntEnum):
         START = 0
@@ -325,7 +325,7 @@ class ShowCreditsPacket:
     credits_state: CreditsState
 
 
-@packet(id=105, since=2168)
+@packet(id=105)
 class SetDefaultGameTypePacket:
     default_game_type: GameType
 
@@ -336,12 +336,12 @@ class MultiplayerSettingsPacketType(IntEnum):
     REFRESH_JOINCODE = 2
 
 
-@packet(id=139, since=2168)
+@packet(id=139)
 class MultiplayerSettingsPacket:
     packet_type: MultiplayerSettingsPacketType
 
 
-@packet(id=151, since=2168)
+@packet(id=151)
 class UpdatePlayerGameTypePacket:
     player_game_type: GameType
     target_player: ActorUniqueID
@@ -355,6 +355,6 @@ class SimulationType(IntEnum, uint8):
     INVALID = 3
 
 
-@packet(id=168, since=2168)
+@packet(id=168)
 class SimulationTypePacket:
     sim_type: SimulationType

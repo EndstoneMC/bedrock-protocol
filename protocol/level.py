@@ -10,7 +10,7 @@ from protocol.nbt import CompoundTag
 package = "bedrock.protocol"
 
 
-@packet(id=10, since=2168)
+@packet(id=10)
 class SetTimePacket:
     time: varint32
 
@@ -36,7 +36,7 @@ class WorldClockData:
     time_markers: list[TimeMarkerData]
 
 
-@packet(id=344, since=2168)
+@packet(id=344)
 class SyncWorldClocksPacket:
     class SyncStateData:
         clock_data: list[SyncWorldClockStateData]
@@ -59,7 +59,7 @@ class PositionTrackingId:
     raw_id: varint32
 
 
-@packet(id=153, since=2168)
+@packet(id=153)
 class PositionTrackingDBServerBroadcastPacket:
     class Action(IntEnum, uint8):
         UPDATE = 0
@@ -71,7 +71,7 @@ class PositionTrackingDBServerBroadcastPacket:
     data: CompoundTag
 
 
-@packet(id=154, since=2168)
+@packet(id=154)
 class PositionTrackingDBClientRequestPacket:
     class Action(IntEnum, uint8):
         QUERY = 0

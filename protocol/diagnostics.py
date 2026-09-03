@@ -276,20 +276,20 @@ class ServerboundDiagnosticsPacket:
     whisker_data: list[ScopeDataSummary] = field(since=1001)
 
 
-@packet(id=190, since=2168)
+@packet(id=190)
 class EditorNetworkPacket:
     route_to_manager: bool
     raw_variant_name: str
     raw_variant_data: str
 
 
-@packet(id=155, since=2168)
+@packet(id=155)
 class DebugInfoPacket:
     actor_id: ActorUniqueID
     data: str
 
 
-@packet(id=164, since=2168)
+@packet(id=164)
 class ClientboundDebugRendererPacket:
     class PayloadType(Enum, uint8):
         INVALID = 0

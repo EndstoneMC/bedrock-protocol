@@ -335,6 +335,6 @@ class PlayerActionPacket:
     face: varint32
 
 
-@packet(id=196, since=2168)
+@packet(id=196)
 class UpdateClientInputLocksPacket:
     input_lock_component_data: uvarint32

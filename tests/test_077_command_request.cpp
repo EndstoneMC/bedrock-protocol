@@ -31,7 +31,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 77")
 {
     STATIC_REQUIRE(bp::CommandRequestPacket_<2168>::Id == 77);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 77>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 77>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 77>);
 }
 
@@ -45,7 +45,7 @@ TEST_CASE("a command request round-trips against the golden")
     packet.origin.request_id = "req-1";
     packet.origin.player_id = -2;
     packet.internal_source = true;
-    packet.version = bp::CurrentCmdVersion::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE;
+    packet.version = bp::CurrentCmdVersion_<2168>::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::CommandRequestPacket_<2168>>(golden);
@@ -56,14 +56,14 @@ TEST_CASE("a command request round-trips against the golden")
     REQUIRE(back.origin.request_id == "req-1");
     REQUIRE(back.origin.player_id == -2);
     REQUIRE(back.internal_source);
-    REQUIRE(back.version == bp::CurrentCmdVersion::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE);
+    REQUIRE(back.version == bp::CurrentCmdVersion_<2168>::TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE);
 }
 
 TEST_CASE("a command request's command line takes a varint length prefix")
 {
     bp::CommandRequestPacket_<2168> packet;
     packet.origin.type = bp::CommandOriginType::PLAYER;
-    packet.version = bp::CurrentCmdVersion::INITIAL;
+    packet.version = bp::CurrentCmdVersion_<2168>::INITIAL;
 
     packet.command = std::string(127, 'a');
     const auto shorter = encode(packet);
@@ -78,7 +78,7 @@ TEST_CASE("a command request's player id is eight fixed bytes below zero")
 {
     bp::CommandRequestPacket_<2168> packet;
     packet.origin.type = bp::CommandOriginType::PLAYER;
-    packet.version = bp::CurrentCmdVersion::INITIAL;
+    packet.version = bp::CurrentCmdVersion_<2168>::INITIAL;
 
     packet.origin.player_id = 0;
     const auto zero = encode(packet);

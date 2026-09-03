@@ -93,7 +93,7 @@ class PlayerPartyInfo:
     is_leader: bool
 
 
-@packet(id=342, since=2168)
+@packet(id=342)
 class PartyChangedPacket:
     party_info: PlayerPartyInfo | None
 

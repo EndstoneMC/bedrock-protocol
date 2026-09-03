@@ -28,7 +28,7 @@ const std::string golden_max = bytes({
 TEST_CASE("packet id is 196")
 {
     STATIC_REQUIRE(bp::UpdateClientInputLocksPacket_<2168>::Id == 196);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 196>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 196>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 196>);
 }
 

@@ -35,7 +35,7 @@ const std::string golden_high_loading_screen_id = bytes({
 TEST_CASE("packet id is 61")
 {
     STATIC_REQUIRE(bp::ChangeDimensionPacket_<2168>::Id == 61);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 61>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 61>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 61>);
 }
 

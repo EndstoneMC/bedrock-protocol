@@ -14,7 +14,7 @@ const std::string golden = bytes({});
 TEST_CASE("packet id is 340")
 {
     STATIC_REQUIRE(bp::ResourcePacksReadyForValidationPacket_<2168>::Id == 340);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 340>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 340>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 340>);
 }
 

@@ -23,7 +23,7 @@ const std::string golden_wide_pos = bytes({
 TEST_CASE("packet id is 125")
 {
     STATIC_REQUIRE(bp::LecternUpdatePacket_<2168>::Id == 125);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 125>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 125>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 125>);
 }
 

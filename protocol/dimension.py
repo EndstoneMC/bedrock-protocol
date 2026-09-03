@@ -34,7 +34,7 @@ class DimensionDataPacket:
     dimension_definitions: dict[str, DimensionDefinitionGroup.DimensionDefinition]
 
 
-@packet(id=61, since=2168)
+@packet(id=61)
 class ChangeDimensionPacket:
     dimension_id: DimensionType
     pos: Vec3

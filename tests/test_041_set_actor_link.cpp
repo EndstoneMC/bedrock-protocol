@@ -18,7 +18,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 41")
 {
     STATIC_REQUIRE(bp::SetActorLinkPacket_<2168>::Id == 41);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 41>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 41>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 41>);
 }
 

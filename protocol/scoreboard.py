@@ -135,7 +135,7 @@ class SetScoreboardIdentityPacket:
     identity_info: list[ScoreboardIdentityPacketInfo]
 
 
-@packet(id=106, since=2168)
+@packet(id=106)
 class RemoveObjectivePacket:
     objective_name: str
 
@@ -145,7 +145,7 @@ class ObjectiveSortOrder(IntEnum, uint8):
     DESCENDING = 1
 
 
-@packet(id=107, since=2168)
+@packet(id=107)
 class SetDisplayObjectivePacket:
     display_slot_name: str
     objective_name: str

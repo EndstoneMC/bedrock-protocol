@@ -16,7 +16,7 @@ class MovementEffectType(IntEnum):
     COUNT = auto()
 
 
-@packet(id=28, since=2168)
+@packet(id=28)
 class MobEffectPacket:
     class Event(IntEnum, uint8):
         INVALID = 0
@@ -34,7 +34,7 @@ class MobEffectPacket:
     ambient: bool
 
 
-@packet(id=318, since=2168)
+@packet(id=318)
 class MovementEffectPacket:
     target_runtime_id: ActorRuntimeID
     effect_id: MovementEffectType

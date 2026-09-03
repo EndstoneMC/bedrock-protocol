@@ -88,7 +88,7 @@ class MoveActorDeltaPacket:
     move_data: MoveActorDeltaData
 
 
-@packet(id=16, since=2168)
+@packet(id=16)
 class ServerPlayerPostMovePositionPacket:
     pos: Vec3
 
@@ -101,7 +101,7 @@ class ActorDataBoundingBoxComponent:
     value: array[float, 3]
 
 
-@packet(id=322, since=2168)
+@packet(id=322)
 class ClientMovementPredictionSyncPacket:
     actor_data_flag: ActorDataFlagComponent
     actor_bounding_box: ActorDataBoundingBoxComponent
@@ -115,7 +115,7 @@ class RewindType(IntEnum, uint8):
     VEHICLE = 1
 
 
-@packet(id=161, since=2168)
+@packet(id=161)
 class CorrectPlayerMovePredictionPacket:
     prediction_type: RewindType
     pos: Vec3

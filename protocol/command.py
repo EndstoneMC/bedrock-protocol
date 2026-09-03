@@ -4,7 +4,7 @@ and both permission ladders."""
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import auto, field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32
+from protocol import auto, field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos
 
@@ -20,13 +20,13 @@ class CommandPermissionLevel(IntEnum, uint8):
     INTERNAL = 5
 
 
-@packet(id=140, since=2168)
+@packet(id=140)
 class SettingsCommandPacket:
     command_string: str
     suppress_output: bool
 
 
-@packet(id=76, since=2168)
+@packet(id=76)
 class AvailableCommandsPacket:
     class EnumData:
         name: str
@@ -82,6 +82,27 @@ class CommandBlockMode(IntEnum, uint16):
     NORMAL = 0
     REPEATING = 1
     CHAIN = 2
+
+
+@packet(id=78, until=2168)
+class CommandBlockUpdatePacket:
+    class EntityCommandTarget:
+        entity_id: ActorRuntimeID
+
+    class BlockCommandData:
+        block_pos: BlockPos
+        mode: CommandBlockMode
+        redstone_mode: bool
+        is_conditional: bool
+
+    target: EntityCommandTarget | BlockCommandData
+    command: str
+    last_output: str
+    name: str
+    filtered_name: str
+    track_output: bool
+    tick_delay: uint32
+    execute_on_first_tick: bool
 
 
 @packet(id=78, since=2168)
@@ -181,14 +202,14 @@ class CurrentCmdVersion(Enum):
     TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE = 44
     CLONE_EXTRA_BLOCK_FILTER_FIX = 45
     FILL_COMMAND_UNFILLABLE_ERROR_OUTPUT = 46
-    STOP_SOUND_OUTPUT_FIX = 47
-    PLAY_SOUND_OUTPUT_FIX = 48
-    PLAYER_WAYPOINTS_GAMERULE = 49
-    CLONE_PARTIAL_BED_BLOCK_FIX = 50
+    STOP_SOUND_OUTPUT_FIX = value(47, since=1001)
+    PLAY_SOUND_OUTPUT_FIX = value(48, since=1001)
+    PLAYER_WAYPOINTS_GAMERULE = value(49, since=1001)
+    CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
     COUNT = auto()
 
 
-@packet(id=77, since=2168)
+@packet(id=77)
 class CommandRequestPacket:
     command: str
     origin: CommandOriginData
@@ -217,7 +238,7 @@ class CommandOutput:
     data: str | None
 
 
-@packet(id=79, since=2168)
+@packet(id=79)
 class CommandOutputPacket:
     origin_data: CommandOriginData
     output: CommandOutput
@@ -229,7 +250,7 @@ class SoftEnumUpdateType(IntEnum, uint8):
     REPLACE = 2
 
 
-@packet(id=114, since=2168)
+@packet(id=114)
 class UpdateSoftEnumPacket:
     enum_name: str
     values: list[str]

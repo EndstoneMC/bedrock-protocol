@@ -35,7 +35,7 @@ const std::string golden_without_angular_velocity = bytes({
 TEST_CASE("packet id is 161")
 {
     STATIC_REQUIRE(bp::CorrectPlayerMovePredictionPacket_<2168>::Id == 161);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 161>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 161>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 161>);
 }
 

@@ -9,12 +9,12 @@ from protocol.presence import ClientStoreEntryPointConfiguration
 package = "bedrock.protocol"
 
 
-@packet(id=104, since=2168)
+@packet(id=104)
 class ShowProfilePacket:
     player_xuid: str
 
 
-@packet(id=305, since=2168)
+@packet(id=305)
 class RefreshEntitlementsPacket:
     pass
 
@@ -26,17 +26,17 @@ class ShowStoreOfferRedirectType(IntEnum, uint8):
     COUNT = auto()
 
 
-@packet(id=91, since=2168)
+@packet(id=91)
 class ShowStoreOfferPacket:
     offer_id: uuid.UUID
     redirect_type: ShowStoreOfferRedirectType
 
 
-@packet(id=92, since=2168)
+@packet(id=92)
 class PurchaseReceiptPacket:
     purchase_receipts: list[str]
 
 
-@packet(id=346, since=2168)
+@packet(id=346)
 class ServerStoreInfoPacket:
     client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None

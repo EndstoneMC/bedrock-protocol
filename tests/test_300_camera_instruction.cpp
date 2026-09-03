@@ -76,7 +76,7 @@ const std::string golden_spline = bytes({
 TEST_CASE("packet id is 300")
 {
     STATIC_REQUIRE(bp::CameraInstructionPacket_<2168>::Id == 300);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 300>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 300>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 300>);
 }
 

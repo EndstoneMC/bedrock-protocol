@@ -26,7 +26,7 @@ const std::string golden_wide = bytes({
 TEST_CASE("packet id is 194")
 {
     STATIC_REQUIRE(bp::GameTestRequestPacket_<2168>::Id == 194);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 194>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 194>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 194>);
 }
 

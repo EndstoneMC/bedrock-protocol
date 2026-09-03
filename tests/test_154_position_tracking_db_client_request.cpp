@@ -23,7 +23,7 @@ const std::string golden_negative = bytes({
 TEST_CASE("packet id is 154")
 {
     STATIC_REQUIRE(bp::PositionTrackingDBClientRequestPacket_<2168>::Id == 154);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 154>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 154>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 154>);
 }
 

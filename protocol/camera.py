@@ -73,7 +73,7 @@ class CameraPresetsPacket:
     camera_presets: CameraPresets
 
 
-@packet(id=73, since=2168)
+@packet(id=73)
 class CameraPacket:
     camera_id: ActorUniqueID
     target_player_id: ActorUniqueID
@@ -89,7 +89,7 @@ class CameraShakeAction(IntEnum, uint8):
     STOP = 1
 
 
-@packet(id=159, since=2168)
+@packet(id=159)
 class CameraShakePacket:
     intensity: float
     seconds: float
@@ -105,7 +105,7 @@ class CameraAimAssistActorPriority:
         priority_value: int32
 
 
-@packet(id=339, since=2168)
+@packet(id=339)
 class CameraAimAssistActorPriorityPacket:
     camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
 
@@ -116,14 +116,14 @@ class ClientCameraAimAssistPacketAction(IntEnum, uint8):
     COUNT = auto()
 
 
-@packet(id=321, since=2168)
+@packet(id=321)
 class ClientCameraAimAssistPacket:
     camera_preset_id: str
     action: ClientCameraAimAssistPacketAction
     allow_aim_assist: bool
 
 
-@packet(id=316, since=2168)
+@packet(id=316)
 class CameraAimAssistPacket:
     class Action(IntEnum, uint8):
         SET = 0
@@ -178,7 +178,7 @@ class CameraAimAssistPresetsPacketOperation(IntEnum, uint8):
     ADD_TO_EXISTING = 1
 
 
-@packet(id=320, since=2168)
+@packet(id=320)
 class CameraAimAssistPresetsPacket:
     categories: list[CameraAimAssistCategoryDefinition]
     presets: list[CameraAimAssistPresetDefinition]
@@ -284,7 +284,7 @@ class CameraInstruction:
     detach_from_entity: bool | None
 
 
-@packet(id=300, since=2168)
+@packet(id=300)
 class CameraInstructionPacket:
     camera_instruction: CameraInstruction
 
@@ -314,11 +314,11 @@ class CameraSplineDefinition:
     spline_rotation_frames: list[CameraSplineRotationKeyFrame]
 
 
-@packet(id=338, since=2168)
+@packet(id=338)
 class CameraSplinePacket:
     splines: list[CameraSplineDefinition]
 
 
-@packet(id=327, since=2168)
+@packet(id=327)
 class ClientboundControlSchemeSetPacket:
     control_scheme: Scheme

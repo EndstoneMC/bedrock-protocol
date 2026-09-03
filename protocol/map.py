@@ -159,7 +159,7 @@ class ClientboundMapItemDataPacket:
     map_pixels: list[uint32] | None
 
 
-@packet(id=68, since=2168)
+@packet(id=68)
 class MapInfoRequestPacket:
     class ClientPixelsProxy:
         pixel: uint32
@@ -169,13 +169,13 @@ class MapInfoRequestPacket:
     client_pixels: list[ClientPixelsProxy] = field(prefix=uint32)
 
 
-@packet(id=131, since=2168)
+@packet(id=131)
 class MapCreateLockedCopyPacket:
     original_map_id: ActorUniqueID
     new_map_id: ActorUniqueID
 
 
-@packet(id=171, since=2168)
+@packet(id=171)
 class CreatePhotoPacket:
     id: ActorUniqueID = field(type=uint64)
     photo_name: str
@@ -188,7 +188,7 @@ class PhotoType(IntEnum, uint8):
     BOOK = 2
 
 
-@packet(id=99, since=2168)
+@packet(id=99)
 class PhotoTransferPacket:
     photo_name: str
     photo_data: str
@@ -199,7 +199,7 @@ class PhotoTransferPacket:
     new_photo_name: str
 
 
-@packet(id=324, since=2168)
+@packet(id=324)
 class PlayerVideoCapturePacket:
     class StartVideoCapture:
         frame_rate: uint32

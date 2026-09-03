@@ -27,7 +27,7 @@ const std::string golden_unfiltered = bytes({
 TEST_CASE("packet id is 323")
 {
     STATIC_REQUIRE(bp::UpdateClientOptionsPacket_<2168>::Id == 323);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 323>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 323>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 323>);
 }
 

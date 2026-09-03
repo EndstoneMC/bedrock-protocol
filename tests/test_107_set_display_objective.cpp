@@ -31,7 +31,7 @@ const std::string golden_descending = bytes({
 TEST_CASE("packet id is 107")
 {
     STATIC_REQUIRE(bp::SetDisplayObjectivePacket_<2168>::Id == 107);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 107>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 107>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 107>);
 }
 

@@ -25,7 +25,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("packet id is 89")
 {
     STATIC_REQUIRE(bp::AddBehaviorTreePacket_<2168>::Id == 89);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 89>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 89>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 89>);
 }
 

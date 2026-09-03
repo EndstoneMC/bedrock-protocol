@@ -694,7 +694,7 @@ class RecordStartedPacket:
     server_sound_handle: ServerSoundHandle
 
 
-@packet(id=87, since=2168)
+@packet(id=87)
 class StopSoundPacket:
     name: str
     stop_all: bool

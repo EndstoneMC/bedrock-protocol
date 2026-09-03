@@ -25,7 +25,7 @@ const std::string golden_wide = bytes({
 TEST_CASE("packet id is 40")
 {
     STATIC_REQUIRE(bp::SetActorMotionPacket_<2168>::Id == 40);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 40>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 40>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 40>);
 }
 

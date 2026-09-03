@@ -15,7 +15,7 @@ class EduSharedUriResource:
     link_uri: str
 
 
-@packet(id=150, since=2168)
+@packet(id=150)
 class CodeBuilderPacket:
     url: str
     should_open_code_builder: bool
@@ -27,7 +27,7 @@ class LessonAction(IntEnum, int8):
     RESTART = 2
 
 
-@packet(id=183, since=2168)
+@packet(id=183)
 class LessonProgressPacket:
     action: LessonAction = field(type=varint32)
     score: varint32
@@ -60,12 +60,12 @@ class EducationLevelSettings:
     external_link_settings: ExternalLinkSettings | None
 
 
-@packet(id=137, since=2168)
+@packet(id=137)
 class EducationSettingsPacket:
     education_level_settings: EducationLevelSettings
 
 
-@packet(id=170, since=2168)
+@packet(id=170)
 class EduUriResourcePacket:
     edu_shared_uri_resource: EduSharedUriResource
 
@@ -92,7 +92,7 @@ class CodeStatus(IntEnum, uint8):
     SUCCEEDED = 5
 
 
-@packet(id=178, since=2168)
+@packet(id=178)
 class CodeBuilderSourcePacket:
     operation: Operation
     category: Category
@@ -104,7 +104,7 @@ class AgentAnimation(IntEnum, uint8):
     SHRUG = 1
 
 
-@packet(id=304, since=2168)
+@packet(id=304)
 class AgentAnimationPacket:
     anim: AgentAnimation
     runtime_id: ActorRuntimeID
@@ -131,7 +131,7 @@ class AgentActionType(IntEnum):
     TURN = 18
 
 
-@packet(id=181, since=2168)
+@packet(id=181)
 class AgentActionEventPacket:
     request_id: str
     action: AgentActionType = field(type=int32)

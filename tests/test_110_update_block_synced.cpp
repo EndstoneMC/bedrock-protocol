@@ -26,7 +26,7 @@ const std::string golden_none = bytes({
 TEST_CASE("packet id is 110")
 {
     STATIC_REQUIRE(bp::UpdateBlockSyncedPacket_<2168>::Id == 110);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 110>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 110>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 110>);
 }
 

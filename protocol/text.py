@@ -22,7 +22,7 @@ class TextPacketType(IntEnum, uint8):
     TEXT_OBJECT_ANNOUNCEMENT = 11
 
 
-@packet(id=9, since=2168)
+@packet(id=9)
 class TextPacket:
     class MessageOnly:
         type: TextPacketType
@@ -45,13 +45,13 @@ class TextPacket:
     filtered_message: str | None
 
 
-@packet(id=186, since=2168)
+@packet(id=186)
 class ToastRequestPacket:
     title: str
     content: str
 
 
-@packet(id=88, since=2168)
+@packet(id=88)
 class SetTitlePacket:
     class TitleType(IntEnum):
         CLEAR = 0

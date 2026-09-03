@@ -23,7 +23,7 @@ const std::string golden_small = bytes({
 TEST_CASE("packet id is 115")
 {
     STATIC_REQUIRE(bp::NetworkStackLatencyPacket_<2168>::Id == 115);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 115>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 115>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 115>);
 }
 

@@ -33,11 +33,11 @@ class DataStoreRemoval:
     data_store_name: str
 
 
-@packet(id=330, since=2168)
+@packet(id=330)
 class ClientboundDataStorePacket:
     updates: list[DataStoreUpdate | DataStoreChange | DataStoreRemoval]
 
 
-@packet(id=332, since=2168)
+@packet(id=332)
 class ServerboundDataStorePacket:
     update: DataStoreUpdate

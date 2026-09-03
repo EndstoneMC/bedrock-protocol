@@ -26,7 +26,7 @@ const std::string golden_infinite = bytes({
 TEST_CASE("packet id is 28")
 {
     STATIC_REQUIRE(bp::MobEffectPacket_<2168>::Id == 28);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 28>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 28>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 28>);
 }
 

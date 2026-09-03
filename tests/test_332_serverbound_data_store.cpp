@@ -42,7 +42,7 @@ const std::string golden_bool = bytes({
 TEST_CASE("packet id is 332")
 {
     STATIC_REQUIRE(bp::ServerboundDataStorePacket_<2168>::Id == 332);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 332>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 332>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 332>);
 }
 

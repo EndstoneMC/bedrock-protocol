@@ -25,7 +25,7 @@ const std::string golden_negative_slot = bytes({
 TEST_CASE("packet id is 54")
 {
     STATIC_REQUIRE(bp::GuiDataPickItemPacket_<2168>::Id == 54);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 54>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 54>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 54>);
 }
 

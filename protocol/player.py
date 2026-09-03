@@ -22,7 +22,7 @@ class PlayerRespawnState(IntEnum, uint8):
     CLIENT_READY_TO_SPAWN = 2
 
 
-@packet(id=45, since=2168)
+@packet(id=45)
 class RespawnPacket:
     pos: Vec3
     state: PlayerRespawnState
@@ -69,24 +69,24 @@ class ActorDamageCause(IntEnum):
     ALL = 35
 
 
-@packet(id=38, since=2168)
+@packet(id=38)
 class HurtArmorPacket:
     cause: ActorDamageCause
     dmg: varint32
     armor_slots: uvarint64
 
 
-@packet(id=42, since=2168)
+@packet(id=42)
 class SetHealthPacket:
     health: varint32
 
 
-@packet(id=309, since=2168)
+@packet(id=309)
 class AwardAchievementPacket:
     achievement_id: int32
 
 
-@packet(id=33, since=2168)
+@packet(id=33)
 class InteractPacket:
     class Action(IntEnum, uint8):
         INVALID = 0
@@ -105,7 +105,7 @@ class SpawnPositionType(IntEnum):
     WORLD_SPAWN = 1
 
 
-@packet(id=43, since=2168)
+@packet(id=43)
 class SetSpawnPositionPacket:
     spawn_pos_type: SpawnPositionType
     pos: BlockPos
@@ -113,7 +113,7 @@ class SetSpawnPositionPacket:
     spawn_block_pos: BlockPos
 
 
-@packet(id=113, since=2168)
+@packet(id=113)
 class SetLocalPlayerAsInitializedPacket:
     player_id: ActorRuntimeID
 
@@ -133,12 +133,12 @@ class ArmorSlotAndDamagePair:
     damage: int16
 
 
-@packet(id=149, since=2168)
+@packet(id=149)
 class PlayerArmorDamagePacket:
     slot_and_damage_pairs: list[ArmorSlotAndDamagePair]
 
 
-@packet(id=160, since=2168)
+@packet(id=160)
 class PlayerFogPacket:
     fog_stack: list[str]
 
@@ -150,7 +150,7 @@ class GraphicsMode(IntEnum, uint8):
     RAY_TRACED = 3
 
 
-@packet(id=323, since=2168)
+@packet(id=323)
 class UpdateClientOptionsPacket:
     graphics_mode: GraphicsMode | None
     filter_profanity: bool | None

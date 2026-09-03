@@ -21,7 +21,7 @@ const std::string golden_one = bytes({
 TEST_CASE("packet id is 130")
 {
     STATIC_REQUIRE(bp::OnScreenTextureAnimationPacket_<2168>::Id == 130);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 130>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 130>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 130>);
 }
 

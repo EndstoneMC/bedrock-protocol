@@ -39,7 +39,7 @@ const std::string golden_use_item_swing_source = bytes({
 TEST_CASE("packet id is 44")
 {
     STATIC_REQUIRE(bp::AnimatePacket_<2168>::Id == 44);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 44>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 44>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 44>);
 }
 

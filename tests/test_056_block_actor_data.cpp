@@ -23,7 +23,7 @@ const std::string golden_empty_tag = bytes({
 TEST_CASE("packet id is 56")
 {
     STATIC_REQUIRE(bp::BlockActorDataPacket_<2168>::Id == 56);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 56>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 56>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 56>);
 }
 

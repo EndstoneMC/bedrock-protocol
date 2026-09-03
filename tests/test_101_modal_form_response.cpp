@@ -30,7 +30,7 @@ const std::string golden_empty_response = bytes({
 TEST_CASE("packet id is 101")
 {
     STATIC_REQUIRE(bp::ModalFormResponsePacket_<2168>::Id == 101);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 101>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 101>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 101>);
 }
 

@@ -24,7 +24,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("packet id is 150")
 {
     STATIC_REQUIRE(bp::CodeBuilderPacket_<2168>::Id == 150);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 150>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 150>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 150>);
 }
 

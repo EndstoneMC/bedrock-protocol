@@ -21,7 +21,7 @@ const std::string golden_negative = bytes({
 TEST_CASE("packet id is 309")
 {
     STATIC_REQUIRE(bp::AwardAchievementPacket_<2168>::Id == 309);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 309>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 309>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 309>);
 }
 

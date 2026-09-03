@@ -12,7 +12,7 @@ from protocol.common import Color, DimensionType, Vec2, Vec3
 package = "bedrock.protocol"
 
 
-@packet(id=335, since=2168)
+@packet(id=335)
 class ClientboundDataDrivenUIReloadPacket:
     pass
 
@@ -40,7 +40,7 @@ class HudVisibility(IntEnum):
     COUNT = auto()
 
 
-@packet(id=308, since=2168)
+@packet(id=308)
 class SetHudPacket:
     hud_element: list[HudElement]
     hud_visible: HudVisibility
@@ -52,25 +52,25 @@ class ServerboundLoadingScreenPacketType(IntEnum):
     END_LOADING_SCREEN = 2
 
 
-@packet(id=312, since=2168)
+@packet(id=312)
 class ServerboundLoadingScreenPacket:
     loading_screen_packet_type: ServerboundLoadingScreenPacketType
     loading_screen_id: uint32 | None
 
 
-@packet(id=334, since=2168)
+@packet(id=334)
 class ClientboundDataDrivenUICloseScreenPacket:
     form_id: uint32 | None
 
 
-@packet(id=333, since=2168)
+@packet(id=333)
 class ClientboundDataDrivenUIShowScreenPacket:
     screen_id: str
     form_id: uint32
     data_instance_id: uint32 | None
 
 
-@packet(id=336, since=2168)
+@packet(id=336)
 class ClientboundTextureShiftPacket:
     class Action(IntEnum, uint8):
         INVALID = 0
@@ -125,7 +125,7 @@ class LocatorBarWaypointPayload:
     action: ServerWaypointGroup.Action
 
 
-@packet(id=341, since=2168)
+@packet(id=341)
 class LocatorBarPacket:
     waypoints: list[LocatorBarWaypointPayload]
 
@@ -138,24 +138,24 @@ class DataDrivenScreenClosedReason(Enum, uint8):
     INVALID_FORM = 4
 
 
-@packet(id=343, since=2168)
+@packet(id=343)
 class ServerboundDataDrivenScreenClosedPacket:
     form_id: uint32
     close_reason: DataDrivenScreenClosedReason = field(type=str)
 
 
-@packet(id=100, since=2168)
+@packet(id=100)
 class ModalFormRequestPacket:
     form_id: uvarint32
     form_json: str
 
 
-@packet(id=102, since=2168)
+@packet(id=102)
 class ServerSettingsRequestPacket:
     pass
 
 
-@packet(id=103, since=2168)
+@packet(id=103)
 class ServerSettingsResponsePacket:
     """The server's answer to a settings request: the JSON describing a settings tab
     to draw for this server, and the form id the client echoes back when the player
@@ -165,7 +165,7 @@ class ServerSettingsResponsePacket:
     form_json: str
 
 
-@packet(id=310, since=2168)
+@packet(id=310)
 class ClientboundCloseFormPacket:
     pass
 
@@ -175,13 +175,13 @@ class ModalFormCancelReason(IntEnum, uint8):
     USER_BUSY = 1
 
 
-@packet(id=101, since=2168)
+@packet(id=101)
 class ModalFormResponsePacket:
     form_id: uvarint32
     json_response: str | None
     form_cancel_reason: ModalFormCancelReason | None
 
 
-@packet(id=130, since=2168)
+@packet(id=130)
 class OnScreenTextureAnimationPacket:
     effect_id: uint32

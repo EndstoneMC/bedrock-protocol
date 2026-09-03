@@ -31,7 +31,7 @@ const std::string golden_wide = bytes({
 TEST_CASE("packet id is 151")
 {
     STATIC_REQUIRE(bp::UpdatePlayerGameTypePacket_<2168>::Id == 151);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 151>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 151>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 151>);
 }
 

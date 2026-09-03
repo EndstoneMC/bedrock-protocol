@@ -32,7 +32,7 @@ const std::string golden_legacy_particle = bytes({
 TEST_CASE("packet id is 25")
 {
     STATIC_REQUIRE(bp::LevelEventPacket_<2168>::Id == 25);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 25>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 25>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 25>);
 }
 

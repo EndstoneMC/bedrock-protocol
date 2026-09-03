@@ -23,7 +23,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("packet id is 181")
 {
     STATIC_REQUIRE(bp::AgentActionEventPacket_<2168>::Id == 181);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 181>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 181>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 181>);
 }
 

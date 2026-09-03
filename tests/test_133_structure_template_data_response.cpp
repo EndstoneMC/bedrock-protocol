@@ -34,7 +34,7 @@ const std::string golden_empty_tag = bytes({
 TEST_CASE("packet id is 133")
 {
     STATIC_REQUIRE(bp::StructureTemplateDataResponsePacket_<2168>::Id == 133);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 133>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 133>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 133>);
 }
 

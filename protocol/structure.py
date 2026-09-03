@@ -101,12 +101,12 @@ class StructureBlockUpdatePacket:
     is_waterlogged: bool
 
 
-@packet(id=179, since=2168)
+@packet(id=179)
 class TickingAreasLoadStatusPacket:
     waiting_for_preload: bool
 
 
-@packet(id=314, since=2168)
+@packet(id=314)
 class CurrentStructureFeaturePacket:
     current_structure_feature: str
 
@@ -118,7 +118,7 @@ class StructureTemplateRequestOperation(IntEnum, uint8):
     QUERY_SAVED_STRUCTURE = 3
 
 
-@packet(id=132, since=2168)
+@packet(id=132)
 class StructureTemplateDataRequestPacket:
     structure_name: str
     structure_block_pos: BlockPos
@@ -132,14 +132,14 @@ class StructureTemplateResponseType(IntEnum, uint8):
     QUERY = 2
 
 
-@packet(id=133, since=2168)
+@packet(id=133)
 class StructureTemplateDataResponsePacket:
     structure_name: str
     structure_tag: CompoundTag | None
     response_type: StructureTemplateResponseType
 
 
-@packet(id=313, since=2168)
+@packet(id=313)
 class JigsawStructureDataPacket:
     jigsaw_structure_data_tag: CompoundTag
 
@@ -150,19 +150,19 @@ class FeatureRegistry:
         binary_json_output: str
 
 
-@packet(id=191, since=2168)
+@packet(id=191)
 class FeatureRegistryPacket:
     features_data_list: list[FeatureRegistry.FeatureBinaryJsonFormat]
 
 
-@packet(id=195, since=2168)
+@packet(id=195)
 class GameTestResultsPacket:
     succeeded: bool
     error: str
     test_name: str
 
 
-@packet(id=194, since=2168)
+@packet(id=194)
 class GameTestRequestPacket:
     max_tests_per_batch: varint32
     repeat_count: varint32

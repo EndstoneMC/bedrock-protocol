@@ -25,7 +25,7 @@ const std::string golden_empty_strings = bytes({
 TEST_CASE("packet id is 98")
 {
     STATIC_REQUIRE(bp::NpcRequestPacket_<2168>::Id == 98);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 98>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 98>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 98>);
 }
 

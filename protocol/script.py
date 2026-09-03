@@ -10,13 +10,13 @@ from protocol.common import Color, DimensionType, Vec2, Vec3
 package = "bedrock.protocol"
 
 
-@packet(id=177, since=2168)
+@packet(id=177)
 class ScriptMessagePacket:
     message_id: str
     message_value: str
 
 
-@packet(id=64, since=2168)
+@packet(id=64)
 class SimpleEventPacket:
     class Subtype(IntEnum, uint16):
         UNINITIALIZED_SUBTYPE = 0

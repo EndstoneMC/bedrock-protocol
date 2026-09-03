@@ -23,7 +23,7 @@ const std::string golden_bare = bytes({
 TEST_CASE("packet id is 333")
 {
     STATIC_REQUIRE(bp::ClientboundDataDrivenUIShowScreenPacket_<2168>::Id == 333);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 333>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 333>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 333>);
 }
 

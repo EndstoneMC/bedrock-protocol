@@ -46,7 +46,7 @@ class AttributeData:
     modifiers: list[AttributeModifier]
 
 
-@packet(id=29, since=2168)
+@packet(id=29)
 class UpdateAttributesPacket:
     runtime_id: ActorRuntimeID
     attribute_data: list[AttributeData]

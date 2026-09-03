@@ -112,7 +112,7 @@ class PackInstanceId:
     subpack_name: str
 
 
-@packet(id=7, since=2168)
+@packet(id=7)
 class ResourcePackStackPacket:
     """The order the client applies the accepted texture packs in, with the base game
     version its stack falls back to and the experiments the world runs."""
@@ -137,7 +137,7 @@ class PackType(IntEnum, int8):
     COUNT = auto()
 
 
-@packet(id=82, since=2168)
+@packet(id=82)
 class ResourcePackDataInfoPacket:
     """The header for one pack's download: how its bytes will be chunked, how large the
     archive is, and the hash the client checks the reassembled file against."""
@@ -151,7 +151,7 @@ class ResourcePackDataInfoPacket:
     pack_type: PackType
 
 
-@packet(id=83, since=2168)
+@packet(id=83)
 class ResourcePackChunkDataPacket:
     """One chunk of a pack the client is downloading: the pack the chunk belongs to,
     the chunk's index in the sequence, and its offset into the pack file."""
@@ -162,12 +162,18 @@ class ResourcePackChunkDataPacket:
     data: bytes
 
 
+@packet(id=84, until=2168)
+class ResourcePackChunkRequestPacket:
+    resource_name: str
+    chunk: uint32
+
+
 @packet(id=84, since=2168)
 class ResourcePackChunkRequestPacket:
     resource_name: str
     chunk: int32
 
 
-@packet(id=340, since=2168)
+@packet(id=340)
 class ResourcePacksReadyForValidationPacket:
     pass

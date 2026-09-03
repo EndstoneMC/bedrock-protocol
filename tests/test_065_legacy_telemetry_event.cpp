@@ -46,7 +46,7 @@ const std::string golden_poi_cauldron_used_gophertunnel = bytes({
 TEST_CASE("packet id is 65")
 {
     STATIC_REQUIRE(bp::LegacyTelemetryEventPacket_<2168>::Id == 65);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 65>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 65>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 65>);
 }
 

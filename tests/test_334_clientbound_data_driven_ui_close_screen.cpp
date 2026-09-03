@@ -22,7 +22,7 @@ const std::string golden_absent = bytes({
 TEST_CASE("packet id is 334")
 {
     STATIC_REQUIRE(bp::ClientboundDataDrivenUICloseScreenPacket_<2168>::Id == 334);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 334>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 334>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 334>);
 }
 

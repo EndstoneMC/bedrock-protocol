@@ -11,7 +11,7 @@ from protocol.command import CommandPermissionLevel, PlayerPermissionLevel
 package = "bedrock.protocol"
 
 
-@packet(id=185, since=2168)
+@packet(id=185)
 class RequestPermissionsPacket:
     class CustomPermissions(IntEnum, uint16):
         BUILD = 1
@@ -36,7 +36,7 @@ class AdventureSettings:
     auto_jump: bool
 
 
-@packet(id=188, since=2168)
+@packet(id=188)
 class UpdateAdventureSettingsPacket:
     adventure_settings: AdventureSettings
 
@@ -66,7 +66,7 @@ class AbilitiesIndex(IntEnum, int8):
     ABILITY_COUNT = auto()
 
 
-@packet(id=184, since=2168)
+@packet(id=184)
 class RequestAbilityPacket:
     class Type(IntEnum, uint8):
         UNSET = 0
@@ -102,6 +102,6 @@ class SerializedAbilitiesData:
     layers: list[SerializedLayer]
 
 
-@packet(id=187, since=2168)
+@packet(id=187)
 class UpdateAbilitiesPacket:
     data: SerializedAbilitiesData

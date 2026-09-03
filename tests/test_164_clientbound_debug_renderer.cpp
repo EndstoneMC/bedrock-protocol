@@ -51,7 +51,7 @@ const std::string golden_clear_with_marker = bytes({
 TEST_CASE("packet id is 164")
 {
     STATIC_REQUIRE(bp::ClientboundDebugRendererPacket_<2168>::Id == 164);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 164>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 164>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 164>);
 }
 

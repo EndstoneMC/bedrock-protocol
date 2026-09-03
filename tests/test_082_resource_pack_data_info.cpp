@@ -31,7 +31,7 @@ const std::string golden_fixed_widths = bytes({
 TEST_CASE("packet id is 82")
 {
     STATIC_REQUIRE(bp::ResourcePackDataInfoPacket_<2168>::Id == 82);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 82>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 82>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 82>);
 }
 

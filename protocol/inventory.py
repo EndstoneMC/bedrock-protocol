@@ -175,41 +175,41 @@ class ContainerType(IntEnum, int8):
     DATA_DRIVEN_CONTAINER = value(37, since=2192)
 
 
-@packet(id=47, since=2168)
+@packet(id=47)
 class ContainerClosePacket:
     container_id: ContainerID
     container_type: ContainerType
     server_initiated_close: bool
 
 
-@packet(id=48, since=2168)
+@packet(id=48)
 class PlayerHotbarPacket:
     selected_slot: uvarint32
     container_id: ContainerID
     should_select_slot: bool
 
 
-@packet(id=51, since=2168)
+@packet(id=51)
 class ContainerSetDataPacket:
     container_id: ContainerID
     id: varint32
     value: varint32
 
 
-@packet(id=54, since=2168)
+@packet(id=54)
 class GuiDataPickItemPacket:
     item_name: str
     item_effect_name: str
     slot: int32
 
 
-@packet(id=142, since=2168)
+@packet(id=142)
 class CompletedUsingItemPacket:
     item_id: int16
     item_use_method: int32
 
 
-@packet(id=306, since=2168)
+@packet(id=306)
 class PlayerToggleCrafterSlotRequestPacket:
     pos_x: int32
     pos_y: int32
@@ -218,7 +218,7 @@ class PlayerToggleCrafterSlotRequestPacket:
     is_disabled: bool
 
 
-@packet(id=46, since=2168)
+@packet(id=46)
 class ContainerOpenPacket:
     container_id: ContainerID
     type: ContainerType
@@ -226,7 +226,7 @@ class ContainerOpenPacket:
     entity_unique_id: ActorUniqueID
 
 
-@packet(id=317, since=2168)
+@packet(id=317)
 class ContainerRegistryCleanupPacket:
     removed_containers: list[FullContainerName]
 
@@ -266,7 +266,7 @@ class InventoryOptions:
     layout_craft: InventoryLayout
 
 
-@packet(id=307, since=2168)
+@packet(id=307)
 class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
 
@@ -312,7 +312,7 @@ class SetPlayerFurnaceOptionsPacket:
     furnace_options: FurnaceOptions
 
 
-@packet(id=80, since=2168)
+@packet(id=80)
 class UpdateTradePacket:
     container_id: ContainerID
     type: ContainerType
@@ -326,7 +326,7 @@ class UpdateTradePacket:
     data: CompoundTag
 
 
-@packet(id=81, since=2168)
+@packet(id=81)
 class UpdateEquipPacket:
     container_id: ContainerID
     type: ContainerType

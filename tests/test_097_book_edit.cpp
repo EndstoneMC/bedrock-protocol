@@ -48,7 +48,7 @@ const std::string golden_finalize = bytes({
 TEST_CASE("packet id is 97")
 {
     STATIC_REQUIRE(bp::BookEditPacket_<2168>::Id == 97);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 97>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 97>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 97>);
 }
 

@@ -32,7 +32,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("packet id is 99")
 {
     STATIC_REQUIRE(bp::PhotoTransferPacket_<2168>::Id == 99);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 99>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 99>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 99>);
 }
 

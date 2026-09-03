@@ -33,7 +33,7 @@ const std::string golden_wide_runtime_id = bytes({
 TEST_CASE("packet id is 27")
 {
     STATIC_REQUIRE(bp::ActorEventPacket_<2168>::Id == 27);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 27>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 27>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 27>);
 }
 

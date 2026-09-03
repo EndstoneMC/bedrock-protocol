@@ -24,7 +24,7 @@ const std::string golden_wide_runtime_id = bytes({
 TEST_CASE("packet id is 22")
 {
     STATIC_REQUIRE(bp::AddPaintingPacket_<2168>::Id == 22);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 22>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 22>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 22>);
 }
 

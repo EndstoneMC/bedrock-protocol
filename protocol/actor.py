@@ -783,24 +783,24 @@ class SetLastHurtByPacket:
     last_hurt_by: ActorType
 
 
-@packet(id=14, since=2168)
+@packet(id=14)
 class RemoveActorPacket:
     entity_id: ActorUniqueID
 
 
-@packet(id=35, since=2168)
+@packet(id=35)
 class ActorPickRequestPacket:
     id: int64
     max_slots: uint8
     with_data: bool
 
 
-@packet(id=89, since=2168)
+@packet(id=89)
 class AddBehaviorTreePacket:
     json_input: str
 
 
-@packet(id=17, since=2168)
+@packet(id=17)
 class TakeItemActorPacket:
     item_id: ActorRuntimeID
     actor_id: ActorRuntimeID
@@ -815,12 +815,12 @@ class MoveActorAbsoluteData:
     rot_y_head: uint8
 
 
-@packet(id=18, since=2168)
+@packet(id=18)
 class MoveActorAbsolutePacket:
     move_data: MoveActorAbsoluteData
 
 
-@packet(id=22, since=2168)
+@packet(id=22)
 class AddPaintingPacket:
     entity_id: ActorUniqueID
     runtime_id: ActorRuntimeID
@@ -893,7 +893,7 @@ class ActorEvent(IntEnum, uint8):
     HURT_WITHOUT_RECEIVING_DAMAGE = 81
 
 
-@packet(id=27, since=2168)
+@packet(id=27)
 class ActorEventPacket:
     runtime_id: ActorRuntimeID
     event_id: ActorEvent
@@ -901,14 +901,14 @@ class ActorEventPacket:
     fire_at_position: Vec3 | None
 
 
-@packet(id=40, since=2168)
+@packet(id=40)
 class SetActorMotionPacket:
     runtime_id: ActorRuntimeID
     motion: Vec3
     tick: PlayerInputTick
 
 
-@packet(id=41, since=2168)
+@packet(id=41)
 class SetActorLinkPacket:
     link: ActorLink
 
@@ -925,7 +925,7 @@ class ActorSwingSource(Enum, uint8):
     EVENT = 8
 
 
-@packet(id=44, since=2168)
+@packet(id=44)
 class AnimatePacket:
     class Action(IntEnum, uint8):
         NO_ACTION = 0
@@ -940,36 +940,36 @@ class AnimatePacket:
     swing_source: ActorSwingSource | None = field(type=str)
 
 
-@packet(id=66, since=2168)
+@packet(id=66)
 class SpawnExperienceOrbPacket:
     pos: Vec3
     xp_value: varint32
 
 
-@packet(id=119, since=2168)
+@packet(id=119)
 class AvailableActorIdentifiersPacket:
     identifier_list: CompoundTag
 
 
-@packet(id=157, since=2168)
+@packet(id=157)
 class MotionPredictionHintsPacket:
     runtime_id: ActorRuntimeID
     motion: Vec3
     on_ground: bool
 
 
-@packet(id=189, since=2168)
+@packet(id=189)
 class DeathInfoPacket:
     death_cause_attack_name: str
     death_cause_message_list: list[str]
 
 
-@packet(id=165, since=2168)
+@packet(id=165)
 class SyncActorPropertyPacket:
     property_data: CompoundTag
 
 
-@packet(id=182, since=2168)
+@packet(id=182)
 class ChangeMobPropertyPacket:
     actor_id: ActorUniqueID
     prop_name: str
@@ -979,7 +979,7 @@ class ChangeMobPropertyPacket:
     float_component_val: float
 
 
-@packet(id=158, since=2168)
+@packet(id=158)
 class AnimateEntityPacket:
     animation: str
     next_state: str
@@ -990,7 +990,7 @@ class AnimateEntityPacket:
     runtime_ids: list[ActorRuntimeID]
 
 
-@packet(id=98, since=2168)
+@packet(id=98)
 class NpcRequestPacket:
     class RequestType(IntEnum, uint8):
         SET_ACTIONS = 0
@@ -1008,7 +1008,7 @@ class NpcRequestPacket:
     scene_name: str
 
 
-@packet(id=169, since=2168)
+@packet(id=169)
 class NpcDialoguePacket:
     class NpcDialogueActionType(IntEnum):
         OPEN = 0

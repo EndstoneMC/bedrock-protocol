@@ -29,7 +29,7 @@ class ItemRegistryPacket:
     items: list[ItemData]
 
 
-@packet(id=176, since=2168)
+@packet(id=176)
 class PlayerStartItemCooldownPacket:
     item_category: str
     duration_ticks: varint32
@@ -62,7 +62,7 @@ class Finalize:
     xuid: str
 
 
-@packet(id=97, since=2168)
+@packet(id=97)
 class BookEditPacket:
     book_slot: varint32
     operation: ReplacePage | AddPage | DeletePage | SwapPages | Finalize

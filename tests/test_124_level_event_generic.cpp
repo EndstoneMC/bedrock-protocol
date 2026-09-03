@@ -28,7 +28,7 @@ const std::string golden_empty_tag = bytes({
 TEST_CASE("packet id is 124")
 {
     STATIC_REQUIRE(bp::LevelEventGenericPacket_<2168>::Id == 124);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 124>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 124>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 124>);
 }
 

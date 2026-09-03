@@ -25,7 +25,7 @@ const std::string golden_empty = bytes({
 TEST_CASE("packet id is 152")
 {
     STATIC_REQUIRE(bp::EmoteListPacket_<2168>::Id == 152);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 152>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 152>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 152>);
 }
 

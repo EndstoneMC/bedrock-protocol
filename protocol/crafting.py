@@ -369,7 +369,7 @@ class LabTableReactionType(IntEnum, uint8):
     MISC_LARGE_SMOKE = 12
 
 
-@packet(id=109, since=2168)
+@packet(id=109)
 class LabTablePacket:
     class Type(IntEnum, uint8):
         START_COMBINE = 0
@@ -446,12 +446,12 @@ class ItemEnchantOption:
     enchant_net_id: RecipeNetId
 
 
-@packet(id=146, since=2168)
+@packet(id=146)
 class PlayerEnchantOptionsPacket:
     options: list[ItemEnchantOption]
 
 
-@packet(id=199, since=2168)
+@packet(id=199)
 class UnlockedRecipesPacket:
     class PacketType(IntEnum, uint32):
         EMPTY = 0

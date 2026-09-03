@@ -40,7 +40,7 @@ const std::string golden_long = bytes({
 TEST_CASE("packet id is 3")
 {
     STATIC_REQUIRE(bp::ServerToClientHandshakePacket_<2168>::Id == 3);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 3>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 3>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 3>);
 }
 

@@ -85,7 +85,7 @@ bp::CommandOutputPacket_<2168> filled()
 TEST_CASE("packet id is 79")
 {
     STATIC_REQUIRE(bp::CommandOutputPacket_<2168>::Id == 79);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 79>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 79>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 79>);
 }
 
