@@ -1,46 +1,14 @@
-import uuid
+"""Position and movement over the wire: move, teleport, delta moves, prediction
+correction and sync. Not actor or player spawning -- AddPlayerPacket is in player.py
+and AddItemActorPacket in actor.py."""
+
 from enum import IntEnum
 
-from protocol import array, bitset, field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint64
-from protocol.actor import (
-    ActorFlags,
-    ActorLink,
-    ActorRuntimeID,
-    ActorUniqueID,
-    PlayerInputTick,
-    PropertySyncData,
-    SynchedActorData,
-)
-from protocol.command import CommandPermissionLevel
+from protocol import array, bitset, field, int8, int32, packet, type, uint8, uint16, uvarint64
+from protocol.actor import ActorFlags, ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import Vec2, Vec3
-from protocol.game import GameType, PlayerPermissionLevel
-from protocol.inventory import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
-from protocol.player_list import BuildPlatform
 
 package = "bedrock.protocol"
-
-
-class SerializedAbilitiesData:
-    class SerializedAbilitiesLayer(IntEnum, uint16):
-        CUSTOM_CACHE = 0
-        BASE = 1
-        SPECTATOR = 2
-        COMMANDS = 3
-        EDITOR = 4
-        LOADING_SCREEN = 5
-
-    class SerializedLayer:
-        serialized_layer: SerializedAbilitiesLayer = field(type=uint16)
-        abilities_set: uint32
-        ability_values: uint32
-        fly_speed: float
-        vertical_fly_speed: float
-        walk_speed: float
-
-    target_player: ActorUniqueID = field(type=int64)
-    player_permissions: PlayerPermissionLevel
-    command_permissions: CommandPermissionLevel
-    layers: list[SerializedLayer]
 
 
 class PlayerPositionModeComponent:
@@ -83,68 +51,6 @@ class MoveActorDeltaData:
     force_move_local_entity: bool
     force_completion: bool
     ticks: uvarint64 = field(since=2192)
-
-
-@packet(id=12, until=2168)
-class AddPlayerPacket:
-    uuid: uuid.UUID
-    name: str
-    runtime_id: ActorRuntimeID
-    platform_online_id: str
-    pos: Vec3
-    velocity: Vec3
-    rot: Vec2
-    y_head_rot: float
-    carried_item: NetworkItemStackDescriptor
-    player_game_type: GameType
-    unpack: SynchedActorData.CopyableDataList
-    synched_properties: PropertySyncData
-    abilities_data: SerializedAbilitiesData
-    links: list[ActorLink]
-    device_id: str
-    build_platform: BuildPlatform = field(type=int32)
-
-
-@packet(id=12, since=2168)
-class AddPlayerPacket:
-    uuid: uuid.UUID
-    name: str
-    runtime_id: ActorRuntimeID
-    platform_online_id: str
-    pos: Vec3
-    velocity: Vec3
-    rot: Vec2
-    y_head_rot: float
-    carried_item: SerializedNetworkItemStackDescriptor
-    player_game_type: GameType
-    unpack: SynchedActorData.CopyableDataList
-    synched_properties: PropertySyncData
-    abilities_data: SerializedAbilitiesData
-    links: list[ActorLink]
-    device_id: str
-    build_platform: BuildPlatform = field(type=int32)
-
-
-@packet(id=15, until=2168)
-class AddItemActorPacket:
-    id: ActorUniqueID
-    runtime_id: ActorRuntimeID
-    item: NetworkItemStackDescriptor
-    pos: Vec3
-    velocity: Vec3
-    data: SynchedActorData.CopyableDataList
-    is_from_fishing: bool
-
-
-@packet(id=15, since=2168)
-class AddItemActorPacket:
-    id: ActorUniqueID
-    runtime_id: ActorRuntimeID
-    item: SerializedNetworkItemStackDescriptor
-    pos: Vec3
-    velocity: Vec3
-    data: SynchedActorData.CopyableDataList
-    is_from_fishing: bool
 
 
 @packet(id=19, until=2168)

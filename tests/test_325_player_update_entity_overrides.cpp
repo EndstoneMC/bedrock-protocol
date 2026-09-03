@@ -2,7 +2,7 @@
 #include <variant>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/player_location.h>
+#include <bedrock/protocol/player.h>
 
 #include "fixture.hpp"
 

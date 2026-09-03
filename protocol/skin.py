@@ -1,7 +1,11 @@
+"""The serialized skin and the persona pieces it is built from, including emotes:
+world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
+
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import array, field, int8, packet, type, uint8, uint32
+from protocol import array, field, int8, packet, type, uint8, uint32, uvarint32
+from protocol.actor import ActorRuntimeID
 from protocol.common import Color
 
 package = "bedrock.protocol"
@@ -214,3 +218,23 @@ class PlayerSkinPacket:
     skin: SerializedSkinRef
     localized_new_skin_name: str
     localized_old_skin_name: str
+
+
+@packet(id=138, since=2168)
+class EmotePacket:
+    class Flags(IntEnum, uint8):
+        SERVER_SIDE = 1
+        MUTE_EMOTE_CHAT = 2
+
+    runtime_id: ActorRuntimeID
+    piece_id: str
+    emote_ticks: uvarint32
+    xuid: str
+    platform_id: str
+    flags: uint8
+
+
+@packet(id=152, since=2168)
+class EmoteListPacket:
+    runtime_id: ActorRuntimeID
+    emote_piece_ids: list[uuid.UUID]

@@ -1,3 +1,6 @@
+"""Resource and behaviour packs: Core/Resource/ and engine/PackInfrastructure --
+pack identity, versions, the download handshake, the applied stack, pack settings."""
+
 import uuid
 from enum import Enum, IntEnum, auto
 

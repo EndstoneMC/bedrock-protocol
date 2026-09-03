@@ -1,7 +1,7 @@
 #include <string>
 #include <variant>
 
-#include <bedrock/protocol/resource_pack.h>
+#include <bedrock/protocol/pack.h>
 
 #include "fixture.hpp"
 

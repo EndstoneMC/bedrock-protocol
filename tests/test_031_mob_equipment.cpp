@@ -2,7 +2,6 @@
 #include <type_traits>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/equipment.h>
 #include <bedrock/protocol/inventory.h>
 
 #include "fixture.hpp"

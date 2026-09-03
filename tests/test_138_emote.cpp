@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string>
 
-#include <bedrock/protocol/emote.h>
+#include <bedrock/protocol/skin.h>
 
 #include "fixture.hpp"
 

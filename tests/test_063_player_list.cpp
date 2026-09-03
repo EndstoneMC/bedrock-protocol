@@ -4,7 +4,7 @@
 
 #include <bedrock/protocol/actor.h>
 #include <bedrock/protocol/common.h>
-#include <bedrock/protocol/player_list.h>
+#include <bedrock/protocol/player.h>
 #include <bedrock/protocol/skin.h>
 
 #include "fixture.hpp"

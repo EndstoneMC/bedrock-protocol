@@ -1,3 +1,7 @@
+"""The actor as a subject: id aliases, links, events, synched data, the ActorType
+registry, and the packets that spawn, move, remove and animate one. world/actor/.
+Not the player -- world/actor/player/ is player.py."""
+
 from enum import Enum, IntEnum, auto
 
 from protocol import (
@@ -9,6 +13,7 @@ from protocol import (
     packet,
     type,
     uint8,
+    uint64,
     uvarint32,
     uvarint64,
     value,
@@ -16,6 +21,7 @@ from protocol import (
     varint64,
 )
 from protocol.common import BlockPos, Vec2, Vec3
+from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -1036,3 +1042,57 @@ class AnimateEntityPacket:
     controller: str
     blend_out_time: float
     runtime_ids: list[ActorRuntimeID]
+
+
+@packet(id=98, since=2168)
+class NpcRequestPacket:
+    class RequestType(IntEnum, uint8):
+        SET_ACTIONS = 0
+        EXECUTE_ACTION = 1
+        EXECUTE_CLOSING_COMMANDS = 2
+        SET_NAME = 3
+        SET_SKIN = 4
+        SET_INTERACT_TEXT = 5
+        EXECUTE_OPENING_COMMANDS = 6
+
+    id: ActorRuntimeID
+    type: RequestType
+    actions: str
+    action_index: uint8
+    scene_name: str
+
+
+@packet(id=169, since=2168)
+class NpcDialoguePacket:
+    class NpcDialogueActionType(IntEnum):
+        OPEN = 0
+        CLOSE = 1
+
+    npc_id: ActorUniqueID = field(type=uint64)
+    npc_dialogue_action_type: NpcDialogueActionType
+    dialogue: str
+    scene_name: str
+    npc_name: str
+    action_json: str
+
+
+@packet(id=15, until=2168)
+class AddItemActorPacket:
+    id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    item: NetworkItemStackDescriptor
+    pos: Vec3
+    velocity: Vec3
+    data: SynchedActorData.CopyableDataList
+    is_from_fishing: bool
+
+
+@packet(id=15, since=2168)
+class AddItemActorPacket:
+    id: ActorUniqueID
+    runtime_id: ActorRuntimeID
+    item: SerializedNetworkItemStackDescriptor
+    pos: Vec3
+    velocity: Vec3
+    data: SynchedActorData.CopyableDataList
+    is_from_fishing: bool

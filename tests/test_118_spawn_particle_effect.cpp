@@ -2,7 +2,7 @@
 #include <string>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/level_event.h>
+#include <bedrock/protocol/block.h>
 
 #include "fixture.hpp"
 

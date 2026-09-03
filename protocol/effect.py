@@ -1,3 +1,5 @@
+"""Status and movement effects applied to an actor: world/effect/."""
+
 from enum import IntEnum, auto
 
 from protocol import packet, uint8, value, varint32

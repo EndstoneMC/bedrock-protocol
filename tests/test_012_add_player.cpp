@@ -3,8 +3,7 @@
 
 #include <bedrock/protocol/actor.h>
 #include <bedrock/protocol/game.h>
-#include <bedrock/protocol/movement.h>
-#include <bedrock/protocol/player_list.h>
+#include <bedrock/protocol/player.h>
 
 #include "fixture.hpp"
 

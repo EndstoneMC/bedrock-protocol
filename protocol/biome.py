@@ -1,3 +1,5 @@
+"""Biome definitions as serialized to the client: world/level/biome/serialization/."""
+
 from enum import IntEnum, auto
 
 from protocol import field, int32, packet, type, uint8, uint16, uint32, varint32

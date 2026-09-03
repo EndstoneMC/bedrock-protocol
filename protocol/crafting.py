@@ -1,3 +1,7 @@
+"""Recipes and their registries: world/item/crafting/, world/item/enchanting/ and
+world/item/alchemy/ -- recipe payloads, potion and container mixes, material reduction,
+the lab table, enchant options."""
+
 import uuid
 from enum import IntEnum, auto
 

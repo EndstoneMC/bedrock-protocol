@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/attribute.h>
 
 #include "fixture.hpp"
 

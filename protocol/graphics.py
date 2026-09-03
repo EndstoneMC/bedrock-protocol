@@ -1,3 +1,5 @@
+"""Server-driven rendering-parameter overrides."""
+
 from enum import IntEnum
 
 from protocol import field, packet, uint8

@@ -1,3 +1,5 @@
+"""Chat, titles and toasts: textobject/."""
+
 from enum import IntEnum
 
 from protocol import packet, uint8, varint32

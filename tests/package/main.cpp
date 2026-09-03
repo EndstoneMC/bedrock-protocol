@@ -2,7 +2,7 @@
 #include <string>
 
 #include <bedrock/protocol.hpp>
-#include <bedrock/protocol/player_list.h>
+#include <bedrock/protocol/player.h>
 
 namespace bp = bedrock::protocol;
 

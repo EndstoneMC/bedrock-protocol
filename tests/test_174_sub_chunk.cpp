@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string>
 
-#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/attribute.h>
 #include <bedrock/protocol/chunk.h>
 
 #include "fixture.hpp"

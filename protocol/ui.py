@@ -1,10 +1,13 @@
+"""Server-driven screens and HUD: dataDrivenUI/ plus world/Waypoint*.h and
+util/HudElementsEnum.h -- modal forms, server settings, data-driven UI, HUD elements,
+loading screens, texture shift, the locator bar."""
+
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import field, packet, uint8, uint32, uvarint64
+from protocol import field, packet, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
-from protocol.attributes import DimensionType
-from protocol.common import Color, Vec2, Vec3
+from protocol.common import Color, DimensionType, Vec2, Vec3
 
 package = "bedrock.protocol"
 
@@ -137,3 +140,46 @@ class DataDrivenScreenClosedReason(Enum, uint8):
 class ServerboundDataDrivenScreenClosedPacket:
     form_id: uint32
     close_reason: DataDrivenScreenClosedReason = field(type=str)
+
+
+@packet(id=100, since=2168)
+class ModalFormRequestPacket:
+    form_id: uvarint32
+    form_json: str
+
+
+@packet(id=102, since=2168)
+class ServerSettingsRequestPacket:
+    pass
+
+
+@packet(id=103, since=2168)
+class ServerSettingsResponsePacket:
+    """The server's answer to a settings request: the JSON describing a settings tab
+    to draw for this server, and the form id the client echoes back when the player
+    submits it."""
+
+    form_id: uvarint32
+    form_json: str
+
+
+@packet(id=310, since=2168)
+class ClientboundCloseFormPacket:
+    pass
+
+
+class ModalFormCancelReason(IntEnum, uint8):
+    USER_CLOSED = 0
+    USER_BUSY = 1
+
+
+@packet(id=101, since=2168)
+class ModalFormResponsePacket:
+    form_id: uvarint32
+    json_response: str | None
+    form_cancel_reason: ModalFormCancelReason | None
+
+
+@packet(id=130, since=2168)
+class OnScreenTextureAnimationPacket:
+    effect_id: uint32

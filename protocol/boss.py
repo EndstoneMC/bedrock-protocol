@@ -1,3 +1,6 @@
+"""The boss bar: world/actor/boss/ and the BossEvent enums BDS declares inside
+network/packet/BossEventPacket.h."""
+
 from enum import IntEnum
 
 from protocol import field, packet, uint8

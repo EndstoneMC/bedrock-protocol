@@ -1,9 +1,15 @@
-from enum import IntEnum, auto
-from typing import Literal
+"""Containers and inventory options: world/containers/ + world/inventory/ --
+container ids and types, screen options, furnace and trade windows, equipment.
+Not the item-stack request/response protocol -- world/inventory/network/, in item_stack.py.
+Not the legacy transaction family -- world/inventory/transaction/, in transaction.py."""
 
-from protocol import field, int8, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
+from enum import IntEnum, auto
+
+from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
-from protocol.common import BlockPos, Vec3
+from protocol.common import BlockPos
+from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -18,15 +24,6 @@ class ContainerID(IntEnum, int8):
     SELECTION_SLOTS = 122
     PLAYER_ONLY_UI = 124
     REGISTRY = 125
-
-
-class InventorySourceType(IntEnum, uint32):
-    INVALID_INVENTORY = -1
-    CONTAINER_INVENTORY = 0
-    GLOBAL_INVENTORY = 1
-    WORLD_INTERACTION = 2
-    CREATIVE_INVENTORY = 3
-    NON_IMPLEMENTED_FEATURE_TODO = 99999
 
 
 class ContainerEnumName(IntEnum, uint8):
@@ -108,325 +105,6 @@ class HandSlot(IntEnum, uint8):
 class FullContainerName:
     name: ContainerEnumName
     dynamic_id: uint32 | None
-
-
-class ItemStackNetId:
-    raw_id: varint32
-
-
-class ItemStackRequestId:
-    raw_id: varint32
-
-
-class ItemStackLegacyRequestId:
-    raw_id: varint32
-
-
-type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
-
-
-class NetworkItemStackDescriptor:
-    """An air item (id 0) is a lone zero byte: the write returns early, so
-    nothing else reaches the wire."""
-
-    id: varint32
-
-    with field(when=lambda d: d.id != 0):
-        stack_size: uint16
-        aux_value: uvarint32
-        net_id: ItemStackNetId | None
-        block_runtime_id: varint32
-        user_data_buffer: bytes
-
-
-@type(until=2168)
-class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData. The extra data
-    (NBT, can-place-on / can-break, shield blocking tick) rides in a single
-    length-prefixed blob, so it stays opaque here -- an empty blob is a lone
-    uvarint32 zero, which is byte-identical to BDS's air-item early-out."""
-
-    id: int16
-    stack_size: uint16
-    aux_value: uvarint32
-    net_id_variant: ItemStackNetIdVariant | None
-    block_runtime_id: uvarint32
-    user_data_buffer: bytes
-
-
-@type(since=2168)
-class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData. ItemStackNetIdVariant's
-    binding projects its three alternatives onto one signed varint: non-negative
-    is an ItemStackNetId, negative-odd an ItemStackRequestId, negative-even an
-    ItemStackLegacyRequestId. The tag is gone, so the case is read back from the
-    sign and parity."""
-
-    id: int16
-    stack_size: uint16
-    aux_value: uvarint32
-    net_id_variant: varint32 | None
-    block_runtime_id: uvarint32
-    user_data_buffer: bytes
-
-
-class LegacySetSlot:
-    container_enum: ContainerEnumName
-    slots: bytes
-
-
-@type(until=1001)
-class InventorySource:
-    class InventorySourceFlags(IntEnum, uint32):
-        NO_FLAG = 0
-        WORLD_INTERACTION_RANDOM = 1
-
-    type: InventorySourceType
-    container_id: ContainerID = field(
-        type=varint32,
-        when=lambda s: (
-            s.type in {InventorySourceType.CONTAINER_INVENTORY, InventorySourceType.NON_IMPLEMENTED_FEATURE_TODO}
-        ),
-    )
-    flags: InventorySourceFlags = field(when=lambda s: s.type == InventorySourceType.WORLD_INTERACTION)
-
-
-@type(since=1001)
-class InventorySource:
-    class InventorySourceFlags(IntEnum, uint32):
-        NO_FLAG = 0
-        WORLD_INTERACTION_RANDOM = 1
-
-    type: InventorySourceType
-    _true_1: Literal[True] = field(until=2192)
-    container_id: ContainerID | None
-    _true_2: Literal[True] = field(until=2192)
-    flags: InventorySourceFlags | None
-
-
-@type(until=1001)
-class InventoryAction:
-    source: InventorySource
-    slot: uvarint32
-    from_item_descriptor: NetworkItemStackDescriptor
-    to_item_descriptor: NetworkItemStackDescriptor
-
-
-@type(since=1001)
-class InventoryAction:
-    source: InventorySource
-    slot: uvarint32
-    from_item_descriptor: SerializedNetworkItemStackDescriptor
-    to_item_descriptor: SerializedNetworkItemStackDescriptor
-
-
-@type(until=1001)
-class InventoryTransaction:
-    actions: list[InventoryAction]
-
-
-@type(since=1001)
-class InventoryTransaction:
-    _true: Literal[True] = field(until=2192)
-    actions: list[InventoryAction]
-
-
-class NormalTransactionData:
-    transaction: InventoryTransaction
-
-
-class InventoryMismatchData:
-    transaction: InventoryTransaction
-
-
-@type(until=1001)
-class ItemUseInventoryTransaction:
-    class ActionType(IntEnum):
-        PLACE = 0
-        USE = 1
-        DESTROY = 2
-        USE_AS_ATTACK = 3
-
-    class TriggerType(IntEnum, uint8):
-        UNKNOWN = 0
-        PLAYER_INPUT = 1
-        SIMULATION_TICK = 2
-
-    class PredictedResult(IntEnum, uint8):
-        FAILURE = 0
-        SUCCESS = 1
-
-    class ClientCooldownState(IntEnum, uint8):
-        OFF = 0
-        ON = 1
-
-    transaction: InventoryTransaction
-    action_type: ActionType = field(type=uvarint32)
-    trigger_type: TriggerType
-    pos: BlockPos
-    face: varint32
-    slot: varint32
-    item: NetworkItemStackDescriptor
-    from_pos: Vec3
-    click_pos: Vec3
-    target_block_id: uvarint32
-    client_predicted_result: PredictedResult = field(type=uvarint32)
-    client_cooldown_state: ClientCooldownState
-
-
-@type(since=1001)
-class ItemUseInventoryTransaction:
-    class ActionType(IntEnum):
-        PLACE = 0
-        USE = 1
-        DESTROY = 2
-        USE_AS_ATTACK = 3
-
-    class TriggerType(IntEnum, uint8):
-        UNKNOWN = 0
-        PLAYER_INPUT = 1
-        SIMULATION_TICK = 2
-
-    class PredictedResult(IntEnum, uint8):
-        FAILURE = 0
-        SUCCESS = 1
-
-    class ClientCooldownState(IntEnum, uint8):
-        OFF = 0
-        ON = 1
-
-    transaction: InventoryTransaction
-    action_type: ActionType
-    trigger_type: TriggerType
-    pos: BlockPos
-    face: uint8
-    slot: varint32
-    hand: HandSlot = field(since=2192)
-    item: SerializedNetworkItemStackDescriptor
-    from_pos: Vec3
-    click_pos: Vec3
-    target_block_id: uvarint32
-    client_predicted_result: PredictedResult
-    client_cooldown_state: ClientCooldownState
-
-
-@type(cereal=False, until=1001)
-class ItemUseInventoryTransaction:
-    """The shape PlayerAuthInputPacket writes: that packet did not cerealise until
-    2168, so its transaction keeps the pre-cereal framing -- the action list carries
-    no member-present marker and `face` stays a varint32 -- while its leaves
-    cerealise at 1001 with everything else."""
-
-    actions: list[InventoryAction]
-    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType
-    pos: BlockPos
-    face: varint32
-    slot: varint32
-    item: NetworkItemStackDescriptor
-    from_pos: Vec3
-    click_pos: Vec3
-    target_block_id: uvarint32
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
-    client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
-
-
-@type(cereal=False, since=1001)
-class ItemUseInventoryTransaction:
-    actions: list[InventoryAction]
-    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType
-    pos: BlockPos
-    face: varint32
-    slot: varint32
-    item: SerializedNetworkItemStackDescriptor
-    from_pos: Vec3
-    click_pos: Vec3
-    target_block_id: uvarint32
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
-    client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
-
-
-@type(until=1001)
-class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum):
-        INTERACT = 0
-        ATTACK = 1
-        ITEM_INTERACT = 2
-
-    transaction: InventoryTransaction
-    runtime_id: ActorRuntimeID
-    action_type: ActionType = field(type=uvarint32)
-    slot: varint32
-    item: NetworkItemStackDescriptor
-    from_pos: Vec3
-    hit_pos: Vec3
-
-
-@type(since=1001)
-class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum):
-        INTERACT = 0
-        ATTACK = 1
-        ITEM_INTERACT = 2
-
-    transaction: InventoryTransaction
-    runtime_id: ActorRuntimeID
-    action_type: ActionType
-    slot: varint32
-    item: SerializedNetworkItemStackDescriptor
-    from_pos: Vec3
-    hit_pos: Vec3
-
-
-@type(until=1001)
-class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum):
-        RELEASE = 0
-        USE = 1
-
-    transaction: InventoryTransaction
-    action_type: ActionType = field(type=uvarint32)
-    slot: varint32
-    item: NetworkItemStackDescriptor
-    from_pos: Vec3
-
-
-@type(since=1001)
-class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum):
-        RELEASE = 0
-        USE = 1
-
-    transaction: InventoryTransaction
-    action_type: ActionType
-    slot: varint32
-    item: SerializedNetworkItemStackDescriptor
-    from_pos: Vec3
-
-
-type TransactionData = (
-    NormalTransactionData
-    | InventoryMismatchData
-    | ItemUseInventoryTransaction
-    | ItemUseOnActorInventoryTransaction
-    | ItemReleaseInventoryTransaction
-)
-
-
-@packet(id=30, until=1001)
-class InventoryTransactionPacket:
-    legacy_request_id: varint32
-    legacy_set_item_slots: list[LegacySetSlot] = field(when=lambda p: p.legacy_request_id != 0)
-    transaction: TransactionData
-
-
-@packet(id=30, since=1001)
-class InventoryTransactionPacket:
-    legacy_request_id: varint32
-    legacy_set_item_slots: list[LegacySetSlot] | None
-    _true: Literal[True] = field(until=2192)
-    transaction: TransactionData
 
 
 @packet(id=49, until=1001)
@@ -591,3 +269,100 @@ class InventoryOptions:
 @packet(id=307, since=2168)
 class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
+
+
+@type(since=2192)
+class FurnaceLeftTabIndex(IntEnum):
+    NONE = 0
+    RECIPE_FOOD = 1
+    RECIPE_ITEMS = 2
+    RECIPE_BLOCKS = 3
+    RECIPE_SEARCH = 4
+    INVENTORY = 5
+
+
+@type(since=2192)
+class FurnaceLayout(IntEnum):
+    NONE = 0
+    INVENTORY_ONLY = 1
+    DEFAULT = 2
+
+
+@type(since=2192)
+class FurnaceOptions:
+    left_furnace_tab: FurnaceLeftTabIndex
+    filtering: bool
+    layout: FurnaceLayout
+
+
+@packet(id=351, since=2192)
+class SetPlayerFurnaceOptionsPacket:
+    """The player's screen options for one kind of furnace: which left-hand tab is
+    open, whether the recipe list is filtered, and the layout it draws with."""
+
+    class FurnaceType(IntEnum, uint8):
+        NONE = 0
+        FURNACE = 1
+        BLAST_FURNACE = 2
+        SMOKER = 3
+
+    furnace_type: FurnaceType
+    furnace_options: FurnaceOptions
+
+
+@packet(id=80, since=2168)
+class UpdateTradePacket:
+    container_id: ContainerID
+    type: ContainerType
+    size: varint32
+    trader_tier: varint32
+    entity_unique_id: ActorUniqueID
+    last_trading_player: ActorUniqueID
+    display_name: str
+    use_new_trade_screen: bool
+    using_economy_trade: bool
+    data: CompoundTag
+
+
+@packet(id=81, since=2168)
+class UpdateEquipPacket:
+    container_id: ContainerID
+    type: ContainerType
+    size: varint32
+    entity_unique_id: ActorUniqueID
+    data: CompoundTag
+
+
+@packet(id=31)
+class MobEquipmentPacket:
+    """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
+
+    runtime_id: ActorRuntimeID
+    item: SerializedNetworkItemStackDescriptor
+    slot: int32 = field(type=uint8)
+    selected_slot: int32 = field(type=uint8)
+    container_id: ContainerID
+
+
+@packet(id=32, until=1001)
+class MobArmorEquipmentPacket:
+    """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
+
+    runtime_id: ActorRuntimeID
+    head: NetworkItemStackDescriptor
+    torso: NetworkItemStackDescriptor
+    legs: NetworkItemStackDescriptor
+    feet: NetworkItemStackDescriptor
+    body: NetworkItemStackDescriptor
+
+
+@packet(id=32, since=1001)
+class MobArmorEquipmentPacket:
+    """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
+
+    runtime_id: ActorRuntimeID
+    head: SerializedNetworkItemStackDescriptor
+    torso: SerializedNetworkItemStackDescriptor
+    legs: SerializedNetworkItemStackDescriptor
+    feet: SerializedNetworkItemStackDescriptor
+    body: SerializedNetworkItemStackDescriptor

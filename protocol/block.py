@@ -1,8 +1,12 @@
+"""The level's block space: world/level/block/ -- blocks, block actors, sub-chunk
+block changes, the level events fired over them, and world/level/voxelshape/ volumes.
+Not chunk transfer -- world/level/chunk/, in chunk.py."""
+
 from enum import IntEnum
 
-from protocol import field, int32, packet, uint8, uint32, uvarint32, uvarint64, varint32
+from protocol import field, int32, packet, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
-from protocol.common import BlockPos
+from protocol.common import BlockPos, DimensionType, Vec3
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -89,3 +93,70 @@ class UpdateSubChunkBlocksChangedInfo:
 class UpdateSubChunkBlocksPacket:
     sub_chunk_block_position: BlockPos
     blocks_changed: UpdateSubChunkBlocksChangedInfo
+
+
+type EntityNetId = uvarint32
+
+
+@packet(id=167, since=2168)
+class RemoveVolumeEntityPacket:
+    entity_net_id: EntityNetId
+    dimension_type: DimensionType
+
+
+@packet(id=166, since=2168)
+class AddVolumeEntityPacket:
+    entity_net_id: EntityNetId
+    components: CompoundTag
+    json_identifier: str
+    instance_name: str
+    min_bounds: BlockPos
+    max_bounds: BlockPos
+    dimension_type: DimensionType
+    min_engine_version: str
+
+
+type RegistryHandle = uint16
+
+
+class SerializableCells:
+    x_size: uint8
+    y_size: uint8
+    z_size: uint8
+    storage: list[uint8]
+
+
+class SerializableVoxelShape:
+    cells: SerializableCells
+    x_coords: list[float]
+    y_coords: list[float]
+    z_coords: list[float]
+
+
+@packet(id=337, since=2168)
+class VoxelShapesPacket:
+    shapes: list[SerializableVoxelShape]
+    name_map: dict[str, RegistryHandle]
+    custom_shape_count: uint16
+
+
+@packet(id=25, since=2168)
+class LevelEventPacket:
+    event_id: varint32
+    pos: Vec3
+    data: varint32
+
+
+@packet(id=124, since=2168)
+class LevelEventGenericPacket:
+    event_id: varint32
+    data: CompoundTag
+
+
+@packet(id=118, since=2168)
+class SpawnParticleEffectPacket:
+    vanilla_dimension_id: uint8
+    actor_id: ActorUniqueID
+    pos: Vec3
+    effect_name: str
+    molang_variables: str | None

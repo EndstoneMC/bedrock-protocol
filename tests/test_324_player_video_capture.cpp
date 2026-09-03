@@ -1,7 +1,7 @@
 #include <string>
 #include <variant>
 
-#include <bedrock/protocol/photo.h>
+#include <bedrock/protocol/map.h>
 
 #include "fixture.hpp"
 

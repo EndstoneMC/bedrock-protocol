@@ -378,8 +378,8 @@ hoisted out of its owner.
 
 `since=` / `until=` are raw protocol version numbers, but must land on a modelled
 snapshot, never an arbitrary changelog number. Gate a change at the next snapshot at
-or after it: a field the changelog dates to 977 gates `since=1001`. Only 975 and 1001
-are materialized, so an off-snapshot boundary buys nothing.
+or after it: a field the changelog dates to 977 gates `since=1001`. Only 944, 1001, 2168
+and 2192 are materialized, so an off-snapshot boundary buys nothing.
 
 **Diff the type closure across protocol-docs branches before modelling a packet.**
 Walk the packet's transitive types on the old and new branch and diff the two dumps:
@@ -410,7 +410,10 @@ ctest --test-dir build-libcxx
 ```
 
 A schema change is not done until those tests run. endweave consumes this schema
-directly, so rebuild it too — a rename here is a compile error there.
+directly **on its `develop` branch** — `main` is the pure-Python line and names no
+generated header — so rebuild that branch too: a rename here is a compile error there.
+The coupling is include lines only; every type it names is namespace-scope
+(`bp::LevelSoundEvent_<2168>`), and those spellings do not change.
 
 **Generate goldens by running gophertunnel; never derive them by hand.** Write a
 small Go program that marshals the packet through `protocol.NewWriter`, and paste
@@ -472,9 +475,46 @@ The rewrite **deliberately dropped** every path the MVP did not use, and a missi
 feature is therefore a deferral, not an oversight: when a packet first needs one,
 re-add it as its own reviewable change, with a test that exercises it. `@builtin`,
 `dict[K, V]`, `when=`, `endian=`, nested types, `bitset` (`input.py`'s
-`bitset[InputData.INPUT_NUM]`), `count=` (`login.py`'s counted id lists) and
+`bitset[InputData.INPUT_NUM]`), `count=` (`network.py`'s counted blob id lists) and
 `array[T, N]` (`chunk.py`'s height maps) have all come back that way. Still gone:
 `tuple` and deprecation.
+
+## A module is a BDS domain, and says so in its docstring
+
+Every schema module is named after a folder in the BDS game tree and opens with a
+docstring naming what it holds **and what it deliberately excludes**. A placement
+argument is settled by grepping those docstrings, not by re-deriving the taxonomy — the
+whole index is `head -qn 4 protocol/*.py`, and the exclusions are `grep -n "^Not " protocol/*.py`.
+A commit that adds a packet to a module whose docstring excludes it must change the
+docstring in the same commit.
+
+To place a new declaration: **find its BDS header and use the module named after that
+header's domain folder.** A reusable domain type goes to its domain's module however many
+packets reach it (`ItemStackDescriptor` → `item`, `PlayerPermissionLevel` → `command`); a
+wire-only type under `network/packet/types/<path>/` goes to the module mirroring `<path>`
+(`SerializedAbilitiesData` → `ability`); a payload BDS declares inside the packet's own
+header is nested in the `@packet` class. A BDS subdirectory merges into its parent's
+module unless it carries enough declarations to stand alone. Where the folder cannot
+decide — it appears at two depths, holds >100 headers (`world/level`, `world/item`,
+`world/actor`) or fewer than 3 (`editor/`) — fall back in order to the module already
+declaring the most types the packet references, then the packet family, then leaving it
+where it is. **Size is never a reason to create a module**: a lookup table lives with its
+subject, which is why `LevelSoundEvent`'s ~578 members stay in `sound.py`.
+
+Three constraints outrank the taxonomy, and none of them is diagnosed:
+
+- **A name-coded enum's `Serializer` is emitted only by a module that name-codes it**
+  (`cpp/file.py`'s `_string_coded_enums` reads the file's own structs). Declaring `E` in
+  one module and writing `e: E = field(type=str)` only in another links against a
+  `Serializer<E>` nobody generated. Never separate the two — it is why `EasingType` sits
+  in `eas.py` and `CommandPermissionLevel` moved in `3f7ac67`.
+- **The import graph must stay acyclic.** `descriptor_pool.py` *skips* an import already
+  on the build stack instead of reporting it, then silently drops that side's versioned
+  set and snapshot points — and which side loses depends on which file `bpc` is emitting.
+- **An unresolvable field type is silent**: the parser returns `None` and the backend
+  emits a one-line `struct Name {};`. `F821` is per-file-ignored here by design, so
+  `grep -c "struct [A-Za-z_0-9]* {};"` over the generated headers is the detector, and it
+  must read 0.
 
 ## The include tree is `bedrock/protocol/`
 

@@ -1,7 +1,11 @@
+"""The connection itself: network/ -- the packet id registry, login and handshake,
+disconnect, play status, compression and network settings, blob-cache negotiation,
+latency, violation, server stats."""
+
 from enum import IntEnum, auto
 from typing import Union
 
-from protocol import field, int32, packet, uint8, uint16, uint64, value
+from protocol import field, int32, packet, uint8, uint16, uint64, uvarint32, value
 
 package = "bedrock.protocol"
 
@@ -570,3 +574,50 @@ class NetworkSettingsPacket:
     client_throttle_enabled: bool
     client_throttle_threshold: uint8
     client_throttle_scalar: float
+
+
+@packet(id=94)
+class SubClientLoginPacket:
+    """Split-screen: a second player joining over the main client's connection sends
+    the same connection request blob the LoginPacket carries."""
+
+    connection_request: bytes
+
+
+@packet(id=135, until=1001)
+class ClientCacheBlobStatusPacket:
+    """Sent periodically by the client to update the server on which blobs it has
+    (ACK) and which blobs it is lacking (MISS)."""
+
+    missing_count: uvarint32
+    found_count: uvarint32
+    missing_ids: list[uint64] = field(count=lambda p: p.missing_count)
+    found_ids: list[uint64] = field(count=lambda p: p.found_count)
+
+
+@packet(id=135, since=1001)
+class ClientCacheBlobStatusPacket:
+    """Sent periodically by the client to update the server on which blobs it has
+    (ACK) and which blobs it is lacking (MISS)."""
+
+    missing_ids: list[uint64]
+    found_ids: list[uint64]
+
+
+class GamePublishSetting(IntEnum):
+    NO_MULTI_PLAY = 0
+    INVITE_ONLY = 1
+    FRIENDS_ONLY = 2
+    FRIENDS_OF_FRIENDS = 3
+    PUBLIC = 4
+
+
+class ServerEditorConnectionPolicy(IntEnum):
+    MATCH_WORLD_TYPE = 0
+    EDITOR_ONLY = 1
+    VANILLA_ONLY = 2
+    MIXED = 3
+
+
+class NetworkPermissions:
+    server_auth_sound_enabled: bool

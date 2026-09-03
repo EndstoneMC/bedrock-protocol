@@ -1,15 +1,14 @@
+"""What the client's input device reports and what the server locks out: input/."""
+
 from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import bitset, field, packet, type, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
-from protocol.inventory import (
-    ItemStackLegacyRequestId,
-    ItemUseInventoryTransaction,
-    LegacySetSlot,
-)
+from protocol.item import ItemStackLegacyRequestId
 from protocol.item_stack import ItemStackRequestCereal, ItemStackRequestData
+from protocol.transaction import ItemUseInventoryTransaction, LegacySetSlot
 
 package = "bedrock.protocol"
 
@@ -334,3 +333,8 @@ class PlayerActionPacket:
     pos: BlockPos
     result_pos: BlockPos
     face: varint32
+
+
+@packet(id=196, since=2168)
+class UpdateClientInputLocksPacket:
+    input_lock_component_data: uvarint32

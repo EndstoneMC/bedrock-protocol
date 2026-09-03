@@ -1,3 +1,7 @@
+"""The scripting data-store sync: scripting/data_sync/.
+Name pinned: the DynamicValue builtin resolves include/bedrock/protocol/data_store.hpp
+from this module's stem."""
+
 from protocol import builtin, double, packet, uint32
 
 package = "bedrock.protocol"

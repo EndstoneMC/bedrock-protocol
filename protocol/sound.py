@@ -1,3 +1,7 @@
+"""Sound events and handles: sound/ and world/level/LevelSoundEvent.h --
+the packets that play, stop and update sound. The LevelSoundEvent table lives here
+because its only consumer does."""
+
 from enum import IntEnum, auto
 
 from protocol import field, int64, packet, type, uint32, uint64, value, varint32

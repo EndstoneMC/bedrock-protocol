@@ -1,7 +1,10 @@
+"""Commands: server/commands/ -- the command tree, origins, output, soft enums,
+and both permission ladders."""
+
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import auto, field, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
+from protocol import auto, field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos
 
@@ -255,3 +258,10 @@ class UpdateSoftEnumPacket:
     enum_name: str
     values: list[str]
     type: SoftEnumUpdateType
+
+
+class PlayerPermissionLevel(IntEnum, int8):
+    VISITOR = 0
+    MEMBER = 1
+    OPERATOR = 2
+    CUSTOM = 3

@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-#include <bedrock/protocol/inventory.h>
+#include <bedrock/protocol/transaction.h>
 
 #include "fixture.hpp"
 

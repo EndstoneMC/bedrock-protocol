@@ -1,7 +1,7 @@
 #include <string>
 #include <type_traits>
 
-#include <bedrock/protocol/trim.h>
+#include <bedrock/protocol/item.h>
 
 #include "fixture.hpp"
 

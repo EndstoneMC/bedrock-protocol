@@ -2,7 +2,7 @@
 #include <string>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/attribute.h>
 #include <bedrock/protocol/common.h>
 #include <bedrock/protocol/ui.h>
 

@@ -1,6 +1,6 @@
 #include <string>
 
-#include <bedrock/protocol/furnace.h>
+#include <bedrock/protocol/inventory.h>
 
 #include "fixture.hpp"
 

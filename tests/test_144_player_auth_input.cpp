@@ -9,6 +9,7 @@
 #include <bedrock/protocol/common.h>
 #include <bedrock/protocol/input.h>
 #include <bedrock/protocol/inventory.h>
+#include <bedrock/protocol/transaction.h>
 
 #include "fixture.hpp"
 

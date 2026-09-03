@@ -1,7 +1,11 @@
-from enum import IntEnum
+"""What the client reports for diagnosis: profile/ Whisker scopes, memory categories,
+frame and system timings, plus debug/ markers and the editor channel."""
+
+from enum import Enum, IntEnum
 
 from protocol import auto, field, packet, type, uint8, uint64, value
-from protocol.common import Vec3
+from protocol.actor import ActorUniqueID
+from protocol.common import Color, Vec3
 
 package = "bedrock.protocol"
 
@@ -270,3 +274,33 @@ class ServerboundDiagnosticsPacket:
     system_timings: list[SystemDiagnosticTimingInfo]
     system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_data: list[ScopeDataSummary] = field(since=1001)
+
+
+@packet(id=190, since=2168)
+class EditorNetworkPacket:
+    route_to_manager: bool
+    raw_variant_name: str
+    raw_variant_data: str
+
+
+@packet(id=155, since=2168)
+class DebugInfoPacket:
+    actor_id: ActorUniqueID
+    data: str
+
+
+@packet(id=164, since=2168)
+class ClientboundDebugRendererPacket:
+    class PayloadType(Enum, uint8):
+        INVALID = 0
+        CLEAR_DEBUG_MARKERS = 1, "ClearDebugMarkers"
+        ADD_DEBUG_MARKER_CUBE = 2, "AddDebugMarkerCube"
+
+    class DebugMarkerData:
+        text: str
+        position: Vec3
+        color: Color
+        duration_ms: uint64
+
+    type: PayloadType = field(type=str)
+    debug_marker_data: DebugMarkerData | None

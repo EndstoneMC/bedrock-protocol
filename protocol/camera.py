@@ -1,9 +1,12 @@
+"""Cameras: world/level/camera/ -- presets, shake, instructions, splines, aim assist,
+and the world/level/controlscheme/ control scheme."""
+
 from enum import IntEnum
 
 from protocol import field, int32, int64, packet, uint8, uint32
 from protocol.actor import ActorUniqueID
-from protocol.attributes import EasingType
 from protocol.common import Vec2, Vec3
+from protocol.eas import EasingType
 
 package = "bedrock.protocol"
 
@@ -311,3 +314,8 @@ class CameraSplineDefinition:
 @packet(id=338, since=2168)
 class CameraSplinePacket:
     splines: list[CameraSplineDefinition]
+
+
+@packet(id=327, since=2168)
+class ClientboundControlSchemeSetPacket:
+    control_scheme: Scheme

@@ -1,3 +1,6 @@
+"""Structures and the harness that lays them out: world/level/levelgen/structure/
+and gametest/ -- structure blocks, templates, jigsaws, features, ticking areas."""
+
 from enum import IntEnum
 
 from protocol import field, packet, type, uint8, uint32, varint32
@@ -148,3 +151,21 @@ class FeatureRegistry:
 @packet(id=191, since=2168)
 class FeatureRegistryPacket:
     features_data_list: list[FeatureRegistry.FeatureBinaryJsonFormat]
+
+
+@packet(id=195, since=2168)
+class GameTestResultsPacket:
+    succeeded: bool
+    error: str
+    test_name: str
+
+
+@packet(id=194, since=2168)
+class GameTestRequestPacket:
+    max_tests_per_batch: varint32
+    repeat_count: varint32
+    rotation: Rotation
+    stop_on_failure: bool
+    test_pos: BlockPos
+    tests_per_row: varint32
+    test_name: str

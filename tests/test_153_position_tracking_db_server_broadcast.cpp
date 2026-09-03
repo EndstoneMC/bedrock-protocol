@@ -1,6 +1,6 @@
 #include <string>
 
-#include <bedrock/protocol/position_tracking.h>
+#include <bedrock/protocol/level.h>
 
 #include "fixture.hpp"
 

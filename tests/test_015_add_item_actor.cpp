@@ -2,7 +2,6 @@
 #include <string>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/movement.h>
 
 #include "fixture.hpp"
 

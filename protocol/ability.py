@@ -1,10 +1,12 @@
+"""Player ability and permission layers: world/actor/player/Abilities.h plus
+network/packet/types/world/actor/SerializedAbilitiesData.h.
+Not the command permission ladder -- that is server/commands/, in command.py."""
+
 from enum import IntEnum, auto
 
-from protocol import field, int8, int64, packet, uint8, uint16, varint32
+from protocol import field, int8, int64, packet, uint8, uint16, uint32, varint32
 from protocol.actor import ActorUniqueID
-from protocol.camera import Scheme
-from protocol.game import PlayerPermissionLevel
-from protocol.movement import SerializedAbilitiesData
+from protocol.command import CommandPermissionLevel, PlayerPermissionLevel
 
 package = "bedrock.protocol"
 
@@ -24,11 +26,6 @@ class RequestPermissionsPacket:
     target_player_id: ActorUniqueID = field(type=int64)
     player_permissions: PlayerPermissionLevel = field(type=varint32)
     custom_permission_flags: uint16
-
-
-@packet(id=327, since=2168)
-class ClientboundControlSchemeSetPacket:
-    control_scheme: Scheme
 
 
 class AdventureSettings:
@@ -80,6 +77,29 @@ class RequestAbilityPacket:
     value_type: Type
     bool_: bool
     float_: float
+
+
+class SerializedAbilitiesData:
+    class SerializedAbilitiesLayer(IntEnum, uint16):
+        CUSTOM_CACHE = 0
+        BASE = 1
+        SPECTATOR = 2
+        COMMANDS = 3
+        EDITOR = 4
+        LOADING_SCREEN = 5
+
+    class SerializedLayer:
+        serialized_layer: SerializedAbilitiesLayer = field(type=uint16)
+        abilities_set: uint32
+        ability_values: uint32
+        fly_speed: float
+        vertical_fly_speed: float
+        walk_speed: float
+
+    target_player: ActorUniqueID = field(type=int64)
+    player_permissions: PlayerPermissionLevel
+    command_permissions: CommandPermissionLevel
+    layers: list[SerializedLayer]
 
 
 @packet(id=187, since=2168)

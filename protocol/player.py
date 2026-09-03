@@ -1,9 +1,17 @@
-from enum import IntEnum, auto
+"""The player as a subject: world/actor/player/ -- respawn state, damage cause,
+armour slots, client options, the player list, per-player location and property overrides,
+and AddPlayer. Not abilities -- those are in ability.py."""
 
-from protocol import int16, int32, packet, uint8, uvarint64, varint32
-from protocol.actor import ActorRuntimeID
-from protocol.attributes import DimensionType
-from protocol.common import BlockPos, Vec3
+import uuid
+from enum import Enum, IntEnum, auto
+
+from protocol import field, int16, int32, packet, type, uint8, uvarint32, uvarint64, value, varint32
+from protocol.ability import SerializedAbilitiesData
+from protocol.actor import ActorLink, ActorRuntimeID, ActorUniqueID, PropertySyncData, SynchedActorData
+from protocol.common import BlockPos, Color, DimensionType, Vec2, Vec3
+from protocol.game import GameType
+from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.skin import SerializedSkinRef
 
 package = "bedrock.protocol"
 
@@ -146,3 +154,189 @@ class GraphicsMode(IntEnum, uint8):
 class UpdateClientOptionsPacket:
     graphics_mode: GraphicsMode | None
     filter_profanity: bool | None
+
+
+class PlayerListPacketType(IntEnum, uint8):
+    ADD = 0
+    REMOVE = 1
+
+
+class BuildPlatform(IntEnum):
+    UNKNOWN = -1
+    GOOGLE = 1
+    IOS = 2
+    OSX = 3
+    AMAZON = 4
+    GEAR_VR_DEPRECATED = 5
+    UWP_DEPRECATED = 7
+    WINDOWS = value(8, "Win32")
+    DEDICATED = 9
+    TV_OS_DEPRECATED = 10
+    SONY = 11
+    NINTENDO = 12
+    XBOX = 13
+    WINDOWS_PHONE_DEPRECATED = 14
+    LINUX = 15
+
+
+@type(until=2168)
+class PlayerListEntry:
+    uuid: uuid.UUID
+    id: ActorUniqueID
+    name: str
+    xuid: str
+    platform_online_id: str
+    build_platform: BuildPlatform = field(type=int32)
+    skin: SerializedSkinRef = field(cereal=False)
+    is_teacher: bool
+    is_host: bool
+    is_sub_client: bool
+    color: Color
+
+
+@packet(id=63, until=2168)
+class PlayerListPacket:
+    action: PlayerListPacketType
+    entries: list[PlayerListEntry] = field(when=lambda p: p.action == PlayerListPacketType.ADD)
+    removed_entries: list[uuid.UUID] = field(when=lambda p: p.action == PlayerListPacketType.REMOVE)
+    trusted_skins: list[bool] = field(
+        when=lambda p: p.action == PlayerListPacketType.ADD,
+        count=lambda p: len(p.entries),
+    )
+
+
+@packet(id=63, since=2168)
+class PlayerListPacket:
+    """Each entry carries its action twice: once as the variant index over the two
+    payloads, then again as the payload's own member."""
+
+    class RemoveEntry:
+        action: PlayerListPacketType
+        uuid: uuid.UUID
+
+    class AddEntry:
+        action: PlayerListPacketType
+        uuid: uuid.UUID
+        id: ActorUniqueID
+        name: str
+        xuid: str
+        platform_online_id: str
+        build_platform: BuildPlatform = field(type=int32)
+        skin: SerializedSkinRef
+        is_teacher: bool
+        is_host: bool
+        is_sub_client: bool
+        color: Color
+
+    entries: list[RemoveEntry | AddEntry]
+
+
+class UpdateType(Enum, uint8):
+    CLEAR_OVERRIDES = 0, "ClearOverrides"
+    REMOVE_OVERRIDE = 1, "RemoveOverride"
+    SET_INT_OVERRIDE = 2, "SetIntOverride"
+    SET_FLOAT_OVERRIDE = 3, "SetFloatOverride"
+
+
+@packet(id=325, until=2168)
+class PlayerUpdateEntityOverridesPacket:
+    id: ActorUniqueID
+    property_index: uvarint32
+    update_type: UpdateType
+    int_value: int32 = field(when=lambda p: p.update_type == UpdateType.SET_INT_OVERRIDE)
+    float_value: float = field(when=lambda p: p.update_type == UpdateType.SET_FLOAT_OVERRIDE)
+
+
+@packet(id=325, since=2168)
+class PlayerUpdateEntityOverridesPacket:
+    # TODO: confirm against BDS -- PlayerUpdateEntityOverridesPacket.h gives these payloads no
+    # tag member at all (ClearOverride and RemoveOverride are empty structs and the type comes
+    # from getUpdateType()), so the header settles nothing beyond UpdateType being uint8_t. The
+    # r26_u4 dump name-codes the tag inside each payload while typing the variant's own switch
+    # uint8; CloudburstMC PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte.
+    # Needs cerealizer<PlayerUpdateEntityOverridesPacketPayload>::bind read directly.
+    class ClearOverride:
+        update_type: UpdateType = field(type=str)
+
+    class RemoveOverride:
+        update_type: UpdateType = field(type=str)
+
+    class IntOverride:
+        update_type: UpdateType = field(type=str)
+        value: int32
+
+    class FloatOverride:
+        update_type: UpdateType = field(type=str)
+        value: float
+
+    id: ActorUniqueID
+    property_index: uvarint32
+    update: ClearOverride | RemoveOverride | IntOverride | FloatOverride
+
+
+@packet(id=326, until=2168)
+class PlayerLocationPacket:
+    class Type(IntEnum):
+        PLAYER_LOCATION_COORDINATES = 0
+        PLAYER_LOCATION_HIDE = 1
+
+    type: Type = field(type=int32)
+    id: ActorUniqueID
+    pos: Vec3 = field(when=lambda p: p.type == Type.PLAYER_LOCATION_COORDINATES)
+
+
+@packet(id=326, since=2168)
+class PlayerLocationPacket:
+    class Type(IntEnum):
+        PLAYER_LOCATION_COORDINATES = 0
+        PLAYER_LOCATION_HIDE = 1
+
+    class CoordinatesLocation:
+        type: Type
+        pos: Vec3
+
+    class HiddenLocation:
+        type: Type
+
+    id: ActorUniqueID
+    location: CoordinatesLocation | HiddenLocation
+
+
+@packet(id=12, until=2168)
+class AddPlayerPacket:
+    uuid: uuid.UUID
+    name: str
+    runtime_id: ActorRuntimeID
+    platform_online_id: str
+    pos: Vec3
+    velocity: Vec3
+    rot: Vec2
+    y_head_rot: float
+    carried_item: NetworkItemStackDescriptor
+    player_game_type: GameType
+    unpack: SynchedActorData.CopyableDataList
+    synched_properties: PropertySyncData
+    abilities_data: SerializedAbilitiesData
+    links: list[ActorLink]
+    device_id: str
+    build_platform: BuildPlatform = field(type=int32)
+
+
+@packet(id=12, since=2168)
+class AddPlayerPacket:
+    uuid: uuid.UUID
+    name: str
+    runtime_id: ActorRuntimeID
+    platform_online_id: str
+    pos: Vec3
+    velocity: Vec3
+    rot: Vec2
+    y_head_rot: float
+    carried_item: SerializedNetworkItemStackDescriptor
+    player_game_type: GameType
+    unpack: SynchedActorData.CopyableDataList
+    synched_properties: PropertySyncData
+    abilities_data: SerializedAbilitiesData
+    links: list[ActorLink]
+    device_id: str
+    build_platform: BuildPlatform = field(type=int32)

@@ -1,3 +1,5 @@
+"""Legacy telemetry events and the MinecraftEventing enum namespace: Events/."""
+
 from enum import IntEnum, auto
 
 from protocol import int16, int32, packet, uint8, uvarint32, value, varint32, varint64

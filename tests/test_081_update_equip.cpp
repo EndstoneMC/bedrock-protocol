@@ -2,7 +2,6 @@
 
 #include <bedrock/protocol/actor.h>
 #include <bedrock/protocol/inventory.h>
-#include <bedrock/protocol/trade.h>
 
 #include "fixture.hpp"
 

@@ -1,3 +1,6 @@
+"""The item-stack request/response protocol: world/inventory/network/ --
+request actions, responses, and the cereal namespace carrier."""
+
 from enum import IntEnum
 from typing import Literal
 
@@ -8,7 +11,8 @@ from protocol.crafting import (
     SerializedNetworkItemInstanceDescriptor,
     SerializedRecipeIngredient,
 )
-from protocol.inventory import FullContainerName, ItemStackNetId, ItemStackRequestId
+from protocol.inventory import FullContainerName
+from protocol.item import ItemStackNetId, ItemStackRequestId
 from protocol.molang import MolangVersion
 
 package = "bedrock.protocol"

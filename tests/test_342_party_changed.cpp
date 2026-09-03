@@ -1,6 +1,6 @@
 #include <string>
 
-#include <bedrock/protocol/party.h>
+#include <bedrock/protocol/presence.h>
 
 #include "fixture.hpp"
 

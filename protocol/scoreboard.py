@@ -1,5 +1,6 @@
+"""Scoreboard ids, identities, objectives and scores: world/scores/."""
+
 from enum import Enum, IntEnum
-from typing import Literal
 
 from protocol import field, int32, packet, type, uint8, varint32, varint64
 from protocol.actor import ActorUniqueID

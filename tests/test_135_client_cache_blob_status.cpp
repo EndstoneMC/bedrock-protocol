@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include <bedrock/protocol/login.h>
+#include <bedrock/protocol/network.h>
 
 #include "fixture.hpp"
 

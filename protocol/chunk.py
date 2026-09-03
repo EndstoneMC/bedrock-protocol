@@ -1,8 +1,10 @@
+"""Chunk and sub-chunk transfer, radius negotiation, publisher updates:
+world/level/chunk/."""
+
 from enum import IntEnum
 
 from protocol import array, field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
-from protocol.attributes import DimensionType
-from protocol.common import BlockPos
+from protocol.common import BlockPos, DimensionType
 
 package = "bedrock.protocol"
 

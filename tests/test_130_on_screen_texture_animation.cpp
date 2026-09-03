@@ -1,6 +1,6 @@
 #include <string>
 
-#include <bedrock/protocol/level_event.h>
+#include <bedrock/protocol/ui.h>
 
 #include "fixture.hpp"
 

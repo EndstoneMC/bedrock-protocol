@@ -3,9 +3,9 @@
 #include <variant>
 
 #include <bedrock/protocol/actor.h>
-#include <bedrock/protocol/attributes.h>
+#include <bedrock/protocol/attribute.h>
 #include <bedrock/protocol/common.h>
-#include <bedrock/protocol/shape.h>
+#include <bedrock/protocol/script.h>
 
 #include "fixture.hpp"
 

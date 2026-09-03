@@ -1,7 +1,7 @@
 #include <string>
 #include <type_traits>
 
-#include <bedrock/protocol/login.h>
+#include <bedrock/protocol/network.h>
 
 #include "fixture.hpp"
 

@@ -1,12 +1,17 @@
+"""The level at runtime and the settings it ships on join: world/level/ --
+game type, difficulty, game rules, simulation type, LevelSettings and StartGame.
+Not world clocks or position tracking -- also world/level/, but in level.py."""
+
 import uuid
 from enum import IntEnum
 
-from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, uvarint64, varint32
+from protocol import field, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
-from protocol.attributes import DimensionType
-from protocol.common import BlockPos, Vec2, Vec3
+from protocol.command import PlayerPermissionLevel
+from protocol.common import BlockPos, DimensionType, Vec2, Vec3
 from protocol.edu import EduSharedUriResource
 from protocol.nbt import CompoundTag
+from protocol.network import GamePublishSetting, NetworkPermissions, ServerEditorConnectionPolicy
 from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
 
 package = "bedrock.protocol"
@@ -63,32 +68,10 @@ class EducationEditionOffer(IntEnum, uint32):
     CHINA_DEPRECATED = 2
 
 
-class GamePublishSetting(IntEnum):
-    NO_MULTI_PLAY = 0
-    INVITE_ONLY = 1
-    FRIENDS_ONLY = 2
-    FRIENDS_OF_FRIENDS = 3
-    PUBLIC = 4
-
-
-class PlayerPermissionLevel(IntEnum, int8):
-    VISITOR = 0
-    MEMBER = 1
-    OPERATOR = 2
-    CUSTOM = 3
-
-
 class ChatRestrictionLevel(IntEnum, uint8):
     NONE = 0
     DROPPED = 1
     DISABLED = 2
-
-
-class ServerEditorConnectionPolicy(IntEnum):
-    MATCH_WORLD_TYPE = 0
-    EDITOR_ONLY = 1
-    VANILLA_ONLY = 2
-    MIXED = 3
 
 
 class SpawnSettings:
@@ -130,10 +113,6 @@ class Experiments:
 class SyncedPlayerMovementSettings:
     rewind_history_size: varint32
     server_auth_block_breaking: bool
-
-
-class NetworkPermissions:
-    server_auth_sound_enabled: bool
 
 
 class BlockEntry:
@@ -320,11 +299,6 @@ class StartGamePacket:
     server_telemetry_data: ServerTelemetryData
 
 
-@packet(id=10, since=2168)
-class SetTimePacket:
-    time: varint32
-
-
 @packet(id=59, since=2168)
 class SetCommandsEnabledPacket:
     commands_enabled: bool
@@ -333,11 +307,6 @@ class SetCommandsEnabledPacket:
 @packet(id=60, since=2168)
 class SetDifficultyPacket:
     difficulty: Difficulty = field(type=uvarint32)
-
-
-@packet(id=196, since=2168)
-class UpdateClientInputLocksPacket:
-    input_lock_component_data: uvarint32
 
 
 @packet(id=62, since=2168)
@@ -388,43 +357,3 @@ class SimulationType(IntEnum, uint8):
 @packet(id=168, since=2168)
 class SimulationTypePacket:
     sim_type: SimulationType
-
-
-class SyncWorldClockStateData:
-    clock_id: uvarint64
-    time: varint32
-    is_paused: bool
-
-
-class TimeMarkerData:
-    id: uvarint64
-    name: str
-    time: varint32
-    period: int32 | None
-
-
-class WorldClockData:
-    id: uvarint64
-    name: str
-    time: varint32
-    is_paused: bool
-    time_markers: list[TimeMarkerData]
-
-
-@packet(id=344, since=2168)
-class SyncWorldClocksPacket:
-    class SyncStateData:
-        clock_data: list[SyncWorldClockStateData]
-
-    class InitializeRegistryData:
-        clock_data: list[WorldClockData]
-
-    class AddTimeMarkerData:
-        clock_id: uvarint64
-        time_markers: list[TimeMarkerData]
-
-    class RemoveTimeMarkerData:
-        clock_id: uvarint64
-        time_marker_ids: list[uvarint64]
-
-    data: SyncStateData | InitializeRegistryData | AddTimeMarkerData | RemoveTimeMarkerData
