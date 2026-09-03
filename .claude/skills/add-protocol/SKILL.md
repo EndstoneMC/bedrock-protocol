@@ -381,6 +381,12 @@ Five signatures in `enums/*.json`, each needing different DSL:
   4, colliding with `MULTIPLY`, while the header carries 5 and 6 **byte-identically at both
   eras**. That reads exactly like a renumber and is a dumper bug. Settle a value in the
   header before gating anything.
+- **DO NOT** treat the C++ enumerator's spelling as cosmetic. The reflected name table is that
+  spelling lowercased with **no separator**, and for a name-coded enum that table *is* the
+  wire - `RebeccaPurple` folds to `rebeccapurple` where `REBECCA_PURPLE` folded to
+  `rebecca_purple`, and BDS writes the former (`test_077`'s golden matches `automationplayer`).
+  So changing how the enumerator is derived is a wire change, and `enum_cast` folds case but
+  not underscores.
 - **DO NOT** read a wholesale respelling as a rename. `SharedTypes::Legacy::LevelSoundEvent`
   respells all ~563 members between two branches (`ItemUseOn` becomes `item.use.on`) because
   the *dumper* switched to emitting the bound `SoundEventIdentifier` strings; the header keeps
@@ -629,8 +635,9 @@ packets declared only from 2168, **169** are byte-identical at 1001, **4** diffe
   closure. The sweep produces *candidates*, and the closure diff confirms them.
 - **DO NOT** forget that lowering a gate can **delete the type's versioned alias**. The backend
   emits `X_<V>` only for a type that actually varies by version; a packet that becomes valid
-  everywhere is emitted as a plain `struct X` and `bp::X_<2168>` stops compiling. Lowering 171
-  gates cost 161 aliases and 1073 references across 162 test files, and `endweave` consumes the
+  everywhere is emitted as a plain `struct X` and both `bp::X_<2168>` **and** the qualified
+  `bp::v2168::X` stop compiling - sweep for the namespace form too, it is the one that hides.
+  Lowering 171 gates cost 161 aliases and 1073 references across 162 test files, and `endweave` consumes the
   same headers. Regenerate and diff the emitted `using X_ =` set before and after - that set,
   not the schema, is what consumers bind to.
 
@@ -797,6 +804,16 @@ REQUIRE(decode<Newer>(encode(newer)).new_field == ...);
   pin the ordering with a body whose bytes actually move.
 - **DO** update the per-snapshot modelled-packet counts in `tests/test_packet.cpp`. A new
   snapshot adds a row, and a newly modelled packet moves every row it exists at.
+- **DO** re-read every `bp::base::` in the suite after materializing a snapshot. `base` stops
+  meaning what it meant: a case that builds a payload from `bp::base::` types and asserts it
+  against a *newer* era's golden was only ever right because the two shared a shape. Splitting
+  944 from 975 caught `test_122` and `test_328` encoding the 944 shape against a 975 golden -
+  they compiled and passed before, and the snapshot is what exposed them.
+- **DO NOT** attribute a red C++ suite to your change before checking it built at `HEAD`. It
+  can be dark for many commits: a backend change that renamed every emitted enumerator updated
+  `tests/compiler/` and left all 214 `tests/test_NNN_*.cpp` behind, so 844 references across
+  120 files had been stale for as long as that - and the rot hid two real regressions, a member
+  the schema had since renamed and a changed wire fold, behind what looked like spelling drift.
 - **DO** check `grep -c "struct [A-Za-z_0-9]* {};"` over the generated headers reads 0. An
   unresolvable field type is silent: the parser returns `None` and the backend emits a
   one-line empty struct.
