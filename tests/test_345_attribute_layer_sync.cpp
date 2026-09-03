@@ -2,6 +2,7 @@
 #include <string>
 
 #include <bedrock/protocol/attribute.h>
+#include <bedrock/protocol/eas.h>
 
 #include "fixture.hpp"
 

@@ -1,6 +1,7 @@
 #include <string>
 
 #include <bedrock/protocol/game.h>
+#include <bedrock/protocol/level.h>
 
 #include "fixture.hpp"
 
