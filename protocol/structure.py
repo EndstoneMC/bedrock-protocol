@@ -1,7 +1,7 @@
 """Structures and the harness that lays them out: world/level/levelgen/structure/
 and gametest/ -- structure blocks, templates, jigsaws, features, ticking areas."""
 
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import field, packet, type, uint8, uint32, varint32
 from protocol.actor import ActorUniqueID
@@ -22,6 +22,7 @@ class StructureBlockType(IntEnum):
     CORNER = 3
     INVALID = 4
     EXPORT = 5
+    COUNT = auto()
 
 
 class StructureRedstoneSaveMode(IntEnum, uint8):
@@ -37,6 +38,7 @@ class Rotation(IntEnum, uint8):
     CLOCKWISE_90 = 1
     CLOCKWISE_180 = 2
     COUNTER_CLOCKWISE_90 = 3
+    TOTAL = auto()
 
 
 class Mirror(IntEnum, uint8):

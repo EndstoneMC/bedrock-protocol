@@ -14,6 +14,8 @@ package = "bedrock.protocol"
 class ArmSizeType(IntEnum, uint8):
     SLIM = 0
     WIDE = 1
+    COUNT = auto()
+    UNKNOWN = auto()
 
 
 class PieceType(Enum, uint32):

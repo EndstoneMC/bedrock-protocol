@@ -3,7 +3,7 @@ util/HudElementsEnum.h -- modal forms, server settings, data-driven UI, HUD elem
 loading screens, texture shift, the locator bar."""
 
 import uuid
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 
 from protocol import field, packet, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
@@ -31,11 +31,13 @@ class HudElement(IntEnum):
     HORSE_HEALTH = 10
     STATUS_EFFECTS = 11
     ITEM_TEXT = 12
+    COUNT = auto()
 
 
 class HudVisibility(IntEnum):
     HIDE = 0
     RESET = 1
+    COUNT = auto()
 
 
 @packet(id=308, since=2168)

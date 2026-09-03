@@ -1,7 +1,7 @@
 """Cameras: world/level/camera/ -- presets, shake, instructions, splines, aim assist,
 and the world/level/controlscheme/ control scheme."""
 
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import field, int32, int64, packet, uint8, uint32
 from protocol.actor import ActorUniqueID
@@ -113,6 +113,7 @@ class CameraAimAssistActorPriorityPacket:
 class ClientCameraAimAssistPacketAction(IntEnum, uint8):
     SET_FROM_CAMERA_PRESET = 0
     CLEAR = 1
+    COUNT = auto()
 
 
 @packet(id=321, since=2168)
@@ -127,10 +128,12 @@ class CameraAimAssistPacket:
     class Action(IntEnum, uint8):
         SET = 0
         CLEAR = 1
+        COUNT = auto()
 
     class TargetMode(IntEnum, uint8):
         ANGLE = 0
         DISTANCE = 1
+        COUNT = auto()
 
     preset_id: str
     view_angle: Vec2

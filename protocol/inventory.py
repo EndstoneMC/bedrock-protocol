@@ -279,6 +279,7 @@ class FurnaceLeftTabIndex(IntEnum):
     RECIPE_BLOCKS = 3
     RECIPE_SEARCH = 4
     INVENTORY = 5
+    COUNT = auto()
 
 
 @type(since=2192)
@@ -286,6 +287,7 @@ class FurnaceLayout(IntEnum):
     NONE = 0
     INVENTORY_ONLY = 1
     DEFAULT = 2
+    COUNT = auto()
 
 
 @type(since=2192)

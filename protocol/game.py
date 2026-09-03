@@ -24,6 +24,7 @@ class GameType(IntEnum):
     ADVENTURE = 2
     DEFAULT = 5
     SPECTATOR = 6
+    WORLD_DEFAULT = 0
 
 
 class Difficulty(IntEnum):
