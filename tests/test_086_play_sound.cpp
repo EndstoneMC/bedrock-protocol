@@ -22,10 +22,9 @@ const std::string golden_v1001_no_handle = bytes({
     0x30, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0xc0, 0x3f, 0x00,
 });
 
-// TODO: confirm against BDS. CloudburstMC PlaySoundSerializer_v2168 writes the
-// loop count with VarInts.writeUnsignedInt, where the r26_u4 dump types the field
-// varint32. For 3 that is 0x03 against the schema's zigzagged 0x06; every other
-// byte agrees.
+// One patch: CloudburstMC PlaySoundSerializer_v2168 writes the loop count with
+// VarInts.writeUnsignedInt, where the r26_u4 dump types the field varint32, so 3
+// zigzags to 0x06 rather than its 0x03. Every other byte agrees.
 //
 // The handle optional costs one framing byte at both versions: the 0x01 sits
 // directly before the eight handle bytes here and in the v1001 golden above, with
@@ -37,7 +36,7 @@ const std::string golden_v1001_no_handle = bytes({
 const std::string golden_v2168 = bytes({
     0x09, 0x6e, 0x6f, 0x74, 0x65, 0x2e, 0x68, 0x61, 0x72, 0x70, 0x10, 0x20,
     0x30, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0xc0, 0x3f,
-    0x06,  // TODO: patched, confirm against BDS
+    0x06,
     0x01, 0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 });
 

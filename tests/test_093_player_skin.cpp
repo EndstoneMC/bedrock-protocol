@@ -136,8 +136,8 @@ const std::string golden_v2168 = bytes({
     0x77, 0x03, 0x6F, 0x6C, 0x64,
 });
 
-// TODO: no golden for v1001, and confirm against BDS. Packet 93 was already
-// cerealised at 1001, so r26_u3's SerializedSkinRef.json is its 1001 shape -- but
+// No golden for v1001. Packet 93 was already cerealised at 1001, so r26_u3's
+// SerializedSkinRef.json is its 1001 shape -- but
 // gophertunnel's Skin and CloudburstMC's pre-v2168 helper both still write the
 // pre-cereal, all-strings skin (arm size, skin colour, piece type, pack id and tint
 // colours as text, uint32 counts, no trusted flag) and append a trailing

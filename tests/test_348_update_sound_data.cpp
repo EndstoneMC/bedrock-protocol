@@ -25,7 +25,7 @@ const std::string golden_binding_casing = bytes({
     0x70,
 });
 
-// TODO: confirm against BDS. The 2168 form has no golden: CloudburstMC's
+// The 2168 form has no golden: CloudburstMC's
 // ClientboundUpdateSoundDataSerializer_v2168 writes the seven alternatives as seven
 // independent optionals, each behind a present flag and a constant zero tag -- for
 // handle=42 with only Stop set, 0x2a 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00,

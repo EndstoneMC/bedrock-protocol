@@ -27,8 +27,8 @@ const std::string golden_v1001_float = bytes({
     0x0e, 0x02, 0x03, 0x00, 0x00, 0x00, 0x3f,
 });
 
-// TODO: confirm against BDS. There is no v2168 golden. The r26_u4 dump types each
-// payload's restated discriminator as a name-coded string
+// No v2168 golden. The r26_u4 dump types each payload's restated discriminator as a
+// name-coded string
 // ("type": "string", "enum": "UpdateType"), which is what the schema encodes and
 // what CloudburstMC itself writes for the two closest siblings
 // (SetScoreSerializer_v2168, ResourcePackClientResponseSerializer_v2168). Its own

@@ -7,19 +7,17 @@
 
 namespace {
 
-// TODO: confirm against BDS. gophertunnel's &packet.ClientBoundDebugRenderer still
-// marshals the pre-cereal body: no presence flag ahead of the marker data, the marker
-// data gated on Type == AddCube rather than on a flag, and the colour as four float32
-// RGBA channels. r26_u4 dumps DebugMarkerData as an optional whose colour is one
-// int32 mce::Color, and ClientboundDebugRendererPacket.h declares
-// std::optional<DebugMarkerData> holding a single Color, so gophertunnel is the side
-// that has to give. The bytes below still come out of gophertunnel's protocol.Writer,
-// driven over the dump's field list (String, Bool, String, Vec3, Int32, Uint64)
-// instead of its own packet struct; the regions the two shapes share are byte-identical
-// to what &packet.ClientBoundDebugRenderer wrote.
+// gophertunnel's &packet.ClientBoundDebugRenderer still marshals the pre-cereal body: no
+// presence flag ahead of the marker data, the marker data gated on Type == AddCube rather
+// than on a flag, and the colour as four float32 RGBA channels. r26_u4 dumps
+// DebugMarkerData as an optional whose colour is one int32 mce::Color, and
+// ClientboundDebugRendererPacket.h declares std::optional<DebugMarkerData> holding a
+// single Color. The bytes below still come out of gophertunnel's protocol.Writer, driven
+// over the dump's field list (String, Bool, String, Vec3, Int32, Uint64) instead of its
+// own packet struct; the regions the two shapes share are byte-identical to what
+// &packet.ClientBoundDebugRenderer wrote.
 // packet: Type AddDebugMarkerCube, DebugMarkerData{Text: "marker",
 // Position: Vec3{1, 2, 3}, Color: 0x44556677, duration: 1500}
-// TODO: patched, confirm against BDS
 const std::string golden_add_cube = bytes({
     0x12, 0x61, 0x64, 0x64, 0x64, 0x65, 0x62, 0x75, 0x67, 0x6d, 0x61, 0x72,
     0x6b, 0x65, 0x72, 0x63, 0x75, 0x62, 0x65, 0x01, 0x06, 0x6d, 0x61, 0x72,
@@ -30,7 +28,6 @@ const std::string golden_add_cube = bytes({
 
 // generated the same way, and patched the same way.
 // packet: Type Invalid, no DebugMarkerData
-// TODO: patched, confirm against BDS
 const std::string golden_invalid = bytes({
     0x07, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x00,
 });
@@ -38,7 +35,6 @@ const std::string golden_invalid = bytes({
 // generated the same way, and patched the same way.
 // packet: Type ClearDebugMarkers, DebugMarkerData{Text: "",
 // Position: Vec3{0, 0, 0}, Color: -1, duration: 255}
-// TODO: patched, confirm against BDS
 const std::string golden_clear_with_marker = bytes({
     0x11, 0x63, 0x6c, 0x65, 0x61, 0x72, 0x64, 0x65, 0x62, 0x75, 0x67, 0x6d,
     0x61, 0x72, 0x6b, 0x65, 0x72, 0x73, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,

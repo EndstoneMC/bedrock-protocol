@@ -41,6 +41,13 @@ phantom `MemoryCategory` VR entry; CloudburstMC reads a second plain string for
 `RedactableString` where BDS has `optional<string>`. Agreement between two refs
 is not evidence — they copy each other.
 
+**At 2168 and above, the dump is BDS.** Everything is cerealised there and protocol-docs
+dumps the cereal schema out of the binary, so for a packet the dump lists at 2168 there is
+no separate hand-written writer left to read and nothing to arbitrate: a community codec
+that disagrees with the dump is wrong, full stop, and no `confirm against BDS` is earned.
+The binary arbiter below is for the pre-2168 range, where a packet's `write(BinaryStream&)`
+is hand-written and the dump cannot describe it at all.
+
 **When the header and the dump disagree, read the binary.** That is the only
 arbiter, and it is cheap: the IDA databases under `~/bedrock-symbols` are already
 built. Two methods that worked. Decompile the writer directly, which settled the
@@ -433,19 +440,20 @@ Labelling them is hand-derivation smuggled back in. The labels rot the moment a 
 moves, and they invite patching the bytes to match the label. Say what the packet was,
 not what each byte means.
 
-**A patch is a TODO, not a fix.** Casing is the one settled patch: a name-coded enum
-reaches the wire in whatever case BDS spells, and BDS lowercases before the lookup, so
-the golden takes the DSL's spelling and its comment says so. Any other disagreement
-means one side is wrong about the wire, and the golden cannot say which. Patch it so
-the suite still says what the schema encodes, mark the bytes
-`// TODO: patched, confirm against BDS`, and open the comment above with
-`// TODO: confirm against BDS` naming what the reference wrote, what the dump says, and
-which side has to give -- the same marker a doubted wire type earns in the DSL. None are
-open today.
+**A patch at 2168 is a fix; below it, a patch is a TODO.** From 2168 the dump settles the
+disagreement outright, so patch the bytes to what the schema encodes and let the comment
+above say what the reference wrote, what the dump says, and how many bytes moved -- no
+`TODO` on either the comment or the bytes. Casing is settled at every version: a
+name-coded enum reaches the wire in whatever case BDS spells and BDS lowercases before the
+lookup, so the golden takes the DSL's spelling and its comment says so. Below 2168 a
+disagreement has no arbiter short of the binary, and the golden cannot say which side is
+wrong: patch it the same way, mark the bytes `// TODO: patched, confirm against BDS`, and
+open the comment above with `// TODO: confirm against BDS` -- the same marker a doubted
+wire type earns in the DSL. None are open today.
 
-The dump is not the tiebreaker by default; the header is, and a third-party codec breaks
-a tie the header cannot. `BoolAttributeData`'s operation closed toward the dump --
-gophertunnel wrote an optional `int32` where the dump has a name-coded string, and
+Below 2168 the dump is not the tiebreaker by default; the header is, and a third-party
+codec breaks a tie the header cannot. `BoolAttributeData`'s operation closed toward the
+dump -- gophertunnel wrote an optional `int32` where the dump has a name-coded string, and
 `BoolEnvironmentAttribute::mOperation` is a cereal-bound enum, which Cloudburst
 ProtocolLib and Nukkit-MOT both write name-coded. `InventorySource`'s container id closed
 toward gophertunnel's plain `int8`: `ContainerID` is a `signed char`, and a one-byte member

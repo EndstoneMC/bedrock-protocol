@@ -24,7 +24,7 @@ const std::string golden_v1001 = bytes({
     0x6c, 0x64, 0x03, 0x72, 0x70, 0x31,
 });
 
-// TODO: no golden for v2168. gophertunnel stops at 1001, and CloudburstMC's
+// No golden for v2168. gophertunnel stops at 1001, and CloudburstMC's
 // Bedrock_v2168 codec still dispatches ServerPresenceInfoPacket through
 // ServerPresenceInfoSerializer_v975 -- it writes the two names and no rich
 // presence id, so it reproduces golden_v975 verbatim at 2168. The v2168 cases
