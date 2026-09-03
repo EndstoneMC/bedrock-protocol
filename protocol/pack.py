@@ -57,9 +57,6 @@ class ResourcePacksInfoPacket:
 
 @packet(id=6, since=2168)
 class ResourcePacksInfoPacket:
-    """The packs the client has to have before it may join, each named by uuid and
-    version so the client can serve one it already cached."""
-
     resource_pack_required: bool
     has_addon_packs: bool
     has_scripts: bool
@@ -79,9 +76,6 @@ class ResourcePackClientResponsePacket:
 
 @packet(id=8, since=2168)
 class ResourcePackClientResponsePacket:
-    """The client's step in the pack handshake: which packs it still wants, then
-    twice more to say the download and the stack are done."""
-
     class Cancel:
         response_type: ResourcePackResponse = field(type=str)
 

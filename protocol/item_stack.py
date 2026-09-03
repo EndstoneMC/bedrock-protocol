@@ -1,7 +1,7 @@
 """The item-stack request/response protocol: world/inventory/network/ --
 request actions, responses, and the cereal namespace carrier."""
 
-from enum import IntEnum
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
@@ -130,7 +130,7 @@ class TextProcessingEventOrigin(IntEnum):
     SUMMON_COMMAND = 13
     SERVER_FORM = 14
     DATA_DRIVEN_UI = 15
-    COUNT = 16
+    COUNT = auto()
 
 
 @type(until=2168)

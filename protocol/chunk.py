@@ -114,9 +114,6 @@ class SubChunkPacket:
     center_pos_x: varint32
     center_pos_y: varint32
     center_pos_z: varint32
-    # TODO: field(when=) cannot reach the enclosing packet, so BDS's single mSubChunkData is
-    # spelled as two whole-list gates on mCacheEnabled, and the uncached entry earns a name BDS
-    # does not have.
     with field(when=lambda p: p.cache_enabled):
         sub_chunk_data: list[SubChunkPacketData] = field(prefix=uint32)
     with field(when=lambda p: not p.cache_enabled):

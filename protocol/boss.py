@@ -77,8 +77,6 @@ class BossEventPacket:
 
 @packet(id=74, since=1001)
 class BossEventPacket:
-    """Sent when a boss gets updated"""
-
     boss_id: ActorUniqueID
     player_id: ActorUniqueID = field(until=2192)
     event_type: BossEventUpdateType

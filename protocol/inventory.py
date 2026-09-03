@@ -358,8 +358,6 @@ class MobArmorEquipmentPacket:
 
 @packet(id=32, since=1001)
 class MobArmorEquipmentPacket:
-    """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
-
     runtime_id: ActorRuntimeID
     head: SerializedNetworkItemStackDescriptor
     torso: SerializedNetworkItemStackDescriptor

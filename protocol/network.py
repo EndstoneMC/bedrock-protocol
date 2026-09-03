@@ -597,9 +597,6 @@ class ClientCacheBlobStatusPacket:
 
 @packet(id=135, since=1001)
 class ClientCacheBlobStatusPacket:
-    """Sent periodically by the client to update the server on which blobs it has
-    (ACK) and which blobs it is lacking (MISS)."""
-
     missing_ids: list[uint64]
     found_ids: list[uint64]
 

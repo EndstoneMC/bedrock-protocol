@@ -405,7 +405,6 @@ class Enchant:
         POWER = 19
         PUNCH = 20
         FLAME = 21
-        # TODO: BDS spells this Infinity, but <math.h> owns INFINITY, so the enumerator cannot take it.
         INFINITY_ = value(22, "Infinity")
         LUCK_OF_THE_SEA = 23
         LURE = 24

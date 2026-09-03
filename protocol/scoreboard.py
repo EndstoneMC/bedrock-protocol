@@ -31,7 +31,7 @@ class ScorePacketType(IntEnum, uint8):
 
 @type(since=2168)
 class ScorePacketEntryAction(Enum, uint8):
-    REMOVE = 0, "Remove"
+    REMOVE = 0
     CHANGE_PLAYER = 1, "ChangePlayer"
     CHANGE_ENTITY = 2, "ChangeEntity"
     CHANGE_FAKE_PLAYER = 3, "ChangeFakePlayer"

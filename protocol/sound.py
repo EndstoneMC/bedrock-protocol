@@ -676,9 +676,6 @@ class LevelSoundEventPacket:
 
 @packet(id=123, since=1001)
 class LevelSoundEventPacket:
-    """Most sounds are launched on the server and replicated to clients; a handful of
-    player-initiated ones are launched on the client and replicated from there."""
-
     sound_event: str
     pos: Vec3
     data: varint32
