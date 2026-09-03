@@ -123,7 +123,16 @@ class InventoryContentPacket:
     storage_item: SerializedNetworkItemStackDescriptor
 
 
-@packet(id=50)
+@packet(id=50, until=975)
+class InventorySlotPacket:
+    inventory_id: ContainerID = field(type=uvarint32)
+    slot: uvarint32
+    full_container_name: FullContainerName
+    storage_item: NetworkItemStackDescriptor
+    item: NetworkItemStackDescriptor
+
+
+@packet(id=50, since=975)
 class InventorySlotPacket:
     inventory_id: ContainerID
     slot: uvarint32
@@ -335,7 +344,18 @@ class UpdateEquipPacket:
     data: CompoundTag
 
 
-@packet(id=31)
+@packet(id=31, until=975)
+class MobEquipmentPacket:
+    """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
+
+    runtime_id: ActorRuntimeID
+    item: NetworkItemStackDescriptor
+    slot: int32 = field(type=uint8)
+    selected_slot: int32 = field(type=uint8)
+    container_id: ContainerID
+
+
+@packet(id=31, since=975)
 class MobEquipmentPacket:
     """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
 

@@ -101,7 +101,16 @@ class ActorDataBoundingBoxComponent:
     value: array[float, 3]
 
 
-@packet(id=322)
+@packet(id=322, until=975)
+class ClientMovementPredictionSyncPacket:
+    actor_data_flag: ActorDataFlagComponent
+    actor_bounding_box: ActorDataBoundingBoxComponent
+    movement_attributes: array[float, 6]
+    actor_id: ActorUniqueID
+    is_flying: bool
+
+
+@packet(id=322, since=975)
 class ClientMovementPredictionSyncPacket:
     actor_data_flag: ActorDataFlagComponent
     actor_bounding_box: ActorDataBoundingBoxComponent

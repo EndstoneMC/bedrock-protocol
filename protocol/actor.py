@@ -160,9 +160,9 @@ class ActorFlags(IntEnum):
     BODY_ROTATION_ALWAYS_FOLLOWS_HEAD = 124
     CAN_USE_VERTICAL_MOVEMENT_ACTION = 125
     ROTATION_LOCKED_TO_VEHICLE = 126
-    USES_LEGACY_FRICTION = 127
-    USES_UNIFORM_AIR_DRAG = 128
-    NAMEPLATE_DEPTH_TESTED = 129
+    USES_LEGACY_FRICTION = value(127, since=975)
+    USES_UNIFORM_AIR_DRAG = value(128, since=975)
+    NAMEPLATE_DEPTH_TESTED = value(129, since=975)
     NOT_PICKABLE_FROM_INSIDE = value(130, since=2168)
     COUNT = auto()
 
@@ -307,8 +307,8 @@ class ActorDataIDs(IntEnum, uint8):
     AIM_ASSIST_PRIORITY_PRESET_ID = 136
     AIM_ASSIST_PRIORITY_CATEGORY_ID = 137
     AIM_ASSIST_PRIORITY_ACTOR_ID = 138
-    RESERVED_139 = 139
-    NAMEPLATE_RENDER_DISTANCE_MAX = 140
+    RESERVED_139 = value(139, since=975)
+    NAMEPLATE_RENDER_DISTANCE_MAX = value(140, since=975)
     COUNT = auto()
 
 
@@ -610,7 +610,7 @@ class ActorType(IntEnum):
     ZOMBIE_NAUTILUS = 74646
     PARCHED = 1117079
     CAMEL_HUSK = 70552
-    SULFUR_CUBE = 2969
+    SULFUR_CUBE = value(2969, since=975)
 
 
 @type(since=2168)
@@ -890,7 +890,7 @@ class ActorEvent(IntEnum, uint8):
     DRINK_MILK = 78
     SHAKE_WETNESS_STOP = 79
     KINETIC_DAMAGE_DEALT = 80
-    HURT_WITHOUT_RECEIVING_DAMAGE = 81
+    HURT_WITHOUT_RECEIVING_DAMAGE = value(81, since=975)
 
 
 @packet(id=27)
@@ -898,7 +898,7 @@ class ActorEventPacket:
     runtime_id: ActorRuntimeID
     event_id: ActorEvent
     data: varint32
-    fire_at_position: Vec3 | None
+    fire_at_position: Vec3 | None = field(since=975)
 
 
 @packet(id=40)

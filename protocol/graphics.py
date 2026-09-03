@@ -58,9 +58,9 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
     FLASH_ILLUMINANCE = 46
     AMBIENT_COLOR = 47
     AMBIENT_ILLUMINANCE = 48
-    EMISSIVE_DESATURATION = 49
-    SKY_INTENSITY = 50
-    ORBITAL_OFFSET_DEGREES = 51
+    EMISSIVE_DESATURATION = value(49, since=975)
+    SKY_INTENSITY = value(50, since=975)
+    ORBITAL_OFFSET_DEGREES = value(51, since=975)
 
 
 @packet(id=331)

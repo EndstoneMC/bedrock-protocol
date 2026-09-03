@@ -16,7 +16,7 @@ class DimensionDefinitionGroup:
         height_maximum: varint32
         height_minimum: varint32
         generator_type: GeneratorType
-        dimension_type: DimensionType
+        dimension_type: DimensionType = field(since=975)
         pack_id: uuid.UUID = field(since=2168)
 
     @type(since=2192)

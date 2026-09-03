@@ -69,7 +69,7 @@ class ServerTelemetryData:
     owner_id: str
 
 
-@packet(id=347)
+@packet(id=347, since=975)
 class ServerPresenceInfoPacket:
     presence_configuration: PresenceConfiguration | None
 
@@ -93,7 +93,12 @@ class PlayerPartyInfo:
     is_leader: bool
 
 
-@packet(id=342)
+@packet(id=342, since=944, until=975)
+class PartyChangedPacket:
+    party_id: str | None
+
+
+@packet(id=342, since=975)
 class PartyChangedPacket:
     party_info: PlayerPartyInfo | None
 

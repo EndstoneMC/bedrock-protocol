@@ -572,8 +572,8 @@ class LevelSoundEvent(IntEnum, uint32):
     NETHERITE_SPEAR_USE = 596
     PAUSE_GROWTH = 597
     RESET_GROWTH = 598
-    PUSHED_BY_PLAYER = 599
-    BOUNCE = 600
+    PUSHED_BY_PLAYER = value(599, since=975)
+    BOUNCE = value(600, since=975)
     SLIME_LANDING = value(601, since=1001)
     ABSORB_BLOCK = value(602, since=1001)
     EJECT_BLOCK = value(603, since=1001)
@@ -607,7 +607,7 @@ class PlaySoundPacket:
     pitch: float
     loop_count: varint32 = field(since=2168)
     bypass_listener_range_check: bool = field(since=2192)
-    server_sound_handle: ServerSoundHandle | None
+    server_sound_handle: ServerSoundHandle | None = field(since=975)
     playback_position_seconds: float | None = field(since=2192)
 
 
@@ -671,7 +671,7 @@ class LevelSoundEventPacket:
     is_baby: bool
     is_global: bool
     actor: ActorUniqueID = field(type=int64)
-    fire_at_position: Vec3 | None
+    fire_at_position: Vec3 | None = field(since=975)
 
 
 @packet(id=123, since=1001)

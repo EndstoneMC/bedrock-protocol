@@ -4,7 +4,7 @@ ScriptModuleMinecraft exposes."""
 from enum import IntEnum, auto
 
 from protocol import field, packet, type, uint8, uint16, uvarint64, value
-from protocol.actor import ActorUniqueID
+from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
 package = "bedrock.protocol"
@@ -50,12 +50,12 @@ class ArrowDataPayload:
 
 class TextDataPayload:
     text: str
-    use_rotation: bool
-    background_color: Color | None
+    use_rotation: bool = field(since=975)
+    background_color: Color | None = field(since=975)
     line_gap_height: float = field(since=2192)
-    depth_test: bool
-    show_backface: bool
-    show_text_backface: bool
+    depth_test: bool = field(since=975)
+    show_backface: bool = field(since=975)
+    show_text_backface: bool = field(since=975)
 
 
 class BoxDataPayload:
@@ -98,12 +98,26 @@ class ConeDataPayload:
     num_segments: uint8
 
 
-@type(until=1001)
+@type(until=975)
 class PrimitiveShapeDataPayload:
     """Wire shape mirrors ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData.
     Most fields are gated by per-instance dirty flags on the server, so they ride as
     optionals."""
 
+    network_id: uvarint64
+    shape_type: ScriptPrimitiveShapeType | None
+    location: Vec3 | None
+    scale: float | None
+    rotation: Vec3 | None
+    time_left_total_sec: float | None
+    color: Color | None
+    dimension_id: DimensionType | None
+    attached_to_id: ActorRuntimeID | None
+    extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
+
+
+@type(since=975, until=1001)
+class PrimitiveShapeDataPayload:
     network_id: uvarint64
     shape_type: ScriptPrimitiveShapeType | None
     location: Vec3 | None

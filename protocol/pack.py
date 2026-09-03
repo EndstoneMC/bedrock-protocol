@@ -174,6 +174,6 @@ class ResourcePackChunkRequestPacket:
     chunk: int32
 
 
-@packet(id=340)
+@packet(id=340, since=944)
 class ResourcePacksReadyForValidationPacket:
     pass

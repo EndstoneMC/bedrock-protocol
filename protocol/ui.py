@@ -5,7 +5,7 @@ loading screens, texture shift, the locator bar."""
 import uuid
 from enum import Enum, IntEnum, auto
 
-from protocol import field, packet, uint8, uint32, uvarint32, uvarint64
+from protocol import field, packet, type, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -100,6 +100,17 @@ class WaypointGroup:
 
 
 class ServerWaypoint:
+    @type(until=975)
+    class Payload:
+        update_flag: uint32
+        is_visible: bool | None
+        world_position: WorldPosition | None
+        texture_id: uint32 | None
+        color: Color | None
+        client_position_authority: bool | None
+        actor_id: ActorUniqueID | None
+
+    @type(since=975)
     class Payload:
         update_flag: uint32
         is_visible: bool | None
@@ -125,7 +136,7 @@ class LocatorBarWaypointPayload:
     action: ServerWaypointGroup.Action
 
 
-@packet(id=341)
+@packet(id=341, since=944)
 class LocatorBarPacket:
     waypoints: list[LocatorBarWaypointPayload]
 
@@ -138,7 +149,7 @@ class DataDrivenScreenClosedReason(Enum, uint8):
     INVALID_FORM = 4
 
 
-@packet(id=343)
+@packet(id=343, since=944)
 class ServerboundDataDrivenScreenClosedPacket:
     form_id: uint32
     close_reason: DataDrivenScreenClosedReason = field(type=str)

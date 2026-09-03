@@ -36,7 +36,7 @@ class WorldClockData:
     time_markers: list[TimeMarkerData]
 
 
-@packet(id=344)
+@packet(id=344, since=944)
 class SyncWorldClocksPacket:
     class SyncStateData:
         clock_data: list[SyncWorldClockStateData]

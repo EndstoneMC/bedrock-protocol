@@ -37,6 +37,6 @@ class PurchaseReceiptPacket:
     purchase_receipts: list[str]
 
 
-@packet(id=346)
+@packet(id=346, since=975)
 class ServerStoreInfoPacket:
     client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None

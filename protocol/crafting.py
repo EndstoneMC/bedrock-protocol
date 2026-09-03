@@ -5,7 +5,7 @@ the lab table, enchant options."""
 import uuid
 from enum import IntEnum, auto
 
-from protocol import array, field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, varint32
+from protocol import array, field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
 from protocol.common import BlockPos
 
 package = "bedrock.protocol"
@@ -25,6 +25,8 @@ class CreativeItemCategory(IntEnum, uint8):
 class CraftingDataEntryType(IntEnum):
     SHAPELESS_RECIPE = 0
     SHAPED_RECIPE = 1
+    FURNACE_RECIPE = value(2, until=975)
+    FURNACE_AUX_RECIPE = value(3, until=975)
     MULTI_RECIPE = 4
     USER_DATA_SHAPELESS_RECIPE = 5
     SHAPELESS_CHEMISTRY_RECIPE = 6
@@ -275,6 +277,39 @@ class CraftingDataEntry:
     smithing_trim_recipe: SmithingTrimRecipePayload = field(
         when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
     )
+    item_data: varint32 = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    item_aux: varint32 = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
+    )
+    item_result: SerializedNetworkItemInstanceDescriptor = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    tag: str = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
 
 
 class PotionMixDataEntry:
@@ -439,6 +474,15 @@ class ItemEnchants:
     item_enchants: array[list[EnchantmentInstance], 3]
 
 
+@type(until=975)
+class ItemEnchantOption:
+    cost: uvarint32
+    enchants: ItemEnchants
+    enchant_name: str
+    enchant_net_id: RecipeNetId
+
+
+@type(since=975)
 class ItemEnchantOption:
     cost: uint8
     enchants: ItemEnchants

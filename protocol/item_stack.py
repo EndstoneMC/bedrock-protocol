@@ -129,7 +129,7 @@ class TextProcessingEventOrigin(IntEnum):
     TITLE_COMMAND = 12
     SUMMON_COMMAND = 13
     SERVER_FORM = 14
-    DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI")
+    DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI", since=975)
     COUNT = auto()
 
 

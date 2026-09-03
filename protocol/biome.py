@@ -242,13 +242,20 @@ class BiomeDefinitionChunkGenData:
     consolidated_features: BiomeConsolidatedFeaturesData | None
     mountain_params: BiomeMountainParamsData | None
     surface_material_adjustments: BiomeSurfaceMaterialAdjustmentData | None
+    surface_materials: BiomeSurfaceMaterialData | None = field(until=975)
+    has_default_overworld_surface: bool = field(until=975)
+    has_swamp_surface: bool = field(until=975)
+    has_frozen_ocean_surface: bool = field(until=975)
+    has_the_end_surface: bool = field(until=975)
+    mesa_surface: BiomeMesaSurfaceData | None = field(until=975)
+    capped_surface: BiomeCappedSurfaceData | None = field(until=975)
     overworld_gen_rules: BiomeOverworldGenRulesData | None
     multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
     legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
     replace_biomes: BiomeReplacementsData | None
     village_type: VillageType | None = field(type=uint8)
-    surface_builder_data: BiomeSurfaceBuilderData | None
-    subsurface_builder_data: BiomeSurfaceBuilderData | None
+    surface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
+    subsurface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
 
 
 class BiomeDefinitionData:

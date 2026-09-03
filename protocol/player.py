@@ -153,7 +153,7 @@ class GraphicsMode(IntEnum, uint8):
 @packet(id=323)
 class UpdateClientOptionsPacket:
     graphics_mode: GraphicsMode | None
-    filter_profanity: bool | None
+    filter_profanity: bool | None = field(since=975)
 
 
 class PlayerListPacketType(IntEnum, uint8):

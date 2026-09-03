@@ -125,6 +125,15 @@ class EnvironmentAttributeData:
     noise_alignment: NoiseAlignment = field(since=2192)
 
 
+@type(until=975)
+class AttributeLayerSettings:
+    priority: int32
+    weight: float | str
+    enabled: bool
+    transitions_paused: bool
+
+
+@type(since=975)
 class AttributeLayerSettings:
     priority: int32
     weight: float
