@@ -342,6 +342,7 @@ class ItemStackRequestData:
 # TODO: ItemStackRequestCereal is a BDS namespace, and the packet's element type is
 # ItemStackRequestPacketData::RequestData, an identically-bodied struct in a second
 # namespace. The DSL has no namespace, so both collapse onto this one scoping class.
+@type(since=2168)
 class ItemStackRequestCereal:
     class ItemDescriptorType(IntEnum, uint8):
         EMPTY = 0
@@ -349,28 +350,23 @@ class ItemStackRequestCereal:
         MOLANG = 2
         ITEM_TAG = 3
 
-    @type(since=2168)
     class EmptyItemDescriptorData:
         descriptor_type: ItemDescriptorType
 
-    @type(since=2168)
     class ItemNameDescriptorData:
         descriptor_type: ItemDescriptorType
         full_name: str
         aux_value: varint32
 
-    @type(since=2168)
     class MolangItemDescriptorData:
         descriptor_type: ItemDescriptorType
         tag_expression: str
         molang_version: MolangVersion = field(type=int16)
 
-    @type(since=2168)
     class ItemTagDescriptorData:
         descriptor_type: ItemDescriptorType
         item_tag: str
 
-    @type(since=2168)
     class NetworkItemInstanceDescriptorData:
         item_descriptor: (
             EmptyItemDescriptorData | ItemNameDescriptorData | MolangItemDescriptorData | ItemTagDescriptorData
@@ -379,129 +375,108 @@ class ItemStackRequestCereal:
         block_runtime_id: uvarint32
         user_data_buffer: bytes
 
-    @type(since=2168)
     class RecipeIngredientData:
         item_descriptor: (
             EmptyItemDescriptorData | ItemNameDescriptorData | MolangItemDescriptorData | ItemTagDescriptorData
         )
         stack_size: uint16
 
-    @type(since=2168)
     class SlotInfoData:
         full_container_name: FullContainerName
         slot: uint8
         net_id_variant: int32
 
-    @type(since=2168)
     class TakeActionData:
         action_type: ItemStackRequestActionType
         amount: uint8
         source: SlotInfoData
         destination: SlotInfoData
 
-    @type(since=2168)
     class PlaceActionData:
         action_type: ItemStackRequestActionType
         amount: uint8
         source: SlotInfoData
         destination: SlotInfoData
 
-    @type(since=2168)
     class SwapActionData:
         action_type: ItemStackRequestActionType
         source: SlotInfoData
         destination: SlotInfoData
 
-    @type(since=2168)
     class DropActionData:
         action_type: ItemStackRequestActionType
         amount: uint8
         source: SlotInfoData
         randomly: bool
 
-    @type(since=2168)
     class DestroyActionData:
         action_type: ItemStackRequestActionType
         amount: uint8
         source: SlotInfoData
 
-    @type(since=2168)
     class ConsumeActionData:
         action_type: ItemStackRequestActionType
         amount: uint8
         source: SlotInfoData
 
-    @type(since=2168)
     class CreateActionData:
         action_type: ItemStackRequestActionType
         results_index: uint8
 
-    @type(since=2168)
     class LabTableCombineActionData:
         action_type: ItemStackRequestActionType
 
-    @type(since=2168)
     class BeaconPaymentActionData:
         action_type: ItemStackRequestActionType
         primary_effect_id: varint32
         secondary_effect_id: varint32
 
-    @type(since=2168)
     class MineBlockActionData:
         action_type: ItemStackRequestActionType
         slot: varint32
         predicted_durability: varint32
         net_id_variant: int32
 
-    @type(since=2168)
     class CraftRecipeActionData:
         action_type: ItemStackRequestActionType
         recipe_net_id: RecipeNetId
         num_crafts: uint8
 
-    @type(since=2168)
     class CraftRecipeAutoActionData:
         action_type: ItemStackRequestActionType
         recipe_net_id: RecipeNetId
         num_crafts: uint8
         ingredients: list[RecipeIngredientData]
 
-    @type(since=2168)
     class CraftCreativeActionData:
         action_type: ItemStackRequestActionType
         creative_item_net_id: uvarint32
         num_crafts: uint8
 
-    @type(since=2168)
     class CraftRecipeOptionalActionData:
         action_type: ItemStackRequestActionType
         recipe_net_id: RecipeNetId
         filtered_string_index: int32
 
-    @type(since=2168)
     class CraftRepairAndDisenchantActionData:
         action_type: ItemStackRequestActionType
         recipe_net_id: int32
         num_crafts: uint8
         repair_cost: varint32
 
-    @type(since=2168)
     class CraftLoomActionData:
         action_type: ItemStackRequestActionType
         pattern_name_id: str
         num_crafts: uint8
 
-    @type(since=2168)
     class CraftNonImplementedActionData:
         action_type: ItemStackRequestActionType
 
-    @type(since=2168)
     class CraftResultsActionData:
         action_type: ItemStackRequestActionType
         craft_results: list[NetworkItemInstanceDescriptorData]
         num_crafts: uint8
 
-    @type(since=2168)
     class RequestData:
         client_request_id: ItemStackRequestId
         actions: list[
