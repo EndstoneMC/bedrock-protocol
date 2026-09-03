@@ -73,14 +73,8 @@ class InventoryAction:
     to_item_descriptor: SerializedNetworkItemStackDescriptor
 
 
-@type(until=1001)
 class InventoryTransaction:
-    actions: list[InventoryAction]
-
-
-@type(since=1001)
-class InventoryTransaction:
-    _true: Literal[True] = field(until=2192)
+    _true: Literal[True] = field(since=1001, until=2192)
     actions: list[InventoryAction]
 
 

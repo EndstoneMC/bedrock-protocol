@@ -10,7 +10,6 @@ from protocol.common import BlockPos, Color
 package = "bedrock.protocol"
 
 
-@type(until=2168)
 class MapItemTrackedActor:
     class Type(IntEnum):
         ENTITY = 0
@@ -22,14 +21,6 @@ class MapItemTrackedActor:
         type: "MapItemTrackedActor.Type" = field(type=int32)
         key_entity_id: ActorUniqueID = field(when=lambda u: u.type == MapItemTrackedActor.Type.ENTITY)
         key_block_pos: BlockPos = field(when=lambda u: u.type == MapItemTrackedActor.Type.BLOCK_ENTITY)
-
-
-@type(since=2168)
-class MapItemTrackedActor:
-    class Type(IntEnum):
-        ENTITY = 0
-        BLOCK_ENTITY = 1
-        OTHER = 2
 
     @type(since=2168)
     class UniqueId:

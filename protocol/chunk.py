@@ -74,7 +74,6 @@ class SubChunkPacket:
         INDEX_OUT_OF_BOUNDS = 5
         SUCCESS_ALL_AIR = 6
 
-    @type(until=2168)
     class HeightmapData:
         height_map_type: HeightMapDataType
         subchunk_height_map: array[array[int8, 16], 16] = field(
@@ -90,7 +89,6 @@ class SubChunkPacket:
         y: int8
         z: int8
 
-    @type(until=2168)
     class SubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult
@@ -157,7 +155,6 @@ class SubChunkPacket:
         y: int8
         z: int8
 
-    @type(since=2168)
     class SubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult

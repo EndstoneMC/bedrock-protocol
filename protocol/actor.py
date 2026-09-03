@@ -325,102 +325,48 @@ class DataItemType(IntEnum, uint8):
     UNKNOWN = 9
 
 
-@type(until=2168)
 class DataItemBytePayload:
+    type: DataItemType = field(since=2168)
     value: int8
 
 
-@type(since=2168)
-class DataItemBytePayload:
-    type: DataItemType
-    value: int8
-
-
-@type(until=2168)
 class DataItemShortPayload:
+    type: DataItemType = field(since=2168)
     value: int16
 
 
-@type(since=2168)
-class DataItemShortPayload:
-    type: DataItemType
-    value: int16
-
-
-@type(until=2168)
 class DataItemIntPayload:
+    type: DataItemType = field(since=2168)
     value: varint32
 
 
-@type(since=2168)
-class DataItemIntPayload:
-    type: DataItemType
-    value: varint32
-
-
-@type(until=2168)
 class DataItemFloatPayload:
+    type: DataItemType = field(since=2168)
     value: float
 
 
-@type(since=2168)
-class DataItemFloatPayload:
-    type: DataItemType
-    value: float
-
-
-@type(until=2168)
 class DataItemStringPayload:
+    type: DataItemType = field(since=2168)
     value: str
 
 
-@type(since=2168)
-class DataItemStringPayload:
-    type: DataItemType
-    value: str
-
-
-@type(until=2168)
 class DataItemCompoundTagPayload:
+    type: DataItemType = field(since=2168)
     value: CompoundTag
 
 
-@type(since=2168)
-class DataItemCompoundTagPayload:
-    type: DataItemType
-    value: CompoundTag
-
-
-@type(until=2168)
 class DataItemPosPayload:
+    type: DataItemType = field(since=2168)
     value: BlockPos
 
 
-@type(since=2168)
-class DataItemPosPayload:
-    type: DataItemType
-    value: BlockPos
-
-
-@type(until=2168)
 class DataItemInt64Payload:
+    type: DataItemType = field(since=2168)
     value: varint64
 
 
-@type(since=2168)
-class DataItemInt64Payload:
-    type: DataItemType
-    value: varint64
-
-
-@type(until=2168)
 class DataItemVec3Payload:
-    value: Vec3
-
-
-@type(since=2168)
-class DataItemVec3Payload:
-    type: DataItemType
+    type: DataItemType = field(since=2168)
     value: Vec3
 
 
