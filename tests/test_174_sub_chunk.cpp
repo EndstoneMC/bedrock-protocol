@@ -127,9 +127,7 @@ TEST_CASE("sub-chunk v1001 cache-off form round-trips against the golden")
     PacketV1001 packet;
     packet.cache_enabled = false;
     packet.dimension_type = bp::DimensionType{1};
-    packet.center_pos_x = 1;
-    packet.center_pos_y = 2;
-    packet.center_pos_z = 3;
+    packet.center_pos = {.x = 1, .y = 2, .z = 3};
 
     PacketV1001::UncachedSubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
@@ -142,8 +140,8 @@ TEST_CASE("sub-chunk v1001 cache-off form round-trips against the golden")
     REQUIRE(encode(packet) == golden_v1001_uncached);
 
     const auto back = decode<PacketV1001>(golden_v1001_uncached);
-    REQUIRE(back.center_pos_x == 1);
-    REQUIRE(back.center_pos_z == 3);
+    REQUIRE(back.center_pos.x == 1);
+    REQUIRE(back.center_pos.z == 3);
     REQUIRE(back.sub_chunk_data.empty());
     REQUIRE(back.uncached_sub_chunk_data.size() == 1);
     REQUIRE(back.uncached_sub_chunk_data[0].sub_chunk_pos_offset.x == -1);
@@ -157,9 +155,7 @@ TEST_CASE("sub-chunk v1001 cache-on form round-trips against the golden")
     PacketV1001 packet;
     packet.cache_enabled = true;
     packet.dimension_type = bp::DimensionType{1};
-    packet.center_pos_x = 1;
-    packet.center_pos_y = 2;
-    packet.center_pos_z = 3;
+    packet.center_pos = {.x = 1, .y = 2, .z = 3};
 
     PacketV1001::SubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};
@@ -186,9 +182,7 @@ TEST_CASE("sub-chunk is unchanged between v975 and v1001")
     PacketV975 older;
     older.cache_enabled = false;
     older.dimension_type = bp::DimensionType{1};
-    older.center_pos_x = 1;
-    older.center_pos_y = 2;
-    older.center_pos_z = 3;
+    older.center_pos = {.x = 1, .y = 2, .z = 3};
 
     PacketV975::UncachedSubChunkPacketData entry;
     entry.sub_chunk_pos_offset = {.x = -1, .y = 0, .z = 1};

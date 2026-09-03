@@ -28,6 +28,16 @@ class SubChunkPos:
     z: int32
 
 
+@type(cereal=False, until=2168)
+class SubChunkPos:
+    """The shape SubChunkPacket wrote before it cerealised at 2168, keeping all
+    three components varint32 where the cerealised type took fixed int32 at 1001."""
+
+    x: varint32
+    y: varint32
+    z: varint32
+
+
 @packet(id=58, until=2168)
 class LevelChunkPacket:
     class SubChunkMetadata:
@@ -105,13 +115,7 @@ class SubChunkPacket:
 
     cache_enabled: bool
     dimension_type: DimensionType
-    # TODO: mCenterPos is a SubChunkPos, but this packet does not cerealise until 2168, so here
-    # it writes three varint32 where the cerealised SubChunkPos (chunk.py:20, reached by packet
-    # 175 from 1001 on) is three fixed int32. The DSL versions a type by protocol version, not
-    # by writer, so the components are spelled out.
-    center_pos_x: varint32
-    center_pos_y: varint32
-    center_pos_z: varint32
+    center_pos: SubChunkPos = field(cereal=False)
     with field(when=lambda p: p.cache_enabled):
         sub_chunk_data: list[SubChunkPacketData] = field(prefix=uint32)
     with field(when=lambda p: not p.cache_enabled):
