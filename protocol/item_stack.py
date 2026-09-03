@@ -339,9 +339,6 @@ class ItemStackRequestData:
     strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
 
 
-# TODO: ItemStackRequestCereal is a BDS namespace, and the packet's element type is
-# ItemStackRequestPacketData::RequestData, an identically-bodied struct in a second
-# namespace. The DSL has no namespace, so both collapse onto this one scoping class.
 @type(since=2168)
 class ItemStackRequestCereal:
     class ItemDescriptorType(IntEnum, uint8):
