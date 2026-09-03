@@ -21,6 +21,12 @@ break.
 4. **Enum change** - a value added, removed, renamed, shifted, or a sentinel moved.
 
 - **DO** walk all four explicitly and report what you found in each, including "nothing".
+  **"Run it" and "dry run it" both mean all four**, every time - a partial pass is not a
+  smaller version of this workflow, it is a wrong answer with a confident shape. Reporting
+  three categories and calling the fourth "not yet walked" is the failure, not a caveat.
+- **DO** fan out rather than defer when the four do not fit one pass. One agent per category,
+  each given the interval, the four sources and the schema to check against, is the intended
+  shape - the categories are independent by construction, so they parallelise exactly.
 - **DO** treat a change to a packet the schema does **not** model as a finding, not a
   no-op. It is the most expensive miss there is: an unmodelled `CameraPresetsPacket` whose
   preset grew two fields relayed a short body and desynchronised a client mid-list, and a
@@ -69,13 +75,36 @@ packet from scratch.
 
 ## Sources
 
-| what it settles | source |
+**There are exactly two sources of truth, and everything else is a pointer.**
+
+| | source of truth |
 | --- | --- |
-| wire type, order, prefix, presence | `github.com/EndstoneMC/protocol-docs` - one branch per update line |
-| golden bytes, pre-2168 wire | `github.com/Sandertv/gophertunnel` |
-| per-version dating | `github.com/CloudburstMC/Protocol`, `github.com/MemoriesOfTime/Nukkit-MOT` |
-| names | **bedrock-headers**, at the era's branch - else the schema, then the dump. See **Naming** |
-| the arbiter, when refs disagree | the BDS binary |
+| cerealised at that version | `github.com/EndstoneMC/protocol-docs`, the era's branch |
+| hand-written at that version | **`<Packet>::write` decompiled in that era's IDA database** |
+
+| pointer - tells you *where to look*, never what is true | |
+| --- | --- |
+| `github.com/Sandertv/gophertunnel` | which bytes moved, and golden generation |
+| `github.com/CloudburstMC/Protocol`, `Nukkit-MOT` | per-version dating |
+| `Mojang/bedrock-protocol-docs`, `legacy_changelogs/` | which step inside a cycle |
+| **bedrock-headers**, the era's branch | names, C++ types, member order - see **Naming** |
+
+- **DO** finish a pre-cereal reading in the binary. The IDA databases are already built, one per
+  build, under `bedrock-symbols/<platform>/<build>/`; `<Packet>::write` decompiles in seconds
+  and BDS labels every field itself, because each write carries its own name string.
+- **DO NOT** take a *type* from gophertunnel any more than a name. It is a Go codec's
+  modelling, not BDS's, and it will merge or split members freely.
+- **DO NOT** read one write call as one field. **The binary settles the bytes; the header
+  settles how many members produced them.** BDS packs adjacent members into a single call:
+  `BossEventPacket::write` at 975 emits one `writeUnsignedShort` labelled `"Darken Screen"`,
+  and the header at `android/r26_u2` declares `byte mDarkenScreen` **and** `byte
+  mCreateWorldFog` - two members, little-endian, one call. Reading the writer alone concludes
+  one `uint16` and loses a field BDS really has; reading the header alone never sees that they
+  ship in one call. Use both, every time.
+- **DO NOT** conclude a field is wrong because the era you are back-porting to lacks it. It may
+  be right at the *other* era, which makes it two models rather than a fix - the pair above
+  exists at 975 and is gone from the cereal form at 1001, so `until=1001` carries it and
+  `since=1001` does not.
 
 Commands below assume you have each repo cloned locally; substitute your own paths. If one
 is missing, **clone it** rather than working around its absence - CloudburstMC needs only
@@ -287,6 +316,13 @@ Five signatures in `enums/*.json`, each needing different DSL:
   and `auto()` for every member after it. The pool re-resolves `auto()` per snapshot, so
   the shift falls out of the single gate. One version dropped
   `Memory::MemoryCategory::Persona_Textures` and shifted fifty-odd members by one.
+  **`auto()` absorbs an insertion and a removal in the same span, and they can cancel.**
+  Between 944 and 975 that same enum gains `Rendering_RenderRegistry = 60` *and* loses
+  `VR = 68`: everything from `Rendering_Library` to `Textures` shifts up one, and
+  `WeatherRenderer` lands on 69 at **both** eras. Written as two gates -
+  `value(60, since=975)` on the arrival, `value(until=975)` on the departure - with every
+  member between them `auto()`, both eras fall out and nothing else is touched. Reach for a
+  whole-enum redeclaration only when that fails.
 - **A rename at the same value** - wire-invisible for an int-coded enum, a **wire change**
   for a name-coded one (`field(type=str)`) where the folded member name *is* the bytes.
   `BuildPlatform`'s `Nx` became `Nintendo` at 12. Check the encoding, then take the new
@@ -335,6 +371,21 @@ Five signatures in `enums/*.json`, each needing different DSL:
   will name them, and `auto()` would silently lie about where the sentinel sits.
 - **DO NOT** assume the dump lists every enumerator. It lists the bound ones; a sentinel is
   the only witness to the rest.
+- **DO** let a `std::bitset<N>` instantiation in the binary date the enum that sizes it. A
+  `bitset[E.COUNT]` field means `E`'s sentinel *is* a wire width, so the writer's
+  `?_Xoflo@?$bitset@$0HP@@std@@` (`$0HP@` = 0x7F) pins `ActorFlags::Count` at **127** for 944 -
+  which is how the changelog was caught over-reporting four additions at 126..129 when 126
+  already existed. The binary outranks the changelog on arithmetic.
+- **DO NOT** assume a bound value is the *right* value. The dump can bind a wrong one, not
+  merely omit: at r26_u2 `EAS::FloatAttributeOperation` binds `MINIMUM` and `MAXIMUM` both to
+  4, colliding with `MULTIPLY`, while the header carries 5 and 6 **byte-identically at both
+  eras**. That reads exactly like a renumber and is a dumper bug. Settle a value in the
+  header before gating anything.
+- **DO NOT** read a wholesale respelling as a rename. `SharedTypes::Legacy::LevelSoundEvent`
+  respells all ~563 members between two branches (`ItemUseOn` becomes `item.use.on`) because
+  the *dumper* switched to emitting the bound `SoundEventIdentifier` strings; the header keeps
+  the CamelCase spellings at both eras. The answer was a packet redeclaration for the field
+  that went int-coded to name-coded, not a versioned enum.
 - **DO NOT** redeclare an enum unless a wholesale renumbering gives one member two explicit
   values.
 - **DO NOT** gate an enum member without following it out. The gate versions the enum, so
@@ -374,7 +425,22 @@ test:
 | in the dump | cerealised - the dump is the wire, and a variant tag is **always `uvarint32`** over cases in declaration order |
 | --- | --- |
 | **absent** | hand-written - the dump cannot describe it and gives no hint. Go to the Marshal history |
-| **new file between two branches** | that packet *cerealised* there - the highest-risk change in the repo |
+| **new file between two branches** | usually that packet *cerealised* there - the highest-risk change in the repo - but confirm it, see below |
+
+**A new dump file is not proof of a cerealisation.** It can equally be the *dumper's*
+coverage expanding. Mojang's `legacy_changelogs` names six conversions in the 976..1001
+window - `SubChunkRequest` 979, `BossEvent` 984, `InventoryTransaction` 985,
+`MobArmorEquipment` 988, `ClientCacheBlobStatus` 996, `InventoryContent` 1001 - while the dump
+gained **ten** packet files there. The four extras (`ResourcePackStack` 7, `UpdateAttributes`
+29, `CommandBlockUpdate` 78, `UpdateAbilities` 187) have no changelog entry at any version.
+
+- **DO** cross the dump's file-appearance against the changelog before calling something a
+  cerealisation, and settle a disagreement by reading the era's `Marshal` field-by-field
+  against the newer dump. For those four it comes out byte-identical either way, so the
+  question is academic *there* - but the inference is not sound in general.
+- **DO NOT** try to settle it by grepping the binary for the cereal display strings. They are
+  present at both eras for packets the changelog says converted in between, so the probe
+  measures string presence, not cerealisation.
 
 979 cerealising `SubChunkRequestPacket` moved `center_pos` behind the offsets, swapped the
 offset count from fixed `uint32` to `uvarint32`, and reshaped `SubChunkPos` from `varint32`
@@ -474,6 +540,24 @@ so an empty dump diff is not a finding and a dump hunk is not a measurement.
 - **DO NOT** promote a dump hunk into a finding below 2168, and do not read dump silence as
   "unchanged". They are the same laziness in opposite directions.
 
+**Mojang's own changelog, as a second hint.** `Mojang/bedrock-protocol-docs` carries
+`legacy_changelogs/changelog_<protocol>_<MM_DD_YY>.md`, one file per cycle from 407 to 2168.
+It is the only source **keyed by protocol number**, and its entries are numbered by the
+*intermediate* step, so it says which number inside the cycle a change actually landed on -
+`984: BossEventPacket : Converted to Cereal, broke binary compatibility` dates that
+cerealisation to 984, not to 1001. It also names renames in BDS member spelling:
+`993: LevelSoundEventPacket : mSoundEvent changed from LevelSoundEvent to SoundEventIdentifier`.
+
+- **DO** read it to find cerealisations stated outright rather than inferred from a dump file
+  appearing, and to date a change to its step - which is what "the changelog dates it to N"
+  means under **Then model it**, where the gate still lands on the next materialized snapshot
+  at or after N.
+- **DO NOT** treat it as complete. It carries no wire types, does not list removals, and
+  omits silently: the 1001 changelog never mentions `SendPartyDestinationCookiePacket` or
+  `PartyDestinationCookieResponsePacket`, and the dump proves both arrived at 1001.
+- **DO NOT** let it outrank the dump or the binary. `CLAUDE.md` puts Mojang's docs last, and
+  a claim resting on this file alone earns a `# TODO: confirm against BDS`.
+
 **When gophertunnel and CloudburstMC disagree, read the binary.** They are independent
 codecs of the same bytes and should agree; a disagreement means one of them is wrong, and
 only the BDS build for that version settles which. A packet BDS has not fully cerealised
@@ -504,6 +588,85 @@ them**:
 - **DO NOT** audit coverage by grepping the `@packet` line. It reports correct code as
   broken, and the repair it invites - splitting a packet that should stay whole - is a real
   wire break.
+
+### Gate a packet at the version it was introduced
+
+An ungated `@packet` claims the packet existed at protocol 0. That is false for anything BDS
+added after the floor, and it is the mirror of the over-gating above: the sweep that lowers
+gates will happily lower one past its own introduction.
+
+**The header's packet-id enum dates every id, and `EndId` is the fast read.** Across
+`android/r21_u13` / `r26_u0` / `r26_u1` / `r26_u2` the last real id runs 332 / 339 / 345 / 347,
+so ids 340..345 arrive at 944 and 346..347 at 975 - which Mojang's changelog confirms as
+"960: Added ServerStoreInfoPacket and ServerPresenceInfoPacket".
+
+- **DO** gate the body **and** the `MinecraftPacketIds` member at the same version. An id
+  ungated below its body puts an undecodable id on the wire; a body ungated below its id
+  claims a packet BDS did not have.
+- **DO** exclude the sentinel when parsing that enum. `EndId = 346` matches a naive
+  `NAME = <int>,` pattern and reads as a packet at id 346, which places two ids an era early.
+- **DO** accept that an introduction gate can materialize a new snapshot - 346/347 forced 975
+  into existence - and that this is the evidence doing its job, not a cost to avoid.
+
+### Lowering a gate is a back-port
+
+The cheapest back-port is **not modelling at all**. Where a declaration's shape is already
+right at the target, the whole change is its gate: `since=2168` becomes `since=<target>`, and
+nothing is re-modelled. Ask this before writing anything.
+
+**`since=2168` is a floor the schema was bootstrapped on, not a finding.** The schema was
+built at 2168 and everything landed there by default, so a back-port is mostly a sweep of
+that population rather than a hunt for deltas. Measured against the 1001 dump, of the **173**
+packets declared only from 2168, **169** are byte-identical at 1001, **4** differ
+(`MapInfoRequest` 68, `PhotoTransfer` 99, `RequestAbility` 184, `CameraAimAssist` 316) and
+**none** is absent. The back-port is a gate edit for all but four.
+
+- **DO** run that sweep first: list every packet whose only declaration is `since=2168`, then
+  diff each one's `packets/*.json` between the target's dump branch and 2168's. It costs one
+  loop and it scopes the whole job before any modelling starts.
+- **DO NOT** stop at the packet's own JSON. Byte-identity there does not clear the closure -
+  a referenced type can still differ, which is the standing rule to diff the whole transitive
+  closure. The sweep produces *candidates*, and the closure diff confirms them.
+- **DO NOT** forget that lowering a gate can **delete the type's versioned alias**. The backend
+  emits `X_<V>` only for a type that actually varies by version; a packet that becomes valid
+  everywhere is emitted as a plain `struct X` and `bp::X_<2168>` stops compiling. Lowering 171
+  gates cost 161 aliases and 1073 references across 162 test files, and `endweave` consumes the
+  same headers. Regenerate and diff the emitted `using X_ =` set before and after - that set,
+  not the schema, is what consumers bind to.
+
+**The same bootstrap leaves enums under-gated, which is the worse half.** A packet inherited
+the floor as `since=2168`, too high; an enum inherited it as *no gate at all*, so `base`
+carries 2168's member set and its sentinel and claims both were true from protocol 0. Sweep
+that too, and separately - the two look nothing alike:
+
+| | symptom | failure |
+| --- | --- | --- |
+| packet | `since=2168` too high | loud - nothing decodes the id |
+| enum | no gate at all | silent - decodes a value BDS never had, and `Count` lies |
+
+- **DO** check every ungated enum's sentinel arithmetic *at the target*, not just at head.
+  Three were wrong at 975 **and already wrong at 1001**: `CurrentCmdVersion` (`COUNT` reads 51
+  where the header says 47 at 975 and 50 at 1001), `MinecraftEventing::AchievementIds`, and
+  `Connection::DisconnectFailReason` (`MAX` reads the 2168 value at `base`).
+- **DO** price the follow-out before gating: the gate versions the enum, so a consumer
+  spelling `bp::base::E::MEMBER` stops compiling while the `bp::E_<N>::` alias form survives.
+
+The test is byte-identity of the declared shape across the two eras, and for a packet
+cerealised at or below the target the **dump settles it outright** - identical JSON at both
+eras means lower the gate and stop. Six packets sit in exactly that state at 1001:
+`SendPartyDestinationCookie` (349) and `PartyDestinationCookieResponse` (350), new at 1001
+and modelled `since=2168`; and `CommandBlockUpdate` (78), `ResourcePackStack` (7),
+`UpdateAbilities` (187) and `UpdateAttributes` (29), cerealised at 1001 and modelled from
+2168. Every one has a body identical at 1001 and 2168.
+
+- **DO** check that a packet's **id gate and body gate agree**. `MinecraftPacketIds` gates
+  349 and 350 `since=1001` while both bodies start at 2168, which puts an id on the wire at
+  1001 with nothing able to decode it. An id gated below its body is always a defect.
+- **DO NOT** read "the packet is modelled" as "the packet is supported at this version". It
+  is modelled *from some version*, and the gate is the claim being audited.
+- **DO NOT** lower a gate past what the evidence covers. Below the cerealisation the packet
+  was hand-written and the cereal shape says nothing about it - that half is real modelling,
+  not a gate edit.
 
 ### The hand-written half
 
@@ -551,6 +714,11 @@ git log -p -- minecraft/protocol/packet/<name>.go     # in a gophertunnel clone
 - **DO NOT** treat agreement between two refs as evidence - they copy each other - or
   silence as evidence. A packet neither Geyser nor Dragonfly exercises has an untested
   codec.
+- **DO NOT** carry a ref's known-wrong reputation across eras. gophertunnel's
+  `MemoryCategory` `VR` entry is the standing example of a phantom constant - and the header
+  says `VR = 68` is **real at 944**, removed at 975. gophertunnel is right at the older era
+  and stale at the newer one. "Ref X is wrong about Y" is always dated; re-check it at the
+  era you are modelling.
 - **DO NOT** put a single `@type(until=N)` pair over a shared type. It forces both call
   sites to agree and silently mis-encodes the one the dump did not describe.
 
@@ -581,6 +749,12 @@ transitively contains it, at a second namespace.
   cerealised form has a netid variant.
 - **DO** lead a union with `None` where BDS numbers its cases from one, so `std::monostate`
   takes index 0.
+- **DO NOT** reach for `field(type=X, until=N)` to switch a width at N. It means "this field
+  exists **until** N, encoded as X" - it *removes* the field at the gate. `AnvilDamagePacket`'s
+  `damage: int32 = field(type=uint8, until=2168)` is correct precisely because BDS deletes
+  Damage Amount at 2168. A field that lives at both eras with different widths is a
+  **redeclaration pair**, and the generated serializer is where you catch getting it wrong -
+  the field simply vanishes from the later namespace.
 - **DO** write a declared-type-vs-wire split as `name: <DeclaredType> = field(type=<wire>)`
   - the annotation keeps the semantic type, `field(type=)` switches the encoding. The
   declared type is the dump's `type` string or the alias the schema already uses. Dropping
