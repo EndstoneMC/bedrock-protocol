@@ -28,10 +28,10 @@ class TextPacket:
     class MessageOnly:
         _raw: Literal["raw"] = field(since=898, until=924)
         _tip: Literal["tip"] = field(since=898, until=924)
-        _system_message: Literal["systemMessage"] = field(since=898, until=924)
-        _text_object_whisper: Literal["textObjectWhisper"] = field(since=898, until=924)
-        _text_object_announcement: Literal["textObjectAnnouncement"] = field(since=898, until=924)
-        _text_object: Literal["textObject"] = field(since=898, until=924)
+        _system_message: Literal["systemmessage"] = field(since=898, until=924)
+        _text_object_whisper: Literal["textobjectwhisper"] = field(since=898, until=924)
+        _text_object_announcement: Literal["textobjectannouncement"] = field(since=898, until=924)
+        _text_object: Literal["textobject"] = field(since=898, until=924)
 
         type: TextPacketType
         message: str
@@ -48,7 +48,7 @@ class TextPacket:
     class MessageAndParams:
         _translate: Literal["translate"] = field(since=898, until=924)
         _popup: Literal["popup"] = field(since=898, until=924)
-        _jukebox_popup: Literal["jukeboxPopup"] = field(since=898, until=924)
+        _jukebox_popup: Literal["jukeboxpopup"] = field(since=898, until=924)
 
         type: TextPacketType
         message: str
