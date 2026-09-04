@@ -258,8 +258,10 @@ the body; it never restates one under a second type. Redeclarations must tile on
 range: same id, each `until` meeting the next `since`, only the last left open.
 
 **An enum is redeclared the same way when it is renumbered.** `value(N, since=)` /
-`value(N, until=)` covers a member arriving or going, but it cannot give one member
-two values, so a wholesale renumbering — `Memory::MemoryCategory` at 2168 dropped
+`value(N, until=)` covers a member arriving or going, and a member that *moves* may be
+declared twice over disjoint ranges (`SKELETON_HORSE = value(2186010, until=924)` then
+`= value(2183962, since=924)`) -- the importer unshadows the repeat. Reach for a
+redeclaration only when a wholesale renumbering — `Memory::MemoryCategory` at 2168 dropped
 one member, added twenty, and shifted most survivors — declares the enum twice over
 adjacent ranges, each body holding its era's numbers. Every declaration shares one
 underlying type. `@type(since=, until=)` gates the enum itself as it does a struct,
@@ -378,8 +380,8 @@ hoisted out of its owner.
 
 `since=` / `until=` are raw protocol version numbers, but must land on a modelled
 snapshot, never an arbitrary changelog number. Gate a change at the next snapshot at
-or after it: a field the changelog dates to 977 gates `since=1001`. Only 924, 944, 975,
-1001, 2168 and 2192 are materialized, so an off-snapshot boundary buys nothing.
+or after it: a field the changelog dates to 977 gates `since=1001`. Only 898, 924, 944,
+975, 1001, 2168 and 2192 are materialized, so an off-snapshot boundary buys nothing.
 
 **Diff the type closure across protocol-docs branches before modelling a packet.**
 Walk the packet's transitive types on the old and new branch and diff the two dumps:

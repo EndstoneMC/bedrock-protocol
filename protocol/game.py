@@ -180,6 +180,10 @@ class LevelSettings:
     disable_player_interactions: bool
     server_editor_connection_policy: ServerEditorConnectionPolicy = field(since=1001)
     allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
+    server_id: str = field(until=924)
+    world_id: str = field(until=924)
+    scenario_id: str = field(until=924)
+    owner_id: str = field(until=924)
 
 
 @type(since=944, until=2168)
@@ -317,8 +321,8 @@ class StartGamePacket:
     block_network_ids_are_hashes: bool
     network_permissions: NetworkPermissions
     is_logging_chat: bool = field(since=1001)
-    server_configuration_join_info: ServerConfigurationJoinInfo | None
-    server_telemetry_data: ServerTelemetryData
+    server_configuration_join_info: ServerConfigurationJoinInfo | None = field(since=924)
+    server_telemetry_data: ServerTelemetryData = field(since=924)
 
 
 @packet(id=72)

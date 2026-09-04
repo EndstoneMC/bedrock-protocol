@@ -128,6 +128,7 @@ class MemoryCategory(IntEnum, uint8):
     GAMEFACE_SCRIPT = value(since=2168)
     GAMEFACE_LAYOUT = value(since=2168)
     COUNT = auto()
+@type(since=924)
 class MemoryCategoryCounter:
     category: MemoryCategory
     current_bytes: uint64
@@ -174,7 +175,7 @@ class ServerboundDiagnosticsPacket:
     avg_end_frame_time_ms: float
     avg_remainder_time_percent: float
     avg_unaccounted_time_percent: float
-    category_counters: list[MemoryCategoryCounter]
+    category_counters: list[MemoryCategoryCounter] = field(since=924)
     entity_timings: list[EntityDiagnosticTimingInfo] = field(since=975)
     system_timings: list[SystemDiagnosticTimingInfo] = field(since=975)
     system_categories: list[SystemCategory] | None = field(since=2168)

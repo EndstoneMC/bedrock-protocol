@@ -4,7 +4,7 @@ The net ids sit here rather than in item_stack.py because the descriptors refere
 
 from enum import IntEnum
 
-from protocol import field, int16, packet, type, uint16, uvarint32, varint32
+from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -62,7 +62,32 @@ class Finalize:
     xuid: str
 
 
-@packet(id=97)
+class BookEditAction(IntEnum, uint8):
+    REPLACE_PAGE = 0
+    ADD_PAGE = 1
+    DELETE_PAGE = 2
+    SWAP_PAGES = 3
+    FINALIZE = 4
+
+
+@packet(id=97, until=924)
+class BookEditPacket:
+    action: BookEditAction
+    book_slot: int32 = field(type=uint8)
+    page_index: int32 = field(type=uint8, when=lambda p: p.action != BookEditAction.FINALIZE)
+    swap_with_index: int32 = field(type=uint8, when=lambda p: p.action == BookEditAction.SWAP_PAGES)
+
+    with field(when=lambda p: p.action in {BookEditAction.REPLACE_PAGE, BookEditAction.ADD_PAGE}):
+        page_text: str
+        photo_name: str
+
+    with field(when=lambda p: p.action == BookEditAction.FINALIZE):
+        title: str
+        author: str
+        xuid: str
+
+
+@packet(id=97, since=924)
 class BookEditPacket:
     book_slot: varint32
     operation: ReplacePage | AddPage | DeletePage | SwapPages | Finalize

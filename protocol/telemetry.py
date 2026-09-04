@@ -100,7 +100,7 @@ class MinecraftEventing:
         HEART_TRANSPLANTER = 113
         STAY_HYDRATED = 114
         MOB_KABOB = 115
-        ADVENTURING_TIME = 116
+        ADVENTURING_TIME = value(116, since=924)
         UH_OH = value(117, since=1001)
         GETTING_WOOD = value(118, since=2168)
         BENCH_MAKING = value(119, since=2168)

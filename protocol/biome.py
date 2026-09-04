@@ -253,7 +253,7 @@ class BiomeDefinitionChunkGenData:
     multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
     legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
     replace_biomes: BiomeReplacementsData | None
-    village_type: VillageType | None = field(type=uint8)
+    village_type: VillageType | None = field(type=uint8, since=924)
     surface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
     subsurface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
 

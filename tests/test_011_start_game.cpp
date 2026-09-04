@@ -189,6 +189,7 @@ void fill_v2168(bp::StartGamePacket_<2168> &packet)
 
 TEST_CASE("StartGamePacket: id")
 {
+    STATIC_REQUIRE(bp::StartGamePacket_<898>::Id == 11);
     STATIC_REQUIRE(bp::StartGamePacket_<975>::Id == 11);
     STATIC_REQUIRE(bp::StartGamePacket_<1001>::Id == 11);
     STATIC_REQUIRE(bp::StartGamePacket_<2168>::Id == 11);
@@ -360,4 +361,23 @@ TEST_CASE("StartGamePacket: a v1001 body does not decode as a v2168 one")
 
     REQUIRE(rejects<bp::StartGamePacket_<2168>>(old_bytes));
     REQUIRE(rejects<bp::StartGamePacket_<1001>>(new_bytes));
+}
+
+// Until 924 the four telemetry ids sat at the tail of LevelSettings, in the order
+// server/world/scenario/owner; at 924 they moved to the packet tail behind an
+// optional join-info block, and world and scenario swapped places there.
+TEST_CASE("StartGamePacket: the telemetry ids move out of LevelSettings at 924")
+{
+    bp::StartGamePacket_<898> before;
+    before.settings.server_id = "s";
+    before.settings.world_id = "w";
+    before.settings.scenario_id = "c";
+    before.settings.owner_id = "o";
+
+    const auto wire = encode(before);
+    const auto back = decode<bp::StartGamePacket_<898>>(wire);
+    REQUIRE(back.settings.server_id == "s");
+    REQUIRE(back.settings.world_id == "w");
+    REQUIRE(back.settings.scenario_id == "c");
+    REQUIRE(back.settings.owner_id == "o");
 }

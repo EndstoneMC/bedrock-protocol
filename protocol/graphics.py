@@ -19,22 +19,22 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
     SUN_MIE_STRENGTH = 7
     MOON_MIE_STRENGTH = 8
     SUN_GLARE_SHAPE = 9
-    CHLOROPHYLL = 10
-    CDOM = value(11, cpp_name="CDOM")
-    SUSPENDED_SEDIMENT = 12
-    WAVES_DEPTH = 13
-    WAVES_FREQUENCY = 14
-    WAVES_FREQUENCY_SCALING = 15
-    WAVES_SPEED = 16
-    WAVES_SPEED_SCALING = 17
-    WAVES_SHAPE = 18
-    WAVES_OCTAVES = 19
-    WAVES_MIX = 20
-    WAVES_PULL = 21
-    WAVES_DIRECTION_INCREMENT = 22
-    MIDTONES_CONTRAST = 23
-    HIGHLIGHTS_CONTRAST = 24
-    SHADOWS_CONTRAST = 25
+    CHLOROPHYLL = value(10, since=924)
+    CDOM = value(11, cpp_name="CDOM", since=924)
+    SUSPENDED_SEDIMENT = value(12, since=924)
+    WAVES_DEPTH = value(13, since=924)
+    WAVES_FREQUENCY = value(14, since=924)
+    WAVES_FREQUENCY_SCALING = value(15, since=924)
+    WAVES_SPEED = value(16, since=924)
+    WAVES_SPEED_SCALING = value(17, since=924)
+    WAVES_SHAPE = value(18, since=924)
+    WAVES_OCTAVES = value(19, since=924)
+    WAVES_MIX = value(20, since=924)
+    WAVES_PULL = value(21, since=924)
+    WAVES_DIRECTION_INCREMENT = value(22, since=924)
+    MIDTONES_CONTRAST = value(23, since=924)
+    HIGHLIGHTS_CONTRAST = value(24, since=924)
+    SHADOWS_CONTRAST = value(25, since=924)
     HIGHLIGHTS_GAIN = value(26, since=944)
     HIGHLIGHTS_GAMMA = value(27, since=944)
     HIGHLIGHTS_OFFSET = value(28, since=944)
@@ -68,8 +68,8 @@ class GraphicsOverrideParameterPacket:
     """Sent from the server to the client when a server script changes the rendering settings."""
 
     keyframes: dict[float, Vec3]
-    float_value: float | None
-    vec3_value: Vec3 | None
+    float_value: float | None = field(since=924)
+    vec3_value: Vec3 | None = field(since=924)
     biome_id: str
     player_id: str | None = field(since=1001)
     parameter_id: GraphicsOverrideParameterType

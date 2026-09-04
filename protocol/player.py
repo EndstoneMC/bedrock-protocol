@@ -67,7 +67,8 @@ class ActorDamageCause(IntEnum):
     CAMPFIRE = 32
     SOUL_CAMPFIRE = 33
     MACE_SMASH = 34
-    ALL = 35
+    DEHYDRATION = value(until=924)
+    ALL = auto()
 
 
 @packet(id=38)

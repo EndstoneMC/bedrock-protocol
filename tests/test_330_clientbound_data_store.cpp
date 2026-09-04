@@ -3,6 +3,7 @@
 #include <variant>
 
 #include <bedrock/protocol/data_store.h>
+#include <bedrock/protocol/network.h>
 
 #include "fixture.hpp"
 
@@ -59,6 +60,19 @@ TEST_CASE("packet id is 330")
     STATIC_REQUIRE(bp::ClientboundDataStorePacket::Id == 330);
     STATIC_REQUIRE(bp::has_packet_v<1001, 330>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 330>);
+}
+
+// Both data-store packets arrive with the 1.21.130 line: the header puts EndId at
+// 332 at r21_u12 and 333 at r21_u13, and 330 was a classless DataStoreSyncPacket
+// slot before it gained ClientboundDataStorePacket.
+TEST_CASE("the data-store packets arrive at 898")
+{
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<897, 330>);
+    STATIC_REQUIRE(bp::has_packet_v<898, 330>);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<897, 332>);
+    STATIC_REQUIRE(bp::has_packet_v<898, 332>);
+    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<897>::EndId) == 332);
+    STATIC_REQUIRE(static_cast<int>(bp::MinecraftPacketIds_<898>::EndId) == 333);
 }
 
 TEST_CASE("every data store change type round-trips against the golden")

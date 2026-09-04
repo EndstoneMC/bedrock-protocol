@@ -3,7 +3,7 @@ and the world/level/controlscheme/ control scheme."""
 
 from enum import IntEnum, auto
 
-from protocol import field, int32, int64, packet, uint8, uint32
+from protocol import field, int32, int64, packet, type, uint8, uint32
 from protocol.actor import ActorUniqueID
 from protocol.common import Vec2, Vec3
 from protocol.eas import EasingType
@@ -147,7 +147,7 @@ class CameraAimAssistCategoryPriorities:
     entities: dict[str, int32]
     blocks: dict[str, int32]
     block_tags: dict[str, int32]
-    entity_type_families: dict[str, int32]
+    entity_type_families: dict[str, int32] = field(since=924)
     entity_default: int32 | None
     block_default: int32 | None
 
@@ -161,7 +161,7 @@ class CameraAimAssistPresetExclusionDefinition:
     block_exclusion_list: list[str]
     actor_exclusion_list: list[str]
     block_tag_exclusion_list: list[str]
-    entity_type_family_exclusion_list: list[str]
+    entity_type_family_exclusion_list: list[str] = field(since=924)
 
 
 class CameraAimAssistPresetDefinition:
@@ -252,6 +252,19 @@ class CameraInstructionOptions:
     class AttachToEntityInstruction:
         attach_to_entity_id: int64
 
+    @type(until=924)
+    class SplineInstruction:
+        class SplineRotationOption:
+            rotation_key_frame_value: Vec3
+            rotation_key_frame_time: float
+
+        total_time: float
+        curve_type: SplineType
+        curve: list[Vec3]
+        progress_key_frames: list[Vec2]
+        spline_rotation_option: list[SplineRotationOption]
+
+    @type(since=924)
     class SplineInstruction:
         class SplineProgressOption:
             progress_key_frame_value: float

@@ -112,7 +112,7 @@ class PrimitiveShapeDataPayload:
     time_left_total_sec: float | None
     color: Color | None
     dimension_id: DimensionType | None
-    attached_to_id: ActorRuntimeID | None
+    attached_to_id: ActorRuntimeID | None = field(since=924)
     extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
 
 
