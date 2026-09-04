@@ -262,6 +262,28 @@ is a convenience index and Mojang routinely forgets to bind values in it - r26_u
   nothing able to decode it.
 - **DO NOT** treat the id enum as the packet list. It is the source that silently omits.
 
+### An id with no packet behind it
+
+BDS keeps an id in `MinecraftPacketIds` long after the class is gone, so an entry there is
+not evidence a packet exists. Ask the question directly before modelling one - and before
+concluding a packet is missing from the schema.
+
+- **DO** answer it from **bedrock-headers**: a live packet has a `<Name>Packet.h`, and the
+  name in the id enum drops its `_DEPRECATED` / `_deprecated` / `_Deprecated` suffix to give
+  it. Of the 22 ids the schema left unmodelled at 924, **all 22** had no class header at any
+  branch from `r21_u4` to `r26_u4`, and the binaries agreed.
+- **DO** run live packets through the same probe as controls in the same command. A probe
+  that quietly matches nothing looks identical to a true negative, and the controls are what
+  tell the two apart - `DebugDrawer`, `Text`, `Login`, `StartGame`, `PlayerSkin` all resolve.
+- **DO NOT** use `??$make_packet@V<Name>Packet@@` as the packet list. It is instantiated for
+  one construction path only - 178 of 240 ids at 924 - and omits `LoginPacket`,
+  `TextPacket` and `StartGamePacket` among others, so reading absence there as "removed"
+  invents dozens of false deprecations.
+- **DO NOT** read `?getId@<Name>Packet@@` as universal either. It resolves for
+  `DebugDrawerPacket` and not for `TextPacket` in the same stripped 924 build.
+- **DO NOT** date the removal from the enum name. `ScriptCustomEvent` (117) carries no
+  deprecation suffix and has had no class for the entire range these sources cover.
+
 ### (2) Type change
 
 Field entries appearing or vanishing in a `fields[]` array, and whole files arriving,
@@ -554,10 +576,31 @@ It is the only source **keyed by protocol number**, and its entries are numbered
 cerealisation to 984, not to 1001. It also names renames in BDS member spelling:
 `993: LevelSoundEventPacket : mSoundEvent changed from LevelSoundEvent to SoundEventIdentifier`.
 
-- **DO** read it to find cerealisations stated outright rather than inferred from a dump file
-  appearing, and to date a change to its step - which is what "the changelog dates it to N"
-  means under **Then model it**, where the gate still lands on the next materialized snapshot
-  at or after N.
+**Only the step-numbered half dates anything.** A changelog file holds two things: a list
+whose lines open with an intermediate protocol number, and a bare `Added X` / `Removed X`
+summary. The step list is tight and barely overlaps its neighbours - 893 covers steps
+860..897, 924 covers 894..924, 944 covers 925..944 - and it is the dating authority. The
+bare summary is **cumulative**: it re-lists what earlier cycles already shipped, so an entry
+appearing in it dates nothing at all. 156 of `changelog_944`'s 178 bare entries (**88%**)
+appear verbatim in `changelog_924`, and `changelog_893` has 159 fewer of them than `924`
+because it carries **none** - it is step list only.
+
+That one mechanism explains both standing over-reports. `Added Lunge (41)` and
+`Added ROTATION_LOCKED_TO_VEHICLE (126)` sit in the bare summary of *both* the 924 and the
+944 files, yet `changelog_893`'s step list already dates them: `863: Added enchantment
+"Lunge"` and `865: Added ActorFlags::ROTATION_LOCKED_TO_VEHICLE`. Both predate the whole
+1.26 line, and the binaries agree - `LungeEnchant` is in the 898 build and the 924 build
+alike.
+
+- **DO** read the step-numbered lines to find cerealisations stated outright rather than
+  inferred from a dump file appearing, and to date a change to its step - which is what "the
+  changelog dates it to N" means under **Then model it**, where the gate still lands on the
+  next materialized snapshot at or after N.
+- **DO** check the step range at the top of the file before trusting any line in it, and
+  read the *previous* cycle's file when a step number falls below that range.
+- **DO NOT** date anything by the bare `Added`/`Removed` summary, and do not read a name's
+  presence there as an arrival. Diff it against the previous file first: what survives the
+  diff is a candidate, not a finding, and the header or the binary still settles it.
 - **DO NOT** treat it as complete. It carries no wire types, does not list removals, and
   omits silently: the 1001 changelog never mentions `SendPartyDestinationCookiePacket` or
   `PartyDestinationCookieResponsePacket`, and the dump proves both arrived at 1001.
@@ -762,6 +805,15 @@ transitively contains it, at a second namespace.
   Damage Amount at 2168. A field that lives at both eras with different widths is a
   **redeclaration pair**, and the generated serializer is where you catch getting it wrong -
   the field simply vanishes from the later namespace.
+- **DO NOT** declare the same field twice over disjoint gates to switch its *type*
+  (`pos: NetworkBlockPosition = field(until=944)` then `pos: BlockPos = field(since=944)`).
+  It is the obvious shape, the `prototype` branch uses it, and **this compiler drops it
+  silently**: `importer.py`'s `_unshadow_repeated_members` rewrites only `ast.Assign` - enum
+  members - so a repeated `ast.AnnAssign` struct field stays one key in griffe's member dict
+  and the second annotation overwrites the first with no error. Redeclare the owning class
+  instead. `NetworkBlockPosition` -> `BlockPos` at 944 is the standing case: 21 owners, each
+  a tiling pair, and five of them already tiled at 1001 or 2168 so they became three-tile
+  chains.
 - **DO** write a declared-type-vs-wire split as `name: <DeclaredType> = field(type=<wire>)`
   - the annotation keeps the semantic type, `field(type=)` switches the encoding. The
   declared type is the dump's `type` string or the alias the schema already uses. Dropping
