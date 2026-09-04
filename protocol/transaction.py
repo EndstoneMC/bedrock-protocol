@@ -5,7 +5,7 @@ Not container state -- world/containers/, in inventory.py."""
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, packet, type, uint8, uint32, uvarint32, varint32
+from protocol import field, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 from protocol.inventory import ContainerEnumName, ContainerID, HandSlot
@@ -93,7 +93,7 @@ class ItemUseInventoryTransaction:
         PLACE = 0
         USE = 1
         DESTROY = 2
-        USE_AS_ATTACK = 3
+        USE_AS_ATTACK = value(3, since=844)
 
     class TriggerType(IntEnum, uint8):
         UNKNOWN = 0
@@ -127,7 +127,7 @@ class ItemUseInventoryTransaction:
         PLACE = 0
         USE = 1
         DESTROY = 2
-        USE_AS_ATTACK = 3
+        USE_AS_ATTACK = value(3, since=844)
 
     class TriggerType(IntEnum, uint8):
         UNKNOWN = 0
@@ -162,7 +162,7 @@ class ItemUseInventoryTransaction:
         PLACE = 0
         USE = 1
         DESTROY = 2
-        USE_AS_ATTACK = 3
+        USE_AS_ATTACK = value(3, since=844)
 
     class TriggerType(IntEnum, uint8):
         UNKNOWN = 0

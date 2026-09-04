@@ -121,6 +121,10 @@ class BiomeSurfaceBuilderData:
 class BiomeClimateData:
     temperature: float
     downfall: float
+    red_spore_density: float = field(until=844)
+    blue_spore_density: float = field(until=844)
+    ash_density: float = field(until=844)
+    white_ash_density: float = field(until=844)
     snow_accumulation_min: float
     snow_accumulation_max: float
 
@@ -243,7 +247,7 @@ class BiomeDefinitionChunkGenData:
     mountain_params: BiomeMountainParamsData | None
     surface_material_adjustments: BiomeSurfaceMaterialAdjustmentData | None
     surface_materials: BiomeSurfaceMaterialData | None = field(until=975)
-    has_default_overworld_surface: bool = field(until=975)
+    has_default_overworld_surface: bool = field(since=844, until=975)
     has_swamp_surface: bool = field(until=975)
     has_frozen_ocean_surface: bool = field(until=975)
     has_the_end_surface: bool = field(until=975)
@@ -262,7 +266,11 @@ class BiomeDefinitionData:
     id: uint16
     temperature: float
     downfall: float
-    foliage_snow: float
+    red_spore_density: float = field(until=844)
+    blue_spore_density: float = field(until=844)
+    ash_density: float = field(until=844)
+    white_ash_density: float = field(until=844)
+    foliage_snow: float = field(since=844)
     depth: float
     scale: float
     map_water_color_argb: int32

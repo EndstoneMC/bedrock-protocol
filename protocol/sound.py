@@ -537,9 +537,9 @@ class LevelSoundEvent(IntEnum, uint32):
     UNSADDLE = 560
     EQUIP_COPPER = 561
     RECORD_LAVA_CHICKEN = 562
-    PLACE_ITEM = 563
-    SINGLE_ITEM_SWAP = 564
-    MULTI_ITEM_SWAP = 565
+    PLACE_ITEM = value(563, since=844)
+    SINGLE_ITEM_SWAP = value(564, since=844)
+    MULTI_ITEM_SWAP = value(565, since=844)
     LUNGE1 = value(566, since=898)
     LUNGE2 = value(567, since=898)
     LUNGE3 = value(568, since=898)

@@ -185,7 +185,7 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
 {
     bp::v1001::ItemUseInventoryTransaction use;
     use.transaction.actions = std::vector<bp::v1001::InventoryAction>{};
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.action_type = bp::v1001::ItemUseInventoryTransaction::ActionType::Place;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
@@ -319,7 +319,7 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
 TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
 {
     bp::ItemUseInventoryTransaction_<975> use;
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.action_type = bp::ItemUseInventoryTransaction_<975>::ActionType::Place;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
@@ -365,7 +365,7 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
 {
     bp::v2168::ItemUseInventoryTransaction older;
     older.transaction.actions = std::vector<bp::v2168::InventoryAction>{};
-    older.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    older.action_type = bp::v2168::ItemUseInventoryTransaction::ActionType::Place;
     older.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     older.pos = {.x = 1, .y = 2, .z = 3};
     older.face = 4;
@@ -377,7 +377,7 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
 
     bp::v2192::ItemUseInventoryTransaction use;
     use.transaction.actions = std::vector<bp::v2192::InventoryAction>{};
-    use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
+    use.action_type = bp::v2192::ItemUseInventoryTransaction::ActionType::Place;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;

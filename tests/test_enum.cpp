@@ -59,8 +59,9 @@ TEST_CASE("declaration order", "[enum]")
 }
 
 // An enum BDS declares inside a class is nested in C++ too, and reflects under
-// its qualified name. A versioned owner shares one definition across snapshots,
-// so the nested type is the same C++ type at every one.
+// its qualified name. A versioned owner shares one definition across snapshots
+// unless the nested enum gates on its own: ActionType gained UseAsAttack at 844
+// and is one C++ type per era, while its ungated siblings stay single.
 TEST_CASE("nested enum", "[enum]")
 {
     using Transaction = bp::ItemUseInventoryTransaction;
@@ -68,8 +69,12 @@ TEST_CASE("nested enum", "[enum]")
     STATIC_REQUIRE(bp::enum_count<Transaction::TriggerType>() == 3);
     STATIC_REQUIRE(bp::enum_name(Transaction::ActionType::UseAsAttack) == "useasattack");
     STATIC_REQUIRE(bp::enum_cast<Transaction::PredictedResult>("SUCCESS") == Transaction::PredictedResult::Success);
-    STATIC_REQUIRE(std::is_same_v<bp::base::ItemUseInventoryTransaction::ActionType,
-                                  bp::v1001::ItemUseInventoryTransaction::ActionType>);
+    STATIC_REQUIRE(std::is_same_v<bp::base::ItemUseInventoryTransaction::TriggerType,
+                                  bp::v1001::ItemUseInventoryTransaction::TriggerType>);
+    STATIC_REQUIRE_FALSE(std::is_same_v<bp::base::ItemUseInventoryTransaction::ActionType,
+                                        bp::v1001::ItemUseInventoryTransaction::ActionType>);
+    STATIC_REQUIRE(bp::enum_count<bp::ItemUseInventoryTransaction_<827>::ActionType>() == 3);
+    STATIC_REQUIRE(bp::enum_count<bp::ItemUseInventoryTransaction_<844>::ActionType>() == 4);
     STATIC_REQUIRE(bp::enum_type_name<bp::InventorySource::InventorySourceFlags>() ==
                    "InventorySource::InventorySourceFlags");
 }

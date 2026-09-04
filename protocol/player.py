@@ -144,7 +144,17 @@ class ArmorSlotAndDamagePair:
     damage: int16
 
 
-@packet(id=149)
+@packet(id=149, until=844)
+class PlayerArmorDamagePacket:
+    slots: uint8
+    head_damage: varint32 = field(when=lambda p: p.slots & 1 != 0)
+    torso_damage: varint32 = field(when=lambda p: p.slots & 2 != 0)
+    legs_damage: varint32 = field(when=lambda p: p.slots & 4 != 0)
+    feet_damage: varint32 = field(when=lambda p: p.slots & 8 != 0)
+    body_damage: varint32 = field(when=lambda p: p.slots & 16 != 0)
+
+
+@packet(id=149, since=844)
 class PlayerArmorDamagePacket:
     slot_and_damage_pairs: list[ArmorSlotAndDamagePair]
 

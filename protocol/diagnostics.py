@@ -58,7 +58,7 @@ class MemoryCategory(IntEnum, uint8):
     LEVEL_CHUNK_GEN_THREAD_LOCAL = auto()
     LIGHT_VOLUME_MANAGER = value(since=944)
     NETWORK = auto()
-    MARKETPLACE = auto()
+    MARKETPLACE = value(since=844)
     MATERIAL_DRAGON_COMPILED_DEFINITION = auto()
     MATERIAL_DRAGON_MATERIAL = auto()
     MATERIAL_DRAGON_RESOURCE = auto()
