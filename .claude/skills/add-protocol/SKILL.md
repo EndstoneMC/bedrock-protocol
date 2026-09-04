@@ -553,6 +553,27 @@ Cross-check that listing against gophertunnel's, and mind how you compare:
   Resolve every name to the **BDS** spelling before comparing anything - to either ref's list,
   or to the schema. A raw set difference manufactures phantom "not modelled" findings.
 
+**Check the two dumps are the same generation before diffing them at all.** The dumper
+itself changes, and an older one prints the *declared C++ width* with no notion of cereal
+compression, endianness or enum coding. Across 898 -> 924 that made **195 of 197** field
+`type` diffs and 143 of 162 changed files pure rendering noise - `int32`->`varint32`,
+`uint32`->`uvarint32`, `int64`->`varint64`, `int16`->`varint32`, `int32`->`int32_be`,
+`repeat: uvarint32`->`uint32`, and `string`->`uint8` on every enum-bound field. Modelling
+any one of them is a wire break.
+
+- **DO** probe the older dump before reading a single hunk: count `"varint32"`,
+  `"uvarint64"`, `_be`, `"repeat": "uint32"`, and enum-bound fields whose type is
+  `"string"`. At `r21_u13` those come back **0, 0, 0, 0, and 98-of-98** against 83, 9, 3, 2
+  and 11-of-82 at `r26_u0` - a generation gap, not a protocol change.
+- **DO** settle anything that survives the probe in bedrock-headers at the two branches, or
+  in the binary. A control helps: `LegacyTelemetryEventPacketPayload::ItemUsed` keeps its
+  uncompressed `int16` at *both* eras, proving the newer dumper does print a raw width where
+  cereal genuinely does not compress.
+- **DO NOT** let a community codec talk you into an artifact. Both gophertunnel and
+  Cloudburst transcribed the 898 dumper's rendering of `TextPacket`'s enum-value name
+  bindings as a run of 12 constant strings on the wire; `cerealizer<TextPacketPayload>::bind`
+  in the 898 binary shows they are `bindConstInternal` entries that never reach it.
+
 **protocol-docs, as a hint - never as the diff.** The dump describes only what is fully
 cerealised at that version. A change inside a type BDS still writes by hand is not in it,
 so an empty dump diff is not a finding and a dump hunk is not a measurement.
@@ -598,6 +619,15 @@ alike.
   next materialized snapshot at or after N.
 - **DO** check the step range at the top of the file before trusting any line in it, and
   read the *previous* cycle's file when a step number falls below that range.
+- **DO NOT** read a step number as "shipped in the release that reports N". A step is a
+  point in the *next* cycle's development, so it routinely names a number the previous line
+  already released under. `changelog_924`'s list opens at 894 and says
+  `898: Added ClientboundDataDrivenUIShowScreenPacket and ClientboundDataDrivenUICloseAllScreensPacket`
+  - yet 898 is the released 1.21.132.3, whose dump carries neither packet, whose header puts
+  `EndId` at 333, and whose binary has no class for either. Those ids arrive at 924. The
+  overlap is the tell: `changelog_893` covers steps 860..897 and `changelog_924` covers
+  894..924, so the same step numbers appear in both. The step orders changes *within* a
+  cycle; only the dump, the header's `EndId` and the binary say which release has one.
 - **DO NOT** date anything by the bare `Added`/`Removed` summary, and do not read a name's
   presence there as an arrival. Diff it against the previous file first: what survives the
   diff is a candidate, not a finding, and the header or the binary still settles it.
