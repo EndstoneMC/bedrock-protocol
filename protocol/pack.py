@@ -93,7 +93,7 @@ class ResourcePackClientResponsePacket:
     response: Cancel | Downloading | DownloadingFinished | ResourcePackStackFinished
 
 
-@packet(id=329, until=2192)
+@packet(id=329, since=844, until=2192)
 class ServerboundPackSettingChangePacket:
     pack_id: uuid.UUID
     pack_setting_name: str

@@ -3,7 +3,7 @@ SharedTypes/versionless/Molang/. Tier-0: imports nothing but the DSL surface."""
 
 from enum import IntEnum, auto
 
-from protocol import int16
+from protocol import int16, value
 
 package = "bedrock.protocol"
 
@@ -109,35 +109,35 @@ class ExpressionOp(IntEnum, int16):
     COMMA = 75
     THIS = 76
     INTERNAL_NON_EVALUATED_ARRAY = 77
-    INVERSE_LERP = 78
-    EASE_IN_QUAD = 79
-    EASE_OUT_QUAD = 80
-    EASE_IN_OUT_QUAD = 81
-    EASE_IN_CUBIC = 82
-    EASE_OUT_CUBIC = 83
-    EASE_IN_OUT_CUBIC = 84
-    EASE_IN_QUART = 85
-    EASE_OUT_QUART = 86
-    EASE_IN_OUT_QUART = 87
-    EASE_IN_QUINT = 88
-    EASE_OUT_QUINT = 89
-    EASE_IN_OUT_QUINT = 90
-    EASE_IN_SINE = 91
-    EASE_OUT_SINE = 92
-    EASE_IN_OUT_SINE = 93
-    EASE_IN_EXPO = 94
-    EASE_OUT_EXPO = 95
-    EASE_IN_OUT_EXPO = 96
-    EASE_IN_CIRC = 97
-    EASE_OUT_CIRC = 98
-    EASE_IN_OUT_CIRC = 99
-    EASE_IN_BOUNCE = 100
-    EASE_OUT_BOUNCE = 101
-    EASE_IN_OUT_BOUNCE = 102
-    EASE_IN_BACK = 103
-    EASE_OUT_BACK = 104
-    EASE_IN_OUT_BACK = 105
-    EASE_IN_ELASTIC = 106
-    EASE_OUT_ELASTIC = 107
-    EASE_IN_OUT_ELASTIC = 108
+    INVERSE_LERP = value(78, since=859)
+    EASE_IN_QUAD = value(79, since=859)
+    EASE_OUT_QUAD = value(80, since=859)
+    EASE_IN_OUT_QUAD = value(81, since=859)
+    EASE_IN_CUBIC = value(82, since=859)
+    EASE_OUT_CUBIC = value(83, since=859)
+    EASE_IN_OUT_CUBIC = value(84, since=859)
+    EASE_IN_QUART = value(85, since=859)
+    EASE_OUT_QUART = value(86, since=859)
+    EASE_IN_OUT_QUART = value(87, since=859)
+    EASE_IN_QUINT = value(88, since=859)
+    EASE_OUT_QUINT = value(89, since=859)
+    EASE_IN_OUT_QUINT = value(90, since=859)
+    EASE_IN_SINE = value(91, since=859)
+    EASE_OUT_SINE = value(92, since=859)
+    EASE_IN_OUT_SINE = value(93, since=859)
+    EASE_IN_EXPO = value(94, since=859)
+    EASE_OUT_EXPO = value(95, since=859)
+    EASE_IN_OUT_EXPO = value(96, since=859)
+    EASE_IN_CIRC = value(97, since=859)
+    EASE_OUT_CIRC = value(98, since=859)
+    EASE_IN_OUT_CIRC = value(99, since=859)
+    EASE_IN_BOUNCE = value(100, since=859)
+    EASE_OUT_BOUNCE = value(101, since=859)
+    EASE_IN_OUT_BOUNCE = value(102, since=859)
+    EASE_IN_BACK = value(103, since=859)
+    EASE_OUT_BACK = value(104, since=859)
+    EASE_IN_OUT_BACK = value(105, since=859)
+    EASE_IN_ELASTIC = value(106, since=859)
+    EASE_OUT_ELASTIC = value(107, since=859)
+    EASE_IN_OUT_ELASTIC = value(108, since=859)
     COUNT = auto()

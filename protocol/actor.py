@@ -893,7 +893,7 @@ class ActorEvent(IntEnum, uint8):
     ACTOR_GROW_UP = 76
     VIBRATION_DETECTED = 77
     DRINK_MILK = 78
-    SHAKE_WETNESS_STOP = 79
+    SHAKE_WETNESS_STOP = value(79, since=859)
     KINETIC_DAMAGE_DEALT = value(80, since=898)
     HURT_WITHOUT_RECEIVING_DAMAGE = value(81, since=975)
 
@@ -930,7 +930,36 @@ class ActorSwingSource(Enum, uint8):
     EVENT = 8
 
 
-@packet(id=44)
+@packet(id=44, until=859)
+class AnimatePacket:
+    class Action(IntEnum, uint8):
+        NO_ACTION = 0
+        SWING = 1
+        WAKE_UP = 3
+        CRITICAL_HIT = 4
+        MAGIC_CRITICAL_HIT = 5
+
+    action: varint32
+    runtime_id: ActorRuntimeID
+    data: float = field(when=lambda p: p.action & 0x80 != 0)
+
+
+@packet(id=44, since=859, until=898)
+class AnimatePacket:
+    class Action(IntEnum, uint8):
+        NO_ACTION = 0
+        SWING = 1
+        WAKE_UP = 3
+        CRITICAL_HIT = 4
+        MAGIC_CRITICAL_HIT = 5
+
+    action: varint32
+    runtime_id: ActorRuntimeID
+    data: float
+    rowing_time: float = field(when=lambda p: p.action & 0x80 != 0)
+
+
+@packet(id=44, since=898)
 class AnimatePacket:
     class Action(IntEnum, uint8):
         NO_ACTION = 0
