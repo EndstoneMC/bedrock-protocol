@@ -608,7 +608,7 @@ class ActorType(IntEnum):
     OMINOUS_ITEM_SPAWNER = 145
     CREAKING = 2962
     HAPPY_GHAST = 5011
-    COPPER_GOLEM = 916
+    COPPER_GOLEM = value(916, since=827)
     NAUTILUS = 9109
     ZOMBIE_NAUTILUS = value(76694, until=924)
     ZOMBIE_NAUTILUS = value(74646, since=924)

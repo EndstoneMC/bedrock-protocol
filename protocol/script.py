@@ -187,7 +187,7 @@ class PrimitiveShapeDataPayload:
     )
 
 
-@packet(id=328, until=859)
+@packet(id=328, since=818, until=859)
 class ServerScriptDebugDrawerPacket:
     """Send primitive drawing shape info (from scripting) to the client for rendering."""
 

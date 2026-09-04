@@ -140,7 +140,7 @@ class CameraAimAssistPacket:
     distance: float
     target_mode: TargetMode
     action: Action
-    show_debug_render: bool
+    show_debug_render: bool = field(since=827)
 
 
 class CameraAimAssistCategoryPriorities:
@@ -291,7 +291,7 @@ class CameraInstruction:
     fade: CameraInstructionOptions.FadeInstruction | None
     target: CameraInstructionOptions.TargetInstruction | None
     remove_target: bool | None
-    field_of_view: CameraInstructionOptions.FovInstruction | None
+    field_of_view: CameraInstructionOptions.FovInstruction | None = field(since=827)
     spline: CameraInstructionOptions.SplineInstruction | None = field(since=859)
     attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None = field(since=859)
     detach_from_entity: bool | None = field(since=859)

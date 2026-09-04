@@ -124,7 +124,19 @@ class RewindType(IntEnum, uint8):
     VEHICLE = 1
 
 
-@packet(id=161)
+@packet(id=161, until=827)
+class CorrectPlayerMovePredictionPacket:
+    prediction_type: RewindType
+    pos: Vec3
+    pos_delta: Vec3
+    with field(when=lambda p: p.prediction_type == RewindType.VEHICLE):
+        vehicle_rotation: Vec2
+        vehicle_angular_velocity: float | None
+    on_ground: bool
+    tick: PlayerInputTick
+
+
+@packet(id=161, since=827)
 class CorrectPlayerMovePredictionPacket:
     prediction_type: RewindType
     pos: Vec3

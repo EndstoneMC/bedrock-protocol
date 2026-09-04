@@ -262,6 +262,24 @@ class BiomeDefinitionChunkGenData:
     subsurface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
 
 
+@type(until=827)
+class BiomeDefinitionData:
+    id: uint16 | None
+    temperature: float
+    downfall: float
+    red_spore_density: float
+    blue_spore_density: float
+    ash_density: float
+    white_ash_density: float
+    depth: float
+    scale: float
+    map_water_color_argb: int32
+    rain: bool
+    tags: BiomeTagsData | None
+    chunk_gen_data: BiomeDefinitionChunkGenData | None
+
+
+@type(since=827)
 class BiomeDefinitionData:
     id: uint16
     temperature: float
