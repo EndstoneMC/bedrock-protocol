@@ -46,7 +46,7 @@ bp::DynamicValue nested_state()
 {
     return bp::DynamicValue::Object{
         {"flag", bp::DynamicValue{true}},
-        {"items", bp::DynamicValue::Array{bp::DynamicValue{"a"}, bp::DynamicValue{7LL}}},
+        {"items", bp::DynamicValue::Array{bp::DynamicValue{"a"}, bp::DynamicValue{bp::DynamicValue::Integer{7}}}},
         {"nothing", bp::DynamicValue{}},
         {"ratio", bp::DynamicValue{0.25}},
     };
