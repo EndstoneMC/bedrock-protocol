@@ -1,6 +1,7 @@
 """Scoreboard ids, identities, objectives and scores: world/scores/."""
 
 from enum import Enum, IntEnum
+from typing import Literal
 
 from protocol import field, int32, packet, type, uint8, varint32, varint64
 from protocol.actor import ActorUniqueID
@@ -54,14 +55,14 @@ class ScorePacketInfo:
 
 @type(since=2168)
 class RemoveScore:
-    action: ScorePacketEntryAction = field(type=str)
+    action: Literal["remove"]
     scoreboard_id: ScoreboardId
     objective_name: str | None
 
 
 @type(since=2168)
 class ChangePlayerScore:
-    action: ScorePacketEntryAction = field(type=str)
+    action: Literal["changeplayer"]
     scoreboard_id: ScoreboardId
     objective_name: str
     score_value: int32
@@ -70,7 +71,7 @@ class ChangePlayerScore:
 
 @type(since=2168)
 class ChangeEntityScore:
-    action: ScorePacketEntryAction = field(type=str)
+    action: Literal["changeentity"]
     scoreboard_id: ScoreboardId
     objective_name: str
     score_value: int32
@@ -79,7 +80,7 @@ class ChangeEntityScore:
 
 @type(since=2168)
 class ChangeFakePlayerScore:
-    action: ScorePacketEntryAction = field(type=str)
+    action: Literal["changefakeplayer"]
     scoreboard_id: ScoreboardId
     objective_name: str
     score_value: int32

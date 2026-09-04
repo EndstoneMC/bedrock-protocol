@@ -3,6 +3,7 @@ pack identity, versions, the download handshake, the applied stack, pack setting
 
 import uuid
 from enum import Enum, IntEnum, auto
+from typing import Literal
 
 from protocol import field, int8, int32, packet, uint16, uint32, uint64
 from protocol.game import Experiments
@@ -77,17 +78,17 @@ class ResourcePackClientResponsePacket:
 @packet(id=8, since=2168)
 class ResourcePackClientResponsePacket:
     class Cancel:
-        response_type: ResourcePackResponse = field(type=str)
+        response_type: Literal["cancel"]
 
     class Downloading:
-        response_type: ResourcePackResponse = field(type=str)
+        response_type: Literal["downloading"]
         downloading_packs: list[str]
 
     class DownloadingFinished:
-        response_type: ResourcePackResponse = field(type=str)
+        response_type: Literal["downloadingfinished"]
 
     class ResourcePackStackFinished:
-        response_type: ResourcePackResponse = field(type=str)
+        response_type: Literal["resourcepackstackfinished"]
 
     response: Cancel | Downloading | DownloadingFinished | ResourcePackStackFinished
 

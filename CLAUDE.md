@@ -75,8 +75,10 @@ read, and was wrong. To settle presence, decompile `write` and count what it emi
 field to 1001.
 
 **A protocol-docs branch is a network version**, not a release ordering — check its
-README (`r26_u3` = 1001, `r26_u4` = **2168**). A packet missing from the dump is not
-cerealised at that version, so the dump cannot describe it at all.
+README, and check it again after every fetch, because a branch bumps within itself:
+`r26_u4` was 2168 through 1.26.44.3 and is **2169** from 1.26.45.1 (`r26_u5` = 2192,
+`r26_u6` = 2207). A packet missing from the dump is not cerealised at that version,
+so the dump cannot describe it at all.
 
 ## Settled — do not re-open without new evidence
 
@@ -93,6 +95,7 @@ codec is what disagreed.
 | `ContainerID` width per call site | packet 49 `uvarint32`, packet 50 `int8` — deliberately different | they part company at `NONE = -1`; unifying corrupts every `NONE` |
 | `TextPacket`'s twelve constant strings at 898 | **on the wire**, in BDS's own spelling (`systemMessage`, not folded), over `[898, 924)` | 898's cereal serialized the `bindConstInternal` enumerator names ahead of the tagged member's case: 74 of an 85-byte raw packet. gophertunnel added `StringConst` at the 898 bump (`c8d4e93`) and deleted it at the 924 bump (`0381a95`), CloudburstMC has a `TextSerializer_v898` writing them and a `_v924` dropping them, and the 898 dump lists them as `string` fields. `StringConst`'s `EqualFold` read is why the casing is the folded form and not the C++ spelling both refs write |
 | does a cereal-bound *constant* fold like an enum value? | **no** — the two bind paths differ | `memberDescriptorFor` runs `tolower` into `mName` and the write emits `mName`, so a name-coded enum **value** is lowercased. A constant bound by `BasicFactory<T>::bindConstInternal` is not: it `memcpy`s the `string_view` verbatim and takes its lookup id from `cereal::enttHash`, a plain FNV-1a over the raw bytes with **no fold** — so a folded wire form would hash differently and never match. `TextPacket`'s constants therefore go out `systemMessage`, `textObjectWhisper`, `jukeboxPopup`. Applying the enum fold rule to a constant is the mistake; check which function bound it |
+| a cereal variant's selector | always a `uvarint32` index over the alternatives, never the tag | `doSaveTaggedVariant` hashes `mTaggedName` and runs a per-alternative lambda capturing `{any, taggedNameHash, state, descriptor}` and **not** the writer, so it cannot put a byte on the stream; it then delegates to `doSavePlainVariant`, which writes the `std::variant` index with Compression forced on. A `TaggedVariantDescriptor` only names the member inside each alternative that carries the discriminator, and that member is bound in its own right and serialized with the rest of the alternative. Dumps before 2026-09-04 rendered the tag as the selector and had the width wrong three separate ways (`uint8` for PlayerList, `int8` for ResourcePackResponse, `varint32` for PlayerLocation) |
 | a name-coded enum's casing on the wire | **lowercased**, and the read matches nothing else | `BasicFactory<E>::memberDescriptorFor` runs `tolower` over the bound name into `mName` (+0x30) and keeps the original in `mNameExt` (+0x10); `TypeSchema<E>::doSave` writes `mName`, and the meta_data id hashes it. Confirmed against gophertunnel's lowercase-both-ways `CommandOriginType` table. Reading the *bind site's* string literal is what got this backwards once — that literal is `mNameExt`, which never reaches the wire |
 
 ## Names mirror BDS
@@ -347,6 +350,35 @@ Those two legacy codecs disagree with each other — Cloudburst writes a zigzag
 value — so anything modelling StartGame's game rules before 2168 earns a
 `# TODO: confirm against BDS` until BDS's hand-written path is read directly.
 
+## A dumped `value` is a `Literal`
+
+A field carrying `"value"` in the dump is a constant: cereal's `bindConst` on a
+compound factory declares a member fixed at compile time, and the serializer writes
+it like any other. Model it as a `Literal`, keeping the name BDS bound it under:
+
+```python
+class TakeActionData:
+    action_type: Literal[ItemStackRequestActionType.TAKE]
+
+class ChangeEntityScore:
+    action: Literal["changeentity"]
+```
+
+An integer-coded constant names the **enumerator**, which carries the number and the
+width both -- never a bare `Literal[0] = field(type=uint8)`, which says neither which
+constant it is nor why that width. A name-coded one is the **folded string** it puts
+on the wire, spelled out: routing it through the enum would hide the bytes behind a
+fold nobody reading the line can see.
+
+The leading `_` marks bug noise, not a constant: a member-present byte BDS never
+varies, or the run of enumerator names 898's cereal wrote by mistake. A tag BDS means
+to send keeps its own name.
+
+Every variant alternative carries one, since the selector is the case index and the
+alternative restates its own tag. Where the dump gives that member `constraints.enum_values`
+instead of a `value`, BDS bound it as an ordinary member and only validates it — that
+one stays a field.
+
 ## An always-true marker is `Literal[True]`, never an optional
 
 cereal prefixes a dynamic member with an always-true member-present byte. That is
@@ -368,7 +400,8 @@ moves, whereas a conflated optional has to be reshaped or redeclared. Folding it
 also lets the schema encode a `nullopt` BDS never writes.
 
 Grep the dump for `"value": true` when modelling any dynamic member, at every era
-— `git grep '"value": true' origin/r26_u4` and the same for `origin/r26_u3`.
+— `git grep '"value": true' origin/r26_u4` and the same for `origin/r26_u3`. BDS is
+fixing them: `RemoveScore` lost its marker at 2169 and the rest went at 2192.
 
 ## A union spells its discriminator
 

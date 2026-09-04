@@ -144,12 +144,11 @@ TEST_CASE("packet id is 147 at v2168")
 }
 
 // Cerealised, an action costs two discriminators: the variant index over the eighteen
-// action structs, then the struct's own ItemStackRequestActionType member. They agree
+// action structs, then the constant action type the struct itself pins. They agree
 // only up to Create -- the union has no slot for the two deprecated container transfers.
 TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 {
     bp::v2168::ItemStackRequestCereal::TakeActionData take;
-    take.action_type = bp::ItemStackRequestActionType::Take;
     take.amount = 1;
     take.source = slot_v2168(bp::ContainerEnumName::LevelEntityContainer, 3, 9);
     take.destination = slot_v2168(bp::ContainerEnumName::CursorContainer, 0, 0);
@@ -165,7 +164,6 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 
     const auto back = decode<PacketV2168>(golden_take_v2168);
     const auto &take_back = std::get<0>(back.requests[0].actions[0]);
-    REQUIRE(take_back.action_type == bp::ItemStackRequestActionType::Take);
     REQUIRE(take_back.source.slot == 3);
     REQUIRE(take_back.source.net_id_variant == 9);
 }
@@ -173,10 +171,8 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type stays 9")
 {
     bp::v2168::ItemStackRequestCereal::LabTableCombineActionData lab;
-    lab.action_type = bp::ItemStackRequestActionType::ScreenLabTableCombine;
 
     bp::v2168::ItemStackRequestCereal::CraftCreativeActionData creative;
-    creative.action_type = bp::ItemStackRequestActionType::CraftCreative;
     creative.creative_item_net_id = 5;
     creative.num_crafts = 1;
 
@@ -192,10 +188,8 @@ TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type st
 
     const auto back = decode<PacketV2168>(golden_two_actions_v2168);
     REQUIRE(back.requests[0].actions[0].index() == 7);
-    REQUIRE(std::get<7>(back.requests[0].actions[0]).action_type ==
-            bp::ItemStackRequestActionType::ScreenLabTableCombine);
     REQUIRE(back.requests[0].actions[1].index() == 12);
-    REQUIRE(std::get<12>(back.requests[0].actions[1]).action_type == bp::ItemStackRequestActionType::CraftCreative);
+    REQUIRE(std::get<12>(back.requests[0].actions[1]).creative_item_net_id == 5);
 }
 
 // The 1001 body is the shorter of the two -- no action-type byte, and a varint32 slot net

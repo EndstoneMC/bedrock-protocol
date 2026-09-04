@@ -4,6 +4,7 @@ and AddPlayer. Not abilities -- those are in ability.py."""
 
 import uuid
 from enum import Enum, IntEnum, auto
+from typing import Literal
 
 from protocol import field, int16, int32, packet, type, uint8, uvarint32, uvarint64, value, varint32
 from protocol.ability import SerializedAbilitiesData
@@ -259,24 +260,18 @@ class PlayerUpdateEntityOverridesPacket:
 
 @packet(id=325, since=2168)
 class PlayerUpdateEntityOverridesPacket:
-    # TODO: confirm against BDS -- PlayerUpdateEntityOverridesPacket.h gives these payloads no
-    # tag member at all (ClearOverride and RemoveOverride are empty structs and the type comes
-    # from getUpdateType()), so the header settles nothing beyond UpdateType being uint8_t. The
-    # r26_u4 dump name-codes the tag inside each payload while typing the variant's own switch
-    # uint8; CloudburstMC PlayerUpdateEntityOverridesSerializer_v2168 writes a single byte.
-    # Needs cerealizer<PlayerUpdateEntityOverridesPacketPayload>::bind read directly.
     class ClearOverride:
-        update_type: UpdateType = field(type=str)
+        update_type: Literal["clearoverrides"]
 
     class RemoveOverride:
-        update_type: UpdateType = field(type=str)
+        update_type: Literal["removeoverride"]
 
     class IntOverride:
-        update_type: UpdateType = field(type=str)
+        update_type: Literal["setintoverride"]
         value: int32
 
     class FloatOverride:
-        update_type: UpdateType = field(type=str)
+        update_type: Literal["setfloatoverride"]
         value: float
 
     id: ActorUniqueID

@@ -38,21 +38,16 @@ Packet2168 fill_v2168()
 {
     Packet2168 packet;
     packet.score_info = {
-        bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::Remove,
-                               .scoreboard_id = {.raw_id = 1},
-                               .objective_name = "rm"},
-        bp::v2168::ChangePlayerScore{.action = bp::ScorePacketEntryAction::ChangePlayer,
-                                     .scoreboard_id = {.raw_id = 2},
+        bp::v2168::RemoveScore{.scoreboard_id = {.raw_id = 1}, .objective_name = "rm"},
+        bp::v2168::ChangePlayerScore{.scoreboard_id = {.raw_id = 2},
                                      .objective_name = "obj",
                                      .score_value = 5,
                                      .player_id = {.actor_unique_id = 9}},
-        bp::v2168::ChangeEntityScore{.action = bp::ScorePacketEntryAction::ChangeEntity,
-                                     .scoreboard_id = {.raw_id = 3},
+        bp::v2168::ChangeEntityScore{.scoreboard_id = {.raw_id = 3},
                                      .objective_name = "obj",
                                      .score_value = 6,
                                      .entity_id = bp::ActorUniqueID{11}},
-        bp::v2168::ChangeFakePlayerScore{.action = bp::ScorePacketEntryAction::ChangeFakePlayer,
-                                         .scoreboard_id = {.raw_id = 4},
+        bp::v2168::ChangeFakePlayerScore{.scoreboard_id = {.raw_id = 4},
                                          .objective_name = "obj",
                                          .score_value = 7,
                                          .fake_player_name = "fake"},
@@ -152,9 +147,8 @@ TEST_CASE("SetScorePacket: v2168 round-trip")
 TEST_CASE("SetScorePacket: a v2168 remove entry may drop its objective name")
 {
     Packet2168 packet;
-    packet.score_info = {bp::v2168::RemoveScore{.action = bp::ScorePacketEntryAction::Remove,
-                                                .scoreboard_id = {.raw_id = 1},
-                                                .objective_name = std::nullopt}};
+    packet.score_info = {
+        bp::v2168::RemoveScore{.scoreboard_id = {.raw_id = 1}, .objective_name = std::nullopt}};
 
     const auto encoded = encode(packet);
 
@@ -167,8 +161,8 @@ TEST_CASE("SetScorePacket: a v2168 remove entry may drop its objective name")
 }
 
 // 1001 spent one action byte on the whole packet; 2168 moved it into every entry and
-// restated it as a name-coded string, so the leading byte means different things and
-// neither body survives the other's reader.
+// pinned it there as a name-coded constant, so the leading byte means different things
+// and neither body survives the other's reader.
 TEST_CASE("SetScorePacket: a v1001 body does not decode as a v2168 one")
 {
     const auto wrong = decode_partial<Packet2168>(golden_v1001_change);

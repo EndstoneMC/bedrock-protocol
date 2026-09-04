@@ -87,30 +87,24 @@ TEST_CASE("resource-pack-client-response v1001 round-trips against the goldens")
 }
 
 // 2168 turned the packet into one variant: a zero-based index, then a payload that repeats
-// the response as a name-coded string, and only Downloading carries the pack list.
+// the response as a constant name-coded string, and only Downloading carries the pack list.
 TEST_CASE("resource-pack-client-response v2168 round-trips against the goldens")
 {
     PacketV2168 packet;
-    packet.response = PacketV2168::Downloading{
-        .response_type = bp::ResourcePackResponse::Downloading,
-        .downloading_packs = {"pack_a", "pack_b"},
-    };
+    packet.response = PacketV2168::Downloading{.downloading_packs = {"pack_a", "pack_b"}};
     REQUIRE(encode(packet) == golden_v2168_downloading);
 
     PacketV2168 finished;
-    finished.response = PacketV2168::ResourcePackStackFinished{
-        .response_type = bp::ResourcePackResponse::ResourcePackStackFinished,
-    };
+    finished.response = PacketV2168::ResourcePackStackFinished{};
     REQUIRE(encode(finished) == golden_v2168_stack_finished);
 
     PacketV2168 cancel;
-    cancel.response = PacketV2168::Cancel{.response_type = bp::ResourcePackResponse::Cancel};
+    cancel.response = PacketV2168::Cancel{};
     REQUIRE(encode(cancel) == golden_v2168_cancel);
 
     const auto back = decode<PacketV2168>(golden_v2168_downloading);
     REQUIRE(back.response.index() == 1);
     REQUIRE(std::get<1>(back.response).downloading_packs.size() == 2);
-    REQUIRE(std::get<1>(back.response).response_type == bp::ResourcePackResponse::Downloading);
 }
 
 // The discriminator is the variant index at 2168 and the enum value at 1001, so every

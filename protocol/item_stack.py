@@ -348,20 +348,20 @@ class ItemStackRequestCereal:
         ITEM_TAG = 3
 
     class EmptyItemDescriptorData:
-        descriptor_type: ItemDescriptorType
+        descriptor_type: Literal[ItemDescriptorType.EMPTY]
 
     class ItemNameDescriptorData:
-        descriptor_type: ItemDescriptorType
+        descriptor_type: Literal[ItemDescriptorType.ITEM_NAME]
         full_name: str
         aux_value: varint32
 
     class MolangItemDescriptorData:
-        descriptor_type: ItemDescriptorType
+        descriptor_type: Literal[ItemDescriptorType.MOLANG]
         tag_expression: str
         molang_version: MolangVersion = field(type=int16)
 
     class ItemTagDescriptorData:
-        descriptor_type: ItemDescriptorType
+        descriptor_type: Literal[ItemDescriptorType.ITEM_TAG]
         item_tag: str
 
     class NetworkItemInstanceDescriptorData:
@@ -384,93 +384,93 @@ class ItemStackRequestCereal:
         net_id_variant: int32
 
     class TakeActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.TAKE]
         amount: uint8
         source: SlotInfoData
         destination: SlotInfoData
 
     class PlaceActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.PLACE]
         amount: uint8
         source: SlotInfoData
         destination: SlotInfoData
 
     class SwapActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.SWAP]
         source: SlotInfoData
         destination: SlotInfoData
 
     class DropActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.DROP]
         amount: uint8
         source: SlotInfoData
         randomly: bool
 
     class DestroyActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.DESTROY]
         amount: uint8
         source: SlotInfoData
 
     class ConsumeActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CONSUME]
         amount: uint8
         source: SlotInfoData
 
     class CreateActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CREATE]
         results_index: uint8
 
     class LabTableCombineActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.SCREEN_LAB_TABLE_COMBINE]
 
     class BeaconPaymentActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.SCREEN_BEACON_PAYMENT]
         primary_effect_id: varint32
         secondary_effect_id: varint32
 
     class MineBlockActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.SCREEN_HUD_MINE_BLOCK]
         slot: varint32
         predicted_durability: varint32
         net_id_variant: int32
 
     class CraftRecipeActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_RECIPE]
         recipe_net_id: RecipeNetId
         num_crafts: uint8
 
     class CraftRecipeAutoActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_RECIPE_AUTO]
         recipe_net_id: RecipeNetId
         num_crafts: uint8
         ingredients: list[RecipeIngredientData]
 
     class CraftCreativeActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_CREATIVE]
         creative_item_net_id: uvarint32
         num_crafts: uint8
 
     class CraftRecipeOptionalActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_RECIPE_OPTIONAL]
         recipe_net_id: RecipeNetId
         filtered_string_index: int32
 
     class CraftRepairAndDisenchantActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_REPAIR_AND_DISENCHANT]
         recipe_net_id: int32
         num_crafts: uint8
         repair_cost: varint32
 
     class CraftLoomActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_LOOM]
         pattern_name_id: str
         num_crafts: uint8
 
     class CraftNonImplementedActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING]
 
     class CraftResultsActionData:
-        action_type: ItemStackRequestActionType
+        action_type: Literal[ItemStackRequestActionType.CRAFT_RESULTS_DEPRECATEDASKTYLAING]
         craft_results: list[NetworkItemInstanceDescriptorData]
         num_crafts: uint8
 

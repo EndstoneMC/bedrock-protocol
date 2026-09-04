@@ -3,6 +3,7 @@ registry, and the packets that spawn, move, remove and animate one. world/actor/
 Not the player -- world/actor/player/ is player.py."""
 
 from enum import Enum, IntEnum, auto
+from typing import Literal
 
 from protocol import (
     field,
@@ -326,47 +327,47 @@ class DataItemType(IntEnum, uint8):
 
 
 class DataItemBytePayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.BYTE] = field(since=2168)
     value: int8
 
 
 class DataItemShortPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.SHORT] = field(since=2168)
     value: int16
 
 
 class DataItemIntPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.INT] = field(since=2168)
     value: varint32
 
 
 class DataItemFloatPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.FLOAT] = field(since=2168)
     value: float
 
 
 class DataItemStringPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.STRING] = field(since=2168)
     value: str
 
 
 class DataItemCompoundTagPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.COMPOUND_TAG] = field(since=2168)
     value: CompoundTag
 
 
 class DataItemPosPayload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.POS] = field(since=2168)
     value: BlockPos
 
 
 class DataItemInt64Payload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.INT64] = field(since=2168)
     value: varint64
 
 
 class DataItemVec3Payload:
-    type: DataItemType = field(since=2168)
+    type: Literal[DataItemType.VEC3] = field(since=2168)
     value: Vec3
 
 
