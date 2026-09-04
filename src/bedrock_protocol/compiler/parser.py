@@ -639,13 +639,15 @@ class Parser:
         return t
 
     def _literal_type(
-        self, values: tuple[bool | int, ...], field_name: str, type_kw: str | None, endian: Endian | None
+        self, values: tuple[bool | int | str, ...], field_name: str, type_kw: str | None, endian: Endian | None
     ) -> LiteralType:
         """`Literal[V, ...]`: the wire carries a constant the read checks against.
-        A bool takes the one-byte wire by itself; an integer needs `field(type=)`
-        to say how wide it is."""
+        A bool takes the one-byte wire by itself, a string the length-prefixed one;
+        an integer needs `field(type=)` to say how wide it is."""
         if all(isinstance(v, bool) for v in values):
             wire = PrimitiveType(name="bool")
+        elif all(isinstance(v, str) for v in values):
+            wire = PrimitiveType(name="str")
         elif type_kw is not None and type_kw in INTEGER_PRIMITIVES:
             wire = PrimitiveType(name=type_kw)
         else:
@@ -1196,7 +1198,7 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
     return cases
 
 
-def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None:
+def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int | str, ...] | None:
     """The values of a `Literal[...]` annotation, or None for anything else. They
     are the set the read accepts, so several may be listed; all take one type."""
     if not (isinstance(ann, griffe.ExprSubscript) and isinstance(ann.left, griffe.ExprName)):
@@ -1205,7 +1207,7 @@ def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None
         return None
     slice_ = ann.slice
     spelled = slice_.elements if isinstance(slice_, griffe.ExprTuple) else [slice_]
-    values: list[bool | int] = []
+    values: list[bool | int | str] = []
     for element in spelled:
         text = str(element)
         number = _as_int(text)
@@ -1213,9 +1215,11 @@ def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int, ...] | None
             values.append(text == "True")
         elif number is not None:
             values.append(number)
+        elif len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
+            values.append(text[1:-1])
         else:
-            raise CompilerError(f"{field_name}: Literal[...] takes bool or integer values, got {text}")
-    if len({isinstance(v, bool) for v in values}) != 1:
+            raise CompilerError(f"{field_name}: Literal[...] takes bool, integer or string values, got {text}")
+    if len({type(v) for v in values}) != 1:
         raise CompilerError(f"{field_name}: Literal[...] values must all take one type")
     return tuple(values)
 

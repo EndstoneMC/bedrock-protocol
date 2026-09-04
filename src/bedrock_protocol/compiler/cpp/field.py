@@ -231,10 +231,12 @@ def _read_verb(prim: PrimitiveType) -> str:
     return f"read<{u}{_order_argument(prim)}>"
 
 
-def _literal_value(value: bool | int) -> str:
+def _literal_value(value: bool | int | str) -> str:
     """A `Literal[...]` member as a C++ literal."""
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, str):
+        return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
     return str(value)
 
 

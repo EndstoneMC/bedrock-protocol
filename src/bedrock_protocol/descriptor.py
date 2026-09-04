@@ -221,12 +221,12 @@ class LiteralType:
     field BDS always writes the same way, such as cereal's member-present
     marker ahead of a dynamic member."""
 
-    values: tuple[bool | int, ...]
+    values: tuple[bool | int | str, ...]
     wire: PrimitiveType
     kind: Literal["literal"] = "literal"
 
     @property
-    def written(self) -> bool | int:
+    def written(self) -> bool | int | str:
         """The value serialize emits — the first one the annotation lists."""
         return self.values[0]
 
