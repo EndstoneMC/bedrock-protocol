@@ -319,6 +319,7 @@ class StartGamePacket:
     world_template_id: uuid.UUID
     server_enabled_client_side_generation: bool
     block_network_ids_are_hashes: bool
+    tick_death_systems_enabled: bool = field(since=827, until=898)
     network_permissions: NetworkPermissions
     is_logging_chat: bool = field(since=1001)
     server_configuration_join_info: ServerConfigurationJoinInfo | None = field(since=924)

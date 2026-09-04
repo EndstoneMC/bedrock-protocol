@@ -118,6 +118,7 @@ class ResourcePackStackPacket:
     version its stack falls back to and the experiments the world runs."""
 
     texture_pack_required: bool
+    add_on_ids_and_versions: list[PackInstanceId] = field(until=898)
     texture_pack_ids_and_versions: list[PackInstanceId]
     base_game_version: str
     experiments: Experiments

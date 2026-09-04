@@ -4,7 +4,7 @@ offers. Not the recipes that consume them -- world/item/crafting/, in crafting.p
 
 from enum import IntEnum, auto
 
-from protocol import array, int32, packet, type, uint8, uvarint32
+from protocol import array, int32, packet, type, uint8, uvarint32, value
 from protocol.crafting import RecipeNetId
 
 package = "bedrock.protocol"
@@ -53,7 +53,7 @@ class Enchant:
         WIND_BURST = 38
         DENSITY = 39
         BREACH = 40
-        LUNGE = 41
+        LUNGE = value(41, since=898)
         NUM_ENCHANTMENTS = auto()
         INVALID_ENCHANTMENT = auto()
 

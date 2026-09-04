@@ -13,7 +13,7 @@ class DynamicValue:
     number, string, array, or object (a string-keyed map of values)."""
 
 
-@type(until=924)
+@type(since=898, until=924)
 class DataStoreUpdate:
     data_store_name: str
     property: str
@@ -41,6 +41,11 @@ class DataStoreChange:
 
 class DataStoreRemoval:
     data_store_name: str
+
+
+@packet(id=330, since=859, until=898)
+class DataStoreSyncPacket:
+    updates: list[DataStoreChange | DataStoreRemoval]
 
 
 @packet(id=330, since=898)

@@ -67,7 +67,7 @@ class ActorDamageCause(IntEnum):
     CAMPFIRE = 32
     SOUL_CAMPFIRE = 33
     MACE_SMASH = 34
-    DEHYDRATION = value(until=924)
+    DEHYDRATION = value(35, since=898, until=924)
     ALL = auto()
 
 

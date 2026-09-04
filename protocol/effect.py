@@ -2,7 +2,7 @@
 
 from enum import IntEnum, auto
 
-from protocol import packet, uint8, value, varint32
+from protocol import field, packet, uint8, value, varint32
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
@@ -31,7 +31,7 @@ class MobEffectPacket:
     show_particles: bool
     effect_duration_ticks: varint32
     tick: PlayerInputTick
-    ambient: bool
+    ambient: bool = field(since=898)
 
 
 @packet(id=318)

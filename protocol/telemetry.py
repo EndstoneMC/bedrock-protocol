@@ -99,7 +99,7 @@ class MinecraftEventing:
         OVER_OVERKILL = 112
         HEART_TRANSPLANTER = 113
         STAY_HYDRATED = 114
-        MOB_KABOB = 115
+        MOB_KABOB = value(115, since=898)
         ADVENTURING_TIME = value(116, since=924)
         UH_OH = value(117, since=1001)
         GETTING_WOOD = value(118, since=2168)

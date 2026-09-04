@@ -146,7 +146,7 @@ class CameraAimAssistPacket:
 class CameraAimAssistCategoryPriorities:
     entities: dict[str, int32]
     blocks: dict[str, int32]
-    block_tags: dict[str, int32]
+    block_tags: dict[str, int32] = field(since=898)
     entity_type_families: dict[str, int32] = field(since=924)
     entity_default: int32 | None
     block_default: int32 | None
@@ -292,9 +292,9 @@ class CameraInstruction:
     target: CameraInstructionOptions.TargetInstruction | None
     remove_target: bool | None
     field_of_view: CameraInstructionOptions.FovInstruction | None
-    spline: CameraInstructionOptions.SplineInstruction | None
-    attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None
-    detach_from_entity: bool | None
+    spline: CameraInstructionOptions.SplineInstruction | None = field(since=859)
+    attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None = field(since=859)
+    detach_from_entity: bool | None = field(since=859)
 
 
 @packet(id=300)

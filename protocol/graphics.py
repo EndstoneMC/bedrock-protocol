@@ -10,15 +10,15 @@ package = "bedrock.protocol"
 
 class GraphicsOverrideParameterType(IntEnum, uint8):
     SKY_ZENITH_COLOR = 0
-    SKY_HORIZON_COLOR = 1
-    HORIZON_BLEND_MIN = 2
-    HORIZON_BLEND_MAX = 3
-    HORIZON_BLEND_START = 4
-    HORIZON_BLEND_MIE_START = 5
-    RAYLEIGH_STRENGTH = 6
-    SUN_MIE_STRENGTH = 7
-    MOON_MIE_STRENGTH = 8
-    SUN_GLARE_SHAPE = 9
+    SKY_HORIZON_COLOR = value(1, since=898)
+    HORIZON_BLEND_MIN = value(2, since=898)
+    HORIZON_BLEND_MAX = value(3, since=898)
+    HORIZON_BLEND_START = value(4, since=898)
+    HORIZON_BLEND_MIE_START = value(5, since=898)
+    RAYLEIGH_STRENGTH = value(6, since=898)
+    SUN_MIE_STRENGTH = value(7, since=898)
+    MOON_MIE_STRENGTH = value(8, since=898)
+    SUN_GLARE_SHAPE = value(9, since=898)
     CHLOROPHYLL = value(10, since=924)
     CDOM = value(11, cpp_name="CDOM", since=924)
     SUSPENDED_SEDIMENT = value(12, since=924)
@@ -63,7 +63,7 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
     ORBITAL_OFFSET_DEGREES = value(51, since=975)
 
 
-@packet(id=331)
+@packet(id=331, since=859)
 class GraphicsOverrideParameterPacket:
     """Sent from the server to the client when a server script changes the rendering settings."""
 

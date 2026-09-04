@@ -26,7 +26,13 @@ class ShowStoreOfferRedirectType(IntEnum, uint8):
     COUNT = auto()
 
 
-@packet(id=91)
+@packet(id=91, until=859)
+class ShowStoreOfferPacket:
+    offer_id: str
+    redirect_type: ShowStoreOfferRedirectType
+
+
+@packet(id=91, since=859)
 class ShowStoreOfferPacket:
     offer_id: uuid.UUID
     redirect_type: ShowStoreOfferRedirectType

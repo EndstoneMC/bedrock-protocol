@@ -540,18 +540,18 @@ class LevelSoundEvent(IntEnum, uint32):
     PLACE_ITEM = 563
     SINGLE_ITEM_SWAP = 564
     MULTI_ITEM_SWAP = 565
-    LUNGE1 = 566
-    LUNGE2 = 567
-    LUNGE3 = 568
-    ATTACK_CRITICAL = 569
-    SPEAR_ATTACK_HIT = 570
-    SPEAR_ATTACK_MISS = 571
-    WOODEN_SPEAR_ATTACK_HIT = 572
-    WOODEN_SPEAR_ATTACK_MISS = 573
-    IMITATE_PARCHED = 574
-    IMITATE_CAMEL_HUSK = 575
-    SPEAR_USE = 576
-    WOODEN_SPEAR_USE = 577
+    LUNGE1 = value(566, since=898)
+    LUNGE2 = value(567, since=898)
+    LUNGE3 = value(568, since=898)
+    ATTACK_CRITICAL = value(569, since=898)
+    SPEAR_ATTACK_HIT = value(570, since=898)
+    SPEAR_ATTACK_MISS = value(571, since=898)
+    WOODEN_SPEAR_ATTACK_HIT = value(572, since=898)
+    WOODEN_SPEAR_ATTACK_MISS = value(573, since=898)
+    IMITATE_PARCHED = value(574, since=898)
+    IMITATE_CAMEL_HUSK = value(575, since=898)
+    SPEAR_USE = value(576, since=898)
+    WOODEN_SPEAR_USE = value(577, since=898)
     SADDLE_IN_WATER = value(578, since=924)
     STONE_SPEAR_ATTACK_HIT = value(579, since=924)
     IRON_SPEAR_ATTACK_HIT = value(580, since=924)
