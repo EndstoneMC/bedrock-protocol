@@ -41,6 +41,15 @@ phantom `MemoryCategory` VR entry; CloudburstMC reads a second plain string for
 `RedactableString` where BDS has `optional<string>`. Agreement between two refs
 is not evidence — they copy each other.
 
+**A ref's *read* side is evidence where its write side is not.** Codecs copy each
+other's writes, but a **tolerance** records what a real server actually sent: nobody
+makes a read case-insensitive, or accepts a field the spec says is absent, for bytes
+that never arrive. gophertunnel's `StringConst` compares with `strings.EqualFold`,
+and that single line is what proves BDS emits those constants at all — and emits them
+folded, not in the C++ casing gophertunnel itself writes. Read `Reader`, not just
+`Writer`, and treat a defensive read as a live-traffic observation.
+
+
 **When the header and the dump disagree, read the binary.** That is the only
 arbiter, and it is cheap: the IDA databases under `~/bedrock-symbols` are already
 built. Two methods that worked. Decompile the writer directly, which settled the
@@ -49,6 +58,17 @@ Symmetry). Or, where symbols are absent, count code owners of a cereal field-nam
 string literal — `"Radius X"` and `"Radius Z"` are registered back to back in the
 shape cerealizer, proving `CylinderDataPayload`'s single `Vec2 mRadii` is bound
 twice and two Vec2s reach the wire.
+
+**But a `bind` function says what is *bound*, never what is written.** Reading
+`cerealizer<T>::bind` and finding a member absent from it does not make that member
+absent from the wire — the serializer walks the bound set, and a cereal bug can walk
+more of it than the schema intends. `cerealizer<TextPacketPayload>::bind` binds four
+members and a run of `BasicFactory<TextPacketType>::bindConstInternal` entries; at 898
+those const entries were **serialized**, putting twelve enumerator names on the wire
+(74 of an 85-byte raw text packet) until 924 fixed it. Concluding "bound as a const,
+therefore not on the wire" contradicted two codecs, the dump and a case-insensitive
+read, and was wrong. To settle presence, decompile `write` and count what it emits.
+
 
 **Dating shortcuts:** Nukkit-MOT annotates members `@since vNNN`. A CloudburstMC
 `Serializer_v1001` that extends `Serializer_v975` and appends a field dates that
@@ -71,6 +91,7 @@ codec is what disagreed.
 | `CylinderDataPayload` | **two** `Vec2`s, not the header's one | 1.26.33 registers `"Radius X"` and `"Radius Z"` back to back in the shape cerealizer; Cone's single `"Radii"` is registered elsewhere in the same function |
 | chemistry recipes and the unlocking requirement | they do **not** write it | `serialize<ShapedChemistryRecipe>::write` ends at Assume Symmetry, `serialize<ShapelessChemistryRecipe>::write` at Priority; the four non-chemistry writers do write it |
 | `ContainerID` width per call site | packet 49 `uvarint32`, packet 50 `int8` — deliberately different | they part company at `NONE = -1`; unifying corrupts every `NONE` |
+| `TextPacket`'s twelve constant strings at 898 | **on the wire**, folded, over `[898, 924)` | 898's cereal serialized the `bindConstInternal` enumerator names ahead of the tagged member's case: 74 of an 85-byte raw packet. gophertunnel added `StringConst` at the 898 bump (`c8d4e93`) and deleted it at the 924 bump (`0381a95`), CloudburstMC has a `TextSerializer_v898` writing them and a `_v924` dropping them, and the 898 dump lists them as `string` fields. `StringConst`'s `EqualFold` read is why the casing is the folded form and not the C++ spelling both refs write |
 | a name-coded enum's casing on the wire | **lowercased**, and the read matches nothing else | `BasicFactory<E>::memberDescriptorFor` runs `tolower` over the bound name into `mName` (+0x30) and keeps the original in `mNameExt` (+0x10); `TypeSchema<E>::doSave` writes `mName`, and the meta_data id hashes it. Confirmed against gophertunnel's lowercase-both-ways `CommandOriginType` table. Reading the *bind site's* string literal is what got this backwards once — that literal is `mNameExt`, which never reaches the wire |
 
 ## Names mirror BDS
