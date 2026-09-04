@@ -348,6 +348,26 @@ class FileGenerator:
             return any(self._inner_is_versioned(i, owner) for i in inner.nested)
         return False
 
+    def _redefined_in_snapshot(self, dotted: str, owner: str) -> bool:
+        """Whether a later snapshot defines this nested type afresh rather than
+        aliasing the first one's. True for a type that is itself versioned, and
+        for anything nested inside one: a fresh owner redefines its whole
+        subtree, so a grandchild is a distinct C++ type even when its own shape
+        never moved."""
+        current = self._by_name().get(owner)
+        if not isinstance(current, Struct):
+            return False
+        for segment in dotted[len(owner) + 1 :].split("."):
+            inner = next((i for i in current.nested if i.name == segment), None)
+            if inner is None:
+                return False
+            if self._inner_is_versioned(inner, owner):
+                return True
+            if not isinstance(inner, Struct):
+                return False
+            current = inner
+        return False
+
     def _fresh_nested(self, name: str) -> frozenset[str]:
         """The nested types a later snapshot has to define rather than alias."""
         t = self._by_name().get(name)
@@ -373,7 +393,7 @@ class FileGenerator:
             _collect_nested(s.struct, name, cpp_qualified(name, s.lo), s.lo, collected)
             # The first snapshot defines them all; a later one repeats only what it redefines,
             # since the rest alias it and a second serializer would specialize the same type twice.
-            out += [v for v in collected if i == 0 or self._inner_is_versioned(v[0], name)]
+            out += [v for v in collected if i == 0 or self._redefined_in_snapshot(v[1], name)]
         return out
 
     # --- versioning traits + selector --------------------------------------
