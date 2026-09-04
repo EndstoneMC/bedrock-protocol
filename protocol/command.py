@@ -7,6 +7,7 @@ from enum import Enum, IntEnum
 from protocol import auto, field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -84,7 +85,28 @@ class CommandBlockMode(IntEnum, uint16):
     CHAIN = 2
 
 
-@packet(id=78, until=2168)
+@packet(id=78, until=944)
+class CommandBlockUpdatePacket:
+    class EntityCommandTarget:
+        entity_id: ActorRuntimeID
+
+    class BlockCommandData:
+        block_pos: NetworkBlockPosition
+        mode: CommandBlockMode
+        redstone_mode: bool
+        is_conditional: bool
+
+    target: EntityCommandTarget | BlockCommandData
+    command: str
+    last_output: str
+    name: str
+    filtered_name: str
+    track_output: bool
+    tick_delay: uint32
+    execute_on_first_tick: bool
+
+
+@packet(id=78, since=944, until=2168)
 class CommandBlockUpdatePacket:
     class EntityCommandTarget:
         entity_id: ActorRuntimeID

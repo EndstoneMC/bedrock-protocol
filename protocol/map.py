@@ -6,6 +6,7 @@ from enum import IntEnum, auto
 from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uint64, uvarint32, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Color
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -16,7 +17,13 @@ class MapItemTrackedActor:
         BLOCK_ENTITY = 1
         OTHER = 2
 
-    @type(until=2168)
+    @type(until=944)
+    class UniqueId:
+        type: "MapItemTrackedActor.Type" = field(type=int32)
+        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == MapItemTrackedActor.Type.ENTITY)
+        key_block_pos: NetworkBlockPosition = field(when=lambda u: u.type == MapItemTrackedActor.Type.BLOCK_ENTITY)
+
+    @type(since=944, until=2168)
     class UniqueId:
         type: "MapItemTrackedActor.Type" = field(type=int32)
         key_entity_id: ActorUniqueID = field(when=lambda u: u.type == MapItemTrackedActor.Type.ENTITY)

@@ -318,7 +318,7 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
 
 TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
 {
-    bp::base::ItemUseInventoryTransaction use;
+    bp::ItemUseInventoryTransaction_<975> use;
     use.action_type = bp::ItemUseInventoryTransaction::ActionType::Place;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};

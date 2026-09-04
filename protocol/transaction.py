@@ -10,6 +10,7 @@ from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
 from protocol.inventory import ContainerEnumName, ContainerID, HandSlot
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -86,7 +87,41 @@ class InventoryMismatchData:
     transaction: InventoryTransaction
 
 
-@type(until=1001)
+@type(until=944)
+class ItemUseInventoryTransaction:
+    class ActionType(IntEnum):
+        PLACE = 0
+        USE = 1
+        DESTROY = 2
+        USE_AS_ATTACK = 3
+
+    class TriggerType(IntEnum, uint8):
+        UNKNOWN = 0
+        PLAYER_INPUT = 1
+        SIMULATION_TICK = 2
+
+    class PredictedResult(IntEnum, uint8):
+        FAILURE = 0
+        SUCCESS = 1
+
+    class ClientCooldownState(IntEnum, uint8):
+        OFF = 0
+        ON = 1
+
+    transaction: InventoryTransaction
+    action_type: ActionType = field(type=uvarint32)
+    trigger_type: TriggerType
+    pos: NetworkBlockPosition
+    face: varint32
+    slot: varint32
+    item: NetworkItemStackDescriptor
+    from_pos: Vec3
+    click_pos: Vec3
+    target_block_id: uvarint32
+    client_predicted_result: PredictedResult = field(type=uvarint32)
+
+
+@type(since=944, until=1001)
 class ItemUseInventoryTransaction:
     class ActionType(IntEnum):
         PLACE = 0
@@ -157,13 +192,28 @@ class ItemUseInventoryTransaction:
     client_cooldown_state: ClientCooldownState
 
 
-@type(cereal=False, until=1001)
+@type(cereal=False, until=944)
 class ItemUseInventoryTransaction:
     """The shape PlayerAuthInputPacket writes: that packet did not cerealise until
     2168, so its transaction keeps the pre-cereal framing -- the action list carries
     no member-present marker and `face` stays a varint32 -- while its leaves
     cerealise at 1001 with everything else."""
 
+    actions: list[InventoryAction]
+    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
+    trigger_type: ItemUseInventoryTransaction.TriggerType
+    pos: NetworkBlockPosition
+    face: varint32
+    slot: varint32
+    item: NetworkItemStackDescriptor
+    from_pos: Vec3
+    click_pos: Vec3
+    target_block_id: uvarint32
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
+
+
+@type(cereal=False, since=944, until=1001)
+class ItemUseInventoryTransaction:
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
     trigger_type: ItemUseInventoryTransaction.TriggerType

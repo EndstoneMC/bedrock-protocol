@@ -8,6 +8,7 @@ from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.item_stack import RedactableString
 from protocol.nbt import CompoundTag
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -54,6 +55,25 @@ class AnimationMode(IntEnum, uint8):
     BLOCKS = 2
 
 
+@type(until=944)
+class StructureSettings:
+    palette_name: str
+    ignore_entities: bool
+    ignore_blocks: bool
+    allow_non_ticking_player_and_ticking_area_chunks: bool
+    structure_size: NetworkBlockPosition
+    structure_offset: NetworkBlockPosition
+    last_touched_by_player: ActorUniqueID
+    rotation: Rotation
+    mirror: Mirror
+    animation_mode: AnimationMode
+    animation_seconds: float
+    integrity_value: float
+    integrity_seed: RandomSeed
+    pivot: Vec3
+
+
+@type(since=944)
 class StructureSettings:
     palette_name: str
     ignore_entities: bool
@@ -93,7 +113,15 @@ class StructureEditorData:
     redstone_save_mode: StructureRedstoneSaveMode
 
 
-@packet(id=90)
+@packet(id=90, until=944)
+class StructureBlockUpdatePacket:
+    block_pos: NetworkBlockPosition
+    data: StructureEditorData
+    trigger: bool
+    is_waterlogged: bool
+
+
+@packet(id=90, since=944)
 class StructureBlockUpdatePacket:
     block_pos: BlockPos
     data: StructureEditorData
@@ -118,7 +146,15 @@ class StructureTemplateRequestOperation(IntEnum, uint8):
     QUERY_SAVED_STRUCTURE = 3
 
 
-@packet(id=132)
+@packet(id=132, until=944)
+class StructureTemplateDataRequestPacket:
+    structure_name: str
+    structure_block_pos: NetworkBlockPosition
+    structure_settings: StructureSettings
+    request_operation: StructureTemplateRequestOperation
+
+
+@packet(id=132, since=944)
 class StructureTemplateDataRequestPacket:
     structure_name: str
     structure_block_pos: BlockPos

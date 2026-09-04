@@ -6,6 +6,7 @@ from enum import Enum, IntEnum
 from protocol import auto, field, packet, type, uint8, uint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -16,6 +17,7 @@ class MemoryCategory(IntEnum, uint8):
     ACTOR = auto()
     ACTOR_ANIMATION = auto()
     ACTOR_RENDERING = auto()
+    BALANCER = value(until=944)
     BLOCK_TICKING_QUEUES = auto()
     BIOME_STORAGE = auto()
     BLOBS = value(since=2168)
@@ -54,7 +56,7 @@ class MemoryCategory(IntEnum, uint8):
     LEVEL_CHUNK = auto()
     LEVEL_CHUNK_GEN = auto()
     LEVEL_CHUNK_GEN_THREAD_LOCAL = auto()
-    LIGHT_VOLUME_MANAGER = auto()
+    LIGHT_VOLUME_MANAGER = value(since=944)
     NETWORK = auto()
     MARKETPLACE = auto()
     MATERIAL_DRAGON_COMPILED_DEFINITION = auto()
@@ -112,17 +114,17 @@ class MemoryCategory(IntEnum, uint8):
     SCRIPTING_CONTEXT_RUN = auto()
     DATA_DRIVEN_UI = value(cpp_name="DataDrivenUI")
     DATA_DRIVEN_UI_DEFS = value(cpp_name="DataDrivenUIDefs")
-    GAMEFACE = auto()
-    GAMEFACE_SYSTEM = auto()
-    GAMEFACE_DOM = value(cpp_name="GamefaceDOM")
-    GAMEFACE_CSS = value(cpp_name="GamefaceCSS")
-    GAMEFACE_DISPLAY = auto()
-    GAMEFACE_TEMP_ALLOCATOR = auto()
-    GAMEFACE_POOL_ALLOCATOR = auto()
-    GAMEFACE_DUMP = auto()
-    GAMEFACE_MEDIA = auto()
-    GAMEFACE_JSON = value(cpp_name="GamefaceJSON")
-    GAMEFACE_SCRIPT_ENGINE = auto()
+    GAMEFACE = value(since=944)
+    GAMEFACE_SYSTEM = value(since=944)
+    GAMEFACE_DOM = value(cpp_name="GamefaceDOM", since=944)
+    GAMEFACE_CSS = value(cpp_name="GamefaceCSS", since=944)
+    GAMEFACE_DISPLAY = value(since=944)
+    GAMEFACE_TEMP_ALLOCATOR = value(since=944)
+    GAMEFACE_POOL_ALLOCATOR = value(since=944)
+    GAMEFACE_DUMP = value(since=944)
+    GAMEFACE_MEDIA = value(since=944)
+    GAMEFACE_JSON = value(cpp_name="GamefaceJSON", since=944)
+    GAMEFACE_SCRIPT_ENGINE = value(since=944)
     GAMEFACE_SCRIPT = value(since=2168)
     GAMEFACE_LAYOUT = value(since=2168)
     COUNT = auto()
@@ -179,7 +181,13 @@ class ServerboundDiagnosticsPacket:
     whisker_data: list[ScopeDataSummary] = field(since=1001)
 
 
-@packet(id=190)
+@packet(id=190, until=944)
+class EditorNetworkPacket:
+    route_to_manager: bool
+    payload: CompoundTag
+
+
+@packet(id=190, since=944)
 class EditorNetworkPacket:
     route_to_manager: bool
     raw_variant_name: str

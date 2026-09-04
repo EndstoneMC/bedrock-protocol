@@ -12,7 +12,7 @@ from protocol.common import Color, DimensionType, Vec2, Vec3
 package = "bedrock.protocol"
 
 
-@packet(id=335)
+@packet(id=335, since=924)
 class ClientboundDataDrivenUIReloadPacket:
     pass
 
@@ -58,19 +58,24 @@ class ServerboundLoadingScreenPacket:
     loading_screen_id: uint32 | None
 
 
-@packet(id=334)
+@packet(id=334, since=924, until=944)
+class ClientboundDataDrivenUICloseAllScreensPacket:
+    pass
+
+
+@packet(id=334, since=944)
 class ClientboundDataDrivenUICloseScreenPacket:
     form_id: uint32 | None
 
 
-@packet(id=333)
+@packet(id=333, since=924)
 class ClientboundDataDrivenUIShowScreenPacket:
     screen_id: str
-    form_id: uint32
-    data_instance_id: uint32 | None
+    form_id: uint32 = field(since=944)
+    data_instance_id: uint32 | None = field(since=944)
 
 
-@packet(id=336)
+@packet(id=336, since=924)
 class ClientboundTextureShiftPacket:
     class Action(IntEnum, uint8):
         INVALID = 0

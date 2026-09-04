@@ -216,8 +216,8 @@ def type(
     independently version-gated. A field reaches this one with
     `field(cereal=False)`; a plain reference always gets the cerealised
     declaration. `SerializedSkinRef` is the standing case -- packet 93 is
-    cerealised at 1001 while packet 63 writes the same class through
-    `SerializedSkinImpl::write` at that very version.
+    cerealised at 944 while packet 63 writes the same class through
+    `SerializedSkinImpl::write` until 2168.
 
     Use it only where BDS reuses one class name for two wire shapes. Where BDS
     has a second name for the cerealised form, declare that name instead

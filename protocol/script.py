@@ -157,7 +157,14 @@ class PrimitiveShapeDataPayload:
     )
 
 
-@packet(id=328)
+@packet(id=328, until=975)
+class DebugDrawerPacket:
+    """Send primitive drawing shape info (from scripting) to the client for rendering."""
+
+    shapes: list[PrimitiveShapeDataPayload]
+
+
+@packet(id=328, since=975)
 class PrimitiveShapesPacket:
     """Send primitive drawing shape info (from scripting) to the client for rendering."""
 

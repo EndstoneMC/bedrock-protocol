@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <bedrock/protocol/common.h>
@@ -43,6 +44,33 @@ std::map<bp::PieceType, bp::TintMapColor> tints()
     return {{bp::PieceType::Skeleton,
              bp::TintMapColor{.colors = {bp::Color{1}, bp::Color{2},
                                          bp::Color{3}, bp::Color{4}}}}};
+}
+
+bp::legacy::SerializedSkinRef legacy_skin()
+{
+    bp::legacy::SerializedSkinRef out;
+    out.id = "sid";
+    out.play_fab_id = "pfid";
+    out.resource_patch = "patch";
+    out.image_width = 1;
+    out.image_height = 1;
+    out.image_bytes = std::string(4, char{0});
+    out.cape_image_width = 1;
+    out.cape_image_height = 1;
+    out.cape_image_bytes = std::string(4, char{0});
+    out.geometry_data = "geo";
+    out.geometry_data_min_engine_version = "gev";
+    out.animation_data = "anim";
+    out.cape_id = "cape";
+    out.full_id = "full";
+    out.arm_size = bp::ArmSizeType::Wide;
+    out.skin_color = "#010203";
+    out.is_premium = true;
+    out.is_persona = false;
+    out.is_persona_cape_on_classic_skin = false;
+    out.is_primary_user = true;
+    out.overrides_player_appearance = false;
+    return out;
 }
 
 Packet1001 fill_v1001()
@@ -190,4 +218,35 @@ TEST_CASE("PlayerSkinPacket: a v2168 body does not decode as a v1001 one")
     REQUIRE(wrong.localized_old_skin_name == "new");
 
     REQUIRE(rejects<Packet2168>(encode(fill_v1001())));
+}
+
+// Until 944 BDS wrote this packet by hand -- PlayerSkinPacket::write in the 1.26.0
+// build calls SerializedSkinRef::write and then one writeBool of isTrustedSkin --
+// where 944 builds a ReflectionCtx and delegates to cerealizer<PlayerSkinPacket>.
+// So the pre-944 body is the legacy skin plus a trailing trusted byte.
+TEST_CASE("PlayerSkinPacket: the pre-944 body is hand-written and ends in a trusted byte")
+{
+    using Packet924 = bp::PlayerSkinPacket_<924>;
+    STATIC_REQUIRE(Packet924::Id == 93);
+    STATIC_REQUIRE_FALSE(std::is_same_v<Packet924, Packet1001>);
+
+    Packet924 packet;
+    packet.uuid = kPlayer;
+    packet.skin = legacy_skin();
+    packet.localized_new_skin_name = "new";
+    packet.localized_old_skin_name = "old";
+    packet.trusted_skin = true;
+
+    const auto encoded = encode(packet);
+    REQUIRE(static_cast<unsigned char>(encoded.back()) == 0x01);
+
+    const auto rt = decode<Packet924>(encoded);
+    REQUIRE(rt.skin.id == "sid");
+    REQUIRE(rt.localized_old_skin_name == "old");
+    REQUIRE(rt.trusted_skin == true);
+
+    packet.trusted_skin = false;
+    const auto flipped = encode(packet);
+    REQUIRE(flipped.size() == encoded.size());
+    REQUIRE(static_cast<unsigned char>(flipped.back()) == 0x00);
 }

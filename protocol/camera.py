@@ -105,7 +105,7 @@ class CameraAimAssistActorPriority:
         priority_value: int32
 
 
-@packet(id=339)
+@packet(id=339, since=924)
 class CameraAimAssistActorPriorityPacket:
     camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
 
@@ -268,8 +268,8 @@ class CameraInstructionOptions:
         curve: list[Vec3]
         progress_key_frames: list[SplineProgressOption]
         spline_rotation_option: list[SplineRotationOption]
-        spline_identifier: str
-        load_from_json: bool
+        spline_identifier: str = field(since=944)
+        load_from_json: bool = field(since=944)
 
 
 class CameraInstruction:
@@ -314,7 +314,7 @@ class CameraSplineDefinition:
     spline_rotation_frames: list[CameraSplineRotationKeyFrame]
 
 
-@packet(id=338)
+@packet(id=338, since=924)
 class CameraSplinePacket:
     splines: list[CameraSplineDefinition]
 

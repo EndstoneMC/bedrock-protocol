@@ -27,7 +27,18 @@ class PresenceConfiguration:
     rich_presence_id: str | None
 
 
-@type(until=2168)
+@type(until=944)
+class GatheringsConfigurationJoinInfo:
+    experience_id: str
+    experience_name: str
+    experience_world_id: str
+    experience_world_name: str
+    creator_id: str
+    store_id: str
+    store_name: str
+
+
+@type(since=944, until=2168)
 class GatheringsConfigurationJoinInfo:
     experience_id: uuid.UUID
     experience_name: str
@@ -58,8 +69,8 @@ class ClientStoreEntryPointConfiguration:
 
 class ServerConfigurationJoinInfo:
     gatherings_configuration: GatheringsConfigurationJoinInfo | None
-    client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None
-    presence_configuration: PresenceConfiguration | None
+    client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None = field(since=944)
+    presence_configuration: PresenceConfiguration | None = field(since=944)
 
 
 class ServerTelemetryData:
@@ -82,7 +93,7 @@ class TransferPacket:
     gatherings_configuration: GatheringsConfigurationJoinInfo | None = field(since=2168)
 
 
-@packet(id=350, since=2168)
+@packet(id=350, since=1001)
 class PartyDestinationCookieResponsePacket:
     cookie: str
     accepted: bool
@@ -109,7 +120,7 @@ class PartyDestinationCookieIntent(Enum, int8):
     OPT_OUT = 2
 
 
-@packet(id=349, since=2168)
+@packet(id=349, since=1001)
 class SendPartyDestinationCookiePacket:
     cookie: str
     intent: PartyDestinationCookieIntent = field(type=str)

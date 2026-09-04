@@ -27,8 +27,9 @@ const std::string golden_empty = bytes({
 
 TEST_CASE("packet id is 349")
 {
-    STATIC_REQUIRE(bp::SendPartyDestinationCookiePacket_<2168>::Id == 349);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 349>);
+    STATIC_REQUIRE(bp::SendPartyDestinationCookiePacket_<1001>::Id == 349);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<975, 349>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 349>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 349>);
 }
 

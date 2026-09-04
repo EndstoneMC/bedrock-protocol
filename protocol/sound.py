@@ -7,6 +7,7 @@ from enum import IntEnum, auto
 from protocol import field, int64, packet, type, uint32, uint64, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, Vec3
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -570,8 +571,8 @@ class LevelSoundEvent(IntEnum, uint32):
     GOLDEN_SPEAR_USE = 594
     DIAMOND_SPEAR_USE = 595
     NETHERITE_SPEAR_USE = 596
-    PAUSE_GROWTH = 597
-    RESET_GROWTH = 598
+    PAUSE_GROWTH = value(597, since=944)
+    RESET_GROWTH = value(598, since=944)
     PUSHED_BY_PLAYER = value(599, since=975)
     BOUNCE = value(600, since=975)
     SLIME_LANDING = value(601, since=1001)
@@ -599,7 +600,15 @@ class ServerSoundHandle:
     value: uint64
 
 
-@packet(id=86)
+@packet(id=86, until=944)
+class PlaySoundPacket:
+    name: str
+    pos: NetworkBlockPosition
+    volume: float
+    pitch: float
+
+
+@packet(id=86, since=944)
 class PlaySoundPacket:
     name: str
     pos: BlockPos

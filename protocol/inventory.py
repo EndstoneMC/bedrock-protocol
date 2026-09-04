@@ -10,6 +10,7 @@ from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.nbt import CompoundTag
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
@@ -227,7 +228,15 @@ class PlayerToggleCrafterSlotRequestPacket:
     is_disabled: bool
 
 
-@packet(id=46)
+@packet(id=46, until=944)
+class ContainerOpenPacket:
+    container_id: ContainerID
+    type: ContainerType
+    pos: NetworkBlockPosition
+    entity_unique_id: ActorUniqueID
+
+
+@packet(id=46, since=944)
 class ContainerOpenPacket:
     container_id: ContainerID
     type: ContainerType

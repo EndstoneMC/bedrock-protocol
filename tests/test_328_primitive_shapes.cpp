@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <variant>
 
 #include <bedrock/protocol/actor.h>
@@ -118,6 +119,17 @@ TEST_CASE("packet id is 328 at both eras")
 {
     STATIC_REQUIRE(PacketV975::Id == 328);
     STATIC_REQUIRE(PacketV1001::Id == 328);
+}
+
+// BDS renamed the class at 975 -- ServerScriptDebugDrawerPacket became
+// DebugDrawerPacket at r21_u12 and PrimitiveShapesPacket at r26_u2 -- so id 328
+// resolves to a differently named type either side of the boundary.
+TEST_CASE("id 328 is DebugDrawerPacket until 975")
+{
+    STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<944, 328>, bp::DebugDrawerPacket_<944>>);
+    STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<975, 328>, bp::PrimitiveShapesPacket_<975>>);
+    STATIC_REQUIRE(bp::DebugDrawerPacket_<944>::Id == 328);
+    STATIC_REQUIRE(bp::has_packet_v<924, 328>);
 }
 
 TEST_CASE("primitive shapes v975 round-trips against the golden")

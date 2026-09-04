@@ -8,6 +8,7 @@ from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.item import ItemStackLegacyRequestId
 from protocol.item_stack import ItemStackRequestCereal, ItemStackRequestData
+from protocol.network import NetworkBlockPosition
 from protocol.transaction import ItemUseInventoryTransaction, LegacySetSlot
 
 package = "bedrock.protocol"
@@ -326,7 +327,16 @@ class PlayerAuthInputPacket:
     raw_move_vector: Vec2
 
 
-@packet(id=36)
+@packet(id=36, until=944)
+class PlayerActionPacket:
+    runtime_id: ActorRuntimeID
+    action: PlayerActionType
+    pos: NetworkBlockPosition
+    result_pos: NetworkBlockPosition
+    face: varint32
+
+
+@packet(id=36, since=944)
 class PlayerActionPacket:
     runtime_id: ActorRuntimeID
     action: PlayerActionType
@@ -338,3 +348,4 @@ class PlayerActionPacket:
 @packet(id=196)
 class UpdateClientInputLocksPacket:
     input_lock_component_data: uvarint32
+    server_pos: Vec3 = field(until=944)

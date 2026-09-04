@@ -378,8 +378,8 @@ hoisted out of its owner.
 
 `since=` / `until=` are raw protocol version numbers, but must land on a modelled
 snapshot, never an arbitrary changelog number. Gate a change at the next snapshot at
-or after it: a field the changelog dates to 977 gates `since=1001`. Only 944, 1001, 2168
-and 2192 are materialized, so an off-snapshot boundary buys nothing.
+or after it: a field the changelog dates to 977 gates `since=1001`. Only 924, 944, 975,
+1001, 2168 and 2192 are materialized, so an off-snapshot boundary buys nothing.
 
 **Diff the type closure across protocol-docs branches before modelling a packet.**
 Walk the packet's transitive types on the old and new branch and diff the two dumps:

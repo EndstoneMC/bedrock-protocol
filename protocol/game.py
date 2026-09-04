@@ -11,7 +11,7 @@ from protocol.command import PlayerPermissionLevel
 from protocol.common import BlockPos, DimensionType, Vec2, Vec3
 from protocol.edu import EduSharedUriResource
 from protocol.nbt import CompoundTag
-from protocol.network import GamePublishSetting, NetworkPermissions, ServerEditorConnectionPolicy
+from protocol.network import GamePublishSetting, NetworkBlockPosition, NetworkPermissions, ServerEditorConnectionPolicy
 from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
 
 package = "bedrock.protocol"
@@ -127,7 +127,62 @@ class ServerBlockProperty:
     tag: CompoundTag
 
 
-@type(until=2168)
+@type(until=944)
+class LevelSettings:
+    seed: uint64
+    spawn_settings: SpawnSettings
+    generator: GeneratorType
+    game_type: GameType
+    is_hardcore: bool
+    game_difficulty: Difficulty
+    default_spawn: NetworkBlockPosition
+    achievements_disabled: bool
+    editor_world_type: WorldType
+    is_created_in_editor: bool
+    is_exported_from_editor: bool
+    time: varint32
+    education_edition_offer: EducationEditionOffer = field(type=varint32)
+    education_features_enabled: bool
+    education_product_id: str
+    rain_level: float
+    lightning_level: float
+    confirmed_platform_locked_content: bool
+    multiplayer_game_intent: bool
+    lan_broadcast_intent: bool
+    xbl_broadcast_intent: GamePublishSetting
+    platform_broadcast_intent: GamePublishSetting
+    commands_enabled: bool
+    texture_packs_required: bool
+    game_rules: list[GameRule] = field(cereal=False)
+    experiments: list[ExperimentToggle] = field(prefix=uint32)
+    experiments_ever_toggled: bool
+    bonus_chest_enabled: bool
+    start_with_map_enabled: bool
+    default_permissions: PlayerPermissionLevel = field(type=varint32)
+    server_chunk_tick_range: int32
+    has_locked_behavior_pack: bool
+    has_locked_resource_pack: bool
+    is_from_locked_template: bool
+    use_msa_gamertags_only: bool
+    is_from_world_template: bool
+    is_world_template_option_locked: bool
+    spawn_v1_villagers: bool
+    persona_disabled: bool
+    custom_skins_disabled: bool
+    emote_chat_muted: bool
+    base_game_version: str
+    limited_world_width: int32
+    limited_world_depth: int32
+    nether_type: NetherWorldType
+    edu_shared_uri_resource: EduSharedUriResource
+    override_force_experimental_gameplay: bool | None
+    chat_restriction_level: ChatRestrictionLevel
+    disable_player_interactions: bool
+    server_editor_connection_policy: ServerEditorConnectionPolicy = field(since=1001)
+    allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
+
+
+@type(since=944, until=2168)
 class LevelSettings:
     seed: uint64
     spawn_settings: SpawnSettings

@@ -4,21 +4,36 @@ Not chunk transfer -- world/level/chunk/, in chunk.py."""
 
 from enum import IntEnum
 
-from protocol import field, int32, packet, uint8, uint16, uint32, uvarint32, uvarint64, varint32
+from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, DimensionType, Vec3
 from protocol.nbt import CompoundTag
+from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 
 
-@packet(id=141)
+@packet(id=141, until=944)
+class AnvilDamagePacket:
+    damage: int32 = field(type=uint8)
+    position: NetworkBlockPosition
+
+
+@packet(id=141, since=944)
 class AnvilDamagePacket:
     damage: int32 = field(type=uint8, until=2168)
     position: BlockPos
 
 
-@packet(id=21)
+@packet(id=21, until=944)
+class UpdateBlockPacket:
+    pos: NetworkBlockPosition
+    runtime_id: uvarint32
+    update_flags: uint8 = field(type=uvarint32)
+    layer: uvarint32
+
+
+@packet(id=21, since=944)
 class UpdateBlockPacket:
     pos: BlockPos
     runtime_id: uvarint32
@@ -26,7 +41,14 @@ class UpdateBlockPacket:
     layer: uvarint32
 
 
-@packet(id=26)
+@packet(id=26, until=944)
+class BlockEventPacket:
+    pos: NetworkBlockPosition
+    b0: varint32
+    b1: varint32
+
+
+@packet(id=26, since=944)
 class BlockEventPacket:
     pos: BlockPos
     b0: varint32
@@ -40,7 +62,13 @@ class BlockPickRequestPacket:
     max_slots: uint8
 
 
-@packet(id=56)
+@packet(id=56, until=944)
+class BlockActorDataPacket:
+    pos: NetworkBlockPosition
+    data: CompoundTag
+
+
+@packet(id=56, since=944)
 class BlockActorDataPacket:
     pos: BlockPos
     data: CompoundTag
@@ -53,7 +81,17 @@ class ActorBlockSyncMessage:
         DESTROY = 2
 
 
-@packet(id=110)
+@packet(id=110, until=944)
+class UpdateBlockSyncedPacket:
+    pos: NetworkBlockPosition
+    runtime_id: uvarint32
+    update_flags: uint8 = field(type=uvarint32)
+    layer: uvarint32
+    entity_unique_id: ActorUniqueID = field(type=uvarint64)
+    message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
+
+
+@packet(id=110, since=944)
 class UpdateBlockSyncedPacket:
     pos: BlockPos
     runtime_id: uvarint32
@@ -63,19 +101,42 @@ class UpdateBlockSyncedPacket:
     message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
 
 
-@packet(id=125)
+@packet(id=125, until=944)
+class LecternUpdatePacket:
+    page: int32 = field(type=uint8)
+    total_pages: int32 = field(type=uint8)
+    pos: NetworkBlockPosition
+
+
+@packet(id=125, since=944)
 class LecternUpdatePacket:
     page: int32 = field(type=uint8)
     total_pages: int32 = field(type=uint8)
     pos: BlockPos
 
 
-@packet(id=303)
+@packet(id=303, until=944)
+class OpenSignPacket:
+    pos: NetworkBlockPosition
+    is_front_side: bool
+
+
+@packet(id=303, since=944)
 class OpenSignPacket:
     pos: BlockPos
     is_front_side: bool
 
 
+@type(until=944)
+class UpdateSubChunkNetworkBlockInfo:
+    pos: NetworkBlockPosition
+    runtime_id: uvarint32
+    update_flags: uint8 = field(type=uvarint32)
+    entity_unique_id: ActorUniqueID = field(type=uvarint64)
+    message: ActorBlockSyncMessage.MessageId
+
+
+@type(since=944)
 class UpdateSubChunkNetworkBlockInfo:
     pos: BlockPos
     runtime_id: uvarint32
@@ -89,7 +150,13 @@ class UpdateSubChunkBlocksChangedInfo:
     extras: list[UpdateSubChunkNetworkBlockInfo]
 
 
-@packet(id=172)
+@packet(id=172, until=944)
+class UpdateSubChunkBlocksPacket:
+    sub_chunk_block_position: NetworkBlockPosition
+    blocks_changed: UpdateSubChunkBlocksChangedInfo
+
+
+@packet(id=172, since=944)
 class UpdateSubChunkBlocksPacket:
     sub_chunk_block_position: BlockPos
     blocks_changed: UpdateSubChunkBlocksChangedInfo
@@ -104,7 +171,19 @@ class RemoveVolumeEntityPacket:
     dimension_type: DimensionType
 
 
-@packet(id=166)
+@packet(id=166, until=944)
+class AddVolumeEntityPacket:
+    entity_net_id: EntityNetId
+    components: CompoundTag
+    json_identifier: str
+    instance_name: str
+    min_bounds: NetworkBlockPosition
+    max_bounds: NetworkBlockPosition
+    dimension_type: DimensionType
+    min_engine_version: str
+
+
+@packet(id=166, since=944)
 class AddVolumeEntityPacket:
     entity_net_id: EntityNetId
     components: CompoundTag
@@ -133,11 +212,11 @@ class SerializableVoxelShape:
     z_coords: list[float]
 
 
-@packet(id=337)
+@packet(id=337, since=924)
 class VoxelShapesPacket:
     shapes: list[SerializableVoxelShape]
     name_map: dict[str, RegistryHandle]
-    custom_shape_count: uint16
+    custom_shape_count: uint16 = field(since=944)
 
 
 @packet(id=25)

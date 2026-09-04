@@ -11,6 +11,7 @@ from protocol.actor import ActorLink, ActorRuntimeID, ActorUniqueID, PropertySyn
 from protocol.common import BlockPos, Color, DimensionType, Vec2, Vec3
 from protocol.game import GameType
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.network import NetworkBlockPosition
 from protocol.skin import SerializedSkinRef
 
 package = "bedrock.protocol"
@@ -105,7 +106,15 @@ class SpawnPositionType(IntEnum):
     WORLD_SPAWN = 1
 
 
-@packet(id=43)
+@packet(id=43, until=944)
+class SetSpawnPositionPacket:
+    spawn_pos_type: SpawnPositionType
+    pos: NetworkBlockPosition
+    dimension_type: DimensionType
+    spawn_block_pos: NetworkBlockPosition
+
+
+@packet(id=43, since=944)
 class SetSpawnPositionPacket:
     spawn_pos_type: SpawnPositionType
     pos: BlockPos

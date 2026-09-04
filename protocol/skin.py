@@ -217,7 +217,16 @@ class SerializedSkinRef:
     profile_hash: str = field(since=2168)
 
 
-@packet(id=93)
+@packet(id=93, until=944)
+class PlayerSkinPacket:
+    uuid: uuid.UUID
+    skin: SerializedSkinRef = field(cereal=False)
+    localized_new_skin_name: str
+    localized_old_skin_name: str
+    trusted_skin: bool
+
+
+@packet(id=93, since=944)
 class PlayerSkinPacket:
     uuid: uuid.UUID
     skin: SerializedSkinRef

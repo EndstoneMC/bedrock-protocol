@@ -35,29 +35,29 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
     MIDTONES_CONTRAST = 23
     HIGHLIGHTS_CONTRAST = 24
     SHADOWS_CONTRAST = 25
-    HIGHLIGHTS_GAIN = 26
-    HIGHLIGHTS_GAMMA = 27
-    HIGHLIGHTS_OFFSET = 28
-    HIGHLIGHTS_SATURATION = 29
-    MIDTONES_GAIN = 30
-    MIDTONES_GAMMA = 31
-    MIDTONES_OFFSET = 32
-    MIDTONES_SATURATION = 33
-    SHADOWS_GAIN = 34
-    SHADOWS_GAMMA = 35
-    SHADOWS_OFFSET = 36
-    SHADOWS_SATURATION = 37
-    HIGHLIGHTS_MIN = 38
-    SHADOWS_MAX = 39
-    TEMPERATURE = 40
-    SUN_COLOR = 41
-    SUN_ILLUMINANCE = 42
-    MOON_COLOR = 43
-    MOON_ILLUMINANCE = 44
-    FLASH_COLOR = 45
-    FLASH_ILLUMINANCE = 46
-    AMBIENT_COLOR = 47
-    AMBIENT_ILLUMINANCE = 48
+    HIGHLIGHTS_GAIN = value(26, since=944)
+    HIGHLIGHTS_GAMMA = value(27, since=944)
+    HIGHLIGHTS_OFFSET = value(28, since=944)
+    HIGHLIGHTS_SATURATION = value(29, since=944)
+    MIDTONES_GAIN = value(30, since=944)
+    MIDTONES_GAMMA = value(31, since=944)
+    MIDTONES_OFFSET = value(32, since=944)
+    MIDTONES_SATURATION = value(33, since=944)
+    SHADOWS_GAIN = value(34, since=944)
+    SHADOWS_GAMMA = value(35, since=944)
+    SHADOWS_OFFSET = value(36, since=944)
+    SHADOWS_SATURATION = value(37, since=944)
+    HIGHLIGHTS_MIN = value(38, since=944)
+    SHADOWS_MAX = value(39, since=944)
+    TEMPERATURE = value(40, since=944)
+    SUN_COLOR = value(41, since=944)
+    SUN_ILLUMINANCE = value(42, since=944)
+    MOON_COLOR = value(43, since=944)
+    MOON_ILLUMINANCE = value(44, since=944)
+    FLASH_COLOR = value(45, since=944)
+    FLASH_ILLUMINANCE = value(46, since=944)
+    AMBIENT_COLOR = value(47, since=944)
+    AMBIENT_ILLUMINANCE = value(48, since=944)
     EMISSIVE_DESATURATION = value(49, since=975)
     SKY_INTENSITY = value(50, since=975)
     ORBITAL_OFFSET_DEGREES = value(51, since=975)

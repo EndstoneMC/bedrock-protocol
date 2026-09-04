@@ -23,8 +23,9 @@ const std::string golden_declined = bytes({
 
 TEST_CASE("packet id is 350")
 {
-    STATIC_REQUIRE(bp::PartyDestinationCookieResponsePacket_<2168>::Id == 350);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<1001, 350>);
+    STATIC_REQUIRE(bp::PartyDestinationCookieResponsePacket_<1001>::Id == 350);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<975, 350>);
+    STATIC_REQUIRE(bp::has_packet_v<1001, 350>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 350>);
 }
 
