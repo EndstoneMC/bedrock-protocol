@@ -65,7 +65,7 @@ class SymbolTable:
 
     enum_names: frozenset[str]
     enum_underlying: dict[str, PrimitiveType]
-    enum_members: dict[str, dict[str, int]]
+    enum_members: dict[str, dict[str, EnumValue]]
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
     primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = field(default_factory=dict)
@@ -81,9 +81,10 @@ class Parser:
 
     def __init__(self, symbols: SymbolTable) -> None:
         self._symbols = symbols
-        #: Member values of the enums nested in the struct being parsed, so a
-        #: `bitset[Inner.MEMBER]` width resolves to an integer. Set by struct().
-        self._nested_enums: dict[str, dict[str, int]] = {}
+        #: Members of the enums nested in the struct being parsed, so a
+        #: `bitset[Inner.MEMBER]` width or a `Literal[Inner.MEMBER]` constant
+        #: resolves without a module-scope lookup. Set by struct().
+        self._nested_enums: dict[str, dict[str, EnumValue]] = {}
 
     @property
     def enum_names(self) -> frozenset[str]:
@@ -98,7 +99,7 @@ class Parser:
         return self._symbols.enum_underlying
 
     @property
-    def enum_members(self) -> dict[str, dict[str, int]]:
+    def enum_members(self) -> dict[str, dict[str, EnumValue]]:
         return self._symbols.enum_members
 
     @property
@@ -229,7 +230,8 @@ class Parser:
         # Before the fields: one of them may name a nested enum member as its
         # `bitset[...]` width.
         nested = self._nested(decls, qualified)
-        outer, self._nested_enums = self._nested_enums, _member_values(nested)
+        outer = self._nested_enums
+        self._nested_enums = {**outer, **_member_values(nested)}
         fields: list[Field] = []
         try:
             for decl, (lo, hi) in zip(decls, spans):
@@ -262,24 +264,36 @@ class Parser:
         owner repeats each nested type in every body -- Python needs the name in
         scope to annotate against it -- so identical repeats collapse to one;
         bodies that disagree are a version-redeclared nested type, taking the
-        range of the owner declaration each body was written in."""
+        range of the owner declaration each body was written in.
+
+        The enums are parsed first and put in scope for the rest, so a sibling
+        nested struct reaches one bare the way lookup walks outward. The importer
+        cannot register it instead: a nested enum's ranges are its owner's."""
         owners = {id(cls): decl for decl in decls for cls in nested_of(decl)}
-        out: list[Enum | Struct] = []
-        for group in nested_declarations(decls):
+        groups = list(nested_declarations(decls))
+        for group in groups:
             for c in group:
                 if not decl_is_cereal(c):
                     raise CompilerError(
                         f"{qualified}.{c.name}: @type(cereal=False) marks a module-scope declaration; "
                         "a nested type takes its owner's flavour"
                     )
-            ranges = [_decl_range(c, owners[id(c)]) for c in group]
+        ranges = [[_decl_range(c, owners[id(c)]) for c in group] for group in groups]
+        out: list[Enum | Struct | None] = [None] * len(groups)
+        for i, group in enumerate(groups):
             if is_enum(group[0]):
                 each = [self.enum([c]) for c in group]
-                out.append(each[0] if all(e == each[0] for e in each) else self.enum(group, ranges))
-            else:
-                one = [self.struct([c], qualified) for c in group]
-                out.append(one[0] if all(s == one[0] for s in one) else self.struct(group, qualified, ranges))
-        return tuple(out)
+                out[i] = each[0] if all(e == each[0] for e in each) else self.enum(group, ranges[i])
+        outer = self._nested_enums
+        self._nested_enums = {**outer, **_member_values(tuple(t for t in out if t is not None))}
+        try:
+            for i, group in enumerate(groups):
+                if out[i] is None:
+                    one = [self.struct([c], qualified) for c in group]
+                    out[i] = one[0] if all(s == one[0] for s in one) else self.struct(group, qualified, ranges[i])
+        finally:
+            self._nested_enums = outer
+        return cast(tuple["Enum | Struct", ...], tuple(out))
 
     def field(self, attr: griffe.Attribute, scope: str = "", earlier: Mapping[str, FieldType | None] = {}) -> Field:
         call = attr.value
@@ -594,25 +608,36 @@ class Parser:
         """The width baked into the C++ type and, where the DSL spelled it
         `Enum.MEMBER`, the symbolic ref the pool re-resolves per snapshot. BDS
         sizes PlayerAuthInput's bitset by its own `INPUT_NUM` sentinel, which
-        moves as inputs are added.
-
-        A nested enum is tried first, so it shadows a module-scope one of the
-        same name the way `lookup` does."""
+        moves as inputs are added."""
         literal = _as_int(expr)
         if literal is not None:
             return literal, None
-        if isinstance(expr, griffe.ExprAttribute):
-            parts = [str(v) for v in expr.values]
-            if len(parts) == 2:
-                members = self._nested_enums.get(parts[0])
-                if members is not None and parts[1] in members:
-                    return members[parts[1]], (parts[0], parts[1])
-                resolved = self.lookup(parts[0], scope)
-                if resolved is not None:
-                    members = self.enum_members.get(resolved)
-                    if members is not None and parts[1] in members:
-                        return members[parts[1]], (resolved, parts[1])
-        return None, None
+        found = self._enum_member(expr, scope)
+        if found is None:
+            return None, None
+        name, value = found
+        return value.number, (name, value.name)
+
+    def _enum_member(self, expr: _Ann, scope: str = "") -> tuple[str, EnumValue] | None:
+        """The enum a bare `Enum.MEMBER` names and the member it picks, or None
+        for anything else.
+
+        A nested enum is tried first, so it shadows a module-scope one of the
+        same name the way `lookup` does."""
+        if not isinstance(expr, griffe.ExprAttribute):
+            return None
+        parts = [str(v) for v in expr.values]
+        if len(parts) != 2:
+            return None
+        members = self._nested_enums.get(parts[0])
+        if members is not None and parts[1] in members:
+            return parts[0], members[parts[1]]
+        resolved = self.lookup(parts[0], scope)
+        if resolved is not None:
+            members = self.enum_members.get(resolved)
+            if members is not None and parts[1] in members:
+                return resolved, members[parts[1]]
+        return None
 
     # ---- field-type walker -------------------------------------------------
 
@@ -624,9 +649,9 @@ class Parser:
         # The flavour applies to every declared type the annotation names, so a
         # `list[T]` reaches its element with it, as `field(type=)` already does.
         cereal = _bool_kwarg(call, "field", "cereal")
-        values = _literal_values(ann, field_name)
-        if values is not None:
-            return self._literal_type(values, field_name, type_kw, endian)
+        elements = _literal_elements(ann)
+        if elements is not None:
+            return self._literal_type(elements, field_name, type_kw, endian, scope)
         cases, tagged = _union_cases(ann)
         if cases is not None:
             t = self._union_type(cases, tagged, field_name, type_kw, prefix, endian, scope, cereal, halves)
@@ -639,22 +664,58 @@ class Parser:
         return t
 
     def _literal_type(
-        self, values: tuple[bool | int | str, ...], field_name: str, type_kw: str | None, endian: Endian | None
+        self,
+        elements: list[griffe.Expr | str],
+        field_name: str,
+        type_kw: str | None,
+        endian: Endian | None,
+        scope: str,
     ) -> LiteralType:
         """`Literal[V, ...]`: the wire carries a constant the read checks against.
         A bool takes the one-byte wire by itself, a string the length-prefixed one;
-        an integer needs `field(type=)` to say how wide it is."""
+        a bare integer needs `field(type=)` to say how wide it is.
+
+        An `Enum.MEMBER` says which enumerator BDS pinned, and needs no width: the
+        enum's underlying type derives one exactly as it does for an enum-typed
+        field, so the constant and the member it stands in for encode alike. The
+        member resolves to a value here, the way an `array[T, Enum.MEMBER]` size
+        does, and everything downstream sees the plain constant."""
+        values: list[bool | int | str] = []
+        enum_wire: PrimitiveType | None = None
+        for element in elements:
+            member = self._enum_member(element, scope)
+            if member is not None:
+                name, value = member
+                enum_wire = self._enum_scalar(type_kw, field_name, self.lookup(name, scope) or name, endian)
+                values.append(value.wire_name if enum_wire is None else value.number)
+                continue
+            text = str(element)
+            number = _as_int(text)
+            if text in ("True", "False"):
+                values.append(text == "True")
+            elif number is not None:
+                values.append(number)
+            elif len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
+                values.append(text[1:-1])
+            else:
+                raise CompilerError(
+                    f"{field_name}: Literal[...] takes bool, integer, string or Enum.MEMBER values, got {text}"
+                )
+        if len({type(v) for v in values}) != 1:
+            raise CompilerError(f"{field_name}: Literal[...] values must all take one type")
         if all(isinstance(v, bool) for v in values):
             wire = PrimitiveType(name="bool")
         elif all(isinstance(v, str) for v in values):
             wire = PrimitiveType(name="str")
+        elif enum_wire is not None:
+            wire = enum_wire
         elif type_kw is not None and type_kw in INTEGER_PRIMITIVES:
             wire = PrimitiveType(name=type_kw)
         else:
             raise CompilerError(
                 f"{field_name}: an integer Literal[...] needs its wire width -- spell field(type=<integer primitive>)"
             )
-        return LiteralType(values, _with_endian(wire, endian, field_name))
+        return LiteralType(tuple(values), _with_endian(wire, endian, field_name))
 
     def _union_type(
         self,
@@ -1198,37 +1259,22 @@ def _flatten_union(ann: _Ann) -> list[griffe.Expr | str] | None:
     return cases
 
 
-def _literal_values(ann: _Ann, field_name: str) -> tuple[bool | int | str, ...] | None:
-    """The values of a `Literal[...]` annotation, or None for anything else. They
-    are the set the read accepts, so several may be listed; all take one type."""
+def _literal_elements(ann: _Ann) -> list[griffe.Expr | str] | None:
+    """What a `Literal[...]` annotation subscripts, or None for anything else.
+    Several may be listed: they are the set the read accepts."""
     if not (isinstance(ann, griffe.ExprSubscript) and isinstance(ann.left, griffe.ExprName)):
         return None
     if ann.left.name != "Literal":
         return None
     slice_ = ann.slice
-    spelled = slice_.elements if isinstance(slice_, griffe.ExprTuple) else [slice_]
-    values: list[bool | int | str] = []
-    for element in spelled:
-        text = str(element)
-        number = _as_int(text)
-        if text in ("True", "False"):
-            values.append(text == "True")
-        elif number is not None:
-            values.append(number)
-        elif len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
-            values.append(text[1:-1])
-        else:
-            raise CompilerError(f"{field_name}: Literal[...] takes bool, integer or string values, got {text}")
-    if len({type(v) for v in values}) != 1:
-        raise CompilerError(f"{field_name}: Literal[...] values must all take one type")
-    return tuple(values)
+    return list(slice_.elements) if isinstance(slice_, griffe.ExprTuple) else [slice_]
 
 
-def _member_values(nested: tuple[Enum | Struct, ...]) -> dict[str, dict[str, int]]:
-    """Member values of the nested enums, by enum name. A redeclared enum holds
+def _member_values(nested: tuple[Enum | Struct, ...]) -> dict[str, dict[str, EnumValue]]:
+    """Members of the nested enums, by enum name. A redeclared enum holds
     every range's members, so the last declaration wins -- the pool narrows the
     width back per snapshot."""
-    return {t.name: {v.name: v.number for v in t.values} for t in nested if isinstance(t, Enum)}
+    return {t.name: {v.name: v for v in t.values} for t in nested if isinstance(t, Enum)}
 
 
 def _list_element(ann: griffe.ExprSubscript, field_name: str) -> griffe.Expr | str | None:

@@ -31,9 +31,13 @@ A `typing.Literal[V, ...]` field is a constant the wire carries and the C++
 does not: no member is generated, the write emits the first value, and the read
 rejects anything the annotation does not list. Bools take the one-byte wire on
 their own; an integer literal needs `field(type=<integer primitive>)` for its
-width. Use it where BDS writes a fixed byte nobody models -- cereal prefixes a
-dynamic member with an always-true member-present marker, so an optional member
-reads `_unused: Literal[True]` then `x: T | None`.
+width, and an `Enum.MEMBER` needs none -- the enum's underlying type derives the
+wire the way it does for an enum-typed field. Use it where the wire carries a value
+the sender never varies: cereal binds the tag inside a variant alternative as a
+compile-time constant, and the dump gives such a field a `value`. The field keeps
+the name BDS bound it under, unless it is bug noise -- that takes a `_`-prefixed
+name. cereal prefixes a dynamic member with an always-true member-present byte, so an
+optional member reads `_unused: Literal[True]` then `x: T | None`.
 """
 
 from enum import auto

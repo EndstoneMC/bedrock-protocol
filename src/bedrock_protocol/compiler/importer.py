@@ -22,6 +22,7 @@ import griffe
 from bedrock_protocol.descriptor import (
     PRIMITIVES,
     CompilerError,
+    EnumValue,
     FileSet,
     PrimitiveAlias,
     PrimitiveType,
@@ -312,7 +313,7 @@ class Importer:
     def _classify(self, loaded: dict[str, griffe.Module]) -> SymbolTable:
         enum_names: set[str] = set()
         enum_underlying: dict[str, PrimitiveType] = {}
-        enum_members: dict[str, dict[str, int]] = {}
+        enum_members: dict[str, dict[str, EnumValue]] = {}
         enum_decls: list[tuple[str, list[griffe.Class]]] = []
         struct_names: set[str] = set()
         aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
@@ -340,9 +341,10 @@ class Importer:
             for decls in self._source_tree.declarations_of(mod_name):
                 register(decls, "")
 
-        # Member values, so a `bitset[Enum.MEMBER]` width reaches an enum the
-        # reference does not nest inside. A redeclared enum holds every range's
-        # members and the last wins; the pool narrows the width back per snapshot.
+        # Members, so a `bitset[Enum.MEMBER]` width or a `Literal[Enum.MEMBER]`
+        # constant reaches an enum the reference does not nest inside. A redeclared
+        # enum holds every range's members and the last wins; the pool narrows the
+        # width back per snapshot.
         reader = Parser(
             SymbolTable(
                 enum_names=frozenset(enum_names),
@@ -353,7 +355,7 @@ class Importer:
             )
         )
         for name, decls in enum_decls:
-            enum_members[name] = {v.name: v.number for v in reader.enum(decls).values}
+            enum_members[name] = {v.name: v for v in reader.enum(decls).values}
 
         # Alias pass — after classification, since an alias may reference any
         # class. Declaration order is the resolution order.
