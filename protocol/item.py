@@ -1,13 +1,19 @@
 """The item as a subject: world/item/ -- the registry, the stack descriptors and the
-net ids they carry, trims, cooldowns, book editing.
+net ids they carry, the hand slots, trims, cooldowns, book editing.
 The net ids sit here rather than in item_stack.py because the descriptors reference them."""
 
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+
+
+class HandSlot(IntEnum, uint8):
+    MAINHAND = 0
+    OFFHAND = 1
+    COUNT = auto()
 
 
 class ItemVersion(IntEnum):

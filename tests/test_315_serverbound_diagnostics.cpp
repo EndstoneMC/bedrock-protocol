@@ -238,3 +238,15 @@ TEST_CASE("before v1001 the whisker scopes are absent from the wire")
     REQUIRE(back.system_timings.size() == 1);
     REQUIRE(back.system_timings[0].display_name == "Physics");
 }
+
+// 2192 dropped Persona_Textures and shifted the tail down one; 2208 appends Executable
+// on the end, so the sentinel returns to where 2168 had it for a different reason.
+TEST_CASE("the memory categories gain Executable at v2208")
+{
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2192>::GamefaceLayout) == 109);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2192>::Count) == 110);
+
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2208>::GamefaceLayout) == 109);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2208>::Executable) == 110);
+    STATIC_REQUIRE(static_cast<int>(bp::MemoryCategory_<2208>::Count) == 111);
+}

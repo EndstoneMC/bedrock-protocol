@@ -1,5 +1,5 @@
 """Containers and inventory options: world/containers/ + world/inventory/ --
-container ids and types, screen options, furnace and trade windows, equipment.
+container ids and types, screen options, furnace, stonecutter and trade windows, equipment.
 Not the item-stack request/response protocol -- world/inventory/network/, in item_stack.py.
 Not the legacy transaction family -- world/inventory/transaction/, in transaction.py."""
 
@@ -95,12 +95,6 @@ class ContainerEnumName(IntEnum, uint8):
     RECIPE_FOOD_CONTAINER = value(64, since=924)
     RECIPE_BLOCKS_CONTAINER = value(65, since=924)
     RECIPE_FURNACE_ITEMS_CONTAINER = value(66, since=924)
-
-
-class HandSlot(IntEnum, uint8):
-    MAINHAND = 0
-    OFFHAND = 1
-    COUNT = auto()
 
 
 class FullContainerName:
@@ -328,6 +322,19 @@ class SetPlayerFurnaceOptionsPacket:
 
     furnace_type: FurnaceType
     furnace_options: FurnaceOptions
+
+
+@packet(id=354, since=2208)
+class ServerboundStonecutterSetRecipePacket:
+    container_id: ContainerID
+    recipe_index: varint32
+
+
+@packet(id=355, since=2208)
+class ClientboundStonecutterSetRecipePacket:
+    player_id: ActorUniqueID
+    container_id: ContainerID
+    recipe_index: varint32
 
 
 @packet(id=80)

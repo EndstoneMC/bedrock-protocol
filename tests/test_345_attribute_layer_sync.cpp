@@ -82,3 +82,88 @@ TEST_CASE("v1001 form round-trips against the golden")
     REQUIRE(encode(make_packet<1001>()) == golden_v1001);
     REQUIRE(decode<Packet>(golden_v1001).data.index() == 2);
 }
+
+// 2208 reshapes the attribute into a name plus a three-case payload: the constant it
+// always was, the transition it used to spell inline, and a noise transition that now
+// carries its own clock, noise name and alignment. No golden -- gophertunnel stops at
+// 2168 -- so the assertions are structural.
+TEST_CASE("v2208 carries the attribute as a tagged payload")
+{
+    using Packet = bp::ClientboundAttributeLayerSyncPacket_<2208>;
+
+    auto wrap = [](const bp::EnvironmentAttributeData_<2208> &env) {
+        bp::UpdateEnvironmentAttributesData_<2208> inner;
+        inner.layer_name = "wet";
+        inner.layer_dimension_id = bp::DimensionType{0};
+        inner.attributes = {env};
+
+        Packet packet;
+        packet.data = inner;
+        return packet;
+    };
+
+    bp::ConstantAttributeData_<2208> constant;
+    constant.attribute = bp::BoolAttributeData{true, bp::BoolAttributeOperation::Override};
+
+    bp::EnvironmentAttributeData_<2208> constant_env;
+    constant_env.name = "temp";
+    constant_env.payload = constant;
+
+    bp::TransitionAttributeData_<2208> transition;
+    transition.from_attribute = bp::BoolAttributeData{false, bp::BoolAttributeOperation::Override};
+    transition.to_attribute = bp::BoolAttributeData{true, bp::BoolAttributeOperation::Override};
+    transition.settings.total_transition_ticks = 40;
+    transition.settings.current_transition_ticks = 10;
+    transition.settings.easing = bp::EasingType::Linear;
+    transition.settings.clock_name = "day";
+
+    bp::EnvironmentAttributeData_<2208> transition_env;
+    transition_env.name = "temp";
+    transition_env.payload = transition;
+
+    bp::NoiseTransitionAttributeData_<2208> noise;
+    noise.from_attribute = transition.from_attribute;
+    noise.to_attribute = transition.to_attribute;
+    noise.settings.total_transition_ticks = 40;
+    noise.settings.current_transition_ticks = 10;
+    noise.settings.easing = bp::EasingType::Linear;
+    noise.settings.clock_name = "day";
+    noise.settings.local_transition_ticks = 5;
+    noise.settings.noise_name = "gust";
+    noise.settings.noise_alignment = {bp::NoiseAlignmentType::MinLocalTransitionEnd, 3};
+
+    bp::EnvironmentAttributeData_<2208> noise_env;
+    noise_env.name = "temp";
+    noise_env.payload = noise;
+
+    // The tag is the payload's declaration order, so each case round-trips to its index.
+    REQUIRE(std::get<2>(decode<Packet>(encode(wrap(constant_env))).data).attributes[0].payload.index() == 0);
+    REQUIRE(std::get<2>(decode<Packet>(encode(wrap(transition_env))).data).attributes[0].payload.index() == 1);
+    REQUIRE(std::get<2>(decode<Packet>(encode(wrap(noise_env))).data).attributes[0].payload.index() == 2);
+
+    const auto back = std::get<2>(decode<Packet>(encode(wrap(noise_env))).data).attributes[0];
+    REQUIRE(back.name == "temp");
+    const auto &settings = std::get<2>(back.payload).settings;
+    REQUIRE(settings.clock_name == "day");
+    REQUIRE(settings.noise_name == "gust");
+    REQUIRE(settings.local_transition_ticks == 5);
+    REQUIRE(settings.noise_alignment.value == 3);
+}
+
+// The flat shape name-coded the easing, so its width tracked the enumerator's spelling.
+// 2208 int-codes it, and two easings of very different name length now cost the same.
+TEST_CASE("v2208 int-codes the easing the flat shape wrote by name")
+{
+    bp::TransitionSettingsData_<2208> linear;
+    linear.total_transition_ticks = 40;
+    linear.current_transition_ticks = 10;
+    linear.easing = bp::EasingType::Linear;
+    linear.clock_name = "day";
+
+    auto bouncy = linear;
+    bouncy.easing = bp::EasingType::InOutBounce;
+
+    REQUIRE(encode(linear).size() == encode(bouncy).size());
+    REQUIRE(encode(linear) != encode(bouncy));
+    REQUIRE(decode<bp::TransitionSettingsData_<2208>>(encode(bouncy)).easing == bp::EasingType::InOutBounce);
+}

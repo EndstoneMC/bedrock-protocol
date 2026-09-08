@@ -30,18 +30,18 @@ std::vector<bp::AnimatedImageData> animations()
              .animation_expression = bp::AnimationExpression::Linear}};
 }
 
-std::vector<bp::SerializedPersonaPieceHandle> pieces()
+std::vector<bp::SerializedPersonaPieceHandle_<2168>> pieces()
 {
     return {{.piece_id = "p1",
-             .piece_type = bp::PieceType::Skeleton,
+             .piece_type = bp::PieceType_<2168>::Skeleton,
              .pack_id = kPack,
              .is_default_piece = true,
              .product_id = "prod"}};
 }
 
-std::map<bp::PieceType, bp::TintMapColor> tints()
+std::map<bp::PieceType_<2168>, bp::TintMapColor> tints()
 {
-    return {{bp::PieceType::Skeleton,
+    return {{bp::PieceType_<2168>::Skeleton,
              bp::TintMapColor{.colors = {bp::Color{1}, bp::Color{2},
                                          bp::Color{3}, bp::Color{4}}}}};
 }
@@ -190,7 +190,7 @@ TEST_CASE("PlayerSkinPacket: v2168 round-trip")
     REQUIRE(rt.skin.animated_image_data.size() == 1);
     REQUIRE(rt.skin.animated_image_data[0].type == bp::AnimatedTextureType::Face);
     REQUIRE(rt.skin.persona_pieces[0].pack_id.least_significant_bits == kPack.least_significant_bits);
-    REQUIRE(rt.skin.piece_tint_colors.at(bp::PieceType::Skeleton).colors.size() == 4);
+    REQUIRE(rt.skin.piece_tint_colors.at(bp::PieceType_<2168>::Skeleton).colors.size() == 4);
     REQUIRE(rt.skin.trusted_skin_flag == bp::TrustedSkinFlag::False);
     REQUIRE(rt.skin.profile_hash == "hash");
     REQUIRE(rt.localized_old_skin_name == "old");
@@ -249,4 +249,48 @@ TEST_CASE("PlayerSkinPacket: the pre-944 body is hand-written and ends in a trus
     const auto flipped = encode(packet);
     REQUIRE(flipped.size() == encoded.size());
     REQUIRE(static_cast<unsigned char>(flipped.back()) == 0x00);
+}
+
+// 2208 hoists PlayFabID out of the skin and into the player-list entry, so the skin is
+// the 2168 one less that length-prefixed string. No golden above 2168.
+TEST_CASE("v2208 drops the PlayFab id from the skin")
+{
+    Packet2168 older;
+    older.uuid = kPlayer;
+    older.skin.id = "sid";
+    older.skin.play_fab_id = "pfid";
+    older.skin.resource_patch = "patch";
+    older.skin.trusted_skin_flag = bp::TrustedSkinFlag::False;
+    older.skin.profile_hash = "hash";
+    older.localized_new_skin_name = "new";
+    older.localized_old_skin_name = "old";
+
+    bp::PlayerSkinPacket_<2208> newer;
+    newer.uuid = kPlayer;
+    newer.skin.id = "sid";
+    newer.skin.resource_patch = "patch";
+    newer.skin.trusted_skin_flag = bp::TrustedSkinFlag::False;
+    newer.skin.profile_hash = "hash";
+    newer.localized_new_skin_name = "new";
+    newer.localized_old_skin_name = "old";
+
+    // "pfid" is four bytes behind a one-byte length prefix.
+    REQUIRE(encode(newer).size() + 5 == encode(older).size());
+
+    const auto back = decode<bp::PlayerSkinPacket_<2208>>(encode(newer));
+    REQUIRE(back.skin.id == "sid");
+    REQUIRE(back.skin.resource_patch == "patch");
+    REQUIRE(back.skin.profile_hash == "hash");
+}
+
+// Coco takes 28 and pushes Unsupported and the sentinel up one. The piece type is
+// int-coded on SerializedPersonaPieceHandle, so the shift is on the wire there.
+TEST_CASE("2208 inserts Coco into the persona piece types")
+{
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2168>::Unsupported) == 28);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2168>::Count) == 29);
+
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Coco) == 28);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Unsupported) == 29);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Count) == 30);
 }

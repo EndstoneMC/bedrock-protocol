@@ -59,19 +59,20 @@ TEST_CASE("packet id is 44")
     STATIC_REQUIRE(bp::AnimatePacket::Id == 44);
     STATIC_REQUIRE(bp::has_packet_v<1001, 44>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 44>);
+    STATIC_REQUIRE(bp::has_packet_v<2208, 44>);
 }
 
 TEST_CASE("animate round-trips against the golden")
 {
-    bp::AnimatePacket packet;
-    packet.action = bp::AnimatePacket::Action::Swing;
+    bp::AnimatePacket_<898> packet;
+    packet.action = bp::AnimatePacket_<898>::Action::Swing;
     packet.runtime_id = bp::ActorRuntimeID{300};
     packet.data = 1.5F;
     packet.swing_source = bp::ActorSwingSource::Attack;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::AnimatePacket>(golden);
-    REQUIRE(back.action == bp::AnimatePacket::Action::Swing);
+    const auto back = decode<bp::AnimatePacket_<898>>(golden);
+    REQUIRE(back.action == bp::AnimatePacket_<898>::Action::Swing);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{300});
     REQUIRE(back.data == 1.5F);
     REQUIRE(back.swing_source.has_value());
@@ -80,31 +81,31 @@ TEST_CASE("animate round-trips against the golden")
 
 TEST_CASE("an absent swing source is one zero byte, not a name")
 {
-    bp::AnimatePacket packet;
-    packet.action = bp::AnimatePacket::Action::CriticalHit;
+    bp::AnimatePacket_<898> packet;
+    packet.action = bp::AnimatePacket_<898>::Action::CriticalHit;
     packet.runtime_id = bp::ActorRuntimeID{7};
     packet.data = 0.0F;
     packet.swing_source = std::nullopt;
     REQUIRE(encode(packet) == golden_without_swing_source);
     REQUIRE(encode(packet).size() == 7);
 
-    const auto back = decode<bp::AnimatePacket>(golden_without_swing_source);
-    REQUIRE(back.action == bp::AnimatePacket::Action::CriticalHit);
+    const auto back = decode<bp::AnimatePacket_<898>>(golden_without_swing_source);
+    REQUIRE(back.action == bp::AnimatePacket_<898>::Action::CriticalHit);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{7});
     REQUIRE_FALSE(back.swing_source.has_value());
 }
 
 TEST_CASE("a NONE swing source is present, and the animate runtime id survives past 32 bits")
 {
-    bp::AnimatePacket packet;
-    packet.action = bp::AnimatePacket::Action::NoAction;
+    bp::AnimatePacket_<898> packet;
+    packet.action = bp::AnimatePacket_<898>::Action::NoAction;
     packet.runtime_id = bp::ActorRuntimeID{1ULL << 32U};
     packet.data = 0.0F;
     packet.swing_source = bp::ActorSwingSource::None;
     REQUIRE(encode(packet) == golden_none_swing_source);
 
-    const auto back = decode<bp::AnimatePacket>(golden_none_swing_source);
-    REQUIRE(back.action == bp::AnimatePacket::Action::NoAction);
+    const auto back = decode<bp::AnimatePacket_<898>>(golden_none_swing_source);
+    REQUIRE(back.action == bp::AnimatePacket_<898>::Action::NoAction);
     REQUIRE(back.runtime_id == bp::ActorRuntimeID{1ULL << 32U});
     REQUIRE(back.swing_source.has_value());
     REQUIRE(*back.swing_source == bp::ActorSwingSource::None);
@@ -112,14 +113,14 @@ TEST_CASE("a NONE swing source is present, and the animate runtime id survives p
 
 TEST_CASE("the use-item swing source reaches the wire without its underscore")
 {
-    bp::AnimatePacket packet;
-    packet.action = bp::AnimatePacket::Action::MagicCriticalHit;
+    bp::AnimatePacket_<898> packet;
+    packet.action = bp::AnimatePacket_<898>::Action::MagicCriticalHit;
     packet.runtime_id = bp::ActorRuntimeID{1};
     packet.data = -1.0F;
     packet.swing_source = bp::ActorSwingSource::UseItem;
     REQUIRE(encode(packet) == golden_use_item_swing_source);
 
-    const auto back = decode<bp::AnimatePacket>(golden_use_item_swing_source);
+    const auto back = decode<bp::AnimatePacket_<898>>(golden_use_item_swing_source);
     REQUIRE(back.data == -1.0F);
     REQUIRE(back.swing_source.has_value());
     REQUIRE(*back.swing_source == bp::ActorSwingSource::UseItem);
@@ -176,3 +177,31 @@ TEST_CASE("859 is 844 plus the unconditional float")
 
     REQUIRE(encode(newer).size() == encode(older).size() + 4);
 }
+
+// No golden -- gophertunnel stops at 2168 -- so the 898 body is the reference: 2208
+// appends the hand that swung, one uint8 past the swing source.
+TEST_CASE("2208 appends the swinging hand")
+{
+    bp::AnimatePacket_<898> older;
+    older.action = bp::AnimatePacket_<898>::Action::Swing;
+    older.runtime_id = bp::ActorRuntimeID{300};
+    older.data = 1.5F;
+    older.swing_source = bp::ActorSwingSource::Attack;
+
+    bp::AnimatePacket_<2208> newer;
+    newer.action = bp::AnimatePacket_<2208>::Action::Swing;
+    newer.runtime_id = bp::ActorRuntimeID{300};
+    newer.data = 1.5F;
+    newer.swing_source = bp::ActorSwingSource::Attack;
+    newer.hand = bp::HandSlot::Mainhand;
+
+    REQUIRE(encode(newer).size() == encode(older).size() + 1);
+    REQUIRE(encode(newer) == golden + bytes({0x00}));
+
+    auto offhand = newer;
+    offhand.hand = bp::HandSlot::Offhand;
+    REQUIRE(encode(offhand).size() == encode(newer).size());
+    REQUIRE(encode(offhand) != encode(newer));
+    REQUIRE(decode<bp::AnimatePacket_<2208>>(encode(offhand)).hand == bp::HandSlot::Offhand);
+}
+

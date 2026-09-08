@@ -4,7 +4,7 @@ world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
 import uuid
 from enum import Enum, IntEnum, auto
 
-from protocol import array, field, int8, packet, type, uint8, uint32, uvarint32
+from protocol import array, field, int8, packet, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import Color
 
@@ -47,7 +47,8 @@ class PieceType(Enum, uint32):
     CAPES = 25
     CLASSIC_SKIN = 26
     EMOTE = 27
-    UNSUPPORTED = 28
+    COCO = value(28, since=2208)
+    UNSUPPORTED = auto()
     COUNT = auto()
 
 
@@ -194,7 +195,7 @@ class SerializedSkinRef:
 
 class SerializedSkinRef:
     id: str
-    play_fab_id: str
+    play_fab_id: str = field(until=2208)
     resource_patch: str
     image_data: SkinImage
     animated_image_data: list[AnimatedImageData]

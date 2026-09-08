@@ -1,5 +1,5 @@
 """The server's session presence: gathering configuration, store entry point,
-telemetry identity, the player's party, and transfer."""
+telemetry identity, the player's party, matchmaking, and transfer."""
 
 import uuid
 from enum import Enum
@@ -125,3 +125,20 @@ class SendPartyDestinationCookiePacket:
     cookie: str
     intent: PartyDestinationCookieIntent = field(type=str)
     destination_name: str
+
+
+class MatchmakingState(Enum):
+    IDLE = 0
+    MATCHMAKING = 1
+    MATCH_FOUND = 2
+
+
+@packet(id=353, since=2208)
+class ClientboundMatchmakingStatePacket:
+    state: MatchmakingState = field(type=str)
+    destination_name: str
+
+
+@packet(id=356, since=2208)
+class ServerboundMatchmakingCancelPacket:
+    pass

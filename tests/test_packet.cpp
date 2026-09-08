@@ -72,4 +72,9 @@ TEST_CASE("a packet resolves only inside its version range", "[packet]")
     // ClientboundAttributeLayerSyncPacket arrives at 944.
     STATIC_REQUIRE_FALSE(bp::has_packet_v<940, 345>);
     STATIC_REQUIRE(bp::has_packet_v<975, 345>);
+    // The matchmaking and stonecutter packets arrive together at 2208.
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<2192, 353>);
+    STATIC_REQUIRE(bp::has_packet_v<2208, 353>);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<2192, 356>);
+    STATIC_REQUIRE(bp::has_packet_v<2208, 356>);
 }

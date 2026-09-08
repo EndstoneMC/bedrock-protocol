@@ -241,6 +241,7 @@ class PlayerListPacket:
         id: ActorUniqueID
         name: str
         xuid: str
+        play_fab_id: str = field(since=2208)
         platform_online_id: str
         build_platform: BuildPlatform = field(type=int32)
         skin: SerializedSkinRef

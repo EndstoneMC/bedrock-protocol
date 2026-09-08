@@ -64,6 +64,7 @@ class LevelChunkPacket:
     cache_enabled: bool
     cache_metadata: list[SubChunkMetadata]
     serialized_chunk: str
+    is_client_biome_update: bool = field(since=2208)
 
 
 @packet(id=174, until=2168)

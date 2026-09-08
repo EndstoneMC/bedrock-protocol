@@ -27,6 +27,8 @@ class DimensionDefinitionGroup:
         dimension_type: DimensionType
         pack_id: uuid.UUID
         default_biome: str
+        cloud_height: varint32 = field(since=2208)
+        render_clouds: bool = field(since=2208)
 
 
 @packet(id=180)

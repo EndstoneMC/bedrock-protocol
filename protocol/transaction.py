@@ -8,8 +8,8 @@ from typing import Literal
 from protocol import field, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, Vec3
-from protocol.inventory import ContainerEnumName, ContainerID, HandSlot
-from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.inventory import ContainerEnumName, ContainerID
+from protocol.item import HandSlot, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
@@ -271,6 +271,7 @@ class ItemUseOnActorInventoryTransaction:
     runtime_id: ActorRuntimeID
     action_type: ActionType
     slot: varint32
+    hand: HandSlot = field(since=2208)
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     hit_pos: Vec3
@@ -300,6 +301,7 @@ class ItemReleaseInventoryTransaction:
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
+    hand: HandSlot = field(since=2208)
 
 
 type TransactionData = (

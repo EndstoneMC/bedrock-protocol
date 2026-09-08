@@ -127,6 +127,7 @@ class MemoryCategory(IntEnum, uint8):
     GAMEFACE_SCRIPT_ENGINE = value(since=944)
     GAMEFACE_SCRIPT = value(since=2168)
     GAMEFACE_LAYOUT = value(since=2168)
+    EXECUTABLE = value(since=2208)
     COUNT = auto()
 @type(since=924)
 class MemoryCategoryCounter:

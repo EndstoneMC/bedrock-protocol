@@ -83,3 +83,40 @@ TEST_CASE("a v1001 dimension-data body does not decode as a v2168 one")
     REQUIRE(rejects<bp::DimensionDataPacket_<2168>>(golden_v1001));
     REQUIRE(decode_partial<bp::DimensionDataPacket_<1001>>(golden_v2168).dimension_definitions.size() == 1);
 }
+
+// 2192 renamed the leading pair and appended the default biome; 2208 adds the cloud
+// height and the flag that draws them. No golden -- gophertunnel and CloudburstMC both
+// stop at 2168 -- so the 2192 body is the reference.
+TEST_CASE("dimension-data v2208 appends the cloud height and its flag")
+{
+    bp::DimensionDataPacket_<2192> older;
+    older.dimension_definitions["test:dim"] = {
+        .minimum_y = -64,
+        .height_range = 384,
+        .generator_type = bp::GeneratorType::Overworld,
+        .dimension_type = bp::DimensionType{1000},
+        .pack_id = {0x0102030405060708ULL, 0x090a0b0c0d0e0f10ULL},
+        .default_biome = "plains",
+    };
+
+    bp::DimensionDataPacket_<2208> newer;
+    newer.dimension_definitions["test:dim"] = {
+        .minimum_y = -64,
+        .height_range = 384,
+        .generator_type = bp::GeneratorType::Overworld,
+        .dimension_type = bp::DimensionType{1000},
+        .pack_id = {0x0102030405060708ULL, 0x090a0b0c0d0e0f10ULL},
+        .default_biome = "plains",
+        .cloud_height = 192,
+        .render_clouds = true,
+    };
+
+    // 192 zigzags to 384, which is a two-byte varint, and the flag is one byte.
+    REQUIRE(encode(newer).size() == encode(older).size() + 3);
+
+    const auto decoded = decode<bp::DimensionDataPacket_<2208>>(encode(newer));
+    const auto &definition = decoded.dimension_definitions.at("test:dim");
+    REQUIRE(definition.default_biome == "plains");
+    REQUIRE(definition.cloud_height == 192);
+    REQUIRE(definition.render_clouds);
+}

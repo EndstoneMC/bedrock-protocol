@@ -290,3 +290,65 @@ TEST_CASE("PlayerListPacket: the variant index is not the action value")
     REQUIRE(static_cast<unsigned char>(encoded[1]) == 0);
     REQUIRE(static_cast<unsigned char>(encoded[2]) == 1);
 }
+
+// 2208 hoists the PlayFab id out of the skin and up into the entry, between the XUID and
+// the platform id. The bytes move rather than arrive, so the frame is the same length and
+// the ordering is the only thing that separates the two eras. No golden above 2168.
+TEST_CASE("PlayerListPacket: v2208 moves the PlayFab id up into the entry")
+{
+    bp::SerializedSkinRef_<2208> newer_skin;
+    newer_skin.id = "sid";
+    newer_skin.resource_patch = "patch";
+    newer_skin.image_data = {.width = 1, .height = 1, .image_bytes = std::string(4, '\0')};
+    newer_skin.cape_image_data = {.width = 1, .height = 1, .image_bytes = std::string(4, '\0')};
+    newer_skin.geometry_data = "geo";
+    newer_skin.geometry_data_min_engine_version = "1.0.0";
+    newer_skin.animation_data = "anim";
+    newer_skin.cape_id = "cid";
+    newer_skin.full_id = "fid";
+    newer_skin.arm_size = bp::ArmSizeType::Wide;
+    newer_skin.skin_color = bp::Color{0x01020304};
+    newer_skin.is_premium = true;
+    newer_skin.is_persona = false;
+    newer_skin.is_persona_cape_on_classic_skin = false;
+    newer_skin.is_primary_user = true;
+    newer_skin.overrides_player_appearance = false;
+    newer_skin.trusted_skin_flag = bp::TrustedSkinFlag::True;
+    newer_skin.profile_hash = "hash";
+
+    bp::PlayerListPacket_<2208>::AddEntry add;
+    add.action = bp::PlayerListPacketType::Add;
+    add.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
+    add.id = bp::ActorUniqueID{7};
+    add.name = "Steve";
+    add.xuid = "xuid";
+    add.play_fab_id = "pfid";
+    add.platform_online_id = "pcid";
+    add.build_platform = bp::BuildPlatform::Win32;
+    add.skin = newer_skin;
+    add.is_teacher = false;
+    add.is_host = true;
+    add.is_sub_client = false;
+    add.color = bp::Color{0x05060708};
+
+    bp::PlayerListPacket_<2208> pkt;
+    pkt.entries.emplace_back(add);
+
+    bp::PlayerListPacket_<2168> older;
+    older.entries.emplace_back(std::get<bp::PlayerListPacket_<2168>::AddEntry>(fill().entries[0]));
+
+    // Same content, same length -- a size assertion could not tell the shapes apart.
+    REQUIRE(encode(pkt).size() == encode(older).size());
+    REQUIRE(encode(pkt) != encode(older));
+
+    const auto decoded = decode<bp::PlayerListPacket_<2208>>(encode(pkt));
+    const auto &back = std::get<bp::PlayerListPacket_<2208>::AddEntry>(decoded.entries[0]);
+    REQUIRE(back.xuid == "xuid");
+    REQUIRE(back.play_fab_id == "pfid");
+    REQUIRE(back.platform_online_id == "pcid");
+    REQUIRE(back.skin.id == "sid");
+
+    // Equal length is not equal shape: the hoisted id lands where the platform id belongs
+    // and every string after it slides, so the 2168 read runs off the end of the frame.
+    REQUIRE(rejects<bp::PlayerListPacket_<2168>>(encode(pkt)));
+}

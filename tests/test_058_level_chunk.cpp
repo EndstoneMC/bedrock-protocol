@@ -221,3 +221,26 @@ TEST_CASE("the cerealisation reshapes the wire, not just the field widths")
     const auto stale = decode_partial<PacketV1001>(golden_v2168_full);
     REQUIRE(stale.serialized_chunk.empty());
 }
+
+// No golden -- gophertunnel and CloudburstMC both stop at 2168 -- so the 2168 body is
+// the reference: 2208 appends one bool saying the chunk is a biome-only update.
+TEST_CASE("level-chunk v2208 appends the client biome update flag")
+{
+    bp::LevelChunkPacket_<2208> packet;
+    packet.pos = {.x = 2, .z = 3};
+    packet.dimension_id = bp::DimensionType{0};
+    packet.sub_chunks_count = 5;
+    packet.cache_enabled = false;
+    packet.serialized_chunk = payload_ab;
+    packet.is_client_biome_update = true;
+
+    REQUIRE(encode(packet).size() == golden_v2168_full.size() + 1);
+    REQUIRE(encode(packet).substr(0, golden_v2168_full.size()) == golden_v2168_full);
+
+    const auto back = decode<bp::LevelChunkPacket_<2208>>(encode(packet));
+    REQUIRE(back.serialized_chunk == payload_ab);
+    REQUIRE(back.is_client_biome_update);
+
+    // A 2168 body read as 2208 runs off the end at the flag.
+    REQUIRE(rejects<bp::LevelChunkPacket_<2208>>(golden_v2168_full));
+}

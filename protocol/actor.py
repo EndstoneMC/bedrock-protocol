@@ -22,7 +22,7 @@ from protocol import (
     varint64,
 )
 from protocol.common import BlockPos, Vec2, Vec3
-from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.item import HandSlot, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -972,6 +972,7 @@ class AnimatePacket:
     runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
+    hand: HandSlot = field(since=2208)
 
 
 @packet(id=66)

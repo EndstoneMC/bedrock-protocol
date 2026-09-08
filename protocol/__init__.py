@@ -43,7 +43,7 @@ optional member reads `_unused: Literal[True]` then `x: T | None`.
 from enum import auto
 from typing import Any, TypeAliasType, Union
 
-__version__ = 2192
+__version__ = 2208
 
 
 def _identity(cls):
