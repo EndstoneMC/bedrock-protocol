@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    name: Tag
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the tag against the project version
+        run: |
+          version=$(sed -n 's/^project(bedrock-protocol VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          if [ -z "$version" ]; then
+            echo "::error::CMakeLists.txt has no project(bedrock-protocol VERSION ...) to check against"
+            exit 1
+          fi
+          if [ "$version" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match project(bedrock-protocol VERSION ${version})"
+            exit 1
+          fi
+
+  ci:
+    needs: tag
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish
+    needs: ci
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Name the assets after the release
+        run: |
+          shopt -s nullglob
+          dirs=(artifacts/*/)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "::error::the build produced no artifacts to release"
+            exit 1
+          fi
+          mkdir -p assets
+          for dir in "${dirs[@]}"; do
+            name=$(basename "$dir")
+            asset=${name/-${GITHUB_SHA::7}/}
+            mv "artifacts/$name" "artifacts/$asset"
+            (cd artifacts && zip -qr "../assets/${asset}.zip" "$asset")
+          done
+          ls -l assets
+
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            assets/*.zip
