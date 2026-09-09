@@ -22,6 +22,16 @@ jobs:
       - name: mypy
         run: uv run mypy
 
+  test:
+    name: Compiler tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: pytest
+        run: uv run pytest -n auto
+
   # Three compilers across three standard libraries. Clang pairs with libc++
   # rather than libstdc++ because libstdc++'s <expected> is incompatible with
   # Clang's concepts front end; libstdc++ itself is still covered by the GCC job.

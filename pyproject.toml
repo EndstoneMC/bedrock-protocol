@@ -14,7 +14,7 @@ dependencies = [
 bpc = "bedrock_protocol.cli:main"
 
 [dependency-groups]
-dev = ["mypy"]
+dev = ["mypy", "pytest", "pytest-xdist"]
 
 [build-system]
 requires = ["hatchling"]
