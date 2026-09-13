@@ -25,7 +25,7 @@ from .descriptor import CompilerError
 
 
 @click.command()
-@click.version_option(version="0.1.0", prog_name="bpc")
+@click.version_option(version="0.2.0", prog_name="bpc")
 @click.option("-v", "--verbose", is_flag=True, help="Print one line per output file.")
 @click.option(
     "--language",
