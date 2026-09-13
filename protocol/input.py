@@ -349,3 +349,20 @@ class PlayerActionPacket:
 class UpdateClientInputLocksPacket:
     input_lock_component_data: uvarint32
     server_pos: Vec3 = field(until=944)
+
+
+@packet(id=20, until=800)
+class PassengerJumpPacket:
+    """How hard the passenger of a jumping mount asked it to jump. Retired at 800."""
+
+    jump_scale: varint32
+
+
+@packet(id=57, until=800)
+class PlayerInputPacket:
+    """The pre-auth-input movement report: stick vector plus the two held states.
+    Retired at 800, by which point PlayerAuthInputPacket carried all of it."""
+
+    mov: Vec2
+    is_jumping: bool
+    is_sneaking: bool

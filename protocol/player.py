@@ -212,7 +212,7 @@ class PlayerListEntry:
     is_teacher: bool
     is_host: bool
     is_sub_client: bool
-    color: Color
+    color: Color = field(since=800)
 
 
 @packet(id=63, until=2168)
@@ -290,7 +290,7 @@ class PlayerUpdateEntityOverridesPacket:
     update: ClearOverride | RemoveOverride | IntOverride | FloatOverride
 
 
-@packet(id=326, until=2168)
+@packet(id=326, since=800, until=2168)
 class PlayerLocationPacket:
     class Type(IntEnum):
         PLAYER_LOCATION_COORDINATES = 0

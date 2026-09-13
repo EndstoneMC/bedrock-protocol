@@ -4,6 +4,7 @@ from enum import IntEnum, auto
 
 from protocol import field, int32, packet, type, uint8, uint16, uint32, value, varint32
 from protocol.molang import ExpressionOp
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 
@@ -301,7 +302,20 @@ class BiomeStringList:
     strings: list[str]
 
 
-@packet(id=122)
+@packet(id=122, until=800)
+class BiomeDefinitionListPacket:
+    biome_data: CompoundTag
+
+
+@packet(id=122, since=800)
 class BiomeDefinitionListPacket:
     biome_data: dict[BiomeStringIndex, BiomeDefinitionData]
     string_list: BiomeStringList
+
+
+@packet(id=301, until=800)
+class CompressedBiomeDefinitionListPacket:
+    """The biome definitions behind BDS's own dictionary compression, sent instead of
+    packet 122 when the client advertised support. Retired at 800."""
+
+    compressed_biome_data: str

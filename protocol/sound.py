@@ -520,15 +520,15 @@ class LevelSoundEvent(IntEnum, uint32):
     OPEN_LONG = 543
     CLOSE = 544
     CLOSE_LONG = 545
-    IMITATE_PHANTOM = 546
-    IMITATE_ZOGLIN = 547
-    IMITATE_GUARDIAN = 548
-    IMITATE_RAVAGER = 549
-    IMITATE_PILLAGER = 550
-    PLACE_IN_WATER = 551
-    STATE_CHANGE = 552
-    IMITATE_HAPPY_GHAST = 553
-    UNEQUIP_GENERIC = 554
+    IMITATE_PHANTOM = value(546, since=800)
+    IMITATE_ZOGLIN = value(547, since=800)
+    IMITATE_GUARDIAN = value(548, since=800)
+    IMITATE_RAVAGER = value(549, since=800)
+    IMITATE_PILLAGER = value(550, since=800)
+    PLACE_IN_WATER = value(551, since=800)
+    STATE_CHANGE = value(552, since=800)
+    IMITATE_HAPPY_GHAST = value(553, since=800)
+    UNEQUIP_GENERIC = value(554, since=800)
     RECORD_TEARS = value(555, since=818)
     THE_END_LIGHT_FLASH = value(556, since=818)
     LEAD_LEASH = value(557, since=818)

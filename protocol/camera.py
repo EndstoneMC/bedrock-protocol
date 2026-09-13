@@ -58,7 +58,7 @@ class CameraPreset:
     player_effects: bool | None
     align_target_and_camera_forward: bool | None = field(until=818)
     aim_assist: CameraAimAssistCommandPresetDefinition | None
-    control_scheme: Scheme | None
+    control_scheme: Scheme | None = field(since=800)
     apply_inherited_starting_rotation: bool = field(since=2192)
     starting_rotation: Vec2 | None = field(since=2192)
 
@@ -333,6 +333,6 @@ class CameraSplinePacket:
     splines: list[CameraSplineDefinition]
 
 
-@packet(id=327)
+@packet(id=327, since=800)
 class ClientboundControlSchemeSetPacket:
     control_scheme: Scheme

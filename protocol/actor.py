@@ -157,7 +157,7 @@ class ActorFlags(IntEnum):
     ROTATION_AXIS_ALIGNED = 120
     COLLIDABLE = 121
     WASD_FREE_CAMERA_CONTROLLED = 122
-    DOES_SERVER_AUTH_ONLY_DISMOUNT = 123
+    DOES_SERVER_AUTH_ONLY_DISMOUNT = value(123, since=800)
     BODY_ROTATION_ALWAYS_FOLLOWS_HEAD = value(124, since=818)
     CAN_USE_VERTICAL_MOVEMENT_ACTION = value(125, since=844)
     ROTATION_LOCKED_TO_VEHICLE = value(126, since=898)
@@ -303,8 +303,8 @@ class ActorDataIDs(IntEnum, uint8):
     VISIBLE_MOB_EFFECTS = 131
     FILTERED_NAME = 132
     ENTER_BED_POSITION = 133
-    SEAT_THIRD_PERSON_CAMERA_RADIUS = 134
-    SEAT_CAMERA_RELAX_DISTANCE_SMOOTHING = 135
+    SEAT_THIRD_PERSON_CAMERA_RADIUS = value(134, since=800)
+    SEAT_CAMERA_RELAX_DISTANCE_SMOOTHING = value(135, since=800)
     AIM_ASSIST_PRIORITY_PRESET_ID = value(136, since=924)
     AIM_ASSIST_PRIORITY_CATEGORY_ID = value(137, since=924)
     AIM_ASSIST_PRIORITY_ACTOR_ID = value(138, since=924)
@@ -607,7 +607,7 @@ class ActorType(IntEnum):
     BOGGED = 1117072
     OMINOUS_ITEM_SPAWNER = 145
     CREAKING = 2962
-    HAPPY_GHAST = 5011
+    HAPPY_GHAST = value(5011, since=800)
     COPPER_GOLEM = value(916, since=827)
     NAUTILUS = 9109
     ZOMBIE_NAUTILUS = value(76694, until=924)
@@ -773,7 +773,7 @@ class ActorType(IntEnum):
     BOGGED = 1117072
     OMINOUS_ITEM_SPAWNER = 145
     CREAKING = 2962
-    HAPPY_GHAST = 5011
+    HAPPY_GHAST = value(5011, since=800)
     COPPER_GOLEM = 916
     NAUTILUS = 9109
     ZOMBIE_NAUTILUS = 74646
@@ -938,6 +938,8 @@ class AnimatePacket:
         WAKE_UP = 3
         CRITICAL_HIT = 4
         MAGIC_CRITICAL_HIT = 5
+        ROW_RIGHT = value(128, until=800)
+        ROW_LEFT = value(129, until=800)
 
     action: varint32
     runtime_id: ActorRuntimeID
