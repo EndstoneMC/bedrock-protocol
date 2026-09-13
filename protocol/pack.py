@@ -5,7 +5,7 @@ import uuid
 from enum import Enum, IntEnum, auto
 from typing import Literal
 
-from protocol import field, int8, int32, packet, uint16, uint32, uint64
+from protocol import field, int8, int32, packet, type, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
@@ -19,6 +19,13 @@ class ContentIdentity:
     identity: str
 
 
+@type(until=766)
+class PackIdVersion:
+    id: str
+    version: SemVersion
+
+
+@type(since=766)
 class PackIdVersion:
     id: uuid.UUID
     version: SemVersion
@@ -52,7 +59,7 @@ class ResourcePacksInfoPacket:
     has_addon_packs: bool
     has_scripts: bool
     force_disable_vibrant_visuals: bool = field(since=818)
-    world_template_id_and_version: PackIdVersion
+    world_template_id_and_version: PackIdVersion = field(since=766)
     resource_packs: list[PackInfoData] = field(prefix=uint16)
 
 

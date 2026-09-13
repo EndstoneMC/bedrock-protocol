@@ -98,7 +98,7 @@ class MinecraftEventing:
         CRAFTERS_CRAFTING_CRAFTERS = 110
         WHO_NEEDS_ROCKETS = 111
         OVER_OVERKILL = 112
-        HEART_TRANSPLANTER = 113
+        HEART_TRANSPLANTER = value(113, since=766)
         STAY_HYDRATED = value(114, since=818)
         MOB_KABOB = value(115, since=898)
         ADVENTURING_TIME = value(116, since=924)

@@ -190,13 +190,13 @@ class PlayerAuthInputPacket:
         IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
         START_SPIN_ATTACK = 56
         STOP_SPIN_ATTACK = 57
-        IS_HOTBAR_ONLY_TOUCH = 58
-        JUMP_RELEASED_RAW = 59
-        JUMP_PRESSED_RAW = 60
-        JUMP_CURRENT_RAW = 61
-        SNEAK_RELEASED_RAW = 62
-        SNEAK_PRESSED_RAW = 63
-        SNEAK_CURRENT_RAW = 64
+        IS_HOTBAR_ONLY_TOUCH = value(58, since=766)
+        JUMP_RELEASED_RAW = value(59, since=766)
+        JUMP_PRESSED_RAW = value(60, since=766)
+        JUMP_CURRENT_RAW = value(61, since=766)
+        SNEAK_RELEASED_RAW = value(62, since=766)
+        SNEAK_PRESSED_RAW = value(63, since=766)
+        SNEAK_CURRENT_RAW = value(64, since=766)
         INPUT_NUM = auto()
 
     rot: Vec2
@@ -226,7 +226,7 @@ class PlayerAuthInputPacket:
 
     analog_move_vector: Vec2
     camera_orientation: Vec3
-    raw_move_vector: Vec2
+    raw_move_vector: Vec2 = field(since=766)
 
 
 @packet(id=144, since=2168)

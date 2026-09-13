@@ -134,7 +134,7 @@ class TextProcessingEventOrigin(IntEnum):
     COUNT = auto()
 
 
-@type(until=2168)
+@type(since=766, until=2168)
 class RedactableString:
     unredacted_string: str
     redacted_string: str
@@ -146,7 +146,17 @@ class RedactableString:
     redacted_string: str | None
 
 
-@type(until=2168)
+@type(until=766)
+class ItemStackResponseSlotInfo:
+    requested_slot: uint8
+    slot: uint8
+    amount: uint8
+    item_stack_net_id: ItemStackNetId
+    custom_name: str
+    durability_correction: int16 = field(type=varint32)
+
+
+@type(since=766, until=2168)
 class ItemStackResponseSlotInfo:
     requested_slot: uint8
     slot: uint8

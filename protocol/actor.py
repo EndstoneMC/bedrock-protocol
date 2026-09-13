@@ -606,7 +606,7 @@ class ActorType(IntEnum):
     WIND_CHARGE_PROJECTILE = 4194447
     BOGGED = 1117072
     OMINOUS_ITEM_SPAWNER = 145
-    CREAKING = 2962
+    CREAKING = value(2962, since=766)
     HAPPY_GHAST = value(5011, since=800)
     COPPER_GOLEM = value(916, since=827)
     NAUTILUS = 9109

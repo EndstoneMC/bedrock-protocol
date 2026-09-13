@@ -507,19 +507,19 @@ class LevelSoundEvent(IntEnum, uint32):
     RECORD_PRECIPICE = 529
     VAULT_REJECT_REWARDED_PLAYER = 530
     IMITATE_DROWNED = 531
-    IMITATE_CREAKING = 532
+    IMITATE_CREAKING = value(532, since=766)
     BUNDLE_INSERT_FAIL = 533
-    SPONGE_ABSORB = 534
-    CREAKING_HEART_TRAIL = 536
-    CREAKING_HEART_SPAWN = 537
-    ACTIVATE = 538
-    DEACTIVATE = 539
-    FREEZE = 540
-    UNFREEZE = 541
-    OPEN = 542
-    OPEN_LONG = 543
-    CLOSE = 544
-    CLOSE_LONG = 545
+    SPONGE_ABSORB = value(534, since=766)
+    CREAKING_HEART_TRAIL = value(536, since=766)
+    CREAKING_HEART_SPAWN = value(537, since=766)
+    ACTIVATE = value(538, since=766)
+    DEACTIVATE = value(539, since=766)
+    FREEZE = value(540, since=766)
+    UNFREEZE = value(541, since=766)
+    OPEN = value(542, since=766)
+    OPEN_LONG = value(543, since=766)
+    CLOSE = value(544, since=766)
+    CLOSE_LONG = value(545, since=766)
     IMITATE_PHANTOM = value(546, since=800)
     IMITATE_ZOGLIN = value(547, since=800)
     IMITATE_GUARDIAN = value(548, since=800)

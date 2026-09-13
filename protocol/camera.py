@@ -19,11 +19,13 @@ class Scheme(IntEnum, uint8):
     PLAYER_RELATIVE_STRAFE = 4
 
 
+@type(since=766)
 class TargetMode(IntEnum, uint8):
     ANGLE = 0
     DISTANCE = 1
 
 
+@type(since=766)
 class CameraAimAssistCommandPresetDefinition:
     preset_id: str | None
     target_mode: TargetMode | None
@@ -48,7 +50,7 @@ class CameraPreset:
     horizontal_rotation_limit: Vec2 | None
     vertical_rotation_limit: Vec2 | None
     continue_targeting: bool | None
-    tracking_radius: float | None
+    tracking_radius: float | None = field(since=766)
     view_offset: Vec2 | None
     entity_offset: Vec3 | None
     radius: float | None
@@ -57,7 +59,7 @@ class CameraPreset:
     listener: AudioListener | None
     player_effects: bool | None
     align_target_and_camera_forward: bool | None = field(until=818)
-    aim_assist: CameraAimAssistCommandPresetDefinition | None
+    aim_assist: CameraAimAssistCommandPresetDefinition | None = field(since=766)
     control_scheme: Scheme | None = field(since=800)
     apply_inherited_starting_rotation: bool = field(since=2192)
     starting_rotation: Vec2 | None = field(since=2192)
@@ -137,7 +139,7 @@ class CameraAimAssistPacket:
         DISTANCE = 1
         COUNT = auto()
 
-    preset_id: str
+    preset_id: str = field(since=766)
     view_angle: Vec2
     distance: float
     target_mode: TargetMode
@@ -145,6 +147,7 @@ class CameraAimAssistPacket:
     show_debug_render: bool = field(since=827)
 
 
+@type(since=766)
 class CameraAimAssistCategoryPriorities:
     entities: dict[str, int32]
     blocks: dict[str, int32]
@@ -154,6 +157,7 @@ class CameraAimAssistCategoryPriorities:
     block_default: int32 | None
 
 
+@type(since=766)
 class CameraAimAssistCategoryDefinition:
     name: str
     priorities: CameraAimAssistCategoryPriorities
@@ -167,6 +171,7 @@ class CameraAimAssistPresetExclusionDefinition:
     entity_type_family_exclusion_list: list[str] = field(since=924)
 
 
+@type(since=766)
 class CameraAimAssistPresetDefinition:
     identifier: str
     categories: str = field(until=776)
@@ -184,13 +189,13 @@ class CameraAimAssistPresetsPacketOperation(IntEnum, uint8):
     ADD_TO_EXISTING = 1
 
 
-@type(until=776)
+@type(since=766, until=776)
 class CameraAimAssistCategoriesDefinition:
     identifier: str
     categories: list[CameraAimAssistCategoryDefinition]
 
 
-@packet(id=320, until=776)
+@packet(id=320, since=766, until=776)
 class CameraAimAssistPresetsPacket:
     categories: list[CameraAimAssistCategoriesDefinition]
     presets: list[CameraAimAssistPresetDefinition]
