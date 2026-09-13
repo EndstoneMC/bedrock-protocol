@@ -51,7 +51,7 @@ class ResourcePacksInfoPacket:
     resource_pack_required: bool
     has_addon_packs: bool
     has_scripts: bool
-    force_disable_vibrant_visuals: bool
+    force_disable_vibrant_visuals: bool = field(since=818)
     world_template_id_and_version: PackIdVersion
     resource_packs: list[PackInfoData] = field(prefix=uint16)
 

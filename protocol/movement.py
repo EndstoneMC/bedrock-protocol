@@ -145,3 +145,17 @@ class CorrectPlayerMovePredictionPacket:
     vehicle_angular_velocity: float | None
     on_ground: bool
     tick: PlayerInputTick
+
+
+class ServerAuthMovementMode(IntEnum, uint8):
+    LEGACY_CLIENT_AUTHORITATIVE_V1_DEPRECATED = 0
+    CLIENT_AUTHORITATIVE_V2 = 1
+    SERVER_AUTHORITATIVE_V3 = 2
+
+
+@packet(id=319, until=818)
+class SetMovementAuthorityPacket:
+    """Switches the client between client- and server-authoritative movement mid-session.
+    Retired at 818, when only the server-authoritative mode was left."""
+
+    new_auth_movement_mode: ServerAuthMovementMode

@@ -98,7 +98,7 @@ class MinecraftEventing:
         WHO_NEEDS_ROCKETS = 111
         OVER_OVERKILL = 112
         HEART_TRANSPLANTER = 113
-        STAY_HYDRATED = 114
+        STAY_HYDRATED = value(114, since=818)
         MOB_KABOB = value(115, since=898)
         ADVENTURING_TIME = value(116, since=924)
         UH_OH = value(117, since=1001)

@@ -529,12 +529,12 @@ class LevelSoundEvent(IntEnum, uint32):
     STATE_CHANGE = 552
     IMITATE_HAPPY_GHAST = 553
     UNEQUIP_GENERIC = 554
-    RECORD_TEARS = 555
-    THE_END_LIGHT_FLASH = 556
-    LEAD_LEASH = 557
-    LEAD_UNLEASH = 558
-    LEAD_BREAK = 559
-    UNSADDLE = 560
+    RECORD_TEARS = value(555, since=818)
+    THE_END_LIGHT_FLASH = value(556, since=818)
+    LEAD_LEASH = value(557, since=818)
+    LEAD_UNLEASH = value(558, since=818)
+    LEAD_BREAK = value(559, since=818)
+    UNSADDLE = value(560, since=818)
     EQUIP_COPPER = value(561, since=827)
     RECORD_LAVA_CHICKEN = value(561, since=819, until=827)
     RECORD_LAVA_CHICKEN = value(562, since=827)

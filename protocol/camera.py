@@ -56,6 +56,7 @@ class CameraPreset:
     yaw_limit_max: float | None
     listener: AudioListener | None
     player_effects: bool | None
+    align_target_and_camera_forward: bool | None = field(until=818)
     aim_assist: CameraAimAssistCommandPresetDefinition | None
     control_scheme: Scheme | None
     apply_inherited_starting_rotation: bool = field(since=2192)
@@ -223,7 +224,7 @@ class CameraInstructionOptions:
         view_offset: ViewOffsetOption | None
         entity_offset: EntityOffsetOption | None
         default_: bool | None
-        remove_ignore_starting_values_component: bool
+        remove_ignore_starting_values_component: bool = field(since=818)
 
     class FadeInstruction:
         class TimeOption:

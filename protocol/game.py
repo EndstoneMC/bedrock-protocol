@@ -10,6 +10,7 @@ from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.command import PlayerPermissionLevel
 from protocol.common import BlockPos, DimensionType, Vec2, Vec3
 from protocol.edu import EduSharedUriResource
+from protocol.movement import ServerAuthMovementMode
 from protocol.nbt import CompoundTag
 from protocol.network import GamePublishSetting, NetworkBlockPosition, NetworkPermissions, ServerEditorConnectionPolicy
 from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
@@ -121,6 +122,7 @@ class Experiments:
 
 
 class SyncedPlayerMovementSettings:
+    authority_mode: ServerAuthMovementMode = field(type=varint32, until=818)
     rewind_history_size: varint32
     server_auth_block_breaking: bool
 
@@ -192,7 +194,7 @@ class LevelSettings:
     server_id: str = field(until=924)
     world_id: str = field(until=924)
     scenario_id: str = field(until=924)
-    owner_id: str = field(until=924)
+    owner_id: str = field(since=818, until=924)
 
 
 @type(since=944, until=2168)

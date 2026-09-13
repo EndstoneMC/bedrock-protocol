@@ -3,7 +3,21 @@ world/level/chunk/."""
 
 from enum import IntEnum
 
-from protocol import array, field, int8, int32, packet, type, uint8, uint16, uint32, uint64, uvarint32, varint32
+from protocol import (
+    array,
+    field,
+    int8,
+    int32,
+    packet,
+    type,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    uvarint32,
+    value,
+    varint32,
+)
 from protocol.common import BlockPos, DimensionType
 
 package = "bedrock.protocol"
@@ -74,7 +88,7 @@ class SubChunkPacket:
         HAS_DATA = 1
         ALL_TOO_HIGH = 2
         ALL_TOO_LOW = 3
-        ALL_COPIED = 4
+        ALL_COPIED = value(4, since=818)
 
     class SubChunkRequestResult(IntEnum, uint8):
         UNDEFINED = 0
@@ -90,9 +104,9 @@ class SubChunkPacket:
         subchunk_height_map: array[array[int8, 16], 16] = field(
             when=lambda h: h.height_map_type == HeightMapDataType.HAS_DATA
         )
-        render_height_map_type: HeightMapDataType
+        render_height_map_type: HeightMapDataType = field(since=818)
         subchunk_render_height_map: array[array[int8, 16], 16] = field(
-            when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA
+            when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA, since=818
         )
 
     class SubChunkPosOffset:
