@@ -159,6 +159,7 @@ class CameraAimAssistCategoryDefinition:
     priorities: CameraAimAssistCategoryPriorities
 
 
+@type(since=898)
 class CameraAimAssistPresetExclusionDefinition:
     block_exclusion_list: list[str]
     actor_exclusion_list: list[str]
@@ -169,7 +170,8 @@ class CameraAimAssistPresetExclusionDefinition:
 class CameraAimAssistPresetDefinition:
     identifier: str
     categories: str = field(until=776)
-    exclusion_settings: CameraAimAssistPresetExclusionDefinition
+    exclusion_list: list[str] = field(until=898)
+    exclusion_settings: CameraAimAssistPresetExclusionDefinition = field(since=898)
     liquid_targeting_list: list[str]
     item_settings: dict[str, str]
     default_item_settings: str | None
