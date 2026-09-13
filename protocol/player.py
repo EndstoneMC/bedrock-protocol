@@ -171,7 +171,7 @@ class GraphicsMode(IntEnum, uint8):
     RAY_TRACED = 3
 
 
-@packet(id=323)
+@packet(id=323, since=786)
 class UpdateClientOptionsPacket:
     graphics_mode: GraphicsMode | None
     filter_profanity: bool | None = field(since=975)
@@ -260,7 +260,7 @@ class UpdateType(Enum, uint8):
     SET_FLOAT_OVERRIDE = 3
 
 
-@packet(id=325, until=2168)
+@packet(id=325, since=786, until=2168)
 class PlayerUpdateEntityOverridesPacket:
     id: ActorUniqueID
     property_index: uvarint32

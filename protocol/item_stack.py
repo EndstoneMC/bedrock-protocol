@@ -39,6 +39,7 @@ class ItemStackRequestActionType(IntEnum, uint8):
     CRAFT_LOOM = 17
     CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = 18
     CRAFT_RESULTS_DEPRECATEDASKTYLAING = 19
+    TEST = value(20, until=786)
 
 
 class ItemStackNetResult(IntEnum, uint8):

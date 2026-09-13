@@ -40,7 +40,13 @@ class HudVisibility(IntEnum):
     COUNT = auto()
 
 
-@packet(id=308)
+@packet(id=308, until=786)
+class SetHudPacket:
+    hud_element: list[HudElement] = field(type=uvarint32)
+    hud_visible: HudVisibility = field(type=uint8)
+
+
+@packet(id=308, since=786)
 class SetHudPacket:
     hud_element: list[HudElement]
     hud_visible: HudVisibility

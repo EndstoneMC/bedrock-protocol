@@ -206,7 +206,7 @@ class PhotoTransferPacket:
     new_photo_name: str
 
 
-@packet(id=324)
+@packet(id=324, since=786)
 class PlayerVideoCapturePacket:
     class StartVideoCapture:
         frame_rate: uint32

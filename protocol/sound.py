@@ -4,8 +4,8 @@ because its only consumer does."""
 
 from enum import IntEnum, auto
 
-from protocol import field, int64, packet, type, uint32, uint64, value, varint32
-from protocol.actor import ActorUniqueID
+from protocol import field, int64, packet, type, uint8, uint32, uint64, value, varint32
+from protocol.actor import ActorType, ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.network import NetworkBlockPosition
 
@@ -680,7 +680,7 @@ class LevelSoundEventPacket:
     actor_identifier: str
     is_baby: bool
     is_global: bool
-    actor: ActorUniqueID = field(type=int64)
+    actor: ActorUniqueID = field(type=int64, since=786)
     fire_at_position: Vec3 | None = field(since=975)
 
 
@@ -709,3 +709,28 @@ class StopSoundPacket:
     name: str
     stop_all: bool
     stop_music_legacy: bool
+
+
+@packet(id=24, until=786)
+class LevelSoundEventPacketV1:
+    """The original sound event packet, keyed by a single-byte event id. Superseded by
+    V2 and then by packet 123; retired at 786."""
+
+    event_id: LevelSoundEvent = field(type=uint8)
+    pos: Vec3
+    data: varint32
+    entity_type: ActorType = field(type=varint32)
+    is_baby_mob: bool
+    is_global: bool
+
+
+@packet(id=120, until=786)
+class LevelSoundEventPacketV2:
+    """V1 with the actor named by identifier rather than by type. Retired at 786."""
+
+    event_id: LevelSoundEvent = field(type=uint8)
+    pos: Vec3
+    data: varint32
+    entity_identifier: str
+    is_baby_mob: bool
+    is_global: bool

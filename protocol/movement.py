@@ -107,7 +107,7 @@ class ClientMovementPredictionSyncPacket:
     actor_bounding_box: ActorDataBoundingBoxComponent
     movement_attributes: array[float, 6]
     actor_id: ActorUniqueID
-    is_flying: bool
+    is_flying: bool = field(since=786)
 
 
 @packet(id=322, since=975)
