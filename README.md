@@ -11,11 +11,26 @@ holds one schema covering every version it supports, and a protoc-shaped compile
 consumer names the version it wants and gets a compile error if it asks for a field
 that era never had.
 
-Modelled today: protocol **776** (1.21.60), **786** (1.21.70), **800** (1.21.80),
-**818** (1.21.90), **819** (1.21.93), **827** (1.21.100), **844** (1.21.111),
-**859** (1.21.120), **898** (1.21.132), **924** (1.26.3), **944** (1.26.14),
-**975** (1.26.20), **1001** (1.26.30), **2168** (1.26.40), **2192** (1.26.50.27)
-and **2208** (1.26.60.23).
+## Versions
+
+| protocol | Minecraft |
+| --- | --- |
+| 776 | 1.21.60 |
+| 786 | 1.21.70 |
+| 800 | 1.21.80 |
+| 818 | 1.21.90 |
+| 819 | 1.21.93 |
+| 827 | 1.21.100 |
+| 844 | 1.21.111 |
+| 859 | 1.21.120 |
+| 898 | 1.21.132 |
+| 924 | 1.26.3 |
+| 944 | 1.26.14 |
+| 975 | 1.26.20 |
+| 1001 | 1.26.30 |
+| 2168 | 1.26.40 |
+| 2192 | 1.26.50.27 |
+| 2208 | 1.26.60.23 |
 
 ## Example
 
@@ -27,18 +42,20 @@ per era; anything smaller carries its own version range:
 class SubChunkRequestPacket:
     dimension_type: DimensionType
     center_pos: SubChunkPos
-    sub_chunk_pos_offsets: list[SubChunkPosOffset] = field(prefix=uint32)
+    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset] = field(prefix=uint32)
 
 
 @packet(id=175, since=1001)
 class SubChunkRequestPacket:
     dimension_type: DimensionType
-    sub_chunk_pos_offsets: list[SubChunkPosOffset]
+    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset]
     center_pos: SubChunkPos
 ```
 
-The compiler emits one struct per version behind a selector alias, so both eras are
-reachable from a single name:
+Cerealising this packet both moved `center_pos` behind the offsets and swapped the
+offset count from a fixed `uint32` to a varint; the schema gates that at 1001. The
+compiler emits one struct per version behind a selector alias, so both eras are
+reachable from a single name and the one you spell decides which bytes you get:
 
 ```cpp
 #include <bedrock/protocol.hpp>
@@ -47,18 +64,105 @@ namespace bp = bedrock::protocol;
 using Packet = bp::SubChunkRequestPacket_<975>;
 
 Packet packet;
-packet.dimension_type = static_cast<bp::DimensionType>(0);
+packet.dimension_type = bp::DimensionType{0};
+packet.center_pos = {.x = 1, .y = 2, .z = 3};
+packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
 
 std::string buffer;
 bp::BinaryWriter writer{buffer};
-bp::Serializer<Packet>::serialize(writer, packet);
+bp::serialize(writer, packet);  // 11 bytes here, 17 at 1001
 
 bp::BinaryReader reader{buffer};
-std::expected<Packet, std::error_code> back = bp::Serializer<Packet>::deserialize(reader);
+std::expected<Packet, std::error_code> back = bp::deserialize<Packet>(reader);
 ```
 
 Unversioned types keep their plain name; `bp::SubChunkRequestPacket` without the
 suffix is the latest version.
+
+## Reflection
+
+Everything the compiler knows about a generated enum, packet or struct is emitted
+alongside it, so a consumer can ask at compile time. There is no macro to register a
+type and nothing to keep in sync — the tables come out of the same schema the codecs
+do.
+
+```cpp
+namespace bp = bedrock::protocol;
+using Packet = bp::SubChunkRequestPacket_<975>;
+
+// Enums carry their enumerators in declaration order, and the lowercased names
+// BDS writes for a name-coded field.
+static_assert(bp::enum_count<bp::BossBarColor>() == 8);
+static_assert(bp::enum_name(bp::BossBarColor::Red) == "red");
+static_assert(bp::enum_cast<bp::BossBarColor>("RED") == bp::BossBarColor::Red);
+
+// A packet id resolves to the type that version modelled, and to `void` otherwise.
+static_assert(std::is_same_v<bp::packet_of_t<975, 175>, Packet>);
+static_assert(bp::has_packet_v<2208, 353>);   // ClientboundMatchmakingStatePacket
+static_assert(!bp::has_packet_v<2192, 353>);  // ... which 1.26.50 did not have
+
+// A struct carries its name and its members, so the reorder above is a fact you
+// can assert on rather than something to go read out of the header.
+static_assert(bp::struct_name<Packet>() == "SubChunkRequestPacket");
+static_assert(bp::field_count<Packet>() == 3);
+static_assert(bp::field_name<1, bp::SubChunkRequestPacket_<975>>() == "center_pos");
+static_assert(bp::field_name<1, bp::SubChunkRequestPacket_<1001>>() == "sub_chunk_pos_offsets");
+static_assert(!bp::field_contains<Packet>("cache_enabled"));
+```
+
+`for_each_named_field` expands a pack rather than erasing to a variant, so every
+member arrives under its own static type and a walk can recurse into nested structs:
+
+```cpp
+void dump(std::string_view name, const auto &value, int indent = 0)
+{
+    using T = std::remove_cvref_t<decltype(value)>;
+    if constexpr (bp::Reflected<T>) {
+        std::println("{:{}}{} : {}", "", indent, name, bp::struct_name<T>());
+        bp::for_each_named_field(value, [indent](std::string_view member, const auto &v) {
+            dump(member, v, indent + 2);
+        });
+    }
+    else if constexpr (std::ranges::input_range<T>) {
+        for (const auto &item : value) {
+            dump(name, item, indent);
+        }
+    }
+    else {
+        std::println("{:{}}{} = {}", "", indent, name, static_cast<std::int64_t>(value));
+    }
+}
+
+dump("packet", packet);
+```
+
+```text
+packet : SubChunkRequestPacket
+  dimension_type = 0
+  center_pos : SubChunkPos
+    x = 1
+    y = 2
+    z = 3
+  sub_chunk_pos_offsets : SubChunkPacket::SubChunkPosOffset
+    x = -1
+    y = 0
+    z = 1
+```
+
+`field_get` reaches one member by index, and `field_index` is consteval, so naming a
+member by string costs nothing at runtime and a typo is a compile error rather than a
+miss:
+
+```cpp
+bp::field_get<bp::field_index<Packet>("center_pos")>(packet).y = 9;
+```
+
+The enum surface follows [magic_enum](https://github.com/Neargye/magic_enum) and the
+struct surface follows [Boost.PFR](https://github.com/boostorg/pfr), spelled the same
+way but without the limits each works around: no bounded value range to scan, no
+arity cap, no aggregate requirement, and member names on every compiler. A type the
+compiler did not emit is simply unreflected rather than an error, so `bp::Reflected`
+is safe to branch on.
 
 ## Building
 
