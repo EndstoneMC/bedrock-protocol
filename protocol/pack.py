@@ -40,7 +40,7 @@ class PackInfoData:
     has_scripts: bool
     is_addon_pack: bool
     is_ray_tracing_capable: bool
-    cdn_url: str
+    cdn_url: str = field(since=748)
 
 
 class ResourcePackResponse(Enum, int8):
@@ -48,6 +48,12 @@ class ResourcePackResponse(Enum, int8):
     DOWNLOADING = 2
     DOWNLOADING_FINISHED = 3
     RESOURCE_PACK_STACK_FINISHED = 4
+
+
+@type(until=748)
+class PackUrl:
+    pack_id_and_version: str
+    url: str
 
 
 @packet(id=6, until=2168)
@@ -61,6 +67,7 @@ class ResourcePacksInfoPacket:
     force_disable_vibrant_visuals: bool = field(since=818)
     world_template_id_and_version: PackIdVersion = field(since=766)
     resource_packs: list[PackInfoData] = field(prefix=uint16)
+    pack_urls: list[PackUrl] = field(until=748)
 
 
 @packet(id=6, since=2168)

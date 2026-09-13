@@ -25,6 +25,7 @@ class ContainerID(IntEnum, int8):
     SELECTION_SLOTS = 122
     PLAYER_ONLY_UI = 124
     REGISTRY = 125
+    REGISTRY_INVENTORY = value(126, until=748)
 
 
 class ContainerEnumName(IntEnum, uint8):
@@ -107,7 +108,8 @@ class InventoryContentPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slots: list[NetworkItemStackDescriptor]
     full_container_name: FullContainerName
-    storage_item: NetworkItemStackDescriptor
+    dynamic_container_size: uvarint32 = field(until=748)
+    storage_item: NetworkItemStackDescriptor = field(since=748)
 
 
 @packet(id=49, since=1001)
@@ -123,7 +125,8 @@ class InventorySlotPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slot: uvarint32
     full_container_name: FullContainerName
-    storage_item: NetworkItemStackDescriptor
+    dynamic_container_size: uvarint32 = field(until=748)
+    storage_item: NetworkItemStackDescriptor = field(since=748)
     item: NetworkItemStackDescriptor
 
 

@@ -251,7 +251,68 @@ class SmithingTrimRecipePayload:
     net_id: RecipeNetId
 
 
-@type(until=2168)
+@type(until=748)
+class CraftingDataEntry:
+    entry_type: CraftingDataEntryType
+    shapeless_recipe: ShapelessRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_RECIPE
+    )
+    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
+        when=lambda e: e.entry_type
+        in {
+            CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
+            CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
+        }
+    )
+    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
+    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
+    )
+    multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
+    smithing_transform_recipe: SmithingTransformRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRANSFORM_RECIPE
+    )
+    smithing_trim_recipe: SmithingTrimRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
+    )
+    item_data: varint32 = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    item_aux: varint32 = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
+    )
+    item_result: SerializedNetworkItemInstanceDescriptor = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    tag: str = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+
+
+
+
+@type(since=748, until=2168)
 class CraftingDataEntry:
     entry_type: CraftingDataEntryType
     shapeless_recipe: ShapelessRecipePayload = field(

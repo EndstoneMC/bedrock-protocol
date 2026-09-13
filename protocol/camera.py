@@ -47,9 +47,9 @@ class CameraPreset:
     rot_y: float | None
     camera_rotation_speed: float | None
     snap_to_target: bool | None
-    horizontal_rotation_limit: Vec2 | None
-    vertical_rotation_limit: Vec2 | None
-    continue_targeting: bool | None
+    horizontal_rotation_limit: Vec2 | None = field(since=748)
+    vertical_rotation_limit: Vec2 | None = field(since=748)
+    continue_targeting: bool | None = field(since=748)
     tracking_radius: float | None = field(since=766)
     view_offset: Vec2 | None
     entity_offset: Vec3 | None
@@ -58,7 +58,7 @@ class CameraPreset:
     yaw_limit_max: float | None = field(since=776)
     listener: AudioListener | None
     player_effects: bool | None
-    align_target_and_camera_forward: bool | None = field(until=818)
+    align_target_and_camera_forward: bool | None = field(since=748, until=818)
     aim_assist: CameraAimAssistCommandPresetDefinition | None = field(since=766)
     control_scheme: Scheme | None = field(since=800)
     apply_inherited_starting_rotation: bool = field(since=2192)
@@ -244,7 +244,7 @@ class CameraInstructionOptions:
         rot: RotOption | None
         facing: FacingOption | None
         view_offset: ViewOffsetOption | None
-        entity_offset: EntityOffsetOption | None
+        entity_offset: EntityOffsetOption | None = field(since=748)
         default_: bool | None
         remove_ignore_starting_values_component: bool = field(since=818)
 

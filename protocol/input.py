@@ -82,7 +82,7 @@ class PlayerActionType(IntEnum):
     START_FLYING = 34
     STOP_FLYING = 35
     DEPRECATED_CLIENT_ACK_SERVER_DATA = 36
-    START_USING_ITEM = 37
+    START_USING_ITEM = value(37, since=748)
     INTERNAL_UPDATE = value(38, since=2168)
     COUNT = auto()
 
@@ -185,11 +185,11 @@ class PlayerAuthInputPacket:
         VERTICAL_COLLISION = 50
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
-        START_USING_ITEM = 53
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
-        START_SPIN_ATTACK = 56
-        STOP_SPIN_ATTACK = 57
+        START_USING_ITEM = value(53, since=748)
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = value(54, since=748)
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = value(55, since=748)
+        START_SPIN_ATTACK = value(56, since=748)
+        STOP_SPIN_ATTACK = value(57, since=748)
         IS_HOTBAR_ONLY_TOUCH = value(58, since=766)
         JUMP_RELEASED_RAW = value(59, since=766)
         JUMP_PRESSED_RAW = value(60, since=766)
@@ -207,7 +207,8 @@ class PlayerAuthInputPacket:
     input_mode: InputMode
     play_mode: ClientPlayMode
     new_interaction_model: NewInteractionModel = field(type=uvarint32)
-    interact_rotation: Vec2
+    gaze_direction: Vec3 = field(when=lambda p: p.play_mode == ClientPlayMode.REALITY_DEPRECATED, until=748)
+    interact_rotation: Vec2 = field(since=748)
     client_tick: PlayerInputTick
     pos_delta: Vec3
     item_use_transaction: PackedItemUseLegacyInventoryTransaction = field(
@@ -225,7 +226,7 @@ class PlayerAuthInputPacket:
         client_predicted_vehicle: ActorUniqueID
 
     analog_move_vector: Vec2
-    camera_orientation: Vec3
+    camera_orientation: Vec3 = field(since=748)
     raw_move_vector: Vec2 = field(since=766)
 
 

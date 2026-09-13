@@ -281,7 +281,7 @@ TEST_CASE("packet id is 30 at v975")
 TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against the golden")
 {
     PacketV975 packet;
-    packet.transaction = bp::base::NormalTransactionData{};
+    packet.transaction = bp::NormalTransactionData_<975>{};
     REQUIRE(encode(packet) == golden_v975_normal_empty);
 
     const auto back = decode<PacketV975>(golden_v975_normal_empty);
@@ -293,7 +293,7 @@ TEST_CASE("inventory-transaction v975 normal (no actions) round-trips against th
 // puts its window id on the wire as a varint32 and writes no flags at all.
 TEST_CASE("inventory-transaction v975 normal with a container action round-trips")
 {
-    bp::base::InventoryAction action;
+    bp::InventoryAction_<975> action;
     action.source.type = bp::InventorySourceType::ContainerInventory;
     action.source.container_id = static_cast<bp::ContainerID>(12);
     action.slot = 3;
@@ -301,8 +301,8 @@ TEST_CASE("inventory-transaction v975 normal with a container action round-trips
     action.to_item_descriptor = stone_v975();
 
     PacketV975 packet;
-    bp::base::NormalTransactionData normal;
-    normal.transaction.actions = std::vector<bp::base::InventoryAction>{action};
+    bp::NormalTransactionData_<975> normal;
+    normal.transaction.actions = std::vector<bp::InventoryAction_<975>>{action};
     packet.transaction = normal;
     REQUIRE(encode(packet) == golden_v975_normal_action);
 
@@ -348,7 +348,7 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     packet.legacy_set_item_slots = {
         {.container_enum = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer, .slots = "\x03\x04"},
     };
-    packet.transaction = bp::base::NormalTransactionData{};
+    packet.transaction = bp::NormalTransactionData_<975>{};
     REQUIRE(encode(packet) == golden_v975_legacy_request);
 
     const auto back = decode<PacketV975>(golden_v975_legacy_request);

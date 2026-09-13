@@ -14,9 +14,11 @@ const std::string golden = bytes({
 
 }  // namespace
 
-TEST_CASE("packet id is 319, and it is gone from 818")
+TEST_CASE("packet id is 319: it arrives at 748 and is gone from 818")
 {
-    STATIC_REQUIRE(bp::base::SetMovementAuthorityPacket::Id == 319);
+    STATIC_REQUIRE(bp::SetMovementAuthorityPacket_<748>::Id == 319);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<729, 319>);
+    STATIC_REQUIRE(bp::has_packet_v<748, 319>);
     STATIC_REQUIRE(bp::has_packet_v<800, 319>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<818, 319>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<2168, 319>);
@@ -24,11 +26,11 @@ TEST_CASE("packet id is 319, and it is gone from 818")
 
 TEST_CASE("set-movement-authority round-trips against the golden")
 {
-    bp::base::SetMovementAuthorityPacket packet;
+    bp::SetMovementAuthorityPacket_<748> packet;
     packet.new_auth_movement_mode = bp::ServerAuthMovementMode::ServerAuthoritativeV3;
     REQUIRE(encode(packet) == golden);
 
-    const auto back = decode<bp::base::SetMovementAuthorityPacket>(golden);
+    const auto back = decode<bp::SetMovementAuthorityPacket_<748>>(golden);
     REQUIRE(back.new_auth_movement_mode == bp::ServerAuthMovementMode::ServerAuthoritativeV3);
 }
 
@@ -36,7 +38,7 @@ TEST_CASE("set-movement-authority round-trips against the golden")
 // as a varint32 -- one byte per mode, no continuation bit at 2.
 TEST_CASE("the body is one unsigned byte and nothing else")
 {
-    bp::base::SetMovementAuthorityPacket packet;
+    bp::SetMovementAuthorityPacket_<748> packet;
     packet.new_auth_movement_mode = bp::ServerAuthMovementMode::LegacyClientAuthoritativeV1Deprecated;
     REQUIRE(encode(packet) == bytes({0x00}));
 
