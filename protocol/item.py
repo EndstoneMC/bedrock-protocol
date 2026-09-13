@@ -4,7 +4,7 @@ The net ids sit here rather than in item_stack.py because the descriptors refere
 
 from enum import IntEnum, auto
 
-from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, varint32
+from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -19,7 +19,7 @@ class HandSlot(IntEnum, uint8):
 class ItemVersion(IntEnum):
     LEGACY = 0
     DATA_DRIVEN = 1
-    NONE = 2
+    NONE = value(2, since=776)
 
 
 class ItemData:
@@ -30,7 +30,20 @@ class ItemData:
     component_data: CompoundTag
 
 
-@packet(id=162)
+class ItemComponentEntry:
+    name: str
+    component_data: CompoundTag
+
+
+@packet(id=162, until=776)
+class ItemComponentPacket:
+    """The item component table before 776 folded the registry into it: just a name
+    and its component NBT per entry."""
+
+    items: list[ItemComponentEntry]
+
+
+@packet(id=162, since=776)
 class ItemRegistryPacket:
     items: list[ItemData]
 

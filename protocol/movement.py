@@ -93,15 +93,17 @@ class ServerPlayerPostMovePositionPacket:
     pos: Vec3
 
 
+@type(since=776)
 class ActorDataFlagComponent:
     value: bitset[ActorFlags.COUNT]
 
 
+@type(since=776)
 class ActorDataBoundingBoxComponent:
     value: array[float, 3]
 
 
-@packet(id=322, until=975)
+@packet(id=322, since=776, until=975)
 class ClientMovementPredictionSyncPacket:
     actor_data_flag: ActorDataFlagComponent
     actor_bounding_box: ActorDataBoundingBoxComponent

@@ -4,7 +4,7 @@ Not the command permission ladder -- that is server/commands/, in command.py."""
 
 from enum import IntEnum, auto
 
-from protocol import field, int8, int64, packet, uint8, uint16, uint32, varint32
+from protocol import field, int8, int64, packet, uint8, uint16, uint32, value, varint32
 from protocol.actor import ActorUniqueID
 from protocol.command import CommandPermissionLevel, PlayerPermissionLevel
 
@@ -62,7 +62,7 @@ class AbilitiesIndex(IntEnum, int8):
     WORLD_BUILDER = 16
     NO_CLIP = 17
     PRIVILEGED_BUILDER = 18
-    VERTICAL_FLY_SPEED = 19
+    VERTICAL_FLY_SPEED = value(19, since=776)
     ABILITY_COUNT = auto()
 
 
@@ -93,7 +93,7 @@ class SerializedAbilitiesData:
         abilities_set: uint32
         ability_values: uint32
         fly_speed: float
-        vertical_fly_speed: float
+        vertical_fly_speed: float = field(since=776)
         walk_speed: float
 
     target_player: ActorUniqueID = field(type=int64)

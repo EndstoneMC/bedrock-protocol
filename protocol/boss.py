@@ -56,7 +56,7 @@ class BossEventPacket:
 
     with field(when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_NAME}):
         name: str
-        filtered_name: str
+        filtered_name: str = field(since=776)
 
     health_percent: float = field(
         when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PERCENT}
@@ -81,7 +81,7 @@ class BossEventPacket:
     player_id: ActorUniqueID = field(until=2192)
     event_type: BossEventUpdateType
     name: str
-    filtered_name: str
+    filtered_name: str = field(since=776)
     health_percent: float
     color: BossBarColor
     overlay: BossBarOverlay

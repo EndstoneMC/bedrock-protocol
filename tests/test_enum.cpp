@@ -82,7 +82,8 @@ TEST_CASE("nested enum", "[enum]")
 // A versioned enum reflects the member set of the snapshot it is spelled at.
 TEST_CASE("versioned enum", "[enum]")
 {
-    STATIC_REQUIRE(bp::enum_count<bp::base::MovementEffectType>() == 4);
+    STATIC_REQUIRE(bp::enum_count<bp::base::MovementEffectType>() == 3);
+    STATIC_REQUIRE(bp::enum_count<bp::v776::MovementEffectType>() == 4);
     STATIC_REQUIRE(bp::enum_count<bp::v1001::MovementEffectType>() == 5);
     STATIC_REQUIRE(bp::enum_type_name<bp::base::MovementEffectType>() == "MovementEffectType");
     STATIC_REQUIRE(bp::enum_cast<bp::base::MovementEffectType>("GEYSERBOOST") == std::nullopt);

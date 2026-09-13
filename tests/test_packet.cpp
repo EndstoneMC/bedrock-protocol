@@ -51,7 +51,7 @@ constexpr int end_id = static_cast<int>(bp::MinecraftPacketIds_<V>::EndId);
 
 TEST_CASE("packet by id", "[packet]")
 {
-    STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<975, 74>, bp::base::BossEventPacket>);
+    STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<975, 74>, bp::v776::BossEventPacket>);
     STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<1001, 74>, bp::v1001::BossEventPacket>);
     STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<2168, 74>, bp::v1001::BossEventPacket>);
     STATIC_REQUIRE(std::is_same_v<bp::packet_of_t<975, 1>, bp::LoginPacket>);

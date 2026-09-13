@@ -91,7 +91,18 @@ class StructureSettings:
     pivot: Vec3
 
 
-@type(until=2168)
+@type(until=776)
+class StructureEditorData:
+    structure_name: str
+    data_field: str
+    include_players: bool
+    show_bounding_box: bool
+    type: StructureBlockType
+    settings: StructureSettings
+    redstone_save_mode: StructureRedstoneSaveMode = field(type=varint32)
+
+
+@type(since=776, until=2168)
 class StructureEditorData:
     structure_name: RedactableString
     data_field: str

@@ -100,7 +100,7 @@ class CommandBlockUpdatePacket:
     command: str
     last_output: str
     name: str
-    filtered_name: str
+    filtered_name: str = field(since=776)
     track_output: bool
     tick_delay: uint32
     execute_on_first_tick: bool
@@ -121,7 +121,7 @@ class CommandBlockUpdatePacket:
     command: str
     last_output: str
     name: str
-    filtered_name: str
+    filtered_name: str = field(since=776)
     track_output: bool
     tick_delay: uint32
     execute_on_first_tick: bool
@@ -142,7 +142,7 @@ class CommandBlockUpdatePacket:
     command: str
     last_output: str
     name: str
-    filtered_name: str
+    filtered_name: str = field(since=776)
     track_output: bool
     tick_delay: int32
     execute_on_first_tick: bool

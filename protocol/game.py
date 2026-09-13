@@ -132,6 +132,13 @@ class BlockEntry:
     properties: CompoundTag
 
 
+@type(until=776)
+class StartGameItemEntry:
+    name: str
+    id: int16
+    is_component_based: bool
+
+
 @type(since=2168)
 class ServerBlockProperty:
     name: str
@@ -322,6 +329,7 @@ class StartGamePacket:
     level_current_time: uint64
     enchantment_seed: varint32
     block_properties: list[BlockEntry]
+    items: list[StartGameItemEntry] = field(until=776)
     multiplayer_correlation_id: str
     enable_item_stack_net_manager: bool
     server_version: str

@@ -52,8 +52,8 @@ class CameraPreset:
     view_offset: Vec2 | None
     entity_offset: Vec3 | None
     radius: float | None
-    yaw_limit_min: float | None
-    yaw_limit_max: float | None
+    yaw_limit_min: float | None = field(since=776)
+    yaw_limit_max: float | None = field(since=776)
     listener: AudioListener | None
     player_effects: bool | None
     align_target_and_camera_forward: bool | None = field(until=818)
@@ -111,13 +111,14 @@ class CameraAimAssistActorPriorityPacket:
     camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
 
 
+@type(since=776)
 class ClientCameraAimAssistPacketAction(IntEnum, uint8):
     SET_FROM_CAMERA_PRESET = 0
     CLEAR = 1
     COUNT = auto()
 
 
-@packet(id=321)
+@packet(id=321, since=776)
 class ClientCameraAimAssistPacket:
     camera_preset_id: str
     action: ClientCameraAimAssistPacketAction
@@ -167,6 +168,7 @@ class CameraAimAssistPresetExclusionDefinition:
 
 class CameraAimAssistPresetDefinition:
     identifier: str
+    categories: str = field(until=776)
     exclusion_settings: CameraAimAssistPresetExclusionDefinition
     liquid_targeting_list: list[str]
     item_settings: dict[str, str]
@@ -174,12 +176,25 @@ class CameraAimAssistPresetDefinition:
     hand_settings: str | None
 
 
+@type(since=776)
 class CameraAimAssistPresetsPacketOperation(IntEnum, uint8):
     SET = 0
     ADD_TO_EXISTING = 1
 
 
-@packet(id=320)
+@type(until=776)
+class CameraAimAssistCategoriesDefinition:
+    identifier: str
+    categories: list[CameraAimAssistCategoryDefinition]
+
+
+@packet(id=320, until=776)
+class CameraAimAssistPresetsPacket:
+    categories: list[CameraAimAssistCategoriesDefinition]
+    presets: list[CameraAimAssistPresetDefinition]
+
+
+@packet(id=320, since=776)
 class CameraAimAssistPresetsPacket:
     categories: list[CameraAimAssistCategoryDefinition]
     presets: list[CameraAimAssistPresetDefinition]

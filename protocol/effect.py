@@ -11,7 +11,7 @@ package = "bedrock.protocol"
 class MovementEffectType(IntEnum):
     INVALID = -1
     GLIDE_BOOST = 0
-    DOLPHIN_BOOST = 1
+    DOLPHIN_BOOST = value(1, since=776)
     GEYSER_BOOST = value(2, since=1001)
     COUNT = auto()
 

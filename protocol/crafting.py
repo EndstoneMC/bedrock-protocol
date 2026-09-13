@@ -362,7 +362,7 @@ class CraftingDataPacket:
     clear_recipes: bool
 
 
-@type(until=2168)
+@type(since=776, until=2168)
 class CreativeGroupInfoPayload:
     creative_item_category: CreativeItemCategory = field(type=int32)
     name: str
@@ -379,12 +379,12 @@ class CreativeGroupInfoPayload:
 class CreativeItemEntryPayload:
     creative_item_net_id: CreativeItemNetId
     item_descriptor: SerializedNetworkItemInstanceDescriptor
-    group_index: uvarint32
+    group_index: uvarint32 = field(since=776)
 
 
 @packet(id=145)
 class CreativeContentPacket:
-    groups: list[CreativeGroupInfoPayload]
+    groups: list[CreativeGroupInfoPayload] = field(since=776)
     entries: list[CreativeItemEntryPayload]
 
 

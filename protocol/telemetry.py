@@ -55,6 +55,7 @@ class MinecraftEventing:
         TREASURE_HUNTER = 67
         SHOOTING_STAR = 68
         FASHION_SHOW = 69
+        BRILLIANCE = value(70, until=776)
         SELF_PUBLISHED_AUTHOR = 71
         ALTERNATIVE_FUEL = 72
         SLEEP_WITH_THE_FISHES = 73
