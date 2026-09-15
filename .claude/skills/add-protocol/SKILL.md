@@ -175,7 +175,8 @@ names the Minecraft build, the channel and the network version. Branches run bac
 ### When the new number supersedes a modelled preview
 
 **One protocol per update line.** The preview channel renumbers repeatedly inside one
-update - 2181, then 2187, then 2192 for 1.26.50 - and nobody runs a superseded preview. A
+update - 2181, then 2187, then 2192 for 1.26.50, and the stable that closes it renumbers
+once more to 2193 - and nobody runs a superseded preview. A
 newer number on the same update line *replaces* the older one; it never becomes a second
 snapshot beside it.
 

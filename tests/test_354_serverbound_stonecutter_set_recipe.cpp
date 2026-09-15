@@ -8,11 +8,11 @@
 // at 2168. The shape below is the r26_u6 dump's -- the container the stonecutter screen
 // is open on, then the index into its recipe list.
 
-TEST_CASE("packet id is 354 and 2192 does not have it")
+TEST_CASE("packet id is 354 and 2193 does not have it")
 {
     STATIC_REQUIRE(bp::ServerboundStonecutterSetRecipePacket_<2208>::Id == 354);
     STATIC_REQUIRE(bp::has_packet_v<2208, 354>);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<2192, 354>);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<2193, 354>);
 }
 
 TEST_CASE("ServerboundStonecutterSetRecipePacket: v2208 round-trip")

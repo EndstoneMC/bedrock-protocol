@@ -76,7 +76,7 @@ field to 1001.
 
 **A protocol-docs branch is a network version**, not a release ordering — check its
 README, and check it again after every fetch, because a branch bumps within itself:
-`r26_u4` was 2168 through 1.26.44.3 and is **2169** from 1.26.45.1 (`r26_u5` = 2192,
+`r26_u4` was 2168 through 1.26.44.3 and is **2169** from 1.26.45.1 (`r26_u5` = 2193,
 `r26_u6` = 2207). A packet missing from the dump is not cerealised at that version,
 so the dump cannot describe it at all.
 
@@ -401,7 +401,7 @@ also lets the schema encode a `nullopt` BDS never writes.
 
 Grep the dump for `"value": true` when modelling any dynamic member, at every era
 — `git grep '"value": true' origin/r26_u4` and the same for `origin/r26_u3`. BDS is
-fixing them: `RemoveScore` lost its marker at 2169 and the rest went at 2192.
+fixing them: `RemoveScore` lost its marker at 2169 and the rest went at 2193.
 
 ## A union spells its discriminator
 
@@ -436,7 +436,7 @@ hoisted out of its owner.
 `since=` / `until=` are raw protocol version numbers, but must land on a modelled
 snapshot, never an arbitrary changelog number. Gate a change at the next snapshot at
 or after it: a field the changelog dates to 977 gates `since=1001`. Only 898, 924, 944,
-975, 1001, 2168 and 2192 are materialized, so an off-snapshot boundary buys nothing.
+975, 1001, 2168 and 2193 are materialized, so an off-snapshot boundary buys nothing.
 
 **Diff the type closure across protocol-docs branches before modelling a packet.**
 Walk the packet's transitive types on the old and new branch and diff the two dumps:

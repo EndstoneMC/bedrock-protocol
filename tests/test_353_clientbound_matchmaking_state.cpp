@@ -8,11 +8,11 @@
 // at 2168 and neither can marshal it. The shape below is the r26_u6 dump's -- a
 // name-coded MatchmakingState, then the destination -- and the assertions are structural.
 
-TEST_CASE("packet id is 353 and 2192 does not have it")
+TEST_CASE("packet id is 353 and 2193 does not have it")
 {
     STATIC_REQUIRE(bp::ClientboundMatchmakingStatePacket_<2208>::Id == 353);
     STATIC_REQUIRE(bp::has_packet_v<2208, 353>);
-    STATIC_REQUIRE_FALSE(bp::has_packet_v<2192, 353>);
+    STATIC_REQUIRE_FALSE(bp::has_packet_v<2193, 353>);
 }
 
 TEST_CASE("ClientboundMatchmakingStatePacket: v2208 round-trip")

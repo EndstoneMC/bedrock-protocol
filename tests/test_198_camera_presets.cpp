@@ -8,7 +8,7 @@
 namespace {
 
 using PacketV2168 = bp::CameraPresetsPacket_<2168>;
-using PacketV2192 = bp::CameraPresetsPacket_<2192>;
+using PacketV2193 = bp::CameraPresetsPacket_<2193>;
 
 template <class Packet>
 Packet two_presets()
@@ -78,7 +78,7 @@ const std::string golden = bytes({
 TEST_CASE("packet id is 198 at both eras")
 {
     STATIC_REQUIRE(PacketV2168::Id == 198);
-    STATIC_REQUIRE(PacketV2192::Id == 198);
+    STATIC_REQUIRE(PacketV2193::Id == 198);
 }
 
 // The preset carries no aim assist: gophertunnel writes its target mode as a fixed
@@ -101,15 +101,15 @@ TEST_CASE("camera presets round-trip against the golden")
     REQUIRE(back.camera_presets.presets[1].control_scheme == bp::Scheme::CameraRelativeStrafe);
 }
 
-// 2192 appends a starting rotation and the flag that applies it, so each preset grows
+// 2193 appends a starting rotation and the flag that applies it, so each preset grows
 // by the flag byte plus the rotation's presence byte, and a 2168 body runs short.
-TEST_CASE("camera presets: v2192 appends the starting rotation")
+TEST_CASE("camera presets: v2193 appends the starting rotation")
 {
-    const auto newer = two_presets<PacketV2192>();
+    const auto newer = two_presets<PacketV2193>();
     REQUIRE(encode(newer).size() == golden.size() + 4);
-    REQUIRE(rejects<PacketV2192>(golden));
+    REQUIRE(rejects<PacketV2193>(golden));
 
-    const auto back = decode<PacketV2192>(encode(newer));
+    const auto back = decode<PacketV2193>(encode(newer));
     REQUIRE_FALSE(back.camera_presets.presets[1].apply_inherited_starting_rotation);
     REQUIRE_FALSE(back.camera_presets.presets[1].starting_rotation.has_value());
 }

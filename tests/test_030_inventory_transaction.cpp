@@ -357,11 +357,11 @@ TEST_CASE("inventory-transaction v975 legacy request id carries the set-item slo
     REQUIRE(std::get<0>(back.transaction).transaction.actions.empty());
 }
 
-// 2192 inserts the hand between the slot and the item. No golden -- gophertunnel stops at
+// 2193 inserts the hand between the slot and the item. No golden -- gophertunnel stops at
 // 2168 -- so the 2168 body is the reference, and three changes land in that delta at once:
 // the hand arrives, and the two always-true markers, one on the transaction and one on the
 // packet, go.
-TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
+TEST_CASE("inventory-transaction v2193 carries the hand ahead of the item")
 {
     bp::v2168::ItemUseInventoryTransaction older;
     older.transaction.actions = std::vector<bp::v2168::InventoryAction>{};
@@ -375,9 +375,9 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
     bp::InventoryTransactionPacket_<2168> old_packet;
     old_packet.transaction = older;
 
-    bp::v2192::ItemUseInventoryTransaction use;
-    use.transaction.actions = std::vector<bp::v2192::InventoryAction>{};
-    use.action_type = bp::v2192::ItemUseInventoryTransaction::ActionType::Place;
+    bp::v2193::ItemUseInventoryTransaction use;
+    use.transaction.actions = std::vector<bp::v2193::InventoryAction>{};
+    use.action_type = bp::v2193::ItemUseInventoryTransaction::ActionType::Place;
     use.trigger_type = bp::ItemUseInventoryTransaction::TriggerType::PlayerInput;
     use.pos = {.x = 1, .y = 2, .z = 3};
     use.face = 4;
@@ -385,13 +385,13 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
     use.hand = bp::HandSlot::Offhand;
     use.target_block_id = 9;
 
-    bp::InventoryTransactionPacket_<2192> packet;
+    bp::InventoryTransactionPacket_<2193> packet;
     packet.transaction = use;
 
     const auto off_hand = encode(packet);
     REQUIRE(off_hand.size() + 1 == encode(old_packet).size());
 
-    const auto back = decode<bp::InventoryTransactionPacket_<2192>>(off_hand);
+    const auto back = decode<bp::InventoryTransactionPacket_<2193>>(off_hand);
     REQUIRE(std::get<2>(back.transaction).hand == bp::HandSlot::Offhand);
     REQUIRE(std::get<2>(back.transaction).slot == 5);
     REQUIRE(std::get<2>(back.transaction).target_block_id == 9);
@@ -413,19 +413,19 @@ TEST_CASE("inventory-transaction v2192 carries the hand ahead of the item")
 
 // 2208 gives both remaining transactions the hand they were performed with: mid-struct
 // between the slot and the item on the use-on-actor, appended on the release. No golden
-// -- gophertunnel and CloudburstMC both stop at 2168 -- so the 2192 bodies are the
-// reference, and 2192 rather than 2168 because that is where the three always-true
+// -- gophertunnel and CloudburstMC both stop at 2168 -- so the 2193 bodies are the
+// reference, and 2193 rather than 2168 because that is where the three always-true
 // markers went. The hand is pinned twice, by the net delta and by the byte that moves.
 TEST_CASE("inventory-transaction v2208 threads the hand through the use-on-actor")
 {
-    bp::ItemUseOnActorInventoryTransaction_<2192> older;
+    bp::ItemUseOnActorInventoryTransaction_<2193> older;
     older.runtime_id = bp::ActorRuntimeID{4};
-    older.action_type = bp::ItemUseOnActorInventoryTransaction_<2192>::ActionType::Attack;
+    older.action_type = bp::ItemUseOnActorInventoryTransaction_<2193>::ActionType::Attack;
     older.slot = 3;
     older.from_pos = {1.0F, 2.0F, 3.0F};
     older.hit_pos = {4.0F, 5.0F, 6.0F};
 
-    bp::InventoryTransactionPacket_<2192> older_packet;
+    bp::InventoryTransactionPacket_<2193> older_packet;
     older_packet.transaction = older;
 
     bp::ItemUseOnActorInventoryTransaction_<2208> newer;
@@ -453,12 +453,12 @@ TEST_CASE("inventory-transaction v2208 threads the hand through the use-on-actor
 
 TEST_CASE("inventory-transaction v2208 appends the hand to the release")
 {
-    bp::ItemReleaseInventoryTransaction_<2192> older;
-    older.action_type = bp::ItemReleaseInventoryTransaction_<2192>::ActionType::Release;
+    bp::ItemReleaseInventoryTransaction_<2193> older;
+    older.action_type = bp::ItemReleaseInventoryTransaction_<2193>::ActionType::Release;
     older.slot = 3;
     older.from_pos = {1.0F, 2.0F, 3.0F};
 
-    bp::InventoryTransactionPacket_<2192> older_packet;
+    bp::InventoryTransactionPacket_<2193> older_packet;
     older_packet.transaction = older;
 
     bp::ItemReleaseInventoryTransaction_<2208> newer;

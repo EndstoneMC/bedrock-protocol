@@ -84,12 +84,12 @@ TEST_CASE("a v1001 dimension-data body does not decode as a v2168 one")
     REQUIRE(decode_partial<bp::DimensionDataPacket_<1001>>(golden_v2168).dimension_definitions.size() == 1);
 }
 
-// 2192 renamed the leading pair and appended the default biome; 2208 adds the cloud
+// 2193 renamed the leading pair and appended the default biome; 2208 adds the cloud
 // height and the flag that draws them. No golden -- gophertunnel and CloudburstMC both
-// stop at 2168 -- so the 2192 body is the reference.
+// stop at 2168 -- so the 2193 body is the reference.
 TEST_CASE("dimension-data v2208 appends the cloud height and its flag")
 {
-    bp::DimensionDataPacket_<2192> older;
+    bp::DimensionDataPacket_<2193> older;
     older.dimension_definitions["test:dim"] = {
         .minimum_y = -64,
         .height_range = 384,

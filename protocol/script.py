@@ -52,7 +52,7 @@ class TextDataPayload:
     text: str
     use_rotation: bool = field(since=975)
     background_color: Color | None = field(since=975)
-    line_gap_height: float = field(since=2192)
+    line_gap_height: float = field(since=2193)
     depth_test: bool = field(since=975)
     show_backface: bool = field(since=975)
     show_text_backface: bool = field(since=975)

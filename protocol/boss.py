@@ -78,7 +78,7 @@ class BossEventPacket:
 @packet(id=74, since=1001)
 class BossEventPacket:
     boss_id: ActorUniqueID
-    player_id: ActorUniqueID = field(until=2192)
+    player_id: ActorUniqueID = field(until=2193)
     event_type: BossEventUpdateType
     name: str
     filtered_name: str = field(since=776)

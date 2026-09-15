@@ -32,7 +32,7 @@ that era never had.
 | 975 | 1.26.20 |
 | 1001 | 1.26.30 |
 | 2168 | 1.26.40 |
-| 2192 | 1.26.50.27 |
+| 2193 | 1.26.50.5 |
 | 2208 | 1.26.60.23 |
 
 ## Example
@@ -102,7 +102,7 @@ static_assert(bp::enum_cast<bp::BossBarColor>("RED") == bp::BossBarColor::Red);
 // A packet id resolves to the type that version modelled, and to `void` otherwise.
 static_assert(std::is_same_v<bp::packet_of_t<975, 175>, Packet>);
 static_assert(bp::has_packet_v<2208, 353>);   // ClientboundMatchmakingStatePacket
-static_assert(!bp::has_packet_v<2192, 353>);  // ... which 1.26.50 did not have
+static_assert(!bp::has_packet_v<2193, 353>);  // ... which 1.26.50 did not have
 
 // A struct carries its name and its members, so the reorder above is a fact you
 // can assert on rather than something to go read out of the header.

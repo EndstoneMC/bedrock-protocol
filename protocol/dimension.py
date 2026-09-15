@@ -11,7 +11,7 @@ package = "bedrock.protocol"
 
 
 class DimensionDefinitionGroup:
-    @type(until=2192)
+    @type(until=2193)
     class DimensionDefinition:
         height_maximum: varint32
         height_minimum: varint32
@@ -19,7 +19,7 @@ class DimensionDefinitionGroup:
         dimension_type: DimensionType = field(since=975)
         pack_id: uuid.UUID = field(since=2168)
 
-    @type(since=2192)
+    @type(since=2193)
     class DimensionDefinition:
         minimum_y: varint32
         height_range: varint32

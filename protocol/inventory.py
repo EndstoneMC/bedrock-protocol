@@ -179,7 +179,7 @@ class ContainerType(IntEnum, int8):
     CHEST_BOAT = 34
     DECORATED_POT = 35
     CRAFTER = 36
-    DATA_DRIVEN_CONTAINER = value(37, since=2192)
+    DATA_DRIVEN_CONTAINER = value(37, since=2193)
 
 
 @packet(id=47)
@@ -286,7 +286,7 @@ class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
 
 
-@type(since=2192)
+@type(since=2193)
 class FurnaceLeftTabIndex(IntEnum):
     NONE = 0
     RECIPE_FOOD = 1
@@ -297,7 +297,7 @@ class FurnaceLeftTabIndex(IntEnum):
     COUNT = auto()
 
 
-@type(since=2192)
+@type(since=2193)
 class FurnaceLayout(IntEnum):
     NONE = 0
     INVENTORY_ONLY = 1
@@ -305,14 +305,14 @@ class FurnaceLayout(IntEnum):
     COUNT = auto()
 
 
-@type(since=2192)
+@type(since=2193)
 class FurnaceOptions:
     left_furnace_tab: FurnaceLeftTabIndex
     filtering: bool
     layout: FurnaceLayout
 
 
-@packet(id=351, since=2192)
+@packet(id=351, since=2193)
 class SetPlayerFurnaceOptionsPacket:
     """The player's screen options for one kind of furnace: which left-hand tab is
     open, whether the recipe list is filtered, and the layout it draws with."""

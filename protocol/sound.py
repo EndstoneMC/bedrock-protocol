@@ -616,9 +616,9 @@ class PlaySoundPacket:
     volume: float
     pitch: float
     loop_count: varint32 = field(since=2168)
-    bypass_listener_range_check: bool = field(since=2192)
+    bypass_listener_range_check: bool = field(since=2193)
     server_sound_handle: ServerSoundHandle | None = field(since=975)
-    playback_position_seconds: float | None = field(since=2192)
+    playback_position_seconds: float | None = field(since=2193)
 
 
 @packet(id=348, since=1001, until=2168)
@@ -696,7 +696,7 @@ class LevelSoundEventPacket:
     fire_at_position: Vec3 | None
 
 
-@packet(id=352, since=2192)
+@packet(id=352, since=2193)
 class RecordStartedPacket:
     """A jukebox began playing, so the client can show the record's name."""
 

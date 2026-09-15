@@ -72,7 +72,7 @@ class MemoryCategory(IntEnum, uint8):
     ORE_UI_CLIENT = value(cpp_name="OreUIClient", since=2168)
     PERSONA_PIECES = value(since=2168)
     PERSONA_ANIMATIONS = value(since=2168)
-    PERSONA_TEXTURES = value(until=2192, since=2168)
+    PERSONA_TEXTURES = value(until=2193, since=2168)
     PERSONA_CHARACTERS = value(since=2168)
     PERSONA_SKIN_PACKS = value(since=2168)
     PERSONA_REPO = value(since=2168)
@@ -140,8 +140,8 @@ class EntityDiagnosticTimingInfo:
     entity: str
     time_in_ns: uint64
     percent_of_total: uint8
-    position: Vec3 | None = field(since=2192)
-    dimension: str | None = field(since=2192)
+    position: Vec3 | None = field(since=2193)
+    dimension: str | None = field(since=2193)
 
 
 class SystemDiagnosticTimingInfo:

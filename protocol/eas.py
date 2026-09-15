@@ -81,12 +81,12 @@ class EasingType(Enum, uint32):
     IN_OUT_ELASTIC = 31, "in_out_elastic"
 
 
-@type(since=2192)
+@type(since=2193)
 class NoiseAlignmentType(IntEnum, uint8):
     MIN_LOCAL_TRANSITION_END = 0
 
 
-@type(since=2192)
+@type(since=2193)
 class NoiseAlignment:
     type: NoiseAlignmentType
     value: uvarint32
@@ -164,7 +164,7 @@ class EnvironmentAttributeData:
     easing: EasingType = field(type=str)
     local_transition_ticks: uint32 = field(since=1001)
     noise_transition: bool = field(since=1001)
-    noise_alignment: NoiseAlignment = field(since=2192)
+    noise_alignment: NoiseAlignment = field(since=2193)
 
 
 @type(since=2208)

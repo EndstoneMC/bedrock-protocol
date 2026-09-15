@@ -171,7 +171,7 @@ class ItemStackResponseSlotInfo:
     requested_slot: uint8
     slot: uint8
     amount: uint8
-    _true: Literal[True] = field(until=2192)
+    _true: Literal[True] = field(until=2193)
     item_stack_net_id: ItemStackNetId | None
     custom_name: RedactableString
     durability_correction: int16 = field(type=varint32)
@@ -193,7 +193,7 @@ class ItemStackResponseInfo:
 class ItemStackResponseInfo:
     result: ItemStackNetResult
     client_request_id: ItemStackRequestId
-    _true: Literal[True] = field(until=2192)
+    _true: Literal[True] = field(until=2193)
     containers: list[ItemStackResponseContainerInfo] | None
 
 

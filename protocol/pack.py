@@ -107,14 +107,14 @@ class ResourcePackClientResponsePacket:
     response: Cancel | Downloading | DownloadingFinished | ResourcePackStackFinished
 
 
-@packet(id=329, since=844, until=2192)
+@packet(id=329, since=844, until=2193)
 class ServerboundPackSettingChangePacket:
     pack_id: uuid.UUID
     pack_setting_name: str
     pack_setting_value: float | bool | str
 
 
-@packet(id=329, since=2192)
+@packet(id=329, since=2193)
 class ServerboundPackSettingChangePacket:
     pack_id: uuid.UUID
     pack_setting_name: str

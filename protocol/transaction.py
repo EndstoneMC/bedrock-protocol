@@ -52,9 +52,9 @@ class InventorySource:
         WORLD_INTERACTION_RANDOM = 1
 
     type: InventorySourceType
-    _true_1: Literal[True] = field(until=2192)
+    _true_1: Literal[True] = field(until=2193)
     container_id: ContainerID | None
-    _true_2: Literal[True] = field(until=2192)
+    _true_2: Literal[True] = field(until=2193)
     flags: InventorySourceFlags | None
 
 
@@ -75,7 +75,7 @@ class InventoryAction:
 
 
 class InventoryTransaction:
-    _true: Literal[True] = field(since=1001, until=2192)
+    _true: Literal[True] = field(since=1001, until=2193)
     actions: list[InventoryAction]
 
 
@@ -183,7 +183,7 @@ class ItemUseInventoryTransaction:
     pos: BlockPos
     face: uint8
     slot: varint32
-    hand: HandSlot = field(since=2192)
+    hand: HandSlot = field(since=2193)
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
@@ -324,5 +324,5 @@ class InventoryTransactionPacket:
 class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
-    _true: Literal[True] = field(until=2192)
+    _true: Literal[True] = field(until=2193)
     transaction: TransactionData

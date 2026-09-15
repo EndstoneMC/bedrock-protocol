@@ -139,12 +139,12 @@ TEST_CASE("the cerealisation drops the gating and darken_screen")
     REQUIRE(rejects<V1001>(golden_v975_remove));
 }
 
-// 2192 dropped the player id. It has no golden -- gophertunnel stops at 2168 -- so the
+// 2193 dropped the player id. It has no golden -- gophertunnel stops at 2168 -- so the
 // assertions are structural: the body is the v1001 one less that varint, and a v1001 body
-// read at 2192 takes the id's byte for the event type and desynchronises from there.
-TEST_CASE("boss-event v2192 drops the player id")
+// read at 2193 takes the id's byte for the event type and desynchronises from there.
+TEST_CASE("boss-event v2193 drops the player id")
 {
-    bp::BossEventPacket_<2192> packet;
+    bp::BossEventPacket_<2193> packet;
     packet.boss_id = bp::ActorUniqueID{-3};
     packet.event_type = bp::BossEventUpdateType::Add;
     packet.name = "boss";
@@ -156,13 +156,13 @@ TEST_CASE("boss-event v2192 drops the player id")
     const auto encoded = encode(packet);
     REQUIRE(encoded.size() + 1 == golden_v1001.size());
 
-    const auto back = decode<bp::BossEventPacket_<2192>>(encoded);
+    const auto back = decode<bp::BossEventPacket_<2193>>(encoded);
     REQUIRE(back.boss_id == bp::ActorUniqueID{-3});
     REQUIRE(back.filtered_name == "bo**");
     REQUIRE(back.health_percent == 0.5F);
     REQUIRE(back.overlay == bp::BossBarOverlay::Notched6);
 
-    const auto misread = decode_partial<bp::BossEventPacket_<2192>>(golden_v1001);
+    const auto misread = decode_partial<bp::BossEventPacket_<2193>>(golden_v1001);
     REQUIRE(misread.event_type != bp::BossEventUpdateType::Add);
     REQUIRE(misread.name.empty());
 }
