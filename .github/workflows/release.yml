@@ -62,6 +62,9 @@ jobs:
       - name: Draft the release
         env:
           GH_TOKEN: ${{ github.token }}
+          # The job downloads artifacts and never checks out, so gh has no git
+          # remote to read the repository off.
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --draft \
