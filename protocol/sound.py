@@ -3,6 +3,7 @@ the packets that play, stop and update sound. The LevelSoundEvent table lives he
 because its only consumer does."""
 
 from enum import IntEnum, auto
+from typing import Literal
 
 from protocol import field, int64, packet, type, uint8, uint32, uint64, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
@@ -627,40 +628,54 @@ class ClientboundUpdateSoundDataPacket:
     sound_event: SoundDataEvent = field(type=str)
 
 
+class SoundDataEventType(IntEnum, uint8):
+    STOP = 0
+    SET_VOLUME = 1
+    SET_PITCH = 2
+    FADE = 3
+    SEEK_TO = 4
+    PAUSE = 5
+    RESUME = 6
+
+
 @type(since=2168)
 class Stop:
-    pass
+    type: Literal[SoundDataEventType.STOP] = field(since=2211)
 
 
 @type(since=2168)
 class SetVolume:
+    type: Literal[SoundDataEventType.SET_VOLUME] = field(since=2211)
     volume: float
 
 
 @type(since=2168)
 class SetPitch:
+    type: Literal[SoundDataEventType.SET_PITCH] = field(since=2211)
     pitch: float
 
 
 @type(since=2168)
 class Fade:
+    type: Literal[SoundDataEventType.FADE] = field(since=2211)
     duration: float
     target_volume: float
 
 
 @type(since=2168)
 class SeekTo:
+    type: Literal[SoundDataEventType.SEEK_TO] = field(since=2211)
     seconds: float
 
 
 @type(since=2168)
 class Pause:
-    pass
+    type: Literal[SoundDataEventType.PAUSE] = field(since=2211)
 
 
 @type(since=2168)
 class Resume:
-    pass
+    type: Literal[SoundDataEventType.RESUME] = field(since=2211)
 
 
 @packet(id=348, since=2168)

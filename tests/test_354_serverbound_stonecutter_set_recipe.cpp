@@ -4,20 +4,20 @@
 
 #include "fixture.hpp"
 
-// 2208 added the packet, so there is no golden: gophertunnel and CloudburstMC both stop
+// 2211 added the packet, so there is no golden: gophertunnel and CloudburstMC both stop
 // at 2168. The shape below is the r26_u6 dump's -- the container the stonecutter screen
 // is open on, then the index into its recipe list.
 
 TEST_CASE("packet id is 354 and 2193 does not have it")
 {
-    STATIC_REQUIRE(bp::ServerboundStonecutterSetRecipePacket_<2208>::Id == 354);
-    STATIC_REQUIRE(bp::has_packet_v<2208, 354>);
+    STATIC_REQUIRE(bp::ServerboundStonecutterSetRecipePacket_<2211>::Id == 354);
+    STATIC_REQUIRE(bp::has_packet_v<2211, 354>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<2193, 354>);
 }
 
-TEST_CASE("ServerboundStonecutterSetRecipePacket: v2208 round-trip")
+TEST_CASE("ServerboundStonecutterSetRecipePacket: v2211 round-trip")
 {
-    using Packet = bp::ServerboundStonecutterSetRecipePacket_<2208>;
+    using Packet = bp::ServerboundStonecutterSetRecipePacket_<2211>;
 
     Packet packet;
     packet.container_id = bp::ContainerID::First;

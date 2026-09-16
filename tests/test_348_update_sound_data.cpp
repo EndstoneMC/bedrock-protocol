@@ -112,3 +112,32 @@ TEST_CASE("a v2168 body does not decode as a v1001 one")
     REQUIRE(wire != golden);
     REQUIRE(rejects<bp::ClientboundUpdateSoundDataPacket_<1001>>(wire));
 }
+
+// No golden -- gophertunnel stops at 2168 -- so the 2168 body is the reference: 2211
+// restates the case as a uint8 tag inside the alternative, behind the variant index.
+TEST_CASE("v2211 repeats the case as a tag inside the alternative")
+{
+    using Packet = bp::ClientboundUpdateSoundDataPacket_<2211>;
+
+    Packet resume;
+    resume.server_sound_handle.value = 42;
+    resume.event = bp::v2211::Resume{};
+    REQUIRE(encode(resume) == handle_42 + bytes({0x06, 0x06}));
+
+    Packet fade;
+    fade.server_sound_handle.value = 42;
+    fade.event = bp::v2211::Fade{.duration = 1.5F, .target_volume = 0.25F};
+    REQUIRE(encode(fade) ==
+            handle_42 + bytes({0x03, 0x03, 0x00, 0x00, 0xc0, 0x3f, 0x00, 0x00, 0x80, 0x3e}));
+
+    bp::ClientboundUpdateSoundDataPacket_<2168> older;
+    older.server_sound_handle.value = 42;
+    older.event = bp::v2168::Fade{.duration = 1.5F, .target_volume = 0.25F};
+    REQUIRE(encode(fade).size() == encode(older).size() + 1);
+
+    const auto back = decode<Packet>(encode(fade));
+    REQUIRE(std::get<bp::v2211::Fade>(back.event).duration == 1.5F);
+
+    // A 2168 body read as 2211 stops on the tag the alternative now leads with.
+    REQUIRE(rejects<Packet>(encode(older)));
+}

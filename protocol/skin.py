@@ -47,7 +47,7 @@ class PieceType(Enum, uint32):
     CAPES = 25
     CLASSIC_SKIN = 26
     EMOTE = 27
-    COCO = value(28, since=2208)
+    COCO = value(28, since=2211)
     UNSUPPORTED = auto()
     COUNT = auto()
 
@@ -195,7 +195,7 @@ class SerializedSkinRef:
 
 class SerializedSkinRef:
     id: str
-    play_fab_id: str = field(until=2208)
+    play_fab_id: str = field(until=2211)
     resource_patch: str
     image_data: SkinImage
     animated_image_data: list[AnimatedImageData]

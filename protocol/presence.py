@@ -133,12 +133,12 @@ class MatchmakingState(Enum):
     MATCH_FOUND = 2
 
 
-@packet(id=353, since=2208)
+@packet(id=353, since=2211)
 class ClientboundMatchmakingStatePacket:
     state: MatchmakingState = field(type=str)
     destination_name: str
 
 
-@packet(id=356, since=2208)
+@packet(id=356, since=2211)
 class ServerboundMatchmakingCancelPacket:
     pass

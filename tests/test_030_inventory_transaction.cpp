@@ -411,12 +411,12 @@ TEST_CASE("inventory-transaction v2193 carries the hand ahead of the item")
     REQUIRE(differing == 1);
 }
 
-// 2208 gives both remaining transactions the hand they were performed with: mid-struct
+// 2211 gives both remaining transactions the hand they were performed with: mid-struct
 // between the slot and the item on the use-on-actor, appended on the release. No golden
 // -- gophertunnel and CloudburstMC both stop at 2168 -- so the 2193 bodies are the
 // reference, and 2193 rather than 2168 because that is where the three always-true
 // markers went. The hand is pinned twice, by the net delta and by the byte that moves.
-TEST_CASE("inventory-transaction v2208 threads the hand through the use-on-actor")
+TEST_CASE("inventory-transaction v2211 threads the hand through the use-on-actor")
 {
     bp::ItemUseOnActorInventoryTransaction_<2193> older;
     older.runtime_id = bp::ActorRuntimeID{4};
@@ -428,15 +428,15 @@ TEST_CASE("inventory-transaction v2208 threads the hand through the use-on-actor
     bp::InventoryTransactionPacket_<2193> older_packet;
     older_packet.transaction = older;
 
-    bp::ItemUseOnActorInventoryTransaction_<2208> newer;
+    bp::ItemUseOnActorInventoryTransaction_<2211> newer;
     newer.runtime_id = bp::ActorRuntimeID{4};
-    newer.action_type = bp::ItemUseOnActorInventoryTransaction_<2208>::ActionType::Attack;
+    newer.action_type = bp::ItemUseOnActorInventoryTransaction_<2211>::ActionType::Attack;
     newer.slot = 3;
     newer.hand = bp::HandSlot::Mainhand;
     newer.from_pos = {1.0F, 2.0F, 3.0F};
     newer.hit_pos = {4.0F, 5.0F, 6.0F};
 
-    bp::InventoryTransactionPacket_<2208> newer_packet;
+    bp::InventoryTransactionPacket_<2211> newer_packet;
     newer_packet.transaction = newer;
 
     REQUIRE(encode(newer_packet).size() == encode(older_packet).size() + 1);
@@ -446,12 +446,12 @@ TEST_CASE("inventory-transaction v2208 threads the hand through the use-on-actor
     REQUIRE(encode(offhand_packet).size() == encode(newer_packet).size());
     REQUIRE(encode(offhand_packet) != encode(newer_packet));
 
-    const auto back = decode<bp::InventoryTransactionPacket_<2208>>(encode(offhand_packet));
+    const auto back = decode<bp::InventoryTransactionPacket_<2211>>(encode(offhand_packet));
     REQUIRE(std::get<3>(back.transaction).hand == bp::HandSlot::Offhand);
     REQUIRE(std::get<3>(back.transaction).slot == 3);
 }
 
-TEST_CASE("inventory-transaction v2208 appends the hand to the release")
+TEST_CASE("inventory-transaction v2211 appends the hand to the release")
 {
     bp::ItemReleaseInventoryTransaction_<2193> older;
     older.action_type = bp::ItemReleaseInventoryTransaction_<2193>::ActionType::Release;
@@ -461,17 +461,17 @@ TEST_CASE("inventory-transaction v2208 appends the hand to the release")
     bp::InventoryTransactionPacket_<2193> older_packet;
     older_packet.transaction = older;
 
-    bp::ItemReleaseInventoryTransaction_<2208> newer;
-    newer.action_type = bp::ItemReleaseInventoryTransaction_<2208>::ActionType::Release;
+    bp::ItemReleaseInventoryTransaction_<2211> newer;
+    newer.action_type = bp::ItemReleaseInventoryTransaction_<2211>::ActionType::Release;
     newer.slot = 3;
     newer.from_pos = {1.0F, 2.0F, 3.0F};
     newer.hand = bp::HandSlot::Offhand;
 
-    bp::InventoryTransactionPacket_<2208> newer_packet;
+    bp::InventoryTransactionPacket_<2211> newer_packet;
     newer_packet.transaction = newer;
 
     REQUIRE(encode(newer_packet).size() == encode(older_packet).size() + 1);
 
-    const auto back = decode<bp::InventoryTransactionPacket_<2208>>(encode(newer_packet));
+    const auto back = decode<bp::InventoryTransactionPacket_<2211>>(encode(newer_packet));
     REQUIRE(std::get<4>(back.transaction).hand == bp::HandSlot::Offhand);
 }

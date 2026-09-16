@@ -4,19 +4,19 @@
 
 #include "fixture.hpp"
 
-// 2208 added the packet, so there is no golden: gophertunnel and CloudburstMC both stop
+// 2211 added the packet, so there is no golden: gophertunnel and CloudburstMC both stop
 // at 2168. It is the serverbound shape led by the player the selection belongs to.
 
 TEST_CASE("packet id is 355 and 2193 does not have it")
 {
-    STATIC_REQUIRE(bp::ClientboundStonecutterSetRecipePacket_<2208>::Id == 355);
-    STATIC_REQUIRE(bp::has_packet_v<2208, 355>);
+    STATIC_REQUIRE(bp::ClientboundStonecutterSetRecipePacket_<2211>::Id == 355);
+    STATIC_REQUIRE(bp::has_packet_v<2211, 355>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<2193, 355>);
 }
 
-TEST_CASE("ClientboundStonecutterSetRecipePacket: v2208 round-trip")
+TEST_CASE("ClientboundStonecutterSetRecipePacket: v2211 round-trip")
 {
-    using Packet = bp::ClientboundStonecutterSetRecipePacket_<2208>;
+    using Packet = bp::ClientboundStonecutterSetRecipePacket_<2211>;
 
     Packet packet;
     packet.player_id = bp::ActorUniqueID{5};

@@ -271,7 +271,7 @@ class ItemUseOnActorInventoryTransaction:
     runtime_id: ActorRuntimeID
     action_type: ActionType
     slot: varint32
-    hand: HandSlot = field(since=2208)
+    hand: HandSlot = field(since=2211)
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     hit_pos: Vec3
@@ -301,7 +301,7 @@ class ItemReleaseInventoryTransaction:
     slot: varint32
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
-    hand: HandSlot = field(since=2208)
+    hand: HandSlot = field(since=2211)
 
 
 type TransactionData = (

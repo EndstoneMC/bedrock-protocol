@@ -327,13 +327,13 @@ class SetPlayerFurnaceOptionsPacket:
     furnace_options: FurnaceOptions
 
 
-@packet(id=354, since=2208)
+@packet(id=354, since=2211)
 class ServerboundStonecutterSetRecipePacket:
     container_id: ContainerID
     recipe_index: varint32
 
 
-@packet(id=355, since=2208)
+@packet(id=355, since=2211)
 class ClientboundStonecutterSetRecipePacket:
     player_id: ActorUniqueID
     container_id: ContainerID

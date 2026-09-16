@@ -974,7 +974,7 @@ class AnimatePacket:
     runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
-    hand: HandSlot = field(since=2208)
+    hand: HandSlot = field(since=2211)
 
 
 @packet(id=66)

@@ -59,7 +59,7 @@ TEST_CASE("packet id is 44")
     STATIC_REQUIRE(bp::AnimatePacket::Id == 44);
     STATIC_REQUIRE(bp::has_packet_v<1001, 44>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 44>);
-    STATIC_REQUIRE(bp::has_packet_v<2208, 44>);
+    STATIC_REQUIRE(bp::has_packet_v<2211, 44>);
 }
 
 TEST_CASE("animate round-trips against the golden")
@@ -178,9 +178,9 @@ TEST_CASE("859 is 844 plus the unconditional float")
     REQUIRE(encode(newer).size() == encode(older).size() + 4);
 }
 
-// No golden -- gophertunnel stops at 2168 -- so the 898 body is the reference: 2208
+// No golden -- gophertunnel stops at 2168 -- so the 898 body is the reference: 2211
 // appends the hand that swung, one uint8 past the swing source.
-TEST_CASE("2208 appends the swinging hand")
+TEST_CASE("2211 appends the swinging hand")
 {
     bp::AnimatePacket_<898> older;
     older.action = bp::AnimatePacket_<898>::Action::Swing;
@@ -188,8 +188,8 @@ TEST_CASE("2208 appends the swinging hand")
     older.data = 1.5F;
     older.swing_source = bp::ActorSwingSource::Attack;
 
-    bp::AnimatePacket_<2208> newer;
-    newer.action = bp::AnimatePacket_<2208>::Action::Swing;
+    bp::AnimatePacket_<2211> newer;
+    newer.action = bp::AnimatePacket_<2211>::Action::Swing;
     newer.runtime_id = bp::ActorRuntimeID{300};
     newer.data = 1.5F;
     newer.swing_source = bp::ActorSwingSource::Attack;
@@ -202,6 +202,6 @@ TEST_CASE("2208 appends the swinging hand")
     offhand.hand = bp::HandSlot::Offhand;
     REQUIRE(encode(offhand).size() == encode(newer).size());
     REQUIRE(encode(offhand) != encode(newer));
-    REQUIRE(decode<bp::AnimatePacket_<2208>>(encode(offhand)).hand == bp::HandSlot::Offhand);
+    REQUIRE(decode<bp::AnimatePacket_<2211>>(encode(offhand)).hand == bp::HandSlot::Offhand);
 }
 

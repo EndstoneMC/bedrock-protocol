@@ -251,9 +251,9 @@ TEST_CASE("PlayerSkinPacket: the pre-944 body is hand-written and ends in a trus
     REQUIRE(static_cast<unsigned char>(flipped.back()) == 0x00);
 }
 
-// 2208 hoists PlayFabID out of the skin and into the player-list entry, so the skin is
+// 2211 hoists PlayFabID out of the skin and into the player-list entry, so the skin is
 // the 2168 one less that length-prefixed string. No golden above 2168.
-TEST_CASE("v2208 drops the PlayFab id from the skin")
+TEST_CASE("v2211 drops the PlayFab id from the skin")
 {
     Packet2168 older;
     older.uuid = kPlayer;
@@ -265,7 +265,7 @@ TEST_CASE("v2208 drops the PlayFab id from the skin")
     older.localized_new_skin_name = "new";
     older.localized_old_skin_name = "old";
 
-    bp::PlayerSkinPacket_<2208> newer;
+    bp::PlayerSkinPacket_<2211> newer;
     newer.uuid = kPlayer;
     newer.skin.id = "sid";
     newer.skin.resource_patch = "patch";
@@ -277,7 +277,7 @@ TEST_CASE("v2208 drops the PlayFab id from the skin")
     // "pfid" is four bytes behind a one-byte length prefix.
     REQUIRE(encode(newer).size() + 5 == encode(older).size());
 
-    const auto back = decode<bp::PlayerSkinPacket_<2208>>(encode(newer));
+    const auto back = decode<bp::PlayerSkinPacket_<2211>>(encode(newer));
     REQUIRE(back.skin.id == "sid");
     REQUIRE(back.skin.resource_patch == "patch");
     REQUIRE(back.skin.profile_hash == "hash");
@@ -285,12 +285,12 @@ TEST_CASE("v2208 drops the PlayFab id from the skin")
 
 // Coco takes 28 and pushes Unsupported and the sentinel up one. The piece type is
 // int-coded on SerializedPersonaPieceHandle, so the shift is on the wire there.
-TEST_CASE("2208 inserts Coco into the persona piece types")
+TEST_CASE("2211 inserts Coco into the persona piece types")
 {
     STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2168>::Unsupported) == 28);
     STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2168>::Count) == 29);
 
-    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Coco) == 28);
-    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Unsupported) == 29);
-    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2208>::Count) == 30);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2211>::Coco) == 28);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2211>::Unsupported) == 29);
+    STATIC_REQUIRE(static_cast<int>(bp::PieceType_<2211>::Count) == 30);
 }

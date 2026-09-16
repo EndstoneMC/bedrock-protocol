@@ -112,12 +112,12 @@ class ColorAttributeData:
 type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
 
 
-@type(since=2208)
+@type(since=2211)
 class ConstantAttributeData:
     attribute: AttributeDataVariant
 
 
-@type(since=2208)
+@type(since=2211)
 class TransitionSettingsData:
     total_transition_ticks: uvarint32
     current_transition_ticks: uvarint32
@@ -125,14 +125,14 @@ class TransitionSettingsData:
     clock_name: str
 
 
-@type(since=2208)
+@type(since=2211)
 class TransitionAttributeData:
     from_attribute: AttributeDataVariant
     to_attribute: AttributeDataVariant
     settings: TransitionSettingsData
 
 
-@type(since=2208)
+@type(since=2211)
 class NoiseTransitionSettingsData:
     total_transition_ticks: uvarint32
     current_transition_ticks: uvarint32
@@ -143,7 +143,7 @@ class NoiseTransitionSettingsData:
     noise_alignment: NoiseAlignment
 
 
-@type(since=2208)
+@type(since=2211)
 class NoiseTransitionAttributeData:
     from_attribute: AttributeDataVariant
     to_attribute: AttributeDataVariant
@@ -153,7 +153,7 @@ class NoiseTransitionAttributeData:
 type AttributeDataPayload = ConstantAttributeData | TransitionAttributeData | NoiseTransitionAttributeData
 
 
-@type(until=2208)
+@type(until=2211)
 class EnvironmentAttributeData:
     name: str
     from_attribute: AttributeDataVariant | None
@@ -167,7 +167,7 @@ class EnvironmentAttributeData:
     noise_alignment: NoiseAlignment = field(since=2193)
 
 
-@type(since=2208)
+@type(since=2211)
 class EnvironmentAttributeData:
     name: str
     payload: AttributeDataPayload
@@ -191,7 +191,7 @@ class AttributeLayerSettings:
 
 class AttributeLayerData:
     name: str
-    noise_name: str | None = field(since=1001, until=2208)
+    noise_name: str | None = field(since=1001, until=2211)
     dimension_id: DimensionType
     settings: AttributeLayerSettings
     attributes: list[EnvironmentAttributeData]

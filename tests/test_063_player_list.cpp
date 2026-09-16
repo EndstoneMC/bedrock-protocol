@@ -291,12 +291,12 @@ TEST_CASE("PlayerListPacket: the variant index is not the action value")
     REQUIRE(static_cast<unsigned char>(encoded[2]) == 1);
 }
 
-// 2208 hoists the PlayFab id out of the skin and up into the entry, between the XUID and
+// 2211 hoists the PlayFab id out of the skin and up into the entry, between the XUID and
 // the platform id. The bytes move rather than arrive, so the frame is the same length and
 // the ordering is the only thing that separates the two eras. No golden above 2168.
-TEST_CASE("PlayerListPacket: v2208 moves the PlayFab id up into the entry")
+TEST_CASE("PlayerListPacket: v2211 moves the PlayFab id up into the entry")
 {
-    bp::SerializedSkinRef_<2208> newer_skin;
+    bp::SerializedSkinRef_<2211> newer_skin;
     newer_skin.id = "sid";
     newer_skin.resource_patch = "patch";
     newer_skin.image_data = {.width = 1, .height = 1, .image_bytes = std::string(4, '\0')};
@@ -316,7 +316,7 @@ TEST_CASE("PlayerListPacket: v2208 moves the PlayFab id up into the entry")
     newer_skin.trusted_skin_flag = bp::TrustedSkinFlag::True;
     newer_skin.profile_hash = "hash";
 
-    bp::PlayerListPacket_<2208>::AddEntry add;
+    bp::PlayerListPacket_<2211>::AddEntry add;
     add.action = bp::PlayerListPacketType::Add;
     add.uuid = {.most_significant_bits = 0, .least_significant_bits = 1};
     add.id = bp::ActorUniqueID{7};
@@ -331,7 +331,7 @@ TEST_CASE("PlayerListPacket: v2208 moves the PlayFab id up into the entry")
     add.is_sub_client = false;
     add.color = bp::Color{0x05060708};
 
-    bp::PlayerListPacket_<2208> pkt;
+    bp::PlayerListPacket_<2211> pkt;
     pkt.entries.emplace_back(add);
 
     bp::PlayerListPacket_<2168> older;
@@ -341,8 +341,8 @@ TEST_CASE("PlayerListPacket: v2208 moves the PlayFab id up into the entry")
     REQUIRE(encode(pkt).size() == encode(older).size());
     REQUIRE(encode(pkt) != encode(older));
 
-    const auto decoded = decode<bp::PlayerListPacket_<2208>>(encode(pkt));
-    const auto &back = std::get<bp::PlayerListPacket_<2208>::AddEntry>(decoded.entries[0]);
+    const auto decoded = decode<bp::PlayerListPacket_<2211>>(encode(pkt));
+    const auto &back = std::get<bp::PlayerListPacket_<2211>::AddEntry>(decoded.entries[0]);
     REQUIRE(back.xuid == "xuid");
     REQUIRE(back.play_fab_id == "pfid");
     REQUIRE(back.platform_online_id == "pcid");
