@@ -593,11 +593,6 @@ class LevelSoundEvent(IntEnum, uint32):
     UNDEFINED = auto()
 
 
-@type(until=2168)
-class SoundDataEvent(IntEnum):
-    STOP = 0
-
-
 class ServerSoundHandle:
     value: uint64
 
@@ -724,6 +719,11 @@ class StopSoundPacket:
     name: str
     stop_all: bool
     stop_music_legacy: bool
+
+
+@type(until=2168)
+class SoundDataEvent(IntEnum):
+    STOP = 0
 
 
 @packet(id=24, until=786)

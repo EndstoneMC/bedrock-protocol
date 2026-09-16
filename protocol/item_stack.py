@@ -202,154 +202,6 @@ class ItemStackResponsePacket:
     responses: list[ItemStackResponseInfo]
 
 
-@type(until=2168)
-class ItemStackRequestSlotInfo:
-    full_container_name: FullContainerName
-    slot: uint8
-    net_id_variant: varint32
-
-
-@type(until=2168)
-class ItemStackRequestActionTake:
-    amount: uint8
-    src: ItemStackRequestSlotInfo
-    dst: ItemStackRequestSlotInfo
-
-
-@type(until=2168)
-class ItemStackRequestActionPlace:
-    amount: uint8
-    src: ItemStackRequestSlotInfo
-    dst: ItemStackRequestSlotInfo
-
-
-@type(until=2168)
-class ItemStackRequestActionSwap:
-    src: ItemStackRequestSlotInfo
-    dst: ItemStackRequestSlotInfo
-
-
-@type(until=2168)
-class ItemStackRequestActionDrop:
-    amount: uint8
-    src: ItemStackRequestSlotInfo
-    randomly: bool
-
-
-@type(until=2168)
-class ItemStackRequestActionDestroy:
-    amount: uint8
-    src: ItemStackRequestSlotInfo
-
-
-@type(until=2168)
-class ItemStackRequestActionConsume:
-    amount: uint8
-    src: ItemStackRequestSlotInfo
-
-
-@type(until=2168)
-class ItemStackRequestActionCreate:
-    results_index: uint8
-
-
-@type(until=2168)
-class ItemStackRequestActionLabTableCombine:
-    pass
-
-
-@type(until=2168)
-class ItemStackRequestActionBeaconPayment:
-    primary_effect_id: varint32
-    secondary_effect_id: varint32
-
-
-@type(until=2168)
-class ItemStackRequestActionMineBlock:
-    slot: varint32
-    predicted_durability: varint32
-    net_id_variant: varint32
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftRecipe:
-    recipe_net_id: RecipeNetId
-    num_crafts: uint8
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftRecipeAuto:
-    recipe_net_id: RecipeNetId
-    num_crafts: uint8
-    num_ingredients: uint8
-    ingredients: list[SerializedRecipeIngredient]
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftCreative:
-    creative_item_net_id: CreativeItemNetId
-    num_crafts: uint8
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftRecipeOptional:
-    recipe_net_id: RecipeNetId
-    filtered_string_index: int32
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftGrindstone:
-    recipe_net_id: uvarint32
-    num_crafts: uint8
-    repair_cost: varint32
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftLoom:
-    pattern_name_id: str
-    num_crafts: uint8
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING:
-    pass
-
-
-@type(until=2168)
-class ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING:
-    craft_results: list[SerializedNetworkItemInstanceDescriptor]
-    num_crafts: uint8
-
-
-@type(until=2168)
-class ItemStackRequestData:
-    client_request_id: ItemStackRequestId
-    actions: list[
-        ItemStackRequestActionTake
-        | ItemStackRequestActionPlace
-        | ItemStackRequestActionSwap
-        | ItemStackRequestActionDrop
-        | ItemStackRequestActionDestroy
-        | ItemStackRequestActionConsume
-        | ItemStackRequestActionCreate
-        | None
-        | None
-        | ItemStackRequestActionLabTableCombine
-        | ItemStackRequestActionBeaconPayment
-        | ItemStackRequestActionMineBlock
-        | ItemStackRequestActionCraftRecipe
-        | ItemStackRequestActionCraftRecipeAuto
-        | ItemStackRequestActionCraftCreative
-        | ItemStackRequestActionCraftRecipeOptional
-        | ItemStackRequestActionCraftGrindstone
-        | ItemStackRequestActionCraftLoom
-        | ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING
-        | ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING
-    ]
-    strings_to_filter: list[str]
-    strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
-
-
 @type(since=2168)
 class ItemStackRequestCereal:
     class ItemDescriptorType(IntEnum, uint8):
@@ -519,3 +371,151 @@ class ItemStackRequestPacket:
 @packet(id=147, since=2168)
 class ItemStackRequestPacket:
     requests: list[ItemStackRequestCereal.RequestData]
+
+
+@type(until=2168)
+class ItemStackRequestSlotInfo:
+    full_container_name: FullContainerName
+    slot: uint8
+    net_id_variant: varint32
+
+
+@type(until=2168)
+class ItemStackRequestActionTake:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
+
+
+@type(until=2168)
+class ItemStackRequestActionPlace:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
+
+
+@type(until=2168)
+class ItemStackRequestActionSwap:
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
+
+
+@type(until=2168)
+class ItemStackRequestActionDrop:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    randomly: bool
+
+
+@type(until=2168)
+class ItemStackRequestActionDestroy:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+
+
+@type(until=2168)
+class ItemStackRequestActionConsume:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+
+
+@type(until=2168)
+class ItemStackRequestActionCreate:
+    results_index: uint8
+
+
+@type(until=2168)
+class ItemStackRequestActionLabTableCombine:
+    pass
+
+
+@type(until=2168)
+class ItemStackRequestActionBeaconPayment:
+    primary_effect_id: varint32
+    secondary_effect_id: varint32
+
+
+@type(until=2168)
+class ItemStackRequestActionMineBlock:
+    slot: varint32
+    predicted_durability: varint32
+    net_id_variant: varint32
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftRecipe:
+    recipe_net_id: RecipeNetId
+    num_crafts: uint8
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftRecipeAuto:
+    recipe_net_id: RecipeNetId
+    num_crafts: uint8
+    num_ingredients: uint8
+    ingredients: list[SerializedRecipeIngredient]
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftCreative:
+    creative_item_net_id: CreativeItemNetId
+    num_crafts: uint8
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftRecipeOptional:
+    recipe_net_id: RecipeNetId
+    filtered_string_index: int32
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftGrindstone:
+    recipe_net_id: uvarint32
+    num_crafts: uint8
+    repair_cost: varint32
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftLoom:
+    pattern_name_id: str
+    num_crafts: uint8
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING:
+    pass
+
+
+@type(until=2168)
+class ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING:
+    craft_results: list[SerializedNetworkItemInstanceDescriptor]
+    num_crafts: uint8
+
+
+@type(until=2168)
+class ItemStackRequestData:
+    client_request_id: ItemStackRequestId
+    actions: list[
+        ItemStackRequestActionTake
+        | ItemStackRequestActionPlace
+        | ItemStackRequestActionSwap
+        | ItemStackRequestActionDrop
+        | ItemStackRequestActionDestroy
+        | ItemStackRequestActionConsume
+        | ItemStackRequestActionCreate
+        | None
+        | None
+        | ItemStackRequestActionLabTableCombine
+        | ItemStackRequestActionBeaconPayment
+        | ItemStackRequestActionMineBlock
+        | ItemStackRequestActionCraftRecipe
+        | ItemStackRequestActionCraftRecipeAuto
+        | ItemStackRequestActionCraftCreative
+        | ItemStackRequestActionCraftRecipeOptional
+        | ItemStackRequestActionCraftGrindstone
+        | ItemStackRequestActionCraftLoom
+        | ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING
+        | ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING
+    ]
+    strings_to_filter: list[str]
+    strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)

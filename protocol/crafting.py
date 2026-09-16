@@ -73,41 +73,6 @@ class SerializedNetworkItemInstanceDescriptor:
 
 
 @type(until=2168)
-class ItemDescriptor:
-    """ItemDescriptor::serialize. The type byte selects which impl follows; four
-    of the six lead with a string, so one slot carries the molang expression,
-    the item tag, and the deferred / complex-alias name alike."""
-
-    class InternalType(IntEnum, uint8):
-        INVALID = 0
-        DEFAULT = 1
-        MOLANG = 2
-        ITEM_TAG = 3
-        DEFERRED = 4
-        COMPLEX_ALIAS = 5
-
-    internal_type: InternalType
-    id: int16 = field(when=lambda d: d.internal_type == InternalType.DEFAULT)
-    name: str = field(
-        when=lambda d: (
-            d.internal_type
-            in {
-                InternalType.MOLANG,
-                InternalType.ITEM_TAG,
-                InternalType.DEFERRED,
-                InternalType.COMPLEX_ALIAS,
-            }
-        )
-    )
-    molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
-    aux_value: int16 = field(
-        when=lambda d: (
-            d.internal_type == InternalType.DEFERRED or (d.internal_type == InternalType.DEFAULT and d.id != 0)
-        )
-    )
-
-
-@type(until=2168)
 class SerializedRecipeIngredient:
     descriptor: ItemDescriptor
     stack_size: uint16 = field(type=varint32)
@@ -179,20 +144,6 @@ class ShapedRecipePayload:
 
 
 @type(until=2168)
-class ShapedChemistryRecipePayload:
-    recipe_id: str
-    width: varint32
-    height: varint32
-    ingredients: list[SerializedRecipeIngredient] = field(count=lambda r: r.width * r.height)
-    results: list[SerializedNetworkItemInstanceDescriptor]
-    uuid: uuid.UUID
-    tag: str
-    priority: varint32
-    assume_symmetry: bool
-    net_id: RecipeNetId
-
-
-@type(until=2168)
 class ShapelessRecipePayload:
     recipe_id: str
     ingredients: list[SerializedRecipeIngredient]
@@ -213,17 +164,6 @@ class ShapelessRecipePayload:
     tag: str
     priority: varint32
     unlocking_requirement: SerializedRecipeUnlockingRequirement | None
-    net_id: RecipeNetId
-
-
-@type(until=2168)
-class ShapelessChemistryRecipePayload:
-    recipe_id: str
-    ingredients: list[SerializedRecipeIngredient]
-    results: list[SerializedNetworkItemInstanceDescriptor]
-    uuid: uuid.UUID
-    tag: str
-    priority: varint32
     net_id: RecipeNetId
 
 
@@ -249,128 +189,6 @@ class SmithingTrimRecipePayload:
     addition_ingredient: SerializedRecipeIngredient
     tag: str
     net_id: RecipeNetId
-
-
-@type(until=748)
-class CraftingDataEntry:
-    entry_type: CraftingDataEntryType
-    shapeless_recipe: ShapelessRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_RECIPE
-    )
-    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
-        when=lambda e: e.entry_type
-        in {
-            CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
-            CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-        }
-    )
-    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
-    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
-    )
-    multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
-    smithing_transform_recipe: SmithingTransformRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRANSFORM_RECIPE
-    )
-    smithing_trim_recipe: SmithingTrimRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
-    )
-    item_data: varint32 = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    item_aux: varint32 = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
-    )
-    item_result: SerializedNetworkItemInstanceDescriptor = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    tag: str = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-
-
-
-
-@type(since=748, until=2168)
-class CraftingDataEntry:
-    entry_type: CraftingDataEntryType
-    shapeless_recipe: ShapelessRecipePayload = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.SHAPELESS_RECIPE,
-                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-            }
-        )
-    )
-    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE
-    )
-    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
-    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
-    )
-    multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
-    smithing_transform_recipe: SmithingTransformRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRANSFORM_RECIPE
-    )
-    smithing_trim_recipe: SmithingTrimRecipePayload = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
-    )
-    item_data: varint32 = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    item_aux: varint32 = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
-    )
-    item_result: SerializedNetworkItemInstanceDescriptor = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    tag: str = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
 
 
 class PotionMixDataEntry:
@@ -488,3 +306,183 @@ class UnlockedRecipesPacket:
 
     packet_type: PacketType = field(type=uint32)
     unlocked_recipes: list[str]
+
+
+@type(until=2168)
+class ItemDescriptor:
+    """ItemDescriptor::serialize. The type byte selects which impl follows; four
+    of the six lead with a string, so one slot carries the molang expression,
+    the item tag, and the deferred / complex-alias name alike."""
+
+    class InternalType(IntEnum, uint8):
+        INVALID = 0
+        DEFAULT = 1
+        MOLANG = 2
+        ITEM_TAG = 3
+        DEFERRED = 4
+        COMPLEX_ALIAS = 5
+
+    internal_type: InternalType
+    id: int16 = field(when=lambda d: d.internal_type == InternalType.DEFAULT)
+    name: str = field(
+        when=lambda d: (
+            d.internal_type
+            in {
+                InternalType.MOLANG,
+                InternalType.ITEM_TAG,
+                InternalType.DEFERRED,
+                InternalType.COMPLEX_ALIAS,
+            }
+        )
+    )
+    molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
+    aux_value: int16 = field(
+        when=lambda d: (
+            d.internal_type == InternalType.DEFERRED or (d.internal_type == InternalType.DEFAULT and d.id != 0)
+        )
+    )
+
+
+@type(until=2168)
+class ShapedChemistryRecipePayload:
+    recipe_id: str
+    width: varint32
+    height: varint32
+    ingredients: list[SerializedRecipeIngredient] = field(count=lambda r: r.width * r.height)
+    results: list[SerializedNetworkItemInstanceDescriptor]
+    uuid: uuid.UUID
+    tag: str
+    priority: varint32
+    assume_symmetry: bool
+    net_id: RecipeNetId
+
+
+@type(until=2168)
+class ShapelessChemistryRecipePayload:
+    recipe_id: str
+    ingredients: list[SerializedRecipeIngredient]
+    results: list[SerializedNetworkItemInstanceDescriptor]
+    uuid: uuid.UUID
+    tag: str
+    priority: varint32
+    net_id: RecipeNetId
+
+
+@type(until=748)
+class CraftingDataEntry:
+    entry_type: CraftingDataEntryType
+    shapeless_recipe: ShapelessRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_RECIPE
+    )
+    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
+        when=lambda e: e.entry_type
+        in {
+            CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
+            CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
+        }
+    )
+    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
+    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
+    )
+    multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
+    smithing_transform_recipe: SmithingTransformRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRANSFORM_RECIPE
+    )
+    smithing_trim_recipe: SmithingTrimRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
+    )
+    item_data: varint32 = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    item_aux: varint32 = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
+    )
+    item_result: SerializedNetworkItemInstanceDescriptor = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    tag: str = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+
+
+@type(since=748, until=2168)
+class CraftingDataEntry:
+    entry_type: CraftingDataEntryType
+    shapeless_recipe: ShapelessRecipePayload = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.SHAPELESS_RECIPE,
+                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
+            }
+        )
+    )
+    shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE
+    )
+    shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
+    shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_CHEMISTRY_RECIPE
+    )
+    multi_recipe: MultiRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.MULTI_RECIPE)
+    smithing_transform_recipe: SmithingTransformRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRANSFORM_RECIPE
+    )
+    smithing_trim_recipe: SmithingTrimRecipePayload = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
+    )
+    item_data: varint32 = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    item_aux: varint32 = field(
+        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
+    )
+    item_result: SerializedNetworkItemInstanceDescriptor = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )
+    tag: str = field(
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.FURNACE_RECIPE,
+                CraftingDataEntryType.FURNACE_AUX_RECIPE,
+            }
+        ),
+        until=975,
+    )

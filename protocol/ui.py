@@ -64,11 +64,6 @@ class ServerboundLoadingScreenPacket:
     loading_screen_id: uint32 | None
 
 
-@packet(id=334, since=924, until=944)
-class ClientboundDataDrivenUICloseAllScreensPacket:
-    pass
-
-
 @packet(id=334, since=944)
 class ClientboundDataDrivenUICloseScreenPacket:
     form_id: uint32 | None
@@ -207,3 +202,8 @@ class ModalFormResponsePacket:
 @packet(id=130)
 class OnScreenTextureAnimationPacket:
     effect_id: uint32
+
+
+@packet(id=334, since=924, until=944)
+class ClientboundDataDrivenUICloseAllScreensPacket:
+    pass

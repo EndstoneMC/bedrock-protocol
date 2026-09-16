@@ -583,6 +583,26 @@ Three constraints outrank the taxonomy, and none of them is diagnosed:
   `grep -c "struct [A-Za-z_0-9]* {};"` over the generated headers is the detector, and it
   must read 0.
 
+## A dead class sits at the tail
+
+Inside a module the current wire comes first: every class still live at `__version__` on
+top, then the classes that no longer exist at it, newest `until=` first. A reader who only
+wants the latest schema stops at the first declaration that is `until=`-only. Nothing marks
+the boundary — *DSL comments record blockers only* forbids a banner, and the `until=` is
+the marker.
+
+**A redeclaration chain is one unit and keeps its own ascending order.**
+`_check_redeclaration` reads spans in source order and rejects an earlier declaration left
+open, so `until=944` cannot follow `since=944`. Only a chain whose *last* declaration
+carries `until=` is dead and moves; a class with a live tile stays on top with its history
+attached, which is why `PlaySoundPacket` keeps its 786 form up there and `SoundDataEvent`
+does not.
+
+Order is otherwise free — the parser resolves references through `SymbolTable` rather than
+by position, and a declaration moved to the end of its module regenerates the same set of
+types either way. It does permute the emitted order of independent definitions, so an
+ordering change is not output-identical the way a refactor has to be; diff the two as sets.
+
 ## The include tree is `bedrock/protocol/`
 
 `<bedrock/protocol.hpp>` is the umbrella and everything else sits one level down, so

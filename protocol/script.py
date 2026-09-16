@@ -98,27 +98,6 @@ class ConeDataPayload:
     num_segments: uint8
 
 
-@type(until=859)
-class PacketShapeData:
-    """Wire shape mirrors ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData.
-    Most fields are gated by per-instance dirty flags on the server, so they ride as
-    optionals."""
-
-    network_id: uvarint64
-    shape_type: ScriptPrimitiveShapeType | None
-    location: Vec3 | None
-    scale: float | None
-    rotation: Vec3 | None
-    time_left_total_sec: float | None
-    color: Color | None
-    text: str | None
-    box_bound: Vec3 | None
-    end_location: Vec3 | None
-    arrow_head_length: float | None
-    arrow_head_radius: float | None
-    num_segments: uint8 | None
-
-
 @type(since=859, until=898)
 class PrimitiveShapeDataPayload:
     network_id: uvarint64
@@ -187,11 +166,11 @@ class PrimitiveShapeDataPayload:
     )
 
 
-@packet(id=328, since=818, until=859)
-class ServerScriptDebugDrawerPacket:
+@packet(id=328, since=975)
+class PrimitiveShapesPacket:
     """Send primitive drawing shape info (from scripting) to the client for rendering."""
 
-    shapes: list[PacketShapeData]
+    shapes: list[PrimitiveShapeDataPayload]
 
 
 @packet(id=328, since=859, until=975)
@@ -201,8 +180,29 @@ class DebugDrawerPacket:
     shapes: list[PrimitiveShapeDataPayload]
 
 
-@packet(id=328, since=975)
-class PrimitiveShapesPacket:
+@type(until=859)
+class PacketShapeData:
+    """Wire shape mirrors ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData.
+    Most fields are gated by per-instance dirty flags on the server, so they ride as
+    optionals."""
+
+    network_id: uvarint64
+    shape_type: ScriptPrimitiveShapeType | None
+    location: Vec3 | None
+    scale: float | None
+    rotation: Vec3 | None
+    time_left_total_sec: float | None
+    color: Color | None
+    text: str | None
+    box_bound: Vec3 | None
+    end_location: Vec3 | None
+    arrow_head_length: float | None
+    arrow_head_radius: float | None
+    num_segments: uint8 | None
+
+
+@packet(id=328, since=818, until=859)
+class ServerScriptDebugDrawerPacket:
     """Send primitive drawing shape info (from scripting) to the client for rendering."""
 
-    shapes: list[PrimitiveShapeDataPayload]
+    shapes: list[PacketShapeData]

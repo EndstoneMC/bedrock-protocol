@@ -200,21 +200,6 @@ class BuildPlatform(IntEnum):
     LINUX = 15
 
 
-@type(until=2168)
-class PlayerListEntry:
-    uuid: uuid.UUID
-    id: ActorUniqueID
-    name: str
-    xuid: str
-    platform_online_id: str
-    build_platform: BuildPlatform = field(type=int32)
-    skin: SerializedSkinRef = field(cereal=False)
-    is_teacher: bool
-    is_host: bool
-    is_sub_client: bool
-    color: Color = field(since=800)
-
-
 @packet(id=63, until=2168)
 class PlayerListPacket:
     action: PlayerListPacketType
@@ -356,3 +341,18 @@ class AddPlayerPacket:
     links: list[ActorLink]
     device_id: str
     build_platform: BuildPlatform = field(type=int32)
+
+
+@type(until=2168)
+class PlayerListEntry:
+    uuid: uuid.UUID
+    id: ActorUniqueID
+    name: str
+    xuid: str
+    platform_online_id: str
+    build_platform: BuildPlatform = field(type=int32)
+    skin: SerializedSkinRef = field(cereal=False)
+    is_teacher: bool
+    is_host: bool
+    is_sub_client: bool
+    color: Color = field(since=800)

@@ -43,11 +43,6 @@ class DataStoreRemoval:
     data_store_name: str
 
 
-@packet(id=330, since=859, until=898)
-class DataStoreSyncPacket:
-    updates: list[DataStoreChange | DataStoreRemoval]
-
-
 @packet(id=330, since=898)
 class ClientboundDataStorePacket:
     updates: list[DataStoreUpdate | DataStoreChange | DataStoreRemoval]
@@ -56,3 +51,8 @@ class ClientboundDataStorePacket:
 @packet(id=332, since=898)
 class ServerboundDataStorePacket:
     update: DataStoreUpdate
+
+
+@packet(id=330, since=859, until=898)
+class DataStoreSyncPacket:
+    updates: list[DataStoreChange | DataStoreRemoval]

@@ -10,13 +10,6 @@ from protocol import field, int32, packet, type, uint8, uint16, uint64, uvarint3
 package = "bedrock.protocol"
 
 
-@type(until=944)
-class NetworkBlockPosition:
-    x: varint32
-    y: int32 = field(type=uvarint32)
-    z: varint32
-
-
 class MinecraftPacketIds(IntEnum):
     LOGIN = 1
     PLAY_STATUS = 2
@@ -618,3 +611,10 @@ class ServerEditorConnectionPolicy(IntEnum):
 
 class NetworkPermissions:
     server_auth_sound_enabled: bool
+
+
+@type(until=944)
+class NetworkBlockPosition:
+    x: varint32
+    y: int32 = field(type=uvarint32)
+    z: varint32

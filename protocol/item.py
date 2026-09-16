@@ -35,14 +35,6 @@ class ItemComponentEntry:
     component_data: CompoundTag
 
 
-@packet(id=162, until=776)
-class ItemComponentPacket:
-    """The item component table before 776 folded the registry into it: just a name
-    and its component NBT per entry."""
-
-    items: list[ItemComponentEntry]
-
-
 @packet(id=162, since=776)
 class ItemRegistryPacket:
     items: list[ItemData]
@@ -187,3 +179,11 @@ class SerializedNetworkItemStackDescriptor:
     net_id_variant: varint32 | None
     block_runtime_id: uvarint32
     user_data_buffer: bytes
+
+
+@packet(id=162, until=776)
+class ItemComponentPacket:
+    """The item component table before 776 folded the registry into it: just a name
+    and its component NBT per entry."""
+
+    items: list[ItemComponentEntry]

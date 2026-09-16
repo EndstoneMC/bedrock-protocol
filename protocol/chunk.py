@@ -28,30 +28,6 @@ class ChunkPos:
     z: varint32
 
 
-@type(until=1001)
-class SubChunkPos:
-    x: varint32
-    y: varint32
-    z: varint32
-
-
-@type(since=1001)
-class SubChunkPos:
-    x: int32
-    y: int32
-    z: int32
-
-
-@type(cereal=False, until=2168)
-class SubChunkPos:
-    """The shape packet 174 writes by hand, which stayed a varint triple after
-    the cerealised form went fixed at 1001."""
-
-    x: varint32
-    y: varint32
-    z: varint32
-
-
 @packet(id=58, until=2168)
 class LevelChunkPacket:
     class SubChunkMetadata:
@@ -217,3 +193,27 @@ class NetworkChunkPublisherUpdatePacket:
     position: BlockPos
     radius: uvarint32
     server_built_chunks: list[ChunkPos] = field(prefix=uint32)
+
+
+@type(until=1001)
+class SubChunkPos:
+    x: varint32
+    y: varint32
+    z: varint32
+
+
+@type(since=1001)
+class SubChunkPos:
+    x: int32
+    y: int32
+    z: int32
+
+
+@type(cereal=False, until=2168)
+class SubChunkPos:
+    """The shape packet 174 writes by hand, which stayed a varint triple after
+    the cerealised form went fixed at 1001."""
+
+    x: varint32
+    y: varint32
+    z: varint32

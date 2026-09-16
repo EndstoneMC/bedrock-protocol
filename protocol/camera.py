@@ -189,12 +189,6 @@ class CameraAimAssistPresetsPacketOperation(IntEnum, uint8):
     ADD_TO_EXISTING = 1
 
 
-@type(since=766, until=776)
-class CameraAimAssistCategoriesDefinition:
-    identifier: str
-    categories: list[CameraAimAssistCategoryDefinition]
-
-
 @packet(id=320, since=766, until=776)
 class CameraAimAssistPresetsPacket:
     categories: list[CameraAimAssistCategoriesDefinition]
@@ -358,3 +352,9 @@ class CameraSplinePacket:
 @packet(id=327, since=800)
 class ClientboundControlSchemeSetPacket:
     control_scheme: Scheme
+
+
+@type(since=766, until=776)
+class CameraAimAssistCategoriesDefinition:
+    identifier: str
+    categories: list[CameraAimAssistCategoryDefinition]

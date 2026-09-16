@@ -50,12 +50,6 @@ class ResourcePackResponse(Enum, int8):
     RESOURCE_PACK_STACK_FINISHED = 4
 
 
-@type(until=748)
-class PackUrl:
-    pack_id_and_version: str
-    url: str
-
-
 @packet(id=6, until=2168)
 class ResourcePacksInfoPacket:
     """The packs the client has to have before it may join, each named by uuid and
@@ -193,3 +187,9 @@ class ResourcePackChunkRequestPacket:
 @packet(id=340, since=944)
 class ResourcePacksReadyForValidationPacket:
     pass
+
+
+@type(until=748)
+class PackUrl:
+    pack_id_and_version: str
+    url: str
