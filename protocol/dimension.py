@@ -21,7 +21,7 @@ class DimensionDefinitionGroup:
 
     @type(since=2193)
     class DimensionDefinition:
-        minimum_y: varint32
+        min_y: varint32
         height_range: varint32
         generator_type: GeneratorType
         dimension_type: DimensionType

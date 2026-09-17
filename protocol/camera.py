@@ -62,7 +62,7 @@ class CameraPreset:
     aim_assist: CameraAimAssistCommandPresetDefinition | None = field(since=766)
     control_scheme: Scheme | None = field(since=800)
     apply_inherited_starting_rotation: bool = field(since=2193)
-    starting_rotation: Vec2 | None = field(since=2193)
+    starting_rot: Vec2 | None = field(since=2193)
 
 
 class CameraPresets:

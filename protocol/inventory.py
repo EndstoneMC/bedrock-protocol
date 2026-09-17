@@ -5,7 +5,7 @@ Not the legacy transaction family -- world/inventory/transaction/, in transactio
 
 from enum import IntEnum, auto
 
-from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uvarint32, value, varint32
+from protocol import field, int8, int16, int32, packet, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -286,7 +286,6 @@ class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
 
 
-@type(since=2193)
 class FurnaceLeftTabIndex(IntEnum):
     NONE = 0
     RECIPE_FOOD = 1
@@ -297,7 +296,6 @@ class FurnaceLeftTabIndex(IntEnum):
     COUNT = auto()
 
 
-@type(since=2193)
 class FurnaceLayout(IntEnum):
     NONE = 0
     INVENTORY_ONLY = 1
@@ -305,7 +303,6 @@ class FurnaceLayout(IntEnum):
     COUNT = auto()
 
 
-@type(since=2193)
 class FurnaceOptions:
     left_furnace_tab: FurnaceLeftTabIndex
     filtering: bool
@@ -322,6 +319,7 @@ class SetPlayerFurnaceOptionsPacket:
         FURNACE = 1
         BLAST_FURNACE = 2
         SMOKER = 3
+        COUNT = auto()
 
     furnace_type: FurnaceType
     furnace_options: FurnaceOptions

@@ -111,5 +111,5 @@ TEST_CASE("camera presets: v2193 appends the starting rotation")
 
     const auto back = decode<PacketV2193>(encode(newer));
     REQUIRE_FALSE(back.camera_presets.presets[1].apply_inherited_starting_rotation);
-    REQUIRE_FALSE(back.camera_presets.presets[1].starting_rotation.has_value());
+    REQUIRE_FALSE(back.camera_presets.presets[1].starting_rot.has_value());
 }

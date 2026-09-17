@@ -4,7 +4,7 @@ and both permission ladders."""
 import uuid
 from enum import Enum, IntEnum
 
-from protocol import auto, field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
+from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos
 from protocol.network import NetworkBlockPosition
@@ -228,7 +228,10 @@ class CurrentCmdVersion(Enum):
     PLAY_SOUND_OUTPUT_FIX = value(48, since=1001)
     PLAYER_WAYPOINTS_GAMERULE = value(49, since=1001)
     CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
-    COUNT = auto()
+    TELEPORT_ENTITY_DIMENSION_POSITION_FIX = value(51, since=2193)
+    TIME_OF_COMMAND_OVERLOADS = value(52, since=2193)
+    COUNT = value(until=2211)
+    COUNT = value(55, since=2211)  # TODO: 53 and 54 unnamed until a header branch above r26_u5
 
 
 @packet(id=77)

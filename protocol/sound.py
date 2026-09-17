@@ -710,7 +710,7 @@ class LevelSoundEventPacket:
 class RecordStartedPacket:
     """A jukebox began playing, so the client can show the record's name."""
 
-    pos: BlockPos
+    block_pos: BlockPos
     server_sound_handle: ServerSoundHandle
 
 

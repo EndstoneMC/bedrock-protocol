@@ -91,7 +91,7 @@ TEST_CASE("dimension-data v2211 appends the cloud height and its flag")
 {
     bp::DimensionDataPacket_<2193> older;
     older.dimension_definitions["test:dim"] = {
-        .minimum_y = -64,
+        .min_y = -64,
         .height_range = 384,
         .generator_type = bp::GeneratorType::Overworld,
         .dimension_type = bp::DimensionType{1000},
@@ -101,7 +101,7 @@ TEST_CASE("dimension-data v2211 appends the cloud height and its flag")
 
     bp::DimensionDataPacket_<2211> newer;
     newer.dimension_definitions["test:dim"] = {
-        .minimum_y = -64,
+        .min_y = -64,
         .height_range = 384,
         .generator_type = bp::GeneratorType::Overworld,
         .dimension_type = bp::DimensionType{1000},
