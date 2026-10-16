@@ -93,6 +93,10 @@ class ContainerEnumName(IntEnum, uint8):
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
     CRAFTER_LEVEL_ENTITY_CONTAINER = 62
     DYNAMIC_CONTAINER = 63
+    RESERVED_CONTAINER_A = value(67, since=2225)
+    RESERVED_CONTAINER_B = value(68, since=2225)
+    RESERVED_CONTAINER_C = value(69, since=2225)
+    RESERVED_CONTAINER_D = value(70, since=2225)
     RECIPE_FOOD_CONTAINER = value(64, since=924)
     RECIPE_BLOCKS_CONTAINER = value(65, since=924)
     RECIPE_FURNACE_ITEMS_CONTAINER = value(66, since=924)
@@ -180,6 +184,7 @@ class ContainerType(IntEnum, int8):
     DECORATED_POT = 35
     CRAFTER = 36
     DATA_DRIVEN_CONTAINER = value(37, since=2193)
+    RESERVED_CONTAINER_TYPE = value(38, since=2225)
 
 
 @packet(id=47)
@@ -325,17 +330,27 @@ class SetPlayerFurnaceOptionsPacket:
     furnace_options: FurnaceOptions
 
 
-@packet(id=354, since=2211)
+@packet(id=354, since=2225)
 class ServerboundStonecutterSetRecipePacket:
     container_id: ContainerID
     recipe_index: varint32
 
 
-@packet(id=355, since=2211)
+@packet(id=355, since=2225)
 class ClientboundStonecutterSetRecipePacket:
     player_id: ActorUniqueID
     container_id: ContainerID
     recipe_index: varint32
+
+
+class CursorItemDragState(IntEnum, uint8):
+    START = 0
+    STOP = 1
+
+
+@packet(id=358, since=2225)
+class ServerboundCursorItemDragPacket:
+    state: CursorItemDragState
 
 
 @packet(id=80)

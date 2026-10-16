@@ -153,3 +153,31 @@ TEST_CASE("AddActorPacket: an empty data list encodes identically at both versio
 
     REQUIRE(encode(older) == encode(newer));
 }
+
+// No golden -- gophertunnel stops at 2168 -- so the 2193 body is the reference.
+TEST_CASE("AddActorPacket: 2225 appends the passenger block data")
+{
+    bp::AddActorPacket_<2193> older;
+    fill(older);
+
+    bp::AddActorPacket_<2225> newer;
+    fill(newer);
+
+    const auto absent = encode(newer);
+    REQUIRE(absent == encode(older) + bytes({0x00}));
+
+    newer.passenger_block_data = bp::PassengerOfBlockArguments{
+        .block_pos = {.x = 1, .y = 2, .z = 3},
+        .offset = {.x = 0.0f, .y = 0.5f, .z = 0.0f},
+        .rotation = 90.0f,
+        .rotation_limit = 45.0f,
+        .emote_type = bp::PassengerOfBlockArguments::EmoteType::Laying,
+    };
+    const auto present = encode(newer);
+    REQUIRE(present.size() == absent.size() + 24);
+
+    const auto rt = decode<bp::AddActorPacket_<2225>>(present);
+    REQUIRE(rt.passenger_block_data->block_pos.z == 3);
+    REQUIRE(rt.passenger_block_data->rotation_limit == 45.0f);
+    REQUIRE(rt.passenger_block_data->emote_type == bp::PassengerOfBlockArguments::EmoteType::Laying);
+}

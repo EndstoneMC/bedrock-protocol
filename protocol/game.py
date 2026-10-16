@@ -5,7 +5,7 @@ Not world clocks or position tracking -- also world/level/, but in level.py."""
 import uuid
 from enum import IntEnum
 
-from protocol import field, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, value, varint32
+from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uint64, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.command import PlayerPermissionLevel
 from protocol.common import BlockPos, DimensionType, Vec2, Vec3
@@ -62,6 +62,11 @@ class WorldType(IntEnum):
     EDITOR_PROJECT = 1
     EDITOR_TEST_LEVEL = 2
     EDITOR_REALMS_UPLOAD = value(3, since=800)
+
+
+class EditorLevelMigrationVersion(IntEnum, int8):
+    LEGACY = 0
+    EDITOR_ACHIEVEMENTS = 1
 
 
 class EducationEditionOffer(IntEnum, uint32):
@@ -240,6 +245,7 @@ class LevelSettings:
     editor_world_type: WorldType
     is_created_in_editor: bool
     is_exported_from_editor: bool
+    editor_level_migration_version: EditorLevelMigrationVersion = field(since=2225)
     time: varint32
     education_edition_offer: EducationEditionOffer
     education_features_enabled: bool

@@ -426,6 +426,19 @@ class ActorLink:
     vehicle_angular_velocity: float
 
 
+class PassengerOfBlockArguments:
+    class EmoteType(IntEnum, uint8):
+        STANDING = 0
+        RIDING = 1
+        LAYING = 2
+
+    block_pos: BlockPos
+    offset: Vec3
+    rotation: float
+    rotation_limit: float
+    emote_type: EmoteType
+
+
 @packet(id=13)
 class AddActorPacket:
     entity_id: ActorUniqueID
@@ -440,6 +453,7 @@ class AddActorPacket:
     data: SynchedActorData.CopyableDataList
     synched_properties: PropertySyncData
     links: list[ActorLink]
+    passenger_block_data: PassengerOfBlockArguments | None = field(since=2225)
 
 
 @packet(id=39)
@@ -781,6 +795,8 @@ class ActorType(IntEnum):
     CAMEL_HUSK = 70552
     SULFUR_CUBE = 921
     CUSHION = 154
+    FROSTBITE = value(199579, since=2225)
+    ICE_BALL = value(4194460, since=2225)
 
 
 @packet(id=96)
@@ -918,6 +934,12 @@ class SetActorLinkPacket:
     link: ActorLink
 
 
+@packet(id=357, since=2225)
+class SetPassengerOfBlockPacket:
+    passenger: ActorUniqueID
+    passenger_of_block_data: PassengerOfBlockArguments | None
+
+
 class ActorSwingSource(Enum, uint8):
     NONE = 0
     BUILD = 1
@@ -974,7 +996,7 @@ class AnimatePacket:
     runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
-    hand: HandSlot = field(since=2211)
+    hand: HandSlot = field(since=2225)
 
 
 @packet(id=66)

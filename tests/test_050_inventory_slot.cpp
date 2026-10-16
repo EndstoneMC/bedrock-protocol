@@ -29,8 +29,8 @@ Packet sample()
     Packet packet;
     packet.inventory_id = static_cast<bp::ContainerID>(12);
     packet.slot = 3;
-    packet.full_container_name = bp::FullContainerName{
-        .name = bp::ContainerEnumName::CursorContainer,
+    packet.full_container_name = bp::FullContainerName_<2168>{
+        .name = bp::ContainerEnumName_<2168>::CursorContainer,
         .dynamic_id = 3,
     };
     packet.storage_item = Item{};
@@ -114,7 +114,7 @@ TEST_CASE("inventory-slot v1001 round-trips against the goldens")
     const auto back = decode<PacketV1001>(golden_v1001_present);
     REQUIRE(back.inventory_id == static_cast<bp::ContainerID>(12));
     REQUIRE(back.slot == 3);
-    REQUIRE(back.full_container_name->name == bp::ContainerEnumName::CursorContainer);
+    REQUIRE(back.full_container_name->name == bp::ContainerEnumName_<1001>::CursorContainer);
     REQUIRE(back.full_container_name->dynamic_id == 3);
     REQUIRE(back.storage_item->id == 0);
     REQUIRE(std::get<0>(*back.item.net_id_variant).raw_id == 9);

@@ -101,7 +101,8 @@ void fill(Packet &packet)
     packet.server_telemetry_data = {};
 }
 
-void fill_v2168(bp::StartGamePacket_<2168> &packet)
+template <class Packet>
+void fill_v2168(Packet &packet)
 {
     packet.entity_id = bp::ActorUniqueID{1};
     packet.runtime_id = bp::ActorRuntimeID{2};
@@ -341,6 +342,35 @@ TEST_CASE("StartGamePacket: v2168 round-trip")
 // come out the same size and are a wire break all the same. Nothing about a body's
 // length says which era wrote it, which is why the integer rule is worth carrying:
 // without one the older body still reads as the newer, holding the wrong values.
+// No golden -- gophertunnel stops at 2168 -- so the 2193 body is the reference. The
+// migration version lands behind the editor flags, directly ahead of the day-cycle time.
+TEST_CASE("StartGamePacket: 2225 puts the editor level migration version ahead of the time")
+{
+    bp::StartGamePacket_<2193> older;
+    fill_v2168(older);
+    older.settings.time = 1000;
+
+    bp::StartGamePacket_<2225> newer;
+    fill_v2168(newer);
+    newer.settings.time = 1000;
+    newer.settings.editor_level_migration_version = bp::EditorLevelMigrationVersion::EditorAchievements;
+
+    const auto old_bytes = encode(older);
+    const auto new_bytes = encode(newer);
+    REQUIRE(new_bytes.size() == old_bytes.size() + 1);
+
+    std::size_t split = 0;
+    while (new_bytes[split] == old_bytes[split]) {
+        ++split;
+    }
+    REQUIRE(new_bytes.substr(split, 3) == bytes({0x01, 0xd0, 0x0f}));
+    REQUIRE(new_bytes.substr(0, split) + new_bytes.substr(split + 1) == old_bytes);
+
+    const auto back = decode<bp::StartGamePacket_<2225>>(new_bytes);
+    REQUIRE(back.settings.editor_level_migration_version == bp::EditorLevelMigrationVersion::EditorAchievements);
+    REQUIRE(back.settings.time == 1000);
+}
+
 TEST_CASE("StartGamePacket: a v1001 body does not decode as a v2168 one")
 {
     using Packet1001 = bp::StartGamePacket_<1001>;

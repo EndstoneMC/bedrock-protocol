@@ -37,8 +37,9 @@ class ItemStackRequestActionType(IntEnum, uint8):
     CRAFT_RECIPE_OPTIONAL = 15
     CRAFT_REPAIR_AND_DISENCHANT = 16
     CRAFT_LOOM = 17
-    CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = 18
-    CRAFT_RESULTS_DEPRECATEDASKTYLAING = 19
+    CRAFT_RESERVED_ACTION = value(18, since=2225)
+    CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = auto()
+    CRAFT_RESULTS_DEPRECATEDASKTYLAING = auto()
     TEST = value(20, since=776, until=786)
 
 
@@ -329,6 +330,12 @@ class ItemStackRequestCereal:
         pattern_name_id: str
         num_crafts: uint8
 
+    @type(since=2225)
+    class CraftDiscPressActionData:
+        action_type: Literal[ItemStackRequestActionType.CRAFT_RESERVED_ACTION]
+        reserved_id: str
+        num_crafts: uint8
+
     class CraftNonImplementedActionData:
         action_type: Literal[ItemStackRequestActionType.CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING]
 
@@ -337,6 +344,7 @@ class ItemStackRequestCereal:
         craft_results: list[NetworkItemInstanceDescriptorData]
         num_crafts: uint8
 
+    @type(since=2168, until=2225)
     class RequestData:
         client_request_id: ItemStackRequestId
         actions: list[
@@ -356,6 +364,33 @@ class ItemStackRequestCereal:
             | CraftRecipeOptionalActionData
             | CraftRepairAndDisenchantActionData
             | CraftLoomActionData
+            | CraftNonImplementedActionData
+            | CraftResultsActionData
+        ]
+        strings_to_filter: list[str]
+        strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
+
+    @type(since=2225)
+    class RequestData:
+        client_request_id: ItemStackRequestId
+        actions: list[
+            TakeActionData
+            | PlaceActionData
+            | SwapActionData
+            | DropActionData
+            | DestroyActionData
+            | ConsumeActionData
+            | CreateActionData
+            | LabTableCombineActionData
+            | BeaconPaymentActionData
+            | MineBlockActionData
+            | CraftRecipeActionData
+            | CraftRecipeAutoActionData
+            | CraftCreativeActionData
+            | CraftRecipeOptionalActionData
+            | CraftRepairAndDisenchantActionData
+            | CraftLoomActionData
+            | CraftDiscPressActionData
             | CraftNonImplementedActionData
             | CraftResultsActionData
         ]

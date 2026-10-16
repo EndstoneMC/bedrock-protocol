@@ -8,7 +8,14 @@ from typing import Literal
 
 from protocol import field, int16, int32, packet, type, uint8, uvarint32, uvarint64, value, varint32
 from protocol.ability import SerializedAbilitiesData
-from protocol.actor import ActorLink, ActorRuntimeID, ActorUniqueID, PropertySyncData, SynchedActorData
+from protocol.actor import (
+    ActorLink,
+    ActorRuntimeID,
+    ActorUniqueID,
+    PassengerOfBlockArguments,
+    PropertySyncData,
+    SynchedActorData,
+)
 from protocol.common import BlockPos, Color, DimensionType, Vec2, Vec3
 from protocol.game import GameType
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -226,7 +233,7 @@ class PlayerListPacket:
         id: ActorUniqueID
         name: str
         xuid: str
-        play_fab_id: str = field(since=2211)
+        play_fab_id: str = field(since=2225)
         platform_online_id: str
         build_platform: BuildPlatform = field(type=int32)
         skin: SerializedSkinRef
@@ -339,6 +346,7 @@ class AddPlayerPacket:
     synched_properties: PropertySyncData
     abilities_data: SerializedAbilitiesData
     links: list[ActorLink]
+    passenger_block_data: PassengerOfBlockArguments | None = field(since=2225)
     device_id: str
     build_platform: BuildPlatform = field(type=int32)
 

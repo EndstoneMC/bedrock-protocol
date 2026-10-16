@@ -175,7 +175,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with the item interaction arm
     packet.input_data = flags<65>({OldFlag::Ascend, OldFlag::PerformItemInteraction});
     packet.item_use_transaction.id = -4;
     packet.item_use_transaction.slots = {
-        {.container_enum = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer, .slots = "\x01\x02\x03"}};
+        {.container_enum = bp::ContainerEnumName_<1001>::CombinedHotbarAndInventoryContainer, .slots = "\x01\x02\x03"}};
 
     bp::InventoryAction_<1001> action;
     action.source.type = bp::InventorySourceType::ContainerInventory;
@@ -248,7 +248,7 @@ TEST_CASE("PlayerAuthInputPacket: the v1001 legacy slots ride on the request id"
     Older packet = fill_v1001();
     packet.input_data = flags<65>({OldFlag::PerformItemInteraction});
     packet.item_use_transaction.slots = {
-        {.container_enum = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer, .slots = "\x01\x02\x03"}};
+        {.container_enum = bp::ContainerEnumName_<1001>::CombinedHotbarAndInventoryContainer, .slots = "\x01\x02\x03"}};
 
     packet.item_use_transaction.id = -3;  // odd
     const auto odd = encode(packet);

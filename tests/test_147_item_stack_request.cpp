@@ -13,7 +13,7 @@ namespace {
 using Packet = bp::ItemStackRequestPacket_<1001>;
 using PacketV2168 = bp::ItemStackRequestPacket_<2168>;
 
-bp::v1001::ItemStackRequestSlotInfo slot(bp::ContainerEnumName container, std::uint8_t index, std::int32_t net_id)
+bp::v1001::ItemStackRequestSlotInfo slot(bp::ContainerEnumName_<1001> container, std::uint8_t index, std::int32_t net_id)
 {
     bp::v1001::ItemStackRequestSlotInfo info;
     info.full_container_name.name = container;
@@ -22,7 +22,7 @@ bp::v1001::ItemStackRequestSlotInfo slot(bp::ContainerEnumName container, std::u
     return info;
 }
 
-bp::v2168::ItemStackRequestCereal::SlotInfoData slot_v2168(bp::ContainerEnumName container, std::uint8_t index,
+bp::v2168::ItemStackRequestCereal::SlotInfoData slot_v2168(bp::ContainerEnumName_<2168> container, std::uint8_t index,
                                                            std::int32_t net_id)
 {
     bp::v2168::ItemStackRequestCereal::SlotInfoData info;
@@ -85,8 +85,8 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
 {
     bp::v1001::ItemStackRequestActionTake take;
     take.amount = 1;
-    take.src = slot(bp::ContainerEnumName::LevelEntityContainer, 3, 9);
-    take.dst = slot(bp::ContainerEnumName::CursorContainer, 0, 0);
+    take.src = slot(bp::ContainerEnumName_<1001>::LevelEntityContainer, 3, 9);
+    take.dst = slot(bp::ContainerEnumName_<1001>::CursorContainer, 0, 0);
 
     bp::v1001::ItemStackRequestData request;
     request.client_request_id.raw_id = -1;
@@ -106,7 +106,7 @@ TEST_CASE("item-stack-request v1001 take round-trips against the golden")
     REQUIRE(take_back.amount == 1);
     REQUIRE(take_back.src.slot == 3);
     REQUIRE(take_back.src.net_id_variant == 9);
-    REQUIRE(take_back.dst.full_container_name.name == bp::ContainerEnumName::CursorContainer);
+    REQUIRE(take_back.dst.full_container_name.name == bp::ContainerEnumName_<1001>::CursorContainer);
 }
 
 // Two slots of the action tag are dead at 1001: BDS declares
@@ -150,8 +150,8 @@ TEST_CASE("item-stack-request v2168 take round-trips against the golden")
 {
     bp::v2168::ItemStackRequestCereal::TakeActionData take;
     take.amount = 1;
-    take.source = slot_v2168(bp::ContainerEnumName::LevelEntityContainer, 3, 9);
-    take.destination = slot_v2168(bp::ContainerEnumName::CursorContainer, 0, 0);
+    take.source = slot_v2168(bp::ContainerEnumName_<2168>::LevelEntityContainer, 3, 9);
+    take.destination = slot_v2168(bp::ContainerEnumName_<2168>::CursorContainer, 0, 0);
 
     bp::v2168::ItemStackRequestCereal::RequestData request;
     request.client_request_id.raw_id = -1;
@@ -190,6 +190,52 @@ TEST_CASE("item-stack-request v2168 indexes lab-table 7 while its action type st
     REQUIRE(back.requests[0].actions[0].index() == 7);
     REQUIRE(back.requests[0].actions[1].index() == 12);
     REQUIRE(std::get<12>(back.requests[0].actions[1]).creative_item_net_id == 5);
+}
+
+// No golden -- gophertunnel stops at 2168. 2225 slots disc press in ahead of the two
+// deprecated crafts, so both their variant index and the action type they pin move up one.
+TEST_CASE("item-stack-request v2225 moves the deprecated crafts up behind disc press")
+{
+    using PacketV2225 = bp::ItemStackRequestPacket_<2225>;
+
+    bp::v2168::ItemStackRequestCereal::RequestData older;
+    older.client_request_id.raw_id = -1;
+    older.actions = {bp::v2168::ItemStackRequestCereal::CraftNonImplementedActionData{}};
+    PacketV2168 old_packet;
+    old_packet.requests = {older};
+
+    bp::v2225::ItemStackRequestCereal::RequestData newer;
+    newer.client_request_id.raw_id = -1;
+    newer.actions = {bp::v2225::ItemStackRequestCereal::CraftNonImplementedActionData{}};
+    PacketV2225 new_packet;
+    new_packet.requests = {newer};
+
+    const auto old_bytes = encode(old_packet);
+    const auto new_bytes = encode(new_packet);
+    REQUIRE(old_bytes.substr(3, 2) == bytes({0x10, 0x12}));
+    REQUIRE(new_bytes.substr(3, 2) == bytes({0x11, 0x13}));
+    REQUIRE(old_bytes.substr(5) == new_bytes.substr(5));
+}
+
+TEST_CASE("item-stack-request v2225 disc press round-trips")
+{
+    using PacketV2225 = bp::ItemStackRequestPacket_<2225>;
+
+    bp::v2225::ItemStackRequestCereal::CraftDiscPressActionData press;
+    press.reserved_id = "disc";
+    press.num_crafts = 1;
+
+    bp::v2225::ItemStackRequestCereal::RequestData request;
+    request.client_request_id.raw_id = -1;
+    request.actions = {press};
+    PacketV2225 packet;
+    packet.requests = {request};
+
+    const auto encoded = encode(packet);
+    REQUIRE(encoded.substr(3, 8) == bytes({0x10, 0x12, 0x04, 'd', 'i', 's', 'c', 0x01}));
+
+    const auto back = decode<PacketV2225>(encoded);
+    REQUIRE(std::get<16>(back.requests[0].actions[0]).reserved_id == "disc");
 }
 
 // The 1001 body is the shorter of the two -- no action-type byte, and a varint32 slot net

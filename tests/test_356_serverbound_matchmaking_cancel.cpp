@@ -4,17 +4,17 @@
 
 #include "fixture.hpp"
 
-// 2211 added the packet and it carries no fields, so the body is empty at every version
+// 2225 added the packet and it carries no fields, so the body is empty at every version
 // that has it. No golden: gophertunnel and CloudburstMC both stop at 2168.
 
 TEST_CASE("packet id is 356 and 2193 does not have it")
 {
-    STATIC_REQUIRE(bp::ServerboundMatchmakingCancelPacket_<2211>::Id == 356);
-    STATIC_REQUIRE(bp::has_packet_v<2211, 356>);
+    STATIC_REQUIRE(bp::ServerboundMatchmakingCancelPacket_<2225>::Id == 356);
+    STATIC_REQUIRE(bp::has_packet_v<2225, 356>);
     STATIC_REQUIRE_FALSE(bp::has_packet_v<2193, 356>);
 }
 
 TEST_CASE("ServerboundMatchmakingCancelPacket: the body is empty")
 {
-    REQUIRE(encode(bp::ServerboundMatchmakingCancelPacket_<2211>{}).empty());
+    REQUIRE(encode(bp::ServerboundMatchmakingCancelPacket_<2225>{}).empty());
 }

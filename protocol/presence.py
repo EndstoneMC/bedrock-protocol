@@ -2,9 +2,9 @@
 telemetry identity, the player's party, matchmaking, and transfer."""
 
 import uuid
-from enum import Enum
+from enum import Enum, IntEnum
 
-from protocol import field, int8, packet, type, uint16
+from protocol import field, int8, packet, type, uint8, uint16
 
 package = "bedrock.protocol"
 
@@ -127,18 +127,30 @@ class SendPartyDestinationCookiePacket:
     destination_name: str
 
 
-class MatchmakingState(Enum):
+class MatchmakingState(IntEnum, uint8):
     IDLE = 0
     MATCHMAKING = 1
     MATCH_FOUND = 2
+    CANCELED = 3
+    PLAYER_LEFT_PARTY = 4
+    PLAYER_LEFT_SERVER = 5
+    SERVER_SHUTDOWN = 6
+    TIMED_OUT = 7
+    REQUEUE_AS_PARTY = 8
 
 
-@packet(id=353, since=2211)
+class MatchmakingStateOptions:
+    triggering_player_name: str | None
+    triggered_by_local_player: bool | None
+
+
+@packet(id=353, since=2225)
 class ClientboundMatchmakingStatePacket:
-    state: MatchmakingState = field(type=str)
+    state: MatchmakingState
     destination_name: str
+    options: MatchmakingStateOptions | None
 
 
-@packet(id=356, since=2211)
+@packet(id=356, since=2225)
 class ServerboundMatchmakingCancelPacket:
     pass

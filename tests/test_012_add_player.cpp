@@ -173,3 +173,26 @@ TEST_CASE("AddPlayerPacket: v1001 round-trip")
 
     REQUIRE(rejects<Packet>(encode(newer)));
 }
+
+// No golden -- gophertunnel stops at 2168 -- so the 2193 body is the reference. The new
+// optional sits between the links and the device id, not at the end.
+TEST_CASE("AddPlayerPacket: 2225 puts the passenger block data ahead of the device id")
+{
+    bp::AddPlayerPacket_<2193> older;
+    fill(older);
+
+    bp::AddPlayerPacket_<2225> newer;
+    fill(newer);
+
+    const auto old_bytes = encode(older);
+    const auto tail = old_bytes.size() - 8;
+    REQUIRE(encode(newer) == old_bytes.substr(0, tail) + bytes({0x00}) + old_bytes.substr(tail));
+
+    newer.passenger_block_data = bp::PassengerOfBlockArguments{
+        .block_pos = {.x = 1, .y = 2, .z = 3},
+        .emote_type = bp::PassengerOfBlockArguments::EmoteType::Riding,
+    };
+    const auto rt = decode<bp::AddPlayerPacket_<2225>>(encode(newer));
+    REQUIRE(rt.passenger_block_data->emote_type == bp::PassengerOfBlockArguments::EmoteType::Riding);
+    REQUIRE(rt.device_id == "dev");
+}

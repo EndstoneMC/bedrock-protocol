@@ -230,8 +230,8 @@ class CurrentCmdVersion(Enum):
     CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
     TELEPORT_ENTITY_DIMENSION_POSITION_FIX = value(51, since=2193)
     TIME_OF_COMMAND_OVERLOADS = value(52, since=2193)
-    COUNT = value(until=2211)
-    COUNT = value(55, since=2211)  # TODO: 53 and 54 unnamed until a header branch above r26_u5
+    COUNT = value(until=2225)
+    COUNT = value(56, since=2225)  # TODO: 53 to 55 unnamed until a header branch above r26_u5
 
 
 @packet(id=77)

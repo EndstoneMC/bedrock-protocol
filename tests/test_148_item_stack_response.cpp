@@ -60,7 +60,7 @@ TEST_CASE("item-stack-response v1001 round-trips against the golden")
     slot.item_stack_net_id.raw_id = 9;
 
     bp::v1001::ItemStackResponseContainerInfo container;
-    container.full_container_name.name = bp::ContainerEnumName::CombinedHotbarAndInventoryContainer;
+    container.full_container_name.name = bp::ContainerEnumName_<1001>::CombinedHotbarAndInventoryContainer;
     container.slots = {slot};
 
     bp::v1001::ItemStackResponseInfo response;
@@ -113,7 +113,7 @@ TEST_CASE("item-stack-response v2168 round-trips against the golden")
     slot.item_stack_net_id = bp::ItemStackNetId{.raw_id = 9};
 
     bp::v2168::ItemStackResponseContainerInfo container;
-    container.full_container_name.name = bp::ContainerEnumName::LevelEntityContainer;
+    container.full_container_name.name = bp::ContainerEnumName_<2168>::LevelEntityContainer;
     container.slots = {slot};
 
     bp::v2168::ItemStackResponseInfo response;

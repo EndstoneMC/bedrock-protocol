@@ -2,7 +2,7 @@
 the packets that play, stop and update sound. The LevelSoundEvent table lives here
 because its only consumer does."""
 
-from enum import IntEnum, auto
+from enum import Enum, IntEnum, auto
 from typing import Literal
 
 from protocol import field, int64, packet, type, uint8, uint32, uint64, value, varint32
@@ -590,6 +590,7 @@ class LevelSoundEvent(IntEnum, uint32):
     MOUNT = value(611, since=2168)
     DISMOUNT = value(612, since=2168)
     STRAW_BED_BREAK_LEAVE = value(613, since=2168)
+    ICE_BALL_BREAK = value(614, since=2225)
     UNDEFINED = auto()
 
 
@@ -635,42 +636,42 @@ class SoundDataEventType(IntEnum, uint8):
 
 @type(since=2168)
 class Stop:
-    type: Literal[SoundDataEventType.STOP] = field(since=2211)
+    type: Literal[SoundDataEventType.STOP] = field(since=2225)
 
 
 @type(since=2168)
 class SetVolume:
-    type: Literal[SoundDataEventType.SET_VOLUME] = field(since=2211)
+    type: Literal[SoundDataEventType.SET_VOLUME] = field(since=2225)
     volume: float
 
 
 @type(since=2168)
 class SetPitch:
-    type: Literal[SoundDataEventType.SET_PITCH] = field(since=2211)
+    type: Literal[SoundDataEventType.SET_PITCH] = field(since=2225)
     pitch: float
 
 
 @type(since=2168)
 class Fade:
-    type: Literal[SoundDataEventType.FADE] = field(since=2211)
+    type: Literal[SoundDataEventType.FADE] = field(since=2225)
     duration: float
     target_volume: float
 
 
 @type(since=2168)
 class SeekTo:
-    type: Literal[SoundDataEventType.SEEK_TO] = field(since=2211)
+    type: Literal[SoundDataEventType.SEEK_TO] = field(since=2225)
     seconds: float
 
 
 @type(since=2168)
 class Pause:
-    type: Literal[SoundDataEventType.PAUSE] = field(since=2211)
+    type: Literal[SoundDataEventType.PAUSE] = field(since=2225)
 
 
 @type(since=2168)
 class Resume:
-    type: Literal[SoundDataEventType.RESUME] = field(since=2211)
+    type: Literal[SoundDataEventType.RESUME] = field(since=2225)
 
 
 @packet(id=348, since=2168)
@@ -719,6 +720,35 @@ class StopSoundPacket:
     name: str
     stop_all: bool
     stop_music_legacy: bool
+
+
+class SignedAudioContent:
+    compact_jwt: str
+
+
+class AudioContentPlaybackType(Enum):
+    MUSIC = 0
+    SOUND = 1
+
+
+@packet(id=359, since=2225)
+class ClientboundPlayAudioContentPacket:
+    shared_metadata: SignedAudioContent
+    playback_content: SignedAudioContent
+    playback_type: AudioContentPlaybackType = field(type=str)
+    play_sound: PlaySoundPacket
+
+
+class AudioContentRegistrationEntry:
+    audio_content_id: str
+    shared_metadata: SignedAudioContent
+    server_content: SignedAudioContent
+    playback_content: SignedAudioContent
+
+
+@packet(id=360, since=2225)
+class ServerboundRegisterAudioContentPacket:
+    registrations: list[AudioContentRegistrationEntry]
 
 
 @type(until=2168)

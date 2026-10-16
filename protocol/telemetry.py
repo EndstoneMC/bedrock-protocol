@@ -112,6 +112,7 @@ class MinecraftEventing:
         MONSTER_HUNTER = value(124, since=2168)
         DIAMONDS = value(125, since=2168)
         PLETHORA_OF_CATS = value(126, since=2168)
+        WHAT_GOES_AROUND_COMES_AROUND = value(127, since=2225)
         COUNT = auto()
 
     class POIBlockInteractionType(IntEnum, uint8):
