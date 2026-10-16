@@ -36,6 +36,7 @@ from bedrock_protocol.descriptor import (
     FieldType,
     File,
     FileSet,
+    LiteralType,
     MappingType,
     OptionalType,
     PrimitiveType,
@@ -375,14 +376,21 @@ def _rebind(
 ) -> FieldType | None:
     """Walk a field-type tree, re-resolving everything a nested enum's snapshot
     view decides: a `bitset[Enum.MEMBER]` width, an `array[T, Enum.MEMBER]` size,
-    and the wire encoding a field derived from an enum's underlying type.
-    Anything naming an enum this snapshot does not hold is left alone."""
+    a `Literal[Enum.MEMBER]` constant, and the wire encoding a field derived from
+    an enum's underlying type. Anything naming an enum this snapshot does not hold
+    is left alone."""
     if isinstance(t, BitsetType):
         if t.enum_member is None:
             return t
         enum_name, member_name = t.enum_member
         size = members.get(enum_name, {}).get(member_name)
         return t if size is None or size == t.size else replace(t, size=size)
+    if isinstance(t, LiteralType):
+        values = tuple(
+            v if ref is None else members.get(ref[0], {}).get(ref[1], v)
+            for v, ref in zip(t.values, t.enum_members or (None,) * len(t.values))
+        )
+        return t if values == t.values else replace(t, values=values)
     if isinstance(t, ArrayType):
         inner = _rebind(t.inner, members, underlyings)
         assert inner is not None

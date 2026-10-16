@@ -679,8 +679,9 @@ class Parser:
         enum's underlying type derives one exactly as it does for an enum-typed
         field, so the constant and the member it stands in for encode alike. The
         member resolves to a value here, the way an `array[T, Enum.MEMBER]` size
-        does, and everything downstream sees the plain constant."""
+        does, and the pool re-resolves an integer-coded one per snapshot."""
         values: list[bool | int | str] = []
+        enum_members: list[tuple[str, str] | None] = []
         enum_wire: PrimitiveType | None = None
         for element in elements:
             member = self._enum_member(element, scope)
@@ -688,7 +689,9 @@ class Parser:
                 name, value = member
                 enum_wire = self._enum_scalar(type_kw, field_name, self.lookup(name, scope) or name, endian)
                 values.append(value.wire_name if enum_wire is None else value.number)
+                enum_members.append(None if enum_wire is None else (name, value.name))
                 continue
+            enum_members.append(None)
             text = str(element)
             number = _as_int(text)
             if text in ("True", "False"):
@@ -715,7 +718,8 @@ class Parser:
             raise CompilerError(
                 f"{field_name}: an integer Literal[...] needs its wire width -- spell field(type=<integer primitive>)"
             )
-        return LiteralType(tuple(values), _with_endian(wire, endian, field_name))
+        members = tuple(enum_members) if any(m is not None for m in enum_members) else ()
+        return LiteralType(tuple(values), _with_endian(wire, endian, field_name), enum_members=members)
 
     def _union_type(
         self,

@@ -104,6 +104,41 @@ class ConstantPacket:
         body = self.body(source, "void Serializer<Owner::DropAction>::serialize")
         self.assertIn("stream.write<std::uint8_t>(3);", body)
 
+    def test_the_constant_follows_a_renumbered_member_per_snapshot(self) -> None:
+        """2225 slotted CraftReservedAction in at 18 and pushed the two deprecated
+        crafts up one, so the tag each of their structs pins moved with them."""
+        _, source = self.compile(
+            """
+from enum import IntEnum, auto
+from typing import Literal
+
+from protocol import packet, uint8, value
+
+package = "bedrock.protocol"
+
+
+class ActionType(IntEnum, uint8):
+    TAKE = 0
+    RESERVED = value(1, since=2225)
+    DROP = auto()
+
+
+class Owner:
+    class TakeAction:
+        action_type: Literal[ActionType.TAKE]
+
+    class DropAction:
+        action_type: Literal[ActionType.DROP]
+
+
+@packet(id=9)
+class ConstantPacket:
+    action: Owner.TakeAction | Owner.DropAction
+"""
+        )
+        self.assertIn("stream.write<std::uint8_t>(1);", self.body(source, "void Serializer<base::Owner::DropAction>"))
+        self.assertIn("stream.write<std::uint8_t>(2);", self.body(source, "void Serializer<v2225::Owner::DropAction>"))
+
     def test_an_unknown_member_is_rejected(self) -> None:
         message = self.rejects(
             """

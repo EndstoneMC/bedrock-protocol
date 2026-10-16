@@ -219,10 +219,16 @@ class LiteralType:
     write emits `written`; the read accepts any member of `values` and rejects
     anything else, since another value means the wire is not this shape. For a
     field BDS always writes the same way, such as cereal's member-present
-    marker ahead of a dynamic member."""
+    marker ahead of a dynamic member.
+
+    `enum_members` records, per value, the `(enum, member)` an integer-coded
+    `Literal[Enum.MEMBER]` came from, as a `bitset[Enum.MEMBER]` width does. The
+    pool re-resolves it against each snapshot's view of that enum, so a constant
+    whose enumerator was renumbered follows it."""
 
     values: tuple[bool | int | str, ...]
     wire: PrimitiveType
+    enum_members: tuple[tuple[str, str] | None, ...] = ()
     kind: Literal["literal"] = "literal"
 
     @property
@@ -232,7 +238,7 @@ class LiteralType:
 
     @property
     def referenced(self) -> frozenset[str]:
-        return frozenset()
+        return frozenset(m[0] for m in self.enum_members if m is not None)
 
 
 @dataclass(frozen=True)
