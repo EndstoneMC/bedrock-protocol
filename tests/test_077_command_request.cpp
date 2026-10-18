@@ -59,6 +59,27 @@ TEST_CASE("a command request round-trips against the golden")
     REQUIRE(back.version == bp::CurrentCmdVersion_<2168>::TestForBlockCommandDoesNotIgnoreBlockState);
 }
 
+TEST_CASE("Latest is one below Count at every snapshot")
+{
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<748>::Latest) == 42);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<786>::Latest) == 43);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<818>::Latest) == 44);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<898>::Latest) == 45);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<975>::Latest) == 46);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<1001>::Latest) == 49);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<2168>::Latest) == 50);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<2193>::Latest) == 52);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<2225>::Latest) == 55);
+    STATIC_REQUIRE(static_cast<int>(bp::CurrentCmdVersion_<2225>::Count) == 56);
+}
+
+TEST_CASE("a command request's version reads latest")
+{
+    REQUIRE(bp::enum_cast<bp::CurrentCmdVersion_<2168>>("latest") == bp::CurrentCmdVersion_<2168>::Latest);
+    REQUIRE(bp::enum_cast<bp::CurrentCmdVersion_<2193>>("latest") == bp::CurrentCmdVersion_<2193>::Latest);
+    REQUIRE(bp::enum_cast<bp::CurrentCmdVersion_<2225>>("latest") == bp::CurrentCmdVersion_<2225>::Latest);
+}
+
 TEST_CASE("a command request's command line takes a varint length prefix")
 {
     bp::CommandRequestPacket_<2168> packet;

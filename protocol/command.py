@@ -2,7 +2,7 @@
 and both permission ladders."""
 
 import uuid
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 
 from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
@@ -230,8 +230,11 @@ class CurrentCmdVersion(Enum):
     CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
     TELEPORT_ENTITY_DIMENSION_POSITION_FIX = value(51, since=2193)
     TIME_OF_COMMAND_OVERLOADS = value(52, since=2193)
-    COUNT = value(until=2225)
-    COUNT = value(56, since=2225)  # TODO: 53 to 55 unnamed until a header branch above r26_u5
+    UNKNOWN_053 = value(53, since=2225)  # TODO: 53 to 55 unnamed until a header branch above r26_u5
+    UNKNOWN_054 = value(54, since=2225)
+    UNKNOWN_055 = value(55, since=2225)
+    COUNT = auto()
+    LATEST = COUNT - 1
 
 
 @packet(id=77)
