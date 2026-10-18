@@ -23,7 +23,7 @@ bp::SerializedNetworkItemStackDescriptor_<1001> stone()
     bp::SerializedNetworkItemStackDescriptor_<1001> item;
     item.id = 1;
     item.stack_size = 64;
-    item.block_runtime_id = 7;
+    item.block_runtime_id = bp::BlockRuntimeId{7};
     item.user_data_buffer = empty_item_blob();
     return item;
 }
@@ -66,7 +66,7 @@ bp::NetworkItemStackDescriptor stone_v975()
     bp::NetworkItemStackDescriptor item;
     item.id = 1;
     item.stack_size = 64;
-    item.block_runtime_id = 7;
+    item.block_runtime_id = bp::BlockRuntimeId{7};
     item.user_data_buffer = empty_item_blob();
     return item;
 }
@@ -117,7 +117,7 @@ bp::v2168::SerializedNetworkItemStackDescriptor stone_v2168()
     bp::v2168::SerializedNetworkItemStackDescriptor item;
     item.id = 1;
     item.stack_size = 64;
-    item.block_runtime_id = 7;
+    item.block_runtime_id = bp::BlockRuntimeId{7};
     item.user_data_buffer = empty_item_blob();
     return item;
 }
@@ -191,7 +191,7 @@ TEST_CASE("inventory-transaction use-item round-trips against the golden")
     use.face = 4;
     use.slot = 5;
     use.item = air();
-    use.target_block_id = 9;
+    use.target_block_id = bp::BlockRuntimeId{9};
 
     Packet packet;
     packet.transaction = use;
@@ -325,7 +325,7 @@ TEST_CASE("inventory-transaction v975 use-item round-trips against the golden")
     use.face = 4;
     use.slot = 5;
     use.item = air_v975();
-    use.target_block_id = 9;
+    use.target_block_id = bp::BlockRuntimeId{9};
 
     PacketV975 packet;
     packet.transaction = use;
@@ -370,7 +370,7 @@ TEST_CASE("inventory-transaction v2193 carries the hand ahead of the item")
     older.pos = {.x = 1, .y = 2, .z = 3};
     older.face = 4;
     older.slot = 5;
-    older.target_block_id = 9;
+    older.target_block_id = bp::BlockRuntimeId{9};
 
     bp::InventoryTransactionPacket_<2168> old_packet;
     old_packet.transaction = older;
@@ -383,7 +383,7 @@ TEST_CASE("inventory-transaction v2193 carries the hand ahead of the item")
     use.face = 4;
     use.slot = 5;
     use.hand = bp::HandSlot::Offhand;
-    use.target_block_id = 9;
+    use.target_block_id = bp::BlockRuntimeId{9};
 
     bp::InventoryTransactionPacket_<2193> packet;
     packet.transaction = use;

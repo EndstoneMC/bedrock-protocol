@@ -22,7 +22,7 @@ bp::SerializedNetworkItemInstanceDescriptor_<1001> plank_1001()
     out.id = 7;
     out.stack_size = 4;
     out.aux_value = 0;
-    out.block_runtime_id = 9;
+    out.block_runtime_id = bp::BlockRuntimeId{9};
     out.user_data_buffer = empty_item_blob();
     return out;
 }

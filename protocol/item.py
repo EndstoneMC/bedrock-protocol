@@ -5,6 +5,7 @@ The net ids sit here rather than in item_stack.py because the descriptors refere
 from enum import IntEnum, auto
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
+from protocol.common import BlockRuntimeId
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -146,7 +147,7 @@ class NetworkItemStackDescriptor:
         stack_size: uint16
         aux_value: uvarint32
         net_id: ItemStackNetId | None
-        block_runtime_id: varint32
+        block_runtime_id: BlockRuntimeId = field(type=varint32)
         user_data_buffer: bytes
 
 
@@ -161,7 +162,7 @@ class SerializedNetworkItemStackDescriptor:
     stack_size: uint16
     aux_value: uvarint32
     net_id_variant: ItemStackNetIdVariant | None
-    block_runtime_id: uvarint32
+    block_runtime_id: BlockRuntimeId
     user_data_buffer: bytes
 
 
@@ -177,7 +178,7 @@ class SerializedNetworkItemStackDescriptor:
     stack_size: uint16
     aux_value: uvarint32
     net_id_variant: varint32 | None
-    block_runtime_id: uvarint32
+    block_runtime_id: BlockRuntimeId
     user_data_buffer: bytes
 
 

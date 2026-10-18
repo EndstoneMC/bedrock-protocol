@@ -19,7 +19,7 @@ Item stone()
     item.id = 5;
     item.stack_size = 1;
     item.aux_value = 0;
-    item.block_runtime_id = 0;
+    item.block_runtime_id = bp::BlockRuntimeId{0};
     item.user_data_buffer = empty_item_blob();
     return item;
 }

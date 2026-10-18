@@ -6,7 +6,7 @@ import uuid
 from enum import IntEnum, auto
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
-from protocol.common import BlockPos
+from protocol.common import BlockPos, BlockRuntimeId
 
 package = "bedrock.protocol"
 
@@ -54,7 +54,7 @@ class SerializedNetworkItemInstanceDescriptor:
     with field(when=lambda d: d.id != 0):
         stack_size: uint16
         aux_value: uvarint32
-        block_runtime_id: varint32
+        block_runtime_id: BlockRuntimeId = field(type=varint32)
         user_data_buffer: bytes
 
 

@@ -34,7 +34,7 @@ TEST_CASE("update-block-synced round-trips against the golden")
 {
     bp::UpdateBlockSyncedPacket packet;
     packet.pos = {.x = 1, .y = -2, .z = 3};
-    packet.runtime_id = 300;
+    packet.runtime_id = bp::BlockRuntimeId{300};
     packet.update_flags = 3;
     packet.layer = 1;
     packet.entity_unique_id = bp::ActorUniqueID{4294967297};
@@ -56,7 +56,7 @@ TEST_CASE("the block-sync actor id does not zigzag and the update flags are not 
 {
     bp::UpdateBlockSyncedPacket packet;
     packet.pos = {.x = 0, .y = 0, .z = 0};
-    packet.runtime_id = 0;
+    packet.runtime_id = bp::BlockRuntimeId{0};
     packet.update_flags = 200;
     packet.layer = 0;
     packet.entity_unique_id = bp::ActorUniqueID{64};

@@ -3,6 +3,7 @@
 from enum import IntEnum, auto
 
 from protocol import field, int32, packet, type, uint8, uint16, uint32, value, varint32
+from protocol.common import BlockRuntimeId
 from protocol.molang import ExpressionOp
 from protocol.nbt import CompoundTag
 
@@ -65,7 +66,7 @@ class SerializedNoiseBlockSpecifier:
     noise: str
     threshold: float
     range: FloatRange
-    block_runtime_id: uint32
+    block_runtime_id: BlockRuntimeId = field(type=uint32)
 
 
 @type(until=1001)
@@ -85,17 +86,17 @@ class BiomeNoiseGradientSurfaceData:
 
 
 class BiomeSurfaceMaterialData:
-    top_block: uint32
-    mid_block: uint32
-    sea_floor_block: uint32
-    foundation_block: uint32
-    sea_block: uint32
+    top_block: BlockRuntimeId = field(type=uint32)
+    mid_block: BlockRuntimeId = field(type=uint32)
+    sea_floor_block: BlockRuntimeId = field(type=uint32)
+    foundation_block: BlockRuntimeId = field(type=uint32)
+    sea_block: BlockRuntimeId = field(type=uint32)
     sea_floor_depth: int32
 
 
 class BiomeMesaSurfaceData:
-    clay_material: uint32
-    hard_clay_material: uint32
+    clay_material: BlockRuntimeId = field(type=uint32)
+    hard_clay_material: BlockRuntimeId = field(type=uint32)
     bryce_pillars: bool
     has_forest: bool
 
@@ -164,7 +165,7 @@ class BiomeConsolidatedFeaturesData:
 
 
 class BiomeMountainParamsData:
-    steep_block: uint32
+    steep_block: BlockRuntimeId = field(type=uint32)
     north_slopes: bool
     south_slopes: bool
     west_slopes: bool

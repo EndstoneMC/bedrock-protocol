@@ -13,7 +13,7 @@ Item plank()
     out.id = 7;
     out.stack_size = 4;
     out.aux_value = 0;
-    out.block_runtime_id = 9;
+    out.block_runtime_id = decltype(out.block_runtime_id){9};
     out.user_data_buffer = empty_item_blob();
     return out;
 }

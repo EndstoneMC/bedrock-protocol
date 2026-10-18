@@ -7,7 +7,7 @@ from typing import Literal
 
 from protocol import field, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID
-from protocol.common import BlockPos, Vec3
+from protocol.common import BlockPos, BlockRuntimeId, Vec3
 from protocol.inventory import ContainerEnumName, ContainerID
 from protocol.item import HandSlot, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
 from protocol.network import NetworkBlockPosition
@@ -117,7 +117,7 @@ class ItemUseInventoryTransaction:
     item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: PredictedResult = field(type=uvarint32)
 
 
@@ -151,7 +151,7 @@ class ItemUseInventoryTransaction:
     item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: PredictedResult = field(type=uvarint32)
     client_cooldown_state: ClientCooldownState
 
@@ -187,7 +187,7 @@ class ItemUseInventoryTransaction:
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: PredictedResult
     client_cooldown_state: ClientCooldownState
 
@@ -208,7 +208,7 @@ class ItemUseInventoryTransaction:
     item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
 
 
@@ -223,7 +223,7 @@ class ItemUseInventoryTransaction:
     item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
     client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
 
@@ -239,7 +239,7 @@ class ItemUseInventoryTransaction:
     item: SerializedNetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
-    target_block_id: uvarint32
+    target_block_id: BlockRuntimeId
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult
     client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
 

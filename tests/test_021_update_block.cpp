@@ -25,7 +25,7 @@ TEST_CASE("update-block round-trips against the golden")
 {
     bp::UpdateBlockPacket packet;
     packet.pos = {.x = 1, .y = -2, .z = 3};
-    packet.runtime_id = 300;
+    packet.runtime_id = bp::BlockRuntimeId{300};
     packet.update_flags = 3;
     packet.layer = 1;
     REQUIRE(encode(packet) == golden);

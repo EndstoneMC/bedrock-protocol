@@ -190,7 +190,7 @@ TEST_CASE("PlayerAuthInputPacket: v1001 round-trip with the item interaction arm
                                                           .slot = 5,
                                                           .from_pos = {.x = 27.0f, .y = 28.0f, .z = 29.0f},
                                                           .click_pos = {.x = 30.0f, .y = 31.0f, .z = 32.0f},
-                                                          .target_block_id = 33,
+                                                          .target_block_id = bp::BlockRuntimeId{33},
                                                           .client_predicted_result = Use::PredictedResult::Success,
                                                           .client_cooldown_state = Use::ClientCooldownState::On};
 

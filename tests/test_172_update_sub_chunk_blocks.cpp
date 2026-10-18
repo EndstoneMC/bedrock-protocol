@@ -36,14 +36,14 @@ TEST_CASE("update-sub-chunk-blocks round-trips against the golden")
     packet.sub_chunk_block_position = {.x = 4, .y = -5, .z = 6};
     packet.blocks_changed.standards.push_back({
         .pos = {.x = 1, .y = 2, .z = 3},
-        .runtime_id = 300,
+        .runtime_id = bp::BlockRuntimeId{300},
         .update_flags = 200,
         .entity_unique_id = bp::ActorUniqueID{9},
         .message = bp::ActorBlockSyncMessage::MessageId::Destroy,
     });
     packet.blocks_changed.extras.push_back({
         .pos = {.x = -1, .y = 0, .z = 1},
-        .runtime_id = 5,
+        .runtime_id = bp::BlockRuntimeId{5},
         .update_flags = 0,
         .entity_unique_id = bp::ActorUniqueID{0},
         .message = bp::ActorBlockSyncMessage::MessageId::None,

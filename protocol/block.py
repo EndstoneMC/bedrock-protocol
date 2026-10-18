@@ -6,7 +6,7 @@ from enum import IntEnum
 
 from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
-from protocol.common import BlockPos, DimensionType, Vec3
+from protocol.common import BlockPos, BlockRuntimeId, DimensionType, Vec3
 from protocol.nbt import CompoundTag
 from protocol.network import NetworkBlockPosition
 
@@ -28,7 +28,7 @@ class AnvilDamagePacket:
 @packet(id=21, until=944)
 class UpdateBlockPacket:
     pos: NetworkBlockPosition
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
 
@@ -36,7 +36,7 @@ class UpdateBlockPacket:
 @packet(id=21, since=944)
 class UpdateBlockPacket:
     pos: BlockPos
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
 
@@ -84,7 +84,7 @@ class ActorBlockSyncMessage:
 @packet(id=110, until=944)
 class UpdateBlockSyncedPacket:
     pos: NetworkBlockPosition
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
@@ -94,7 +94,7 @@ class UpdateBlockSyncedPacket:
 @packet(id=110, since=944)
 class UpdateBlockSyncedPacket:
     pos: BlockPos
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
@@ -130,7 +130,7 @@ class OpenSignPacket:
 @type(until=944)
 class UpdateSubChunkNetworkBlockInfo:
     pos: NetworkBlockPosition
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
     message: ActorBlockSyncMessage.MessageId
@@ -139,7 +139,7 @@ class UpdateSubChunkNetworkBlockInfo:
 @type(since=944)
 class UpdateSubChunkNetworkBlockInfo:
     pos: BlockPos
-    runtime_id: uvarint32
+    runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
     message: ActorBlockSyncMessage.MessageId

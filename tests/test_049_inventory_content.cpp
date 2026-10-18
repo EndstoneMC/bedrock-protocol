@@ -17,7 +17,7 @@ Packet sample()
     Item stone;
     stone.id = 1;
     stone.stack_size = 64;
-    stone.block_runtime_id = 7;
+    stone.block_runtime_id = bp::BlockRuntimeId{7};
     stone.user_data_buffer = empty_item_blob();
 
     Packet packet;

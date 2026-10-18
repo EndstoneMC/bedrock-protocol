@@ -5,6 +5,7 @@ from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
+from protocol.common import BlockRuntimeId
 from protocol.crafting import (
     CreativeItemNetId,
     RecipeNetId,
@@ -233,7 +234,7 @@ class ItemStackRequestCereal:
             EmptyItemDescriptorData | ItemNameDescriptorData | MolangItemDescriptorData | ItemTagDescriptorData
         )
         stack_size: uint16
-        block_runtime_id: uvarint32
+        block_runtime_id: BlockRuntimeId
         user_data_buffer: bytes
 
     class RecipeIngredientData:

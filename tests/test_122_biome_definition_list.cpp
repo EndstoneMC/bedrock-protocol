@@ -172,7 +172,7 @@ TEST_CASE("biome definition list v1001 carries the reshaped noise gradient")
     gradient.gradient_block_ranges.push_back({.noise = "n",
                                               .threshold = 0.25f,
                                               .range = {.min = 0.0f, .max = 1.0f},
-                                              .block_runtime_id = 9});
+                                              .block_runtime_id = bp::BlockRuntimeId{9}});
     gradient.noise_descriptor = {.name = "seed", .first_octave = -3, .amplitudes = {1.0f, 0.5f}};
 
     bp::v1001::BiomeSurfaceBuilderData surface;
