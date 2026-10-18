@@ -80,6 +80,18 @@ TEST_CASE("a command request's version reads latest")
     REQUIRE(bp::enum_cast<bp::CurrentCmdVersion_<2225>>("latest") == bp::CurrentCmdVersion_<2225>::Latest);
 }
 
+TEST_CASE("a command request's version writes latest")
+{
+    REQUIRE(bp::enum_name(bp::CurrentCmdVersion_<2168>::Latest) == "latest");
+    REQUIRE(bp::enum_name(bp::CurrentCmdVersion_<2193>::Latest) == "latest");
+    REQUIRE(bp::enum_name(bp::CurrentCmdVersion_<2225>::Latest) == "latest");
+
+    bp::CommandRequestPacket_<2193> packet;
+    packet.origin.type = bp::CommandOriginType::Player;
+    packet.version = bp::CurrentCmdVersion_<2193>::Latest;
+    REQUIRE(encode(packet).ends_with("\x06latest"));
+}
+
 TEST_CASE("a command request's command line takes a varint length prefix")
 {
     bp::CommandRequestPacket_<2168> packet;

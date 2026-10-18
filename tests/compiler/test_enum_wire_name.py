@@ -59,6 +59,43 @@ class WireNameCase(CompilerCase):
         return header[start : header.index("}};", start)]
 
 
+DERIVED = (
+    PREAMBLE
+    + """
+
+class CurrentCmdVersion(Enum, uint8):
+    INITIAL = 1
+    NEWEST_FIX = 2
+    COUNT = auto()
+    LATEST = COUNT - 1
+
+
+@packet(id=77)
+class CommandRequestPacket:
+    version: CurrentCmdVersion = field(type=str)
+"""
+)
+
+
+class DerivedName(WireNameCase):
+    """`LATEST` shares its number with the newest fix, and only `latest` is bound."""
+
+    def values(self, header: str, qualified: str) -> str:
+        start = header.index(f"values_v<{qualified}>")
+        return header[start : header.index("}};", start)]
+
+    def test_the_derived_member_leads_both_tables(self) -> None:
+        header, _ = self.compile(DERIVED)
+        names = self.names(header, "CurrentCmdVersion")
+        values = self.values(header, "CurrentCmdVersion")
+        self.assertLess(names.index('"latest",'), names.index('"newestfix",'))
+        self.assertLess(values.index("CurrentCmdVersion::Latest,"), values.index("CurrentCmdVersion::NewestFix,"))
+
+    def test_the_enum_keeps_declaration_order(self) -> None:
+        header, _ = self.compile(DERIVED)
+        self.assertLess(header.index("NewestFix = 2,"), header.index("Latest = Count - 1,"))
+
+
 class WireName(WireNameCase):
     def test_the_cpp_spelling_is_derived_not_the_pair(self) -> None:
         header, _ = self.compile(SCHEMA)

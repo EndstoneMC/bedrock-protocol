@@ -45,9 +45,13 @@ class EnumGenerator:
     def generate_reflection(self, p: Printer, qualified: str, type_name: str | None = None) -> None:
         """The name table is lowercased for every enum, name-coded or not. It is the
         wire table for the ones that need one, and `enum_cast` folds its input, so a
-        single spelling makes every name lookup case-insensitive by construction."""
+        single spelling makes every name lookup case-insensitive by construction.
+
+        A member defined against a sibling -- `LATEST = COUNT - 1` -- leads the
+        tables: the value lookup keeps the first entry for a number, and where a
+        number has two names, the derived one is the name BDS binds for it."""
         p.add_includes(f"<{INCLUDE_PREFIX}/enum.hpp>", "<array>", "<string_view>")
-        values = self._enum.values
+        values = sorted(self._enum.values, key=lambda v: v.derived is None)
         n = len(values)
         p.print("template <>\n")
         p.print(f"inline constexpr std::array<{qualified}, {n}> values_v<{qualified}>{{{{\n")
