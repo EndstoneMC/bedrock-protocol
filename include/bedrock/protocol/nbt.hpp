@@ -154,9 +154,10 @@ using IntArrayTag = nbt::ArrayTag<std::int32_t>;
 
 class Tag;
 
-// A homogeneous, ordered sequence of tags. The first element appended fixes
-// the element type that every later element must match. Its methods are
-// defined out of line, below Tag, since they construct the still-incomplete Tag.
+// A homogeneous, ordered sequence of tags. The constructor or the first element
+// appended fixes the element type that every later element must match. Its
+// methods are defined out of line, below Tag, since they construct the
+// still-incomplete Tag.
 class ListTag {
 public:
     using value_type = Tag;
@@ -166,6 +167,7 @@ public:
     using const_iterator = container_type::const_iterator;
 
     ListTag() = default;
+    explicit ListTag(nbt::Type element_type);
     template <typename T>
         requires(!std::is_same_v<std::remove_cvref_t<T>, Tag>)
     ListTag(std::initializer_list<T> init);
@@ -475,6 +477,14 @@ ListTag::ListTag(std::initializer_list<T> init)
     }
 }
 
+inline ListTag::ListTag(nbt::Type element_type) : type_(element_type)
+{
+    if (static_cast<std::uint8_t>(element_type) >
+        static_cast<std::uint8_t>(nbt::Type::IntArray)) {
+        throw std::invalid_argument("ListTag element type is not a tag type");
+    }
+}
+
 inline bool ListTag::empty() const noexcept { return elements_.empty(); }
 
 inline ListTag::size_type ListTag::size() const noexcept { return elements_.size(); }
@@ -553,7 +563,7 @@ inline ListTag::const_iterator ListTag::cend() const noexcept
 
 inline bool operator==(const ListTag &a, const ListTag &b) noexcept
 {
-    return a.elements_ == b.elements_;
+    return a.type_ == b.type_ && a.elements_ == b.elements_;
 }
 inline bool operator!=(const ListTag &a, const ListTag &b) noexcept
 {
@@ -833,7 +843,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             return std::unexpected(
                 std::make_error_code(std::errc::illegal_byte_sequence));
         }
-        ListTag out;
+        ListTag out(static_cast<Type>(*element_type));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = readTag(stream, static_cast<Type>(*element_type));
             if (!element) return std::unexpected(element.error());

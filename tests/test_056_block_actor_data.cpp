@@ -67,3 +67,52 @@ TEST_CASE("a negative block position zigzags instead of widening")
     REQUIRE(back.pos.y == -1);
     REQUIRE(back.pos.z == -1);
 }
+
+TEST_CASE("an empty list keeps its element type through a round trip")
+{
+    const auto wire = bytes({
+        0x00, 0x00, 0x00, 0x0a, 0x00, 0x09, 0x01, 0x61, 0x0a, 0x00, 0x00,
+    });
+
+    const auto back = decode<bp::BlockActorDataPacket>(wire);
+    const auto &list = back.data.at("a").get<bp::ListTag>();
+    REQUIRE(list.empty());
+    REQUIRE(list.type() == bp::nbt::Type::Compound);
+    REQUIRE(encode(back) == wire);
+}
+
+TEST_CASE("a list built in code takes its type from the first element")
+{
+    bp::ListTag list;
+    REQUIRE(list.type() == bp::nbt::Type::End);
+    list.push_back(bp::IntTag{1});
+    REQUIRE(list.type() == bp::nbt::Type::Int);
+    REQUIRE_THROWS_AS(list.push_back(bp::StringTag{"x"}), std::invalid_argument);
+
+    list.clear();
+    REQUIRE(list.type() == bp::nbt::Type::End);
+
+    bp::ListTag typed(bp::nbt::Type::Compound);
+    REQUIRE(typed.empty());
+    REQUIRE_THROWS_AS(typed.push_back(bp::IntTag{1}), std::invalid_argument);
+    REQUIRE(typed != bp::ListTag{});
+    REQUIRE_THROWS_AS(bp::ListTag(static_cast<bp::nbt::Type>(12)), std::invalid_argument);
+}
+
+TEST_CASE("nested empty lists keep their element types")
+{
+    bp::ListTag inner_a(bp::nbt::Type::String);
+    bp::ListTag inner_b(bp::nbt::Type::Int64);
+    bp::ListTag outer;
+    outer.push_back(bp::Tag{inner_a});
+    outer.push_back(bp::Tag{inner_b});
+
+    bp::BlockActorDataPacket packet;
+    packet.data = bp::CompoundTag{{"o", bp::Tag{outer}}};
+    const auto wire = encode(packet);
+    const auto back = decode<bp::BlockActorDataPacket>(wire);
+    const auto &list = back.data.at("o").get<bp::ListTag>();
+    REQUIRE(list.at(0).get<bp::ListTag>().type() == bp::nbt::Type::String);
+    REQUIRE(list.at(1).get<bp::ListTag>().type() == bp::nbt::Type::Int64);
+    REQUIRE(encode(back) == wire);
+}
