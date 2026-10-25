@@ -677,7 +677,14 @@ class Resume:
 @packet(id=348, since=2168)
 class ClientboundUpdateSoundDataPacket:
     server_sound_handle: ServerSoundHandle
-    event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
+    stop: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    set_volume: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    set_pitch: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    fade: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    seek_to: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    pause: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    resume: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(until=2225)
+    event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(since=2225)
 
 
 @packet(id=123, until=1001)
