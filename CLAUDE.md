@@ -77,7 +77,7 @@ field to 1001.
 **A protocol-docs branch is a network version**, not a release ordering — check its
 README, and check it again after every fetch, because a branch bumps within itself:
 `r26_u4` was 2168 through 1.26.44.3 and is **2169** from 1.26.45.1 (`r26_u5` = 2193,
-`r26_u6` = 2207). A packet missing from the dump is not cerealised at that version,
+`r26_u6` = 2225). A packet missing from the dump is not cerealised at that version,
 so the dump cannot describe it at all.
 
 ## Settled — do not re-open without new evidence
