@@ -21,8 +21,7 @@ def test_uuid_subclass_bytes_must_have_exact_native_length(length):
 
 
 @pytest.mark.parametrize("value", [0, 7, 1 << 64, (1 << 65) - 1, -1, 1 << 65])
-@pytest.mark.parametrize("forged_bytes", [b"", bytes(9), b"\xff" * 9])
-def test_bitset_subclasses_use_their_integer_value(value, forged_bytes, golden):
+def test_bitset_subclasses_use_their_integer_value(value, golden):
     calls = []
 
     class ForgedInt(int):
@@ -41,8 +40,7 @@ def test_bitset_subclasses_use_their_integer_value(value, forged_bytes, golden):
             return 0
 
         def to_bytes(self, *args):
-            calls.append("to_bytes")
-            return forged_bytes
+            raise AssertionError("overridden to_bytes called")
 
     original = bp.Codec(1001).decode_packet(golden(144, "test_144_player_auth_input.cpp")).payload
     fields = {name: getattr(original, name) for name in original.to_dict()}

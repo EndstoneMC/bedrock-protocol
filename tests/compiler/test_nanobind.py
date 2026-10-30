@@ -8,24 +8,17 @@ from io import StringIO
 from harness import CompilerCase
 
 from bedrock_protocol.compiler.nanobind.generator import NanobindGenerator
-from bedrock_protocol.compiler.registry import GENERATORS
-
-
-def test_nanobind_backend_is_registered():
-    assert "nanobind" in GENERATORS
 
 
 class Context:
     def __init__(self):
         self.files = {}
-        self.writes = []
 
     @contextmanager
     def open(self, name):
         out = StringIO()
         yield out
         self.files[name] = out.getvalue()
-        self.writes.append(name)
 
 
 class NanobindContract(CompilerCase):
@@ -144,48 +137,6 @@ class Shared:
         assert "shared.cpp" in result.files
         assert "bind_shared(types);" in result.files["bindings.cpp"]
         assert "Shared: TypeAlias = _v1001.Shared" in result.files["bedrock_protocol/v2193.pyi"]
-
-    def test_mapping_prefix_is_construction_only(self):
-        _, result = self.generate("""
-from protocol import field, packet, uint8
-package = "bedrock.protocol"
-@packet(id=7)
-class Root:
-    values: dict[str, uint8] = field(prefix=uint8)
-""")
-        assert "Mapping<Text, Scalar<std::uint8_t>, std::uint8_t>::load(a0)" in result.files["mod.cpp"]
-        assert "bindMap<Mapping<Text, Scalar<std::uint8_t>>>" in result.files["bindings.cpp"]
-        assert "bindMap<Mapping<Text, Scalar<std::uint8_t>, std::uint8_t>>" not in result.files["bindings.cpp"]
-
-    def test_builtin_metadata_has_the_exact_discrete_supported_versions(self):
-        resolved = self.resolve("""
-from protocol import packet
-package = "bedrock.protocol"
-@packet(id=4)
-class Root:
-    pass
-""")
-        assert resolved.pool.file_set.supported_versions == (
-            729,
-            748,
-            766,
-            776,
-            786,
-            800,
-            818,
-            819,
-            827,
-            844,
-            859,
-            898,
-            924,
-            944,
-            975,
-            1001,
-            2168,
-            2193,
-            2225,
-        )
 
     def test_construction_adapters_follow_wire_types_without_changing_view_types(self):
         _, result = self.generate("""

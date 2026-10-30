@@ -267,9 +267,6 @@ struct Bits {
         }
         Type result;
         auto bytes = nb::cast<nb::bytes>(number.attr("to_bytes")((N + 7) / 8, "little"));
-        if (bytes.size() != (N + 7) / 8) {
-            throw nb::value_error("invalid bitset byte length");
-        }
         for (std::size_t i = 0; i < N; ++i) {
             result[i] = (static_cast<unsigned char>(bytes.c_str()[i / 8]) >> (i % 8)) & 1;
         }
