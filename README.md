@@ -1,19 +1,79 @@
 # bedrock-protocol
 
-> Version-aware C++ packet codecs for the Minecraft: Bedrock protocol, generated from a Python schema.
+Typed packet codecs for Minecraft Bedrock, generated from one version-aware
+Python schema. Use the C++ library for native applications, the Python runtime
+for immutable packet values and codecs, or `bpc` to compile schemas.
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
 
-Bedrock's wire format moves between protocol versions: fields appear, packets get
-reordered, and whole packets migrate to BDS's Cereal serialization. This repository
-holds one schema covering every version it supports, and a protoc-shaped compiler
-(`bpc`) that turns it into C++ types and serializers — one shape per version, so a
-consumer names the version it wants and gets a compile error if it asks for a field
-that era never had.
+## Python
 
-## Versions
+The `bedrock-protocol` distribution contains the schema compiler and `bpc` command.
+`bedrock-protocol-native` adds the native runtime, generated version modules and
+type stubs, and requires the matching compiler distribution. Compiler-only use
+does not require a native toolchain. See the [Python guide](docs/python.md) for
+installation, packet construction, limits and ownership.
 
-| protocol | Minecraft |
+```python
+from bedrock_protocol import Codec, v2193
+
+codec = Codec(2193)
+packet = v2193.RequestNetworkSettingsPacket(client_network_version=2193)
+wire = codec.encode_packet(packet)
+decoded = codec.decode_packet(wire)
+assert decoded.payload.client_network_version == 2193
+```
+
+## C++
+
+Choose a protocol explicitly with the generated selector aliases. A type without
+a version suffix names the latest shape; fields unavailable in the selected era
+are absent from that type.
+
+```cpp
+#include <bedrock/protocol.hpp>
+
+namespace bp = bedrock::protocol;
+using Packet = bp::SubChunkRequestPacket_<975>;
+
+Packet packet;
+packet.dimension_type = bp::DimensionType{0};
+packet.center_pos = {.x = 1, .y = 2, .z = 3};
+packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
+
+std::string bytes;
+bp::BinaryWriter writer{bytes};
+bp::serialize(writer, packet);
+
+bp::BinaryReader reader{bytes};
+std::expected<Packet, std::error_code> decoded = bp::deserialize<Packet>(reader);
+```
+
+Link the library as a subproject:
+
+```cmake
+add_subdirectory(bedrock-protocol)
+target_link_libraries(my_target PRIVATE bedrock::protocol)
+```
+
+Or consume an installed package:
+
+```cmake
+find_package(bedrock-protocol CONFIG REQUIRED)
+target_link_libraries(my_target PRIVATE bedrock::protocol)
+```
+
+The umbrella header includes every generated family. Include an individual header
+such as `<bedrock/protocol/inventory.h>` when only that family is needed.
+
+## Supported protocols
+
+Both runtimes cover the active packet shapes and their dependent types in these
+schema versions. Retired packets and declaration gaps remain absent in the
+corresponding version. Python exposes the exact list as `SUPPORTED_VERSIONS` and
+active IDs through `Codec.supported_packet_ids`.
+
+| Protocol | Minecraft Bedrock |
 | --- | --- |
 | 729 | 1.21.30 |
 | 748 | 1.21.40 |
@@ -35,143 +95,29 @@ that era never had.
 | 2193 | 1.26.50.5 |
 | 2225 | 1.26.60.30 |
 
-## Example
-
-The schema lives in `protocol/*.py`. A packet whose shape changed is declared once
-per era; anything smaller carries its own version range:
-
-```python
-@packet(id=175, until=1001)
-class SubChunkRequestPacket:
-    dimension_type: DimensionType
-    center_pos: SubChunkPos
-    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset] = field(prefix=uint32)
-
-
-@packet(id=175, since=1001)
-class SubChunkRequestPacket:
-    dimension_type: DimensionType
-    sub_chunk_pos_offsets: list[SubChunkPacket.SubChunkPosOffset]
-    center_pos: SubChunkPos
-```
-
-Cerealising this packet both moved `center_pos` behind the offsets and swapped the
-offset count from a fixed `uint32` to a varint; the schema gates that at 1001. The
-compiler emits one struct per version behind a selector alias, so both eras are
-reachable from a single name and the one you spell decides which bytes you get:
-
-```cpp
-#include <bedrock/protocol.hpp>
-
-namespace bp = bedrock::protocol;
-using Packet = bp::SubChunkRequestPacket_<975>;
-
-Packet packet;
-packet.dimension_type = bp::DimensionType{0};
-packet.center_pos = {.x = 1, .y = 2, .z = 3};
-packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
-
-std::string buffer;
-bp::BinaryWriter writer{buffer};
-bp::serialize(writer, packet);  // 11 bytes here, 17 at 1001
-
-bp::BinaryReader reader{buffer};
-std::expected<Packet, std::error_code> back = bp::deserialize<Packet>(reader);
-```
-
-Unversioned types keep their plain name; `bp::SubChunkRequestPacket` without the
-suffix is the latest version.
-
 ## Reflection
 
-Everything the compiler knows about a generated enum, packet or struct is emitted
-alongside it, so a consumer can ask at compile time. There is no macro to register a
-type and nothing to keep in sync — the tables come out of the same schema the codecs
-do.
+Generated enums, structs and packets carry compile-time metadata from the same
+schema as their codecs:
 
 ```cpp
-namespace bp = bedrock::protocol;
-using Packet = bp::SubChunkRequestPacket_<975>;
-
-// Enums carry their enumerators in declaration order, and the lowercased names
-// BDS writes for a name-coded field.
-static_assert(bp::enum_count<bp::BossBarColor>() == 8);
 static_assert(bp::enum_name(bp::BossBarColor::Red) == "red");
 static_assert(bp::enum_cast<bp::BossBarColor>("RED") == bp::BossBarColor::Red);
-
-// A packet id resolves to the type that version modelled, and to `void` otherwise.
 static_assert(std::is_same_v<bp::packet_of_t<975, 175>, Packet>);
-static_assert(bp::has_packet_v<2225, 353>);   // ClientboundMatchmakingStatePacket
-static_assert(!bp::has_packet_v<2193, 353>);  // ... which 1.26.50 did not have
-
-// A struct carries its name and its members, so the reorder above is a fact you
-// can assert on rather than something to go read out of the header.
-static_assert(bp::struct_name<Packet>() == "SubChunkRequestPacket");
-static_assert(bp::field_count<Packet>() == 3);
-static_assert(bp::field_name<1, bp::SubChunkRequestPacket_<975>>() == "center_pos");
-static_assert(bp::field_name<1, bp::SubChunkRequestPacket_<1001>>() == "sub_chunk_pos_offsets");
-static_assert(!bp::field_contains<Packet>("cache_enabled"));
+static_assert(!bp::has_packet_v<2193, 353>);
+static_assert(bp::field_name<1, Packet>() == "center_pos");
 ```
 
-`for_each_named_field` expands a pack rather than erasing to a variant, so every
-member arrives under its own static type and a walk can recurse into nested structs:
-
-```cpp
-void dump(std::string_view name, const auto &value, int indent = 0)
-{
-    using T = std::remove_cvref_t<decltype(value)>;
-    if constexpr (bp::Reflected<T>) {
-        std::println("{:{}}{} : {}", "", indent, name, bp::struct_name<T>());
-        bp::for_each_named_field(value, [indent](std::string_view member, const auto &v) {
-            dump(member, v, indent + 2);
-        });
-    }
-    else if constexpr (std::ranges::input_range<T>) {
-        for (const auto &item : value) {
-            dump(name, item, indent);
-        }
-    }
-    else {
-        std::println("{:{}}{} = {}", "", indent, name, static_cast<std::int64_t>(value));
-    }
-}
-
-dump("packet", packet);
-```
-
-```text
-packet : SubChunkRequestPacket
-  dimension_type = 0
-  center_pos : SubChunkPos
-    x = 1
-    y = 2
-    z = 3
-  sub_chunk_pos_offsets : SubChunkPacket::SubChunkPosOffset
-    x = -1
-    y = 0
-    z = 1
-```
-
-`field_get` reaches one member by index, and `field_index` is consteval, so naming a
-member by string costs nothing at runtime and a typo is a compile error rather than a
-miss:
-
-```cpp
-bp::field_get<bp::field_index<Packet>("center_pos")>(packet).y = 9;
-```
-
-The enum surface follows [magic_enum](https://github.com/Neargye/magic_enum) and the
-struct surface follows [Boost.PFR](https://github.com/boostorg/pfr), spelled the same
-way but without the limits each works around: no bounded value range to scan, no
-arity cap, no aggregate requirement, and member names on every compiler. A type the
-compiler did not emit is simply unreflected rather than an error, so `bp::Reflected`
-is safe to branch on.
+Use `for_each_named_field` to visit members with their static types, and
+`field_get<field_index<T>("name")>` to access a member by compile-time name.
+`Reflected<T>` is safe to test for types outside the generated schema. Enum
+metadata preserves declaration order and the wire names of name-coded fields.
 
 ## Building
 
-Requires CMake, a C++23 compiler, and [uv](https://docs.astral.sh/uv/), which runs
-the compiler during the build. CI covers GCC (libstdc++), Clang 18 (libc++) and
-MSVC.
+Requires CMake and a C++23 compiler. Building a checkout also requires Python
+3.12+ and the compiler dependencies declared in `pyproject.toml`. Pregenerated C++
+source releases and installed C++ packages need no Python.
 
 ```shell
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -179,66 +125,27 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-`BEDROCK_PROTOCOL_BUILD_TESTS` and `BEDROCK_PROTOCOL_INSTALL` both default to on for a
-top-level build and off when the project is added as a subdirectory.
+Code generation is part of the build. `BEDROCK_PROTOCOL_BUILD_TESTS` and
+`BEDROCK_PROTOCOL_INSTALL` default to on for top-level builds and off for
+subprojects. `BEDROCK_PROTOCOL_BUILD_PYTHON` and `BEDROCK_PROTOCOL_BUILD_WIRE` are
+optional and default to off. The wire target is `bedrock::protocol_wire`.
 
-Code generation is wired into the build, but `bpc` can be run directly:
+Install the C++ headers, library and CMake package with `cmake --install build`.
+Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
+Python distribution builds are described in the [Python guide](docs/python.md#building).
 
-```shell
-uv run bpc --language cpp --out build/protocol --import-path . protocol/inventory.py
-```
+## Contributing
 
-## Using it
+Schemas live in `protocol/`; the compiler and its backends live in
+`src/bedrock_protocol/`. Hand-written C++ runtime headers are under
+`include/bedrock/protocol/`. Keep schema changes version-aware and retain older
+shapes when the wire format changes.
 
-As a subproject. Code generation runs during the build, so this needs uv on the
-consumer's machine too:
-
-```cmake
-add_subdirectory(bedrock-protocol)
-target_link_libraries(my_target PRIVATE bedrock::protocol)
-```
-
-Or install it once and consume the built artifacts, which needs no Python at all:
-
-```shell
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/bedrock-protocol
-cmake --build build
-cmake --install build
-```
-
-```cmake
-find_package(bedrock-protocol CONFIG REQUIRED)
-target_link_libraries(my_target PRIVATE bedrock::protocol)
-```
-
-The install tree:
-
-| path | |
-| --- | --- |
-| `include/bedrock/protocol.hpp` | umbrella — the runtime plus every generated header |
-| `include/bedrock/protocol/*.h` | one generated header per packet family, each paired with a compiled `.cpp` |
-| `include/bedrock/protocol/*.hpp` | header-only runtime — binary streams, `Serializer`, NBT, UUID |
-| `include/bedrock/protocol/detail/` | plumbing the generated code leans on, not meant to be included directly |
-| `lib/libbedrock_protocol.a` | the generated serializer bodies |
-| `lib/cmake/bedrock-protocol/` | the CMake package `find_package` resolves |
-
-A consumer that only touches one family can include `<bedrock/protocol/inventory.h>`
-rather than the umbrella.
-
-## Layout
-
-| path | |
-| --- | --- |
-| `protocol/` | the schema — one module per BDS domain, named after its folder in the game tree |
-| `src/bedrock_protocol/` | the compiler: `compiler/` (parser, descriptors, pool) and `compiler/cpp/` (backend) |
-| `include/bedrock/protocol/` | hand-written runtime — binary streams, the `Serializer` entry point, NBT |
-| `tests/` | per-packet round-trip tests against goldens generated by running gophertunnel |
-
-Wire shapes are taken from [protocol-docs](https://github.com/EndstoneMC/protocol-docs),
-names and C++ types from reverse-engineered BDS headers, and golden bytes from
-[gophertunnel](https://github.com/Sandertv/gophertunnel). `CLAUDE.md` documents those
-sources and the conventions the schema follows.
+Wire definitions draw on [protocol-docs](https://github.com/EndstoneMC/protocol-docs),
+BDS type information and [gophertunnel](https://github.com/Sandertv/gophertunnel)
+golden bytes. See `CLAUDE.md` for schema conventions and source attribution.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+The original C++ library, schema and compiler use [MIT](LICENSE). Native attribution
+is in [the wire notice](src/wire/NOTICE) and [the Python extension notice](src/python/NOTICE).

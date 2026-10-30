@@ -226,7 +226,21 @@ class LevelEventPacket:
     data: varint32
 
 
-@packet(id=124)
+@packet(id=124, until=2193)
+class LevelEventGenericPacket:
+    event_id: varint32
+    data: CompoundTag
+
+
+@packet(id=124, since=2193, until=2194)
+class LevelEventGenericPacket:
+    event_id: varint32
+    # Captured on BDS 1.26.52.3: the compound entries start immediately after
+    # event_id, without the root tag id and empty root name.
+    data: CompoundTag = field(nbt_root=False)
+
+
+@packet(id=124, since=2194)
 class LevelEventGenericPacket:
     event_id: varint32
     data: CompoundTag

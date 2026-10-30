@@ -198,7 +198,7 @@ class PhotoType(IntEnum, uint8):
 @packet(id=99)
 class PhotoTransferPacket:
     photo_name: str
-    photo_data: str
+    photo_data: bytes
     book_id: str
     type: PhotoType
     source_type: PhotoType

@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from bedrock_protocol.descriptor import (
+    INTEGER_PRIMITIVES,
     VARINT_PRIMITIVES,
     ArrayType,
     BitsetType,
@@ -166,6 +167,13 @@ def enumerator(enum: str, member: str, ctx: FileContext) -> str:
             if v.name == member:
                 return v.cpp_name
     return pascal(member)
+
+
+def render_count(pred: Predicate, base: str, ctx: FileContext, snapshot: int | None, owner: str | None = None) -> str:
+    if pred.kind in {"*", "+", "-", "&"}:
+        left, right = (render_count(p, base, ctx, snapshot, owner) for p in pred.operands)
+        return f"detail::countOperation({left}, {right}, '{pred.kind}')"
+    return f"detail::countValue({render_predicate(pred, base, ctx, snapshot, owner)})"
 
 
 def _find_enum(name: str, ctx: FileContext) -> Enum | None:
@@ -317,10 +325,20 @@ class PrimitiveFieldGenerator(FieldGenerator):
         p.print(_primitive_read(self._prim) + "\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
         if self._prim.name in ("str", "bytes") and self._prim.alias is None:
-            p.print(f"{target} = *v;\n")
+            p.print(f"{target} = std::move(*v);\n")
         else:
             cast = cpp_type(self._prim, self._gc.ctx)
             p.print(f"{target} = static_cast<{cast}>(*v);\n")
+            if (
+                self._prim.name in INTEGER_PRIMITIVES | {"bool"}
+                and self._prim.encoding in INTEGER_PRIMITIVES | {"bool"}
+            ):
+                p.add_includes("<system_error>")
+                wire = PRIMITIVE_TYPES[self._prim.encoding]
+                p.print(
+                    f"if (static_cast<{wire}>({target}) != *v) "
+                    "return std::unexpected(std::make_error_code(std::errc::value_too_large));\n"
+                )
 
 
 class EnumFieldGenerator(FieldGenerator):
@@ -345,12 +363,18 @@ class EnumFieldGenerator(FieldGenerator):
             p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
             p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
-            p.print(f"{target} = *v;\n")
+            p.print(f"{target} = std::move(*v);\n")
         else:
             p.add_includes(*_codec_includes(self._enum.scalar))
             p.print(_primitive_read(self._enum.scalar) + "\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
+            p.add_includes("<system_error>")
+            wire = PRIMITIVE_TYPES[self._enum.scalar.encoding]
+            p.print(
+                f"if (static_cast<{wire}>({target}) != *v) "
+                "return std::unexpected(std::make_error_code(std::errc::value_too_large));\n"
+            )
 
 
 class ClassFieldGenerator(FieldGenerator):
@@ -369,7 +393,21 @@ class ClassFieldGenerator(FieldGenerator):
         p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", "<expected>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
-        p.print(f"{target} = *v;\n")
+        p.print(f"{target} = std::move(*v);\n")
+
+
+class CompoundPayloadFieldGenerator(FieldGenerator):
+    """A direct CompoundTag field without the named-root header."""
+
+    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
+        p.add_includes(f"<{INCLUDE_PREFIX}/nbt.hpp>")
+        p.print(f"nbt::writeTag(stream, Tag{{{var}}});\n")
+
+    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+        p.add_includes(f"<{INCLUDE_PREFIX}/nbt.hpp>", "<expected>", "<utility>")
+        p.print("auto v = nbt::readTag(stream, nbt::Type::Compound);\n")
+        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"{target} = std::move(v->get<CompoundTag>());\n")
 
 
 class BitsetFieldGenerator(FieldGenerator):
@@ -395,7 +433,7 @@ class BitsetFieldGenerator(FieldGenerator):
         p.add_includes("<expected>", *self._includes())
         p.print(f"auto v = Serializer<{self._spelling}>::deserialize(stream);\n")
         p.print("if (!v) return std::unexpected(v.error());\n")
-        p.print(f"{target} = *v;\n")
+        p.print(f"{target} = std::move(*v);\n")
 
 
 class OptionalFieldGenerator(FieldGenerator):
@@ -471,22 +509,25 @@ class RepeatedFieldGenerator(FieldGenerator):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<expected>")
+        p.add_includes("<expected>", "<type_traits>")
         if self._count is not None:
-            # The count reads the surrounding struct's earlier fields, which
-            # `MessageGenerator` names `out` -- not `target`, which is a staging
-            # temporary whenever the list sits inside another combinator.
-            count = render_predicate(self._count, "out", self._gc.ctx, self._gc.snapshot, self._gc.owner)
-            p.print(f"{target}.clear();\n")
-            with p.block(f"for (auto rep{depth} = {count}; rep{depth} > 0; --rep{depth})"):
-                p.print(f"{target}.emplace_back();\n")
-                self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
-            return
-        p.add_includes(*type_includes(self._prefix))
-        p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
-        p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+            count = render_count(self._count, "out", self._gc.ctx, self._gc.snapshot, self._gc.owner)
+            p.print(f"const auto checked{depth} = {count};\n")
+            p.print(f"if (!checked{depth}) return std::unexpected(checked{depth}.error());\n")
+            p.print(f"const auto count{depth} = *checked{depth};\n")
+        else:
+            p.add_includes(*type_includes(self._prefix))
+            p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
+            p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+            p.print(f"const auto count{depth} = *len{depth};\n")
+        p.print(
+            f"auto budget{depth} = stream.account(count{depth}, "
+            f"sizeof(typename std::remove_reference_t<decltype({target})>::value_type));\n"
+        )
+        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
         p.print(f"{target}.clear();\n")
-        with p.block(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth})"):
+        p.print(f"{target}.reserve(static_cast<std::size_t>(count{depth}));\n")
+        with p.block(f"for (auto rep{depth} = count{depth}; rep{depth} > 0; --rep{depth})"):
             p.print(f"{target}.emplace_back();\n")
             self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
 
@@ -506,6 +547,8 @@ class ArrayFieldGenerator(FieldGenerator):
 
     def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
         p.add_includes("<cstddef>", "<expected>")
+        p.print(f"auto budget{depth} = stream.account({self._size}, sizeof({target}[0]));\n")
+        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
         with p.block(f"for (std::size_t i{depth} = 0; i{depth} < {self._size}; ++i{depth})"):
             self._inner.generate_deserialize(p, f"{target}[i{depth}]", depth + 1)
 
@@ -539,6 +582,12 @@ class MapFieldGenerator(FieldGenerator):
         p.add_includes("<expected>", "<map>", *type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
         p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+        p.add_includes("<type_traits>")
+        p.print(
+            f"auto budget{depth} = stream.account(*len{depth}, "
+            f"sizeof(typename std::remove_reference_t<decltype({target})>::value_type));\n"
+        )
+        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
         p.print(f"{target}.clear();\n")
         with p.block(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth})"):
             p.print(f"{self._key_type} key{depth}{{}};\n")
@@ -582,11 +631,11 @@ class VariantFieldGenerator(FieldGenerator):
                     if case is not None:
                         with p.block(""):
                             case.generate_deserialize(p, f"alt{depth}", depth + 1)
-                    p.print(f"var{depth}.emplace<{index}>(alt{depth});\n")
+                    p.print(f"var{depth}.emplace<{index}>(std::move(alt{depth}));\n")
                     p.print("break;\n")
             with p.block("default:"):
                 p.print("return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
-        p.print(f"{target} = var{depth};\n")
+        p.print(f"{target} = std::move(var{depth});\n")
 
 
 class FieldGeneratorMap:
@@ -602,7 +651,9 @@ class FieldGeneratorMap:
         for f in struct.fields:
             (version,) = f.versions
             assert version.type is not None
-            self._by_name[f.name] = make_field_generator(version.type, gc)
+            self._by_name[f.name] = (
+                make_field_generator(version.type, gc) if version.nbt_root else CompoundPayloadFieldGenerator()
+            )
 
     def get(self, field: Field) -> FieldGenerator:
         return self._by_name[field.name]

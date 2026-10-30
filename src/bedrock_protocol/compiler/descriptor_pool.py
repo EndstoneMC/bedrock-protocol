@@ -365,7 +365,7 @@ def _snapshot_view(
             continue
         bound = replace(version, type=_rebind(version.type, members, underlyings))
         narrowed.append(Field(f.name, (bound,)))
-        key_parts.append((f.name, bound.type))
+        key_parts.append((f.name, bound.type, bound.nbt_root))
     return None, replace(t, fields=tuple(narrowed), nested=tuple(nested)), tuple(key_parts + nested_keys)
 
 

@@ -1,4 +1,6 @@
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include <bedrock/protocol/block.h>
 
@@ -23,6 +25,16 @@ const std::string golden_empty_tag = bytes({
     0x01, 0x0a, 0x00, 0x00,
 });
 
+// Captured on BDS 1.26.52.3, protocol 2193, packet header 0x7c.
+const std::string golden_v2193 = bytes({
+    0x92, 0x99, 0x01, 0x03, 0x0b, 0x61, 0x62, 0x6c, 0x65, 0x54, 0x6f, 0x53,
+    0x6c, 0x65, 0x65, 0x70, 0x02, 0x03, 0x14, 0x6f, 0x76, 0x65, 0x72, 0x77,
+    0x6f, 0x72, 0x6c, 0x64, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x43, 0x6f,
+    0x75, 0x6e, 0x74, 0x02, 0x03, 0x13, 0x73, 0x6c, 0x65, 0x65, 0x70, 0x69,
+    0x6e, 0x67, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x43, 0x6f, 0x75, 0x6e,
+    0x74, 0x00, 0x00,
+});
+
 }  // namespace
 
 TEST_CASE("packet id is 124")
@@ -30,6 +42,53 @@ TEST_CASE("packet id is 124")
     STATIC_REQUIRE(bp::LevelEventGenericPacket::Id == 124);
     STATIC_REQUIRE(bp::has_packet_v<1001, 124>);
     STATIC_REQUIRE(bp::has_packet_v<2168, 124>);
+}
+
+TEST_CASE("packet124 keeps named roots outside protocol2193")
+{
+    [&]<int... Versions>(std::integer_sequence<int, Versions...>) {
+        ([&] {
+            using Packet = bp::packet_of_t<Versions, 124>;
+            const auto packet = decode<Packet>(golden);
+            REQUIRE(packet.event_id == 2026);
+            REQUIRE(packet.data.at("size").template get<bp::IntTag>().value() == 18);
+            REQUIRE(encode(packet) == golden);
+            REQUIRE(encode(decode<Packet>(golden_empty_tag)) == golden_empty_tag);
+        }(), ...);
+    }(std::integer_sequence<int, 729, 748, 766, 776, 786, 800, 818, 819, 827,
+                            844, 859, 898, 924, 944, 975, 1001, 2168, 2225>{});
+    STATIC_REQUIRE(std::is_same_v<bp::LevelEventGenericPacket, bp::LevelEventGenericPacket_<2225>>);
+    STATIC_REQUIRE_FALSE(std::is_same_v<bp::LevelEventGenericPacket_<2193>, bp::LevelEventGenericPacket_<2225>>);
+}
+
+TEST_CASE("packet124 protocol2193 consumes the captured compound payload")
+{
+    using Packet = bp::packet_of_t<2193, 124>;
+    REQUIRE(golden_v2193.size() == 63);
+    bp::BinaryReader reader(golden_v2193);
+    auto packet = bp::Serializer<Packet>::deserialize(reader);
+    REQUIRE(packet);
+    REQUIRE(reader.getReadPointer() == 63);
+    REQUIRE(reader.getUnreadLength() == 0);
+    REQUIRE(packet->event_id == 9801);
+    REQUIRE(packet->data.size() == 3);
+    REQUIRE(packet->data.at("ableToSleep").get<bp::IntTag>().value() == 1);
+    REQUIRE(packet->data.at("overworldPlayerCount").get<bp::IntTag>().value() == 1);
+    REQUIRE(packet->data.at("sleepingPlayerCount").get<bp::IntTag>().value() == 0);
+    REQUIRE(encode(*packet) == golden_v2193);
+    REQUIRE(rejects<Packet>(golden_v2193.substr(0, golden_v2193.size() - 1)));
+}
+
+TEST_CASE("packet124 payload shares the reader resource budget")
+{
+    using Packet = bp::LevelEventGenericPacket_<2193>;
+    for (const auto limits : {bp::DecodeLimits{0, 1024, 128}, bp::DecodeLimits{100, 0, 128},
+                              bp::DecodeLimits{100, 1024, 2}}) {
+        bp::DecodeBudget budget(limits);
+        bp::BinaryReader reader(golden_v2193, &budget);
+        REQUIRE_FALSE(bp::Serializer<Packet>::deserialize(reader));
+        REQUIRE(budget.resourceFailure());
+    }
 }
 
 TEST_CASE("a generic level event round-trips against the golden")

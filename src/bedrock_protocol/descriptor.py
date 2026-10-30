@@ -538,6 +538,9 @@ class FieldVersion:
     type: FieldType | None
     since: int | None
     until: int | None
+    #: Direct CompoundTag fields normally carry a named root; False selects
+    #: only the compound payload, including its terminating TAG_End.
+    nbt_root: bool = True
 
 
 @dataclass(frozen=True)
@@ -664,6 +667,7 @@ class FileSet:
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     version: int | None = None
+    supported_versions: tuple[int, ...] = ()
 
 
 # --- resolved descriptors (post-versioning) -----------------------------------

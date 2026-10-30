@@ -264,6 +264,7 @@ class Importer:
             files=files,
             outputs=tuple(output_names),
             version=_dsl_version(griffe_modules),
+            supported_versions=_dsl_supported_versions(griffe_modules),
         )
 
     def _load_owning_packages(self, loaded: dict[str, griffe.Module], seed: list[str]) -> None:
@@ -411,3 +412,22 @@ def _dsl_version(loaded: dict[str, griffe.Module]) -> int | None:
         except ValueError:
             continue
     return None
+
+
+def _dsl_supported_versions(loaded: dict[str, griffe.Module]) -> tuple[int, ...]:
+    versions: tuple[int, ...] = ()
+    for mod in loaded.values():
+        attr = mod.attributes.get("__supported_versions__")
+        if attr is None or attr.value is None:
+            continue
+        try:
+            values = ast.literal_eval(str(attr.value))
+        except (ValueError, SyntaxError) as exc:
+            raise CompilerError("invalid __supported_versions__") from exc
+        if not isinstance(values, (list, tuple)) or not values or any(type(v) is not int or v <= 0 for v in values):
+            raise CompilerError("__supported_versions__ must contain positive protocol integers")
+        candidate = tuple(values)
+        if candidate != tuple(sorted(set(candidate))) or (versions and versions != candidate):
+            raise CompilerError("inconsistent or unordered __supported_versions__")
+        versions = candidate
+    return versions
