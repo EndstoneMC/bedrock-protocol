@@ -161,17 +161,25 @@ def test_recursive_conversion_cannot_publish_or_replace_partial_values(kind):
     victim = cls.__new__(cls)
     published = []
 
+    def observe_partial():
+        if kind == "nbt":
+            return observe(victim)
+        with pytest.warns(
+            RuntimeWarning, match=r"^nanobind: attempted to access an uninitialized instance of type '[^']+'!$"
+        ):
+            return observe(victim)
+
     def reenter():
         cls.__init__(victim, **inner)
         try:
-            published.append(observe(victim))
+            published.append(observe_partial())
         except (TypeError, RuntimeError, BufferError):
             pass
 
     # Manual initialization cannot make an exposed empty allocation usable.
     cls.__init__(victim, **arguments(reenter))
     with pytest.raises((TypeError, RuntimeError, BufferError)):
-        observe(victim)
+        observe_partial()
     assert published == []
 
     outer = cls(**arguments(reenter))
