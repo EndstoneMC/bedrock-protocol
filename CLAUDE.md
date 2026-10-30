@@ -12,6 +12,8 @@ and confirm against a second source before acting:
 | golden bytes | **gophertunnel** (see Tests) |
 | dating, cross-validation | **Nukkit-MOT**, **CloudburstMC/Protocol** |
 
+Actor IDs are typed `ActorUniqueID` or `ActorRuntimeID` even where BDS declares a plain integer, with the wire encoding kept (`field(type=int64)`). Establish which from where BDS fills the member.
+
 Never take a *name* from gophertunnel or CloudburstMC — they date and shape
 symbols, they do not name them. Mojang/bedrock-protocol-docs is a last resort and
 always earns a `# TODO: confirm against BDS`. **Do not trust `prototype`**: it has real

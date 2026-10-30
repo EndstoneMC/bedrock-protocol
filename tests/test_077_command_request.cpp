@@ -43,7 +43,7 @@ TEST_CASE("a command request round-trips against the golden")
     packet.origin.uuid = {.most_significant_bits = 0x0123456789abcdefULL,
                           .least_significant_bits = 0xfedcba9876543210ULL};
     packet.origin.request_id = "req-1";
-    packet.origin.player_id = -2;
+    packet.origin.player_id = bp::ActorUniqueID{-2};
     packet.internal_source = true;
     packet.version = bp::CurrentCmdVersion_<2168>::TestForBlockCommandDoesNotIgnoreBlockState;
     REQUIRE(encode(packet) == golden);
@@ -54,7 +54,7 @@ TEST_CASE("a command request round-trips against the golden")
     REQUIRE(back.origin.uuid.most_significant_bits == 0x0123456789abcdefULL);
     REQUIRE(back.origin.uuid.least_significant_bits == 0xfedcba9876543210ULL);
     REQUIRE(back.origin.request_id == "req-1");
-    REQUIRE(back.origin.player_id == -2);
+    REQUIRE(back.origin.player_id == bp::ActorUniqueID{-2});
     REQUIRE(back.internal_source);
     REQUIRE(back.version == bp::CurrentCmdVersion_<2168>::TestForBlockCommandDoesNotIgnoreBlockState);
 }
@@ -113,11 +113,11 @@ TEST_CASE("a command request's player id is eight fixed bytes below zero")
     packet.origin.type = bp::CommandOriginType::Player;
     packet.version = bp::CurrentCmdVersion_<2168>::Initial;
 
-    packet.origin.player_id = 0;
+    packet.origin.player_id = bp::ActorUniqueID{0};
     const auto zero = encode(packet);
-    packet.origin.player_id = -1;
+    packet.origin.player_id = bp::ActorUniqueID{-1};
     const auto negative = encode(packet);
 
     REQUIRE(negative.size() == zero.size());
-    REQUIRE(decode<bp::CommandRequestPacket_<2168>>(negative).origin.player_id == -1);
+    REQUIRE(decode<bp::CommandRequestPacket_<2168>>(negative).origin.player_id == bp::ActorUniqueID{-1});
 }

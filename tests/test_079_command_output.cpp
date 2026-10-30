@@ -72,7 +72,7 @@ bp::CommandOutputPacket filled()
     packet.origin_data.uuid = {.most_significant_bits = 0x0102030405060708,
                                .least_significant_bits = 0x090a0b0c0d0e0f10};
     packet.origin_data.request_id = "req-1";
-    packet.origin_data.player_id = -3;
+    packet.origin_data.player_id = bp::ActorUniqueID{-3};
     packet.output.type = bp::CommandOutputType::DataSet;
     packet.output.success_count = 300;
     packet.output.messages = {ok, failed};
@@ -98,7 +98,7 @@ TEST_CASE("command output round-trips against the golden")
     REQUIRE(back.origin_data.uuid.most_significant_bits == 0x0102030405060708);
     REQUIRE(back.origin_data.uuid.least_significant_bits == 0x090a0b0c0d0e0f10);
     REQUIRE(back.origin_data.request_id == "req-1");
-    REQUIRE(back.origin_data.player_id == -3);
+    REQUIRE(back.origin_data.player_id == bp::ActorUniqueID{-3});
     REQUIRE(back.output.type == bp::CommandOutputType::DataSet);
     REQUIRE(back.output.success_count == 300);
     REQUIRE(back.output.messages.size() == 2);
@@ -125,7 +125,7 @@ TEST_CASE("an empty command output writes an empty message list and an absent da
     packet.origin_data.type = bp::CommandOriginType::Player;
     packet.origin_data.uuid = {.most_significant_bits = 0, .least_significant_bits = 0};
     packet.origin_data.request_id = "";
-    packet.origin_data.player_id = 0;
+    packet.origin_data.player_id = bp::ActorUniqueID{0};
     packet.output.type = bp::CommandOutputType::None;
     packet.output.success_count = 0;
     packet.output.data = std::nullopt;
@@ -140,11 +140,11 @@ TEST_CASE("the command output's success count and player id are fixed-width")
 {
     auto packet = filled();
     packet.output.success_count = 0xdeadbeef;
-    packet.origin_data.player_id = -1;
+    packet.origin_data.player_id = bp::ActorUniqueID{-1};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == golden.size());
 
     const auto back = decode<bp::CommandOutputPacket>(wire);
     REQUIRE(back.output.success_count == 0xdeadbeef);
-    REQUIRE(back.origin_data.player_id == -1);
+    REQUIRE(back.origin_data.player_id == bp::ActorUniqueID{-1});
 }

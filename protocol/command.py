@@ -5,7 +5,7 @@ import uuid
 from enum import Enum, IntEnum, auto
 
 from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
-from protocol.actor import ActorRuntimeID
+from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.network import NetworkBlockPosition
 
@@ -171,7 +171,7 @@ class CommandOriginData:
     type: CommandOriginType = field(type=str)
     uuid: uuid.UUID
     request_id: str
-    player_id: int64
+    player_id: ActorUniqueID = field(type=int64)
 
 
 class CurrentCmdVersion(Enum):

@@ -14,7 +14,7 @@ class ScoreboardId:
 
 
 class PlayerScoreboardId:
-    actor_unique_id: varint64
+    actor_unique_id: ActorUniqueID
 
 
 class IdentityDefinition:
@@ -96,7 +96,7 @@ class ScoreboardIdentityPacketInfo:
 @type(since=2168)
 class ScoreboardIdentityPacketInfo:
     scoreboard_id: ScoreboardId
-    player_id: varint64 | None
+    player_id: ActorUniqueID | None
 
 
 @packet(id=108, until=2168)
