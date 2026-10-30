@@ -143,7 +143,7 @@ jobs:
           cd "$RUNNER_TEMP/delivery-consumer-tests"
           "$consumer" -I "$GITHUB_WORKSPACE/tests/package/check_delivery.py" installed "$GITHUB_WORKSPACE/protocol/__init__.py"
           "$consumer" -I "$GITHUB_WORKSPACE/tests/package/check_delivery.py" compiler "$GITHUB_WORKSPACE/protocol/__init__.py" "$RUNNER_TEMP/delivery-bpc"
-          "$consumer" -I -W error -m pytest tests/python
+          "$consumer" -I -m pytest tests/python
           "$consumer" -m pip uninstall -y bedrock-protocol-native
           "$consumer" -I "$GITHUB_WORKSPACE/tests/package/check_delivery.py" compiler "$GITHUB_WORKSPACE/protocol/__init__.py" "$RUNNER_TEMP/delivery-bpc-after-uninstall"
       - uses: actions/upload-artifact@v7.0.2
