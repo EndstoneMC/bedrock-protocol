@@ -1,0 +1,127 @@
+name: Installed consumers
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_repository:
+        description: SDK repository (owner/name)
+        required: true
+        type: string
+      sdk_sha:
+        description: Full SDK commit SHA
+        required: true
+        type: string
+      bench_repository:
+        description: Benchmark repository (owner/name)
+        required: true
+        type: string
+      bench_sha:
+        description: Full benchmark commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  protocol:
+    uses: ./.github/workflows/ci.yml
+
+  consumers:
+    name: Installed SDK and adapter (${{ matrix.os }})
+    needs: protocol
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    env:
+      SDK_SHA: ${{ inputs.sdk_sha }}
+      BENCH_SHA: ${{ inputs.bench_sha }}
+      PYTHONUTF8: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require full commit SHAs
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          for name in ("SDK_SHA", "BENCH_SHA"):
+              if not re.fullmatch(r"[0-9a-fA-F]{40}", os.environ[name]):
+                  raise SystemExit(f"{name} must be a full commit SHA")
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.sdk_repository }}
+          ref: ${{ inputs.sdk_sha }}
+          path: sdk
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.bench_repository }}
+          ref: ${{ inputs.bench_sha }}
+          path: bench
+          persist-credentials: false
+      - name: Verify selected commits
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          for directory, name in (("sdk", "SDK_SHA"), ("bench", "BENCH_SHA")):
+              actual = subprocess.check_output(["git", "-C", directory, "rev-parse", "HEAD"], text=True).strip()
+              if actual != os.environ[name].lower():
+                  raise SystemExit(f"{directory}: expected {os.environ[name]}, checked out {actual}")
+              print(f"{directory}: {actual}")
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-pure
+          path: ${{ runner.temp }}/protocol-pure
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-native-${{ runner.os }}
+          path: ${{ runner.temp }}/protocol-native
+      - name: Build consumer wheels from their source distributions
+        run: |
+          python -m pip install build
+          python -m build sdk --outdir "$RUNNER_TEMP/consumer-sdk"
+          python -m build bench --outdir "$RUNNER_TEMP/consumer-harness"
+          python -m build bench/bots/python --outdir "$RUNNER_TEMP/consumer-adapter"
+          mkdir "$RUNNER_TEMP/consumer-sources"
+          tar -xzf "$RUNNER_TEMP"/consumer-sdk/*.tar.gz -C "$RUNNER_TEMP/consumer-sources"
+          tar -xzf "$RUNNER_TEMP"/consumer-adapter/*.tar.gz -C "$RUNNER_TEMP/consumer-sources"
+      - name: Install the selected five-wheel dependency graph
+        run: |
+          python -m venv "$RUNNER_TEMP/consumer"
+          if [ "$RUNNER_OS" = Windows ]; then
+            consumer="$RUNNER_TEMP/consumer/Scripts/python.exe"
+          else
+            consumer="$RUNNER_TEMP/consumer/bin/python"
+          fi
+          pure=("$RUNNER_TEMP"/protocol-pure/*.whl)
+          native=("$RUNNER_TEMP"/protocol-native/*.whl)
+          sdk=("$RUNNER_TEMP"/consumer-sdk/*.whl)
+          harness=("$RUNNER_TEMP"/consumer-harness/*.whl)
+          adapter=("$RUNNER_TEMP"/consumer-adapter/*.whl)
+          for count in "${#pure[@]}" "${#native[@]}" "${#sdk[@]}" "${#harness[@]}" "${#adapter[@]}"; do
+            test "$count" -eq 1
+          done
+          "$consumer" -m pip install "${pure[0]}" "${native[0]}" "${sdk[0]}[test]" \
+            "${harness[0]}" "${adapter[0]}[test]"
+          "$consumer" -m pip check
+          echo "CONSUMER_PYTHON=$consumer" >> "$GITHUB_ENV"
+      - name: Test installed SDK and adapter outside the checkouts
+        run: |
+          sdk=("$RUNNER_TEMP"/consumer-sources/bedrock_bot-*)
+          adapter=("$RUNNER_TEMP"/consumer-sources/bedrock_bench_bot-*)
+          test "${#sdk[@]}" -eq 1
+          test "${#adapter[@]}" -eq 1
+          cd "$RUNNER_TEMP/consumer-sources"
+          "$CONSUMER_PYTHON" -I -m pytest "${sdk[0]}/tests/python" \
+            "${sdk[0]}/tests/integration/nethernet/test_transport.py"
+          "$CONSUMER_PYTHON" -I -m pytest "${adapter[0]}/tests" --sdk-source "${sdk[0]}"
