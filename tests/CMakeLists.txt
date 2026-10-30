@@ -5,3 +5,9 @@ target_link_libraries(bedrock_protocol_tests PRIVATE bedrock::protocol Catch2::C
 
 include(Catch)
 catch_discover_tests(bedrock_protocol_tests)
+
+if (TARGET bedrock_protocol_wire)
+    add_executable(bedrock_protocol_wire_tests wire/main.cpp)
+    target_link_libraries(bedrock_protocol_wire_tests PRIVATE bedrock::protocol_wire)
+    add_test(NAME bedrock_protocol_wire_tests COMMAND bedrock_protocol_wire_tests)
+endif ()

@@ -1,14 +1,14 @@
 [project]
 name = "bedrock-protocol"
-version = "0.4.5"
-description = "Bedrock protocol compiler -- reads protocol/*.py DSL and emits C++ headers."
+version = "0.5.0.dev0"
+description = "Version-aware Bedrock protocol schema compiler."
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = [
-    "click",
-    "griffe",
-]
+dependencies = ["click", "griffe"]
+
+[project.optional-dependencies]
+compiler = []
 
 [project.scripts]
 bpc = "bedrock_protocol.cli:main"
@@ -20,11 +20,17 @@ dev = ["mypy", "pytest", "pytest-xdist"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib", "src/bedrock_protocol/v[0-9]*.py", "src/bedrock_protocol/v[0-9]*.pyi"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/bedrock_protocol"]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/bedrock_protocol", "protocol", "tests/compiler", "LICENSE", "README.md", "pyproject.toml"]
+
 [tool.mypy]
-files = ["src"]
+packages = ["bedrock_protocol"]
 python_version = "3.12"
 strict = true
 

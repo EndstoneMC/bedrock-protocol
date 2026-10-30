@@ -239,6 +239,8 @@ class MessageGenerator:
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
+            p.print("BinaryReader::ReadScope scope(stream);\n")
+            p.print("if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));\n")
             p.print(f"{q} out;\n")
             for guard, group in self._groups():
                 if guard is None:

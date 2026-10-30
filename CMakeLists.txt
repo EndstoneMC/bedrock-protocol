@@ -15,6 +15,8 @@ else ()
 endif ()
 option(BEDROCK_PROTOCOL_BUILD_TESTS "Build the test suite" ${_tests_default})
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
+option(BEDROCK_PROTOCOL_BUILD_PYTHON "Build the Python runtime" OFF)
+option(BEDROCK_PROTOCOL_BUILD_WIRE "Build batch compression and encryption" OFF)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -34,6 +36,7 @@ set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedro
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
 set_target_properties(bedrock_protocol PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
         EXPORT_NAME protocol
         OUTPUT_NAME bedrock_protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
@@ -91,6 +94,16 @@ else ()
             "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedrock/protocol.hpp"
             @ONLY
     )
+endif ()
+
+# Optional runtime dependencies are confined to the wire target.
+set(BEDROCK_PROTOCOL_HAS_WIRE OFF)
+if (BEDROCK_PROTOCOL_BUILD_WIRE OR BEDROCK_PROTOCOL_BUILD_PYTHON)
+    set(BEDROCK_PROTOCOL_HAS_WIRE ON)
+    add_subdirectory(src/wire)
+endif ()
+if (BEDROCK_PROTOCOL_BUILD_PYTHON)
+    add_subdirectory(src/python)
 endif ()
 
 # Tests

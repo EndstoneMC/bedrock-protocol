@@ -53,6 +53,10 @@ jobs:
           mkdir -p assets
           for dir in "${dirs[@]}"; do
             name=$(basename "$dir")
+            if [[ "$name" == python-* ]]; then
+              cp "$dir"/* assets/
+              continue
+            fi
             asset=${name/-${GITHUB_SHA::7}/}
             mv "artifacts/$name" "artifacts/$asset"
             (cd artifacts && zip -qr "../assets/${asset}.zip" "$asset")
@@ -71,4 +75,4 @@ jobs:
             --verify-tag \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
-            assets/*.zip
+            assets/*

@@ -10,7 +10,9 @@ from typing import Callable
 
 from .code_generator import CodeGenerator
 from .cpp import CppGenerator
+from .nanobind import NanobindGenerator
 
 GENERATORS: dict[str, Callable[[], CodeGenerator]] = {
     "cpp": CppGenerator,
+    "nanobind": NanobindGenerator,
 }

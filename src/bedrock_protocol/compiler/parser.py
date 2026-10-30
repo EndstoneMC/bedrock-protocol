@@ -240,8 +240,8 @@ class Parser:
                 for attr in decl.attributes.values():
                     (version,) = self.field(attr, qualified, earlier).versions
                     earlier[_field_name(attr.name)] = version.type
-                    narrowed = FieldVersion(
-                        type=version.type,
+                    narrowed = replace(
+                        version,
                         since=_tighten(version.since, lo, max),
                         until=_tighten(version.until, hi, min),
                     )
@@ -307,10 +307,16 @@ class Parser:
                     "wrap it in a with field(when=...) block instead"
                 )
             t = CondType(t, self._predicate(guard, attr.name, scope, earlier), _int_kwarg(call, "field", "_group_id"))
+        nbt_root = _bool_kwarg(call, "field", "nbt_root")
+        if _call_arg(call, "field", "nbt_root") is not None and not (
+            isinstance(t, StructType) and t.name == "CompoundTag"
+        ):
+            raise CompilerError(f"{attr.name}: field(nbt_root=...) applies only to a direct CompoundTag field")
         version = FieldVersion(
             type=t,
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
+            nbt_root=nbt_root,
         )
         return Field(_field_name(attr.name), (version,))
 
@@ -1382,7 +1388,21 @@ _Keywords = tuple[frozenset[str], Mapping[str, str]]
 _NO_DEPRECATION = "the compiler emits no [[deprecated]] attribute; drop the keyword or say it in the commit message"
 
 _FIELD_KEYWORDS: _Keywords = (
-    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "cereal", "_group_when", "_group_id"}),
+    frozenset(
+        {
+            "type",
+            "since",
+            "until",
+            "when",
+            "endian",
+            "prefix",
+            "count",
+            "cereal",
+            "nbt_root",
+            "_group_when",
+            "_group_id",
+        }
+    ),
     {
         "tag": (
             "a union is always prefixed by a uvarint32 index over its cases in declaration order -- "

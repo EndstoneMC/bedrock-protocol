@@ -17,31 +17,19 @@ set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/..")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
-    "${_compiler_dir}/src/bedrock_protocol/*"
+    "${_compiler_dir}/src/bedrock_protocol/*.py"
     "${_compiler_dir}/pyproject.toml")
 
-# bpc is a uv-managed Python package. The wrapper per-platform routes through
-# `uv run --project`, which syncs the project's venv and invokes the `bpc`
-# script entry point declared in compiler/pyproject.toml.
-find_program(UV_EXECUTABLE uv)
-if(NOT UV_EXECUTABLE)
-    message(FATAL_ERROR
-        "bedrock-protocol: uv is required to run the bpc compiler. "
-        "Install it from https://docs.astral.sh/uv/")
-endif()
-
+find_package(Python COMPONENTS Interpreter REQUIRED)
 if(WIN32)
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
     file(WRITE "${_compiler_exe}"
-        "@\"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc %*\r\n")
+        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@set PYTHONUTF8=1\r\n@\"${Python_EXECUTABLE}\" -m bedrock_protocol %*\r\n")
 else()
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
     file(WRITE "${_compiler_exe}"
-        "#!/bin/sh\nexec \"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc \"$@\"\n")
-    file(CHMOD "${_compiler_exe}" PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE)
+        "#!/bin/sh\nexport PYTHONPATH=\"${_compiler_dir}/src\"\nexec \"${Python_EXECUTABLE}\" -m bedrock_protocol \"$@\"\n")
+    file(CHMOD "${_compiler_exe}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endif()
 
 add_executable(bedrock_protocol_compiler IMPORTED GLOBAL)
@@ -136,7 +124,7 @@ function(bedrock_protocol_generate)
         list(APPEND _import_args --import-path "${d}")
     endforeach()
 
-    # One custom_command per input keeps the per-file output path simple.
+    # One parse supplies all per-schema translation units.
     set(_generated)
     foreach(p IN LISTS _abs_inputs)
         # Every input lands directly in COMPILER_OUT_DIR, which is the one
@@ -146,26 +134,21 @@ function(bedrock_protocol_generate)
         # `.hpp` (which is reserved for the header-only runtime support).
         set(_out_hdr "${BP_COMPILER_OUT_DIR}/${_stem}.h")
         set(_out_cpp "${BP_COMPILER_OUT_DIR}/${_stem}.cpp")
-        set(_out_dir "${BP_COMPILER_OUT_DIR}")
-
-        # One bpc invocation emits both the declaration header and the
-        # out-of-line definition source; declare both as OUTPUTs.
-        add_custom_command(
-            OUTPUT  "${_out_hdr}" "${_out_cpp}"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
-            COMMAND ${_compiler_cmd}
-                    --language cpp --out "${_out_dir}" ${_import_args}
-                    ${BP_COMPILER_OPTIONS} "${p}"
-            DEPENDS "${p}" ${_abs_inputs} ${BP_DEPENDENCIES}
-                    ${_compiler_dep} ${_compiler_sources}
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            COMMENT "bpc: generating ${_stem}.{h,cpp}"
-            VERBATIM)
 
         # protobuf_generate keeps one flat list of every generated file (both
         # the .h and the .cpp), not separate header/source lists.
         list(APPEND _generated "${_out_hdr}" "${_out_cpp}")
     endforeach()
+
+    add_custom_command(
+        OUTPUT ${_generated}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BP_COMPILER_OUT_DIR}"
+        COMMAND ${_compiler_cmd} --language cpp --out "${BP_COMPILER_OUT_DIR}" ${_import_args}
+                ${BP_COMPILER_OPTIONS} ${_abs_inputs}
+        DEPENDS ${_abs_inputs} ${BP_DEPENDENCIES} ${_compiler_dep} ${_compiler_sources}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "bpc: generating C++ schema"
+        VERBATIM)
 
     if(BP_TARGET)
         get_target_property(_target_type ${BP_TARGET} TYPE)

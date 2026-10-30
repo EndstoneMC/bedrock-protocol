@@ -105,6 +105,7 @@ public:
 
     [[nodiscard]] bool empty() const noexcept { return v_.empty(); }
     [[nodiscard]] size_type size() const noexcept { return v_.size(); }
+    void reserve(size_type count) { v_.reserve(count); }
     void clear() noexcept { v_.clear(); }
 
     value_type &at(size_type i) { return v_.at(i); }
@@ -182,6 +183,7 @@ public:
     const value_type &operator[](size_type i) const;
 
     void clear() noexcept;
+    void reserve(size_type count);
     void push_back(const value_type &v);
     void push_back(value_type &&v);
     template <typename... Args>
@@ -512,6 +514,7 @@ inline void ListTag::clear() noexcept
 }
 
 inline void ListTag::push_back(const value_type &v) { emplace_back(v); }
+inline void ListTag::reserve(size_type count) { elements_.reserve(count); }
 
 inline void ListTag::push_back(value_type &&v) { emplace_back(std::move(v)); }
 
@@ -709,6 +712,11 @@ void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag);
 std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
     BinaryReader &stream);
 
+namespace detail {
+std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
+    BinaryReader &stream, bool compound_entry);
+}
+
 // Write a tag's payload only -- no id, no name, just the bytes the value
 // occupies. An End tag writes nothing.
 inline void writeTag(BinaryWriter &stream, const Tag &tag)
@@ -773,6 +781,8 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
 // Read a payload of the given type, returning the tag it forms.
 inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type)
 {
+    BinaryReader::ReadScope scope(stream);
+    if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));
     switch (type) {
     case Type::End:
         return Tag{};
@@ -814,7 +824,11 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
     case Type::ByteArray: {
         auto count = stream.readVarInt<std::int32_t>();
         if (!count) return std::unexpected(count.error());
+        if (auto r = stream.account(*count, sizeof(std::int8_t)); !r) return std::unexpected(r.error());
+        if (static_cast<std::size_t>(*count) > stream.getUnreadLength())
+            return std::unexpected(std::make_error_code(std::errc::message_size));
         ByteArrayTag out;
+        out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = stream.read<std::int8_t>();
             if (!element) return std::unexpected(element.error());
@@ -825,7 +839,11 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
     case Type::IntArray: {
         auto count = stream.readVarInt<std::int32_t>();
         if (!count) return std::unexpected(count.error());
+        if (auto r = stream.account(*count, sizeof(std::int32_t)); !r) return std::unexpected(r.error());
+        if (static_cast<std::size_t>(*count) > stream.getUnreadLength())
+            return std::unexpected(std::make_error_code(std::errc::message_size));
         IntArrayTag out;
+        out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = stream.readVarInt<std::int32_t>();
             if (!element) return std::unexpected(element.error());
@@ -843,7 +861,9 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             return std::unexpected(
                 std::make_error_code(std::errc::illegal_byte_sequence));
         }
+        if (auto r = stream.account(*count, sizeof(Tag)); !r) return std::unexpected(r.error());
         ListTag out(static_cast<Type>(*element_type));
+        out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = readTag(stream, static_cast<Type>(*element_type));
             if (!element) return std::unexpected(element.error());
@@ -854,7 +874,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
     case Type::Compound: {
         CompoundTag out;
         for (;;) {
-            auto entry = readNamedTag(stream);
+            auto entry = detail::readNamedTag(stream, true);
             if (!entry) return std::unexpected(entry.error());
             if (entry->second.type() == Type::End) {
                 break;  // TAG_End
@@ -883,8 +903,8 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name,
 
 // Read [type:uint8][name:string][payload]. A bare 0 byte yields an empty name
 // and an End tag, so a CompoundTag reader can stop on it.
-inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
-    BinaryReader &stream)
+inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readNamedTag(
+    BinaryReader &stream, bool compound_entry)
 {
     auto type = stream.read<std::uint8_t>();
     if (!type) return std::unexpected(type.error());
@@ -895,11 +915,20 @@ inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
         return std::unexpected(
             std::make_error_code(std::errc::illegal_byte_sequence));
     }
+    if (compound_entry) {
+        if (auto r = stream.account(1, sizeof(CompoundTag::value_type)); !r) return std::unexpected(r.error());
+    }
     auto name = stream.read<std::string>();
     if (!name) return std::unexpected(name.error());
     auto payload = readTag(stream, static_cast<Type>(*type));
     if (!payload) return std::unexpected(payload.error());
     return std::pair<std::string, Tag>{std::move(*name), std::move(*payload)};
+}
+
+inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
+    BinaryReader &stream)
+{
+    return detail::readNamedTag(stream, false);
 }
 
 }  // namespace nbt

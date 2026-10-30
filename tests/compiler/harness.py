@@ -39,6 +39,11 @@ class CompilerCase(unittest.TestCase):
         `imports` are further modules written alongside it, by name, for the
         cases where what is being tested is a reference reaching across a
         module boundary."""
+        resolved = self.resolve(source, module, imports)
+        generator = FileGenerator(resolved)
+        return generator.render_header(resolved.pool.file_set.version), generator.render_source()
+
+    def resolve(self, source: str, module: str = "mod", imports: Mapping[str, str] | None = None):
         root = Path(tempfile.mkdtemp(prefix="bpc-test-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         package = root / "protocol"
@@ -52,8 +57,7 @@ class CompilerCase(unittest.TestCase):
         file_set = Importer(SourceTree([root])).load_all((target,))
         assert file_set.version is not None
         resolved = DescriptorPool(file_set).build_file(f"protocol.{module}")
-        generator = FileGenerator(resolved)
-        return generator.render_header(file_set.version), generator.render_source()
+        return resolved
 
     def rejects(self, source: str) -> str:
         """The `CompilerError` message a bad module raises."""

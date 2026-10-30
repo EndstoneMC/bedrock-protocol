@@ -41,9 +41,32 @@ optional member reads `_unused: Literal[True]` then `x: T | None`.
 """
 
 from enum import auto
-from typing import Any, TypeAliasType, Union
+from types import UnionType
+from typing import Any, TypeAliasType
+from typing import Union as Union
 
 __version__ = 2225
+__supported_versions__ = (
+    729,
+    748,
+    766,
+    776,
+    786,
+    800,
+    818,
+    819,
+    827,
+    844,
+    859,
+    898,
+    924,
+    944,
+    975,
+    1001,
+    2168,
+    2193,
+    2225,
+)
 
 
 def _identity(cls):
@@ -82,7 +105,7 @@ def value(
 
 def field(
     *,
-    type: type[str | Union] | TypeAliasType | None = None,
+    type: type[str | UnionType] | TypeAliasType | None = None,
     since: int | None = None,
     until: int | None = None,
     when: Any = None,
@@ -90,6 +113,7 @@ def field(
     prefix: TypeAliasType | None = None,
     count: Any = None,
     cereal: bool = True,
+    nbt_root: bool = True,
 ) -> Any:
     """Mark a struct field.
 
@@ -165,6 +189,10 @@ def field(
       element, the way `type=` does. Naming a flavour the type does not declare
       is an error either way round, so a reference never silently resolves to the
       other shape.
+    - `nbt_root`: only for a direct `CompoundTag` field. The default writes a
+      named root with an empty name; `False` writes just the compound payload,
+      retaining its terminating TAG_End. It does not apply to containers,
+      optional or conditional fields.
 
     A `T1 | T2 | T3` union carries no `tag=`: it is always prefixed on the wire
     by a `uvarint32` index over its cases in declaration order. An
