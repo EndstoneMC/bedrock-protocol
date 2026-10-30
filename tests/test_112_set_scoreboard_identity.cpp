@@ -51,8 +51,8 @@ TEST_CASE("SetScoreboardIdentityPacket: v1001 round-trip")
     Packet1001 update;
     update.type = bp::ScoreboardIdentityPacketType::Update;
     update.identity_info = {
-        {.scoreboard_id = {.raw_id = 1}, .player_id = {.actor_unique_id = 7}},
-        {.scoreboard_id = {.raw_id = 2}, .player_id = {.actor_unique_id = 8}},
+        {.scoreboard_id = {.raw_id = 1}, .player_id = {.actor_unique_id = bp::ActorUniqueID{7}}},
+        {.scoreboard_id = {.raw_id = 2}, .player_id = {.actor_unique_id = bp::ActorUniqueID{8}}},
     };
     REQUIRE(encode(update) == golden_v1001_update);
 
@@ -72,8 +72,8 @@ TEST_CASE("SetScoreboardIdentityPacket: v2168 round-trip")
     Packet2168 update;
     update.type = bp::ScoreboardIdentityPacketType::Update;
     update.identity_info = {
-        {.scoreboard_id = {.raw_id = 1}, .player_id = 7},
-        {.scoreboard_id = {.raw_id = 2}, .player_id = 8},
+        {.scoreboard_id = {.raw_id = 1}, .player_id = bp::ActorUniqueID{7}},
+        {.scoreboard_id = {.raw_id = 2}, .player_id = bp::ActorUniqueID{8}},
     };
     REQUIRE(encode(update) == golden_v2168_update);
 
