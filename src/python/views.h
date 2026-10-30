@@ -30,7 +30,18 @@ struct SequenceBase : Value {};
 struct MapBase : Value {};
 
 template <class T>
-using ValueBase = std::conditional_t<requires { T::Id; }, Packet, Value>;
+struct ValueBaseType {
+    using type = Value;
+};
+
+template <class T>
+    requires requires { T::Id; }
+struct ValueBaseType<T> {
+    using type = Packet;
+};
+
+template <class T>
+using ValueBase = typename ValueBaseType<T>::type;
 
 template <class T>
 struct View : ValueBase<T> {
