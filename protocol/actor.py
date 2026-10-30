@@ -811,7 +811,7 @@ class RemoveActorPacket:
 
 @packet(id=35)
 class ActorPickRequestPacket:
-    id: int64
+    id: ActorUniqueID = field(type=int64)
     max_slots: uint8
     with_data: bool
 

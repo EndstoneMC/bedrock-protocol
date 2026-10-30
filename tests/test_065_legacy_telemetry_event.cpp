@@ -57,8 +57,8 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
     packet.type = bp::LegacyTelemetryEventPacket_<2168>::Type::MobKilled;
     packet.use_player_id = true;
     packet.event_data = bp::LegacyTelemetryEventPacket_<2168>::MobKilled{
-        .killer_entity_id = 1,
-        .killed_mob_id = 2,
+        .killer_entity_id = bp::ActorUniqueID{1},
+        .killed_mob_id = bp::ActorUniqueID{2},
         .damage_child_type = bp::ActorType_<2168>::Player,
         .damage_source = 2,
         .trader_tier = -1,
@@ -73,8 +73,8 @@ TEST_CASE("legacy-telemetry-event mob-killed round-trips against the golden")
     REQUIRE(back.event_data.index() == 4);
 
     const auto &killed = std::get<4>(back.event_data);
-    REQUIRE(killed.killer_entity_id == 1);
-    REQUIRE(killed.killed_mob_id == 2);
+    REQUIRE(killed.killer_entity_id == bp::ActorUniqueID{1});
+    REQUIRE(killed.killed_mob_id == bp::ActorUniqueID{2});
     REQUIRE(killed.damage_child_type == bp::ActorType_<2168>::Player);
     REQUIRE(killed.damage_source == 2);
     REQUIRE(killed.trader_tier == -1);
