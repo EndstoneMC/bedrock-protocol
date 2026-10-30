@@ -7,7 +7,6 @@ import hashlib
 import json
 import keyword
 from collections import defaultdict
-from collections.abc import Collection, Mapping
 
 from bedrock_protocol.compiler.code_generator import CodeGenerator, GeneratorContext
 from bedrock_protocol.compiler.cpp.field import render_count, render_predicate
@@ -294,7 +293,7 @@ class BindingWriter:
                 code = [f'types.attr({quote(self.names[cpp])}) = nb::module_::import_("builtins").attr("int");']
             by_file[shape.resolved.file.name].extend(code)
         outputs = {}
-        declarations, registrations, finders = [], [], []
+        declarations, registrations = [], []
         for filename, file in self.model.files.items():
             stem = file.file.name.rsplit(".", 1)[-1]
             body = [
@@ -305,25 +304,19 @@ class BindingWriter:
                 *by_file[filename],
                 "}",
             ]
-            entries = []
+            declarations.append(f"void bind_{stem}(nb::module_ &);")
             for version in self.model.versions:
                 for packet_id, cpp in sorted(self.model.packets[version].items()):
                     if self.model.shapes[cpp].resolved.file.name == filename:
-                        entries.append(f"packetEntry<bp::packet_of_t<{version}, {packet_id}>>({version}, {packet_id})")
-            body.append(f"const PacketEntry *find_{stem}(int protocol, int packet_id) {{")
-            if entries:
-                body += [
-                    "static const PacketEntry entries[] = {",
-                    ",\n".join(entries),
-                    "};",
-                    "for (const auto &entry : entries) "
-                    "if (entry.protocol == protocol && entry.id == packet_id) return &entry;",
-                ]
-            body += ["return nullptr;", "}", "}"]
+                        name = f"packet_{version}_{packet_id}"
+                        declarations.append(f"extern const PacketEntry {name};")
+                        body.append(
+                            f"extern const PacketEntry {name} = "
+                            f"packetEntry<bp::packet_of_t<{version}, {packet_id}>>({packet_id});"
+                        )
+            body.append("}")
             outputs[f"{stem}.cpp"] = "\n".join(body) + "\n"
-            declarations += [f"void bind_{stem}(nb::module_ &);", f"const PacketEntry *find_{stem}(int, int);"]
             registrations.append(f"bind_{stem}(types);")
-            finders.append(f"if (auto entry = find_{stem}(protocol, packet_id)) return entry;")
         # Containers can reference any schema type, so the aggregate includes the umbrella.
         main = [
             '#include "codec.h"',
@@ -346,19 +339,21 @@ class BindingWriter:
                             f"types.attr({quote(self.names[parent_cpp])}).attr({quote(child)}) = "
                             f"types.attr({quote(self.names[cpp])});"
                         )
-        main += ["}", "const PacketEntry *findPacket(int protocol, int packet_id) {", *finders, "return nullptr;", "}"]
-        selections: tuple[tuple[str, Mapping[int, Collection[int]]], ...] = (
-            ("knownPacketIds", self.model.known),
-            ("supportedPacketIds", self.model.packets),
-        )
-        for function, source in selections:
-            main += [f"std::span<const int> {function}(int protocol) {{"]
-            for version in self.model.versions:
-                main += [
-                    f"static constexpr int ids{version}[] = {{{', '.join(map(str, sorted(source[version])))}}};",
-                    f"if (protocol == {version}) return ids{version};",
-                ]
-            main += ["return {};", "}"]
+        main += ["}", "std::span<const PacketEntry *const> packetEntries(int protocol) {"]
+        for version in self.model.versions:
+            entries = ", ".join(f"&packet_{version}_{id}" for id in sorted(self.model.packets[version]))
+            main += [
+                f"static const PacketEntry *const entries{version}[] = {{{entries}}};",
+                f"if (protocol == {version}) return entries{version};",
+            ]
+        main += ["return {};", "}", "std::span<const int> supportedPacketIds(int protocol) {"]
+        for version in self.model.versions:
+            main += [
+                f"static constexpr int ids{version}[] = "
+                f"{{{', '.join(map(str, sorted(self.model.packets[version])))}}};",
+                f"if (protocol == {version}) return ids{version};",
+            ]
+        main += ["return {};", "}"]
         main += [
             "std::span<const int> supportedVersions() {",
             "static constexpr int versions[] = {" + ", ".join(map(str, self.model.versions)) + "};",
@@ -370,18 +365,6 @@ class BindingWriter:
         for version in self.model.versions:
             outputs[f"bedrock_protocol/v{version}.py"] = self.module(version)
             outputs[f"bedrock_protocol/v{version}.pyi"] = self.stub(version)
-        outputs["coverage.json"] = (
-            json.dumps(
-                {
-                    "protocols": self.model.versions,
-                    "supported_packet_ids": {v: sorted(p) for v, p in self.model.packets.items()},
-                    "known_packet_ids": self.model.known,
-                    "shapes": sorted(self.model.shapes),
-                },
-                indent=2,
-            )
-            + "\n"
-        )
         return outputs
 
     def module(self, version: int) -> str:

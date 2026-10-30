@@ -1,69 +1,40 @@
-import subprocess
-import sys
-
 import pytest
 from conftest import varuint
 
 import bedrock_protocol as bp
 from bedrock_protocol.wire import BatchCodec
 
-_MAPPING_CASE = """
-import sys
-if sys.platform == "win32":
-    import ctypes
-    ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x0002 | 0x8000)
-else:
-    import resource
-    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-import bedrock_protocol as bp
 
-kind, shape = sys.argv[1:]
-item = "v" if kind == "map" else bp.Nbt(bp.NbtType.INT, 1)
-arity = int(shape[-1])
-entry = ("k", item, "extra")[:arity]
-if shape.startswith("list"):
-    entry = list(entry)
-elif shape.startswith("forged"):
+@pytest.mark.parametrize("kind", ["map", "nbt"])
+@pytest.mark.parametrize("arity", [0, 1, 2, 3])
+def test_mapping_entries_use_actual_tuple_arity_and_items(kind, arity):
     class Pair(tuple):
         def __len__(self):
             return 0 if arity == 2 else 2
+
         def __getitem__(self, index):
             raise AssertionError("overridden tuple indexing called")
-    entry = Pair(entry)
-class Items:
-    def items(self):
-        yield entry
-valid = arity == 2 and not shape.startswith("list")
-try:
-    if kind == "map":
-        value = bp.v2193.SerializedRecipeIngredient(descriptor=Items(), aux_value=0, stack_size=1)
+
+    class Items:
+        def items(self):
+            yield Pair(("k", _mapping_item(kind), "extra")[:arity])
+
+    if arity != 2:
+        with pytest.raises(TypeError, match=r"items\(\) must yield 2-tuples"):
+            _mapping_value(kind, Items())
     else:
-        value = bp.Nbt(bp.NbtType.COMPOUND, Items())
-except TypeError as error:
-    assert not valid
-    assert str(error) == "items() must yield 2-tuples"
-else:
-    assert valid, "malformed mapping entry was accepted"
-    if kind == "map":
-        assert value.descriptor.to_dict() == {"k": "v"}
-    else:
-        assert value["k"].value == 1
-"""
+        value = _mapping_value(kind, Items())
+        assert _mapping_read(kind, value, "k") == ("v" if kind == "map" else 1)
 
 
 @pytest.mark.parametrize("kind", ["map", "nbt"])
-@pytest.mark.parametrize(
-    "shape", ["tuple0", "tuple1", "tuple2", "tuple3", "list2", "forged0", "forged1", "forged2", "forged3"]
-)
-def test_mapping_entries_use_actual_tuple_arity_and_items(kind, shape, tmp_path):
-    result = subprocess.run(
-        [sys.executable, "-I", "-c", _MAPPING_CASE, kind, shape],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert result.returncode == 0, f"child exit {result.returncode}\n{result.stdout}\n{result.stderr}"
+def test_mapping_rejects_list_entries(kind):
+    class Items:
+        def items(self):
+            yield ["k", _mapping_item(kind)]
+
+    with pytest.raises(TypeError, match=r"items\(\) must yield 2-tuples"):
+        _mapping_value(kind, Items())
 
 
 def _mapping_value(kind, source):
@@ -171,31 +142,17 @@ def _check_handshake_text(payload, raw):
 
 
 @pytest.mark.parametrize("raw", [b"a", b"\xff"])
-def test_text_conversion_is_lazy_and_native_reencoding_preserves_bytes(raw):
-    wire = b"\x03\x01" + raw
-    codec = bp.Codec(2193)
-    payload = codec.decode_packet(wire).payload
-    _check_handshake_text(payload, raw)
-    assert payload.wire_bytes() == wire[1:]
-    assert codec.encode_packet(payload) == wire
-    assert codec.decode_packet(b"\x03\x01a").payload.token == "a"
-
-
-@pytest.mark.parametrize("raw", [b"a", b"\xff"])
-def test_text_conversion_failure_does_not_poison_batch_decode(raw):
+def test_text_conversion_is_lazy_and_does_not_poison_batch_decode(raw):
     codec = bp.Codec(2193)
     batch = BatchCodec(codec)
     wire = b"\x03\x01" + raw
     frame = varuint(len(wire)) + wire
-    payload = batch.decode(frame)[0].payload
-    _check_handshake_text(payload, raw)
-    assert codec.encode_packet(payload) == wire
-    assert batch.encode([payload]) == frame
+    for payload in (codec.decode_packet(wire).payload, batch.decode(frame)[0].payload):
+        _check_handshake_text(payload, raw)
+        assert payload.wire_bytes() == wire[1:]
+        assert codec.encode_packet(payload) == wire
+        assert batch.encode([payload]) == frame
     assert batch.decode(b"\x03\x03\x01a")[0].payload.token == "a"
-    with pytest.raises(bp.DecodeError):
-        batch.decode(b"\x01\x02")
-    with pytest.raises(RuntimeError, match="terminal"):
-        batch.decode(b"\x03\x03\x01a")
 
 
 @pytest.mark.parametrize("kind", ["string", "name"])

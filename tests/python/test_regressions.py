@@ -97,70 +97,43 @@ class CallbackList(list):
         return super().__iter__()
 
 
-@pytest.mark.parametrize("kind", ["record", "sequence", "unknown", "nbt", "variant"])
-def test_recursive_conversion_cannot_publish_or_replace_partial_values(kind):
-    if kind == "record":
-        cls = bp.v2193.MissingBlobData
-        inner = dict(blob_id=2, blob_data=b"inner")
-
-        def arguments(callback):
-            return dict(blob_id=1, blob_data=CallbackBuffer(callback))
-
-        def observe(value):
-            return value.blob_data.to_bytes()
-
-        expected = b"outer"
-    elif kind == "sequence":
-        cls = bp.v2193.ClientCacheMissResponsePacket
-        blob = bp.v2193.MissingBlobData(blob_id=1, blob_data=b"outer")
-        inner = dict(blobs=[])
-
-        def arguments(callback):
-            return dict(blobs=CallbackList(callback, [blob]))
-
-        def observe(value):
-            return value.blobs[0].blob_data.to_bytes()
-
-        expected = b"outer"
-    elif kind == "unknown":
-        cls = bp.UnknownPacket
-        inner = dict(packet_id=1023, body=b"inner")
-
-        def arguments(callback):
-            return dict(packet_id=1023, body=CallbackBuffer(callback))
-
-        def observe(value):
-            return value.body.to_bytes()
-
-        expected = b"outer"
-    elif kind == "nbt":
-        cls = bp.Nbt
-        inner = dict(type=bp.NbtType.BYTE_ARRAY, value=b"inner")
-
-        def arguments(callback):
-            return dict(type=bp.NbtType.BYTE_ARRAY, value=CallbackBuffer(callback))
-
-        def observe(value):
-            return bytes(memoryview(value))
-
-        expected = b"outer"
-    else:
-        cls = bp.Variant
-        inner = dict(index=0, value=b"inner")
-
-        def arguments(callback):
-            return dict(index=1, value=CallbackList(callback, [b"outer"]))
-
-        def observe(value):
-            return value.value
-
-        expected = (b"outer",)
-
+@pytest.mark.parametrize(
+    "cls,inner,arguments,observe,expected",
+    [
+        (
+            bp.v2193.MissingBlobData, dict(blob_id=2, blob_data=b"inner"),
+            lambda cb: dict(blob_id=1, blob_data=CallbackBuffer(cb)),
+            lambda v: v.blob_data.to_bytes(), b"outer",
+        ),
+        (
+            bp.v2193.ClientCacheMissResponsePacket, dict(blobs=[]),
+            lambda cb: dict(blobs=CallbackList(cb, [bp.v2193.MissingBlobData(blob_id=1, blob_data=b"outer")])),
+            lambda v: v.blobs[0].blob_data.to_bytes(), b"outer",
+        ),
+        (
+            bp.UnknownPacket, dict(packet_id=1023, body=b"inner"),
+            lambda cb: dict(packet_id=1023, body=CallbackBuffer(cb)),
+            lambda v: v.body.to_bytes(), b"outer",
+        ),
+        (
+            bp.Nbt, dict(type=bp.NbtType.BYTE_ARRAY, value=b"inner"),
+            lambda cb: dict(type=bp.NbtType.BYTE_ARRAY, value=CallbackBuffer(cb)),
+            lambda v: bytes(memoryview(v)), b"outer",
+        ),
+        (
+            bp.Variant, dict(index=0, value=b"inner"),
+            lambda cb: dict(index=1, value=CallbackList(cb, [b"outer"])),
+            lambda v: v.value, (b"outer",),
+        ),
+    ],
+    ids=["record", "sequence", "unknown", "nbt", "variant"],
+)
+def test_recursive_conversion_cannot_publish_or_replace_partial_values(cls, inner, arguments, observe, expected):
     victim = cls.__new__(cls)
     published = []
 
     def observe_partial():
-        if kind == "nbt":
+        if cls is bp.Nbt:
             return observe(victim)
         with pytest.warns(
             RuntimeWarning, match=r"^nanobind: attempted to access an uninitialized instance of type '[^']+'!$"

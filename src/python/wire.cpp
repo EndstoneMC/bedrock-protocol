@@ -2,6 +2,8 @@
 #include <set>
 #include <thread>
 
+#include <nanobind/make_iterator.h>
+
 #include <bedrock/protocol/wire/batch.h>
 
 #include "codec.h"
@@ -17,17 +19,12 @@ struct PacketDecodeError {
 };
 
 struct PacketBatch {
-    std::shared_ptr<const std::vector<DecodedPacket>> packets;
+    std::vector<DecodedPacket> packets;
     std::vector<PacketHeader> headers;
     std::vector<int> skipped;
     std::vector<PacketDecodeError> errors;
     bool filtered;
     int protocol;
-};
-
-struct BatchIterator {
-    std::shared_ptr<const std::vector<DecodedPacket>> packets;
-    std::size_t offset = 0;
 };
 
 class Batch {
@@ -219,8 +216,7 @@ public:
                 }
             }
         } failure{*this};
-        auto packets = std::make_shared<std::vector<DecodedPacket>>();
-        PacketBatch batch{packets, {}, {}, {}, selected.has_value(), codec_.protocol()};
+        PacketBatch batch{{}, {}, {}, {}, selected.has_value(), codec_.protocol()};
         std::optional<NativeError> error;
         {
             nb::gil_scoped_release release;
@@ -263,7 +259,7 @@ public:
                             error = packet.error();
                             break;
                         }
-                        packets->push_back(std::move(*packet));
+                        batch.packets.push_back(std::move(*packet));
                     }
                 }
             }
@@ -291,20 +287,11 @@ void bindWire(nb::module_ &module)
         .value("ZLIB", wire::Compression::zlib)
         .value("SNAPPY", wire::Compression::snappy)
         .value("NONE", wire::Compression::none);
-    nb::class_<BatchIterator>(wire_module, "_BatchIterator")
-        .def(
-            "__iter__", [](BatchIterator &self) -> BatchIterator & { return self; }, nb::rv_policy::reference)
-        .def("__next__", [](BatchIterator &self) {
-            if (self.offset == self.packets->size()) {
-                throw nb::stop_iteration();
-            }
-            return (*self.packets)[self.offset++];
-        });
     nb::class_<PacketBatch>(wire_module, "PacketBatch")
         .def_ro("protocol", &PacketBatch::protocol)
         .def_ro("filtered", &PacketBatch::filtered)
         .def_prop_ro("packet_count", [](const PacketBatch &self) { return self.headers.size(); })
-        .def_prop_ro("decoded_count", [](const PacketBatch &self) { return self.packets->size(); })
+        .def_prop_ro("decoded_count", [](const PacketBatch &self) { return self.packets.size(); })
         .def_prop_ro("errors", [](const PacketBatch &self) {
             nb::list result;
             for (const auto &error : self.errors) {
@@ -328,10 +315,13 @@ void bindWire(nb::module_ &module)
                          }
                          return nb::tuple(result);
                      })
-        .def("__len__", [](const PacketBatch &self) { return self.packets->size(); })
+        .def("__len__", [](const PacketBatch &self) { return self.packets.size(); })
         .def("__getitem__",
-             [](const PacketBatch &self, Py_ssize_t i) { return (*self.packets)[index(i, self.packets->size())]; })
-        .def("__iter__", [](const PacketBatch &self) { return BatchIterator{self.packets}; });
+             [](const PacketBatch &self, Py_ssize_t i) { return self.packets[index(i, self.packets.size())]; })
+        .def("__iter__", [](const PacketBatch &self) {
+            return nb::make_iterator<nb::rv_policy::copy>(nb::type<PacketBatch>(), "_BatchIterator",
+                                                         self.packets.begin(), self.packets.end());
+        }, nb::keep_alive<0, 1>());
     nb::class_<PacketDecodeError>(wire_module, "PacketDecodeError")
         .def_ro("protocol", &PacketDecodeError::protocol)
         .def_ro("packet_index", &PacketDecodeError::packet_index)

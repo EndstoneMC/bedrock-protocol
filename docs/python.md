@@ -142,8 +142,7 @@ zero-based `packet_index` into `headers`, `header`, frame-relative `offset`
 
 Errors are distinct from filtered skips:
 `packet_count == decoded_count + len(skipped_packet_ids) + len(errors)`.
-Unknown IDs still yield `UnknownPacket`; known but unbound packets may produce
-`packet_not_bound` errors.
+Unknown IDs still yield `UnknownPacket`; every active known packet has a typed binding.
 
 Recovery covers malformed fields, truncation, discriminators, constants, varints,
 scalar narrowing, bitset overflow and trailing body bytes. Framing, compression,

@@ -61,7 +61,6 @@ struct UnknownPacket : Packet {
 };
 
 struct PacketEntry {
-    int protocol;
     int id;
     std::expected<NativePacket, NativeError> (*read)(bp::BinaryReader &);
     bool (*accepts)(nb::handle);
@@ -81,9 +80,9 @@ NativePacket nativePacket(std::shared_ptr<const T> value)
 }
 
 template <class T>
-PacketEntry packetEntry(int protocol, int id)
+constexpr PacketEntry packetEntry(int id)
 {
-    return {protocol, id,
+    return {id,
             [](bp::BinaryReader &reader) -> std::expected<NativePacket, NativeError> {
                 if (auto result = reader.account(1, sizeof(T), false); !result) {
                     return std::unexpected(NativeError{"decoded_storage_limit", reader.getReadPointer()});
@@ -100,8 +99,7 @@ PacketEntry packetEntry(int protocol, int id)
             }};
 }
 
-const PacketEntry *findPacket(int protocol, int packet_id);
-std::span<const int> knownPacketIds(int protocol);
+std::span<const PacketEntry *const> packetEntries(int protocol);
 std::span<const int> supportedPacketIds(int protocol);
 std::span<const int> supportedVersions();
 void bindGenerated(nb::module_ &module);

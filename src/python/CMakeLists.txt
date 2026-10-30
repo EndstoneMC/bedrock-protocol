@@ -25,7 +25,7 @@ foreach (_input IN LISTS _schema)
     get_filename_component(_stem "${_input}" NAME_WE)
     list(APPEND _bindings "${_python_generated}/${_stem}.cpp")
 endforeach ()
-add_custom_command(OUTPUT ${_bindings} ${_python_modules} "${_python_generated}/coverage.json"
+add_custom_command(OUTPUT ${_bindings} ${_python_modules}
     COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${PROJECT_SOURCE_DIR}/src" "PYTHONUTF8=1"
         "${Python_EXECUTABLE}" -m bedrock_protocol --language nanobind --out "${_python_generated}"
         --import-path "${PROJECT_SOURCE_DIR}" ${_schema}

@@ -1,7 +1,6 @@
 #include "codec.h"
 
 #include <algorithm>
-#include <vector>
 
 namespace bedrock::protocol::python {
 
@@ -41,30 +40,6 @@ std::expected<PacketHeader, NativeError> readHeader(bp::BinaryReader &reader)
 }
 
 namespace {
-std::span<const PacketEntry *const> packetEntries(int protocol)
-{
-    static const auto entries = [] {
-        std::vector<std::pair<int, std::vector<const PacketEntry *>>> result;
-        result.reserve(supportedVersions().size());
-        for (const auto version : supportedVersions()) {
-            std::vector<const PacketEntry *> packets;
-            const auto packet_ids = supportedPacketIds(version);
-            packets.reserve(packet_ids.size());
-            for (const auto id : packet_ids) {
-                packets.push_back(findPacket(version, id));
-            }
-            result.emplace_back(version, std::move(packets));
-        }
-        return result;
-    }();
-    for (const auto &[version, packets] : entries) {
-        if (version == protocol) {
-            return packets;
-        }
-    }
-    return {};
-}
-
 NativePacket unknown(std::shared_ptr<const UnknownPacket> value)
 {
     return {std::move(value),
@@ -125,11 +100,6 @@ std::expected<DecodedPacket, NativeError> Codec::decodeBody(bp::BinaryReader &re
                                         [](const PacketEntry *entry, int packet_id) { return entry->id < packet_id; });
     const auto *entry = found != entries.end() && (*found)->id == id ? *found : nullptr;
     if (!entry) {
-        auto known = knownPacketIds(protocol_);
-        if (std::binary_search(known.begin(), known.end(), id)) {
-            return std::unexpected(NativeError{"packet_not_bound", reader.getReadPointer(), id,
-                                                Recoverability::packet_body});
-        }
         auto body = reader.readRemaining();
         if (!body) {
             return std::unexpected(NativeError{body.error().message(), reader.getReadPointer(), id});
@@ -155,7 +125,7 @@ std::pair<int, NativePacket> Codec::snapshot(nb::handle packet) const
 {
     if (nb::isinstance<UnknownPacket>(packet)) {
         const auto &value = nb::cast<const UnknownPacket &>(packet);
-        auto known = knownPacketIds(protocol_);
+        auto known = supportedPacketIds(protocol_);
         if (std::binary_search(known.begin(), known.end(), value.packet_id)) {
             fail("EncodeError", protocol_, value.packet_id, "known_packet_requires_typed_value");
         }
@@ -233,7 +203,7 @@ void bindCodec(nb::module_ &module)
              nb::arg("limits") = bp::DecodeLimits{})
         .def_prop_ro("protocol", &Codec::protocol)
         .def_prop_ro("limits", [](const Codec &self) { return self.limits(); })
-        .def_prop_ro("known_packet_ids", [](const Codec &self) { return ids(knownPacketIds(self.protocol())); })
+        .def_prop_ro("known_packet_ids", [](const Codec &self) { return ids(supportedPacketIds(self.protocol())); })
         .def_prop_ro("supported_packet_ids", [](const Codec &self) { return ids(supportedPacketIds(self.protocol())); })
         .def(
             "decode_packet",

@@ -222,21 +222,17 @@ def test_recovery_still_validates_every_header_before_any_body(position, golden)
         batch.decode(frame(good))
 
 
-@pytest.mark.parametrize("invalid", [b"", b"\x80", bytes.fromhex("ffffffff10"), b"\x01\x80"])
-def test_recovery_does_not_weaken_wire_failures(invalid):
-    batch = BatchCodec(bp.Codec(2193))
-    with pytest.raises(bp.DecodeError):
-        batch.decode(invalid, recover_packet_errors=True)
-    with pytest.raises(RuntimeError, match="terminal"):
-        batch.decode(frame(b"\x04"))
-
-
 @pytest.mark.parametrize(
-    "algorithm,invalid", [(Compression.ZLIB, b"\x00x"), (Compression.SNAPPY, b"\x01x"), (Compression.NONE, b"\xff\x80")]
+    "algorithm,invalid",
+    [
+        (None, b""), (None, b"\x80"), (None, bytes.fromhex("ffffffff10")), (None, b"\x01\x80"),
+        (Compression.ZLIB, b"\x00x"), (Compression.SNAPPY, b"\x01x"), (Compression.NONE, b"\xff\x80"),
+    ],
 )
-def test_recovery_does_not_weaken_compression_failures(algorithm, invalid):
+def test_wire_and_compression_failures_are_terminal(algorithm, invalid):
     batch = BatchCodec(bp.Codec(2193))
-    batch.set_compression(algorithm, 0)
+    if algorithm is not None:
+        batch.set_compression(algorithm, 0)
     with pytest.raises(bp.DecodeError):
         batch.decode(invalid, recover_packet_errors=True)
     with pytest.raises(RuntimeError, match="terminal"):

@@ -51,7 +51,6 @@ class Model:
                     self.declared_names.update(_nested_names(declaration, declaration.key))
         self.shapes: dict[str, Shape] = {}
         self.aliases: dict[int, dict[str, str]] = {v: {} for v in self.versions}
-        self.known: dict[int, list[int]] = {v: [] for v in self.versions}
         self.packets: dict[int, dict[int, str]] = {v: {} for v in self.versions}
         self._visited: set[tuple[int, str]] = set()
         for version in self.versions:
@@ -59,9 +58,7 @@ class Model:
                 for decl in file.file.structs:
                     if decl.packet_id is None or self._declaration_at(file, decl.key, version) is None:
                         continue
-                    self.known[version].append(decl.packet_id)
                     self.packets[version][decl.packet_id] = self.visit(decl.key, version)
-            self.known[version].sort()
             for file in self.files.values():
                 for alias in file.file.type_aliases:
                     references = alias.target.referenced
