@@ -51,7 +51,6 @@ jobs:
       matrix:
         os: [ubuntu-24.04, windows-2022]
     env:
-      CONAN_HOME: ${{ runner.temp }}/delivery-conan
       PYTHONUTF8: "1"
     defaults:
       run:
@@ -76,6 +75,8 @@ jobs:
           & $clang --version
       - name: Install build tools and create a private profile
         run: |
+          export CONAN_HOME="$RUNNER_TEMP/delivery-conan"
+          echo "CONAN_HOME=$CONAN_HOME" >> "$GITHUB_ENV"
           python -m pip install build hatchling conan-py-build==0.6.4 click griffe pytest nanobind==3.1.0
           if [ "$RUNNER_OS" = Windows ]; then
             mkdir -p "$CONAN_HOME/profiles"
