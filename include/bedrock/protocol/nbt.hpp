@@ -956,4 +956,27 @@ struct Serializer<CompoundTag> {
     }
 };
 
+class CompoundTagData : public CompoundTag {
+public:
+    using CompoundTag::CompoundTag;
+    CompoundTagData() = default;
+    CompoundTagData(CompoundTag tag) : CompoundTag(std::move(tag)) {}
+};
+
+template <>
+struct Serializer<CompoundTagData> {
+    static void serialize(BinaryWriter &stream, const CompoundTagData &value)
+    {
+        nbt::writeTag(stream, Tag{static_cast<const CompoundTag &>(value)});
+    }
+
+    static auto deserialize(BinaryReader &stream)
+        -> std::expected<CompoundTagData, std::error_code>
+    {
+        auto tag = nbt::readTag(stream, nbt::Type::Compound);
+        if (!tag) return std::unexpected(tag.error());
+        return CompoundTagData{std::move(tag->get<CompoundTag>())};
+    }
+};
+
 }  // namespace bedrock::protocol

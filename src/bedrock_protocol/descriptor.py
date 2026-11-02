@@ -538,9 +538,6 @@ class FieldVersion:
     type: FieldType | None
     since: int | None
     until: int | None
-    #: Direct CompoundTag fields normally carry a named root; False selects
-    #: only the compound payload, including its terminating TAG_End.
-    nbt_root: bool = True
 
 
 @dataclass(frozen=True)

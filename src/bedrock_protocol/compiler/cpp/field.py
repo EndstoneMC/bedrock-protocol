@@ -396,20 +396,6 @@ class ClassFieldGenerator(FieldGenerator):
         p.print(f"{target} = std::move(*v);\n")
 
 
-class CompoundPayloadFieldGenerator(FieldGenerator):
-    """A direct CompoundTag field without the named-root header."""
-
-    def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None:
-        p.add_includes(f"<{INCLUDE_PREFIX}/nbt.hpp>")
-        p.print(f"nbt::writeTag(stream, Tag{{{var}}});\n")
-
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes(f"<{INCLUDE_PREFIX}/nbt.hpp>", "<expected>", "<utility>")
-        p.print("auto v = nbt::readTag(stream, nbt::Type::Compound);\n")
-        p.print("if (!v) return std::unexpected(v.error());\n")
-        p.print(f"{target} = std::move(v->get<CompoundTag>());\n")
-
-
 class BitsetFieldGenerator(FieldGenerator):
     """`bitset[N]` — the base-128 dump. The codec is hand-written in
     <bedrock/protocol/detail/bitset.hpp> rather than emitted here: N may exceed any integer's
@@ -651,9 +637,7 @@ class FieldGeneratorMap:
         for f in struct.fields:
             (version,) = f.versions
             assert version.type is not None
-            self._by_name[f.name] = (
-                make_field_generator(version.type, gc) if version.nbt_root else CompoundPayloadFieldGenerator()
-            )
+            self._by_name[f.name] = make_field_generator(version.type, gc)
 
     def get(self, field: Field) -> FieldGenerator:
         return self._by_name[field.name]

@@ -17,6 +17,7 @@
 
 #include <bedrock/protocol/data_store.hpp>
 #include <bedrock/protocol/detail/reflect.hpp>
+#include <bedrock/protocol/nbt.hpp>
 #include <bedrock/protocol/uuid.hpp>
 
 NAMESPACE_BEGIN(NB_NAMESPACE)
@@ -282,6 +283,29 @@ struct type_caster<bedrock::protocol::DynamicValue> {
                 return make_caster<V>::from_cpp(payload, policy, cleanup);
             }
         });
+    }
+};
+
+template <>
+struct type_caster<bedrock::protocol::CompoundTagData> {
+    using CompoundTag = bedrock::protocol::CompoundTag;
+    using CompoundTagData = bedrock::protocol::CompoundTagData;
+
+    NB_TYPE_CASTER(CompoundTagData, const_name("CompoundTag"))
+
+    bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
+    {
+        make_caster<CompoundTag> caster;
+        if (!caster.from_python(src, flags, cleanup)) {
+            return false;
+        }
+        value = CompoundTagData{caster.operator cast_t<CompoundTag>()};
+        return true;
+    }
+
+    static handle from_cpp(const CompoundTagData &value, rv_policy, cleanup_list *cleanup) noexcept
+    {
+        return make_caster<CompoundTag>::from_cpp(static_cast<const CompoundTag &>(value), rv_policy::copy, cleanup);
     }
 };
 

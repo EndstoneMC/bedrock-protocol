@@ -266,6 +266,9 @@ nb::object annotation()
     else if constexpr (std::is_same_v<F, std::monostate>) {
         return nb::none();
     }
+    else if constexpr (std::is_same_v<F, CompoundTagData>) {
+        return annotation<CompoundTag>();
+    }
     else if constexpr (is_optional_v<F>) {
         return typing("Optional")[annotation<typename F::value_type>()];
     }

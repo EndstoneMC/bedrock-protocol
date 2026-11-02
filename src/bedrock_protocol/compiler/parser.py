@@ -307,16 +307,10 @@ class Parser:
                     "wrap it in a with field(when=...) block instead"
                 )
             t = CondType(t, self._predicate(guard, attr.name, scope, earlier), _int_kwarg(call, "field", "_group_id"))
-        nbt_root = _bool_kwarg(call, "field", "nbt_root")
-        if _call_arg(call, "field", "nbt_root") is not None and not (
-            isinstance(t, StructType) and t.name == "CompoundTag"
-        ):
-            raise CompilerError(f"{attr.name}: field(nbt_root=...) applies only to a direct CompoundTag field")
         version = FieldVersion(
             type=t,
             since=_int_kwarg(call, "field", "since"),
             until=_int_kwarg(call, "field", "until"),
-            nbt_root=nbt_root,
         )
         return Field(_field_name(attr.name), (version,))
 
@@ -1398,7 +1392,6 @@ _FIELD_KEYWORDS: _Keywords = (
             "prefix",
             "count",
             "cereal",
-            "nbt_root",
             "_group_when",
             "_group_id",
         }
