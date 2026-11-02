@@ -44,10 +44,26 @@ inline constexpr std::string_view struct_name_v{};
 template <typename T>
 struct field_accessor;
 
+// Specialized by the compiler for every `type X = <primitive>` wrapper, naming
+// the primitive it holds.
+template <typename T>
+struct primitive_alias {};
+
 }  // namespace detail
 
 template <typename T>
 concept Reflected = std::is_class_v<T> && detail::is_reflected_struct_v<T>;
+
+template <typename T>
+concept PrimitiveAlias = requires { typename detail::primitive_alias<T>::type; };
+
+template <PrimitiveAlias T>
+using primitive_alias_t = typename detail::primitive_alias<T>::type;
+
+// An ordered pack of types. Each emitted module lists what it declares at a
+// version as `<module>_types<V>`, holding one of these per tree.
+template <typename... T>
+struct type_list {};
 
 //: Index returned by `field_index` for a name the struct does not carry.
 inline constexpr std::size_t field_npos = static_cast<std::size_t>(-1);

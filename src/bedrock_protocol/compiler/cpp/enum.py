@@ -68,6 +68,13 @@ class EnumGenerator:
         p.outdent()
         p.print("}};\n\n")
         p.print("template <>\n")
+        p.print(f"inline constexpr std::array<std::string_view, {n}> schema_names_v<{qualified}>{{{{\n")
+        p.indent()
+        for v in values:
+            p.print(f'"{v.name}",\n')
+        p.outdent()
+        p.print("}};\n\n")
+        p.print("template <>\n")
         spelled = type_name if type_name is not None else self._enum.name
         p.print(f'inline constexpr std::string_view type_name_v<{qualified}>{{"{spelled}"}};\n')
 

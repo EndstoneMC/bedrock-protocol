@@ -93,6 +93,7 @@ class FileGenerator:
         self._emit_struct_reflections(body)
         self._emit_serializers(body, mode="decl")
         self._emit_latest_aliases(body, latest_version)
+        self._emit_file_types(body)
         self._emit_namespace_close(body)
         self._header_includes = set(body.includes) | self._builtin_includes()
 
@@ -224,6 +225,14 @@ class FileGenerator:
             p.print("  private:\n")
             p.print(f"    {underlying} value_{{}};\n")
             p.print("};\n\n")
+        if not self._file.primitive_aliases:
+            return
+        p.add_includes(f"<{INCLUDE_PREFIX}/detail/reflect.hpp>")
+        p.print("namespace detail {\n\n")
+        for a in self._file.primitive_aliases:
+            p.print("template <>\n")
+            p.print(f"struct primitive_alias<{a.name}> {{ using type = {PRIMITIVE_TYPES[a.primitive]}; }};\n\n")
+        p.print("}  // namespace detail\n\n")
 
     def _emit_unversioned(self, p: Printer) -> None:
         by_name = self._by_name()
@@ -519,6 +528,68 @@ class FileGenerator:
             )
         p.print("\n}  // namespace detail\n\n")
 
+    # --- module type list ---------------------------------------------------
+
+    def _emit_file_types(self, p: Printer) -> None:
+        """`<module>_types<V>`, protoc's per-file descriptor table: every enum and
+        struct this module declares that exists at V, each owner ahead of its
+        nested types, spelled as the C++ type V reaches. The cerealised and the
+        pre-cereal tree get a list each, since both may hold the same name."""
+        name = f"{self._file.stem}_types"
+        plans: list[tuple[int, tuple[str, ...], tuple[str, ...]]] = []
+        for snap in self._resolved.snapshots:
+            cereal, legacy = self._types_at(snap)
+            if plans and plans[-1][1:] == (cereal, legacy):
+                continue
+            plans.append((snap, cereal, legacy))
+        p.add_includes(f"<{INCLUDE_PREFIX}/detail/reflect.hpp>")
+        if len(plans) > 1:
+            p.print("\ntemplate <int V>\n")
+            p.print(f"struct {name};\n")
+        for i, (lo, cereal, legacy) in enumerate(plans):
+            hi = plans[i + 1][0] if i + 1 < len(plans) else None
+            p.print("\n")
+            if len(plans) == 1:
+                p.print("template <int V>\n")
+                p.print(f"struct {name} {{\n")
+            else:
+                p.print(f"template <int V> requires ({requires_clause(lo, hi)})\n")
+                p.print(f"struct {name}<V> {{\n")
+            p.indent()
+            for member, entries in (("cereal", cereal), ("legacy", legacy)):
+                if not entries:
+                    p.print(f"using {member} = type_list<>;\n")
+                    continue
+                p.print(f"using {member} = type_list<\n")
+                p.indent()
+                for j, entry in enumerate(entries):
+                    p.print(f"{entry}{',' if j + 1 < len(entries) else '>;'}\n")
+                p.outdent()
+            p.outdent()
+            p.print("};\n")
+
+    def _types_at(self, snapshot: int) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        by_name = self._by_name()
+        cereal: list[str] = []
+        legacy: list[str] = []
+        for name in self._resolved.declaration_order:
+            t = by_name[name]
+            if isinstance(t, Struct) and t.builtin:
+                continue
+            shape: Enum | Struct | None = t
+            spelled = cpp_qualified(name)
+            if self._resolved.is_versioned(name):
+                view = self._resolved.present_at(name, snapshot)
+                if view is None:
+                    continue
+                shape = view.struct if view.struct is not None else view.enum
+                spelled = cpp_qualified(name, view.concrete)
+            out = legacy if _is_legacy(name) else cereal
+            out.append(spelled)
+            if isinstance(shape, Struct):
+                _list_nested(shape, spelled, out)
+        return tuple(cereal), tuple(legacy)
+
     # --- serializers --------------------------------------------------------
 
     def _emit_serializers(self, p: Printer, mode: str) -> None:
@@ -762,6 +833,15 @@ def _nested_names(struct: Struct, prefix: str) -> Iterator[str]:
         yield qualified
         if isinstance(inner, Struct):
             yield from _nested_names(inner, qualified)
+
+
+def _list_nested(struct: Struct, qualified: str, out: list[str]) -> None:
+    """Append `struct`'s nested types outermost-first, each owner ahead of its own."""
+    for inner in struct.nested:
+        spelled = f"{qualified}::{inner.name}"
+        out.append(spelled)
+        if isinstance(inner, Struct):
+            _list_nested(inner, spelled, out)
 
 
 def _collect_nested(struct: Struct, dotted: str, qualified: str, snapshot: int | None, out: list[NestedView]) -> None:

@@ -100,6 +100,9 @@ class MessageGenerator:
             p.print(f"static constexpr int Id = {self._struct.packet_id};\n")
         for ctype, fname in rendered:
             p.print(f"{ctype} {fname}{{}};\n")
+        if has_body or self._struct.nested:
+            p.print("\n")
+        p.print(f"friend bool operator==(const {self._struct.name} &, const {self._struct.name} &) = default;\n")
         p.outdent()
         p.print("};\n")
 
