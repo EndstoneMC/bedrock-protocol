@@ -1,22 +1,22 @@
 [project]
-name = "bedrock-protocol-native"
+name = "bedrock-protocol"
 version = "0.5.0.dev0"
-description = "Native typed Bedrock protocol codecs."
+description = "Bedrock packets and codecs for Python, bound from the generated C++."
 requires-python = ">=3.12"
 license = "MIT AND BSD-3-Clause"
 license-files = ["LICENSE", "python/NOTICE"]
-dependencies = ["bedrock-protocol==0.5.0.dev0"]
 
 [build-system]
 requires = ["conan-py-build==0.6.4", "nanobind==2.13.0", "click", "griffe"]
 build-backend = "conan_py_build.build"
 
 [tool.conan-py-build]
+extra-profile = "python.profile"
 extra-arguments = ["-o=&:with_python=True", "-o=&:with_tests=False"]
 
 [tool.conan-py-build.wheel]
 packages = []
 
 [tool.conan-py-build.sdist]
-include = ["src", "python", "protocol", "tests", "third_party", "docs", "conanfile.py"]
-exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib", "src/bedrock_protocol/v[0-9]*.py", "src/bedrock_protocol/v[0-9]*.pyi"]
+include = ["src", "python", "protocol", "tests", "third_party", "docs", "conanfile.py", "python.profile"]
+exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib"]

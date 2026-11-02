@@ -10,6 +10,7 @@ BUILD_INPUTS = (
     "CMakeLists.txt",
     "conanfile.py",
     "pyproject.native.toml",
+    "python.profile",
     "cmake",
     "include",
     "src",
