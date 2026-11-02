@@ -523,7 +523,7 @@ there too, so neither disagreement stands today.
 
 ## The compiler mirrors protoc
 
-`src/bedrock_protocol/` follows protoc's architecture, names, and call shapes —
+`src/bedrock_protocol_compiler/` follows protoc's architecture, names, and call shapes —
 `Importer` / `SourceTree` / `Parser`, `DescriptorPool.build_file`, `FileGenerator` /
 `MessageGenerator` / `EnumGenerator` / `FieldGeneratorMap`, `CodeGenerator` +
 `GeneratorContext`. When adding to it, find protoc's equivalent first and follow it;

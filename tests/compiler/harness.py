@@ -19,9 +19,9 @@ import unittest
 from pathlib import Path
 from typing import Mapping
 
-from bedrock_protocol.compiler import DescriptorPool, Importer, SourceTree
-from bedrock_protocol.compiler.cpp.file import FileGenerator
-from bedrock_protocol.descriptor import CompilerError
+from bedrock_protocol_compiler.compiler import DescriptorPool, Importer, SourceTree
+from bedrock_protocol_compiler.compiler.cpp.file import FileGenerator
+from bedrock_protocol_compiler.descriptor import CompilerError
 
 #: The DSL surface every case compiles against -- the real one, copied in.
 DSL_SURFACE = Path(__file__).resolve().parents[2] / "protocol" / "__init__.py"

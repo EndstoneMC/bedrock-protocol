@@ -17,18 +17,18 @@ set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/..")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
-    "${_compiler_dir}/src/bedrock_protocol/*.py"
+    "${_compiler_dir}/src/bedrock_protocol_compiler/*.py"
     "${_compiler_dir}/pyproject.toml")
 
 find_package(Python COMPONENTS Interpreter REQUIRED)
 if(WIN32)
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
     file(WRITE "${_compiler_exe}"
-        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@set PYTHONUTF8=1\r\n@\"${Python_EXECUTABLE}\" -m bedrock_protocol %*\r\n")
+        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@set PYTHONUTF8=1\r\n@\"${Python_EXECUTABLE}\" -m bedrock_protocol_compiler %*\r\n")
 else()
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
     file(WRITE "${_compiler_exe}"
-        "#!/bin/sh\nexport PYTHONPATH=\"${_compiler_dir}/src\"\nexec \"${Python_EXECUTABLE}\" -m bedrock_protocol \"$@\"\n")
+        "#!/bin/sh\nexport PYTHONPATH=\"${_compiler_dir}/src\"\nexec \"${Python_EXECUTABLE}\" -m bedrock_protocol_compiler \"$@\"\n")
     file(CHMOD "${_compiler_exe}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endif()
 

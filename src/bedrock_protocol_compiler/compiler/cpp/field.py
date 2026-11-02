@@ -17,7 +17,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from bedrock_protocol.descriptor import (
+from bedrock_protocol_compiler.descriptor import (
     INTEGER_PRIMITIVES,
     VARINT_PRIMITIVES,
     ArrayType,

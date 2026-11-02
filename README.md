@@ -136,7 +136,7 @@ Python distribution builds are described in the [Python guide](docs/python.md#bu
 ## Contributing
 
 Schemas live in `protocol/`; the compiler and its backends live in
-`src/bedrock_protocol/`. Hand-written C++ runtime headers are under
+`src/bedrock_protocol_compiler/`. Hand-written C++ runtime headers are under
 `include/bedrock/protocol/`. Keep schema changes version-aware and retain older
 shapes when the wire format changes.
 

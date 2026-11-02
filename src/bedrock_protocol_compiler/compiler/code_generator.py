@@ -18,7 +18,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Iterator, Protocol, TextIO, runtime_checkable
 
-from bedrock_protocol.descriptor import ResolvedFile
+from bedrock_protocol_compiler.descriptor import ResolvedFile
 
 
 @runtime_checkable

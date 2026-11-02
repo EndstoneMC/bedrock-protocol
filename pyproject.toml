@@ -11,7 +11,7 @@ dependencies = ["click", "griffe"]
 compiler = []
 
 [project.scripts]
-bpc = "bedrock_protocol.cli:main"
+bpc = "bedrock_protocol_compiler.cli:main"
 
 [dependency-groups]
 dev = ["mypy", "pytest", "pytest-xdist"]
@@ -21,16 +21,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib", "src/bedrock_protocol/v[0-9]*.py", "src/bedrock_protocol/v[0-9]*.pyi"]
+exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib", "src/bedrock_protocol_compiler/v[0-9]*.py", "src/bedrock_protocol_compiler/v[0-9]*.pyi"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bedrock_protocol"]
+packages = ["src/bedrock_protocol_compiler"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/bedrock_protocol", "protocol", "tests/compiler", "LICENSE", "README.md", "pyproject.toml"]
+include = ["src/bedrock_protocol_compiler", "protocol", "tests/compiler", "LICENSE", "README.md", "pyproject.toml"]
 
 [tool.mypy]
-packages = ["bedrock_protocol"]
+packages = ["bedrock_protocol_compiler"]
 python_version = "3.12"
 strict = true
 

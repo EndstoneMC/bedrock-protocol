@@ -15,7 +15,7 @@ from typing import Callable, Mapping, cast
 
 import griffe
 
-from bedrock_protocol.descriptor import (
+from bedrock_protocol_compiler.descriptor import (
     BUILTIN_ANNOTATIONS,
     INT_WIDTHS,
     INTEGER_PRIMITIVES,

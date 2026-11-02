@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from bedrock_protocol.descriptor import (
+from bedrock_protocol_compiler.descriptor import (
     LEGACY_SCOPE,
     ArrayType,
     CondType,
