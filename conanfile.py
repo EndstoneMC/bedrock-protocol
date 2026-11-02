@@ -1,3 +1,6 @@
+import os
+import sys
+
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 
@@ -27,6 +30,9 @@ class BedrockProtocolConan(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["BEDROCK_PROTOCOL_BUILD_PYTHON"] = bool(self.options.with_python)
         tc.variables["BEDROCK_PROTOCOL_BUILD_TESTS"] = bool(self.options.with_tests)
+        tc.cache_variables["BEDROCK_PROTOCOL_COMPILER_PYTHON"] = sys.executable.replace("\\", "/")
+        if versions := os.environ.get("BEDROCK_PROTOCOL_PYTHON_VERSIONS"):
+            tc.cache_variables["BEDROCK_PROTOCOL_PYTHON_VERSIONS"] = versions
         tc.user_presets_path = False
         tc.generate()
 

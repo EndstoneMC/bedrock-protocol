@@ -20,16 +20,31 @@ file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
     "${_compiler_dir}/src/bedrock_protocol_compiler/*.py"
     "${_compiler_dir}/pyproject.toml")
 
-find_package(Python COMPONENTS Interpreter REQUIRED)
+get_filename_component(_compiler_dir "${_compiler_dir}" ABSOLUTE)
+if(BEDROCK_PROTOCOL_COMPILER_PYTHON)
+    set(_launcher "\"${BEDROCK_PROTOCOL_COMPILER_PYTHON}\"")
+else()
+    find_program(UV_EXECUTABLE uv)
+    if(NOT UV_EXECUTABLE)
+        message(FATAL_ERROR
+            "bedrock-protocol: uv is required to run the bpc compiler. "
+            "Install it from https://docs.astral.sh/uv/")
+    endif()
+    set(_launcher "\"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" python")
+endif()
+
 if(WIN32)
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
-    file(WRITE "${_compiler_exe}"
-        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@set PYTHONUTF8=1\r\n@\"${Python_EXECUTABLE}\" -m bedrock_protocol_compiler %*\r\n")
+    file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
+        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@${_launcher} -m bedrock_protocol_compiler %*\r\n")
 else()
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
-    file(WRITE "${_compiler_exe}"
-        "#!/bin/sh\nexport PYTHONPATH=\"${_compiler_dir}/src\"\nexec \"${Python_EXECUTABLE}\" -m bedrock_protocol_compiler \"$@\"\n")
-    file(CHMOD "${_compiler_exe}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
+        "#!/bin/sh\nPYTHONPATH=\"${_compiler_dir}/src\" exec ${_launcher} -m bedrock_protocol_compiler \"$@\"\n")
+    file(CHMOD "${_compiler_exe}" PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE)
 endif()
 
 add_executable(bedrock_protocol_compiler IMPORTED GLOBAL)
@@ -124,7 +139,7 @@ function(bedrock_protocol_generate)
         list(APPEND _import_args --import-path "${d}")
     endforeach()
 
-    # One parse supplies all per-schema translation units.
+    # One custom_command per input keeps the per-file output path simple.
     set(_generated)
     foreach(p IN LISTS _abs_inputs)
         # Every input lands directly in COMPILER_OUT_DIR, which is the one
@@ -134,21 +149,26 @@ function(bedrock_protocol_generate)
         # `.hpp` (which is reserved for the header-only runtime support).
         set(_out_hdr "${BP_COMPILER_OUT_DIR}/${_stem}.h")
         set(_out_cpp "${BP_COMPILER_OUT_DIR}/${_stem}.cpp")
+        set(_out_dir "${BP_COMPILER_OUT_DIR}")
+
+        # One bpc invocation emits both the declaration header and the
+        # out-of-line definition source; declare both as OUTPUTs.
+        add_custom_command(
+            OUTPUT  "${_out_hdr}" "${_out_cpp}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${_out_dir}"
+            COMMAND ${_compiler_cmd}
+                    --language cpp --out "${_out_dir}" ${_import_args}
+                    ${BP_COMPILER_OPTIONS} "${p}"
+            DEPENDS "${p}" ${_abs_inputs} ${BP_DEPENDENCIES}
+                    ${_compiler_dep} ${_compiler_sources}
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMENT "bpc: generating ${_stem}.{h,cpp}"
+            VERBATIM)
 
         # protobuf_generate keeps one flat list of every generated file (both
         # the .h and the .cpp), not separate header/source lists.
         list(APPEND _generated "${_out_hdr}" "${_out_cpp}")
     endforeach()
-
-    add_custom_command(
-        OUTPUT ${_generated}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${BP_COMPILER_OUT_DIR}"
-        COMMAND ${_compiler_cmd} --language cpp --out "${BP_COMPILER_OUT_DIR}" ${_import_args}
-                ${BP_COMPILER_OPTIONS} ${_abs_inputs}
-        DEPENDS ${_abs_inputs} ${BP_DEPENDENCIES} ${_compiler_dep} ${_compiler_sources}
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMENT "bpc: generating C++ schema"
-        VERBATIM)
 
     if(BP_TARGET)
         get_target_property(_target_type ${BP_TARGET} TYPE)
