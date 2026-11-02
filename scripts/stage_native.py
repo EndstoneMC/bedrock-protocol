@@ -13,6 +13,7 @@ BUILD_INPUTS = (
     "cmake",
     "include",
     "src",
+    "python",
     "protocol",
     "tests",
     "third_party",
