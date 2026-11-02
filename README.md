@@ -2,26 +2,25 @@
 
 Typed packet codecs for Minecraft Bedrock, generated from one version-aware
 Python schema. Use the C++ library for native applications, the Python runtime
-for immutable packet values and codecs, or `bpc` to compile schemas.
+for the same packets in Python, or `bpc` to compile schemas.
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
 
 ## Python
 
-The `bedrock-protocol` distribution contains the schema compiler and `bpc` command.
-`bedrock-protocol-native` adds the native runtime, generated version modules and
-type stubs, and requires the matching compiler distribution. Compiler-only use
-does not require a native toolchain. See the [Python guide](docs/python.md) for
-installation, packet construction, limits and ownership.
+`bedrock-protocol` is the runtime: the schema's packets, types and enums, bound from
+the generated C++, so Python encodes exactly the bytes the C++ codecs do. A bare name
+is the latest protocol and `v<N>` pins one, as in C++. `bedrock-protocol-compiler`
+carries the schema and `bpc`. See the [Python guide](docs/python.md).
 
 ```python
-from bedrock_protocol import Codec, v2193
+import bedrock_protocol as bp
+from bedrock_protocol import v2193
 
-codec = Codec(2193)
-packet = v2193.RequestNetworkSettingsPacket(client_network_version=2193)
-wire = codec.encode_packet(packet)
-decoded = codec.decode_packet(wire)
-assert decoded.payload.client_network_version == 2193
+packet = v2193.TextPacket(body=v2193.TextPacket.MessageOnly(type=v2193.TextPacketType.CHAT, message="hello"))
+header, back = v2193.decode_packet(v2193.encode_packet(packet))
+assert back == packet and header.packet_id == v2193.TextPacket.ID
+assert bp.TextPacket is getattr(bp, f"v{bp.LATEST_PROTOCOL}").TextPacket
 ```
 
 ## C++
@@ -115,8 +114,9 @@ metadata preserves declaration order and the wire names of name-coded fields.
 
 ## Building
 
-Requires CMake and a C++23 compiler. Building a checkout also requires Python
-3.12+ and the compiler dependencies declared in `pyproject.toml`. Pregenerated C++
+Requires CMake and a C++23 compiler. Building a checkout also requires uv,
+which runs the compiler, or an interpreter with its dependencies named by
+`BEDROCK_PROTOCOL_COMPILER_PYTHON`. Pregenerated C++
 source releases and installed C++ packages need no Python.
 
 ```shell

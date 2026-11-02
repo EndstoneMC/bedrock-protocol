@@ -99,6 +99,8 @@ codec is what disagreed.
 | does a cereal-bound *constant* fold like an enum value? | **yes** — one path, because a constant is an ordinary member whose value is fixed | `bindConst` means two things by factory. On an enum factory it declares an enumerator. On a *compound* factory it declares a member carrying `entt::meta_getter<Compound,(Enum)N,entt::as_value_t>` and `is_const | is_static`, which `GenericCompositeSchema` saves like any other — so what reaches the wire is the enum **value**, through `TypeSchema<E>::doSave` and its folded `mName`. The earlier reading followed `bindConstInternal`'s verbatim `memcpy` of the `string_view` and its unfolded `cereal::enttHash` id: both describe the *member's own* name, which never reaches the stream |
 | a cereal variant's selector | always a `uvarint32` index over the alternatives, never the tag | `doSaveTaggedVariant` hashes `mTaggedName` and runs a per-alternative lambda capturing `{any, taggedNameHash, state, descriptor}` and **not** the writer, so it cannot put a byte on the stream; it then delegates to `doSavePlainVariant`, which writes the `std::variant` index with Compression forced on. A `TaggedVariantDescriptor` only names the member inside each alternative that carries the discriminator, and that member is bound in its own right and serialized with the rest of the alternative. Dumps before 2026-09-04 rendered the tag as the selector and had the width wrong three separate ways (`uint8` for PlayerList, `int8` for ResourcePackResponse, `varint32` for PlayerLocation) |
 | a name-coded enum's casing on the wire | **lowercased**, and the read matches nothing else | `BasicFactory<E>::memberDescriptorFor` runs `tolower` over the bound name into `mName` (+0x30) and keeps the original in `mNameExt` (+0x10); `TypeSchema<E>::doSave` writes `mName`, and the meta_data id hashes it. Confirmed against gophertunnel's lowercase-both-ways `CommandOriginType` table. Reading the *bind site's* string literal is what got this backwards once — that literal is `mNameExt`, which never reaches the wire |
+| the packet header's sub-client bits | `id \| recipient << 10 \| sender << 12` in one uvarint32, ids 0..3, nothing above bit 13 | 1.26.51 `NetworkSystem::send` writes `getId() \| recipientSubId << 10 \| packet->mSenderSubId << 12` in both bedrock_server.exe and Minecraft.Windows.exe, and the read in `NetworkSystem::runEvents` hands `(v >> 12) & 3` on as the sender's `SubClientId`. gophertunnel's `Header` has the two swapped, which no capture catches while both are 0 |
+| packet 124's event data | a compound's entries and its `TAG_End` with **no root** tag id or name, at every version, spelled `CompoundTagData` | 1.26.51 `TypeSchema<CompoundTag>::doSave` writes the root header only when the member is not named `__[[CTD]]__`, and `cerealizer<LevelEventGenericPacketPayload>::bind` binds the data under that name, which every protocol-docs branch from r21_u11 to r26_u7 carries. A 1.26.52.3 capture agrees byte for byte. gophertunnel keeps the field as raw bytes, so its goldens prove nothing here, and its comment that the `TAG_End` is absent is wrong |
 
 ## Names mirror BDS
 
@@ -639,3 +641,20 @@ from it when it finds one, so nothing downstream needs uv or `bpc`. Anything the
 build needs at *consume* time therefore has to be inside that archive: a new
 `configure_file` template must be stamped during generation, never resolved lazily,
 or a source build will look for a `.in` that was never shipped.
+
+## The Python extension binds reflection, never a packet
+
+`python/` is one generic binder (`binder.hpp`) walked over `<module>_types<V>`, the
+per-module type list the emitter writes, plus casters for the leaf types reflection does
+not reach. Anything a binding needs that the generated code lacks is a general emitter
+feature (the type lists, `schema_names_v`, `primitive_alias`, the defaulted `operator==`),
+never a per-packet line in `python/`. A type shared by two bound versions is one C++ type
+and is bound once, so the binder checks `nb::type<T>()` before binding. An enum member
+field is open, as in C++: a value the schema does not name crosses as an `int`.
+
+The binding needs only the generated headers, so it must keep building from a source
+package with no schema and no compiler in the tree. CI's `python-from-sources` job
+proves it. The runtime is the `bedrock_protocol` package in the `bedrock-protocol`
+distribution, and the compiler is `bedrock_protocol_compiler` in
+`bedrock-protocol-compiler`. `tests/python` checks the binding, never the codec: the
+goldens belong to the C++ suite.
