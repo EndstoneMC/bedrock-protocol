@@ -1,5 +1,6 @@
 """What the generic binder promises beyond the codecs themselves."""
 
+import importlib
 import uuid
 
 import pytest
@@ -16,6 +17,16 @@ def uvarint(value):
         out.append(byte | (0x80 if value else 0))
         if not value:
             return bytes(out)
+
+
+def test_the_bare_names_are_the_latest_protocol():
+    import bedrock_protocol
+
+    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.LATEST_PROTOCOL}")
+    assert bedrock_protocol.TextPacket is latest.TextPacket
+    assert bedrock_protocol.PROTOCOL == bedrock_protocol.LATEST_PROTOCOL
+    packet = bedrock_protocol.PlayStatusPacket(status=bedrock_protocol.PlayStatus.PLAYER_SPAWN)
+    assert bedrock_protocol.decode(packet.ID, bedrock_protocol.encode(packet)) == packet
 
 
 def test_the_header_packs_recipient_then_sender_as_bds_does():

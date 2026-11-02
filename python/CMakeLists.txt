@@ -6,10 +6,15 @@ if (NOT nanobind_DIR)
 endif ()
 find_package(nanobind CONFIG REQUIRED)
 
+file(STRINGS "${BEDROCK_PROTOCOL_HEADER_DIR}/version.hpp" _latest REGEX "^#define BEDROCK_PROTOCOL_LATEST [0-9]+$")
+string(REGEX MATCH "[0-9]+$" _latest "${_latest}")
+set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS} ${_latest})
+list(REMOVE_DUPLICATES _versions)
+
 set(_sources src/module.cpp src/nbt.cpp)
 set(_declarations "")
 set(_table "")
-foreach (BP_VERSION IN LISTS BEDROCK_PROTOCOL_PYTHON_VERSIONS)
+foreach (BP_VERSION IN LISTS _versions)
     set(_files "")
     foreach (BP_MODULE IN LISTS BEDROCK_PROTOCOL_MODULES)
         set(_tu "${CMAKE_CURRENT_BINARY_DIR}/bind/${BP_MODULE}_${BP_VERSION}.cpp")
@@ -50,6 +55,7 @@ if (MSVC)
     target_compile_options(_native PRIVATE /bigobj)
 endif ()
 
+install(FILES __init__.py DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
 install(TARGETS _native
     LIBRARY DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel
     RUNTIME DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
