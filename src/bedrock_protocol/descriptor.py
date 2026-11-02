@@ -664,7 +664,6 @@ class FileSet:
     files: Mapping[str, File]
     outputs: tuple[str, ...]
     version: int | None = None
-    supported_versions: tuple[int, ...] = ()
 
 
 # --- resolved descriptors (post-versioning) -----------------------------------
