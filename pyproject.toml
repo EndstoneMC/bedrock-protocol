@@ -38,5 +38,8 @@ strict = true
 line-length = 120
 lint.select = ["I", "E", "F"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["bedrock_protocol", "bedrock_protocol_compiler"]
+
 [tool.ruff.lint.per-file-ignores]
 "protocol/*.py" = ["F811", "F821"]
