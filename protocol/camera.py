@@ -258,7 +258,7 @@ class CameraInstructionOptions:
 
     class TargetInstruction:
         target_center_offset: Vec3 | None
-        target_actor_id: int64
+        target_actor_id: ActorUniqueID = field(type=int64)
 
     class FovInstruction:
         fov: float
@@ -267,7 +267,7 @@ class CameraInstructionOptions:
         fov_clear: bool
 
     class AttachToEntityInstruction:
-        attach_to_entity_id: int64
+        attach_to_entity_id: ActorUniqueID = field(type=int64)
 
     @type(until=924)
     class SplineInstruction:

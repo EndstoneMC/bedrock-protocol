@@ -107,13 +107,13 @@ TEST_CASE("a camera instruction round-trips against the golden")
     };
     packet.camera_instruction.target = bp::CameraInstructionOptions::TargetInstruction{
         .target_center_offset = bp::Vec3{.x = 0.5F, .y = 1.0F, .z = 1.5F},
-        .target_actor_id = 300,
+        .target_actor_id = bp::ActorUniqueID{300},
     };
     packet.camera_instruction.remove_target = false;
     packet.camera_instruction.field_of_view = bp::CameraInstructionOptions::FovInstruction{
         .fov = 70.0F, .fov_ease_time = 2.0F, .fov_ease_type = bp::EasingType::OutBack, .fov_clear = false};
     packet.camera_instruction.attach_to_entity =
-        bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = -5};
+        bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = bp::ActorUniqueID{-5}};
     packet.camera_instruction.detach_from_entity = true;
     REQUIRE(encode(packet) == golden);
 
@@ -136,14 +136,14 @@ TEST_CASE("a camera instruction round-trips against the golden")
     REQUIRE(back.camera_instruction.fade->color->green == 0.0F);
     REQUIRE(back.camera_instruction.fade->color->blue == 1.0F);
     REQUIRE(back.camera_instruction.target->target_center_offset->y == 1.0F);
-    REQUIRE(back.camera_instruction.target->target_actor_id == 300);
+    REQUIRE(back.camera_instruction.target->target_actor_id == bp::ActorUniqueID{300});
     REQUIRE(back.camera_instruction.remove_target == false);
     REQUIRE(back.camera_instruction.field_of_view->fov == 70.0F);
     REQUIRE(back.camera_instruction.field_of_view->fov_ease_time == 2.0F);
     REQUIRE(back.camera_instruction.field_of_view->fov_ease_type == bp::EasingType::OutBack);
     REQUIRE_FALSE(back.camera_instruction.field_of_view->fov_clear);
     REQUIRE_FALSE(back.camera_instruction.spline.has_value());
-    REQUIRE(back.camera_instruction.attach_to_entity->attach_to_entity_id == -5);
+    REQUIRE(back.camera_instruction.attach_to_entity->attach_to_entity_id == bp::ActorUniqueID{-5});
     REQUIRE(back.camera_instruction.detach_from_entity == true);
 }
 
@@ -218,9 +218,9 @@ TEST_CASE("a camera instruction's attach-to-entity id is a fixed eight-byte int6
 {
     bp::CameraInstructionPacket packet;
     packet.camera_instruction.attach_to_entity =
-        bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = -1};
+        bp::CameraInstructionOptions::AttachToEntityInstruction{.attach_to_entity_id = bp::ActorUniqueID{-1}};
     const auto wire = encode(packet);
     REQUIRE(wire.size() == 17);
     REQUIRE(decode<bp::CameraInstructionPacket>(wire).camera_instruction.attach_to_entity->attach_to_entity_id ==
-            -1);
+            bp::ActorUniqueID{-1});
 }

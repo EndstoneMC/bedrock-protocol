@@ -30,13 +30,13 @@ TEST_CASE("packet id is 35")
 TEST_CASE("actor-pick-request round-trips against the golden")
 {
     bp::ActorPickRequestPacket packet;
-    packet.id = 4294967298LL;
+    packet.id = bp::ActorUniqueID{4294967298LL};
     packet.max_slots = 200;
     packet.with_data = true;
     REQUIRE(encode(packet) == golden);
 
     const auto back = decode<bp::ActorPickRequestPacket>(golden);
-    REQUIRE(back.id == 4294967298LL);
+    REQUIRE(back.id == bp::ActorUniqueID{4294967298LL});
     REQUIRE(back.max_slots == 200);
     REQUIRE(back.with_data);
 }
@@ -44,11 +44,11 @@ TEST_CASE("actor-pick-request round-trips against the golden")
 TEST_CASE("a negative actor id still occupies eight fixed bytes")
 {
     bp::ActorPickRequestPacket packet;
-    packet.id = -1;
+    packet.id = bp::ActorUniqueID{-1};
     REQUIRE(encode(packet) == golden_negative);
 
     const auto back = decode<bp::ActorPickRequestPacket>(golden_negative);
-    REQUIRE(back.id == -1);
+    REQUIRE(back.id == bp::ActorUniqueID{-1});
     REQUIRE(back.max_slots == 0);
     REQUIRE_FALSE(back.with_data);
 }

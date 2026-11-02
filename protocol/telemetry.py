@@ -2,7 +2,7 @@
 
 from enum import IntEnum, auto
 
-from protocol import int16, int32, packet, uint8, uvarint32, value, varint32, varint64
+from protocol import int16, int32, packet, uint8, uvarint32, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
@@ -184,7 +184,7 @@ class LegacyTelemetryEventPacket:
         achievement_id: MinecraftEventing.AchievementIds
 
     class Interaction:
-        interacted_entity_id: varint64
+        interacted_entity_id: ActorUniqueID
         interaction_type: MinecraftEventing.InteractionType
         interacted_entity_type: varint32
         interacted_entity_variant: varint32
@@ -198,8 +198,8 @@ class LegacyTelemetryEventPacket:
         to_dimension: varint32
 
     class MobKilled:
-        killer_entity_id: varint64
-        killed_mob_id: varint64
+        killer_entity_id: ActorUniqueID
+        killed_mob_id: ActorUniqueID
         damage_child_type: ActorType
         damage_source: varint32
         trader_tier: varint32
@@ -217,7 +217,7 @@ class LegacyTelemetryEventPacket:
         in_raid: bool
 
     class BossKilled:
-        boss_unique_id: varint64
+        boss_unique_id: ActorUniqueID
         party_size: varint32
         boss_type: varint32
 
