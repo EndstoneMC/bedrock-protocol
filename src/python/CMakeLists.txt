@@ -33,8 +33,8 @@ add_custom_command(OUTPUT ${_bindings} ${_python_modules}
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM)
 nanobind_add_module(_native NB_STATIC NOMINSIZE PROTECT_STACK
-    module.cpp codec.cpp views.cpp nbt.cpp wire.cpp ${_bindings})
+    module.cpp codec.cpp views.cpp nbt.cpp ${_bindings})
 target_include_directories(_native PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(_native PRIVATE bedrock::protocol bedrock::protocol_wire)
+target_link_libraries(_native PRIVATE bedrock::protocol)
 install(TARGETS _native DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
 install(DIRECTORY "${_python_generated}/bedrock_protocol/" DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)

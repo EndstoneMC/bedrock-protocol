@@ -53,7 +53,7 @@ def installed(schema):
     assert bp.__all__ == literal(stub, "__all__")
     for name in bp.__all__:
         getattr(bp, name)
-    for name in [*versions, "wire"]:
+    for name in versions:
         module = importlib.import_module(f"bedrock_protocol.{name}")
         assert getattr(bp, name) is module
         stub = ast.parse((package / f"{name}.pyi").read_text(encoding="utf-8"))

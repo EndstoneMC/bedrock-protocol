@@ -2,7 +2,6 @@ import pytest
 from conftest import varuint
 
 import bedrock_protocol as bp
-from bedrock_protocol.wire import BatchCodec
 
 
 @pytest.mark.parametrize("kind", ["map", "nbt"])
@@ -142,17 +141,13 @@ def _check_handshake_text(payload, raw):
 
 
 @pytest.mark.parametrize("raw", [b"a", b"\xff"])
-def test_text_conversion_is_lazy_and_does_not_poison_batch_decode(raw):
+def test_text_conversion_is_lazy(raw):
     codec = bp.Codec(2193)
-    batch = BatchCodec(codec)
     wire = b"\x03\x01" + raw
-    frame = varuint(len(wire)) + wire
-    for payload in (codec.decode_packet(wire).payload, batch.decode(frame)[0].payload):
-        _check_handshake_text(payload, raw)
-        assert payload.wire_bytes() == wire[1:]
-        assert codec.encode_packet(payload) == wire
-        assert batch.encode([payload]) == frame
-    assert batch.decode(b"\x03\x03\x01a")[0].payload.token == "a"
+    payload = codec.decode_packet(wire).payload
+    _check_handshake_text(payload, raw)
+    assert payload.wire_bytes() == wire[1:]
+    assert codec.encode_packet(payload) == wire
 
 
 @pytest.mark.parametrize("kind", ["string", "name"])
@@ -192,8 +187,7 @@ def test_non_utf8_opaque_bytes_remain_opaque(kind):
     else:
         packet = bp.v2193.ClientCacheMissResponsePacket(blobs=[bp.v2193.MissingBlobData(blob_id=9, blob_data=b"\xff")])
     wire = codec.encode_packet(packet)
-    batch = BatchCodec(codec)
-    payload = batch.decode(varuint(len(wire)) + wire)[0].payload
+    payload = codec.decode_packet(wire).payload
     if kind == "unknown":
         assert payload.body.to_bytes() == b"\xff"
     else:

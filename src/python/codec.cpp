@@ -115,8 +115,7 @@ std::expected<DecodedPacket, NativeError> Codec::decodeBody(bp::BinaryReader &re
         return std::unexpected(std::move(error));
     }
     if (reader.getUnreadLength()) {
-        return std::unexpected(NativeError{"trailing_packet_data", reader.getReadPointer(), id,
-                                            Recoverability::packet_body});
+        return std::unexpected(NativeError{"trailing_packet_data", reader.getReadPointer(), id});
     }
     return DecodedPacket{protocol_, header, std::move(*payload)};
 }
@@ -174,10 +173,6 @@ void bindCodec(nb::module_ &module)
         .def_ro("header", &DecodedPacket::header)
         .def_prop_ro("payload",
                      [](const DecodedPacket &self) { return self.payload.expose(self.payload.value, self.protocol); });
-    nb::class_<EncodedPacket>(module, "EncodedPacket")
-        .def_ro("protocol", &EncodedPacket::protocol)
-        .def_ro("packet_id", &EncodedPacket::packet_id)
-        .def("__len__", [](const EncodedPacket &self) { return self.bytes.size(); });
     nb::class_<UnknownPacket, Packet>(module, "UnknownPacket")
         .def(nb::new_([](int packet_id, nb::handle body) {
                  if (packet_id < 0 || packet_id > 1023) {
@@ -228,13 +223,6 @@ void bindCodec(nb::module_ &module)
                 return std::move(*result);
             },
             nb::arg("data"))
-        .def(
-            "prepare_packet",
-            [](const Codec &self, nb::handle packet, int sender, int target) {
-                auto [id, bytes] = encodePacket(self, packet, sender, target);
-                return EncodedPacket{std::move(bytes), self.protocol(), id};
-            },
-            nb::arg("packet"), nb::kw_only(), nb::arg("sender_subclient_id") = 0, nb::arg("target_subclient_id") = 0)
         .def(
             "encode_packet",
             [](const Codec &self, nb::handle packet, int sender, int target) {

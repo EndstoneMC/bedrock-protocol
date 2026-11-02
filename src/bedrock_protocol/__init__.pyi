@@ -21,7 +21,6 @@ import bedrock_protocol.v1001 as v1001
 import bedrock_protocol.v2168 as v2168
 import bedrock_protocol.v2193 as v2193
 import bedrock_protocol.v2225 as v2225
-import bedrock_protocol.wire as wire
 
 from ._api import DecodeError as DecodeError
 from ._api import EncodeError as EncodeError
@@ -32,7 +31,6 @@ __all__ = [
     "Codec",
     "DecodeLimits",
     "DecodedPacket",
-    "EncodedPacket",
     "PacketHeader",
     "UnknownPacket",
     "Variant",
@@ -68,7 +66,6 @@ __all__ = [
     "v2168",
     "v2193",
     "v2225",
-    "wire",
 ]
 
 ReadableBuffer = Buffer
@@ -112,13 +109,6 @@ class DecodedPacket:
     @property
     def payload(self) -> Packet: ...
 
-class EncodedPacket:
-    @property
-    def protocol(self) -> int: ...
-    @property
-    def packet_id(self) -> int: ...
-    def __len__(self) -> int: ...
-
 class Codec:
     def __init__(self, protocol: int, *, limits: DecodeLimits = ...) -> None: ...
     @property
@@ -131,9 +121,6 @@ class Codec:
     def known_packet_ids(self) -> tuple[int, ...]: ...
     def decode_packet(self, data: ReadableBuffer) -> DecodedPacket: ...
     def encode_packet(self, packet: Packet, *, sender_subclient_id: int = 0, target_subclient_id: int = 0) -> bytes: ...
-    def prepare_packet(
-        self, packet: Packet, *, sender_subclient_id: int = 0, target_subclient_id: int = 0
-    ) -> EncodedPacket: ...
 
 class BinaryView(Value, Buffer):
     def __buffer__(self, flags: int) -> memoryview: ...

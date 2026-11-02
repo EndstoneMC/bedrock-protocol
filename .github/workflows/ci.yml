@@ -44,7 +44,7 @@ jobs:
           PYTHONPATH: src
 
   delivery:
-    name: Python and wire (${{ matrix.os }})
+    name: Python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -163,25 +163,6 @@ jobs:
           name: python-native-source
           path: ${{ runner.temp }}/delivery-dist/*.tar.gz
           if-no-files-found: error
-      - name: Build and run the independent wire golden
-        run: |
-          conan install "$GITHUB_WORKSPACE" --output-folder "$RUNNER_TEMP/delivery-wire" \
-            --profile:host delivery --profile:build delivery --build=missing \
-            '-o=&:with_wire=True' '-o=&:with_tests=True'
-          cmake -S "$GITHUB_WORKSPACE" -B "$RUNNER_TEMP/delivery-wire/build/Release" -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$RUNNER_TEMP/delivery-wire/build/Release/generators/conan_toolchain.cmake"
-          cmake --build "$RUNNER_TEMP/delivery-wire/build/Release" --target bedrock_protocol bedrock_protocol_wire_tests
-          ctest --test-dir "$RUNNER_TEMP/delivery-wire/build/Release" -R '^bedrock_protocol_wire_tests$' --no-tests=error --output-on-failure
-      - name: Consume the installed wire target
-        run: |
-          cmake --install "$RUNNER_TEMP/delivery-wire/build/Release" --prefix "$RUNNER_TEMP/delivery-wire-stage"
-          cmake -S "$GITHUB_WORKSPACE/tests/package" -B "$RUNNER_TEMP/delivery-wire-consumer" -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$RUNNER_TEMP/delivery-wire/build/Release/generators/conan_toolchain.cmake" \
-            -Dbedrock-protocol_DIR="$RUNNER_TEMP/delivery-wire-stage/lib/cmake/bedrock-protocol"
-          cmake --build "$RUNNER_TEMP/delivery-wire-consumer"
-          ctest --test-dir "$RUNNER_TEMP/delivery-wire-consumer" -R '^package_wire_test$' --no-tests=error --output-on-failure
 
   # Three compilers across three standard libraries. Clang pairs with libc++
   # rather than libstdc++ because libstdc++'s <expected> is incompatible with

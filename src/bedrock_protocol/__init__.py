@@ -12,7 +12,6 @@ _NATIVE_EXPORTS = (
     "Codec",
     "DecodeLimits",
     "DecodedPacket",
-    "EncodedPacket",
     "PacketHeader",
     "UnknownPacket",
     "Variant",
@@ -45,7 +44,6 @@ _MODULE_EXPORTS = (
     "v2168",
     "v2193",
     "v2225",
-    "wire",
 )
 __all__ = [
     *_NATIVE_EXPORTS,

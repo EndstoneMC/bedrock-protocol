@@ -1,10 +1,8 @@
-import gc
 
 import pytest
 from conftest import varuint
 
 import bedrock_protocol as bp
-from bedrock_protocol.wire import BatchCodec
 
 
 def test_runtime_entrypoint():
@@ -48,15 +46,8 @@ def test_independent_native_goldens(protocol, packet_id, filename, variable, gol
     assert decoded.payload.protocol == protocol
     assert decoded.payload.wire_bytes() == data[len(varuint(packet_id)) :]
     assert codec.encode_packet(decoded.payload) == data
-    batch = BatchCodec(codec)
-    prepared = codec.prepare_packet(decoded.payload)
-    assert len(prepared) == len(data)
-    assert batch.encode_prepared([prepared]) == batch.encode([decoded.payload]) == varuint(len(data)) + data
     subclient_data = varuint(packet_id | (3 << 10) | (2 << 12)) + data[len(varuint(packet_id)) :]
     assert codec.encode_packet(decoded.payload, sender_subclient_id=2, target_subclient_id=3) == subclient_data
-    prepared = codec.prepare_packet(decoded.payload, sender_subclient_id=2, target_subclient_id=3)
-    assert len(prepared) == len(subclient_data)
-    assert batch.encode_prepared([prepared]) == varuint(len(subclient_data)) + subclient_data
 
 
 def test_owned_keyword_constructor_and_shared_shape(golden):
@@ -86,7 +77,6 @@ def test_packet_subclass_encodes_with_shared_shape(protocol, golden):
     expected = golden(2, "test_002_play_status.cpp")
     codec = bp.Codec(protocol)
     assert codec.encode_packet(packet) == expected
-    assert BatchCodec(codec).encode([packet]) == varuint(len(expected)) + expected
 
 
 def test_open_enums_preserve_unknown_values_without_cache_growth():
@@ -250,48 +240,11 @@ def test_numeric_enum_wire_values_cannot_collapse_into_underlying_range(golden):
     assert codec.decode_packet(codec.encode_packet(packet)).payload.inventory_id == -2
 
 
-@pytest.mark.parametrize("protocol", [729, 2225])
-def test_prepared_packet_owns_immutable_encoding(protocol, golden):
-    expected = golden(2, "test_002_play_status.cpp")
-    codec = bp.Codec(protocol)
-    packet = codec.decode_packet(expected).payload
-    prepared = codec.prepare_packet(packet)
-    assert isinstance(prepared, bp.EncodedPacket)
-    assert (prepared.protocol, prepared.packet_id, len(prepared)) == (protocol, 2, len(expected))
-    for name, value in [("protocol", 0), ("packet_id", 0), ("bytes", b"changed")]:
-        with pytest.raises(AttributeError):
-            setattr(prepared, name, value)
-    with pytest.raises(TypeError):
-        bp.EncodedPacket()
-    with pytest.raises(TypeError):
-        memoryview(prepared)
-    del packet, codec
-    gc.collect()
-    assert BatchCodec(bp.Codec(protocol)).encode_prepared([prepared]) == varuint(len(expected)) + expected
-
-
 @pytest.mark.parametrize(
     "kwargs", [{"sender_subclient_id": -1}, {"sender_subclient_id": 4}, {"target_subclient_id": 4}]
 )
-def test_prepare_preserves_subclient_validation(kwargs):
+def test_encode_validates_subclient_ids(kwargs):
     codec = bp.Codec(2193)
     packet = bp.v2193.PlayStatusPacket(status=bp.v2193.PlayStatus.PLAYER_SPAWN)
-    for encode in (codec.encode_packet, codec.prepare_packet):
-        with pytest.raises(ValueError, match="subclient IDs must fit 2 bits"):
-            encode(packet, **kwargs)
-
-
-@pytest.mark.parametrize("case", ["type", "known_unknown", "packet_bytes"])
-def test_prepare_preserves_encode_error_metadata(case):
-    codec = bp.Codec(2193)
-    packet = {
-        "type": object,
-        "known_unknown": lambda: bp.UnknownPacket(packet_id=2, body=b""),
-        "packet_bytes": lambda: bp.UnknownPacket(packet_id=1023, body=b"x" * (4 * 1024 * 1024)),
-    }[case]()
-    errors = []
-    for encode in (codec.encode_packet, codec.prepare_packet):
-        with pytest.raises(bp.EncodeError) as caught:
-            encode(packet)
-        errors.append((caught.value.protocol, caught.value.packet_id, caught.value.offset, caught.value.reason))
-    assert errors[0] == errors[1]
+    with pytest.raises(ValueError, match="subclient IDs must fit 2 bits"):
+        codec.encode_packet(packet, **kwargs)

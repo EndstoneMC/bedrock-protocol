@@ -15,7 +15,6 @@ The runtime covers every active packet and dependent type in the 19
 
 ```python
 from bedrock_protocol import Codec, DecodeLimits, v2193
-from bedrock_protocol.wire import BatchCodec
 
 codec = Codec(2193, limits=DecodeLimits())
 request = v2193.RequestNetworkSettingsPacket(client_network_version=2193)
@@ -24,10 +23,6 @@ wire = codec.encode_packet(request)
 decoded = codec.decode_packet(wire)
 assert decoded.header.packet_id == 193
 assert decoded.payload.client_network_version == 2193
-
-batch = BatchCodec(codec)
-message = batch.encode([request])
-assert batch.decode(message)[0].payload.client_network_version == 2193
 ```
 
 A schema-unknown ID produces an owned `UnknownPacket`, whose body can be inspected
@@ -91,77 +86,17 @@ Text converts strictly to UTF-8 when accessed as a Python string. Malformed text
 may decode and later raise `UnicodeDecodeError` in a getter or `to_dict()`,
 including NBT string values. Invalid NBT compound names raise `RuntimeError`
 during iteration or materialization. Re-encoding preserves their native bytes.
-A later text conversion failure does not make `BatchCodec` terminal.
-
-## Batches and prepared packets
-
 `Codec` is immutable and permits independent calls from different threads.
-`BatchCodec` belongs to its creating thread and one connection; reentrant and
-cross-thread calls are rejected. Fatal decode failure makes it terminal, including
-configuration and encode calls.
-
-`Codec.prepare_packet(packet, sender_subclient_id=0, target_subclient_id=0)` uses
-the same serializer and validation as `encode_packet` and returns an immutable
-`EncodedPacket`. Its readonly `protocol`, `packet_id` and `len(token)` describe
-owned bytes including the subclient header. Tokens survive destruction of their
-codec and source packet and have no public constructor or buffer interface.
-
-```python
-prepared = codec.prepare_packet(request)
-message = batch.encode_prepared([prepared])
-```
-
-`encode_prepared` retains every token during the native call and accepts tokens
-from any codec with the same protocol. A non-token raises `TypeError`; a different
-protocol raises `EncodeError` with reason `prepared_packet_protocol_mismatch`.
-Iterable, type and protocol failures occur before encryption advances. Packet and
-batch limits still apply. Compression and encryption use the batch configuration
-at send time, so tokens can survive a negotiated configuration change.
-
-Wait for transport backpressure before `encode()` or `encode_prepared()`.
-Successful encoding advances cipher state: send every returned message in order.
-Argument validation before cipher mutation may fail without consuming the cipher.
-Change compression or encryption at the negotiated boundary after processing the
-current batch and before decoding the next. Batch framing supports raw DEFLATE,
-Snappy, no compression, checksum and directional counters; it adds no RakNet
-`0xFE` prefix.
-
-## Selection and error recovery
-
-`decode(data, packet_ids=...)` filters bodies after validating every frame length
-and header. `PacketBatch.headers`, `packet_count`, `decoded_count`, `filtered` and
-`skipped_packet_ids` describe selection. Unselected bodies may remain undecoded.
-By default, a selected-body failure rejects the entire batch and makes the codec
-terminal.
-
-`decode(data, recover_packet_errors=True)` recovers isolated malformed bodies.
-Successful values keep their normal immutable storage. `PacketBatch.errors` is a
-readonly tuple of owned `PacketDecodeError` values in wire order: `protocol`,
-zero-based `packet_index` into `headers`, `header`, frame-relative `offset`
-(including its header) and `reason`.
-
-Errors are distinct from filtered skips:
-`packet_count == decoded_count + len(skipped_packet_ids) + len(errors)`.
-Unknown IDs still yield `UnknownPacket`; every active known packet has a typed binding.
-
-Recovery covers malformed fields, truncation, discriminators, constants, varints,
-scalar narrowing, bitset overflow and trailing body bytes. Framing, compression,
-decryption, checksum, any packet header, resource limits and unexpected native
-exceptions remain fatal and return no partial batch. Headers validate before any
-body. Failed bodies retain their charges in the cumulative batch budget. A
-recovered batch consumes encryption state normally; lazy text conversion remains
-separate and is not validated eagerly by recovery.
 
 ## Resource limits
 
-Defaults are 4 MiB per packet, 16 MiB per decompressed batch, 4096 packets,
+Defaults are 4 MiB per packet,
 128 nesting levels, 1,048,576 decoded container elements and 64 MiB of accounted
 decoded storage. `DecodeLimits` configures depth, elements and storage; depth
 cannot exceed 128.
 
 Accounting covers string/binary bytes and native container elements, not process
-RSS or allocator overhead. Nested readers share one packet budget; selected
-bodies share one batch budget. Enclosing schema scopes count toward nesting, so
+RSS or allocator overhead. Nested readers share one packet budget. Enclosing schema scopes count toward nesting, so
 an NBT subtree's depth alone does not determine whether decoding fits. Successful
 construction, copying, materialization or encoding does not establish that a value
 fits a decode budget.
@@ -210,10 +145,8 @@ python -I -m pytest tests/compiler tests/python
 
 Replace `NATIVE_WHEEL` with the path produced by the native build.
 
-For standalone C++, leaving `BEDROCK_PROTOCOL_BUILD_PYTHON` and
-`BEDROCK_PROTOCOL_BUILD_WIRE` off avoids native Python and wire dependencies.
-Enabling wire support adds `bedrock::protocol_wire`. C++ and Python packages have
-independent package versions.
+For standalone C++, leaving `BEDROCK_PROTOCOL_BUILD_PYTHON` off avoids the native
+Python dependencies. C++ and Python packages have independent package versions.
 
 Code generation uses the build interpreter and source compiler without installing
 the native extension first. Native wheels include every supported version module

@@ -1,10 +1,8 @@
 import gc
 
 import pytest
-from conftest import varuint
 
 import bedrock_protocol as bp
-from bedrock_protocol.wire import BatchCodec
 
 CAPTURED = bytes.fromhex(
     "7c929901030b61626c65546f536c6565700203146f766572776f726c64506c61796572436f756e74"
@@ -55,21 +53,9 @@ def test_snapshot_identity_and_supported_version_boundary():
 
 
 @pytest.mark.parametrize("invalid", [CAPTURED[:-1], CAPTURED + b"\x00"])
-def test_incomplete_and_trailing_payload_reject_and_recover(invalid):
+def test_incomplete_and_trailing_payload_reject(invalid):
     with pytest.raises(bp.DecodeError):
         bp.Codec(2193).decode_packet(invalid)
-    batch = BatchCodec(bp.Codec(2193))
-    with pytest.raises(bp.DecodeError):
-        batch.decode(varuint(len(invalid)) + invalid)
-    with pytest.raises(RuntimeError, match="terminal"):
-        batch.decode(varuint(len(CAPTURED)) + CAPTURED)
-    recovered = BatchCodec(bp.Codec(2193)).decode(
-        varuint(len(invalid)) + invalid + varuint(len(CAPTURED)) + CAPTURED,
-        recover_packet_errors=True,
-    )
-    assert len(recovered.errors) == 1
-    assert recovered.errors[0].header.packet_id == 124
-    assert len(recovered) == 1 and recovered[0].payload.event_id == 9801
 
 
 @pytest.mark.parametrize(
@@ -80,9 +66,6 @@ def test_incomplete_and_trailing_payload_reject_and_recover(invalid):
         bp.DecodeLimits(max_decoded_elements=0),
     ],
 )
-def test_payload_resource_failures_stay_fatal(limits):
-    batch = BatchCodec(bp.Codec(2193, limits=limits))
+def test_payload_resource_limits_reject(limits):
     with pytest.raises(bp.DecodeError):
-        batch.decode(varuint(len(CAPTURED)) + CAPTURED, recover_packet_errors=True)
-    with pytest.raises(RuntimeError, match="terminal"):
-        batch.decode(varuint(len(CAPTURED)) + CAPTURED, recover_packet_errors=True)
+        bp.Codec(2193, limits=limits).decode_packet(CAPTURED)

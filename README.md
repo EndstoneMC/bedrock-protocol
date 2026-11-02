@@ -127,8 +127,7 @@ ctest --test-dir build --output-on-failure
 
 Code generation is part of the build. `BEDROCK_PROTOCOL_BUILD_TESTS` and
 `BEDROCK_PROTOCOL_INSTALL` default to on for top-level builds and off for
-subprojects. `BEDROCK_PROTOCOL_BUILD_PYTHON` and `BEDROCK_PROTOCOL_BUILD_WIRE` are
-optional and default to off. The wire target is `bedrock::protocol_wire`.
+subprojects. `BEDROCK_PROTOCOL_BUILD_PYTHON` is optional and defaults to off.
 
 Install the C++ headers, library and CMake package with `cmake --install build`.
 Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
@@ -148,4 +147,4 @@ golden bytes. See `CLAUDE.md` for schema conventions and source attribution.
 ## License
 
 The original C++ library, schema and compiler use [MIT](LICENSE). Native attribution
-is in [the wire notice](src/wire/NOTICE) and [the Python extension notice](src/python/NOTICE).
+is in [the Python extension notice](src/python/NOTICE).

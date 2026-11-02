@@ -3,10 +3,8 @@ from enum import IntEnum
 from uuid import UUID
 
 import pytest
-from conftest import varuint
 
 import bedrock_protocol as bp
-from bedrock_protocol.wire import BatchCodec
 
 
 @pytest.mark.parametrize("length", [0, 1, 15, 17, 32])
@@ -207,17 +205,11 @@ def test_integral_narrowing_accepts_int16_limits(wire, expected, golden):
 
 
 @pytest.mark.parametrize("wire", [b"\x80\x80\x04", b"\x81\x80\x04"])
-def test_integral_narrowing_rejects_int16_overflow_and_poison_batch(wire, golden):
+def test_integral_narrowing_rejects_int16_overflow(wire, golden):
     data = golden(148, "test_148_item_stack_response.cpp", "golden_ok")[:-1] + wire
     codec = bp.Codec(1001)
     with pytest.raises(bp.DecodeError):
         codec.decode_packet(data)
-    batch = BatchCodec(codec)
-    frame = varuint(len(data)) + data
-    with pytest.raises(bp.DecodeError):
-        batch.decode(frame)
-    with pytest.raises(RuntimeError, match="terminal"):
-        batch.decode(frame)
 
 
 @pytest.mark.parametrize("value", [0, 255])

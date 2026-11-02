@@ -7,23 +7,15 @@
 namespace bedrock::protocol::python {
 inline constexpr std::size_t maxPacketBytes = 4 * 1024 * 1024;
 
-enum class Recoverability { fatal, packet_body };
-
 struct NativeError {
     std::string reason;
     std::size_t offset = 0;
     int packet_id = -1;
-    Recoverability recoverability = Recoverability::fatal;
 };
 
 inline NativeError bodyError(std::error_code error, const bp::BinaryReader &reader)
 {
-    // These are the malformed-body codes emitted by the audited serializers.
-    // value_too_large also represents limits; the sticky budget state takes priority.
-    const bool malformed = error == std::errc::message_size || error == std::errc::illegal_byte_sequence ||
-                           error == std::errc::value_too_large;
-    return {error.message(), reader.getReadPointer(), -1,
-            malformed && !reader.resourceFailure() ? Recoverability::packet_body : Recoverability::fatal};
+    return {error.message(), reader.getReadPointer()};
 }
 
 struct PacketHeader {
@@ -42,12 +34,6 @@ struct DecodedPacket {
     int protocol;
     PacketHeader header;
     NativePacket payload;
-};
-
-struct EncodedPacket {
-    std::string bytes;
-    int protocol;
-    int packet_id;
 };
 
 struct UnknownPacket : Packet {
@@ -124,5 +110,4 @@ std::expected<PacketHeader, NativeError> readHeader(bp::BinaryReader &reader);
 [[noreturn]] void fail(const char *kind, int protocol, int packet_id, const std::string &reason,
                        std::optional<std::size_t> offset = {});
 void bindCodec(nb::module_ &module);
-void bindWire(nb::module_ &module);
 }  // namespace bedrock::protocol::python

@@ -7,5 +7,4 @@ NB_MODULE(_native, module)
     bindNbt(module);
     bindCodec(module);
     bindGenerated(module);
-    bindWire(module);
 }
