@@ -449,7 +449,7 @@ def test_prepared_respects_thread_reentrancy_and_terminal_state():
         batch.encode_prepared([prepared])
 
 
-@pytest.mark.parametrize("header", [b"\x82\x80\x00", varuint(2 | (2 << 10) | (3 << 12))])
+@pytest.mark.parametrize("header", [b"\x82\x80\x00", varuint(2 | (3 << 10) | (2 << 12))])
 @pytest.mark.parametrize("body", [b"\x00", b"\x00\x00\x00\x03trailing"])
 def test_batch_recovery_matches_full_frame_error_offsets(header, body, golden):
     codec = bp.Codec(2193)

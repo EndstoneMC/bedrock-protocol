@@ -35,8 +35,8 @@ std::expected<PacketHeader, NativeError> readHeader(bp::BinaryReader &reader)
     if ((*raw >> 14) != 0) {
         return std::unexpected(NativeError{"reserved_packet_header_bits", reader.getReadPointer()});
     }
-    return PacketHeader{static_cast<int>(*raw & 0x3ff), static_cast<int>((*raw >> 10) & 3),
-                        static_cast<int>((*raw >> 12) & 3)};
+    return PacketHeader{static_cast<int>(*raw & 0x3ff), static_cast<int>((*raw >> 12) & 3),
+                        static_cast<int>((*raw >> 10) & 3)};
 }
 
 namespace {
@@ -143,7 +143,7 @@ std::string Codec::encode(int id, const NativePacket &packet, int sender, int ta
 {
     std::string bytes;
     bp::BinaryWriter writer(bytes);
-    writer.writeVarInt<std::uint32_t>(static_cast<unsigned>(id) | (sender << 10) | (target << 12));
+    writer.writeVarInt<std::uint32_t>(static_cast<unsigned>(id) | (target << 10) | (sender << 12));
     packet.write(writer, packet.value.get());
     if (bytes.size() > maxPacketBytes) {
         throw std::length_error("packet_byte_limit");

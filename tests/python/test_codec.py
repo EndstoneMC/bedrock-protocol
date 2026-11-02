@@ -52,7 +52,7 @@ def test_independent_native_goldens(protocol, packet_id, filename, variable, gol
     prepared = codec.prepare_packet(decoded.payload)
     assert len(prepared) == len(data)
     assert batch.encode_prepared([prepared]) == batch.encode([decoded.payload]) == varuint(len(data)) + data
-    subclient_data = varuint(packet_id | (2 << 10) | (3 << 12)) + data[len(varuint(packet_id)) :]
+    subclient_data = varuint(packet_id | (3 << 10) | (2 << 12)) + data[len(varuint(packet_id)) :]
     assert codec.encode_packet(decoded.payload, sender_subclient_id=2, target_subclient_id=3) == subclient_data
     prepared = codec.prepare_packet(decoded.payload, sender_subclient_id=2, target_subclient_id=3)
     assert len(prepared) == len(subclient_data)
