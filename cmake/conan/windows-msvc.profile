@@ -9,6 +9,6 @@ compiler.runtime_type=Release
 build_type=Release
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
-tools.build:compiler_executables={"c":"clang-cl","cpp":"clang-cl"}
+tools.build:compiler_executables={"c":"cl","cpp":"cl"}
 tools.build:jobs=2
 tools.cmake.cmaketoolchain:user_presets=

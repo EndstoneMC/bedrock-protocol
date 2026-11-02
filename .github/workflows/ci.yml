@@ -64,11 +64,6 @@ jobs:
             $value = [Environment]::GetEnvironmentVariable($name, 'Process')
             if ($value) { "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
           }
-          $clangBin = Join-Path $vs 'VC\Tools\Llvm\x64\bin'
-          $clang = Join-Path $clangBin 'clang-cl.exe'
-          if (-not (Test-Path -LiteralPath $clang)) { throw "clang-cl is missing: $clang" }
-          $clangBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          & $clang --version
       - name: Install build tools and create a private profile
         run: |
           export CONAN_HOME="$RUNNER_TEMP/delivery-conan"
@@ -76,7 +71,7 @@ jobs:
           python -m pip install build conan-py-build==0.6.4
           mkdir -p "$CONAN_HOME/profiles"
           if [ "$RUNNER_OS" = Windows ]; then
-            cp cmake/conan/windows-clang.profile "$CONAN_HOME/profiles/delivery"
+            cp cmake/conan/windows-msvc.profile "$CONAN_HOME/profiles/delivery"
           else
             gcc_major="$(g++ -dumpfullversion | cut -d. -f1)"
             cat > "$CONAN_HOME/profiles/delivery" <<EOF
