@@ -6,14 +6,14 @@ paths:
 # Gating
 
 ## Redeclare or gate
-- Redeclare the whole class at the change point for a reshape: a cerealisation, a reorder, a rename, or a change to any field's type, a union gaining a case and a field turning optional included; a packet already cerealised is no exception.
+- Redeclare the whole class at the change point for a reshape: a cerealisation, a reorder, a rename, or any field's type changing (a union gaining a case, a field turning optional), even in a packet already cerealised.
 - `field(since=)` and `field(until=)` gate only a field's presence.
 - Never switch a field's type with `field(type=X, until=N)`, which removes the field at N, or by declaring one field twice over disjoint gates.
 - Tile redeclarations over one range: the same id, each `until=` meeting the next `since=`, and only the last open.
 - Model both sides of a cerealisation, gated at the boundary: the switch arms before it, a flat redeclaration after it.
 - Never assume the pre-cereal form used the same construct as the cerealised one: a cerealised optional or variant can be a plain `bool` and a value before it.
 - Read a delete plus an add at the same position with the same type as a rename, and check whether its meaning changed.
-- A union gaining or losing a case is a wire change, and an insertion renumbers every case after it.
+- Inserting a union case renumbers every case after it.
 - When BDS drops an always-true marker, gate that one `Literal[True]` field `until=<version>` and move nothing else.
 - Gate a whole type with `@type(since=, until=)`; outside that range the type does not exist.
 
