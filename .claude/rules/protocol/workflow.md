@@ -29,7 +29,7 @@ paths:
 - Never assume a packet's pre-floor shape from its cerealised one, or the reverse.
 - Never re-derive a whole pre-cereal body from Sandertv/gophertunnel; its Marshal history says only what differed at the time.
 - First ask whether a back-port is only a gate edit.
-- Never fold a drive-by correction into a version bump; land it separately.
+- Never re-baseline, and never fold a drive-by correction into a version bump; land it separately.
 - Diff a packet's whole transitive type closure across EndstoneMC/protocol-docs branches before modelling it; a new branch is not evidence of change.
 
 ## Forward
@@ -54,7 +54,7 @@ paths:
 - Decide cerealisation per packet from dump presence (`sources.md`); a packet file new between branches is a candidate.
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
-- Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer, finish it in the binary, and gate it at the cerealisation boundary.
+- Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.
 
 ## Back-port
 
