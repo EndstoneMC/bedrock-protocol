@@ -1,0 +1,17 @@
+line-length = 120
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "C4", "RET", "PT", "PIE", "ERA", "T20", "ARG", "RUF", "N"]
+
+[lint.isort]
+known-first-party = ["bedrock_protocol", "bedrock_protocol_compiler"]
+
+[lint.flake8-pytest-style]
+raises-require-match-for = ["*"]
+
+[lint.per-file-ignores]
+"protocol/**" = ["E501", "F811", "F821", "N", "ARG", "UP007", "PIE794", "PIE796"]
+"**/bench_*.py" = ["T20"]
+"conanfile.py" = ["RUF012"]
+"src/**" = ["B", "UP", "PT", "T20", "ARG", "RUF"]
+"tests/compiler/**" = ["UP", "RET", "PT"]

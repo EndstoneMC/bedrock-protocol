@@ -33,13 +33,3 @@ testpaths = ["tests/compiler"]
 packages = ["bedrock_protocol_compiler"]
 python_version = "3.12"
 strict = true
-
-[tool.ruff]
-line-length = 120
-lint.select = ["I", "E", "F"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["bedrock_protocol", "bedrock_protocol_compiler"]
-
-[tool.ruff.lint.per-file-ignores]
-"protocol/*.py" = ["F811", "F821"]
