@@ -3,6 +3,7 @@ paths:
   - "include/**"
   - "python/**/*.{cpp,hpp,h}"
 ---
+
 # Hand-written C++
 
 - Include the repo's own headers with quotes and the full path from the include root (`"bedrock/protocol/stream.hpp"`); use `<>` only for the standard library and third-party headers; never use `./` or `../`.
