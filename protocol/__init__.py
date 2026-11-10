@@ -14,9 +14,7 @@ An enum member may also pair its value with the string BDS writes,
 `HIGH_PANTS = 8, "High_Pants"`, the way `enum.Enum` spells `MONDAY = 1, "Mon"`.
 cereal folds an enumerator's bound name at bind time, so a name-coded enum
 reaches the wire lowercased and the compiler applies the fold: casing is never
-the schema's to carry, but the separator is. Pair only the members BDS separates
-where the C++ spelling joins -- `EasingType` is snake all the way down
-(`in_out_quad`), the EAS operations are screaming (`ALPHA_BLEND`). The fold
+the schema's to carry, but the separator is. The fold
 reaches every enum's reflected name, name-coded or not, so `enum_name` is
 lowercase and `enum_cast` folds what it is given.
 The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
@@ -32,12 +30,7 @@ does not: no member is generated, the write emits the first value, and the read
 rejects anything the annotation does not list. Bools take the one-byte wire on
 their own; an integer literal needs `field(type=<integer primitive>)` for its
 width, and an `Enum.MEMBER` needs none -- the enum's underlying type derives the
-wire the way it does for an enum-typed field. Use it where the wire carries a value
-the sender never varies: cereal binds the tag inside a variant alternative as a
-compile-time constant, and the dump gives such a field a `value`. The field keeps
-the name BDS bound it under, unless it is bug noise -- that takes a `_`-prefixed
-name. cereal prefixes a dynamic member with an always-true member-present byte, so an
-optional member reads `_unused: Literal[True]` then `x: T | None`.
+wire the way it does for an enum-typed field.
 """
 
 from enum import auto
@@ -63,8 +56,6 @@ def value(
 
     - `v`: explicit wire value. Omit to auto-number as `previous_member + 1`,
       mirroring `enum.auto()` but allowing the version-gating kwargs below.
-      For an auto-numbered member with no other options, prefer plain
-      `enum.auto()` -- shorter and more idiomatic.
     - `name`: the string BDS writes, for a member a plain `Enum` would spell
       `MEMBER = 3, "WireName"`. Spelled here so the escape reaches an `IntEnum`
       or `StrEnum` member, which cannot carry a pair.
@@ -74,10 +65,6 @@ def value(
     - `since`: first protocol version where the member is present (inclusive).
     - `until`: first protocol version where the member is removed (exclusive),
       so the member is present in `[since, until)`.
-
-    An enum whose members were renumbered is redeclared over adjacent ranges,
-    like a reshaped struct; `since` / `until` here cover a member simply
-    arriving or going inside one range.
     """
     return auto() if v is None else v
 
@@ -116,10 +103,7 @@ def field(
       for the form that carries a case index instead.
     - `since`: protocol version that introduced the field.
     - `until`: first protocol version where the field is removed (exclusive),
-      so the field is present in `[since, until)`. These gate a field that is
-      simply absent over part of the range; a field whose *type* moved is a
-      reshape, and the class is redeclared over adjacent ranges instead (see
-      `type` and `packet`).
+      so the field is present in `[since, until)`.
     - `when`: a one-argument lambda gating the field on the value of earlier
       fields in the same struct, e.g. `when=lambda p: p.action == Foo.BAR`.
       Unlike `X | None`, nothing marks presence on the wire -- both serialize
@@ -148,18 +132,13 @@ def field(
     - `count`: a one-argument lambda whose body is an integer expression
       over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
       valid on a `list[T]` field, or on a `list[T] | None` whose presence
-      flag is a separate matter. A length that is a constant is a size rather
-      than an expression -- spell that `array[T, N]` and let the type carry
-      it. The wire has no length prefix -- both serialize and deserialize
+      flag is a separate matter. The wire has no length prefix -- both serialize and deserialize
       compute the element count by evaluating the expression against the
       surrounding struct. Setting `count=` suppresses
       the default `prefix=`; passing an explicit `prefix=` together with
       `count=` is an error. The expression may reference earlier fields
       (`p.<name>`), `len(p.<name>)` of an earlier list, map or string,
-      integer literals, and arithmetic operators `*`, `+`, `-`. Use this for
-      inline arrays sized by sibling fields (BDS's shaped recipe grid, for
-      instance, is `width * height` ingredients with no separate count on the
-      wire) and for parallel runs sharing one count (`len(p.entries)`).
+      integer literals, and arithmetic operators `*`, `+`, `-`.
     - `cereal`: which declaration of the annotated type this reference reaches.
       A shared type's wire form is per call site, so where BDS both cerealises a
       type and writes it by hand, `cereal=False` picks the `@type(cereal=False)`
@@ -174,11 +153,10 @@ def field(
     a real field and gate each arm on it with `when=`.
 
     Two cases where one is `None` are an optional instead, since that is what
-    BDS writes almost everywhere: a presence byte, then the payload. Spell the
-    union `typing.Union[T, None]` where BDS really did cerealise a two-case
-    variant -- the wire then carries the case index over the cases in
-    declaration order, which is the *inverse* of the presence byte
-    (`Union[T, None]` writes 0 for the payload, an optional writes 1).
+    BDS writes almost everywhere: a presence byte, then the payload.
+    `typing.Union[T, None]` is a two-case variant whose wire carries the case
+    index over the cases in declaration order, which is the *inverse* of the
+    presence byte (`Union[T, None]` writes 0 for the payload, an optional writes 1).
     DisconnectPacket's messages are the live case.
 
     Any keyword this signature does not list is a compile error, as is one the
@@ -225,9 +203,7 @@ def type(
     cerealised at 944 while packet 63 writes the same class through
     `SerializedSkinImpl::write` until 2168.
 
-    Use it only where BDS reuses one class name for two wire shapes. Where BDS
-    has a second name for the cerealised form, declare that name instead
-    (`cerealizer<NetworkItemStackDescriptor>::SerializedData`). It applies to a
+    It applies to a
     module-scope declaration; a nested type takes its owner's flavour. A packet
     never takes it: a packet id has one wire shape per protocol version, so its
     cerealisation is an ordinary `since=` / `until=` reshape.
@@ -284,9 +260,7 @@ class array:
 
     Spell as `array[T, N]` in a field annotation, in `std::array`'s own order:
     exactly N elements go out back to back, and nothing on the wire marks the
-    count. Reach for it where BDS declares the member `std::array` and both
-    sides therefore already know how many elements there are; `list[T]` stays
-    the length-prefixed sequence. It nests, so BDS's sixteen rows of sixteen
+    count. It nests, so BDS's sixteen rows of sixteen
     are `array[array[int8, 16], 16]`. N is an integer literal or a member of
     an enum nested in the same class, as a `bitset[N]` width is.
     """
