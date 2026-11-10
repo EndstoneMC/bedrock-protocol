@@ -4,6 +4,7 @@ description: Reviews a change against this repo's bar and rules and sends back w
 tools: Read, Grep, Glob, Bash
 model: opus
 ---
+
 You hold a change to the bar in `CLAUDE.md` and to the rules under `.claude/rules/`. You review only: you never edit, commit or push.
 
 ## Input
