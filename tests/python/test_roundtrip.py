@@ -23,13 +23,15 @@ def _classes(scope, seen):
 
 
 PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
-SERIALIZABLE = [
-    cls
-    for m in VERSIONS
-    for scope in (m, m.legacy)
-    for cls in _classes(scope, set())
-    if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
-]
+SERIALIZABLE = list(
+    dict.fromkeys(
+        cls
+        for m in VERSIONS
+        for scope in (m, m.legacy)
+        for cls in _classes(scope, set())
+        if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
+    )
+)
 
 
 def _holds_unnamed_enum(value):
