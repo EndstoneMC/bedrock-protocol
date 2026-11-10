@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git add -A)",
+      "Bash(git add -A *)",
+      "Bash(git add --all)",
+      "Bash(git add --all *)",
+      "Bash(git add .)",
+      "Bash(git add . *)",
+      "Bash(git add -u)",
+      "Bash(git add -u *)",
+      "Bash(git add --update)",
+      "Bash(git add --update *)",
+      "Bash(git commit -a*)",
+      "Bash(git commit --all*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/reject-attribution.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
