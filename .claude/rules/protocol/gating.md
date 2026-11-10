@@ -6,6 +6,7 @@ paths:
 # Gating
 
 ## Redeclare or gate
+
 - Redeclare the whole class at the change point for a reshape: a cerealisation, a reorder, a rename, or any field's type changing (a union gaining a case, a field turning optional), even in a packet already cerealised.
 - `field(since=)` and `field(until=)` gate only a field's presence.
 - Never switch a field's type with `field(type=X, until=N)`, which removes the field at N, or by declaring one field twice over disjoint gates.
@@ -18,6 +19,7 @@ paths:
 - Gate a whole type with `@type(since=, until=)`; outside that range the type does not exist.
 
 ## What the evidence separates
+
 - Gate only the fields and types that the evidence separates.
 - Check that two eras really encode differently before splitting anything.
 - Before calling a field wrong because the target era lacks it, check whether it is right at the other era; if it is, that is two models, not a fix.
@@ -25,6 +27,7 @@ paths:
 - Gate a retro-fix at the older era it corrects.
 
 ## Packets and ids
+
 - Gate a packet from the version that introduced it; an ungated `@packet` claims protocol 0.
 - Gate a packet's body and its `MinecraftPacketIds` member at the same version, in the same commit.
 - An id that moved is a break for the packet that took it, never a rename.
@@ -34,6 +37,7 @@ paths:
 - "Modelled" is not "supported at this version"; the gate is the claim.
 
 ## Lowering a gate
+
 - Never lower a gate past what the evidence covers; below a cerealisation, lowering it becomes real modelling.
 - Treat gates on the schema's bootstrap floor as unverified; sweep them by diffing each packet's dump between the target and the floor branch.
 - Confirm each sweep candidate with a closure diff, because a packet's own JSON does not clear its closure.
