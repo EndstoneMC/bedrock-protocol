@@ -16,7 +16,7 @@ paths:
 
 ## Where a name comes from
 
-- A name taken from EndstoneMC/bedrock-headers at the era's branch needs no TODO; cite that branch in the commit.
+- A name taken from EndstoneMC/bedrock-headers at the era's branch needs no TODO.
 - On forward work, name anything the newest header branch declares as that branch does; it lists every enumerator, bound or not. Name anything newer by heuristic.
 - Take a packet's name from its class header, not the id-enum symbol, which can be a stale alias; a deprecated suffix still names the same packet.
 - Never take a name or a type from Sandertv/gophertunnel or CloudburstMC/Protocol.
@@ -25,7 +25,8 @@ paths:
 
 - Keep the existing declaration's names, field order and type vocabulary unless evidence names a change.
 - Keep the DSL's name when the dump labels a field differently; dump labels are cereal display strings and they drift.
-- Turn a genuinely new label into snake_case that follows the module's existing vocabulary rather than an awkward label's literal words (`"Bypass Listener Range Check"` becomes `bypass_listener_range_check`).
+- Turn a genuinely new label into snake_case that reads like its neighbours (`"Bypass Listener Range Check"` becomes `bypass_listener_range_check`).
+- Follow the module's existing vocabulary rather than transcribing an awkward label literally.
 - Never rename an existing field as a side effect of a version bump; a real BDS rename needs its own evidence.
 
 ## References
