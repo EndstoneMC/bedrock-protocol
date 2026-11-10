@@ -14,7 +14,7 @@ paths:
 - Cross-check it against EndstoneMC/bedrock-server-data's `versions.json` and minecraft.wiki's Protocol version page.
 - Stop and ask before modelling a number that none of them carries.
 - An EndstoneMC/protocol-docs branch is a network version, not a release order, and it can bump within itself; re-read its README after every fetch.
-- Pin the protocol-docs SHA you diffed; the version commit quotes it with the build you dumped (`workflow.md`).
+- Pin the protocol-docs SHA you diffed and the build you dumped.
 - A protocol number does not identify a wire format: Mojang changes the wire within one number, and `since=` cannot express that.
 - Diff the releases of one update line through its protocol-docs branch's history, taking one commit per stable release.
 
