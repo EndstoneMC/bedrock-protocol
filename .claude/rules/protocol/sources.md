@@ -15,7 +15,7 @@ An era is one modelled protocol and the BDS build that reports it.
 | names, nesting, C++ types, member order | EndstoneMC/bedrock-headers at the era's `android/rNN_uN` branch, never head |
 | wire of a cerealised packet (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
 | wire of a hand-written packet | the era's `<Packet>::write`, decompiled in that build's IDA database |
-| golden bytes | what Sandertv/gophertunnel marshals (`.claude/rules/tests.md`) |
+| golden bytes | what BDS writes through bedrock-dumper; Sandertv/gophertunnel where BDS cannot write the packet (`.claude/rules/tests.md`) |
 | dating | MemoriesOfTime/Nukkit-MOT and CloudburstMC/Protocol (`versions.md`) |
 | the step inside a cycle | Mojang/bedrock-protocol-docs `legacy_changelogs/` (`versions.md`) |
 
@@ -56,6 +56,7 @@ An era is one modelled protocol and the BDS build that reports it.
 
 - A packet missing from the dump is not cerealised at that version, and the dump cannot describe it.
 - Check dump presence first: a packet present at both eras is settled by the dump, within the blind spots below; where it is absent at either era, a dump hunk is only a pointer and an empty dump diff is no finding.
+- Where BDS's hand-written writer and its cereal writer disagree, model the cereal writer, which is what the dump describes, and record the disagreement in the commit body.
 - A shared type's dump entry covers only the packets the dump also lists; a hand-written call site may encode it differently, and the dump shows no sign of it.
 - An unchanged dump is no proof of an unchanged wire; compile-time TypeSchema specialisations are invisible to it.
 - Suspect a TypeSchema specialisation flip when a packet grows by a multiple of a fixed array's outer extent; confirm statically from the RTTI name, then the vtable, then the read virtual's error strings.
