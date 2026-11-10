@@ -51,7 +51,7 @@ paths:
 ## Cerealisation
 
 - A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
-- Decide cerealisation per packet below 2168 from dump presence (`sources.md`), and from 2168 from the packet's `SerializationMode` in its constructor; a packet file new between branches is a candidate.
+- Decide cerealisation per packet below 2168 from dump presence (`sources.md`); a packet file new between branches is a candidate. From 2168 model every packet from the dump, and where BDS writes it by hand (`SerializationMode` 0 to 2 in its constructor), check the hand-written writer against the dump in the binary before trusting the dump's shape.
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
 - Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.
