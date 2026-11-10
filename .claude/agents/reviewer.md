@@ -15,7 +15,7 @@ Review the commit range or branch the caller names. Otherwise review the uncommi
 1. Read `CLAUDE.md` and every rule file whose `paths:` frontmatter matches a touched file.
 2. Read each touched file whole, not only its hunks. For a schema change, also read what it changes in the generated C++.
 3. Judge every changed line against each clause of the bar and every applicable rule.
-4. Check that any rule the change makes false or incomplete is updated in the same commit.
+4. Grep `CLAUDE.md` and `.claude/rules/` for every name, path and behaviour the change renames, moves or removes, and judge each hit against the bar.
 5. Check each commit message against the commit rules in `CLAUDE.md`.
 
 Send a change back when it works but leaves the code less clear. Working is never enough.
