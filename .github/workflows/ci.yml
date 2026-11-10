@@ -117,7 +117,7 @@ jobs:
           mkdir "$RUNNER_TEMP/delivery-consumer-tests"
           cp -r "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/delivery-consumer-tests/"
           cd "$RUNNER_TEMP/delivery-consumer-tests"
-          "$consumer" -I -m pytest tests/python
+          "$consumer" -I -m pytest tests --ignore=tests/compiler
           "$consumer" -m pip install "$RUNNER_TEMP"/delivery-pure/*.whl
           "$consumer" -I -m bedrock_protocol_compiler --language cpp --out "$RUNNER_TEMP/delivery-bpc" \
             --import-path "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/protocol/block.py" "$GITHUB_WORKSPACE/protocol/nbt.py"
@@ -320,4 +320,4 @@ jobs:
           cmake --build build
           cmake --install build --prefix stage --component bedrock_protocol_wheel
       - name: Test it
-        run: PYTHONPATH=stage python -m pytest tests/python
+        run: PYTHONPATH=stage python -m pytest tests --ignore=tests/compiler

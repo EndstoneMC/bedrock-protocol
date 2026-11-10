@@ -4,9 +4,8 @@ import importlib
 import uuid
 
 import pytest
-from conftest import VERSIONS
 
-proto = VERSIONS[0]
+from bedrock_protocol import v2193 as proto
 
 
 def uvarint(value):

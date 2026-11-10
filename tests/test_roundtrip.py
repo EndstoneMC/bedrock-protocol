@@ -6,9 +6,18 @@ as bytes, through the class methods and through the version's dispatch by id.
 """
 
 import enum
+import importlib
+import pkgutil
 
 import pytest
-from conftest import VERSIONS
+
+import bedrock_protocol
+
+VERSIONS = [
+    importlib.import_module(f"bedrock_protocol.{module.name}")
+    for module in pkgutil.iter_modules(bedrock_protocol.__path__)
+    if module.name.startswith("v") and module.name[1:].isdigit()
+]
 
 
 def _classes(scope, seen):
