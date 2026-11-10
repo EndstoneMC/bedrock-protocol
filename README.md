@@ -142,7 +142,7 @@ shapes when the wire format changes.
 
 Wire definitions draw on [protocol-docs](https://github.com/EndstoneMC/protocol-docs),
 BDS type information and [gophertunnel](https://github.com/Sandertv/gophertunnel)
-golden bytes. See `CLAUDE.md` for schema conventions and source attribution.
+golden bytes. See `.claude/rules/protocol/` for schema conventions and source attribution.
 
 ## License
 
