@@ -61,7 +61,8 @@ def test_a_struct_field_is_a_live_reference_and_a_list_is_a_copy():
 
 def test_a_value_the_schema_does_not_name_crosses_as_an_int():
     packet = proto.PlayStatusPacket.from_bytes(bytes([0, 0, 0, 0xFF]))
-    assert packet.status == 255 and type(packet.status) is int
+    assert packet.status == 255
+    assert type(packet.status) is int
     assert "status=255" in repr(packet)
     assert bytes(packet) == bytes([0, 0, 0, 0xFF])
 
@@ -70,7 +71,7 @@ def test_a_value_the_schema_does_not_name_crosses_as_an_int():
     assert proto.ContainerClosePacket.from_bytes(bytes(window)) == window
     window.container_id = proto.ContainerID.INVENTORY
     assert window.container_id is proto.ContainerID.INVENTORY
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="does not fit the enum"):
         proto.ContainerClosePacket(container_id=1000)
 
 
@@ -99,15 +100,15 @@ def test_decode_is_strict():
     packet = proto.PlayStatusPacket(status=proto.PlayStatus.PLAYER_SPAWN)
     with pytest.raises(ValueError, match="trailing bytes"):
         proto.decode(packet.ID, bytes(packet) + b"\x00")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at byte"):
         proto.decode(packet.ID, bytes(packet)[:-1])
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="no packet 1023"):
         proto.decode(1023, b"")
 
 
 def test_every_packet_class_is_registered_under_its_id():
     for packet_id, cls in proto.PACKETS.items():
-        assert cls.ID == packet_id
+        assert packet_id == cls.ID
 
 
 def test_an_empty_list_keeps_its_element_type_through_a_round_trip():
@@ -122,5 +123,5 @@ def test_an_empty_list_keeps_its_element_type_through_a_round_trip():
     built = proto.BlockActorDataPacket(data=type(packet.data)({"a": ListTag(type=10)}))
     assert bytes(built) == wire
     assert ListTag(type=10) != ListTag()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a tag type"):
         ListTag(type=12)
