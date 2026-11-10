@@ -7,6 +7,7 @@ paths:
 # Sources
 
 ## Authorities
+
 An era is one modelled protocol and the BDS build that reports it.
 
 | Aspect | Authority |
@@ -27,6 +28,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Never take a `<Packet>::write` symbol as proof a packet is hand-written; only its body answers.
 
 ## Reading
+
 - Read protocol-docs and bedrock-headers with `git show origin/<branch>:<path>`, never from a local branch or after a checkout; a stale checkout looks like a finding.
 - Read each branch's commit subject before diffing; the same `rNN_uN` does not name the same release in bedrock-headers and protocol-docs.
 - Grep bedrock-headers, the dump and the schema case-insensitively; BDS spells `Serverbound` with a lowercase b.
@@ -35,6 +37,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Clone a missing reference repository rather than working around it.
 
 ## Weighing evidence
+
 - Never take silence in a reference, or agreement between two community codecs, as evidence; the codecs copy each other.
 - Where a community codec disagrees with BDS, the codec is wrong until proven otherwise.
 - Lean on a codec only for packets its consumer exercises (GeyserMC/Geyser for CloudburstMC/Protocol, df-mc/dragonfly for gophertunnel), after checking that a codec and a test exist.
@@ -50,6 +53,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Never decide cerealisation by grepping the binary for cereal display strings.
 
 ## The dump
+
 - A packet missing from the dump is not cerealised at that version, and the dump cannot describe it.
 - Check dump presence first: a packet present at both eras is settled by the dump, within the blind spots below; where it is absent at either era, a dump hunk is only a pointer and an empty dump diff is no finding.
 - A shared type's dump entry covers only the packets the dump also lists; a hand-written call site may encode it differently, and the dump shows no sign of it.
@@ -60,6 +64,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Before diffing two dumps, probe that one dumper generation made both (varint, `_be`, `uint32` repeats, string-typed enum fields); a generation gap is rendering noise, and whatever survives is settled in bedrock-headers at both branches or in the binary, with a control.
 
 ## Is a packet live
+
 - Never take an id-enum entry as evidence that a packet exists; BDS keeps ids long after the class is gone.
 - Take a packet as live when bedrock-headers has its `<Name>Packet.h`, after dropping any `_DEPRECATED`, `_deprecated` or `_Deprecated` suffix from the id name.
 - Run known-live packets through any presence probe as controls, in the same command.
@@ -67,4 +72,5 @@ An era is one modelled protocol and the BDS build that reports it.
 - Never treat a `getId` symbol as present for every packet in a stripped build.
 
 ## prototype
+
 - Never merge or rebase across the `prototype` branch, an unrelated history; port its ideas rather than its code, and re-verify every wire detail it holds.
