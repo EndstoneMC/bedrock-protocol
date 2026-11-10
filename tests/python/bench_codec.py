@@ -1,6 +1,6 @@
 """Encode+decode throughput of two mid-size packets.
 
-    python tests/python/bench_codec.py
+python tests/python/bench_codec.py
 """
 
 import timeit
