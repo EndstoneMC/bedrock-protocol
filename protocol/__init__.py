@@ -1,8 +1,8 @@
 """DSL surface consumed by the bpc compiler.
 
-A field name may carry a single trailing underscore to escape a Python keyword
-(PEP 8's `pass_`); the compiler drops it, so the wire and the generated C++ keep
-the BDS name.
+A field name that is a Python keyword carries a single trailing underscore
+(PEP 8's `pass_`), which the compiler drops, so the wire and the generated C++
+keep the BDS name; on any other name a trailing underscore is part of it.
 
 An enum member is spelled PEP 8 and reaches C++ as `CamelCase` --
 `REBECCA_PURPLE` is `RebeccaPurple`, which is BDS's own spelling for all but a
