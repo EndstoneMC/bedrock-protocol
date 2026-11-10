@@ -14,9 +14,9 @@ An enum member may also pair its value with the string BDS writes,
 `HIGH_PANTS = 8, "High_Pants"`, the way `enum.Enum` spells `MONDAY = 1, "Mon"`.
 cereal folds an enumerator's bound name at bind time, so a name-coded enum
 reaches the wire lowercased and the compiler applies the fold: casing is never
-the schema's to carry, but the separator is. The fold
-reaches every enum's reflected name, name-coded or not, so `enum_name` is
-lowercase and `enum_cast` folds what it is given.
+the schema's to carry, but the separator is. The fold reaches every enum's
+reflected name, name-coded or not, so `enum_name` is lowercase and `enum_cast`
+folds what it is given.
 The pair needs a plain `Enum` base, since `IntEnum` and `StrEnum` coerce a
 member to their own type and a pair is not one; a member spelled `value()`
 takes the string as its second positional instead.
@@ -132,9 +132,9 @@ def field(
     - `count`: a one-argument lambda whose body is an integer expression
       over earlier fields, e.g. `count=lambda p: p.width * p.height`. Only
       valid on a `list[T]` field, or on a `list[T] | None` whose presence
-      flag is a separate matter. The wire has no length prefix -- both serialize and deserialize
-      compute the element count by evaluating the expression against the
-      surrounding struct. Setting `count=` suppresses
+      flag is a separate matter. The wire has no length prefix -- both
+      serialize and deserialize compute the element count by evaluating the
+      expression against the surrounding struct. Setting `count=` suppresses
       the default `prefix=`; passing an explicit `prefix=` together with
       `count=` is an error. The expression may reference earlier fields
       (`p.<name>`), `len(p.<name>)` of an earlier list, map or string,
@@ -156,8 +156,8 @@ def field(
     BDS writes almost everywhere: a presence byte, then the payload.
     `typing.Union[T, None]` is a two-case variant whose wire carries the case
     index over the cases in declaration order, which is the *inverse* of the
-    presence byte (`Union[T, None]` writes 0 for the payload, an optional writes 1).
-    DisconnectPacket's messages are the live case.
+    presence byte (`Union[T, None]` writes 0 for the payload, an optional
+    writes 1). DisconnectPacket's messages are the live case.
 
     Any keyword this signature does not list is a compile error, as is one the
     compiler does not read. It never silently drops one.
@@ -203,10 +203,10 @@ def type(
     cerealised at 944 while packet 63 writes the same class through
     `SerializedSkinImpl::write` until 2168.
 
-    It applies to a
-    module-scope declaration; a nested type takes its owner's flavour. A packet
-    never takes it: a packet id has one wire shape per protocol version, so its
-    cerealisation is an ordinary `since=` / `until=` reshape.
+    `cereal=False` applies to a module-scope declaration; a nested type takes
+    its owner's flavour. A packet never takes it: a packet id has one wire
+    shape per protocol version, so its cerealisation is an ordinary
+    `since=` / `until=` reshape.
     """
     return _identity
 
@@ -260,9 +260,9 @@ class array:
 
     Spell as `array[T, N]` in a field annotation, in `std::array`'s own order:
     exactly N elements go out back to back, and nothing on the wire marks the
-    count. It nests, so BDS's sixteen rows of sixteen
-    are `array[array[int8, 16], 16]`. N is an integer literal or a member of
-    an enum nested in the same class, as a `bitset[N]` width is.
+    count. It nests, so BDS's sixteen rows of sixteen are
+    `array[array[int8, 16], 16]`. N is an integer literal or a member of an
+    enum nested in the same class, as a `bitset[N]` width is.
     """
 
     def __class_getitem__(cls, _item: tuple[Any, int]):
