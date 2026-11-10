@@ -461,6 +461,16 @@ class ItemStackRequestActionCreate:
 
 
 @type(until=2168)
+class ItemStackRequestActionPlaceInItemContainer_DEPRECATED:
+    pass
+
+
+@type(until=2168)
+class ItemStackRequestActionTakeFromItemContainer_DEPRECATED:
+    pass
+
+
+@type(until=2168)
 class ItemStackRequestActionLabTableCombine:
     pass
 
@@ -539,8 +549,8 @@ class ItemStackRequestData:
         | ItemStackRequestActionDestroy
         | ItemStackRequestActionConsume
         | ItemStackRequestActionCreate
-        | None
-        | None
+        | ItemStackRequestActionPlaceInItemContainer_DEPRECATED
+        | ItemStackRequestActionTakeFromItemContainer_DEPRECATED
         | ItemStackRequestActionLabTableCombine
         | ItemStackRequestActionBeaconPayment
         | ItemStackRequestActionMineBlock
