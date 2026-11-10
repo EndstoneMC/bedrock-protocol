@@ -1,0 +1,76 @@
+Checks: >
+  -*,
+  bugprone-*,
+  cert-dcl58-cpp,
+  cppcoreguidelines-macro-usage,
+  cppcoreguidelines-special-member-functions,
+  google-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-unused-raii,
+  -google-explicit-constructor,
+  -google-readability-todo,
+  -misc-const-correctness,
+  -misc-explicit-constructor,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-avoid-c-arrays,
+  -modernize-use-trailing-return-type,
+  -performance-enum-size,
+  -portability-avoid-pragma-once,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-isolate-declaration,
+  -readability-magic-numbers,
+  -readability-math-missing-parentheses,
+  -readability-named-parameter,
+  -readability-simplify-boolean-expr
+WarningsAsErrors: '*'
+HeaderFilterRegex: '/(include/bedrock|python)/'
+ExcludeHeaderFilterRegex: '/generated/'
+CheckOptions:
+  misc-unused-parameters.IgnoreVirtual: true
+  modernize-type-traits.IgnoreMacros: true
+  readability-implicit-bool-conversion.AllowPointerConditions: true
+  readability-implicit-bool-conversion.AllowIntegerConditions: true
+  cppcoreguidelines-macro-usage.AllowedRegexp: '^BEDROCK_PROTOCOL_'
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.ClassIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.StructIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.UnionCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypeAliasIgnoredRegexp: '^[a-z][a-z0-9_]*$'
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+  readability-identifier-naming.TypeTemplateParameterCase: CamelCase
+  readability-identifier-naming.ValueTemplateParameterCase: CamelCase
+  readability-identifier-naming.FunctionCase: aNy_CasE
+  readability-identifier-naming.MethodCase: camelBack
+  readability-identifier-naming.MethodIgnoredRegexp: '^[a-z][a-z0-9]*(_[a-z0-9]+)+$'
+  readability-identifier-naming.EnumConstantCase: aNy_CasE
+  readability-identifier-naming.ScopedEnumConstantCase: aNy_CasE
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.LocalVariableCase: lower_case
+  readability-identifier-naming.LocalConstantCase: lower_case
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.GlobalVariableCase: lower_case
+  readability-identifier-naming.GlobalConstantCase: lower_case
+  readability-identifier-naming.ConstexprVariableCase: lower_case
+  readability-identifier-naming.StaticConstantCase: lower_case
+  readability-identifier-naming.StaticVariableCase: lower_case
+  readability-identifier-naming.ClassConstantCase: lower_case
+  readability-identifier-naming.ClassMemberCase: lower_case
+  readability-identifier-naming.MemberCase: lower_case
+  readability-identifier-naming.PublicMemberSuffix: ''
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  readability-identifier-naming.ProtectedMemberSuffix: '_'
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
