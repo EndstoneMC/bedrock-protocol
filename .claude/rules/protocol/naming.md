@@ -11,7 +11,6 @@ paths:
 - Keep a BDS `Outer::Inner` nested; never flatten it to `OuterInner`.
 - Map `FooPacketPayload` onto `@packet FooPacket` and move its nested types into the packet; no `...PacketPayload` class exists in the schema.
 - Type actor ids as `ActorUniqueID` or `ActorRuntimeID` even where BDS declares a plain integer, keep the wire with `field(type=)` (`target_player_id: ActorUniqueID = field(type=int64)`), and pick which one from where BDS fills the member.
-- Escape a field name that is a Python keyword with one trailing underscore (`pass_`); any other trailing underscore is part of the name.
 - Enum members are the one exception to mirroring BDS (`enums.md`).
 
 ## Where a name comes from
