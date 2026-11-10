@@ -24,7 +24,7 @@ def _classes(scope, seen):
 
 PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
 SERIALIZABLE = [
-    (m, cls)
+    cls
     for m in VERSIONS
     for scope in (m, m.legacy)
     for cls in _classes(scope, set())
@@ -77,8 +77,8 @@ def test_a_default_packet_round_trips(module, cls):
     assert framed == packet
 
 
-@pytest.mark.parametrize(("module", "cls"), SERIALIZABLE, ids=_id)
-def test_a_default_value_round_trips(module, cls):
+@pytest.mark.parametrize("cls", SERIALIZABLE, ids=lambda cls: f"{cls.__module__}.{cls.__qualname__}")
+def test_a_default_value_round_trips(cls):
     value = cls()
     data = bytes(value)
     try:
