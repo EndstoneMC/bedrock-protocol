@@ -5,7 +5,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 ## The bar
 
 - Every line is one the owner can understand, and the architecture is beautiful; functionality is never the main goal. Clean, sharp, DRY, well structured, inspired by protobuf.
-- Do real engineering and be ethical: never patch over a defect to make something work; fix its cause and build what will still hold long into the future, so nobody is sent back to redo it. The quality check does not pass a workaround.
+- Do real engineering and be ethical: never patch over a defect to make something work; fix its cause and build what will still hold long into the future, so nobody is sent back to redo it. Build nothing ahead of need: every abstraction, layer, option and file earns its weight. The quality check passes neither a workaround nor over-engineering.
 - Code that needs an explanatory comment, or a decision that needs a diary, is wrong: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`, an open disagreement) or a golden's provenance.
 - A docstring says what the signature cannot: none on properties, obvious functions or tests.
 - Write no one-use helper function or lambda: inline the expression or bind a local named for the value. A lambda passed as an argument is fine.
