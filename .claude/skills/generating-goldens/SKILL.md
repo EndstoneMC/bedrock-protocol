@@ -41,5 +41,5 @@ Where a golden goes and how it is labelled is `.claude/rules/tests.md`; this is 
 - `go` refuses the commit's `go` directive -> run with `GOTOOLCHAIN=auto`.
 - The value is a type, not a packet -> call its `Marshal` on the same writer.
 - gophertunnel lacks a field the schema has at that era -> it cannot marshal the shape; assert it structurally (`tests.md`).
-- The bytes disagree with the schema -> follow the patch rule in `tests.md`; never edit the bytes to match.
+- The bytes disagree with the schema -> follow the patch rule in `tests.md`.
 - The header of a framed packet disagrees with BDS -> golden the body only (`.claude/rules/protocol/wire.md`).
