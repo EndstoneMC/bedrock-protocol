@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, Mapping
 
 if TYPE_CHECKING:
-    from bedrock_protocol.compiler.descriptor_pool import DescriptorPool
+    from bedrock_protocol_compiler.compiler.descriptor_pool import DescriptorPool
 
 # --- primitives ---------------------------------------------------------------
 

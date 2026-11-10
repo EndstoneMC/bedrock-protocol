@@ -156,7 +156,7 @@ class ResourcePackDataInfoPacket:
     chunk_size: uint32
     nb_chunks: uint32
     file_size: uint64
-    file_hash: str
+    file_hash: bytes
     is_premium: bool
     pack_type: PackType
 

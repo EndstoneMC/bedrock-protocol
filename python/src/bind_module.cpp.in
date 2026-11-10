@@ -1,0 +1,12 @@
+#include <bedrock/protocol/@BP_MODULE@.h>
+
+#include "binder.hpp"
+
+namespace bedrock::protocol::python {
+
+void bind_@BP_MODULE@_@BP_VERSION@(Version &version)
+{
+    bind_file<@BP_MODULE@_types<@BP_VERSION@>>(version);
+}
+
+}  // namespace bedrock::protocol::python

@@ -69,6 +69,19 @@ const std::string golden_v2168_net_id = bytes({
 
 }  // namespace
 
+TEST_CASE("inventory-content rejects integer enum narrowing without losing signed sentinels")
+{
+    std::string invalid;
+    bp::BinaryWriter writer(invalid);
+    writer.writeVarInt<std::uint32_t>(300);
+    invalid.append(golden_v2168.substr(1));
+    REQUIRE(rejects<PacketV2168>(invalid));
+
+    auto packet = sample<PacketV2168, bp::v2168::SerializedNetworkItemStackDescriptor>();
+    packet.inventory_id = static_cast<bp::ContainerID>(-2);
+    REQUIRE(decode<PacketV2168>(encode(packet)).inventory_id == static_cast<bp::ContainerID>(-2));
+}
+
 TEST_CASE("packet id is 49 at every version")
 {
     STATIC_REQUIRE(PacketV975::Id == 49);

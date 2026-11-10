@@ -15,6 +15,8 @@ else ()
 endif ()
 option(BEDROCK_PROTOCOL_BUILD_TESTS "Build the test suite" ${_tests_default})
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
+option(BEDROCK_PROTOCOL_BUILD_PYTHON "Build the Python runtime" OFF)
+set(BEDROCK_PROTOCOL_PYTHON_VERSIONS "2193" CACHE STRING "Protocol versions the Python extension binds")
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -34,6 +36,7 @@ set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedro
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
 set_target_properties(bedrock_protocol PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
         EXPORT_NAME protocol
         OUTPUT_NAME bedrock_protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
@@ -45,6 +48,7 @@ target_include_directories(bedrock_protocol PUBLIC
 if (BEDROCK_PROTOCOL_PREGENERATED)
     file(GLOB BEDROCK_PROTOCOL_GENERATED CONFIGURE_DEPENDS "${BEDROCK_PROTOCOL_HEADER_DIR}/*.cpp")
     target_sources(bedrock_protocol PRIVATE ${BEDROCK_PROTOCOL_GENERATED})
+    set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_GENERATED})
 else ()
     # The latest protocol the schema targets, read off the DSL surface so the C++
     # side and the compiler cannot disagree about it.
@@ -59,6 +63,7 @@ else ()
     include(BedrockProtocol)
     file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
     list(FILTER BEDROCK_PROTOCOL_SOURCES EXCLUDE REGEX "/_[^/]*\\.py$")
+    set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_SOURCES})
     bedrock_protocol_generate(
             TARGET bedrock_protocol
             INPUTS ${BEDROCK_PROTOCOL_SOURCES}
@@ -91,6 +96,13 @@ else ()
             "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedrock/protocol.hpp"
             @ONLY
     )
+endif ()
+
+# The schema modules, by stem: one generated header and source pair each.
+list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.[a-z]+$" "\\1")
+
+if (BEDROCK_PROTOCOL_BUILD_PYTHON)
+    add_subdirectory(python)
 endif ()
 
 # Tests

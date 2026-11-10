@@ -41,7 +41,9 @@ optional member reads `_unused: Literal[True]` then `x: T | None`.
 """
 
 from enum import auto
-from typing import Any, TypeAliasType, Union
+from types import UnionType
+from typing import Any, TypeAliasType
+from typing import Union as Union
 
 __version__ = 2225
 
@@ -82,7 +84,7 @@ def value(
 
 def field(
     *,
-    type: type[str | Union] | TypeAliasType | None = None,
+    type: type[str | UnionType] | TypeAliasType | None = None,
     since: int | None = None,
     until: int | None = None,
     when: Any = None,

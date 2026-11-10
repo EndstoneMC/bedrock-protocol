@@ -106,7 +106,7 @@ class ThingPacket:
         write = self.body(source, "void Serializer<ThingPacket>::serialize")
         self.assertIn("Serializer<Slot>::serialize(stream, e0);", write)
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
-        self.assertIn("out.slots[i0] = *v;", read)
+        self.assertIn("out.slots[i0] = std::move(*v);", read)
 
     def test_a_list_of_arrays_keeps_the_lists_prefix(self) -> None:
         """The prefix belongs to the `list[T]` alone: the array inside it still

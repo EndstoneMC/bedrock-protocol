@@ -199,7 +199,7 @@ grep -rn "<old>" protocol/ tests/ README.md      # must come back empty
 ## 2. Snapshots
 
 There is no version registry. `_snapshot_points` in
-`src/bedrock_protocol/compiler/descriptor_pool.py` takes `{0}` plus every change point
+`src/bedrock_protocol_compiler/compiler/descriptor_pool.py` takes `{0}` plus every change point
 every versioned type declares, unioned transitively across imports. The first `since=` /
 `until=` you write materializes the version: `base` (the floor, claiming validity from 0),
 then one `vNNNN` namespace per change point.

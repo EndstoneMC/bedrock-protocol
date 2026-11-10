@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from bedrock_protocol.descriptor import CompilerError, Enum, EnumValue
+from bedrock_protocol_compiler.descriptor import CompilerError, Enum, EnumValue
 
 from .field import type_includes
 from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES
@@ -65,6 +65,13 @@ class EnumGenerator:
         p.indent()
         for v in values:
             p.print(f'"{v.wire_name}",\n')
+        p.outdent()
+        p.print("}};\n\n")
+        p.print("template <>\n")
+        p.print(f"inline constexpr std::array<std::string_view, {n}> schema_names_v<{qualified}>{{{{\n")
+        p.indent()
+        for v in values:
+            p.print(f'"{v.name}",\n')
         p.outdent()
         p.print("}};\n\n")
         p.print("template <>\n")

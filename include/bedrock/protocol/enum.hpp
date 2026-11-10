@@ -39,6 +39,10 @@ inline constexpr std::array<std::string_view, 0> names_v{};
 template <typename E>
 inline constexpr std::string_view type_name_v{};
 
+// The members as the schema spells them (`REBECCA_PURPLE`), parallel to `names_v`.
+template <typename E>
+inline constexpr std::array<std::string_view, 0> schema_names_v{};
+
 template <typename E>
 inline constexpr auto count_v = values_v<E>.size();
 
@@ -181,6 +185,14 @@ template <typename E>
 [[nodiscard]] constexpr const auto &enum_names() noexcept
 {
     return detail::names_v<E>;
+}
+
+// Returns std::array with the schema's own member names, in declaration order.
+template <typename E>
+    requires detail::is_reflected_v<E>
+[[nodiscard]] constexpr const auto &enum_schema_names() noexcept
+{
+    return detail::schema_names_v<E>;
 }
 
 // Returns std::array with pairs (value, name), in declaration order.

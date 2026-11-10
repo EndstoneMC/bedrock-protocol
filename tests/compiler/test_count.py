@@ -30,7 +30,8 @@ class ThingPacket:
         write = self.body(source, "void Serializer<ThingPacket>::serialize")
         self.assertNotIn("writeVarInt<std::uint32_t>(value.cells.size())", write)
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
-        self.assertIn("for (auto rep0 = 256; rep0 > 0; --rep0)", read)
+        self.assertIn("detail::countValue(256)", read)
+        self.assertIn("for (auto rep0 = count0; rep0 > 0; --rep0)", read)
 
     def test_counted_list_may_be_optional(self) -> None:
         """A cerealised optional list still has its length written elsewhere:
@@ -55,7 +56,8 @@ class ThingPacket:
 
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
         self.assertIn("std::vector<std::int8_t> staged{};", read)
-        self.assertIn("for (auto rep0 = 256; rep0 > 0; --rep0)", read)
+        self.assertIn("detail::countValue(256)", read)
+        self.assertIn("for (auto rep0 = count0; rep0 > 0; --rep0)", read)
         self.assertNotIn("stream.readVarInt<std::uint32_t>()", read)
 
     def test_an_optional_count_reads_the_struct_not_the_staging_temporary(self) -> None:
@@ -74,7 +76,11 @@ class ThingPacket:
 """
         )
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
-        self.assertIn("for (auto rep0 = (out.width) * (out.height); rep0 > 0; --rep0)", read)
+        self.assertIn(
+            "detail::countOperation(detail::countValue(out.width), detail::countValue(out.height), '*')",
+            read,
+        )
+        self.assertIn("for (auto rep0 = count0; rep0 > 0; --rep0)", read)
         self.assertNotIn("staged.width", read)
 
     def test_count_may_read_an_earlier_lists_length(self) -> None:
@@ -91,7 +97,8 @@ class ThingPacket:
 """
         )
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
-        self.assertIn("for (auto rep0 = out.entries.size(); rep0 > 0; --rep0)", read)
+        self.assertIn("detail::countValue(out.entries.size())", read)
+        self.assertIn("for (auto rep0 = count0; rep0 > 0; --rep0)", read)
 
     def test_len_needs_a_sized_field(self) -> None:
         message = self.rejects(

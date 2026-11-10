@@ -47,8 +47,8 @@ wheels = [
 ]
 
 [[package]]
-name = "bedrock-protocol"
-version = "0.4.6"
+name = "bedrock-protocol-compiler"
+version = "0.5.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

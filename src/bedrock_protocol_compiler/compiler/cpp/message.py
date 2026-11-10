@@ -9,7 +9,7 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol.descriptor import CondType, Enum, Field, FieldType, LiteralType, Predicate, Struct
+from bedrock_protocol_compiler.descriptor import CondType, Enum, Field, FieldType, LiteralType, Predicate, Struct
 
 from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes
@@ -100,6 +100,9 @@ class MessageGenerator:
             p.print(f"static constexpr int Id = {self._struct.packet_id};\n")
         for ctype, fname in rendered:
             p.print(f"{ctype} {fname}{{}};\n")
+        if has_body or self._struct.nested:
+            p.print("\n")
+        p.print(f"friend bool operator==(const {self._struct.name} &, const {self._struct.name} &) = default;\n")
         p.outdent()
         p.print("};\n")
 
@@ -239,6 +242,8 @@ class MessageGenerator:
         p.print("\n")
         p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
         with p.block():
+            p.print("BinaryReader::ReadScope scope(stream);\n")
+            p.print("if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));\n")
             p.print(f"{q} out;\n")
             for guard, group in self._groups():
                 if guard is None:

@@ -15,7 +15,7 @@ from typing import Callable, Mapping, cast
 
 import griffe
 
-from bedrock_protocol.descriptor import (
+from bedrock_protocol_compiler.descriptor import (
     BUILTIN_ANNOTATIONS,
     INT_WIDTHS,
     INTEGER_PRIMITIVES,
@@ -240,8 +240,8 @@ class Parser:
                 for attr in decl.attributes.values():
                     (version,) = self.field(attr, qualified, earlier).versions
                     earlier[_field_name(attr.name)] = version.type
-                    narrowed = FieldVersion(
-                        type=version.type,
+                    narrowed = replace(
+                        version,
                         since=_tighten(version.since, lo, max),
                         until=_tighten(version.until, hi, min),
                     )
@@ -1382,7 +1382,20 @@ _Keywords = tuple[frozenset[str], Mapping[str, str]]
 _NO_DEPRECATION = "the compiler emits no [[deprecated]] attribute; drop the keyword or say it in the commit message"
 
 _FIELD_KEYWORDS: _Keywords = (
-    frozenset({"type", "since", "until", "when", "endian", "prefix", "count", "cereal", "_group_when", "_group_id"}),
+    frozenset(
+        {
+            "type",
+            "since",
+            "until",
+            "when",
+            "endian",
+            "prefix",
+            "count",
+            "cereal",
+            "_group_when",
+            "_group_id",
+        }
+    ),
     {
         "tag": (
             "a union is always prefixed by a uvarint32 index over its cases in declaration order -- "

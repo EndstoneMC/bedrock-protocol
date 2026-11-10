@@ -546,7 +546,7 @@ class AutomationClientConnectPacket:
 
 class MissingBlobData:
     blob_id: uint64
-    blob_data: str
+    blob_data: bytes
 
 
 @packet(id=136)

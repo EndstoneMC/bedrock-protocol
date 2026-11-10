@@ -39,7 +39,7 @@ class LevelChunkPacket:
     client_request_sub_chunk_limit: uint16 = field(when=lambda p: p.sub_chunks_count == 4294967294)
     cache_enabled: bool
     cache_metadata: list[SubChunkMetadata] = field(when=lambda p: p.cache_enabled)
-    serialized_chunk: str
+    serialized_chunk: bytes
 
 
 @packet(id=58, since=2168)
@@ -53,7 +53,7 @@ class LevelChunkPacket:
     client_request_sub_chunk_limit: varint32 | None
     cache_enabled: bool
     cache_metadata: list[SubChunkMetadata]
-    serialized_chunk: str
+    serialized_chunk: bytes
     is_client_biome_update: bool = field(since=2225)
 
 
@@ -93,7 +93,7 @@ class SubChunkPacket:
     class SubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult
-        serialized_sub_chunk: str = field(when=lambda d: d.result != SubChunkRequestResult.SUCCESS_ALL_AIR)
+        serialized_sub_chunk: bytes = field(when=lambda d: d.result != SubChunkRequestResult.SUCCESS_ALL_AIR)
         height_map_data: HeightmapData
         blob_id: uint64
 
@@ -101,7 +101,7 @@ class SubChunkPacket:
     class UncachedSubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult
-        serialized_sub_chunk: str
+        serialized_sub_chunk: bytes
         height_map_data: HeightmapData
 
     cache_enabled: bool
@@ -153,7 +153,7 @@ class SubChunkPacket:
     class SubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult
-        serialized_sub_chunk: str | None
+        serialized_sub_chunk: bytes | None
         height_map_data: HeightmapData
         blob_id: uint64 | None
 

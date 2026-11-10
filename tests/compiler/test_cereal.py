@@ -44,9 +44,9 @@ class ThingPacket:
     hand_written: Rule = field(cereal=False)
 """
         )
-        self.assertIn("struct Rule {\n    std::uint32_t value{};\n};", header)
+        self.assertIn("struct Rule {\n    std::uint32_t value{};\n", header)
         legacy = self.namespace(header, "legacy")
-        self.assertIn("struct Rule {\n    std::uint32_t value{};\n};", legacy)
+        self.assertIn("struct Rule {\n    std::uint32_t value{};\n", legacy)
         self.assertIn("Rule cerealised{};", header)
         self.assertIn("legacy::Rule hand_written{};", header)
 

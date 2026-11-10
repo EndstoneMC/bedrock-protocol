@@ -65,3 +65,8 @@ class CompoundTag:
 @builtin
 class IntArrayTag:
     """A length-prefixed array of varint-coded 32-bit integers."""
+
+
+@builtin
+class CompoundTagData:
+    """A compound's named tags and its closing TAG_End, with no root tag id or name."""

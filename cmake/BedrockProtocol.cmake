@@ -17,27 +17,30 @@ set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/..")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS
-    "${_compiler_dir}/src/bedrock_protocol/*"
+    "${_compiler_dir}/src/bedrock_protocol_compiler/*.py"
     "${_compiler_dir}/pyproject.toml")
 
-# bpc is a uv-managed Python package. The wrapper per-platform routes through
-# `uv run --project`, which syncs the project's venv and invokes the `bpc`
-# script entry point declared in compiler/pyproject.toml.
-find_program(UV_EXECUTABLE uv)
-if(NOT UV_EXECUTABLE)
-    message(FATAL_ERROR
-        "bedrock-protocol: uv is required to run the bpc compiler. "
-        "Install it from https://docs.astral.sh/uv/")
+get_filename_component(_compiler_dir "${_compiler_dir}" ABSOLUTE)
+if(BEDROCK_PROTOCOL_COMPILER_PYTHON)
+    set(_launcher "\"${BEDROCK_PROTOCOL_COMPILER_PYTHON}\"")
+else()
+    find_program(UV_EXECUTABLE uv)
+    if(NOT UV_EXECUTABLE)
+        message(FATAL_ERROR
+            "bedrock-protocol: uv is required to run the bpc compiler. "
+            "Install it from https://docs.astral.sh/uv/")
+    endif()
+    set(_launcher "\"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" python")
 endif()
 
 if(WIN32)
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
-    file(WRITE "${_compiler_exe}"
-        "@\"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc %*\r\n")
+    file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
+        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@${_launcher} -m bedrock_protocol_compiler %*\r\n")
 else()
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
-    file(WRITE "${_compiler_exe}"
-        "#!/bin/sh\nexec \"${UV_EXECUTABLE}\" run --project \"${_compiler_dir}\" bpc \"$@\"\n")
+    file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
+        "#!/bin/sh\nPYTHONPATH=\"${_compiler_dir}/src\" exec ${_launcher} -m bedrock_protocol_compiler \"$@\"\n")
     file(CHMOD "${_compiler_exe}" PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE

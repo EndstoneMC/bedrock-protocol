@@ -229,7 +229,7 @@ class LevelEventPacket:
 @packet(id=124)
 class LevelEventGenericPacket:
     event_id: varint32
-    data: CompoundTag
+    data: CompoundTagData
 
 
 @packet(id=118)

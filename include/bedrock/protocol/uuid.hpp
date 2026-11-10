@@ -11,6 +11,8 @@ namespace bedrock::protocol {
 struct UUID {
     std::uint64_t most_significant_bits;
     std::uint64_t least_significant_bits;
+
+    friend bool operator==(const UUID &, const UUID &) = default;
 };
 
 template <>
