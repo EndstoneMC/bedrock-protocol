@@ -37,7 +37,7 @@ paths:
 - Spell `Union[T, None]` only where BDS cerealised a two-case variant; `T | None` is an optional.
 
 ## Shared types
-- Model a shared type's encoding per call site, never with one `@type(until=)`/`@type(since=)` pair over the shared type. Declare the hand-written shape `@type(cereal=False)` and reach it with `field(cereal=False)`.
+- Model a shared type's encoding per call site, never with one `@type(until=)`/`@type(since=)` pair over the shared type.
 - Use `cereal=False` only where BDS reuses one class name for two wire shapes. Where BDS names the cerealised form separately, declare that name instead.
 
 ## Growing the DSL
