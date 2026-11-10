@@ -18,8 +18,8 @@ paths:
 - Give every overload of a name one meaning; a length-prefixed write and a raw write take different names.
 - Use `std::` fixed-width integers at the width the wire declares, and `std::size_t` for counts and indices.
 - Capture explicitly in a lambda that outlives its scope; use `[&]` only in one that runs in place.
-- Constrain templates with concepts, `if constexpr` and fold expressions; never use SFINAE, `enable_if` or recursive instantiation.
-- Own heap objects by value or through `std::unique_ptr`; never use an owning `new`.
+- Constrain templates with concepts, branch with `if constexpr` and expand packs with fold expressions; never use SFINAE, `enable_if` or recursive instantiation.
+- Own an object by value, or through `std::unique_ptr` when it must live on the heap; never use an owning `new`.
 - Build strings with `std::format`, never with `+` chains of `std::string` and `std::to_string`.
 - Name a std-shaped facility the std way (`packet_of_t`, `has_packet_v`, `enum_cast`); a hand-written type that mirrors a BDS type keeps BDS's names.
-- Run clang-format and clang-tidy on hand-written files only, never on generated code.
+- Never run clang-format or clang-tidy on generated code.
