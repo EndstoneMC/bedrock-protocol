@@ -1,0 +1,78 @@
+---
+paths:
+  - "protocol/**"
+---
+
+# Adding a protocol version
+
+## Scope
+
+- This file covers a forward version (at or above the cereal floor, `.claude/rules/protocol/wire.md`), a back-port below it, and a renumber when a newer preview replaces the modelled one.
+- How a declaration is spelled lives in `dsl.md`, `enums.md` and `gating.md` beside this file; on spelling those files win.
+
+## The rule of four
+
+- A version is done only when four categories are accounted for and each is reported, `nothing` included:
+  - packet: added, removed, id moved;
+  - type: a field added, removed, renamed or moved; a type added, removed or renamed;
+  - wire: the same field, encoded differently;
+  - enum: a value added, removed, renamed or shifted; a sentinel moved.
+- `Run it` and `dry run it` both mean all four categories; a partial pass is a wrong answer.
+- When the four do not fit one pass, fan out one `version-delta` agent per category, each given the interval, the sources and the schema.
+- Treat a change to a packet the schema does not model as a finding, and model the packet.
+- Never stop at the first category with hits; a name-level read cannot see wire and enum changes.
+
+## Start from the declaration
+
+- Model only the target's delta on top of the existing declaration; a back-port is peeled off it as `until=` or as an earlier redeclaration.
+- The existing declaration is where reading starts, never evidence about an older wire.
+- Never assume a packet's pre-floor shape from its cerealised one, or the reverse.
+- Never re-derive a whole pre-cereal body from gophertunnel; its Marshal history says only what differed at the time.
+- First ask whether a back-port is only a gate edit.
+- Never re-baseline, and never fold a drive-by correction into a version bump; land it separately.
+- Diff a packet's whole transitive type closure across protocol-docs branches before modelling it; a new branch is not evidence of change.
+
+## Forward
+
+- Read the dump as primary evidence with known blind spots (`sources.md`); a back-port reads it only for cerealised packets, and the references and the binary for the rest.
+- Take the four categories from two fetched `origin/` branches of EndstoneMC/protocol-docs: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
+- Compare two-dot, because the branches share no merge base; always pass `-M`, or a rename reads as a delete plus an add.
+- A `constraints` block is not wire, except `RequestNetworkSettingsPacket`'s, which carries the version.
+- Classify every hunk into exactly one category; never write a diff off as constraint churn in bulk.
+- Take a packet's id from its own `packets/*.json`; `enums/MinecraftPacketIds.json` is an index that leaves ids out.
+- Diff `MinecraftPacketIds.json` as a second view: an id there with no packet file is a packet that is not cerealised. Merge the two lists as a union, never an intersection.
+- Compare fields as an ordered sequence, because cereal is positional, and compare the whole field object, not only its name.
+- A change to a field's type string, `optional` or `enum` binding is a wire change; follow nested type objects, a repeat's element type included.
+- Read `repeat` exactly: an integer means `array[T, N]`; a string is a `list[T]`'s length prefix.
+- Before reading a vanished field as removed, check the same file for a matching addition.
+- Follow a renamed type into every file that references it, including a BDS-versioned namespace (`SharedTypes::v1_X_Y`).
+- Grep every era's dump for `"value": true` when modelling a dynamic member.
+
+## Cerealisation
+
+- A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
+- Decide per packet from dump presence: present, the dump is its wire; absent, it is hand-written. A file new between branches is a candidate cerealisation.
+- Confirm a candidate against Mojang's step changelog and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
+- Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
+- Take a pre-cereal shape from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer, finish it in the binary, and gate the delta at the snapshot.
+
+## Back-port
+
+- Go one step down: diff the target against the nearest modelled snapshot above it, never skipping one.
+- Bound a gophertunnel window by the two commits that set each era's `CurrentProtocol`, and diff the whole `minecraft/protocol` tree between them.
+- Classify every commit in the window (the bump, a retro-fix to the older era, non-wire churn) before attributing any of it; the interval diff is only a candidate set.
+- At HEAD, read CloudburstMC/Protocol's `codec/v<new>/` listing as the packet-level changelog, and compare `Bedrock_v<new>.java` against `v<old>` for ids.
+- Compare CloudburstMC against gophertunnel's whole `minecraft/protocol` tree, never `packet/` alone.
+- Never find changes with `git log -S<field>`; it misses wire changes.
+
+## Land it
+
+- Land a schema change with its golden or structural test in the same commit; it is not done until the suite runs (`.claude/rules/tests.md`).
+- Write a version commit as `feat(protocol): follow <build> to protocol <new>`; its body covers all four categories: what changed on the wire, and the evidence for each (build, protocol-docs SHA, gophertunnel commit).
+
+## Consumers
+
+- A schema change reaches EndstoneMC/endweave only through a bedrock-protocol release it pins; a renamed generated name or a renumbered version is a breaking change there.
+- A renumber also renames endweave's `protocols/v<old>` directory.
+- Never report a version endweave lacks as a bedrock-protocol limitation; a missing hop is endweave transform work.
+- Diff the generated public type set before and after any gate change; consumers bind to that set, not to the schema.
