@@ -9,13 +9,13 @@ from bedrock_protocol import v2193 as proto
 
 
 def player_auth_input():
-    Input = proto.PlayerAuthInputPacket.InputData
+    input_data = proto.PlayerAuthInputPacket.InputData
     return proto.PlayerAuthInputPacket(
         rot=proto.Vec2(x=12.5, y=-90.0),
         pos=proto.Vec3(x=104.5, y=65.62, z=-37.25),
         move=proto.Vec2(x=0.0, y=1.0),
         y_head_rot=12.5,
-        input_data=[Input.UP, Input.SPRINTING, Input.SPRINT_DOWN, Input.START_SPRINTING],
+        input_data=[input_data.UP, input_data.SPRINTING, input_data.SPRINT_DOWN, input_data.START_SPRINTING],
         client_tick=123456,
         pos_delta=proto.Vec3(x=0.0, y=-0.0784, z=0.28),
         player_block_actions=[
