@@ -7,10 +7,9 @@ paths:
 
 ## Spelling
 - Spell members PEP 8 UPPER_CASE, converted from BDS's spelling (`JsonUI_ControlTree_PopulateTTS` becomes `JSON_UI_CONTROL_TREE_POPULATE_TTS`).
-- Record BDS's spelling in the DSL, never the wire's, and never patch a golden to mixed case.
+- Record BDS's spelling in the DSL, never the wire's.
 - Pair a member with BDS's spelling only where it differs from the member's fold (`protocol/__init__.py`) by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
-- Put the pair on a plain `Enum` base; where the base cannot take one (`IntEnum`, `StrEnum`) or the member is gated, pass it as `value()`'s second positional (`ALPHA_BLEND = value(1, "ALPHA_BLEND")`).
 - Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
 
 ## Values
