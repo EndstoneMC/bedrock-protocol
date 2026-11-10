@@ -20,7 +20,7 @@ paths:
 ## Underlying type
 - Declare the underlying type as the second base, taken from bedrock-headers (`class MemoryCategory(IntEnum, uint8)`), and spell it even when the header's is `int` (`int32`).
 - Give every redeclaration of an enum the same underlying type.
-- Model a width that narrows between eras on the narrow type at both eras; a narrowing that reaches the wire makes two types.
+- Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second wire shape.
 - Grep the enum for a negative enumerator before unifying a narrowed width; with one, the eras are two types.
 - Spell `field(type=)` on an enum field only for a real divergence: `str` (name-coded), a fixed primitive against a wider underlying type, or `endian="big"`.
 
