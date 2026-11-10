@@ -41,5 +41,5 @@ paths:
 - Never lower a gate past what the evidence covers; below a cerealisation, lowering it becomes real modelling.
 - Treat gates on the schema's bootstrap floor as unverified; sweep them by diffing each packet's dump between the target and the floor branch.
 - Confirm each sweep candidate with a closure diff, because a packet's own JSON does not clear its closure.
-- For a packet cerealised at or below the target whose dump closure is identical at both eras, lower the gate and stop.
+- For a packet BDS writes through cereal at or below the target whose dump closure is identical at both eras, lower the gate and stop.
 - Before gating an enum member, find every test and consumer that names it.

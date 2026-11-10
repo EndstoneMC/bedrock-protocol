@@ -11,7 +11,7 @@ paths:
 
 ## cereal
 
-- 2168 is the cereal floor. Below it, BDS wrote each packet by hand or through cereal, and a packet could switch at any release. From it, every packet is cereal: flat, in declaration order, unconditional.
+- 2168 is the cereal floor. Below it, BDS wrote each packet by hand or through cereal, and a packet could switch at any release. From it, every packet has a cereal schema, which the dump describes. BDS writes a packet through cereal only at `SerializationMode` 3 to 5, and through its hand-written writer at 0 to 2, read from the packet's constructor in the binary. What cereal writes is flat, in declaration order, unconditional.
 - cereal writes a nested struct inline with no framing, so a composed type adds no bytes of its own. The DSL still keeps BDS's type boundaries (`naming.md`).
 - A variant's selector is a `uvarint32` index over its alternatives, never the tag. The tag member is serialized inside its alternative.
 - A name-coded enum goes on the wire folded to lower case. The string literal at the bind site never reaches the wire.

@@ -40,7 +40,7 @@ paths:
 - A `constraints` block is not wire, except `RequestNetworkSettingsPacket`'s, which carries the version.
 - Classify every hunk into exactly one category; never write a diff off as constraint churn in bulk.
 - Take a packet's id from its own `packets/*.json`; `enums/MinecraftPacketIds.json` is an index that leaves ids out.
-- Diff `MinecraftPacketIds.json` as a second view: an id there with no packet file is not cerealised, if it is live at all (`sources.md`). Merge the two lists as a union, never an intersection.
+- Diff `MinecraftPacketIds.json` as a second view: below 2168 an id there with no packet file is not cerealised, if it is live at all (`sources.md`). Merge the two lists as a union, never an intersection.
 - Compare fields as an ordered sequence, because cereal is positional, and compare the whole field object, not only its name.
 - A change to a field's type string, `optional` or `enum` binding is a wire change; follow nested type objects, a repeat's element type included.
 - Read `repeat` exactly: an integer means `array[T, N]`; a string is a `list[T]`'s length prefix.
@@ -51,7 +51,7 @@ paths:
 ## Cerealisation
 
 - A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
-- Decide cerealisation per packet from dump presence (`sources.md`); a packet file new between branches is a candidate.
+- Decide cerealisation per packet below 2168 from dump presence (`sources.md`), and from 2168 from the packet's `SerializationMode` in its constructor; a packet file new between branches is a candidate.
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
 - Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.

@@ -13,8 +13,8 @@ An era is one modelled protocol and the BDS build that reports it.
 | Aspect | Authority |
 | --- | --- |
 | names, nesting, C++ types, member order | EndstoneMC/bedrock-headers at the era's `android/rNN_uN` branch, never head |
-| wire of a cerealised packet (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
-| wire of a hand-written packet | the era's `<Packet>::write`, decompiled in that build's IDA database |
+| wire of a packet BDS writes through cereal (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
+| wire of a packet BDS writes by hand, in any era | the era's hand-written writer, decompiled in that build's IDA database |
 | golden bytes | what BDS writes through bedrock-dumper; Sandertv/gophertunnel where BDS cannot write the packet (`.claude/rules/tests.md`) |
 | dating | MemoriesOfTime/Nukkit-MOT and CloudburstMC/Protocol (`versions.md`) |
 | the step inside a cycle | Mojang/bedrock-protocol-docs `legacy_changelogs/` (`versions.md`) |
@@ -54,9 +54,9 @@ An era is one modelled protocol and the BDS build that reports it.
 
 ## The dump
 
-- A packet missing from the dump is not cerealised at that version, and the dump cannot describe it.
-- Check dump presence first: a packet present at both eras is settled by the dump, within the blind spots below; where it is absent at either era, a dump hunk is only a pointer and an empty dump diff is no finding.
-- Where BDS's hand-written writer and its cereal writer disagree, model the cereal writer, which is what the dump describes, and record the disagreement in the commit body.
+- Below 2168 a packet missing from the dump is not cerealised at that version, and the dump cannot describe it; from 2168 the dump describes every packet.
+- Check how BDS writes the packet first: where it writes through cereal at both eras, the dump settles it, within the blind spots below; where it writes by hand at either era, or the dump lacks the packet, a dump hunk is only a pointer and an empty dump diff is no finding.
+- Model the writer BDS uses for the packet; where its two writers disagree, record the disagreement in the commit body as a finding against the dump.
 - A shared type's dump entry covers only the packets the dump also lists; a hand-written call site may encode it differently, and the dump shows no sign of it.
 - An unchanged dump is no proof of an unchanged wire; compile-time TypeSchema specialisations are invisible to it.
 - Suspect a TypeSchema specialisation flip when a packet grows by a multiple of a fixed array's outer extent; confirm statically from the RTTI name, then the vtable, then the read virtual's error strings.
