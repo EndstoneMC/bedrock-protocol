@@ -23,7 +23,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_death_info_is_packet_189(version):
     assert version.PACKETS[189] is version.DeathInfoPacket
 
