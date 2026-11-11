@@ -25,7 +25,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_resource_pack_chunk_request_is_packet_84(version):
     assert version.PACKETS[84] is version.ResourcePackChunkRequestPacket
 
