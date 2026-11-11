@@ -3,9 +3,9 @@
 
 namespace bedrock::protocol::python {
 
-void init_ @_module @_types(std::span<const Version> bound)
+void init_@_module@_types(std::span<const Version> bound)
 {
-    bind_schema_types<@_module @_types>(bound);
+    bind_schema_types<@_module@_types>(bound);
 }
 
 }  // namespace bedrock::protocol::python
