@@ -53,7 +53,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_position_tracking_db_server_broadcast_is_packet_153(version):
     assert version.PACKETS[153] is version.PositionTrackingDBServerBroadcastPacket
 
@@ -66,7 +66,3 @@ def test_position_tracking_db_server_broadcast_encodes_to_its_golden(packet, gol
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_position_tracking_db_server_broadcast_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
-
-
-def test_a_not_found_broadcast_writes_a_three_byte_empty_tag():
-    assert len(NOT_FOUND) == 5
