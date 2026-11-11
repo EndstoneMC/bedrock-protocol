@@ -66,7 +66,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_resource_pack_client_response_is_packet_8(version):
     assert version.PACKETS[8] is version.ResourcePackClientResponsePacket
 
