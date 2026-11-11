@@ -61,7 +61,7 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_texture_shift_is_packet_336(version):
     assert version.PACKETS[336] is version.ClientboundTextureShiftPacket
 
