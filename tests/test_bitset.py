@@ -75,12 +75,12 @@ REJECTS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_a_130_bit_bitset_encodes_to_its_golden(version):
     assert bytes(version.ActorDataFlagComponent(value=WIDE_VALUE)) == WIDE
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_a_130_bit_bitset_decodes_from_its_golden(version):
     assert version.ActorDataFlagComponent.from_bytes(WIDE) == version.ActorDataFlagComponent(value=WIDE_VALUE)
 
