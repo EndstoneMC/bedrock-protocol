@@ -184,8 +184,6 @@ class SerializedSkinRef:
 
 
 class SerializedSkinRef:
-    """SerializedSkinImpl::write."""
-
     id: str
     play_fab_id: str = field(until=2225)
     resource_patch: str
