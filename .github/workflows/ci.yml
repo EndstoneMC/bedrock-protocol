@@ -58,8 +58,8 @@ jobs:
           wheels=(dist/*.whl)
           test "${#wheels[@]}" -eq 1
           case "${wheels[0]}" in *-cp312-abi3-*) ;; *) echo "not an abi3 wheel: ${wheels[0]}"; exit 1 ;; esac
-          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with pytest python -I -c "import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None"
-          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with pytest python -I -m pytest tests -p no:cacheprovider
+          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" python -I -c "import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None"
+          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with pytest pytest
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
@@ -252,7 +252,6 @@ jobs:
           done
           rm -rf protocol compiler
           cp -r package/generated generated
-          python -m pip install "scikit-build-core>=1.1" nanobind==2.13.0 pytest
-          python -m pip install --no-build-isolation .
+          python -m pip install . pytest
       - name: Test it
-        run: python -I -m pytest tests -p no:cacheprovider
+        run: python -m pytest tests
