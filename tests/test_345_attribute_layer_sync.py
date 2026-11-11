@@ -104,7 +104,7 @@ NOISE = v2225.NoiseTransitionAttributeData(
 )
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_attribute_layer_sync_is_packet_345(version):
     assert version.PACKETS[345] is version.ClientboundAttributeLayerSyncPacket
 
