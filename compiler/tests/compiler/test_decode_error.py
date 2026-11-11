@@ -56,6 +56,32 @@ class ThingPacket:
         read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
         self.assertIn('if (!v) return stream.fail(v.error(), "cells", i0, i1);', read)
 
+    def test_a_map_entry_names_its_field_and_index(self) -> None:
+        _, source = self.compile(
+            PREAMBLE
+            + """
+
+@packet(id=7)
+class ThingPacket:
+    tints: dict[uvarint32, uint8]
+"""
+        )
+        read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
+        self.assertIn('if (!v) return stream.fail(v.error(), "tints", i0);', read)
+
+    def test_a_union_names_its_field_when_the_discriminant_is_unknown(self) -> None:
+        _, source = self.compile(
+            PREAMBLE
+            + """
+
+@packet(id=7)
+class ThingPacket:
+    value: uint8 | int8
+"""
+        )
+        read = self.body(source, "auto Serializer<ThingPacket>::deserialize")
+        self.assertIn('return stream.fail(Errc::unknown_value, "value");', read)
+
     def test_a_struct_read_guards_no_depth(self) -> None:
         _, source = self.compile(
             PREAMBLE

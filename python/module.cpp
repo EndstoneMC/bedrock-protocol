@@ -1,12 +1,15 @@
 #include "module.hpp"
 
+#include <cstddef>
 #include <format>
 #include <string>
 #include <string_view>
+#include <variant>
 
 #include <nanobind/nanobind.h>
 
 #include "bedrock/protocol/packet.hpp"
+#include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/version.hpp"
 #include "binder.hpp"
 
@@ -18,28 +21,9 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
     return list;
 }
 
-PyObject *decode_error = nullptr;
-
-void throw_decode_error(const DecodeError &error)
-{
-    nb::list path;
-    for (const auto &segment : error.path) {
-        if (const auto *name = std::get_if<std::string_view>(&segment)) {
-            path.append(nb::str(name->data(), name->size()));
-        }
-        else {
-            path.append(std::get<std::size_t>(segment));
-        }
-    }
-    nb::object exception = nb::borrow(decode_error)(nb::str(std::format("{}", error).c_str()));
-    exception.attr("reason") = nb::str(std::format("{}", error.reason).c_str());
-    exception.attr("path") = nb::tuple(path);
-    exception.attr("offset") = error.offset;
-    PyErr_SetObject(decode_error, exception.ptr());
-    throw nb::python_error();
-}
-
 namespace {
+
+PyObject *decode_error = nullptr;
 
 std::uint16_t id_of(nb::handle packet)
 {
@@ -102,7 +86,11 @@ void bind_version_api(Version &version)
             BinaryReader reader{std::string_view(data.c_str(), data.size())};
             auto header = Serializer<PacketHeader>::deserialize(reader);
             if (!header) {
-                throw_decode_error({header.error(), "PacketHeader", {}, reader.getReadPointer(), reader.getLength()});
+                throw_decode_error({.reason = header.error(),
+                                    .type = "PacketHeader",
+                                    .path = {},
+                                    .offset = reader.getReadPointer(),
+                                    .length = reader.getLength()});
             }
             nb::object packet = decode_body(version, header->packet_id, reader);
             return nb::make_tuple(*header, packet);
@@ -114,6 +102,25 @@ void bind_version_api(Version &version)
 }
 
 }  // namespace
+
+void throw_decode_error(const DecodeError &error)
+{
+    nb::list path;
+    for (const auto &segment : error.path) {
+        if (const auto *name = std::get_if<std::string_view>(&segment)) {
+            path.append(nb::str(python_name(*name).c_str()));
+        }
+        else {
+            path.append(std::get<std::size_t>(segment));
+        }
+    }
+    nb::object exception = nb::borrow(decode_error)(nb::str(std::format("{}", error).c_str()));
+    exception.attr("reason") = nb::str(std::format("{}", error.reason).c_str());
+    exception.attr("path") = nb::tuple(path);
+    exception.attr("offset") = error.offset;
+    PyErr_SetObject(decode_error, exception.ptr());
+    throw nb::python_error();
+}
 
 void bind_versions(nb::module_ &parent)
 {

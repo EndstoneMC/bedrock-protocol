@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-
 #include <expected>
+
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 

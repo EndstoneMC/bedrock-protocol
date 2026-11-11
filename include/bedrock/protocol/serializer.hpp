@@ -59,7 +59,7 @@ auto decode(BinaryReader &stream) -> std::expected<T, DecodeError>
 
 template <>
 struct std::formatter<bedrock::protocol::Errc> : std::formatter<std::string_view> {
-    auto format(bedrock::protocol::Errc reason, std::format_context &ctx) const
+    std::format_context::iterator format(bedrock::protocol::Errc reason, std::format_context &ctx) const
     {
         static constexpr std::array<std::string_view, 6> reasons{
             "truncated", "out of range", "unknown value", "too large", "too deep", "trailing bytes",
@@ -70,7 +70,7 @@ struct std::formatter<bedrock::protocol::Errc> : std::formatter<std::string_view
 
 template <>
 struct std::formatter<bedrock::protocol::DecodeError> : std::formatter<std::string_view> {
-    auto format(const bedrock::protocol::DecodeError &error, std::format_context &ctx) const
+    static std::format_context::iterator format(const bedrock::protocol::DecodeError &error, std::format_context &ctx)
     {
         auto out = std::format_to(ctx.out(), "{}", error.type);
         for (const auto &segment : error.path) {

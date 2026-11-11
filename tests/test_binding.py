@@ -13,6 +13,9 @@ FRAMED_PLAY_STATUS = bytes.fromhex("824800000003")
 
 PLAY_STATUS = proto.PlayStatusPacket(status=proto.PlayStatus.PLAYER_SPAWN)
 
+HEALTH = proto.AttributeData(name="health")
+TRUNCATED_ATTRIBUTES = bytes(proto.UpdateAttributesPacket(attribute_data=[HEALTH, HEALTH]))[:-2]
+
 
 def test_the_bare_names_are_the_latest_protocol():
     latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.LATEST_PROTOCOL}")
@@ -146,33 +149,82 @@ def test_decode_rejects_a_truncated_body():
         proto.decode(PLAY_STATUS.ID, bytes(PLAY_STATUS)[:-1])
 
 
-@pytest.fixture
-def truncated_attributes():
-    attribute = proto.AttributeData(name="health")
-    body = bytes(proto.UpdateAttributesPacket(attribute_data=[attribute, attribute]))
+def test_a_decode_error_is_a_value_error():
+    with pytest.raises(ValueError, match="truncated"):
+        proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
+
+
+def test_a_decode_error_carries_its_reason():
     with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
-        proto.UpdateAttributesPacket.from_bytes(body[:-2])
-    return caught.value
+        proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
+    assert caught.value.reason == "truncated"
 
 
-def test_a_decode_error_is_a_value_error(truncated_attributes):
-    assert isinstance(truncated_attributes, ValueError)
+def test_a_decode_error_carries_the_path_through_a_list_element():
+    with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
+        proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
+    assert caught.value.path == ("attribute_data", 1, "modifiers")
 
 
-def test_a_decode_error_carries_its_reason(truncated_attributes):
-    assert truncated_attributes.reason == "truncated"
+def test_a_decode_error_carries_the_offset_where_the_reader_stopped():
+    with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
+        proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
+    assert caught.value.offset == 65
 
 
-def test_a_decode_error_carries_the_path_through_a_list_element(truncated_attributes):
-    assert truncated_attributes.path == ("attribute_data", 1, "modifiers")
+def test_a_decode_error_message_names_the_nested_field_and_the_list_element():
+    with pytest.raises(
+        bedrock_protocol.DecodeError,
+        match=r"^UpdateAttributesPacket\.attribute_data\[1\]\.modifiers: truncated at byte 65 of 65$",
+    ):
+        proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
 
 
-def test_a_decode_error_carries_the_offset_where_the_reader_stopped(truncated_attributes):
-    assert truncated_attributes.offset == 65
+def test_a_rejected_value_reports_the_offset_after_it():
+    with pytest.raises(
+        bedrock_protocol.DecodeError,
+        match=r"^ItemStackResponseSlotInfo\.durability_correction: out of range at byte 9 of 10$",
+    ):
+        proto.ItemStackResponseSlotInfo.from_bytes(bytes(6) + bytes.fromhex("808004") + b"\x00")
 
 
-def test_a_decode_error_message_names_the_nested_field_and_the_list_element(truncated_attributes):
-    assert str(truncated_attributes) == "UpdateAttributesPacket.attribute_data[1].modifiers: truncated at byte 65 of 65"
+@pytest.mark.parametrize(
+    ("decode", "data", "message"),
+    [
+        pytest.param(
+            proto.DataItemBytePayload,
+            b"\x01\x00",
+            r"^DataItemBytePayload\.type: unknown value at byte 1 of 2$",
+            id="unknown value",
+        ),
+        pytest.param(
+            proto.UpdateAttributesPacket,
+            bytes.fromhex("00ffffffff0f"),
+            r"^UpdateAttributesPacket\.attribute_data: too large at byte 6 of 6$",
+            id="too large",
+        ),
+        pytest.param(
+            proto.BlockActorDataPacket,
+            bytes(3) + b"\x0a\x00" + b"\x0a\x01a" * 128 + bytes(129),
+            r"^BlockActorDataPacket\.data: too deep at byte 389 of 518$",
+            id="too deep",
+        ),
+    ],
+)
+def test_a_decode_error_message_spells_its_reason(decode, data, message):
+    with pytest.raises(bedrock_protocol.DecodeError, match=message):
+        decode.from_bytes(data)
+
+
+def test_a_header_read_fails_as_a_decode_error():
+    with pytest.raises(bedrock_protocol.DecodeError, match=r"^PacketHeader: truncated at byte 0 of 0$"):
+        proto.decode_packet(b"")
+
+
+def test_a_decode_error_path_names_the_attribute_the_binding_exposes():
+    with pytest.raises(bedrock_protocol.DecodeError) as caught:
+        proto.BiomeConsolidatedFeatureData.from_bytes(bytes(proto.BiomeConsolidatedFeatureData())[:-2])
+    assert caught.value.path == ("pass_",)
 
 
 def test_decode_rejects_an_unknown_packet_id():

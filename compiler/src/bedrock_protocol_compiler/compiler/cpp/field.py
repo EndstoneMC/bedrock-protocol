@@ -304,9 +304,8 @@ def _fail(error: str, where: str) -> str:
 
 class FieldGenerator(ABC):
     """One wire node's codec. `generate_serialize` pushes `var` onto the
-    stream; `generate_deserialize` pulls from the stream into `target`, naming it
-    `where` (the `stream.fail` segments) on failure. `depth` disambiguates the
-    loop / temporary names of nested combinators."""
+    stream; `generate_deserialize` pulls from the stream into `target`. `depth`
+    disambiguates the loop / temporary names of nested combinators."""
 
     @abstractmethod
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None: ...
