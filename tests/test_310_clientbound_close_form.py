@@ -13,7 +13,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_close_form_is_packet_310(version):
     assert version.PACKETS[310] is version.ClientboundCloseFormPacket
 
@@ -28,7 +28,7 @@ def test_clientbound_close_form_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_close_form_rejects_trailing_bytes(version):
     with pytest.raises(ValueError, match="trailing bytes"):
         version.ClientboundCloseFormPacket.from_bytes(b"\x7f\xff")
