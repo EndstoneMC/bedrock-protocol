@@ -72,7 +72,7 @@ def test_type_alias_names_a_primitive(build_package):
 
     alias, struct = package.modules[0].families
 
-    assert alias.primitive == Primitive("uint32")
+    assert alias.target == Primitive("uint32")
     assert struct.declarations[0].fields[0].type == AliasRef(alias)
 
 
@@ -176,7 +176,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
     [
         ("class A:\n    x: 'uint8'\n", "string annotations are not allowed"),
         ("class A:\n    x: Missing\n", "Missing: is not defined"),
-        ("class A:\n    x: uint8 | None\n", "is not supported yet"),
+        ("class A:\n    x: 3\n", "is not supported yet"),
         ("class A:\n    x: print\n", "is not a type"),
         ("class A:\n    x: uint8\n    x: uint8\n", "x: is declared twice"),
         ("class A:\n    x: uint8 = 3\n", "x: is assigned something other than field"),
@@ -199,7 +199,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("@packet(id=1)\n@type()\nclass A:\n    pass\n", "A: takes only one of packet, type and builtin"),
         ("@print\nclass A:\n    pass\n", "is decorated with something other than"),
         ("@builtin\nclass A:\n    x: uint8\n", "A: a builtin has no body"),
-        ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive"),
+        ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive or a union"),
         ("class A[T]:\n    pass\n", "A: type parameters are not allowed"),
         ("class A:\n    x: __dict__\n", "__dict__: is not a type"),
         ("class A:\n    x: double.__value__\n", r"double\.__value__: is not defined"),

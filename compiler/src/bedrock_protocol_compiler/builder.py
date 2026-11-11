@@ -4,9 +4,10 @@ import enum
 import inspect
 import keyword
 import math
+import typing
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
@@ -16,7 +17,9 @@ from bedrock_protocol_compiler import dsl
 from bedrock_protocol_compiler.descriptor import (
     Alias,
     AliasRef,
+    Array,
     Binary,
+    Bitset,
     Builtin,
     BuiltinRef,
     CompilerError,
@@ -26,9 +29,13 @@ from bedrock_protocol_compiler.descriptor import (
     Family,
     Field,
     Int,
+    List,
+    Literal,
+    Map,
     Member,
     MemberRef,
     Module,
+    Optional,
     Package,
     Primitive,
     Range,
@@ -36,11 +43,13 @@ from bedrock_protocol_compiler.descriptor import (
     StructDeclaration,
     StructRef,
     Type,
+    Variant,
 )
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
 ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32")
+LIST_PREFIXES = ("uint32", "uint16", "varint32")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -390,10 +399,10 @@ class Builder:
     def build_alias(self, pending: PendingAlias) -> None:
         if pending.node.type_params:
             raise error(pending.source, pending.node, pending.alias.name, "type parameters are not allowed")
-        primitive = self.type_of(pending.source, pending.source.scope, pending.node.value)
-        if not isinstance(primitive, Primitive):
-            raise error(pending.source, pending.node.value, pending.alias.name, "is not a primitive")
-        pending.alias.primitive = primitive
+        target = self.type_of(pending.source, pending.source.scope, pending.node.value)
+        if not isinstance(target, Primitive | Variant):
+            raise error(pending.source, pending.node.value, pending.alias.name, "is not a primitive or a union")
+        pending.alias.target = target
 
     def build_struct(self, pending: PendingStruct) -> None:
         source = pending.source
@@ -417,8 +426,16 @@ class Builder:
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                self.bind(source, call, dsl.field, ())
-            fields.append(Field(name, self.type_of(source, scope, statement.annotation)))
+                arguments = self.bind(source, call, dsl.field, ("prefix",))
+            field_type = self.type_of(source, scope, statement.annotation)
+            if call is not None and "prefix" in arguments:
+                prefix = self.type_of(source, scope, arguments["prefix"])
+                if not isinstance(field_type, List):
+                    raise error(source, call, name, "prefix is given to something other than a list")
+                if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
+                    raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
+                field_type = replace(field_type, prefix=prefix)
+            fields.append(Field(name, field_type))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
 
     def bind(
@@ -462,6 +479,45 @@ class Builder:
     def type_of(self, source: Source, scope: Scope, node: ast.expr) -> Type:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             raise error(source, node, node.value, "string annotations are not allowed")
+        operands: list[ast.expr] | None = None
+        pipe = False
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+            pipe = True
+            operands = [node.right]
+            left = node.left
+            while isinstance(left, ast.BinOp) and isinstance(left.op, ast.BitOr):
+                operands.insert(0, left.right)
+                left = left.left
+            operands.insert(0, left)
+        elif isinstance(node, ast.Subscript):
+            container = self.resolve(source, scope, node.value)
+            arguments = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+            if container is typing.Union and len(arguments) > 1:
+                operands = arguments
+            elif container is list and len(arguments) == 1:
+                return List(self.type_of(source, scope, arguments[0]), None)
+            elif container is dict and len(arguments) == 2:
+                return Map(self.type_of(source, scope, arguments[0]), self.type_of(source, scope, arguments[1]))
+            elif container is dsl.array and len(arguments) == 2:
+                return Array(self.type_of(source, scope, arguments[0]), literal(source, arguments[1], int, "array"))
+            elif container is dsl.bitset and len(arguments) == 1:
+                return Bitset(self.member_of(source, scope, arguments[0]))
+            elif container is typing.Literal and len(arguments) == 1:
+                if isinstance(arguments[0], ast.Constant) and isinstance(arguments[0].value, bool | str):
+                    return Literal(arguments[0].value)
+                return Literal(self.member_of(source, scope, arguments[0]))
+            else:
+                raise error(source, node, ast.unparse(node), "is not a type with these arguments")
+        if operands is not None:
+            cases = [
+                None
+                if isinstance(operand, ast.Constant) and operand.value is None
+                else self.type_of(source, scope, operand)
+                for operand in operands
+            ]
+            if pipe and len(cases) == 2 and cases[0] is not None and cases[1] is None:
+                return Optional(cases[0])
+            return Variant(tuple(cases))
         if not isinstance(node, ast.Name | ast.Attribute):
             raise error(source, node, ast.unparse(node), "is not supported yet")
         target = self.resolve(source, scope, node)
@@ -474,7 +530,19 @@ class Builder:
         if isinstance(target, Enum):
             return EnumRef(target)
         if isinstance(target, Alias):
-            return AliasRef(target)
+            if target.target is None:
+                raise error(source, node, ast.unparse(node), "is used before it is built")
+            return target.target if isinstance(target.target, Variant) else AliasRef(target)
         if isinstance(target, Builtin):
             return BuiltinRef(target)
         raise error(source, node, ast.unparse(node), "is not a type")
+
+    def member_of(self, source: Source, scope: Scope, node: ast.expr) -> MemberRef:
+        owner = self.resolve(source, scope, node.value) if isinstance(node, ast.Attribute) else None
+        if not (
+            isinstance(node, ast.Attribute)
+            and isinstance(owner, Enum)
+            and any(member.name == node.attr for declaration in owner.declarations for member in declaration.members)
+        ):
+            raise error(source, node, ast.unparse(node), "is not an enum member")
+        return MemberRef(owner, node.attr)

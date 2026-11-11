@@ -30,7 +30,47 @@ class EnumRef:
     enum: "Enum"
 
 
-type Type = Primitive | AliasRef | StructRef | BuiltinRef | EnumRef
+@dataclass(frozen=True)
+class Optional:
+    element: "Type"
+
+
+@dataclass(frozen=True)
+class List:
+    element: "Type"
+    prefix: Primitive | None
+
+
+@dataclass(frozen=True)
+class Array:
+    element: "Type"
+    size: int
+
+
+@dataclass(frozen=True)
+class Map:
+    key: "Type"
+    value: "Type"
+
+
+@dataclass(frozen=True)
+class Variant:
+    cases: tuple["Type | None", ...]
+
+
+@dataclass(frozen=True)
+class Literal:
+    value: "bool | str | MemberRef"
+
+
+@dataclass(frozen=True)
+class Bitset:
+    width: "MemberRef"
+
+
+type Type = (
+    Primitive | AliasRef | StructRef | BuiltinRef | EnumRef | Optional | List | Array | Map | Variant | Literal | Bitset
+)
 
 
 @dataclass(frozen=True)
@@ -105,7 +145,7 @@ class Enum:
 class Alias:
     name: str
     module: str
-    primitive: Primitive = field(init=False)
+    target: Primitive | Variant | None = None
 
 
 @dataclass(eq=False)
