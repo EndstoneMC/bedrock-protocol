@@ -95,9 +95,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "version", [v898, v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2]
-)
+@pytest.mark.parametrize("version", [v898, v1001, v2168, v2225])
 def test_book_edit_is_packet_97(version):
     assert version.PACKETS[97] is version.BookEditPacket
 
