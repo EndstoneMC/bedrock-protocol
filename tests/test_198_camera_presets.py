@@ -78,3 +78,18 @@ def test_camera_presets_2193_rejects_a_2168_body():
 def test_camera_presets_2193_round_trips_without_a_starting_rotation():
     packet = TWO_PRESETS_PACKETS[v2193]
     assert v2193.CameraPresetsPacket.from_bytes(bytes(packet)) == packet
+
+
+def test_camera_presets_2193_round_trips_a_starting_rotation():
+    packet = v2193.CameraPresetsPacket(
+        camera_presets=v2193.CameraPresets(
+            presets=[
+                v2193.CameraPreset(
+                    name="bare",
+                    apply_inherited_starting_rotation=True,
+                    starting_rot=v2193.Vec2(x=10.0, y=20.0),
+                )
+            ]
+        )
+    )
+    assert v2193.CameraPresetsPacket.from_bytes(bytes(packet)) == packet
