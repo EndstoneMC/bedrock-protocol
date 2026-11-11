@@ -8,11 +8,14 @@ A field named after a Python keyword carries one trailing underscore, which the 
 (`pass_` is `pass`). Any other trailing underscore is part of the name.
 
 An enum is `class E(IntEnum, P)` or `class E(Enum, P)`, where P is bool, int8, uint8, int16, uint16,
-int32 or uint32 and becomes `enum class E : P`. A member is `PEP8_NAME = N`, `= -N`, `= auto()`,
-`= OTHER` or `= OTHER - k` for an earlier member, and reaches C++ as `CamelCase`. A member name may
-repeat over disjoint version ranges. The wire folds the C++ spelling to lower case, so a member
-whose BDS spelling differs by more than case is paired with it, `HIGH_PANTS = 8, "persona_high_pants"`,
-or `value(8, "persona_high_pants")`.
+int32 or uint32 and becomes `enum class E : P`. The bare base `class E(IntEnum)` or `(Enum)` has type
+`int` until it is dropped. An enum field goes on the wire as P when P is one byte, and otherwise as
+varint32 or uvarint32 by the signedness of P. A member is `PEP8_NAME = N`, `= -N`, `= auto()`,
+`= OTHER` or `= OTHER - k` for an earlier member, and reaches C++ as `CamelCase`. `auto()` and a
+`value()` without a number take the previous present member's value plus one, at each version. A
+member name may repeat over disjoint version ranges. The wire name is the pair or else the member
+name without underscores, folded to lower case. A member whose BDS spelling differs by more than
+case is paired with it, `HIGH_PANTS = 8, "persona_high_pants"`, or `value(8, "persona_high_pants")`.
 """
 
 from collections.abc import Callable
@@ -30,8 +33,8 @@ def value(
 ) -> int:
     """Mark an enum member's wire value, optionally gated by protocol version.
 
-    - `v`: the wire value. Omit it to number the member as the previous member plus one.
-    - `name`: the string BDS writes, for a member a plain `Enum` would spell `MEMBER = 3, "WireName"`.
+    - `v`: the wire value. Omit it to number the member as the previous present member plus one.
+    - `name`: BDS's spelling, the same string the pair `MEMBER = 3, "WireName"` gives.
     - `cpp_name`: BDS's casing for an acronym the derived C++ name flattens. Only the casing may differ.
     - `since`: the first protocol version that has the member.
     - `until`: the first protocol version that no longer has it.

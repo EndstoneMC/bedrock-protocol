@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, TypeAliasType
+from typing import TypeAliasType
 
 from bedrock_protocol_compiler import dsl
 from bedrock_protocol_compiler.descriptor import (
@@ -87,7 +87,6 @@ class PendingEnum:
     scope: Scope
     node: ast.ClassDef
     enum: Enum
-    underlying: Primitive | None
 
 
 @dataclass
@@ -99,6 +98,18 @@ class PendingAlias:
 
 def error(source: Source, node: ast.stmt | ast.expr | ast.alias | ast.keyword, name: str, reason: str) -> CompilerError:
     return CompilerError(f"{source.path}:{node.lineno}:{node.col_offset + 1}: {name}: {reason}")
+
+
+def literal[T](source: Source, node: ast.expr, kind: type[T], name: str) -> T:
+    try:
+        parsed = ast.literal_eval(node)
+    except (ValueError, TypeError):
+        parsed = None
+    if type(parsed) is not kind:
+        raise error(source, node, name, f"is not a literal {kind.__name__}")
+    if parsed == "":
+        raise error(source, node, name, "is an empty string")
+    return parsed
 
 
 def without_docstring(body: list[ast.stmt]) -> list[ast.stmt]:
@@ -257,12 +268,7 @@ class Builder:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
                 arguments = self.bind(source, decorator, function, ("id",))
                 if function is dsl.packet:
-                    try:
-                        packet_id = ast.literal_eval(arguments["id"])
-                    except (ValueError, TypeError):
-                        packet_id = None
-                    if type(packet_id) is not int:
-                        raise error(source, decorator, "packet", "id is not an integer literal")
+                    packet_id = literal(source, arguments["id"], int, "packet")
             else:
                 function = self.resolve(source, scope, decorator)
                 if function is not dsl.builtin:
@@ -288,17 +294,7 @@ class Builder:
             owner.nested.append(family)
             self.add(source, scope, node, node.name, family)
         if isinstance(family, Enum):
-            underlying: Primitive | None = None
-            if len(node.bases) > 2:
-                raise error(source, node, node.name, "takes an enum base and at most an underlying type")
-            if self.resolve(source, scope, node.bases[0]) not in (enum.IntEnum, enum.Enum):
-                raise error(source, node.bases[0], node.name, "is not IntEnum or Enum")
-            if len(node.bases) == 2:
-                base = self.type_of(source, scope, node.bases[1])
-                if not (isinstance(base, Primitive) and base.name in ENUM_UNDERLYING):
-                    raise error(source, node.bases[1], node.name, "is not an enum underlying type")
-                underlying = base
-            self.enums.append(PendingEnum(source, scope, node, family, underlying))
+            self.enums.append(PendingEnum(source, scope, node, family))
             return
         inner = Scope(scope)
         self.scopes[family] = inner
@@ -309,64 +305,78 @@ class Builder:
 
     def build_enum(self, pending: PendingEnum) -> None:
         source = pending.source
+        node = pending.node
+        if len(node.bases) > 2:
+            raise error(source, node, node.name, "takes an enum base and at most an underlying type")
+        if self.resolve(source, pending.scope, node.bases[0]) not in (enum.IntEnum, enum.Enum):
+            raise error(source, node.bases[0], node.name, "is not IntEnum or Enum")
+        underlying = None
+        if len(node.bases) == 2:
+            base = self.type_of(source, pending.scope, node.bases[1])
+            if not (isinstance(base, Primitive) and base.name in ENUM_UNDERLYING):
+                raise error(source, node.bases[1], node.name, "is not an enum underlying type")
+            underlying = base
         members: list[Member] = []
-        for statement in without_docstring(pending.node.body):
-            if isinstance(statement, ast.Pass):
-                continue
+        for statement in without_docstring(node.body):
             if not (
                 isinstance(statement, ast.Assign)
                 and len(statement.targets) == 1
                 and isinstance(statement.targets[0], ast.Name)
             ):
-                raise error(source, statement, pending.enum.name, "holds only members, a docstring and pass")
+                raise error(source, statement, pending.enum.name, "holds only members and a docstring")
             name = statement.targets[0].id
-            node: ast.expr | None = statement.value
-            wire_name = None
-            if isinstance(node, ast.Tuple):
-                if len(node.elts) != 2:
-                    raise error(source, node, name, "a pair is a value and a wire name")
-                wire_name = self.literal(source, node.elts[1], str, name)
-                node = node.elts[0]
-            cpp_name = None
+            expression = statement.value
+            function = (
+                self.resolve(source, pending.scope, expression.func) if isinstance(expression, ast.Call) else None
+            )
+            wire_name = name.replace("_", "")
+            derived = "".join(part[:1].upper() + part[1:].lower() for part in name.split("_"))
+            cpp_name = derived
             since = None
             until = None
-            if isinstance(node, ast.Call) and self.resolve(source, pending.scope, node.func) is dsl.value:
-                arguments = self.bind(source, node, dsl.value, ("v", "name", "cpp_name", "since", "until"))
+            value: Int | MemberRef | Binary | None
+            if isinstance(expression, ast.Tuple):
+                if len(expression.elts) != 2:
+                    raise error(source, expression, name, "a pair is a value and a wire name")
+                wire_name = literal(source, expression.elts[1], str, name)
+                value = Int(literal(source, expression.elts[0], int, name))
+            elif isinstance(expression, ast.Call) and function is dsl.value:
+                arguments = self.bind(source, expression, dsl.value, ("v", "name", "cpp_name", "since", "until"))
                 if "name" in arguments:
-                    if wire_name is not None:
-                        raise error(source, node, name, "has its wire name twice")
-                    wire_name = self.literal(source, arguments["name"], str, name)
+                    wire_name = literal(source, arguments["name"], str, name)
                 if "cpp_name" in arguments:
-                    cpp_name = self.literal(source, arguments["cpp_name"], str, name)
-                    if cpp_name.lower() != name.replace("_", "").lower():
+                    cpp_name = literal(source, arguments["cpp_name"], str, name)
+                    if cpp_name.lower() != derived.lower():
                         raise error(
-                            source, node, name, f"cpp_name {cpp_name!r} is not a case variant of the derived name"
+                            source, expression, name, f"cpp_name {cpp_name!r} is not a case variant of {derived!r}"
                         )
                 if "since" in arguments:
-                    since = self.literal(source, arguments["since"], int, name)
+                    since = literal(source, arguments["since"], int, name)
                 if "until" in arguments:
-                    until = self.literal(source, arguments["until"], int, name)
-                node = arguments.get("v")
-            offset = None
-            if isinstance(node, ast.BinOp):
-                if not (isinstance(node.op, ast.Sub) and isinstance(node.left, ast.Name)):
-                    raise error(source, node, name, "is not a member minus an integer")
-                offset = self.literal(source, node.right, int, name)
-                node = node.left
-            value: Int | MemberRef | Binary | None = None
-            if isinstance(node, ast.Name):
-                if not any(member.name == node.id for member in members):
-                    raise error(source, node, name, f"{node.id} is not a member declared above it")
-                value = MemberRef(pending.enum, node.id)
+                    until = literal(source, arguments["until"], int, name)
+                value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
+            elif (
+                isinstance(expression, ast.Call)
+                and function is enum.auto
+                and not expression.args
+                and not expression.keywords
+            ):
+                value = None
+            elif isinstance(expression, ast.Name | ast.BinOp):
+                offset = None
+                if isinstance(expression, ast.BinOp):
+                    if not (isinstance(expression.op, ast.Sub) and isinstance(expression.left, ast.Name)):
+                        raise error(source, expression, name, "is not a member minus an integer")
+                    offset = literal(source, expression.right, int, name)
+                    expression = expression.left
+                if not any(member.name == expression.id for member in members):
+                    raise error(source, expression, name, f"{expression.id} is not a member declared above it")
+                value = MemberRef(pending.enum, expression.id)
                 if offset is not None:
                     value = Binary("-", value, Int(offset))
-            elif node is not None and not (
-                isinstance(node, ast.Call)
-                and not node.args
-                and not node.keywords
-                and self.resolve(source, pending.scope, node.func) is enum.auto
-            ):
-                value = Int(self.literal(source, node, int, name))
+            else:
+                value = Int(literal(source, expression, int, name))
+            wire_name = wire_name.lower()
             for earlier in members:
                 if earlier.name == name and max(earlier.range.since or 0, since or 0) < min(
                     earlier.range.until or math.inf, until or math.inf
@@ -374,8 +384,8 @@ class Builder:
                     raise error(source, statement, name, "is declared twice over overlapping versions")
             members.append(Member(name, value, Range(since, until), cpp_name, wire_name))
         if not members:
-            raise error(source, pending.node, pending.enum.name, "has no members")
-        pending.enum.declarations.append(EnumDeclaration(pending.underlying, tuple(members)))
+            raise error(source, node, pending.enum.name, "has no members")
+        pending.enum.declarations.append(EnumDeclaration(underlying, tuple(members)))
 
     def build_alias(self, pending: PendingAlias) -> None:
         if pending.node.type_params:
@@ -410,17 +420,6 @@ class Builder:
                 self.bind(source, call, dsl.field, ())
             fields.append(Field(name, self.type_of(source, scope, statement.annotation)))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
-
-    def literal(self, source: Source, node: ast.expr, kind: type, name: str) -> Any:
-        try:
-            parsed = ast.literal_eval(node)
-        except (ValueError, TypeError):
-            parsed = None
-        if type(parsed) is not kind:
-            raise error(source, node, name, f"is not a {kind.__name__} literal")
-        if parsed == "":
-            raise error(source, node, name, "is an empty string")
-        return parsed
 
     def bind(
         self,

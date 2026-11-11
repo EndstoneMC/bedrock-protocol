@@ -73,8 +73,8 @@ class Member:
     name: str
     value: Int | MemberRef | Binary | None
     range: Range
-    cpp_name: str | None
-    wire_name: str | None
+    cpp_name: str
+    wire_name: str
 
 
 @dataclass(frozen=True)
