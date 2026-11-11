@@ -24,7 +24,7 @@ GOLDENS = [
                 client_throttle_scalar=0.5,
             ),
             SNAPPY,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-snappy",
+            id=f"{version.__name__.rpartition('.')[2]}-snappy",
         )
         for version in VERSIONS
     ],
@@ -32,7 +32,7 @@ GOLDENS = [
         pytest.param(
             version.NetworkSettingsPacket(compression_algorithm=version.PacketCompressionAlgorithm.NONE),
             NONE,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-no-compression",
+            id=f"{version.__name__.rpartition('.')[2]}-no-compression",
         )
         for version in VERSIONS
     ],
