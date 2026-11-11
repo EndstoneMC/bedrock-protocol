@@ -116,40 +116,48 @@ class FileGenerator:
             if not families:
                 continue
             if not cereal:
-                self.switch(p, (), ("legacy",))
+                self.switch(p, (), (names.LEGACY,))
             p.emit("namespace detail {")
             p.emit("")
             for family in families:
                 p.emit(
                     """
                     template <int V>
-                    struct $name$_;
+                    struct $selector$;
 
                     """,
-                    name=family.name,
+                    selector=names.selector(family),
                 )
                 for run, shape in self.runs(family):
                     p.emit(
                         """
                         template <int V> requires ($clause$)
-                        struct $name$_<V> { using type = $type$; };
+                        struct $selector$<V> { using type = $type$; };
 
                         """,
                         clause=names.clause(run),
-                        name=family.name,
+                        selector=names.selector(family),
                         type=names.qualified(self.schema, shape),
                     )
             p.emit("}  // namespace detail")
             p.emit("")
             for family in families:
-                p.emit("template <int V> using $name$_ = typename detail::$name$_<V>::type;", name=family.name)
+                p.emit(
+                    "template <int V> using $selector$ = typename detail::$selector$<V>::type;",
+                    selector=names.selector(family),
+                )
             p.emit("")
             for family in families:
                 if (family, self.schema.latest) in self.schema.live:
-                    p.emit("using $name$ = $name$_<$latest$>;", name=family.name, latest=self.schema.latest)
+                    p.emit(
+                        "using $name$ = $selector$<$latest$>;",
+                        name=family.name,
+                        selector=names.selector(family),
+                        latest=self.schema.latest,
+                    )
             p.emit("")
             if not cereal:
-                self.switch(p, ("legacy",), ())
+                self.switch(p, (names.LEGACY,), ())
 
     def packets(self, p: Printer) -> None:
         packets = [family for family in self.families if isinstance(family, Struct) and family.packet_id is not None]
@@ -157,7 +165,7 @@ class FileGenerator:
             runs = self.runs(family)
             constraint = names.clause(Range(runs[0][0].since, runs[-1][0].until))
             spelled = (
-                f"::{names.namespace(self.schema)}::{family.name}_<V>"
+                f"::{names.namespace(self.schema)}::{names.selector(family)}<V>"
                 if runs[0][1].versioned
                 else names.qualified(self.schema, runs[0][1])
             )

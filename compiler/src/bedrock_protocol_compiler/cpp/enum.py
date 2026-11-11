@@ -16,7 +16,7 @@ class EnumGenerator:
         if self.underlying.startswith("std::"):
             includes.add("<cstdint>")
         if self.name_coded:
-            includes |= {names.runtime("serializer"), names.runtime("stream"), "<expected>"}
+            includes |= names.SERIALIZER_INCLUDES
         return includes
 
     def definition(self, p: Printer) -> None:
@@ -81,9 +81,10 @@ class EnumGenerator:
             template <>
             struct Serializer<$qualified$> {
                 static void serialize(BinaryWriter &stream, $qualified$ value);
-                static auto deserialize(BinaryReader &stream) -> std::expected<$qualified$, Errc>;
+                static auto deserialize(BinaryReader &stream) -> $decoded$;
             };
 
             """,
             qualified=self.qualified,
+            decoded=names.decoded(self.qualified),
         )

@@ -2,6 +2,7 @@ from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, Range, St
 from bedrock_protocol_compiler.schema import Schema, Shape
 
 INCLUDE_DIR = "bedrock/protocol"
+LEGACY = "legacy"
 PRIMITIVES = {
     "str": "std::string",
     "bytes": "std::vector<std::byte>",
@@ -28,7 +29,7 @@ def namespace(schema: Schema) -> str:
 
 
 def scope(shape: Shape) -> tuple[str, ...]:
-    parts = [] if shape.family.cereal else ["legacy"]
+    parts = [] if shape.family.cereal else [LEGACY]
     if shape.versioned:
         since = shape.ranges[0].since
         parts.append("base" if since is None else f"v{since}")
@@ -39,8 +40,20 @@ def qualified(schema: Schema, target: Shape | Alias | Builtin) -> str:
     if isinstance(target, Alias | Builtin):
         return f"::{namespace(schema)}::{target.name}"
     if target.owner is not None:
-        return f"{qualified(schema, target.owner)}_nested::{target.family.name}"
+        return f"{nested(qualified(schema, target.owner))}::{target.family.name}"
     return "::".join(("", namespace(schema), *scope(target), target.family.name))
+
+
+def nested(spelled: str) -> str:
+    return f"{spelled}_nested"
+
+
+def selector(family: Struct | Enum) -> str:
+    return f"{family.name}_"
+
+
+def decoded(spelled: str) -> str:
+    return f"std::expected<{spelled}, Errc>"
 
 
 def bare(family: Struct | Enum) -> str:
@@ -62,6 +75,9 @@ def runtime(stem: str) -> str:
 
 def generated(stem: str) -> str:
     return f"<{INCLUDE_DIR}/{stem}.h>"
+
+
+SERIALIZER_INCLUDES = frozenset({runtime("serializer"), runtime("stream"), "<expected>"})
 
 
 def header(family: Struct | Enum | Alias | Builtin) -> str:

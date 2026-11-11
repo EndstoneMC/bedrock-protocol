@@ -35,7 +35,7 @@ class StructGenerator:
             "<string_view>",
         }
         if self.has_serializer:
-            includes |= {names.runtime("serializer"), names.runtime("stream"), "<expected>"}
+            includes |= names.SERIALIZER_INCLUDES
         return includes.union(*(child.includes() for child in self.defined))
 
     @property
@@ -45,12 +45,12 @@ class StructGenerator:
     def definition(self, p: Printer) -> None:
         name = self.shape.family.name
         if self.defined:
-            p.emit("namespace $nested$_nested {", nested=name)
+            p.emit("namespace $nested$ {", nested=names.nested(name))
             p.emit("")
             for child in self.defined:
                 child.definition(p)
                 p.emit("")
-            p.emit("}  // namespace $nested$_nested", nested=name)
+            p.emit("}  // namespace $nested$", nested=names.nested(name))
             p.emit("")
         p.emit(
             """
@@ -143,11 +143,12 @@ class StructGenerator:
             template <>
             struct Serializer<$qualified$> {
                 static void serialize(BinaryWriter &stream, const $qualified$ &value);
-                static auto deserialize(BinaryReader &stream) -> std::expected<$qualified$, Errc>;
+                static auto deserialize(BinaryReader &stream) -> $decoded$;
             };
 
             """,
             qualified=self.qualified,
+            decoded=names.decoded(self.qualified),
         )
 
 
