@@ -8,7 +8,7 @@ license-files = ["LICENSE"]
 dependencies = ["click", "griffe"]
 
 [project.scripts]
-bpc = "bedrock_protocol_compiler.cli:main"
+bpc = "bedrock_protocol_compiler.compiler.cli:main"
 
 [dependency-groups]
 dev = ["mypy", "pytest", "pytest-xdist"]

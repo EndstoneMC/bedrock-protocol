@@ -9,7 +9,15 @@ The serializer bodies iterate the struct's fields and delegate each to the
 
 from __future__ import annotations
 
-from bedrock_protocol_compiler.descriptor import CondType, Enum, Field, FieldType, LiteralType, Predicate, Struct
+from bedrock_protocol_compiler.compiler.descriptor import (
+    CondType,
+    Enum,
+    Field,
+    FieldType,
+    LiteralType,
+    Predicate,
+    Struct,
+)
 
 from .enum import EnumGenerator
 from .field import FieldGeneratorMap, FileContext, cpp_type, render_predicate, type_includes

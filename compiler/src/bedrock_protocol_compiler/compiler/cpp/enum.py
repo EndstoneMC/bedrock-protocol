@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from bedrock_protocol_compiler.descriptor import CompilerError, Enum, EnumValue
+from bedrock_protocol_compiler.compiler.descriptor import CompilerError, Enum, EnumValue
 
 from .field import type_includes
 from .helpers import INCLUDE_PREFIX, PRIMITIVE_TYPES

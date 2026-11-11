@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-from .compiler import (
+from . import (
     GENERATORS,
     DescriptorPool,
     FilesystemContext,

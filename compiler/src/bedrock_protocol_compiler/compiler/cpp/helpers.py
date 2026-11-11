@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bedrock_protocol_compiler.descriptor import split_scope
+from bedrock_protocol_compiler.compiler.descriptor import split_scope
 
 #: DSL primitive name → C++ type spelling.
 PRIMITIVE_TYPES: dict[str, str] = {

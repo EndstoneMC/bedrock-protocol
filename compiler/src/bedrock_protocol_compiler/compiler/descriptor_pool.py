@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Iterable
 
-from bedrock_protocol_compiler.descriptor import (
+from bedrock_protocol_compiler.compiler.descriptor import (
     ArrayType,
     BitsetType,
     CondType,

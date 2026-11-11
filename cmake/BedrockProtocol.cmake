@@ -36,11 +36,11 @@ endif()
 if(WIN32)
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc.cmd")
     file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
-        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@${_launcher} -m bedrock_protocol_compiler %*\r\n")
+        "@set \"PYTHONPATH=${_compiler_dir}/src\"\r\n@${_launcher} -m bedrock_protocol_compiler.compiler %*\r\n")
 else()
     set(_compiler_exe "${CMAKE_BINARY_DIR}/bpc")
     file(CONFIGURE OUTPUT "${_compiler_exe}" @ONLY CONTENT
-        "#!/bin/sh\nPYTHONPATH=\"${_compiler_dir}/src\" exec ${_launcher} -m bedrock_protocol_compiler \"$@\"\n")
+        "#!/bin/sh\nPYTHONPATH=\"${_compiler_dir}/src\" exec ${_launcher} -m bedrock_protocol_compiler.compiler \"$@\"\n")
     file(CHMOD "${_compiler_exe}" PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE

@@ -21,10 +21,10 @@ from typing import Mapping
 
 from bedrock_protocol_compiler.compiler import DescriptorPool, Importer, SourceTree
 from bedrock_protocol_compiler.compiler.cpp.file import FileGenerator
-from bedrock_protocol_compiler.descriptor import CompilerError
+from bedrock_protocol_compiler.compiler.descriptor import CompilerError
 
 #: The DSL surface every case compiles against -- the real one, copied in.
-DSL_SURFACE = Path(__file__).resolve().parents[2] / "protocol" / "__init__.py"
+DSL_SURFACE = Path(__file__).resolve().parents[3] / "protocol" / "__init__.py"
 
 
 class CompilerCase(unittest.TestCase):

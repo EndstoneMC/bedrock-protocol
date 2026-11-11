@@ -19,7 +19,7 @@ from typing import cast
 
 import griffe
 
-from bedrock_protocol_compiler.descriptor import (
+from bedrock_protocol_compiler.compiler.descriptor import (
     PRIMITIVES,
     CompilerError,
     EnumValue,

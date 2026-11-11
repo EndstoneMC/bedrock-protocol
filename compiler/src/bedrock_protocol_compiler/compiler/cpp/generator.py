@@ -9,7 +9,7 @@ from `__version__` in the DSL surface module).
 from __future__ import annotations
 
 from bedrock_protocol_compiler.compiler.code_generator import CodeGenerator, GeneratorContext
-from bedrock_protocol_compiler.descriptor import CompilerError, ResolvedFile
+from bedrock_protocol_compiler.compiler.descriptor import CompilerError, ResolvedFile
 
 from .file import FileGenerator
 
