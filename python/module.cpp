@@ -1,4 +1,4 @@
-#include <forward_list>
+#include <format>
 #include <string>
 #include <string_view>
 
@@ -24,17 +24,10 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
     return list;
 }
 
-const char *intern(std::string_view name)
-{
-    static std::forward_list<std::string> names;
-    return names.emplace_front(name).c_str();
-}
-
 void throw_decode_error(std::string_view type, const BinaryReader &stream, std::string_view reason)
 {
-    throw nb::value_error((std::string(type) + ": " + std::string(reason) + " at byte " +
-                           std::to_string(stream.getReadPointer()) + " of " + std::to_string(stream.getLength()))
-                              .c_str());
+    throw nb::value_error(
+        std::format("{}: {} at byte {} of {}", type, reason, stream.getReadPointer(), stream.getLength()).c_str());
 }
 
 namespace {
@@ -43,7 +36,7 @@ const PacketCodec &codec_of(nb::handle packet)
 {
     const auto it = codecs().find(reinterpret_cast<PyTypeObject *>(packet.type().ptr()));
     if (it == codecs().end()) {
-        throw nb::type_error(("not a packet: " + std::string(nb::repr(packet.type()).c_str())).c_str());
+        throw nb::type_error(std::format("not a packet: {}", nb::repr(packet.type()).c_str()).c_str());
     }
     return it->second;
 }
@@ -74,8 +67,7 @@ const PacketCodec &codec_for(const Version &version, int id)
 {
     const auto it = version.packets.find(id);
     if (it == version.packets.end()) {
-        throw nb::key_error(("no packet " + std::to_string(id) + " at protocol " + std::to_string(version.number))
-                                .c_str());
+        throw nb::key_error(std::format("no packet {} at protocol {}", id, version.number).c_str());
     }
     return it->second;
 }
@@ -99,23 +91,22 @@ void bind_version_api(Version &version)
         packets[nb::int_(id)] = codec.type;
     }
     m.attr("PACKETS") = packets;
-    const Version *v = &version;
     m.def(
         "decode",
-        [v](int packet_id, nb::bytes data) {
+        [version](int packet_id, nb::bytes data) {
             BinaryReader reader{std::string_view(data.c_str(), data.size())};
-            return decode_body(*v, packet_id, reader);
+            return decode_body(version, packet_id, reader);
         },
         nb::arg("packet_id"), nb::arg("data"), "Reads a packet body, its class chosen by `packet_id`.");
     m.def(
         "decode_packet",
-        [v](nb::bytes data) {
+        [version](nb::bytes data) {
             BinaryReader reader{std::string_view(data.c_str(), data.size())};
             auto header = Serializer<PacketHeader>::deserialize(reader);
             if (!header) {
                 throw_decode_error("PacketHeader", reader, header.error().message());
             }
-            nb::object packet = decode_body(*v, header->packet_id, reader);
+            nb::object packet = decode_body(version, header->packet_id, reader);
             return nb::make_tuple(*header, packet);
         },
         nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
@@ -130,15 +121,15 @@ void bind_versions(nb::module_ &parent)
 {
     bind_type<PacketHeader>(parent, nullptr);
     for (const auto &binding : version_bindings()) {
-        auto module = parent.def_submodule(("v" + std::to_string(binding.number)).c_str());
+        auto module = parent.def_submodule(std::format("v{}", binding.number).c_str());
         auto legacy = module.def_submodule("legacy", "The pre-cereal shapes, where one name has two encodings.");
         module.attr("nbt") = parent.attr("nbt");
-        auto *version = new Version{binding.number, module, legacy, {}};
+        Version version{binding.number, module, legacy, {}};
         for (auto *bind_file : binding.files) {
-            bind_file(*version);
+            bind_file(version);
         }
-        binding.check(*version);
-        bind_version_api(*version);
+        binding.check(version);
+        bind_version_api(version);
     }
     for (const auto &[cls, annotations] : annotators()) {
         cls.attr("__annotations__") = annotations();

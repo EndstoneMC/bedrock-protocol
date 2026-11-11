@@ -5,6 +5,7 @@
 #include <bitset>
 #include <concepts>
 #include <cstddef>
+#include <format>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -44,11 +45,11 @@ template <typename T, std::size_t I>
 using field_t = std::remove_cvref_t<decltype(field_get<I>(std::declval<T &>()))>;
 
 // A member named after a Python keyword takes the DSL's trailing underscore back.
-inline const char *python_name(std::string_view name)
+inline std::string python_name(std::string_view name)
 {
     const nb::object iskeyword = nb::module_::import_("keyword").attr("iskeyword");
     const bool keyword = nb::cast<bool>(iskeyword(nb::str(name.data(), name.size())));
-    return intern(keyword ? std::string(name) + "_" : std::string(name));
+    return keyword ? std::format("{}_", name) : std::string(name);
 }
 
 // The Python names of T's members, resolved once while T is bound.
@@ -56,7 +57,7 @@ template <typename T>
 const auto &python_names()
 {
     static const auto names = [] {
-        std::array<const char *, field_count<T>()> out{};
+        std::array<std::string, field_count<T>()> out{};
         for (std::size_t i = 0; i < out.size(); ++i) {
             out[i] = python_name(field_names<T>()[i]);
         }
@@ -116,7 +117,7 @@ void bind_enum(nb::handle scope, const char *name)
         const auto &values = enum_values<E>();
         const auto &names = enum_schema_names<E>();
         for (std::size_t i = 0; i < values.size(); ++i) {
-            cls.value(intern(names[i]), values[i]);
+            cls.value(std::string(names[i]).c_str(), values[i]);
         }
     }
 }
@@ -209,7 +210,7 @@ F from_python(nb::handle src)
             fits = std::in_range<U>(v);
         }
         if (!fits) {
-            throw nb::type_error(("value " + std::to_string(v) + " does not fit the enum").c_str());
+            throw nb::type_error(std::format("value {} does not fit the enum", v).c_str());
         }
         return static_cast<F>(static_cast<U>(v));
     }
@@ -297,7 +298,7 @@ nb::dict annotations()
 {
     nb::dict out;
     [&]<std::size_t... I>(std::index_sequence<I...>) {
-        ((out[python_names<T>()[I]] = annotation<field_t<T, I>>()), ...);
+        ((out[python_names<T>()[I].c_str()] = annotation<field_t<T, I>>()), ...);
     }(std::make_index_sequence<field_count<T>()>{});
     return out;
 }
@@ -318,7 +319,7 @@ template <typename T, std::size_t I>
 void bind_field(nb::class_<T> &cls)
 {
     using F = field_t<T, I>;
-    const char *name = python_names<T>()[I];
+    const char *name = python_names<T>()[I].c_str();
     if constexpr (holds_enum<F>()) {
         cls.def_prop_rw(
             name, [](const T &self) { return to_python(field_get<I>(self)); },
@@ -343,9 +344,8 @@ void assign(T &value, nb::handle src)
         field_get<I>(value) = from_python<field_t<T, I>>(src);
     }
     catch (const nb::cast_error &) {
-        throw nb::type_error((std::string(struct_name<T>()) + "." + python_names<T>()[I] + " cannot hold " +
-                              nb::repr(src).c_str())
-                                 .c_str());
+        throw nb::type_error(
+            std::format("{}.{} cannot hold {}", struct_name<T>(), python_names<T>()[I], nb::repr(src).c_str()).c_str());
     }
 }
 
@@ -355,20 +355,19 @@ T construct(nb::args args, nb::kwargs kwargs)
 {
     constexpr std::size_t N = field_count<T>();
     if (args.size() > N) {
-        throw nb::type_error(
-            (std::string(struct_name<T>()) + " takes at most " + std::to_string(N) + " positional arguments").c_str());
+        throw nb::type_error(std::format("{} takes at most {} positional arguments", struct_name<T>(), N).c_str());
     }
     T value{};
     std::size_t used = 0;
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         (
             [&] {
-                const char *name = python_names<T>()[I];
+                const char *name = python_names<T>()[I].c_str();
                 const bool keyword = kwargs.contains(name);
                 if (I < args.size()) {
                     if (keyword) {
                         throw nb::type_error(
-                            (std::string(struct_name<T>()) + " got multiple values for '" + name + "'").c_str());
+                            std::format("{} got multiple values for '{}'", struct_name<T>(), name).c_str());
                     }
                     assign<T, I>(value, args[I]);
                 }
@@ -383,12 +382,11 @@ T construct(nb::args args, nb::kwargs kwargs)
         for (auto [key, _] : kwargs) {
             bool known = false;
             [&]<std::size_t... I>(std::index_sequence<I...>) {
-                ((known = known || nb::str(python_names<T>()[I]).equal(key)), ...);
+                ((known = known || nb::str(python_names<T>()[I].c_str()).equal(key)), ...);
             }(std::make_index_sequence<N>{});
             if (!known) {
-                throw nb::type_error((std::string(struct_name<T>()) + " has no field '" +
-                                      nb::cast<std::string>(key) + "'")
-                                         .c_str());
+                throw nb::type_error(
+                    std::format("{} has no field '{}'", struct_name<T>(), nb::cast<std::string>(key)).c_str());
             }
         }
     }
@@ -407,7 +405,7 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
 
     nb::list fields;
     for (std::size_t i = 0; i < field_count<T>(); ++i) {
-        fields.append(nb::str(python_names<T>()[i]));
+        fields.append(nb::str(python_names<T>()[i].c_str()));
     }
     cls.attr("__match_args__") = nb::tuple(fields);
     annotators().emplace_back(cls, &annotations<T>);
@@ -428,9 +426,9 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
 
     // Members keep BDS's names, `serialize` among them, so the codec takes a dunder and from_bytes.
     if constexpr (Serializable<T>) {
-        for (const char *field : python_names<T>()) {
-            if (std::string_view(field) == "from_bytes") {
-                throw std::logic_error(std::string(struct_name<T>()) + " has a member named from_bytes");
+        for (const std::string &field : python_names<T>()) {
+            if (field == "from_bytes") {
+                throw std::logic_error(std::format("{} has a member named from_bytes", struct_name<T>()));
             }
         }
         cls.def("__bytes__", &encode<T>, "The wire form, without a packet header.");
@@ -466,11 +464,11 @@ void bind_type(nb::handle module, Version *version)
     }
     std::string_view leaf;
     nb::object scope = owner_of(module, qualified, leaf);
-    const char *name = intern(leaf);
+    const std::string name(leaf);
 
     // A type every version shares is bound once and re-exported.
     if (nb::handle existing = nb::type<T>(); existing.is_valid()) {
-        scope.attr(name) = existing;
+        scope.attr(name.c_str()) = existing;
         if constexpr (Packet<T>) {
             if (version != nullptr) {
                 version->packets.emplace(T::Id, codecs().at(reinterpret_cast<PyTypeObject *>(existing.ptr())));
@@ -479,10 +477,10 @@ void bind_type(nb::handle module, Version *version)
         return;
     }
     if constexpr (std::is_enum_v<T>) {
-        bind_enum<T>(scope, name);
+        bind_enum<T>(scope, name.c_str());
     }
     else {
-        bind_struct<T>(scope, name, version);
+        bind_struct<T>(scope, name.c_str(), version);
     }
 }
 
@@ -502,8 +500,7 @@ void check_packets(const Version &version)
                 if constexpr (has_packet_v<V, Id>) {
                     const auto it = version.packets.find(Id);
                     if (it == version.packets.end() || !it->second.type.is(nb::type<packet_of_t<V, Id>>())) {
-                        throw std::runtime_error("packet " + std::to_string(Id) + " of protocol " +
-                                                 std::to_string(V) + " is not bound");
+                        throw std::runtime_error(std::format("packet {} of protocol {} is not bound", Id, V));
                     }
                 }
             }(),

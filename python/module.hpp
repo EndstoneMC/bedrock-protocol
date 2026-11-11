@@ -45,9 +45,6 @@ std::unordered_map<PyTypeObject *, PacketCodec> &codecs();
 // Each bound class with the function that fills its `__annotations__` once every type is bound.
 std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
-// Keeps a name alive for as long as the extension is loaded.
-const char *intern(std::string_view name);
-
 [[noreturn]] void throw_decode_error(std::string_view type, const BinaryReader &stream, std::string_view reason);
 
 void bind_nbt(nb::module_ &parent);

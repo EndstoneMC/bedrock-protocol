@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -85,9 +86,8 @@ void bind_value_tag(nb::module_ &m, const char *name)
         .def_prop_ro("value", [](const T &self) { return self.value(); })
         .def(nb::self == nb::self)
         .def("__hash__", [](const T &self) { return nb::hash(nb::cast(self.value())); })
-        .def("__repr__", [name](const T &self) {
-            return std::string(name) + "(" + nb::repr(nb::cast(self.value())).c_str() + ")";
-        });
+        .def("__repr__",
+             [name](const T &self) { return std::format("{}({})", name, nb::repr(nb::cast(self.value())).c_str()); });
 }
 
 template <typename T>
@@ -102,8 +102,7 @@ void bind_array_tag(nb::module_ &m, const char *name)
         .def("__len__", &T::size)
         .def(nb::self == nb::self)
         .def("__repr__", [name](const T &self) {
-            return std::string(name) + "(" +
-                   nb::repr(nb::cast(std::vector<V>(self.begin(), self.end()))).c_str() + ")";
+            return std::format("{}({})", name, nb::repr(nb::cast(std::vector<V>(self.begin(), self.end()))).c_str());
         });
 }
 
