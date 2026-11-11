@@ -130,10 +130,6 @@ def test_mob_armor_equipment_net_id_is_one_byte_shorter_at_2168():
     assert len(V2168_HELMET) + 1 == len(V1001_HELMET)
 
 
-def test_mob_armor_equipment_a_net_id_changes_the_bytes_between_1001_and_2168():
-    assert V2168_HELMET != V1001_HELMET
-
-
 def test_mob_armor_equipment_1001_body_leaves_trailing_bytes_at_2168():
     with pytest.raises(ValueError, match="trailing bytes"):
         v2168.MobArmorEquipmentPacket.from_bytes(V1001_HELMET)
