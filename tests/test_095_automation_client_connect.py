@@ -29,7 +29,7 @@ GOLDENS = [
                 web_socket_data=version.WebSocketPacketData(ip="ws://localhost:8000/ws")
             ),
             URI,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-uri",
+            id=f"{version.__name__.rpartition('.')[2]}-uri",
         )
         for version in VERSIONS
     ],
@@ -37,7 +37,7 @@ GOLDENS = [
         pytest.param(
             version.AutomationClientConnectPacket(web_socket_data=version.WebSocketPacketData(ip="")),
             EMPTY,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-empty-uri",
+            id=f"{version.__name__.rpartition('.')[2]}-empty-uri",
         )
         for version in VERSIONS
     ],
@@ -45,7 +45,7 @@ GOLDENS = [
         pytest.param(
             version.AutomationClientConnectPacket(web_socket_data=version.WebSocketPacketData(ip="a" * 200)),
             LONG,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-uri-past-127-bytes",
+            id=f"{version.__name__.rpartition('.')[2]}-uri-past-127-bytes",
         )
         for version in VERSIONS
     ],
