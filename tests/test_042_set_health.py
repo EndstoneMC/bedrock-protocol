@@ -16,7 +16,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_set_health_is_packet_42(version):
     assert version.PACKETS[42] is version.SetHealthPacket
 
