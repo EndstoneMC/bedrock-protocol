@@ -254,16 +254,12 @@ class FileGenerator:
             with _FlavourScope(p, ns) as scope:
                 for name in self._versioned_names():
                     view = self._resolved.present_at(name, snap)
-                    if view is None:
+                    if view is None or not view.is_fresh:
                         continue
                     scope.enter(name)
-                    if view.is_fresh:
-                        self._emit_definition(
-                            p, view.enum or view.struct, self._nested_anchor(name, snap), snap, _owner_of(name)
-                        )
-                    else:
-                        bare = bare_name(name)
-                        p.print(f"using {bare} = {snapshot_namespace(view.concrete)}::{bare};\n")
+                    self._emit_definition(
+                        p, view.enum or view.struct, self._nested_anchor(name, snap), snap, _owner_of(name)
+                    )
                     p.print("\n")
 
     def _emit_legacy_traits(self, p: Printer, latest_version: int) -> None:
