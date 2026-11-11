@@ -11,14 +11,14 @@ string(REGEX MATCH "[0-9]+$" _latest "${_latest}")
 set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS} ${_latest})
 list(REMOVE_DUPLICATES _versions)
 
-set(_sources src/module.cpp src/nbt.cpp)
+set(_sources module.cpp nbt.cpp)
 set(_declarations "")
 set(_table "")
 foreach (BP_VERSION IN LISTS _versions)
     set(_files "")
     foreach (BP_MODULE IN LISTS BEDROCK_PROTOCOL_MODULES)
         set(_tu "${CMAKE_CURRENT_BINARY_DIR}/bind/${BP_MODULE}_${BP_VERSION}.cpp")
-        configure_file(src/bind_module.cpp.in "${_tu}" @ONLY)
+        configure_file(bind_module.cpp.in "${_tu}" @ONLY)
         list(APPEND _sources "${_tu}")
         string(APPEND _declarations "void bind_${BP_MODULE}_${BP_VERSION}(Version &);\n")
         string(APPEND _files "&bind_${BP_MODULE}_${BP_VERSION}, ")
@@ -48,14 +48,14 @@ ${_table}    };
 list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp")
 
 nanobind_add_module(_native STABLE_ABI ${_sources})
-target_include_directories(_native PRIVATE src)
+target_include_directories(_native PRIVATE .)
 target_link_libraries(_native PRIVATE bedrock::protocol)
 add_dependencies(_native bedrock_protocol)
 if (MSVC)
     target_compile_options(_native PRIVATE /bigobj)
 endif ()
 
-install(FILES __init__.py DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
+install(FILES bedrock_protocol/__init__.py DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
 install(TARGETS _native
     LIBRARY DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel
     RUNTIME DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
