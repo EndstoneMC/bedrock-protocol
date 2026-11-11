@@ -14,7 +14,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_client_to_server_handshake_is_packet_4(version):
     assert version.PACKETS[4] is version.ClientToServerHandshakePacket
 
@@ -29,7 +29,7 @@ def test_client_to_server_handshake_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_client_to_server_handshake_leaves_a_trailing_byte_unread(version):
     with pytest.raises(ValueError, match="trailing bytes"):
         version.ClientToServerHandshakePacket.from_bytes(b"\x01")
