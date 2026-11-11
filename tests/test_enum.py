@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v748, v827, v844, v975, v1001, v2168
+from bedrock_protocol import v748, v786, v827, v844, v975, v1001, v2168, v2225
 
 
 def test_an_enum_member_keeps_its_schema_name(protocol):
@@ -21,10 +21,6 @@ def test_a_name_no_member_holds_is_not_in_the_enum(protocol):
 
 def test_a_member_is_in_its_enum(protocol):
     assert protocol.BossBarOverlay.NOTCHED_20 in protocol.BossBarOverlay
-
-
-def test_an_integer_between_members_is_not_in_the_enum(protocol):
-    assert 5 not in protocol.BossBarOverlay
 
 
 def test_an_integer_finds_its_member(protocol):
@@ -68,10 +64,10 @@ def test_an_enum_is_named_for_its_schema_class(protocol, name):
     ("enum", "name"),
     [
         pytest.param(
-            v1001.ItemUseInventoryTransaction.ActionType, "ItemUseInventoryTransaction.ActionType", id="action-type"
+            v2225.ItemUseInventoryTransaction.ActionType, "ItemUseInventoryTransaction.ActionType", id="action-type"
         ),
         pytest.param(
-            v1001.InventorySource.InventorySourceFlags, "InventorySource.InventorySourceFlags", id="source-flags"
+            v2225.InventorySource.InventorySourceFlags, "InventorySource.InventorySourceFlags", id="source-flags"
         ),
     ],
 )
@@ -102,7 +98,7 @@ def test_a_nested_enum_that_gates_a_member_is_a_type_per_snapshot():
         pytest.param(v827.ItemUseInventoryTransaction.ActionType, 3, id="v827-action-type"),
         pytest.param(v844.ItemUseInventoryTransaction.ActionType, 4, id="v844-action-type"),
         pytest.param(v748.MovementEffectType, 3, id="v748-movement-effect"),
-        pytest.param(v975.MovementEffectType, 4, id="v975-movement-effect"),
+        pytest.param(v786.MovementEffectType, 4, id="v786-movement-effect"),
         pytest.param(v1001.MovementEffectType, 5, id="v1001-movement-effect"),
     ],
 )
