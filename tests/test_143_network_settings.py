@@ -39,7 +39,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_network_settings_is_packet_143(version):
     assert version.PACKETS[143] is version.NetworkSettingsPacket
 
