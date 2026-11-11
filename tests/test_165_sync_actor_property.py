@@ -22,7 +22,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_sync_actor_property_is_packet_165(version):
     assert version.PACKETS[165] is version.SyncActorPropertyPacket
 
