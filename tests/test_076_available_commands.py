@@ -81,10 +81,9 @@ GOLDENS = [
     pytest.param(v2225.AvailableCommandsPacket(), EMPTY, id="eight-empty-lists-are-eight-zero-bytes"),
     pytest.param(
         v2225.AvailableCommandsPacket(
-            enums=[v2225.AvailableCommandsPacket.EnumData(name="", values=[300])],
+            enums=[v2225.AvailableCommandsPacket.EnumData(values=[300])],
             chained_subcommands=[
                 v2225.AvailableCommandsPacket.ChainedSubcommandData(
-                    name="",
                     values=[
                         v2225.AvailableCommandsPacket.ChainedSubcommandRelationship(
                             sub_command_first_value=300, sub_command_second_value=300
