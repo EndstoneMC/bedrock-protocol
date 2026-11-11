@@ -148,7 +148,7 @@ def test_camera_instruction_decodes_from_its_golden(packet, golden):
 
 
 def test_a_spline_with_an_empty_curve_still_writes_the_three_list_prefixes():
-    assert len(bytes(EMPTY_SPLINE)) == 9 + 4 + 1 + 3 + 1 + 1
+    assert len(bytes(EMPTY_SPLINE)) == 19
 
 
 def test_a_spline_with_an_empty_curve_round_trips():
