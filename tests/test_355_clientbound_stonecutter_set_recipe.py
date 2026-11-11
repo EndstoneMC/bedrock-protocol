@@ -1,6 +1,7 @@
 from bedrock_protocol import v2193, v2225
 
 PACKET = v2225.ClientboundStonecutterSetRecipePacket(player_id=5, container_id=v2225.ContainerID.FIRST, recipe_index=7)
+# TODO: confirm against BDS: gophertunnel stops at 2168 and cannot marshal this packet; the bytes follow the r26_u6 dump
 ENCODED = bytes.fromhex("0a010e")
 
 
