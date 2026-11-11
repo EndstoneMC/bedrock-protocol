@@ -71,12 +71,15 @@ def field(
       annotated type. It reaches through `list` and `T | None`, and the one scalar half of a `dict`.
     - `since`, `until`: the field exists in protocol versions `[since, until)`, within its
       declaration's range. A gate that the declaration's range already decides is an error.
-    - `when`: a one-argument lambda over earlier fields. Nothing marks presence on the wire: both
-      directions recompute it, and the field stays the bare type in C++.
+    - `when`: a one-argument lambda over earlier fields: `p.f`, `not`, `and`, `or`, `==`, `!=`, `<`,
+      `&`, `in {E.A, ...}`, `p.bits.test(E.M)`, integers and enum members. Every field it reads is
+      present wherever this one is, and every member it names exists there. Nothing marks presence
+      on the wire: both directions recompute it, and the field stays the bare type in C++.
     - `endian`: `"big"` for a 16, 32 or 64-bit integer, or an enum whose `type=` is one, written big-endian. `int8`,
       `uint8`, the varints and a primitive alias take none.
     - `prefix`: `uint32`, `uint16` or `varint32` in place of the field's `list`'s `uvarint32` count.
-    - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix.
+    - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix: an
+      earlier field, `len(p.f)` of an earlier list or dict, or a product of them with `*`.
     - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type. It flows
       through `list`, `dict`, `T | None`, union cases and array elements, and every name it reaches
       needs a `@type(cereal=False)` declaration.

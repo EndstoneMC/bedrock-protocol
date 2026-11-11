@@ -8,6 +8,7 @@ import uuid
 from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
+from functools import reduce
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
@@ -27,15 +28,19 @@ from bedrock_protocol_compiler.descriptor import (
     EnumDeclaration,
     EnumName,
     EnumRef,
+    Expression,
     Family,
     Field,
+    FieldRef,
     Int,
+    Len,
     List,
     Literal,
     Map,
     Member,
     MemberRef,
     Module,
+    Not,
     Optional,
     Package,
     Primitive,
@@ -43,6 +48,7 @@ from bedrock_protocol_compiler.descriptor import (
     Struct,
     StructDeclaration,
     StructRef,
+    Test,
     Type,
     Variant,
 )
@@ -112,6 +118,16 @@ class UnionAlias:
 
 
 @dataclass
+class Lambda:
+    source: Source
+    scope: Scope
+    name: str
+    param: str
+    earlier: list[Field]
+    range: Range
+
+
+@dataclass
 class PendingAlias:
     source: Source
     node: ast.TypeAlias
@@ -169,14 +185,24 @@ def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
     return None
 
 
-def reaches(node: Type | None) -> Iterator[Struct | Enum | MemberRef]:
+def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRef]:
     match node:
         case StructRef(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
             yield family
-        case Literal(value=MemberRef() as member) | Bitset(width=member):
+        case MemberRef():
+            yield node
+        case Literal(value=MemberRef() as member) | Bitset(width=member) | Test(member=member):
             yield member
-        case Optional(element=element) | List(element=element) | Array(element=element):
+        case Optional(element=element) | Array(element=element):
             yield from reaches(element)
+        case List(element=element, count=count):
+            yield from reaches(element)
+            yield from reaches(count)
+        case Not(operand=operand):
+            yield from reaches(operand)
+        case Binary(left=left, right=right):
+            yield from reaches(left)
+            yield from reaches(right)
         case Map(key=key, value=value):
             yield from reaches(key)
             yield from reaches(value)
@@ -197,7 +223,7 @@ def check(package: Package) -> None:
 def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str) -> None:
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
-            for target in reaches(struct_field.type):
+            for target in (*reaches(struct_field.type), *reaches(struct_field.when)):
                 for version in versions:
                     if not struct_field.range.contains(version):
                         continue
@@ -596,11 +622,22 @@ class Builder:
         source = pending.source
         scope = self.scopes[pending.struct]
         fields: list[Field] = []
+        statements: list[tuple[ast.stmt, ast.expr | None]] = []
         for statement in without_docstring(pending.node.body):
-            if isinstance(statement, ast.Pass | ast.ClassDef):
+            if not isinstance(statement, ast.With):
+                statements.append((statement, None))
                 continue
-            if isinstance(statement, ast.With):
-                raise error(source, statement, pending.struct.name, "with blocks are not supported yet")
+            single = len(statement.items) == 1 and statement.items[0].optional_vars is None
+            block = statement.items[0].context_expr if single else None
+            if not (isinstance(block, ast.Call) and self.resolve(source, scope, block.func) is dsl.field):
+                raise error(source, statement, pending.struct.name, "is not a with field(when=...) block")
+            arguments = self.bind(source, block, dsl.field, ("when",))
+            if "when" not in arguments:
+                raise error(source, block, pending.struct.name, "a with block needs when=")
+            statements.extend((inner, arguments["when"]) for inner in statement.body)
+        for statement, block_when in statements:
+            if block_when is None and isinstance(statement, ast.Pass | ast.ClassDef):
+                continue
             if not (isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)):
                 raise error(
                     source, statement, pending.struct.name, "holds only fields, nested classes, a docstring and pass"
@@ -614,7 +651,9 @@ class Builder:
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                arguments = self.bind(source, call, dsl.field, ("type", "endian", "prefix", "cereal", "since", "until"))
+                arguments = self.bind(
+                    source, call, dsl.field, ("type", "endian", "prefix", "count", "cereal", "when", "since", "until")
+                )
             annotation = statement.annotation
             cereal = True
             if call is not None and "cereal" in arguments:
@@ -643,6 +682,8 @@ class Builder:
                 field_type = replace(field_type, prefix=prefix)
             wire = None
             endian = None
+            if call is not None and "count" in arguments and "prefix" in arguments:
+                raise error(source, call, name, "count and prefix are both given")
             if call is not None and "type" in arguments:
                 wire_type = self.type_of(source, scope, arguments["type"])
                 if not (isinstance(wire_type, Primitive) and wire_type.name in ("str", *INTEGERS)):
@@ -660,7 +701,24 @@ class Builder:
                     )
                 field_type = rewired
             own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
-            fields.append(Field(name, field_type, self.narrow(source, statement, name, own, pending.range)))
+            field_range = self.narrow(source, statement, name, own, pending.range)
+            if call is not None and "count" in arguments:
+                if not isinstance(field_type, List):
+                    raise error(source, call, name, "count is given to something other than a bare list")
+                count_lambda, count_body = self.read_lambda(
+                    source, scope, name, arguments["count"], fields, field_range
+                )
+                field_type = replace(field_type, prefix=None, count=self.count_of(count_lambda, count_body))
+            guard = block_when
+            if call is not None and "when" in arguments:
+                if block_when is not None:
+                    raise error(source, call, name, "has its own when= inside a with block")
+                guard = arguments["when"]
+            when = None
+            if guard is not None:
+                when_lambda, when_body = self.read_lambda(source, scope, name, guard, fields, field_range)
+                when = self.predicate_of(when_lambda, when_body)
+            fields.append(Field(name, field_type, field_range, when))
         struct = pending.struct
         self.tile(source, pending.node, struct, pending.range)
         if struct.packet_id is not None:
@@ -672,6 +730,77 @@ class Builder:
                     )
             claimed.append((struct, pending.range))
         struct.declarations.append(StructDeclaration(pending.range, tuple(fields)))
+
+    def read_lambda(
+        self, source: Source, scope: Scope, name: str, node: ast.expr, earlier: list[Field], range: Range
+    ) -> tuple[Lambda, ast.expr]:
+        if not (
+            isinstance(node, ast.Lambda)
+            and len(node.args.args) == 1
+            and not (node.args.posonlyargs or node.args.kwonlyargs or node.args.vararg or node.args.kwarg)
+            and not node.args.defaults
+        ):
+            raise error(source, node, name, "is not a lambda of one argument")
+        return Lambda(source, scope, name, node.args.args[0].arg, earlier, range), node.body
+
+    def earlier_field(self, context: Lambda, node: ast.expr) -> Field:
+        if not (
+            isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == context.param
+        ):
+            raise error(context.source, node, context.name, f"{ast.unparse(node)} is not {context.param}.<field>")
+        for earlier in context.earlier:
+            if earlier.name == node.attr:
+                for version in self.versions:
+                    if context.range.contains(version) and not earlier.range.contains(version):
+                        raise error(context.source, node, context.name, f"{ast.unparse(node)} is absent at {version}")
+                return earlier
+        raise error(context.source, node, context.name, f"{ast.unparse(node)} is not an earlier field")
+
+    def count_of(self, context: Lambda, node: ast.expr) -> Expression:
+        match node:
+            case ast.BinOp(op=ast.Mult(), left=left, right=right):
+                return Binary("*", self.count_of(context, left), self.count_of(context, right))
+            case ast.Call(func=ast.Name(id="len"), args=[argument], keywords=[]):
+                counted = self.earlier_field(context, argument)
+                if not isinstance(counted.type, List | Map):
+                    raise error(
+                        context.source, argument, context.name, "len is given something other than a list or map"
+                    )
+                return Len(counted.name)
+            case ast.Attribute():
+                return FieldRef(self.earlier_field(context, node).name)
+        raise error(context.source, node, context.name, "is not a field, len(field) or a product")
+
+    def predicate_of(self, context: Lambda, node: ast.expr) -> Expression:
+        match node:
+            case ast.BoolOp(op=op, values=values):
+                operator = "and" if isinstance(op, ast.And) else "or"
+                operands = [self.predicate_of(context, value) for value in values]
+                return reduce(lambda left, right: Binary(operator, left, right), operands)
+            case ast.UnaryOp(op=ast.Not(), operand=operand):
+                return Not(self.predicate_of(context, operand))
+            case ast.BinOp(op=ast.BitAnd(), left=left, right=right):
+                return Binary("&", self.predicate_of(context, left), self.predicate_of(context, right))
+            case ast.Compare(left=left, ops=[ast.In()], comparators=[ast.Set(elts=elements)]):
+                operands = [
+                    Binary("==", self.predicate_of(context, left), self.predicate_of(context, e)) for e in elements
+                ]
+                return reduce(lambda first, second: Binary("or", first, second), operands)
+            case ast.Compare(left=left, ops=[ast.Eq() | ast.NotEq() | ast.Lt() as op], comparators=[right]):
+                operator = {ast.Eq: "==", ast.NotEq: "!=", ast.Lt: "<"}[type(op)]
+                return Binary(operator, self.predicate_of(context, left), self.predicate_of(context, right))
+            case ast.Call(func=ast.Attribute(value=receiver, attr="test"), args=[bit], keywords=[]):
+                bits = self.earlier_field(context, receiver)
+                if not isinstance(bits.type, Bitset):
+                    raise error(context.source, receiver, context.name, "test is given something other than a bitset")
+                return Test(bits.name, self.member_of(context.source, context.scope, bit))
+            case ast.Attribute(value=ast.Name(id=name)) if name == context.param:
+                return FieldRef(self.earlier_field(context, node).name)
+            case ast.Attribute():
+                return self.member_of(context.source, context.scope, node)
+            case ast.Constant() | ast.UnaryOp(op=ast.USub()):
+                return Int(literal(context.source, node, int, context.name))
+        raise error(context.source, node, context.name, "is not a predicate")
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}

@@ -48,7 +48,8 @@ class Optional:
 @dataclass(frozen=True)
 class List:
     element: "Type"
-    prefix: Primitive
+    prefix: Primitive | None
+    count: "Expression | None" = None
 
 
 @dataclass(frozen=True)
@@ -119,6 +120,7 @@ class Field:
     name: str
     type: Type
     range: Range
+    when: "Expression | None" = None
 
 
 @dataclass(frozen=True)
@@ -139,10 +141,34 @@ class MemberRef:
 
 
 @dataclass(frozen=True)
+class FieldRef:
+    name: str
+
+
+@dataclass(frozen=True)
+class Len:
+    field: str
+
+
+@dataclass(frozen=True)
+class Test:
+    field: str
+    member: MemberRef
+
+
+@dataclass(frozen=True)
+class Not:
+    operand: "Expression"
+
+
+@dataclass(frozen=True)
 class Binary:
     operator: str
-    left: MemberRef
-    right: Int
+    left: "Expression"
+    right: "Expression"
+
+
+type Expression = FieldRef | MemberRef | Int | Len | Test | Not | Binary
 
 
 @dataclass(frozen=True)
