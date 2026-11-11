@@ -1,6 +1,5 @@
-"""The schema language: the compiler reads a schema module's source and never runs it.
+"""The schema language, where every version range is `[since, until)`.
 
-`since` and `until` name versions and give the range `[since, until)`.
 A field named after a Python keyword carries one trailing underscore, which the compiler drops (`pass_`).
 """
 
@@ -17,7 +16,7 @@ def value(
     since: int | None = None,
     until: int | None = None,
 ) -> int:
-    """Mark an enum member's wire value, optionally with BDS's spelling or a version gate."""
+    """Mark an enum member's value; an omitted `v` is the previous present member's plus one."""
     return 0 if v is None else v
 
 
@@ -52,7 +51,7 @@ def builtin[T](cls: T) -> T:
 
 
 class bitset:
-    """`bitset[E.M]` is a `std::bitset` as wide as the enum member `E.M`."""
+    """`bitset[E.M]` is a `std::bitset` as wide as the enum member `E.M`, written as a base-128 dump."""
 
 
 class array:
