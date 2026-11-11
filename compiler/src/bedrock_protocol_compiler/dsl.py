@@ -91,8 +91,9 @@ def type(*, since: int | None = None, until: int | None = None, cereal: bool = T
 
     A type may be declared again with the adjacent range that follows; the declarations form one
     versioned type, and only the last may be open. A nested class lives within its owner's range,
-    narrowed by its own gates, and is one type across its owner's redeclarations. `cereal=False` marks BDS's hand-written encoding of a type BDS also cerealises;
-    only a reference spelled `field(cereal=False)` reaches it.
+    narrowed by its own gates, and is one type across its owner's redeclarations. `cereal=False`
+    marks BDS's hand-written encoding of a type BDS also cerealises; only a reference spelled
+    `field(cereal=False)` reaches it.
     """
     return lambda cls: cls
 
