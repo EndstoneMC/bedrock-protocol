@@ -1,0 +1,265 @@
+import pytest
+
+from bedrock_protocol_compiler.descriptor import CompilerError, Int, Range
+from bedrock_protocol_compiler.schema import Schema
+
+HEADER = """
+from enum import IntEnum, auto
+from protocol import field, packet, type, uint8, uint16, value
+package = "bedrock.protocol"
+"""
+
+BOSS = """
+from enum import IntEnum
+from protocol import field, packet, int64, uint8
+package = "bedrock.protocol"
+
+type ActorUniqueID = int64
+
+
+class BossEventUpdateType(IntEnum, uint8):
+    ADD = 0
+    PLAYER_ADDED = 1
+    UPDATE_NAME = 5
+
+
+@packet(id=74, until=1001)
+class BossEventPacket:
+    boss_id: ActorUniqueID
+    event_type: BossEventUpdateType
+    player_id: ActorUniqueID = field(when=lambda p: p.event_type == BossEventUpdateType.PLAYER_ADDED)
+
+    with field(when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_NAME}):
+        name: str
+        filtered_name: str = field(since=776)
+
+    health_percent: float
+
+
+@packet(id=74, since=1001)
+class BossEventPacket:
+    boss_id: ActorUniqueID
+    player_id: ActorUniqueID = field(until=2193)
+    event_type: BossEventUpdateType
+    name: str
+    filtered_name: str
+    health_percent: float
+"""
+
+VERSIONS = """
+from bedrock_protocol_compiler.dsl import field, int64, packet, type, uint8, uint16, value
+
+versions = (729, 748, 766, 776, 786, 800, 818, 819, 827, 844, 859, 898, 924, 944, 975, 1001, 2168, 2193, 2225)
+"""
+
+
+def names(shape):
+    return [each.name for each in shape.fields]
+
+
+def test_boss_changes_shape_at_776_1001_and_2193(build_package):
+    schema = Schema(build_package({"boss": BOSS}, VERSIONS))
+    packet = schema.order[-1]
+
+    shapes = schema.shapes(packet)
+
+    assert [shape.ranges for shape in shapes] == [
+        [Range(None, 776)],
+        [Range(776, 1001)],
+        [Range(1001, 2193)],
+        [Range(2193, None)],
+    ]
+    assert names(schema.shape_at(packet, 776)) == [
+        "boss_id",
+        "event_type",
+        "player_id",
+        "name",
+        "filtered_name",
+        "health_percent",
+    ]
+    assert names(schema.shape_at(packet, 1001)) == [
+        "boss_id",
+        "player_id",
+        "event_type",
+        "name",
+        "filtered_name",
+        "health_percent",
+    ]
+    assert names(schema.shape_at(packet, 2193)) == ["boss_id", "event_type", "name", "filtered_name", "health_percent"]
+
+
+def test_a_shape_that_returns_is_one_shape_with_two_ranges(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    x: uint8\n\n"
+        + "@type(since=3, until=4)\nclass A:\n    y: uint8\n\n"
+        + "@type(since=4)\nclass A:\n    x: uint8\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    first, second = schema.shapes(family)
+
+    assert first.ranges == [Range(None, 3), Range(4, None)]
+    assert second.ranges == [Range(3, 4)]
+    assert schema.shape_at(family, 5) is first
+
+
+def test_a_family_with_one_shape_over_every_version_is_unversioned(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    (shape,) = schema.shapes(family)
+
+    assert (shape.ranges, shape.versioned) == ([Range(None, None)], False)
+
+
+def test_a_family_that_stops_early_is_versioned(build_package):
+    schema = Schema(build_package({"a": HEADER + "@type(until=4)\nclass A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    (shape,) = schema.shapes(family)
+
+    assert (shape.ranges, shape.versioned) == ([Range(None, 4)], True)
+
+
+def test_a_reached_family_that_changes_changes_the_owner(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    y: uint8\n\n"
+        + "class A:\n    b: B\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, a = schema.order
+
+    assert [shape.ranges for shape in schema.shapes(a)] == [[Range(None, 3)], [Range(3, None)]]
+
+
+def test_a_nested_shape_is_owned_by_the_first_owner_shape_that_holds_it(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class B:\n        x: uint8\n    b: B\n\n"
+        + "@type(since=3)\nclass A:\n    class B:\n        x: uint8\n    b: B\n    y: uint8\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    nested, owner = schema.order
+
+    (inner,) = schema.shapes(nested)
+    early, late = schema.shapes(owner)
+
+    assert inner.ranges == [Range(None, None)]
+    assert early.nested == late.nested == (inner,)
+    assert inner.owner is early
+
+
+def test_a_new_nested_shape_opens_a_new_owner_shape(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class B:\n        x: uint8\n    b: B\n\n"
+        + "@type(since=3)\nclass A:\n    class B:\n        y: uint8\n    b: B\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    nested, owner = schema.order
+
+    old, new = schema.shapes(nested)
+    early, late = schema.shapes(owner)
+
+    assert (old.owner, new.owner) == (early, late)
+
+
+def test_a_deeper_nested_shape_is_owned_by_its_mid_shape(build_package):
+    source = HEADER + "class A:\n    class B:\n        class C:\n            x: uint8\n        c: C\n    b: B\n"
+    schema = Schema(build_package({"a": source}))
+    deep, mid, top = schema.order
+
+    assert schema.shapes(deep)[0].owner is schema.shapes(mid)[0]
+    assert schema.shapes(mid)[0].owner is schema.shapes(top)[0]
+
+
+def test_a_nested_family_absent_at_a_version_is_left_out_of_its_owner(build_package):
+    source = HEADER + "class A:\n    @type(since=3)\n    class B:\n        x: uint8\n    y: uint8\n"
+    schema = Schema(build_package({"a": source}))
+    nested, owner = schema.order
+
+    before, after = schema.shapes(owner)
+
+    assert (before.nested, after.nested) == ((), (schema.shapes(nested)[0],))
+
+
+def test_the_cereal_and_legacy_flavours_are_separate_families(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "class A:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, legacy, a = schema.order
+
+    assert len(schema.shapes(cereal)) == 2
+    assert len(schema.shapes(legacy)) == 1
+    assert len(schema.shapes(a)) == 1
+
+
+def test_a_packet_that_reaches_a_legacy_family_does_not_change_with_the_cereal_one(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    a = schema.order[-1]
+
+    (shape,) = schema.shapes(a)
+
+    assert shape.ranges == [Range(None, None)]
+
+
+def test_a_family_comes_after_the_families_it_reaches(build_package):
+    source = HEADER + "class A:\n    b: B\n\nclass B:\n    c: C\n\nclass C:\n    x: uint8\n"
+    schema = Schema(build_package({"a": source}))
+
+    assert [family.name for family in schema.order] == ["C", "B", "A"]
+
+
+def test_the_latest_version_is_the_last_one(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+
+    assert (schema.versions, schema.latest) == ((1, 2, 3, 4, 5), 5)
+
+
+def test_enum_values_are_evaluated_over_the_members_present(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 4\n    B = value(5, since=3)\n    C = auto()\n    D = A\n    F = C - 1\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    early, late = schema.shapes(family)
+
+    assert [(member.name, member.value) for member in early.members] == [
+        ("A", Int(4)),
+        ("C", Int(5)),
+        ("D", Int(4)),
+        ("F", Int(4)),
+    ]
+    assert [member.value for member in late.members] == [Int(4), Int(5), Int(6), Int(4), Int(5)]
+
+
+def test_enums_with_the_same_values_merge_even_when_their_gates_differ(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n    C = value(2, until=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    shapes = schema.shapes(family)
+
+    assert [shape.ranges for shape in shapes] == [[Range(None, 3)], [Range(3, None)]]
+
+
+def test_a_member_that_names_an_absent_member_is_rejected(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    B = A\n"
+
+    with pytest.raises(CompilerError, match=r"E\.B: names A, which does not exist at 3"):
+        Schema(build_package({"a": source}))
