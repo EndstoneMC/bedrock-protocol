@@ -28,8 +28,7 @@ set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedro
 
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
-set_target_properties(bedrock_protocol PROPERTIES
-        EXPORT_NAME protocol)
+set_target_properties(bedrock_protocol PROPERTIES EXPORT_NAME protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
 target_include_directories(bedrock_protocol PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
