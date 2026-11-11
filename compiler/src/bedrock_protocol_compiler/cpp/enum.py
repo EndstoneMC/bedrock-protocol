@@ -1,4 +1,5 @@
 from bedrock_protocol_compiler.cpp import names
+from bedrock_protocol_compiler.cpp.field import PrimitiveField
 from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema
@@ -8,13 +9,14 @@ class EnumGenerator:
     def __init__(self, schema: Schema, shape: EnumShape) -> None:
         self.shape = shape
         self.qualified = names.qualified(schema, shape)
-        self.underlying = "int" if shape.underlying is None else names.PRIMITIVES[shape.underlying.name]
+        self.primitive = None if shape.underlying is None else PrimitiveField(shape.underlying)
+        self.underlying = "int" if self.primitive is None else self.primitive.cpp_type()
         self.name_coded = shape.family in schema.name_coded
 
     def includes(self) -> set[str]:
         includes = {names.runtime("enum"), "<array>", "<string_view>"}
-        if self.underlying.startswith("std::"):
-            includes.add("<cstdint>")
+        if self.primitive is not None:
+            includes |= self.primitive.includes()
         if self.name_coded:
             includes |= names.SERIALIZER_INCLUDES
         return includes
