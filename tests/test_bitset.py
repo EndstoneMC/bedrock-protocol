@@ -85,6 +85,11 @@ def test_a_130_bit_bitset_decodes_from_its_golden(version):
     assert version.ActorDataFlagComponent.from_bytes(WIDE) == version.ActorDataFlagComponent(value=WIDE_VALUE)
 
 
+@pytest.mark.parametrize("version", [v975, v1001])
+def test_a_130_bit_bitset_reads_back_as_its_int(version):
+    assert version.ActorDataFlagComponent.from_bytes(WIDE).value == WIDE_VALUE
+
+
 @pytest.mark.parametrize(("value", "golden"), WHOLE)
 def test_a_65_bit_bitset_packet_encodes_to_its_golden(value, golden):
     assert bytes(v1001.PlayerAuthInputPacket(input_data=value)) == golden
@@ -98,6 +103,11 @@ def test_a_65_bit_bitset_packet_decodes_from_its_golden(value, golden):
 def test_a_bit_past_the_declared_width_cannot_be_assigned():
     with pytest.raises(TypeError, match="cannot hold"):
         v1001.PlayerAuthInputPacket(input_data=1 << 65)
+
+
+def test_a_negative_int_cannot_be_assigned():
+    with pytest.raises(TypeError, match="cannot hold"):
+        v1001.PlayerAuthInputPacket(input_data=-1)
 
 
 @pytest.mark.parametrize("wire", REJECTS)
