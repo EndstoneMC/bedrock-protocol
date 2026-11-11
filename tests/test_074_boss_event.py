@@ -49,7 +49,7 @@ V975_GOLDENS = [
     pytest.param(v975.BossEventUpdateType.UPDATE_STYLE, V975_UPDATE_STYLE, id="update-style"),
 ]
 
-V975_DECODED = [
+GOLDENS = [
     pytest.param(
         v975.BossEventPacket(
             boss_id=-3,
@@ -62,17 +62,17 @@ V975_DECODED = [
             overlay=v975.BossBarOverlay.NOTCHED_6,
         ),
         V975_ADD,
-        id="add",
+        id="v975-add",
     ),
     pytest.param(
         v975.BossEventPacket(boss_id=-3, player_id=7, event_type=v975.BossEventUpdateType.PLAYER_ADDED),
         V975_PLAYER_ADDED,
-        id="player-added",
+        id="v975-player-added",
     ),
     pytest.param(
         v975.BossEventPacket(boss_id=-3, event_type=v975.BossEventUpdateType.REMOVE),
         V975_REMOVE,
-        id="remove",
+        id="v975-remove",
     ),
     pytest.param(
         v975.BossEventPacket(
@@ -82,15 +82,64 @@ V975_DECODED = [
             overlay=v975.BossBarOverlay.NOTCHED_6,
         ),
         V975_UPDATE_STYLE,
-        id="update-style",
+        id="v975-update-style",
     ),
-]
-
-V1001_GOLDENS = [
-    pytest.param(v1001.BossEventUpdateType.ADD, V1001_ADD, id="add"),
-    pytest.param(v1001.BossEventUpdateType.REMOVE, V1001_REMOVE, id="remove"),
-    pytest.param(v1001.BossEventUpdateType.UPDATE_STYLE, V1001_UPDATE_STYLE, id="update-style"),
-    pytest.param(v1001.BossEventUpdateType.QUERY, V1001_QUERY, id="query"),
+    pytest.param(
+        v1001.BossEventPacket(
+            boss_id=-3,
+            player_id=7,
+            event_type=v1001.BossEventUpdateType.ADD,
+            name="boss",
+            filtered_name="bo**",
+            health_percent=0.5,
+            color=v1001.BossBarColor.GREEN,
+            overlay=v1001.BossBarOverlay.NOTCHED_6,
+        ),
+        V1001_ADD,
+        id="v1001-add",
+    ),
+    pytest.param(
+        v1001.BossEventPacket(
+            boss_id=-3,
+            player_id=7,
+            event_type=v1001.BossEventUpdateType.REMOVE,
+            name="boss",
+            filtered_name="bo**",
+            health_percent=0.5,
+            color=v1001.BossBarColor.GREEN,
+            overlay=v1001.BossBarOverlay.NOTCHED_6,
+        ),
+        V1001_REMOVE,
+        id="v1001-remove",
+    ),
+    pytest.param(
+        v1001.BossEventPacket(
+            boss_id=-3,
+            player_id=7,
+            event_type=v1001.BossEventUpdateType.UPDATE_STYLE,
+            name="boss",
+            filtered_name="bo**",
+            health_percent=0.5,
+            color=v1001.BossBarColor.GREEN,
+            overlay=v1001.BossBarOverlay.NOTCHED_6,
+        ),
+        V1001_UPDATE_STYLE,
+        id="v1001-update-style",
+    ),
+    pytest.param(
+        v1001.BossEventPacket(
+            boss_id=-3,
+            player_id=7,
+            event_type=v1001.BossEventUpdateType.QUERY,
+            name="boss",
+            filtered_name="bo**",
+            health_percent=0.5,
+            color=v1001.BossBarColor.GREEN,
+            overlay=v1001.BossBarOverlay.NOTCHED_6,
+        ),
+        V1001_QUERY,
+        id="v1001-query",
+    ),
 ]
 
 
@@ -116,42 +165,14 @@ def test_boss_event_v975_gating_selects_the_payload_per_event_type(event_type, g
     assert bytes(packet) == golden
 
 
-@pytest.mark.parametrize(("packet", "golden"), V975_DECODED)
-def test_boss_event_v975_decodes_each_gated_shape_and_defaults_the_rest(packet, golden):
-    assert v975.BossEventPacket.from_bytes(golden) == packet
+@pytest.mark.parametrize(("packet", "golden"), GOLDENS)
+def test_boss_event_encodes_to_its_golden(packet, golden):
+    assert bytes(packet) == golden
 
 
-@pytest.mark.parametrize("golden", [V975_ADD, V975_PLAYER_ADDED, V975_REMOVE, V975_UPDATE_STYLE])
-def test_boss_event_v975_re_encodes_each_gated_shape(golden):
-    assert bytes(v975.BossEventPacket.from_bytes(golden)) == golden
-
-
-@pytest.fixture
-def v1001_add():
-    return v1001.BossEventPacket(
-        boss_id=-3,
-        player_id=7,
-        event_type=v1001.BossEventUpdateType.ADD,
-        name="boss",
-        filtered_name="bo**",
-        health_percent=0.5,
-        color=v1001.BossBarColor.GREEN,
-        overlay=v1001.BossBarOverlay.NOTCHED_6,
-    )
-
-
-def test_boss_event_v1001_encodes_to_its_golden(v1001_add):
-    assert bytes(v1001_add) == V1001_ADD
-
-
-def test_boss_event_v1001_decodes_from_its_golden(v1001_add):
-    assert v1001.BossEventPacket.from_bytes(V1001_ADD) == v1001_add
-
-
-@pytest.mark.parametrize(("event_type", "golden"), V1001_GOLDENS)
-def test_boss_event_v1001_writes_every_event_type_the_same_way(v1001_add, event_type, golden):
-    v1001_add.event_type = event_type
-    assert bytes(v1001_add) == golden
+@pytest.mark.parametrize(("packet", "golden"), GOLDENS)
+def test_boss_event_decodes_from_its_golden(packet, golden):
+    assert type(packet).from_bytes(golden) == packet
 
 
 def test_a_v975_remove_body_does_not_decode_as_a_v1001_one():
