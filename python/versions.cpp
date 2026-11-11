@@ -10,7 +10,6 @@
 
 #include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/serializer.hpp"
-#include "bedrock/protocol/version.hpp"
 #include "binder.hpp"
 #include "module.hpp"
 
@@ -62,40 +61,6 @@ nb::object decode_body(const Version &version, int id, BinaryReader &reader)
     return nb::type_supplement<Codec>(cls).decode(reader);
 }
 
-void bind_version_api(Version &version)
-{
-    auto m = nb::borrow<nb::module_>(version.module);
-    m.attr("PROTOCOL") = version.number;
-    m.attr("PacketHeader") = nb::type<PacketHeader>();
-    m.attr("PACKETS") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
-    m.def(
-        "decode",
-        [version](int packet_id, nb::bytes data) {
-            BinaryReader reader{std::string_view(data.c_str(), data.size())};
-            return decode_body(version, packet_id, reader);
-        },
-        nb::arg("packet_id"), nb::arg("data"), "Reads a packet body.");
-    m.def(
-        "decode_packet",
-        [version](nb::bytes data) {
-            BinaryReader reader{std::string_view(data.c_str(), data.size())};
-            auto header = Serializer<PacketHeader>::deserialize(reader);
-            if (!header) {
-                throw_decode_error({.reason = header.error(),
-                                    .type = "PacketHeader",
-                                    .path = {},
-                                    .offset = reader.getReadPointer(),
-                                    .length = reader.getLength()});
-            }
-            nb::object packet = decode_body(version, header->packet_id, reader);
-            return nb::make_tuple(*header, packet);
-        },
-        nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
-    m.def("encode", &encode_body, nb::arg("packet"), "The packet body, without its header.");
-    m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
-          nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
-}
-
 }  // namespace
 
 void throw_decode_error(const DecodeError &error)
@@ -131,7 +96,36 @@ void init_versions(nb::module_ &parent)
     }
     init_types(bound);
     for (Version &version : bound) {
-        bind_version_api(version);
+        auto m = nb::borrow<nb::module_>(version.module);
+        m.attr("PROTOCOL") = version.number;
+        m.attr("PacketHeader") = nb::type<PacketHeader>();
+        m.attr("PACKETS") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
+        m.def(
+            "decode",
+            [version](int packet_id, nb::bytes data) {
+                BinaryReader reader{std::string_view(data.c_str(), data.size())};
+                return decode_body(version, packet_id, reader);
+            },
+            nb::arg("packet_id"), nb::arg("data"), "Reads a packet body.");
+        m.def(
+            "decode_packet",
+            [version](nb::bytes data) {
+                BinaryReader reader{std::string_view(data.c_str(), data.size())};
+                auto header = Serializer<PacketHeader>::deserialize(reader);
+                if (!header) {
+                    throw_decode_error({.reason = header.error(),
+                                        .type = "PacketHeader",
+                                        .path = {},
+                                        .offset = reader.getReadPointer(),
+                                        .length = reader.getLength()});
+                }
+                nb::object packet = decode_body(version, header->packet_id, reader);
+                return nb::make_tuple(*header, packet);
+            },
+            nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
+        m.def("encode", &encode_body, nb::arg("packet"), "The packet body, without its header.");
+        m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
+              nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
     }
     for (const auto &[cls, annotations] : annotators()) {
         cls.attr("__annotations__") = annotations();
