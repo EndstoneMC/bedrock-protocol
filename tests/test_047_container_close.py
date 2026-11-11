@@ -32,7 +32,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_container_close_is_packet_47(version):
     assert version.PACKETS[47] is version.ContainerClosePacket
 
