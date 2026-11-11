@@ -13,7 +13,7 @@ permissions:
 jobs:
   lint:
     name: Lint (ruff + mypy)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
@@ -27,7 +27,7 @@ jobs:
 
   test:
     name: Compiler tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
@@ -97,21 +97,21 @@ jobs:
           - name: Linux GCC (libstdc++)
             os: ubuntu-24.04
             triple: linux-x86_64-gcc13
-            cxx: g++
+            generator: Ninja
+            cmakeflags: -DCMAKE_CXX_COMPILER=g++
           - name: Linux Clang (libc++)
             os: ubuntu-24.04
             triple: linux-x86_64-clang18-libcxx
-            cxx: clang++-18
+            generator: Ninja
             llvm: "18"
-            cmakeflags: -DCMAKE_CXX_FLAGS=-stdlib=libc++
+            cmakeflags: -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS=-stdlib=libc++
           - name: Windows MSVC
             os: windows-2022
             triple: windows-x86_64-msvc2022
-            cxx: cl
+            generator: Visual Studio 17 2022
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
-      - uses: lukka/get-cmake@latest
 
       - name: Install Clang ${{ matrix.llvm }} + libc++
         if: matrix.llvm
@@ -123,29 +123,15 @@ jobs:
           sudo ./llvm.sh ${{ matrix.llvm }}
           sudo apt-get install -y -q libc++-${{ matrix.llvm }}-dev libc++abi-${{ matrix.llvm }}-dev
 
-      - name: Set up MSVC
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          if (-not $vs) { throw 'Visual Studio C++ tools are missing' }
-          Import-Module (Join-Path $vs 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
-          Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
-          foreach ($name in 'INCLUDE', 'LIB', 'LIBPATH', 'PATH') {
-            $value = [Environment]::GetEnvironmentVariable($name, 'Process')
-            if ($value) { "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
-          }
-
       - name: Configure
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/stage ${{ matrix.cmakeflags }}
+        run: cmake -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/stage ${{ matrix.cmakeflags }}
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --config Release
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build -C Release --output-on-failure
 
       - name: Install
-        run: cmake --install build
+        run: cmake --install build --config Release
 
       # The install tree has to stand on its own: a consumer resolves it through
       # find_package, includes the umbrella and links the archive, with no part of
@@ -153,13 +139,12 @@ jobs:
       - name: Consume the install tree
         shell: bash
         run: |
-          cmake -S tests/package -B package-build -G Ninja \
+          cmake -S tests/package -B package-build -G "${{ matrix.generator }}" \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
                 -DCMAKE_PREFIX_PATH='${{ github.workspace }}/stage' \
                 ${{ matrix.cmakeflags }}
-          cmake --build package-build
-          ctest --test-dir package-build --output-on-failure
+          cmake --build package-build --config Release
+          ctest --test-dir package-build -C Release --output-on-failure
 
       - name: Name the package
         id: package
@@ -186,7 +171,6 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: false
-      - uses: lukka/get-cmake@latest
 
       - name: Generate
         run: |
@@ -238,22 +222,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.1.0
-        with:
-          python-version: "3.12"
-      - uses: lukka/get-cmake@latest
+      - uses: astral-sh/setup-uv@v10.3.2
       - uses: actions/download-artifact@v8.0.2
         with:
           name: ${{ needs.sources.outputs.name }}
           path: package
       - name: Build the binding from the generated sources
         run: |
-          for tool in uv uvx; do
-            path=$(command -v $tool || true)
-            [ -n "$path" ] && sudo mv "$path" "$path.disabled"
-          done
           rm -rf protocol compiler
           cp -r package/generated generated
-          python -m pip install . pytest
+          uv venv --python 3.12
+          uv pip install . pytest
       - name: Test it
-        run: python -m pytest tests
+        run: uv run --no-project pytest tests
