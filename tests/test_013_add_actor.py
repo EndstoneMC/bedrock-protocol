@@ -117,8 +117,12 @@ def test_an_empty_data_list_encodes_identically_at_1001_and_2168():
     assert bytes(v1001.AddActorPacket(**COMMON)) == bytes(v2168.AddActorPacket(**COMMON))
 
 
-def test_2225_appends_an_absent_passenger_block_data_flag():
-    assert bytes(v2225.AddActorPacket(**COMMON)) == bytes(v2193.AddActorPacket(**COMMON)) + b"\x00"
+def test_2225_appends_the_passenger_block_data_after_the_2193_body():
+    assert bytes(v2225.AddActorPacket(**COMMON))[:-1] == bytes(v2193.AddActorPacket(**COMMON))
+
+
+def test_2225_adds_one_byte_for_an_absent_passenger_block_data():
+    assert len(bytes(v2225.AddActorPacket(**COMMON))) == len(bytes(v2193.AddActorPacket(**COMMON))) + 1
 
 
 def test_2225_passenger_block_data_adds_24_bytes():
