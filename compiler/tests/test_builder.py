@@ -37,7 +37,9 @@ def test_docstrings_declare_nothing(build_package):
 
 
 def test_struct_fields_keep_declaration_order(build_package):
-    package = build_package({"a": HEADER + "class A:\n    x: uint8\n    y: double\n    z: str\n    w: bytes\n"})
+    package = build_package(
+        {"a": HEADER + "class A:\n    x: uint8\n    y: double\n    z: str\n    w: bytes\n    v: bool\n    u: float\n"}
+    )
 
     struct = package.modules[0].families[0]
 
@@ -46,6 +48,8 @@ def test_struct_fields_keep_declaration_order(build_package):
         ("y", Primitive("double")),
         ("z", Primitive("str")),
         ("w", Primitive("bytes")),
+        ("v", Primitive("bool")),
+        ("u", Primitive("float")),
     ]
 
 
@@ -127,6 +131,24 @@ def test_import_across_modules_resolves_to_the_family(build_package):
     assert b.declarations[0].fields[0].type == StructRef(a)
 
 
+def test_imports_bind_their_as_names(build_package):
+    source = HEADER + "import uuid as u\nfrom protocol import uint8 as byte\nfrom protocol.a import A as B\n"
+    package = build_package(
+        {"a": HEADER + "class A:\n    pass\n", "b": source + "class C:\n    x: u.UUID\n    y: byte\n    z: B\n"}
+    )
+
+    x, y, z = package.modules[1].families[0].declarations[0].fields
+
+    assert x.type.builtin.name == "UUID"
+    assert y.type == Primitive("uint8")
+    assert z.type == StructRef(package.modules[0].families[0])
+
+
+def test_import_across_modules_reaches_only_declared_families(build_package):
+    with pytest.raises(CompilerError, match=r"uuid: is not declared in protocol\.a"):
+        build_package({"a": HEADER + "import uuid\n", "b": HEADER + "from protocol.a import uuid\n"})
+
+
 def test_import_may_precede_the_module_it_names(build_package):
     package = build_package(
         {"a": HEADER + "from protocol.b import B\n\nclass A:\n    b: B\n", "b": HEADER + "class B:\n    pass\n"}
@@ -158,10 +180,13 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("class A:\n    x: print\n", "is not a type"),
         ("class A:\n    x: uint8\n    x: uint8\n", "x: is declared twice"),
         ("class A:\n    x: uint8 = 3\n", "x: is assigned something other than field"),
+        ("class A:\n    x: uint8 = packet(id=1)\n", "x: is assigned something other than field"),
         ("class A:\n    x: uint8 = field(since=2)\n", "field: since is not supported yet"),
         ("class A:\n    x: uint8 = field(bogus=2)\n", "field: got an unexpected keyword argument 'bogus'"),
         ("class A:\n    x = 3\n", "A: holds only fields"),
+        ("class A:\n    3\n", "A: holds only fields"),
         ("class A(Enum):\n    pass\n", "bases are not supported yet"),
+        ("class A(metaclass=type):\n    pass\n", "bases are not supported yet"),
         ("@packet\nclass A:\n    pass\n", "A: is decorated with something other than a bare builtin"),
         ("@builtin(uint8)\nclass A:\n    pass\n", "A: is decorated with something other than a bare builtin"),
         ("@packet(id=1, id=2)\nclass A:\n    pass\n", "id: is repeated"),
@@ -170,6 +195,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("@packet()\nclass A:\n    pass\n", "packet: missing a required keyword-only argument: 'id'"),
         ("@packet(id=1, bogus=2)\nclass A:\n    pass\n", "packet: got an unexpected keyword argument 'bogus'"),
         ("@packet(id='1')\nclass A:\n    pass\n", "packet: id is not an integer literal"),
+        ("@packet(id=True)\nclass A:\n    pass\n", "packet: id is not an integer literal"),
         ("@packet(id=1, since=2)\nclass A:\n    pass\n", "packet: since is not supported yet"),
         ("@packet(id=1)\n@type()\nclass A:\n    pass\n", "A: takes only one of packet, type and builtin"),
         ("@print\nclass A:\n    pass\n", "is decorated with something other than"),
@@ -177,16 +203,21 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive"),
         ("class A[T]:\n    pass\n", "A: type parameters are not allowed"),
         ("class A:\n    x: __dict__\n", "__dict__: is not a type"),
+        ("class A:\n    x: double.__value__\n", r"double\.__value__: is not defined"),
         ("@packet(id=x)\nclass A:\n    pass\n", "packet: id is not an integer literal"),
         ("@packet(id={[]})\nclass A:\n    pass\n", "packet: id is not an integer literal"),
         ("type Id[T] = uint8\n", "Id: type parameters are not allowed"),
         ("import os\n", "os: is not an importable module"),
         ("from os import path\n", "os: is not an importable module"),
+        ("from enum import Bogus\n", "Bogus: is not exported by enum"),
         ("from protocol import versions\n", "versions: is not exported by protocol"),
         ("from protocol.missing import A\n", "A: is not declared in protocol.missing"),
         ("x = 3\n", "module: holds only imports"),
+        ('x = "a"\n', "module: holds only imports"),
+        ("package = 3\n", "module: holds only imports"),
         ('package = "bedrock.protocol"\n', "package: is declared twice"),
         ("from . import a\n", r"\.: is not an importable module"),
+        ("from .enum import IntEnum\n", r"\.enum: is not an importable module"),
         ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
         ("class A:\n    x: uint8 = field(*x)\n", "field: takes its arguments written out"),
         ("class A:\n    x: foo().bar\n", r"foo\(\): is not a name"),
@@ -225,7 +256,9 @@ def test_error_names_the_file_and_position(build_package):
         ("versions = x\n", "versions: is not a tuple of ascending integers"),
         ("versions = {[]}\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
+        ("versions = (True, 2)\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 2, 3)\nversions = (1, 2, 3)\n", "versions: is declared twice"),
+        ("versions = (1, 2, 3)\n__version__ = 3\n", "module: holds only imports"),
         ("versions = (1, 2, 3)\nclass A:\n    pass\n", "module: holds only imports"),
         ("from protocol.a import A\nversions = (1, 2, 3)\n", "protocol.a: is not importable from __init__"),
     ],
