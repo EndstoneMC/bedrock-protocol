@@ -114,18 +114,31 @@ def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, m
         build_package({"a": source})
 
 
-@pytest.mark.parametrize("wire", ["int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64"])
-@pytest.mark.parametrize("wire_type", ["varint32", "varint64", "uvarint32", "uvarint64"])
-def test_type_accepts_every_integer_wire(build_package, wire, wire_type):
-    package = build_package(
-        {"a": HEADER + f"class A:\n    x: int32 = field(type={wire})\n    y: uint8 = field(type={wire_type})\n"}
-    )
+@pytest.mark.parametrize(
+    "wire",
+    [
+        "int8",
+        "uint8",
+        "int16",
+        "uint16",
+        "int32",
+        "uint32",
+        "int64",
+        "uint64",
+        "varint32",
+        "varint64",
+        "uvarint32",
+        "uvarint64",
+    ],
+)
+def test_type_accepts_every_integer_wire(build_package, wire):
+    package = build_package({"a": HEADER + f"class A:\n    x: int32 = field(type={wire})\n"})
 
-    assert field_types(package) == [Primitive("int32", wire=wire), Primitive("uint8", wire=wire_type)]
+    assert field_types(package) == [Primitive("int32", wire=wire)]
 
 
 @pytest.mark.parametrize("name", ["int16", "uint16", "int32", "uint32", "int64", "uint64"])
-def test_endian_accepts_every_fixed_width_integer(build_package, name):
+def test_endian_accepts_every_16_32_and_64_bit_integer(build_package, name):
     package = build_package({"a": HEADER + f"class A:\n    x: {name} = field(endian='big')\n"})
 
     assert field_types(package) == [Primitive(name, endian="big")]
