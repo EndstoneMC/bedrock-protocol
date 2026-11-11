@@ -366,8 +366,6 @@ class EnumFieldGenerator(FieldGenerator):
             p.print(_primitive_read(self._enum.scalar) + "\n")
             p.print(f"if (!v) {_fail('v.error()', where)}\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
-            wire = PRIMITIVE_TYPES[self._enum.scalar.encoding]
-            p.print(f"if (static_cast<{wire}>({target}) != *v) {_fail('Errc::out_of_range', where)}\n")
 
 
 class ClassFieldGenerator(FieldGenerator):
