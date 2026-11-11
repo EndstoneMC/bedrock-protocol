@@ -89,6 +89,14 @@ def test_uuid_is_a_builtin(build_package):
     assert (field_type.builtin.name, field_type.builtin.stem) == ("UUID", "uuid")
 
 
+def test_families_record_their_module(build_package):
+    package = build_package({"a": HEADER + "type Id = uint8\n\nclass A:\n    class B:\n        pass\n"})
+
+    alias, a = package.modules[0].families
+
+    assert [alias.module, a.module, a.nested[0].module] == ["a", "a", "a"]
+
+
 def test_forward_reference_resolves(build_package):
     package = build_package({"a": HEADER + "class A:\n    b: B\n\nclass B:\n    pass\n"})
 
@@ -125,6 +133,11 @@ def test_import_may_precede_the_module_it_names(build_package):
     )
 
     assert package.modules[0].families[0].declarations[0].fields[0].type == StructRef(package.modules[1].families[0])
+
+
+def test_protocol_exports_only_what_its_init_binds(build_package):
+    with pytest.raises(CompilerError, match="uint8: is not exported by protocol"):
+        build_package({"a": 'from protocol import uint8\npackage = "a"\n'}, "versions = (1, 2, 3)\n")
 
 
 def test_class_scopes_resolve_outward_before_the_module(build_package):
@@ -175,6 +188,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ('package = "bedrock.protocol"\n', "package: is declared twice"),
         ("from . import a\n", r"\.: is not an importable module"),
         ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
+        ("class A:\n    x: uint8 = field(*x)\n", "field: takes its arguments written out"),
         ("class A:\n    x: foo().bar\n", r"foo\(\): is not a name"),
         ("class A:\n    pass\n\nclass A:\n    pass\n", "A: is already declared"),
         ("class uint8:\n    pass\n", "uint8: is already declared"),
@@ -207,6 +221,7 @@ def test_error_names_the_file_and_position(build_package):
         ("versions = (2, 1)\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 1)\n", "versions: is not a tuple of ascending integers"),
         ("versions = ()\n", "versions: is not a tuple of ascending integers"),
+        ("versions = [1, 2, 3]\n", "versions: is not a tuple of ascending integers"),
         ("versions = x\n", "versions: is not a tuple of ascending integers"),
         ("versions = {[]}\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
