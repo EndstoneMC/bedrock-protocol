@@ -59,7 +59,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_graphics_override_parameter_is_packet_331(version):
     assert version.PACKETS[331] is version.GraphicsOverrideParameterPacket
 
