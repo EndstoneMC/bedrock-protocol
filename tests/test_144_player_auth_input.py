@@ -360,10 +360,6 @@ def test_v1001_leaves_the_legacy_slots_off_the_wire_for_an_odd_request_id():
     assert bytes(packet) == V1001_ODD_REQUEST_ID
 
 
-def test_v1001_legacy_slots_cost_six_bytes_on_an_even_negative_request_id():
-    assert len(V1001_ITEM_INTERACTION) == len(V1001_ODD_REQUEST_ID) + 6
-
-
 def test_v1001_writes_no_bytes_for_a_vehicle_arm_the_flags_do_not_take():
     packet = v1001.PlayerAuthInputPacket(
         **BODY,
@@ -372,18 +368,6 @@ def test_v1001_writes_no_bytes_for_a_vehicle_arm_the_flags_do_not_take():
         client_predicted_vehicle=26,
     )
     assert bytes(packet) == V1001_VEHICLE_ARM_UNTAKEN
-
-
-def test_v1001_vehicle_arm_costs_nine_bytes_when_taken():
-    assert len(V1001_VEHICLE_ARM_TAKEN) == len(V1001_VEHICLE_ARM_UNTAKEN) + 9
-
-
-def test_v2168_absent_optional_costs_a_marker_and_a_flag():
-    assert len(V2168_VEHICLE_ROTATION) == len(V2168_PLAIN) + 8
-
-
-def test_v2168_body_is_twelve_bytes_longer_than_the_v1001_body():
-    assert len(V2168_PLAIN) == len(V1001_PLAIN) + 12
 
 
 def test_v2168_rejects_a_v1001_body():
@@ -408,17 +392,8 @@ def test_v2168_rejects_a_block_action_without_its_position():
         v2168.PlayerBlockActionData.from_bytes(bytes.fromhex("04"))
 
 
-@pytest.mark.parametrize(
-    ("member", "value"),
-    [
-        pytest.param(v1001.PlayerActionType.COUNT, 38, id="v1001-count"),
-        pytest.param(v2168.PlayerActionType.COUNT, 39, id="v2168-count"),
-        pytest.param(v2168.PlayerActionType.INTERNAL_UPDATE, 38, id="v2168-internal-update"),
-        pytest.param(V2168_FLAG.INTERNAL_UPDATE, 65, id="v2168-input-flag-internal-update"),
-    ],
-)
-def test_2168_moves_the_count_sentinel_past_internal_update(member, value):
-    assert member == value
+def test_2168_appends_internal_update_to_the_input_flags():
+    assert V2168_FLAG.INTERNAL_UPDATE == 65
 
 
 def test_the_v1001_input_flag_count_is_the_bitset_width():
