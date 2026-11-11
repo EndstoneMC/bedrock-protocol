@@ -204,7 +204,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_primitive_shapes_is_packet_328(version):
     assert version.PACKETS[328] is version.PrimitiveShapesPacket
 
