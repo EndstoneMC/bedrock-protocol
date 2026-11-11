@@ -7,7 +7,7 @@ license = "MIT AND BSD-3-Clause"
 license-files = ["LICENSE", "python/NOTICE"]
 
 [dependency-groups]
-dev = ["nanobind==2.13.0", "pytest", "scikit-build-core>=1.1", "click", "griffe"]
+dev = ["pytest"]
 
 [build-system]
 requires = ["scikit-build-core>=1.1", "nanobind==2.13.0", "click", "griffe"]
