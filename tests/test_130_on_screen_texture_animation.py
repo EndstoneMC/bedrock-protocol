@@ -27,7 +27,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_on_screen_texture_animation_is_packet_130(version):
     assert version.PACKETS[130] is version.OnScreenTextureAnimationPacket
 
@@ -42,7 +42,7 @@ def test_on_screen_texture_animation_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_on_screen_texture_animation_rejects_a_short_body(version):
     with pytest.raises(ValueError, match="at byte"):
         version.OnScreenTextureAnimationPacket.from_bytes(ANIMATION[:3])
