@@ -38,7 +38,7 @@ class Optional:
 @dataclass(frozen=True)
 class List:
     element: "Type"
-    prefix: Primitive | None
+    prefix: Primitive
 
 
 @dataclass(frozen=True)
@@ -145,7 +145,7 @@ class Enum:
 class Alias:
     name: str
     module: str
-    target: Primitive | Variant | None = None
+    primitive: Primitive = field(init=False)
 
 
 @dataclass(eq=False)

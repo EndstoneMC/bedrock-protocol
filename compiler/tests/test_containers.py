@@ -1,6 +1,8 @@
 import pytest
 
+from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.descriptor import (
+    AliasRef,
     Array,
     Bitset,
     BuiltinRef,
@@ -21,6 +23,9 @@ from typing import Literal, Union
 from protocol import array, bitset, field, int8, int32, uint8, uint16, uint32, uvarint32, varint32
 package = "bedrock.protocol"
 """
+
+
+uvarint32 = Primitive("uvarint32")
 
 
 def field_types(package):
@@ -77,20 +82,94 @@ def test_union_alias_is_not_flattened_into_an_enclosing_union(build_package):
     assert field_types(package) == [Variant((Variant((Primitive("uint8"), Primitive("uint16"))), Primitive("uint32")))]
 
 
-def test_union_alias_used_before_it_is_built_is_rejected(build_package):
-    with pytest.raises(CompilerError, match="Later: is used before it is built"):
-        build_package({"a": HEADER + "type Early = uint8 | Later\n\ntype Later = uint8 | uint16\n"})
+def test_union_alias_naming_a_later_union_alias_builds_the_nested_variant(build_package):
+    source = HEADER + "type V = W | uint8\n\ntype W = uint16 | uint32\n\nclass A:\n    x: V\n"
+    package = build_package({"a": source})
+
+    inner = Variant((Primitive("uint16"), Primitive("uint32")))
+
+    assert field_types(package) == [Variant((inner, Primitive("uint8")))]
 
 
-def test_list_holds_its_element_with_no_prefix(build_package):
+def test_union_alias_naming_a_later_primitive_alias_builds(build_package):
+    source = HEADER + "type V = Id | uint8\n\ntype Id = uint32\n\nclass A:\n    x: V\n"
+    package = build_package({"a": source})
+
+    id_alias = package.modules[0].families[0]
+
+    assert field_types(package) == [Variant((AliasRef(id_alias), Primitive("uint8")))]
+
+
+def test_union_alias_naming_an_alias_from_a_later_module_builds(build_package):
+    imports = "from bedrock_protocol_compiler.dsl import uint8, uint32\npackage = 'bedrock.protocol'\n"
+    a = imports + "from protocol.b import Id\n\ntype V = Id | uint8\n"
+    b = imports + "type Id = uint32\n"
+    package = build_package({"a": a, "b": b})
+
+    assert package.modules[0].families == ()
+
+
+def test_union_alias_naming_itself_is_rejected(build_package):
+    with pytest.raises(CompilerError, match="V: names itself"):
+        build_package({"a": HEADER + "type V = V | uint8\n"})
+
+
+def test_union_aliases_naming_each_other_are_rejected(build_package):
+    with pytest.raises(CompilerError, match="names itself"):
+        build_package({"a": HEADER + "type V = W | uint8\n\ntype W = V | uint16\n"})
+
+
+def test_union_alias_imported_by_another_module_resolves_to_its_variant(build_package):
+    imports = "from bedrock_protocol_compiler.dsl import uint8, uint16\npackage = 'bedrock.protocol'\n"
+    a = imports + "type V = uint8 | uint16\n"
+    b = imports + "from protocol.a import V\n\nclass B:\n    x: V\n"
+    package = build_package({"a": a, "b": b})
+
+    assert package.modules[1].families[0].declarations[0].fields[0].type == Variant(
+        (Primitive("uint8"), Primitive("uint16"))
+    )
+
+
+def test_union_alias_is_not_a_family(build_package):
+    package = build_package({"a": HEADER + "type V = uint8 | uint16\n\ntype Id = uint32\n"})
+
+    assert [family.name for family in package.modules[0].families] == ["Id"]
+
+
+def test_union_alias_may_name_an_enum_member_width(build_package):
+    source = HEADER + "type V = bitset[E.M] | uint8\n\nclass E(IntEnum, uint8):\n    M = 1\n\nclass A:\n    x: V\n"
+    package = build_package({"a": source})
+
+    e = package.modules[0].families[0]
+
+    assert field_types(package) == [Variant((Bitset(MemberRef(e, "M")), Primitive("uint8")))]
+
+
+def test_none_first_two_case_union_is_a_variant(build_package):
+    package = build_package({"a": HEADER + "class A:\n    x: None | uint8\n"})
+
+    assert field_types(package) == [Variant((None, Primitive("uint8")))]
+
+
+def test_long_pipe_chain_is_one_flat_variant(build_package):
+    package = build_package({"a": HEADER + "class B:\n    pass\n\nclass A:\n    x: uint8 | uint16 | uint32 | B\n"})
+
+    b = package.modules[0].families[0]
+
+    assert field_types(package) == [
+        Variant((Primitive("uint8"), Primitive("uint16"), Primitive("uint32"), StructRef(b)))
+    ]
+
+
+def test_list_count_is_uvarint32_by_default(build_package):
     package = build_package(
         {"a": HEADER + "class A:\n    x: list[uint8]\n    y: list[list[str]]\n    z: list[uint8] | None\n"}
     )
 
     assert field_types(package) == [
-        List(Primitive("uint8"), None),
-        List(List(Primitive("str"), None), None),
-        Optional(List(Primitive("uint8"), None)),
+        List(Primitive("uint8"), uvarint32),
+        List(List(Primitive("str"), uvarint32), uvarint32),
+        Optional(List(Primitive("uint8"), uvarint32)),
     ]
 
 
@@ -101,12 +180,18 @@ def test_list_prefix_is_the_named_primitive(build_package, prefix):
     assert field_types(package) == [List(Primitive("uint8"), Primitive(prefix))]
 
 
+def test_list_prefix_reaches_only_the_fields_own_list(build_package):
+    package = build_package({"a": HEADER + "class A:\n    x: list[list[uint8]] = field(prefix=uint32)\n"})
+
+    assert field_types(package) == [List(List(Primitive("uint8"), uvarint32), Primitive("uint32"))]
+
+
 def test_dict_holds_key_and_value(build_package):
     package = build_package({"a": HEADER + "class A:\n    x: dict[str, int32]\n    y: dict[float, list[uint8]]\n"})
 
     assert field_types(package) == [
         Map(Primitive("str"), Primitive("int32")),
-        Map(Primitive("float"), List(Primitive("uint8"), None)),
+        Map(Primitive("float"), List(Primitive("uint8"), uvarint32)),
     ]
 
 
@@ -124,7 +209,7 @@ def test_array_holds_element_and_size_and_nests(build_package):
 def test_container_reaches_a_uuid(build_package):
     package = build_package({"a": HEADER + "import uuid\n\nclass A:\n    x: list[uuid.UUID]\n"})
 
-    assert isinstance(field_types(package)[0].element, BuiltinRef)
+    assert field_types(package) == [List(BuiltinRef(UUID), uvarint32)]
 
 
 def test_literal_holds_a_bool_a_string_or_an_enum_member(build_package):
@@ -169,11 +254,11 @@ def test_bitset_is_as_wide_as_an_enum_member(build_package):
         ("class A:\n    x: array[uint8, 'a']\n", "array: is not a literal int"),
         ("class A:\n    x: array[uint8, True]\n", "array: is not a literal int"),
         ("class A:\n    x: array\n", "array: is not a type"),
-        ("class A:\n    x: Union[uint8, uint16, None, 3]\n", "is not supported yet"),
+        ("class A:\n    x: Union[uint8, uint16, None, 3]\n", "3: is not a type"),
         ("class A:\n    x: Literal[1]\n", "1: is not an enum member"),
         ("class A:\n    x: Literal[None]\n", "None: is not an enum member"),
         ("class A:\n    x: Literal['a', 'b']\n", "is not a type with these arguments"),
-        ("class A:\n    x: Literal[uint8.M]\n", r"uint8\.M: is not defined"),
+        ("class A:\n    x: Literal[uint8.M]\n", r"uint8\.M: is not an enum member"),
         ("class A:\n    x: bitset[3]\n", "3: is not an enum member"),
         ("class A:\n    x: Missing[uint8]\n", "Missing: is not defined"),
         ("class A:\n    x: list[Missing]\n", "Missing: is not defined"),
@@ -186,8 +271,13 @@ def test_bitset_is_as_wide_as_an_enum_member(build_package):
         ("class A:\n    x: list[uint8] = field(prefix=uvarint32)\n", "x: prefix is not uint32, uint16 or varint32"),
         ("class A:\n    x: list[uint8] = field(prefix=str)\n", "x: prefix is not uint32, uint16 or varint32"),
         ("class A:\n    x: list[uint8] = field(prefix=Missing)\n", "Missing: is not defined"),
-        ("type X = list[uint8]\n", "X: is not a primitive or a union"),
-        ("type X = uint8 | None\n", "X: is not a primitive or a union"),
+        ("type X = list[uint8]\n", "X: is not a union"),
+        ("type X = uint8 | None\n", "X: is not a union"),
+        ("class A:\n    x: list[Literal[True]]\n", "is not a type with these arguments"),
+        ("class A:\n    x: Literal['a'] | None\n", "is not a type with these arguments"),
+        ("class A:\n    x: Literal[True] | uint8\n", "is not a type with these arguments"),
+        ("class A:\n    x: dict[str, Literal[True]]\n", "is not a type with these arguments"),
+        ("class A:\n    x: Union[uint8]\n", "is not a type with these arguments"),
     ],
 )
 def test_container_is_rejected(build_package, source, message):

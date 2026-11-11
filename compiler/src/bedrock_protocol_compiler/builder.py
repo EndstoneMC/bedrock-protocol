@@ -80,6 +80,7 @@ class Source:
     scope: Scope
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
+    unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
 
 
@@ -96,6 +97,12 @@ class PendingEnum:
     scope: Scope
     node: ast.ClassDef
     enum: Enum
+
+
+@dataclass(eq=False)
+class UnionAlias:
+    source: Source
+    node: ast.TypeAlias
 
 
 @dataclass
@@ -147,6 +154,8 @@ class Builder:
         self.structs: list[PendingStruct] = []
         self.enums: list[PendingEnum] = []
         self.aliases: list[PendingAlias] = []
+        self.unions: list[UnionAlias] = []
+        self.expanding: list[UnionAlias] = []
 
     def build(self) -> Package:
         versions = self.declare_init(self.init)
@@ -154,10 +163,12 @@ class Builder:
             self.declare_module(source)
         for source in self.sources.values():
             self.bind_family_imports(source)
-        for pending_alias in self.aliases:
-            self.build_alias(pending_alias)
         for pending_enum in self.enums:
             self.build_enum(pending_enum)
+        for pending_alias in self.aliases:
+            self.build_alias(pending_alias)
+        for union in self.unions:
+            self.expand(union.source, union.node, union)
         for pending_struct in self.structs:
             self.build_struct(pending_struct)
         modules = tuple(
@@ -202,9 +213,18 @@ class Builder:
                 case ast.ClassDef():
                     self.declare_class(source, source.scope, statement, None)
                 case ast.TypeAlias():
-                    alias = Alias(statement.name.id, source.stem)
-                    self.declare_family(source, statement, alias)
-                    self.aliases.append(PendingAlias(source, statement, alias))
+                    name = statement.name.id
+                    if statement.type_params:
+                        raise error(source, statement, name, "type parameters are not allowed")
+                    if isinstance(statement.value, ast.Name | ast.Attribute):
+                        alias = Alias(name, source.stem)
+                        self.declare_family(source, statement, alias)
+                        self.aliases.append(PendingAlias(source, statement, alias))
+                    else:
+                        union = UnionAlias(source, statement)
+                        self.add(source, source.scope, statement, name, union)
+                        source.unions[name] = union
+                        self.unions.append(union)
                 case ast.Assign(targets=[ast.Name(id="package")], value=ast.Constant(value=str() as package)):
                     if source.package:
                         raise error(source, statement, "package", "is declared twice")
@@ -258,10 +278,10 @@ class Builder:
         for statement in source.family_imports:
             module = self.sources.get((statement.module or "").removeprefix(f"{self.name}."))
             for alias in statement.names:
-                family = module.families.get(alias.name) if module else None
-                if family is None:
+                declared = (module.families.get(alias.name) or module.unions.get(alias.name)) if module else None
+                if declared is None:
                     raise error(source, alias, alias.name, f"is not declared in {statement.module}")
-                self.add(source, source.scope, statement, alias.asname or alias.name, family)
+                self.add(source, source.scope, statement, alias.asname or alias.name, declared)
 
     def declare_class(self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None) -> None:
         if node.keywords:
@@ -397,12 +417,21 @@ class Builder:
         pending.enum.declarations.append(EnumDeclaration(underlying, tuple(members)))
 
     def build_alias(self, pending: PendingAlias) -> None:
-        if pending.node.type_params:
-            raise error(pending.source, pending.node, pending.alias.name, "type parameters are not allowed")
-        target = self.type_of(pending.source, pending.source.scope, pending.node.value)
-        if not isinstance(target, Primitive | Variant):
-            raise error(pending.source, pending.node.value, pending.alias.name, "is not a primitive or a union")
-        pending.alias.target = target
+        primitive = self.type_of(pending.source, pending.source.scope, pending.node.value)
+        if not isinstance(primitive, Primitive):
+            raise error(pending.source, pending.node.value, pending.alias.name, "is not a primitive")
+        pending.alias.primitive = primitive
+
+    def expand(self, source: Source, node: ast.expr | ast.stmt, union: UnionAlias) -> Variant:
+        name = union.node.name.id
+        if union in self.expanding:
+            raise error(source, node, name, "names itself")
+        self.expanding.append(union)
+        expanded = self.type_of(union.source, union.source.scope, union.node.value)
+        self.expanding.pop()
+        if not isinstance(expanded, Variant):
+            raise error(union.source, union.node.value, name, "is not a union")
+        return expanded
 
     def build_struct(self, pending: PendingStruct) -> None:
         source = pending.source
@@ -427,7 +456,20 @@ class Builder:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
                 arguments = self.bind(source, call, dsl.field, ("prefix",))
-            field_type = self.type_of(source, scope, statement.annotation)
+            annotation = statement.annotation
+            if (
+                isinstance(annotation, ast.Subscript)
+                and self.resolve(source, scope, annotation.value) is typing.Literal
+            ):
+                values = annotation.slice.elts if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
+                if len(values) != 1:
+                    raise error(source, annotation, ast.unparse(annotation), "is not a type with these arguments")
+                if isinstance(values[0], ast.Constant) and isinstance(values[0].value, bool | str):
+                    field_type: Type = Literal(values[0].value)
+                else:
+                    field_type = Literal(self.member_of(source, scope, values[0]))
+            else:
+                field_type = self.type_of(source, scope, annotation)
             if call is not None and "prefix" in arguments:
                 prefix = self.type_of(source, scope, arguments["prefix"])
                 if not isinstance(field_type, List):
@@ -476,50 +518,44 @@ class Builder:
             raise error(source, node, ast.unparse(node), "is not defined")
         return found
 
+    def cases_of(self, source: Source, scope: Scope, operands: list[ast.expr]) -> tuple[Type | None, ...]:
+        return tuple(
+            None
+            if isinstance(operand, ast.Constant) and operand.value is None
+            else self.type_of(source, scope, operand)
+            for operand in operands
+        )
+
     def type_of(self, source: Source, scope: Scope, node: ast.expr) -> Type:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             raise error(source, node, node.value, "string annotations are not allowed")
-        operands: list[ast.expr] | None = None
-        pipe = False
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
-            pipe = True
             operands = [node.right]
             left = node.left
             while isinstance(left, ast.BinOp) and isinstance(left.op, ast.BitOr):
                 operands.insert(0, left.right)
                 left = left.left
             operands.insert(0, left)
-        elif isinstance(node, ast.Subscript):
+            cases = self.cases_of(source, scope, operands)
+            if len(cases) == 2 and cases[0] is not None and cases[1] is None:
+                return Optional(cases[0])
+            return Variant(cases)
+        if isinstance(node, ast.Subscript):
             container = self.resolve(source, scope, node.value)
             arguments = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
             if container is typing.Union and len(arguments) > 1:
-                operands = arguments
-            elif container is list and len(arguments) == 1:
-                return List(self.type_of(source, scope, arguments[0]), None)
-            elif container is dict and len(arguments) == 2:
+                return Variant(self.cases_of(source, scope, arguments))
+            if container is list and len(arguments) == 1:
+                return List(self.type_of(source, scope, arguments[0]), Primitive("uvarint32"))
+            if container is dict and len(arguments) == 2:
                 return Map(self.type_of(source, scope, arguments[0]), self.type_of(source, scope, arguments[1]))
-            elif container is dsl.array and len(arguments) == 2:
+            if container is dsl.array and len(arguments) == 2:
                 return Array(self.type_of(source, scope, arguments[0]), literal(source, arguments[1], int, "array"))
-            elif container is dsl.bitset and len(arguments) == 1:
+            if container is dsl.bitset and len(arguments) == 1:
                 return Bitset(self.member_of(source, scope, arguments[0]))
-            elif container is typing.Literal and len(arguments) == 1:
-                if isinstance(arguments[0], ast.Constant) and isinstance(arguments[0].value, bool | str):
-                    return Literal(arguments[0].value)
-                return Literal(self.member_of(source, scope, arguments[0]))
-            else:
-                raise error(source, node, ast.unparse(node), "is not a type with these arguments")
-        if operands is not None:
-            cases = [
-                None
-                if isinstance(operand, ast.Constant) and operand.value is None
-                else self.type_of(source, scope, operand)
-                for operand in operands
-            ]
-            if pipe and len(cases) == 2 and cases[0] is not None and cases[1] is None:
-                return Optional(cases[0])
-            return Variant(tuple(cases))
+            raise error(source, node, ast.unparse(node), "is not a type with these arguments")
         if not isinstance(node, ast.Name | ast.Attribute):
-            raise error(source, node, ast.unparse(node), "is not supported yet")
+            raise error(source, node, ast.unparse(node), "is not a type")
         target = self.resolve(source, scope, node)
         if isinstance(target, TypeAliasType | type) and target in PRIMITIVES:
             return Primitive(PRIMITIVES[target])
@@ -530,9 +566,9 @@ class Builder:
         if isinstance(target, Enum):
             return EnumRef(target)
         if isinstance(target, Alias):
-            if target.target is None:
-                raise error(source, node, ast.unparse(node), "is used before it is built")
-            return target.target if isinstance(target.target, Variant) else AliasRef(target)
+            return AliasRef(target)
+        if isinstance(target, UnionAlias):
+            return self.expand(source, node, target)
         if isinstance(target, Builtin):
             return BuiltinRef(target)
         raise error(source, node, ast.unparse(node), "is not a type")
