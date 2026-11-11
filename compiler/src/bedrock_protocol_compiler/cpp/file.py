@@ -160,8 +160,12 @@ class FileGenerator:
                 self.switch(p, (names.LEGACY,), ())
 
     def packets(self, p: Printer) -> None:
-        packets = [family for family in self.families if isinstance(family, Struct) and family.packet_id is not None]
-        for family in sorted(packets, key=lambda family: family.packet_id or 0):
+        packets = [
+            (family.packet_id, family)
+            for family in self.families
+            if isinstance(family, Struct) and family.packet_id is not None
+        ]
+        for packet_id, family in sorted(packets, key=lambda each: each[0]):
             runs = self.runs(family)
             constraint = names.clause(Range(runs[0][0].since, runs[-1][0].until))
             spelled = (
@@ -176,7 +180,7 @@ class FileGenerator:
 
                 """,
                 constraint=f" requires ({constraint})" if constraint else "",
-                id=family.packet_id or 0,
+                id=packet_id,
                 type=spelled,
             )
 
