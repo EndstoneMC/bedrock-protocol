@@ -21,18 +21,14 @@ GOLDENS = [
         id="clear-preset",
     ),
     pytest.param(
-        v2225.ClientCameraAimAssistPacket(
-            camera_preset_id="",
-            action=v2225.ClientCameraAimAssistPacketAction.SET_FROM_CAMERA_PRESET,
-            allow_aim_assist=False,
-        ),
+        v2225.ClientCameraAimAssistPacket(),
         EMPTY,
         id="empty-preset-id",
     ),
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_client_camera_aim_assist_is_packet_321(version):
     assert version.PACKETS[321] is version.ClientCameraAimAssistPacket
 
@@ -45,7 +41,3 @@ def test_client_camera_aim_assist_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_client_camera_aim_assist_decodes_from_its_golden(packet, golden):
     assert v2225.ClientCameraAimAssistPacket.from_bytes(golden) == packet
-
-
-def test_a_default_client_camera_aim_assist_is_an_empty_preset_id():
-    assert bytes(v2225.ClientCameraAimAssistPacket()) == EMPTY
