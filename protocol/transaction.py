@@ -194,8 +194,6 @@ class ItemUseInventoryTransaction:
 
 @type(cereal=False, until=944)
 class ItemUseInventoryTransaction:
-    """The shape PlayerAuthInputPacket writes."""
-
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
     trigger_type: ItemUseInventoryTransaction.TriggerType

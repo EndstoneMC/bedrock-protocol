@@ -427,8 +427,6 @@ class GameRule:
 
 @type(cereal=False, until=2168)
 class GameRule:
-    """The shape StartGame writes."""
-
     name: str
     can_be_modified_by_player: bool
     value: None | bool | uvarint32 | float

@@ -101,9 +101,7 @@ class ScoreboardIdentityPacketInfo:
 
 @packet(id=108, until=2168)
 class SetScorePacket:
-    # TODO: field(when=) cannot reach the enclosing packet, so BDS's single
-    # mScoreInfo is spelled as two whole-list gates on mType, and the remove-case
-    # entry earns a name BDS does not have.
+    # TODO: one mScoreInfo, without RemovedScorePacketInfo, once field(when=) can read the enclosing packet
     class RemovedScorePacketInfo:
         scoreboard_id: ScoreboardId
         objective_name: str
@@ -121,8 +119,7 @@ class SetScorePacket:
 
 @packet(id=112, until=2168)
 class SetScoreboardIdentityPacket:
-    # TODO: field(when=) cannot reach the enclosing packet, so BDS's single
-    # mIdentityInfo is spelled as two whole-list gates on mType.
+    # TODO: one mIdentityInfo once field(when=) can read the enclosing packet
     type: ScoreboardIdentityPacketType
     identity_info: list[ScoreboardIdentityPacketInfo] = field(
         when=lambda p: p.type == ScoreboardIdentityPacketType.UPDATE

@@ -118,8 +118,6 @@ class AnimatedImageData:
 
 @type(cereal=False)
 class AnimatedImageData:
-    """SerializedSkinImpl::write."""
-
     image_width: uint32
     image_height: uint32
     image_bytes: bytes
@@ -151,8 +149,6 @@ class TintMapColor:
 
 @type(cereal=False)
 class TintMapColor:
-    """SerializedSkinImpl::write."""
-
     piece_type: PieceType = field(type=str, cereal=False)
     colors: list[str] = field(prefix=uint32)
 
@@ -188,6 +184,8 @@ class SerializedSkinRef:
 
 
 class SerializedSkinRef:
+    """SerializedSkinImpl::write."""
+
     id: str
     play_fab_id: str = field(until=2225)
     resource_patch: str

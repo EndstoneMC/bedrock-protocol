@@ -1,4 +1,4 @@
-"""NBT (Named Binary Tag) types, compiler built-ins hand-written in include/bedrock/nbt.hpp."""
+"""NBT (Named Binary Tag) types, hand-written in include/bedrock/protocol/nbt.hpp."""
 
 from protocol import builtin
 
@@ -6,48 +6,60 @@ package = "bedrock.protocol"
 
 
 @builtin
-class ByteTag: ...
+class ByteTag:
+    pass
 
 
 @builtin
-class ShortTag: ...
+class ShortTag:
+    pass
 
 
 @builtin
-class IntTag: ...
+class IntTag:
+    pass
 
 
 @builtin
-class Int64Tag: ...
+class Int64Tag:
+    pass
 
 
 @builtin
-class FloatTag: ...
+class FloatTag:
+    pass
 
 
 @builtin
-class DoubleTag: ...
+class DoubleTag:
+    pass
 
 
 @builtin
-class ByteArrayTag: ...
+class ByteArrayTag:
+    pass
 
 
 @builtin
-class StringTag: ...
+class StringTag:
+    pass
 
 
 @builtin
-class ListTag: ...
+class ListTag:
+    pass
 
 
 @builtin
-class CompoundTag: ...
+class CompoundTag:
+    pass
 
 
 @builtin
-class IntArrayTag: ...
+class IntArrayTag:
+    pass
 
 
 @builtin
-class CompoundTagData: ...
+class CompoundTagData:
+    pass

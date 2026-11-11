@@ -211,8 +211,6 @@ class SubChunkPos:
 
 @type(cereal=False, until=2168)
 class SubChunkPos:
-    """The shape packet 174 writes by hand."""
-
     x: varint32
     y: varint32
     z: varint32

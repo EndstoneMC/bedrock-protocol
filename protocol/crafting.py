@@ -304,8 +304,6 @@ class UnlockedRecipesPacket:
 
 @type(until=2168)
 class ItemDescriptor:
-    """ItemDescriptor::serialize."""
-
     class InternalType(IntEnum, uint8):
         INVALID = 0
         DEFAULT = 1

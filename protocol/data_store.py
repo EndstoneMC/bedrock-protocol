@@ -1,5 +1,4 @@
-"""The scripting data-store sync: scripting/data_sync/.
-Name fixed: the DynamicValue builtin resolves data_store.hpp from it."""
+"""The scripting data-store sync: scripting/data_sync/."""
 
 from protocol import builtin, double, packet, type, uint32
 
@@ -7,7 +6,8 @@ package = "bedrock.protocol"
 
 
 @builtin
-class DynamicValue: ...
+class DynamicValue:
+    pass
 
 
 @type(since=898, until=924)
