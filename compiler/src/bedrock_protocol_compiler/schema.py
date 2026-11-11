@@ -3,16 +3,23 @@ from dataclasses import dataclass, field, replace
 
 from bedrock_protocol_compiler.builder import reaches
 from bedrock_protocol_compiler.descriptor import (
+    Array,
     Binary,
     Enum,
+    EnumName,
     Field,
     Int,
+    List,
+    Map,
     Member,
     MemberRef,
+    Optional,
     Package,
     Primitive,
     Range,
     Struct,
+    Type,
+    Variant,
 )
 
 ALWAYS = Range(None, None)
@@ -41,6 +48,21 @@ class EnumShape:
 type Shape = StructShape | EnumShape
 
 
+def name_coded(node: Type) -> Iterator[Enum]:
+    match node:
+        case EnumName(enum=enum):
+            yield enum
+        case Optional(element=element) | List(element=element) | Array(element=element):
+            yield from name_coded(element)
+        case Map(key=key, value=value):
+            yield from name_coded(key)
+            yield from name_coded(value)
+        case Variant(cases=cases):
+            for case in cases:
+                if case is not None:
+                    yield from name_coded(case)
+
+
 def outermost(family: Struct | Enum) -> Struct | Enum:
     return family if family.owner is None else outermost(family.owner)
 
@@ -52,6 +74,8 @@ def reached_by(each: Field) -> Iterator[Struct | Enum]:
 
 class Schema:
     def __init__(self, package: Package) -> None:
+        self.modules = package.modules
+        self.package = package.modules[0].package
         self.versions = package.versions
         self.latest = package.versions[-1]
         self.order: list[Struct | Enum] = []
@@ -64,6 +88,14 @@ class Schema:
                     self.place(family, placed)
         for family in self.order:
             self.project(family)
+        self.name_coded = {
+            enum
+            for family in self.order
+            if isinstance(family, Struct)
+            for declaration in family.declarations
+            for each in declaration.fields
+            for enum in name_coded(each.type)
+        }
 
     def shapes(self, family: Struct | Enum) -> list[Shape]:
         return self.family_shapes[family]
@@ -118,7 +150,10 @@ class Schema:
                         case Binary(left=MemberRef(name=name), right=Int(value=offset)):
                             number = numbers[name] - offset
                     numbers[member.name] = number
-                    members.append(replace(member, value=Int(number), range=ALWAYS))
+                    settled = replace(member, range=ALWAYS)
+                    if not isinstance(member.value, MemberRef | Binary):
+                        settled = replace(settled, value=Int(number))
+                    members.append(settled)
                 key = (enum_declaration.underlying, tuple(members))
                 candidate = EnumShape(family, enum_declaration.underlying, tuple(members))
             self.live[family, version] = shapes.setdefault(key, candidate)

@@ -197,6 +197,8 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
 
 def check(package: Package) -> None:
     for module in package.modules:
+        if module.package != package.modules[0].package:
+            raise CompilerError(f"{module.stem}.py: package: differs from {package.modules[0].stem}.py's")
         for family in module.families:
             if isinstance(family, Struct):
                 check_struct(package.versions, f"{module.stem}.py", family, family.name)

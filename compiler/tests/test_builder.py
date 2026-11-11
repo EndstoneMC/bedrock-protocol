@@ -16,13 +16,15 @@ package = "bedrock.protocol"
 
 
 def test_package_lists_versions_and_modules(build_package):
-    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "bedrock.protocol"\n'}, "versions = (1, 2, 3)\n")
+    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "a.b"\n'}, "versions = (1, 2, 3)\n")
 
     assert package.versions == (1, 2, 3)
-    assert [(module.stem, module.package) for module in package.modules] == [
-        ("a", "a.b"),
-        ("b", "bedrock.protocol"),
-    ]
+    assert [(module.stem, module.package) for module in package.modules] == [("a", "a.b"), ("b", "a.b")]
+
+
+def test_modules_declare_one_package(build_package):
+    with pytest.raises(CompilerError, match=r"b\.py: package: differs from a\.py's"):
+        build_package({"a": 'package = "a.b"\n', "b": 'package = "a.c"\n'})
 
 
 def test_docstrings_declare_nothing(build_package):

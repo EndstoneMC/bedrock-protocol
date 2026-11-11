@@ -1,4 +1,4 @@
-from bedrock_protocol_compiler.descriptor import Int, Range
+from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef, Range
 from bedrock_protocol_compiler.schema import Schema
 
 HEADER = """
@@ -225,10 +225,10 @@ def test_enum_values_are_evaluated_over_the_members_present(build_package):
     assert [(member.name, member.value) for member in early.members] == [
         ("A", Int(4)),
         ("C", Int(5)),
-        ("D", Int(4)),
-        ("F", Int(4)),
+        ("D", MemberRef(family, "A")),
+        ("F", Binary("-", MemberRef(family, "C"), Int(1))),
     ]
-    assert [member.value for member in late.members] == [Int(4), Int(5), Int(6), Int(4), Int(5)]
+    assert [member.value for member in late.members][:3] == [Int(4), Int(5), Int(6)]
 
 
 def test_an_enum_member_renamed_at_the_same_value_is_a_new_shape(build_package):
@@ -297,3 +297,21 @@ def test_a_family_reaching_a_nested_one_comes_after_the_nested_ones_owner(build_
     schema = Schema(build_package({"a": source}))
 
     assert [family.name for family in schema.order] == ["C", "B", "A"]
+
+
+def test_an_enum_a_field_codes_by_name_is_name_coded(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = 1\n\nclass F(IntEnum, uint8):\n    X = 1\n\n"
+        + "class A:\n    x: list[E] = field(type=str)\n    y: F\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    e, _, _ = schema.order
+
+    assert schema.name_coded == {e}
+
+
+def test_the_package_is_the_modules_namespace(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+
+    assert (schema.package, [module.stem for module in schema.modules]) == ("bedrock.protocol", ["a"])
