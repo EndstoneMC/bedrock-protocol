@@ -37,7 +37,7 @@ BINDING_CASING = bytes.fromhex(
 
 MESSAGES = [
     v2225.CommandOutputMessage(message_id="commands.tp.success", successful=True, params=["Alex", "Steve"]),
-    v2225.CommandOutputMessage(message_id="commands.generic.syntax", successful=False, params=[]),
+    v2225.CommandOutputMessage(message_id="commands.generic.syntax", successful=False),
 ]
 
 FILLED = v2225.CommandOutputPacket(
