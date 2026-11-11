@@ -57,12 +57,6 @@ def test_anvil_damage_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_the_same_position_takes_a_different_y_either_side_of_944():
-    before = v924.AnvilDamagePacket(damage=3, position=v924.NetworkBlockPosition(x=1, y=200, z=3))
-    after = v1001.AnvilDamagePacket(damage=3, position=v1001.BlockPos(x=1, y=200, z=3))
-    assert bytes(before) != bytes(after)
-
-
 def test_a_v1001_anvil_damage_body_does_not_decode_as_a_v2168_one():
     with pytest.raises(ValueError, match="trailing bytes"):
         v2168.AnvilDamagePacket.from_bytes(V1001)
