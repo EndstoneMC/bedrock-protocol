@@ -1,5 +1,3 @@
-"""Every packet, type and enum of Bedrock protocol @BP_VERSION@, and its codecs."""
-
 from ._native import v@BP_VERSION@ as _protocol
 
 globals().update({name: getattr(_protocol, name) for name in dir(_protocol) if not name.startswith("_")})
