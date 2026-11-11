@@ -88,7 +88,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_clientbound_map_item_data_is_packet_67(version):
     assert version.PACKETS[67] is version.ClientboundMapItemDataPacket
 
