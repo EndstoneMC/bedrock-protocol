@@ -79,7 +79,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_mob_equipment_is_packet_31(version):
     assert version.PACKETS[31] is version.MobEquipmentPacket
 
