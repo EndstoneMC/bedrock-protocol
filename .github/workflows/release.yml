@@ -15,15 +15,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check the tag against the project version
         run: |
-          version=$(sed -n 's/^project(bedrock-protocol VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
-          if [ -z "$version" ]; then
-            echo "::error::CMakeLists.txt has no project(bedrock-protocol VERSION ...) to check against"
-            exit 1
-          fi
-          if [ "$version" != "${GITHUB_REF_NAME#v}" ]; then
-            echo "::error::tag ${GITHUB_REF_NAME} does not match project(bedrock-protocol VERSION ${version})"
-            exit 1
-          fi
+          for file in pyproject.toml compiler/pyproject.toml; do
+            version=$(sed -n 's/^version = "\(.*\)"/\1/p' "$file")
+            if [ "$version" != "${GITHUB_REF_NAME#v}" ]; then
+              echo "::error::tag ${GITHUB_REF_NAME} does not match ${file} version ${version}"
+              exit 1
+            fi
+          done
 
   ci:
     needs: tag

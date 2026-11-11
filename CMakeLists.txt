@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
-project(bedrock-protocol VERSION 0.4.6 LANGUAGES CXX)
+file(STRINGS pyproject.toml _version_line REGEX "^version = ")
+string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _version "${_version_line}")
+project(bedrock-protocol VERSION ${_version} LANGUAGES CXX)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS pyproject.toml)
 
 if (PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     set(CMAKE_CXX_STANDARD 23)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
