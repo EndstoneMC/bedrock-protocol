@@ -8,11 +8,14 @@ class CompilerError(Exception):
 @dataclass(frozen=True)
 class Primitive:
     name: str
+    wire: str | None = None
+    endian: str | None = None
 
 
 @dataclass(frozen=True)
 class AliasRef:
     alias: "Alias"
+    wire: str | None = None
 
 
 @dataclass(frozen=True)
@@ -27,6 +30,13 @@ class BuiltinRef:
 
 @dataclass(frozen=True)
 class EnumRef:
+    enum: "Enum"
+    wire: str | None = None
+    endian: str | None = None
+
+
+@dataclass(frozen=True)
+class EnumName:
     enum: "Enum"
 
 
@@ -69,7 +79,19 @@ class Bitset:
 
 
 type Type = (
-    Primitive | AliasRef | StructRef | BuiltinRef | EnumRef | Optional | List | Array | Map | Variant | Literal | Bitset
+    Primitive
+    | AliasRef
+    | StructRef
+    | BuiltinRef
+    | EnumRef
+    | EnumName
+    | Optional
+    | List
+    | Array
+    | Map
+    | Variant
+    | Literal
+    | Bitset
 )
 
 
@@ -128,6 +150,7 @@ class Struct:
     name: str
     owner: "Struct | None"
     module: str
+    cereal: bool
     packet_id: int | None
     declarations: list[StructDeclaration] = field(default_factory=list)
     nested: list["Struct | Enum"] = field(default_factory=list)
@@ -138,6 +161,7 @@ class Enum:
     name: str
     owner: Struct | None
     module: str
+    cereal: bool
     declarations: list[EnumDeclaration] = field(default_factory=list)
 
 

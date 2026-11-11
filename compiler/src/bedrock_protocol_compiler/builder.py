@@ -25,6 +25,7 @@ from bedrock_protocol_compiler.descriptor import (
     CompilerError,
     Enum,
     EnumDeclaration,
+    EnumName,
     EnumRef,
     Family,
     Field,
@@ -50,6 +51,8 @@ STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
 ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32")
 LIST_PREFIXES = ("uint32", "uint16", "varint32")
+FIXED_WIDTHS = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
+INTEGERS = ("int8", "uint8", *FIXED_WIDTHS, "varint32", "varint64", "uvarint32", "uvarint64")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -80,6 +83,7 @@ class Source:
     scope: Scope
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
+    legacies: dict[str, Struct | Enum] = field(default_factory=dict)
     unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
 
@@ -135,6 +139,34 @@ def without_docstring(body: list[ast.stmt]) -> list[ast.stmt]:
     return body
 
 
+def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
+    match node:
+        case Optional(element=element) | List(element=element):
+            rewired = rewire(element, wire, endian)
+            return None if rewired is None else replace(node, element=rewired)
+        case Map(key=key, value=value):
+            rewired_key = rewire(key, wire, endian)
+            rewired_value = rewire(value, wire, endian)
+            if (rewired_key is None) == (rewired_value is None):
+                return None
+            return Map(rewired_key or key, rewired_value or value)
+        case EnumRef(enum=enum):
+            if wire == "str":
+                return None if endian else EnumName(enum)
+            if wire is None or (endian and wire not in FIXED_WIDTHS):
+                return None
+            return EnumRef(enum, wire, endian)
+        case Primitive(name=name):
+            if name not in INTEGERS or wire == "str" or (endian and (wire or name) not in FIXED_WIDTHS):
+                return None
+            return replace(node, wire=wire, endian=endian)
+        case AliasRef(alias=alias):
+            if alias.primitive.name not in INTEGERS or wire == "str" or endian:
+                return None
+            return replace(node, wire=wire)
+    return None
+
+
 def build(package_dir: Path) -> Package:
     return Builder(package_dir).build()
 
@@ -151,6 +183,7 @@ class Builder:
         self.init = self.sources.pop("__init__")
         self.scopes: dict[Struct, Scope] = {}
         self.declared: dict[str, Family] = {}
+        self.legacies: dict[Struct | Enum, Struct | Enum] = {}
         self.structs: list[PendingStruct] = []
         self.enums: list[PendingEnum] = []
         self.aliases: list[PendingAlias] = []
@@ -162,6 +195,7 @@ class Builder:
         for source in self.sources.values():
             self.declare_module(source)
         for source in self.sources.values():
+            self.pair_legacies(source)
             self.bind_family_imports(source)
         for pending_enum in self.enums:
             self.build_enum(pending_enum)
@@ -172,7 +206,8 @@ class Builder:
         for pending_struct in self.structs:
             self.build_struct(pending_struct)
         modules = tuple(
-            Module(source.stem, source.package, tuple(source.families.values())) for source in self.sources.values()
+            Module(source.stem, source.package, (*source.families.values(), *source.legacies.values()))
+            for source in self.sources.values()
         )
         return Package(versions, modules)
 
@@ -274,6 +309,13 @@ class Builder:
                 raise error(source, alias, alias.name, f"is not exported by {module}")
             self.add(source, source.scope, statement, alias.asname or alias.name, imported)
 
+    def pair_legacies(self, source: Source) -> None:
+        for name, legacy in source.legacies.items():
+            family = source.families.get(name)
+            if not isinstance(family, type(legacy)):
+                raise CompilerError(f"{source.path}: {name}: a cereal=False declaration needs a cereal one beside it")
+            self.legacies[family] = legacy
+
     def bind_family_imports(self, source: Source) -> None:
         for statement in source.family_imports:
             module = self.sources.get((statement.module or "").removeprefix(f"{self.name}."))
@@ -290,14 +332,17 @@ class Builder:
             raise error(source, node, node.name, "type parameters are not allowed")
         kinds: list[object] = []
         packet_id = None
+        cereal = True
         for decorator in node.decorator_list:
             if isinstance(decorator, ast.Call):
                 function = self.resolve(source, scope, decorator.func)
                 if function is not dsl.packet and function is not dsl.type:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
-                arguments = self.bind(source, decorator, function, ("id",))
+                arguments = self.bind(source, decorator, function, ("id", "cereal"))
                 if function is dsl.packet:
                     packet_id = literal(source, arguments["id"], int, "packet")
+                if "cereal" in arguments:
+                    cereal = literal(source, arguments["cereal"], bool, "type")
             else:
                 function = self.resolve(source, scope, decorator)
                 if function is not dsl.builtin:
@@ -305,6 +350,8 @@ class Builder:
             kinds.append(function)
         if len(kinds) > 1:
             raise error(source, node, node.name, "takes only one of packet, type and builtin")
+        if not cereal and owner is not None:
+            raise error(source, node, node.name, "cereal=False marks a module-scope declaration")
         if node.bases and kinds not in ([], [dsl.type]):
             raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
@@ -315,9 +362,15 @@ class Builder:
             self.declare_family(source, node, Builtin(node.name, source.stem))
             return
         family: Struct | Enum = (
-            Enum(node.name, owner, source.stem) if node.bases else Struct(node.name, owner, source.stem, packet_id)
+            Enum(node.name, owner, source.stem, cereal)
+            if node.bases
+            else Struct(node.name, owner, source.stem, cereal, packet_id)
         )
-        if owner is None:
+        if not cereal:
+            if node.name in source.legacies:
+                raise error(source, node, node.name, "is already declared")
+            source.legacies[node.name] = family
+        elif owner is None:
             self.declare_family(source, node, family)
         else:
             owner.nested.append(family)
@@ -455,8 +508,11 @@ class Builder:
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                arguments = self.bind(source, call, dsl.field, ("prefix",))
+                arguments = self.bind(source, call, dsl.field, ("type", "endian", "prefix", "cereal"))
             annotation = statement.annotation
+            cereal = True
+            if call is not None and "cereal" in arguments:
+                cereal = literal(source, arguments["cereal"], bool, name)
             if (
                 isinstance(annotation, ast.Subscript)
                 and self.resolve(source, scope, annotation.value) is typing.Literal
@@ -469,7 +525,7 @@ class Builder:
                 else:
                     field_type = Literal(self.member_of(source, scope, values[0]))
             else:
-                field_type = self.type_of(source, scope, annotation)
+                field_type = self.type_of(source, scope, annotation, cereal)
             if call is not None and "prefix" in arguments:
                 prefix = self.type_of(source, scope, arguments["prefix"])
                 if not isinstance(field_type, List):
@@ -477,6 +533,22 @@ class Builder:
                 if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
                     raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
                 field_type = replace(field_type, prefix=prefix)
+            wire = None
+            endian = None
+            if call is not None and "type" in arguments:
+                wire_type = self.type_of(source, scope, arguments["type"])
+                if not (isinstance(wire_type, Primitive) and wire_type.name in ("str", *INTEGERS)):
+                    raise error(source, arguments["type"], name, "type is not str or an integer primitive")
+                wire = wire_type.name
+            if call is not None and "endian" in arguments:
+                if literal(source, arguments["endian"], str, name) != "big":
+                    raise error(source, arguments["endian"], name, 'endian is not "big"')
+                endian = "big"
+            if wire or endian:
+                rewired = rewire(field_type, wire, endian)
+                if rewired is None:
+                    raise error(source, statement, name, "type and endian do not reach exactly one scalar")
+                field_type = rewired
             fields.append(Field(name, field_type))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
 
@@ -518,15 +590,15 @@ class Builder:
             raise error(source, node, ast.unparse(node), "is not defined")
         return found
 
-    def cases_of(self, source: Source, scope: Scope, operands: list[ast.expr]) -> tuple[Type | None, ...]:
+    def cases_of(self, source: Source, scope: Scope, operands: list[ast.expr], cereal: bool) -> tuple[Type | None, ...]:
         return tuple(
             None
             if isinstance(operand, ast.Constant) and operand.value is None
-            else self.type_of(source, scope, operand)
+            else self.type_of(source, scope, operand, cereal)
             for operand in operands
         )
 
-    def type_of(self, source: Source, scope: Scope, node: ast.expr) -> Type:
+    def type_of(self, source: Source, scope: Scope, node: ast.expr, cereal: bool = True) -> Type:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             raise error(source, node, node.value, "string annotations are not allowed")
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
@@ -536,7 +608,7 @@ class Builder:
                 operands.insert(0, left.right)
                 left = left.left
             operands.insert(0, left)
-            cases = self.cases_of(source, scope, operands)
+            cases = self.cases_of(source, scope, operands, cereal)
             if len(cases) == 2 and cases[0] is not None and cases[1] is None:
                 return Optional(cases[0])
             return Variant(cases)
@@ -544,13 +616,17 @@ class Builder:
             container = self.resolve(source, scope, node.value)
             arguments = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
             if container is typing.Union and len(arguments) > 1:
-                return Variant(self.cases_of(source, scope, arguments))
+                return Variant(self.cases_of(source, scope, arguments, cereal))
             if container is list and len(arguments) == 1:
-                return List(self.type_of(source, scope, arguments[0]), Primitive("uvarint32"))
+                return List(self.type_of(source, scope, arguments[0], cereal), Primitive("uvarint32"))
             if container is dict and len(arguments) == 2:
-                return Map(self.type_of(source, scope, arguments[0]), self.type_of(source, scope, arguments[1]))
+                return Map(
+                    self.type_of(source, scope, arguments[0], cereal), self.type_of(source, scope, arguments[1], cereal)
+                )
             if container is dsl.array and len(arguments) == 2:
-                return Array(self.type_of(source, scope, arguments[0]), literal(source, arguments[1], int, "array"))
+                return Array(
+                    self.type_of(source, scope, arguments[0], cereal), literal(source, arguments[1], int, "array")
+                )
             if container is dsl.bitset and len(arguments) == 1:
                 return Bitset(self.member_of(source, scope, arguments[0]))
             raise error(source, node, ast.unparse(node), "is not a type with these arguments")
@@ -561,6 +637,11 @@ class Builder:
             return Primitive(PRIMITIVES[target])
         if target is uuid.UUID:
             return BuiltinRef(UUID)
+        if not cereal and isinstance(target, Struct | Enum):
+            legacy = self.legacies.get(target)
+            if legacy is None:
+                raise error(source, node, ast.unparse(node), "has no cereal=False declaration")
+            target = legacy
         if isinstance(target, Struct):
             return StructRef(target)
         if isinstance(target, Enum):
