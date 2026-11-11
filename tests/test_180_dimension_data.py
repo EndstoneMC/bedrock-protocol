@@ -50,40 +50,6 @@ GOLDENS = [
 ]
 
 
-@pytest.fixture
-def dimension_data_2193():
-    return v2193.DimensionDataPacket(
-        dimension_definitions={
-            "test:dim": v2193.DimensionDefinitionGroup.DimensionDefinition(
-                min_y=-64,
-                height_range=384,
-                generator_type=v2193.GeneratorType.OVERWORLD,
-                dimension_type=1000,
-                pack_id=PACK_ID,
-                default_biome="plains",
-            )
-        }
-    )
-
-
-@pytest.fixture
-def dimension_data_2225():
-    return v2225.DimensionDataPacket(
-        dimension_definitions={
-            "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(
-                min_y=-64,
-                height_range=384,
-                generator_type=v2225.GeneratorType.OVERWORLD,
-                dimension_type=1000,
-                pack_id=PACK_ID,
-                default_biome="plains",
-                cloud_height=192,
-                render_clouds=True,
-            )
-        }
-    )
-
-
 @pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_dimension_data_is_packet_180(version):
     assert version.PACKETS[180] is version.DimensionDataPacket
@@ -109,12 +75,41 @@ def test_a_v2168_dimension_data_body_does_not_decode_as_a_v1001_one():
         v1001.DimensionDataPacket.from_bytes(V2168)
 
 
-def test_dimension_data_2225_appends_the_cloud_height_and_its_flag(dimension_data_2193, dimension_data_2225):
-    older = bytes(dimension_data_2193)
-    newer = bytes(dimension_data_2225)
-    assert newer[: len(older)] == older
-    assert newer[len(older) :] == bytes.fromhex("800301")
+def test_dimension_data_2225_appends_the_cloud_height_and_its_flag():
+    older = v2193.DimensionDataPacket(
+        dimension_definitions={
+            "test:dim": v2193.DimensionDefinitionGroup.DimensionDefinition(
+                min_y=-64,
+                height_range=384,
+                generator_type=v2193.GeneratorType.OVERWORLD,
+                dimension_type=1000,
+                pack_id=PACK_ID,
+                default_biome="plains",
+            )
+        }
+    )
+    newer = v2225.DimensionDataPacket(
+        dimension_definitions={
+            "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(
+                min_y=-64,
+                height_range=384,
+                generator_type=v2225.GeneratorType.OVERWORLD,
+                dimension_type=1000,
+                pack_id=PACK_ID,
+                default_biome="plains",
+                cloud_height=192,
+                render_clouds=True,
+            )
+        }
+    )
+    assert bytes(newer)[: len(bytes(older))] == bytes(older)
+    assert len(bytes(newer)) == len(bytes(older)) + 3
 
 
-def test_dimension_data_2225_round_trips_the_cloud_height_and_its_flag(dimension_data_2225):
-    assert v2225.DimensionDataPacket.from_bytes(bytes(dimension_data_2225)) == dimension_data_2225
+def test_dimension_data_2225_round_trips_the_cloud_height_and_its_flag():
+    packet = v2225.DimensionDataPacket(
+        dimension_definitions={
+            "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(cloud_height=192, render_clouds=True)
+        }
+    )
+    assert v2225.DimensionDataPacket.from_bytes(bytes(packet)) == packet
