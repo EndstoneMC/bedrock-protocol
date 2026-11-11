@@ -226,6 +226,8 @@ class LevelSettings:
     override_force_experimental_gameplay: bool | None
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
+    server_editor_connection_policy: ServerEditorConnectionPolicy = field(since=1001)
+    allow_anonymous_block_drops_in_editor_worlds: bool = field(since=1001)
 
 
 @type(since=2168)
@@ -310,6 +312,7 @@ class StartGamePacket:
     block_network_ids_are_hashes: bool
     tick_death_systems_enabled: bool = field(since=827, until=898)
     network_permissions: NetworkPermissions
+    is_logging_chat: bool = field(since=1001)
     server_configuration_join_info: ServerConfigurationJoinInfo | None = field(since=924)
     server_telemetry_data: ServerTelemetryData = field(since=924)
 
