@@ -34,7 +34,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_show_store_offer_is_packet_91(version):
     assert version.PACKETS[91] is version.ShowStoreOfferPacket
 
