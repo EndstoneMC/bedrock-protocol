@@ -35,7 +35,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_npc_request_is_packet_98(version):
     assert version.PACKETS[98] is version.NpcRequestPacket
 
