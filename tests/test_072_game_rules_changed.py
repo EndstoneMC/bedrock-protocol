@@ -67,7 +67,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_game_rules_changed_is_packet_72(version):
     assert version.PACKETS[72] is version.GameRulesChangedPacket
 
