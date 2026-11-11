@@ -9,8 +9,8 @@ A field named after a Python keyword carries one trailing underscore, which the 
 
 An enum is `class E(IntEnum, P)` or `class E(Enum, P)`, where P is bool, int8, uint8, int16, uint16,
 int32 or uint32 and becomes `enum class E : P`. The bare base `class E(IntEnum)` or `(Enum)` has type
-`int` until it is dropped. An enum field goes on the wire as P when P is one byte, and otherwise as
-varint32 or uvarint32 by the signedness of P. A member is `PEP8_NAME = N`, `= -N`, `= auto()`,
+`int`. An enum field goes on the wire as P when P is one byte, and otherwise as varint32 or uvarint32
+by the signedness of P. A member is `PEP8_NAME = N`, `= -N`, `= auto()`,
 `= OTHER` or `= OTHER - k` for an earlier member, and reaches C++ as `CamelCase`. `auto()` and a
 `value()` without a number take the previous present member's value plus one, at each version. A
 member name may repeat over disjoint version ranges. The wire name is the pair or else the member
