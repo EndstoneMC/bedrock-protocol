@@ -35,12 +35,12 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v748, v800], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v748, v800])
 def test_set_movement_authority_is_packet_319(version):
     assert version.PACKETS[319] is version.SetMovementAuthorityPacket
 
 
-@pytest.mark.parametrize("version", [v729, v818, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v729, v818, v2168])
 def test_set_movement_authority_is_not_a_packet_319_outside_748_to_800(version):
     assert 319 not in version.PACKETS
 
