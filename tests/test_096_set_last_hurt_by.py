@@ -16,7 +16,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_set_last_hurt_by_is_packet_96(version):
     assert version.PACKETS[96] is version.SetLastHurtByPacket
 
