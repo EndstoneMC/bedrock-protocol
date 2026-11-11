@@ -48,6 +48,7 @@ class MobEffectPacket:
     show_particles: bool
     effect_duration_ticks: varint32
     tick: PlayerInputTick
+    ambient: bool = field(since=898)
 
 
 @packet(id=318, since=748)
