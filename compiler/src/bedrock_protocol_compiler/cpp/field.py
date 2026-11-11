@@ -308,7 +308,7 @@ class ListField:
             {
                 auto count$depth$ = $count$;
                 if (!count$depth$) $fail$
-                auto budget$depth$ = stream.account(*count$depth$, sizeof($container$::value_type));
+                auto budget$depth$ = $account$;
                 if (!budget$depth$) $budget_fail$
                 $target$.reserve(static_cast<std::size_t>(*count$depth$));
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
@@ -320,7 +320,7 @@ class ListField:
             depth=self.depth,
             count=count,
             fail=names.fail(f"count{self.depth}.error()", self.where),
-            container=self.cpp_type(),
+            account=names.account(f"*count{self.depth}", self.cpp_type()),
             budget_fail=names.fail(f"budget{self.depth}.error()", self.where),
             target=target,
             body=lambda: self.element.read(p, f"{target}.back()"),
@@ -356,7 +356,7 @@ class ArrayField:
         p.emit(
             """
             {
-                auto budget$depth$ = stream.account($size$, sizeof($container$::value_type));
+                auto budget$depth$ = $account$;
                 if (!budget$depth$) $fail$
                 for (std::size_t i$depth$ = 0; i$depth$ < $size$; ++i$depth$) {
                     $body$
@@ -365,7 +365,7 @@ class ArrayField:
             """,
             depth=self.depth,
             size=self.node.size,
-            container=self.cpp_type(),
+            account=names.account(str(self.node.size), self.cpp_type()),
             fail=names.fail(f"budget{self.depth}.error()", self.where),
             body=lambda: self.element.read(p, f"{target}[i{self.depth}]"),
         )
@@ -405,7 +405,7 @@ class MapField:
             {
                 auto count$depth$ = $count$;
                 if (!count$depth$) $fail$
-                auto budget$depth$ = stream.account(*count$depth$, sizeof($container$::value_type));
+                auto budget$depth$ = $account$;
                 if (!budget$depth$) $budget_fail$
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
                     $container$::key_type key$depth${};
@@ -419,6 +419,7 @@ class MapField:
             depth=self.depth,
             count=names.read("uvarint32", None),
             fail=names.fail(f"count{self.depth}.error()", self.where),
+            account=names.account(f"*count{self.depth}", self.cpp_type()),
             container=self.cpp_type(),
             target=target,
             budget_fail=names.fail(f"budget{self.depth}.error()", self.where),

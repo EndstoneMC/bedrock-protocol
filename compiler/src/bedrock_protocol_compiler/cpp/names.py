@@ -76,6 +76,10 @@ def write(wire: str, endian: str | None, value: str) -> str:
     return f"stream.write<{PRIMITIVES[wire]}{order}>({value});"
 
 
+def account(count: str, container: str) -> str:
+    return f"stream.account({count}, sizeof({container}::value_type))"
+
+
 def read(wire: str, endian: str | None) -> str:
     if wire in VARINTS:
         return f"stream.readVarInt<{PRIMITIVES[wire]}>()"

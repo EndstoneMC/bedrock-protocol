@@ -97,12 +97,12 @@ class EnumGenerator:
             """
             void Serializer<$qualified$>::serialize(BinaryWriter &stream, $qualified$ value)
             {
-                stream.write(enum_name(value));
+                $write$
             }
 
             auto Serializer<$qualified$>::deserialize(BinaryReader &stream) -> $decoded$
             {
-                auto v = stream.read<std::string>();
+                auto v = $read$;
                 if (!v) $read_failure$
                 const auto value = enum_cast<$qualified$>(*v);
                 if (!value) $unknown$
@@ -111,6 +111,8 @@ class EnumGenerator:
 
             """,
             qualified=self.qualified,
+            write=names.write("str", None, "enum_name(value)"),
+            read=names.read("str", None),
             decoded=names.decoded(self.qualified),
             read_failure=names.unexpected("v.error()"),
             unknown=names.unexpected(names.UNKNOWN_VALUE),
