@@ -1,10 +1,8 @@
-from bedrock_protocol_compiler.builder import reaches
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator
 from bedrock_protocol_compiler.cpp.field import make_field_generator
-from bedrock_protocol_compiler.descriptor import MemberRef
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape
+from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape, reached_by
 
 
 class StructGenerator:
@@ -22,9 +20,7 @@ class StructGenerator:
             if spelled is not None:
                 self.members.append((spelled, each.name))
             self.field_includes |= generator.includes()
-            for target in reaches(each.when):
-                if isinstance(target, MemberRef):
-                    self.field_includes.add(names.header(target.enum))
+            self.field_includes |= {names.header(target) for target in reached_by(each)}
 
     def includes(self) -> set[str]:
         includes = {
