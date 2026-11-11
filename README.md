@@ -127,7 +127,7 @@ ctest --test-dir build --output-on-failure
 
 Code generation is part of the build. `BEDROCK_PROTOCOL_BUILD_TESTS` and
 `BEDROCK_PROTOCOL_INSTALL` default to on for top-level builds and off for
-subprojects. `BEDROCK_PROTOCOL_BUILD_PYTHON` is optional and defaults to off.
+subprojects.
 
 Install the C++ headers, library and CMake package with `cmake --install build`.
 Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.

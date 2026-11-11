@@ -33,8 +33,8 @@ jobs:
       - name: pytest
         run: uv run --directory compiler pytest -n auto
 
-  delivery:
-    name: Python (${{ matrix.os }})
+  wheel:
+    name: Wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -47,96 +47,35 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.1.0
-        with:
-          python-version: "3.12"
-      - uses: lukka/get-cmake@latest
-      - name: Set up Windows toolchain
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - uses: astral-sh/setup-uv@v10.3.2
+      - name: Build the sdist and the wheel
+        run: uv build --no-config -o dist
+      - name: Build the compiler wheel
+        if: runner.os == 'Linux'
+        run: uv build --no-config --package bedrock-protocol-compiler -o dist-compiler
+      - name: Test the installed wheel
         run: |
-          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          if (-not $vs) { throw 'Visual Studio C++ tools are missing' }
-          Import-Module (Join-Path $vs 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
-          Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
-          foreach ($name in 'INCLUDE', 'LIB', 'LIBPATH', 'PATH') {
-            $value = [Environment]::GetEnvironmentVariable($name, 'Process')
-            if ($value) { "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
-          }
-      - name: Install build tools and create a private profile
-        run: |
-          export CONAN_HOME="$RUNNER_TEMP/delivery-conan"
-          echo "CONAN_HOME=$CONAN_HOME" >> "$GITHUB_ENV"
-          python -m pip install build conan-py-build==0.6.4
-          mkdir -p "$CONAN_HOME/profiles"
-          if [ "$RUNNER_OS" = Windows ]; then
-            cp cmake/conan/windows-msvc.profile "$CONAN_HOME/profiles/delivery"
-          else
-            gcc_major="$(g++ -dumpfullversion | cut -d. -f1)"
-            cat > "$CONAN_HOME/profiles/delivery" <<EOF
-          [settings]
-          os=Linux
-          arch=x86_64
-          compiler=gcc
-          compiler.version=$gcc_major
-          compiler.cppstd=gnu23
-          compiler.libcxx=libstdc++11
-          build_type=Release
-          [conf]
-          tools.cmake.cmaketoolchain:generator=Ninja
-          tools.build:compiler_executables={"c":"gcc","cpp":"g++"}
-          tools.build:jobs=2
-          EOF
-          fi
-      - name: Build the compiler wheel and the runtime source distribution
-        run: |
-          python -m build --wheel compiler --outdir "$RUNNER_TEMP/delivery-pure"
-          python -m build --sdist --outdir "$RUNNER_TEMP/delivery-dist"
-          mkdir "$RUNNER_TEMP/delivery-sdist"
-          python -m tarfile -e "$RUNNER_TEMP"/delivery-dist/*.tar.gz "$RUNNER_TEMP/delivery-sdist" --filter data
-      - name: Build the runtime wheel from its sdist
-        run: |
-          python -m build --wheel "$RUNNER_TEMP"/delivery-sdist/* --outdir "$RUNNER_TEMP/delivery-dist" \
-            -C host-profile=delivery -C build-profile=delivery -C "build-dir=$RUNNER_TEMP/delivery-wheel-build"
-      - name: Test the installed wheels outside the checkout
-        run: |
-          python -m venv "$RUNNER_TEMP/delivery-consumer"
-          if [ "$RUNNER_OS" = Windows ]; then
-            consumer="$RUNNER_TEMP/delivery-consumer/Scripts/python.exe"
-          else
-            consumer="$RUNNER_TEMP/delivery-consumer/bin/python"
-          fi
-          wheels=("$RUNNER_TEMP"/delivery-dist/*.whl)
+          wheels=(dist/*.whl)
           test "${#wheels[@]}" -eq 1
           case "${wheels[0]}" in *-cp312-abi3-*) ;; *) echo "not an abi3 wheel: ${wheels[0]}"; exit 1 ;; esac
-          "$consumer" -m pip install pytest "${wheels[0]}"
-          "$consumer" -I -c "import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None"
-          "$consumer" -I -c "import bedrock_protocol as bp; assert bp.TextPacket is getattr(bp, f'v{bp.LATEST_PROTOCOL}').TextPacket"
-          mkdir "$RUNNER_TEMP/delivery-consumer-tests"
-          cp -r "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/delivery-consumer-tests/"
-          cd "$RUNNER_TEMP/delivery-consumer-tests"
-          "$consumer" -I -m pytest tests
-          "$consumer" -m pip install "$RUNNER_TEMP"/delivery-pure/*.whl
-          "$consumer" -I -m bedrock_protocol_compiler --language cpp --out "$RUNNER_TEMP/delivery-bpc" \
-            --import-path "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/protocol/block.py" "$GITHUB_WORKSPACE/protocol/nbt.py"
-          test -f "$RUNNER_TEMP/delivery-bpc/block.h"
+          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with pytest python -I -c "import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None"
+          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with pytest python -I -m pytest tests -p no:cacheprovider
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
           name: python-compiler
-          path: ${{ runner.temp }}/delivery-pure/*
+          path: dist-compiler/*
           if-no-files-found: error
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: python-runtime-${{ runner.os }}
-          path: ${{ runner.temp }}/delivery-dist/*.whl
+          path: dist/*.whl
           if-no-files-found: error
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
           name: python-runtime-source
-          path: ${{ runner.temp }}/delivery-dist/*.tar.gz
+          path: dist/*.tar.gz
           if-no-files-found: error
 
   # Three compilers across three standard libraries. Clang pairs with libc++
@@ -313,10 +252,7 @@ jobs:
           done
           rm -rf protocol compiler
           cp -r package/generated generated
-          python -m pip install nanobind==2.13.0 pytest
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBEDROCK_PROTOCOL_BUILD_TESTS=OFF \
-                -DBEDROCK_PROTOCOL_BUILD_PYTHON=ON -DPython_EXECUTABLE="$(command -v python)"
-          cmake --build build
-          cmake --install build --prefix stage --component bedrock_protocol_wheel
+          python -m pip install "scikit-build-core>=1.1" nanobind==2.13.0 pytest
+          python -m pip install --no-build-isolation .
       - name: Test it
-        run: PYTHONPATH=stage python -m pytest tests
+        run: python -I -m pytest tests -p no:cacheprovider

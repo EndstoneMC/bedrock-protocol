@@ -6,20 +6,20 @@ requires-python = ">=3.12"
 license = "MIT AND BSD-3-Clause"
 license-files = ["LICENSE", "python/NOTICE"]
 
+[dependency-groups]
+dev = ["nanobind==2.13.0", "pytest", "scikit-build-core>=1.1", "click", "griffe"]
+
 [build-system]
-requires = ["conan-py-build==0.6.4", "nanobind==2.13.0", "click", "griffe"]
-build-backend = "conan_py_build.build"
+requires = ["scikit-build-core>=1.1", "nanobind==2.13.0", "click", "griffe"]
+build-backend = "scikit_build_core.build"
 
-[tool.conan-py-build]
-extra-profile = "python.profile"
-extra-arguments = ["-o=&:with_python=True", "-o=&:with_tests=False"]
-
-[tool.conan-py-build.wheel]
-packages = []
-
-[tool.conan-py-build.sdist]
-include = ["compiler/src", "compiler/pyproject.toml", "python", "protocol", "tests", "third_party", "conanfile.py", "python.profile"]
-exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib"]
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+wheel.py-api = "cp312"
 
 [tool.uv.workspace]
 members = ["compiler"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

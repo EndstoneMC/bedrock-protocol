@@ -1,9 +1,4 @@
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
-if (NOT nanobind_DIR)
-    execute_process(COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-        OUTPUT_VARIABLE nanobind_DIR OUTPUT_STRIP_TRAILING_WHITESPACE
-        COMMAND_ERROR_IS_FATAL ANY)
-endif ()
 find_package(nanobind CONFIG REQUIRED)
 
 file(STRINGS "${BEDROCK_PROTOCOL_HEADER_DIR}/version.hpp" _latest REGEX "^#define BEDROCK_PROTOCOL_LATEST [0-9]+$")
@@ -25,8 +20,7 @@ foreach (BP_VERSION IN LISTS _versions)
     endforeach ()
     string(APPEND _table "        {${BP_VERSION}, {${_files}}, &check_packets<${BP_VERSION}>},\n")
     configure_file(version.py.in "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" @ONLY)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol
-        COMPONENT bedrock_protocol_wheel)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol)
 endforeach ()
 file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include <bedrock/protocol.hpp>
 
@@ -50,12 +44,8 @@ list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp")
 nanobind_add_module(_native STABLE_ABI ${_sources})
 target_include_directories(_native PRIVATE .)
 target_link_libraries(_native PRIVATE bedrock::protocol)
-add_dependencies(_native bedrock_protocol)
 if (MSVC)
     target_compile_options(_native PRIVATE /bigobj)
 endif ()
 
-install(FILES bedrock_protocol/__init__.py DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
-install(TARGETS _native
-    LIBRARY DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel
-    RUNTIME DESTINATION bedrock_protocol COMPONENT bedrock_protocol_wheel)
+install(TARGETS _native DESTINATION bedrock_protocol)

@@ -9,7 +9,6 @@ if (PROJECT_IS_TOP_LEVEL)
 endif ()
 
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
-option(BEDROCK_PROTOCOL_BUILD_PYTHON "Build the Python runtime" OFF)
 set(BEDROCK_PROTOCOL_PYTHON_VERSIONS "2193" CACHE STRING "Protocol versions the Python extension binds")
 
 include(GNUInstallDirs)
@@ -53,6 +52,10 @@ else ()
     endif ()
     string(REGEX MATCH "[0-9]+" BEDROCK_PROTOCOL_LATEST "${_version_line}")
 
+    if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
+        find_package(Python 3.12 REQUIRED COMPONENTS Interpreter)
+        set(BEDROCK_PROTOCOL_COMPILER_PYTHON "${Python_EXECUTABLE}")
+    endif ()
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
     include(BedrockProtocol)
     file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
@@ -95,11 +98,9 @@ endif ()
 # The schema modules, by stem: one generated header and source pair each.
 list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.[a-z]+$" "\\1")
 
-if (BEDROCK_PROTOCOL_BUILD_PYTHON)
+if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
     add_subdirectory(python)
-endif ()
-
-if (BEDROCK_PROTOCOL_INSTALL)
+elseif (BEDROCK_PROTOCOL_INSTALL)
     install(TARGETS bedrock_protocol
             EXPORT bedrock-protocol-targets
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
