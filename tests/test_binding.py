@@ -97,7 +97,8 @@ def test_a_value_the_schema_does_not_name_encodes_again(unnamed_status):
 
 def test_an_enum_value_its_cpp_type_cannot_hold_is_rejected():
     with pytest.raises(
-        bedrock_protocol.DecodeError, match=r"^RequestPermissionsPacket\.player_permissions: out of range at byte 10 of 12$"
+        bedrock_protocol.DecodeError,
+        match=r"^RequestPermissionsPacket\.player_permissions: out of range at byte 10 of 12$",
     ):
         proto.RequestPermissionsPacket.from_bytes(bytes(8) + b"\xd8\x04" + bytes(2))
 
