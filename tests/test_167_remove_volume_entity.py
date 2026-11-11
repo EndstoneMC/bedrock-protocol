@@ -18,7 +18,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_remove_volume_entity_is_packet_167(version):
     assert version.PACKETS[167] is version.RemoveVolumeEntityPacket
 
