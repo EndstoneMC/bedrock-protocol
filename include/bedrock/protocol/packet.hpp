@@ -13,6 +13,7 @@
 
 namespace bedrock::protocol {
 
+// Complete only through <bedrock/protocol.hpp>; a lone module header reads other modules' packets as void.
 template <int V, int Id>
 struct packet_of {
     using type = void;

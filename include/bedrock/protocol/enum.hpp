@@ -16,6 +16,7 @@ namespace detail {
 template <typename E>
 inline constexpr std::array<E, 0> values_v{};
 
+// Lowercased wire names; schema_names_v keeps the schema's spelling.
 template <typename E>
 inline constexpr std::array<std::string_view, 0> names_v{};
 
