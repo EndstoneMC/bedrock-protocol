@@ -33,7 +33,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_settings_command_is_packet_140(version):
     assert version.PACKETS[140] is version.SettingsCommandPacket
 
