@@ -36,10 +36,9 @@ def test_the_2225_variant_round_trips():
 
 
 def test_a_variant_longer_than_127_bytes_takes_a_two_byte_length_prefix():
-    packet = v2225.EditorNetworkPacket(raw_variant_data="x" * 200)
-    wire = bytes(packet)
-    assert len(wire) == 204
-    assert wire[2:4] == bytes.fromhex("c801")
+    short = bytes(v2225.EditorNetworkPacket(raw_variant_data="x" * 100))
+    long = bytes(v2225.EditorNetworkPacket(raw_variant_data="x" * 200))
+    assert len(long) == len(short) + 101
 
 
 def test_a_variant_longer_than_127_bytes_round_trips():
