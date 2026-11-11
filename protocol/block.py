@@ -7,7 +7,7 @@ from enum import IntEnum
 from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, BlockRuntimeId, DimensionType, Vec3
-from protocol.nbt import CompoundTag
+from protocol.nbt import CompoundTag, CompoundTagData
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
