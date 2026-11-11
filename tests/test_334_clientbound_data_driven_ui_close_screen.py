@@ -31,7 +31,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v944, *VERSIONS], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v944, *VERSIONS])
 def test_clientbound_data_driven_ui_close_screen_is_packet_334(version):
     assert version.PACKETS[334] is version.ClientboundDataDrivenUICloseScreenPacket
 
@@ -65,7 +65,7 @@ def test_clientbound_data_driven_ui_close_screen_decodes_from_its_golden(packet,
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_data_driven_ui_close_screen_rejects_a_truncated_form_id(version):
     with pytest.raises(ValueError, match="at byte"):
         version.ClientboundDataDrivenUICloseScreenPacket.from_bytes(bytes.fromhex("012c01"))
