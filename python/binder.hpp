@@ -195,11 +195,11 @@ F from_python(nb::handle src)
             throw nb::type_error("expected an int or an enum member");
         }
         F member;
-        if (nb::try_cast<F>(src, member)) {
+        if (nb::try_cast(src, member)) {
             return member;
         }
         std::underlying_type_t<F> integer;
-        if (!nb::try_cast<std::underlying_type_t<F>>(src, integer, false)) {
+        if (!nb::try_cast(src, integer)) {
             throw nb::type_error(std::format("value {} does not fit the enum", nb::str(src).c_str()).c_str());
         }
         return static_cast<F>(integer);
