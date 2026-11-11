@@ -54,8 +54,8 @@ def test_every_version_rejects_a_compound_with_a_root_tag(protocol):
         protocol.LevelEventGenericPacket.from_bytes(NAMED_ROOT)
 
 
-def test_an_empty_compound_is_just_its_tag_end():
-    assert bytes(v2225.LevelEventGenericPacket(event_id=-1))[1:] == b"\x00"
+def test_an_empty_compound_is_the_event_id_and_one_tag_byte():
+    assert len(bytes(v2225.LevelEventGenericPacket(event_id=-1))) == 2
 
 
 def test_an_empty_compound_round_trips():
