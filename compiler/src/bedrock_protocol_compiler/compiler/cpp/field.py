@@ -329,10 +329,8 @@ class PrimitiveFieldGenerator(FieldGenerator):
         else:
             cast = cpp_type(self._prim, self._gc.ctx)
             p.print(f"{target} = static_cast<{cast}>(*v);\n")
-            if (
-                self._prim.name in INTEGER_PRIMITIVES | {"bool"}
-                and self._prim.encoding in INTEGER_PRIMITIVES | {"bool"}
-            ):
+            integral = INTEGER_PRIMITIVES | {"bool"}
+            if self._prim.name in integral and self._prim.encoding in integral:
                 p.add_includes("<system_error>")
                 wire = PRIMITIVE_TYPES[self._prim.encoding]
                 p.print(

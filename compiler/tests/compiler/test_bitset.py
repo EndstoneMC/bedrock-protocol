@@ -186,9 +186,7 @@ class ThingPacket:
         self.assertIn("std::bitset<2> flags{};", header)
 
     def test_the_width_follows_the_member_per_snapshot(self) -> None:
-        header, _ = self.compile(
-            COUNTED.format(members="        EXTRA = value(2, since=2168)", width="Flag.FLAG_NUM")
-        )
+        header, _ = self.compile(COUNTED.format(members="        EXTRA = value(2, since=2168)", width="Flag.FLAG_NUM"))
         self.assertIn("std::bitset<2> flags{};", self.namespace(header, "base"))
         self.assertIn("std::bitset<3> flags{};", self.namespace(header, "v2168"))
 

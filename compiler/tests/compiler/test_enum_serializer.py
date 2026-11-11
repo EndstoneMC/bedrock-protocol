@@ -89,12 +89,8 @@ class ThingPacket:
         self.assertIn('"beta",', header[new : header.index("}};", new)])
         old = header.index("names_v<base::Kind>")
         self.assertNotIn('"beta",', header[old : header.index("}};", old)])
-        self.assertIn(
-            "enum_cast<v2168::Kind>(*v)", self.body(source, "auto Serializer<v2168::Kind>::deserialize")
-        )
-        self.assertIn(
-            "enum_cast<base::Kind>(*v)", self.body(source, "auto Serializer<base::Kind>::deserialize")
-        )
+        self.assertIn("enum_cast<v2168::Kind>(*v)", self.body(source, "auto Serializer<v2168::Kind>::deserialize"))
+        self.assertIn("enum_cast<base::Kind>(*v)", self.body(source, "auto Serializer<base::Kind>::deserialize"))
 
     def test_a_gated_field_still_reaches_its_enum(self) -> None:
         """A `when=` gate wraps the field's type, and the walk collecting
