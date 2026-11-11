@@ -51,7 +51,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_level_sound_event_is_packet_123(version):
     assert version.PACKETS[123] is version.LevelSoundEventPacket
 
