@@ -3,6 +3,9 @@
 A schema module imports these names and declares structs, packets, type aliases and builtins with
 them. The compiler reads the module's source and never runs it, so every call is checked against the
 signature written here: a keyword this module does not list is an error.
+
+A field named after a Python keyword carries one trailing underscore, which the compiler drops
+(`pass_` is `pass`). Any other trailing underscore is part of the name.
 """
 
 from collections.abc import Callable
@@ -44,7 +47,7 @@ def field(
 
     - `type`: the wire form where it differs from the annotation. `str` name-codes an enum, and an
       integer primitive overrides the width of an integer field or enum while C++ keeps the
-      annotated type. It reaches through `list` and `T | None`.
+      annotated type. It reaches through `list` and `T | None`, and the one scalar half of a `dict`.
     - `since`, `until`: the field exists in protocol versions `[since, until)`, within its
       declaration's range.
     - `when`: a one-argument lambda over earlier fields. Nothing marks presence on the wire: both
@@ -52,7 +55,8 @@ def field(
     - `endian`: `"big"` for a fixed-width integer written big-endian.
     - `prefix`: the integer primitive that prefixes a `list`, `uvarint32` by default.
     - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix.
-    - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type.
+    - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type. It flows
+      through `list`, `dict` and `T | None`.
 
     `with field(when=...):` gates every field in the block by one predicate.
     """
@@ -79,20 +83,12 @@ def builtin[T](cls: T) -> T:
     return cls
 
 
-@builtin
 class bitset:
     """`bitset[E.M]` is a `std::bitset` as wide as the enum member `E.M`, written as a base-128 dump."""
 
-    def __class_getitem__(cls, _width: object) -> object:
-        return cls
 
-
-@builtin
 class array:
     """`array[T, N]` is a `std::array` of exactly N elements, written back to back with no prefix."""
-
-    def __class_getitem__(cls, _item: object) -> object:
-        return cls
 
 
 type varint32 = int
