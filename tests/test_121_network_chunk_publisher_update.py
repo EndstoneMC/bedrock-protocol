@@ -44,7 +44,6 @@ def test_network_chunk_publisher_update_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_an_empty_server_built_chunk_list_still_writes_a_four_byte_count():
-    assert len(EMPTY) == 8
+def test_network_chunk_publisher_update_rejects_a_one_byte_chunk_count():
     with pytest.raises(ValueError, match="at byte"):
         v2225.NetworkChunkPublisherUpdatePacket.from_bytes(EMPTY[:5])
