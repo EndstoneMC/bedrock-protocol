@@ -1,6 +1,5 @@
 """The connection itself: network/ -- the packet id registry, login and handshake,
-disconnect, play status, compression and network settings, blob-cache negotiation,
-latency, violation, server stats, and the wire-only block position."""
+disconnect, compression, blob-cache negotiation and server stats."""
 
 from enum import IntEnum, auto
 from typing import Union

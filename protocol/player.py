@@ -1,6 +1,6 @@
-"""The player as a subject: world/actor/player/ -- respawn state, damage cause,
-armour slots, client options, the player list, per-player location and property overrides,
-and AddPlayer. Not abilities -- those are in ability.py."""
+"""The player as a subject: world/actor/player/ -- respawn state, damage cause, armour
+slots, client options, the player list, location and property overrides, AddPlayer.
+Not abilities -- those are in ability.py."""
 
 import uuid
 from enum import Enum, IntEnum, auto
