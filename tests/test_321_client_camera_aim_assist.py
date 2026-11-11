@@ -28,7 +28,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_client_camera_aim_assist_is_packet_321(version):
     assert version.PACKETS[321] is version.ClientCameraAimAssistPacket
 
