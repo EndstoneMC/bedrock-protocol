@@ -29,7 +29,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_network_chunk_publisher_update_is_packet_121(version):
     assert version.PACKETS[121] is version.NetworkChunkPublisherUpdatePacket
 
