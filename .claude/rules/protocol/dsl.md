@@ -10,7 +10,7 @@ paths:
 ## Nesting
 
 - Nest a type as a class inside its owner. Reference it bare inside the owner and as `Owner.Inner` elsewhere.
-- Repeat each nested type verbatim in every redeclared body of its owner.
+- Repeat each nested type verbatim in every redeclared body of its owner, dropping gates the owner's range decides.
 - Where only a nested type is modelled, declare its owner with no fields.
 
 ## Fields

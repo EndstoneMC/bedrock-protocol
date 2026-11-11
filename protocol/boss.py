@@ -81,7 +81,7 @@ class BossEventPacket:
     player_id: ActorUniqueID = field(until=2193)
     event_type: BossEventUpdateType
     name: str
-    filtered_name: str = field(since=776)
+    filtered_name: str
     health_percent: float
     color: BossBarColor
     overlay: BossBarOverlay

@@ -400,11 +400,8 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
         ),
-        until=975,
     )
-    item_aux: varint32 = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
-    )
+    item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE)
     item_result: SerializedNetworkItemInstanceDescriptor = field(
         when=lambda e: (
             e.entry_type
@@ -413,7 +410,6 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
         ),
-        until=975,
     )
     tag: str = field(
         when=lambda e: (
@@ -423,7 +419,6 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
         ),
-        until=975,
     )
 
 

@@ -127,7 +127,7 @@ class ItemUseInventoryTransaction:
         PLACE = 0
         USE = 1
         DESTROY = 2
-        USE_AS_ATTACK = value(3, since=844)
+        USE_AS_ATTACK = 3
 
     class TriggerType(IntEnum, uint8):
         UNKNOWN = 0
@@ -162,7 +162,7 @@ class ItemUseInventoryTransaction:
         PLACE = 0
         USE = 1
         DESTROY = 2
-        USE_AS_ATTACK = value(3, since=844)
+        USE_AS_ATTACK = 3
 
     class TriggerType(IntEnum, uint8):
         UNKNOWN = 0
