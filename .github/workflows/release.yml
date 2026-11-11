@@ -12,7 +12,7 @@ jobs:
     name: Tag
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: Check the tag against the project version
         run: |
           for file in pyproject.toml compiler/pyproject.toml; do
@@ -36,7 +36,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8.0.2
         with:
           path: artifacts
 
