@@ -667,7 +667,7 @@ class Builder:
         if struct.packet_id is not None:
             claimed = self.packets.setdefault(struct.packet_id, [])
             for other, other_range in claimed:
-                if other is not struct and other_range.overlaps(pending.range):
+                if other_range.overlaps(pending.range):
                     raise error(
                         source, pending.node, struct.name, f"takes packet id {struct.packet_id} from {other.name}"
                     )
