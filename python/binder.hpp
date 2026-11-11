@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <bitset>
 #include <concepts>
@@ -384,7 +383,7 @@ T construct(nb::args args, nb::kwargs kwargs)
 template <typename T>
 void bind_struct(nb::handle scope, const char *name, const Version *version)
 {
-    static_assert(!std::ranges::contains(field_names<T>(), "from_bytes"), "a member named from_bytes hides from_bytes");
+    static_assert(!field_contains<T>("from_bytes"), "a member named from_bytes hides T.from_bytes");
     nb::class_<T> cls(scope, name, nb::supplement<Codec>());
     cls.def("__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
     [&]<std::size_t... I>(std::index_sequence<I...>) {
