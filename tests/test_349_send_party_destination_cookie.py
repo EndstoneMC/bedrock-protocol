@@ -49,7 +49,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_send_party_destination_cookie_is_packet_349(version):
     assert version.PACKETS[349] is version.SendPartyDestinationCookiePacket
 
