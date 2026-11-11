@@ -52,7 +52,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_automation_client_connect_is_packet_95(version):
     assert version.PACKETS[95] is version.AutomationClientConnectPacket
 
