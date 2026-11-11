@@ -111,20 +111,26 @@ def test_a_value_that_does_not_fit_the_enum_is_rejected():
         proto.ContainerClosePacket(container_id=1000)
 
 
-def test_a_string_carries_any_bytes():
+def test_bytes_cross_as_python_bytes():
     packet = proto.LevelChunkPacket(serialized_chunk=bytes([0xFF, 0x00, 0xC3, 0x41]))
-    assert packet.serialized_chunk.encode("utf-8", "surrogateescape") == bytes([0xFF, 0x00, 0xC3, 0x41])
-
-
-def test_a_string_carrying_any_bytes_round_trips():
-    packet = proto.LevelChunkPacket(serialized_chunk=bytes([0xFF, 0x00, 0xC3, 0x41]))
+    assert packet.serialized_chunk == bytes([0xFF, 0x00, 0xC3, 0x41])
     assert proto.LevelChunkPacket.from_bytes(bytes(packet)) == packet
 
 
+def test_a_bytes_field_rejects_text():
+    with pytest.raises(TypeError):
+        proto.LevelChunkPacket(serialized_chunk="héllo")
+
+
+def test_a_string_field_rejects_bytes():
+    with pytest.raises(TypeError):
+        proto.ResourcePackChunkDataPacket(resource_name=b"p")
+
+
 def test_a_string_can_be_assigned_text():
-    packet = proto.LevelChunkPacket()
-    packet.serialized_chunk = "héllo"
-    assert packet.serialized_chunk == "héllo"
+    packet = proto.ResourcePackChunkDataPacket()
+    packet.resource_name = "héllo"
+    assert packet.resource_name == "héllo"
 
 
 def test_a_uuid_crosses_as_uuid():

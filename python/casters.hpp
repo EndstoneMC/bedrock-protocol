@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/array.h>
@@ -30,16 +31,6 @@ struct type_caster<std::string> {
 
     bool from_python(handle src, uint8_t, cleanup_list *) noexcept
     {
-        if (PyBytes_Check(src.ptr())) {
-            char *data = nullptr;
-            Py_ssize_t size = 0;
-            if (PyBytes_AsStringAndSize(src.ptr(), &data, &size) != 0) {
-                PyErr_Clear();
-                return false;
-            }
-            value.assign(data, static_cast<std::size_t>(size));
-            return true;
-        }
         if (!PyUnicode_Check(src.ptr())) {
             return false;
         }
@@ -59,6 +50,27 @@ struct type_caster<std::string> {
     static handle from_cpp(const std::string &value, rv_policy, cleanup_list *) noexcept
     {
         return PyUnicode_DecodeUTF8(value.data(), static_cast<Py_ssize_t>(value.size()), "surrogateescape");
+    }
+};
+
+template <>
+struct type_caster<std::vector<std::byte>> {
+    NB_TYPE_CASTER(std::vector<std::byte>, const_name("bytes"))
+
+    bool from_python(handle src, uint8_t, cleanup_list *) noexcept
+    {
+        if (!PyBytes_Check(src.ptr())) {
+            return false;
+        }
+        const auto *data = reinterpret_cast<const std::byte *>(PyBytes_AsString(src.ptr()));
+        value.assign(data, data + PyBytes_Size(src.ptr()));
+        return true;
+    }
+
+    static handle from_cpp(const std::vector<std::byte> &value, rv_policy, cleanup_list *) noexcept
+    {
+        return PyBytes_FromStringAndSize(reinterpret_cast<const char *>(value.data()),
+                                         static_cast<Py_ssize_t>(value.size()));
     }
 };
 
@@ -207,7 +219,7 @@ struct type_caster<bedrock::protocol::DynamicValue> {
         else if (PyFloat_Check(src.ptr())) {
             value = DynamicValue{PyFloat_AsDouble(src.ptr())};
         }
-        else if (PyUnicode_Check(src.ptr()) || PyBytes_Check(src.ptr())) {
+        else if (PyUnicode_Check(src.ptr())) {
             make_caster<std::string> s;
             if (!s.from_python(src, flags, cleanup)) {
                 return false;

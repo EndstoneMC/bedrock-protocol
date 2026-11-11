@@ -24,7 +24,7 @@ V2168_AIR = bytes.fromhex("070000000000000000020200")
 #   InventorySlot: 2, HotBarSlot: 2, WindowID: 0}
 V2168_HELMET = bytes.fromhex("0705000100030112000a00000000000000000000020200")
 
-EMPTY_ITEM_BLOB = "\x00" * 10
+EMPTY_ITEM_BLOB = bytes(10)
 
 GOLDENS = [
     pytest.param(

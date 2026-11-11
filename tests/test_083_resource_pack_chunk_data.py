@@ -24,7 +24,7 @@ GOLDENS = [
             resource_name="24b1e0e7-4b3c-4bd2-9a5f-3e2c1f0a8d64_1.0.0",
             chunk_id=2,
             byte_offset=1048576,
-            data=b"PK\x03\x04".decode("utf-8", "surrogateescape"),
+            data=b"PK\x03\x04",
         ),
         WITH_DATA,
         id="with-data",
@@ -35,7 +35,7 @@ GOLDENS = [
         id="empty-chunk",
     ),
     pytest.param(
-        v2225.ResourcePackChunkDataPacket(resource_name="p", data=b"\x00\xff\x00".decode("utf-8", "surrogateescape")),
+        v2225.ResourcePackChunkDataPacket(resource_name="p", data=b"\x00\xff\x00"),
         EMBEDDED_NUL,
         id="embedded-nul",
     ),

@@ -2,7 +2,7 @@ import pytest
 
 from bedrock_protocol import v975, v1001, v2168
 
-EMPTY_ITEM_BLOB = "\x00" * 10
+EMPTY_ITEM_BLOB = bytes(10)
 
 STICK_V1001 = v1001.SerializedRecipeIngredient(
     descriptor=v1001.ItemDescriptor(internal_type=v1001.ItemDescriptor.InternalType.DEFAULT, id=5, aux_value=1),

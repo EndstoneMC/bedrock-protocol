@@ -119,6 +119,8 @@ template <typename T>
 inline constexpr bool is_vector_v = false;
 template <typename T, typename A>
 inline constexpr bool is_vector_v<std::vector<T, A>> = true;
+template <>
+inline constexpr bool is_vector_v<std::vector<std::byte>> = false;
 template <typename T>
 inline constexpr bool is_array_v = false;
 template <typename T, std::size_t N>
@@ -242,6 +244,9 @@ nb::object annotation()
     }
     else if constexpr (std::is_same_v<F, std::string>) {
         return builtin("str");
+    }
+    else if constexpr (std::is_same_v<F, std::vector<std::byte>>) {
+        return builtin("bytes");
     }
     else if constexpr (std::is_same_v<F, UUID>) {
         return nb::module_::import_("uuid").attr("UUID");

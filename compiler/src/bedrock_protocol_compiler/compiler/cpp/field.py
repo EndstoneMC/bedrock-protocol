@@ -224,7 +224,7 @@ def _primitive_write(prim: PrimitiveType, expr: str) -> str:
 
 def _primitive_read(prim: PrimitiveType) -> str:
     if prim.encoding in ("str", "bytes"):
-        return "auto v = stream.read<std::string>();"
+        return f"auto v = stream.read<{PRIMITIVE_TYPES[prim.encoding]}>();"
     u = PRIMITIVE_TYPES[prim.encoding]
     if prim.encoding in VARINT_PRIMITIVES:
         return f"auto v = stream.readVarInt<{u}>();"
@@ -259,8 +259,10 @@ def type_includes(t: FieldType | None) -> set[str]:
     a `std::int32_t` field -> `<cstdint>`, and so on. Struct/enum references
     carry no stdlib header."""
     if isinstance(t, PrimitiveType):
-        if t.name in ("str", "bytes"):
+        if t.name == "str":
             return {"<string>"}
+        if t.name == "bytes":
+            return {"<cstddef>", "<vector>"}
         # the codec names the encoding's C++ type too, which may be the wider one
         if any(PRIMITIVE_TYPES[n].startswith("std::") for n in (t.name, t.encoding)):
             return {"<cstdint>"}

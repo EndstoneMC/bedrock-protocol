@@ -7,7 +7,7 @@ from bedrock_protocol_compiler.compiler.descriptor import split_scope
 #: DSL primitive name → C++ type spelling.
 PRIMITIVE_TYPES: dict[str, str] = {
     "str": "std::string",
-    "bytes": "std::string",
+    "bytes": "std::vector<std::byte>",
     "int": "int",
     "bool": "bool",
     "float": "float",

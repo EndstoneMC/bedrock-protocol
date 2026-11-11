@@ -9,6 +9,7 @@
 #include <cstring>
 #include <expected>
 #include <limits>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -258,6 +259,28 @@ public:
         return out;
     }
 
+    template <typename T>
+        requires std::same_as<T, std::vector<std::byte>>
+    auto read() -> Result<std::vector<std::byte>>
+    {
+        auto len = readVarInt<std::uint32_t>();
+        if (!len) {
+            return std::unexpected(len.error());
+        }
+        if (*len > getUnreadLength()) {
+            return std::unexpected(Errc::truncated);
+        }
+        if (auto r = account(*len, 1, false); !r) {
+            return std::unexpected(r.error());
+        }
+        std::vector<std::byte> out(*len);
+        auto r = read(out.data(), *len);
+        if (!r) {
+            return std::unexpected(r.error());
+        }
+        return out;
+    }
+
     auto readRemaining() -> Result<std::string>
     {
         if (read_pos_ > view_.size()) {
@@ -365,6 +388,12 @@ public:
     }
 
     void write(std::string_view value)
+    {
+        writeVarInt<std::uint32_t>(value.size());
+        write(value.data(), value.size());
+    }
+
+    void write(std::span<const std::byte> value)
     {
         writeVarInt<std::uint32_t>(value.size());
         write(value.data(), value.size());

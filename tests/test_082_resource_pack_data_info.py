@@ -22,7 +22,7 @@ GOLDENS = [
             chunk_size=1048576,
             nb_chunks=16,
             file_size=15925248,
-            file_hash=b"\xde\xad\xbe\xef".decode("utf-8", "surrogateescape"),
+            file_hash=b"\xde\xad\xbe\xef",
             is_premium=True,
             pack_type=v2225.PackType.RESOURCES,
         ),

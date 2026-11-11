@@ -10,7 +10,7 @@ LOGIN = bytes.fromhex("000003e903616263")
 
 GOLDENS = [
     pytest.param(
-        version.LoginPacket(client_network_version=1001, connection_request="abc"),
+        version.LoginPacket(client_network_version=1001, connection_request=b"abc"),
         LOGIN,
         id=version.__name__.rpartition(".")[2],
     )

@@ -28,7 +28,7 @@ GOLDENS = [
     pytest.param(
         v2225.PhotoTransferPacket(
             photo_name="1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg",
-            photo_data=b"\xff\xd8\xff\xe0".decode("utf-8", "surrogateescape"),
+            photo_data=b"\xff\xd8\xff\xe0",
             book_id="book-7",
             type=v2225.PhotoType.PHOTO_ITEM,
             source_type=v2225.PhotoType.BOOK,
