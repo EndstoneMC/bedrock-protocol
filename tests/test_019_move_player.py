@@ -63,7 +63,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_move_player_is_packet_19(version):
     assert version.PACKETS[19] is version.MovePlayerPacket
 
