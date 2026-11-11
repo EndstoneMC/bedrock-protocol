@@ -25,7 +25,7 @@ GOLDENS = [
         pytest.param(
             version.ServerToClientHandshakePacket(token="eyJhbGciOiJFUzM4NCJ9.e30.c2ln"),
             TOKEN,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-token",
+            id=f"{version.__name__.rpartition('.')[2]}-token",
         )
         for version in VERSIONS
     ],
@@ -33,7 +33,7 @@ GOLDENS = [
         pytest.param(
             version.ServerToClientHandshakePacket(token=""),
             EMPTY,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-empty-token",
+            id=f"{version.__name__.rpartition('.')[2]}-empty-token",
         )
         for version in VERSIONS
     ],
@@ -41,7 +41,7 @@ GOLDENS = [
         pytest.param(
             version.ServerToClientHandshakePacket(token="x" * 130),
             LONG,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-token-past-127-bytes",
+            id=f"{version.__name__.rpartition('.')[2]}-token-past-127-bytes",
         )
         for version in VERSIONS
     ],
