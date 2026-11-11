@@ -304,6 +304,22 @@ def test_an_enum_a_field_codes_by_name_is_name_coded(build_package):
     assert schema.name_coded == {e}
 
 
+def test_an_enum_coded_by_name_inside_an_optional_is_name_coded(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    X = 1\n\nclass A:\n    x: E | None = field(type=str)\n"
+    schema = Schema(build_package({"a": source}))
+    e, _ = schema.order
+
+    assert schema.name_coded == {e}
+
+
+def test_an_enum_coded_by_name_in_a_dicts_scalar_half_is_name_coded(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    X = 1\n\nclass A:\n    x: dict[E, uint8] = field(type=str)\n"
+    schema = Schema(build_package({"a": source}))
+    e, _ = schema.order
+
+    assert schema.name_coded == {e}
+
+
 def test_the_package_is_the_modules_namespace(build_package):
     schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
 

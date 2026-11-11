@@ -3,7 +3,6 @@ from dataclasses import dataclass, field, replace
 
 from bedrock_protocol_compiler.builder import reaches
 from bedrock_protocol_compiler.descriptor import (
-    Array,
     Binary,
     Enum,
     EnumName,
@@ -19,7 +18,6 @@ from bedrock_protocol_compiler.descriptor import (
     Range,
     Struct,
     Type,
-    Variant,
 )
 
 ALWAYS = Range(None, None)
@@ -53,15 +51,11 @@ def name_coded(node: Type) -> Iterator[Enum]:
     match node:
         case EnumName(enum=enum):
             yield enum
-        case Optional(element=element) | List(element=element) | Array(element=element):
+        case Optional(element=element) | List(element=element):
             yield from name_coded(element)
         case Map(key=key, value=value):
             yield from name_coded(key)
             yield from name_coded(value)
-        case Variant(cases=cases):
-            for case in cases:
-                if case is not None:
-                    yield from name_coded(case)
 
 
 def outermost(family: Struct | Enum) -> Struct | Enum:
