@@ -375,11 +375,13 @@ class CraftingDataEntry:
         when=lambda e: e.entry_type == CraftingDataEntryType.SHAPELESS_RECIPE
     )
     shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
-        when=lambda e: e.entry_type
-        in {
-            CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
-            CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-        }
+        when=lambda e: (
+            e.entry_type
+            in {
+                CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
+                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
+            }
+        )
     )
     shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
     shaped_chemistry_recipe: ShapedChemistryRecipePayload = field(
@@ -399,7 +401,7 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_RECIPE,
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
-        ),
+        )
     )
     item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE)
     item_result: SerializedNetworkItemInstanceDescriptor = field(
@@ -409,7 +411,7 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_RECIPE,
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
-        ),
+        )
     )
     tag: str = field(
         when=lambda e: (
@@ -418,7 +420,7 @@ class CraftingDataEntry:
                 CraftingDataEntryType.FURNACE_RECIPE,
                 CraftingDataEntryType.FURNACE_AUX_RECIPE,
             }
-        ),
+        )
     )
 
 
@@ -458,9 +460,7 @@ class CraftingDataEntry:
         ),
         until=975,
     )
-    item_aux: varint32 = field(
-        when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975
-    )
+    item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975)
     item_result: SerializedNetworkItemInstanceDescriptor = field(
         when=lambda e: (
             e.entry_type
