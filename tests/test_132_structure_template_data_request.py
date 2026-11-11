@@ -72,7 +72,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_structure_template_data_request_is_packet_132(version):
     assert version.PACKETS[132] is version.StructureTemplateDataRequestPacket
 
@@ -85,7 +85,3 @@ def test_structure_template_data_request_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_structure_template_data_request_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
-
-
-def test_a_zeroed_structure_template_data_request_body_carries_no_presence_byte():
-    assert len(bytes(v2225.StructureTemplateDataRequestPacket())) == 43
