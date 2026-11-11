@@ -215,7 +215,7 @@ def test_an_enum_takes_type(build_package):
         ),
         ("class E(IntEnum):\n    A = print(1)\n", "A: is not a literal int"),
         ("class A:\n    class E(IntEnum):\n        '''E.'''\n", "E: has no members"),
-        ("class E(IntEnum):\n    A = 1\nclass E(IntEnum):\n    A = 1\n", "E: is already declared"),
+        ("class E(IntEnum):\n    A = 1\nclass E(IntEnum):\n    A = 1\n", "E: is declared again after an open"),
     ],
 )
 def test_bad_enum_is_rejected(build_package, source, message):

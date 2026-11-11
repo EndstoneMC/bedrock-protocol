@@ -263,7 +263,7 @@ def test_cereal_false_family_imports_by_its_cereal_name(build_package):
         ("@type(cereal=False)\nclass B:\n    pass\n", "B: a cereal=False declaration needs a cereal one"),
         (
             "class B:\n    pass\n\n" + "@type(cereal=False)\nclass B:\n    pass\n\n" * 2,
-            "B: is already declared",
+            "B: is declared again after an open",
         ),
         ("class A:\n    @type(cereal=False)\n    class B:\n        pass\n", "B: cereal=False marks a module-scope"),
         (

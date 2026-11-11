@@ -9,7 +9,7 @@ from bedrock_protocol_compiler.dsl import (
     uvarint32, uvarint64, value, varint32, varint64
 )
 
-versions = (1, 2, 3)
+versions = (1, 2, 3, 4, 5)
 """
 
 

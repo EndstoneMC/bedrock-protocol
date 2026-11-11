@@ -96,20 +96,35 @@ type Type = (
 
 
 @dataclass(frozen=True)
+class Range:
+    since: int | None
+    until: int | None
+
+    def contains(self, version: int) -> bool:
+        return (self.since is None or self.since <= version) and (self.until is None or version < self.until)
+
+    def overlaps(self, other: "Range") -> bool:
+        return (self.since is None or other.until is None or self.since < other.until) and (
+            other.since is None or self.until is None or other.since < self.until
+        )
+
+    def intersect(self, other: "Range") -> "Range":
+        bounds = [bound for bound in (self.since, other.since) if bound is not None]
+        ends = [end for end in (self.until, other.until) if end is not None]
+        return Range(max(bounds, default=None), min(ends, default=None))
+
+
+@dataclass(frozen=True)
 class Field:
     name: str
     type: Type
+    range: Range
 
 
 @dataclass(frozen=True)
 class StructDeclaration:
+    range: Range
     fields: tuple[Field, ...]
-
-
-@dataclass(frozen=True)
-class Range:
-    since: int | None
-    until: int | None
 
 
 @dataclass(frozen=True)
@@ -141,6 +156,7 @@ class Member:
 
 @dataclass(frozen=True)
 class EnumDeclaration:
+    range: Range
     underlying: Primitive | None
     members: tuple[Member, ...]
 

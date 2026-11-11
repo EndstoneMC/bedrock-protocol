@@ -3,10 +3,10 @@ import builtins
 import enum
 import inspect
 import keyword
-import math
 import typing
 import uuid
-from collections.abc import Callable
+from collections import Counter
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
 from importlib import import_module
 from pathlib import Path
@@ -93,6 +93,7 @@ class PendingStruct:
     source: Source
     node: ast.ClassDef
     struct: Struct
+    range: Range
 
 
 @dataclass
@@ -101,6 +102,7 @@ class PendingEnum:
     scope: Scope
     node: ast.ClassDef
     enum: Enum
+    range: Range
 
 
 @dataclass(eq=False)
@@ -167,6 +169,80 @@ def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
     return None
 
 
+def reaches(node: Type | None) -> Iterator[Struct | Enum | MemberRef]:
+    match node:
+        case StructRef(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
+            yield family
+        case Literal(value=MemberRef() as member) | Bitset(width=member):
+            yield member
+        case Optional(element=element) | List(element=element) | Array(element=element):
+            yield from reaches(element)
+        case Map(key=key, value=value):
+            yield from reaches(key)
+            yield from reaches(value)
+        case Variant(cases=cases):
+            for case in cases:
+                yield from reaches(case)
+
+
+def check(package: Package) -> None:
+    for module in package.modules:
+        for family in module.families:
+            if isinstance(family, Struct):
+                check_struct(package.versions, f"{module.stem}.py", family, family.name)
+            elif isinstance(family, Enum):
+                check_enum(package.versions, f"{module.stem}.py", family, family.name)
+
+
+def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str) -> None:
+    for declaration in struct.declarations:
+        for struct_field in declaration.fields:
+            for target in reaches(struct_field.type):
+                for version in versions:
+                    if not struct_field.range.contains(version):
+                        continue
+                    if isinstance(target, MemberRef):
+                        found = any(
+                            member.name == target.name and member.range.contains(version)
+                            for declared in target.enum.declarations
+                            for member in declared.members
+                        )
+                        missing = f"{target.enum.name}.{target.name}"
+                    else:
+                        found = any(declared.range.contains(version) for declared in target.declarations)
+                        missing = target.name
+                    if not found:
+                        where = f"{path}: {qualified}.{struct_field.name}"
+                        raise CompilerError(f"{where}: reaches {missing}, which does not exist at {version}")
+    for nested in struct.nested:
+        if isinstance(nested, Struct):
+            check_struct(versions, path, nested, f"{qualified}.{nested.name}")
+        else:
+            check_enum(versions, path, nested, f"{qualified}.{nested.name}")
+
+
+def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str) -> None:
+    for version in versions:
+        members = [
+            member
+            for declaration in enum.declarations
+            if declaration.range.contains(version)
+            for member in declaration.members
+            if member.range.contains(version)
+        ]
+        if members and members[0].value is None:
+            raise CompilerError(
+                f"{path}: {qualified}.{members[0].name}: has no earlier member to number from at {version}"
+            )
+        for label, names in (
+            ("C++ name", [member.cpp_name for member in members]),
+            ("wire name", [member.wire_name for member in members]),
+        ):
+            for name, count in Counter(names).items():
+                if count > 1:
+                    raise CompilerError(f"{path}: {qualified}: has the {label} {name} twice at {version}")
+
+
 def build(package_dir: Path) -> Package:
     return Builder(package_dir).build()
 
@@ -182,7 +258,9 @@ class Builder:
             raise CompilerError(f"{package_dir}: __init__.py: missing")
         self.init = self.sources.pop("__init__")
         self.scopes: dict[Struct, Scope] = {}
-        self.declared: dict[str, Family] = {}
+        self.versions: tuple[int, ...] = ()
+        self.homes: dict[tuple[str, bool], Source] = {}
+        self.packets: dict[int, list[tuple[Struct, Range]]] = {}
         self.legacies: dict[Struct | Enum, Struct | Enum] = {}
         self.structs: list[PendingStruct] = []
         self.enums: list[PendingEnum] = []
@@ -191,7 +269,7 @@ class Builder:
         self.expanding: list[UnionAlias] = []
 
     def build(self) -> Package:
-        versions = self.declare_init(self.init)
+        self.versions = self.declare_init(self.init)
         for source in self.sources.values():
             self.declare_module(source)
         for source in self.sources.values():
@@ -213,7 +291,9 @@ class Builder:
             )
             for source in self.sources.values()
         )
-        return Package(versions, modules)
+        package = Package(self.versions, modules)
+        check(package)
+        return package
 
     def declare_init(self, source: Source) -> tuple[int, ...]:
         versions: tuple[int, ...] | None = None
@@ -250,7 +330,7 @@ class Builder:
                 case ast.Import() | ast.ImportFrom():
                     self.bind_import(source, statement)
                 case ast.ClassDef():
-                    self.declare_class(source, source.scope, statement, None)
+                    self.declare_class(source, source.scope, statement, None, Range(None, None))
                 case ast.TypeAlias():
                     name = statement.name.id
                     if statement.type_params:
@@ -261,6 +341,7 @@ class Builder:
                         self.aliases.append(PendingAlias(source, statement, alias))
                     else:
                         union = UnionAlias(source, statement)
+                        self.claim(source, statement, name, True)
                         self.add(source, source.scope, statement, name, union)
                         source.unions[name] = union
                         self.unions.append(union)
@@ -283,11 +364,14 @@ class Builder:
             raise error(source, node, name, "is already declared")
         scope.names[name] = value
 
+    def claim(self, source: Source, node: ast.stmt, name: str, cereal: bool) -> None:
+        home = self.homes.setdefault((name, cereal), source)
+        if home is not source:
+            raise error(source, node, name, f"is already declared in {home.stem}")
+
     def declare_family(self, source: Source, node: ast.stmt, family: Family) -> None:
-        if family.name in self.declared:
-            raise error(source, node, family.name, "is already declared")
+        self.claim(source, node, family.name, True)
         self.add(source, source.scope, node, family.name, family)
-        self.declared[family.name] = family
         source.families[family.name] = family
 
     def bind_import(self, source: Source, statement: ast.Import | ast.ImportFrom) -> None:
@@ -329,7 +413,9 @@ class Builder:
                     raise error(source, alias, alias.name, f"is not declared in {statement.module}")
                 self.add(source, source.scope, statement, alias.asname or alias.name, declared)
 
-    def declare_class(self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None) -> None:
+    def declare_class(
+        self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None, outer: Range
+    ) -> None:
         if node.keywords:
             raise error(source, node, node.name, "keywords are not supported")
         if node.type_params:
@@ -337,12 +423,14 @@ class Builder:
         kinds: list[object] = []
         packet_id = None
         cereal = True
+        own = Range(None, None)
         for decorator in node.decorator_list:
             if isinstance(decorator, ast.Call):
                 function = self.resolve(source, scope, decorator.func)
                 if function is not dsl.packet and function is not dsl.type:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
-                arguments = self.bind(source, decorator, function, ("id", "cereal"))
+                arguments = self.bind(source, decorator, function, ("id", "cereal", "since", "until"))
+                own = self.read_range(source, decorator, node.name, arguments)
                 if function is dsl.packet:
                     packet_id = literal(source, arguments["id"], int, "packet")
                 if "cereal" in arguments:
@@ -358,6 +446,9 @@ class Builder:
             raise error(source, node, node.name, "cereal=False marks a module-scope declaration")
         if owner is not None:
             cereal = owner.cereal
+        range = own.intersect(outer)
+        if range.since is not None and range.until is not None and range.since >= range.until:
+            raise error(source, node, node.name, "is empty within its owner")
         if node.bases and kinds not in ([], [dsl.type]):
             raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
@@ -367,29 +458,43 @@ class Builder:
                 raise error(source, node, node.name, "a builtin has no body")
             self.declare_family(source, node, Builtin(node.name, source.stem))
             return
-        family: Struct | Enum = (
-            Enum(node.name, owner, source.stem, cereal)
-            if node.bases
-            else Struct(node.name, owner, source.stem, cereal, packet_id)
-        )
         if owner is not None:
-            owner.nested.append(family)
-            self.add(source, scope, node, node.name, family)
-        elif not cereal:
-            if node.name in source.legacies:
-                raise error(source, node, node.name, "is already declared")
-            source.legacies[node.name] = (node, family)
+            existing = scope.names.get(node.name)
+        elif cereal:
+            existing = source.families.get(node.name)
         else:
-            self.declare_family(source, node, family)
+            existing = source.legacies[node.name][1] if node.name in source.legacies else None
+        family: Struct | Enum
+        if existing is None:
+            family = (
+                Enum(node.name, owner, source.stem, cereal)
+                if node.bases
+                else Struct(node.name, owner, source.stem, cereal, packet_id)
+            )
+            if owner is not None:
+                owner.nested.append(family)
+                self.add(source, scope, node, node.name, family)
+            elif not cereal:
+                self.claim(source, node, node.name, False)
+                source.legacies[node.name] = (node, family)
+            else:
+                self.declare_family(source, node, family)
+        elif isinstance(existing, Enum if node.bases else Struct):
+            if isinstance(existing, Struct) and existing.packet_id != packet_id:
+                raise error(
+                    source, node, node.name, f"is declared with packet ids {existing.packet_id} and {packet_id}"
+                )
+            family = existing
+        else:
+            raise error(source, node, node.name, "is already declared")
         if isinstance(family, Enum):
-            self.enums.append(PendingEnum(source, scope, node, family))
+            self.enums.append(PendingEnum(source, scope, node, family, range))
             return
-        inner = Scope(scope)
-        self.scopes[family] = inner
+        inner = self.scopes.setdefault(family, Scope(scope))
         for statement in node.body:
             if isinstance(statement, ast.ClassDef):
-                self.declare_class(source, inner, statement, family)
-        self.structs.append(PendingStruct(source, node, family))
+                self.declare_class(source, inner, statement, family, range)
+        self.structs.append(PendingStruct(source, node, family, range))
 
     def build_enum(self, pending: PendingEnum) -> None:
         source = pending.source
@@ -420,8 +525,7 @@ class Builder:
             wire_name = name.replace("_", "")
             derived = "".join(part[:1].upper() + part[1:].lower() for part in name.split("_"))
             cpp_name = derived
-            since = None
-            until = None
+            own = Range(None, None)
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -438,10 +542,7 @@ class Builder:
                         raise error(
                             source, expression, name, f"cpp_name {cpp_name!r} is not a case variant of {derived!r}"
                         )
-                if "since" in arguments:
-                    since = literal(source, arguments["since"], int, name)
-                if "until" in arguments:
-                    until = literal(source, arguments["until"], int, name)
+                own = self.read_range(source, expression, name, arguments)
                 value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
             elif (
                 isinstance(expression, ast.Call)
@@ -465,15 +566,15 @@ class Builder:
             else:
                 value = Int(literal(source, expression, int, name))
             wire_name = wire_name.lower()
+            member_range = self.narrow(source, statement, name, own, pending.range)
             for earlier in members:
-                if earlier.name == name and max(earlier.range.since or 0, since or 0) < min(
-                    earlier.range.until or math.inf, until or math.inf
-                ):
+                if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, Range(since, until), cpp_name, wire_name))
+            members.append(Member(name, value, member_range, cpp_name, wire_name))
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
-        pending.enum.declarations.append(EnumDeclaration(underlying, tuple(members)))
+        self.tile(source, node, pending.enum, pending.range)
+        pending.enum.declarations.append(EnumDeclaration(pending.range, underlying, tuple(members)))
 
     def build_alias(self, pending: PendingAlias) -> None:
         primitive = self.type_of(pending.source, pending.source.scope, pending.node.value)
@@ -514,7 +615,7 @@ class Builder:
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                arguments = self.bind(source, call, dsl.field, ("type", "endian", "prefix", "cereal"))
+                arguments = self.bind(source, call, dsl.field, ("type", "endian", "prefix", "cereal", "since", "until"))
             annotation = statement.annotation
             cereal = True
             if call is not None and "cereal" in arguments:
@@ -559,8 +660,51 @@ class Builder:
                         source, statement, name, "type and endian do not reach exactly one scalar that takes them"
                     )
                 field_type = rewired
-            fields.append(Field(name, field_type))
-        pending.struct.declarations.append(StructDeclaration(tuple(fields)))
+            own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
+            fields.append(Field(name, field_type, self.narrow(source, statement, name, own, pending.range)))
+        struct = pending.struct
+        self.tile(source, pending.node, struct, pending.range)
+        if struct.packet_id is not None:
+            claimed = self.packets.setdefault(struct.packet_id, [])
+            for other, other_range in claimed:
+                if other is not struct and other_range.overlaps(pending.range):
+                    raise error(
+                        source, pending.node, struct.name, f"takes packet id {struct.packet_id} from {other.name}"
+                    )
+            claimed.append((struct, pending.range))
+        struct.declarations.append(StructDeclaration(pending.range, tuple(fields)))
+
+    def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
+        bounds: dict[str, int | None] = {"since": None, "until": None}
+        for bound in bounds:
+            if bound in arguments:
+                bounds[bound] = literal(source, arguments[bound], int, name)
+                if bounds[bound] not in self.versions:
+                    raise error(source, arguments[bound], name, f"{bound} {bounds[bound]} is not a modelled version")
+        since, until = bounds["since"], bounds["until"]
+        if since is not None and until is not None and since >= until:
+            raise error(source, node, name, "has an empty version range")
+        return Range(since, until)
+
+    def narrow(self, source: Source, node: ast.stmt, name: str, own: Range, within: Range) -> Range:
+        for gate in (Range(own.since, None), Range(None, own.until)):
+            if gate != Range(None, None) and (not gate.overlaps(within) or gate.intersect(within) == within):
+                raise error(source, node, name, "has a gate its declaration already decides")
+        return own.intersect(within)
+
+    def tile(self, source: Source, node: ast.ClassDef, family: Struct | Enum, range: Range) -> None:
+        if not family.declarations:
+            return
+        previous = family.declarations[-1].range
+        if previous.until is None:
+            raise error(source, node, family.name, "is declared again after an open declaration")
+        if previous.until != range.since:
+            raise error(
+                source,
+                node,
+                family.name,
+                f"starts at {range.since}, but its previous declaration ends at {previous.until}",
+            )
 
     def bind(
         self,
