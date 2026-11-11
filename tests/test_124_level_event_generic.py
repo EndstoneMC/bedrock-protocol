@@ -40,7 +40,9 @@ def test_a_generic_level_event_decodes_its_compound_without_a_root_tag():
 
 
 def test_every_version_reads_the_compound_without_a_root_tag(protocol):
-    assert protocol.LevelEventGenericPacket.from_bytes(SLEEP_STATE).event_id == 9801
+    assert protocol.LevelEventGenericPacket.from_bytes(SLEEP_STATE) == protocol.LevelEventGenericPacket(
+        event_id=9801, data=SLEEP_STATE_PACKET.data
+    )
 
 
 def test_every_version_writes_the_compound_without_a_root_tag(protocol):
@@ -53,8 +55,11 @@ def test_every_version_rejects_a_compound_with_a_root_tag(protocol):
 
 
 def test_an_empty_compound_is_just_its_tag_end():
+    assert bytes(v2225.LevelEventGenericPacket(event_id=-1))[1:] == b"\x00"
+
+
+def test_an_empty_compound_round_trips():
     packet = v2225.LevelEventGenericPacket(event_id=-1)
-    assert bytes(packet)[-1] == 0
     assert v2225.LevelEventGenericPacket.from_bytes(bytes(packet)) == packet
 
 
