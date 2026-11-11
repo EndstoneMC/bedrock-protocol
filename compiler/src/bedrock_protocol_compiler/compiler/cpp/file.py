@@ -63,7 +63,6 @@ class FileGenerator:
                 *(s.key for s in f.structs),
                 *(n for s in f.structs for n in _nested_names(s, s.key)),
                 *(a.name for a in f.primitive_aliases),
-                *(a.name for a in f.type_aliases),
             )
         )
         self._ctx = FileContext(
@@ -163,7 +162,6 @@ class FileGenerator:
                 *(e.key for e in f.enums),
                 *(s.key for s in f.structs if not s.builtin),
                 *(a.name for a in f.primitive_aliases),
-                *(a.name for a in f.type_aliases),
             ):
                 owners[declared] = name
         return owners
@@ -186,8 +184,6 @@ class FileGenerator:
         out: set[str] = set()
         for struct in self._file.structs:
             out |= {r.split(".", 1)[0] for r in struct.referenced}
-        for alias in self._file.type_aliases:
-            out |= {r.split(".", 1)[0] for r in alias.target.referenced}
         return out
 
     # --- namespace ----------------------------------------------------------
@@ -773,6 +769,4 @@ def _string_coded_enums(resolved: ResolvedFile) -> frozenset[str]:
 
     for struct in resolved.file.structs:
         walk_struct(struct)
-    for a in resolved.file.type_aliases:
-        walk(a.target)
     return frozenset(out)

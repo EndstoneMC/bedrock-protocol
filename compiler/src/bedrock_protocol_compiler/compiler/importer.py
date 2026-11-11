@@ -318,7 +318,6 @@ class Importer:
         struct_names: set[str] = set()
         aliases_by_name: dict[str, PrimitiveAlias | TypeAlias] = {}
         primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = {}
-        type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = {}
 
         def register(decls: list[griffe.Class], scope: str) -> None:
             """Record one declared type under its dotted path, then recurse into
@@ -361,7 +360,6 @@ class Importer:
         # class. Declaration order is the resolution order.
         for name, mod in loaded.items():
             primitives: list[PrimitiveAlias] = []
-            others: list[TypeAlias] = []
             parser = Parser(
                 SymbolTable(
                     enum_names=frozenset(enum_names),
@@ -382,10 +380,7 @@ class Importer:
                 aliases_by_name[alias.name] = alias
                 if isinstance(alias, PrimitiveAlias):
                     primitives.append(alias)
-                else:
-                    others.append(alias)
             primitive_aliases_by_module[name] = tuple(primitives)
-            type_aliases_by_module[name] = tuple(others)
 
         return SymbolTable(
             enum_names=frozenset(enum_names),
@@ -394,7 +389,6 @@ class Importer:
             struct_names=frozenset(struct_names),
             aliases_by_name=aliases_by_name,
             primitive_aliases_by_module=primitive_aliases_by_module,
-            type_aliases_by_module=type_aliases_by_module,
         )
 
 

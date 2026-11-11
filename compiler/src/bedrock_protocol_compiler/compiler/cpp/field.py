@@ -7,9 +7,8 @@ its generator; `make_field_generator` is the factory behind it, which
 walks a `FieldType` and builds a generator tree whose combinator nodes
 (optional / repeated / map / variant) hold a child generator and recurse.
 
-`cpp_type()` is the shared type-spelling used by field declarations and
-`type`-alias rendering. `FileContext` is the cross-cutting state every
-generator reads.
+`cpp_type()` is the shared type-spelling used by field declarations. `FileContext` is the
+cross-cutting state every generator reads.
 """
 
 from __future__ import annotations

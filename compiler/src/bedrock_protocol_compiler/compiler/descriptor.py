@@ -632,8 +632,7 @@ class PrimitiveAlias:
 
 @dataclass(frozen=True)
 class TypeAlias:
-    """`type Name = <non-primitive>`. Rendered as `using Name = ctype`;
-    `target` is the single field-type tree."""
+    """`type Name = <non-primitive>`; `target` is the single field-type tree."""
 
     name: str
     target: FieldType
@@ -650,7 +649,6 @@ class File:
     enums: tuple[Enum, ...]
     structs: tuple[Struct, ...]
     primitive_aliases: tuple[PrimitiveAlias, ...]
-    type_aliases: tuple[TypeAlias, ...]
     imports: tuple[str, ...]
     declaration_order: tuple[str, ...]  # type names in source order
 

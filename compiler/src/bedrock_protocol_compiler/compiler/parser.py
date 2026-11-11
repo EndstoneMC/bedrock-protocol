@@ -69,7 +69,6 @@ class SymbolTable:
     struct_names: frozenset[str]
     aliases_by_name: dict[str, PrimitiveAlias | TypeAlias]
     primitive_aliases_by_module: dict[str, tuple[PrimitiveAlias, ...]] = field(default_factory=dict)
-    type_aliases_by_module: dict[str, tuple[TypeAlias, ...]] = field(default_factory=dict)
 
 
 class Parser:
@@ -157,7 +156,6 @@ class Parser:
             enums=tuple(enums),
             structs=tuple(structs),
             primitive_aliases=self._symbols.primitive_aliases_by_module[name],
-            type_aliases=self._symbols.type_aliases_by_module[name],
             imports=imports,
             declaration_order=tuple(order),
         )
