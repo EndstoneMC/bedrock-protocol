@@ -152,12 +152,11 @@ void bind_nbt(nb::module_ &parent)
         .def("append", [](ListTag &self, const Tag &tag) { self.push_back(tag); })
         .def(nb::self == nb::self)
         .def("__repr__", [](const ListTag &self) {
-            std::string out = "ListTag([";
+            std::string tags;
             for (std::size_t i = 0; i < self.size(); ++i) {
-                out += i ? ", " : "";
-                out += nb::repr(nb::cast(self[i])).c_str();
+                tags += std::format("{}{}", i ? ", " : "", nb::repr(nb::cast(self[i])).c_str());
             }
-            return out + "])";
+            return std::format("ListTag([{}])", tags);
         });
 
     nb::class_<CompoundTag>(m, "CompoundTag")
@@ -208,16 +207,12 @@ void bind_nbt(nb::module_ &parent)
              })
         .def(nb::self == nb::self)
         .def("__repr__", [](const CompoundTag &self) {
-            std::string out = "CompoundTag({";
-            bool first = true;
+            std::string entries;
             for (const auto &[key, tag] : self) {
-                out += first ? "" : ", ";
-                out += nb::repr(nb::cast(key)).c_str();
-                out += ": ";
-                out += nb::repr(nb::cast(tag)).c_str();
-                first = false;
+                entries += std::format("{}{}: {}", entries.empty() ? "" : ", ", nb::repr(nb::cast(key)).c_str(),
+                                       nb::repr(nb::cast(tag)).c_str());
             }
-            return out + "})";
+            return std::format("CompoundTag({{{}}})", entries);
         });
 }
 

@@ -414,14 +414,12 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
     cls.def("__copy__", [](const T &self) { return T(self); });
     cls.def("__deepcopy__", [](const T &self, nb::handle) { return T(self); }, nb::arg("memo"));
     cls.def("__repr__", [](const T &self) {
-        std::string out(struct_name<T>().substr(struct_name<T>().rfind(':') + 1));
-        out += '(';
+        std::string fields;
         [&]<std::size_t... I>(std::index_sequence<I...>) {
-            ((out += (I ? ", " : ""), out += python_names<T>()[I], out += '=',
-              out += describe(field_get<I>(self))),
+            ((fields += std::format("{}{}={}", I ? ", " : "", python_names<T>()[I], describe(field_get<I>(self)))),
              ...);
         }(std::make_index_sequence<field_count<T>()>{});
-        return out + ')';
+        return std::format("{}({})", struct_name<T>().substr(struct_name<T>().rfind(':') + 1), fields);
     });
 
     // Members keep BDS's names, `serialize` among them, so the codec takes a dunder and from_bytes.
