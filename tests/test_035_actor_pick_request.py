@@ -20,7 +20,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_actor_pick_request_is_packet_35(version):
     assert version.PACKETS[35] is version.ActorPickRequestPacket
 
