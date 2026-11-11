@@ -46,7 +46,7 @@ def field(
     """Mark a struct field.
 
     - `type`: the wire form where it differs from the annotation. `str` name-codes an enum, and an
-      integer primitive overrides the width of an integer field or enum while C++ keeps the
+      integer primitive overrides the wire of an integer field or enum while C++ keeps the
       annotated type. It reaches through `list` and `T | None`, and the one scalar half of a `dict`.
     - `since`, `until`: the field exists in protocol versions `[since, until)`, within its
       declaration's range.
