@@ -8,7 +8,6 @@ from bedrock_protocol_compiler.descriptor import (
     BuiltinRef,
     EnumName,
     EnumRef,
-    Int,
     List,
     Literal,
     Map,
@@ -98,9 +97,7 @@ class BitsetField:
         self.node = node
         shape = schema.shape_at(node.width.enum, version)
         assert isinstance(shape, EnumShape)
-        (member,) = (each for each in shape.members if each.name == node.width.name)
-        assert isinstance(member.value, Int)
-        self.width = member.value.value
+        self.width = shape.numbers[node.width.name]
 
     def cpp_type(self) -> str:
         return f"std::bitset<{self.width}>"

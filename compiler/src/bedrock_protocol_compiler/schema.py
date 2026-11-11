@@ -40,6 +40,7 @@ class EnumShape:
     family: Enum
     underlying: Primitive | None
     members: tuple[Member, ...]
+    numbers: dict[str, int]
     ranges: list[Range] = field(default_factory=list)
     owner: StructShape | None = None
     versioned: bool = True
@@ -166,7 +167,7 @@ class Schema:
                         settled = replace(settled, value=Int(number))
                     members.append(settled)
                 key = (enum_declaration.underlying, tuple(members))
-                candidate = EnumShape(family, enum_declaration.underlying, tuple(members))
+                candidate = EnumShape(family, enum_declaration.underlying, tuple(members), numbers)
             self.live[family, version] = shapes.setdefault(key, candidate)
         previous: Shape | None = None
         for version in self.versions:

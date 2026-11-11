@@ -26,6 +26,21 @@ class B:
 """
 
 
+BITSET = """
+from enum import IntEnum
+from protocol import bitset, type, uint8
+package = "bedrock.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = 2
+    COUNT = B
+
+class P:
+    x: bitset[E.COUNT]
+"""
+
+
 @pytest.fixture
 def generate(build_package, tmp_path):
     def run(modules: dict[str, str]):
@@ -67,3 +82,9 @@ def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
 
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
+
+
+def test_a_bitset_width_may_name_a_derived_member(generate):
+    out = generate({"a": BITSET})
+
+    assert (out / "a.h").exists()

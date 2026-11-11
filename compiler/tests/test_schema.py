@@ -228,7 +228,7 @@ def test_enum_values_are_evaluated_over_the_members_present(build_package):
         ("D", MemberRef(family, "A")),
         ("F", Binary("-", MemberRef(family, "C"), Int(1))),
     ]
-    assert [member.value for member in late.members][:3] == [Int(4), Int(5), Int(6)]
+    assert late.numbers == {"A": 4, "B": 5, "C": 6, "D": 4, "F": 5}
 
 
 def test_an_enum_member_renamed_at_the_same_value_is_a_new_shape(build_package):
