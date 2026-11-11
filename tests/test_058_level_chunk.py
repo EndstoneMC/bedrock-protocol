@@ -119,7 +119,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_level_chunk_is_packet_58(version):
     assert version.PACKETS[58] is version.LevelChunkPacket
 
