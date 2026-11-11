@@ -52,7 +52,7 @@ jobs:
         run: uv build --no-config -o dist
       - name: Build the compiler wheel
         if: runner.os == 'Linux'
-        run: uv build --no-config --package bedrock-protocol-compiler -o dist-compiler
+        run: uv build --no-config --package bedrock-protocol-compiler --wheel -o dist-compiler
       - name: Test the installed wheel
         run: |
           wheels=(dist/*.whl)
