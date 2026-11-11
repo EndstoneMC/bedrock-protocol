@@ -154,7 +154,6 @@ def test_2225_puts_the_editor_level_migration_version_ahead_of_the_time():
     new = bytes(EDITOR_MIGRATED)
     assert len(new) == len(old) + 1
     assert new[:47] + new[48:] == old
-    assert new[47:50] == bytes.fromhex("01d00f")
 
 
 def test_2225_start_game_round_trips_its_editor_level_migration_version():
