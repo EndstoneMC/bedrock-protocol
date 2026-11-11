@@ -53,7 +53,7 @@ TWO_PRESETS_PACKETS = {
 }
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_camera_presets_is_packet_198(version):
     assert version.PACKETS[198] is version.CameraPresetsPacket
 
