@@ -1,4 +1,3 @@
-// The one binder: every generated enum and struct is bound from its reflection.
 #pragma once
 
 #include <array>
@@ -42,7 +41,6 @@ concept Packet = Reflected<T> && Serializable<T> && requires {
 template <typename T, std::size_t I>
 using field_t = std::remove_cvref_t<decltype(field_get<I>(std::declval<T &>()))>;
 
-// A member named after a Python keyword takes the DSL's trailing underscore back.
 inline std::string python_name(std::string_view name)
 {
     const nb::object iskeyword = nb::module_::import_("keyword").attr("iskeyword");
@@ -50,7 +48,6 @@ inline std::string python_name(std::string_view name)
     return keyword ? std::format("{}_", name) : std::string(name);
 }
 
-// The Python names of T's members, resolved once while T is bound.
 template <typename T>
 const auto &python_names()
 {
@@ -64,7 +61,6 @@ const auto &python_names()
     return names;
 }
 
-// `Owner::Inner` lives on the Owner class, which the module list binds first.
 inline nb::object owner_of(nb::handle module, std::string_view qualified, std::string_view &leaf)
 {
     nb::object scope = nb::borrow(module);
@@ -144,7 +140,6 @@ inline constexpr bool is_bitset_v = false;
 template <std::size_t N>
 inline constexpr bool is_bitset_v<std::bitset<N>> = true;
 
-// Enum members stay open: a value the schema does not name (a window id) crosses as an int.
 template <typename F>
 constexpr bool holds_enum()
 {
@@ -231,7 +226,6 @@ F from_python(nb::handle src)
     }
 }
 
-// The Python type a member holds, for `__annotations__`.
 template <typename F>
 nb::object annotation()
 {
@@ -341,7 +335,6 @@ void assign(T &value, nb::handle src)
     }
 }
 
-// `T(a, b, c=...)`: positionals fill members in declaration order, keywords by name.
 template <typename T>
 T construct(nb::args args, nb::kwargs kwargs)
 {
@@ -413,7 +406,6 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
         return std::format("{}({})", struct_name<T>().substr(struct_name<T>().rfind(':') + 1), members);
     });
 
-    // Members keep BDS's names, `serialize` among them, so the codec takes a dunder and from_bytes.
     if constexpr (Serializable<T>) {
         for (const std::string &field : python_names<T>()) {
             if (field == "from_bytes") {
@@ -448,7 +440,6 @@ void bind_type(nb::handle module, Version *version)
     nb::object scope = owner_of(module, qualified, leaf);
     const std::string name(leaf);
 
-    // A type every version shares is bound once and re-exported.
     if (nb::handle existing = nb::type<T>(); existing.is_valid()) {
         scope.attr(name.c_str()) = existing;
         if constexpr (Packet<T>) {
@@ -472,7 +463,6 @@ void bind_types(nb::handle module, Version &version, type_list<T...>)
     (bind_type<T>(module, &version), ...);
 }
 
-// Binds what `<module>_types<V>` lists into the version's module.
 template <typename File>
 void bind_file(Version &version)
 {
