@@ -79,12 +79,14 @@ def field(
       `uint8`, the varints and a primitive alias take none.
     - `prefix`: `uint32`, `uint16` or `varint32` in place of the field's `list`'s `uvarint32` count.
     - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix: an
-      earlier field, `len(p.f)` of an earlier list or dict, or a product of them with `*`.
+      earlier field, `len(p.f)` of an earlier list or dict, or a product of them with `*`. Every
+      field it reads is present wherever the list is.
     - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type. It flows
       through `list`, `dict`, `T | None`, union cases and array elements, and every name it reaches
       needs a `@type(cereal=False)` declaration.
 
-    `with field(when=...):` gates every field in the block by one predicate.
+    `with field(when=...):` takes only `when=`, holds only fields, and gates each of them by one
+    predicate. A field inside carries no `when=` of its own.
     """
     return None
 

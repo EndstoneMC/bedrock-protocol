@@ -320,6 +320,27 @@ def test_a_nested_enum_redeclares_with_its_owner(build_package):
             "@type(since=3)\nclass E(IntEnum, uint8):\n    X = 1\n\nclass A:\n    x: dict[E, uint8]\n",
             "a.py: A.x: reaches E, which does not exist at 1",
         ),
+        (
+            "class E(IntEnum, uint8):\n    C = value(1, since=3)\n\n"
+            + "class S:\n    k: E\n    x: uint8 = field(when=lambda p: p.k == E.C)\n",
+            "a.py: S.x: reaches E.C, which does not exist at 1",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    A = 1\n    C = value(2, since=3)\n\n"
+            + "class S:\n    b: bitset[E.A]\n    x: uint8 = field(when=lambda p: p.b.test(E.C))\n",
+            "a.py: S.x: reaches E.C, which does not exist at 1",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    C = value(1, since=3)\n\n"
+            + "class S:\n    k: E\n    with field(when=lambda p: p.k == E.C):\n        x: uint8 = field(since=3)\n"
+            + "        y: uint8\n",
+            "a.py: S.y: reaches E.C, which does not exist at 1",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    C = value(1, since=3)\n\n"
+            + "class S:\n    k: E\n    x: uint8 = field(when=lambda p: not p.k == E.C)\n",
+            "a.py: S.x: reaches E.C, which does not exist at 1",
+        ),
     ],
 )
 def test_a_field_reaches_only_what_exists_where_it_is_present(build_package, source, message):

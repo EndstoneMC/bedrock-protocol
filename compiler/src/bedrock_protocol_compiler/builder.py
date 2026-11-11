@@ -2,13 +2,11 @@ import ast
 import builtins
 import enum
 import inspect
-import keyword
 import typing
 import uuid
 from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
-from functools import reduce
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
@@ -31,9 +29,7 @@ from bedrock_protocol_compiler.descriptor import (
     Expression,
     Family,
     Field,
-    FieldRef,
     Int,
-    Len,
     List,
     Literal,
     Map,
@@ -52,6 +48,7 @@ from bedrock_protocol_compiler.descriptor import (
     Type,
     Variant,
 )
+from bedrock_protocol_compiler.lambdas import field_name, parse_count, parse_predicate, read_lambda
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
@@ -115,16 +112,6 @@ class PendingEnum:
 class UnionAlias:
     source: Source
     node: ast.TypeAlias
-
-
-@dataclass
-class Lambda:
-    source: Source
-    scope: Scope
-    name: str
-    param: str
-    earlier: list[Field]
-    range: Range
 
 
 @dataclass
@@ -193,11 +180,8 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
             yield node
         case Literal(value=MemberRef() as member) | Bitset(width=member) | Test(member=member):
             yield member
-        case Optional(element=element) | Array(element=element):
+        case Optional(element=element) | List(element=element) | Array(element=element):
             yield from reaches(element)
-        case List(element=element, count=count):
-            yield from reaches(element)
-            yield from reaches(count)
         case Not(operand=operand):
             yield from reaches(operand)
         case Binary(left=left, right=right):
@@ -454,7 +438,7 @@ class Builder:
                 function = self.resolve(source, scope, decorator.func)
                 if function is not dsl.packet and function is not dsl.type:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
-                arguments = self.bind(source, decorator, function, ("id", "cereal", "since", "until"))
+                arguments = self.bind(source, decorator, function)
                 own = self.read_range(source, decorator, node.name, arguments)
                 if function is dsl.packet:
                     packet_id = literal(source, arguments["id"], int, "packet")
@@ -558,7 +542,7 @@ class Builder:
                 wire_name = literal(source, expression.elts[1], str, name)
                 value = Int(literal(source, expression.elts[0], int, name))
             elif isinstance(expression, ast.Call) and function is dsl.value:
-                arguments = self.bind(source, expression, dsl.value, ("v", "name", "cpp_name", "since", "until"))
+                arguments = self.bind(source, expression, dsl.value)
                 if "name" in arguments:
                     wire_name = literal(source, arguments["name"], str, name)
                 if "cpp_name" in arguments:
@@ -631,29 +615,27 @@ class Builder:
             block = statement.items[0].context_expr if single else None
             if not (isinstance(block, ast.Call) and self.resolve(source, scope, block.func) is dsl.field):
                 raise error(source, statement, pending.struct.name, "is not a with field(when=...) block")
-            arguments = self.bind(source, block, dsl.field, ("when",))
-            if "when" not in arguments:
-                raise error(source, block, pending.struct.name, "a with block needs when=")
+            arguments = self.bind(source, block, dsl.field)
+            if list(arguments) != ["when"]:
+                raise error(source, block, pending.struct.name, "a with block takes only when=")
             statements.extend((inner, arguments["when"]) for inner in statement.body)
         for statement, block_when in statements:
-            if block_when is None and isinstance(statement, ast.Pass | ast.ClassDef):
+            if block_when is not None and not isinstance(statement, ast.AnnAssign):
+                raise error(source, statement, pending.struct.name, "a with block holds only fields")
+            if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
             if not (isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)):
                 raise error(
                     source, statement, pending.struct.name, "holds only fields, nested classes, a docstring and pass"
                 )
-            name = statement.target.id
-            if name.endswith("_") and keyword.iskeyword(name[:-1]):
-                name = name[:-1]
+            name = field_name(statement.target.id)
             if any(name == existing.name for existing in fields):
                 raise error(source, statement, name, "is declared twice")
             call = statement.value
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                arguments = self.bind(
-                    source, call, dsl.field, ("type", "endian", "prefix", "count", "cereal", "when", "since", "until")
-                )
+                arguments = self.bind(source, call, dsl.field)
             annotation = statement.annotation
             cereal = True
             if call is not None and "cereal" in arguments:
@@ -682,8 +664,6 @@ class Builder:
                 field_type = replace(field_type, prefix=prefix)
             wire = None
             endian = None
-            if call is not None and "count" in arguments and "prefix" in arguments:
-                raise error(source, call, name, "count and prefix are both given")
             if call is not None and "type" in arguments:
                 wire_type = self.type_of(source, scope, arguments["type"])
                 if not (isinstance(wire_type, Primitive) and wire_type.name in ("str", *INTEGERS)):
@@ -705,10 +685,17 @@ class Builder:
             if call is not None and "count" in arguments:
                 if not isinstance(field_type, List):
                     raise error(source, call, name, "count is given to something other than a bare list")
-                count_lambda, count_body = self.read_lambda(
-                    source, scope, name, arguments["count"], fields, field_range
+                if "prefix" in arguments:
+                    raise error(source, call, name, "count and prefix are both given")
+                count = read_lambda(
+                    arguments["count"],
+                    fields,
+                    field_range,
+                    self.versions,
+                    lambda node: self.member_of(source, scope, node),
+                    lambda node, reason: error(source, node, name, reason),
                 )
-                field_type = replace(field_type, prefix=None, count=self.count_of(count_lambda, count_body))
+                field_type = replace(field_type, prefix=None, count=parse_count(count))
             guard = block_when
             if call is not None and "when" in arguments:
                 if block_when is not None:
@@ -716,8 +703,16 @@ class Builder:
                 guard = arguments["when"]
             when = None
             if guard is not None:
-                when_lambda, when_body = self.read_lambda(source, scope, name, guard, fields, field_range)
-                when = self.predicate_of(when_lambda, when_body)
+                when = parse_predicate(
+                    read_lambda(
+                        guard,
+                        fields,
+                        field_range,
+                        self.versions,
+                        lambda node: self.member_of(source, scope, node),
+                        lambda node, reason: error(source, node, name, reason),
+                    )
+                )
             fields.append(Field(name, field_type, field_range, when))
         struct = pending.struct
         self.tile(source, pending.node, struct, pending.range)
@@ -730,77 +725,6 @@ class Builder:
                     )
             claimed.append((struct, pending.range))
         struct.declarations.append(StructDeclaration(pending.range, tuple(fields)))
-
-    def read_lambda(
-        self, source: Source, scope: Scope, name: str, node: ast.expr, earlier: list[Field], range: Range
-    ) -> tuple[Lambda, ast.expr]:
-        if not (
-            isinstance(node, ast.Lambda)
-            and len(node.args.args) == 1
-            and not (node.args.posonlyargs or node.args.kwonlyargs or node.args.vararg or node.args.kwarg)
-            and not node.args.defaults
-        ):
-            raise error(source, node, name, "is not a lambda of one argument")
-        return Lambda(source, scope, name, node.args.args[0].arg, earlier, range), node.body
-
-    def earlier_field(self, context: Lambda, node: ast.expr) -> Field:
-        if not (
-            isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == context.param
-        ):
-            raise error(context.source, node, context.name, f"{ast.unparse(node)} is not {context.param}.<field>")
-        for earlier in context.earlier:
-            if earlier.name == node.attr:
-                for version in self.versions:
-                    if context.range.contains(version) and not earlier.range.contains(version):
-                        raise error(context.source, node, context.name, f"{ast.unparse(node)} is absent at {version}")
-                return earlier
-        raise error(context.source, node, context.name, f"{ast.unparse(node)} is not an earlier field")
-
-    def count_of(self, context: Lambda, node: ast.expr) -> Expression:
-        match node:
-            case ast.BinOp(op=ast.Mult(), left=left, right=right):
-                return Binary("*", self.count_of(context, left), self.count_of(context, right))
-            case ast.Call(func=ast.Name(id="len"), args=[argument], keywords=[]):
-                counted = self.earlier_field(context, argument)
-                if not isinstance(counted.type, List | Map):
-                    raise error(
-                        context.source, argument, context.name, "len is given something other than a list or map"
-                    )
-                return Len(counted.name)
-            case ast.Attribute():
-                return FieldRef(self.earlier_field(context, node).name)
-        raise error(context.source, node, context.name, "is not a field, len(field) or a product")
-
-    def predicate_of(self, context: Lambda, node: ast.expr) -> Expression:
-        match node:
-            case ast.BoolOp(op=op, values=values):
-                operator = "and" if isinstance(op, ast.And) else "or"
-                operands = [self.predicate_of(context, value) for value in values]
-                return reduce(lambda left, right: Binary(operator, left, right), operands)
-            case ast.UnaryOp(op=ast.Not(), operand=operand):
-                return Not(self.predicate_of(context, operand))
-            case ast.BinOp(op=ast.BitAnd(), left=left, right=right):
-                return Binary("&", self.predicate_of(context, left), self.predicate_of(context, right))
-            case ast.Compare(left=left, ops=[ast.In()], comparators=[ast.Set(elts=elements)]):
-                operands = [
-                    Binary("==", self.predicate_of(context, left), self.predicate_of(context, e)) for e in elements
-                ]
-                return reduce(lambda first, second: Binary("or", first, second), operands)
-            case ast.Compare(left=left, ops=[ast.Eq() | ast.NotEq() | ast.Lt() as op], comparators=[right]):
-                operator = {ast.Eq: "==", ast.NotEq: "!=", ast.Lt: "<"}[type(op)]
-                return Binary(operator, self.predicate_of(context, left), self.predicate_of(context, right))
-            case ast.Call(func=ast.Attribute(value=receiver, attr="test"), args=[bit], keywords=[]):
-                bits = self.earlier_field(context, receiver)
-                if not isinstance(bits.type, Bitset):
-                    raise error(context.source, receiver, context.name, "test is given something other than a bitset")
-                return Test(bits.name, self.member_of(context.source, context.scope, bit))
-            case ast.Attribute(value=ast.Name(id=name)) if name == context.param:
-                return FieldRef(self.earlier_field(context, node).name)
-            case ast.Attribute():
-                return self.member_of(context.source, context.scope, node)
-            case ast.Constant() | ast.UnaryOp(op=ast.USub()):
-                return Int(literal(context.source, node, int, context.name))
-        raise error(context.source, node, context.name, "is not a predicate")
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}
@@ -839,7 +763,6 @@ class Builder:
         source: Source,
         call: ast.Call,
         function: Callable[..., object],
-        read: tuple[str, ...],
     ) -> dict[str, ast.expr]:
         name = function.__name__
         if any(isinstance(arg, ast.Starred) for arg in call.args) or any(kw.arg is None for kw in call.keywords):
@@ -852,9 +775,6 @@ class Builder:
             bound = inspect.signature(function).bind(*call.args, **{kw.arg: kw.value for kw in call.keywords if kw.arg})
         except TypeError as reason:
             raise error(source, call, name, str(reason)) from None
-        unread = [argument for argument in bound.arguments if argument not in read]
-        if unread:
-            raise error(source, call, name, f"{unread[0]} is not supported yet")
         return bound.arguments
 
     def resolve(self, source: Source, scope: Scope, node: ast.expr) -> object:
