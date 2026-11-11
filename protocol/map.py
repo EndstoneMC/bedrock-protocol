@@ -19,19 +19,19 @@ class MapItemTrackedActor:
 
     @type(until=944)
     class UniqueId:
-        type: "MapItemTrackedActor.Type" = field(type=int32)
-        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == MapItemTrackedActor.Type.ENTITY)
-        key_block_pos: NetworkBlockPosition = field(when=lambda u: u.type == MapItemTrackedActor.Type.BLOCK_ENTITY)
+        type: Type = field(type=int32)
+        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == Type.ENTITY)
+        key_block_pos: NetworkBlockPosition = field(when=lambda u: u.type == Type.BLOCK_ENTITY)
 
     @type(since=944, until=2168)
     class UniqueId:
-        type: "MapItemTrackedActor.Type" = field(type=int32)
-        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == MapItemTrackedActor.Type.ENTITY)
-        key_block_pos: BlockPos = field(when=lambda u: u.type == MapItemTrackedActor.Type.BLOCK_ENTITY)
+        type: Type = field(type=int32)
+        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == Type.ENTITY)
+        key_block_pos: BlockPos = field(when=lambda u: u.type == Type.BLOCK_ENTITY)
 
     @type(since=2168)
     class UniqueId:
-        type: "MapItemTrackedActor.Type" = field(type=int32)
+        type: Type = field(type=int32)
         key_entity_id: ActorUniqueID | None
         key_block_pos: BlockPos | None
 
