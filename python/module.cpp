@@ -27,42 +27,46 @@ void throw_decode_error(std::string_view type, const BinaryReader &stream, std::
 
 namespace {
 
-std::uint16_t id_of(const Version &version, nb::handle packet)
+std::uint16_t id_of(nb::handle packet)
 {
     nb::object id = nb::getattr(packet.type(), "ID", nb::none());
-    if (!id.is_none() && version.packets.contains(id) && version.packets[id].is(packet.type())) {
-        return nb::cast<std::uint16_t>(id);
+    if (id.is_none()) {
+        throw nb::type_error(std::format("not a packet: {}", nb::repr(packet.type()).c_str()).c_str());
     }
-    throw nb::type_error(std::format("not a packet: {}", nb::repr(packet.type()).c_str()).c_str());
+    return nb::cast<std::uint16_t>(id);
 }
 
-nb::bytes encode_body(const Version &version, nb::handle packet)
+nb::bytes encode_body(nb::handle packet)
 {
-    id_of(version, packet);
-    return nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
+    id_of(packet);
+    auto body = nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
+    if (!body.is_valid()) {
+        throw nb::python_error();
+    }
+    return body;
 }
 
-nb::bytes encode_framed(const Version &version, nb::handle packet, std::uint8_t recipient_sub_id,
-                        std::uint8_t sender_sub_id)
+nb::bytes encode_framed(nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id)
 {
     std::string buffer;
     BinaryWriter writer{buffer};
     Serializer<PacketHeader>::serialize(writer, PacketHeader{
-                                                    .packet_id = id_of(version, packet),
+                                                    .packet_id = id_of(packet),
                                                     .recipient_sub_id = recipient_sub_id,
                                                     .sender_sub_id = sender_sub_id,
                                                 });
-    nb::bytes body = nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
+    nb::bytes body = encode_body(packet);
     buffer.append(body.c_str(), body.size());
     return nb::bytes(buffer.data(), buffer.size());
 }
 
 nb::object decode_body(const Version &version, int id, BinaryReader &reader)
 {
-    if (!version.packets.contains(nb::int_(id))) {
+    nb::object cls = version.packets.get(nb::int_(id), nb::none());
+    if (cls.is_none()) {
         throw nb::key_error(std::format("no packet {} at protocol {}", id, version.number).c_str());
     }
-    nb::object packet = nb::type_supplement<Codec>(version.packets[nb::int_(id)]).decode(reader);
+    nb::object packet = nb::type_supplement<Codec>(cls).decode(reader);
     if (reader.getUnreadLength() != 0) {
         throw_decode_error(nb::type_name(packet.type()).c_str(), reader, "trailing bytes");
     }
@@ -94,16 +98,9 @@ void bind_version_api(Version &version)
             return nb::make_tuple(*header, packet);
         },
         nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
-    m.def(
-        "encode", [version](nb::handle packet) { return encode_body(version, packet); }, nb::arg("packet"),
-        "The packet body, without its header.");
-    m.def(
-        "encode_packet",
-        [version](nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id) {
-            return encode_framed(version, packet, recipient_sub_id, sender_sub_id);
-        },
-        nb::arg("packet"), nb::arg("recipient_sub_id") = 0, nb::arg("sender_sub_id") = 0,
-        "Header and body, the bytes a batch length-prefixes.");
+    m.def("encode", &encode_body, nb::arg("packet"), "The packet body, without its header.");
+    m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
+          nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
 }
 
 }  // namespace
