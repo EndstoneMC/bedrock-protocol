@@ -127,13 +127,13 @@ def test_import_may_precede_the_module_it_names(build_package):
     assert package.modules[0].families[0].declarations[0].fields[0].type == StructRef(package.modules[1].families[0])
 
 
-def test_class_scope_resolves_before_the_module(build_package):
-    source = HEADER + "class B:\n    pass\n\nclass A:\n    class B:\n        pass\n\n    b: B\n"
+def test_class_scopes_resolve_outward_before_the_module(build_package):
+    source = HEADER + "class B:\n    pass\n\nclass A:\n    class B:\n        pass\n\n    class C:\n        b: B\n"
     package = build_package({"a": source})
 
     a = package.modules[0].families[1]
 
-    assert a.declarations[0].fields[0].type == StructRef(a.nested[0])
+    assert a.nested[1].declarations[0].fields[0].type == StructRef(a.nested[0])
 
 
 @pytest.mark.parametrize(
@@ -177,6 +177,7 @@ def test_class_scope_resolves_before_the_module(build_package):
         ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
         ("class A:\n    x: foo().bar\n", r"foo\(\): is not a name"),
         ("class A:\n    pass\n\nclass A:\n    pass\n", "A: is already declared"),
+        ("class uint8:\n    pass\n", "uint8: is already declared"),
     ],
 )
 def test_module_is_rejected(build_package, source, message):
