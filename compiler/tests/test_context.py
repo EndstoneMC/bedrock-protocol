@@ -54,4 +54,3 @@ def test_commit_leaves_files_outside_bedrock_alone(tmp_path):
 def test_commit_creates_the_out_directory(tmp_path):
     write(tmp_path / "generated", "bedrock/protocol/boss.h", "boss")
     assert (tmp_path / "generated/bedrock/protocol/boss.h").is_file()
-
