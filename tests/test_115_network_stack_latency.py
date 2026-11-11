@@ -32,7 +32,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_network_stack_latency_is_packet_115(version):
     assert version.PACKETS[115] is version.NetworkStackLatencyPacket
 
