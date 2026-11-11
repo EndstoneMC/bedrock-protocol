@@ -103,12 +103,10 @@ template <typename E>
 void bind_enum(nb::handle scope, const char *name)
 {
     nb::enum_<E> cls(scope, name, nb::is_arithmetic());
-    if constexpr (detail::is_reflected_v<E>) {
-        const auto &values = enum_values<E>();
-        const auto &names = enum_schema_names<E>();
-        for (std::size_t i = 0; i < values.size(); ++i) {
-            cls.value(std::string(names[i]).c_str(), values[i]);
-        }
+    const auto &values = enum_values<E>();
+    const auto &names = enum_schema_names<E>();
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        cls.value(std::string(names[i]).c_str(), values[i]);
     }
 }
 
@@ -157,10 +155,8 @@ template <typename F>
 nb::object to_python(const F &value)
 {
     if constexpr (std::is_enum_v<F>) {
-        if constexpr (detail::is_reflected_v<F>) {
-            if (enum_contains(value)) {
-                return nb::cast(value);
-            }
+        if (enum_contains(value)) {
+            return nb::cast(value);
         }
         return nb::cast(enum_integer(value));
     }
