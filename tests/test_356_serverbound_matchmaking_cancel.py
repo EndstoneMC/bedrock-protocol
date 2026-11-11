@@ -1,6 +1,5 @@
 from bedrock_protocol import v2193, v2225
 
-# TODO: confirm against BDS: gophertunnel stops at 2168 and cannot marshal this packet; the bytes follow the r26_u6 dump
 EMPTY = b""
 
 
