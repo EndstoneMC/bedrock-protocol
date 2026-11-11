@@ -1,9 +1,9 @@
 """What the client reports for diagnosis: profile/ Whisker scopes, memory categories,
 frame and system timings, plus debug/ markers and the editor channel."""
 
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 
-from protocol import auto, field, packet, type, uint8, uint64, value
+from protocol import field, packet, type, uint8, uint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
 from protocol.nbt import CompoundTag
