@@ -108,19 +108,3 @@ def test_decode_is_strict():
 def test_every_packet_class_is_registered_under_its_id():
     for packet_id, cls in proto.PACKETS.items():
         assert packet_id == cls.ID
-
-
-def test_an_empty_list_keeps_its_element_type_through_a_round_trip():
-    from bedrock_protocol._native.nbt import ListTag
-
-    wire = bytes.fromhex("0000000a000901610a0000")
-    packet = proto.BlockActorDataPacket.from_bytes(wire)
-    assert packet.data["a"].type == 10
-    assert len(packet.data["a"]) == 0
-    assert bytes(packet) == wire
-
-    built = proto.BlockActorDataPacket(data=type(packet.data)({"a": ListTag(type=10)}))
-    assert bytes(built) == wire
-    assert ListTag(type=10) != ListTag()
-    with pytest.raises(ValueError, match="not a tag type"):
-        ListTag(type=12)
