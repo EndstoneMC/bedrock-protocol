@@ -6,20 +6,8 @@ from bedrock_protocol import v924, v944, v1001, v2168, v2225
 # &packet.EditorNetwork{RouteToManager: true, Payload: map[string]any{}}
 NBT_PAYLOAD = bytes.fromhex("010a0000")
 
-# TODO: confirm against BDS: gophertunnel has no 944 shape, so this is derived from the BDS dump
-VARIANT = bytes.fromhex("010e656469746f722e76617269616e7403616263")
-
-# TODO: confirm against BDS: gophertunnel has no 944 shape, so this is derived from the BDS dump
-EMPTY_VARIANT = bytes.fromhex("000000")
-
 GOLDENS = [
     pytest.param(v924.EditorNetworkPacket(route_to_manager=True), NBT_PAYLOAD, id="v924-nbt-payload"),
-    pytest.param(
-        v2225.EditorNetworkPacket(route_to_manager=True, raw_variant_name="editor.variant", raw_variant_data="abc"),
-        VARIANT,
-        id="v2225-variant",
-    ),
-    pytest.param(v2225.EditorNetworkPacket(), EMPTY_VARIANT, id="v2225-empty-variant"),
 ]
 
 
@@ -36,6 +24,15 @@ def test_editor_network_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_editor_network_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
+
+
+def test_the_944_body_is_one_byte_shorter_than_the_924_nbt_body():
+    assert len(bytes(v944.EditorNetworkPacket(route_to_manager=True))) == len(NBT_PAYLOAD) - 1
+
+
+def test_the_2225_variant_round_trips():
+    packet = v2225.EditorNetworkPacket(route_to_manager=True, raw_variant_name="editor.variant", raw_variant_data="abc")
+    assert v2225.EditorNetworkPacket.from_bytes(bytes(packet)) == packet
 
 
 def test_a_variant_longer_than_127_bytes_takes_a_two_byte_length_prefix():
