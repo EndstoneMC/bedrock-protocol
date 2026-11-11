@@ -107,12 +107,12 @@ struct type_caster<std::bitset<N>> {
         if (!PyLong_Check(src.ptr())) {
             return false;
         }
-        const object text = steal(PyNumber_ToBase(src.ptr(), 2));
+        const str text = steal<str>(PyNumber_ToBase(src.ptr(), 2));
         if (!text.is_valid()) {
             PyErr_Clear();
             return false;
         }
-        std::string_view digits = borrow<str>(text).c_str();
+        std::string_view digits = text.c_str();
         if (digits.starts_with('-')) {
             return false;
         }
@@ -120,7 +120,7 @@ struct type_caster<std::bitset<N>> {
         if (digits.size() > N) {
             return false;
         }
-        value = std::bitset<N>(std::string(digits));
+        value = std::bitset<N>(digits.data(), digits.size());
         return true;
     }
 
