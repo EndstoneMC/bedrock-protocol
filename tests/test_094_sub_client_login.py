@@ -17,7 +17,7 @@ GOLDENS = [
         pytest.param(
             version.SubClientLoginPacket(connection_request="sub-client-jwt"),
             SUB_CLIENT_JWT,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-request",
+            id=f"{version.__name__.rpartition('.')[2]}-request",
         )
         for version in VERSIONS
     ],
@@ -25,7 +25,7 @@ GOLDENS = [
         pytest.param(
             version.SubClientLoginPacket(connection_request=""),
             EMPTY,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-empty-request",
+            id=f"{version.__name__.rpartition('.')[2]}-empty-request",
         )
         for version in VERSIONS
     ],
