@@ -11,7 +11,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_jigsaw_structure_data_is_packet_313(version):
     assert version.PACKETS[313] is version.JigsawStructureDataPacket
 
