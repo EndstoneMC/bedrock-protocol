@@ -10,7 +10,8 @@ for the same packets in Python, or `bpc` to compile schemas.
 
 `bedrock-protocol` is the runtime: the schema's packets, types and enums, bound from
 the generated C++, so Python encodes exactly the bytes the C++ codecs do. A bare name
-is the latest protocol and `v<N>` pins one, as in C++. `bedrock-protocol-compiler` is `bpc`, the compiler.
+is the latest protocol and `v<N>` pins one, as in C++. `bedrock-protocol-compiler`
+is `bpc`, the compiler.
 
 ```python
 import bedrock_protocol as bp
