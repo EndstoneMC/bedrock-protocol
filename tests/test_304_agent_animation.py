@@ -18,7 +18,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_agent_animation_is_packet_304(version):
     assert version.PACKETS[304] is version.AgentAnimationPacket
 
