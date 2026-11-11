@@ -7,7 +7,7 @@ paths:
 
 ## Placement
 
-- Name every schema module after a BDS game-tree folder, and open it with a docstring naming what it holds and what it deliberately excludes.
+- Name every schema module after a BDS game-tree folder, and open it with a docstring of a line or two naming what it holds, then one `Not ...` line per exclusion.
 - Settle placement by grepping the docstrings (`head -qn 4 protocol/*.py`, `grep -n "^Not " protocol/*.py`), never by re-deriving the taxonomy.
 - Change a module's docstring in the same commit that adds a declaration it excludes.
 - Place a declaration by its BDS header's domain folder:

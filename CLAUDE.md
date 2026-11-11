@@ -8,7 +8,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - The schema in `protocol/` is the product, written for a human to read. The compiler bends to the DSL, never the DSL to the compiler, and a DSL change must make the schema read better.
 - Do real engineering and be ethical: never patch over a defect to make something work; fix its cause and build what will still hold long into the future, so nobody is sent back to redo it. Build nothing ahead of need: every abstraction, layer, option and file earns its weight. The quality check passes neither a workaround nor over-engineering.
 - Code that needs an explanatory comment, or a decision that needs a diary, is wrong: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`, an open disagreement) or a golden's provenance.
-- A docstring says what the signature cannot: none on properties, obvious functions or tests.
+- A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale, comparisons or a walkthrough.
 - Write no one-use helper function or lambda: inline the expression or bind a local named for the value. A lambda passed as an argument is fine.
 - No docs and no decision logs in the repo: no notes, guides, design docs or diaries; README.md is the only prose page.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
