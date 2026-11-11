@@ -96,7 +96,7 @@ def test_a_shape_that_returns_is_one_shape_with_two_ranges(build_package):
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
 
-    first, _ = schema.shapes(family)
+    first, second = schema.shapes(family)
 
     assert first.ranges == [Range(None, 3), Range(4, None)]
     assert second.ranges == [Range(3, 4)]
