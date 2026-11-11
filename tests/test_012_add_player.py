@@ -131,7 +131,7 @@ def test_add_player_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_add_player_2168_restates_the_data_item_type_in_two_more_bytes():
+def test_add_player_2168_body_is_two_bytes_longer_than_1001():
     assert len(V2168) == len(V1001) + 2
 
 
