@@ -13,7 +13,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_server_settings_request_is_packet_102(version):
     assert version.PACKETS[102] is version.ServerSettingsRequestPacket
 
@@ -28,7 +28,7 @@ def test_server_settings_request_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_server_settings_request_rejects_trailing_bytes(version):
     with pytest.raises(ValueError, match="trailing bytes"):
         version.ServerSettingsRequestPacket.from_bytes(b"\x7f")
