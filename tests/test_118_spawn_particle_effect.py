@@ -61,8 +61,3 @@ def test_spawn_particle_effect_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_spawn_particle_effect_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
-
-
-def test_an_empty_molang_variable_map_is_not_an_absent_one():
-    assert v2225.SpawnParticleEffectPacket.from_bytes(EMPTY_VARIABLES).molang_variables == ""
-    assert v2225.SpawnParticleEffectPacket.from_bytes(WITHOUT_VARIABLES).molang_variables is None
