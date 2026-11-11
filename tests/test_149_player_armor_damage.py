@@ -64,6 +64,10 @@ def test_an_empty_pre_844_slot_mask_is_a_lone_zero_byte():
     assert bytes(v827.PlayerArmorDamagePacket(slots=0, head_damage=99)) == EMPTY_MASK
 
 
+def test_an_empty_pre_844_slot_mask_decodes_to_no_damage():
+    assert v827.PlayerArmorDamagePacket.from_bytes(EMPTY_MASK) == v827.PlayerArmorDamagePacket(slots=0)
+
+
 def test_player_armor_damage_changes_shape_at_844():
     assert v827.PlayerArmorDamagePacket is not v844.PlayerArmorDamagePacket
 
