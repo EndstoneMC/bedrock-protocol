@@ -142,7 +142,7 @@ def test_the_level_sound_events_added_at_2168_are_absent_before_it(enum, name):
     ("member", "value"),
     [
         pytest.param(v2168.LevelSoundEvent.MOUNT, 611, id="mount"),
-        pytest.param(v2168.LevelSoundEvent.DISMOUNT, 611, id="dismount"),
+        pytest.param(v2168.LevelSoundEvent.DISMOUNT, 612, id="dismount"),
         pytest.param(v2168.LevelSoundEvent.STRAW_BED_BREAK_LEAVE, 613, id="straw-bed-break-leave"),
     ],
 )
