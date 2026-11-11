@@ -48,7 +48,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_actor_event_is_packet_27(version):
     assert version.PACKETS[27] is version.ActorEventPacket
 
