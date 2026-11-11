@@ -14,12 +14,12 @@ class BedrockProtocolConan(ConanFile):
         "CMakeLists.txt",
         "cmake/*",
         "include/*",
-        "compiler/*",
+        "compiler/src/*",
         "protocol/*",
         "tests/*",
         "third_party/*",
         "LICENSE",
-        "pyproject.toml",
+        "compiler/pyproject.toml",
     )
 
     def layout(self):
