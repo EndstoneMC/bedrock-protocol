@@ -10,7 +10,8 @@ PACKET = v2225.ServerboundRegisterAudioContentPacket(
         )
     ]
 )
-ENCODED = bytes.fromhex("0102" + "6964" + "0173" + "0176" + "0170")
+# TODO: confirm against BDS: gophertunnel stops at 2168 and cannot marshal this packet; the bytes follow the r26_u6 dump
+ENCODED = bytes.fromhex("01026964017301760170")
 
 
 def test_serverbound_register_audio_content_is_packet_360_from_2225():
