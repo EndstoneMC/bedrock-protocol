@@ -160,7 +160,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_serverbound_diagnostics_is_packet_315(version):
     assert version.PACKETS[315] is version.ServerboundDiagnosticsPacket
 
