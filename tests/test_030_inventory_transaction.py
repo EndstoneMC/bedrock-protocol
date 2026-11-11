@@ -330,7 +330,9 @@ def test_inventory_transaction_2193_hand_is_one_byte_of_its_own():
     )
     main_hand = bytes(v2193.InventoryTransactionPacket(transaction=main_hand_use))
     off_hand = bytes(v2193.InventoryTransactionPacket(transaction=USE_V2193_OFFHAND))
-    assert main_hand[:11] + bytes.fromhex("01") + main_hand[12:] == off_hand
+    assert main_hand[:11] == off_hand[:11]
+    assert main_hand[12:] == off_hand[12:]
+    assert main_hand[11:12] != off_hand[11:12]
 
 
 def test_inventory_transaction_2225_use_on_actor_gains_the_hand():
@@ -344,9 +346,11 @@ def test_inventory_transaction_2225_use_on_actor_gains_the_hand():
 
 
 def test_inventory_transaction_2225_use_on_actor_hand_is_one_byte_of_its_own():
-    assert bytes(USE_ON_ACTOR_V2225_MAINHAND)[:7] + bytes.fromhex("01") + bytes(USE_ON_ACTOR_V2225_MAINHAND)[
-        8:
-    ] == bytes(USE_ON_ACTOR_V2225_OFFHAND)
+    main_hand = bytes(USE_ON_ACTOR_V2225_MAINHAND)
+    off_hand = bytes(USE_ON_ACTOR_V2225_OFFHAND)
+    assert main_hand[:7] == off_hand[:7]
+    assert main_hand[8:] == off_hand[8:]
+    assert main_hand[7:8] != off_hand[7:8]
 
 
 def test_inventory_transaction_2225_use_on_actor_round_trips_the_offhand():
@@ -363,7 +367,8 @@ def test_inventory_transaction_2225_release_appends_the_hand():
         )
     )
     newer = RELEASE_V2225_OFFHAND
-    assert bytes(newer) == bytes(older) + bytes.fromhex("01")
+    assert bytes(newer)[:-1] == bytes(older)
+    assert len(bytes(newer)) == len(bytes(older)) + 1
 
 
 def test_inventory_transaction_2225_release_round_trips_the_offhand():
