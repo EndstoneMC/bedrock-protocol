@@ -316,9 +316,6 @@ class FurnaceOptions:
 
 @packet(id=351, since=2193)
 class SetPlayerFurnaceOptionsPacket:
-    """The player's screen options for one kind of furnace: which left-hand tab is
-    open, whether the recipe list is filtered, and the layout it draws with."""
-
     class FurnaceType(IntEnum, uint8):
         NONE = 0
         FURNACE = 1
@@ -378,8 +375,6 @@ class UpdateEquipPacket:
 
 @packet(id=31, until=975)
 class MobEquipmentPacket:
-    """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
-
     runtime_id: ActorRuntimeID
     item: NetworkItemStackDescriptor
     slot: int32 = field(type=uint8)
@@ -389,8 +384,6 @@ class MobEquipmentPacket:
 
 @packet(id=31, since=975)
 class MobEquipmentPacket:
-    """One slot at a time, where MobArmorEquipmentPacket carries every armor slot."""
-
     runtime_id: ActorRuntimeID
     item: SerializedNetworkItemStackDescriptor
     slot: int32 = field(type=uint8)
@@ -400,8 +393,6 @@ class MobEquipmentPacket:
 
 @packet(id=32, until=1001)
 class MobArmorEquipmentPacket:
-    """Every armor slot at once, where MobEquipmentPacket carries one at a time."""
-
     runtime_id: ActorRuntimeID
     head: NetworkItemStackDescriptor
     torso: NetworkItemStackDescriptor

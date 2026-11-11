@@ -71,8 +71,6 @@ class CameraPresets:
 
 @packet(id=198)
 class CameraPresetsPacket:
-    """The camera presets the level defines, sent during the join sequence."""
-
     camera_presets: CameraPresets
 
 

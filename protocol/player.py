@@ -220,9 +220,6 @@ class PlayerListPacket:
 
 @packet(id=63, since=2168)
 class PlayerListPacket:
-    """Each entry carries its action twice: once as the variant index over the two
-    payloads, then again as the payload's own member."""
-
     class RemoveEntry:
         action: PlayerListPacketType
         uuid: uuid.UUID

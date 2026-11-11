@@ -1,8 +1,5 @@
-"""Versionless primitives shared across domains, the tier below every domain module:
-SharedTypes/versionless/ -- Vec2, Vec3, BlockPos, Color, DimensionType -- and
-world/level/block/'s BlockRuntimeId, which item.py needs and block.py would reach in a cycle.
-Admission needs a primitive at the versionless root with two or more domain consumers,
-or one whose own domain module cannot be imported by its consumers."""
+"""Versionless primitives shared across domains: SharedTypes/versionless/ -- Vec2, Vec3,
+BlockPos, Color, DimensionType -- and world/level/block/'s BlockRuntimeId."""
 
 from protocol import int32, uvarint32, varint32
 

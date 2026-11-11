@@ -168,23 +168,17 @@ class PrimitiveShapeDataPayload:
 
 @packet(id=328, since=975)
 class PrimitiveShapesPacket:
-    """Send primitive drawing shape info (from scripting) to the client for rendering."""
-
     shapes: list[PrimitiveShapeDataPayload]
 
 
 @packet(id=328, since=859, until=975)
 class DebugDrawerPacket:
-    """Send primitive drawing shape info (from scripting) to the client for rendering."""
-
     shapes: list[PrimitiveShapeDataPayload]
 
 
 @type(until=859)
 class PacketShapeData:
-    """Wire shape mirrors ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData.
-    Most fields are gated by per-instance dirty flags on the server, so they ride as
-    optionals."""
+    """ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData."""
 
     network_id: uvarint64
     shape_type: ScriptPrimitiveShapeType | None
@@ -203,6 +197,4 @@ class PacketShapeData:
 
 @packet(id=328, since=818, until=859)
 class ServerScriptDebugDrawerPacket:
-    """Send primitive drawing shape info (from scripting) to the client for rendering."""
-
     shapes: list[PacketShapeData]

@@ -52,9 +52,6 @@ class ResourcePackResponse(Enum, int8):
 
 @packet(id=6, until=2168)
 class ResourcePacksInfoPacket:
-    """The packs the client has to have before it may join, each named by uuid and
-    version so the client can serve one it already cached."""
-
     resource_pack_required: bool
     has_addon_packs: bool
     has_scripts: bool
@@ -76,9 +73,6 @@ class ResourcePacksInfoPacket:
 
 @packet(id=8, until=2168)
 class ResourcePackClientResponsePacket:
-    """The client's step in the pack handshake: which packs it still wants, then
-    twice more to say the download and the stack are done."""
-
     response: ResourcePackResponse
     downloading_packs: list[str] = field(prefix=uint16)
 
@@ -123,9 +117,6 @@ class PackInstanceId:
 
 @packet(id=7)
 class ResourcePackStackPacket:
-    """The order the client applies the accepted texture packs in, with the base game
-    version its stack falls back to and the experiments the world runs."""
-
     texture_pack_required: bool
     add_on_ids_and_versions: list[PackInstanceId] = field(until=898)
     texture_pack_ids_and_versions: list[PackInstanceId]
@@ -149,9 +140,6 @@ class PackType(IntEnum, int8):
 
 @packet(id=82)
 class ResourcePackDataInfoPacket:
-    """The header for one pack's download: how its bytes will be chunked, how large the
-    archive is, and the hash the client checks the reassembled file against."""
-
     resource_name: str
     chunk_size: uint32
     nb_chunks: uint32
@@ -163,9 +151,6 @@ class ResourcePackDataInfoPacket:
 
 @packet(id=83)
 class ResourcePackChunkDataPacket:
-    """One chunk of a pack the client is downloading: the pack the chunk belongs to,
-    the chunk's index in the sequence, and its offset into the pack file."""
-
     resource_name: str
     chunk_id: uint32
     byte_offset: uint64

@@ -1,6 +1,5 @@
 """Sound events and handles: sound/ and world/level/LevelSoundEvent.h --
-the packets that play, stop and update sound. The LevelSoundEvent table lives here
-because its only consumer does."""
+the packets that play, stop and update sound, and the LevelSoundEvent table."""
 
 from enum import Enum, IntEnum, auto
 from typing import Literal
@@ -689,9 +688,6 @@ class ClientboundUpdateSoundDataPacket:
 
 @packet(id=123, until=1001)
 class LevelSoundEventPacket:
-    """Most sounds are launched on the server and replicated to clients; a handful of
-    player-initiated ones are launched on the client and replicated from there."""
-
     event_id: LevelSoundEvent
     pos: Vec3
     data: varint32
@@ -716,8 +712,6 @@ class LevelSoundEventPacket:
 
 @packet(id=352, since=2193)
 class RecordStartedPacket:
-    """A jukebox began playing, so the client can show the record's name."""
-
     block_pos: BlockPos
     server_sound_handle: ServerSoundHandle
 
@@ -765,9 +759,6 @@ class SoundDataEvent(IntEnum):
 
 @packet(id=24, until=786)
 class LevelSoundEventPacketV1:
-    """The original sound event packet, keyed by a single-byte event id. Superseded by
-    V2 and then by packet 123; retired at 786."""
-
     event_id: LevelSoundEvent = field(type=uint8)
     pos: Vec3
     data: varint32
@@ -778,8 +769,6 @@ class LevelSoundEventPacketV1:
 
 @packet(id=120, until=786)
 class LevelSoundEventPacketV2:
-    """V1 with the actor named by identifier rather than by type. Retired at 786."""
-
     event_id: LevelSoundEvent = field(type=uint8)
     pos: Vec3
     data: varint32

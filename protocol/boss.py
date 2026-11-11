@@ -42,8 +42,6 @@ class BossBarOverlay(IntEnum, uint8):
 
 @packet(id=74, until=1001)
 class BossEventPacket:
-    """Sent when a boss gets updated"""
-
     boss_id: ActorUniqueID
     event_type: BossEventUpdateType
 

@@ -1,6 +1,5 @@
 """The Environment Attribute System: world/eas/ and world/eas/attributes/ --
-bool/float/colour environment attributes, their operations and easing, and attribute layers.
-EasingType lives here because this module name-codes it; moving it would not link."""
+bool/float/colour environment attributes, their operations and easing, and attribute layers."""
 
 from enum import Enum, IntEnum
 

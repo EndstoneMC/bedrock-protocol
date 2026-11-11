@@ -1,5 +1,5 @@
 """Molang versions and expression opcodes: util/molang/ and
-SharedTypes/versionless/Molang/. Tier-0: imports nothing but the DSL surface."""
+SharedTypes/versionless/Molang/."""
 
 from enum import IntEnum, auto
 

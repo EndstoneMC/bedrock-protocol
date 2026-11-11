@@ -194,10 +194,7 @@ class ItemUseInventoryTransaction:
 
 @type(cereal=False, until=944)
 class ItemUseInventoryTransaction:
-    """The shape PlayerAuthInputPacket writes: that packet did not cerealise until
-    2168, so its transaction keeps the pre-cereal framing -- the action list carries
-    no member-present marker and `face` stays a varint32 -- while its leaves
-    cerealise at 1001 with everything else."""
+    """The shape PlayerAuthInputPacket writes."""
 
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)

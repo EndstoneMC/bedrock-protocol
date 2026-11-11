@@ -1,11 +1,4 @@
-"""NBT (Named Binary Tag) types -- compiler built-ins.
-
-Every tag is hand-written in include/bedrock/nbt.hpp: the leaf tags below, the
-recursive Tag union, ListTag, and CompoundTag, plus the codec over them. Each
-class here carries `@builtin`, so the compiler references the type by name and
-routes it through `Serializer<Name>` without emitting a definition of its own.
-The names are declared in wire tag-id order.
-"""
+"""NBT (Named Binary Tag) types, compiler built-ins hand-written in include/bedrock/nbt.hpp."""
 
 from protocol import builtin
 
@@ -13,60 +6,48 @@ package = "bedrock.protocol"
 
 
 @builtin
-class ByteTag:
-    """A single signed byte."""
+class ByteTag: ...
 
 
 @builtin
-class ShortTag:
-    """A signed 16-bit integer."""
+class ShortTag: ...
 
 
 @builtin
-class IntTag:
-    """A signed 32-bit integer, varint-coded."""
+class IntTag: ...
 
 
 @builtin
-class Int64Tag:
-    """A signed 64-bit integer, varint-coded."""
+class Int64Tag: ...
 
 
 @builtin
-class FloatTag:
-    """A 32-bit float."""
+class FloatTag: ...
 
 
 @builtin
-class DoubleTag:
-    """A 64-bit float."""
+class DoubleTag: ...
 
 
 @builtin
-class ByteArrayTag:
-    """A length-prefixed array of signed bytes."""
+class ByteArrayTag: ...
 
 
 @builtin
-class StringTag:
-    """A length-prefixed UTF-8 string."""
+class StringTag: ...
 
 
 @builtin
-class ListTag:
-    """A length-prefixed, homogeneous sequence of tags."""
+class ListTag: ...
 
 
 @builtin
-class CompoundTag:
-    """An ordered list of named tags."""
+class CompoundTag: ...
 
 
 @builtin
-class IntArrayTag:
-    """A length-prefixed array of varint-coded 32-bit integers."""
+class IntArrayTag: ...
 
 
 @builtin
-class CompoundTagData:
-    """A compound's named tags and its closing TAG_End, with no root tag id or name."""
+class CompoundTagData: ...

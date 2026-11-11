@@ -46,8 +46,7 @@ class CreativeItemNetId:
 
 @type(until=2168)
 class SerializedNetworkItemInstanceDescriptor:
-    """NetworkItemInstanceDescriptor::write. An air item (id 0) is a lone zero
-    byte: the write returns early, so nothing else reaches the wire."""
+    """NetworkItemInstanceDescriptor::write."""
 
     id: varint32
 
@@ -60,10 +59,7 @@ class SerializedNetworkItemInstanceDescriptor:
 
 @type(since=2168)
 class SerializedNetworkItemInstanceDescriptor:
-    """cerealizer<NetworkItemInstanceDescriptor>::SerializedData. The extra data
-    (NBT, can-place-on / can-break) rides in a single length-prefixed blob, so it
-    stays opaque here -- an empty blob is a lone uvarint32 zero, which is
-    byte-identical to BDS's air-item early-out."""
+    """cerealizer<NetworkItemInstanceDescriptor>::SerializedData."""
 
     id: varint32
     stack_size: uint16
@@ -80,9 +76,7 @@ class SerializedRecipeIngredient:
 
 @type(since=2168)
 class SerializedRecipeIngredient:
-    """cerealizer<RecipeIngredient>::SerializedData. The descriptor collapses to
-    the impl's toMap(), so the type tag is gone and the case is read back from
-    the single key the map carries."""
+    """cerealizer<RecipeIngredient>::SerializedData."""
 
     descriptor: dict[str, str]
     aux_value: int16 = field(type=varint32)
@@ -310,9 +304,7 @@ class UnlockedRecipesPacket:
 
 @type(until=2168)
 class ItemDescriptor:
-    """ItemDescriptor::serialize. The type byte selects which impl follows; four
-    of the six lead with a string, so one slot carries the molang expression,
-    the item tag, and the deferred / complex-alias name alike."""
+    """ItemDescriptor::serialize."""
 
     class InternalType(IntEnum, uint8):
         INVALID = 0

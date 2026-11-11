@@ -65,8 +65,6 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
 
 @packet(id=331, since=859)
 class GraphicsOverrideParameterPacket:
-    """Sent from the server to the client when a server script changes the rendering settings."""
-
     keyframes: dict[float, Vec3]
     float_value: float | None = field(since=924)
     vec3_value: Vec3 | None = field(since=924)

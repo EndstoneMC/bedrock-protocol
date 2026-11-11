@@ -427,9 +427,7 @@ class GameRule:
 
 @type(cereal=False, until=2168)
 class GameRule:
-    """The shape StartGame wrote before it cerealised at 2168, with the integer
-    case as a varint. Packet 72 shared that encoding until 844, when it took the
-    fixed one and left StartGame behind."""
+    """The shape StartGame writes."""
 
     name: str
     can_be_modified_by_player: bool

@@ -157,7 +157,4 @@ class ServerAuthMovementMode(IntEnum, uint8):
 
 @packet(id=319, since=748, until=818)
 class SetMovementAuthorityPacket:
-    """Switches the client between client- and server-authoritative movement mid-session.
-    Retired at 818, when only the server-authoritative mode was left."""
-
     new_auth_movement_mode: ServerAuthMovementMode

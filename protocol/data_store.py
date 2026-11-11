@@ -1,6 +1,5 @@
 """The scripting data-store sync: scripting/data_sync/.
-Name pinned: the DynamicValue builtin resolves include/bedrock/protocol/data_store.hpp
-from this module's stem."""
+Name fixed: the DynamicValue builtin resolves data_store.hpp from it."""
 
 from protocol import builtin, double, packet, type, uint32
 
@@ -8,9 +7,7 @@ package = "bedrock.protocol"
 
 
 @builtin
-class DynamicValue:
-    """A recursive, self-describing data-store value: null, boolean, integer,
-    number, string, array, or object (a string-keyed map of values)."""
+class DynamicValue: ...
 
 
 @type(since=898, until=924)

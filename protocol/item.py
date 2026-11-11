@@ -1,6 +1,5 @@
 """The item as a subject: world/item/ -- the registry, the stack descriptors and the
-net ids they carry, the hand slots, trims, cooldowns, book editing.
-The net ids sit here rather than in item_stack.py because the descriptors reference them."""
+net ids they carry, the hand slots, trims, cooldowns, book editing."""
 
 from enum import IntEnum, auto
 
@@ -138,9 +137,6 @@ type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLega
 
 
 class NetworkItemStackDescriptor:
-    """An air item (id 0) is a lone zero byte: the write returns early, so
-    nothing else reaches the wire."""
-
     id: varint32
 
     with field(when=lambda d: d.id != 0):
@@ -153,10 +149,7 @@ class NetworkItemStackDescriptor:
 
 @type(until=2168)
 class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData. The extra data
-    (NBT, can-place-on / can-break, shield blocking tick) rides in a single
-    length-prefixed blob, so it stays opaque here -- an empty blob is a lone
-    uvarint32 zero, which is byte-identical to BDS's air-item early-out."""
+    """cerealizer<NetworkItemStackDescriptor>::SerializedData."""
 
     id: int16
     stack_size: uint16
@@ -168,11 +161,7 @@ class SerializedNetworkItemStackDescriptor:
 
 @type(since=2168)
 class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData. ItemStackNetIdVariant's
-    binding projects its three alternatives onto one signed varint: non-negative
-    is an ItemStackNetId, negative-odd an ItemStackRequestId, negative-even an
-    ItemStackLegacyRequestId. The tag is gone, so the case is read back from the
-    sign and parity."""
+    """cerealizer<NetworkItemStackDescriptor>::SerializedData."""
 
     id: int16
     stack_size: uint16
@@ -184,7 +173,4 @@ class SerializedNetworkItemStackDescriptor:
 
 @packet(id=162, until=776)
 class ItemComponentPacket:
-    """The item component table before 776 folded the registry into it: just a name
-    and its component NBT per entry."""
-
     items: list[ItemComponentEntry]

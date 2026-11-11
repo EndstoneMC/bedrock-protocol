@@ -316,7 +316,4 @@ class BiomeDefinitionListPacket:
 
 @packet(id=301, until=800)
 class CompressedBiomeDefinitionListPacket:
-    """The biome definitions behind BDS's own dictionary compression, sent instead of
-    packet 122 when the client advertised support. Retired at 800."""
-
     compressed_biome_data: bytes

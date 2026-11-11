@@ -54,8 +54,7 @@ class PieceType(Enum, uint32):
 
 @type(cereal=False)
 class PieceType(Enum, uint32):
-    """persona::stringFromPieceType name-codes the piece type for the pre-cereal
-    write, where cereal binds the enumerator verbatim."""
+    """persona::stringFromPieceType."""
 
     SKELETON = 1, "persona_skeleton"
     BODY = 2, "persona_body"
@@ -119,8 +118,7 @@ class AnimatedImageData:
 
 @type(cereal=False)
 class AnimatedImageData:
-    """SerializedSkinImpl::write writes the image inline rather than through a
-    SkinImage, and both enums uncompressed."""
+    """SerializedSkinImpl::write."""
 
     image_width: uint32
     image_height: uint32
@@ -153,8 +151,7 @@ class TintMapColor:
 
 @type(cereal=False)
 class TintMapColor:
-    """The pre-cereal write walks the map as a list, so each entry carries its own
-    key and the colours their own count."""
+    """SerializedSkinImpl::write."""
 
     piece_type: PieceType = field(type=str, cereal=False)
     colors: list[str] = field(prefix=uint32)
@@ -162,10 +159,7 @@ class TintMapColor:
 
 @type(cereal=False)
 class SerializedSkinRef:
-    """SerializedSkinImpl::write. The arm size and skin colour go as strings
-    rather than as an enumerator and a packed colour, each list takes a fixed
-    count, and the trusted flag is absent -- PlayerListPacket writes it as a
-    trailing run of its own, one bool per entry."""
+    """SerializedSkinImpl::write."""
 
     id: str
     play_fab_id: str

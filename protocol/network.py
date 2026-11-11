@@ -1,6 +1,6 @@
 """The connection itself: network/ -- the packet id registry, login and handshake,
 disconnect, play status, compression and network settings, blob-cache negotiation,
-latency, violation, server stats, and the wire-only block position BDS wrote until 944."""
+latency, violation, server stats, and the wire-only block position."""
 
 from enum import IntEnum, auto
 from typing import Union
@@ -448,19 +448,12 @@ class PlayStatus(IntEnum):
 
 @packet(id=1)
 class LoginPacket:
-    """The client's login, repeating the protocol version it speaks and carrying the
-    identity and client data it authenticates with."""
-
     client_network_version: int32 = field(endian="big")
     connection_request: bytes
 
 
 @packet(id=2)
 class PlayStatusPacket:
-    """The server's answer to a login or a sub-client authentication: either the
-    status that carries the handshake through to the spawn, or the reason the
-    connection is about to be dropped."""
-
     status: PlayStatus = field(type=int32, endian="big")
 
 
@@ -476,18 +469,12 @@ class DisconnectPacketMessages:
 
 @packet(id=5)
 class DisconnectPacket:
-    """Ends the connection, naming the reason the client shows and, unless the
-    disconnection screen is skipped, the message it shows with it."""
-
     reason: DisconnectFailReason
     messages: Union[DisconnectPacketMessages, None]
 
 
 @packet(id=156)
 class PacketViolationWarningPacket:
-    """Sent by the client when a packet fails to parse, naming the offending packet
-    and how the client is reacting to it."""
-
     violation_type: PacketViolationType
     violation_severity: PacketViolationSeverity
     violating_packet_id: MinecraftPacketIds
@@ -496,9 +483,6 @@ class PacketViolationWarningPacket:
 
 @packet(id=193)
 class RequestNetworkSettingsPacket:
-    """The first packet a client sends, carrying the protocol version it speaks so
-    the server can answer with its network settings."""
-
     client_network_version: int32 = field(endian="big")
 
 
@@ -509,25 +493,17 @@ class ClientToServerHandshakePacket:
 
 @packet(id=115)
 class NetworkStackLatencyPacket:
-    """Deprecated round-trip probe over the whole network stack, feeding the in-game
-    debug graph's ping and the realms latency telemetry. Sent by both sides."""
-
     create_time: uint64
     from_server: bool
 
 
 @packet(id=129)
 class ClientCacheStatusPacket:
-    """Sent once at login, telling the server whether the client supports the
-    client blob cache protocol."""
-
     enabled: bool
 
 
 @packet(id=192)
 class ServerStatsPacket:
-    """Server-side timing statistics the server reports to the client."""
-
     server_time: float
     network_time: float
 
@@ -538,9 +514,6 @@ class WebSocketPacketData:
 
 @packet(id=95)
 class AutomationClientConnectPacket:
-    """Tells the client to open a websocket connection to the given server, which may
-    then run commands on the client's behalf and listen for the events it fires."""
-
     web_socket_data: WebSocketPacketData
 
 
@@ -562,11 +535,6 @@ class PacketCompressionAlgorithm(IntEnum, uint16):
 
 @packet(id=143)
 class NetworkSettingsPacket:
-    """The server's answer to a network settings request, naming the compression
-    algorithm and the packet size above which it kicks in for the rest of the
-    connection, plus the render distance throttle the client applies to other
-    players."""
-
     compression_threshold: uint16
     compression_algorithm: PacketCompressionAlgorithm = field(type=uint16)
     client_throttle_enabled: bool
@@ -576,17 +544,11 @@ class NetworkSettingsPacket:
 
 @packet(id=94)
 class SubClientLoginPacket:
-    """Split-screen: a second player joining over the main client's connection sends
-    the same connection request blob the LoginPacket carries."""
-
     connection_request: bytes
 
 
 @packet(id=135, until=1001)
 class ClientCacheBlobStatusPacket:
-    """Sent periodically by the client to update the server on which blobs it has
-    (ACK) and which blobs it is lacking (MISS)."""
-
     missing_count: uvarint32
     found_count: uvarint32
     missing_ids: list[uint64] = field(count=lambda p: p.missing_count)
