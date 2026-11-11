@@ -33,7 +33,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_serverbound_loading_screen_is_packet_312(version):
     assert version.PACKETS[312] is version.ServerboundLoadingScreenPacket
 
