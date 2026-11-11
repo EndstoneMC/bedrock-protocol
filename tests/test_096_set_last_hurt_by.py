@@ -38,12 +38,21 @@ def test_set_last_hurt_by_decodes_from_its_golden(packet, golden):
         pytest.param(v2168.ActorType.SULFUR_CUBE, 921, id="v2168-sulfur-cube"),
         pytest.param(v1001.ActorType.MONSTER, 2969 - 153, id="v1001-monster"),
         pytest.param(v2168.ActorType.PATHFINDER_MOB, 921 - 153, id="v2168-pathfinder-mob"),
-        pytest.param(v2168.ActorType.CUSHION, 154, id="v2168-cushion"),
     ],
 )
-def test_actor_type_composes_a_category_with_a_type_index(member, value):
+def test_2168_moves_the_sulfur_cube_from_monster_to_pathfinder_mob_at_index_153(member, value):
     assert member == value
 
 
+def test_cushion_is_154_at_2168():
+    assert v2168.ActorType.CUSHION == 154
+
+
+def test_1001_has_no_cushion():
+    assert not hasattr(v1001.ActorType, "CUSHION")
+
+
 def test_a_1001_sulfur_cube_does_not_read_as_one_at_2168():
-    assert v2168.SetLastHurtByPacket.from_bytes(V1001).last_hurt_by != v2168.ActorType.SULFUR_CUBE
+    assert v2168.SetLastHurtByPacket.from_bytes(V1001) != v2168.SetLastHurtByPacket(
+        last_hurt_by=v2168.ActorType.SULFUR_CUBE
+    )
