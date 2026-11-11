@@ -135,7 +135,7 @@ class Builder:
                         raise error(source, statement, "versions", "is declared twice")
                     try:
                         parsed = ast.literal_eval(value)
-                    except ValueError:
+                    except (ValueError, TypeError):
                         parsed = None
                     if not (
                         isinstance(parsed, tuple)
@@ -223,13 +223,15 @@ class Builder:
     def declare_class(self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None) -> None:
         if node.bases or node.keywords:
             raise error(source, node, node.name, "bases are not supported yet")
+        if node.type_params:
+            raise error(source, node, node.name, "type parameters are not allowed")
         kinds: list[object] = []
         packet_id = None
         for decorator in node.decorator_list:
             arguments: dict[str, ast.expr] = {}
             if isinstance(decorator, ast.Call):
                 function = self.resolve(source, scope, decorator.func)
-                if not (callable(function) and (function is dsl.packet or function is dsl.type)):
+                if function is not dsl.packet and function is not dsl.type:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
                 arguments = self.bind(source, decorator, function, decorator.args, decorator.keywords, ("id",))
             else:
@@ -239,7 +241,7 @@ class Builder:
             if "id" in arguments:
                 try:
                     packet_id = ast.literal_eval(arguments["id"])
-                except ValueError:
+                except (ValueError, TypeError):
                     packet_id = None
                 if type(packet_id) is not int:
                     raise error(source, decorator, "packet", "id is not an integer literal")
@@ -346,7 +348,7 @@ class Builder:
         if not isinstance(node, ast.Name | ast.Attribute):
             raise error(source, node, ast.unparse(node), "is not supported yet")
         target = self.resolve(source, scope, node)
-        if target in PRIMITIVES:
+        if isinstance(target, TypeAliasType | type) and target in PRIMITIVES:
             return Primitive(PRIMITIVES[target])
         if target is uuid.UUID:
             return BuiltinRef(UUID)

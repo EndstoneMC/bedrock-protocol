@@ -16,15 +16,24 @@ package = "bedrock.protocol"
 
 
 def test_package_lists_versions_and_modules(build_package):
-    names = "builtin, double, field, packet, type, uint8, uint32"
-    init = f"from bedrock_protocol_compiler.dsl import {names}\nversions = (1, 2, 3)\n"
-    package = build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER}, init)
+    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "bedrock.protocol"\n'}, "versions = (1, 2, 3)\n")
 
     assert package.versions == (1, 2, 3)
     assert [(module.stem, module.package) for module in package.modules] == [
-        ("a", "bedrock.protocol"),
+        ("a", "a.b"),
         ("b", "bedrock.protocol"),
     ]
+
+
+def test_docstrings_declare_nothing(build_package):
+    package = build_package(
+        {"a": '"""Module."""\n' + HEADER + 'class A:\n    """Struct."""\n    x: uint8\n'},
+        '"""Init."""\n'
+        "from bedrock_protocol_compiler.dsl import builtin, double, field, packet, type, uint8, uint32\n"
+        "versions = (1, 2, 3)\n",
+    )
+
+    assert [field.name for field in package.modules[0].families[0].declarations[0].fields] == ["x"]
 
 
 def test_struct_fields_keep_declaration_order(build_package):
@@ -153,6 +162,10 @@ def test_class_scope_resolves_before_the_module(build_package):
         ("@print\nclass A:\n    pass\n", "is decorated with something other than"),
         ("@builtin\nclass A:\n    x: uint8\n", "A: a builtin has no body"),
         ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive"),
+        ("class A[T]:\n    pass\n", "A: type parameters are not allowed"),
+        ("class A:\n    x: __dict__\n", "__dict__: is not a type"),
+        ("@packet(id=x)\nclass A:\n    pass\n", "packet: id is not an integer literal"),
+        ("@packet(id={[]})\nclass A:\n    pass\n", "packet: id is not an integer literal"),
         ("type Id[T] = uint8\n", "Id: type parameters are not allowed"),
         ("import os\n", "os: is not an importable module"),
         ("from os import path\n", "os: is not an importable module"),
@@ -193,6 +206,8 @@ def test_error_names_the_file_and_position(build_package):
         ("versions = (2, 1)\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 1)\n", "versions: is not a tuple of ascending integers"),
         ("versions = ()\n", "versions: is not a tuple of ascending integers"),
+        ("versions = x\n", "versions: is not a tuple of ascending integers"),
+        ("versions = {[]}\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 2, 3)\nversions = (1, 2, 3)\n", "versions: is declared twice"),
         ("versions = (1, 2, 3)\nclass A:\n    pass\n", "module: holds only imports"),
