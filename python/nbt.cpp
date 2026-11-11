@@ -48,7 +48,7 @@ void bind_array_tag(nb::module_ &m, const char *name)
 
 }  // namespace
 
-void bind_nbt(nb::module_ &parent)
+void init_nbt(nb::module_ &parent)
 {
     auto m = parent.def_submodule("nbt", "NBT tags, the network little-endian variant.");
 

@@ -13,7 +13,7 @@ endforeach ()
 list(JOIN _versions ", " _versions)
 configure_file(versions.hpp.in bind/versions.hpp @ONLY)
 
-set(_sources module.cpp nbt.cpp)
+set(_sources module.cpp nbt.cpp versions.cpp)
 set(_declarations "")
 set(_calls "")
 foreach (_module IN LISTS BEDROCK_PROTOCOL_MODULES)

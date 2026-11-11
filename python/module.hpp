@@ -28,7 +28,8 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
 [[noreturn]] void throw_decode_error(const DecodeError &error);
 
-void bind_nbt(nb::module_ &parent);
+void init_nbt(nb::module_ &parent);
+void init_versions(nb::module_ &parent);
 
 void init_types(std::span<const Version> bound);
 
