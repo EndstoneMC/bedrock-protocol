@@ -100,7 +100,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_structure_block_update_is_packet_90(version):
     assert version.PACKETS[90] is version.StructureBlockUpdatePacket
 
