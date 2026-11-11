@@ -4,10 +4,8 @@ string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _version "${_version_line}")
 project(bedrock-protocol VERSION ${_version} LANGUAGES CXX)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS pyproject.toml)
 
-if (PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_CXX_STANDARD 23)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+if (MSVC)
+    add_compile_options(/MP)
 endif ()
 
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
@@ -31,9 +29,7 @@ set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedro
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
 set_target_properties(bedrock_protocol PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        EXPORT_NAME protocol
-        OUTPUT_NAME bedrock_protocol)
+        EXPORT_NAME protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
 target_include_directories(bedrock_protocol PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
