@@ -21,7 +21,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_map_create_locked_copy_is_packet_131(version):
     assert version.PACKETS[131] is version.MapCreateLockedCopyPacket
 
