@@ -272,7 +272,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_crafting_data_is_packet_52(version):
     assert version.PACKETS[52] is version.CraftingDataPacket
 
