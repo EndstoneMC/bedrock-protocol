@@ -32,7 +32,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_server_stats_is_packet_192(version):
     assert version.PACKETS[192] is version.ServerStatsPacket
 
