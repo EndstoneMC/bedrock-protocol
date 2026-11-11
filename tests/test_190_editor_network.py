@@ -6,6 +6,7 @@ from bedrock_protocol import v924, v944, v1001, v2168, v2225
 # &packet.EditorNetwork{RouteToManager: true, Payload: map[string]any{}}
 NBT_PAYLOAD = bytes.fromhex("010a0000")
 
+# TODO: pending BDS golden: bedrock-dumper has to write the 944 variant body and the empty variant body
 GOLDENS = [
     pytest.param(v924.EditorNetworkPacket(route_to_manager=True), NBT_PAYLOAD, id="v924-nbt-payload"),
 ]
