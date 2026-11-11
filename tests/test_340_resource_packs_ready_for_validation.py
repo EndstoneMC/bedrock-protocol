@@ -7,7 +7,7 @@ from bedrock_protocol import v1001, v2168, v2225
 EMPTY = bytes.fromhex("")
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_resource_packs_ready_for_validation_is_packet_340(version):
     assert version.PACKETS[340] is version.ResourcePacksReadyForValidationPacket
 
