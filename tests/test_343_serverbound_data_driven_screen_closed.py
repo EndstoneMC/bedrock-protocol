@@ -70,7 +70,7 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_serverbound_data_driven_screen_closed_is_packet_343(version):
     assert version.PACKETS[343] is version.ServerboundDataDrivenScreenClosedPacket
 
