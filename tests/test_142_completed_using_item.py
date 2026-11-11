@@ -16,7 +16,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_completed_using_item_is_packet_142(version):
     assert version.PACKETS[142] is version.CompletedUsingItemPacket
 
