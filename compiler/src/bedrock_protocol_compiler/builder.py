@@ -130,7 +130,9 @@ class Builder:
                     raise error(source, statement, module, "is not importable from __init__")
                 case ast.Import() | ast.ImportFrom():
                     self.bind_import(source, statement)
-                case ast.Assign(targets=[ast.Name(id="versions")], value=value) if versions is None:
+                case ast.Assign(targets=[ast.Name(id="versions")], value=value):
+                    if versions is not None:
+                        raise error(source, statement, "versions", "is declared twice")
                     try:
                         parsed = ast.literal_eval(value)
                     except ValueError:
@@ -160,9 +162,9 @@ class Builder:
                     alias = Alias(statement.name.id, source.stem)
                     self.declare_family(source, statement, alias)
                     self.aliases.append(PendingAlias(source, statement, alias))
-                case ast.Assign(targets=[ast.Name(id="package")], value=ast.Constant(value=str() as package)) if (
-                    not source.package
-                ):
+                case ast.Assign(targets=[ast.Name(id="package")], value=ast.Constant(value=str() as package)):
+                    if source.package:
+                        raise error(source, statement, "package", "is declared twice")
                     source.package = package
                 case _:
                     raise error(
@@ -196,7 +198,7 @@ class Builder:
         module = statement.module or ""
         in_package = module == self.name or module.startswith(f"{self.name}.")
         if statement.level or not (module in FOREIGN_MODULES or in_package):
-            raise error(source, statement, module, "is not an importable module")
+            raise error(source, statement, "." * statement.level + module, "is not an importable module")
         if module != self.name and in_package:
             source.family_imports.append(statement)
             return

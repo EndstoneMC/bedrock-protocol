@@ -1,5 +1,6 @@
 import pytest
 
+from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     BuiltinRef,
@@ -158,6 +159,10 @@ def test_class_scope_resolves_before_the_module(build_package):
         ("from protocol import versions\n", "versions: is not exported by protocol"),
         ("from protocol.missing import A\n", "A: is not declared in protocol.missing"),
         ("x = 3\n", "module: holds only imports"),
+        ('package = "bedrock.protocol"\n', "package: is declared twice"),
+        ("from . import a\n", r"\.: is not an importable module"),
+        ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
+        ("class A:\n    x: foo().bar\n", r"foo\(\): is not a name"),
         ("class A:\n    pass\n\nclass A:\n    pass\n", "A: is already declared"),
     ],
 )
@@ -189,6 +194,7 @@ def test_error_names_the_file_and_position(build_package):
         ("versions = (1, 1)\n", "versions: is not a tuple of ascending integers"),
         ("versions = ()\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
+        ("versions = (1, 2, 3)\nversions = (1, 2, 3)\n", "versions: is declared twice"),
         ("versions = (1, 2, 3)\nclass A:\n    pass\n", "module: holds only imports"),
         ("from protocol.a import A\nversions = (1, 2, 3)\n", "protocol.a: is not importable from __init__"),
     ],
@@ -196,3 +202,8 @@ def test_error_names_the_file_and_position(build_package):
 def test_init_is_rejected(build_package, init, message):
     with pytest.raises(CompilerError, match=message):
         build_package({"a": HEADER}, init)
+
+
+def test_package_without_init_is_rejected(tmp_path):
+    with pytest.raises(CompilerError, match=r"__init__\.py: missing"):
+        build(tmp_path)
