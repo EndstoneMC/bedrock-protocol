@@ -49,7 +49,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_structure_template_data_response_is_packet_133(version):
     assert version.PACKETS[133] is version.StructureTemplateDataResponsePacket
 
@@ -62,7 +62,3 @@ def test_structure_template_data_response_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_structure_template_data_response_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
-
-
-def test_a_present_but_empty_structure_template_is_not_an_absent_one():
-    assert v2225.StructureTemplateDataResponsePacket.from_bytes(EMPTY_TAG).structure_tag is not None
