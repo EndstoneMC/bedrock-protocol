@@ -12,7 +12,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v924, v944, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v924, v944, v1001, v2168])
 def test_editor_network_is_packet_190(version):
     assert version.PACKETS[190] is version.EditorNetworkPacket
 
