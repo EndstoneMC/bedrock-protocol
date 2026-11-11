@@ -4,6 +4,8 @@ A schema module imports these names and declares structs, packets, type aliases 
 them. The compiler reads the module's source and never runs it, so every call is checked against the
 signature written here: a keyword this module does not list is an error.
 
+Every `since` and `until` names a version in the package's `versions`, and a range is `[since, until)`.
+
 A field named after a Python keyword carries one trailing underscore, which the compiler drops
 (`pass_` is `pass`). Any other trailing underscore is part of the name.
 
@@ -43,8 +45,10 @@ def value(
     - `v`: the wire value. Omit it to number the member as the previous present member plus one.
     - `name`: BDS's spelling, the same string the pair `MEMBER = 3, "WireName"` gives.
     - `cpp_name`: BDS's casing for an acronym the derived C++ name flattens. Only the casing may differ.
-    - `since`: the first protocol version that has the member.
-    - `until`: the first protocol version that no longer has it.
+    - `since`: the first protocol version that has the member, within its declaration's range.
+    - `until`: the first protocol version that no longer has it, within its declaration's range.
+
+    A gate that its declaration's range already decides is an error.
     """
     return 0 if v is None else v
 
@@ -66,7 +70,7 @@ def field(
       integer primitive overrides the wire of an integer field or enum while C++ keeps the
       annotated type. It reaches through `list` and `T | None`, and the one scalar half of a `dict`.
     - `since`, `until`: the field exists in protocol versions `[since, until)`, within its
-      declaration's range.
+      declaration's range. A gate that the declaration's range already decides is an error.
     - `when`: a one-argument lambda over earlier fields. Nothing marks presence on the wire: both
       directions recompute it, and the field stays the bare type in C++.
     - `endian`: `"big"` for a 16, 32 or 64-bit integer, or an enum whose `type=` is one, written big-endian. `int8`,
@@ -86,14 +90,18 @@ def type(*, since: int | None = None, until: int | None = None, cereal: bool = T
     """Class decorator: gate a struct or enum by protocol version.
 
     A type may be declared again with the adjacent range that follows; the declarations form one
-    versioned type. `cereal=False` marks BDS's hand-written encoding of a type BDS also cerealises;
+    versioned type, and only the last may be open. A nested class lives within its owner's range,
+    narrowed by its own gates, and is one type across its owner's redeclarations. `cereal=False` marks BDS's hand-written encoding of a type BDS also cerealises;
     only a reference spelled `field(cereal=False)` reaches it.
     """
     return lambda cls: cls
 
 
 def packet(*, id: int, since: int | None = None, until: int | None = None) -> Callable[[Any], Any]:
-    """Class decorator: a struct that is the packet with this id, gated like `type`."""
+    """Class decorator: a struct that is the packet with this id, gated like `type`.
+
+    Every declaration carries the same id, and two packets share an id only over disjoint ranges.
+    """
     return lambda cls: cls
 
 
