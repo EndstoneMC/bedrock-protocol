@@ -20,7 +20,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_request_chunk_radius_is_packet_69(version):
     assert version.PACKETS[69] is version.RequestChunkRadiusPacket
 
