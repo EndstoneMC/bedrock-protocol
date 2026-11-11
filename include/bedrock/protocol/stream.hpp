@@ -1,7 +1,3 @@
-// Ported verbatim from Endstone's bedrock/core/utility/binary_stream.{h,cpp}
-// (commit d4c9c420ec38acc9bb3eb618fec964b3dc55279a), adapted to use
-// std::expected for errors, std::string_view / std::string for the buffer, and
-// without the doc-helper / hook-library scaffolding.
 #pragma once
 
 #include <algorithm>
@@ -160,7 +156,6 @@ public:
     [[nodiscard]] auto canRead() const { return read_pos_ < view_.size(); }
     [[nodiscard]] bool resourceFailure() const { return budget_->resourceFailure(); }
 
-    // Fixed-width read, native-endian little by default.
     template <typename T>
         requires(std::integral<T> || std::floating_point<T>)
     auto read() -> Result<T>
@@ -168,8 +163,6 @@ public:
         return read<T, std::endian::little>();
     }
 
-    // Fixed-width read with explicit byte order. `bool` is a special case
-    // that accepts any non-zero byte as true (matching the wire convention).
     template <typename T, std::endian Order>
         requires(std::integral<T> || std::floating_point<T>)
     auto read() -> Result<T>
@@ -201,7 +194,6 @@ public:
         }
     }
 
-    // Length-prefixed string (varuint32 byte count, then raw bytes).
     template <typename T>
         requires std::same_as<T, std::string>
     auto read() -> Result<std::string>
@@ -222,9 +214,6 @@ public:
         return out;
     }
 
-    // All remaining unread bytes in the frame. Used for trailing payloads
-    // that the wire leaves length-less because the frame boundary
-    // terminates them.
     auto readRemaining() -> Result<std::string>
     {
         if (read_pos_ > view_.size()) return std::unexpected(std::make_error_code(std::errc::message_size));
@@ -238,9 +227,6 @@ public:
         return out;
     }
 
-    // LEB128 varint, zigzag-decoded for signed `T`. Reading more than
-    // ceil(bits(T)/7) continuation bytes is malformed input (5 for 32-bit,
-    // 10 for 64-bit) and yields `value_too_large`.
     template <std::integral T>
     auto readVarInt() -> Result<T>
     {
@@ -295,11 +281,8 @@ class BinaryWriter {
 public:
     explicit BinaryWriter(std::string &buffer) : buffer_(buffer) {}
 
-    // Raw bytes, no length marker.
     void writeRawBytes(std::string_view bytes) { write(bytes.data(), bytes.size()); }
 
-    // Fixed-width write, native-endian little by default. `value` is converted
-    // to the wire type `T`, so callers need not spell the cast.
     template <typename T, typename V>
         requires((std::integral<T> || std::floating_point<T>) &&
                  requires(V v) { static_cast<T>(v); })
@@ -308,7 +291,6 @@ public:
         write<T, std::endian::little>(value);
     }
 
-    // Fixed-width write with explicit byte order.
     template <typename T, std::endian Order, typename V>
         requires((std::integral<T> || std::floating_point<T>) &&
                  requires(V v) { static_cast<T>(v); })
@@ -335,15 +317,12 @@ public:
         }
     }
 
-    // Length-prefixed string (varuint32 byte count, then raw bytes).
     void write(std::string_view value)
     {
         writeVarInt<std::uint32_t>(value.size());
         write(value.data(), value.size());
     }
 
-    // LEB128 varint, zigzag-encoded for signed `T`. The argument is converted
-    // to `T`, as in `write`.
     template <std::integral T, typename V>
         requires requires(V v) { static_cast<T>(v); }
     void writeVarInt(V raw)

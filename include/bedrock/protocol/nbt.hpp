@@ -1,9 +1,3 @@
-// NBT (Named Binary Tag), the network-little-endian variant Bedrock uses on
-// the wire. The tag types model an in-memory tree: ValueTag/ArrayTag leaves,
-// the homogeneous ListTag, the CompoundTag map, and the Tag variant over all
-// of them. The four codec functions in namespace nbt move that tree on and
-// off a stream -- writeTag/readTag for a bare payload, writeNamedTag/
-// readNamedTag for the [type][name][payload] form a CompoundTag entry takes.
 #pragma once
 
 #include <cstddef>
@@ -27,8 +21,6 @@ namespace bedrock::protocol {
 
 namespace nbt {
 
-// Tag ids as they travel on the wire. A Tag's variant index is exactly this
-// value, so the id and the index never need translating.
 enum class Type : std::uint8_t {
     End = 0,
     Byte = 1,
@@ -44,7 +36,6 @@ enum class Type : std::uint8_t {
     IntArray = 11,
 };
 
-// A leaf tag carrying a single scalar or string payload.
 template <typename T>
 class ValueTag {
 public:
@@ -87,7 +78,6 @@ private:
     T value_{};
 };
 
-// A leaf tag carrying a length-prefixed array of a scalar type.
 template <typename T>
 class ArrayTag {
 public:
@@ -155,10 +145,6 @@ using IntArrayTag = nbt::ArrayTag<std::int32_t>;
 
 class Tag;
 
-// A homogeneous, ordered sequence of tags. The constructor or the first element
-// appended fixes the element type that every later element must match. Its
-// methods are defined out of line, below Tag, since they construct the
-// still-incomplete Tag.
 class ListTag {
 public:
     using value_type = Tag;
@@ -206,8 +192,6 @@ private:
     container_type elements_;
 };
 
-// An ordered map from name to tag. Iteration visits entries by sorted key.
-// Like ListTag, its methods are defined out of line, below Tag.
 class CompoundTag {
 public:
     using key_type = std::string;
@@ -260,7 +244,6 @@ private:
     map_type entries_;
 };
 
-// A single NBT tag of any type. Default-constructs to an empty (End) tag.
 class Tag {
 public:
     using Storage =
@@ -468,8 +451,6 @@ private:
     Storage storage_;
 };
 
-// --- ListTag ---
-
 template <typename T>
     requires(!std::is_same_v<std::remove_cvref_t<T>, Tag>)
 ListTag::ListTag(std::initializer_list<T> init)
@@ -572,8 +553,6 @@ inline bool operator!=(const ListTag &a, const ListTag &b) noexcept
 {
     return !(a == b);
 }
-
-// --- CompoundTag ---
 
 inline CompoundTag::CompoundTag(
     std::initializer_list<std::pair<const key_type, mapped_type>> init)
@@ -702,8 +681,6 @@ inline bool operator!=(const CompoundTag &a, const CompoundTag &b) noexcept
     return !(a == b);
 }
 
-// --- codec ---
-
 namespace nbt {
 
 void writeTag(BinaryWriter &stream, const Tag &tag);
@@ -717,14 +694,11 @@ std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
     BinaryReader &stream, bool compound_entry);
 }
 
-// Write a tag's payload only -- no id, no name, just the bytes the value
-// occupies. An End tag writes nothing.
 inline void writeTag(BinaryWriter &stream, const Tag &tag)
 {
     tag.visit([&](const auto &payload) {
         using V = std::decay_t<decltype(payload)>;
         if constexpr (std::is_same_v<V, std::monostate>) {
-            // End: no payload.
         }
         else if constexpr (std::is_same_v<V, ByteTag>) {
             stream.write<std::int8_t>(payload.value());
@@ -773,12 +747,11 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
             for (const auto &[name, child] : payload) {
                 writeNamedTag(stream, name, child);
             }
-            stream.write<std::uint8_t>(0);  // TAG_End
+            stream.write<std::uint8_t>(0);
         }
     });
 }
 
-// Read a payload of the given type, returning the tag it forms.
 inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type)
 {
     BinaryReader::ReadScope scope(stream);
@@ -877,7 +850,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             auto entry = detail::readNamedTag(stream, true);
             if (!entry) return std::unexpected(entry.error());
             if (entry->second.type() == Type::End) {
-                break;  // TAG_End
+                break;
             }
             out.emplace(std::move(entry->first), std::move(entry->second));
         }
@@ -887,8 +860,6 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
     return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
 }
 
-// Write [type:uint8][name:string][payload]. An End tag writes a bare 0 byte,
-// matching the terminator a CompoundTag ends with.
 inline void writeNamedTag(BinaryWriter &stream, std::string_view name,
                           const Tag &tag)
 {
@@ -901,8 +872,6 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name,
     writeTag(stream, tag);
 }
 
-// Read [type:uint8][name:string][payload]. A bare 0 byte yields an empty name
-// and an End tag, so a CompoundTag reader can stop on it.
 inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readNamedTag(
     BinaryReader &stream, bool compound_entry)
 {
@@ -933,8 +902,6 @@ inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
 
 }  // namespace nbt
 
-// A CompoundTag packet field is a root compound: a named tag with an empty
-// name carrying the compound payload.
 template <>
 struct Serializer<CompoundTag> {
     static void serialize(BinaryWriter &stream, const CompoundTag &value)

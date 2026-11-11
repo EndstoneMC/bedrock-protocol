@@ -11,12 +11,6 @@
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 
-// The packet registry. `bpc` compiles one module at a time, so no generated
-// header sees every packet; each specializes `packet_of` for its own ids and the
-// primary below answers `void` for an id nobody modelled. Reach it through
-// <bedrock/protocol.hpp>, which stamps in every generated header -- a lone
-// module include leaves its neighbours' packets reading as unmodelled.
-
 namespace bedrock::protocol {
 
 template <int V, int Id>
@@ -30,8 +24,6 @@ using packet_of_t = typename packet_of<V, Id>::type;
 template <int V, int Id>
 inline constexpr bool has_packet_v = !std::is_void_v<packet_of_t<V, Id>>;
 
-// What precedes every packet body: BDS's PacketHeader, one uvarint32 holding the
-// id in bits 0-9, the recipient sub-client in 10-11 and the sender in 12-13.
 struct PacketHeader {
     std::uint16_t packet_id{};
     std::uint8_t recipient_sub_id{};

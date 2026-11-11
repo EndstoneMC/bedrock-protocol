@@ -11,10 +11,6 @@
 
 namespace bedrock::protocol {
 
-// A base-128 little-endian dump of the bitset's numeric value: seven payload
-// bits per byte, the top bit a continuation flag, and a lone 0x00 byte for the
-// empty bitset. N routinely exceeds 64 (PlayerAuthInputPacket's is 65), so the
-// value is never staged in an integer -- both halves walk the bits.
 template <std::size_t N>
 struct Serializer<std::bitset<N>> {
     static void serialize(BinaryWriter &stream, const std::bitset<N> &value)
@@ -53,8 +49,6 @@ struct Serializer<std::bitset<N>> {
             for (std::size_t k = 0; k < 7; ++k) {
                 if ((*b & (1U << k)) != 0) {
                     const std::size_t bit = g * 7 + k;
-                    // A bit past the declared width means the wire is not this
-                    // bitset; accepting it would drop information silently.
                     if (bit >= N) {
                         return std::unexpected(std::make_error_code(std::errc::value_too_large));
                     }

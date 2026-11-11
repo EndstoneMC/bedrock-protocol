@@ -1,7 +1,3 @@
-// cereal::DynamicValue, the recursive self-describing value a DDUI data-store
-// change carries. Each value is a 4-byte little-endian type tag followed by a
-// payload the tag selects; the array and object arms recurse into the value
-// itself, which is why the codec is hand-written here rather than emitted.
 #pragma once
 
 #include <cstdint>
@@ -104,7 +100,6 @@ struct Serializer<DynamicValue> {
         value.visit([&](const auto &payload) {
             using V = std::decay_t<decltype(payload)>;
             if constexpr (std::is_same_v<V, std::monostate>) {
-                // null: no payload.
             }
             else if constexpr (std::is_same_v<V, DynamicValue::Array>) {
                 stream.writeVarInt<std::uint32_t>(payload.size());
