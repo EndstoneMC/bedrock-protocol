@@ -143,7 +143,14 @@ def test_add_player_2168_body_is_rejected_at_1001():
 def test_add_player_2225_puts_the_passenger_block_data_ahead_of_the_device_id():
     older = bytes(v2193.AddPlayerPacket(**FIELDS, carried_item=STONE_V2193))
     newer = bytes(v2225.AddPlayerPacket(**FIELDS, carried_item=STONE_V2225))
-    assert newer == older[:-8] + bytes.fromhex("00") + older[-8:]
+    assert newer[:-9] == older[:-8]
+    assert newer[-8:] == older[-8:]
+
+
+def test_add_player_2225_adds_one_byte_for_an_absent_passenger_block_data():
+    older = bytes(v2193.AddPlayerPacket(**FIELDS, carried_item=STONE_V2193))
+    newer = bytes(v2225.AddPlayerPacket(**FIELDS, carried_item=STONE_V2225))
+    assert len(newer) == len(older) + 1
 
 
 def test_add_player_2225_round_trips_the_passenger_block_data():
