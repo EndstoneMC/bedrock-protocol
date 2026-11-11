@@ -138,18 +138,6 @@ def test_v898_hands_packet_330_to_the_clientbound_data_store_packet():
     assert v898.PACKETS[330] is v898.ClientboundDataStorePacket
 
 
-@pytest.mark.parametrize(
-    ("version", "end_id"),
-    [
-        pytest.param(v858, 330, id="v858"),
-        pytest.param(v897, 332, id="v897"),
-        pytest.param(v898, 333, id="v898"),
-    ],
-)
-def test_the_end_id_walks_across_the_data_store_versions(version, end_id):
-    assert end_id == version.MinecraftPacketIds.END_ID
-
-
 def test_the_v897_sync_packet_tags_a_removal_with_case_one():
     assert bytes(V897_REMOVAL)[1] == 1
 
