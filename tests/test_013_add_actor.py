@@ -88,7 +88,7 @@ PASSENGER_BLOCK_DATA = v2225.PassengerOfBlockArguments(
 )
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_add_actor_is_packet_13(version):
     assert version.PACKETS[13] is version.AddActorPacket
 
