@@ -30,12 +30,12 @@ from bedrock_protocol_compiler.descriptor import (
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
+DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
     **{alias: alias.__name__ for alias in vars(dsl).values() if isinstance(alias, TypeAliasType)},
     **{primitive: primitive.__name__ for primitive in (bool, float, str, bytes)},
 }
-DECORATORS: dict[object, str] = {dsl.packet: "packet", dsl.type: "type", dsl.builtin: "builtin"}
 
 
 class Scope:
@@ -66,7 +66,6 @@ class Source:
 @dataclass
 class PendingStruct:
     source: Source
-    scope: Scope
     node: ast.ClassDef
     struct: Struct
 
@@ -78,8 +77,8 @@ class PendingAlias:
     alias: Alias
 
 
-def error(source: Source, node: ast.stmt | ast.expr | ast.alias, name: str, reason: str) -> CompilerError:
-    return CompilerError(f"{source.path}:{node.lineno}:{node.col_offset}: {name}: {reason}")
+def error(source: Source, node: ast.stmt | ast.expr | ast.alias | ast.keyword, name: str, reason: str) -> CompilerError:
+    return CompilerError(f"{source.path}:{node.lineno}:{node.col_offset + 1}: {name}: {reason}")
 
 
 def without_docstring(body: list[ast.stmt]) -> list[ast.stmt]:
@@ -112,7 +111,7 @@ class Builder:
         versions = self.declare_init(self.init)
         for source in self.sources.values():
             self.declare_module(source)
-        for source in (self.init, *self.sources.values()):
+        for source in self.sources.values():
             self.bind_family_imports(source)
         for pending_alias in self.aliases:
             self.build_alias(pending_alias)
@@ -127,6 +126,8 @@ class Builder:
         versions: tuple[int, ...] | None = None
         for statement in without_docstring(source.tree.body):
             match statement:
+                case ast.ImportFrom(module=str() as module) if module.startswith(f"{self.name}."):
+                    raise error(source, statement, module, "is not importable from __init__")
                 case ast.Import() | ast.ImportFrom():
                     self.bind_import(source, statement)
                 case ast.Assign(targets=[ast.Name(id="versions")], value=value) if versions is None:
@@ -140,7 +141,7 @@ class Builder:
                         and all(type(version) is int for version in parsed)
                         and list(parsed) == sorted(set(parsed))
                     ):
-                        raise error(source, statement, "versions", "is not a tuple of ascending integers") from None
+                        raise error(source, statement, "versions", "is not a tuple of ascending integers")
                     versions = parsed
                 case _:
                     raise error(source, statement, "module", "holds only imports, a docstring and versions")
@@ -220,19 +221,19 @@ class Builder:
     def declare_class(self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None) -> None:
         if node.bases or node.keywords:
             raise error(source, node, node.name, "bases are not supported yet")
-        kinds: list[str] = []
+        kinds: list[object] = []
         packet_id = None
         for decorator in node.decorator_list:
-            call = decorator if isinstance(decorator, ast.Call) else None
-            function = self.resolve(source, scope, call.func if call else decorator)
-            if not (callable(function) and function in DECORATORS):
-                raise error(
-                    source, decorator, node.name, "is decorated with something other than packet, type or builtin"
-                )
-            read = ("id",) if function is dsl.packet else ("cls",)
-            arguments = self.bind(
-                source, decorator, function, call.args if call else [node], call.keywords if call else [], read
-            )
+            arguments: dict[str, ast.expr] = {}
+            if isinstance(decorator, ast.Call):
+                function = self.resolve(source, scope, decorator.func)
+                if not (callable(function) and (function is dsl.packet or function is dsl.type)):
+                    raise error(source, decorator, node.name, DECORATOR_ERROR)
+                arguments = self.bind(source, decorator, function, decorator.args, decorator.keywords, ("id",))
+            else:
+                function = self.resolve(source, scope, decorator)
+                if function is not dsl.builtin:
+                    raise error(source, decorator, node.name, DECORATOR_ERROR)
             if "id" in arguments:
                 try:
                     packet_id = ast.literal_eval(arguments["id"])
@@ -240,10 +241,12 @@ class Builder:
                     packet_id = None
                 if type(packet_id) is not int:
                     raise error(source, decorator, "packet", "id is not an integer literal")
-            kinds.append(DECORATORS[function])
+            kinds.append(function)
         if len(kinds) > 1:
             raise error(source, node, node.name, "takes only one of packet, type and builtin")
-        if kinds == ["builtin"]:
+        if kinds == [dsl.builtin]:
+            if owner is not None:
+                raise error(source, node, node.name, "a builtin is declared at the top of a module")
             if any(not isinstance(statement, ast.Pass) for statement in without_docstring(node.body)):
                 raise error(source, node, node.name, "a builtin has no body")
             self.declare_family(source, node, Builtin(node.name, source.stem))
@@ -259,7 +262,7 @@ class Builder:
         for statement in node.body:
             if isinstance(statement, ast.ClassDef):
                 self.declare_class(source, inner, statement, struct)
-        self.structs.append(PendingStruct(source, inner, node, struct))
+        self.structs.append(PendingStruct(source, node, struct))
 
     def build_alias(self, pending: PendingAlias) -> None:
         if pending.node.type_params:
@@ -271,10 +274,13 @@ class Builder:
 
     def build_struct(self, pending: PendingStruct) -> None:
         source = pending.source
+        scope = self.scopes[pending.struct]
         fields: list[Field] = []
         for statement in without_docstring(pending.node.body):
             if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
+            if isinstance(statement, ast.With):
+                raise error(source, statement, pending.struct.name, "with blocks are not supported yet")
             if not (isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)):
                 raise error(
                     source, statement, pending.struct.name, "holds only fields, nested classes, a docstring and pass"
@@ -286,10 +292,10 @@ class Builder:
                 raise error(source, statement, name, "is declared twice")
             call = statement.value
             if call is not None:
-                if not (isinstance(call, ast.Call) and self.resolve(source, pending.scope, call.func) is dsl.field):
+                if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
                 self.bind(source, call, dsl.field, call.args, call.keywords, ())
-            fields.append(Field(name, self.type_of(source, pending.scope, statement.annotation)))
+            fields.append(Field(name, self.type_of(source, scope, statement.annotation)))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
 
     def bind(
@@ -297,13 +303,17 @@ class Builder:
         source: Source,
         node: ast.expr,
         function: Callable[..., object],
-        args: Sequence[ast.AST],
+        args: Sequence[ast.expr],
         keywords: Sequence[ast.keyword],
         read: tuple[str, ...],
     ) -> dict[str, ast.expr]:
         name = function.__name__
         if any(isinstance(arg, ast.Starred) for arg in args) or any(kw.arg is None for kw in keywords):
             raise error(source, node, name, "takes its arguments written out")
+        names = [kw.arg for kw in keywords]
+        for kw in keywords:
+            if names.count(kw.arg) > 1:
+                raise error(source, kw, str(kw.arg), "is repeated")
         try:
             bound = inspect.signature(function).bind(*args, **{kw.arg: kw.value for kw in keywords if kw.arg})
         except TypeError as reason:

@@ -1,7 +1,6 @@
 import pytest
 
 from bedrock_protocol_compiler.descriptor import (
-    Alias,
     AliasRef,
     BuiltinRef,
     CompilerError,
@@ -16,7 +15,9 @@ package = "bedrock.protocol"
 
 
 def test_package_lists_versions_and_modules(build_package):
-    package = build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER})
+    names = "builtin, double, field, packet, type, uint8, uint32"
+    init = f"from bedrock_protocol_compiler.dsl import {names}\nversions = (1, 2, 3)\n"
+    package = build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER}, init)
 
     assert package.versions == (1, 2, 3)
     assert [(module.stem, module.package) for module in package.modules] == [
@@ -113,13 +114,16 @@ def test_import_may_precede_the_module_it_names(build_package):
         {"a": HEADER + "from protocol.b import B\n\nclass A:\n    b: B\n", "b": HEADER + "class B:\n    pass\n"}
     )
 
-    assert isinstance(package.modules[0].families[0].declarations[0].fields[0].type, StructRef)
+    assert package.modules[0].families[0].declarations[0].fields[0].type == StructRef(package.modules[1].families[0])
 
 
-def test_alias_family_is_an_alias(build_package):
-    package = build_package({"a": HEADER + "type Id = uint8\n"})
+def test_class_scope_resolves_before_the_module(build_package):
+    source = HEADER + "class B:\n    pass\n\nclass A:\n    class B:\n        pass\n\n    b: B\n"
+    package = build_package({"a": source})
 
-    assert isinstance(package.modules[0].families[0], Alias)
+    a = package.modules[0].families[1]
+
+    assert a.declarations[0].fields[0].type == StructRef(a.nested[0])
 
 
 @pytest.mark.parametrize(
@@ -135,7 +139,11 @@ def test_alias_family_is_an_alias(build_package):
         ("class A:\n    x: uint8 = field(bogus=2)\n", "field: got an unexpected keyword argument 'bogus'"),
         ("class A:\n    x = 3\n", "A: holds only fields"),
         ("class A(Enum):\n    pass\n", "bases are not supported yet"),
-        ("@packet\nclass A:\n    pass\n", "packet: "),
+        ("@packet\nclass A:\n    pass\n", "A: is decorated with something other than a bare builtin"),
+        ("@builtin(uint8)\nclass A:\n    pass\n", "A: is decorated with something other than a bare builtin"),
+        ("@packet(id=1, id=2)\nclass A:\n    pass\n", "id: is repeated"),
+        ("class A:\n    @builtin\n    class B:\n        pass\n", "B: a builtin is declared at the top"),
+        ("class A:\n    with field(when=1):\n        x: uint8\n", "A: with blocks are not supported yet"),
         ("@packet()\nclass A:\n    pass\n", "packet: missing a required keyword-only argument: 'id'"),
         ("@packet(id=1, bogus=2)\nclass A:\n    pass\n", "packet: got an unexpected keyword argument 'bogus'"),
         ("@packet(id='1')\nclass A:\n    pass\n", "packet: id is not an integer literal"),
@@ -169,21 +177,22 @@ def test_family_name_repeated_across_modules_is_rejected(build_package):
 
 
 def test_error_names_the_file_and_position(build_package):
-    with pytest.raises(CompilerError, match=r"protocol/a.py:5:7: Missing: is not defined"):
+    with pytest.raises(CompilerError, match=r"protocol/a.py:5:8: Missing: is not defined"):
         build_package({"a": HEADER + "class A:\n    x: Missing\n"})
 
 
 @pytest.mark.parametrize(
-    ("old", "new", "message"),
+    ("init", "message"),
     [
-        ("versions = (1, 2, 3)", "", "versions: missing"),
-        ("(1, 2, 3)", "(2, 1)", "versions: is not a tuple of ascending integers"),
-        ("(1, 2, 3)", "(1, 1)", "versions: is not a tuple of ascending integers"),
-        ("(1, 2, 3)", "()", "versions: is not a tuple of ascending integers"),
-        ("(1, 2, 3)", "(1, 'a')", "versions: is not a tuple of ascending integers"),
-        ("versions = (1, 2, 3)", "class A:\n    pass", "module: holds only imports"),
+        ("", "versions: missing"),
+        ("versions = (2, 1)\n", "versions: is not a tuple of ascending integers"),
+        ("versions = (1, 1)\n", "versions: is not a tuple of ascending integers"),
+        ("versions = ()\n", "versions: is not a tuple of ascending integers"),
+        ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
+        ("versions = (1, 2, 3)\nclass A:\n    pass\n", "module: holds only imports"),
+        ("from protocol.a import A\nversions = (1, 2, 3)\n", "protocol.a: is not importable from __init__"),
     ],
 )
-def test_init_is_rejected(build_package, init_source, old, new, message):
+def test_init_is_rejected(build_package, init, message):
     with pytest.raises(CompilerError, match=message):
-        build_package({"a": HEADER}, init_source.replace(old, new))
+        build_package({"a": HEADER}, init)

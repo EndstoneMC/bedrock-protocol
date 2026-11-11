@@ -11,11 +11,6 @@ versions = (1, 2, 3)
 
 
 @pytest.fixture
-def init_source():
-    return INIT
-
-
-@pytest.fixture
 def build_package(tmp_path):
     def build_modules(modules: dict[str, str], init: str = INIT) -> Package:
         package_dir = tmp_path / "protocol"
