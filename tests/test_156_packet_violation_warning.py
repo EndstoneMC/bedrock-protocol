@@ -44,7 +44,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_packet_violation_warning_is_packet_156(version):
     assert version.PACKETS[156] is version.PacketViolationWarningPacket
 
@@ -59,7 +59,7 @@ def test_packet_violation_warning_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_packet_violation_warning_rejects_a_truncated_context(version):
     with pytest.raises(ValueError, match="at byte"):
         version.PacketViolationWarningPacket.from_bytes(TERMINATING[:-1])
