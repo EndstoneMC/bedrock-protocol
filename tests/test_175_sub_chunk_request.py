@@ -34,7 +34,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_sub_chunk_request_is_packet_175(version):
     assert version.PACKETS[175] is version.SubChunkRequestPacket
 
