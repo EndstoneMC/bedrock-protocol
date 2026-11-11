@@ -12,12 +12,6 @@
 
 namespace bedrock::protocol::python {
 
-std::unordered_map<PyTypeObject *, PacketCodec> &codecs()
-{
-    static std::unordered_map<PyTypeObject *, PacketCodec> table;
-    return table;
-}
-
 std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
 {
     static std::vector<std::pair<nb::handle, nb::dict (*)()>> list;
@@ -33,49 +27,42 @@ void throw_decode_error(std::string_view type, const BinaryReader &stream, std::
 
 namespace {
 
-const PacketCodec &codec_of(nb::handle packet)
+std::uint16_t id_of(const Version &version, nb::handle packet)
 {
-    const auto it = codecs().find(reinterpret_cast<PyTypeObject *>(packet.type().ptr()));
-    if (it == codecs().end()) {
-        throw nb::type_error(std::format("not a packet: {}", nb::repr(packet.type()).c_str()).c_str());
+    nb::object id = nb::getattr(packet.type(), "ID", nb::none());
+    if (!id.is_none() && version.packets.contains(id) && version.packets[id].is(packet.type())) {
+        return nb::cast<std::uint16_t>(id);
     }
-    return it->second;
+    throw nb::type_error(std::format("not a packet: {}", nb::repr(packet.type()).c_str()).c_str());
 }
 
-nb::bytes encode_body(nb::handle packet)
+nb::bytes encode_body(const Version &version, nb::handle packet)
 {
-    std::string buffer;
-    BinaryWriter writer{buffer};
-    codec_of(packet).encode(packet, writer);
-    return nb::bytes(buffer.data(), buffer.size());
+    id_of(version, packet);
+    return nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
 }
 
-nb::bytes encode_framed(nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id)
+nb::bytes encode_framed(const Version &version, nb::handle packet, std::uint8_t recipient_sub_id,
+                        std::uint8_t sender_sub_id)
 {
-    const auto &codec = codec_of(packet);
     std::string buffer;
     BinaryWriter writer{buffer};
     Serializer<PacketHeader>::serialize(writer, PacketHeader{
-                                                    .packet_id = static_cast<std::uint16_t>(codec.id),
+                                                    .packet_id = id_of(version, packet),
                                                     .recipient_sub_id = recipient_sub_id,
                                                     .sender_sub_id = sender_sub_id,
                                                 });
-    codec.encode(packet, writer);
+    nb::bytes body = nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
+    buffer.append(body.c_str(), body.size());
     return nb::bytes(buffer.data(), buffer.size());
-}
-
-const PacketCodec &codec_for(const Version &version, int id)
-{
-    const auto it = version.packets.find(id);
-    if (it == version.packets.end()) {
-        throw nb::key_error(std::format("no packet {} at protocol {}", id, version.number).c_str());
-    }
-    return it->second;
 }
 
 nb::object decode_body(const Version &version, int id, BinaryReader &reader)
 {
-    nb::object packet = codec_for(version, id).decode(reader);
+    if (!version.packets.contains(nb::int_(id))) {
+        throw nb::key_error(std::format("no packet {} at protocol {}", id, version.number).c_str());
+    }
+    nb::object packet = nb::type_supplement<Codec>(version.packets[nb::int_(id)]).decode(reader);
     if (reader.getUnreadLength() != 0) {
         throw_decode_error(nb::type_name(packet.type()).c_str(), reader, "trailing bytes");
     }
@@ -87,11 +74,7 @@ void bind_version_api(Version &version)
     auto m = nb::borrow<nb::module_>(version.module);
     m.attr("PROTOCOL") = version.number;
     m.attr("PacketHeader") = nb::type<PacketHeader>();
-    nb::dict packets;
-    for (const auto &[id, codec] : version.packets) {
-        packets[nb::int_(id)] = codec.type;
-    }
-    m.attr("PACKETS") = packets;
+    m.attr("PACKETS") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
     m.def(
         "decode",
         [version](int packet_id, nb::bytes data) {
@@ -111,9 +94,16 @@ void bind_version_api(Version &version)
             return nb::make_tuple(*header, packet);
         },
         nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
-    m.def("encode", &encode_body, nb::arg("packet"), "The packet body, without its header.");
-    m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
-          nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
+    m.def(
+        "encode", [version](nb::handle packet) { return encode_body(version, packet); }, nb::arg("packet"),
+        "The packet body, without its header.");
+    m.def(
+        "encode_packet",
+        [version](nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id) {
+            return encode_framed(version, packet, recipient_sub_id, sender_sub_id);
+        },
+        nb::arg("packet"), nb::arg("recipient_sub_id") = 0, nb::arg("sender_sub_id") = 0,
+        "Header and body, the bytes a batch length-prefixes.");
 }
 
 }  // namespace
@@ -129,7 +119,6 @@ void bind_versions(nb::module_ &parent)
         for (auto *bind_file : binding.files) {
             bind_file(version);
         }
-        binding.check(version);
         bind_version_api(version);
     }
     for (const auto &[cls, annotations] : annotators()) {

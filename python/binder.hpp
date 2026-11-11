@@ -396,7 +396,7 @@ T construct(nb::args args, nb::kwargs kwargs)
 template <typename T>
 void bind_struct(nb::handle scope, const char *name, Version *version)
 {
-    nb::class_<T> cls(scope, name);
+    nb::class_<T> cls(scope, name, nb::supplement<Codec>());
     cls.def(
         "__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
     [&]<std::size_t... I>(std::index_sequence<I...>) {
@@ -435,17 +435,11 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
     }
     if constexpr (Packet<T>) {
         cls.attr("ID") = T::Id;
-        PacketCodec codec{
-            .id = T::Id,
-            .type = cls,
-            .encode = [](nb::handle packet, BinaryWriter &stream) {
-                Serializer<T>::serialize(stream, nb::cast<const T &>(packet));
-            },
-            .decode = [](BinaryReader &stream) -> nb::object { return nb::cast(decode<T>(stream)); },
+        nb::type_supplement<Codec>(cls).decode = [](BinaryReader &stream) -> nb::object {
+            return nb::cast(decode<T>(stream));
         };
-        codecs().emplace(reinterpret_cast<PyTypeObject *>(cls.ptr()), codec);
         if (version != nullptr) {
-            version->packets.emplace(T::Id, codec);
+            version->packets[nb::int_(T::Id)] = cls;
         }
     }
 }
@@ -469,7 +463,7 @@ void bind_type(nb::handle module, Version *version)
         scope.attr(name.c_str()) = existing;
         if constexpr (Packet<T>) {
             if (version != nullptr) {
-                version->packets.emplace(T::Id, codecs().at(reinterpret_cast<PyTypeObject *>(existing.ptr())));
+                version->packets[nb::int_(T::Id)] = existing;
             }
         }
         return;
@@ -486,24 +480,6 @@ template <typename... T>
 void bind_types(nb::handle module, Version &version, type_list<T...>)
 {
     (bind_type<T>(module, &version), ...);
-}
-
-// Every id `packet_of<V, Id>` resolves has to have been bound, as that very type.
-template <int V>
-void check_packets(const Version &version)
-{
-    [&]<int... Id>(std::integer_sequence<int, Id...>) {
-        (
-            [&] {
-                if constexpr (has_packet_v<V, Id>) {
-                    const auto it = version.packets.find(Id);
-                    if (it == version.packets.end() || !it->second.type.is(nb::type<packet_of_t<V, Id>>())) {
-                        throw std::runtime_error(std::format("packet {} of protocol {} is not bound", Id, V));
-                    }
-                }
-            }(),
-            ...);
-    }(std::make_integer_sequence<int, 1024>{});
 }
 
 // Binds what `<module>_types<V>` lists into the version's module.

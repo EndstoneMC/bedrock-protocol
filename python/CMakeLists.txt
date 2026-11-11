@@ -18,13 +18,11 @@ foreach (BP_VERSION IN LISTS _versions)
         string(APPEND _declarations "void bind_${BP_MODULE}_${BP_VERSION}(Version &);\n")
         string(APPEND _files "&bind_${BP_MODULE}_${BP_VERSION}, ")
     endforeach ()
-    string(APPEND _table "        {${BP_VERSION}, {${_files}}, &check_packets<${BP_VERSION}>},\n")
+    string(APPEND _table "        {${BP_VERSION}, {${_files}}},\n")
     configure_file(version.py.in "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" @ONLY)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol)
 endforeach ()
-file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include <bedrock/protocol.hpp>
-
-#include \"binder.hpp\"
+file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include \"binder.hpp\"
 #include \"module.hpp\"
 
 namespace bedrock::protocol::python {
