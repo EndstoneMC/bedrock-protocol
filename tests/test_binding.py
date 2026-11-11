@@ -151,6 +151,8 @@ def test_decode_rejects_an_unknown_packet_id():
         proto.decode(1023, b"")
 
 
-@pytest.mark.parametrize(("packet_id", "cls"), proto.PACKETS.items(), ids=lambda value: getattr(value, "__name__", str(value)))
+@pytest.mark.parametrize(
+    ("packet_id", "cls"), proto.PACKETS.items(), ids=lambda value: getattr(value, "__name__", str(value))
+)
 def test_every_packet_class_is_registered_under_its_id(packet_id, cls):
     assert packet_id == cls.ID
