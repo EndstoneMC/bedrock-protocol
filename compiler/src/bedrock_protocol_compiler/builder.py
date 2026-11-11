@@ -250,13 +250,14 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str)
             for name, count in Counter(names).items():
                 if count > 1:
                     raise CompilerError(f"{path}: {qualified}: has the {label} {name} twice at {version}")
-        present = {member.name for member in members}
+        earlier: set[str] = set()
         for member in members:
             match member.value:
-                case MemberRef(name=name) | Binary(left=MemberRef(name=name)) if name not in present:
+                case MemberRef(name=name) | Binary(left=MemberRef(name=name)) if name not in earlier:
                     raise CompilerError(
                         f"{path}: {qualified}.{member.name}: names {name}, which does not exist at {version}"
                     )
+            earlier.add(member.name)
 
 
 def build(package_dir: Path) -> Package:

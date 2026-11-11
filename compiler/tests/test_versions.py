@@ -383,6 +383,10 @@ def test_a_reference_across_modules_is_checked(build_package):
         ("A = auto()", "a.py: E.A: has no earlier member to number from at 1"),
         ("A = value(1, until=3)\n    B = value(since=2)", "a.py: E.B: has no earlier member to number from at 3"),
         ("A = value(1, until=3)\n    B = A", "a.py: E.B: names A, which does not exist at 3"),
+        (
+            "A = value(1, until=3)\n    B = A\n    A = value(5, since=3)",
+            "a.py: E.B: names A, which does not exist at 3",
+        ),
     ],
 )
 def test_bad_enum_names_and_numbers_are_rejected(build_package, members, message):
