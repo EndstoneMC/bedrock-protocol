@@ -22,7 +22,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_edu_uri_resource_is_packet_170(version):
     assert version.PACKETS[170] is version.EduUriResourcePacket
 
