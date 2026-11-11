@@ -18,6 +18,7 @@ ADD_CUBE = bytes.fromhex(
     "dc05000000000000"
 )
 
+# TODO: pending BDS golden: bedrock-dumper has to write the invalid-type body and the clear body with a marker
 GOLDENS = [
     pytest.param(
         Packet(
