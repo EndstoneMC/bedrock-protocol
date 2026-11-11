@@ -6,6 +6,7 @@ from contextlib import contextmanager
 INDENT = "    "
 MARKER = re.compile(r"\$(\w+)\$")
 
+
 class Printer:
     def __init__(self) -> None:
         self.lines: list[str] = []
