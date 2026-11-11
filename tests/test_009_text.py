@@ -132,7 +132,12 @@ def test_text_decodes_from_its_golden(packet, golden):
 
 
 def test_text_before_898_writes_no_enumerator_names():
-    packet = v897.TextPacket(
-        body=v897.TextPacket.MessageOnly(type=v897.TextPacketType.RAW, message="hi"), xuid="x", platform_id="p"
+    assert bytes(
+        v897.TextPacket(
+            body=v897.TextPacket.MessageOnly(type=v897.TextPacketType.RAW, message="hi"), xuid="x", platform_id="p"
+        )
+    ) == bytes(
+        v924.TextPacket(
+            body=v924.TextPacket.MessageOnly(type=v924.TextPacketType.RAW, message="hi"), xuid="x", platform_id="p"
+        )
     )
-    assert bytes(packet) == V924_RAW
