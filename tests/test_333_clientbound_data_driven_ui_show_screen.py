@@ -48,7 +48,7 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", [v924, *VERSIONS], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v924, *VERSIONS])
 def test_clientbound_data_driven_ui_show_screen_is_packet_333(version):
     assert version.PACKETS[333] is version.ClientboundDataDrivenUIShowScreenPacket
 
