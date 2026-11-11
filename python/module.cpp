@@ -12,6 +12,7 @@
 #include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/version.hpp"
 #include "binder.hpp"
+#include "versions.hpp"
 
 namespace bedrock::protocol::python {
 

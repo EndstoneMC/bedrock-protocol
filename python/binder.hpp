@@ -382,7 +382,7 @@ T construct(nb::args args, nb::kwargs kwargs)
 }
 
 template <typename T>
-void bind_struct(nb::handle scope, const char *name, Version *version)
+void bind_struct(nb::handle scope, const char *name, const Version *version)
 {
     nb::class_<T> cls(scope, name, nb::supplement<Codec>());
     cls.def("__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
@@ -430,7 +430,7 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
 }
 
 template <typename T>
-void bind_type(nb::handle module, Version *version)
+void bind_type(nb::handle module, const Version *version)
 {
     std::string_view qualified;
     if constexpr (std::is_enum_v<T>) {
@@ -465,7 +465,7 @@ void bind_schema_types(std::span<const Version> bound)
 {
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         (
-            [&]<typename... C, typename... L>(Version version, type_list<C...>, type_list<L...>) {
+            [&]<typename... C, typename... L>(const Version &version, type_list<C...>, type_list<L...>) {
                 (bind_type<C>(version.module, &version), ...);
                 (bind_type<L>(version.legacy, &version), ...);
             }(bound[I], typename Types<versions[I]>::cereal{}, typename Types<versions[I]>::legacy{}),
