@@ -22,8 +22,7 @@ foreach (BP_VERSION IN LISTS _versions)
     configure_file(version.py.in "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" @ONLY)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol)
 endforeach ()
-file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include \"binder.hpp\"
-#include \"module.hpp\"
+file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include \"module.hpp\"
 
 namespace bedrock::protocol::python {
 

@@ -21,7 +21,6 @@
 
 #include <bedrock/protocol/detail/reflect.hpp>
 #include <bedrock/protocol/enum.hpp>
-#include <bedrock/protocol/packet.hpp>
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 
