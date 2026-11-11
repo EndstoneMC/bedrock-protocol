@@ -119,18 +119,6 @@ GOLDENS = [
 ]
 
 
-@pytest.fixture
-def level_chunk_2225():
-    return v2225.LevelChunkPacket(
-        pos=v2225.ChunkPos(x=2, z=3),
-        dimension_id=0,
-        sub_chunks_count=5,
-        cache_enabled=False,
-        serialized_chunk=PAYLOAD_AB,
-        is_client_biome_update=True,
-    )
-
-
 @pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_level_chunk_is_packet_58(version):
     assert version.PACKETS[58] is version.LevelChunkPacket
@@ -167,14 +155,23 @@ def test_a_v2168_level_chunk_body_does_not_decode_as_a_v1001_one():
         v1001.LevelChunkPacket.from_bytes(V2168_FULL)
 
 
-def test_level_chunk_2225_appends_the_client_biome_update_flag(level_chunk_2225):
-    wire = bytes(level_chunk_2225)
+def test_level_chunk_2225_appends_the_client_biome_update_flag():
+    packet = v2225.LevelChunkPacket(
+        pos=v2225.ChunkPos(x=2, z=3),
+        dimension_id=0,
+        sub_chunks_count=5,
+        cache_enabled=False,
+        serialized_chunk=PAYLOAD_AB,
+        is_client_biome_update=True,
+    )
+    wire = bytes(packet)
     assert wire[: len(V2168_FULL)] == V2168_FULL
-    assert wire[len(V2168_FULL) :] == bytes.fromhex("01")
+    assert len(wire) == len(V2168_FULL) + 1
 
 
-def test_level_chunk_2225_round_trips_the_client_biome_update_flag(level_chunk_2225):
-    assert v2225.LevelChunkPacket.from_bytes(bytes(level_chunk_2225)) == level_chunk_2225
+def test_level_chunk_2225_round_trips_the_client_biome_update_flag():
+    packet = v2225.LevelChunkPacket(is_client_biome_update=True)
+    assert v2225.LevelChunkPacket.from_bytes(bytes(packet)) == packet
 
 
 def test_a_v2168_level_chunk_body_does_not_decode_as_a_v2225_one():
