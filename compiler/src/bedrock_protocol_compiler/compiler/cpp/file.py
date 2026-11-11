@@ -26,13 +26,12 @@ from bedrock_protocol_compiler.compiler.descriptor import (
     RepeatedType,
     ResolvedFile,
     Struct,
-    TypeAlias,
     VariantType,
     split_scope,
 )
 
 from .enum import EnumGenerator
-from .field import FileContext, GenContext, cpp_type, make_field_generator, type_includes
+from .field import FileContext, type_includes
 from .helpers import (
     BUILTIN_HEADERS,
     INCLUDE_PREFIX,
@@ -73,7 +72,6 @@ class FileGenerator:
             string_coded_enums=_string_coded_enums(resolved),
         )
         self._header_includes: set[str] = set()
-        self._versioned_alias_cache: tuple[TypeAlias, ...] | None = None
 
     # --- public driver ------------------------------------------------------
 
@@ -84,7 +82,6 @@ class FileGenerator:
         self._emit_namespace_open(body)
         self._emit_primitive_aliases(body)
         self._emit_unversioned(body)
-        self._emit_type_aliases(body)
         self._emit_versioned_namespaces(body)
         self._emit_traits(body)
         self._emit_legacy_traits(body, latest_version)
@@ -245,16 +242,6 @@ class FileGenerator:
                 self._emit_definition(p, t, owner=_owner_of(name))
                 p.print("\n")
 
-    def _emit_type_aliases(self, p: Printer) -> None:
-        plain = [a for a in self._file.type_aliases if a not in self._versioned_aliases()]
-        for a in plain:
-            ctype = cpp_type(a.target, self._ctx)
-            assert ctype is not None
-            p.add_includes(*type_includes(a.target))
-            p.print(f"using {a.name} = {ctype};\n")
-        if plain:
-            p.print("\n")
-
     def _emit_versioned_namespaces(self, p: Printer) -> None:
         """One namespace per snapshot, holding that snapshot's view of every
         versioned type in topological order.
@@ -282,18 +269,6 @@ class FileGenerator:
                         bare = bare_name(name)
                         p.print(f"using {bare} = {snapshot_namespace(view.concrete)}::{bare};\n")
                     p.print("\n")
-                # An alias over versioned types lands in the namespace too: its
-                # spelling changes with the snapshot its cases resolve to. An
-                # alias names no flavour, so it is always cerealised.
-                for a in self._versioned_aliases():
-                    alias_view = self._alias_view(a, snap)
-                    if alias_view is None:
-                        continue
-                    spelling, concrete = alias_view
-                    scope.enter(a.name)
-                    p.add_includes(*type_includes(a.target))
-                    target = spelling if concrete == snap else f"{snapshot_namespace(concrete)}::{a.name}"
-                    p.print(f"using {a.name} = {target};\n\n")
 
     def _emit_legacy_traits(self, p: Printer, latest_version: int) -> None:
         """The `_<V>` selectors over the pre-cereal declarations. They follow
@@ -632,18 +607,6 @@ class FileGenerator:
             else:
                 p.print("\n")
                 self._emit_struct_serializer(p, t, None, cpp_qualified(name), mode)
-        for a in self._file.type_aliases:
-            if not isinstance(a.target, VariantType):
-                continue
-            if a in self._versioned_aliases():
-                for lo, _, concrete in self._alias_plan(a):
-                    if concrete != lo:
-                        continue
-                    p.print("\n")
-                    self._emit_variant_alias_serializer(p, f"{snapshot_namespace(lo)}::{a.name}", a.target, mode, lo)
-            else:
-                p.print("\n")
-                self._emit_variant_alias_serializer(p, a.name, a.target, mode, None)
 
     def _emit_enum_serializer(self, p: Printer, enum: Enum, qualified: str, mode: str) -> None:
         gen = EnumGenerator(enum, qualified)
@@ -660,39 +623,6 @@ class FileGenerator:
             gen.generate_serializer_declaration(p)
         else:
             gen.generate_serializer_definition(p)
-
-    def _emit_variant_alias_serializer(
-        self, p: Printer, name: str, target: VariantType, mode: str, snapshot: int | None
-    ) -> None:
-        if mode == "decl":
-            p.add_includes(
-                f"<{INCLUDE_PREFIX}/serializer.hpp>",
-                f"<{INCLUDE_PREFIX}/stream.hpp>",
-                "<expected>",
-                "<system_error>",
-            )
-            p.print("template <>\n")
-            p.print(f"struct Serializer<{name}> {{\n")
-            p.indent()
-            p.print(f"static void serialize(BinaryWriter &stream, const {name} &value);\n")
-            p.print(f"static auto deserialize(BinaryReader &stream) -> std::expected<{name}, std::error_code>;\n")
-            p.outdent()
-            p.print("};\n")
-            return
-        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>")
-        gen = make_field_generator(target, GenContext(self._ctx, snapshot))
-        p.print(f"void Serializer<{name}>::serialize(BinaryWriter &stream, const {name} &value)\n")
-        with p.block():
-            gen.generate_serialize(p, "value")
-        p.print("\n")
-        p.print(
-            f"auto Serializer<{name}>::deserialize(BinaryReader &stream) -> std::expected<{name}, std::error_code>\n"
-        )
-        with p.block():
-            p.print(f"{name} out;\n")
-            with p.block():
-                gen.generate_deserialize(p, "out")
-            p.print("return out;\n")
 
     # --- helpers ------------------------------------------------------------
 
@@ -714,45 +644,11 @@ class FileGenerator:
             if self._resolved.is_versioned(n) and (cereal is None or _is_legacy(n) != cereal)
         ]
 
-    def _versioned_aliases(self) -> tuple[TypeAlias, ...]:
-        """Aliases whose target reaches a versioned type, so the alias is itself
-        one shape per snapshot."""
-        if self._versioned_alias_cache is None:
-            self._versioned_alias_cache = tuple(
-                a
-                for a in self._file.type_aliases
-                if any(self._resolved.is_versioned(r.split(".", 1)[0]) for r in a.target.referenced)
-            )
-        return self._versioned_alias_cache
-
-    def _alias_plan(self, alias: TypeAlias) -> tuple[tuple[int, str, int], ...]:
-        """`(snapshot, spelling, concrete)` per snapshot the alias is spellable
-        at. Two snapshots spelling the same C++ type share one definition -- a
-        `using` names a type rather than making one, so a second definition
-        would redeclare that type's `Serializer`."""
-        plan: list[tuple[int, str, int]] = []
-        first: dict[str, int] = {}
-        roots = {r.split(".", 1)[0] for r in alias.target.referenced}
-        for snap in self._resolved.snapshots:
-            if any(self._resolved.is_versioned(r) and self._resolved.present_at(r, snap) is None for r in roots):
-                continue
-            spelling = cpp_type(alias.target, self._ctx, snap)
-            if spelling is None:
-                continue
-            plan.append((snap, spelling, first.setdefault(spelling, snap)))
-        return tuple(plan)
-
-    def _alias_view(self, alias: TypeAlias, snapshot: int) -> tuple[str, int] | None:
-        for lo, spelling, concrete in self._alias_plan(alias):
-            if lo == snapshot:
-                return spelling, concrete
-        return None
-
     def _versioned_entries(self, cereal: bool = True) -> list[tuple[str, tuple[int, ...], int | None]]:
         """Every versioned name with the snapshots holding a fresh definition and
         the version it disappears at, for the `_<V>` selector."""
         by_name = self._by_name()
-        entries = [
+        return [
             (
                 name,
                 tuple(s.lo for s in self._resolved.fresh_snapshots(name)),
@@ -760,11 +656,6 @@ class FileGenerator:
             )
             for name in self._versioned_names(cereal)
         ]
-        for a in self._versioned_aliases() if cereal else ():
-            los = tuple(lo for lo, _, concrete in self._alias_plan(a) if lo == concrete)
-            if los:
-                entries.append((a.name, los, None))
-        return entries
 
     def _snapshot_has_entries(self, snap: int) -> bool:
         return any(self._resolved.present_at(n, snap) is not None for n in self._versioned_names())
