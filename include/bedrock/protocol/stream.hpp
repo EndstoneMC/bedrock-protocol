@@ -238,8 +238,8 @@ public:
     }
 
     template <typename T>
-        requires std::same_as<T, std::string>
-    auto read() -> Result<std::string>
+        requires(std::same_as<T, std::string> || std::same_as<T, std::vector<std::byte>>)
+    auto read() -> Result<T>
     {
         auto len = readVarInt<std::uint32_t>();
         if (!len) {
@@ -251,29 +251,7 @@ public:
         if (auto r = account(*len, 1, false); !r) {
             return std::unexpected(r.error());
         }
-        std::string out(*len, '\0');
-        auto r = read(out.data(), *len);
-        if (!r) {
-            return std::unexpected(r.error());
-        }
-        return out;
-    }
-
-    template <typename T>
-        requires std::same_as<T, std::vector<std::byte>>
-    auto read() -> Result<std::vector<std::byte>>
-    {
-        auto len = readVarInt<std::uint32_t>();
-        if (!len) {
-            return std::unexpected(len.error());
-        }
-        if (*len > getUnreadLength()) {
-            return std::unexpected(Errc::truncated);
-        }
-        if (auto r = account(*len, 1, false); !r) {
-            return std::unexpected(r.error());
-        }
-        std::vector<std::byte> out(*len);
+        T out(*len, typename T::value_type{});
         auto r = read(out.data(), *len);
         if (!r) {
             return std::unexpected(r.error());

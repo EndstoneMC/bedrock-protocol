@@ -116,11 +116,11 @@ inline constexpr bool is_optional_v = false;
 template <typename T>
 inline constexpr bool is_optional_v<std::optional<T>> = true;
 template <typename T>
-inline constexpr bool is_vector_v = false;
+inline constexpr bool is_list_v = false;
 template <typename T, typename A>
-inline constexpr bool is_vector_v<std::vector<T, A>> = true;
+inline constexpr bool is_list_v<std::vector<T, A>> = true;
 template <>
-inline constexpr bool is_vector_v<std::vector<std::byte>> = false;
+inline constexpr bool is_list_v<std::vector<std::byte>> = false;
 template <typename T>
 inline constexpr bool is_array_v = false;
 template <typename T, std::size_t N>
@@ -144,7 +144,7 @@ constexpr bool holds_enum()
     if constexpr (std::is_enum_v<F>) {
         return true;
     }
-    else if constexpr (is_optional_v<F> || is_vector_v<F> || is_array_v<F>) {
+    else if constexpr (is_optional_v<F> || is_list_v<F> || is_array_v<F>) {
         return holds_enum<typename F::value_type>();
     }
     else {
@@ -166,7 +166,7 @@ nb::object to_python(const F &value)
     else if constexpr (is_optional_v<F>) {
         return value ? to_python(*value) : nb::none();
     }
-    else if constexpr (is_vector_v<F> || is_array_v<F>) {
+    else if constexpr (is_list_v<F> || is_array_v<F>) {
         nb::list out;
         for (const auto &item : value) {
             out.append(to_python(item));
@@ -198,7 +198,7 @@ F from_python(nb::handle src)
     else if constexpr (is_optional_v<F>) {
         return src.is_none() ? F{} : F{from_python<typename F::value_type>(src)};
     }
-    else if constexpr (is_vector_v<F>) {
+    else if constexpr (is_list_v<F>) {
         F out;
         for (nb::handle item : nb::iter(src)) {
             out.push_back(from_python<typename F::value_type>(item));
@@ -260,7 +260,7 @@ nb::object annotation()
     else if constexpr (is_optional_v<F>) {
         return typing("Optional")[annotation<typename F::value_type>()];
     }
-    else if constexpr (is_vector_v<F> || is_array_v<F>) {
+    else if constexpr (is_list_v<F> || is_array_v<F>) {
         return builtin("list").attr("__class_getitem__")(annotation<typename F::value_type>());
     }
     else if constexpr (is_map_v<F>) {

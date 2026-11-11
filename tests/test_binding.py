@@ -111,20 +111,30 @@ def test_a_value_that_does_not_fit_the_enum_is_rejected():
         proto.ContainerClosePacket(container_id=1000)
 
 
-def test_bytes_cross_as_python_bytes():
+def test_a_bytes_field_crosses_as_python_bytes():
     packet = proto.LevelChunkPacket(serialized_chunk=bytes([0xFF, 0x00, 0xC3, 0x41]))
     assert packet.serialized_chunk == bytes([0xFF, 0x00, 0xC3, 0x41])
+
+
+def test_a_bytes_field_round_trips():
+    packet = proto.LevelChunkPacket(serialized_chunk=bytes([0xFF, 0x00, 0xC3, 0x41]))
     assert proto.LevelChunkPacket.from_bytes(bytes(packet)) == packet
 
 
 def test_a_bytes_field_rejects_text():
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"^LevelChunkPacket\.serialized_chunk cannot hold 'héllo'$"):
         proto.LevelChunkPacket(serialized_chunk="héllo")
 
 
 def test_a_string_field_rejects_bytes():
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"^ResourcePackChunkDataPacket\.resource_name cannot hold b'p'$"):
         proto.ResourcePackChunkDataPacket(resource_name=b"p")
+
+
+def test_a_string_carries_wire_bytes_that_are_not_utf8():
+    text = b"\xff".decode("utf-8", "surrogateescape")
+    packet = proto.ResourcePackChunkDataPacket(resource_name=text)
+    assert proto.ResourcePackChunkDataPacket.from_bytes(bytes(packet)).resource_name == text
 
 
 def test_a_string_can_be_assigned_text():

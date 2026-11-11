@@ -21,8 +21,8 @@ GOLDENS = [
     pytest.param(
         v2225.ClientCacheMissResponsePacket(
             blobs=[
-                v2225.MissingBlobData(blob_id=0x0102030405060708, blob_data="chunk"),
-                v2225.MissingBlobData(blob_id=300, blob_data=""),
+                v2225.MissingBlobData(blob_id=0x0102030405060708, blob_data=b"chunk"),
+                v2225.MissingBlobData(blob_id=300, blob_data=b""),
             ]
         ),
         BLOBS,
@@ -30,7 +30,7 @@ GOLDENS = [
     ),
     pytest.param(v2225.ClientCacheMissResponsePacket(), EMPTY, id="empty"),
     pytest.param(
-        v2225.ClientCacheMissResponsePacket(blobs=[v2225.MissingBlobData(blob_id=300, blob_data="x" * 200)]),
+        v2225.ClientCacheMissResponsePacket(blobs=[v2225.MissingBlobData(blob_id=300, blob_data=b"x" * 200)]),
         LONG_PAYLOAD,
         id="long-payload",
     ),

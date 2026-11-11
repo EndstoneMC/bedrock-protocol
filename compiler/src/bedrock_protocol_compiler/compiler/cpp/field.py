@@ -223,8 +223,6 @@ def _primitive_write(prim: PrimitiveType, expr: str) -> str:
 
 
 def _primitive_read(prim: PrimitiveType) -> str:
-    if prim.encoding in ("str", "bytes"):
-        return f"auto v = stream.read<{PRIMITIVE_TYPES[prim.encoding]}>();"
     u = PRIMITIVE_TYPES[prim.encoding]
     if prim.encoding in VARINT_PRIMITIVES:
         return f"auto v = stream.readVarInt<{u}>();"

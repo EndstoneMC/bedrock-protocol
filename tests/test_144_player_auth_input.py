@@ -206,7 +206,7 @@ V1001_ITEM_TRANSACTION = v1001.legacy.ItemUseInventoryTransaction(
 
 V1001_LEGACY_SLOTS = [
     v1001.LegacySetSlot(
-        container_enum=v1001.ContainerEnumName.COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, slots="\x01\x02\x03"
+        container_enum=v1001.ContainerEnumName.COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, slots=b"\x01\x02\x03"
     )
 ]
 

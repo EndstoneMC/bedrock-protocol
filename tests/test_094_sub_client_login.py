@@ -15,7 +15,7 @@ EMPTY = bytes.fromhex("00")
 GOLDENS = [
     *[
         pytest.param(
-            version.SubClientLoginPacket(connection_request="sub-client-jwt"),
+            version.SubClientLoginPacket(connection_request=b"sub-client-jwt"),
             SUB_CLIENT_JWT,
             id=f"{version.__name__.rpartition('.')[2]}-request",
         )
@@ -23,7 +23,7 @@ GOLDENS = [
     ],
     *[
         pytest.param(
-            version.SubClientLoginPacket(connection_request=""),
+            version.SubClientLoginPacket(connection_request=b""),
             EMPTY,
             id=f"{version.__name__.rpartition('.')[2]}-empty-request",
         )

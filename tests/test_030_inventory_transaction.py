@@ -213,7 +213,7 @@ GOLDENS = [
             legacy_request_id=7,
             legacy_set_item_slots=[
                 v975.LegacySetSlot(
-                    container_enum=v975.ContainerEnumName.COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, slots="\x03\x04"
+                    container_enum=v975.ContainerEnumName.COMBINED_HOTBAR_AND_INVENTORY_CONTAINER, slots=b"\x03\x04"
                 )
             ],
             transaction=v975.NormalTransactionData(),

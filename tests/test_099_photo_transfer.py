@@ -39,7 +39,7 @@ GOLDENS = [
         id="transfer",
     ),
     pytest.param(v2225.PhotoTransferPacket(), EMPTY, id="empty"),
-    pytest.param(v2225.PhotoTransferPacket(photo_data="\x7f" * 200), LONG_PHOTO_DATA, id="200-byte-photo-data"),
+    pytest.param(v2225.PhotoTransferPacket(photo_data=b"\x7f" * 200), LONG_PHOTO_DATA, id="200-byte-photo-data"),
 ]
 
 
