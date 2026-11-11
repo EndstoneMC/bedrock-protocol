@@ -197,9 +197,12 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
 
 
 def check(package: Package) -> None:
+    first = package.modules[0]
     for module in package.modules:
-        if module.package != package.modules[0].package:
-            raise CompilerError(f"{module.stem}.py: package: differs from {package.modules[0].stem}.py's")
+        if module.package != first.package:
+            raise CompilerError(
+                f"{module.stem}.py: package: {module.package!r} differs from {first.stem}.py's {first.package!r}"
+            )
         for family in module.families:
             if isinstance(family, Struct):
                 check_struct(package.versions, f"{module.stem}.py", family, family.name)
@@ -277,6 +280,8 @@ class Builder:
         if "__init__" not in self.sources:
             raise CompilerError(f"{package_dir}: __init__.py: missing")
         self.init = self.sources.pop("__init__")
+        if not self.sources:
+            raise CompilerError(f"{package_dir}: has no schema module")
         self.scopes: dict[Struct, Scope] = {}
         self.versions: tuple[int, ...] = ()
         self.homes: dict[tuple[str, bool], Source] = {}

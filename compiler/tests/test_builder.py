@@ -23,7 +23,7 @@ def test_package_lists_versions_and_modules(build_package):
 
 
 def test_modules_declare_one_package(build_package):
-    with pytest.raises(CompilerError, match=r"b\.py: package: differs from a\.py's"):
+    with pytest.raises(CompilerError, match=r"b\.py: package: 'a\.c' differs from a\.py's 'a\.b'"):
         build_package({"a": 'package = "a.b"\n', "b": 'package = "a.c"\n'})
 
 
@@ -267,6 +267,13 @@ def test_init_is_rejected(build_package, init, message):
 
 def test_package_without_init_is_rejected(tmp_path):
     with pytest.raises(CompilerError, match=r"__init__\.py: missing"):
+        build(tmp_path)
+
+
+def test_package_without_a_schema_module_is_rejected(tmp_path):
+    (tmp_path / "__init__.py").write_text("versions = (1,)\n")
+
+    with pytest.raises(CompilerError, match=r"has no schema module"):
         build(tmp_path)
 
 
