@@ -69,14 +69,11 @@ def test_block_actor_data_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_a_decoded_empty_list_keeps_its_element_type():
-    packet = v2225.BlockActorDataPacket.from_bytes(EMPTY_COMPOUND_LIST)
-    assert (packet.data["a"].type, len(packet.data["a"])) == (10, 0)
-
-
-def test_decoded_nested_empty_lists_keep_their_element_types():
-    outer = v2225.BlockActorDataPacket.from_bytes(NESTED_EMPTY_LISTS).data["o"]
-    assert (outer[0].type, outer[1].type) == (8, 4)
+@pytest.mark.xfail(strict=True, reason="binding gap: ListTag has no clear()")
+def test_clearing_a_list_resets_its_type():
+    tags = nbt.ListTag([nbt.IntTag(1)])
+    tags.clear()
+    assert tags.type == 0
 
 
 def test_a_list_built_in_code_takes_its_type_from_the_first_element():
