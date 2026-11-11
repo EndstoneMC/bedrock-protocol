@@ -7,7 +7,7 @@ from bedrock_protocol import v1001, v2168, v2225
 EMPTY = bytes.fromhex("")
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_refresh_entitlements_is_packet_305(version):
     assert version.PACKETS[305] is version.RefreshEntitlementsPacket
 
