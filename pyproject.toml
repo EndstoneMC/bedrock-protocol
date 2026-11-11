@@ -19,6 +19,7 @@ build-dir = "build/{wheel_tag}"
 wheel.py-api = "cp312"
 sdist.inclusion-mode = "explicit"
 sdist.include = ["/pyproject.toml", "/CMakeLists.txt", "/LICENSE", "/cmake/", "/include/", "/protocol/*.py", "/compiler/pyproject.toml", "/compiler/src/", "/python/"]
+sdist.exclude = ["__pycache__/"]
 
 [tool.uv.workspace]
 members = ["compiler"]
