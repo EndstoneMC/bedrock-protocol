@@ -219,7 +219,7 @@ def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_p
     )
     package = build_package({"a": source})
 
-    cereal, _, legacy = package.modules[0].families
+    cereal, legacy, _ = package.modules[0].families
 
     assert field_types(package) == [
         StructRef(cereal),
@@ -239,7 +239,7 @@ def test_cereal_false_enum_name_codes_through_type(build_package):
     )
     package = build_package({"a": source})
 
-    legacy = package.modules[0].families[-1]
+    legacy = package.modules[0].families[1]
 
     assert field_types(package) == [EnumName(legacy)]
 
@@ -310,7 +310,7 @@ def test_a_legacy_declared_before_its_cereal_sibling_is_reached(build_package):
     )
     package = build_package({"a": source})
 
-    cereal, _, legacy = package.modules[0].families
+    legacy, cereal, _ = package.modules[0].families
 
     assert (cereal.cereal, legacy.cereal) == (True, False)
     assert field_types(package) == [StructRef(legacy)]

@@ -268,3 +268,16 @@ def test_init_is_rejected(build_package, init, message):
 def test_package_without_init_is_rejected(tmp_path):
     with pytest.raises(CompilerError, match=r"__init__\.py: missing"):
         build(tmp_path)
+
+
+def test_a_module_lists_its_families_in_source_order(build_package):
+    source = (
+        HEADER + "class A:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\nclass B:\n    x: uint8\n"
+    )
+    package = build_package({"a": source})
+
+    assert [(family.name, family.cereal) for family in package.modules[0].families] == [
+        ("A", True),
+        ("B", False),
+        ("B", True),
+    ]

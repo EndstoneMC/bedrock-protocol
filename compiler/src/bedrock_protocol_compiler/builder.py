@@ -86,6 +86,7 @@ class Source:
     scope: Scope
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
+    order: list[Family] = field(default_factory=list)
     legacies: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
     unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
@@ -306,7 +307,7 @@ class Builder:
             Module(
                 source.stem,
                 source.package,
-                (*source.families.values(), *(legacy for _, legacy in source.legacies.values())),
+                tuple(source.order),
             )
             for source in self.sources.values()
         )
@@ -392,6 +393,7 @@ class Builder:
         self.claim(source, node, family.name, True)
         self.add(source, source.scope, node, family.name, family)
         source.families[family.name] = family
+        source.order.append(family)
 
     def bind_import(self, source: Source, statement: ast.Import | ast.ImportFrom) -> None:
         if isinstance(statement, ast.Import):
@@ -496,6 +498,7 @@ class Builder:
             elif not cereal:
                 self.claim(source, node, node.name, False)
                 source.legacies[node.name] = (node, family)
+                source.order.append(family)
             else:
                 self.declare_family(source, node, family)
         elif isinstance(existing, Enum if node.bases else Struct):
