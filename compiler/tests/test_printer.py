@@ -1,6 +1,5 @@
 import pytest
 
-from bedrock_protocol_compiler.descriptor import CompilerError
 from bedrock_protocol_compiler.printer import Printer
 
 
@@ -25,7 +24,7 @@ def test_emit_formats_an_int_variable():
 
 
 def test_emit_fails_on_a_missing_variable():
-    with pytest.raises(CompilerError, match=r"\$name\$: no such variable"):
+    with pytest.raises(ValueError, match=r"\$name\$: no such variable"):
         Printer().emit("struct $name$;")
 
 
@@ -88,5 +87,24 @@ def test_a_callable_may_emit_several_lines_and_indent_further():
 
 
 def test_a_callable_beside_other_text_is_rejected():
-    with pytest.raises(CompilerError, match=r"\$body\$: a callable must be alone on its line"):
+    with pytest.raises(ValueError, match=r"\$body\$: a callable must be alone on its line"):
         Printer().emit("x = $body$;", body=lambda: None)
+
+
+def test_a_string_alone_on_its_line_is_substituted_at_that_indent():
+    p = Printer()
+    p.emit(
+        """
+        {
+            $statement$
+        }
+        """,
+        statement="return;",
+    )
+    assert p.text == "{\n    return;\n}\n"
+
+
+def test_every_marker_on_a_line_is_substituted():
+    p = Printer()
+    p.emit("$type$ $name${};", type="int", name="id")
+    assert p.text == "int id{};\n"
