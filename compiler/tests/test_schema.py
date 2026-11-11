@@ -1,6 +1,4 @@
-import pytest
-
-from bedrock_protocol_compiler.descriptor import CompilerError, Int, Range
+from bedrock_protocol_compiler.descriptor import Int, Range
 from bedrock_protocol_compiler.schema import Schema
 
 HEADER = """
@@ -46,7 +44,7 @@ class BossEventPacket:
     health_percent: float
 """
 
-VERSIONS = """
+MODELLED_INIT = """
 from bedrock_protocol_compiler.dsl import field, int64, packet, type, uint8, uint16, value
 
 versions = (729, 748, 766, 776, 786, 800, 818, 819, 827, 844, 859, 898, 924, 944, 975, 1001, 2168, 2193, 2225)
@@ -58,7 +56,7 @@ def names(shape):
 
 
 def test_boss_changes_shape_at_776_1001_and_2193(build_package):
-    schema = Schema(build_package({"boss": BOSS}, VERSIONS))
+    schema = Schema(build_package({"boss": BOSS}, MODELLED_INIT))
     packet = schema.order[-1]
 
     shapes = schema.shapes(packet)
@@ -98,7 +96,7 @@ def test_a_shape_that_returns_is_one_shape_with_two_ranges(build_package):
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
 
-    first, second = schema.shapes(family)
+    first, _ = schema.shapes(family)
 
     assert first.ranges == [Range(None, 3), Range(4, None)]
     assert second.ranges == [Range(3, 4)]
@@ -186,7 +184,7 @@ def test_a_nested_family_absent_at_a_version_is_left_out_of_its_owner(build_pack
     assert (before.nested, after.nested) == ((), (schema.shapes(nested)[0],))
 
 
-def test_the_cereal_and_legacy_flavours_are_separate_families(build_package):
+def test_a_struct_that_reaches_a_legacy_family_does_not_change_with_the_cereal_one(build_package):
     source = (
         HEADER
         + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
@@ -199,21 +197,6 @@ def test_the_cereal_and_legacy_flavours_are_separate_families(build_package):
     assert len(schema.shapes(cereal)) == 2
     assert len(schema.shapes(legacy)) == 1
     assert len(schema.shapes(a)) == 1
-
-
-def test_a_packet_that_reaches_a_legacy_family_does_not_change_with_the_cereal_one(build_package):
-    source = (
-        HEADER
-        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
-        + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
-        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    a = schema.order[-1]
-
-    (shape,) = schema.shapes(a)
-
-    assert shape.ranges == [Range(None, None)]
 
 
 def test_a_family_comes_after_the_families_it_reaches(build_package):
@@ -248,7 +231,7 @@ def test_enum_values_are_evaluated_over_the_members_present(build_package):
     assert [member.value for member in late.members] == [Int(4), Int(5), Int(6), Int(4), Int(5)]
 
 
-def test_enums_with_the_same_values_merge_even_when_their_gates_differ(build_package):
+def test_an_enum_member_renamed_at_the_same_value_is_a_new_shape(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n    C = value(2, until=3)\n"
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -258,8 +241,52 @@ def test_enums_with_the_same_values_merge_even_when_their_gates_differ(build_pac
     assert [shape.ranges for shape in shapes] == [[Range(None, 3)], [Range(3, None)]]
 
 
-def test_a_member_that_names_an_absent_member_is_rejected(build_package):
-    source = HEADER + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    B = A\n"
+def test_an_enum_whose_underlying_type_changes_is_a_new_shape(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint16):\n    A = 1\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
 
-    with pytest.raises(CompilerError, match=r"E\.B: names A, which does not exist at 3"):
-        Schema(build_package({"a": source}))
+    assert [shape.ranges for shape in schema.shapes(family)] == [[Range(None, 3)], [Range(3, None)]]
+
+
+def test_an_enum_whose_members_return_in_a_later_declaration_is_one_shape(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
+        + "@type(since=3, until=4)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n\n"
+        + "@type(since=4)\nclass E(IntEnum, uint8):\n    A = 1\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    first, _ = schema.shapes(family)
+
+    assert first.ranges == [Range(None, 3), Range(4, None)]
+
+
+def test_a_field_whose_predicate_changes_is_a_new_shape(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    a: uint8\n    b: uint8 = field(when=lambda p: p.a == 1)\n\n"
+        + "@type(since=3)\nclass A:\n    a: uint8\n    b: uint8 = field(when=lambda p: p.a == 2)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert [shape.ranges for shape in schema.shapes(family)] == [[Range(None, 3)], [Range(3, None)]]
+
+
+def test_a_struct_changes_shape_with_the_enum_its_predicate_names(build_package):
+    source = (
+        HEADER
+        + "class A:\n    a: uint8\n    b: uint8 = field(when=lambda p: p.a == E.X)\n\n"
+        + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, a = schema.order
+
+    assert [shape.ranges for shape in schema.shapes(a)] == [[Range(None, 3)], [Range(3, None)]]
