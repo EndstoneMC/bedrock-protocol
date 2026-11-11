@@ -16,7 +16,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_set_local_player_as_initialized_is_packet_113(version):
     assert version.PACKETS[113] is version.SetLocalPlayerAsInitializedPacket
 
