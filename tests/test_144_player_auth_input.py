@@ -324,7 +324,7 @@ BLOCK_ACTION_GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_player_auth_input_is_packet_144(version):
     assert version.PACKETS[144] is version.PlayerAuthInputPacket
 
