@@ -126,7 +126,9 @@ struct Serializer<DynamicValue> {
     static auto deserialize(BinaryReader &stream) -> std::expected<DynamicValue, std::error_code>
     {
         BinaryReader::ReadScope scope(stream);
-        if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        if (!scope) {
+            return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        }
         auto tag = stream.read<std::uint32_t>();
         if (!tag) {
             return std::unexpected(tag.error());
@@ -167,7 +169,9 @@ struct Serializer<DynamicValue> {
             if (!count) {
                 return std::unexpected(count.error());
             }
-            if (auto r = stream.account(*count, sizeof(DynamicValue::Array::value_type)); !r) return std::unexpected(r.error());
+            if (auto r = stream.account(*count, sizeof(DynamicValue::Array::value_type)); !r) {
+                return std::unexpected(r.error());
+            }
             DynamicValue::Array out;
             for (std::uint32_t i = 0; i < *count; ++i) {
                 auto element = deserialize(stream);
@@ -183,7 +187,9 @@ struct Serializer<DynamicValue> {
             if (!count) {
                 return std::unexpected(count.error());
             }
-            if (auto r = stream.account(*count, sizeof(DynamicValue::Object::value_type)); !r) return std::unexpected(r.error());
+            if (auto r = stream.account(*count, sizeof(DynamicValue::Object::value_type)); !r) {
+                return std::unexpected(r.error());
+            }
             DynamicValue::Object out;
             for (std::uint32_t i = 0; i < *count; ++i) {
                 auto key = stream.read<std::string>();

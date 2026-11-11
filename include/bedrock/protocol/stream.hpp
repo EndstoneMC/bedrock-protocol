@@ -7,13 +7,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <expected>
 #include <limits>
 #include <string>
 #include <string_view>
 #include <system_error>
 #include <type_traits>
-
-#include <expected>
 
 #if !defined(__cpp_lib_byteswap) || __cpp_lib_byteswap < 202110L
 namespace std {
@@ -35,29 +34,44 @@ template <std::integral T>
 std::expected<std::size_t, std::error_code> countValue(T value)
 {
     if constexpr (std::is_signed_v<T>) {
-        if (value < 0) return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        if (value < 0) {
+            return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        }
     }
-    if (static_cast<std::uintmax_t>(value) > std::numeric_limits<std::size_t>::max())
+    if (static_cast<std::uintmax_t>(value) > std::numeric_limits<std::size_t>::max()) {
         return std::unexpected(std::make_error_code(std::errc::value_too_large));
+    }
     return static_cast<std::size_t>(value);
 }
 
-inline std::expected<std::size_t, std::error_code> countOperation(
-    std::expected<std::size_t, std::error_code> a, std::expected<std::size_t, std::error_code> b, char operation)
+inline std::expected<std::size_t, std::error_code> countOperation(std::expected<std::size_t, std::error_code> a,
+                                                                  std::expected<std::size_t, std::error_code> b,
+                                                                  char operation)
 {
-    if (!a) return a;
-    if (!b) return b;
+    if (!a) {
+        return a;
+    }
+    if (!b) {
+        return b;
+    }
     switch (operation) {
     case '*':
-        if (*b && *a > std::numeric_limits<std::size_t>::max() / *b) break;
+        if (*b && *a > std::numeric_limits<std::size_t>::max() / *b) {
+            break;
+        }
         return *a * *b;
     case '+':
-        if (*a > std::numeric_limits<std::size_t>::max() - *b) break;
+        if (*a > std::numeric_limits<std::size_t>::max() - *b) {
+            break;
+        }
         return *a + *b;
     case '-':
-        if (*a < *b) break;
+        if (*a < *b) {
+            break;
+        }
         return *a - *b;
-    case '&': return *a & *b;
+    case '&':
+        return *a & *b;
     }
     return std::unexpected(std::make_error_code(std::errc::value_too_large));
 }
@@ -101,11 +115,15 @@ public:
     using Result = std::expected<T, std::error_code>;
 
     explicit BinaryReader(std::string_view buf, DecodeBudget *budget = nullptr)
-        : view_(buf), budget_(budget ? budget : &local_budget_) {}
+        : view_(buf), budget_(budget ? budget : &local_budget_)
+    {
+    }
 
     BinaryReader(const BinaryReader &other)
         : view_(other.view_), read_pos_(other.read_pos_), local_budget_(other.local_budget_),
-          budget_(other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_), depth_(other.depth_) {}
+          budget_(other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_), depth_(other.depth_)
+    {
+    }
     BinaryReader &operator=(const BinaryReader &other)
     {
         if (this != &other) {
@@ -122,7 +140,9 @@ public:
     auto account(N count, std::size_t width, bool elements = true) -> Result<void>
     {
         if constexpr (std::is_signed_v<N>) {
-            if (count < 0) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+            if (count < 0) {
+                return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+            }
         }
         if (static_cast<std::uintmax_t>(count) > std::numeric_limits<std::size_t>::max() ||
             !budget_->charge(static_cast<std::size_t>(count), width, elements)) {
@@ -136,13 +156,23 @@ public:
     public:
         explicit ReadScope(BinaryReader &reader) : reader_(reader), entered_(reader.depth_ < reader.budget_->maxDepth())
         {
-            if (entered_) ++reader_.depth_;
-            else reader_.budget_->markResourceFailure();
+            if (entered_) {
+                ++reader_.depth_;
+            }
+            else {
+                reader_.budget_->markResourceFailure();
+            }
         }
-        ~ReadScope() { if (entered_) --reader_.depth_; }
+        ~ReadScope()
+        {
+            if (entered_) {
+                --reader_.depth_;
+            }
+        }
         ReadScope(const ReadScope &) = delete;
         ReadScope &operator=(const ReadScope &) = delete;
         explicit operator bool() const { return entered_; }
+
     private:
         BinaryReader &reader_;
         bool entered_;
@@ -205,7 +235,9 @@ public:
         if (*len > getUnreadLength()) {
             return std::unexpected(std::make_error_code(std::errc::message_size));
         }
-        if (auto r = account(*len, 1, false); !r) return std::unexpected(r.error());
+        if (auto r = account(*len, 1, false); !r) {
+            return std::unexpected(r.error());
+        }
         std::string out(*len, '\0');
         auto r = read(out.data(), *len);
         if (!r) {
@@ -216,9 +248,13 @@ public:
 
     auto readRemaining() -> Result<std::string>
     {
-        if (read_pos_ > view_.size()) return std::unexpected(std::make_error_code(std::errc::message_size));
+        if (read_pos_ > view_.size()) {
+            return std::unexpected(std::make_error_code(std::errc::message_size));
+        }
         const auto remaining = getUnreadLength();
-        if (auto r = account(remaining, 1, false); !r) return std::unexpected(r.error());
+        if (auto r = account(remaining, 1, false); !r) {
+            return std::unexpected(r.error());
+        }
         std::string out(remaining, '\0');
         auto r = read(out.data(), remaining);
         if (!r) {
@@ -284,16 +320,14 @@ public:
     void writeRawBytes(std::string_view bytes) { write(bytes.data(), bytes.size()); }
 
     template <typename T, typename V>
-        requires((std::integral<T> || std::floating_point<T>) &&
-                 requires(V v) { static_cast<T>(v); })
+        requires((std::integral<T> || std::floating_point<T>) && requires(V v) { static_cast<T>(v); })
     void write(V value)
     {
         write<T, std::endian::little>(value);
     }
 
     template <typename T, std::endian Order, typename V>
-        requires((std::integral<T> || std::floating_point<T>) &&
-                 requires(V v) { static_cast<T>(v); })
+        requires((std::integral<T> || std::floating_point<T>) && requires(V v) { static_cast<T>(v); })
     void write(V raw)
     {
         const T value = static_cast<T>(raw);

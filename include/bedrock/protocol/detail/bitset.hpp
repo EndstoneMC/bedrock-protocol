@@ -3,9 +3,9 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <expected>
 #include <system_error>
 
-#include <expected>
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 

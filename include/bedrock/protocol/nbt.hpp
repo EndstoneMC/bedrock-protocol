@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <expected>
 #include <initializer_list>
 #include <map>
 #include <stdexcept>
@@ -13,7 +14,6 @@
 #include <variant>
 #include <vector>
 
-#include <expected>
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 
@@ -49,30 +49,12 @@ public:
 
     [[nodiscard]] constexpr const T &value() const noexcept { return value_; }
 
-    friend constexpr bool operator==(const ValueTag &a, const ValueTag &b) noexcept
-    {
-        return a.value_ == b.value_;
-    }
-    friend constexpr bool operator!=(const ValueTag &a, const ValueTag &b) noexcept
-    {
-        return !(a == b);
-    }
-    friend constexpr bool operator==(const ValueTag &a, const T &b) noexcept
-    {
-        return a.value_ == b;
-    }
-    friend constexpr bool operator==(const T &a, const ValueTag &b) noexcept
-    {
-        return a == b.value_;
-    }
-    friend constexpr bool operator!=(const ValueTag &a, const T &b) noexcept
-    {
-        return !(a == b);
-    }
-    friend constexpr bool operator!=(const T &a, const ValueTag &b) noexcept
-    {
-        return !(a == b);
-    }
+    friend constexpr bool operator==(const ValueTag &a, const ValueTag &b) noexcept { return a.value_ == b.value_; }
+    friend constexpr bool operator!=(const ValueTag &a, const ValueTag &b) noexcept { return !(a == b); }
+    friend constexpr bool operator==(const ValueTag &a, const T &b) noexcept { return a.value_ == b; }
+    friend constexpr bool operator==(const T &a, const ValueTag &b) noexcept { return a == b.value_; }
+    friend constexpr bool operator!=(const ValueTag &a, const T &b) noexcept { return !(a == b); }
+    friend constexpr bool operator!=(const T &a, const ValueTag &b) noexcept { return !(a == b); }
 
 private:
     T value_{};
@@ -90,7 +72,9 @@ public:
     ArrayTag() = default;
     explicit ArrayTag(storage_type v) : v_(std::move(v)) {}
     template <typename It>
-    ArrayTag(It first, It last) : v_(first, last) {}
+    ArrayTag(It first, It last) : v_(first, last)
+    {
+    }
     ArrayTag(std::initializer_list<value_type> init) : v_(init) {}
 
     [[nodiscard]] bool empty() const noexcept { return v_.empty(); }
@@ -107,7 +91,10 @@ public:
 
     void push_back(value_type v) { v_.push_back(v); }
     template <typename It>
-    void assign(It first, It last) { v_.assign(first, last); }
+    void assign(It first, It last)
+    {
+        v_.assign(first, last);
+    }
     iterator insert(const_iterator pos, value_type v) { return v_.insert(pos, v); }
     iterator erase(const_iterator pos) { return v_.erase(pos); }
 
@@ -118,14 +105,8 @@ public:
     const_iterator cbegin() const noexcept { return v_.cbegin(); }
     const_iterator cend() const noexcept { return v_.cend(); }
 
-    friend bool operator==(const ArrayTag &a, const ArrayTag &b) noexcept
-    {
-        return a.v_ == b.v_;
-    }
-    friend bool operator!=(const ArrayTag &a, const ArrayTag &b) noexcept
-    {
-        return !(a == b);
-    }
+    friend bool operator==(const ArrayTag &a, const ArrayTag &b) noexcept { return a.v_ == b.v_; }
+    friend bool operator!=(const ArrayTag &a, const ArrayTag &b) noexcept { return !(a == b); }
 
 private:
     storage_type v_;
@@ -246,10 +227,8 @@ private:
 
 class Tag {
 public:
-    using Storage =
-        std::variant<std::monostate, ByteTag, ShortTag, IntTag, Int64Tag,
-                     FloatTag, DoubleTag, ByteArrayTag, StringTag, ListTag,
-                     CompoundTag, IntArrayTag>;
+    using Storage = std::variant<std::monostate, ByteTag, ShortTag, IntTag, Int64Tag, FloatTag, DoubleTag, ByteArrayTag,
+                                 StringTag, ListTag, CompoundTag, IntArrayTag>;
 
     Tag() noexcept : storage_(std::monostate{}) {}
     Tag(const ByteTag &v) : storage_(v) {}
@@ -275,10 +254,7 @@ public:
     Tag(const IntArrayTag &v) : storage_(v) {}
     Tag(IntArrayTag &&v) : storage_(std::move(v)) {}
 
-    [[nodiscard]] nbt::Type type() const noexcept
-    {
-        return static_cast<nbt::Type>(storage_.index());
-    }
+    [[nodiscard]] nbt::Type type() const noexcept { return static_cast<nbt::Type>(storage_.index()); }
 
     [[nodiscard]] std::size_t size() const noexcept
     {
@@ -288,10 +264,8 @@ public:
                 if constexpr (std::is_same_v<V, std::monostate>) {
                     return 0;
                 }
-                else if constexpr (std::is_same_v<V, ListTag> ||
-                                   std::is_same_v<V, CompoundTag> ||
-                                   std::is_same_v<V, ByteArrayTag> ||
-                                   std::is_same_v<V, IntArrayTag>) {
+                else if constexpr (std::is_same_v<V, ListTag> || std::is_same_v<V, CompoundTag> ||
+                                   std::is_same_v<V, ByteArrayTag> || std::is_same_v<V, IntArrayTag>) {
                     return payload.size();
                 }
                 else {
@@ -438,14 +412,8 @@ public:
         return std::visit(std::forward<Fn>(fn), storage_);
     }
 
-    friend bool operator==(const Tag &a, const Tag &b) noexcept
-    {
-        return a.storage_ == b.storage_;
-    }
-    friend bool operator!=(const Tag &a, const Tag &b) noexcept
-    {
-        return !(a == b);
-    }
+    friend bool operator==(const Tag &a, const Tag &b) noexcept { return a.storage_ == b.storage_; }
+    friend bool operator!=(const Tag &a, const Tag &b) noexcept { return !(a == b); }
 
 private:
     Storage storage_;
@@ -462,26 +430,40 @@ ListTag::ListTag(std::initializer_list<T> init)
 
 inline ListTag::ListTag(nbt::Type element_type) : type_(element_type)
 {
-    if (static_cast<std::uint8_t>(element_type) >
-        static_cast<std::uint8_t>(nbt::Type::IntArray)) {
+    if (static_cast<std::uint8_t>(element_type) > static_cast<std::uint8_t>(nbt::Type::IntArray)) {
         throw std::invalid_argument("ListTag element type is not a tag type");
     }
 }
 
-inline bool ListTag::empty() const noexcept { return elements_.empty(); }
+inline bool ListTag::empty() const noexcept
+{
+    return elements_.empty();
+}
 
-inline ListTag::size_type ListTag::size() const noexcept { return elements_.size(); }
+inline ListTag::size_type ListTag::size() const noexcept
+{
+    return elements_.size();
+}
 
-inline nbt::Type ListTag::type() const noexcept { return type_; }
+inline nbt::Type ListTag::type() const noexcept
+{
+    return type_;
+}
 
-inline ListTag::value_type &ListTag::at(size_type i) { return elements_.at(i); }
+inline ListTag::value_type &ListTag::at(size_type i)
+{
+    return elements_.at(i);
+}
 
 inline const ListTag::value_type &ListTag::at(size_type i) const
 {
     return elements_.at(i);
 }
 
-inline ListTag::value_type &ListTag::operator[](size_type i) { return elements_[i]; }
+inline ListTag::value_type &ListTag::operator[](size_type i)
+{
+    return elements_[i];
+}
 
 inline const ListTag::value_type &ListTag::operator[](size_type i) const
 {
@@ -494,10 +476,19 @@ inline void ListTag::clear() noexcept
     type_ = nbt::Type::End;
 }
 
-inline void ListTag::push_back(const value_type &v) { emplace_back(v); }
-inline void ListTag::reserve(size_type count) { elements_.reserve(count); }
+inline void ListTag::push_back(const value_type &v)
+{
+    emplace_back(v);
+}
+inline void ListTag::reserve(size_type count)
+{
+    elements_.reserve(count);
+}
 
-inline void ListTag::push_back(value_type &&v) { emplace_back(std::move(v)); }
+inline void ListTag::push_back(value_type &&v)
+{
+    emplace_back(std::move(v));
+}
 
 template <typename... Args>
 ListTag::value_type &ListTag::emplace_back(Args &&...args)
@@ -526,8 +517,14 @@ inline ListTag::iterator ListTag::erase(const_iterator first, const_iterator las
     return elements_.erase(first, last);
 }
 
-inline ListTag::iterator ListTag::begin() noexcept { return elements_.begin(); }
-inline ListTag::iterator ListTag::end() noexcept { return elements_.end(); }
+inline ListTag::iterator ListTag::begin() noexcept
+{
+    return elements_.begin();
+}
+inline ListTag::iterator ListTag::end() noexcept
+{
+    return elements_.end();
+}
 inline ListTag::const_iterator ListTag::begin() const noexcept
 {
     return elements_.begin();
@@ -554,13 +551,12 @@ inline bool operator!=(const ListTag &a, const ListTag &b) noexcept
     return !(a == b);
 }
 
-inline CompoundTag::CompoundTag(
-    std::initializer_list<std::pair<const key_type, mapped_type>> init)
-    : entries_(init)
-{
-}
+inline CompoundTag::CompoundTag(std::initializer_list<std::pair<const key_type, mapped_type>> init) : entries_(init) {}
 
-inline bool CompoundTag::empty() const noexcept { return entries_.empty(); }
+inline bool CompoundTag::empty() const noexcept
+{
+    return entries_.empty();
+}
 
 inline CompoundTag::size_type CompoundTag::size() const noexcept
 {
@@ -597,7 +593,10 @@ inline CompoundTag::const_iterator CompoundTag::find(const key_type &key) const 
     return entries_.find(key);
 }
 
-inline void CompoundTag::clear() noexcept { entries_.clear(); }
+inline void CompoundTag::clear() noexcept
+{
+    entries_.clear();
+}
 
 template <typename P>
 std::pair<CompoundTag::iterator, bool> CompoundTag::insert(P &&v)
@@ -612,15 +611,13 @@ std::pair<CompoundTag::iterator, bool> CompoundTag::emplace(Args &&...args)
 }
 
 template <typename... Args>
-std::pair<CompoundTag::iterator, bool> CompoundTag::try_emplace(
-    const key_type &key, Args &&...args)
+std::pair<CompoundTag::iterator, bool> CompoundTag::try_emplace(const key_type &key, Args &&...args)
 {
     return entries_.try_emplace(key, std::forward<Args>(args)...);
 }
 
 template <typename M>
-std::pair<CompoundTag::iterator, bool> CompoundTag::insert_or_assign(
-    const key_type &key, M &&obj)
+std::pair<CompoundTag::iterator, bool> CompoundTag::insert_or_assign(const key_type &key, M &&obj)
 {
     return entries_.insert_or_assign(key, std::forward<M>(obj));
 }
@@ -635,8 +632,7 @@ inline CompoundTag::size_type CompoundTag::erase(const key_type &key)
     return entries_.erase(key);
 }
 
-inline CompoundTag::iterator CompoundTag::erase(const_iterator first,
-                                                const_iterator last)
+inline CompoundTag::iterator CompoundTag::erase(const_iterator first, const_iterator last)
 {
     return entries_.erase(first, last);
 }
@@ -653,8 +649,14 @@ inline void CompoundTag::merge(const CompoundTag &source)
     }
 }
 
-inline CompoundTag::iterator CompoundTag::begin() noexcept { return entries_.begin(); }
-inline CompoundTag::iterator CompoundTag::end() noexcept { return entries_.end(); }
+inline CompoundTag::iterator CompoundTag::begin() noexcept
+{
+    return entries_.begin();
+}
+inline CompoundTag::iterator CompoundTag::end() noexcept
+{
+    return entries_.end();
+}
 inline CompoundTag::const_iterator CompoundTag::begin() const noexcept
 {
     return entries_.begin();
@@ -686,12 +688,10 @@ namespace nbt {
 void writeTag(BinaryWriter &stream, const Tag &tag);
 std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type);
 void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag);
-std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
-    BinaryReader &stream);
+std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream);
 
 namespace detail {
-std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
-    BinaryReader &stream, bool compound_entry);
+std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream, bool compound_entry);
 }
 
 inline void writeTag(BinaryWriter &stream, const Tag &tag)
@@ -722,23 +722,20 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
             stream.write(payload.value());
         }
         else if constexpr (std::is_same_v<V, ByteArrayTag>) {
-            stream.writeVarInt<std::int32_t>(
-                static_cast<std::int32_t>(payload.size()));
+            stream.writeVarInt<std::int32_t>(static_cast<std::int32_t>(payload.size()));
             for (auto element : payload) {
                 stream.write<std::int8_t>(element);
             }
         }
         else if constexpr (std::is_same_v<V, IntArrayTag>) {
-            stream.writeVarInt<std::int32_t>(
-                static_cast<std::int32_t>(payload.size()));
+            stream.writeVarInt<std::int32_t>(static_cast<std::int32_t>(payload.size()));
             for (auto element : payload) {
                 stream.writeVarInt<std::int32_t>(element);
             }
         }
         else if constexpr (std::is_same_v<V, ListTag>) {
             stream.write<std::uint8_t>(static_cast<std::uint8_t>(payload.type()));
-            stream.writeVarInt<std::int32_t>(
-                static_cast<std::int32_t>(payload.size()));
+            stream.writeVarInt<std::int32_t>(static_cast<std::int32_t>(payload.size()));
             for (const auto &element : payload) {
                 writeTag(stream, element);
             }
@@ -755,91 +752,127 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
 inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type)
 {
     BinaryReader::ReadScope scope(stream);
-    if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));
+    if (!scope) {
+        return std::unexpected(std::make_error_code(std::errc::value_too_large));
+    }
     switch (type) {
     case Type::End:
         return Tag{};
     case Type::Byte: {
         auto v = stream.read<std::int8_t>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{ByteTag{*v}};
     }
     case Type::Short: {
         auto v = stream.read<std::int16_t>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{ShortTag{*v}};
     }
     case Type::Int: {
         auto v = stream.readVarInt<std::int32_t>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{IntTag{*v}};
     }
     case Type::Int64: {
         auto v = stream.readVarInt<std::int64_t>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{Int64Tag{*v}};
     }
     case Type::Float: {
         auto v = stream.read<float>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{FloatTag{*v}};
     }
     case Type::Double: {
         auto v = stream.read<double>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{DoubleTag{*v}};
     }
     case Type::String: {
         auto v = stream.read<std::string>();
-        if (!v) return std::unexpected(v.error());
+        if (!v) {
+            return std::unexpected(v.error());
+        }
         return Tag{StringTag{std::move(*v)}};
     }
     case Type::ByteArray: {
         auto count = stream.readVarInt<std::int32_t>();
-        if (!count) return std::unexpected(count.error());
-        if (auto r = stream.account(*count, sizeof(std::int8_t)); !r) return std::unexpected(r.error());
-        if (static_cast<std::size_t>(*count) > stream.getUnreadLength())
+        if (!count) {
+            return std::unexpected(count.error());
+        }
+        if (auto r = stream.account(*count, sizeof(std::int8_t)); !r) {
+            return std::unexpected(r.error());
+        }
+        if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
             return std::unexpected(std::make_error_code(std::errc::message_size));
+        }
         ByteArrayTag out;
         out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = stream.read<std::int8_t>();
-            if (!element) return std::unexpected(element.error());
+            if (!element) {
+                return std::unexpected(element.error());
+            }
             out.push_back(*element);
         }
         return Tag{std::move(out)};
     }
     case Type::IntArray: {
         auto count = stream.readVarInt<std::int32_t>();
-        if (!count) return std::unexpected(count.error());
-        if (auto r = stream.account(*count, sizeof(std::int32_t)); !r) return std::unexpected(r.error());
-        if (static_cast<std::size_t>(*count) > stream.getUnreadLength())
+        if (!count) {
+            return std::unexpected(count.error());
+        }
+        if (auto r = stream.account(*count, sizeof(std::int32_t)); !r) {
+            return std::unexpected(r.error());
+        }
+        if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
             return std::unexpected(std::make_error_code(std::errc::message_size));
+        }
         IntArrayTag out;
         out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = stream.readVarInt<std::int32_t>();
-            if (!element) return std::unexpected(element.error());
+            if (!element) {
+                return std::unexpected(element.error());
+            }
             out.push_back(*element);
         }
         return Tag{std::move(out)};
     }
     case Type::List: {
         auto element_type = stream.read<std::uint8_t>();
-        if (!element_type) return std::unexpected(element_type.error());
-        auto count = stream.readVarInt<std::int32_t>();
-        if (!count) return std::unexpected(count.error());
-        if (*element_type > static_cast<std::uint8_t>(Type::IntArray) ||
-            (*count > 0 && *element_type == 0)) {
-            return std::unexpected(
-                std::make_error_code(std::errc::illegal_byte_sequence));
+        if (!element_type) {
+            return std::unexpected(element_type.error());
         }
-        if (auto r = stream.account(*count, sizeof(Tag)); !r) return std::unexpected(r.error());
+        auto count = stream.readVarInt<std::int32_t>();
+        if (!count) {
+            return std::unexpected(count.error());
+        }
+        if (*element_type > static_cast<std::uint8_t>(Type::IntArray) || (*count > 0 && *element_type == 0)) {
+            return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+        }
+        if (auto r = stream.account(*count, sizeof(Tag)); !r) {
+            return std::unexpected(r.error());
+        }
         ListTag out(static_cast<Type>(*element_type));
         out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = readTag(stream, static_cast<Type>(*element_type));
-            if (!element) return std::unexpected(element.error());
+            if (!element) {
+                return std::unexpected(element.error());
+            }
             out.push_back(std::move(*element));
         }
         return Tag{std::move(out)};
@@ -848,7 +881,9 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
         CompoundTag out;
         for (;;) {
             auto entry = detail::readNamedTag(stream, true);
-            if (!entry) return std::unexpected(entry.error());
+            if (!entry) {
+                return std::unexpected(entry.error());
+            }
             if (entry->second.type() == Type::End) {
                 break;
             }
@@ -860,8 +895,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
     return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
 }
 
-inline void writeNamedTag(BinaryWriter &stream, std::string_view name,
-                          const Tag &tag)
+inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag)
 {
     const auto type = tag.type();
     stream.write<std::uint8_t>(static_cast<std::uint8_t>(type));
@@ -872,30 +906,36 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name,
     writeTag(stream, tag);
 }
 
-inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readNamedTag(
-    BinaryReader &stream, bool compound_entry)
+inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readNamedTag(BinaryReader &stream,
+                                                                                        bool compound_entry)
 {
     auto type = stream.read<std::uint8_t>();
-    if (!type) return std::unexpected(type.error());
+    if (!type) {
+        return std::unexpected(type.error());
+    }
     if (*type == 0) {
         return std::pair<std::string, Tag>{};
     }
     if (*type > static_cast<std::uint8_t>(Type::IntArray)) {
-        return std::unexpected(
-            std::make_error_code(std::errc::illegal_byte_sequence));
+        return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
     }
     if (compound_entry) {
-        if (auto r = stream.account(1, sizeof(CompoundTag::value_type)); !r) return std::unexpected(r.error());
+        if (auto r = stream.account(1, sizeof(CompoundTag::value_type)); !r) {
+            return std::unexpected(r.error());
+        }
     }
     auto name = stream.read<std::string>();
-    if (!name) return std::unexpected(name.error());
+    if (!name) {
+        return std::unexpected(name.error());
+    }
     auto payload = readTag(stream, static_cast<Type>(*type));
-    if (!payload) return std::unexpected(payload.error());
+    if (!payload) {
+        return std::unexpected(payload.error());
+    }
     return std::pair<std::string, Tag>{std::move(*name), std::move(*payload)};
 }
 
-inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(
-    BinaryReader &stream)
+inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream)
 {
     return detail::readNamedTag(stream, false);
 }
@@ -909,15 +949,15 @@ struct Serializer<CompoundTag> {
         nbt::writeNamedTag(stream, std::string_view{}, Tag{value});
     }
 
-    static auto deserialize(BinaryReader &stream)
-        -> std::expected<CompoundTag, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTag, std::error_code>
     {
         auto named = nbt::readNamedTag(stream);
-        if (!named) return std::unexpected(named.error());
+        if (!named) {
+            return std::unexpected(named.error());
+        }
         auto *compound = named->second.get_if<CompoundTag>();
         if (compound == nullptr) {
-            return std::unexpected(
-                std::make_error_code(std::errc::illegal_byte_sequence));
+            return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
         }
         return std::move(*compound);
     }
@@ -937,11 +977,12 @@ struct Serializer<CompoundTagData> {
         nbt::writeTag(stream, Tag{static_cast<const CompoundTag &>(value)});
     }
 
-    static auto deserialize(BinaryReader &stream)
-        -> std::expected<CompoundTagData, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTagData, std::error_code>
     {
         auto tag = nbt::readTag(stream, nbt::Type::Compound);
-        if (!tag) return std::unexpected(tag.error());
+        if (!tag) {
+            return std::unexpected(tag.error());
+        }
         return CompoundTagData{std::move(tag->get<CompoundTag>())};
     }
 };
