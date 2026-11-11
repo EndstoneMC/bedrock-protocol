@@ -16,6 +16,13 @@ the previous present member's value plus one, at each version. A member name may
 version ranges. The wire name is the pair or else the member name without underscores, folded to
 lower case. A member whose BDS spelling differs by more than case is paired with it,
 `HIGH_PANTS = 8, "persona_high_pants"`, or `value(8, "persona_high_pants")`.
+
+`X | None` is a presence byte (1 = present), then X. Every other union, `Union[...]` included, is a
+uvarint32 index over its cases in declaration order, then the case, with `None` an empty case, so
+`Union[T, None]` writes 0 for T. `type X = A | B` names a union that stays one case inside an
+enclosing union. `list[T]` and `dict[K, V]` are a uvarint32 count, then the elements or the key and
+value pairs. `Literal[True]`, `Literal["s"]` and `Literal[E.M]`, as a field's whole annotation, are a
+constant with no C++ member that the write emits and the read requires.
 """
 
 from collections.abc import Callable
@@ -63,7 +70,7 @@ def field(
     - `when`: a one-argument lambda over earlier fields. Nothing marks presence on the wire: both
       directions recompute it, and the field stays the bare type in C++.
     - `endian`: `"big"` for a fixed-width integer written big-endian.
-    - `prefix`: the integer primitive that prefixes a `list`, `uvarint32` by default.
+    - `prefix`: `uint32`, `uint16` or `varint32` in place of the field's `list`'s `uvarint32` count.
     - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix.
     - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type. It flows
       through `list`, `dict` and `T | None`.
@@ -98,7 +105,10 @@ class bitset:
 
 
 class array:
-    """`array[T, N]` is a `std::array` of exactly N elements, written back to back with no prefix."""
+    """`array[T, N]` is a `std::array` of exactly N elements, written back to back with no prefix.
+
+    It nests: `array[array[int8, 16], 16]`.
+    """
 
 
 type varint32 = int
