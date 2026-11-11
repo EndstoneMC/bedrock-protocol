@@ -26,8 +26,9 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
 
 void throw_decode_error(std::string_view type, const BinaryReader &stream, std::string_view reason)
 {
-    throw nb::value_error(
-        std::format("{}: {} at byte {} of {}", type, reason, stream.getReadPointer(), stream.getLength()).c_str());
+    throw nb::value_error((std::string(type) + ": " + std::string(reason) + " at byte " +
+                           std::to_string(stream.getReadPointer()) + " of " + std::to_string(stream.getLength()))
+                              .c_str());
 }
 
 namespace {
@@ -124,7 +125,7 @@ void bind_versions(nb::module_ &parent)
         auto module = parent.def_submodule(std::format("v{}", binding.number).c_str());
         auto legacy = module.def_submodule("legacy", "The pre-cereal shapes, where one name has two encodings.");
         module.attr("nbt") = parent.attr("nbt");
-        Version version{binding.number, module, legacy, {}};
+        Version version{.number = binding.number, .module = module, .legacy = legacy};
         for (auto *bind_file : binding.files) {
             bind_file(version);
         }
