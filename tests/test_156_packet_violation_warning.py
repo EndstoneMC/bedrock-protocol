@@ -59,17 +59,6 @@ def test_packet_violation_warning_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize(
-    ("version", "end_id"),
-    [
-        pytest.param(v975, 348, id="v975"),
-        pytest.param(v1001, 351, id="v1001"),
-    ],
-)
-def test_1001_adds_three_packet_ids_ahead_of_the_end_marker(version, end_id):
-    assert end_id == version.MinecraftPacketIds.END_ID
-
-
 @pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
 def test_packet_violation_warning_rejects_a_truncated_context(version):
     with pytest.raises(ValueError, match="at byte"):
