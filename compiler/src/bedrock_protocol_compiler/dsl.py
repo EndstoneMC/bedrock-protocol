@@ -13,11 +13,11 @@ An enum is `class E(IntEnum, P)` or `class E(Enum, P)`, where P is bool, int8, u
 int32 or uint32 and becomes `enum class E : P`. The bare base `class E(IntEnum)` or `(Enum)` has type
 `int`. An enum field goes on the wire as P when P is one byte, and otherwise as varint32 or uvarint32
 by the signedness of P. A member is `PEP8_NAME = N`, `= -N`, `= auto()`, `= OTHER` or `= OTHER - k`
-for an earlier member, and reaches C++ as `CamelCase`. `auto()` and a `value()` without a number take
-the previous present member's value plus one, at each version. A member name may repeat over disjoint
-version ranges. The wire name is the pair or else the member name without underscores, folded to
-lower case. A member whose BDS spelling differs by more than case is paired with it,
-`HIGH_PANTS = 8, "persona_high_pants"`, or `value(8, "persona_high_pants")`.
+for an earlier member present wherever this one is, and reaches C++ as `CamelCase`. `auto()` and a
+`value()` without a number take the previous present member's value plus one, at each version. A
+member name may repeat over disjoint version ranges. The wire name is the pair or else the member
+name without underscores, folded to lower case. A member whose BDS spelling differs by more than case
+is paired with it, `HIGH_PANTS = 8, "persona_high_pants"`, or `value(8, "persona_high_pants")`.
 
 `X | None` is a presence byte (1 = present), then X. Every other union, `Union[...]` included, is a
 uvarint32 index over its cases in declaration order, then the case, with `None` an empty case, so
