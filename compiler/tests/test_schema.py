@@ -290,3 +290,10 @@ def test_a_struct_changes_shape_with_the_enum_its_predicate_names(build_package)
     _, a = schema.order
 
     assert [shape.ranges for shape in schema.shapes(a)] == [[Range(None, 3)], [Range(3, None)]]
+
+
+def test_a_family_reaching_a_nested_one_comes_after_the_nested_ones_owner(build_package):
+    source = HEADER + "class A:\n    x: B.C\n\nclass B:\n    class C:\n        x: uint8\n"
+    schema = Schema(build_package({"a": source}))
+
+    assert [family.name for family in schema.order] == ["C", "B", "A"]

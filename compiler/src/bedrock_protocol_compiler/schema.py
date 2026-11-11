@@ -41,6 +41,10 @@ class EnumShape:
 type Shape = StructShape | EnumShape
 
 
+def outermost(family: Struct | Enum) -> Struct | Enum:
+    return family if family.owner is None else outermost(family.owner)
+
+
 def reached_by(each: Field) -> Iterator[Struct | Enum]:
     for target in (*reaches(each.type), *reaches(each.when)):
         yield target.enum if isinstance(target, MemberRef) else target
@@ -76,6 +80,8 @@ class Schema:
                 for each in declaration.fields:
                     for target in reached_by(each):
                         self.place(target, placed)
+                        if outermost(target) is not outermost(family):
+                            self.place(outermost(target), placed)
             for child in family.nested:
                 self.place(child, placed)
         self.order.append(family)
