@@ -11,7 +11,7 @@ for the same packets in Python, or `bpc` to compile schemas.
 `bedrock-protocol` is the runtime: the schema's packets, types and enums, bound from
 the generated C++, so Python encodes exactly the bytes the C++ codecs do. A bare name
 is the latest protocol and `v<N>` pins one, as in C++. `bedrock-protocol-compiler`
-carries the schema and `bpc`. See the [Python guide](docs/python.md).
+carries the schema and `bpc`.
 
 ```python
 import bedrock_protocol as bp
@@ -131,7 +131,6 @@ subprojects. `BEDROCK_PROTOCOL_BUILD_PYTHON` is optional and defaults to off.
 
 Install the C++ headers, library and CMake package with `cmake --install build`.
 Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
-Python distribution builds are described in the [Python guide](docs/python.md#building).
 
 ## Contributing
 

@@ -20,7 +20,6 @@ BUILD_INPUTS = (
     "third_party",
     "LICENSE",
     "README.md",
-    "docs/python.md",
 )
 
 
