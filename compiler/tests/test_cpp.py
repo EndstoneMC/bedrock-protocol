@@ -1,0 +1,69 @@
+import os
+
+import pytest
+
+from bedrock_protocol_compiler.__main__ import main
+
+A = """
+from enum import IntEnum
+from protocol import field, packet, type, uint8
+package = "bedrock.protocol"
+
+class E(IntEnum, uint8):
+    X = 1
+
+@packet(id=1)
+class P:
+    e: E = field(type=str)
+"""
+
+B = """
+from protocol import type, uint8
+package = "bedrock.protocol"
+
+class B:
+    x: uint8
+"""
+
+
+@pytest.fixture
+def generate(build_package, tmp_path):
+    def run(modules: dict[str, str]):
+        build_package(modules)
+        main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
+        return tmp_path / "out/bedrock/protocol"
+
+    return run
+
+
+def test_one_header_per_module_and_a_version_header(generate):
+    out = generate({"a": A, "b": B})
+
+    assert sorted(path.name for path in out.iterdir()) == ["a.h", "b.h", "version.hpp"]
+
+
+def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
+    out = generate({"a": A})
+    for path in out.iterdir():
+        os.utime(path, ns=(1, 1))
+
+    main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
+
+    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1}
+
+
+def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
+    out = generate({"a": A, "b": B})
+    (tmp_path / "protocol/b.py").unlink()
+
+    main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
+
+    assert sorted(path.name for path in out.iterdir()) == ["a.h", "version.hpp"]
+
+
+def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
+    build_package({"a": B})
+    (tmp_path / "protocol/a.py").write_text('package = "bedrock.protocol"\nclass A:\n    x: Missing\n')
+
+    with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
+        main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])

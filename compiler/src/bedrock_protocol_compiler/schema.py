@@ -67,6 +67,17 @@ def outermost(family: Struct | Enum) -> Struct | Enum:
     return family if family.owner is None else outermost(family.owner)
 
 
+def roots_reached(family: Struct | Enum) -> set[Struct | Enum]:
+    reached: set[Struct | Enum] = set()
+    if isinstance(family, Struct):
+        for declaration in family.declarations:
+            for each in declaration.fields:
+                reached.update(outermost(target) for target in reached_by(each))
+        for child in family.nested:
+            reached |= roots_reached(child)
+    return reached - {family}
+
+
 def reached_by(each: Field) -> Iterator[Struct | Enum]:
     for target in (*reaches(each.type), *reaches(each.when)):
         yield target.enum if isinstance(target, MemberRef) else target
