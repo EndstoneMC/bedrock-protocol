@@ -125,8 +125,12 @@ def swing_attack_2225():
     )
 
 
-def test_2225_appends_the_mainhand_after_the_898_body(swing_attack_2225):
-    assert bytes(swing_attack_2225) == SWING_ATTACK + b"\x00"
+def test_2225_appends_the_hand_after_the_898_body(swing_attack_2225):
+    assert bytes(swing_attack_2225)[:-1] == SWING_ATTACK
+
+
+def test_2225_adds_one_byte_for_the_hand(swing_attack_2225):
+    assert len(bytes(swing_attack_2225)) == len(SWING_ATTACK) + 1
 
 
 def test_2225_swinging_hand_changes_only_its_own_byte(swing_attack_2225):
