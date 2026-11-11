@@ -74,7 +74,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_set_scoreboard_identity_is_packet_112(version):
     assert version.PACKETS[112] is version.SetScoreboardIdentityPacket
 
