@@ -221,15 +221,13 @@ class MessageGenerator:
     # --- serializer ---------------------------------------------------------
 
     def generate_serializer_declaration(self, p: Printer) -> None:
-        p.add_includes(
-            f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>", "<system_error>"
-        )
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>")
         q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
         p.indent()
         p.print(f"static void serialize(BinaryWriter &stream, const {q} &value);\n")
-        p.print(f"static auto deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>;\n")
+        p.print(f"static auto deserialize(BinaryReader &stream) -> std::expected<{q}, Errc>;\n")
         p.outdent()
         p.print("};\n")
 
@@ -248,21 +246,19 @@ class MessageGenerator:
                     for f in group:
                         self._field_generators.get(f).generate_serialize(p, f"value.{f.name}")
         p.print("\n")
-        p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
+        p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, Errc>\n")
         with p.block():
-            p.print("BinaryReader::ReadScope scope(stream);\n")
-            p.print("if (!scope) return std::unexpected(std::make_error_code(std::errc::value_too_large));\n")
             p.print(f"{q} out;\n")
             for guard, group in self._groups():
                 if guard is None:
                     (f,) = group
                     with p.block():  # scope each field's read locals (v, present, len, tag, ...)
-                        self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
+                        self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}", f'"{f.name}"')
                     continue
                 with p.block(f"if ({self._condition(p, guard, 'out')})"):
                     for f in group:
                         with p.block():
-                            self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}")
+                            self._field_generators.get(f).generate_deserialize(p, f"out.{f.name}", f'"{f.name}"')
             p.print("return out;\n")
 
     # --- gated fields -------------------------------------------------------

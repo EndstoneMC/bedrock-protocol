@@ -45,7 +45,7 @@ bp::BinaryWriter writer{bytes};
 bp::serialize(writer, packet);
 
 bp::BinaryReader reader{bytes};
-std::expected<Packet, std::error_code> decoded = bp::deserialize<Packet>(reader);
+std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
 ```
 
 Link the library as a subproject:

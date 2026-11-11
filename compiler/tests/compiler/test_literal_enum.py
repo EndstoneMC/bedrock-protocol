@@ -48,7 +48,7 @@ class LiteralEnum(CompilerCase):
         _, source = self.compile(SOURCE)
         body = self.body(source, "Serializer<ConstantPacket>::deserialize")
         self.assertIn("*v != 3", body)
-        self.assertIn("illegal_byte_sequence", body)
+        self.assertIn("Errc::unknown_value", body)
 
     def test_a_wide_underlying_compresses_the_way_an_enum_field_does(self) -> None:
         _, source = self.compile(

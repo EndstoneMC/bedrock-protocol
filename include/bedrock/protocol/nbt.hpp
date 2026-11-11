@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -686,12 +685,12 @@ inline bool operator!=(const CompoundTag &a, const CompoundTag &b) noexcept
 namespace nbt {
 
 void writeTag(BinaryWriter &stream, const Tag &tag);
-std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type);
+std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type);
 void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag);
-std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream);
+std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream);
 
 namespace detail {
-std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream, bool compound_entry);
+std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream, bool compound_entry);
 }
 
 inline void writeTag(BinaryWriter &stream, const Tag &tag)
@@ -749,11 +748,11 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
     });
 }
 
-inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type type)
+inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
 {
     BinaryReader::ReadScope scope(stream);
     if (!scope) {
-        return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        return std::unexpected(Errc::too_deep);
     }
     switch (type) {
     case Type::End:
@@ -816,7 +815,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             return std::unexpected(r.error());
         }
         if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
-            return std::unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(Errc::truncated);
         }
         ByteArrayTag out;
         out.reserve(static_cast<std::size_t>(*count));
@@ -838,7 +837,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             return std::unexpected(r.error());
         }
         if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
-            return std::unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(Errc::truncated);
         }
         IntArrayTag out;
         out.reserve(static_cast<std::size_t>(*count));
@@ -861,7 +860,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
             return std::unexpected(count.error());
         }
         if (*element_type > static_cast<std::uint8_t>(Type::IntArray) || (*count > 0 && *element_type == 0)) {
-            return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+            return std::unexpected(Errc::unknown_value);
         }
         if (auto r = stream.account(*count, sizeof(Tag)); !r) {
             return std::unexpected(r.error());
@@ -892,7 +891,7 @@ inline std::expected<Tag, std::error_code> readTag(BinaryReader &stream, Type ty
         return Tag{std::move(out)};
     }
     }
-    return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+    return std::unexpected(Errc::unknown_value);
 }
 
 inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag)
@@ -906,8 +905,7 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag
     writeTag(stream, tag);
 }
 
-inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readNamedTag(BinaryReader &stream,
-                                                                                        bool compound_entry)
+inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(BinaryReader &stream, bool compound_entry)
 {
     auto type = stream.read<std::uint8_t>();
     if (!type) {
@@ -917,7 +915,7 @@ inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readN
         return std::pair<std::string, Tag>{};
     }
     if (*type > static_cast<std::uint8_t>(Type::IntArray)) {
-        return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+        return std::unexpected(Errc::unknown_value);
     }
     if (compound_entry) {
         if (auto r = stream.account(1, sizeof(CompoundTag::value_type)); !r) {
@@ -935,7 +933,7 @@ inline std::expected<std::pair<std::string, Tag>, std::error_code> detail::readN
     return std::pair<std::string, Tag>{std::move(*name), std::move(*payload)};
 }
 
-inline std::expected<std::pair<std::string, Tag>, std::error_code> readNamedTag(BinaryReader &stream)
+inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
 {
     return detail::readNamedTag(stream, false);
 }
@@ -949,7 +947,7 @@ struct Serializer<CompoundTag> {
         nbt::writeNamedTag(stream, std::string_view{}, Tag{value});
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTag, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTag, Errc>
     {
         auto named = nbt::readNamedTag(stream);
         if (!named) {
@@ -957,7 +955,7 @@ struct Serializer<CompoundTag> {
         }
         auto *compound = named->second.get_if<CompoundTag>();
         if (compound == nullptr) {
-            return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+            return std::unexpected(Errc::unknown_value);
         }
         return std::move(*compound);
     }
@@ -977,7 +975,7 @@ struct Serializer<CompoundTagData> {
         nbt::writeTag(stream, Tag{static_cast<const CompoundTag &>(value)});
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTagData, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTagData, Errc>
     {
         auto tag = nbt::readTag(stream, nbt::Type::Compound);
         if (!tag) {

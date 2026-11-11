@@ -14,7 +14,7 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Report bad wire bytes as `std::unexpected(std::error_code)`, never as an exception; throw a `std::` exception only for API misuse, such as wrong-type access.
+- Report bad wire bytes as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail`; never throw for wire bytes.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.
 - Give every overload of a name one meaning; a length-prefixed write and a raw write take different names.
 - Use `std::` fixed-width integers at the width the wire declares, and `std::size_t` for counts and indices.

@@ -11,8 +11,9 @@
 #include <limits>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
+#include <variant>
+#include <vector>
 
 #if !defined(__cpp_lib_byteswap) || __cpp_lib_byteswap < 202110L
 namespace std {
@@ -29,24 +30,34 @@ constexpr T byteswap(T value) noexcept
 
 namespace bedrock::protocol {
 
+enum class Errc : std::uint8_t {
+    truncated,
+    out_of_range,
+    unknown_value,
+    too_large,
+    too_deep,
+    trailing_bytes,
+};
+
+using PathSegment = std::variant<std::string_view, std::size_t>;
+
 namespace detail {
 template <std::integral T>
-std::expected<std::size_t, std::error_code> countValue(T value)
+std::expected<std::size_t, Errc> countValue(T value)
 {
     if constexpr (std::is_signed_v<T>) {
         if (value < 0) {
-            return std::unexpected(std::make_error_code(std::errc::value_too_large));
+            return std::unexpected(Errc::out_of_range);
         }
     }
     if (static_cast<std::uintmax_t>(value) > std::numeric_limits<std::size_t>::max()) {
-        return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        return std::unexpected(Errc::out_of_range);
     }
     return static_cast<std::size_t>(value);
 }
 
-inline std::expected<std::size_t, std::error_code> countOperation(std::expected<std::size_t, std::error_code> a,
-                                                                  std::expected<std::size_t, std::error_code> b,
-                                                                  char operation)
+inline std::expected<std::size_t, Errc> countOperation(std::expected<std::size_t, Errc> a,
+                                                       std::expected<std::size_t, Errc> b, char operation)
 {
     if (!a) {
         return a;
@@ -73,7 +84,7 @@ inline std::expected<std::size_t, std::error_code> countOperation(std::expected<
     case '&':
         return *a & *b;
     }
-    return std::unexpected(std::make_error_code(std::errc::value_too_large));
+    return std::unexpected(Errc::out_of_range);
 }
 }  // namespace detail
 
@@ -91,7 +102,6 @@ public:
     {
         if ((elements && count > limits_.max_decoded_elements - elements_) ||
             (width && count > (limits_.max_decoded_bytes - bytes_) / width)) {
-            resource_failure_ = true;
             return false;
         }
         elements_ += elements ? count : 0;
@@ -99,20 +109,17 @@ public:
         return true;
     }
     [[nodiscard]] std::size_t maxDepth() const { return std::min(limits_.max_depth, std::size_t{128}); }
-    [[nodiscard]] bool resourceFailure() const { return resource_failure_; }
-    void markResourceFailure() { resource_failure_ = true; }
 
 private:
     DecodeLimits limits_;
     std::size_t elements_ = 0;
     std::size_t bytes_ = 0;
-    bool resource_failure_ = false;
 };
 
 class BinaryReader {
 public:
     template <class T>
-    using Result = std::expected<T, std::error_code>;
+    using Result = std::expected<T, Errc>;
 
     explicit BinaryReader(std::string_view buf, DecodeBudget *budget = nullptr)
         : view_(buf), budget_(budget ? budget : &local_budget_)
@@ -121,7 +128,8 @@ public:
 
     BinaryReader(const BinaryReader &other)
         : view_(other.view_), read_pos_(other.read_pos_), local_budget_(other.local_budget_),
-          budget_(other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_), depth_(other.depth_)
+          budget_(other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_), depth_(other.depth_),
+          path_(other.path_)
     {
     }
     BinaryReader &operator=(const BinaryReader &other)
@@ -132,6 +140,7 @@ public:
             local_budget_ = other.local_budget_;
             budget_ = other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_;
             depth_ = other.depth_;
+            path_ = other.path_;
         }
         return *this;
     }
@@ -141,13 +150,12 @@ public:
     {
         if constexpr (std::is_signed_v<N>) {
             if (count < 0) {
-                return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+                return std::unexpected(Errc::out_of_range);
             }
         }
         if (static_cast<std::uintmax_t>(count) > std::numeric_limits<std::size_t>::max() ||
             !budget_->charge(static_cast<std::size_t>(count), width, elements)) {
-            budget_->markResourceFailure();
-            return std::unexpected(std::make_error_code(std::errc::value_too_large));
+            return std::unexpected(Errc::too_large);
         }
         return {};
     }
@@ -158,9 +166,6 @@ public:
         {
             if (entered_) {
                 ++reader_.depth_;
-            }
-            else {
-                reader_.budget_->markResourceFailure();
             }
         }
         ~ReadScope()
@@ -184,7 +189,14 @@ public:
     [[nodiscard]] auto getLength() const { return view_.size(); }
     [[nodiscard]] auto getView() const { return view_; }
     [[nodiscard]] auto canRead() const { return read_pos_ < view_.size(); }
-    [[nodiscard]] bool resourceFailure() const { return budget_->resourceFailure(); }
+    [[nodiscard]] const std::vector<PathSegment> &getPath() const { return path_; }
+
+    template <typename... Segment>
+    [[gnu::cold, gnu::noinline]] std::unexpected<Errc> fail(Errc error, Segment... segments) noexcept
+    {
+        path_.insert(path_.begin(), {PathSegment{segments}...});
+        return std::unexpected(error);
+    }
 
     template <typename T>
         requires(std::integral<T> || std::floating_point<T>)
@@ -233,7 +245,7 @@ public:
             return std::unexpected(len.error());
         }
         if (*len > getUnreadLength()) {
-            return std::unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(Errc::truncated);
         }
         if (auto r = account(*len, 1, false); !r) {
             return std::unexpected(r.error());
@@ -249,7 +261,7 @@ public:
     auto readRemaining() -> Result<std::string>
     {
         if (read_pos_ > view_.size()) {
-            return std::unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(Errc::truncated);
         }
         const auto remaining = getUnreadLength();
         if (auto r = account(remaining, 1, false); !r) {
@@ -276,7 +288,7 @@ public:
                 return std::unexpected(r.error());
             }
             if (n == kMaxBytes - 1 && (b & 0x7fu) > (std::numeric_limits<U>::max() >> (n * 7))) {
-                return std::unexpected(std::make_error_code(std::errc::value_too_large));
+                return std::unexpected(Errc::out_of_range);
             }
             value |= (static_cast<U>(b) & U{0x7F}) << (n * 7);
             if ((b & 0x80u) == 0) {
@@ -288,7 +300,7 @@ public:
                 }
             }
         }
-        return std::unexpected(std::make_error_code(std::errc::value_too_large));
+        return std::unexpected(Errc::out_of_range);
     }
 
 private:
@@ -299,7 +311,7 @@ private:
         }
         const auto end = read_pos_ + num;
         if (end < read_pos_ || end > view_.size()) {
-            return std::unexpected(std::make_error_code(std::errc::message_size));
+            return std::unexpected(Errc::truncated);
         }
         std::memcpy(target, view_.data() + read_pos_, num);
         read_pos_ = end;
@@ -311,6 +323,7 @@ private:
     DecodeBudget local_budget_;
     DecodeBudget *budget_;
     std::size_t depth_ = 0;
+    std::vector<PathSegment> path_;
 };
 
 class BinaryWriter {

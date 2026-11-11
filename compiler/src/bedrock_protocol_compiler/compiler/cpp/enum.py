@@ -81,15 +81,13 @@ class EnumGenerator:
     # --- serializer (name-coded: BDS's spelling, lowercased, on the wire) ---
 
     def generate_serializer_declaration(self, p: Printer) -> None:
-        p.add_includes(
-            f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>", "<system_error>"
-        )
+        p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", f"<{INCLUDE_PREFIX}/stream.hpp>", "<expected>")
         q = self._qualified
         p.print("template <>\n")
         p.print(f"struct Serializer<{q}> {{\n")
         p.indent()
         p.print(f"static void serialize(BinaryWriter &stream, {q} value);\n")
-        p.print(f"static auto deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>;\n")
+        p.print(f"static auto deserialize(BinaryReader &stream) -> std::expected<{q}, Errc>;\n")
         p.outdent()
         p.print("};\n")
 
@@ -100,7 +98,6 @@ class EnumGenerator:
             f"<{INCLUDE_PREFIX}/stream.hpp>",
             "<expected>",
             "<string>",
-            "<system_error>",
         )
         q = self._qualified
         p.print(f"void Serializer<{q}>::serialize(BinaryWriter &stream, {q} value)\n")
@@ -112,7 +109,7 @@ class EnumGenerator:
             # accepts it, so the failure lands on the next deserialize.
             p.print("stream.write(enum_name(value));\n")
         p.print("\n")
-        p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, std::error_code>\n")
+        p.print(f"auto Serializer<{q}>::deserialize(BinaryReader &stream) -> std::expected<{q}, Errc>\n")
         with p.block():
             # BDS folds at bind time, not at lookup: it matches the lowercased name and
             # nothing else. The table is lowercased to match, and enum_cast folds its
@@ -122,7 +119,7 @@ class EnumGenerator:
             p.print("auto v = stream.read<std::string>();\n")
             p.print("if (!v) return std::unexpected(v.error());\n")
             p.print(f"const auto value = enum_cast<{q}>(*v);\n")
-            p.print("if (!value) return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+            p.print("if (!value) return std::unexpected(Errc::unknown_value);\n")
             p.print("return *value;\n")
 
     @staticmethod

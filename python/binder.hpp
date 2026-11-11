@@ -82,11 +82,11 @@ nb::bytes encode(const T &value)
 }
 
 template <typename T>
-T decode(BinaryReader &reader)
+T decode_or_raise(BinaryReader &reader)
 {
-    auto value = Serializer<T>::deserialize(reader);
+    auto value = protocol::decode<T>(reader);
     if (!value) {
-        throw_decode_error(struct_name<T>(), reader, value.error().message());
+        throw_decode_error(value.error());
     }
     return std::move(*value);
 }
@@ -95,11 +95,7 @@ template <typename T>
 T decode_all(nb::bytes data)
 {
     BinaryReader reader{std::string_view(data.c_str(), data.size())};
-    T value = decode<T>(reader);
-    if (reader.getUnreadLength() != 0) {
-        throw_decode_error(struct_name<T>(), reader, "trailing bytes");
-    }
-    return value;
+    return decode_or_raise<T>(reader);
 }
 
 template <typename E>
@@ -418,7 +414,7 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
     if constexpr (Packet<T>) {
         cls.attr("ID") = T::Id;
         nb::type_supplement<Codec>(cls).decode = [](BinaryReader &stream) -> nb::object {
-            return nb::cast(decode<T>(stream));
+            return nb::cast(decode_or_raise<T>(stream));
         };
         if (version != nullptr) {
             version->packets[nb::int_(T::Id)] = cls;

@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <expected>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
 
 #include <bedrock/protocol/detail/reflect.hpp>
@@ -41,7 +40,7 @@ struct Serializer<PacketHeader> {
                                           ((value.sender_sub_id & 3U) << 12));
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<PacketHeader, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<PacketHeader, Errc>
     {
         auto v = stream.readVarInt<std::uint32_t>();
         if (!v) {

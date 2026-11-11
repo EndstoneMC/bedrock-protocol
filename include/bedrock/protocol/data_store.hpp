@@ -4,7 +4,6 @@
 #include <expected>
 #include <map>
 #include <string>
-#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -123,11 +122,11 @@ struct Serializer<DynamicValue> {
         });
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<DynamicValue, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<DynamicValue, Errc>
     {
         BinaryReader::ReadScope scope(stream);
         if (!scope) {
-            return std::unexpected(std::make_error_code(std::errc::value_too_large));
+            return std::unexpected(Errc::too_deep);
         }
         auto tag = stream.read<std::uint32_t>();
         if (!tag) {
@@ -205,7 +204,7 @@ struct Serializer<DynamicValue> {
             return DynamicValue{std::move(out)};
         }
         }
-        return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));
+        return std::unexpected(Errc::unknown_value);
     }
 };
 

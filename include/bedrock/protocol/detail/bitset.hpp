@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
-#include <system_error>
 
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
@@ -38,7 +37,7 @@ struct Serializer<std::bitset<N>> {
         }
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<std::bitset<N>, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<std::bitset<N>, Errc>
     {
         std::bitset<N> out;
         for (std::size_t g = 0;; ++g) {
@@ -50,7 +49,7 @@ struct Serializer<std::bitset<N>> {
                 if ((*b & (1U << k)) != 0) {
                     const std::size_t bit = g * 7 + k;
                     if (bit >= N) {
-                        return std::unexpected(std::make_error_code(std::errc::value_too_large));
+                        return std::unexpected(Errc::out_of_range);
                     }
                     out.set(bit);
                 }
@@ -59,7 +58,7 @@ struct Serializer<std::bitset<N>> {
                 return out;
             }
             if ((g + 1) * 7 >= N) {
-                return std::unexpected(std::make_error_code(std::errc::value_too_large));
+                return std::unexpected(Errc::out_of_range);
             }
         }
     }

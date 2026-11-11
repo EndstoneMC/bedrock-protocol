@@ -137,13 +137,42 @@ def test_a_python_keyword_member_keeps_the_dsl_underscore():
 
 
 def test_decode_rejects_trailing_bytes():
-    with pytest.raises(ValueError, match="trailing bytes"):
+    with pytest.raises(bedrock_protocol.DecodeError, match=r"^PlayStatusPacket: trailing bytes at byte 4 of 5$"):
         proto.decode(PLAY_STATUS.ID, bytes(PLAY_STATUS) + b"\x00")
 
 
 def test_decode_rejects_a_truncated_body():
-    with pytest.raises(ValueError, match="at byte"):
+    with pytest.raises(bedrock_protocol.DecodeError, match=r"^PlayStatusPacket.status: truncated at byte 0 of 3$"):
         proto.decode(PLAY_STATUS.ID, bytes(PLAY_STATUS)[:-1])
+
+
+@pytest.fixture
+def truncated_attributes():
+    attribute = proto.AttributeData(name="health")
+    body = bytes(proto.UpdateAttributesPacket(attribute_data=[attribute, attribute]))
+    with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
+        proto.UpdateAttributesPacket.from_bytes(body[:-2])
+    return caught.value
+
+
+def test_a_decode_error_is_a_value_error(truncated_attributes):
+    assert isinstance(truncated_attributes, ValueError)
+
+
+def test_a_decode_error_carries_its_reason(truncated_attributes):
+    assert truncated_attributes.reason == "truncated"
+
+
+def test_a_decode_error_carries_the_path_through_a_list_element(truncated_attributes):
+    assert truncated_attributes.path == ("attribute_data", 1, "modifiers")
+
+
+def test_a_decode_error_carries_the_offset_where_the_reader_stopped(truncated_attributes):
+    assert truncated_attributes.offset == 65
+
+
+def test_a_decode_error_message_names_the_nested_field_and_the_list_element(truncated_attributes):
+    assert str(truncated_attributes) == "UpdateAttributesPacket.attribute_data[1].modifiers: truncated at byte 65 of 65"
 
 
 def test_decode_rejects_an_unknown_packet_id():

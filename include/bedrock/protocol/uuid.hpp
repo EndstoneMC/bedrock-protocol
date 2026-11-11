@@ -23,7 +23,7 @@ struct Serializer<UUID> {
         stream.write<std::uint64_t>(value.least_significant_bits);
     }
 
-    static auto deserialize(BinaryReader &stream) -> std::expected<UUID, std::error_code>
+    static auto deserialize(BinaryReader &stream) -> std::expected<UUID, Errc>
     {
         auto msb = stream.read<std::uint64_t>();
         if (!msb) {

@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string_view>
-#include <system_error>
 #include <utility>
 #include <vector>
 
 #include <nanobind/nanobind.h>
 
+#include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
 
 namespace bedrock::protocol::python {
@@ -33,7 +32,7 @@ const std::vector<VersionBinding> &version_bindings();
 
 std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
-[[noreturn]] void throw_decode_error(std::string_view type, const BinaryReader &stream, std::string_view reason);
+[[noreturn]] void throw_decode_error(const DecodeError &error);
 
 void bind_nbt(nb::module_ &parent);
 

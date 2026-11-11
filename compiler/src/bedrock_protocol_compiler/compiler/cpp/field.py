@@ -298,16 +298,21 @@ class GenContext:
     owner: str | None = None
 
 
+def _fail(error: str, where: str) -> str:
+    return f"return stream.fail({error}, {where});"
+
+
 class FieldGenerator(ABC):
     """One wire node's codec. `generate_serialize` pushes `var` onto the
-    stream; `generate_deserialize` pulls from the stream into `target`. `depth`
-    disambiguates the loop / temporary names of nested combinators."""
+    stream; `generate_deserialize` pulls from the stream into `target`, naming it
+    `where` (the `stream.fail` segments) on failure. `depth` disambiguates the
+    loop / temporary names of nested combinators."""
 
     @abstractmethod
     def generate_serialize(self, p: Printer, var: str, depth: int = 0) -> None: ...
 
     @abstractmethod
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None: ...
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None: ...
 
 
 class PrimitiveFieldGenerator(FieldGenerator):
@@ -319,10 +324,10 @@ class PrimitiveFieldGenerator(FieldGenerator):
         p.add_includes(*_codec_includes(self._prim))
         p.print(_primitive_write(self._prim, var) + "\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>", *_codec_includes(self._prim))
         p.print(_primitive_read(self._prim) + "\n")
-        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"if (!v) {_fail('v.error()', where)}\n")
         if self._prim.name in ("str", "bytes") and self._prim.alias is None:
             p.print(f"{target} = std::move(*v);\n")
         else:
@@ -330,12 +335,8 @@ class PrimitiveFieldGenerator(FieldGenerator):
             p.print(f"{target} = static_cast<{cast}>(*v);\n")
             integral = INTEGER_PRIMITIVES | {"bool"}
             if self._prim.name in integral and self._prim.encoding in integral:
-                p.add_includes("<system_error>")
                 wire = PRIMITIVE_TYPES[self._prim.encoding]
-                p.print(
-                    f"if (static_cast<{wire}>({target}) != *v) "
-                    "return std::unexpected(std::make_error_code(std::errc::value_too_large));\n"
-                )
+                p.print(f"if (static_cast<{wire}>({target}) != *v) {_fail('Errc::out_of_range', where)}\n")
 
 
 class EnumFieldGenerator(FieldGenerator):
@@ -354,24 +355,20 @@ class EnumFieldGenerator(FieldGenerator):
             p.add_includes(*_codec_includes(self._enum.scalar))
             p.print(_primitive_write(self._enum.scalar, var) + "\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         if self._enum.scalar is None:
             p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
             p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
-            p.print("if (!v) return std::unexpected(v.error());\n")
+            p.print(f"if (!v) {_fail('v.error()', where)}\n")
             p.print(f"{target} = std::move(*v);\n")
         else:
             p.add_includes(*_codec_includes(self._enum.scalar))
             p.print(_primitive_read(self._enum.scalar) + "\n")
-            p.print("if (!v) return std::unexpected(v.error());\n")
+            p.print(f"if (!v) {_fail('v.error()', where)}\n")
             p.print(f"{target} = static_cast<{self._qualified()}>(*v);\n")
-            p.add_includes("<system_error>")
             wire = PRIMITIVE_TYPES[self._enum.scalar.encoding]
-            p.print(
-                f"if (static_cast<{wire}>({target}) != *v) "
-                "return std::unexpected(std::make_error_code(std::errc::value_too_large));\n"
-            )
+            p.print(f"if (static_cast<{wire}>({target}) != *v) {_fail('Errc::out_of_range', where)}\n")
 
 
 class ClassFieldGenerator(FieldGenerator):
@@ -386,10 +383,10 @@ class ClassFieldGenerator(FieldGenerator):
         p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>")
         p.print(f"Serializer<{self._qualified()}>::serialize(stream, {var});\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes(f"<{INCLUDE_PREFIX}/serializer.hpp>", "<expected>")
         p.print(f"auto v = Serializer<{self._qualified()}>::deserialize(stream);\n")
-        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"if (!v) {_fail('v.error()', where)}\n")
         p.print(f"{target} = std::move(*v);\n")
 
 
@@ -412,10 +409,10 @@ class BitsetFieldGenerator(FieldGenerator):
         p.add_includes(*self._includes())
         p.print(f"Serializer<{self._spelling}>::serialize(stream, {var});\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>", *self._includes())
         p.print(f"auto v = Serializer<{self._spelling}>::deserialize(stream);\n")
-        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"if (!v) {_fail('v.error()', where)}\n")
         p.print(f"{target} = std::move(*v);\n")
 
 
@@ -436,13 +433,13 @@ class OptionalFieldGenerator(FieldGenerator):
         with p.block(f"if ({var}.has_value())"):
             self._inner.generate_serialize(p, f"(*{var})", depth)
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>")
         p.print("auto present = stream.read<bool>();\n")
-        p.print("if (!present) return std::unexpected(present.error());\n")
+        p.print(f"if (!present) {_fail('present.error()', where)}\n")
         with p.block("if (*present)"):
             p.print(f"{self._value_type} staged{{}};\n")
-            self._inner.generate_deserialize(p, "staged", depth)
+            self._inner.generate_deserialize(p, "staged", where, depth)
             p.print(f"{target} = std::move(staged);\n")
 
 
@@ -458,13 +455,13 @@ class LiteralFieldGenerator(FieldGenerator):
         p.add_includes(*_codec_includes(self._literal.wire))
         p.print(_primitive_write(self._literal.wire, _literal_value(self._literal.written)) + "\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<expected>", "<system_error>", *_codec_includes(self._literal.wire))
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
+        p.add_includes("<expected>", *_codec_includes(self._literal.wire))
         p.print(_primitive_read(self._literal.wire) + "\n")
-        p.print("if (!v) return std::unexpected(v.error());\n")
+        p.print(f"if (!v) {_fail('v.error()', where)}\n")
         accepted = " && ".join(f"*v != {_literal_value(value)}" for value in self._literal.values)
         with p.block(f"if ({accepted})"):
-            p.print("return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+            p.print(_fail("Errc::unknown_value", where) + "\n")
 
 
 class RepeatedFieldGenerator(FieldGenerator):
@@ -491,28 +488,28 @@ class RepeatedFieldGenerator(FieldGenerator):
         with p.block(f"for (const auto &e{depth} : {var})"):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>", "<type_traits>")
         if self._count is not None:
             count = render_count(self._count, "out", self._gc.ctx, self._gc.snapshot, self._gc.owner)
             p.print(f"const auto checked{depth} = {count};\n")
-            p.print(f"if (!checked{depth}) return std::unexpected(checked{depth}.error());\n")
+            p.print(f"if (!checked{depth}) {_fail(f'checked{depth}.error()', where)}\n")
             p.print(f"const auto count{depth} = *checked{depth};\n")
         else:
             p.add_includes(*type_includes(self._prefix))
             p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
-            p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+            p.print(f"if (!len{depth}) {_fail(f'len{depth}.error()', where)}\n")
             p.print(f"const auto count{depth} = *len{depth};\n")
         p.print(
             f"auto budget{depth} = stream.account(count{depth}, "
             f"sizeof(typename std::remove_reference_t<decltype({target})>::value_type));\n"
         )
-        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
+        p.print(f"if (!budget{depth}) {_fail(f'budget{depth}.error()', where)}\n")
         p.print(f"{target}.clear();\n")
         p.print(f"{target}.reserve(static_cast<std::size_t>(count{depth}));\n")
-        with p.block(f"for (auto rep{depth} = count{depth}; rep{depth} > 0; --rep{depth})"):
+        with p.block(f"for (std::size_t i{depth} = 0; i{depth} < static_cast<std::size_t>(count{depth}); ++i{depth})"):
             p.print(f"{target}.emplace_back();\n")
-            self._inner.generate_deserialize(p, f"{target}.back()", depth + 1)
+            self._inner.generate_deserialize(p, f"{target}.back()", f"{where}, i{depth}", depth + 1)
 
 
 class ArrayFieldGenerator(FieldGenerator):
@@ -528,12 +525,12 @@ class ArrayFieldGenerator(FieldGenerator):
         with p.block(f"for (const auto &e{depth} : {var})"):
             self._inner.generate_serialize(p, f"e{depth}", depth + 1)
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<cstddef>", "<expected>")
         p.print(f"auto budget{depth} = stream.account({self._size}, sizeof({target}[0]));\n")
-        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
+        p.print(f"if (!budget{depth}) {_fail(f'budget{depth}.error()', where)}\n")
         with p.block(f"for (std::size_t i{depth} = 0; i{depth} < {self._size}; ++i{depth})"):
-            self._inner.generate_deserialize(p, f"{target}[i{depth}]", depth + 1)
+            self._inner.generate_deserialize(p, f"{target}[i{depth}]", f"{where}, i{depth}", depth + 1)
 
 
 class MapFieldGenerator(FieldGenerator):
@@ -561,22 +558,22 @@ class MapFieldGenerator(FieldGenerator):
             self._key.generate_serialize(p, f"k{depth}", depth + 1)
             self._value.generate_serialize(p, f"v{depth}", depth + 1)
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
         p.add_includes("<expected>", "<map>", *type_includes(self._prefix))
         p.print(f"auto len{depth} = stream.{_read_verb(self._prefix)}();\n")
-        p.print(f"if (!len{depth}) return std::unexpected(len{depth}.error());\n")
+        p.print(f"if (!len{depth}) {_fail(f'len{depth}.error()', where)}\n")
         p.add_includes("<type_traits>")
         p.print(
             f"auto budget{depth} = stream.account(*len{depth}, "
             f"sizeof(typename std::remove_reference_t<decltype({target})>::value_type));\n"
         )
-        p.print(f"if (!budget{depth}) return std::unexpected(budget{depth}.error());\n")
+        p.print(f"if (!budget{depth}) {_fail(f'budget{depth}.error()', where)}\n")
         p.print(f"{target}.clear();\n")
-        with p.block(f"for (auto rep{depth} = *len{depth}; rep{depth} > 0; --rep{depth})"):
+        with p.block(f"for (std::size_t i{depth} = 0; i{depth} < static_cast<std::size_t>(*len{depth}); ++i{depth})"):
             p.print(f"{self._key_type} key{depth}{{}};\n")
             with p.block(""):
-                self._key.generate_deserialize(p, f"key{depth}", depth + 1)
-            self._value.generate_deserialize(p, f"{target}[key{depth}]", depth + 1)
+                self._key.generate_deserialize(p, f"key{depth}", f"{where}, i{depth}", depth + 1)
+            self._value.generate_deserialize(p, f"{target}[key{depth}]", f"{where}, i{depth}", depth + 1)
 
 
 class VariantFieldGenerator(FieldGenerator):
@@ -602,10 +599,10 @@ class VariantFieldGenerator(FieldGenerator):
                         case.generate_serialize(p, f"std::get<{index}>({var})", depth + 1)
                     p.print("break;\n")
 
-    def generate_deserialize(self, p: Printer, target: str, depth: int = 0) -> None:
-        p.add_includes("<variant>", "<system_error>", "<expected>", *type_includes(self._disc))
+    def generate_deserialize(self, p: Printer, target: str, where: str, depth: int = 0) -> None:
+        p.add_includes("<variant>", "<expected>", *type_includes(self._disc))
         p.print(f"auto tag{depth} = stream.{_read_verb(self._disc)}();\n")
-        p.print(f"if (!tag{depth}) return std::unexpected(tag{depth}.error());\n")
+        p.print(f"if (!tag{depth}) {_fail(f'tag{depth}.error()', where)}\n")
         p.print(f"{self._variant_type} var{depth}{{}};\n")
         with p.block(f"switch (*tag{depth})"):
             for index, case in enumerate(self._cases):
@@ -613,11 +610,11 @@ class VariantFieldGenerator(FieldGenerator):
                     p.print(f"std::variant_alternative_t<{index}, {self._variant_type}> alt{depth}{{}};\n")
                     if case is not None:
                         with p.block(""):
-                            case.generate_deserialize(p, f"alt{depth}", depth + 1)
+                            case.generate_deserialize(p, f"alt{depth}", where, depth + 1)
                     p.print(f"var{depth}.emplace<{index}>(std::move(alt{depth}));\n")
                     p.print("break;\n")
             with p.block("default:"):
-                p.print("return std::unexpected(std::make_error_code(std::errc::illegal_byte_sequence));\n")
+                p.print(_fail("Errc::unknown_value", where) + "\n")
         p.print(f"{target} = std::move(var{depth});\n")
 
 

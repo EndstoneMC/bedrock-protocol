@@ -46,7 +46,7 @@ class LiteralString(CompilerCase):
         _, source = self.compile(SOURCE)
         body = self.body(source, "Serializer<ConstantPacket>::deserialize")
         self.assertIn('*v != "raw"', body)
-        self.assertIn("illegal_byte_sequence", body)
+        self.assertIn("Errc::unknown_value", body)
 
     def test_several_spellings_are_accepted_and_the_first_is_written(self) -> None:
         _, source = self.compile(

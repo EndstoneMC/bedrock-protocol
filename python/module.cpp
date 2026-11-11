@@ -18,11 +18,25 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
     return list;
 }
 
-void throw_decode_error(std::string_view type, const BinaryReader &stream, std::string_view reason)
+PyObject *decode_error = nullptr;
+
+void throw_decode_error(const DecodeError &error)
 {
-    throw nb::value_error((std::string(type) + ": " + std::string(reason) + " at byte " +
-                           std::to_string(stream.getReadPointer()) + " of " + std::to_string(stream.getLength()))
-                              .c_str());
+    nb::list path;
+    for (const auto &segment : error.path) {
+        if (const auto *name = std::get_if<std::string_view>(&segment)) {
+            path.append(nb::str(name->data(), name->size()));
+        }
+        else {
+            path.append(std::get<std::size_t>(segment));
+        }
+    }
+    nb::object exception = nb::borrow(decode_error)(nb::str(std::format("{}", error).c_str()));
+    exception.attr("reason") = nb::str(std::format("{}", error.reason).c_str());
+    exception.attr("path") = nb::tuple(path);
+    exception.attr("offset") = error.offset;
+    PyErr_SetObject(decode_error, exception.ptr());
+    throw nb::python_error();
 }
 
 namespace {
@@ -66,11 +80,7 @@ nb::object decode_body(const Version &version, int id, BinaryReader &reader)
     if (cls.is_none()) {
         throw nb::key_error(std::format("no packet {} at protocol {}", id, version.number).c_str());
     }
-    nb::object packet = nb::type_supplement<Codec>(cls).decode(reader);
-    if (reader.getUnreadLength() != 0) {
-        throw_decode_error(nb::type_name(packet.type()).c_str(), reader, "trailing bytes");
-    }
-    return packet;
+    return nb::type_supplement<Codec>(cls).decode(reader);
 }
 
 void bind_version_api(Version &version)
@@ -92,7 +102,7 @@ void bind_version_api(Version &version)
             BinaryReader reader{std::string_view(data.c_str(), data.size())};
             auto header = Serializer<PacketHeader>::deserialize(reader);
             if (!header) {
-                throw_decode_error("PacketHeader", reader, header.error().message());
+                throw_decode_error({header.error(), "PacketHeader", {}, reader.getReadPointer(), reader.getLength()});
             }
             nb::object packet = decode_body(version, header->packet_id, reader);
             return nb::make_tuple(*header, packet);
@@ -128,6 +138,8 @@ void bind_versions(nb::module_ &parent)
 NB_MODULE(_native, m)
 {
     namespace bpy = bedrock::protocol::python;
+    bpy::decode_error = PyErr_NewException("bedrock_protocol.DecodeError", PyExc_ValueError, nullptr);
+    m.attr("DecodeError") = bpy::nb::borrow(bpy::decode_error);
     m.attr("LATEST_PROTOCOL") = bedrock::protocol::latest_version;
     bpy::bind_nbt(m);
     bpy::bind_versions(m);
