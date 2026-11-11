@@ -1,5 +1,5 @@
 from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef, Range
-from bedrock_protocol_compiler.schema import Schema
+from bedrock_protocol_compiler.schema import Schema, roots_reached
 
 HEADER = """
 from enum import IntEnum, auto
@@ -318,6 +318,28 @@ def test_an_enum_coded_by_name_in_a_dicts_scalar_half_is_name_coded(build_packag
     e, _ = schema.order
 
     assert schema.name_coded == {e}
+
+
+def test_a_family_reaching_a_nested_one_reaches_its_owner(build_package):
+    source = HEADER + "class A:\n    x: Owner.Inner\n\nclass Owner:\n    class Inner:\n        x: uint8\n"
+    schema = Schema(build_package({"a": source}))
+    a = next(family for family in schema.order if family.name == "A")
+    owner = next(family for family in schema.order if family.name == "Owner")
+
+    assert roots_reached(a) == {owner}
+
+
+def test_an_owner_reaches_what_its_nested_types_reach_but_not_itself(build_package):
+    source = (
+        HEADER
+        + "class Other:\n    x: uint8\n\n"
+        + "class Owner:\n    class B:\n        x: uint8\n\n    class A:\n        x: Other\n        y: B\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    other = next(family for family in schema.order if family.name == "Other")
+    owner = next(family for family in schema.order if family.name == "Owner")
+
+    assert roots_reached(owner) == {other}
 
 
 def test_the_package_is_the_modules_namespace(build_package):
