@@ -1,10 +1,9 @@
-import dataclasses
 from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 
+from bedrock_protocol_compiler.builder import reaches
 from bedrock_protocol_compiler.descriptor import (
     Binary,
-    CompilerError,
     Enum,
     Field,
     Int,
@@ -42,15 +41,9 @@ class EnumShape:
 type Shape = StructShape | EnumShape
 
 
-def reaches(node: object) -> Iterator[Struct | Enum]:
-    if isinstance(node, Struct | Enum):
-        yield node
-    elif isinstance(node, tuple | list):
-        for item in node:
-            yield from reaches(item)
-    elif dataclasses.is_dataclass(node):
-        for each in dataclasses.fields(node):
-            yield from reaches(getattr(node, each.name))
+def reached_by(each: Field) -> Iterator[Struct | Enum]:
+    for target in (*reaches(each.type), *reaches(each.when)):
+        yield target.enum if isinstance(target, MemberRef) else target
 
 
 class Schema:
@@ -79,13 +72,16 @@ class Schema:
             return
         placed.add(family)
         if isinstance(family, Struct):
-            for dependency in reaches([[declaration.fields for declaration in family.declarations], family.nested]):
-                self.place(dependency, placed)
+            for declaration in family.declarations:
+                for each in declaration.fields:
+                    for target in reached_by(each):
+                        self.place(target, placed)
+            for child in family.nested:
+                self.place(child, placed)
         self.order.append(family)
 
     def project(self, family: Struct | Enum) -> None:
         shapes: dict[tuple[object, ...], Shape] = {}
-        versions_of: dict[Shape, list[int]] = {}
         for version in self.versions:
             if not any(each.range.contains(version) for each in family.declarations):
                 continue
@@ -94,12 +90,8 @@ class Schema:
                 present = tuple(
                     replace(each, range=ALWAYS) for each in struct_declaration.fields if each.range.contains(version)
                 )
-                nested = tuple(
-                    self.shape_at(child, version)
-                    for child in family.nested
-                    if any(each.range.contains(version) for each in child.declarations)
-                )
-                reached = tuple(self.shape_at(each, version) for each in dict.fromkeys(reaches(present)))
+                nested = tuple(self.live[child, version] for child in family.nested if (child, version) in self.live)
+                reached = tuple(self.shape_at(target, version) for each in present for target in reached_by(each))
                 key: tuple[object, ...] = (present, nested, reached)
                 candidate: Shape = StructShape(family, present, nested)
             else:
@@ -110,44 +102,31 @@ class Schema:
                 for member in enum_declaration.members:
                     if not member.range.contains(version):
                         continue
-                    reference: str | None = None
-                    offset = 0
                     match member.value:
                         case None:
                             number += 1
                         case Int(value=literal):
                             number = literal
-                        case MemberRef(name=reference):
-                            pass
-                        case Binary(left=MemberRef(name=reference), right=Int(value=offset)):
-                            pass
-                    if reference is not None:
-                        if reference not in numbers:
-                            raise CompilerError(
-                                f"{family.name}.{member.name}: names {reference}, which does not exist at {version}"
-                            )
-                        number = numbers[reference] - offset
+                        case MemberRef(name=name):
+                            number = numbers[name]
+                        case Binary(left=MemberRef(name=name), right=Int(value=offset)):
+                            number = numbers[name] - offset
                     numbers[member.name] = number
                     members.append(replace(member, value=Int(number), range=ALWAYS))
                 key = (enum_declaration.underlying, tuple(members))
                 candidate = EnumShape(family, enum_declaration.underlying, tuple(members))
-            shape = shapes.setdefault(key, candidate)
-            versions_of.setdefault(shape, []).append(version)
-        for shape, live in versions_of.items():
-            positions = [self.versions.index(version) for version in live]
-            start = 0
-            for stop in range(1, len(positions) + 1):
-                if stop < len(positions) and positions[stop] == positions[stop - 1] + 1:
-                    continue
-                first = positions[start]
-                last = positions[stop - 1]
-                since = None if first == 0 else self.versions[first]
-                until = None if last == len(self.versions) - 1 else self.versions[last + 1]
-                shape.ranges.append(Range(since, until))
-                start = stop
-            for version in live:
-                self.live[family, version] = shape
-            shape.versioned = len(shapes) > 1 or shape.ranges != [ALWAYS]
+            self.live[family, version] = shapes.setdefault(key, candidate)
+        previous: Shape | None = None
+        for version in self.versions:
+            current = self.live.get((family, version))
+            if current is not previous:
+                if previous is not None:
+                    previous.ranges[-1] = Range(previous.ranges[-1].since, version)
+                if current is not None:
+                    current.ranges.append(Range(None if version == self.versions[0] else version, None))
+            previous = current
+        for shape in shapes.values():
+            shape.versioned = shape.ranges != [ALWAYS]
             if isinstance(shape, StructShape):
                 for child in shape.nested:
                     if child.owner is None:
