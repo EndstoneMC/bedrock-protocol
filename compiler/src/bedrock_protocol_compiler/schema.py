@@ -124,8 +124,6 @@ class Schema:
                 for each in declaration.fields:
                     for target in reached_by(each):
                         self.place(target, placed)
-                        if outermost(target) is not outermost(family):
-                            self.place(outermost(target), placed)
             for child in family.nested:
                 self.place(child, placed)
         self.order.append(family)
