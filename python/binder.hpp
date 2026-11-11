@@ -191,27 +191,18 @@ template <typename F>
 F from_python(nb::handle src)
 {
     if constexpr (std::is_enum_v<F>) {
-        using U = std::underlying_type_t<F>;
         if (!PyLong_Check(src.ptr())) {
             throw nb::type_error("expected an int or an enum member");
         }
-        using Wide = std::conditional_t<std::is_signed_v<U>, long long, unsigned long long>;
-        const Wide v = std::is_signed_v<U> ? static_cast<Wide>(PyLong_AsLongLong(src.ptr()))
-                                           : static_cast<Wide>(PyLong_AsUnsignedLongLong(src.ptr()));
-        if (PyErr_Occurred()) {
-            throw nb::python_error();
+        F member;
+        if (nb::try_cast<F>(src, member)) {
+            return member;
         }
-        bool fits = false;
-        if constexpr (std::is_same_v<U, bool>) {
-            fits = v <= 1;
+        std::underlying_type_t<F> integer;
+        if (!nb::try_cast<std::underlying_type_t<F>>(src, integer, false)) {
+            throw nb::type_error(std::format("value {} does not fit the enum", nb::str(src).c_str()).c_str());
         }
-        else {
-            fits = std::in_range<U>(v);
-        }
-        if (!fits) {
-            throw nb::type_error(std::format("value {} does not fit the enum", v).c_str());
-        }
-        return static_cast<F>(static_cast<U>(v));
+        return static_cast<F>(integer);
     }
     else if constexpr (is_optional_v<F>) {
         return src.is_none() ? F{} : F{from_python<typename F::value_type>(src)};
