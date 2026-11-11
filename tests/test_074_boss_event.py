@@ -143,7 +143,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v975, v1001])
 def test_boss_event_is_packet_74(version):
     assert version.PACKETS[74] is version.BossEventPacket
 
