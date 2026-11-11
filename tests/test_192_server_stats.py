@@ -17,7 +17,7 @@ GOLDENS = [
         pytest.param(
             version.ServerStatsPacket(server_time=12.5, network_time=0.25),
             POSITIVE,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-positive",
+            id=f"{version.__name__.rpartition('.')[2]}-positive",
         )
         for version in VERSIONS
     ],
@@ -25,7 +25,7 @@ GOLDENS = [
         pytest.param(
             version.ServerStatsPacket(server_time=-1.0, network_time=2.5),
             NEGATIVE,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-negative",
+            id=f"{version.__name__.rpartition('.')[2]}-negative",
         )
         for version in VERSIONS
     ],
