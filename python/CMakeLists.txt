@@ -29,8 +29,5 @@ nanobind_add_module(_native STABLE_ABI ${_sources})
 target_include_directories(_native PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}/bind")
 target_link_libraries(_native PRIVATE bedrock::protocol)
 set_target_properties(bedrock_protocol PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
-if (MSVC)
-    target_compile_options(_native PRIVATE /bigobj)
-endif ()
 
 install(TARGETS _native DESTINATION bedrock_protocol)
