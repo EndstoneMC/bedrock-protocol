@@ -445,9 +445,9 @@ class Builder:
             raise error(source, node, node.name, "cereal=False marks a module-scope declaration")
         if owner is not None:
             cereal = owner.cereal
-        range = own.intersect(outer)
-        if range.since is not None and range.until is not None and range.since >= range.until:
+        if not own.overlaps(outer):
             raise error(source, node, node.name, "is empty within its owner")
+        range = own.intersect(outer)
         if node.bases and kinds not in ([], [dsl.type]):
             raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
