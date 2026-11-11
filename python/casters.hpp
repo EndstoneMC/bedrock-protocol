@@ -1,4 +1,3 @@
-// Conversions for the leaf types a generated struct holds but does not reflect.
 #pragma once
 
 #include <bitset>
@@ -25,7 +24,6 @@
 NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
 
-// A string field may hold binary (a chunk body), so undecodable bytes become lone surrogates.
 template <>
 struct type_caster<std::string> {
     NB_TYPE_CASTER(std::string, const_name("str"))
@@ -64,7 +62,6 @@ struct type_caster<std::string> {
     }
 };
 
-// A `type X = <primitive>` wrapper crosses as the primitive it holds.
 template <bedrock::protocol::PrimitiveAlias T>
 struct type_caster<T> {
     using Underlying = bedrock::protocol::primitive_alias_t<T>;
@@ -88,7 +85,6 @@ struct type_caster<T> {
     }
 };
 
-// A bitset is the integer whose bit i is the set's bit i.
 template <std::size_t N>
 struct type_caster<std::bitset<N>> {
     NB_TYPE_CASTER(std::bitset<N>, const_name("int"))
@@ -143,7 +139,6 @@ struct type_caster<std::bitset<N>> {
     }
 };
 
-// `uuid.UUID`, its 128-bit integer split into the two halves the wire carries.
 template <>
 struct type_caster<bedrock::protocol::UUID> {
     NB_TYPE_CASTER(bedrock::protocol::UUID, const_name("uuid.UUID"))
@@ -187,7 +182,6 @@ struct type_caster<bedrock::protocol::UUID> {
     }
 };
 
-// A data-store value is the JSON-shaped Python value it describes.
 template <>
 struct type_caster<bedrock::protocol::DynamicValue> {
     using DynamicValue = bedrock::protocol::DynamicValue;
@@ -311,16 +305,16 @@ struct type_caster<bedrock::protocol::CompoundTagData> {
     }
 };
 
-// A tag crosses as an instance of its own class; the empty tag is None.
 template <>
 struct type_caster<bedrock::protocol::Tag> {
     NB_TYPE_CASTER(bedrock::protocol::Tag, const_name("object"))
 
     bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
     {
-        return try_as<bedrock::protocol::ByteTag, bedrock::protocol::ShortTag, bedrock::protocol::IntTag, bedrock::protocol::Int64Tag, bedrock::protocol::FloatTag, bedrock::protocol::DoubleTag,
-                      bedrock::protocol::ByteArrayTag, bedrock::protocol::StringTag, bedrock::protocol::ListTag, bedrock::protocol::CompoundTag, bedrock::protocol::IntArrayTag>(src, flags,
-                                                                                                       cleanup);
+        return try_as<bedrock::protocol::ByteTag, bedrock::protocol::ShortTag, bedrock::protocol::IntTag,
+                      bedrock::protocol::Int64Tag, bedrock::protocol::FloatTag, bedrock::protocol::DoubleTag,
+                      bedrock::protocol::ByteArrayTag, bedrock::protocol::StringTag, bedrock::protocol::ListTag,
+                      bedrock::protocol::CompoundTag, bedrock::protocol::IntArrayTag>(src, flags, cleanup);
     }
 
     static handle from_cpp(const bedrock::protocol::Tag &value, rv_policy, cleanup_list *cleanup) noexcept

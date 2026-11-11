@@ -1,3 +1,5 @@
+#include "module.hpp"
+
 #include <format>
 #include <string>
 #include <string_view>
@@ -6,9 +8,7 @@
 
 #include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/version.hpp"
-
 #include "binder.hpp"
-#include "module.hpp"
 
 namespace bedrock::protocol::python {
 

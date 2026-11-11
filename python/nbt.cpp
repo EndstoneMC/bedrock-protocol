@@ -1,23 +1,18 @@
+#include "bedrock/protocol/nbt.hpp"
+
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/vector.h>
 
-#include "bedrock/protocol/nbt.hpp"
-
 #include "casters.hpp"
 #include "module.hpp"
-
-namespace nb = nanobind;
-namespace bp = bedrock::protocol;
 
 namespace bedrock::protocol::python {
 
