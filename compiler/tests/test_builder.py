@@ -199,6 +199,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("@print\nclass A:\n    pass\n", "is decorated with something other than"),
         ("@builtin\nclass A:\n    x: uint8\n", "A: a builtin has no body"),
         ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive"),
+        ("type Name = str\n", "Name: is not a scalar primitive"),
         ("class A[T]:\n    pass\n", "A: type parameters are not allowed"),
         ("class A:\n    x: __dict__\n", "__dict__: is not a type"),
         ("class A:\n    x: double.__value__\n", r"double\.__value__: is not defined"),

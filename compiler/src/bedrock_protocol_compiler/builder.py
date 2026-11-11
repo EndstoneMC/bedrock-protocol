@@ -607,6 +607,8 @@ class Builder:
         primitive = self.type_of(pending.source, pending.source.scope, pending.node.value)
         if not isinstance(primitive, Primitive):
             raise error(pending.source, pending.node.value, pending.alias.name, "is not a primitive")
+        if primitive.name in ("str", "bytes"):
+            raise error(pending.source, pending.node.value, pending.alias.name, "is not a scalar primitive")
         pending.alias.primitive = primitive
 
     def expand(self, source: Source, node: ast.expr | ast.stmt, union: UnionAlias) -> Variant:

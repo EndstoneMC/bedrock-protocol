@@ -104,11 +104,10 @@ REWIRE = "type and endian do not reach exactly one scalar that takes them"
         ("x: int16 = field(type=B)", "type is not str or an integer primitive"),
         ("x: int16 = field(type=bool)", "type is not str or an integer primitive"),
         ("x: Id = field(type=str)", REWIRE),
-        ("x: Name = field(type=uint8)", REWIRE),
     ],
 )
 def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, message):
-    source = HEADER + "class B:\n    pass\n\ntype Id = int32\ntype Name = str\n\nclass A:\n    " + line + "\n"
+    source = HEADER + "class B:\n    pass\n\ntype Id = int32\n\nclass A:\n    " + line + "\n"
 
     with pytest.raises(CompilerError, match=message):
         build_package({"a": source})
