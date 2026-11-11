@@ -77,7 +77,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_locator_bar_is_packet_341(version):
     assert version.PACKETS[341] is version.LocatorBarPacket
 
