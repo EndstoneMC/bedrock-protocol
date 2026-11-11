@@ -5,7 +5,7 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Range
 HEADER = """
 from enum import IntEnum, auto
 from typing import Literal
-from protocol import bitset, field, packet, type, uint8, value
+from protocol import array, bitset, field, packet, type, uint8, value
 package = "bedrock.protocol"
 """
 
@@ -22,6 +22,19 @@ def test_declarations_carry_their_ranges(build_package):
     (family,) = package.modules[0].families
 
     assert [declaration.range for declaration in family.declarations] == [Range(None, 3), Range(3, None)]
+
+
+def test_fields_are_clipped_to_their_declaration(build_package):
+    package = build_package(
+        {
+            "a": HEADER
+            + "@packet(id=1, until=3)\nclass A:\n    x: uint8 = field(since=2)\n\n"
+            + "@packet(id=1, since=3)\nclass A:\n    y: uint8 = field(until=5)\n"
+        }
+    )
+
+    (family,) = package.modules[0].families
+
     assert [declaration.fields[0].range for declaration in family.declarations] == [Range(2, 3), Range(3, 5)]
 
 
@@ -77,18 +90,31 @@ def test_redeclarations_are_one_family(build_package):
 
 
 @pytest.mark.parametrize(
-    ("ranges", "message"),
+    ("source", "message"),
     [
-        ("until=2|since=3", "A: starts at 3, but its previous declaration ends at 2"),
-        ("until=3|since=2", "A: starts at 2, but its previous declaration ends at 3"),
-        ("until=3|until=5", "A: starts at None, but its previous declaration ends at 3"),
-        ("since=2|since=2", "A: is declared again after an open declaration"),
-        ("|since=2", "A: is declared again after an open declaration"),
+        (
+            "@type(until=2)\nclass A:\n    pass\n\n@type(since=3)\nclass A:\n    pass\n",
+            "A: starts at 3, but its previous declaration ends at 2",
+        ),
+        (
+            "@type(until=3)\nclass A:\n    pass\n\n@type(since=2)\nclass A:\n    pass\n",
+            "A: starts at 2, but its previous declaration ends at 3",
+        ),
+        (
+            "@type(until=3)\nclass A:\n    pass\n\n@type(until=5)\nclass A:\n    pass\n",
+            "A: starts at None, but its previous declaration ends at 3",
+        ),
+        (
+            "@type(since=2)\nclass A:\n    pass\n\n@type(since=2)\nclass A:\n    pass\n",
+            "A: is declared again after an open declaration",
+        ),
+        (
+            "@type()\nclass A:\n    pass\n\n@type(since=2)\nclass A:\n    pass\n",
+            "A: is declared again after an open declaration",
+        ),
     ],
 )
-def test_redeclarations_must_tile(build_package, ranges, message):
-    source = "".join(f"@type({gates})\nclass A:\n    pass\n\n" for gates in ranges.split("|"))
-
+def test_redeclarations_must_tile(build_package, source, message):
     with pytest.raises(CompilerError, match=message):
         build_package({"a": HEADER + source})
 
@@ -132,20 +158,15 @@ def test_two_packets_may_take_one_id_in_turn(build_package):
 
 
 @pytest.mark.parametrize(
-    "ranges",
+    "source",
     [
-        ("until=3", "since=2"),
-        ("", "since=2"),
-        ("since=2", "since=1, until=4"),
-        ("", ""),
+        "@packet(id=1, until=3)\nclass A:\n    pass\n\n@packet(id=1, since=2)\nclass B:\n    pass\n",
+        "@packet(id=1)\nclass A:\n    pass\n\n@packet(id=1, since=2)\nclass B:\n    pass\n",
+        "@packet(id=1, since=2)\nclass A:\n    pass\n\n@packet(id=1, since=1, until=4)\nclass B:\n    pass\n",
+        "@packet(id=1)\nclass A:\n    pass\n\n@packet(id=1)\nclass B:\n    pass\n",
     ],
 )
-def test_two_packets_on_one_id_must_not_overlap(build_package, ranges):
-    source = "".join(
-        f"@packet(id=1{', ' if gates else ''}{gates})\nclass {name}:\n    pass\n\n"
-        for name, gates in zip("AB", ranges, strict=True)
-    )
-
+def test_two_packets_on_one_id_must_not_overlap(build_package, source):
     with pytest.raises(CompilerError, match="B: takes packet id 1 from A"):
         build_package({"a": HEADER + source})
 
@@ -161,6 +182,16 @@ def test_a_name_shared_by_two_modules_is_rejected(build_package):
     with pytest.raises(CompilerError, match="A: is already declared in a"):
         build_package(
             {"a": HEADER + "@type(until=2)\nclass A:\n    pass\n", "b": HEADER + "@type(since=2)\nclass A:\n    pass\n"}
+        )
+
+
+def test_the_legacy_flavour_of_a_name_shared_by_two_modules_is_rejected(build_package):
+    with pytest.raises(CompilerError, match="B: is already declared in a"):
+        build_package(
+            {
+                "a": HEADER + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    pass\n",
+                "b": HEADER + "@type(cereal=False)\nclass B:\n    pass\n",
+            }
         )
 
 
@@ -273,11 +304,32 @@ def test_a_nested_enum_redeclares_with_its_owner(build_package):
             + "class D:\n    class E:\n        y: C\n",
             "a.py: D.E.y: reaches C, which does not exist at 1",
         ),
+        (
+            "@type(since=3)\nclass B:\n    pass\n\nclass A:\n    x: B | uint8\n",
+            "a.py: A.x: reaches B, which does not exist at 1",
+        ),
+        (
+            "@type(since=3)\nclass B:\n    pass\n\nclass A:\n    x: array[B, 2]\n",
+            "a.py: A.x: reaches B, which does not exist at 1",
+        ),
+        (
+            "@type(since=3)\nclass E(IntEnum, uint8):\n    X = 1\n\nclass A:\n    x: E = field(type=str)\n",
+            "a.py: A.x: reaches E, which does not exist at 1",
+        ),
+        (
+            "@type(since=3)\nclass E(IntEnum, uint8):\n    X = 1\n\nclass A:\n    x: dict[E, uint8]\n",
+            "a.py: A.x: reaches E, which does not exist at 1",
+        ),
     ],
 )
 def test_a_field_reaches_only_what_exists_where_it_is_present(build_package, source, message):
     with pytest.raises(CompilerError, match=message):
         build_package({"a": HEADER + source})
+
+
+def test_a_nested_enum_is_checked(build_package):
+    with pytest.raises(CompilerError, match=r"a\.py: A\.E\.X: has no earlier member to number from at 1"):
+        build_package({"a": HEADER + "class A:\n    class E(IntEnum, uint8):\n        X = auto()\n"})
 
 
 def test_a_field_gate_keeps_a_missing_type_out_of_its_range(build_package):
@@ -321,7 +373,7 @@ def test_names_that_never_meet_are_accepted(build_package):
         {
             "a": HEADER
             + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"
-            + "    B = value(1, until=3, cpp_name='B')\n    C = value(2, since=3, cpp_name='C')\n"
+            + "    A_B = value(3, until=3)\n    AB = value(4, since=3, cpp_name='AB')\n"
             + "    D = auto()\n"
         }
     )
