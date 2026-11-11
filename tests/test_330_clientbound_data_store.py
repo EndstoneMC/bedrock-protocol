@@ -117,7 +117,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_clientbound_data_store_is_packet_330(version):
     assert version.PACKETS[330] is version.ClientboundDataStorePacket
 
