@@ -43,7 +43,7 @@ class FileGenerator:
             includes.add(names.runtime("packet"))
         return includes - {names.generated(self.module.stem)}
 
-    def generate(self, p: Printer) -> None:
+    def header(self, p: Printer) -> None:
         p.emit("#pragma once")
         p.emit("")
         includes = self.includes()
@@ -72,6 +72,21 @@ class FileGenerator:
         for generator in self.generators:
             generator.serializer_declaration(p)
         self.types(p)
+        p.emit("}  // namespace $namespace$", namespace=names.namespace(self.schema))
+
+    def source(self, p: Printer) -> None:
+        p.emit(
+            """
+            #include $header$
+
+            namespace $namespace$ {
+
+            """,
+            header=names.generated(self.module.stem),
+            namespace=names.namespace(self.schema),
+        )
+        for generator in self.generators:
+            generator.serializer_body(p)
         p.emit("}  // namespace $namespace$", namespace=names.namespace(self.schema))
 
     def primitive_aliases(self, p: Printer) -> None:

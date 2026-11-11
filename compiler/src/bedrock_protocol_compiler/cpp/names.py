@@ -1,5 +1,5 @@
-from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, Range, Struct
-from bedrock_protocol_compiler.schema import Schema, Shape
+from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef, Range, Struct
+from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape
 
 INCLUDE_DIR = "bedrock/protocol"
 LEGACY = "legacy"
@@ -22,6 +22,9 @@ PRIMITIVES = {
     "uint32": "std::uint32_t",
     "uint64": "std::uint64_t",
 }
+VARINTS = ("varint32", "varint64", "uvarint32", "uvarint64")
+OUT_OF_RANGE = "Errc::out_of_range"
+UNKNOWN_VALUE = "Errc::unknown_value"
 
 
 def namespace(schema: Schema) -> str:
@@ -54,6 +57,37 @@ def selector(family: Struct | Enum) -> str:
 
 def decoded(spelled: str) -> str:
     return f"std::expected<{spelled}, Errc>"
+
+
+def fail(error: str, where: str) -> str:
+    return f"return stream.fail({error}, {where});"
+
+
+def unexpected(error: str) -> str:
+    return f"return std::unexpected({error});"
+
+
+def write(wire: str, endian: str | None, value: str) -> str:
+    if wire in ("str", "bytes"):
+        return f"stream.write({value});"
+    if wire in VARINTS:
+        return f"stream.writeVarInt<{PRIMITIVES[wire]}>({value});"
+    order = ", std::endian::big" if endian else ""
+    return f"stream.write<{PRIMITIVES[wire]}{order}>({value});"
+
+
+def read(wire: str, endian: str | None) -> str:
+    if wire in VARINTS:
+        return f"stream.readVarInt<{PRIMITIVES[wire]}>()"
+    order = ", std::endian::big" if endian else ""
+    return f"stream.read<{PRIMITIVES[wire]}{order}>()"
+
+
+def enumerator(schema: Schema, member: MemberRef, version: int) -> str:
+    shape = schema.shape_at(member.enum, version)
+    assert isinstance(shape, EnumShape)
+    cpp_name = next(each.cpp_name for each in shape.members if each.name == member.name)
+    return f"{qualified(schema, shape)}::{cpp_name}"
 
 
 def bare(family: Struct | Enum) -> str:

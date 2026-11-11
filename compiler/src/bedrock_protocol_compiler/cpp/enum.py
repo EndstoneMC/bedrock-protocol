@@ -1,5 +1,5 @@
 from bedrock_protocol_compiler.cpp import names
-from bedrock_protocol_compiler.cpp.field import PrimitiveField
+from bedrock_protocol_compiler.cpp.field import primitive_includes
 from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema
@@ -9,14 +9,13 @@ class EnumGenerator:
     def __init__(self, schema: Schema, shape: EnumShape) -> None:
         self.shape = shape
         self.qualified = names.qualified(schema, shape)
-        self.primitive = None if shape.underlying is None else PrimitiveField(shape.underlying)
-        self.underlying = "int" if self.primitive is None else self.primitive.cpp_type()
+        self.underlying = "int" if shape.underlying is None else names.PRIMITIVES[shape.underlying.name]
         self.name_coded = shape.family in schema.name_coded
 
     def includes(self) -> set[str]:
         includes = {names.runtime("enum"), "<array>", "<string_view>"}
-        if self.primitive is not None:
-            includes |= self.primitive.includes()
+        if self.shape.underlying is not None:
+            includes |= primitive_includes(self.shape.underlying)
         if self.name_coded:
             includes |= names.SERIALIZER_INCLUDES
         return includes
@@ -89,4 +88,30 @@ class EnumGenerator:
             """,
             qualified=self.qualified,
             decoded=names.decoded(self.qualified),
+        )
+
+    def serializer_body(self, p: Printer) -> None:
+        if not self.name_coded:
+            return
+        p.emit(
+            """
+            void Serializer<$qualified$>::serialize(BinaryWriter &stream, $qualified$ value)
+            {
+                stream.write(enum_name(value));
+            }
+
+            auto Serializer<$qualified$>::deserialize(BinaryReader &stream) -> $decoded$
+            {
+                auto v = stream.read<std::string>();
+                if (!v) $read_failure$
+                const auto value = enum_cast<$qualified$>(*v);
+                if (!value) $unknown$
+                return *value;
+            }
+
+            """,
+            qualified=self.qualified,
+            decoded=names.decoded(self.qualified),
+            read_failure=names.unexpected("v.error()"),
+            unknown=names.unexpected(names.UNKNOWN_VALUE),
         )

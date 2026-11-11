@@ -6,7 +6,9 @@ from bedrock_protocol_compiler.schema import Schema
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     for module in schema.modules:
-        FileGenerator(schema, module).generate(context.open(f"{names.INCLUDE_DIR}/{module.stem}.h"))
+        file = FileGenerator(schema, module)
+        file.header(context.open(f"{names.INCLUDE_DIR}/{module.stem}.h"))
+        file.source(context.open(f"{names.INCLUDE_DIR}/{module.stem}.cpp"))
     context.open(f"{names.INCLUDE_DIR}/version.hpp").emit(
         """
         #pragma once

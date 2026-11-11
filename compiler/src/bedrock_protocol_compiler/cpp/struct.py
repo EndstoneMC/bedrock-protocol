@@ -1,21 +1,28 @@
+from itertools import groupby
+
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator
-from bedrock_protocol_compiler.cpp.field import make_field_generator
+from bedrock_protocol_compiler.cpp.expression import render
+from bedrock_protocol_compiler.cpp.field import FieldGenerator, make_field_generator
+from bedrock_protocol_compiler.descriptor import Field
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape, reached_by
 
 
 class StructGenerator:
     def __init__(self, schema: Schema, shape: StructShape) -> None:
+        self.schema = schema
         self.shape = shape
         self.qualified = names.qualified(schema, shape)
         self.aliases = [(child.family.name, names.qualified(schema, child)) for child in shape.nested]
         self.defined = [shape_generator(schema, child) for child in shape.nested if child.owner is shape]
         self.members: list[tuple[str, str]] = []
         self.field_includes: set[str] = set()
-        first_version = schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
+        self.version = schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
+        self.fields: list[tuple[Field, FieldGenerator]] = []
         for each in shape.fields:
-            generator = make_field_generator(schema, each.type, first_version)
+            generator = make_field_generator(schema, each.type, self.version, f'"{each.name}"', 0)
+            self.fields.append((each, generator))
             spelled = generator.cpp_type()
             if spelled is not None:
                 self.members.append((spelled, each.name))
@@ -146,6 +153,56 @@ class StructGenerator:
             qualified=self.qualified,
             decoded=names.decoded(self.qualified),
         )
+
+    def serializer_body(self, p: Printer) -> None:
+        for child in self.defined:
+            child.serializer_body(p)
+        if not self.has_serializer:
+            return
+        p.emit(
+            """
+            void Serializer<$qualified$>::serialize(BinaryWriter &stream, const $qualified$ &value)
+            {
+                $writes$
+            }
+
+            auto Serializer<$qualified$>::deserialize(BinaryReader &stream) -> $decoded$
+            {
+                $qualified$ out;
+                $reads$
+                return out;
+            }
+
+            """,
+            qualified=self.qualified,
+            decoded=names.decoded(self.qualified),
+            writes=lambda: self.writes(p),
+            reads=lambda: self.reads(p),
+        )
+
+    def writes(self, p: Printer) -> None:
+        for when, group in groupby(self.fields, key=lambda each: each[0].when):
+            if when is None:
+                for each, generator in group:
+                    generator.write(p, f"value.{each.name}")
+                continue
+            p.emit("if ($condition$) {", condition=render(self.schema, self.version, when, "value"))
+            with p.indent():
+                for each, generator in group:
+                    generator.write(p, f"value.{each.name}")
+            p.emit("}")
+
+    def reads(self, p: Printer) -> None:
+        for when, group in groupby(self.fields, key=lambda each: each[0].when):
+            if when is None:
+                for each, generator in group:
+                    generator.read(p, f"out.{each.name}")
+                continue
+            p.emit("if ($condition$) {", condition=render(self.schema, self.version, when, "out"))
+            with p.indent():
+                for each, generator in group:
+                    generator.read(p, f"out.{each.name}")
+            p.emit("}")
 
 
 def shape_generator(schema: Schema, shape: Shape) -> StructGenerator | EnumGenerator:

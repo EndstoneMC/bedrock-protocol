@@ -51,10 +51,10 @@ def generate(build_package, tmp_path):
     return run
 
 
-def test_one_header_per_module_and_a_version_header(generate):
+def test_a_header_and_a_source_per_module_and_a_version_header(generate):
     out = generate({"a": A, "b": B})
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.h", "b.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "version.hpp"]
 
 
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
@@ -73,7 +73,7 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "version.hpp"]
 
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):

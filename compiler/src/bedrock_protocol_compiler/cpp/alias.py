@@ -1,5 +1,5 @@
 from bedrock_protocol_compiler.cpp import names
-from bedrock_protocol_compiler.cpp.field import PrimitiveField
+from bedrock_protocol_compiler.cpp.field import primitive_includes
 from bedrock_protocol_compiler.descriptor import Alias
 from bedrock_protocol_compiler.printer import Printer
 
@@ -10,7 +10,7 @@ class AliasGenerator:
         self.underlying = names.PRIMITIVES[alias.primitive.name]
 
     def includes(self) -> set[str]:
-        return {"<compare>", names.runtime("detail/reflect"), *PrimitiveField(self.alias.primitive).includes()}
+        return {"<compare>", names.runtime("detail/reflect"), *primitive_includes(self.alias.primitive)}
 
     def definition(self, p: Printer) -> None:
         p.emit(

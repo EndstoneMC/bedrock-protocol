@@ -57,6 +57,21 @@ std::expected<std::size_t, Errc> countValue(T value)
     return static_cast<std::size_t>(value);
 }
 
+inline std::expected<std::size_t, Errc> countProduct(std::expected<std::size_t, Errc> a,
+                                                     std::expected<std::size_t, Errc> b)
+{
+    if (!a) {
+        return a;
+    }
+    if (!b) {
+        return b;
+    }
+    if (*b && *a > std::numeric_limits<std::size_t>::max() / *b) {
+        return std::unexpected(Errc::out_of_range);
+    }
+    return *a * *b;
+}
+
 inline std::expected<std::size_t, Errc> countOperation(std::expected<std::size_t, Errc> a,
                                                        std::expected<std::size_t, Errc> b, char operation)
 {
