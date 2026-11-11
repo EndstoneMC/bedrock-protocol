@@ -6,6 +6,12 @@ resolution-markers = [
     "python_full_version < '3.15'",
 ]
 
+[manifest]
+members = [
+    "bedrock-protocol",
+    "bedrock-protocol-compiler",
+]
+
 [[package]]
 name = "ast-serialize"
 version = "0.5.0"
@@ -47,9 +53,14 @@ wheels = [
 ]
 
 [[package]]
-name = "bedrock-protocol-compiler"
+name = "bedrock-protocol"
 version = "0.5.0.dev0"
 source = { editable = "." }
+
+[[package]]
+name = "bedrock-protocol-compiler"
+version = "0.5.0.dev0"
+source = { editable = "compiler" }
 dependencies = [
     { name = "click" },
     { name = "griffe" },

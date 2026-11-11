@@ -135,7 +135,7 @@ Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
 ## Contributing
 
 Schemas live in `protocol/`; the compiler and its backends live in
-`src/bedrock_protocol_compiler/`. Hand-written C++ runtime headers are under
+`compiler/src/bedrock_protocol_compiler/`. Hand-written C++ runtime headers are under
 `include/bedrock/protocol/`. Keep schema changes version-aware and retain older
 shapes when the wire format changes.
 

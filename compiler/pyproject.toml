@@ -1,0 +1,26 @@
+[project]
+name = "bedrock-protocol-compiler"
+version = "0.5.0.dev0"
+description = "bpc, the compiler that emits the Bedrock protocol schema's C++ codecs."
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["click", "griffe"]
+
+[project.scripts]
+bpc = "bedrock_protocol_compiler.cli:main"
+
+[dependency-groups]
+dev = ["mypy", "pytest", "pytest-xdist"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+packages = ["bedrock_protocol_compiler"]
+python_version = "3.12"
+strict = true

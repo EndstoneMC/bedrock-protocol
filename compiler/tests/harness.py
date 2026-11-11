@@ -8,7 +8,7 @@ own source says.
 
 Run with:
 
-    uv run python -m unittest discover -s tests/compiler -t tests/compiler
+    uv run python -m unittest discover -s tests -t tests
 """
 
 from __future__ import annotations

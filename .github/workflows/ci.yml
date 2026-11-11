@@ -17,11 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
-      - run: uv sync
+      - run: uv sync --directory compiler
       - name: ruff
         run: uvx ruff check .
       - name: mypy
-        run: uv run mypy
+        run: uv run --directory compiler mypy
 
   test:
     name: Compiler tests
@@ -29,9 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
-      - run: uv sync
+      - run: uv sync --directory compiler
       - name: pytest
-        run: uv run pytest -n auto
+        run: uv run --directory compiler pytest -n auto
 
   delivery:
     name: Python (${{ matrix.os }})
@@ -91,9 +91,8 @@ jobs:
           fi
       - name: Build the compiler wheel and the runtime source distribution
         run: |
-          python -m build --wheel --outdir "$RUNNER_TEMP/delivery-pure"
-          python scripts/stage_native.py . "$RUNNER_TEMP/delivery-native-source"
-          python -m build --sdist "$RUNNER_TEMP/delivery-native-source" --outdir "$RUNNER_TEMP/delivery-dist"
+          python -m build --wheel compiler --outdir "$RUNNER_TEMP/delivery-pure"
+          python -m build --sdist --outdir "$RUNNER_TEMP/delivery-dist"
           mkdir "$RUNNER_TEMP/delivery-sdist"
           python -m tarfile -e "$RUNNER_TEMP"/delivery-dist/*.tar.gz "$RUNNER_TEMP/delivery-sdist" --filter data
       - name: Build the runtime wheel from its sdist
@@ -117,7 +116,7 @@ jobs:
           mkdir "$RUNNER_TEMP/delivery-consumer-tests"
           cp -r "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/delivery-consumer-tests/"
           cd "$RUNNER_TEMP/delivery-consumer-tests"
-          "$consumer" -I -m pytest tests --ignore=tests/compiler
+          "$consumer" -I -m pytest tests
           "$consumer" -m pip install "$RUNNER_TEMP"/delivery-pure/*.whl
           "$consumer" -I -m bedrock_protocol_compiler --language cpp --out "$RUNNER_TEMP/delivery-bpc" \
             --import-path "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/protocol/block.py" "$GITHUB_WORKSPACE/protocol/nbt.py"
@@ -312,7 +311,7 @@ jobs:
             path=$(command -v $tool || true)
             [ -n "$path" ] && sudo mv "$path" "$path.disabled"
           done
-          rm -rf protocol src/bedrock_protocol_compiler
+          rm -rf protocol compiler
           cp -r package/generated generated
           python -m pip install nanobind==2.13.0 pytest
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBEDROCK_PROTOCOL_BUILD_TESTS=OFF \
@@ -320,4 +319,4 @@ jobs:
           cmake --build build
           cmake --install build --prefix stage --component bedrock_protocol_wheel
       - name: Test it
-        run: PYTHONPATH=stage python -m pytest tests --ignore=tests/compiler
+        run: PYTHONPATH=stage python -m pytest tests

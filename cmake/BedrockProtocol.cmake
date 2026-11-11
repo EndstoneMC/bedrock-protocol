@@ -13,7 +13,7 @@ if(DEFINED _BEDROCK_PROTOCOL_INCLUDED)
 endif()
 set(_BEDROCK_PROTOCOL_INCLUDED TRUE)
 
-set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/..")
+set(_compiler_dir "${CMAKE_CURRENT_LIST_DIR}/../compiler")
 
 # Re-run codegen when any compiler source or template changes.
 file(GLOB_RECURSE _compiler_sources CONFIGURE_DEPENDS

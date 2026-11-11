@@ -14,7 +14,7 @@ class BedrockProtocolConan(ConanFile):
         "CMakeLists.txt",
         "cmake/*",
         "include/*",
-        "src/*",
+        "compiler/*",
         "protocol/*",
         "tests/*",
         "third_party/*",
