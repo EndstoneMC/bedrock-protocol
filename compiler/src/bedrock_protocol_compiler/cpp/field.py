@@ -409,8 +409,10 @@ class MapField:
                 if (!budget$depth$) $budget_fail$
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
                     $container$::key_type key$depth${};
+                    $container$::mapped_type element$depth${};
                     $key$
                     $element$
+                    $target$[std::move(key$depth$)] = std::move(element$depth$);
                 }
             }
             """,
@@ -418,9 +420,10 @@ class MapField:
             count=names.read("uvarint32", None),
             fail=names.fail(f"count{self.depth}.error()", self.where),
             container=self.cpp_type(),
+            target=target,
             budget_fail=names.fail(f"budget{self.depth}.error()", self.where),
             key=lambda: self.key.read(p, f"key{self.depth}"),
-            element=lambda: self.value.read(p, f"{target}[key{self.depth}]"),
+            element=lambda: self.value.read(p, f"element{self.depth}"),
         )
 
 
