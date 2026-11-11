@@ -19,6 +19,7 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+python_classes = []
 
 [tool.mypy]
 packages = ["bedrock_protocol_compiler"]
