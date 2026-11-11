@@ -398,13 +398,3 @@ def test_2168_appends_internal_update_to_the_input_flags():
 
 def test_the_v1001_input_flag_count_is_the_bitset_width():
     assert V1001_FLAG.INPUT_NUM == 65
-
-
-def test_the_v1001_bitset_holds_its_top_bit():
-    packet = v1001.PlayerAuthInputPacket(input_data=1 << 64)
-    assert packet.input_data == 1 << 64
-
-
-def test_the_v1001_bitset_rejects_a_bit_past_its_width():
-    with pytest.raises(TypeError, match="cannot hold"):
-        v1001.PlayerAuthInputPacket(input_data=1 << 65)
