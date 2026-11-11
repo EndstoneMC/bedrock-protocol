@@ -64,12 +64,23 @@ def test_player_action_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_2168_appends_internal_update_where_1001_keeps_its_count_sentinel():
-    assert v1001.PlayerActionType.COUNT == 38
-    assert v2168.PlayerActionType.INTERNAL_UPDATE == 38
-    assert v2168.PlayerActionType.COUNT == 39
+@pytest.mark.parametrize(
+    ("member", "value"),
+    [
+        pytest.param(v1001.PlayerActionType.COUNT, 38, id="v1001-count"),
+        pytest.param(v2168.PlayerActionType.INTERNAL_UPDATE, 38, id="v2168-internal-update"),
+        pytest.param(v2168.PlayerActionType.COUNT, 39, id="v2168-count"),
+    ],
+)
+def test_2168_appends_internal_update_where_1001_keeps_its_count_sentinel(member, value):
+    assert member == value
 
 
 def test_v1001_reads_action_38_as_its_count_sentinel():
-    packet = v1001.PlayerActionPacket.from_bytes(INTERNAL_UPDATE)
-    assert packet.action == v1001.PlayerActionType.COUNT
+    assert v1001.PlayerActionPacket.from_bytes(INTERNAL_UPDATE) == v1001.PlayerActionPacket(
+        runtime_id=7,
+        action=v1001.PlayerActionType.COUNT,
+        pos=v1001.BlockPos(x=1, y=2, z=3),
+        result_pos=v1001.BlockPos(x=4, y=5, z=6),
+        face=2,
+    )
