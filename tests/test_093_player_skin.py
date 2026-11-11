@@ -224,7 +224,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v924, v975, v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v924, v975, v1001, v2168])
 def test_player_skin_is_packet_93(version):
     assert version.PACKETS[93] is version.PlayerSkinPacket
 
