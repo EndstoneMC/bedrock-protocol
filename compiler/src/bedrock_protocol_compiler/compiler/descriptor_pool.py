@@ -15,8 +15,8 @@ carrying the cache itself.
 
 A versioned type is one whose definition changes at a known protocol version,
 transitively. Each versioned type splits into snapshots `[s_i, s_{i+1})`; each
-either holds a fresh definition or reuses an earlier one. A backend reads
-`VersionSnapshot.is_fresh` to decide between a definition and a `using` alias.
+either holds a fresh definition or reuses an earlier one. A backend defines
+a type only at the snapshots where `VersionSnapshot.is_fresh` is set.
 """
 
 from __future__ import annotations

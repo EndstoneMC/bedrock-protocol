@@ -239,8 +239,8 @@ class FileGenerator:
                 p.print("\n")
 
     def _emit_versioned_namespaces(self, p: Printer) -> None:
-        """One namespace per snapshot, holding that snapshot's view of every
-        versioned type in topological order.
+        """One namespace per snapshot that defines a versioned type afresh,
+        holding those definitions in topological order.
 
         Pre-cereal declarations sit in `legacy::vN` rather than `vN::legacy`, so
         a `legacy::` qualifier written from inside a snapshot namespace cannot
