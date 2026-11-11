@@ -226,7 +226,6 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str)
         members = [
             member
             for declaration in enum.declarations
-            if declaration.range.contains(version)
             for member in declaration.members
             if member.range.contains(version)
         ]
