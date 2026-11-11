@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <concepts>
@@ -8,7 +9,6 @@
 #include <map>
 #include <optional>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -384,6 +384,7 @@ T construct(nb::args args, nb::kwargs kwargs)
 template <typename T>
 void bind_struct(nb::handle scope, const char *name, const Version *version)
 {
+    static_assert(!std::ranges::contains(field_names<T>(), "from_bytes"), "a member named from_bytes hides from_bytes");
     nb::class_<T> cls(scope, name, nb::supplement<Codec>());
     cls.def("__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
     [&]<std::size_t... I>(std::index_sequence<I...>) {
@@ -410,11 +411,6 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
     });
 
     if constexpr (Serializable<T>) {
-        for (const std::string &field : python_names<T>()) {
-            if (field == "from_bytes") {
-                throw std::logic_error(std::format("{} has a member named from_bytes", struct_name<T>()));
-            }
-        }
         cls.def("__bytes__", &encode<T>, "The wire form, without a packet header.");
         cls.def_static("from_bytes", &decode_all<T>, nb::arg("data"), "Reads one value that must span all of `data`.");
     }
