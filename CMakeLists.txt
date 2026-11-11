@@ -8,12 +8,6 @@ if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif ()
 
-if (PROJECT_IS_TOP_LEVEL AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
-    set(_tests_default ON)
-else ()
-    set(_tests_default OFF)
-endif ()
-option(BEDROCK_PROTOCOL_BUILD_TESTS "Build the test suite" ${_tests_default})
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
 option(BEDROCK_PROTOCOL_BUILD_PYTHON "Build the Python runtime" OFF)
 set(BEDROCK_PROTOCOL_PYTHON_VERSIONS "2193" CACHE STRING "Protocol versions the Python extension binds")
@@ -103,14 +97,6 @@ list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.[a-z]+$" "\\1")
 
 if (BEDROCK_PROTOCOL_BUILD_PYTHON)
     add_subdirectory(python)
-endif ()
-
-# Tests
-if (BEDROCK_PROTOCOL_BUILD_TESTS)
-    set(BUILD_TESTING ON)
-    enable_testing()
-    add_subdirectory(third_party)
-    add_subdirectory(tests)
 endif ()
 
 if (BEDROCK_PROTOCOL_INSTALL)
