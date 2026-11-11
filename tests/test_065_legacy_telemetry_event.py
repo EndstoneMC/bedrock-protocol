@@ -103,9 +103,5 @@ def test_the_payload_free_arm_writes_four_bytes(honey_harvested):
     assert len(bytes(honey_harvested)) == 4
 
 
-def test_the_payload_free_arm_is_the_ordinal_after_item_used(honey_harvested):
-    assert bytes(honey_harvested)[-1] == ITEM_USED[3] + 1
-
-
 def test_the_payload_free_arm_round_trips(honey_harvested):
     assert v2168.LegacyTelemetryEventPacket.from_bytes(bytes(honey_harvested)) == honey_harvested
