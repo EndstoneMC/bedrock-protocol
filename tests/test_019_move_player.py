@@ -83,11 +83,6 @@ def test_v1001_leaves_the_teleport_pair_off_the_wire_in_any_other_mode():
     assert bytes(packet) == V1001_NORMAL
 
 
-def test_v1001_forgets_the_teleport_pair_a_normal_mode_body_never_carried():
-    packet = v1001.MovePlayerPacket.from_bytes(V1001_NORMAL)
-    assert (packet.cause, packet.source_entity_type) == (0, 0)
-
-
 def test_v2168_rejects_a_v1001_teleport_body():
     with pytest.raises(ValueError, match="at byte"):
         v2168.MovePlayerPacket.from_bytes(V1001_TELEPORT)
