@@ -71,7 +71,8 @@ def test_education_settings_rejects_the_deprecated_flag_when_set():
 def test_agent_capabilities_carry_a_presence_byte_ahead_of_the_can_modify_blocks_flag():
     wire = bytes(AGENT_CAPABILITIES_ONLY)
     assert len(wire) == len(UNSET) + 1
-    assert wire[6:8] == b"\x01\x00"
+    assert wire[:6] == UNSET[:6]
+    assert wire[8:] == UNSET[7:]
 
 
 def test_agent_capabilities_without_can_modify_blocks_round_trip():
