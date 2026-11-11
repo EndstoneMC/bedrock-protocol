@@ -19,7 +19,7 @@ GOLDENS = [
             emote_ticks=20,
             xuid="2535413418839840",
             platform_id="",
-            flags=1,
+            flags=v2225.EmotePacket.Flags.SERVER_SIDE,
         ),
         SERVER_SIDE,
         id="server-side",
