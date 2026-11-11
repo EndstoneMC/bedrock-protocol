@@ -41,7 +41,6 @@ GOLDENS = [
             runtime_id=1 << 32,
             event_id=v2225.ActorEvent.DEPRECATED_ADD_PLAYER_LEVELS,
             data=-1,
-            fire_at_position=None,
         ),
         WIDE_RUNTIME_ID,
         id="wide-runtime-id",
@@ -49,7 +48,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_actor_event_is_packet_27(version):
     assert version.PACKETS[27] is version.ActorEventPacket
 
