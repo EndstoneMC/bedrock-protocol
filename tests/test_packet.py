@@ -1,10 +1,10 @@
 import pytest
 
-from bedrock_protocol import v940, v975, v1001, v2168, v2193, v2225
+from bedrock_protocol import v786, v940, v975, v1001, v2168, v2193, v2225
 
 
-def test_a_snapshot_packet_resolves_at_its_first_bound_version():
-    assert v975.PACKETS[74] is v975.BossEventPacket
+def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
+    assert v975.PACKETS[74] is v786.BossEventPacket
 
 
 def test_a_packet_changed_at_1001_resolves_to_its_own_type():
