@@ -26,7 +26,7 @@ SLEEP_STATE_PACKET = v2225.LevelEventGenericPacket(
 )
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_level_event_generic_is_packet_124(version):
     assert version.PACKETS[124] is version.LevelEventGenericPacket
 
