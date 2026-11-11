@@ -17,7 +17,7 @@ GOLDENS = [
         pytest.param(
             version.NetworkStackLatencyPacket(create_time=0x0123456789ABCDEF, from_server=True),
             FROM_SERVER,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-from-server",
+            id=f"{version.__name__.rpartition('.')[2]}-from-server",
         )
         for version in VERSIONS
     ],
@@ -25,7 +25,7 @@ GOLDENS = [
         pytest.param(
             version.NetworkStackLatencyPacket(create_time=255, from_server=False),
             SMALL,
-            id=f"{version.__name__.removeprefix('bedrock_protocol.')}-small-time",
+            id=f"{version.__name__.rpartition('.')[2]}-small-time",
         )
         for version in VERSIONS
     ],
