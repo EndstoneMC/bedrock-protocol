@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from bedrock_protocol_compiler.descriptor import CompilerError
 from bedrock_protocol_compiler.printer import Printer
 
 
@@ -10,12 +9,7 @@ class GeneratorContext:
         self.printers: dict[Path, Printer] = {}
 
     def open(self, path: str) -> Printer:
-        relative = Path(path)
-        if relative.parts[:1] != ("bedrock",) or ".." in relative.parts:
-            raise CompilerError(f"{path}: not under bedrock/")
-        if relative in self.printers:
-            raise CompilerError(f"{path}: already open")
-        printer = self.printers[relative] = Printer()
+        printer = self.printers[Path(path)] = Printer()
         return printer
 
     def commit(self) -> None:

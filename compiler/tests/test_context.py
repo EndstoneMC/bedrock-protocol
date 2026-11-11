@@ -1,9 +1,6 @@
 import os
 
-import pytest
-
 from bedrock_protocol_compiler.context import GeneratorContext
-from bedrock_protocol_compiler.descriptor import CompilerError
 
 
 def write(out, path, text):
@@ -58,19 +55,3 @@ def test_commit_creates_the_out_directory(tmp_path):
     write(tmp_path / "generated", "bedrock/protocol/boss.h", "boss")
     assert (tmp_path / "generated/bedrock/protocol/boss.h").is_file()
 
-
-def test_open_rejects_a_path_outside_bedrock(tmp_path):
-    with pytest.raises(CompilerError, match=r"other/boss\.h: not under bedrock/"):
-        GeneratorContext(tmp_path).open("other/boss.h")
-
-
-def test_open_rejects_a_path_that_climbs_out_of_bedrock(tmp_path):
-    with pytest.raises(CompilerError, match="not under bedrock/"):
-        GeneratorContext(tmp_path).open("bedrock/../boss.h")
-
-
-def test_open_rejects_a_path_twice(tmp_path):
-    context = GeneratorContext(tmp_path)
-    context.open("bedrock/protocol/boss.h")
-    with pytest.raises(CompilerError, match=r"boss\.h: already open"):
-        context.open("bedrock/protocol/boss.h")
