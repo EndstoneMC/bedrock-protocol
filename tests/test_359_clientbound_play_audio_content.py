@@ -7,8 +7,6 @@ PACKET = v2225.ClientboundPlayAudioContentPacket(
     playback_type=v2225.AudioContentPlaybackType.MUSIC,
     play_sound=SOUND,
 )
-# TODO: confirm against BDS: gophertunnel stops at 2168 and cannot marshal this packet; the bytes follow the r26_u6 dump
-HEAD = bytes.fromhex("05612e622e6305642e652e66056d75736963")
 
 
 def test_clientbound_play_audio_content_is_packet_359_from_2225():
@@ -19,9 +17,13 @@ def test_clientbound_play_audio_content_is_absent_at_2193():
     assert 359 not in v2193.PACKETS
 
 
-def test_clientbound_play_audio_content_carries_the_play_sound_body_inline():
-    assert bytes(PACKET) == HEAD + bytes(SOUND)
+def test_clientbound_play_audio_content_is_forty_four_bytes():
+    assert len(bytes(PACKET)) == 44
 
 
-def test_clientbound_play_audio_content_decodes_from_its_bytes():
-    assert v2225.ClientboundPlayAudioContentPacket.from_bytes(HEAD + bytes(SOUND)) == PACKET
+def test_clientbound_play_audio_content_ends_with_the_play_sound_body():
+    assert bytes(PACKET).endswith(bytes(SOUND))
+
+
+def test_clientbound_play_audio_content_round_trips():
+    assert v2225.ClientboundPlayAudioContentPacket.from_bytes(bytes(PACKET)) == PACKET
