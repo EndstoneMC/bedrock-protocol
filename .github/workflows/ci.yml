@@ -20,6 +20,8 @@ jobs:
       - run: uv sync --directory compiler
       - name: ruff
         run: uvx ruff check .
+      - name: ruff format
+        run: uvx ruff format --check .
       - name: mypy
         run: uv run --directory compiler mypy
 
