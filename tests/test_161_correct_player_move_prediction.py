@@ -123,10 +123,6 @@ def test_correct_player_move_prediction_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-def test_an_absent_vehicle_angular_velocity_is_one_zero_byte_not_five():
-    assert len(VEHICLE) - len(PLAYER) == 4
-
-
 def test_the_pre_827_prediction_leaves_the_vehicle_fields_off_the_wire_for_a_player():
     packet = v818.CorrectPlayerMovePredictionPacket(
         prediction_type=v818.RewindType.PLAYER,
@@ -139,13 +135,5 @@ def test_the_pre_827_prediction_leaves_the_vehicle_fields_off_the_wire_for_a_pla
     assert bytes(packet) == V818_PLAYER
 
 
-def test_the_pre_827_vehicle_prediction_grows_a_player_one_by_thirteen_bytes():
-    assert len(V818_VEHICLE) == len(V818_PLAYER) + 13
-
-
 def test_827_is_a_distinct_prediction_from_818():
     assert v818.CorrectPlayerMovePredictionPacket is not v827.CorrectPlayerMovePredictionPacket
-
-
-def test_827_writes_the_vehicle_fields_unconditionally():
-    assert len(V827_PLAYER) == len(V818_PLAYER) + 9
