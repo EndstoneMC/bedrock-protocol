@@ -26,6 +26,13 @@ V2168 = bytes.fromhex(
     "0102156974656d47726f75702e6e616d652e706c616e6b730e040000120a0000000000000000000001010e040000120a0000000000000000000000"
 )
 
+PLANK_V1001 = v1001.SerializedNetworkItemInstanceDescriptor(
+    id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
+)
+PLANK_V2168 = v2168.SerializedNetworkItemInstanceDescriptor(
+    id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
+)
+
 GOLDENS = [
     pytest.param(
         v1001.CreativeContentPacket(
@@ -33,17 +40,13 @@ GOLDENS = [
                 v1001.CreativeGroupInfoPayload(
                     creative_item_category=v1001.CreativeItemCategory.NATURE,
                     name="itemGroup.name.planks",
-                    icon=v1001.SerializedNetworkItemInstanceDescriptor(
-                        id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
-                    ),
+                    icon=PLANK_V1001,
                 )
             ],
             entries=[
                 v1001.CreativeItemEntryPayload(
                     creative_item_net_id=v1001.CreativeItemNetId(raw_id=1),
-                    item_descriptor=v1001.SerializedNetworkItemInstanceDescriptor(
-                        id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
-                    ),
+                    item_descriptor=PLANK_V1001,
                     group_index=0,
                 )
             ],
@@ -57,17 +60,13 @@ GOLDENS = [
                 v2168.CreativeGroupInfoPayload(
                     creative_item_category=v2168.CreativeItemCategory.NATURE,
                     name="itemGroup.name.planks",
-                    icon=v2168.SerializedNetworkItemInstanceDescriptor(
-                        id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
-                    ),
+                    icon=PLANK_V2168,
                 )
             ],
             entries=[
                 v2168.CreativeItemEntryPayload(
                     creative_item_net_id=v2168.CreativeItemNetId(raw_id=1),
-                    item_descriptor=v2168.SerializedNetworkItemInstanceDescriptor(
-                        id=7, stack_size=4, block_runtime_id=9, user_data_buffer=EMPTY_ITEM_BLOB
-                    ),
+                    item_descriptor=PLANK_V2168,
                     group_index=0,
                 )
             ],
