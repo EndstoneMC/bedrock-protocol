@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <format>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
