@@ -38,6 +38,6 @@ def test_trim_data_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_1001_and_2168_resolve_trim_data_to_the_latest_type(version):
     assert version.PACKETS[302] is v2225.TrimDataPacket
