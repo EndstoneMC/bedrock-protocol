@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v786, v858, v897, v898, v975, v1001, v2168, v2225
+from bedrock_protocol import v786, v844, v859, v898, v975, v1001, v2168, v2225
 
 
 def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
@@ -23,8 +23,8 @@ def test_an_unmodelled_id_is_absent(packet_id):
 @pytest.mark.parametrize(
     ("version", "end_id"),
     [
-        pytest.param(v858, 330, id="v858"),
-        pytest.param(v897, 332, id="v897"),
+        pytest.param(v844, 330, id="v844"),
+        pytest.param(v859, 332, id="v859"),
         pytest.param(v898, 333, id="v898"),
         pytest.param(v975, 348, id="v975"),
         pytest.param(v1001, 351, id="v1001"),
