@@ -18,8 +18,8 @@ extra-arguments = ["-o=&:with_python=True", "-o=&:with_tests=False"]
 packages = []
 
 [tool.conan-py-build.sdist]
-include = ["compiler", "python", "protocol", "tests", "third_party", "conanfile.py", "python.profile"]
-exclude = ["__pycache__", ".mypy_cache", ".pytest_cache", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib"]
+include = ["compiler/src", "compiler/pyproject.toml", "python", "protocol", "tests", "third_party", "conanfile.py", "python.profile"]
+exclude = ["__pycache__", "*.pyc", "*.pyd", "*.so", "*.dll", "*.dylib"]
 
 [tool.uv.workspace]
 members = ["compiler"]
