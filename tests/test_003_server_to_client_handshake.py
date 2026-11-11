@@ -48,7 +48,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_server_to_client_handshake_is_packet_3(version):
     assert version.PACKETS[3] is version.ServerToClientHandshakePacket
 
