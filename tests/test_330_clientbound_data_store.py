@@ -126,10 +126,6 @@ def test_packet_330_is_not_in_v844():
     assert 330 not in v844.PACKETS
 
 
-def test_packet_330_is_in_v859():
-    assert 330 in v859.PACKETS
-
-
 def test_v859_hands_packet_330_to_the_data_store_sync_packet():
     assert v859.PACKETS[330] is v859.DataStoreSyncPacket
 
