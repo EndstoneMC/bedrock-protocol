@@ -20,7 +20,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_gui_data_pick_item_is_packet_54(version):
     assert version.PACKETS[54] is version.GuiDataPickItemPacket
 
