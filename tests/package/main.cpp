@@ -24,8 +24,7 @@ int main()
     }
 
     const auto platform = bp::enum_name(bp::BuildPlatform::Win32);
-    std::printf("bedrock-protocol %s, latest protocol %d, BuildPlatform::Win32 is \"%.*s\"\n",
-                BEDROCK_PROTOCOL_VERSION_STRING, bp::latest_version,
+    std::printf("latest protocol %d, BuildPlatform::Win32 is \"%.*s\"\n", bp::latest_version,
                 static_cast<int>(platform.size()), platform.data());
     return platform == "win32" ? 0 : 1;
 }
