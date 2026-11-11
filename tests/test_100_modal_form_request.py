@@ -42,7 +42,7 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_modal_form_request_is_packet_100(version):
     assert version.PACKETS[100] is version.ModalFormRequestPacket
 
