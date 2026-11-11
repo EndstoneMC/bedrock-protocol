@@ -9,7 +9,7 @@ VERSIONS = [v1001, v2168, v2225]
 EMPTY = bytes.fromhex("")
 
 GOLDENS = [
-    pytest.param(version.ClientToServerHandshakePacket(), EMPTY, id=version.__name__.removeprefix("bedrock_protocol."))
+    pytest.param(version.ClientToServerHandshakePacket(), EMPTY, id=version.__name__.rpartition(".")[2])
     for version in VERSIONS
 ]
 
