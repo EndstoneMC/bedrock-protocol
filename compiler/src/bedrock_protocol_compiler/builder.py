@@ -51,8 +51,8 @@ STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
 ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32")
 LIST_PREFIXES = ("uint32", "uint16", "varint32")
-FIXED_WIDTHS = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
-INTEGERS = ("int8", "uint8", *FIXED_WIDTHS, "varint32", "varint64", "uvarint32", "uvarint64")
+BYTE_ORDERED = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
+INTEGERS = ("int8", "uint8", *BYTE_ORDERED, "varint32", "varint64", "uvarint32", "uvarint64")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -83,7 +83,7 @@ class Source:
     scope: Scope
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
-    legacies: dict[str, Struct | Enum] = field(default_factory=dict)
+    legacies: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
     unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
 
@@ -153,11 +153,11 @@ def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
         case EnumRef(enum=enum):
             if wire == "str":
                 return None if endian else EnumName(enum)
-            if wire is None or (endian and wire not in FIXED_WIDTHS):
+            if wire is None or (endian and wire not in BYTE_ORDERED):
                 return None
             return EnumRef(enum, wire, endian)
         case Primitive(name=name):
-            if name not in INTEGERS or wire == "str" or (endian and (wire or name) not in FIXED_WIDTHS):
+            if name not in INTEGERS or wire == "str" or (endian and (wire or name) not in BYTE_ORDERED):
                 return None
             return replace(node, wire=wire, endian=endian)
         case AliasRef(alias=alias):
@@ -206,7 +206,11 @@ class Builder:
         for pending_struct in self.structs:
             self.build_struct(pending_struct)
         modules = tuple(
-            Module(source.stem, source.package, (*source.families.values(), *source.legacies.values()))
+            Module(
+                source.stem,
+                source.package,
+                (*source.families.values(), *(legacy for _, legacy in source.legacies.values())),
+            )
             for source in self.sources.values()
         )
         return Package(versions, modules)
@@ -310,10 +314,10 @@ class Builder:
             self.add(source, source.scope, statement, alias.asname or alias.name, imported)
 
     def pair_legacies(self, source: Source) -> None:
-        for name, legacy in source.legacies.items():
+        for name, (node, legacy) in source.legacies.items():
             family = source.families.get(name)
             if not isinstance(family, type(legacy)):
-                raise CompilerError(f"{source.path}: {name}: a cereal=False declaration needs a cereal one beside it")
+                raise error(source, node, name, "a cereal=False declaration needs a cereal one beside it")
             self.legacies[family] = legacy
 
     def bind_family_imports(self, source: Source) -> None:
@@ -352,6 +356,8 @@ class Builder:
             raise error(source, node, node.name, "takes only one of packet, type and builtin")
         if not cereal and owner is not None:
             raise error(source, node, node.name, "cereal=False marks a module-scope declaration")
+        if owner is not None:
+            cereal = owner.cereal
         if node.bases and kinds not in ([], [dsl.type]):
             raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
@@ -366,15 +372,15 @@ class Builder:
             if node.bases
             else Struct(node.name, owner, source.stem, cereal, packet_id)
         )
-        if not cereal:
-            if node.name in source.legacies:
-                raise error(source, node, node.name, "is already declared")
-            source.legacies[node.name] = family
-        elif owner is None:
-            self.declare_family(source, node, family)
-        else:
+        if owner is not None:
             owner.nested.append(family)
             self.add(source, scope, node, node.name, family)
+        elif not cereal:
+            if node.name in source.legacies:
+                raise error(source, node, node.name, "is already declared")
+            source.legacies[node.name] = (node, family)
+        else:
+            self.declare_family(source, node, family)
         if isinstance(family, Enum):
             self.enums.append(PendingEnum(source, scope, node, family))
             return
@@ -520,6 +526,8 @@ class Builder:
                 values = annotation.slice.elts if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
                 if len(values) != 1:
                     raise error(source, annotation, ast.unparse(annotation), "is not a type with these arguments")
+                if not cereal:
+                    raise error(source, annotation, name, "has no cereal=False declaration")
                 if isinstance(values[0], ast.Constant) and isinstance(values[0].value, bool | str):
                     field_type: Type = Literal(values[0].value)
                 else:
@@ -547,7 +555,9 @@ class Builder:
             if wire or endian:
                 rewired = rewire(field_type, wire, endian)
                 if rewired is None:
-                    raise error(source, statement, name, "type and endian do not reach exactly one scalar")
+                    raise error(
+                        source, statement, name, "type and endian do not reach exactly one scalar that takes them"
+                    )
                 field_type = rewired
             fields.append(Field(name, field_type))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
@@ -633,15 +643,15 @@ class Builder:
         if not isinstance(node, ast.Name | ast.Attribute):
             raise error(source, node, ast.unparse(node), "is not a type")
         target = self.resolve(source, scope, node)
+        if not cereal:
+            legacy = self.legacies.get(target) if isinstance(target, Struct | Enum) else None
+            if legacy is None:
+                raise error(source, node, ast.unparse(node), "has no cereal=False declaration")
+            target = legacy
         if isinstance(target, TypeAliasType | type) and target in PRIMITIVES:
             return Primitive(PRIMITIVES[target])
         if target is uuid.UUID:
             return BuiltinRef(UUID)
-        if not cereal and isinstance(target, Struct | Enum):
-            legacy = self.legacies.get(target)
-            if legacy is None:
-                raise error(source, node, ast.unparse(node), "has no cereal=False declaration")
-            target = legacy
         if isinstance(target, Struct):
             return StructRef(target)
         if isinstance(target, Enum):

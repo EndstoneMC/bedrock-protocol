@@ -2,6 +2,7 @@ import pytest
 
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
+    Array,
     CompilerError,
     EnumName,
     EnumRef,
@@ -10,11 +11,16 @@ from bedrock_protocol_compiler.descriptor import (
     Optional,
     Primitive,
     StructRef,
+    Variant,
 )
 
 HEADER = """
 from enum import IntEnum
-from protocol import field, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uvarint32, varint32
+from protocol import (
+    array, field, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, uvarint32, uvarint64,
+    varint32, varint64
+)
+from typing import Union
 package = "bedrock.protocol"
 """
 
@@ -83,22 +89,46 @@ def test_type_on_a_dict_reaches_its_one_scalar_half(build_package):
     ]
 
 
+REWIRE = "type and endian do not reach exactly one scalar that takes them"
+
+
 @pytest.mark.parametrize(
-    "line",
+    ("line", "message"),
     [
-        "x: B = field(type=varint32)",
-        "x: str = field(type=str)",
-        "x: bool = field(type=uint8)",
-        "x: int16 = field(type=str)",
-        "x: dict[int16, int16] = field(type=varint32)",
-        "x: dict[B, B] = field(type=varint32)",
-        "x: int16 = field(type=B)",
-        "x: int16 = field(type=bool)",
+        ("x: B = field(type=varint32)", REWIRE),
+        ("x: str = field(type=str)", REWIRE),
+        ("x: bool = field(type=uint8)", REWIRE),
+        ("x: int16 = field(type=str)", REWIRE),
+        ("x: dict[int16, int16] = field(type=varint32)", REWIRE),
+        ("x: dict[B, B] = field(type=varint32)", REWIRE),
+        ("x: int16 = field(type=B)", "type is not str or an integer primitive"),
+        ("x: int16 = field(type=bool)", "type is not str or an integer primitive"),
+        ("x: Id = field(type=str)", REWIRE),
+        ("x: Name = field(type=uint8)", REWIRE),
     ],
 )
-def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line):
-    with pytest.raises(CompilerError):
-        build_package({"a": HEADER + "class B:\n    pass\n\nclass A:\n    " + line + "\n"})
+def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, message):
+    source = HEADER + "class B:\n    pass\n\ntype Id = int32\ntype Name = str\n\nclass A:\n    " + line + "\n"
+
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": source})
+
+
+@pytest.mark.parametrize("wire", ["int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64"])
+@pytest.mark.parametrize("wire_type", ["varint32", "varint64", "uvarint32", "uvarint64"])
+def test_type_accepts_every_integer_wire(build_package, wire, wire_type):
+    package = build_package(
+        {"a": HEADER + f"class A:\n    x: int32 = field(type={wire})\n    y: uint8 = field(type={wire_type})\n"}
+    )
+
+    assert field_types(package) == [Primitive("int32", wire=wire), Primitive("uint8", wire=wire_type)]
+
+
+@pytest.mark.parametrize("name", ["int16", "uint16", "int32", "uint32", "int64", "uint64"])
+def test_endian_accepts_every_fixed_width_integer(build_package, name):
+    package = build_package({"a": HEADER + f"class A:\n    x: {name} = field(endian='big')\n"})
+
+    assert field_types(package) == [Primitive(name, endian="big")]
 
 
 def test_endian_marks_a_fixed_width_integer(build_package):
@@ -116,22 +146,29 @@ def test_endian_marks_a_fixed_width_integer(build_package):
 
 
 @pytest.mark.parametrize(
-    "line",
+    ("line", "message"),
     [
-        "x: int32 = field(endian='little')",
-        "x: uint8 = field(endian='big')",
-        "x: varint32 = field(endian='big')",
-        "x: int32 = field(type=varint32, endian='big')",
-        "x: str = field(endian='big')",
-        "x: B = field(endian='big')",
-        "x: E = field(endian='big')",
-        "x: E = field(type=str, endian='big')",
+        ("x: int32 = field(endian='little')", 'endian is not "big"'),
+        ("x: uint8 = field(endian='big')", REWIRE),
+        ("x: varint32 = field(endian='big')", REWIRE),
+        ("x: int32 = field(type=varint32, endian='big')", REWIRE),
+        ("x: str = field(endian='big')", REWIRE),
+        ("x: B = field(endian='big')", REWIRE),
+        ("x: E = field(endian='big')", REWIRE),
+        ("x: E = field(type=str, endian='big')", REWIRE),
+        ("x: E = field(type=varint32, endian='big')", REWIRE),
+        ("x: Id = field(endian='big')", REWIRE),
     ],
 )
-def test_endian_is_big_and_on_a_fixed_width_integer_only(build_package, line):
-    source = HEADER + "class B:\n    pass\n\nclass E(IntEnum, uint8):\n    A = 1\n\nclass A:\n    " + line + "\n"
+def test_endian_is_big_and_on_a_fixed_width_integer_only(build_package, line, message):
+    source = (
+        HEADER
+        + "class B:\n    pass\n\nclass E(IntEnum, uint8):\n    A = 1\n\ntype Id = int32\n\nclass A:\n    "
+        + line
+        + "\n"
+    )
 
-    with pytest.raises(CompilerError):
+    with pytest.raises(CompilerError, match=message):
         build_package({"a": source})
 
 
@@ -164,7 +201,8 @@ def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_p
         HEADER
         + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    y: uint16\n\n"
         + "class A:\n    a: B\n    b: B = field(cereal=False)\n    c: list[B] | None = field(cereal=False)\n"
-        + "    d: dict[B, B] = field(cereal=False)\n"
+        + "    d: dict[B, B] = field(cereal=False)\n    e: Union[B, None] = field(cereal=False)\n"
+        + "    f: array[B, 2] = field(cereal=False)\n"
     )
     package = build_package({"a": source})
 
@@ -175,6 +213,8 @@ def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_p
         StructRef(legacy),
         Optional(List(StructRef(legacy), Primitive("uvarint32"))),
         Map(StructRef(legacy), StructRef(legacy)),
+        Variant((StructRef(legacy), None)),
+        Array(StructRef(legacy), 2),
     ]
 
 
@@ -218,8 +258,46 @@ def test_cereal_false_family_imports_by_its_cereal_name(build_package):
             "unexpected keyword argument 'cereal'",
         ),
         ("class A:\n    x: uint8 = field(cereal=1)\n", "x: is not a literal bool"),
+        ("@type(cereal=0)\nclass B:\n    pass\n", "type: is not a literal bool"),
+        (
+            "class B:\n    pass\n\n@type(cereal=False)\nclass B(IntEnum, uint8):\n    A = 1\n",
+            "a.py:[0-9]+:[0-9]+: B: a cereal=False declaration needs a cereal one",
+        ),
+        ("class A:\n    x: uint8 = field(cereal=False)\n", "uint8: has no cereal=False declaration"),
+        ("class A:\n    x: uuid.UUID = field(cereal=False)\n", "has no cereal=False declaration"),
+        (
+            "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    pass\n\n"
+            + "type U = B | uint8\n\nclass A:\n    x: U = field(cereal=False)\n",
+            "U: has no cereal=False declaration",
+        ),
+        ("class A:\n    x: Literal[True] = field(cereal=False)\n", "x: has no cereal=False declaration"),
     ],
 )
 def test_cereal_is_rejected(build_package, source, message):
     with pytest.raises(CompilerError, match=message):
-        build_package({"a": HEADER + source})
+        build_package({"a": HEADER + "import uuid\nfrom typing import Literal\n" + source})
+
+
+def test_a_class_nested_in_a_legacy_owner_is_legacy(build_package):
+    source = HEADER + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    class C:\n        pass\n"
+    package = build_package({"a": source})
+
+    cereal, legacy = package.modules[0].families
+
+    assert [family.cereal for family in legacy.nested] == [False]
+    assert cereal.nested == []
+    assert [family.name for family in package.modules[0].families] == ["B", "B"]
+
+
+def test_a_legacy_declared_before_its_cereal_sibling_is_reached(build_package):
+    source = (
+        HEADER
+        + "@type(cereal=False)\nclass B:\n    y: uint16\n\nclass B:\n    x: uint8\n\n"
+        + "class A:\n    a: B = field(cereal=False)\n"
+    )
+    package = build_package({"a": source})
+
+    cereal, _, legacy = package.modules[0].families
+
+    assert (cereal.cereal, legacy.cereal) == (True, False)
+    assert field_types(package) == [StructRef(legacy)]

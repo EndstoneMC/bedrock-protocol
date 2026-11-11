@@ -6,7 +6,7 @@ from bedrock_protocol_compiler.descriptor import Package
 INIT = """
 from bedrock_protocol_compiler.dsl import (
     array, bitset, builtin, double, field, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64,
-    uvarint32, value, varint32
+    uvarint32, uvarint64, value, varint32, varint64
 )
 
 versions = (1, 2, 3)
