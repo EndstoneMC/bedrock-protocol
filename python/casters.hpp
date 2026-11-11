@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -101,53 +102,31 @@ template <std::size_t N>
 struct type_caster<std::bitset<N>> {
     NB_TYPE_CASTER(std::bitset<N>, const_name("int"))
 
-    static constexpr std::size_t Words = (N + 63) / 64;
-
     bool from_python(handle src, uint8_t, cleanup_list *) noexcept
     {
         if (!PyLong_Check(src.ptr())) {
             return false;
         }
-        object rest = borrow(src);
-        const object zero = steal(PyLong_FromLong(0));
-        const object mask = steal(PyLong_FromUnsignedLongLong(~0ULL));
-        const object shift = steal(PyLong_FromLong(64));
-        if (PyObject_RichCompareBool(rest.ptr(), zero.ptr(), Py_LT) != 0) {
+        const object text = steal(PyNumber_ToBase(src.ptr(), 2));
+        if (!text.is_valid()) {
+            PyErr_Clear();
             return false;
         }
-        value.reset();
-        for (std::size_t word = 0; word < Words; ++word) {
-            const object low = steal(PyNumber_And(rest.ptr(), mask.ptr()));
-            const unsigned long long bits = PyLong_AsUnsignedLongLong(low.ptr());
-            for (std::size_t k = 0; k < 64; ++k) {
-                if ((bits >> k) & 1ULL) {
-                    if (word * 64 + k >= N) {
-                        return false;
-                    }
-                    value.set(word * 64 + k);
-                }
-            }
-            rest = steal(PyNumber_Rshift(rest.ptr(), shift.ptr()));
+        std::string_view digits = borrow<str>(text).c_str();
+        if (digits.starts_with('-')) {
+            return false;
         }
-        return PyObject_RichCompareBool(rest.ptr(), zero.ptr(), Py_EQ) == 1;
+        digits.remove_prefix(2);
+        if (digits.size() > N) {
+            return false;
+        }
+        value = std::bitset<N>(std::string(digits));
+        return true;
     }
 
     static handle from_cpp(const std::bitset<N> &value, rv_policy, cleanup_list *) noexcept
     {
-        object out = steal(PyLong_FromLong(0));
-        const object shift = steal(PyLong_FromLong(64));
-        for (std::size_t word = Words; word-- > 0;) {
-            unsigned long long bits = 0;
-            for (std::size_t k = 0; k < 64 && word * 64 + k < N; ++k) {
-                if (value.test(word * 64 + k)) {
-                    bits |= 1ULL << k;
-                }
-            }
-            out = steal(PyNumber_Lshift(out.ptr(), shift.ptr()));
-            const object low = steal(PyLong_FromUnsignedLongLong(bits));
-            out = steal(PyNumber_Or(out.ptr(), low.ptr()));
-        }
-        return out.release();
+        return PyLong_FromString(value.to_string().c_str(), nullptr, 2);
     }
 };
 
