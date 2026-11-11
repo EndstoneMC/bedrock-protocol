@@ -32,7 +32,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_request_network_settings_is_packet_193(version):
     assert version.PACKETS[193] is version.RequestNetworkSettingsPacket
 
@@ -47,7 +47,7 @@ def test_request_network_settings_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_request_network_settings_rejects_a_truncated_version(version):
     with pytest.raises(ValueError, match="at byte"):
         version.RequestNetworkSettingsPacket.from_bytes(PROTOCOL_1001[:3])
