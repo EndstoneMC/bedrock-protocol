@@ -69,11 +69,13 @@ def field(
       declaration's range.
     - `when`: a one-argument lambda over earlier fields. Nothing marks presence on the wire: both
       directions recompute it, and the field stays the bare type in C++.
-    - `endian`: `"big"` for a fixed-width integer written big-endian.
+    - `endian`: `"big"` for a 16, 32 or 64-bit integer, or an enum whose `type=` is one, written big-endian. `int8`,
+      `uint8`, the varints and a primitive alias take none.
     - `prefix`: `uint32`, `uint16` or `varint32` in place of the field's `list`'s `uvarint32` count.
     - `count`: a one-argument lambda that gives a bare `list` its length instead of a prefix.
     - `cereal`: `False` reaches the `@type(cereal=False)` declaration of the annotated type. It flows
-      through `list`, `dict` and `T | None`.
+      through `list`, `dict`, `T | None`, union cases and array elements, and every name it reaches
+      needs a `@type(cereal=False)` declaration.
 
     `with field(when=...):` gates every field in the block by one predicate.
     """
