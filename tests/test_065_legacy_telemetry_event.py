@@ -79,7 +79,7 @@ def honey_harvested():
     )
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_legacy_telemetry_event_is_packet_65(version):
     assert version.PACKETS[65] is version.LegacyTelemetryEventPacket
 
