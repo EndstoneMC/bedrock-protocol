@@ -9,7 +9,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - Do real engineering and be ethical: never patch over a defect to make something work; fix its cause and build what will still hold long into the future, so nobody is sent back to redo it. Build nothing ahead of need: every abstraction, layer, option and file earns its weight. The quality check passes neither a workaround nor over-engineering.
 - Code that needs an explanatory comment, or a decision that needs a diary, is wrong: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`, an open disagreement) or a golden's provenance.
 - A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale, comparisons or a walkthrough.
-- Write no one-use helper function or lambda: inline the expression or bind a local named for the value. A lambda passed as an argument is fine.
+- Write no one-use helper function or lambda: inline the expression or bind a local named for the value. A lambda passed as an argument, or one invoked in place to expand a parameter pack, is fine.
 - No docs and no decision logs in the repo: no notes, guides, design docs or diaries; README.md is the only prose page.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
 - Touched files pass clang-format, clang-tidy (`.clang-tidy`), `ruff check` and `ruff format` (`ruff.toml`) with no inline suppression (`NOLINT`, `noqa`): fix the code, or change the tool's config when the check itself is wrong.

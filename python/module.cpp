@@ -125,14 +125,15 @@ void throw_decode_error(const DecodeError &error)
 void bind_versions(nb::module_ &parent)
 {
     bind_type<PacketHeader>(parent, nullptr);
-    for (const auto &binding : version_bindings()) {
-        auto module = parent.def_submodule(std::format("v{}", binding.number).c_str());
+    std::vector<Version> bound;
+    for (const int number : versions) {
+        auto module = parent.def_submodule(std::format("v{}", number).c_str());
         auto legacy = module.def_submodule("legacy", "The pre-cereal shapes, where one name has two encodings.");
         module.attr("nbt") = parent.attr("nbt");
-        Version version{.number = binding.number, .module = module, .legacy = legacy};
-        for (auto *bind_file : binding.files) {
-            bind_file(version);
-        }
+        bound.push_back({.number = number, .module = module, .legacy = legacy});
+    }
+    init_types(bound);
+    for (Version &version : bound) {
         bind_version_api(version);
     }
     for (const auto &[cls, annotations] : annotators()) {

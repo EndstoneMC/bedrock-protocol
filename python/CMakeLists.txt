@@ -6,40 +6,28 @@ string(REGEX MATCH "[0-9]+$" _latest "${_latest}")
 set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS} ${_latest})
 list(REMOVE_DUPLICATES _versions)
 
+list(SORT _versions COMPARE NATURAL)
+list(JOIN _versions ", " _versions_list)
+configure_file(versions.hpp.in bind/versions.hpp @ONLY)
+
 set(_sources module.cpp nbt.cpp)
 set(_declarations "")
-set(_table "")
+set(_calls "")
+foreach (_module IN LISTS BEDROCK_PROTOCOL_MODULES)
+    configure_file(module_types.cpp.in "bind/${_module}.cpp" @ONLY)
+    list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/${_module}.cpp")
+    string(APPEND _declarations "void init_${_module}_types(std::span<const Version> bound);\n")
+    string(APPEND _calls "    init_${_module}_types(bound);\n")
+endforeach ()
+configure_file(all_types.cpp.in bind/all_types.cpp @ONLY)
+list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/all_types.cpp")
 foreach (BP_VERSION IN LISTS _versions)
-    set(_files "")
-    foreach (BP_MODULE IN LISTS BEDROCK_PROTOCOL_MODULES)
-        set(_tu "${CMAKE_CURRENT_BINARY_DIR}/bind/${BP_MODULE}_${BP_VERSION}.cpp")
-        configure_file(bind_module.cpp.in "${_tu}" @ONLY)
-        list(APPEND _sources "${_tu}")
-        string(APPEND _declarations "void bind_${BP_MODULE}_${BP_VERSION}(Version &);\n")
-        string(APPEND _files "&bind_${BP_MODULE}_${BP_VERSION}, ")
-    endforeach ()
-    string(APPEND _table "        {${BP_VERSION}, {${_files}}},\n")
     configure_file(version.py.in "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" @ONLY)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol)
 endforeach ()
-file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp" CONTENT "#include \"module.hpp\"
-
-namespace bedrock::protocol::python {
-
-${_declarations}
-const std::vector<VersionBinding> &version_bindings()
-{
-    static const std::vector<VersionBinding> table{
-${_table}    };
-    return table;
-}
-
-}  // namespace bedrock::protocol::python
-")
-list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/versions.cpp")
 
 nanobind_add_module(_native STABLE_ABI ${_sources})
-target_include_directories(_native PRIVATE .)
+target_include_directories(_native PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}/bind")
 target_link_libraries(_native PRIVATE bedrock::protocol)
 set_target_properties(bedrock_protocol PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if (MSVC)

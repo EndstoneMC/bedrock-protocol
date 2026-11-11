@@ -7,6 +7,7 @@
 #include <format>
 #include <map>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -24,6 +25,7 @@
 #include "bedrock/protocol/stream.hpp"
 #include "casters.hpp"
 #include "module.hpp"
+#include "versions.hpp"
 
 namespace bedrock::protocol::python {
 
@@ -458,17 +460,17 @@ void bind_type(nb::handle module, Version *version)
     }
 }
 
-template <typename... T>
-void bind_types(nb::handle module, Version &version, type_list<T...>)
+template <template <int> class Types>
+void bind_schema_types(std::span<const Version> bound)
 {
-    (bind_type<T>(module, &version), ...);
-}
-
-template <typename File>
-void bind_file(Version &version)
-{
-    bind_types(version.module, version, typename File::cereal{});
-    bind_types(version.legacy, version, typename File::legacy{});
+    [&]<std::size_t... I>(std::index_sequence<I...>) {
+        (
+            [&]<typename... C, typename... L>(Version version, type_list<C...>, type_list<L...>) {
+                (bind_type<C>(version.module, &version), ...);
+                (bind_type<L>(version.legacy, &version), ...);
+            }(bound[I], typename Types<versions[I]>::cereal{}, typename Types<versions[I]>::legacy{}),
+            ...);
+    }(std::make_index_sequence<versions.size()>{});
 }
 
 }  // namespace bedrock::protocol::python

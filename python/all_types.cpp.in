@@ -1,0 +1,10 @@
+#include "module.hpp"
+
+namespace bedrock::protocol::python {
+
+@_declarations@
+void init_types(std::span<const Version> bound)
+{
+@_calls@}
+
+}  // namespace bedrock::protocol::python

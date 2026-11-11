@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -23,17 +24,12 @@ struct Version {
     nb::dict packets;
 };
 
-struct VersionBinding {
-    int number;
-    std::vector<void (*)(Version &)> files;
-};
-
-const std::vector<VersionBinding> &version_bindings();
-
 std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
 [[noreturn]] void throw_decode_error(const DecodeError &error);
 
 void bind_nbt(nb::module_ &parent);
+
+void init_types(std::span<const Version> bound);
 
 }  // namespace bedrock::protocol::python
