@@ -76,7 +76,6 @@ inline nb::object owner_of(nb::handle module, std::string_view qualified, std::s
     return scope;
 }
 
-
 template <typename T>
 nb::bytes encode(const T &value)
 {
@@ -236,8 +235,12 @@ F from_python(nb::handle src)
 template <typename F>
 nb::object annotation()
 {
-    const auto builtin = [](const char *name) { return nb::module_::import_("builtins").attr(name); };
-    const auto typing = [](const char *name) { return nb::module_::import_("typing").attr(name); };
+    const auto builtin = [](const char *name) {
+        return nb::module_::import_("builtins").attr(name);
+    };
+    const auto typing = [](const char *name) {
+        return nb::module_::import_("typing").attr(name);
+    };
     if constexpr (std::is_same_v<F, bool>) {
         return builtin("bool");
     }
@@ -386,8 +389,7 @@ template <typename T>
 void bind_struct(nb::handle scope, const char *name, Version *version)
 {
     nb::class_<T> cls(scope, name, nb::supplement<Codec>());
-    cls.def(
-        "__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
+    cls.def("__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         (bind_field<T, I>(cls), ...);
     }(std::make_index_sequence<field_count<T>()>{});
@@ -419,8 +421,7 @@ void bind_struct(nb::handle scope, const char *name, Version *version)
             }
         }
         cls.def("__bytes__", &encode<T>, "The wire form, without a packet header.");
-        cls.def_static("from_bytes", &decode_all<T>, nb::arg("data"),
-                       "Reads one value that must span all of `data`.");
+        cls.def_static("from_bytes", &decode_all<T>, nb::arg("data"), "Reads one value that must span all of `data`.");
     }
     if constexpr (Packet<T>) {
         cls.attr("ID") = T::Id;
