@@ -10,7 +10,7 @@ known-first-party = ["bedrock_protocol", "bedrock_protocol_compiler"]
 raises-require-match-for = ["*"]
 
 [lint.per-file-ignores]
-"protocol/**" = ["E501", "F811", "F821", "N", "ARG", "UP007", "PIE794", "PIE796"]
+"protocol/**" = ["E501", "F811", "F821", "N", "ARG", "UP007", "PIE794", "PIE796", "RUF036"]
 "**/bench_*.py" = ["T20"]
 "compiler/src/**" = ["B", "UP", "PT", "T20", "ARG", "RUF"]
 "compiler/src/bedrock_protocol_compiler/dsl.py" = ["N801"]
