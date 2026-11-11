@@ -14,7 +14,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_data_driven_ui_reload_is_packet_335(version):
     assert version.PACKETS[335] is version.ClientboundDataDrivenUIReloadPacket
 
@@ -29,7 +29,7 @@ def test_clientbound_data_driven_ui_reload_decodes_from_its_golden(packet, golde
     assert type(packet).from_bytes(golden) == packet
 
 
-@pytest.mark.parametrize("version", VERSIONS, ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", VERSIONS)
 def test_clientbound_data_driven_ui_reload_rejects_trailing_bytes(version):
     with pytest.raises(ValueError, match="trailing bytes"):
         version.ClientboundDataDrivenUIReloadPacket.from_bytes(bytes.fromhex("ff7f01"))
