@@ -7,7 +7,7 @@
 
 #include <nanobind/nanobind.h>
 
-#include <bedrock/protocol/stream.hpp>
+#include "bedrock/protocol/stream.hpp"
 
 namespace bedrock::protocol::python {
 

@@ -4,8 +4,8 @@
 
 #include <nanobind/nanobind.h>
 
-#include <bedrock/protocol/packet.hpp>
-#include <bedrock/protocol/version.hpp>
+#include "bedrock/protocol/packet.hpp"
+#include "bedrock/protocol/version.hpp"
 
 #include "binder.hpp"
 #include "module.hpp"

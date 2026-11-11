@@ -11,67 +11,13 @@
 #include <nanobind/operators.h>
 #include <nanobind/stl/vector.h>
 
-#include <bedrock/protocol/nbt.hpp>
+#include "bedrock/protocol/nbt.hpp"
 
 #include "casters.hpp"
 #include "module.hpp"
 
 namespace nb = nanobind;
 namespace bp = bedrock::protocol;
-
-NAMESPACE_BEGIN(NB_NAMESPACE)
-NAMESPACE_BEGIN(detail)
-
-// A tag crosses as an instance of its own class; the empty tag is None.
-template <>
-struct type_caster<bp::Tag> {
-    NB_TYPE_CASTER(bp::Tag, const_name("object"))
-
-    bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
-    {
-        return try_as<bp::ByteTag, bp::ShortTag, bp::IntTag, bp::Int64Tag, bp::FloatTag, bp::DoubleTag,
-                      bp::ByteArrayTag, bp::StringTag, bp::ListTag, bp::CompoundTag, bp::IntArrayTag>(src, flags,
-                                                                                                       cleanup);
-    }
-
-    static handle from_cpp(const bp::Tag &value, rv_policy, cleanup_list *cleanup) noexcept
-    {
-        return value.visit([&](const auto &payload) -> handle {
-            using V = std::decay_t<decltype(payload)>;
-            if constexpr (std::is_same_v<V, std::monostate>) {
-                return none().release();
-            }
-            else {
-                return make_caster<V>::from_cpp(payload, rv_policy::copy, cleanup);
-            }
-        });
-    }
-
-private:
-    template <typename... T>
-    bool try_as(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
-    {
-        if (src.is_none()) {
-            value = bp::Tag{};
-            return true;
-        }
-        return (try_one<T>(src, flags, cleanup) || ...);
-    }
-
-    template <typename T>
-    bool try_one(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
-    {
-        make_caster<T> caster;
-        if (!caster.from_python(src, flags & ~static_cast<uint8_t>(cast_flags::convert), cleanup)) {
-            return false;
-        }
-        value = bp::Tag{caster.operator cast_t<T>()};
-        return true;
-    }
-};
-
-NAMESPACE_END(detail)
-NAMESPACE_END(NB_NAMESPACE)
 
 namespace bedrock::protocol::python {
 

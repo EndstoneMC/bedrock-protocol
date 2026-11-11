@@ -19,10 +19,10 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 
-#include <bedrock/protocol/detail/reflect.hpp>
-#include <bedrock/protocol/enum.hpp>
-#include <bedrock/protocol/serializer.hpp>
-#include <bedrock/protocol/stream.hpp>
+#include "bedrock/protocol/detail/reflect.hpp"
+#include "bedrock/protocol/enum.hpp"
+#include "bedrock/protocol/serializer.hpp"
+#include "bedrock/protocol/stream.hpp"
 
 #include "casters.hpp"
 #include "module.hpp"
