@@ -7,7 +7,8 @@ PACKET = v2225.ClientboundPlayAudioContentPacket(
     playback_type=v2225.AudioContentPlaybackType.MUSIC,
     play_sound=SOUND,
 )
-HEAD = bytes.fromhex("05612e622e63" + "05642e652e66" + "056d75736963")
+# TODO: confirm against BDS: gophertunnel stops at 2168 and cannot marshal this packet; the bytes follow the r26_u6 dump
+HEAD = bytes.fromhex("05612e622e6305642e652e66056d75736963")
 
 
 def test_clientbound_play_audio_content_is_packet_359_from_2225():
