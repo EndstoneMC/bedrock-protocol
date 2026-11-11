@@ -87,7 +87,7 @@ def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
 def test_a_bitset_width_may_name_a_derived_member(generate):
     out = generate({"a": BITSET})
 
-    assert (out / "a.h").exists()
+    assert "std::bitset<2> x{};" in (out / "a.h").read_text()
 
 
 def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
