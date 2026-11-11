@@ -160,6 +160,9 @@ public:
         }
         return *this;
     }
+    BinaryReader(BinaryReader &&) = delete;
+    BinaryReader &operator=(BinaryReader &&) = delete;
+    ~BinaryReader() = default;
 
     template <std::integral N>
     auto account(N count, std::size_t width, bool elements = true) -> Result<void>
@@ -192,6 +195,8 @@ public:
         }
         ReadScope(const ReadScope &) = delete;
         ReadScope &operator=(const ReadScope &) = delete;
+        ReadScope(ReadScope &&) = delete;
+        ReadScope &operator=(ReadScope &&) = delete;
         explicit operator bool() const { return entered_; }
 
     private:
@@ -295,19 +300,19 @@ public:
     auto readVarInt() -> Result<T>
     {
         using U = std::make_unsigned_t<T>;
-        constexpr int kMaxBytes = (sizeof(T) * 8 + 6) / 7;
+        constexpr int max_bytes = (sizeof(T) * 8 + 6) / 7;
         U value = 0;
-        for (int n = 0; n < kMaxBytes; ++n) {
+        for (int n = 0; n < max_bytes; ++n) {
             std::uint8_t b = 0;
             auto r = read(&b, 1);
             if (!r) {
                 return std::unexpected(r.error());
             }
-            if (n == kMaxBytes - 1 && (b & 0x7fu) > (std::numeric_limits<U>::max() >> (n * 7))) {
+            if (n == max_bytes - 1 && (b & 0x7fU) > (std::numeric_limits<U>::max() >> (n * 7))) {
                 return std::unexpected(Errc::out_of_range);
             }
             value |= (static_cast<U>(b) & U{0x7F}) << (n * 7);
-            if ((b & 0x80u) == 0) {
+            if ((b & 0x80U) == 0) {
                 if constexpr (std::is_signed_v<T>) {
                     return static_cast<T>((value >> 1) ^ -(value & U{1}));
                 }
@@ -400,8 +405,8 @@ public:
         using U = std::make_unsigned_t<T>;
         U bits;
         if constexpr (std::is_signed_v<T>) {
-            constexpr int kShift = sizeof(T) * 8 - 1;
-            bits = static_cast<U>((value >> kShift) ^ (value << 1));
+            constexpr int shift = sizeof(T) * 8 - 1;
+            bits = static_cast<U>((value >> shift) ^ (value << 1));
         }
         else {
             bits = value;
@@ -409,7 +414,7 @@ public:
         do {
             std::uint8_t byte = bits & U{0x7F};
             bits >>= 7;
-            const auto out = static_cast<std::uint8_t>(bits ? (byte | 0x80u) : byte);
+            const auto out = static_cast<std::uint8_t>(bits ? (byte | 0x80U) : byte);
             write(&out, 1);
         } while (bits);
     }
