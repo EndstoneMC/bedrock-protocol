@@ -12,7 +12,7 @@ GOLDENS = [
     pytest.param(
         version.LoginPacket(client_network_version=1001, connection_request="abc"),
         LOGIN,
-        id=version.__name__.removeprefix("bedrock_protocol."),
+        id=version.__name__.rpartition(".")[2],
     )
     for version in VERSIONS
 ]
