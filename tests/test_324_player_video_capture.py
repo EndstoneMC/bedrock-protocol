@@ -19,7 +19,7 @@ PACKET = v2225.PlayerVideoCapturePacket(
 )
 
 
-@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_player_video_capture_is_packet_324(version):
     assert version.PACKETS[324] is version.PlayerVideoCapturePacket
 
