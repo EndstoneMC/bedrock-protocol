@@ -3,7 +3,7 @@ import builtins
 import inspect
 import keyword
 import uuid
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from importlib import import_module
 from pathlib import Path
@@ -228,23 +228,22 @@ class Builder:
         kinds: list[object] = []
         packet_id = None
         for decorator in node.decorator_list:
-            arguments: dict[str, ast.expr] = {}
             if isinstance(decorator, ast.Call):
                 function = self.resolve(source, scope, decorator.func)
                 if function is not dsl.packet and function is not dsl.type:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
-                arguments = self.bind(source, decorator, function, decorator.args, decorator.keywords, ("id",))
+                arguments = self.bind(source, decorator, function, ("id",))
+                if function is dsl.packet:
+                    try:
+                        packet_id = ast.literal_eval(arguments["id"])
+                    except (ValueError, TypeError):
+                        packet_id = None
+                    if type(packet_id) is not int:
+                        raise error(source, decorator, "packet", "id is not an integer literal")
             else:
                 function = self.resolve(source, scope, decorator)
                 if function is not dsl.builtin:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
-            if "id" in arguments:
-                try:
-                    packet_id = ast.literal_eval(arguments["id"])
-                except (ValueError, TypeError):
-                    packet_id = None
-                if type(packet_id) is not int:
-                    raise error(source, decorator, "packet", "id is not an integer literal")
             kinds.append(function)
         if len(kinds) > 1:
             raise error(source, node, node.name, "takes only one of packet, type and builtin")
@@ -298,33 +297,31 @@ class Builder:
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
                     raise error(source, call, name, "is assigned something other than field(...)")
-                self.bind(source, call, dsl.field, call.args, call.keywords, ())
+                self.bind(source, call, dsl.field, ())
             fields.append(Field(name, self.type_of(source, scope, statement.annotation)))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
 
     def bind(
         self,
         source: Source,
-        node: ast.expr,
+        call: ast.Call,
         function: Callable[..., object],
-        args: Sequence[ast.expr],
-        keywords: Sequence[ast.keyword],
         read: tuple[str, ...],
     ) -> dict[str, ast.expr]:
         name = function.__name__
-        if any(isinstance(arg, ast.Starred) for arg in args) or any(kw.arg is None for kw in keywords):
-            raise error(source, node, name, "takes its arguments written out")
-        names = [kw.arg for kw in keywords]
-        for kw in keywords:
+        if any(isinstance(arg, ast.Starred) for arg in call.args) or any(kw.arg is None for kw in call.keywords):
+            raise error(source, call, name, "takes its arguments written out")
+        names = [kw.arg for kw in call.keywords]
+        for kw in call.keywords:
             if names.count(kw.arg) > 1:
                 raise error(source, kw, str(kw.arg), "is repeated")
         try:
-            bound = inspect.signature(function).bind(*args, **{kw.arg: kw.value for kw in keywords if kw.arg})
+            bound = inspect.signature(function).bind(*call.args, **{kw.arg: kw.value for kw in call.keywords if kw.arg})
         except TypeError as reason:
-            raise error(source, node, name, str(reason)) from None
+            raise error(source, call, name, str(reason)) from None
         unread = [argument for argument in bound.arguments if argument not in read]
         if unread:
-            raise error(source, node, name, f"{unread[0]} is not supported yet")
+            raise error(source, call, name, f"{unread[0]} is not supported yet")
         return bound.arguments
 
     def resolve(self, source: Source, scope: Scope, node: ast.expr) -> object:
