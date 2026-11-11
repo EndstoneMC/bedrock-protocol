@@ -16,7 +16,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_ticking_areas_load_status_is_packet_179(version):
     assert version.PACKETS[179] is version.TickingAreasLoadStatusPacket
 
@@ -29,10 +29,6 @@ def test_ticking_areas_load_status_encodes_to_its_golden(packet, golden):
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_ticking_areas_load_status_decodes_from_its_golden(packet, golden):
     assert type(packet).from_bytes(golden) == packet
-
-
-def test_the_flag_is_the_whole_body_with_no_marker_byte_in_front_of_it():
-    assert len(bytes(v2225.TickingAreasLoadStatusPacket(waiting_for_preload=False))) == 1
 
 
 def test_an_empty_ticking_areas_load_status_body_is_rejected():
