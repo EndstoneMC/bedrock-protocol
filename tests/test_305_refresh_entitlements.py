@@ -7,7 +7,7 @@ from bedrock_protocol import v1001, v2168, v2225
 EMPTY = bytes.fromhex("")
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_refresh_entitlements_is_packet_305(version):
     assert version.PACKETS[305] is version.RefreshEntitlementsPacket
 
@@ -20,6 +20,6 @@ def test_refresh_entitlements_decodes_from_its_golden():
     assert v2225.RefreshEntitlementsPacket.from_bytes(EMPTY) == v2225.RefreshEntitlementsPacket()
 
 
-def test_the_body_writes_no_cereal_marker_so_a_byte_behind_it_is_left_over():
+def test_the_refresh_entitlements_body_reads_none_of_the_byte_behind_it():
     with pytest.raises(ValueError, match="trailing bytes"):
         v2225.RefreshEntitlementsPacket.from_bytes(b"\x01")
