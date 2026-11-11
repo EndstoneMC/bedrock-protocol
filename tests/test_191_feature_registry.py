@@ -25,7 +25,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168, v2225], ids=lambda version: version.__name__.rpartition(".")[2])
 def test_feature_registry_is_packet_191(version):
     assert version.PACKETS[191] is version.FeatureRegistryPacket
 
