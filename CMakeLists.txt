@@ -103,11 +103,7 @@ list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.[a-z]+$" "\\1")
 if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
     add_subdirectory(python)
 elseif (BEDROCK_PROTOCOL_INSTALL)
-    install(TARGETS bedrock_protocol
-            EXPORT bedrock-protocol-targets
-            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(TARGETS bedrock_protocol EXPORT bedrock-protocol-targets)
 
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
@@ -120,7 +116,6 @@ elseif (BEDROCK_PROTOCOL_INSTALL)
             DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}")
 
     install(EXPORT bedrock-protocol-targets
-            FILE bedrock-protocol-targets.cmake
             NAMESPACE bedrock::
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/bedrock-protocol")
 
