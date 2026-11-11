@@ -6,6 +6,13 @@ signature written here: a keyword this module does not list is an error.
 
 A field named after a Python keyword carries one trailing underscore, which the compiler drops
 (`pass_` is `pass`). Any other trailing underscore is part of the name.
+
+An enum is `class E(IntEnum, P)` or `class E(Enum, P)`, where P is bool, int8, uint8, int16, uint16,
+int32 or uint32 and becomes `enum class E : P`. A member is `PEP8_NAME = N`, `= -N`, `= auto()`,
+`= OTHER` or `= OTHER - k` for an earlier member, and reaches C++ as `CamelCase`. A member name may
+repeat over disjoint version ranges. The wire folds the C++ spelling to lower case, so a member
+whose BDS spelling differs by more than case is paired with it, `HIGH_PANTS = 8, "persona_high_pants"`,
+or `value(8, "persona_high_pants")`.
 """
 
 from collections.abc import Callable

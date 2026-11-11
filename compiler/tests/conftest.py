@@ -4,7 +4,9 @@ from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import Package
 
 INIT = """
-from bedrock_protocol_compiler.dsl import builtin, double, field, packet, type, uint8, uint32
+from bedrock_protocol_compiler.dsl import (
+    builtin, double, field, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, value
+)
 
 versions = (1, 2, 3)
 """

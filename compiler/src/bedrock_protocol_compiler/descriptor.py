@@ -25,7 +25,12 @@ class BuiltinRef:
     builtin: "Builtin"
 
 
-type Type = Primitive | AliasRef | StructRef | BuiltinRef
+@dataclass(frozen=True)
+class EnumRef:
+    enum: "Enum"
+
+
+type Type = Primitive | AliasRef | StructRef | BuiltinRef | EnumRef
 
 
 @dataclass(frozen=True)
@@ -39,6 +44,45 @@ class StructDeclaration:
     fields: tuple[Field, ...]
 
 
+@dataclass(frozen=True)
+class Range:
+    since: int | None
+    until: int | None
+
+
+@dataclass(frozen=True)
+class Int:
+    value: int
+
+
+@dataclass(frozen=True)
+class MemberRef:
+    enum: "Enum"
+    name: str
+
+
+@dataclass(frozen=True)
+class Binary:
+    operator: str
+    left: MemberRef
+    right: Int
+
+
+@dataclass(frozen=True)
+class Member:
+    name: str
+    value: Int | MemberRef | Binary | None
+    range: Range
+    cpp_name: str | None
+    wire_name: str | None
+
+
+@dataclass(frozen=True)
+class EnumDeclaration:
+    underlying: Primitive | None
+    members: tuple[Member, ...]
+
+
 @dataclass(eq=False)
 class Struct:
     name: str
@@ -46,7 +90,15 @@ class Struct:
     module: str
     packet_id: int | None
     declarations: list[StructDeclaration] = field(default_factory=list)
-    nested: list["Struct"] = field(default_factory=list)
+    nested: list["Struct | Enum"] = field(default_factory=list)
+
+
+@dataclass(eq=False)
+class Enum:
+    name: str
+    owner: Struct | None
+    module: str
+    declarations: list[EnumDeclaration] = field(default_factory=list)
 
 
 @dataclass(eq=False)
@@ -62,7 +114,7 @@ class Builtin:
     stem: str
 
 
-type Family = Struct | Alias | Builtin
+type Family = Struct | Enum | Alias | Builtin
 
 
 @dataclass(frozen=True)

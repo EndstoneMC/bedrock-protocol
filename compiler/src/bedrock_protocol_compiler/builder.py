@@ -1,27 +1,37 @@
 import ast
 import builtins
+import enum
 import inspect
 import keyword
+import math
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import TypeAliasType
+from typing import Any, TypeAliasType
 
 from bedrock_protocol_compiler import dsl
 from bedrock_protocol_compiler.descriptor import (
     Alias,
     AliasRef,
+    Binary,
     Builtin,
     BuiltinRef,
     CompilerError,
+    Enum,
+    EnumDeclaration,
+    EnumRef,
     Family,
     Field,
+    Int,
+    Member,
+    MemberRef,
     Module,
     Package,
     Primitive,
+    Range,
     Struct,
     StructDeclaration,
     StructRef,
@@ -30,6 +40,7 @@ from bedrock_protocol_compiler.descriptor import (
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
+ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -71,6 +82,15 @@ class PendingStruct:
 
 
 @dataclass
+class PendingEnum:
+    source: Source
+    scope: Scope
+    node: ast.ClassDef
+    enum: Enum
+    underlying: Primitive | None
+
+
+@dataclass
 class PendingAlias:
     source: Source
     node: ast.TypeAlias
@@ -105,6 +125,7 @@ class Builder:
         self.scopes: dict[Struct, Scope] = {}
         self.declared: dict[str, Family] = {}
         self.structs: list[PendingStruct] = []
+        self.enums: list[PendingEnum] = []
         self.aliases: list[PendingAlias] = []
 
     def build(self) -> Package:
@@ -115,6 +136,8 @@ class Builder:
             self.bind_family_imports(source)
         for pending_alias in self.aliases:
             self.build_alias(pending_alias)
+        for pending_enum in self.enums:
+            self.build_enum(pending_enum)
         for pending_struct in self.structs:
             self.build_struct(pending_struct)
         modules = tuple(
@@ -221,8 +244,8 @@ class Builder:
                 self.add(source, source.scope, statement, alias.asname or alias.name, family)
 
     def declare_class(self, source: Source, scope: Scope, node: ast.ClassDef, owner: Struct | None) -> None:
-        if node.bases or node.keywords:
-            raise error(source, node, node.name, "bases are not supported yet")
+        if node.keywords:
+            raise error(source, node, node.name, "keywords are not supported")
         if node.type_params:
             raise error(source, node, node.name, "type parameters are not allowed")
         kinds: list[object] = []
@@ -247,6 +270,8 @@ class Builder:
             kinds.append(function)
         if len(kinds) > 1:
             raise error(source, node, node.name, "takes only one of packet, type and builtin")
+        if node.bases and kinds not in ([], [dsl.type]):
+            raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
             if owner is not None:
                 raise error(source, node, node.name, "a builtin is declared at the top of a module")
@@ -254,18 +279,103 @@ class Builder:
                 raise error(source, node, node.name, "a builtin has no body")
             self.declare_family(source, node, Builtin(node.name, source.stem))
             return
-        struct = Struct(node.name, owner, source.stem, packet_id)
-        inner = Scope(scope)
-        self.scopes[struct] = inner
+        family: Struct | Enum = (
+            Enum(node.name, owner, source.stem) if node.bases else Struct(node.name, owner, source.stem, packet_id)
+        )
         if owner is None:
-            self.declare_family(source, node, struct)
+            self.declare_family(source, node, family)
         else:
-            owner.nested.append(struct)
-            self.add(source, scope, node, node.name, struct)
+            owner.nested.append(family)
+            self.add(source, scope, node, node.name, family)
+        if isinstance(family, Enum):
+            underlying: Primitive | None = None
+            if len(node.bases) > 2:
+                raise error(source, node, node.name, "takes an enum base and at most an underlying type")
+            if self.resolve(source, scope, node.bases[0]) not in (enum.IntEnum, enum.Enum):
+                raise error(source, node.bases[0], node.name, "is not IntEnum or Enum")
+            if len(node.bases) == 2:
+                base = self.type_of(source, scope, node.bases[1])
+                if not (isinstance(base, Primitive) and base.name in ENUM_UNDERLYING):
+                    raise error(source, node.bases[1], node.name, "is not an enum underlying type")
+                underlying = base
+            self.enums.append(PendingEnum(source, scope, node, family, underlying))
+            return
+        inner = Scope(scope)
+        self.scopes[family] = inner
         for statement in node.body:
             if isinstance(statement, ast.ClassDef):
-                self.declare_class(source, inner, statement, struct)
-        self.structs.append(PendingStruct(source, node, struct))
+                self.declare_class(source, inner, statement, family)
+        self.structs.append(PendingStruct(source, node, family))
+
+    def build_enum(self, pending: PendingEnum) -> None:
+        source = pending.source
+        members: list[Member] = []
+        for statement in without_docstring(pending.node.body):
+            if isinstance(statement, ast.Pass):
+                continue
+            if not (
+                isinstance(statement, ast.Assign)
+                and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name)
+            ):
+                raise error(source, statement, pending.enum.name, "holds only members, a docstring and pass")
+            name = statement.targets[0].id
+            node: ast.expr | None = statement.value
+            wire_name = None
+            if isinstance(node, ast.Tuple):
+                if len(node.elts) != 2:
+                    raise error(source, node, name, "a pair is a value and a wire name")
+                wire_name = self.literal(source, node.elts[1], str, name)
+                node = node.elts[0]
+            cpp_name = None
+            since = None
+            until = None
+            if isinstance(node, ast.Call) and self.resolve(source, pending.scope, node.func) is dsl.value:
+                arguments = self.bind(source, node, dsl.value, ("v", "name", "cpp_name", "since", "until"))
+                if "name" in arguments:
+                    if wire_name is not None:
+                        raise error(source, node, name, "has its wire name twice")
+                    wire_name = self.literal(source, arguments["name"], str, name)
+                if "cpp_name" in arguments:
+                    cpp_name = self.literal(source, arguments["cpp_name"], str, name)
+                    if cpp_name.lower() != name.replace("_", "").lower():
+                        raise error(
+                            source, node, name, f"cpp_name {cpp_name!r} is not a case variant of the derived name"
+                        )
+                if "since" in arguments:
+                    since = self.literal(source, arguments["since"], int, name)
+                if "until" in arguments:
+                    until = self.literal(source, arguments["until"], int, name)
+                node = arguments.get("v")
+            offset = None
+            if isinstance(node, ast.BinOp):
+                if not (isinstance(node.op, ast.Sub) and isinstance(node.left, ast.Name)):
+                    raise error(source, node, name, "is not a member minus an integer")
+                offset = self.literal(source, node.right, int, name)
+                node = node.left
+            value: Int | MemberRef | Binary | None = None
+            if isinstance(node, ast.Name):
+                if not any(member.name == node.id for member in members):
+                    raise error(source, node, name, f"{node.id} is not a member declared above it")
+                value = MemberRef(pending.enum, node.id)
+                if offset is not None:
+                    value = Binary("-", value, Int(offset))
+            elif node is not None and not (
+                isinstance(node, ast.Call)
+                and not node.args
+                and not node.keywords
+                and self.resolve(source, pending.scope, node.func) is enum.auto
+            ):
+                value = Int(self.literal(source, node, int, name))
+            for earlier in members:
+                if earlier.name == name and max(earlier.range.since or 0, since or 0) < min(
+                    earlier.range.until or math.inf, until or math.inf
+                ):
+                    raise error(source, statement, name, "is declared twice over overlapping versions")
+            members.append(Member(name, value, Range(since, until), cpp_name, wire_name))
+        if not members:
+            raise error(source, pending.node, pending.enum.name, "has no members")
+        pending.enum.declarations.append(EnumDeclaration(pending.underlying, tuple(members)))
 
     def build_alias(self, pending: PendingAlias) -> None:
         if pending.node.type_params:
@@ -300,6 +410,17 @@ class Builder:
                 self.bind(source, call, dsl.field, ())
             fields.append(Field(name, self.type_of(source, scope, statement.annotation)))
         pending.struct.declarations.append(StructDeclaration(tuple(fields)))
+
+    def literal(self, source: Source, node: ast.expr, kind: type, name: str) -> Any:
+        try:
+            parsed = ast.literal_eval(node)
+        except (ValueError, TypeError):
+            parsed = None
+        if type(parsed) is not kind:
+            raise error(source, node, name, f"is not a {kind.__name__} literal")
+        if parsed == "":
+            raise error(source, node, name, "is an empty string")
+        return parsed
 
     def bind(
         self,
@@ -351,6 +472,8 @@ class Builder:
             return BuiltinRef(UUID)
         if isinstance(target, Struct):
             return StructRef(target)
+        if isinstance(target, Enum):
+            return EnumRef(target)
         if isinstance(target, Alias):
             return AliasRef(target)
         if isinstance(target, Builtin):
