@@ -1,5 +1,12 @@
 import importlib
 import pkgutil
+import types
+
+
+def pytest_make_parametrize_id(val):
+    if isinstance(val, types.ModuleType):
+        return val.__name__.rpartition(".")[2]
+    return None
 
 
 def pytest_generate_tests(metafunc):
