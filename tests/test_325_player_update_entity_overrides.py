@@ -72,7 +72,7 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168], ids=lambda version: version.__name__.rpartition(".")[2])
+@pytest.mark.parametrize("version", [v1001, v2168])
 def test_player_update_entity_overrides_is_packet_325(version):
     assert version.PACKETS[325] is version.PlayerUpdateEntityOverridesPacket
 
