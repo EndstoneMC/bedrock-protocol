@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import functools
 import importlib
 import json
 import re
@@ -100,6 +101,8 @@ PRESENT_WHEN = {
     "ItemStackResponseInfo.containers": ("result", "SUCCESS"),
     "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
+    "InventorySource.container_id": ("type", "CONTAINER_INVENTORY", "NON_IMPLEMENTED_FEATURE_TODO"),
+    "InventorySource.flags": ("type", "WORLD_INTERACTION"),
 }
 LEVEL_GAME_RULES = (
     ("commandBlockOutput", {"bool": True}),
@@ -314,11 +317,12 @@ class Generator:
             if gate is None or not isinstance(each.type, Optional):
                 found.append(each)
                 continue
-            name, member = gate
+            name, *members = gate
             declared = next(field.type for field in shape.fields if field.name == name)
             if not isinstance(declared, EnumRef | EnumName):
                 raise TypeError(f"{label}.{name}: not an enum field")
-            when = Binary("==", FieldRef(name), MemberRef(declared.enum, member))
+            tests = [Binary("==", FieldRef(name), MemberRef(declared.enum, member)) for member in members]
+            when = functools.reduce(lambda left, right: Binary("or", left, right), tests)
             found.append(dataclasses.replace(each, type=each.type.element, when=when))
         return found
 
