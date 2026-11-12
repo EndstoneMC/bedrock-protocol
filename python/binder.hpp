@@ -275,11 +275,13 @@ void bind_field(nb::class_<T> &cls)
     }
     else if constexpr (Reflected<F>) {
         cls.def_prop_rw(
-            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal, value_arg);
+            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal,
+            value_arg);
     }
     else {
         cls.def_prop_rw(
-            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy, value_arg);
+            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy,
+            value_arg);
     }
 }
 
