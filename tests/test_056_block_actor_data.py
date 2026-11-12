@@ -113,7 +113,7 @@ def test_a_compound_lists_its_keys_and_items():
 
 
 def test_a_compound_raises_key_error_for_a_missing_key():
-    with pytest.raises(KeyError, match="^$"):
+    with pytest.raises(KeyError, match=r"^''$"):
         nbt.CompoundTag()["id"]
 
 
