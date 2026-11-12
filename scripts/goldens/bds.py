@@ -279,73 +279,78 @@ def main() -> None:
                     "value": case["value"],
                 }
                 reports.append(report)
-                holder = server.alloc(bytes(64))
-                constructor = build.default_constructors.get(case["packet"])
-                if constructor is None:
-                    server.call(server.address(build.create_packet), holder, case["packet"])
-                else:
-                    server.call(server.address(constructor), holder, 0)
-                packet = server.u64(holder)
-                if not packet:
-                    report["difference"] = "packet: createPacket builds nothing for this id"
-                    continue
-                vtable = server.u64(packet)
-                virtuals = [server.u64(vtable + 8 * index) for index in range(slots.to_string + 1)]
-                mode = server.call(virtuals[slots.serialization_mode], packet) & 0xFFFFFFFF
-                report["writer"] = "manual" if mode < CEREAL_FIRST else "cereal"
+                try:
+                    holder = server.alloc(bytes(64))
+                    constructor = build.default_constructors.get(case["packet"])
+                    if constructor is None:
+                        server.call(server.address(build.create_packet), holder, case["packet"])
+                    else:
+                        server.call(server.address(constructor), holder, 0)
+                    packet = server.u64(holder)
+                    if not packet:
+                        report["difference"] = "packet: createPacket builds nothing for this id"
+                        continue
+                    vtable = server.u64(packet)
+                    virtuals = [server.u64(vtable + 8 * index) for index in range(slots.to_string + 1)]
+                    mode = server.call(virtuals[slots.serialization_mode], packet) & 0xFFFFFFFF
+                    report["writer"] = "manual" if mode < CEREAL_FIRST else "cereal"
 
-                stream, _ = server.stream(seed, build.read_only_binary_stream_vtable)
-                result = server.alloc(bytes(build.result_ok + 8))
-                server.call(virtuals[slots.read], result, packet, stream, ctx)
-                offset = server.u64(stream + build.stream.read_pointer)
-                report["read"] = {"offset": offset}
-                if not server.read(result + build.result_ok, 1)[0]:
-                    code, category = struct.unpack("<i4xQ", server.read(result, 16))
-                    name = server.call(server.u64(server.u64(category) + 16), category)
-                    message = server.alloc(bytes(24))
-                    server.call(server.u64(server.u64(category) + 48), message, category, code)
-                    category_name = server.read(name, 64).split(b"\0")[0].decode()
-                    report["read"]["error"] = f"{category_name}:{code}"
-                    report["read"]["message"] = server.string(message).decode(errors="replace")
+                    stream, _ = server.stream(seed, build.read_only_binary_stream_vtable)
+                    result = server.alloc(bytes(build.result_ok + 8))
+                    server.call(virtuals[slots.read], result, packet, stream, ctx)
+                    offset = server.u64(stream + build.stream.read_pointer)
+                    report["read"] = {"offset": offset}
+                    if not server.read(result + build.result_ok, 1)[0]:
+                        code, category = struct.unpack("<i4xQ", server.read(result, 16))
+                        name = server.call(server.u64(server.u64(category) + 16), category)
+                        message = server.alloc(bytes(24))
+                        server.call(server.u64(server.u64(category) + 48), message, category, code)
+                        category_name = server.read(name, 64).split(b"\0")[0].decode()
+                        report["read"]["error"] = f"{category_name}:{code}"
+                        report["read"]["message"] = server.string(message).decode(errors="replace")
 
-                json_text = server.alloc(bytes(24))
-                server.call(virtuals[slots.to_string], json_text, packet)
-                shown_text = server.string(json_text)
-                report["bds_json"] = json.loads(shown_text) if shown_text else None
+                    json_text = server.alloc(bytes(24))
+                    server.call(virtuals[slots.to_string], json_text, packet)
+                    shown_text = server.string(json_text)
+                    report["bds_json"] = json.loads(shown_text) if shown_text else None
 
-                stream, buffer = server.stream(b"", build.binary_stream_vtable)
-                server.call(virtuals[slots.write], packet, stream, ctx)
-                report["bytes"] = server.string(buffer).hex()
-                if mode != CEREAL_ONLY:
-                    other = (1 << 32) | (CEREAL_ONLY if report["writer"] == "manual" else MANUAL_ONLY)
                     stream, buffer = server.stream(b"", build.binary_stream_vtable)
-                    server.call(virtuals[slots.write_with_mode], packet, stream, ctx, other)
-                    report["other_writer_bytes"] = server.string(buffer).hex()
+                    server.call(virtuals[slots.write], packet, stream, ctx)
+                    report["bytes"] = server.string(buffer).hex()
+                    if mode != CEREAL_ONLY:
+                        other = (1 << 32) | (CEREAL_ONLY if report["writer"] == "manual" else MANUAL_ONLY)
+                        stream, buffer = server.stream(b"", build.binary_stream_vtable)
+                        server.call(virtuals[slots.write_with_mode], packet, stream, ctx, other)
+                        report["other_writer_bytes"] = server.string(buffer).hex()
 
-                written = bytes.fromhex(report["bytes"])
-                expected = leaves(case["value"])
-                shown = leaves(report["bds_json"])
-                expected_scalars = [scalar for _, scalar in expected]
-                shown_scalars = [scalar for _, scalar in shown]
-                if "error" in report["read"]:
-                    report["difference"] = f"read: {report['read']['error']} at byte {offset} of {len(seed)}"
-                elif written != seed:
-                    first = next(
-                        i for i in range(max(len(written), len(seed))) if written[i : i + 1] != seed[i : i + 1]
-                    )
-                    report["difference"] = f"bytes: BDS writes {written.hex()}, first unlike the seed at byte {first}"
-                elif report["bds_json"] is not None and shown_scalars != expected_scalars:
-                    first = next(
-                        i
-                        for i in range(max(len(shown), len(expected)))
-                        if shown_scalars[i : i + 1] != expected_scalars[i : i + 1]
-                    )
-                    bds = repr(shown_scalars[first]) if first < len(shown) else "absent"
-                    value = repr(expected_scalars[first]) if first < len(expected) else "absent"
-                    path = expected[first][0] if first < len(expected) else shown[first][0]
-                    report["difference"] = f"json: {path} is {bds} in BDS and {value} in the case"
-                else:
-                    report["difference"] = None
+                    written = bytes.fromhex(report["bytes"])
+                    expected = leaves(case["value"])
+                    shown = leaves(report["bds_json"])
+                    expected_scalars = [scalar for _, scalar in expected]
+                    shown_scalars = [scalar for _, scalar in shown]
+                    if "error" in report["read"]:
+                        report["difference"] = f"read: {report['read']['error']} at byte {offset} of {len(seed)}"
+                    elif written != seed:
+                        first = next(
+                            i for i in range(max(len(written), len(seed))) if written[i : i + 1] != seed[i : i + 1]
+                        )
+                        report["difference"] = (
+                            f"bytes: BDS writes {written.hex()}, first unlike the seed at byte {first}"
+                        )
+                    elif report["bds_json"] is not None and shown_scalars != expected_scalars:
+                        first = next(
+                            i
+                            for i in range(max(len(shown), len(expected)))
+                            if shown_scalars[i : i + 1] != expected_scalars[i : i + 1]
+                        )
+                        bds = repr(shown_scalars[first]) if first < len(shown) else "absent"
+                        value = repr(expected_scalars[first]) if first < len(expected) else "absent"
+                        path = expected[first][0] if first < len(expected) else shown[first][0]
+                        report["difference"] = f"json: {path} is {bds} in BDS and {value} in the case"
+                    else:
+                        report["difference"] = None
+                except (RuntimeError, ValueError) as error:
+                    report["difference"] = f"bds: {error}"
         finally:
             transcript.write(server.output())
             server.process.Kill()
