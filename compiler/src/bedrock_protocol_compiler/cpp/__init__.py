@@ -19,10 +19,11 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
 
         inline constexpr std::array versions{$versions$};
 
-        inline constexpr int latest_version = versions.back();
+        inline constexpr int latest_version = $latest$;
 
         }  // namespace $namespace$
         """,
         namespace=names.namespace(schema),
         versions=", ".join(map(str, schema.versions)),
+        latest=schema.latest,
     )
