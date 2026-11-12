@@ -212,6 +212,7 @@ FIXED: dict[str, Json] = {
     "PlayerListPacket.RemoveEntry.action": "REMOVE",
     "PlayerListPacket.AddEntry.action": "ADD",
     "CommandOriginData.type": "PLAYER",
+    "ServerboundLoadingScreenPacket.serverbound_loading_screen_packet_type": "START_LOADING_SCREEN",
     "LevelSettings.game_rules": {
         "rules": [{"name": name, "can_be_modified_by_player": True, "value": value} for name, value in LEVEL_GAME_RULES]
     },

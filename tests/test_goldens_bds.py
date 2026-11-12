@@ -489,6 +489,7 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
         ("RemoveEntry", "action", "REMOVE"),
         ("AddEntry", "action", "ADD"),
         ("CommandOriginData", "type", "PLAYER"),
+        ("ServerboundLoadingScreenPacket", "serverbound_loading_screen_packet_type", "START_LOADING_SCREEN"),
     ],
     ids=[
         "text-message-only",
@@ -497,6 +498,7 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
         "player-list-remove",
         "player-list-add",
         "command-origin",
+        "loading-screen",
     ],
 )
 def test_an_enum_bds_narrows_to_some_members_is_generated_as_one_of_them(values, schema, name, field, read):
