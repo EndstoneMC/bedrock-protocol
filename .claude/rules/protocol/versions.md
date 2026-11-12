@@ -24,7 +24,7 @@ paths:
 - A newer preview on the same update line replaces the older number; it never becomes a second snapshot beside it.
 - Renumber every gate the superseded preview carried, and model the new delta in the same commit.
 - After a renumber, grep for the bare number and for `v<number>`; a word-boundary match misses the namespace form.
-- With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one), and add the release to README's Supported protocols list and bump its pinned examples to the new number.
+- With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one), and add the release to README's Supported Protocols list and bump its pinned examples to the new number.
 
 ## Snapshots
 

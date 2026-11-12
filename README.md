@@ -4,7 +4,7 @@
 
 <p>
   <b>The Minecraft: Bedrock Edition network protocol as one schema</b><br>
-  One library for C++ and Python, with a module (Python) or a template argument (C++) per protocol version
+  One library for C++ and Python that encodes and decodes every supported protocol version
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -18,12 +18,18 @@ Every language exposes the same packets, types and enums, and encodes the same b
 
 | Language | Get it |
 | --- | --- |
-| [Python](#python) | Build the wheel from a checkout. It is not on PyPI. |
+| [Python](#python) | Download a wheel from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). It is not on PyPI. |
 | [C++](#c) | Download a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). |
 
 ## Python
 
-You need Python 3.12 or newer, CMake and a C++23 compiler:
+Each release carries a wheel for Linux and Windows on x86_64, for Python 3.12 or newer:
+
+```shell
+uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-linux_x86_64.whl
+```
+
+To build it from a checkout instead, you need CMake and a C++23 compiler:
 
 ```shell
 git clone https://github.com/EndstoneMC/bedrock-protocol
@@ -38,11 +44,11 @@ header, back = decode_packet(encode_packet(packet))
 assert back == packet and header.packet_id == TextPacket.ID
 ```
 
-The bare names are the latest protocol. `VERSIONS` lists the protocol numbers. `PACKETS` maps packet ids to packet classes.
+`VERSIONS` lists the protocol numbers. `PACKETS` maps packet ids to packet classes.
 
 ## C++
 
-Each release carries one package per toolchain:
+Each release carries these packages:
 
 | Asset | Contents |
 | --- | --- |
@@ -79,9 +85,9 @@ bp::BinaryReader reader{bytes};
 std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
 ```
 
-`<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/inventory.h>` and its siblings include one family.
+`<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
 
-## Pinning a protocol version
+## Pinning a Protocol Version
 
 The bare names follow the latest protocol. To stay on protocol 2225, name it.
 
@@ -99,7 +105,7 @@ In C++, pass it as the template argument:
 using Packet = bedrock::protocol::SubChunkRequestPacket_<2225>;
 ```
 
-## Supported protocols
+## Supported Protocols
 
 - 729: 1.21.30
 - 748: 1.21.40
@@ -123,13 +129,15 @@ using Packet = bedrock::protocol::SubChunkRequestPacket_<2225>;
 
 ## Building from Source
 
-You need CMake, Ninja, Python 3.12 and a C++23 compiler.
+You need CMake, Ninja, Python 3.12 or newer and a C++23 compiler:
 
 ```shell
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 cmake --install build --prefix stage
 ```
+
+`stage` holds the same tree as a C++ release package.
 
 ## License
 
