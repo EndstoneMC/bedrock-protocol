@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -14,12 +15,18 @@ def bds():
     return module
 
 
-def gap(bds, shown, value):
-    return bds.missing([scalar for _, scalar in bds.leaves(shown)], bds.leaves(value))
+def gap(bds, shown, value, enums=None):
+    return bds.missing([scalar for _, scalar in bds.leaves(shown)], bds.leaves(value), enums)
 
 
 def test_an_enum_the_case_names_matches_the_number_bds_shows(bds):
-    assert gap(bds, {"Status": 1}, {"status": "LOGIN_FAILED_CLIENT_OLD"}) is None
+    assert gap(bds, {"Status": 1}, {"status": "LOGIN_FAILED_CLIENT_OLD"}, {"status": 1}) is None
+
+
+def test_an_enum_the_case_names_does_not_match_another_number(bds):
+    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
+    assert gap(bds, {"Status": 99}, value, {"status": 1}) == ("status", "LOGIN_FAILED_CLIENT_OLD")
+    assert gap(bds, {"Status": 1}, value) == ("status", "LOGIN_FAILED_CLIENT_OLD")
 
 
 def test_a_string_that_is_no_enum_name_does_not_match_a_number(bds):
@@ -48,7 +55,7 @@ def test_a_null_in_the_case_needs_nothing_from_bds(bds):
 
 
 def scanned(bds, text, value):
-    shown = [bds.json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
+    shown = [json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
     return bds.missing(shown, bds.leaves(value))
 
 

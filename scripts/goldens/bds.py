@@ -94,12 +94,14 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
     return [] if value is None else [(path, value)]
 
 
-def same(shown: Json, wanted: Json) -> bool:
-    """Compare two scalars: an enum by name or number, an integer by its bits, a blob's hex by its bytes."""
+def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
+    """Compare two scalars: an enum by number or lower-case name, an integer by its bits, a blob's hex by its bytes."""
     if isinstance(shown, bool) or isinstance(wanted, bool):
         return type(shown) is type(wanted) and bool(shown == wanted)
     if isinstance(wanted, str) and ENUM_NAME.fullmatch(wanted):
-        return type(shown) is int or shown in (wanted.lower(), wanted.replace("_", "").lower())
+        if type(shown) is int:
+            return shown == number
+        return shown in (wanted.lower(), wanted.replace("_", "").lower())
     if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
         return bool(shown == bytes.fromhex(wanted).decode("latin-1"))
     if type(shown) is int and type(wanted) is int:
@@ -112,8 +114,14 @@ def same(shown: Json, wanted: Json) -> bool:
     return bool(shown == wanted)
 
 
-def missing(shown: list[Json], expected: list[tuple[str, Json]]) -> tuple[str, Json] | None:
-    """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more."""
+def missing(
+    shown: list[Json], expected: list[tuple[str, Json]], enums: dict[str, int] | None = None
+) -> tuple[str, Json] | None:
+    """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more.
+
+    `enums` maps the key path of each enum leaf to its number.
+    """
+    enums = enums or {}
     position = 0
     halves = [
         part
@@ -125,7 +133,7 @@ def missing(shown: list[Json], expected: list[tuple[str, Json]]) -> tuple[str, J
         )
     ]
     for path, wanted in halves:
-        found = next((i for i in range(position, len(shown)) if same(shown[i], wanted)), None)
+        found = next((i for i in range(position, len(shown)) if same(shown[i], wanted, enums.get(path))), None)
         if found is None:
             return path, wanted
         position = found + 1
@@ -378,7 +386,7 @@ def main() -> None:
                         shown = [scalar for _, scalar in leaves(report["bds_json"])]
                     elif shown_text:
                         shown = [json.loads(scalar) for scalar in SCALAR.findall(shown_text)]
-                    gap = None if shown is None else missing(shown, leaves(case["value"]))
+                    gap = None if shown is None else missing(shown, leaves(case["value"]), case.get("enums"))
                     if offset != len(seed):
                         report["difference"] = f"read: BDS stops at byte {offset} of {len(seed)}"
                     elif written != seed:
