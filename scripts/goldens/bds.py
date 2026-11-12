@@ -236,7 +236,7 @@ class Server:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes"}')
+    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes", "enums"}')
     parser.add_argument("--server", type=Path, required=True, help="unpacked stock BDS; its ports are moved off 19132")
     parser.add_argument("--lldb", default="lldb", help="lldb executable whose Python module matches this python")
     args = parser.parse_args()
