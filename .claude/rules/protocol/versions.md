@@ -1,6 +1,7 @@
 ---
 paths:
   - "protocol/**"
+  - "README.md"
 ---
 
 # Versions
@@ -16,13 +17,14 @@ paths:
 - Pin the protocol-docs SHA you diffed and the build you dumped.
 - A protocol number does not identify a wire format: Mojang changes the wire within one number, and `since=` cannot express that.
 - Diff the releases of one update line through its protocol-docs branch's history, taking one commit per stable release.
+- Spell a release with three parts (`1.26.60`) and a preview with four (`1.26.70.21`).
 
 ## One protocol per update line
 
 - A newer preview on the same update line replaces the older number; it never becomes a second snapshot beside it.
 - Renumber every gate the superseded preview carried, and model the new delta in the same commit.
 - After a renumber, grep for the bare number and for `v<number>`; a word-boundary match misses the namespace form.
-- With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one), and add the release to README's Supported protocols table.
+- With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one), and add the release to README's Supported protocols list and bump its pinned examples to the new number.
 
 ## Snapshots
 
