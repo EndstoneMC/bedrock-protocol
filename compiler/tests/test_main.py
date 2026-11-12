@@ -55,6 +55,31 @@ class P:
 """
 
 
+SENTINEL = """
+from enum import IntEnum
+from protocol import bitset, field, packet, sentinel, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = 2
+    COUNT = sentinel()
+
+class F(IntEnum, uint8):
+    A = 1
+    COUNT = sentinel()
+    LATEST = COUNT - 1
+
+@packet(id=1)
+class P:
+    e: E = field(type=str)
+    width: bitset[E.COUNT]
+    x: uint8 = field(when=lambda p: p.e == E.COUNT)
+    f: F
+"""
+
+
 @pytest.fixture
 def generate(build_package, tmp_path):
     def run(modules: dict[str, str], **options):
@@ -104,6 +129,39 @@ def test_a_bitset_width_may_name_a_derived_member(generate):
     out = generate({"a": BITSET})
 
     assert (out / "a.h").exists()
+
+
+def test_a_sentinel_is_no_enumerator(generate):
+    out = generate({"a": SENTINEL})
+
+    assert "enum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};" in (out / "a.h").read_text()
+
+
+def test_a_sentinel_has_no_reflected_value_or_name(generate):
+    header = (generate({"a": SENTINEL}) / "a.h").read_text()
+    values = "values_v<::bedrock::protocol::E>{{\n    ::bedrock::protocol::E::A,\n    ::bedrock::protocol::E::B,\n}};"
+
+    assert values in header
+    assert 'names_v<::bedrock::protocol::E>{{\n    "a",\n    "b",\n}};' in header
+    assert 'schema_names_v<::bedrock::protocol::E>{{\n    "A",\n    "B",\n}};' in header
+
+
+def test_a_member_named_after_a_sentinel_takes_its_number(generate):
+    out = generate({"a": SENTINEL})
+
+    assert "enum class F : std::uint8_t {\n    A = 1,\n    Latest = 1,\n};" in (out / "a.h").read_text()
+
+
+def test_a_bitset_is_as_wide_as_the_sentinel_it_names(generate):
+    out = generate({"a": SENTINEL})
+
+    assert "std::bitset<3> width{};" in (out / "a.h").read_text()
+
+
+def test_a_predicate_reads_a_sentinel_as_its_number(generate):
+    out = generate({"a": SENTINEL})
+
+    assert "(value.e) == (static_cast<::bedrock::protocol::E>(3))" in (out / "a.cpp").read_text()
 
 
 def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):

@@ -628,6 +628,7 @@ class Builder:
             derived = "".join(part[:1].upper() + part[1:].lower() for part in name.split("_"))
             cpp_name = derived
             own = Range(None, None)
+            sentinel = False
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -650,11 +651,12 @@ class Builder:
                 value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
             elif (
                 isinstance(expression, ast.Call)
-                and function is enum.auto
+                and function in (enum.auto, dsl.sentinel)
                 and not expression.args
                 and not expression.keywords
             ):
                 value = None
+                sentinel = function is dsl.sentinel
             elif isinstance(expression, ast.Name | ast.BinOp):
                 offset = None
                 if isinstance(expression, ast.BinOp):
@@ -674,7 +676,7 @@ class Builder:
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, wire_name))
+            members.append(Member(name, value, member_range, cpp_name, wire_name, sentinel))
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
         self.tile(source, node, pending.enum, pending.range)

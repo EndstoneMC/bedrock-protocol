@@ -23,17 +23,16 @@ class EnumGenerator:
         p.emit("enum class $name$ : $underlying$ {", name=self.shape.family.name, underlying=self.underlying)
         with p.indent():
             for member in self.shape.members:
+                number = self.shape.numbers[member.name]
                 match member.value:
-                    case MemberRef(name=name):
+                    case MemberRef(name=name) if name in cpp_names:
                         spelled = cpp_names[name]
-                    case Binary(left=MemberRef(name=name), right=Int(value=offset)):
+                    case Binary(left=MemberRef(name=name), right=Int(value=offset)) if name in cpp_names:
                         spelled = f"{cpp_names[name]} - {offset}"
-                    case Int(value=number) if number < 0 and self.underlying.startswith("std::uint"):
+                    case _ if number < 0 and self.underlying.startswith("std::uint"):
                         spelled = f"static_cast<{self.underlying}>({number})"
-                    case Int(value=number):
-                        spelled = str(number)
                     case _:
-                        raise AssertionError(member.name)
+                        spelled = str(number)
                 p.emit("$name$ = $value$,", name=member.cpp_name, value=spelled)
         p.emit("};")
 

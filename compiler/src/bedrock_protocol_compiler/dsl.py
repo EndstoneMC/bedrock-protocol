@@ -20,6 +20,11 @@ def value(
     return 0 if v is None else v
 
 
+def sentinel() -> Any:
+    """Number a member as `auto()` does, for the schema to read but never to generate."""
+    return 0
+
+
 def field(
     *,
     type: Any = None,

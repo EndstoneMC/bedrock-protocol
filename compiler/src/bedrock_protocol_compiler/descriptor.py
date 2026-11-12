@@ -179,6 +179,7 @@ class Member:
     range: Range
     cpp_name: str
     wire_name: str
+    sentinel: bool = False
 
 
 @dataclass(frozen=True)

@@ -156,11 +156,13 @@ class Schema:
                         case Binary(left=MemberRef(name=name), right=Int(value=offset)):
                             number = numbers[name] - offset
                     numbers[member.name] = number
+                    if member.sentinel:
+                        continue
                     settled = replace(member, range=ALWAYS)
                     if not isinstance(member.value, MemberRef | Binary):
                         settled = replace(settled, value=Int(number))
                     members.append(settled)
-                key = (enum_declaration.underlying, tuple(members))
+                key = (enum_declaration.underlying, tuple(members), tuple(numbers.items()))
                 candidate = EnumShape(family, enum_declaration.underlying, tuple(members), numbers)
             self.live[family, version] = shapes.setdefault(key, candidate)
         previous: Shape | None = None

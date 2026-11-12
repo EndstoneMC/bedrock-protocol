@@ -91,7 +91,9 @@ def read(wire: str, endian: str | None) -> str:
 def enumerator(schema: Schema, member: MemberRef, version: int) -> str:
     shape = schema.shape_at(member.enum, version)
     assert isinstance(shape, EnumShape)
-    cpp_name = next(each.cpp_name for each in shape.members if each.name == member.name)
+    cpp_name = next((each.cpp_name for each in shape.members if each.name == member.name), None)
+    if cpp_name is None:
+        return f"static_cast<{qualified(schema, shape)}>({shape.numbers[member.name]})"
     return f"{qualified(schema, shape)}::{cpp_name}"
 
 

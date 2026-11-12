@@ -17,7 +17,9 @@ paths:
 ## Values
 
 - Give a real member an explicit int literal.
-- Use `auto()` (previous + 1) only for a count sentinel or a run that shifts behind a gate, and check that the line above holds the right value.
+- Use `auto()` (previous + 1) only for a count the dump binds or a run that shifts behind a gate, and check that the line above holds the right value.
+- Write `sentinel()` for a member the header declares and the era's dump, holding its enum, does not bind (by name if name-coded, else by value); where no dumped field reads the enum, only for its trailing count.
+- Gate a sentinel with a `with value(since=, until=):` block even when it stands alone, beside the member's bound line over the disjoint range (`UNSUPPORTED = value(since=2168)`).
 
 ## Underlying type
 
@@ -36,7 +38,7 @@ paths:
 - Gate a member arriving or leaving with `value(N, since=)` or `value(N, until=)`, and a run of two or more consecutive members that share one gate with one `with value(since=, until=):` block; a block never nests in another, and a member in it that narrows the gate keeps its own `value(N, since=)` or `value(N, until=)`.
 - Declare a moved member once per value, over disjoint ranges (`RECORD_LAVA_CHICKEN = value(561, since=819, until=827)` and `value(562, since=827)`).
 - Redeclare an enum over adjacent ranges only for a wholesale renumbering.
-- Gate an appended value with `value(N, since=)` and let a trailing `COUNT = auto()` follow it.
+- Gate an appended value with `value(N, since=)` and let the trailing count (`auto()` or `sentinel()`) follow it.
 - Gate a removed value with `value(N, until=)` and make every member after it `auto()`; an insertion and a removal in one span can cancel, so redeclare only when that fails.
 - For a rename at the same value, take the new spelling at every era rather than versioning the enum.
 - Treat any change to a name-coded member's spelling as a wire change.
@@ -46,7 +48,7 @@ paths:
 ## Sentinels and gaps
 
 - Check both sentinel sums every time: the sentinel's change equals added minus removed, and the sentinel equals the last named member plus one.
-- Where the sum shows enumerators the dump does not bind, pin the sentinel with an explicit `value(N, since=)` and mark the gap `# TODO`.
+- Where the sum shows enumerators the dump does not bind, declare each from bedrock-headers as `sentinel()`.
 - The dump lists only bound enumerators; never assume it lists them all.
 - Sort a value the dump has and the DSL lacks by the field's encoding: an alias on a numeric field is noise, a member of a name-coded enum is a decode hole to report.
 - Date an enum that sizes a `std::bitset` from the bitset's instantiation in the binary; on arithmetic the binary outranks the changelog.

@@ -13,7 +13,7 @@ from bedrock_protocol_compiler.descriptor import (
 
 HEADER = """
 from enum import IntEnum, auto
-from protocol import builtin, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, value
+from protocol import builtin, int8, int16, int32, int64, packet, sentinel, type, uint8, uint16, uint32, uint64, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 """
@@ -57,6 +57,16 @@ def test_auto_and_bare_value_have_no_number(build_package):
     )
 
     assert [member.value for member in members(package)] == [Int(1), None, None, None]
+
+
+def test_a_sentinel_has_no_number_and_is_marked(build_package):
+    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = sentinel()\n    C = auto()\n"})
+
+    assert [(member.value, member.sentinel) for member in members(package)] == [
+        (Int(1), False),
+        (None, True),
+        (None, False),
+    ]
 
 
 def test_value_carries_a_number_and_a_range(build_package):
@@ -218,6 +228,9 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 1\n    B = 1 - A\n", "B: is not a member minus an integer"),
         ("class E(IntEnum, int32):\n    A = 1\n    B = A - 'x'\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = auto(1)\n", "A: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = 1\n    B = sentinel(2)\n", "B: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = 1\n    B = value(sentinel(), since=2)\n", "B: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = 1\n    B = (sentinel(), 'x')\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1\n    A = 2\n", "A: is declared twice over overlapping versions"),
         (
             "class E(IntEnum, int32):\n    A = value(1, until=3)\n    A = value(2, since=2)\n",

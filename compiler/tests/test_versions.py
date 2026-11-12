@@ -5,7 +5,7 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Int, Range
 HEADER = """
 from enum import IntEnum, auto
 from typing import Literal
-from protocol import array, bitset, field, packet, type, uint8, uint16, value
+from protocol import array, bitset, field, packet, sentinel, type, uint8, uint16, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 """
@@ -431,6 +431,7 @@ def test_a_reference_across_modules_is_checked(build_package):
         ("A = 1, 'x'\n    B = 2, 'X'", "a.py: E: has the wire name x twice at 1"),
         ("A_B = 1\n    AB = value(2, since=2, cpp_name='AB')", "a.py: E: has the C\\+\\+ name AB twice at 2"),
         ("A = auto()", "a.py: E.A: has no earlier member to number from at 1"),
+        ("A = sentinel()", "a.py: E.A: has no earlier member to number from at 1"),
         ("A = value(1, until=3)\n    B = value(since=2)", "a.py: E.B: has no earlier member to number from at 3"),
         ("A = value(1, until=3)\n    B = A", "a.py: E.B: names A, which does not exist at 3"),
         (
@@ -504,6 +505,20 @@ def test_a_pair_and_auto_inside_an_enum_block(build_package):
         ("B", Int(2), "bee", Range(3, None)),
         ("C", None, "c", Range(3, None)),
         ("D", None, "d", Range(None, None)),
+    ]
+
+
+def test_a_sentinel_inside_an_enum_block_takes_its_gate(build_package):
+    source = (
+        "class E(IntEnum, uint8):\n    A = 1\n    with value(until=3):\n        B = sentinel()\n"
+        "    B = value(since=3)\n"
+    )
+    members = build_package({"a": HEADER + source}).modules[0].families[0].declarations[0].members
+
+    assert [(member.name, member.sentinel, member.range) for member in members] == [
+        ("A", False, Range(None, None)),
+        ("B", True, Range(None, 3)),
+        ("B", False, Range(3, None)),
     ]
 
 
