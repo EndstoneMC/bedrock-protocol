@@ -47,7 +47,7 @@ class PieceType(IntEnum, uint32):
     CAPES = 25
     CLASSIC_SKIN = 26
     EMOTE = 27
-    COCO = value(28, since=2225)
+    CO_CO = value(28, since=2225)
     UNSUPPORTED = auto()
     COUNT = auto()
 
@@ -187,15 +187,15 @@ class SerializedSkinRef:
     id: str
     play_fab_id: str = field(until=2225)
     resource_patch: str
-    image_data: SkinImage
-    animated_image_data: list[AnimatedImageData]
-    cape_image_data: SkinImage
+    skin_image: SkinImage
+    skin_animated_images: list[AnimatedImageData]
+    cape_image: SkinImage
     geometry_data: str
     geometry_data_min_engine_version: str
     animation_data: str
     cape_id: str
     full_id: str
-    arm_size: ArmSizeType
+    arm_size_type: ArmSizeType
     skin_color: Color
     persona_pieces: list[SerializedPersonaPieceHandle]
     piece_tint_colors: dict[PieceType, TintMapColor] = field(type=str)
@@ -204,7 +204,7 @@ class SerializedSkinRef:
     is_persona_cape_on_classic_skin: bool
     is_primary_user: bool
     overrides_player_appearance: bool
-    trusted_skin_flag: TrustedSkinFlag = field(type=str)
+    is_trusted_skin: TrustedSkinFlag = field(type=str)
     profile_hash: str = field(since=2168)
 
 

@@ -25,6 +25,7 @@ class IdentityDefinition:
         FAKE_PLAYER = 3
 
 
+@type(until=2168)
 class ScorePacketType(IntEnum, uint8):
     CHANGE = 0
     REMOVE = 1
@@ -43,6 +44,7 @@ class ScoreboardIdentityPacketType(IntEnum, uint8):
     REMOVE = 1
 
 
+@type(until=2168)
 class ScorePacketInfo:
     scoreboard_id: ScoreboardId
     objective_name: str

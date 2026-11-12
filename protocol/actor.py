@@ -22,6 +22,7 @@ from protocol import (
 )
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.item import HandSlot, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.molang import MolangVersion
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -283,7 +284,7 @@ class ActorDataIDs(IntEnum, uint8):
     AMBIENT_SOUND_EVENT_NAME = 110
     FALL_DAMAGE_MULTIPLIER = 111
     NAME_RAW_TEXT = 112
-    CAN_RIDE_TARGET = 113
+    RESERVED_113 = 113
     LOW_TIER_CURED_TRADE_DISCOUNT = 114
     HIGH_TIER_CURED_TRADE_DISCOUNT = 115
     NEARBY_CURED_TRADE_DISCOUNT = 116
@@ -315,6 +316,7 @@ class ActorDataIDs(IntEnum, uint8):
     with value(since=975):
         RESERVED_139 = 139
         NAMEPLATE_RENDER_DISTANCE_MAX = 140
+    INTERACTION_RESULT = value(141, since=2225)
     COUNT = auto()
 
 
@@ -441,7 +443,7 @@ class PassengerOfBlockArguments:
     offset: Vec3
     rotation: float
     rotation_limit: float
-    emote_type: EmoteType
+    emote: EmoteType
 
 
 @packet(id=13)
@@ -458,7 +460,7 @@ class AddActorPacket:
     data: SynchedActorData.CopyableDataList
     synched_properties: PropertySyncData
     links: list[ActorLink]
-    passenger_block_data: PassengerOfBlockArguments | None = field(since=2225)
+    passenger_of_block_data: PassengerOfBlockArguments | None = field(since=2225)
 
 
 @packet(id=39)
@@ -672,11 +674,15 @@ class TakeItemActorPacket:
 
 class MoveActorAbsoluteData:
     runtime_id: ActorRuntimeID
-    header: uint8
+
+    class Header:
+        raw: uint8
+
+    header: Header
     pos: Vec3
-    rot_x: uint8
-    rot_y: uint8
-    rot_y_head: uint8
+    rot_x: int8 = field(type=uint8)
+    rot_y: int8 = field(type=uint8)
+    rot_y_head: int8 = field(type=uint8)
 
 
 @packet(id=18)
@@ -840,7 +846,7 @@ class AnimatePacket:
     runtime_id: ActorRuntimeID
     data: float
     swing_source: ActorSwingSource | None = field(type=str)
-    hand: HandSlot = field(since=2225)
+    hand_slot: HandSlot = field(since=2225)
 
 
 @packet(id=66)
@@ -887,7 +893,7 @@ class AnimateEntityPacket:
     animation: str
     next_state: str
     stop_expression: str
-    stop_expression_version: int32
+    stop_expression_version: MolangVersion = field(type=int32)
     controller: str
     blend_out_time: float
     runtime_ids: list[ActorRuntimeID]

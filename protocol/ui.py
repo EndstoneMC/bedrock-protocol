@@ -59,7 +59,7 @@ class ServerboundLoadingScreenPacketType(IntEnum, int32):
 
 @packet(id=312)
 class ServerboundLoadingScreenPacket:
-    loading_screen_packet_type: ServerboundLoadingScreenPacketType
+    serverbound_loading_screen_packet_type: ServerboundLoadingScreenPacketType
     loading_screen_id: uint32 | None
 
 

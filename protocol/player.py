@@ -6,7 +6,7 @@ import uuid
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import field, int16, int32, packet, type, uint8, uvarint32, uvarint64, value, varint32
+from protocol import bitset, field, int16, int32, packet, type, uint8, uvarint32, value, varint32
 from protocol.ability import SerializedAbilitiesData
 from protocol.actor import (
     ActorLink,
@@ -83,7 +83,7 @@ class ActorDamageCause(IntEnum, int32):
 class HurtArmorPacket:
     cause: ActorDamageCause
     dmg: varint32
-    armor_slots: uvarint64
+    armor_slots: bitset[ArmorSlot.COUNT]
 
 
 @packet(id=42)
@@ -172,10 +172,14 @@ class GraphicsMode(IntEnum, uint8):
     RAY_TRACED = 3
 
 
-@packet(id=323, since=786)
-class UpdateClientOptionsPacket:
+class SyncedClientOptionsUpdate:
     graphics_mode: GraphicsMode | None
     filter_profanity: bool | None = field(since=975)
+
+
+@packet(id=323, since=786)
+class UpdateClientOptionsPacket:
+    update: SyncedClientOptionsUpdate
 
 
 class PlayerListPacketType(IntEnum, uint8):
@@ -184,7 +188,6 @@ class PlayerListPacketType(IntEnum, uint8):
 
 
 class BuildPlatform(IntEnum, int32):
-    UNKNOWN = -1
     GOOGLE = 1
     IOS = value(2, cpp_name="IOS")
     OSX = value(3, cpp_name="OSX")
@@ -199,6 +202,7 @@ class BuildPlatform(IntEnum, int32):
     XBOX = 13
     WINDOWS_PHONE_DEPRECATED = 14
     LINUX = 15
+    UNKNOWN = -1
 
 
 @packet(id=63, until=2168)
@@ -337,7 +341,7 @@ class AddPlayerPacket:
     synched_properties: PropertySyncData
     abilities_data: SerializedAbilitiesData
     links: list[ActorLink]
-    passenger_block_data: PassengerOfBlockArguments | None = field(since=2225)
+    passenger_of_block_data: PassengerOfBlockArguments | None = field(since=2225)
     device_id: str
     build_platform: BuildPlatform = field(type=int32)
 

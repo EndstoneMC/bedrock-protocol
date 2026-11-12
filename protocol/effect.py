@@ -33,6 +33,10 @@ class MobEffectPacket:
     tick: PlayerInputTick = field(type=uint64)
 
 
+class EffectDuration:
+    value: varint32
+
+
 @packet(id=28, since=748)
 class MobEffectPacket:
     class Event(IntEnum, uint8):
@@ -46,14 +50,14 @@ class MobEffectPacket:
     effect_id: varint32
     effect_amplifier: varint32
     show_particles: bool
-    effect_duration_ticks: varint32
+    effect_duration_ticks: EffectDuration
     tick: PlayerInputTick
     ambient: bool = field(since=898)
 
 
 @packet(id=318, since=748)
 class MovementEffectPacket:
-    target_runtime_id: ActorRuntimeID
-    effect_id: MovementEffectType
+    runtime_id: ActorRuntimeID
+    effect_type: MovementEffectType
     effect_duration: varint32
     tick: PlayerInputTick
