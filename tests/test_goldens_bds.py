@@ -149,3 +149,19 @@ def generated(values, schema, name):
 def test_a_name_bds_binds_to_another_names_member_repeats_its_value(values, schema, name, field, bound):
     chosen = generated(values, schema, name)
     assert [each[field] for each in chosen] == [each[bound] for each in chosen]
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "gate", "member"),
+    [
+        ("ItemStackResponseInfo", "containers", "result", "SUCCESS"),
+        ("UniqueId", "key_entity_id", "type", "ENTITY"),
+        ("UniqueId", "key_block_pos", "type", "BLOCK_ENTITY"),
+    ],
+    ids=["containers", "entity-id", "block-pos"],
+)
+def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
+    values, schema, name, field, gate, member
+):
+    chosen = generated(values, schema, name)
+    assert {(each[gate] == member, each[field] is not None) for each in chosen} == {(True, True), (False, False)}
