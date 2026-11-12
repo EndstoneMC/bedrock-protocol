@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "action": "QUERY",
+   "id": {
+    "raw_id": 462
+   }
+  },
+  "bytes": "009c07",
+  "bds_json": {
+   "Action": 0,
+   "Id": {
+    "Value": 462
+   }
+  }
+ }
+]
