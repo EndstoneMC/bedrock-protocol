@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "effect_id": 331
+  },
+  "bytes": "4b010000",
+  "bds_json": {
+   "Effect Id": 331
+  }
+ }
+]

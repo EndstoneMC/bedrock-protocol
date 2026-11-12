@@ -1,0 +1,31 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "screen_id": "s1",
+   "form_id": 462,
+   "data_instance_id": 593
+  },
+  "bytes": "027331ce0100000151020000",
+  "bds_json": {
+   "ScreenId": "s1",
+   "FormId": 462,
+   "DataInstanceId": 593
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "screen_id": "s4",
+   "form_id": 855,
+   "data_instance_id": null
+  },
+  "bytes": "0273345703000000",
+  "bds_json": {
+   "ScreenId": "s4",
+   "FormId": 855
+  }
+ }
+]
