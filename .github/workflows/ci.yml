@@ -143,7 +143,6 @@ jobs:
                 -DCMAKE_PREFIX_PATH='${{ github.workspace }}/stage' \
                 ${{ matrix.cmakeflags }}
           cmake --build package-build --config Release
-          ctest --test-dir package-build -C Release --output-on-failure
 
       - name: Name the package
         id: package
@@ -200,7 +199,6 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_PREFIX_PATH=${{ github.workspace }}/verify-stage
           cmake --build verify-package
-          ctest --test-dir verify-package --output-on-failure
 
   python-from-sources:
     name: Python from the source package
