@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    id("com.diffplug.spotless") version "8.10.0"
 }
 
 val versionLine = file("../pyproject.toml").readLines().first { it.startsWith("version = ") }
@@ -13,6 +14,20 @@ layout.buildDirectory = file("../build/java")
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    api("org.jspecify:jspecify:1.0.1")
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+        googleJavaFormat("1.36.0").aosp()
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {

@@ -14,7 +14,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
 - Write a rule as one short final-state line, once, in the file whose `paths:` govern it or here when repo-wide, and point to it from elsewhere; no rationale, history or dates.
 - Write a skill as a team handbook, symptom -> action, with nothing about one machine or one person.
-- Touched files pass clang-format, clang-tidy, `ruff check` and `ruff format` with no inline suppression (`NOLINT`, `noqa`): fix the code, or change the tool's config when the check is wrong.
+- Touched files pass clang-format, clang-tidy, google-java-format (hand-written Java), `ruff check` and `ruff format` with no inline suppression (`NOLINT`, `noqa`): fix the code, or change the tool's config when the check is wrong.
 
 ## Layout
 
