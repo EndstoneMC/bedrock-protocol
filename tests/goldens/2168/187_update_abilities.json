@@ -1,0 +1,41 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "data": {
+    "target_player": 331,
+    "player_permissions": "OPERATOR",
+    "command_permissions": "HOST",
+    "layers": [
+     {
+      "serialized_layer": "EDITOR",
+      "abilities_set": 855,
+      "ability_values": 986,
+      "fly_speed": 3.75,
+      "vertical_fly_speed": 4.25,
+      "walk_speed": 4.75
+     }
+    ]
+   }
+  },
+  "bytes": "4b01000000000000020301040057030000da030000000070400000884000009840",
+  "bds_json": {
+   "Data": {
+    "Target Player Raw Id": 331,
+    "Player Permissions": 2,
+    "Command Permissions": 3,
+    "Layers": [
+     {
+      "SerializedLayer": 4,
+      "AbilitiesSet": 855,
+      "AbilityValues": 986,
+      "FlySpeed": 3.75,
+      "VerticalFlySpeed": 4.25,
+      "WalkSpeed": 4.75
+     }
+    ]
+   }
+  }
+ }
+]
