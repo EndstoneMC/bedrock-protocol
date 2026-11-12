@@ -4,25 +4,12 @@
 #include <cstdint>
 #include <expected>
 #include <string_view>
-#include <type_traits>
 
 #include <bedrock/protocol/detail/reflect.hpp>
 #include <bedrock/protocol/serializer.hpp>
 #include <bedrock/protocol/stream.hpp>
 
 namespace bedrock::protocol {
-
-// Complete only through <bedrock/protocol.hpp>; a lone module header reads other modules' packets as void.
-template <int V, int Id>
-struct packet_of {
-    using type = void;
-};
-
-template <int V, int Id>
-using packet_of_t = typename packet_of<V, Id>::type;
-
-template <int V, int Id>
-inline constexpr bool has_packet_v = !std::is_void_v<packet_of_t<V, Id>>;
 
 struct PacketHeader {
     std::uint16_t packet_id{};

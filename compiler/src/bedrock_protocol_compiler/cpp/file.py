@@ -39,8 +39,6 @@ class FileGenerator:
         includes = {names.runtime("detail/reflect")}
         for generator in (*self.aliases, *self.generators):
             includes |= generator.includes()
-        if any(family.packet_id is not None for family in self.families if isinstance(family, Struct)):
-            includes.add(names.runtime("packet"))
         return includes - {names.generated(self.module.stem)}
 
     def header(self, p: Printer) -> None:
@@ -62,7 +60,6 @@ class FileGenerator:
         self.primitive_aliases(p)
         self.definitions(p)
         self.selectors(p)
-        self.packets(p)
         p.emit("namespace detail {")
         p.emit("")
         for generator in self.generators:

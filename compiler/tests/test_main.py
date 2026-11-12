@@ -26,6 +26,16 @@ class B:
 """
 
 
+C = """
+from protocol import packet, uint8
+package = "bedrock.protocol"
+
+@packet(id=2)
+class Q:
+    x: uint8
+"""
+
+
 BITSET = """
 from enum import IntEnum
 from protocol import bitset, type, uint8
@@ -54,7 +64,7 @@ def generate(build_package, tmp_path):
 def test_a_header_and_a_source_per_module_and_a_version_header(generate):
     out = generate({"a": A, "b": B})
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.h", "version.hpp"]
 
 
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
@@ -73,7 +83,7 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "packets.h", "version.hpp"]
 
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
@@ -102,3 +112,12 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
 
     assert {path.name: path.read_bytes() for path in out.iterdir()} == before
     assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1}
+
+
+def test_packets_h_names_every_packet_of_every_module(generate):
+    out = generate({"a": A, "c": C})
+
+    registry = (out / "packets.h").read_text()
+    assert "struct packet_of<V, 1>" in registry
+    assert "struct packet_of<V, 2>" in registry
+    assert "packet_of" not in (out / "a.h").read_text()

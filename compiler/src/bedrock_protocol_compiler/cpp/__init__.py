@@ -5,10 +5,39 @@ from bedrock_protocol_compiler.schema import Schema
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
-    for module in schema.modules:
-        file = FileGenerator(schema, module)
-        file.header(context.open(f"{names.INCLUDE_DIR}/{module.stem}.h"))
-        file.source(context.open(f"{names.INCLUDE_DIR}/{module.stem}.cpp"))
+    files = [FileGenerator(schema, module) for module in schema.modules]
+    for file in files:
+        file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
+        file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))
+    registry = context.open(f"{names.INCLUDE_DIR}/packets.h")
+    registry.emit("#pragma once")
+    registry.emit("")
+    registry.emit("#include <type_traits>")
+    registry.emit("")
+    for file in files:
+        registry.emit("#include $header$", header=names.generated(file.module.stem))
+    registry.emit(
+        """
+
+        namespace $namespace$ {
+
+        template <int V, int Id>
+        struct packet_of {
+            using type = void;
+        };
+
+        template <int V, int Id>
+        using packet_of_t = typename packet_of<V, Id>::type;
+
+        template <int V, int Id>
+        inline constexpr bool has_packet_v = !std::is_void_v<packet_of_t<V, Id>>;
+
+        """,
+        namespace=names.namespace(schema),
+    )
+    for file in files:
+        file.packets(registry)
+    registry.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
     context.open(f"{names.INCLUDE_DIR}/version.hpp").emit(
         """
         #pragma once
