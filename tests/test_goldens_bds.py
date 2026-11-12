@@ -504,3 +504,8 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
 def test_an_enum_bds_narrows_to_some_members_is_generated_as_one_of_them(values, schema, name, field, read):
     chosen = generated(values, schema, name)
     assert [each[field] for each in chosen] == [read for _ in chosen]
+
+
+def test_an_actor_identifier_list_holds_the_idlist_bds_reads(values, schema):
+    chosen = generated(values, schema, "AvailableActorIdentifiersPacket")
+    assert [list(each["identifier_list"]) for each in chosen] == [["idlist"] for _ in chosen]

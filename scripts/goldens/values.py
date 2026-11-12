@@ -183,6 +183,24 @@ FIXED: dict[str, Json] = {
     "ModalFormResponsePacket.json_response?": "null\n",
     "SerializedSkinRef.geometry_data": "null\n",
     "NpcDialoguePacket.action_json": "[]",
+    "AvailableActorIdentifiersPacket.identifier_list": {
+        "idlist": {
+            "ListTag": {
+                "type": 10,
+                "tags": [
+                    {
+                        "CompoundTag": {
+                            "bid": {"StringTag": "minecraft:"},
+                            "hasspawnegg": {"ByteTag": 1},
+                            "id": {"StringTag": "minecraft:pig"},
+                            "rid": {"IntTag": 1},
+                            "summonable": {"ByteTag": 1},
+                        }
+                    }
+                ],
+            }
+        }
+    },
     "SpawnParticleEffectPacket.molang_variables?": "[]\n",
     "AddVolumeEntityPacket.min_engine_version": "1.21.0",
     "SerializedSkinRef.geometry_data_min_engine_version": "1.21.0",
