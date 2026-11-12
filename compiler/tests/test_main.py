@@ -97,7 +97,7 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
         os.utime(path, ns=(1, 1))
     (tmp_path / "protocol/b.py").write_text('package = "bedrock.protocol"\nclass B:\n    x: Missing\n')
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
     assert {path.name: path.read_bytes() for path in out.iterdir()} == before
