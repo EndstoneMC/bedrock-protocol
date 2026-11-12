@@ -71,6 +71,16 @@ NBT_TAGS = {
     "s": {"ShortTag": 300},
     "str": {"StringTag": "text"},
 }
+SAME_MEMBER = {
+    "PlayerVideoCapturePacket.stop_video_capture": "start_video_capture",
+    "ClientboundUpdateSoundDataPacket.set_volume": "stop",
+    "ClientboundUpdateSoundDataPacket.set_pitch": "stop",
+    "ClientboundUpdateSoundDataPacket.fade": "stop",
+    "ClientboundUpdateSoundDataPacket.seek_to": "stop",
+    "ClientboundUpdateSoundDataPacket.pause": "stop",
+    "ClientboundUpdateSoundDataPacket.resume": "stop",
+    "CylinderDataPayload.radius_z": "radius_x",
+}
 
 
 def integer_range(name: str, wire: str | None) -> tuple[int, int]:
@@ -122,7 +132,8 @@ class Generator:
             yield (f"{label} when#{index}", "true")
             yield (f"{label} when#{index}", "false")
         for each in shape.fields:
-            yield from self.type_points(each.type, f"{label}.{each.name}", seen)
+            if f"{label}.{each.name}" not in SAME_MEMBER:
+                yield from self.type_points(each.type, f"{label}.{each.name}", seen)
 
     def type_points(self, node: Type, key: str, seen: set[int]) -> Iterator[Point]:
         match node:
@@ -436,7 +447,7 @@ class Generator:
         for each in shape.fields:
             plain = each.when is None and not isinstance(each.type, Literal | List)
             counts = isinstance(each.type, List) and each.when is None and not isinstance(each.type.count, Len)
-            if plain or counts:
+            if (plain or counts) and f"{label}.{each.name}" not in SAME_MEMBER:
                 values[each.name] = self.generate(
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
                 )
@@ -478,6 +489,9 @@ class Generator:
                 )
             else:
                 values[each.name] = self.default(each.type)
+        for each in shape.fields:
+            if f"{label}.{each.name}" in SAME_MEMBER:
+                values[each.name] = values[SAME_MEMBER[f"{label}.{each.name}"]]
         return {each.name: values[each.name] for each in shape.fields if each.name in values}
 
     def environment(self, shape: StructShape, values: dict[str, Json]) -> tuple[dict[str, int], set[tuple[str, str]]]:
