@@ -142,6 +142,7 @@ class CorrectPlayerMovePredictionPacket:
     tick: PlayerInputTick
 
 
+@type(until=818)
 class ServerAuthMovementMode(IntEnum, uint8):
     LEGACY_CLIENT_AUTHORITATIVE_V1_DEPRECATED = 0
     CLIENT_AUTHORITATIVE_V2 = 1

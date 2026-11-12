@@ -233,9 +233,9 @@ class CurrentCmdVersion(IntEnum, int32):
         TELEPORT_ENTITY_DIMENSION_POSITION_FIX = 51
         TIME_OF_COMMAND_OVERLOADS = 52
     with value(since=2225):
-        UNKNOWN_053 = 53  # TODO: 53 to 55 unnamed until a header branch above r26_u5
-        UNKNOWN_054 = 54
-        UNKNOWN_055 = 55
+        REDSTONE_CIRCUIT_STATE_CHANGE_FIX = 53
+        TIME_COMMAND_PREVENT_NEGATIVE_TIME = 54
+        TIME_COMMAND_CLOCKS_RELEASE = 55
     COUNT = auto()
     LATEST = COUNT - 1
 

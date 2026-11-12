@@ -237,10 +237,10 @@ class MinecraftPacketIds(IntEnum, int32):
     GRAPHICS_PARAMETER_OVERRIDE_PACKET = value(331, since=859)
     SERVERBOUND_DATA_STORE = value(332, since=898)
     with value(since=924):
-        CLIENTBOUND_DATA_DRIVEN_UI_SHOW_SCREEN = 333
+        CLIENTBOUND_DATA_DRIVEN_UI_SHOW_SCREEN = value(333, cpp_name="ClientboundDataDrivenUIShowScreen")
         CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_ALL_SCREENS = value(334, until=944)
-        CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_SCREEN = value(334, since=944)
-        CLIENTBOUND_DATA_DRIVEN_UI_RELOAD = 335
+        CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_SCREEN = value(334, cpp_name="ClientboundDataDrivenUICloseScreen", since=944)
+        CLIENTBOUND_DATA_DRIVEN_UI_RELOAD = value(335, cpp_name="ClientboundDataDrivenUIReload")
         CLIENTBOUND_TEXTURE_SHIFT_PACKET = 336
         VOXEL_SHAPES_PACKET = 337
         CAMERA_SPLINE = 338

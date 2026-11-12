@@ -67,6 +67,7 @@ class WorldType(IntEnum, int32):
 class EditorLevelMigrationVersion(IntEnum, int8):
     LEGACY = 0
     EDITOR_ACHIEVEMENTS = 1
+    CURRENT = 1
 
 
 class EducationEditionOffer(IntEnum, uint32):
@@ -107,6 +108,7 @@ class SyncedPlayerMovementSettings:
     server_auth_block_breaking: bool
 
 
+@type(until=2168)
 class BlockEntry:
     name: str
     properties: CompoundTag
@@ -166,7 +168,7 @@ class LevelSettings:
     limited_world_depth: int32
     nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
-    override_force_experimental_gameplay: bool | None
+    override_force_experimental_gameplay_flag: bool | None
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     with field(until=924):
@@ -224,7 +226,7 @@ class LevelSettings:
     limited_world_depth: int32
     nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
-    override_force_experimental_gameplay: bool | None
+    override_force_experimental_gameplay_flag: bool | None
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     with field(since=1001):
@@ -259,7 +261,7 @@ class LevelSettings:
     platform_broadcast_intent: GamePublishSetting
     commands_enabled: bool
     texture_packs_required: bool
-    rule_data: GameRulesChangedPacketData
+    game_rules: GameRulesChangedPacketData
     experiments: Experiments
     bonus_chest_enabled: bool
     start_with_map_enabled: bool
@@ -280,7 +282,7 @@ class LevelSettings:
     limited_world_depth: int32
     nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
-    override_force_experimental_gameplay: bool | None
+    override_force_experimental_gameplay_flag: bool | None
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     server_editor_connection_policy: ServerEditorConnectionPolicy
