@@ -555,6 +555,25 @@ def test_a_field_declared_twice_over_disjoint_gates_changes_type_in_place(build_
     ]
 
 
+def test_a_one_field_twin_inside_a_with_block_is_accepted(build_package):
+    package = build_package(
+        {
+            "a": HEADER
+            + "class A:\n    with field(since=2):\n        a: uint8\n        x: uint8 = field(until=3)\n"
+            + "        x: uint16 = field(since=3)\n    z: uint8\n"
+        }
+    )
+
+    fields = package.modules[0].families[0].declarations[0].fields
+
+    assert [(each.name, each.type.name, each.range) for each in fields] == [
+        ("a", "uint8", Range(2, None)),
+        ("x", "uint8", Range(2, 3)),
+        ("x", "uint16", Range(3, None)),
+        ("z", "uint8", Range(None, None)),
+    ]
+
+
 def test_a_run_declared_twice_over_disjoint_blocks_changes_types_in_place(build_package):
     package = build_package(
         {
@@ -589,22 +608,9 @@ def test_a_twin_is_clipped_to_its_declaration(build_package):
     assert [each.range for each in fields] == [Range(2, 3), Range(3, 5)]
 
 
-def test_a_later_field_reads_the_twin_present_where_it_is(build_package):
-    package = build_package(
-        {
-            "a": HEADER
-            + "class A:\n    n: uint8 = field(until=3)\n    n: uint16 = field(since=3)\n"
-            + "    xs: list[uint8] = field(count=lambda p: p.n)\n"
-        }
-    )
-
-    assert package.modules[0].families[0].declarations[0].fields[-1].name == "xs"
-
-
 @pytest.mark.parametrize(
     ("source", "message"),
     [
-        ("class A:\n    x: uint8\n    x: uint8\n", "x: is declared twice over overlapping versions"),
         (
             "class A:\n    x: uint8 = field(until=3)\n    x: uint16 = field(since=2)\n",
             "x: is declared twice over overlapping versions",
@@ -620,17 +626,22 @@ def test_a_later_field_reads_the_twin_present_where_it_is(build_package):
         (
             "class A:\n    with field(until=3):\n        x: uint8\n        y: uint8\n"
             + "    with field(since=3):\n        y: uint8\n        x: uint8\n",
-            "y: is declared twice over a run that does not repeat the run above it in order",
+            "y: is declared twice in a block that does not repeat the block above it in order",
         ),
         (
             "class A:\n    with field(until=3):\n        x: uint8\n        y: uint8\n"
             + "    with field(since=3):\n        x: uint8\n",
-            "x: is declared twice over a run that does not repeat the run above it in order",
+            "x: is declared twice in a block that does not repeat the block above it in order",
         ),
         (
             "class A:\n    x: uint8 = field(until=3)\n    y: uint8 = field(until=3)\n"
             + "    x: uint16 = field(since=3)\n    y: uint16 = field(since=3)\n",
             "x: is declared twice away from its first declaration",
+        ),
+        (
+            "class A:\n    with field(until=3):\n        x: uint8\n"
+            + "    with field(since=3):\n        a: uint8\n        x: uint16\n",
+            "x: is declared twice in a block that does not repeat the block above it in order",
         ),
     ],
 )

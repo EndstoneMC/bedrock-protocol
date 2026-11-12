@@ -7,7 +7,8 @@ paths:
 
 ## Redeclare or gate
 
-- Redeclare the whole class at the change point for a reshape: a cerealisation, a reorder, a rename, even in a packet already cerealised.
+- Redeclare the whole class at the change point for a reshape: a cerealisation, a reorder or a rename.
+- Swap a field's type in place where that reads cleaner than a second declaration of the class; redeclare the class where most of its body changes.
 - `field(since=)` and `field(until=)` gate only a field's presence, and so does the same pair on a `with field(...)` block.
 - Never switch a field's type with `field(type=X, until=N)`, which removes the field at N.
 - Tile redeclarations over one range: the same id, each `until=` meeting the next `since=`, and only the last open.

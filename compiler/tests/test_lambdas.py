@@ -200,6 +200,15 @@ def test_count_is_a_field_a_length_or_a_product(build_package):
             "S: is not a with field\\(...\\) block",
         ),
         ("x: list[uint8] = field(count=lambda p: p.k)\n    k: uint8", "x: p.k is not an earlier field"),
+        (
+            "k: uint8 = field(until=2)\n    k: uint32 = field(since=4)\n    x: uint8 = field(when=lambda p: p.k)",
+            "x: p.k is absent at 2",
+        ),
+        (
+            "k: list[uint8] = field(until=3)\n    k: uint8 = field(since=3)\n"
+            + "    x: list[uint8] = field(count=lambda p: len(p.k))",
+            "x: len is given something other",
+        ),
         ("k: uint8\n    x: uint8 = field(when=lambda p, *rest: p.k)", "x: is not a lambda of one argument"),
         ("k: uint8\n    with k:\n        x: uint8", "S: is not a with field\\(...\\) block"),
     ],
@@ -233,6 +242,18 @@ def test_a_predicate_and_a_count_may_read_a_field_gated_like_themselves(build_pa
 
     assert fields[1].when == FieldRef("k")
     assert fields[2].type.count == FieldRef("k")
+
+
+def test_a_later_field_reads_the_twin_present_where_it_is(build_package):
+    package = build_package(
+        {
+            "a": HEADER
+            + "class S:\n    n: uint8 = field(until=3)\n    n: uint32 = field(since=3)\n"
+            + "    xs: list[uint8] = field(count=lambda p: p.n)\n"
+        }
+    )
+
+    assert family_of(package, "S").declarations[0].fields[-1].type.count == FieldRef("n")
 
 
 def test_len_counts_a_dict(build_package):

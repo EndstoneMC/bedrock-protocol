@@ -180,7 +180,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("class A:\n    x: Missing\n", "Missing: is not defined"),
         ("class A:\n    x: 3\n", "3: is not a type"),
         ("class A:\n    x: print\n", "is not a type"),
-        ("class A:\n    x: uint8\n    x: uint8\n", "x: is declared twice"),
+        ("class A:\n    x: uint8\n    x: uint8\n", "x: is declared twice over overlapping versions"),
         ("class A:\n    x: uint8 = 3\n", "x: is assigned something other than field"),
         ("class A:\n    x: uint8 = packet(id=1)\n", "x: is assigned something other than field"),
         ("class A:\n    x: uint8 = field(bogus=2)\n", "field: got an unexpected keyword argument 'bogus'"),
