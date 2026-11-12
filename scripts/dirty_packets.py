@@ -94,10 +94,10 @@ class Differ:
                     if (found := self.member(old_member, new_member, path)) is not None:
                         return found
             elif tag == "insert":
-                verb = "moved" if new_names[j1] in old_names else "added"
+                verb = "moved" if old_names.count(new_names[j1]) >= new_names.count(new_names[j1]) else "added"
                 return f"{path}: member '{new_names[j1]}' {verb}"
             elif tag == "delete":
-                verb = "moved" if old_names[i1] in new_names else "removed"
+                verb = "moved" if new_names.count(old_names[i1]) >= old_names.count(old_names[i1]) else "removed"
                 return f"{path}: member '{old_names[i1]}' {verb}"
             elif i2 - i1 == j2 - j1 and {**old[i1], "name": 0} == {**new[j1], "name": 0}:
                 return f"{path}.{new_names[j1]}: renamed from '{old_names[i1]}'"
