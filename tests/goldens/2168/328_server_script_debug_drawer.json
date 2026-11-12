@@ -1,0 +1,294 @@
+[
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 2165,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ArrowDataPayload": {
+       "end_location": {
+        "x": 8.25,
+        "y": 8.75,
+        "z": 9.25
+       },
+       "arrow_head_length": 9.75,
+       "arrow_head_radius": 10.25,
+       "num_segments": 48
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01f51000000000000000000001010000044100000c41000014410100001c4101000024410130",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 2165,
+     "Extra Shape Data": {
+      "Arrow End Location": {
+       "X": 8.25,
+       "Y": 8.75,
+       "Z": 9.25
+      },
+      "Arrow Head Length": 9.75,
+      "Arrow Head Radius": 10.25,
+      "Num Segments": 48
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 5702,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "BoxDataPayload": {
+       "box_bound": {
+        "x": 21.75,
+        "y": 22.25,
+        "z": 22.75
+       }
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01c62c000000000000000000030000ae410000b2410000b641",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 5702,
+     "Extra Shape Data": {
+      "Box Bound": {
+       "X": 21.75,
+       "Y": 22.25,
+       "Z": 22.75
+      }
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v5",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 8453,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "SphereDataPayload": {
+       "num_segments": 49
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "0185420000000000000000000531",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 8453,
+     "Extra Shape Data": {
+      "Num Segments": 49
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v7",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 11335,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 43.25,
+       "depth": 43.75,
+       "height": 44.25
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01c7580000000000000000000700002d420100002f4200003142",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 11335,
+     "Extra Shape Data": {
+      "Width": 43.25,
+      "Depth": 43.75,
+      "Height": 44.25
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v9",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 14217,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ConeDataPayload": {
+       "radii": {
+        "x": 54.25,
+        "y": 54.75
+       },
+       "height": 55.25,
+       "num_segments": 78
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01896f000000000000000000090000594200005b4200005d424e",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 14217,
+     "Extra Shape Data": {
+      "Radii": {
+       "X": 54.25,
+       "Y": 54.75
+      },
+      "Height": 55.25,
+      "Num Segments": 78
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v10",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 16706,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ArrowDataPayload": {
+       "end_location": null,
+       "arrow_head_length": null,
+       "arrow_head_radius": null,
+       "num_segments": null
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01c282010000000000000000000100000000",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 16706,
+     "Extra Shape Data": {}
+    }
+   ]
+  }
+ },
+ {
+  "id": "v12",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 24959,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 95.25,
+       "depth": null,
+       "height": 95.75
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01ffc201000000000000000000070080be42000080bf42",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 24959,
+     "Extra Shape Data": {
+      "Width": 95.25,
+      "Height": 95.75
+     }
+    }
+   ]
+  }
+ }
+]
