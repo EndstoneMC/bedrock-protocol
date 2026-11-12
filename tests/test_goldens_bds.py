@@ -325,3 +325,13 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
 def test_a_name_coded_enum_leaf_is_printed_by_its_wire_name(values, schema, name, value, printed):
     family = next(each for each in schema.order if each.name == name)
     assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed
+
+
+@pytest.mark.parametrize(
+    ("name", "number", "named"),
+    [("MolangVersion", 13, "LATEST"), ("CurrentCmdVersion", 50, "LATEST"), ("GameType", 0, "SURVIVAL")],
+    ids=["molang-version", "command-version", "game-type"],
+)
+def test_a_number_two_members_share_is_named_as_to_json_names_it(values, schema, name, number, named):
+    family = next(each for each in schema.order if each.name == name)
+    assert values.Generator(schema, 2168).named(family)[number] == named
