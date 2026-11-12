@@ -14,7 +14,7 @@ configure_file(all_types.cpp.in bind/all_types.cpp @ONLY)
 list(APPEND _sources "${CMAKE_CURRENT_BINARY_DIR}/bind/all_types.cpp")
 
 nanobind_add_module(_core STABLE_ABI ${_sources})
-target_include_directories(_core PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}/bind")
+target_include_directories(_core PRIVATE .)
 target_link_libraries(_core PRIVATE bedrock::protocol)
 set_target_properties(bedrock_protocol PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
 
