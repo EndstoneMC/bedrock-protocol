@@ -12,7 +12,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - Write no one-use helper function or lambda: inline the expression or bind a local named for the value. A lambda passed as an argument, or one invoked in place to expand a parameter pack, is fine.
 - No docs and no decision logs in the repo: no notes, guides, design docs or diaries; README.md is the only prose page.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
-- Touched files pass clang-format, clang-tidy (`.clang-tidy`), `ruff check` and `ruff format` (`ruff.toml`) with no inline suppression (`NOLINT`, `noqa`): fix the code, or change the tool's config when the check itself is wrong.
+- Touched files pass clang-format, clang-tidy (`.clang-tidy`), `ruff check` and `ruff format` (`pyproject.toml`) with no inline suppression (`NOLINT`, `noqa`): fix the code, or change the tool's config when the check itself is wrong.
 
 ## Layout
 

@@ -37,3 +37,23 @@ members = ["compiler"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "C4", "RET", "PT", "PIE", "ERA", "T20", "ARG", "RUF", "N"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bedrock_protocol", "bedrock_protocol_compiler"]
+
+[tool.ruff.lint.flake8-pytest-style]
+raises-require-match-for = ["*"]
+
+[tool.ruff.lint.per-file-ignores]
+"protocol/__init__.py" = ["F401"]
+"protocol/**" = ["E501", "F811", "F821", "N", "ARG", "UP007", "PIE794", "PIE796", "RUF036"]
+"**/bench_*.py" = ["T20"]
+"compiler/src/bedrock_protocol_compiler/builder.py" = ["B023"]
+"compiler/src/bedrock_protocol_compiler/cpp/field.py" = ["ARG002"]
+"compiler/src/bedrock_protocol_compiler/dsl.py" = ["ARG001", "N801"]
