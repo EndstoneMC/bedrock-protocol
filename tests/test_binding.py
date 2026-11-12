@@ -260,6 +260,45 @@ def test_a_uuid_crosses_as_uuid():
     assert type(request).from_bytes(bytes(request)).uuid == value
 
 
+def test_a_uuid_carried_as_text_writes_it_lower_case_and_hyphenated():
+    identity = proto.ContentIdentity(identity=uuid.UUID("6F0B5E2A-1C3D-4E8F-9A7B-2D4C6E8F0A1B"))
+    assert bytes(identity) == b"\x246f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        b"6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b",
+        b"6F0B5E2A-1C3D-4E8F-9A7B-2D4C6E8F0A1B",
+        b"6f0b5e2a1c3d4e8f9a7b2d4c6e8f0a1b",
+    ],
+    ids=["hyphenated", "upper-case", "bare-digits"],
+)
+def test_a_uuid_carried_as_text_reads_every_form_bds_parses(text):
+    identity = proto.ContentIdentity.from_bytes(bytes([len(text)]) + text)
+    assert identity.identity == uuid.UUID("6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        b"",
+        b"cid",
+        b"6f0b5e2a1-c3d-4e8f-9a7b-2d4c6e8f0a1b",
+        b"6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1g",
+        b"{6f0b5e2a1c3d4e8f9a7b2d4c6e8f0a1}",
+    ],
+    ids=["empty", "short", "hyphen-out-of-place", "not-hex", "braced"],
+)
+def test_a_uuid_carried_as_text_rejects_text_bds_reads_as_nil(text):
+    wire = bytes([len(text)]) + text
+    with pytest.raises(
+        bedrock_protocol.DecodeError,
+        match=rf"^ContentIdentity\.identity: unknown value at byte {len(wire)} of {len(wire)}$",
+    ):
+        proto.ContentIdentity.from_bytes(wire)
+
+
 def test_a_python_keyword_member_keeps_the_dsl_underscore():
     assert hasattr(proto.BiomeConsolidatedFeatureData, "pass_")
 
@@ -451,6 +490,7 @@ JSON_VALUES = [
         v2225.SerializedSkinRef(piece_tint_colors={v2225.PieceType.BODY: v2225.TintMapColor()}), id="enum-keyed-map"
     ),
     pytest.param(v2225.CommandRequestPacket(origin=v2225.CommandOriginData(uuid=uuid.UUID(int=7))), id="uuid"),
+    pytest.param(v2225.ContentIdentity(identity=uuid.UUID(int=7)), id="uuid-text"),
 ]
 
 
@@ -669,6 +709,11 @@ def test_from_json_rejects_a_list_field_that_is_not_a_list():
 def test_to_json_spells_a_uuid_as_its_hyphenated_text():
     origin = v2225.CommandOriginData(uuid=uuid.UUID(int=7))
     assert origin.to_json()["uuid"] == "00000000-0000-0000-0000-000000000007"
+
+
+def test_to_json_spells_a_uuid_carried_as_text_as_its_hyphenated_text():
+    identity = v2225.ContentIdentity(identity=uuid.UUID(int=7))
+    assert identity.to_json()["identity"] == "00000000-0000-0000-0000-000000000007"
 
 
 @pytest.mark.parametrize("text", ["nope", 7, None], ids=["not-a-uuid", "int", "none"])

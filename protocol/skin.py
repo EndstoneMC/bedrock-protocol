@@ -139,7 +139,7 @@ class SerializedPersonaPieceHandle:
 class SerializedPersonaPieceHandle:
     piece_id: str
     piece_type: PieceType = field(type=str, cereal=False)
-    pack_id: str
+    pack_id: uuid.UUID = field(type=str)
     is_default_piece: bool
     product_id: str
 

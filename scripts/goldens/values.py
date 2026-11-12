@@ -761,6 +761,8 @@ class Generator:
                 groups = [value >> shift & 0x7F for shift in range(0, max(value.bit_length(), 1), 7)]
                 found = [[path, each | (0x80 if index + 1 < len(groups) else 0)] for index, each in enumerate(groups)]
                 return [found[0], *([*each, True] for each in found[1:])]
+            case BuiltinRef(builtin=builtin, wire="str") if builtin.name == "UUID":
+                return [[path, value]]
             case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
                 number = uuid.UUID(value).int
                 return [[path, number >> 64], [path, number & (1 << 64) - 1]]

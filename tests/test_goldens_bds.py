@@ -273,6 +273,12 @@ def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, sch
             "00000000-0000-0001-0000-000000000002",
             [["pack_id", 1], ["pack_id", 2]],
         ),
+        (
+            "ContentIdentity",
+            "identity",
+            "6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b",
+            [["identity", "6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b"]],
+        ),
         ("ActorDataFlagComponent", "value", 1 | 1 << 13, [["value", 129], ["value", 64, True]]),
         (
             "DataStoreChange",
@@ -329,6 +335,7 @@ def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, sch
         "byte-vector",
         "blob",
         "uuid",
+        "uuid-text",
         "bitset",
         "dynamic-value",
         "compound-tag",

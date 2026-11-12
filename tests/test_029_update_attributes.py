@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from bedrock_protocol import v2225
@@ -36,7 +38,7 @@ PACKET = v2225.UpdateAttributesPacket(
             name="minecraft:health",
             modifiers=[
                 v2225.AttributeModifier(
-                    id="00000000-0000-0000-0000-000000000001",
+                    id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
                     name="buff",
                     amount=2.5,
                     operation=v2225.AttributeModifierOperation.OPERATION_MULTIPLY_BASE,

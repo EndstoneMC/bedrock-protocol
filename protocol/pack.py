@@ -17,11 +17,11 @@ class SemVersion:
 
 
 class ContentIdentity:
-    identity: str
+    identity: uuid.UUID = field(type=str)
 
 
 class PackIdVersion:
-    id: str = field(until=766)
+    id: uuid.UUID = field(type=str, until=766)
     id: uuid.UUID = field(since=766)
     version: SemVersion
 
@@ -99,7 +99,7 @@ class ServerboundPackSettingChangePacket:
 
 
 class PackInstanceId:
-    pack_id: str
+    pack_id: uuid.UUID = field(type=str)
     version: str
     subpack_name: str
 

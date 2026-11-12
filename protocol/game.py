@@ -299,7 +299,7 @@ class StartGamePacket:
     settings: LevelSettings
     level_id: str
     level_name: str
-    template_content_identity: str
+    template_content_identity: uuid.UUID = field(type=str)
     is_trial: bool
     movement_settings: SyncedPlayerMovementSettings
     level_current_time: uint64
@@ -332,7 +332,7 @@ class StartGamePacket:
     settings: LevelSettings
     level_id: str
     level_name: str
-    template_content_identity: str
+    template_content_identity: uuid.UUID = field(type=str)
     is_trial: bool
     movement_settings: SyncedPlayerMovementSettings
     level_current_time: uint64
