@@ -1,0 +1,116 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "rule_data": {
+    "rules": [
+     {
+      "name": "s1",
+      "can_be_modified_by_player": true,
+      "value": null
+     }
+    ]
+   }
+  },
+  "bytes": "010273310100",
+  "bds_json": {
+   "Rule Data": {
+    "Rules List": [
+     {
+      "Rule Name": "s1",
+      "Rule Can Be Modified": true,
+      "Rule Value": null
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "rule_data": {
+    "rules": [
+     {
+      "name": "s3",
+      "can_be_modified_by_player": true,
+      "value": {
+       "bool": false
+      }
+     }
+    ]
+   }
+  },
+  "bytes": "01027333010100",
+  "bds_json": {
+   "Rule Data": {
+    "Rules List": [
+     {
+      "Rule Name": "s3",
+      "Rule Can Be Modified": true,
+      "Rule Value": false
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "rule_data": {
+    "rules": [
+     {
+      "name": "s6",
+      "can_be_modified_by_player": false,
+      "value": {
+       "int": 1248
+      }
+     }
+    ]
+   }
+  },
+  "bytes": "010273360002e0040000",
+  "bds_json": {
+   "Rule Data": {
+    "Rules List": [
+     {
+      "Rule Name": "s6",
+      "Rule Can Be Modified": false,
+      "Rule Value": 1248
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "rule_data": {
+    "rules": [
+     {
+      "name": "s9",
+      "can_be_modified_by_player": true,
+      "value": {
+       "float": 5.75
+      }
+     }
+    ]
+   }
+  },
+  "bytes": "0102733901030000b840",
+  "bds_json": {
+   "Rule Data": {
+    "Rules List": [
+     {
+      "Rule Name": "s9",
+      "Rule Can Be Modified": true,
+      "Rule Value": 5.75
+     }
+    ]
+   }
+  }
+ }
+]

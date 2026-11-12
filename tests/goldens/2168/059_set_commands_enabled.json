@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "commands_enabled": false
+  },
+  "bytes": "00",
+  "bds_json": {
+   "Commands Enabled": false
+  }
+ }
+]
