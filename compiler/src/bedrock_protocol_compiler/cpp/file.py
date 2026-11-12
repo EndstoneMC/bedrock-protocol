@@ -128,7 +128,7 @@ class FileGenerator:
             if not families:
                 continue
             if not cereal:
-                self.switch(p, (), (names.LEGACY,))
+                self.switch(p, (), (names.PRE_CEREAL,))
             p.emit("namespace detail {")
             p.emit("")
             for family in families:
@@ -169,7 +169,7 @@ class FileGenerator:
                     )
             p.emit("")
             if not cereal:
-                self.switch(p, (names.LEGACY,), ())
+                self.switch(p, (names.PRE_CEREAL,), ())
 
     def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
         runs = self.runs(family)

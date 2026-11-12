@@ -2,7 +2,7 @@ from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef
 from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape
 
 INCLUDE_DIR = "bedrock/protocol"
-LEGACY = "legacy"
+PRE_CEREAL = "pre_cereal"
 PRIMITIVES = {
     "str": "std::string",
     "bytes": "std::vector<std::byte>",
@@ -32,7 +32,7 @@ def namespace(schema: Schema) -> str:
 
 
 def scope(shape: Shape) -> tuple[str, ...]:
-    parts = [] if shape.family.cereal else [LEGACY]
+    parts = [] if shape.family.cereal else [PRE_CEREAL]
     if shape.versioned:
         since = shape.ranges[0].since
         parts.append("base" if since is None else f"v{since}")
