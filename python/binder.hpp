@@ -457,9 +457,9 @@ void bind_schema_types(std::span<const Version> bound)
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         constexpr std::size_t newest = versions.size() - 1;
         (
-            [&]<typename... C, typename... L>(const Version &version, type_list<C...>, type_list<L...>) {
+            [&]<typename... C, typename... P>(const Version &version, type_list<C...>, type_list<P...>) {
                 (bind_type<C>(version.module, &version), ...);
-                (bind_type<L>(version.pre_cereal, &version), ...);
+                (bind_type<P>(version.pre_cereal, &version), ...);
             }(bound[newest - I], typename Types<versions[newest - I]>::cereal{},
               typename Types<versions[newest - I]>::pre_cereal{}),
             ...);
