@@ -1,0 +1,27 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "type": "RESET",
+   "title_text": "s2",
+   "fade_in_time": -593,
+   "stay_time": 724,
+   "fade_out_time": 855,
+   "xuid": "s6",
+   "platform_online_id": "s7",
+   "filtered_title_text": "s8"
+  },
+  "bytes": "02027332a109a80bae0d027336027337027338",
+  "bds_json": {
+   "Title Type": 1,
+   "Title Text": "s2",
+   "Fade In Time": -593,
+   "Stay Time": 724,
+   "Fade Out Time": 855,
+   "Xuid": "s6",
+   "Platform Online Id": "s7",
+   "Filtered Title Message": "s8"
+  }
+ }
+]

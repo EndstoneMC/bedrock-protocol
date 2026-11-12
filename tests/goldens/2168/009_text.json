@@ -1,0 +1,63 @@
+[
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "localize": false,
+   "body": {
+    "AuthorAndMessage": {
+     "type": "ANNOUNCEMENT",
+     "author": "s9",
+     "message": "s10"
+    }
+   },
+   "xuid": "s11",
+   "platform_id": "s12",
+   "filtered_message": null
+  },
+  "bytes": "00010802733903733130037331310373313200",
+  "bds_json": {
+   "Localize?": false,
+   "Body": {
+    "Message Type": 8,
+    "Player Name": "s9",
+    "Message": "s10"
+   },
+   "Sender's XUID": "s11",
+   "Platform Id": "s12"
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageAndParams": {
+     "type": "TRANSLATE",
+     "message": "s15",
+     "params": [
+      "s16"
+     ]
+    }
+   },
+   "xuid": "s17",
+   "platform_id": "s18",
+   "filtered_message": "s19"
+  },
+  "bytes": "00020203733135010373313603733137037331380103733139",
+  "bds_json": {
+   "Localize?": false,
+   "Body": {
+    "Message Type": 2,
+    "Message": "s15",
+    "Parameter List": [
+     "s16"
+    ]
+   },
+   "Sender's XUID": "s17",
+   "Platform Id": "s18",
+   "Filtered Message": "s19"
+  }
+ }
+]
