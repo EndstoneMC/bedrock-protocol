@@ -19,30 +19,7 @@ def _classes(scope, seen):
             yield from _classes(cls, seen)
 
 
-def _holds_unnamed_enum(value):
-    annotations = getattr(type(value), "__annotations__", {})
-    for name in getattr(type(value), "__match_args__", ()):
-        member = getattr(value, name)
-        kind = annotations.get(name)
-        if isinstance(kind, type) and issubclass(kind, enum.Enum) and not isinstance(member, kind):
-            return True
-        items = member if isinstance(member, list) else [member]
-        if any(_holds_unnamed_enum(item) for item in items):
-            return True
-    return False
-
-
-def _decodes(decode, data):
-    try:
-        decode(data)
-    except ValueError:
-        return False
-    return True
-
-
 PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
-ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(cls.from_bytes, bytes(cls()))]
-UNDECODABLE_PACKETS = [(m, cls) for m, cls in PACKETS if (m, cls) not in ROUND_TRIPPING_PACKETS]
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
@@ -51,8 +28,12 @@ SERIALIZABLE = list(
         if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
     )
 )
-ROUND_TRIPPING_VALUES = [cls for cls in SERIALIZABLE if _decodes(cls.from_bytes, bytes(cls()))]
-UNDECODABLE_VALUES = [cls for cls in SERIALIZABLE if cls not in ROUND_TRIPPING_VALUES]
+
+
+BINDING_GAP = {
+    f"bedrock_protocol.v{version}.CommandRequestPacket" for version in (776, 800, 859, 944, 975, 1001, 2168, 2193, 2225)
+} | {"bedrock_protocol.v2225.pre_cereal.SerializedPersonaPieceHandle", "bedrock_protocol.v2225.pre_cereal.TintMapColor"}
+GAP = pytest.mark.xfail(strict=True, reason="binding gap: a name-coded enum defaults to an unnamed value")
 
 
 def packet_id(value):
@@ -63,11 +44,15 @@ def value_id(cls):
     return f"{cls.__module__}.{cls.__qualname__}"
 
 
+def gap(cls):
+    return GAP if value_id(cls) in BINDING_GAP else ()
+
+
 def test_every_version_binds_packets(protocol):
     assert len(protocol.PACKETS) > 200
 
 
-@pytest.mark.parametrize(("module", "cls"), ROUND_TRIPPING_PACKETS, ids=packet_id)
+@pytest.mark.parametrize(("module", "cls"), [pytest.param(m, cls, marks=gap(cls)) for m, cls in PACKETS], ids=packet_id)
 def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     packet = cls()
     header, framed = module.decode_packet(module.encode_packet(packet))
@@ -75,29 +60,13 @@ def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     assert framed == packet
 
 
-@pytest.mark.parametrize("cls", ROUND_TRIPPING_VALUES, ids=value_id)
+@pytest.mark.parametrize("cls", [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE], ids=value_id)
 def test_a_default_value_decodes_to_itself(cls):
     value = cls()
     assert cls.from_bytes(bytes(value)) == value
 
 
-@pytest.mark.parametrize("cls", ROUND_TRIPPING_VALUES, ids=value_id)
+@pytest.mark.parametrize("cls", [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE], ids=value_id)
 def test_a_default_value_encodes_again_to_the_same_bytes(cls):
     data = bytes(cls())
     assert bytes(cls.from_bytes(data)) == data
-
-
-@pytest.mark.parametrize("cls", UNDECODABLE_VALUES, ids=value_id)
-def test_a_default_value_holding_an_unnamed_enum_is_rejected_on_decode(cls):
-    with pytest.raises(ValueError, match="at byte"):
-        cls.from_bytes(bytes(cls()))
-
-
-@pytest.mark.parametrize("cls", [cls for _, cls in UNDECODABLE_PACKETS], ids=value_id)
-def test_only_a_default_packet_holding_an_unnamed_enum_is_rejected_on_decode(cls):
-    assert _holds_unnamed_enum(cls())
-
-
-@pytest.mark.parametrize("cls", UNDECODABLE_VALUES, ids=value_id)
-def test_only_a_default_value_holding_an_unnamed_enum_is_rejected_on_decode(cls):
-    assert _holds_unnamed_enum(cls())

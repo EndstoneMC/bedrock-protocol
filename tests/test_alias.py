@@ -1,5 +1,5 @@
 def test_an_alias_crosses_as_its_primitive(protocol):
-    assert protocol.RemoveActorPacket.__annotations__["entity_id"] is int
+    assert type(protocol.RemoveActorPacket().entity_id) is int
 
 
 def test_a_default_alias_is_zero(protocol):

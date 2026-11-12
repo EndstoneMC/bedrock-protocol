@@ -1,8 +1,6 @@
 #pragma once
 
 #include <span>
-#include <utility>
-#include <vector>
 
 #include <nanobind/nanobind.h>
 
@@ -23,8 +21,6 @@ struct Version {
     nb::handle pre_cereal;
     nb::dict packets;
 };
-
-std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
 [[noreturn]] void throw_decode_error(DecodeError error);
 

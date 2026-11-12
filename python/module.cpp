@@ -5,16 +5,6 @@
 
 #include "versions.hpp"
 
-namespace bedrock::protocol::python {
-
-std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
-{
-    static std::vector<std::pair<nb::handle, nb::dict (*)()>> list;
-    return list;
-}
-
-}  // namespace bedrock::protocol::python
-
 NB_MODULE(_core, m)
 {
     namespace nb = nanobind;

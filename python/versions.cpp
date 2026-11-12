@@ -110,9 +110,6 @@ void init_versions(nb::module_ &parent)
         }
         m.attr("__all__") = all;
     }
-    for (const auto &[cls, annotations] : annotators()) {
-        cls.attr("__annotations__") = annotations();
-    }
 }
 
 }  // namespace bedrock::protocol::python

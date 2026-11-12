@@ -221,72 +221,6 @@ F from_python(nb::handle src)
     }
 }
 
-template <typename F>
-nb::object annotation()
-{
-    const auto builtin = [](const char *name) {
-        return nb::module_::import_("builtins").attr(name);
-    };
-    const auto typing = [](const char *name) {
-        return nb::module_::import_("typing").attr(name);
-    };
-    if constexpr (std::is_same_v<F, bool>) {
-        return builtin("bool");
-    }
-    else if constexpr (std::is_integral_v<F> || PrimitiveAlias<F> || is_bitset_v<F>) {
-        return builtin("int");
-    }
-    else if constexpr (std::is_floating_point_v<F>) {
-        return builtin("float");
-    }
-    else if constexpr (std::is_same_v<F, std::string>) {
-        return builtin("str");
-    }
-    else if constexpr (std::is_same_v<F, std::vector<std::byte>>) {
-        return builtin("bytes");
-    }
-    else if constexpr (std::is_same_v<F, UUID>) {
-        return nb::module_::import_("uuid").attr("UUID");
-    }
-    else if constexpr (std::is_same_v<F, std::monostate>) {
-        return nb::none();
-    }
-    else if constexpr (std::is_same_v<F, CompoundTagData>) {
-        return annotation<CompoundTag>();
-    }
-    else if constexpr (is_optional_v<F>) {
-        return typing("Optional")[annotation<typename F::value_type>()];
-    }
-    else if constexpr (is_list_v<F> || is_array_v<F>) {
-        return builtin("list").attr("__class_getitem__")(annotation<typename F::value_type>());
-    }
-    else if constexpr (is_map_v<F>) {
-        return builtin("dict").attr("__class_getitem__")(
-            nb::make_tuple(annotation<typename F::key_type>(), annotation<typename F::mapped_type>()));
-    }
-    else if constexpr (is_variant_v<F>) {
-        return [&]<typename... A>(std::type_identity<std::variant<A...>>) {
-            return typing("Union")[nb::make_tuple(annotation<A>()...)];
-        }(std::type_identity<F>{});
-    }
-    else if (nb::handle bound = nb::type<F>(); bound.is_valid()) {
-        return nb::borrow(bound);
-    }
-    else {
-        return typing("Any");
-    }
-}
-
-template <typename T>
-nb::dict annotations()
-{
-    nb::dict out;
-    [&]<std::size_t... I>(std::index_sequence<I...>) {
-        ((out[python_names<T>()[I].c_str()] = annotation<field_t<T, I>>()), ...);
-    }(std::make_index_sequence<field_count<T>()>{});
-    return out;
-}
-
 template <typename T>
 std::string describe(const T &value)
 {
@@ -391,7 +325,6 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
         fields.append(nb::str(python_names<T>()[i].c_str()));
     }
     cls.attr("__match_args__") = nb::tuple(fields);
-    annotators().emplace_back(cls, &annotations<T>);
     cls.def(nb::self == nb::self);
     cls.attr("__hash__") = nb::none();
     cls.def("__copy__", [](const T &self) { return T(self); });
