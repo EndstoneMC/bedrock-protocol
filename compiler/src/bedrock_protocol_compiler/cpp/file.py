@@ -171,30 +171,24 @@ class FileGenerator:
             if not cereal:
                 self.switch(p, (names.LEGACY,), ())
 
-    def packets(self, p: Printer) -> None:
-        packets = [
-            (family.packet_id, family)
-            for family in self.families
-            if isinstance(family, Struct) and family.packet_id is not None
-        ]
-        for packet_id, family in sorted(packets, key=lambda each: each[0]):
-            runs = self.runs(family)
-            constraint = names.clause(Range(runs[0][0].since, runs[-1][0].until))
-            spelled = (
-                f"::{names.namespace(self.schema)}::{names.selector(family)}<V>"
-                if runs[0][1].versioned
-                else names.qualified(self.schema, runs[0][1])
-            )
-            p.emit(
-                """
-                template <int V>$constraint$
-                struct packet_of<V, $id$> { using type = $type$; };
+    def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
+        runs = self.runs(family)
+        constraint = names.clause(Range(runs[0][0].since, runs[-1][0].until))
+        spelled = (
+            f"::{names.namespace(self.schema)}::{names.selector(family)}<V>"
+            if runs[0][1].versioned
+            else names.qualified(self.schema, runs[0][1])
+        )
+        p.emit(
+            """
+            template <int V>$constraint$
+            struct packet_of<V, $id$> { using type = $type$; };
 
-                """,
-                constraint=f" requires ({constraint})" if constraint else "",
-                id=packet_id,
-                type=spelled,
-            )
+            """,
+            constraint=f" requires ({constraint})" if constraint else "",
+            id=packet_id,
+            type=spelled,
+        )
 
     def types(self, p: Printer) -> None:
         name = f"{self.module.stem}_types"

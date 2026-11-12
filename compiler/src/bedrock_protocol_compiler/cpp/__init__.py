@@ -1,6 +1,7 @@
 from bedrock_protocol_compiler.context import GeneratorContext
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.file import FileGenerator
+from bedrock_protocol_compiler.descriptor import Struct
 from bedrock_protocol_compiler.schema import Schema
 
 
@@ -35,8 +36,14 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         """,
         namespace=names.namespace(schema),
     )
-    for file in files:
-        file.packets(registry)
+    packets = [
+        (family.packet_id, file, family)
+        for file in files
+        for family in file.families
+        if isinstance(family, Struct) and family.packet_id is not None
+    ]
+    for packet_id, file, family in sorted(packets, key=lambda each: each[0]):
+        file.packet(registry, packet_id, family)
     registry.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
     context.open(f"{names.INCLUDE_DIR}/version.hpp").emit(
         """
