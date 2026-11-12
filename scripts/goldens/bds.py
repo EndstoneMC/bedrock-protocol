@@ -97,11 +97,11 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
 def same(shown: Json, wanted: Json) -> bool:
     """Compare two scalars: an enum by name or number, an integer by its bits, a blob's hex by its bytes."""
     if isinstance(shown, bool) or isinstance(wanted, bool):
-        return type(shown) is type(wanted) and shown == wanted
+        return type(shown) is type(wanted) and bool(shown == wanted)
     if isinstance(wanted, str) and ENUM_NAME.fullmatch(wanted):
         return type(shown) is int or shown in (wanted.lower(), wanted.replace("_", "").lower())
     if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
-        return shown == bytes.fromhex(wanted).decode("latin-1")
+        return bool(shown == bytes.fromhex(wanted).decode("latin-1"))
     if type(shown) is int and type(wanted) is int:
         return any(
             -(1 << (bits - 1)) <= min(shown, wanted)
