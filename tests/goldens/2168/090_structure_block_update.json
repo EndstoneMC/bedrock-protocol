@@ -104,5 +104,111 @@
    "is_waterlogged": false
   },
   "bytes": "d546dc48e24a03733336000373333701000a037334310100019d5fa461aa63af65b667bc69c16b0201000000de410000e241f31d00000000ea410000ee410000f241010100"
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "block_pos": {
+    "x": 331,
+    "y": 462,
+    "z": -593
+   },
+   "data": {
+    "structure_name": {
+     "unredacted_string": "s4",
+     "redacted_string": "s5"
+    },
+    "data_field": "s6",
+    "include_players": false,
+    "show_bounding_box": true,
+    "type": "CORNER",
+    "settings": {
+     "palette_name": "s10",
+     "ignore_entities": false,
+     "ignore_blocks": true,
+     "allow_non_ticking_player_and_ticking_area_chunks": false,
+     "structure_size": {
+      "x": 2034,
+      "y": -2165,
+      "z": 2296
+     },
+     "structure_offset": {
+      "x": 2427,
+      "y": -2558,
+      "z": 2689
+     },
+     "last_touched_by_player": 2820,
+     "rotation": "ROTATE_90",
+     "mirror": "Z",
+     "animation_mode": "BLOCKS",
+     "animation_seconds": 12.25,
+     "integrity_value": 12.75,
+     "integrity_seed": 3606,
+     "pivot": {
+      "x": 13.75,
+      "y": 14.25,
+      "z": 14.75
+     }
+    },
+    "redstone_save_mode": "SAVES_TO_MEMORY"
+   },
+   "trigger": false,
+   "is_waterlogged": true
+  },
+  "bytes": "96059c07a1090273340102733502733600010603733130000100e41fe921f023f625fb27822a882c0102020000444100004c41160e000000005c410000644100006c41000001"
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "block_pos": {
+    "x": -4523,
+    "y": 4654,
+    "z": 4785
+   },
+   "data": {
+    "structure_name": {
+     "unredacted_string": "s36",
+     "redacted_string": null
+    },
+    "data_field": "s37",
+    "include_players": true,
+    "show_bounding_box": false,
+    "type": "INVALID",
+    "settings": {
+     "palette_name": "s41",
+     "ignore_entities": true,
+     "ignore_blocks": false,
+     "allow_non_ticking_player_and_ticking_area_chunks": true,
+     "structure_size": {
+      "x": -6095,
+      "y": 6226,
+      "z": 6357
+     },
+     "structure_offset": {
+      "x": -6488,
+      "y": 6619,
+      "z": 6750
+     },
+     "last_touched_by_player": -6881,
+     "rotation": "ROTATE_180",
+     "mirror": "X",
+     "animation_mode": "NONE",
+     "animation_seconds": 27.75,
+     "integrity_value": 28.25,
+     "integrity_seed": 7667,
+     "pivot": {
+      "x": 29.25,
+      "y": 29.75,
+      "z": 30.25
+     }
+    },
+    "redstone_save_mode": "SAVES_TO_DISK"
+   },
+   "trigger": true,
+   "is_waterlogged": false
+  },
+  "bytes": "d546dc48e24a037333360003733337010008037334310100019d5fa461aa63af65b667bc69c16b0201000000de410000e241f31d00000000ea410000ee410000f241010100"
  }
 ]

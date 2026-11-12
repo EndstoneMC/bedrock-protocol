@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "event_id": "UPDATE",
+   "effect_id": -593,
+   "effect_amplifier": 724,
+   "show_particles": false,
+   "effect_duration_ticks": {
+    "value": 600
+   },
+   "tick": 986,
+   "ambient": false
+  },
+  "bytes": "cb0202a109a80b00b009da0700"
+ }
+]

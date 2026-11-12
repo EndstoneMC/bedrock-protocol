@@ -1,0 +1,57 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "rot": {
+    "x": 41.25,
+    "y": 41.75
+   },
+   "pos": {
+    "x": 42.25,
+    "y": 42.75,
+    "z": 43.25
+   },
+   "move": {
+    "x": 43.75,
+    "y": 44.25
+   },
+   "y_head_rot": 44.75,
+   "input_data": [
+    "SNEAK_TOGGLE_DOWN"
+   ],
+   "input_mode": "MOUSE",
+   "play_mode": "SCREEN",
+   "new_interaction_model": "TOUCH",
+   "interact_rotation": {
+    "x": 47.25,
+    "y": 47.75
+   },
+   "client_tick": 12776,
+   "pos_delta": {
+    "x": 48.75,
+    "y": 49.25,
+    "z": 49.75
+   },
+   "item_use_transaction": null,
+   "item_stack_request": null,
+   "player_block_actions": null,
+   "vehicle_rot": null,
+   "client_predicted_vehicle": null,
+   "analog_move_vector": {
+    "x": 50.25,
+    "y": 50.75
+   },
+   "camera_orientation": {
+    "x": 51.25,
+    "y": 51.75,
+    "z": 52.25
+   },
+   "raw_move_vector": {
+    "x": 52.75,
+    "y": 53.25
+   }
+  },
+  "bytes": "00002542000027420000294200002b4200002d4200002f42000031420000334201012e01020000003d4200003f42e863000043420000454200004742010001000100010001000000494200004b4200004d4200004f42000051420000534200005542"
+ }
+]

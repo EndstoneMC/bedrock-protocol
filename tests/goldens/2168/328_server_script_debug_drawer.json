@@ -388,5 +388,242 @@
    ]
   },
   "bytes": "01ffc201000000000000000000070080be42000080bf42"
+ },
+ {
+  "id": "v6",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 8715,
+     "shape_type": "LINE",
+     "location": {
+      "x": 33.75,
+      "y": 34.25,
+      "z": 34.75
+     },
+     "scale": 35.25,
+     "rotation": {
+      "x": 35.75,
+      "y": 36.25,
+      "z": 36.75
+     },
+     "time_left_total_sec": 37.25,
+     "max_render_distance": 37.75,
+     "color": 10156,
+     "dimension_id": 10287,
+     "attached_to_id": -10418,
+     "extra_data_payload": {
+      "CylinderDataPayload": {
+       "radius_x": {
+        "x": 39.75,
+        "y": 40.25
+       },
+       "radius_z": {
+        "x": 39.75,
+        "y": 40.25
+       },
+       "height": 40.75,
+       "num_segments": 75
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "018b44010001000007420000094200000b420100000d420100000f4200001142000013420100001542010000174201ac27000001dea00101e3a2010600001f420000214200001f4200002142000023424b"
+ },
+ {
+  "id": "v13",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 11073,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 42.25,
+       "depth": 42.75,
+       "height": 43.25
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01c15600000000000000000007000029420100002b4200002d42"
+ },
+ {
+  "id": "v14",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 11597,
+     "shape_type": "LINE",
+     "location": {
+      "x": 44.75,
+      "y": 45.25,
+      "z": 45.75
+     },
+     "scale": 46.25,
+     "rotation": {
+      "x": 46.75,
+      "y": 47.25,
+      "z": 47.75
+     },
+     "time_left_total_sec": 48.25,
+     "max_render_distance": 48.75,
+     "color": 13038,
+     "dimension_id": -13169,
+     "attached_to_id": 13300,
+     "extra_data_payload": {
+      "EllipsoidDataPayload": {
+       "radii": {
+        "x": 50.75,
+        "y": 51.25,
+        "z": 51.75
+       },
+       "segments_per_axis": 29
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01cd5a01000100003342000035420000374201000039420100003b4200003d4200003f420100004142010000434201ee32000001e1cd0101e8cf010800004b4200004d4200004f421d"
+ },
+ {
+  "id": "v15",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 13955,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ConeDataPayload": {
+       "radii": {
+        "x": 53.25,
+        "y": 53.75
+       },
+       "height": 54.25,
+       "num_segments": 64
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01836d0000000000000000000900005542000057420000594240"
+ },
+ {
+  "id": "v16",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 16444,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ArrowDataPayload": {
+       "end_location": null,
+       "arrow_head_length": null,
+       "arrow_head_radius": null,
+       "num_segments": null
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01bc80010000000000000000000100000000"
+ },
+ {
+  "id": "v17",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 16575,
+     "shape_type": "ARROW",
+     "location": {
+      "x": 63.75,
+      "y": 64.25,
+      "z": 64.75
+     },
+     "scale": 65.25,
+     "rotation": {
+      "x": 65.75,
+      "y": 66.25,
+      "z": 66.75
+     },
+     "time_left_total_sec": 67.25,
+     "max_render_distance": 67.75,
+     "color": 18016,
+     "dimension_id": 18147,
+     "attached_to_id": -18278,
+     "extra_data_payload": {
+      "TextDataPayload": {
+       "text": "s139",
+       "use_rotation": true,
+       "background_color": null,
+       "depth_test": false,
+       "show_backface": true,
+       "show_text_backface": false
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01bf810101050100007f42008080420080814201008082420100808342008084420080854201008086420100808742016046000001c69b0201cb9d020204733133390100000100"
+ },
+ {
+  "id": "v18",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 24435,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 93.25,
+       "depth": null,
+       "height": 93.75
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01f3be01000000000000000000070080ba42000080bb42"
  }
 ]

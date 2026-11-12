@@ -1,0 +1,14 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "pos_x": 331,
+   "pos_y": 462,
+   "pos_z": -593,
+   "slot_index": 29,
+   "is_disabled": false
+  },
+  "bytes": "4b010000ce010000affdffff1d00"
+ }
+]

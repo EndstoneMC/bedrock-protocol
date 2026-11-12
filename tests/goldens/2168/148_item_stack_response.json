@@ -14,5 +14,59 @@
    ]
   },
   "bytes": "010cde1d0100"
+ },
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "responses": [
+    {
+     "result": "SUCCESS",
+     "client_request_id": {
+      "raw_id": 462
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": "SMITHING_TABLE_INPUT_CONTAINER",
+        "dynamic_id": 724
+       },
+       "slots": [
+        {
+         "requested_slot": 36,
+         "slot": 43,
+         "amount": 50,
+         "item_stack_net_id": {
+          "raw_id": 1248
+         },
+         "custom_name": {
+          "unredacted_string": "s9",
+          "redacted_string": "s10"
+         },
+         "durability_correction": 1641
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "01009c070101010301d402000001242b320101c0130273390103733130d219"
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "responses": [
+    {
+     "result": "ERROR",
+     "client_request_id": {
+      "raw_id": 1903
+     },
+     "containers": null
+    }
+   ]
+  },
+  "bytes": "0101de1d0100"
  }
 ]

@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "hud_element": [
+    "ARMOR"
+   ],
+   "hud_visible": "HIDE"
+  },
+  "bytes": "010200"
+ }
+]

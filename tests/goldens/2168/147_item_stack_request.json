@@ -190,5 +190,157 @@
    ]
   },
   "bytes": "0191b301010b0dcc5a1401020204733331380e00582f0104733332310f000000"
+ },
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -4523
+     },
+     "actions": [
+      {
+       "DropActionData": {
+        "amount": 39,
+        "source": {
+         "full_container_name": {
+          "name": "COMPOUND_CREATOR_INPUT",
+          "dynamic_id": 4916
+         },
+         "slot": 60,
+         "net_id_variant": 5178
+        },
+        "randomly": false
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s40"
+     ],
+     "strings_to_filter_origin": "BLOCK_ACTOR_DATA_TEXT"
+    }
+   ]
+  },
+  "bytes": "01d546010303272301341300003c3a14000000010373343006000000"
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -7667
+     },
+     "actions": [
+      {
+       "CreateActionData": {
+        "results_index": 7
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s59"
+     ],
+     "strings_to_filter_origin": "LEAVE_EVENT_TEXT"
+    }
+   ]
+  },
+  "bytes": "01e57701060607010373353908000000"
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -9239
+     },
+     "actions": [
+      {
+       "MineBlockActionData": {
+        "slot": 9370,
+        "predicted_durability": 9501,
+        "net_id_variant": -9632
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s73"
+     ],
+     "strings_to_filter_origin": "COMMAND_BLOCK_TEXT"
+    }
+   ]
+  },
+  "bytes": "01ad900101090bb49201ba940160daffff010373373305000000"
+ },
+ {
+  "id": "v4",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -10025
+     },
+     "actions": [
+      {
+       "CraftRecipeActionData": {
+        "recipe_net_id": {
+         "raw_id": 10156
+        },
+        "num_crafts": 40
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s78"
+     ],
+     "strings_to_filter_origin": "CARTOGRAPHY_TEXT"
+    }
+   ]
+  },
+  "bytes": "01d19c01010a0cac4f2801037337380a000000"
+ },
+ {
+  "id": "v5",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -26399
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 26530
+        },
+        "num_crafts": 18,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "ItemTagDescriptorData": {
+            "item_tag": "s432"
+           }
+          },
+          "stack_size": 26923
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s434"
+     ],
+     "strings_to_filter_origin": "SLASH_COMMAND_CHAT"
+    }
+   ]
+  },
+  "bytes": "01bd9c03010b0da2cf011201030304733433322b6901047334333409000000"
  }
 ]

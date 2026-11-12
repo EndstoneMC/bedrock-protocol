@@ -22,5 +22,119 @@
    "map_pixels": null
   },
   "bytes": "a6365300b83cbe3ec340000000000000000000"
+ },
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "map_id": 331,
+   "dimension": 15,
+   "locked": false,
+   "map_origin": {
+    "x": 724,
+    "y": 855,
+    "z": -986
+   },
+   "creation_map_ids": [
+    1117
+   ],
+   "scale": 57,
+   "unique_ids": [
+    {
+     "type": "ENTITY",
+     "key_entity_id": 1510,
+     "key_block_pos": null
+    }
+   ],
+   "decorations": [
+    {
+     "image": "MARKER_TEAL",
+     "rotation": -85,
+     "x": 92,
+     "y": 99,
+     "label": "s15",
+     "color": 2296
+    }
+   ],
+   "width": 2427,
+   "height": -2558,
+   "start_x": 2689,
+   "start_y": 2820,
+   "map_pixels": [
+    2951
+   ]
+  },
+  "bytes": "96050f00a80bae0db30f0101ba11013901010000000001cc170001010bab5c6303733135f808000001f62501fb2701822a01882c0101870b0000"
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "map_id": 3082,
+   "dimension": 62,
+   "locked": true,
+   "map_origin": {
+    "x": 3475,
+    "y": 3606,
+    "z": -3737
+   },
+   "creation_map_ids": null,
+   "scale": null,
+   "unique_ids": null,
+   "decorations": null,
+   "width": null,
+   "height": null,
+   "start_x": null,
+   "start_y": null,
+   "map_pixels": null
+  },
+  "bytes": "94303e01a636ac38b13a000000000000000000"
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "map_id": 3868,
+   "dimension": 4,
+   "locked": true,
+   "map_origin": {
+    "x": 4261,
+    "y": 4392,
+    "z": -4523
+   },
+   "creation_map_ids": [
+    4654
+   ],
+   "scale": 46,
+   "unique_ids": [
+    {
+     "type": "BLOCK_ENTITY",
+     "key_entity_id": null,
+     "key_block_pos": {
+      "x": 5047,
+      "y": 5178,
+      "z": -5309
+     }
+    }
+   ],
+   "decorations": [
+    {
+     "image": "MONUMENT",
+     "rotation": 88,
+     "x": -95,
+     "y": 2,
+     "label": "s44",
+     "color": -6095
+    }
+   ],
+   "width": 6226,
+   "height": 6357,
+   "start_x": -6488,
+   "start_y": 6619,
+   "map_pixels": [
+    6750
+   ]
+  },
+  "bytes": "b83c0401ca42d044d5460101dc48012e0101010000000001ee4ef450f95201010f58a1020373343431e8ffff01a46101aa6301af6501b66701015e1a0000"
  }
 ]

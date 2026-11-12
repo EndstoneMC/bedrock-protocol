@@ -1,0 +1,12 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "request_id": "s1",
+   "action": "DESTROY",
+   "response": "null\n"
+  },
+  "bytes": "02733103000000056e756c6c0a"
+ }
+]

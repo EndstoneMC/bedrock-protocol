@@ -11,5 +11,24 @@
    }
   },
   "bytes": "0101"
+ },
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "start_video_capture": {
+    "StartVideoCapture": {
+     "frame_rate": 331,
+     "file_prefix": "s2"
+    }
+   },
+   "stop_video_capture": {
+    "StartVideoCapture": {
+     "frame_rate": 331,
+     "file_prefix": "s2"
+    }
+   }
+  },
+  "bytes": "004b010000027332004b010000027332"
  }
 ]
