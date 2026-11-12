@@ -173,7 +173,7 @@ class LevelSettings:
         server_id: str
         world_id: str
         scenario_id: str
-    owner_id: str = field(since=818, until=924)
+        owner_id: str = field(since=818)
 
 
 @type(since=944, until=2168)

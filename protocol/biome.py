@@ -249,9 +249,9 @@ class BiomeDefinitionChunkGenData:
     consolidated_features: BiomeConsolidatedFeaturesData | None
     mountain_params: BiomeMountainParamsData | None
     surface_material_adjustments: BiomeSurfaceMaterialAdjustmentData | None
-    surface_materials: BiomeSurfaceMaterialData | None = field(until=975)
-    has_default_overworld_surface: bool = field(since=844, until=975)
     with field(until=975):
+        surface_materials: BiomeSurfaceMaterialData | None
+        has_default_overworld_surface: bool = field(since=844)
         has_swamp_surface: bool
         has_frozen_ocean_surface: bool
         has_the_end_surface: bool
