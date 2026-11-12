@@ -121,12 +121,10 @@ source releases and installed C++ packages need no Python.
 ```shell
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-ctest --test-dir build --output-on-failure
 ```
 
-Code generation runs at configure time. `BEDROCK_PROTOCOL_BUILD_TESTS` and
-`BEDROCK_PROTOCOL_INSTALL` default to on for top-level builds and off for
-subprojects.
+Code generation runs at configure time. `BEDROCK_PROTOCOL_INSTALL` defaults
+to on for a top-level build and off for a subproject.
 
 Install the C++ headers, library and CMake package with `cmake --install build`.
 Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
