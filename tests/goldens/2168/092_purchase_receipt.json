@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "purchase_receipts": [
+    "s1"
+   ]
+  },
+  "bytes": "01027331",
+  "bds_json": {
+   "PurchaseReceipts": [
+    "s1"
+   ]
+  }
+ }
+]
