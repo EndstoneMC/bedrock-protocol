@@ -1,5 +1,3 @@
-#include "versions.hpp"
-
 #include <cstddef>
 #include <format>
 #include <string>
@@ -11,6 +9,7 @@
 #include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
+#include "bedrock/protocol/version.hpp"
 #include "binder.hpp"
 #include "module.hpp"
 

@@ -9,7 +9,6 @@ if (MSVC)
 endif ()
 
 option(BEDROCK_PROTOCOL_INSTALL "Generate the install target and CMake package" ${PROJECT_IS_TOP_LEVEL})
-set(BEDROCK_PROTOCOL_PYTHON_VERSIONS "729;748;766;776;786;800;818;819;827;844;859;898;924;944;975;1001;2168;2193;2225" CACHE STRING "Protocol versions the Python extension binds")
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

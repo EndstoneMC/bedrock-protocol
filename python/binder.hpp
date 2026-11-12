@@ -20,9 +20,9 @@
 #include "bedrock/protocol/enum.hpp"
 #include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
+#include "bedrock/protocol/version.hpp"
 #include "casters.hpp"
 #include "module.hpp"
-#include "versions.hpp"
 
 namespace bedrock::protocol::python {
 
