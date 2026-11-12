@@ -10,34 +10,11 @@
 
 #include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/serializer.hpp"
+#include "bedrock/protocol/stream.hpp"
 #include "binder.hpp"
 #include "module.hpp"
 
 namespace bedrock::protocol::python {
-
-namespace {
-
-nb::bytes encode_framed(const Version &version, nb::handle packet, std::uint8_t recipient_sub_id,
-                        std::uint8_t sender_sub_id)
-{
-    nb::object id = nb::getattr(packet.type(), "ID", nb::none());
-    if (id.is_none() || !version.packets.get(id, nb::none()).is(packet.type())) {
-        throw nb::type_error(
-            std::format("{} is not a packet of protocol {}", nb::repr(packet.type()).c_str(), version.number).c_str());
-    }
-    std::string buffer;
-    BinaryWriter writer{buffer};
-    Serializer<PacketHeader>::serialize(writer, PacketHeader{
-                                                    .packet_id = nb::cast<std::uint16_t>(id),
-                                                    .recipient_sub_id = recipient_sub_id,
-                                                    .sender_sub_id = sender_sub_id,
-                                                });
-    nb::bytes body = nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
-    buffer.append(body.c_str(), body.size());
-    return nb::bytes(buffer.data(), buffer.size());
-}
-
-}  // namespace
 
 void throw_decode_error(DecodeError error)
 {
@@ -102,7 +79,25 @@ void init_versions(nb::module_ &parent)
         m.def(
             "encode_packet",
             [version](nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id) {
-                return encode_framed(version, packet, recipient_sub_id, sender_sub_id);
+                nb::object id = nb::getattr(packet.type(), "ID", nb::none());
+                if (!version.packets.get(id, nb::none()).is(packet.type())) {
+                    throw nb::type_error(std::format("packet: {} is not a packet at protocol {}",
+                                                     nb::repr(packet.type()).c_str(), version.number)
+                                             .c_str());
+                }
+                std::string buffer;
+                BinaryWriter writer{buffer};
+                Serializer<PacketHeader>::serialize(writer, PacketHeader{
+                                                                .packet_id = nb::cast<std::uint16_t>(id),
+                                                                .recipient_sub_id = recipient_sub_id,
+                                                                .sender_sub_id = sender_sub_id,
+                                                            });
+                auto body = nb::steal<nb::bytes>(PyObject_Bytes(packet.ptr()));
+                if (!body.is_valid()) {
+                    throw nb::python_error();
+                }
+                buffer.append(body.c_str(), body.size());
+                return nb::bytes(buffer.data(), buffer.size());
             },
             nb::arg("packet"), nb::kw_only(), nb::arg("recipient_sub_id") = 0, nb::arg("sender_sub_id") = 0,
             "Header and body, the bytes a batch length-prefixes.");

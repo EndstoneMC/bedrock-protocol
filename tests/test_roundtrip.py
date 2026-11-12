@@ -41,7 +41,8 @@ def _decodes(decode, data):
 
 
 PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
-ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(m.decode_packet, m.encode_packet(cls()))]
+ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(cls.from_bytes, bytes(cls()))]
+UNDECODABLE_PACKETS = [(m, cls) for m, cls in PACKETS if (m, cls) not in ROUND_TRIPPING_PACKETS]
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
@@ -90,6 +91,11 @@ def test_a_default_value_encodes_again_to_the_same_bytes(cls):
 def test_a_default_value_holding_an_unnamed_enum_is_rejected_on_decode(cls):
     with pytest.raises(ValueError, match="at byte"):
         cls.from_bytes(bytes(cls()))
+
+
+@pytest.mark.parametrize("cls", [cls for _, cls in UNDECODABLE_PACKETS], ids=value_id)
+def test_only_a_default_packet_holding_an_unnamed_enum_is_rejected_on_decode(cls):
+    assert _holds_unnamed_enum(cls())
 
 
 @pytest.mark.parametrize("cls", UNDECODABLE_VALUES, ids=value_id)
