@@ -18,7 +18,11 @@ public record PacketHeader(int packetId, int recipientSubId, int senderSubId) {
         }
     }
 
-    public static PacketHeader decode(ByteBuf buf, DecodeBudget budget) {
+    public static PacketHeader decode(ByteBuf buf) {
+        return Wire.decode(buf, DecodeLimits.DEFAULT, "PacketHeader", PacketHeader::read);
+    }
+
+    public static PacketHeader read(ByteBuf buf, DecodeBudget budget) {
         int bits = Wire.readUvarint32(buf);
         return new PacketHeader(bits & 0x3FF, (bits >>> 10) & 3, (bits >>> 12) & 3);
     }
