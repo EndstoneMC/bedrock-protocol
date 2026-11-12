@@ -1,0 +1,348 @@
+[
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -4523
+     },
+     "actions": [
+      {
+       "DropActionData": {
+        "amount": 39,
+        "source": {
+         "full_container_name": {
+          "name": "COMPOUND_CREATOR_INPUT",
+          "dynamic_id": 4916
+         },
+         "slot": 60,
+         "net_id_variant": 5178
+        },
+        "randomly": false
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s40"
+     ],
+     "strings_to_filter_origin": "BOOK_AND_QUILL_TEXT"
+    }
+   ]
+  },
+  "bytes": "01d546010303272301341300003c3a14000000010373343004000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -4523
+     },
+     "Actions": [
+      {
+       "Action type": 3,
+       "Amount": 39,
+       "Source": {
+        "Full container name.": {
+         "Container Name": 35,
+         "Dynamic ID": 4916
+        },
+        "Slot": 60,
+        "Net Id Variant": 5178
+       },
+       "Randomly": false
+      }
+     ],
+     "Strings To Filter": [
+      "s40"
+     ],
+     "StringsToFilterOrigin": 4
+    }
+   ]
+  }
+ },
+ {
+  "id": "v6",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -7667
+     },
+     "actions": [
+      {
+       "CreateActionData": {
+        "results_index": 7
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s59"
+     ],
+     "strings_to_filter_origin": "COMMAND_BLOCK_TEXT"
+    }
+   ]
+  },
+  "bytes": "01e57701060607010373353905000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -7667
+     },
+     "Actions": [
+      {
+       "Action type": 6,
+       "Results Index": 7
+      }
+     ],
+     "Strings To Filter": [
+      "s59"
+     ],
+     "StringsToFilterOrigin": 5
+    }
+   ]
+  }
+ },
+ {
+  "id": "v9",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -9239
+     },
+     "actions": [
+      {
+       "MineBlockActionData": {
+        "slot": 9370,
+        "predicted_durability": 9501,
+        "net_id_variant": -9632
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s73"
+     ],
+     "strings_to_filter_origin": "SERVER_CHAT_WHISPER"
+    }
+   ]
+  },
+  "bytes": "01ad900101090bb49201ba940160daffff010373373301000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -9239
+     },
+     "Actions": [
+      {
+       "Action type": 11,
+       "Slot": 9370,
+       "Predicted Durability": 9501,
+       "Net Id Variant": -9632
+      }
+     ],
+     "Strings To Filter": [
+      "s73"
+     ],
+     "StringsToFilterOrigin": 1
+    }
+   ]
+  }
+ },
+ {
+  "id": "v10",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -10025
+     },
+     "actions": [
+      {
+       "CraftRecipeActionData": {
+        "recipe_net_id": {
+         "raw_id": 10156
+        },
+        "num_crafts": 40
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s78"
+     ],
+     "strings_to_filter_origin": "BLOCK_ACTOR_DATA_TEXT"
+    }
+   ]
+  },
+  "bytes": "01d19c01010a0cac4f28010373373806000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -10025
+     },
+     "Actions": [
+      {
+       "Action type": 12,
+       "Recipe Net Id": {
+        "Raw Id": 10156
+       },
+       "Number of requested crafts": 40
+      }
+     ],
+     "Strings To Filter": [
+      "s78"
+     ],
+     "StringsToFilterOrigin": 6
+    }
+   ]
+  }
+ },
+ {
+  "id": "v18",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -25745
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 25876
+        },
+        "num_crafts": 80,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "ItemNameDescriptorData": {
+            "full_name": "s198",
+            "aux_value": 26269
+           }
+          },
+          "stack_size": 26400
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s201"
+     ],
+     "strings_to_filter_origin": "ANVIL_TEXT"
+    }
+   ]
+  },
+  "bytes": "01a19203010b0d94ca01500101010473313938ba9a03206701047332303103000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -25745
+     },
+     "Actions": [
+      {
+       "Action type": 13,
+       "Recipe Net Id": {
+        "Raw Id": 25876
+       },
+       "Number of requested crafts": 80,
+       "Ingredients": [
+        {
+         "Item Descriptor": {
+          "Descriptor Type": 1,
+          "Full Name": "s198",
+          "Aux Value": 26269
+         },
+         "StackSize": 26400
+        }
+       ]
+      }
+     ],
+     "Strings To Filter": [
+      "s201"
+     ],
+     "StringsToFilterOrigin": 3
+    }
+   ]
+  }
+ },
+ {
+  "id": "v20",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -11465
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 11596
+        },
+        "num_crafts": 20,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "MolangItemDescriptorData": {
+            "tag_expression": "s318",
+            "molang_version": "NUM_VALID_VERSIONS"
+           }
+          },
+          "stack_size": 12120
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s321"
+     ],
+     "strings_to_filter_origin": "DATA_DRIVEN_UI"
+    }
+   ]
+  },
+  "bytes": "0191b301010b0dcc5a1401020204733331380e00582f0104733332310f000000",
+  "bds_json": {
+   "Requests": [
+    {
+     "Client Request Id": {
+      "ID": -11465
+     },
+     "Actions": [
+      {
+       "Action type": 13,
+       "Recipe Net Id": {
+        "Raw Id": 11596
+       },
+       "Number of requested crafts": 20,
+       "Ingredients": [
+        {
+         "Item Descriptor": {
+          "Descriptor Type": 2,
+          "Tag Expression": "s318",
+          "Molang Version": 14
+         },
+         "StackSize": 12120
+        }
+       ]
+      }
+     ],
+     "Strings To Filter": [
+      "s321"
+     ],
+     "StringsToFilterOrigin": 15
+    }
+   ]
+  }
+ }
+]

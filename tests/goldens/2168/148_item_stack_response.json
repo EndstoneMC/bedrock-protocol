@@ -1,0 +1,28 @@
+[
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "responses": [
+    {
+     "result": "INVALID_ITEM_NET_ID",
+     "client_request_id": {
+      "raw_id": 1903
+     },
+     "containers": null
+    }
+   ]
+  },
+  "bytes": "010cde1d0100",
+  "bds_json": {
+   "Responses": [
+    {
+     "Result": 12,
+     "Client Request Id": {
+      "ID": 1903
+     }
+    }
+   ]
+  }
+ }
+]
