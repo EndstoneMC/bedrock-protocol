@@ -107,10 +107,8 @@ class SubChunkPacket:
     cache_enabled: bool
     dimension_type: DimensionType
     center_pos: SubChunkPos = field(cereal=False)
-    with field(when=lambda p: p.cache_enabled):
-        sub_chunk_data: list[SubChunkPacketData] = field(prefix=uint32)
-    with field(when=lambda p: not p.cache_enabled):
-        uncached_sub_chunk_data: list[UncachedSubChunkPacketData] = field(prefix=uint32)
+    sub_chunk_data: list[SubChunkPacketData] = field(prefix=uint32, when=lambda p: p.cache_enabled)
+    uncached_sub_chunk_data: list[UncachedSubChunkPacketData] = field(prefix=uint32, when=lambda p: not p.cache_enabled)
 
 
 @packet(id=174, since=2168)
