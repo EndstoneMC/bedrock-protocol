@@ -1,0 +1,39 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "resource_pack_required": false,
+   "has_addon_packs": true,
+   "has_scripts": false,
+   "force_disable_vibrant_visuals": true,
+   "world_template_id_and_version": {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "version": {
+     "version": "1.2.3"
+    }
+   },
+   "resource_packs": [
+    {
+     "pack_id_version": {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "version": {
+       "version": "1.2.3"
+      }
+     },
+     "pack_size": 1117,
+     "content_key": "s8",
+     "subpack_name": "s9",
+     "content_identity": {
+      "identity": "11111111-2222-4333-8444-555555555555"
+     },
+     "has_scripts": true,
+     "is_addon_pack": false,
+     "is_ray_tracing_capable": true,
+     "cdn_url": "s13"
+    }
+   ]
+  },
+  "bytes": "000100010000000000000000050000000000000005312e322e33010000000000000000060000000000000005312e322e335d040000000000000273380273392431313131313131312d323232322d343333332d383434342d35353535353535353535353501000103733133"
+ }
+]

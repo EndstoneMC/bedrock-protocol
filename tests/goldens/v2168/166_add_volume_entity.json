@@ -1,0 +1,83 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "entity_net_id": {
+    "raw_id": 331
+   },
+   "components": {
+    "b": {
+     "ByteTag": 7
+    },
+    "bytes": {
+     "ByteArrayTag": [
+      1,
+      254,
+      3
+     ]
+    },
+    "d": {
+     "DoubleTag": 2.5
+    },
+    "f": {
+     "FloatTag": 1.5
+    },
+    "i": {
+     "IntTag": 70000
+    },
+    "ints": {
+     "IntArrayTag": [
+      4,
+      -5,
+      6
+     ]
+    },
+    "l": {
+     "Int64Tag": 5000000000
+    },
+    "list": {
+     "ListTag": {
+      "type": 3,
+      "tags": [
+       {
+        "IntTag": 1
+       },
+       {
+        "IntTag": 2
+       }
+      ]
+     }
+    },
+    "nested": {
+     "CompoundTag": {
+      "k": {
+       "StringTag": "v"
+      }
+     }
+    },
+    "s": {
+     "ShortTag": 300
+    },
+    "str": {
+     "StringTag": "text"
+    }
+   },
+   "json_identifier": "s2",
+   "instance_name": "s3",
+   "min_bounds": {
+    "x": 724,
+    "y": 855,
+    "z": -986
+   },
+   "max_bounds": {
+    "x": 1117,
+    "y": 1248,
+    "z": -1379
+   },
+   "dimension_type": 1510,
+   "min_engine_version": "1.21.0"
+  },
+  "bytes": "cb020a0001016207070562797465730601fe0306016400000000000004400501660000c03f030169e0c5080b04696e74730608090c04016c80c8afa02509046c697374030402040a066e657374656408016b0176000201732c010803737472047465787400027332027333a80bae0db30fba11c013c515cc1706312e32312e30"
+ }
+]
