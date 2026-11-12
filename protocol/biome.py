@@ -133,9 +133,9 @@ class BiomeClimateData:
 
 
 class BiomeCoordinateData:
-    min_value_type: ExpressionOp = field(type=varint32)
+    min_value_type: ExpressionOp
     min_value: BiomeStringIndex
-    max_value_type: ExpressionOp = field(type=varint32)
+    max_value_type: ExpressionOp
     max_value: BiomeStringIndex
     grid_offset: uint32
     grid_step_size: uint32
@@ -145,11 +145,11 @@ class BiomeCoordinateData:
 class BiomeScatterParamData:
     coordinates: list[BiomeCoordinateData]
     eval_order: CoordinateEvaluationOrder
-    chance_percent_type: ExpressionOp = field(type=varint32)
+    chance_percent_type: ExpressionOp
     chance_percent: BiomeStringIndex
     chance_numerator: int32
     chance_denominator: int32
-    iterations_type: ExpressionOp = field(type=varint32)
+    iterations_type: ExpressionOp
     iterations: BiomeStringIndex
 
 
@@ -178,9 +178,9 @@ class BiomeElementData:
     noise_freq_scale: float
     noise_lower_bound: float
     noise_upper_bound: float
-    height_min_type: ExpressionOp = field(type=varint32)
+    height_min_type: ExpressionOp
     height_min: BiomeStringIndex
-    height_max_type: ExpressionOp = field(type=varint32)
+    height_max_type: ExpressionOp
     height_max: BiomeStringIndex
     adjusted_materials: BiomeSurfaceMaterialData
 
@@ -261,7 +261,7 @@ class BiomeDefinitionChunkGenData:
     multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
     legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
     replace_biomes: BiomeReplacementsData | None = field(since=800)
-    village_type: VillageType | None = field(type=uint8, since=924)
+    village_type: VillageType | None = field(since=924)
     with field(since=975):
         surface_builder_data: BiomeSurfaceBuilderData | None
         subsurface_builder_data: BiomeSurfaceBuilderData | None

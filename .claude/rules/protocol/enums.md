@@ -25,7 +25,7 @@ paths:
 - Give every redeclaration of an enum the same underlying type.
 - Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second wire shape.
 - Grep the enum for a negative enumerator before unifying a narrowed width; with one, the eras are two types.
-- Spell `field(type=)` on an enum field only for a real divergence: `str` (name-coded), a fixed primitive against a wider underlying type, or `endian="big"`.
+- An enum field goes out as its underlying type at one byte and as a varint of the same signedness above it (`int16` and `int32` as `varint32`, `uint16` and `uint32` as `uvarint32`). Spell `field(type=)` only where the wire differs: `str` (name-coded), a fixed width (`field(type=int32)` on an `int32` enum), another varint, or `endian="big"`.
 
 ## Placeholders
 
