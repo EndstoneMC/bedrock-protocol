@@ -29,14 +29,17 @@ class DecodeBudgetTest {
     @ParameterizedTest
     @MethodSource("negativeLimits")
     void negativeLimitIsRejected(int elements, long bytes, int depth) {
-        assertThrows(
-                IllegalArgumentException.class, () -> new DecodeLimits(elements, bytes, depth));
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> new DecodeLimits(elements, bytes, depth));
+        assertEquals("decode limits cannot be negative", error.getMessage());
     }
 
     @Test
-    void elementLimitIsAllowedAndOneMoreIsTooLarge() {
+    void oneElementPastTheLimitIsTooLarge() {
         DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
-        assertDoesNotThrow(() -> budget.chargeElements(10, 0));
+        budget.chargeElements(10, 0);
         DecodeException error =
                 assertThrows(DecodeException.class, () -> budget.chargeElements(1, 3));
         assertEquals(List.of(Reason.TOO_LARGE, 3), List.of(error.getReason(), error.getOffset()));
@@ -46,13 +49,15 @@ class DecodeBudgetTest {
     void elementChargesAccumulate() {
         DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
         budget.chargeElements(6, 0);
-        assertThrows(DecodeException.class, () -> budget.chargeElements(5, 0));
+        DecodeException error =
+                assertThrows(DecodeException.class, () -> budget.chargeElements(5, 0));
+        assertEquals(Reason.TOO_LARGE, error.getReason());
     }
 
     @Test
-    void byteLimitIsAllowedAndOneMoreIsTooLarge() {
+    void oneBytePastTheLimitIsTooLarge() {
         DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
-        assertDoesNotThrow(() -> budget.chargeBytes(100, 0));
+        budget.chargeBytes(100, 0);
         DecodeException error = assertThrows(DecodeException.class, () -> budget.chargeBytes(1, 9));
         assertEquals(List.of(Reason.TOO_LARGE, 9), List.of(error.getReason(), error.getOffset()));
     }
@@ -61,15 +66,34 @@ class DecodeBudgetTest {
     void hugeChargeDoesNotOverflow() {
         DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
         budget.chargeBytes(1, 0);
-        assertThrows(DecodeException.class, () -> budget.chargeBytes(Long.MAX_VALUE, 0));
+        DecodeException error =
+                assertThrows(DecodeException.class, () -> budget.chargeBytes(Long.MAX_VALUE, 0));
+        assertEquals(Reason.TOO_LARGE, error.getReason());
     }
 
     @Test
-    void depthLimitIsAllowedAndOneMoreIsTooDeep() {
-        DecodeBudget budget = new DecodeBudget();
-        for (int level = 0; level < 128; level++) {
-            budget.enter(0);
-        }
+    void negativeElementCountIsOutOfRange() {
+        DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
+        DecodeException error =
+                assertThrows(DecodeException.class, () -> budget.chargeElements(-5, 2));
+        assertEquals(
+                List.of(Reason.OUT_OF_RANGE, 2), List.of(error.getReason(), error.getOffset()));
+    }
+
+    @Test
+    void negativeByteCountIsOutOfRange() {
+        DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 4));
+        DecodeException error =
+                assertThrows(DecodeException.class, () -> budget.chargeBytes(-5, 2));
+        assertEquals(
+                List.of(Reason.OUT_OF_RANGE, 2), List.of(error.getReason(), error.getOffset()));
+    }
+
+    @Test
+    void oneLevelPastTheLimitIsTooDeep() {
+        DecodeBudget budget = new DecodeBudget(new DecodeLimits(10, 100, 2));
+        budget.enter(0);
+        budget.enter(0);
         DecodeException error = assertThrows(DecodeException.class, () -> budget.enter(5));
         assertEquals(List.of(Reason.TOO_DEEP, 5), List.of(error.getReason(), error.getOffset()));
     }
@@ -84,6 +108,6 @@ class DecodeBudgetTest {
 
     @Test
     void depthIsCappedAt128() {
-        assertEquals(128, new DecodeBudget(new DecodeLimits(10, 100, 1000)).maxDepth());
+        assertEquals(128, new DecodeLimits(10, 100, 1000).maxDepth());
     }
 }

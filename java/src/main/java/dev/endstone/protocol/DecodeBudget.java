@@ -4,8 +4,6 @@ import dev.endstone.protocol.DecodeException.Reason;
 
 /** The running totals of one decode; not thread-safe. */
 public final class DecodeBudget {
-    private static final int DEPTH_CAP = 128;
-
     private final DecodeLimits limits;
     private long elements;
     private long bytes;
@@ -15,20 +13,28 @@ public final class DecodeBudget {
         this.limits = limits;
     }
 
-    public DecodeBudget() {
-        this(DecodeLimits.DEFAULT);
-    }
-
-    /** Charges count elements, or throws TOO_LARGE at the given byte offset. */
+    /**
+     * Charges count elements, or throws OUT_OF_RANGE if negative or TOO_LARGE past the limit, at
+     * the given byte offset.
+     */
     public void chargeElements(long count, int offset) {
+        if (count < 0) {
+            throw new DecodeException(Reason.OUT_OF_RANGE, offset);
+        }
         if (count > limits.maxElements() - elements) {
             throw new DecodeException(Reason.TOO_LARGE, offset);
         }
         elements += count;
     }
 
-    /** Charges count bytes, or throws TOO_LARGE at the given byte offset. */
+    /**
+     * Charges count bytes, or throws OUT_OF_RANGE if negative or TOO_LARGE past the limit, at the
+     * given byte offset.
+     */
     public void chargeBytes(long count, int offset) {
+        if (count < 0) {
+            throw new DecodeException(Reason.OUT_OF_RANGE, offset);
+        }
         if (count > limits.maxBytes() - bytes) {
             throw new DecodeException(Reason.TOO_LARGE, offset);
         }
@@ -37,7 +43,7 @@ public final class DecodeBudget {
 
     /** Descends one level, or throws TOO_DEEP at the given byte offset. */
     public void enter(int offset) {
-        if (depth >= maxDepth()) {
+        if (depth >= limits.maxDepth()) {
             throw new DecodeException(Reason.TOO_DEEP, offset);
         }
         depth++;
@@ -45,9 +51,5 @@ public final class DecodeBudget {
 
     public void leave() {
         depth--;
-    }
-
-    public int maxDepth() {
-        return Math.min(limits.maxDepth(), DEPTH_CAP);
     }
 }

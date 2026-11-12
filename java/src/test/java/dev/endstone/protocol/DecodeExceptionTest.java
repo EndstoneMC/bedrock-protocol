@@ -68,6 +68,13 @@ class DecodeExceptionTest {
                 new DecodeException(Reason.OUT_OF_RANGE, 7).prepend("b").prepend(3).prepend("a");
         error.stamp("Type", 7, 9);
         assertEquals(List.of("a", 3, "b"), error.getPath());
+    }
+
+    @Test
+    void messageRendersThePathWithBracketedIndexes() {
+        DecodeException error =
+                new DecodeException(Reason.OUT_OF_RANGE, 7).prepend("b").prepend(3).prepend("a");
+        error.stamp("Type", 7, 9);
         assertEquals("Type.a[3].b: out of range at byte 7 of 9", error.getMessage());
     }
 
@@ -93,20 +100,21 @@ class DecodeExceptionTest {
                 new DecodeException(Reason.UNKNOWN_VALUE, 6).prepend(2).prepend("list");
         error.stamp("Type", 6, 8);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {
-            out.writeObject(error);
-        }
-        try (ObjectInputStream in =
-                new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
-            DecodeException copy = assertInstanceOf(DecodeException.class, in.readObject());
-            assertEquals(
-                    List.of(Reason.UNKNOWN_VALUE, "Type", List.of("list", 2), 6, 8),
-                    List.of(
-                            copy.getReason(),
-                            copy.getType(),
-                            copy.getPath(),
-                            copy.getOffset(),
-                            copy.getLength()));
-        }
+        ObjectOutputStream out = new ObjectOutputStream(bytes);
+        out.writeObject(error);
+        out.flush();
+        DecodeException copy =
+                assertInstanceOf(
+                        DecodeException.class,
+                        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))
+                                .readObject());
+        assertEquals(
+                List.of(Reason.UNKNOWN_VALUE, "Type", List.of("list", 2), 6, 8),
+                List.of(
+                        copy.getReason(),
+                        copy.getType(),
+                        copy.getPath(),
+                        copy.getOffset(),
+                        copy.getLength()));
     }
 }

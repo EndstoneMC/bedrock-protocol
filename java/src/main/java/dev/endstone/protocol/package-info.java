@@ -1,4 +1,4 @@
-/** The Bedrock protocol runtime: decode errors, limits and the wire helpers. */
+/** The Bedrock protocol runtime. */
 @NullMarked
 package dev.endstone.protocol;
 

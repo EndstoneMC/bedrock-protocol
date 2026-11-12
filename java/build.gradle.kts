@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("com.diffplug.spotless") version "8.10.0"
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
 val versionLine = file("../pyproject.toml").readLines().first { it.startsWith("version = ") }
@@ -26,7 +26,7 @@ dependencies {
 spotless {
     java {
         target("src/**/*.java")
-        googleJavaFormat("1.36.0").aosp()
+        googleJavaFormat("1.36.1").aosp()
     }
 }
 

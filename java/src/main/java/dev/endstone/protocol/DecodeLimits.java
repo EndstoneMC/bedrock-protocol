@@ -8,5 +8,6 @@ public record DecodeLimits(int maxElements, long maxBytes, int maxDepth) {
         if (maxElements < 0 || maxBytes < 0 || maxDepth < 0) {
             throw new IllegalArgumentException("decode limits cannot be negative");
         }
+        maxDepth = Math.min(maxDepth, 128);
     }
 }
