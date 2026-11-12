@@ -101,6 +101,7 @@ def test_a_blob_in_hex_matches_the_characters_bds_shows(bds):
 
 @pytest.fixture(scope="module")
 def values():
+    pytest.importorskip("bedrock_protocol_compiler")
     spec = importlib.util.spec_from_file_location("goldens_values", SCRIPT.with_name("values.py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -165,3 +166,17 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
 ):
     chosen = generated(values, schema, name)
     assert {(each[gate] == member, each[field] is not None) for each in chosen} == {(True, True), (False, False)}
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "kept"),
+    [
+        ("ContentIdentity", "identity", "11111111-2222-4333-8444-555555555555"),
+        ("PackInstanceId", "pack_id", "22222222-3333-4444-8555-666666666666"),
+        ("AttributeModifier", "id", "33333333-4444-4555-8666-777777777777"),
+    ],
+    ids=["content-identity", "pack-id", "modifier-id"],
+)
+def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
+    chosen = generated(values, schema, name)
+    assert [each[field] for each in chosen] == [kept for _ in chosen]
