@@ -109,6 +109,14 @@ def test_cpp_name_is_a_case_variant(build_package):
     assert (members(package)[0].cpp_name, members(package)[0].wire_name) == ("NPCRequest", "npcrequest")
 
 
+def test_an_ungated_value_carries_a_name_beside_cpp_name(build_package):
+    package = build_package(
+        {"a": HEADER + "class E(IntEnum, uint8):\n    NPC_REQUEST = value(3, 'npc_request', cpp_name='NPCRequest')\n"}
+    )
+
+    assert (members(package)[0].cpp_name, members(package)[0].wire_name) == ("NPCRequest", "npc_request")
+
+
 def test_siblings_resolve_to_earlier_members(build_package):
     package = build_package(
         {"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    COUNT = A\n    LATEST = COUNT - 1\n"}
