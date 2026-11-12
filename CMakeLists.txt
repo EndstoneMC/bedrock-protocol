@@ -19,13 +19,13 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/bedrock/protocol/version.hpp")
 else ()
     set(BEDROCK_PROTOCOL_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
     find_package(Python 3.12 REQUIRED COMPONENTS Interpreter)
-    file(GLOB_RECURSE BEDROCK_PROTOCOL_COMPILER_INPUTS CONFIGURE_DEPENDS
-            "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py"
-            "${CMAKE_CURRENT_SOURCE_DIR}/compiler/src/*.py")
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${BEDROCK_PROTOCOL_COMPILER_INPUTS})
+    file(GLOB BEDROCK_PROTOCOL_SCHEMA_INPUTS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
+    file(GLOB_RECURSE BEDROCK_PROTOCOL_COMPILER_INPUTS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/compiler/src/*.py")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+            ${BEDROCK_PROTOCOL_SCHEMA_INPUTS} ${BEDROCK_PROTOCOL_COMPILER_INPUTS})
     execute_process(
             COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/compiler/src"
-                    "${Python_EXECUTABLE}" -m bedrock_protocol_compiler
+                    "${Python_EXECUTABLE}" -B -m bedrock_protocol_compiler
                     "${CMAKE_CURRENT_SOURCE_DIR}/protocol" --out "${BEDROCK_PROTOCOL_GENERATED_DIR}"
             COMMAND_ERROR_IS_FATAL ANY)
 endif ()
