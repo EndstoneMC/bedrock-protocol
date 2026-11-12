@@ -18,6 +18,7 @@ paths:
   - patch the bytes so the suite says what the schema encodes, and mark them `# TODO: patched, confirm against BDS`;
   - open the golden's comment with `# TODO: confirm against BDS`, naming what the reference wrote, what the dump says and which side has to give;
   - settle it per `.claude/rules/protocol/sources.md`.
+- When a snapshot materializes, re-check every test that builds one era's types against another era's golden.
 - Check every golden both ways: encoding the packet yields the bytes, and decoding the bytes yields the packet.
 - Write expected bytes only as literals; never compute them by re-implementing varints, zigzag, header packing or the codec.
 
@@ -38,8 +39,3 @@ paths:
 - Add a case to the test that owns its packet or topic; never open a second file for it.
 - Per-packet goldens live in `test_{id:03}_{name}.py` (`test_009_text.py`); topics live in `test_<topic>.py`.
 - Give a type that no modelled packet reaches its own test, named for the type.
-
-## A red suite
-
-- After a snapshot materializes, re-check every test that builds one era's types against another era's golden.
-- Before blaming your change for a red suite, run the suite at HEAD in a clean worktree.

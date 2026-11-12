@@ -19,8 +19,6 @@ Review the commit range or branch the caller names. Otherwise review the uncommi
 4. Grep `CLAUDE.md` and `.claude/rules/` for every name, path and behaviour the change renames, moves or removes, and judge each hit against the principles.
 5. Check each commit message against the commit rules in `CLAUDE.md`.
 
-Send a change back when it works but leaves the code less clear. Working is never enough.
-
 ## Output
 
 First line: `ship` or `send back`.
