@@ -262,7 +262,9 @@ def test_a_header_read_fails_as_a_decode_error():
 
 
 def test_a_decode_error_path_names_the_attribute_the_binding_exposes():
-    with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
+    with pytest.raises(
+        bedrock_protocol.DecodeError, match=r"^BiomeConsolidatedFeatureData\.pass_: truncated"
+    ) as caught:
         proto.BiomeConsolidatedFeatureData.from_bytes(bytes(proto.BiomeConsolidatedFeatureData())[:-2])
     assert caught.value.path == ("pass_",)
 
