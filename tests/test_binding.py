@@ -32,6 +32,10 @@ def test_the_package_has_no_legacy():
     assert not hasattr(bedrock_protocol, "legacy")
 
 
+def test_a_version_leaves_legacy_out_of_its_all(protocol):
+    assert "legacy" not in protocol.__all__
+
+
 def test_the_bare_protocol_number_is_the_latest_protocol():
     assert bedrock_protocol.VERSIONS[-1] == bedrock_protocol.PROTOCOL
 

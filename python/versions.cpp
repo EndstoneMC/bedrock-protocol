@@ -123,7 +123,7 @@ void init_versions(nb::module_ &parent)
         m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
               nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
         nb::list all;
-        for (nb::handle name : nb::steal<nb::list>(PyObject_Dir(m.ptr()))) {
+        for (nb::handle name : m.attr("__dict__")) {
             const std::string_view text = nb::borrow<nb::str>(name).c_str();
             if (!text.starts_with('_') && text != "legacy") {
                 all.append(name);
