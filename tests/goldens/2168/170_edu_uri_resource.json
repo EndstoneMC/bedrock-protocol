@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "edu_shared_uri_resource": {
+    "button_name": "s1",
+    "link_uri": "s2"
+   }
+  },
+  "bytes": "027331027332",
+  "bds_json": {
+   "Edu Shared URI Resource": {
+    "Button Name": "s1",
+    "Link Uri": "s2"
+   }
+  }
+ }
+]

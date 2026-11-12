@@ -1,0 +1,15 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "url": "s1",
+   "should_open_code_builder": true
+  },
+  "bytes": "02733101",
+  "bds_json": {
+   "URL": "s1",
+   "Should open code builder": true
+  }
+ }
+]
