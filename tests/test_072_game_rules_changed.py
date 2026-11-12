@@ -33,7 +33,9 @@ PRE_CEREAL_RULE = bytes.fromhex("156d6178636f6d6d616e64636861696e6c656e677468000
 RULE = bytes.fromhex("156d6178636f6d6d616e64636861696e6c656e6774680002feff0100")
 
 RULE_GOLDENS = [
-    pytest.param(v1001.pre_cereal.GameRule(name="maxcommandchainlength", value=131070), PRE_CEREAL_RULE, id="pre_cereal"),
+    pytest.param(
+        v1001.pre_cereal.GameRule(name="maxcommandchainlength", value=131070), PRE_CEREAL_RULE, id="pre_cereal"
+    ),
     pytest.param(v2225.GameRule(name="maxcommandchainlength", value=131070), RULE, id="v2225"),
 ]
 
