@@ -89,6 +89,11 @@ PRESENT_WHEN = {
     "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
 }
+FIXED: dict[str, Json] = {
+    "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
+    "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
+    "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
+}
 
 
 def integer_range(name: str, wire: str | None) -> tuple[int, int]:
@@ -156,7 +161,7 @@ class Generator:
             yield (f"{label} when#{index}", "true")
             yield (f"{label} when#{index}", "false")
         for each in self.fields(shape):
-            if f"{label}.{each.name}" not in SAME_MEMBER:
+            if f"{label}.{each.name}" not in SAME_MEMBER and f"{label}.{each.name}" not in FIXED:
                 yield from self.type_points(each.type, f"{label}.{each.name}", seen)
 
     def type_points(self, node: Type, key: str, seen: set[int]) -> Iterator[Point]:
@@ -472,7 +477,7 @@ class Generator:
         for each in fields:
             plain = each.when is None and not isinstance(each.type, Literal | List)
             counts = isinstance(each.type, List) and each.when is None and not isinstance(each.type.count, Len)
-            if (plain or counts) and f"{label}.{each.name}" not in SAME_MEMBER:
+            if (plain or counts) and f"{label}.{each.name}" not in SAME_MEMBER and f"{label}.{each.name}" not in FIXED:
                 values[each.name] = self.generate(
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
                 )
@@ -515,6 +520,8 @@ class Generator:
             else:
                 values[each.name] = None if f"{label}.{each.name}" in PRESENT_WHEN else self.default(each.type)
         for each in fields:
+            if f"{label}.{each.name}" in FIXED:
+                values[each.name] = FIXED[f"{label}.{each.name}"]
             if f"{label}.{each.name}" in SAME_MEMBER:
                 values[each.name] = values[SAME_MEMBER[f"{label}.{each.name}"]]
         return {each.name: values[each.name] for each in fields if each.name in values}
