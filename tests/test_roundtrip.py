@@ -47,7 +47,7 @@ SERIALIZABLE = list(
     dict.fromkeys(
         cls
         for m in VERSIONS
-        for scope in (m, m.legacy)
+        for scope in (bedrock_protocol, m, m.legacy)
         for cls in _classes(scope, set())
         if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
     )
