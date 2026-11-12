@@ -1,0 +1,201 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "telemetry": {
+    "avg_fps": 0.75,
+    "avg_server_sim_tick_time_ms": 1.25,
+    "avg_client_sim_tick_time_ms": 1.75,
+    "avg_begin_frame_time_ms": 2.25,
+    "avg_input_time_ms": 2.75,
+    "avg_render_time_ms": 3.25,
+    "avg_end_frame_time_ms": 3.75,
+    "avg_remainder_time_percent": 4.25,
+    "avg_unaccounted_time_percent": 4.75,
+    "category_counters": [
+     {
+      "category": "CLIENT",
+      "current_bytes": 1641
+     }
+    ]
+   },
+   "entity_system_diagnostics": {
+    "entity_timings": [
+     {
+      "display_name": "s12",
+      "entity": "s13",
+      "time_in_ns": 2034,
+      "percent_of_total": 6
+     }
+    ],
+    "system_timings": [
+     {
+      "display_name": "s16",
+      "system_index": 2427,
+      "time_in_ns": 2558,
+      "percent_of_total": 34
+     }
+    ],
+    "system_categories": [
+     {
+      "category_name": "s20",
+      "system_index": 2951
+     }
+    ]
+   },
+   "whisker_data": [
+    {
+     "label": "s22",
+     "indentation": "s23",
+     "total_high_cost_ns": 3344,
+     "total_mid_cost_ns": 3475,
+     "total_low_cost_ns": 3606
+    }
+   ]
+  },
+  "bytes": "0000403f0000a03f0000e03f000010400000304000005040000070400000884000009840010a6906000000000000010373313203733133f2070000000000000601037331367b09000000000000fe0900000000000022010103733230870b000000000000010373323203733233100d000000000000930d000000000000160e000000000000",
+  "bds_json": {
+   "AvgFps": 0.75,
+   "AvgServerSimTickTimeMS": 1.25,
+   "AvgClientSimTickTimeMS": 1.75,
+   "AvgBeginFrameTimeMS": 2.25,
+   "AvgInputTimeMS": 2.75,
+   "AvgRenderTimeMS": 3.25,
+   "AvgEndFrameTimeMS": 3.75,
+   "AvgRemainderTimePercent": 4.25,
+   "AvgUnaccountedTimePercent": 4.75,
+   "Memory Category Values": [
+    {
+     "Category": 10,
+     "Current Bytes": 1641
+    }
+   ],
+   "Entity Diagnostics": [
+    {
+     "Display Name": "s12",
+     "Entity": "s13",
+     "Time in NS": 2034,
+     "Percent of Total": 6
+    }
+   ],
+   "System Diagnostics": [
+    {
+     "Display Name": "s16",
+     "System Index": 2427,
+     "Time in NS": 2558,
+     "Percent of Total": 34
+    }
+   ],
+   "System Categories": [
+    {
+     "Category Name": "s20",
+     "System Index": 2951
+    }
+   ],
+   "Whisker Scopes": [
+    {
+     "Label": "s22",
+     "Indentation": "s23",
+     "TotalHighCostNS": 3344,
+     "TotalMidCostNS": 3475,
+     "TotalLowCostNS": 3606
+    }
+   ]
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "telemetry": {
+    "avg_fps": 13.75,
+    "avg_server_sim_tick_time_ms": 14.25,
+    "avg_client_sim_tick_time_ms": 14.75,
+    "avg_begin_frame_time_ms": 15.25,
+    "avg_input_time_ms": 15.75,
+    "avg_render_time_ms": 16.25,
+    "avg_end_frame_time_ms": 16.75,
+    "avg_remainder_time_percent": 17.25,
+    "avg_unaccounted_time_percent": 17.75,
+    "category_counters": [
+     {
+      "category": "JSON_UI_LAYOUT_MANAGER_INIT_VARIABLE",
+      "current_bytes": 5047
+     }
+    ]
+   },
+   "entity_system_diagnostics": {
+    "entity_timings": [
+     {
+      "display_name": "s38",
+      "entity": "s39",
+      "time_in_ns": 5440,
+      "percent_of_total": 88
+     }
+    ],
+    "system_timings": [
+     {
+      "display_name": "s42",
+      "system_index": 5833,
+      "time_in_ns": 5964,
+      "percent_of_total": 16
+     }
+    ],
+    "system_categories": null
+   },
+   "whisker_data": [
+    {
+     "label": "s46",
+     "indentation": "s47",
+     "total_high_cost_ns": 6488,
+     "total_mid_cost_ns": 6619,
+     "total_low_cost_ns": 6750
+    }
+   ]
+  },
+  "bytes": "00005c410000644100006c410000744100007c41000082410000864100008a4100008e410124b7130000000000000103733338037333394015000000000000580103733432c9160000000000004c1700000000000010000103733436037334375819000000000000db190000000000005e1a000000000000",
+  "bds_json": {
+   "AvgFps": 13.75,
+   "AvgServerSimTickTimeMS": 14.25,
+   "AvgClientSimTickTimeMS": 14.75,
+   "AvgBeginFrameTimeMS": 15.25,
+   "AvgInputTimeMS": 15.75,
+   "AvgRenderTimeMS": 16.25,
+   "AvgEndFrameTimeMS": 16.75,
+   "AvgRemainderTimePercent": 17.25,
+   "AvgUnaccountedTimePercent": 17.75,
+   "Memory Category Values": [
+    {
+     "Category": 36,
+     "Current Bytes": 5047
+    }
+   ],
+   "Entity Diagnostics": [
+    {
+     "Display Name": "s38",
+     "Entity": "s39",
+     "Time in NS": 5440,
+     "Percent of Total": 88
+    }
+   ],
+   "System Diagnostics": [
+    {
+     "Display Name": "s42",
+     "System Index": 5833,
+     "Time in NS": 5964,
+     "Percent of Total": 16
+    }
+   ],
+   "Whisker Scopes": [
+    {
+     "Label": "s46",
+     "Indentation": "s47",
+     "TotalHighCostNS": 6488,
+     "TotalMidCostNS": 6619,
+     "TotalLowCostNS": 6750
+    }
+   ]
+  }
+ }
+]
