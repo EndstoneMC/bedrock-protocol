@@ -184,7 +184,7 @@ def test_a_nested_family_absent_at_a_version_is_left_out_of_its_owner(build_pack
     assert (before.nested, after.nested) == ((), (schema.shapes(nested)[0],))
 
 
-def test_a_struct_that_reaches_a_legacy_family_does_not_change_with_the_cereal_one(build_package):
+def test_a_struct_that_reaches_a_pre_cereal_family_does_not_change_with_the_cereal_one(build_package):
     source = (
         HEADER
         + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"

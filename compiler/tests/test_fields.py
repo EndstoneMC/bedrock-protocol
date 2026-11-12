@@ -208,7 +208,7 @@ def test_cereal_false_declares_a_second_flavour_of_the_name(build_package):
     assert [field.name for field in pre_cereal.declarations[0].fields] == ["y"]
 
 
-def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_package):
+def test_field_cereal_false_reaches_the_pre_cereal_family_through_containers(build_package):
     source = (
         HEADER
         + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    y: uint16\n\n"
@@ -290,7 +290,7 @@ def test_cereal_is_rejected(build_package, source, message):
         build_package({"a": HEADER + "import uuid\nfrom typing import Literal\n" + source})
 
 
-def test_a_class_nested_in_a_legacy_owner_is_legacy(build_package):
+def test_a_class_nested_in_a_pre_cereal_owner_is_pre_cereal(build_package):
     source = HEADER + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    class C:\n        pass\n"
     package = build_package({"a": source})
 
@@ -301,7 +301,7 @@ def test_a_class_nested_in_a_legacy_owner_is_legacy(build_package):
     assert [family.name for family in package.modules[0].families] == ["B", "B"]
 
 
-def test_a_legacy_declared_before_its_cereal_sibling_is_reached(build_package):
+def test_a_pre_cereal_family_declared_before_its_cereal_sibling_is_reached(build_package):
     source = (
         HEADER
         + "@type(cereal=False)\nclass B:\n    y: uint16\n\nclass B:\n    x: uint8\n\n"

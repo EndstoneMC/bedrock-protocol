@@ -92,7 +92,7 @@ SETTINGS = {
     "base_game_version": "1.21.0",
 }
 
-LEGACY_RULES = [
+PRE_CEREAL_RULES = [
     v1001.pre_cereal.GameRule(name="dodaylightcycle", value=True),
     v1001.pre_cereal.GameRule(name="maxcommandchainlength", value=131070),
 ]
@@ -116,12 +116,12 @@ EDITOR_MIGRATED = v2225.StartGamePacket(
 
 GOLDENS = [
     pytest.param(
-        v975.StartGamePacket(**PACKET, settings=v975.LevelSettings(**SETTINGS, game_rules=LEGACY_RULES)),
+        v975.StartGamePacket(**PACKET, settings=v975.LevelSettings(**SETTINGS, game_rules=PRE_CEREAL_RULES)),
         V975,
         id="v975",
     ),
     pytest.param(
-        v1001.StartGamePacket(**PACKET, settings=v1001.LevelSettings(**SETTINGS, game_rules=LEGACY_RULES)),
+        v1001.StartGamePacket(**PACKET, settings=v1001.LevelSettings(**SETTINGS, game_rules=PRE_CEREAL_RULES)),
         V1001,
         id="v1001",
     ),

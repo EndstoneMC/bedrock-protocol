@@ -213,7 +213,7 @@ def test_player_list_changes_shape_at_2168():
     assert v1001.PlayerListPacket is not v2168.PlayerListPacket
 
 
-def test_the_legacy_skin_is_not_the_1001_skin():
+def test_the_pre_cereal_skin_is_not_the_1001_skin():
     assert v1001.pre_cereal.SerializedSkinRef is not v1001.SerializedSkinRef
 
 

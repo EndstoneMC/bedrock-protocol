@@ -185,7 +185,7 @@ def test_a_name_shared_by_two_modules_is_rejected(build_package):
         )
 
 
-def test_the_legacy_flavour_of_a_name_shared_by_two_modules_is_rejected(build_package):
+def test_the_pre_cereal_flavour_of_a_name_shared_by_two_modules_is_rejected(build_package):
     with pytest.raises(CompilerError, match="B: is already declared in a"):
         build_package(
             {
@@ -200,7 +200,7 @@ def test_a_union_alias_shares_the_module_scope_namespace(build_package):
         build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER + "type A = uint8 | None\n"})
 
 
-def test_the_legacy_flavour_is_redeclared_beside_its_cereal_family(build_package):
+def test_the_pre_cereal_flavour_is_redeclared_beside_its_cereal_family(build_package):
     package = build_package(
         {
             "a": HEADER

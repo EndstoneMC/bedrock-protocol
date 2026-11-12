@@ -28,11 +28,11 @@ def test_the_bare_names_are_the_latest_versions_all():
     assert set(bedrock_protocol.__all__) == {"VERSIONS", "DecodeError", "PacketHeader", "nbt", *latest.__all__}
 
 
-def test_the_package_has_no_legacy():
+def test_the_package_has_no_pre_cereal():
     assert not hasattr(bedrock_protocol, "pre_cereal")
 
 
-def test_a_version_leaves_legacy_out_of_its_all(protocol):
+def test_a_version_leaves_pre_cereal_out_of_its_all(protocol):
     assert "pre_cereal" not in protocol.__all__
 
 
@@ -304,7 +304,7 @@ def test_every_version_frames_with_the_package_header(protocol):
     assert type(header) is bedrock_protocol.PacketHeader
 
 
-def test_a_legacy_submodule_imports_by_its_dotted_name(protocol):
+def test_a_pre_cereal_submodule_imports_by_its_dotted_name(protocol):
     assert importlib.import_module(f"{protocol.__name__}.pre_cereal") is protocol.pre_cereal
 
 
