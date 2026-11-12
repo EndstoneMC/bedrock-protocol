@@ -187,6 +187,7 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ),
         ("AgentActionEventPacket", "response", "null\n"),
         ("Color255RGBA", "a", 128),
+        ("SerializableCells", "storage", [1, 2, 3, 4, 5, 6]),
     ],
     ids=[
         "content-identity",
@@ -201,6 +202,7 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         "sub-client-connection-request",
         "agent-response",
         "color-alpha",
+        "cell-storage",
     ],
 )
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):

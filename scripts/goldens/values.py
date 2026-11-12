@@ -107,6 +107,10 @@ FIXED: dict[str, Json] = {
     "Color255RGBA.g": 32,
     "Color255RGBA.b": 64,
     "Color255RGBA.a": 128,
+    "SerializableCells.x_size": 8,
+    "SerializableCells.y_size": 2,
+    "SerializableCells.z_size": 3,
+    "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
 }
 
 
