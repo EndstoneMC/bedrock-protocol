@@ -87,22 +87,22 @@ class Differ:
 
     def members(self, old: list[Json], new: list[Json], path: str) -> str | None:
         """Align two member lists by name and describe the first difference."""
-        matcher = SequenceMatcher(None, [m.get("name") for m in old], [m.get("name") for m in new], autojunk=False)
-        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        old_names, new_names = [m.get("name", show(m)) for m in old], [m.get("name", show(m)) for m in new]
+        for tag, i1, i2, j1, j2 in SequenceMatcher(None, old_names, new_names, autojunk=False).get_opcodes():
             if tag == "equal":
                 for old_member, new_member in zip(old[i1:i2], new[j1:j2], strict=True):
                     if (found := self.member(old_member, new_member, path)) is not None:
                         return found
             elif tag == "insert":
-                return f"{path}: member '{new[j1].get('name') or show(new[j1].get('type'))}' added"
+                verb = "moved" if new_names[j1] in old_names else "added"
+                return f"{path}: member '{new_names[j1]}' {verb}"
             elif tag == "delete":
-                return f"{path}: member '{old[i1].get('name') or show(old[i1].get('type'))}' removed"
+                verb = "moved" if old_names[i1] in new_names else "removed"
+                return f"{path}: member '{old_names[i1]}' {verb}"
+            elif i2 - i1 == j2 - j1 and {**old[i1], "name": 0} == {**new[j1], "name": 0}:
+                return f"{path}.{new_names[j1]}: renamed from '{old_names[i1]}'"
             else:
-                old_member, new_member = old[i1], new[j1]
-                renamed = i2 - i1 == j2 - j1 and {**old_member, "name": 0} == {**new_member, "name": 0}
-                if renamed:
-                    return f"{path}.{new_member.get('name')}: renamed from '{old_member.get('name')}'"
-                return f"{path}: member '{old_member.get('name') or show(old_member.get('type'))}' removed"
+                return f"{path}: member '{old_names[i1]}' replaced by '{new_names[j1]}'"
         return None
 
     def member(self, old_member: Json, new_member: Json, path: str) -> str | None:
