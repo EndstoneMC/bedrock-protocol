@@ -161,8 +161,9 @@ class EnvironmentAttributeData:
     current_transition_ticks: uint32
     total_transition_ticks: uint32
     easing: EasingType = field(type=str)
-    local_transition_ticks: uint32 = field(since=1001)
-    noise_transition: bool = field(since=1001)
+    with field(since=1001):
+        local_transition_ticks: uint32
+        noise_transition: bool
     noise_alignment: NoiseAlignment = field(since=2193)
 
 

@@ -71,8 +71,9 @@ class ClientboundDataDrivenUICloseScreenPacket:
 @packet(id=333, since=924)
 class ClientboundDataDrivenUIShowScreenPacket:
     screen_id: str
-    form_id: uint32 = field(since=944)
-    data_instance_id: uint32 | None = field(since=944)
+    with field(since=944):
+        form_id: uint32
+        data_instance_id: uint32 | None
 
 
 @packet(id=336, since=924)

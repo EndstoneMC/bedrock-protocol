@@ -62,6 +62,26 @@ def test_members_are_clipped_to_their_declaration(build_package):
         ("@type(until=3)\nclass A:\n    x: uint8 = field(until=3)\n", "x: has a gate its declaration already decides"),
         ("@type(until=3)\nclass A:\n    x: uint8 = field(since=3)\n", "x: has a gate its declaration already decides"),
         ("@type(since=3)\nclass A:\n    x: uint8 = field(until=3)\n", "x: has a gate its declaration already decides"),
+        ("class A:\n    with field(since=4, until=2):\n        x: uint8\n", "A: has an empty version range"),
+        ("class A:\n    with field(since=9):\n        x: uint8\n", "A: since 9 is not a modelled version"),
+        ("@type(since=2)\nclass A:\n    with field(since=2):\n        x: uint8\n", "A: has a gate its declaration"),
+        ("@type(until=3)\nclass A:\n    with field(since=3):\n        x: uint8\n", "A: has a gate its declaration"),
+        (
+            "class A:\n    with field(since=2):\n        x: uint8 = field(since=2)\n",
+            "x: has a gate its declaration already decides",
+        ),
+        (
+            "class A:\n    with field(until=4):\n        x: uint8 = field(since=4)\n",
+            "x: has a gate its declaration already decides",
+        ),
+        (
+            "class A:\n    with field(since=2):\n        x: uint8 = field(since=1)\n",
+            "x: has a gate its declaration already decides",
+        ),
+        (
+            "class A:\n    with field(since=2):\n        with field(until=4):\n            x: uint8\n",
+            "A: a with block holds only fields",
+        ),
         (
             "@type(until=3)\nclass E(IntEnum):\n    A = value(1, until=4)\n",
             "A: has a gate its declaration already decides",
@@ -403,3 +423,25 @@ def test_names_that_never_meet_are_accepted(build_package):
             + "    D = auto()\n"
         }
     )
+
+
+def test_a_block_gives_each_field_its_range(build_package):
+    source = (
+        "class A:\n    a: uint8\n    with field(since=2, until=5):\n        x: uint8\n"
+        "        y: uint8 = field(since=3)\n        z: uint8 = field(until=4)\n"
+    )
+    package = build_package({"a": HEADER + source})
+
+    assert [field.range for field in package.modules[0].families[0].declarations[0].fields] == [
+        Range(None, None),
+        Range(2, 5),
+        Range(3, 5),
+        Range(2, 4),
+    ]
+
+
+def test_a_block_is_clipped_to_its_declaration(build_package):
+    source = "@type(since=2, until=5)\nclass A:\n    with field(since=3, until=4):\n        x: uint8\n"
+    package = build_package({"a": HEADER + source})
+
+    assert package.modules[0].families[0].declarations[0].fields[0].range == Range(3, 4)

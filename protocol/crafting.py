@@ -440,34 +440,32 @@ class CraftingDataEntry:
     smithing_trim_recipe: SmithingTrimRecipePayload = field(
         when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
     )
-    item_data: varint32 = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE, until=975)
-    item_result: SerializedNetworkItemInstanceDescriptor = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
-    tag: str = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        ),
-        until=975,
-    )
+    with field(until=975):
+        item_data: varint32 = field(
+            when=lambda e: (
+                e.entry_type
+                in {
+                    CraftingDataEntryType.FURNACE_RECIPE,
+                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
+                }
+            )
+        )
+        item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE)
+        item_result: SerializedNetworkItemInstanceDescriptor = field(
+            when=lambda e: (
+                e.entry_type
+                in {
+                    CraftingDataEntryType.FURNACE_RECIPE,
+                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
+                }
+            )
+        )
+        tag: str = field(
+            when=lambda e: (
+                e.entry_type
+                in {
+                    CraftingDataEntryType.FURNACE_RECIPE,
+                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
+                }
+            )
+        )

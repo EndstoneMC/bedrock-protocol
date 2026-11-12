@@ -99,6 +99,18 @@ def test_a_with_block_gives_each_field_its_predicate(build_package):
     ]
 
 
+def test_a_field_and_its_block_both_guard(build_package):
+    source = HEADER + (
+        "class S:\n    k: uint8\n    with field(when=lambda p: p.k == 1):\n"
+        "        x: uint8 = field(when=lambda p: p.k == 2)\n"
+    )
+    package = build_package({"a": source})
+
+    assert family_of(package).declarations[0].fields[1].when == Binary(
+        "and", Binary("==", FieldRef("k"), Int(1)), Binary("==", FieldRef("k"), Int(2))
+    )
+
+
 def test_count_is_a_field_a_length_or_a_product(build_package):
     source = HEADER + (
         "class S:\n    n: uint8\n    xs: list[uint8] = field(count=lambda p: p.n)\n"
@@ -147,10 +159,6 @@ def test_count_is_a_field_a_length_or_a_product(build_package):
         ),
         ("k: uint8\n    x: list[uint8] = field(count=lambda p: len(p.k))", "x: len is given something other"),
         (
-            "k: uint8\n    with field(when=lambda p: p.k):\n        x: uint8 = field(when=lambda p: p.k)",
-            "x: has its own when= inside a with block",
-        ),
-        (
             "k: uint8\n    with field(when=lambda p: p.k):\n        class N:\n            pass",
             "S: a with block holds only fields",
         ),
@@ -160,23 +168,22 @@ def test_count_is_a_field_a_length_or_a_product(build_package):
             + "        with field(when=lambda p: p.k):\n            x: uint8",
             "S: a with block holds only fields",
         ),
-        ("k: uint8\n    with field():\n        x: uint8", "S: a with block takes only when="),
-        ("k: uint8\n    with field(since=2):\n        x: uint8", "S: a with block takes only when="),
+        ("k: uint8\n    with field():\n        x: uint8", "S: a with block takes only since="),
         (
             "k: uint8\n    with field(when=lambda p: p.k, type=uint8):\n        x: uint8",
-            "S: a with block takes only when=",
+            "S: a with block takes only since=",
         ),
         (
             "k: uint8\n    with field(when=lambda p: p.k) as g:\n        x: uint8",
-            "S: is not a with field\\(when=...\\) block",
+            "S: is not a with field\\(...\\) block",
         ),
         (
             "k: uint8\n    with field(when=lambda p: p.k), field(when=lambda p: p.k):\n        x: uint8",
-            "S: is not a with field\\(when=...\\) block",
+            "S: is not a with field\\(...\\) block",
         ),
         ("x: list[uint8] = field(count=lambda p: p.k)\n    k: uint8", "x: p.k is not an earlier field"),
         ("k: uint8\n    x: uint8 = field(when=lambda p, *rest: p.k)", "x: is not a lambda of one argument"),
-        ("k: uint8\n    with k:\n        x: uint8", "S: is not a with field\\(when=...\\) block"),
+        ("k: uint8\n    with k:\n        x: uint8", "S: is not a with field\\(...\\) block"),
     ],
 )
 def test_bad_lambda_is_rejected(build_package, body, message):

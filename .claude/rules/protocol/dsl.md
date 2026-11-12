@@ -24,6 +24,7 @@ paths:
 ## Conditions
 
 - Turn a pre-cereal switch into `when=`: `field(when=...)` for one field, `with field(when=...):` for a run.
+- Write a run of fields that share one gate as `with field(since=, until=):`; a block never nests in another and takes `when=` beside the gate.
 - Use `when=` for any implicit presence rule, such as a field gated on a sentinel value. Never use an optional for it, because an optional adds a byte BDS never wrote.
 
 ## Constants

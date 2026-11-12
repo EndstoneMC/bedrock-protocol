@@ -47,22 +47,25 @@ class CameraPreset:
     rot_y: float | None
     camera_rotation_speed: float | None
     snap_to_target: bool | None
-    horizontal_rotation_limit: Vec2 | None = field(since=748)
-    vertical_rotation_limit: Vec2 | None = field(since=748)
-    continue_targeting: bool | None = field(since=748)
+    with field(since=748):
+        horizontal_rotation_limit: Vec2 | None
+        vertical_rotation_limit: Vec2 | None
+        continue_targeting: bool | None
     tracking_radius: float | None = field(since=766)
     view_offset: Vec2 | None
     entity_offset: Vec3 | None
     radius: float | None
-    yaw_limit_min: float | None = field(since=776)
-    yaw_limit_max: float | None = field(since=776)
+    with field(since=776):
+        yaw_limit_min: float | None
+        yaw_limit_max: float | None
     listener: AudioListener | None
     player_effects: bool | None
     align_target_and_camera_forward: bool | None = field(since=748, until=818)
     aim_assist: CameraAimAssistCommandPresetDefinition | None = field(since=766)
     control_scheme: Scheme | None = field(since=800)
-    apply_inherited_starting_rotation: bool = field(since=2193)
-    starting_rot: Vec2 | None = field(since=2193)
+    with field(since=2193):
+        apply_inherited_starting_rotation: bool
+        starting_rot: Vec2 | None
 
 
 class CameraPresets:
@@ -296,8 +299,9 @@ class CameraInstructionOptions:
         curve: list[Vec3]
         progress_key_frames: list[SplineProgressOption]
         spline_rotation_option: list[SplineRotationOption]
-        spline_identifier: str = field(since=944)
-        load_from_json: bool = field(since=944)
+        with field(since=944):
+            spline_identifier: str
+            load_from_json: bool
 
 
 class CameraInstruction:
@@ -307,9 +311,10 @@ class CameraInstruction:
     target: CameraInstructionOptions.TargetInstruction | None
     remove_target: bool | None
     field_of_view: CameraInstructionOptions.FovInstruction | None = field(since=827)
-    spline: CameraInstructionOptions.SplineInstruction | None = field(since=859)
-    attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None = field(since=859)
-    detach_from_entity: bool | None = field(since=859)
+    with field(since=859):
+        spline: CameraInstructionOptions.SplineInstruction | None
+        attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None
+        detach_from_entity: bool | None
 
 
 @packet(id=300)

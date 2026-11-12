@@ -123,10 +123,11 @@ class BiomeSurfaceBuilderData:
 class BiomeClimateData:
     temperature: float
     downfall: float
-    red_spore_density: float = field(until=844)
-    blue_spore_density: float = field(until=844)
-    ash_density: float = field(until=844)
-    white_ash_density: float = field(until=844)
+    with field(until=844):
+        red_spore_density: float
+        blue_spore_density: float
+        ash_density: float
+        white_ash_density: float
     snow_accumulation_min: float
     snow_accumulation_max: float
 
@@ -250,18 +251,20 @@ class BiomeDefinitionChunkGenData:
     surface_material_adjustments: BiomeSurfaceMaterialAdjustmentData | None
     surface_materials: BiomeSurfaceMaterialData | None = field(until=975)
     has_default_overworld_surface: bool = field(since=844, until=975)
-    has_swamp_surface: bool = field(until=975)
-    has_frozen_ocean_surface: bool = field(until=975)
-    has_the_end_surface: bool = field(until=975)
-    mesa_surface: BiomeMesaSurfaceData | None = field(until=975)
-    capped_surface: BiomeCappedSurfaceData | None = field(until=975)
+    with field(until=975):
+        has_swamp_surface: bool
+        has_frozen_ocean_surface: bool
+        has_the_end_surface: bool
+        mesa_surface: BiomeMesaSurfaceData | None
+        capped_surface: BiomeCappedSurfaceData | None
     overworld_gen_rules: BiomeOverworldGenRulesData | None
     multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
     legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
     replace_biomes: BiomeReplacementsData | None = field(since=800)
     village_type: VillageType | None = field(type=uint8, since=924)
-    surface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
-    subsurface_builder_data: BiomeSurfaceBuilderData | None = field(since=975)
+    with field(since=975):
+        surface_builder_data: BiomeSurfaceBuilderData | None
+        subsurface_builder_data: BiomeSurfaceBuilderData | None
 
 
 @type(until=827)
@@ -286,10 +289,11 @@ class BiomeDefinitionData:
     id: uint16
     temperature: float
     downfall: float
-    red_spore_density: float = field(until=844)
-    blue_spore_density: float = field(until=844)
-    ash_density: float = field(until=844)
-    white_ash_density: float = field(until=844)
+    with field(until=844):
+        red_spore_density: float
+        blue_spore_density: float
+        ash_density: float
+        white_ash_density: float
     foliage_snow: float = field(since=844)
     depth: float
     scale: float

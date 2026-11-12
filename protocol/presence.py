@@ -69,8 +69,9 @@ class ClientStoreEntryPointConfiguration:
 
 class ServerConfigurationJoinInfo:
     gatherings_configuration: GatheringsConfigurationJoinInfo | None
-    client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None = field(since=944)
-    presence_configuration: PresenceConfiguration | None = field(since=944)
+    with field(since=944):
+        client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None
+        presence_configuration: PresenceConfiguration | None
 
 
 class ServerTelemetryData:

@@ -66,8 +66,9 @@ class GraphicsOverrideParameterType(IntEnum, uint8):
 @packet(id=331, since=859)
 class GraphicsOverrideParameterPacket:
     keyframes: dict[float, Vec3]
-    float_value: float | None = field(since=924)
-    vec3_value: Vec3 | None = field(since=924)
+    with field(since=924):
+        float_value: float | None
+        vec3_value: Vec3 | None
     biome_id: str
     player_id: str | None = field(since=1001)
     parameter_id: GraphicsOverrideParameterType

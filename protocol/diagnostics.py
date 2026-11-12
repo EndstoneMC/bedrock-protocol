@@ -142,8 +142,9 @@ class EntityDiagnosticTimingInfo:
     entity: str
     time_in_ns: uint64
     percent_of_total: uint8
-    position: Vec3 | None = field(since=2193)
-    dimension: str | None = field(since=2193)
+    with field(since=2193):
+        position: Vec3 | None
+        dimension: str | None
 
 
 class SystemDiagnosticTimingInfo:
@@ -179,8 +180,9 @@ class ServerboundDiagnosticsPacket:
     avg_remainder_time_percent: float
     avg_unaccounted_time_percent: float
     category_counters: list[MemoryCategoryCounter] = field(since=924)
-    entity_timings: list[EntityDiagnosticTimingInfo] = field(since=975)
-    system_timings: list[SystemDiagnosticTimingInfo] = field(since=975)
+    with field(since=975):
+        entity_timings: list[EntityDiagnosticTimingInfo]
+        system_timings: list[SystemDiagnosticTimingInfo]
     system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_data: list[ScopeDataSummary] = field(since=1001)
 

@@ -80,10 +80,11 @@ class SubChunkPacket:
         subchunk_height_map: array[array[int8, 16], 16] = field(
             when=lambda h: h.height_map_type == HeightMapDataType.HAS_DATA
         )
-        render_height_map_type: HeightMapDataType = field(since=818)
-        subchunk_render_height_map: array[array[int8, 16], 16] = field(
-            when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA, since=818
-        )
+        with field(since=818):
+            render_height_map_type: HeightMapDataType
+            subchunk_render_height_map: array[array[int8, 16], 16] = field(
+                when=lambda h: h.render_height_map_type == HeightMapDataType.HAS_DATA
+            )
 
     class SubChunkPosOffset:
         x: int8

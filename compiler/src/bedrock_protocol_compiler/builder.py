@@ -7,6 +7,7 @@ import uuid
 from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
+from functools import reduce
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
@@ -626,22 +627,24 @@ class Builder:
         source = pending.source
         scope = self.scopes[pending.struct]
         fields: list[Field] = []
-        statements: list[tuple[ast.stmt, ast.expr | None]] = []
+        statements: list[tuple[ast.stmt, Range, ast.expr | None]] = []
         for statement in without_docstring(pending.node.body):
             if not isinstance(statement, ast.With):
-                statements.append((statement, None))
+                statements.append((statement, pending.range, None))
                 continue
             single = len(statement.items) == 1 and statement.items[0].optional_vars is None
             block = statement.items[0].context_expr if single else None
             if not (isinstance(block, ast.Call) and self.resolve(source, scope, block.func) is dsl.field):
-                raise error(source, statement, pending.struct.name, "is not a with field(when=...) block")
+                raise error(source, statement, pending.struct.name, "is not a with field(...) block")
             arguments = self.bind(source, block, dsl.field)
-            if list(arguments) != ["when"]:
-                raise error(source, block, pending.struct.name, "a with block takes only when=")
-            statements.extend((inner, arguments["when"]) for inner in statement.body)
-        for statement, block_when in statements:
-            if block_when is not None and not isinstance(statement, ast.AnnAssign):
+            if not arguments or not arguments.keys() <= {"since", "until", "when"}:
+                raise error(source, block, pending.struct.name, "a with block takes only since=, until= and when=")
+            if any(not isinstance(inner, ast.AnnAssign) for inner in statement.body):
                 raise error(source, statement, pending.struct.name, "a with block holds only fields")
+            own = self.read_range(source, block, pending.struct.name, arguments)
+            within = self.narrow(source, statement, pending.struct.name, own, pending.range)
+            statements.extend((inner, within, arguments.get("when")) for inner in statement.body)
+        for statement, within, block_when in statements:
             if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
             if not (isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)):
@@ -701,7 +704,7 @@ class Builder:
                     )
                 field_type = rewired
             own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
-            field_range = self.narrow(source, statement, name, own, pending.range)
+            field_range = self.narrow(source, statement, name, own, within)
             if call is not None and "count" in arguments:
                 if not isinstance(field_type, List):
                     raise error(source, call, name, "count is given to something other than a bare list")
@@ -716,14 +719,11 @@ class Builder:
                     lambda node, reason: error(source, node, name, reason),
                 )
                 field_type = replace(field_type, prefix=None, count=parse_count(count))
-            guard = block_when
+            guards = [] if block_when is None else [block_when]
             if call is not None and "when" in arguments:
-                if block_when is not None:
-                    raise error(source, call, name, "has its own when= inside a with block")
-                guard = arguments["when"]
-            when = None
-            if guard is not None:
-                when = parse_predicate(
+                guards.append(arguments["when"])
+            predicates = [
+                parse_predicate(
                     read_lambda(
                         guard,
                         fields,
@@ -733,6 +733,9 @@ class Builder:
                         lambda node, reason: error(source, node, name, reason),
                     )
                 )
+                for guard in guards
+            ]
+            when = reduce(lambda left, right: Binary("and", left, right), predicates) if predicates else None
             fields.append(Field(name, field_type, field_range, when))
         struct = pending.struct
         self.tile(source, pending.node, struct, pending.range)
