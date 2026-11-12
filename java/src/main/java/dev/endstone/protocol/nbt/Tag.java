@@ -19,14 +19,10 @@ public sealed interface Tag
                 CompoundTag {
     TagType type();
 
-    /** Writes the payload. */
     void encodeData(ByteBuf buf);
 
     /** Reads the payload of a tag of the given type; END has none. */
     static Tag readData(ByteBuf buf, DecodeBudget budget, TagType type) {
-        if (type == TagType.END) {
-            throw new IllegalArgumentException("Tag.readData: END has no payload");
-        }
         budget.enter(buf.readerIndex());
         try {
             return switch (type) {
@@ -37,11 +33,11 @@ public sealed interface Tag
                 case FLOAT -> new FloatTag(Wire.readFloat(buf));
                 case DOUBLE -> new DoubleTag(Wire.readDouble(buf));
                 case STRING -> new StringTag(Wire.readStr(buf, budget));
-                case BYTE_ARRAY -> ByteArrayTag.readData(buf, budget);
-                case INT_ARRAY -> IntArrayTag.readData(buf, budget);
-                case LIST -> ListTag.readData(buf, budget);
-                case COMPOUND -> CompoundTag.readEntries(buf, budget);
-                case END -> throw new IllegalStateException();
+                case BYTE_ARRAY -> ByteArrayTag.readBody(buf, budget);
+                case INT_ARRAY -> IntArrayTag.readBody(buf, budget);
+                case LIST -> ListTag.readBody(buf, budget);
+                case COMPOUND -> CompoundTag.readBody(buf, budget);
+                case END -> throw new IllegalArgumentException("Tag.readData: END has no payload");
             };
         } finally {
             budget.leave();

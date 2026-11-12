@@ -3,7 +3,6 @@ package dev.endstone.protocol.nbt;
 import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 
-/** A int tag. */
 public record IntTag(int value) implements Tag {
     @Override
     public TagType type() {

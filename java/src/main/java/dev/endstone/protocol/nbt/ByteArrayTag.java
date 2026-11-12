@@ -6,9 +6,15 @@ import dev.endstone.protocol.DecodeException.Reason;
 import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** A byte array tag; two compare equal when their bytes do. */
 public record ByteArrayTag(byte[] value) implements Tag {
+    public ByteArrayTag {
+        Objects.requireNonNull(value, "ByteArrayTag.value");
+    }
+
     @Override
     public TagType type() {
         return TagType.BYTE_ARRAY;
@@ -20,7 +26,7 @@ public record ByteArrayTag(byte[] value) implements Tag {
         buf.writeBytes(value);
     }
 
-    static ByteArrayTag readData(ByteBuf buf, DecodeBudget budget) {
+    static ByteArrayTag readBody(ByteBuf buf, DecodeBudget budget) {
         int count = Wire.charge(buf, budget, Wire.readVarint32Count(buf), 1);
         if (count > buf.readableBytes()) {
             throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
@@ -31,7 +37,7 @@ public record ByteArrayTag(byte[] value) implements Tag {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         return other instanceof ByteArrayTag tag && Arrays.equals(value, tag.value);
     }
 

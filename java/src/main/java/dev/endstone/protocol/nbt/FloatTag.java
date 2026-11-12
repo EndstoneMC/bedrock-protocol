@@ -2,7 +2,6 @@ package dev.endstone.protocol.nbt;
 
 import io.netty.buffer.ByteBuf;
 
-/** A float tag. */
 public record FloatTag(float value) implements Tag {
     @Override
     public TagType type() {

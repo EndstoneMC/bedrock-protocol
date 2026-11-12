@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import dev.endstone.protocol.DecodeBudget;
 import dev.endstone.protocol.DecodeException;
 import dev.endstone.protocol.DecodeException.Reason;
 import dev.endstone.protocol.DecodeLimits;
@@ -120,9 +119,28 @@ class NbtTest {
     @Test
     void compoundKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new CompoundTag(Map.of("𐀀", new ByteTag((byte) 0), "￿", new ByteTag((byte) 0)))
+        new CompoundTag(
+                        Map.of(
+                                "\ud800\udc00",
+                                new ByteTag((byte) 0),
+                                "\uffff",
+                                new ByteTag((byte) 0)))
                 .encodeData(buf);
         assertEquals("0103efbfbf000104f09080800000", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
+    void stringAndArrayTagsRejectNull() {
+        assertEquals(
+                "StringTag.value",
+                assertThrows(NullPointerException.class, () -> new StringTag(null)).getMessage());
+        assertEquals(
+                "ByteArrayTag.value",
+                assertThrows(NullPointerException.class, () -> new ByteArrayTag(null))
+                        .getMessage());
+        assertEquals(
+                "IntArrayTag.value",
+                assertThrows(NullPointerException.class, () -> new IntArrayTag(null)).getMessage());
     }
 
     @Test
@@ -190,12 +208,17 @@ class NbtTest {
 
     @Test
     void entriesPastTheElementLimitAreTooLarge() {
-        DecodeBudget budget = new DecodeBudget(new DecodeLimits(1, 1_000L, 128));
         DecodeException error =
                 assertThrows(
                         DecodeException.class,
-                        () -> CompoundTag.readData(hex("010161010101620100"), budget));
+                        () ->
+                                Wire.decode(
+                                        hex("010161010101620100"),
+                                        new DecodeLimits(1, 1_000L, 128),
+                                        "CompoundTag",
+                                        CompoundTag::readData));
         assertEquals(Reason.TOO_LARGE, error.getReason());
+        assertEquals("CompoundTag: too large at byte 5 of 9", error.getMessage());
     }
 
     @ParameterizedTest

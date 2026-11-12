@@ -36,7 +36,7 @@ public record ListTag(TagType elementType, List<Tag> elements) implements Tag {
         }
     }
 
-    static ListTag readData(ByteBuf buf, DecodeBudget budget) {
+    static ListTag readBody(ByteBuf buf, DecodeBudget budget) {
         int number = Wire.readUint8(buf);
         long count = Wire.readVarint32Count(buf);
         TagType elementType = TagType.forNumber(number);

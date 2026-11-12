@@ -6,6 +6,7 @@ import dev.endstone.protocol.DecodeException.Reason;
 import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -57,14 +58,13 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
         return tag;
     }
 
-    /** Reads a payload. */
     public static CompoundTag readData(ByteBuf buf, DecodeBudget budget) {
         return (CompoundTag) Tag.readData(buf, budget, TagType.COMPOUND);
     }
 
     /** Reads entries up to the END id; a repeated key keeps its first value. */
-    static CompoundTag readEntries(ByteBuf buf, DecodeBudget budget) {
-        TreeMap<String, Tag> entries = new TreeMap<>(Wire.STR_ORDER);
+    static CompoundTag readBody(ByteBuf buf, DecodeBudget budget) {
+        HashMap<String, Tag> entries = new HashMap<>();
         for (; ; ) {
             int number = Wire.readUint8(buf);
             if (number == TagType.END.getNumber()) {
