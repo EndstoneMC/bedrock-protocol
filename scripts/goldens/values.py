@@ -206,6 +206,9 @@ FIXED: dict[str, Json] = {
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
     "NetworkStackLatencyPacket.create_time": 0,
+    "TextPacket.MessageOnly.type": "RAW",
+    "TextPacket.AuthorAndMessage.type": "CHAT",
+    "TextPacket.MessageAndParams.type": "TRANSLATE",
     "LevelSettings.game_rules": {
         "rules": [{"name": name, "can_be_modified_by_player": True, "value": value} for name, value in LEVEL_GAME_RULES]
     },

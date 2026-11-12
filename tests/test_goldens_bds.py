@@ -478,3 +478,21 @@ def test_an_optional_bds_reads_only_within_a_limit_is_absent_or_inside_it(values
 def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values, schema):
     chosen = generated(values, schema, "CameraAimAssistCategoryPriorities")
     assert {priority for each in chosen for priority in each["blocks"].values()} == {20}
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "read"),
+    [
+        ("MessageOnly", "type", "RAW"),
+        ("AuthorAndMessage", "type", "CHAT"),
+        ("MessageAndParams", "type", "TRANSLATE"),
+    ],
+    ids=[
+        "text-message-only",
+        "text-author-and-message",
+        "text-message-and-params",
+    ],
+)
+def test_an_enum_bds_narrows_to_some_members_is_generated_as_one_of_them(values, schema, name, field, read):
+    chosen = generated(values, schema, name)
+    assert [each[field] for each in chosen] == [read for _ in chosen]
