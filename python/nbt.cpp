@@ -68,7 +68,7 @@ void init_nbt(nb::module_ &parent)
             "__init__",
             [](ListTag *self, const std::vector<Tag> &tags, int type) {
                 if (type < 0 || type > static_cast<int>(nbt::Type::IntArray)) {
-                    throw nb::value_error("ListTag type is not a tag type");
+                    throw nb::value_error(std::format("type: {} is not a tag type", type).c_str());
                 }
                 ListTag out(static_cast<nbt::Type>(type));
                 for (const auto &tag : tags) {
