@@ -177,8 +177,21 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("SemVersion", "version", "1.2.3"),
         ("PackInstanceId", "version", "2.3.4"),
         ("ResourcePackStackPacket", "base_game_version", "1.21.0"),
+        ("ExperimentToggle", "name", "gametest"),
+        ("ExperimentToggle", "enabled", True),
+        ("Experiments", "experiments_ever_toggled", True),
     ],
-    ids=["content-identity", "pack-id", "modifier-id", "sem-version", "pack-version", "base-game-version"],
+    ids=[
+        "content-identity",
+        "pack-id",
+        "modifier-id",
+        "sem-version",
+        "pack-version",
+        "base-game-version",
+        "experiment-name",
+        "experiment-enabled",
+        "experiments-ever-toggled",
+    ],
 )
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
     chosen = generated(values, schema, name)
