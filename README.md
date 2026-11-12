@@ -68,6 +68,8 @@ With the source package, replace `find_package` with `add_subdirectory(bedrock-p
 Python. The library needs C++23.
 
 ```cpp
+#include <cassert>
+
 #include <bedrock/protocol.hpp>
 
 namespace bp = bedrock::protocol;
@@ -90,14 +92,10 @@ assert(decoded && *decoded == packet);
 
 The bare names follow the latest protocol. To stay on protocol 2225, name it.
 
-In Python, import its module:
+In Python, import from its module:
 
 ```python
-from bedrock_protocol import v2225
-
-packet = v2225.TextPacket(body=v2225.TextPacket.MessageOnly(type=v2225.TextPacketType.CHAT, message="hello"))
-data = bytes(packet)
-assert v2225.TextPacket.from_bytes(data) == packet
+from bedrock_protocol.v2225 import TextPacket, TextPacketType
 ```
 
 In C++, pass it as the template argument:
