@@ -1,0 +1,92 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "id": 331,
+   "property_index": 462,
+   "update": {
+    "ClearOverride": {}
+   }
+  },
+  "bytes": "9605ce03000e636c6561726f7665727269646573",
+  "bds_json": {
+   "Target ID": {
+    "Actor Unique ID": 331
+   },
+   "Property Index": 462,
+   "Update": {
+    "Type": "clearoverrides"
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "id": -593,
+   "property_index": 724,
+   "update": {
+    "RemoveOverride": {}
+   }
+  },
+  "bytes": "a109d405010e72656d6f76656f76657272696465",
+  "bds_json": {
+   "Target ID": {
+    "Actor Unique ID": -593
+   },
+   "Property Index": 724,
+   "Update": {
+    "Type": "removeoverride"
+   }
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "id": 855,
+   "property_index": 986,
+   "update": {
+    "IntOverride": {
+     "value": 1117
+    }
+   }
+  },
+  "bytes": "ae0dda07020e736574696e746f766572726964655d040000",
+  "bds_json": {
+   "Target ID": {
+    "Actor Unique ID": 855
+   },
+   "Property Index": 986,
+   "Update": {
+    "Type": "setintoverride",
+    "Value": 1117
+   }
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "id": 1248,
+   "property_index": 1379,
+   "update": {
+    "FloatOverride": {
+     "value": 5.25
+    }
+   }
+  },
+  "bytes": "c013e30a0310736574666c6f61746f766572726964650000a840",
+  "bds_json": {
+   "Target ID": {
+    "Actor Unique ID": 1248
+   },
+   "Property Index": 1379,
+   "Update": {
+    "Type": "setfloatoverride",
+    "Value": 5.25
+   }
+  }
+ }
+]

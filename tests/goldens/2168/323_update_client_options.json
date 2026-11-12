@@ -1,5 +1,20 @@
 [
  {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "update": {
+    "graphics_mode": "FANCY",
+    "filter_profanity": true
+   }
+  },
+  "bytes": "01010101",
+  "bds_json": {
+   "Graphics Mode Change": 1,
+   "Filter Profanity Change": true
+  }
+ },
+ {
   "id": "v1",
   "writer": "manual",
   "value": {

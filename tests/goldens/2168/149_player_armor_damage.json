@@ -1,0 +1,23 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "slot_and_damage_pairs": [
+    {
+     "armor_slot": "TORSO",
+     "damage": 462
+    }
+   ]
+  },
+  "bytes": "0102ce01",
+  "bds_json": {
+   "Armor Slot and Damage Pairs": [
+    {
+     "Armor Slot": 1,
+     "Damage": 462
+    }
+   ]
+  }
+ }
+]

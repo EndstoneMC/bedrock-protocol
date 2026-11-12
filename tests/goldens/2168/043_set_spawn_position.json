@@ -1,0 +1,37 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "spawn_pos_type": "WORLD_SPAWN",
+   "pos": {
+    "x": 462,
+    "y": -593,
+    "z": 724
+   },
+   "dimension_type": 855,
+   "spawn_block_pos": {
+    "x": -986,
+    "y": 1117,
+    "z": 1248
+   }
+  },
+  "bytes": "029c07a109a80bae0db30fba11c013",
+  "bds_json": {
+   "Spawn Position Type": 1,
+   "Block Position": {
+    "X": 462,
+    "Y": -593,
+    "Z": 724
+   },
+   "Dimension type": {
+    "value": 855
+   },
+   "Spawn Block Pos": {
+    "X": -986,
+    "Y": 1117,
+    "Z": 1248
+   }
+  }
+ }
+]

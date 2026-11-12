@@ -1,0 +1,54 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "id": 331,
+   "location": {
+    "CoordinatesLocation": {
+     "type": "PLAYER_LOCATION_COORDINATES",
+     "pos": {
+      "x": 1.75,
+      "y": 2.25,
+      "z": 2.75
+     }
+    }
+   }
+  },
+  "bytes": "960500000000e03f0000104000003040",
+  "bds_json": {
+   "Target Actor ID": {
+    "Actor Unique ID": 331
+   },
+   "Location": {
+    "Packet Type": 0,
+    "Position": {
+     "X": 1.75,
+     "Y": 2.25,
+     "Z": 2.75
+    }
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "id": -986,
+   "location": {
+    "HiddenLocation": {
+     "type": "PLAYER_LOCATION_HIDE"
+    }
+   }
+  },
+  "bytes": "b30f0102",
+  "bds_json": {
+   "Target Actor ID": {
+    "Actor Unique ID": -986
+   },
+   "Location": {
+    "Packet Type": 1
+   }
+  }
+ }
+]
