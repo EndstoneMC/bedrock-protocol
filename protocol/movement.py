@@ -1,6 +1,7 @@
 """Position and movement over the wire: move, teleport, delta moves, prediction
-correction and sync. Not actor or player spawning -- AddPlayerPacket is in player.py
-and AddItemActorPacket in actor.py."""
+correction and sync.
+Not actor spawning -- world/actor/, in actor.py.
+Not player spawning -- world/actor/player/, in player.py."""
 
 from enum import IntEnum
 
