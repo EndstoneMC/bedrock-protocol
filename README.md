@@ -45,7 +45,7 @@ data = bytes(packet)
 assert TextPacket.from_bytes(data) == packet
 ```
 
-`versions` lists the protocol numbers. `packets` maps packet ids to packet classes.
+`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. `packets` maps packet ids to packet classes.
 
 ## C++
 
@@ -88,6 +88,8 @@ std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
 assert(decoded && *decoded == packet);
 ```
 
+`bp::protocol_version(2169)` and `bp::protocol_version("1.26.63")` look up the same table in `<bedrock/protocol/version.hpp>`.
+
 `<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
 
 ## Pinning a Protocol Version
@@ -110,25 +112,31 @@ The rest is unchanged.
 
 ## Supported Protocols
 
-- 729: 1.21.30
-- 748: 1.21.40
-- 766: 1.21.50
-- 776: 1.21.60
-- 786: 1.21.70
-- 800: 1.21.80
-- 818: 1.21.90
-- 819: 1.21.93
-- 827: 1.21.100
-- 844: 1.21.111
-- 859: 1.21.120
-- 898: 1.21.132
-- 924: 1.26.3
-- 944: 1.26.14
-- 975: 1.26.20
-- 1001: 1.26.30
-- 2168: 1.26.40
-- 2193: 1.26.50
-- 2225: 1.26.60
+| Protocol | Releases |
+| --- | --- |
+| 729 | 1.21.30 to 1.21.31 |
+| 748 | 1.21.40 to 1.21.44 |
+| 766 | 1.21.50 to 1.21.51 |
+| 776 | 1.21.60 to 1.21.62 |
+| 786 | 1.21.70 to 1.21.73 |
+| 800 | 1.21.80 to 1.21.84 |
+| 818 | 1.21.90 to 1.21.92 |
+| 819 | 1.21.93 to 1.21.95 |
+| 827 | 1.21.100 to 1.21.102 |
+| 844 | 1.21.111 to 1.21.114 |
+| 859 | 1.21.120 to 1.21.123 |
+| 860 | 1.21.124 |
+| 898 | 1.21.130 to 1.21.132 |
+| 924 | 1.26.0 to 1.26.3 |
+| 944 | 1.26.10 to 1.26.14 |
+| 975 | 1.26.20 to 1.26.23 |
+| 1001 | 1.26.30 to 1.26.36 |
+| 2168 | 1.26.40 to 1.26.44 |
+| 2169 | 1.26.45 |
+| 2193 | 1.26.50 to 1.26.52 |
+| 2225 | 1.26.6x |
+
+A number with no `v<N>` module decodes with the newest one below it: 2169 with `v2168`.
 
 ## Building from Source
 

@@ -34,6 +34,7 @@ paths:
 - Spell an entry as a release (`"1.26.45"`) or a range (`"1.26.40-1.26.44"`); only the newest may be its line's wildcard (`"1.26.6x"`).
 - A hotfix that keeps an open entry's number changes nothing; when a new number ships, close the open entry to the last release that reported it.
 - A mid-line renumber is a closed entry (`2226: "1.26.64"`); a later hotfix that reports its number widens it.
+- List each `releases` entry as a row of README's Supported Protocols table, `| <number> | <first> to <last> |`, an open entry with its wildcard.
 - A preview stays out of `releases`; its entry lands with the renumber to the shipped number.
 
 ## Snapshots

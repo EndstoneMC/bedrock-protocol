@@ -1,3 +1,6 @@
+import pathlib
+import re
+
 import pytest
 
 import bedrock_protocol
@@ -37,3 +40,10 @@ def test_the_table_starts_at_the_oldest_snapshot():
 def test_python_cannot_build_an_entry():
     with pytest.raises(TypeError, match="constructor"):
         bedrock_protocol.ProtocolVersion()
+
+
+def test_the_readme_lists_every_release():
+    readme = pathlib.Path(__file__).parent.parent.joinpath("README.md").read_text()
+    section = readme.split("## Supported Protocols")[1].split("\n## ")[0]
+    rows = {int(number): text for number, text in re.findall(r"^\| (\d+) \| (.+) \|$", section, re.M)}
+    assert rows == {entry.number: entry.name.replace("-", " to ") for entry in bedrock_protocol.releases}
