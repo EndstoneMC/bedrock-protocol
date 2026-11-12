@@ -284,6 +284,20 @@ def test_a_nested_range_outside_its_owner_is_rejected(build_package):
         build_package({"a": HEADER + source})
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        "@type(since=2)\nclass A:\n    @type(since=2)\n    class B:\n        pass\n",
+        "@type(since=2)\nclass A:\n    @type(since=1)\n    class B:\n        pass\n",
+        "@type(until=3)\nclass A:\n    @type(until=3)\n    class B:\n        pass\n",
+        "@type(until=3)\nclass A:\n    @type(until=4)\n    class B(IntEnum, uint8):\n        C = 1\n",
+    ],
+)
+def test_a_nested_gate_its_owner_decides_is_rejected(build_package, source):
+    with pytest.raises(CompilerError, match="B: has a gate its enclosing range already decides"):
+        build_package({"a": HEADER + source})
+
+
 def test_nested_redeclarations_must_tile(build_package):
     source = (
         "class A:\n    @type(until=2)\n    class B:\n        pass\n\n    @type(since=3)\n    class B:\n        pass\n"

@@ -475,7 +475,7 @@ class Builder:
             cereal = owner.cereal
         if not own.overlaps(outer):
             raise error(source, node, node.name, "is empty within its owner")
-        range = own.intersect(outer)
+        range = self.narrow(source, node, node.name, own, outer)
         if node.bases and kinds not in ([], [dsl.type]):
             raise error(source, node, node.name, "an enum takes no decorator but type")
         if kinds == [dsl.builtin]:
