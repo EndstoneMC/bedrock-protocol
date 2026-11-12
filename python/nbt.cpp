@@ -90,7 +90,7 @@ void init_nbt(nb::module_ &parent)
                 new (self) ListTag(std::move(out));
             },
             nb::arg("tags") = std::vector<Tag>{}, nb::arg("type") = 0)
-        .def_prop_ro("type", [](const ListTag &self) { return self.type(); })
+        .def_prop_ro("type", &ListTag::type)
         .def("__len__", &ListTag::size)
         .def("__getitem__",
              [](const ListTag &self, std::ptrdiff_t i) -> Tag {

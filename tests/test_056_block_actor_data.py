@@ -145,9 +145,10 @@ def test_a_typed_empty_list_differs_from_an_untyped_one():
     assert nbt.ListTag(type=10) != nbt.ListTag()
 
 
-def test_a_list_rejects_a_type_that_is_not_a_tag_type():
-    with pytest.raises(ValueError, match=r"^type: 12 is not a tag type$"):
-        nbt.ListTag(type=12)
+@pytest.mark.parametrize("type", [12, -1], ids=["above", "below"])
+def test_a_list_rejects_a_type_that_is_not_a_tag_type(type):
+    with pytest.raises(ValueError, match=rf"^type: {type} is not a tag type$"):
+        nbt.ListTag(type=type)
 
 
 def test_a_list_type_is_an_nbt_type_equal_to_its_int():
@@ -182,8 +183,7 @@ def test_an_empty_list_defaults_to_the_end_type():
         ("INT_ARRAY", 11),
     ],
 )
-def test_an_nbt_type_member_has_its_name_and_value(name, value):
-    assert nbt.Type[name] == value
+def test_an_nbt_type_value_has_its_member_name(name, value):
     assert nbt.Type(value).name == name
 
 
