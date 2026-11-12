@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "update": {
     "data_store_name": "s1",
@@ -17,8 +15,6 @@
   "bytes": "02733102733202733300000000000000024057030000da030000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "update": {
     "data_store_name": "s7",
@@ -34,8 +30,6 @@
   "bytes": "027337027338027339010169060000ec060000"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "update": {
     "data_store_name": "s13",

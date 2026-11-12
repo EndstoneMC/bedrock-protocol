@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "target_player_id": 331,
    "player_permissions": "OPERATOR",

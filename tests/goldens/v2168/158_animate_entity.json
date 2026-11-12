@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "animation": "s1",
    "next_state": "s2",

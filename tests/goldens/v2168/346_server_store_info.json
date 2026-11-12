@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "client_store_entry_point_configuration": {
     "store_id": "s1",
@@ -11,8 +9,6 @@
   "bytes": "01027331027332"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "client_store_entry_point_configuration": null
   },

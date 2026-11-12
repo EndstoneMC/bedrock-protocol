@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "rule_data": {
     "rules": [
@@ -16,8 +14,6 @@
   "bytes": "010273310100"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "rule_data": {
     "rules": [
@@ -34,8 +30,6 @@
   "bytes": "01027333010100"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "rule_data": {
     "rules": [
@@ -52,8 +46,6 @@
   "bytes": "010273360002e0040000"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "rule_data": {
     "rules": [

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "name": "s1",
    "pos": {
@@ -19,8 +17,6 @@
   "bytes": "0273319c07a109a80b0000304000005040ba1101e004000000000000"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "name": "s9",
    "pos": {

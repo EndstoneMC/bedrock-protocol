@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "enum_values": [
     "s1"

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "name": "s1",
    "stop_all": true,

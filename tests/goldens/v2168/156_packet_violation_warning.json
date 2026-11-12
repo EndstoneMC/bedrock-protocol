@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "violation_type": "PACKET_MALFORMED",
    "violation_severity": "FINAL_WARNING",

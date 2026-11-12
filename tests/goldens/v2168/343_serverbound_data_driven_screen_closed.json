@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "form_id": 331,
    "close_reason": "CLIENT_CANCELED"

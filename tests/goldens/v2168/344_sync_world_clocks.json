@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "data": {
     "SyncStateData": {
@@ -18,8 +16,6 @@
   "bytes": "0001cb029c0700"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "data": {
     "InitializeRegistryData": {
@@ -45,8 +41,6 @@
   "bytes": "0101d405027335b30f0001e009027339cc170169060000"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "data": {
     "AddTimeMarkerData": {
@@ -65,8 +59,6 @@
   "bytes": "02ec0d01ef0e03733134e92100"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "data": {
     "RemoveTimeMarkerData": {

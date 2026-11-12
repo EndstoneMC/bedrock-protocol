@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "display_slot_name": "s1",
    "objective_name": "s2",

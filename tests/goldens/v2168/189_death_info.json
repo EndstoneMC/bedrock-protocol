@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "death_cause_attack_name": "s1",
    "death_cause_message_list": [

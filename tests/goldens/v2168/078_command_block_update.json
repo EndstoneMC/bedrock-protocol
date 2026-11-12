@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "target": {
     "EntityCommandTarget": {
@@ -19,8 +17,6 @@
   "bytes": "00cb02027332027333027334027335015d04000001"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "target": {
     "BlockCommandData": {

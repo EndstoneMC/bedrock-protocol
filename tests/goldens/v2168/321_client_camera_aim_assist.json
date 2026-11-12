@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "camera_preset_id": "s1",
    "action": "SET_FROM_CAMERA_PRESET",

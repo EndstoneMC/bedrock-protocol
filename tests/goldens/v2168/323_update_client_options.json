@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "update": {
     "graphics_mode": "FANCY",
@@ -11,8 +9,6 @@
   "bytes": "01010101"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "update": {
     "graphics_mode": null,

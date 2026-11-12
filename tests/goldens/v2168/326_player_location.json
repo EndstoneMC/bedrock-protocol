@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "id": 331,
    "location": {
@@ -18,8 +16,6 @@
   "bytes": "960500000000e03f0000104000003040"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "id": -986,
    "location": {

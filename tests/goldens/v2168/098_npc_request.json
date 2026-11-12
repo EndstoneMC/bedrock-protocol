@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "id": 331,
    "type": "EXECUTE_CLOSING_COMMANDS",

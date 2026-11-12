@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "packet_type": "INITIALLY_UNLOCKED_RECIPES",
    "unlocked_recipes": [

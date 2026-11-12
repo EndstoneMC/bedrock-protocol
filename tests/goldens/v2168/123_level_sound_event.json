@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "sound_event": "s1",
    "pos": {
@@ -23,8 +21,6 @@
   "bytes": "0273310000a03f0000e03f00001040ae0d02733600019dfaffffffffffff010000a8400000b8400000c840"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "sound_event": "s13",
    "pos": {

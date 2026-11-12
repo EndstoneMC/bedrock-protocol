@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "player_id": 331,
    "pos": {
@@ -26,8 +24,6 @@
   "bytes": "cb020000a03f0000e03f000010400000304000005040000070400000e60b016906000014f9ffffef0e"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "player_id": 2034,
    "pos": {

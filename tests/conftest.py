@@ -31,7 +31,7 @@ def pytest_generate_tests(metafunc):
         for path, cases in CASES.items():
             packets = importlib.import_module(f"bedrock_protocol.{path.parent.name}").packets
             params.extend(
-                pytest.param(packets[int(path.stem[:3])], case, id=f"{path.parent.name}/{path.stem}/{case['id']}")
-                for case in cases
+                pytest.param(packets[int(path.stem[:3])], case, id=f"{path.parent.name}/{path.stem}/{index}")
+                for index, case in enumerate(cases)
             )
         metafunc.parametrize("cls, case", params)

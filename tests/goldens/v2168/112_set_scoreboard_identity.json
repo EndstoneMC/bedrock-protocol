@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "type": "REMOVE",
    "identity_info": [
@@ -16,8 +14,6 @@
   "bytes": "01019c0701a109"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "type": "UPDATE",
    "identity_info": [

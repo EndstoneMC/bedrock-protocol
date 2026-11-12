@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "control_scheme": "CAMERA_RELATIVE"
   },

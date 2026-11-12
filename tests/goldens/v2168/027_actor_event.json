@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "runtime_id": 331,
    "event_id": "HURT",
@@ -15,8 +13,6 @@
   "bytes": "cb0202a10901000010400000304000005040"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "runtime_id": 1117,
    "event_id": "SHAKE_WETNESS",

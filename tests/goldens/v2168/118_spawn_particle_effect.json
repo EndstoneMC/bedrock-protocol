@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "vanilla_dimension_id": 57,
    "actor_id": -1379,
@@ -16,8 +14,6 @@
   "bytes": "39c5150000a8400000b8400000c8400373313300"
  },
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "vanilla_dimension_id": 8,
    "actor_id": 462,
@@ -32,8 +28,6 @@
   "bytes": "089c070000e03f000010400000304002733601035b5d0a"
  },
  {
-  "id": "v2",
-  "writer": "manual",
   "value": {
    "vanilla_dimension_id": 50,
    "actor_id": 1248,

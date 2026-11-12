@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "responses": [
     {
@@ -16,8 +14,6 @@
   "bytes": "010cde1d0100"
  },
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "responses": [
     {
@@ -54,8 +50,6 @@
   "bytes": "01009c070101010301d402000001242b320101c0130273390103733130d219"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "responses": [
     {
@@ -70,8 +64,6 @@
   "bytes": "0101de1d0100"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "responses": [
     {
@@ -108,8 +100,6 @@
   "bytes": "010009010101020151020000011d242b0101ba1102733801027339cc17"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "responses": [
     {

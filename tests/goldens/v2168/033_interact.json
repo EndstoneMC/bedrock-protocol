@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "action": "STOP_RIDING",
    "target_id": 462,
@@ -14,8 +12,6 @@
   "bytes": "03ce03010000e03f0000104000003040"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "action": "STOP_RIDING",
    "target_id": 1117,

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "start_video_capture": {
     "StopVideoCapture": {}
@@ -13,8 +11,6 @@
   "bytes": "0101"
  },
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "start_video_capture": {
     "StartVideoCapture": {

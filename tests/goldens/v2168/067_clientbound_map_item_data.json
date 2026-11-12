@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "map_id": 3475,
    "dimension": 83,
@@ -24,8 +22,6 @@
   "bytes": "a6365300b83cbe3ec340000000000000000000"
  },
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "map_id": 331,
    "dimension": 15,
@@ -67,8 +63,6 @@
   "bytes": "96050f00a80bae0db30f0101ba11013901010000000001cc170001010bab5c6303733135f808000001f62501fb2701822a01882c0101870b0000"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "map_id": 3082,
    "dimension": 62,
@@ -91,8 +85,6 @@
   "bytes": "94303e01a636ac38b13a000000000000000000"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "map_id": 3868,
    "dimension": 4,

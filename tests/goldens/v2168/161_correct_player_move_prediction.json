@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "prediction_type": "VEHICLE",
    "pos": {
@@ -25,8 +23,6 @@
   "bytes": "010000a03f0000e03f000010400000304000005040000070400000884000009840010000a84000ec0d"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "prediction_type": "VEHICLE",
    "pos": {

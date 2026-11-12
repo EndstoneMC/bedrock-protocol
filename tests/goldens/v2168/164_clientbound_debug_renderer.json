@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "type": "CLEAR_DEBUG_MARKERS",
    "debug_marker_data": {
@@ -18,8 +16,6 @@
   "bytes": "11636c65617264656275676d61726b657273010273320000e03f000010400000304026fcffff5d04000000000000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "type": "ADD_DEBUG_MARKER_CUBE",
    "debug_marker_data": null

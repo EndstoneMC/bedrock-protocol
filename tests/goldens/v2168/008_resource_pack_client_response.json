@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "response": {
     "Cancel": {}
@@ -10,8 +8,6 @@
   "bytes": "000663616e63656c"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "response": {
     "Downloading": {
@@ -24,8 +20,6 @@
   "bytes": "010b646f776e6c6f6164696e6701027331"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "response": {
     "DownloadingFinished": {}
@@ -34,8 +28,6 @@
   "bytes": "0213646f776e6c6f6164696e6766696e6973686564"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "response": {
     "ResourcePackStackFinished": {}

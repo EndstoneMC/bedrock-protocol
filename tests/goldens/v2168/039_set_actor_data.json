@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "id": 331,
    "packed_items": {
@@ -35,8 +33,6 @@
   "bytes": "cb0201ce030000ea01d405ae0d01da0700007040e009"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "id": 1379,
    "packed_items": {
@@ -70,8 +66,6 @@
   "bytes": "e30a01e60b0101690601ec0dde1d01f20f0000f840f811"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "id": 2427,
    "packed_items": {
@@ -105,8 +99,6 @@
   "bytes": "fb1201fe130202822a0184168d2e018a1800003c41901a"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "id": 3475,
    "packed_items": {
@@ -140,8 +132,6 @@
   "bytes": "931b01961c030300005c41019c1ebe3e01a22000007c41a822"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "id": 4523,
    "packed_items": {
@@ -175,8 +165,6 @@
   "bytes": "ab2301ae2404040373333501b426ee4e01ba2800009e41c02a"
  },
  {
-  "id": "v5",
-  "writer": "cereal",
   "value": {
    "id": 5571,
    "packed_items": {
@@ -266,8 +254,6 @@
   "bytes": "c32b01c62c05050a0001016207070562797465730601fe0306016400000000000004400501660000c03f030169e0c5080b04696e74730608090c04016c80c8afa02509046c697374030402040a066e657374656408016b0176000201732c01080373747204746578740001c92d985d01cf2f0000ba41d531"
  },
  {
-  "id": "v6",
-  "writer": "cereal",
   "value": {
    "id": 6488,
    "packed_items": {
@@ -305,8 +291,6 @@
   "bytes": "d83201db330606bc69c16bc86d01e737d37101ed390000e241f33b"
  },
  {
-  "id": "v7",
-  "writer": "cereal",
   "value": {
    "id": 7798,
    "packed_items": {
@@ -340,8 +324,6 @@
   "bytes": "f63c01f93d0707f77d01ff3f848201018542000001428b44"
  },
  {
-  "id": "v8",
-  "writer": "cereal",
   "value": {
    "id": 8846,
    "packed_items": {

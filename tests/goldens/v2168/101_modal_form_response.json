@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "form_id": 724,
    "json_response": null,
@@ -10,8 +8,6 @@
   "bytes": "d4050000"
  },
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "form_id": 331,
    "json_response": "null\n",
@@ -20,8 +16,6 @@
   "bytes": "cb0201056e756c6c0a0100"
  },
  {
-  "id": "v2",
-  "writer": "manual",
   "value": {
    "form_id": 593,
    "json_response": null,

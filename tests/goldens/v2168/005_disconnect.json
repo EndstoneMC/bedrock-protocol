@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "reason": "CANT_CONNECT_NO_INTERNET",
    "messages": {
@@ -14,8 +12,6 @@
   "bytes": "0200027332027333"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "reason": "THIRD_PARTY_BLOCKED",
    "messages": null

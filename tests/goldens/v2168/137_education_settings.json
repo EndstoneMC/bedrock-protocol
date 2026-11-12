@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "s1",
@@ -25,8 +23,6 @@
   "bytes": "027331027332000102733502733601010001027338000102733903733130"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "s11",
@@ -45,8 +41,6 @@
   "bytes": "03733131037331320001037331350373313600000000"
  },
  {
-  "id": "v2",
-  "writer": "manual",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "s17",

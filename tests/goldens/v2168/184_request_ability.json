@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "ability": "BUILD",
    "value_type": "FLOAT",

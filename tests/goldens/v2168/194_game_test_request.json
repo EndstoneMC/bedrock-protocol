@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "max_tests_per_batch": 331,
    "repeat_count": 462,

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "inventory_options": {
     "left_inventory_tab": "RECIPE_CONSTRUCTION",

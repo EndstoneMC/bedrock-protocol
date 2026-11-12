@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "action": "SWING",
    "runtime_id": 462,
@@ -11,8 +9,6 @@
   "bytes": "01ce030000e03f010661747461636b"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "action": "NO_ACTION",
    "runtime_id": 986,

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "npc_id": 331,
    "npc_dialogue_action_type": "OPEN",

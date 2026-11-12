@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "party_info": {
     "party_id": "s1",
@@ -11,8 +9,6 @@
   "bytes": "0102733101"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "party_info": null
   },

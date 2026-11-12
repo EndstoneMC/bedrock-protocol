@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "presence_configuration": {
     "rich_presence_id": "s1"
@@ -10,16 +8,12 @@
   "bytes": "0101027331"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "presence_configuration": null
   },
   "bytes": "00"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "presence_configuration": {
     "rich_presence_id": null

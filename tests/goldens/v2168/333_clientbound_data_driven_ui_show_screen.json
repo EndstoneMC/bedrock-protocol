@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "screen_id": "s1",
    "form_id": 462,
@@ -10,8 +8,6 @@
   "bytes": "027331ce0100000151020000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "screen_id": "s4",
    "form_id": 855,

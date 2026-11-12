@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "manual",
   "value": {
    "removed_containers": [
     {
@@ -13,8 +11,6 @@
   "bytes": "010101ce010000"
  },
  {
-  "id": "v1",
-  "writer": "manual",
   "value": {
    "removed_containers": [
     {

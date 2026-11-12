@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "id": 331,
    "property_index": 462,
@@ -12,8 +10,6 @@
   "bytes": "9605ce03000e636c6561726f7665727269646573"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "id": -593,
    "property_index": 724,
@@ -24,8 +20,6 @@
   "bytes": "a109d405010e72656d6f76656f76657272696465"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "id": 855,
    "property_index": 986,
@@ -38,8 +32,6 @@
   "bytes": "ae0dda07020e736574696e746f766572726964655d040000"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "id": 1248,
    "property_index": 1379,

@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "offer_id": "00000000-0000-0000-0000-000000000001",
    "redirect_type": "THIRD_PARTY_SERVER_PAGE"

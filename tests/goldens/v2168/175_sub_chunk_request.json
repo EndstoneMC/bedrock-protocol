@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "dimension_type": 331,
    "sub_chunk_pos_offsets": [

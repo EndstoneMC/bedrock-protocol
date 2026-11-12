@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 331,
    "type": "PORTAL_CREATED",
@@ -15,8 +13,6 @@
   "bytes": "96050400001d"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 855,
    "type": "PLAYER_DIED",
@@ -34,8 +30,6 @@
   "bytes": "ae0d0c0001c0130acc17d21955"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 1903,
    "type": "PET_DIED_OBSOLETE",
@@ -49,8 +43,6 @@
   "bytes": "de1d1c0002f023"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 2427,
    "type": "ACTOR_DEFINITION",
@@ -65,8 +57,6 @@
   "bytes": "f625240003882c8d2e"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 3082,
    "type": "TARGET_BLOCK_HIT",
@@ -85,8 +75,6 @@
   "bytes": "94302e0104a636ac38fc04b83cbe3e03733330"
  },
  {
-  "id": "v5",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 4261,
    "type": "ACHIEVEMENT",
@@ -102,8 +90,6 @@
   "bytes": "ca42000005ae24b112ccec"
  },
  {
-  "id": "v6",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 5047,
    "type": "PLAYER_DIED",
@@ -120,8 +106,6 @@
   "bytes": "ee4e0c0006805586578b5900"
  },
  {
-  "id": "v7",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 5964,
    "type": "MOB_BORN",
@@ -137,8 +121,6 @@
   "bytes": "985d1a0107aa63af65b667"
  },
  {
-  "id": "v8",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 6750,
    "type": "RAID_UPDATE",
@@ -155,8 +137,6 @@
   "bytes": "bc69260108ce6fd3710373353503733536"
  },
  {
-  "id": "v9",
-  "writer": "cereal",
   "value": {
    "player_unique_id": -7667,
    "type": "CODE_BUILDER_RUNTIME_ACTION",
@@ -172,8 +152,6 @@
   "bytes": "e577340009f77dfe7f23"
  },
  {
-  "id": "v10",
-  "writer": "cereal",
   "value": {
    "player_unique_id": -8453,
    "type": "ACHIEVEMENT",
@@ -188,8 +166,6 @@
   "bytes": "89840100000a0e1123"
  },
  {
-  "id": "v11",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 9108,
    "type": "CAULDRON_USED",
@@ -204,8 +180,6 @@
   "bytes": "a88e010a010b1360da"
  },
  {
-  "id": "v12",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 9763,
    "type": "PATTERN_REMOVED_OBSOLETE",
@@ -219,8 +193,6 @@
   "bytes": "c6980114000cac27"
  },
  {
-  "id": "v13",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 10287,
    "type": "PET_DIED_OBSOLETE",
@@ -234,8 +206,6 @@
   "bytes": "dea0011c000d03733830"
  },
  {
-  "id": "v14",
-  "writer": "cereal",
   "value": {
    "player_unique_id": -10811,
    "type": "ACTOR_DEFINITION",
@@ -251,8 +221,6 @@
   "bytes": "f5a80124000e87af018eb10101"
  },
  {
-  "id": "v15",
-  "writer": "cereal",
   "value": {
    "player_unique_id": -11597,
    "type": "PIGLIN_BARTER",
@@ -266,8 +234,6 @@
   "bytes": "99b50130000fabbb01"
  },
  {
-  "id": "v16",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 12121,
    "type": "STRIDER_RIDDEN_IN_LAVA_IN_OVERWORLD",
@@ -282,8 +248,6 @@
   "bytes": "b2bd01380010c4c30100"
  },
  {
-  "id": "v17",
-  "writer": "cereal",
   "value": {
    "player_unique_id": -12776,
    "type": "INTERACTION",
@@ -297,8 +261,6 @@
   "bytes": "cfc701020111e1cd01"
  },
  {
-  "id": "v18",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 13300,
    "type": "CAULDRON_USED",
@@ -312,8 +274,6 @@
   "bytes": "e8cf010a01120473313033"
  },
  {
-  "id": "v19",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 13824,
    "type": "AGENT_CREATED",
@@ -328,8 +288,6 @@
   "bytes": "80d801120113047331303797e001"
  },
  {
-  "id": "v20",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 14479,
    "type": "PET_DIED_OBSOLETE",
@@ -346,8 +304,6 @@
   "bytes": "9ee2011c0014183a9b3a0000e2c4ffffa13b0000"
  },
  {
-  "id": "v21",
-  "writer": "cereal",
   "value": {
    "player_unique_id": 15396,
    "type": "PLAYER_MOVEMENT_CORRECTED_OBSOLETE",

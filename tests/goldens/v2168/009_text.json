@@ -1,7 +1,5 @@
 [
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "localize": false,
    "body": {
@@ -18,8 +16,6 @@
   "bytes": "00010802733903733130037331310373313200"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "localize": false,
    "body": {

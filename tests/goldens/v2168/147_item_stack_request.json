@@ -1,7 +1,5 @@
 [
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -34,8 +32,6 @@
   "bytes": "01d546010303272301341300003c3a14000000010373343004000000"
  },
  {
-  "id": "v6",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -59,8 +55,6 @@
   "bytes": "01e57701060607010373353905000000"
  },
  {
-  "id": "v9",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -86,8 +80,6 @@
   "bytes": "01ad900101090bb49201ba940160daffff010373373301000000"
  },
  {
-  "id": "v10",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -114,8 +106,6 @@
   "bytes": "01d19c01010a0cac4f28010373373806000000"
  },
  {
-  "id": "v18",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -153,8 +143,6 @@
   "bytes": "01a19203010b0d94ca01500101010473313938ba9a03206701047332303103000000"
  },
  {
-  "id": "v20",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -192,8 +180,6 @@
   "bytes": "0191b301010b0dcc5a1401020204733331380e00582f0104733332310f000000"
  },
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -226,8 +212,6 @@
   "bytes": "01d546010303272301341300003c3a14000000010373343006000000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -251,8 +235,6 @@
   "bytes": "01e57701060607010373353908000000"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -278,8 +260,6 @@
   "bytes": "01ad900101090bb49201ba940160daffff010373373305000000"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -306,8 +286,6 @@
   "bytes": "01d19c01010a0cac4f2801037337380a000000"
  },
  {
-  "id": "v5",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -344,8 +322,6 @@
   "bytes": "01bd9c03010b0da2cf011201030304733433322b6901047334333409000000"
  },
  {
-  "id": "v7",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -385,8 +361,6 @@
   "bytes": "0109010000020101ce01000016d402000005002b5d0400000102733808000000"
  },
  {
-  "id": "v8",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -426,8 +400,6 @@
   "bytes": "0109010101020a0169060000556f0700000e0006f8080000010373313700000000"
  },
  {
-  "id": "v11",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -466,8 +438,6 @@
   "bytes": "01090102021301040b0000300a0c0000170045930d0000010373323609000000"
  },
  {
-  "id": "v12",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -500,8 +470,6 @@
   "bytes": "0109010303021c019f0f00000ba5100000010103733333ffffffff"
  },
  {
-  "id": "v13",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -533,8 +501,6 @@
   "bytes": "010901040402230035b7130000010373333804000000"
  },
  {
-  "id": "v14",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -566,8 +532,6 @@
   "bytes": "0109010505022801c31500005fc916000001037334340a000000"
  },
  {
-  "id": "v15",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -591,8 +555,6 @@
   "bytes": "01090106061701037334370d000000"
  },
  {
-  "id": "v16",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -614,8 +576,6 @@
   "bytes": "010901070901037334390f000000"
  },
  {
-  "id": "v17",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -640,8 +600,6 @@
   "bytes": "010901080a0214010373353100000000"
  },
  {
-  "id": "v19",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -667,8 +625,6 @@
   "bytes": "010901090bce6fd371ed1c0000010373353605000000"
  },
  {
-  "id": "v21",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -695,8 +651,6 @@
   "bytes": "0109010a0cf63c0e010373363009000000"
  },
  {
-  "id": "v22",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -731,8 +685,6 @@
   "bytes": "0109010b0d82412a010000882101037336350e000000"
  },
  {
-  "id": "v23",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -757,8 +709,6 @@
   "bytes": "0109010c0e91464d010373363901000000"
  },
  {
-  "id": "v24",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -785,8 +735,6 @@
   "bytes": "0109010d0f9d4a60daffff010373373305000000"
  },
  {
-  "id": "v25",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -812,8 +760,6 @@
   "bytes": "0109010e10d7d8ffff210a010373373709000000"
  },
  {
-  "id": "v26",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -838,8 +784,6 @@
   "bytes": "0109010f11037337393d01037338310d000000"
  },
  {
-  "id": "v27",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -861,8 +805,6 @@
   "bytes": "010901101201037338330f000000"
  },
  {
-  "id": "v28",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -900,8 +842,6 @@
   "bytes": "0109010b0d8a9b013a01010104733135320e134f01047331353401000000"
  },
  {
-  "id": "v29",
-  "writer": "cereal",
   "value": {
    "requests": [
     {
@@ -939,8 +879,6 @@
   "bytes": "0109010b0deb0d5f01020204733234330300f70801047332343608000000"
  },
  {
-  "id": "v30",
-  "writer": "cereal",
   "value": {
    "requests": [
     {

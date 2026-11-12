@@ -1,15 +1,11 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "form_id": 331
   },
   "bytes": "014b010000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "form_id": null
   },

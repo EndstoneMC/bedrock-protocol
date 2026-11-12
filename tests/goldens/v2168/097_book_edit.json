@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "book_slot": 331,
    "operation": {
@@ -15,8 +13,6 @@
   "bytes": "9605009c07027333027334"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "book_slot": 855,
    "operation": {
@@ -30,8 +26,6 @@
   "bytes": "ae0d01b30f027337027338"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "book_slot": -1379,
    "operation": {
@@ -43,8 +37,6 @@
   "bytes": "c51502cc17"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "book_slot": 1641,
    "operation": {
@@ -57,8 +49,6 @@
   "bytes": "d21903d71bde1d"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "book_slot": 2034,
    "operation": {

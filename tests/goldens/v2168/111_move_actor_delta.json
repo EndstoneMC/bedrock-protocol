@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "move_data": {
     "runtime_id": 331,
@@ -20,8 +18,6 @@
   "bytes": "cb02010000a03f010000e03f0100001040012401d5013201000100"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "move_data": {
     "runtime_id": 1772,

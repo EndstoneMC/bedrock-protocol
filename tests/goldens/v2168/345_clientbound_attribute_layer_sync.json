@@ -1,7 +1,5 @@
 [
  {
-  "id": "v0",
-  "writer": "cereal",
   "value": {
    "data": {
     "UpdateAttributeLayersData": {
@@ -52,8 +50,6 @@
   "bytes": "000102733101027332a109d40200000000304001000102733801000003616e640000026f7201000003786f7275080000f808000007696e5f6578706ffe09000000"
  },
  {
-  "id": "v1",
-  "writer": "cereal",
   "value": {
    "data": {
     "UpdateAttributeLayerSettingsData": {
@@ -71,8 +67,6 @@
   "bytes": "01037332308d2e0a0c000000003c410100"
  },
  {
-  "id": "v2",
-  "writer": "cereal",
   "value": {
    "data": {
     "UpdateEnvironmentAttributesData": {
@@ -104,8 +98,6 @@
   "bytes": "0203733236b13a0103733238000100006c41036164640100007c41010000824100ab1100002e120000086f75745f717561643413000000"
  },
  {
-  "id": "v3",
-  "writer": "cereal",
   "value": {
    "data": {
     "RemoveEnvironmentAttributesData": {
@@ -120,8 +112,6 @@
   "bytes": "0303733338f9520103733430"
  },
  {
-  "id": "v4",
-  "writer": "cereal",
   "value": {
    "data": {
     "UpdateAttributeLayersData": {
@@ -181,8 +171,6 @@
   "bytes": "000103733431008b59c91600000000b2410001010373343701010000c241086f7665727269646500000210000000200000004000000080000000086f7665727269646501010000ce41087375627472616374010000d641010000da41ed1c0000701d00000d696e5f6f75745f626f756e6365761e000000"
  },
  {
-  "id": "v5",
-  "writer": "cereal",
   "value": {
    "data": {
     "UpdateAttributeLayersData": {
