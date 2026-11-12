@@ -93,13 +93,13 @@ class ContainerEnumName(IntEnum, uint8):
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
     CRAFTER_LEVEL_ENTITY_CONTAINER = 62
     DYNAMIC_CONTAINER = 63
-    RESERVED_CONTAINER_A = value(67, since=2225)
-    RESERVED_CONTAINER_B = value(68, since=2225)
-    RESERVED_CONTAINER_C = value(69, since=2225)
-    RESERVED_CONTAINER_D = value(70, since=2225)
     RECIPE_FOOD_CONTAINER = value(64, since=924)
     RECIPE_BLOCKS_CONTAINER = value(65, since=924)
     RECIPE_FURNACE_ITEMS_CONTAINER = value(66, since=924)
+    DISC_PRESS_BLOCK_CONTAINER = value(67, since=2225)
+    DISC_PRESS_DYE_CONTAINER = value(68, since=2225)
+    DISC_PRESS_DISC_CONTAINER = value(69, since=2225)
+    DISC_PRESS_RESULT_PREVIEW_CONTAINER = value(70, since=2225)
 
 
 class FullContainerName:
@@ -184,7 +184,7 @@ class ContainerType(IntEnum, int8):
     DECORATED_POT = 35
     CRAFTER = 36
     DATA_DRIVEN_CONTAINER = value(37, since=2193)
-    RESERVED_CONTAINER_TYPE = value(38, since=2225)
+    DISC_PRESS = value(38, since=2225)
 
 
 @packet(id=47)

@@ -38,7 +38,7 @@ class ItemStackRequestActionType(IntEnum, uint8):
     CRAFT_RECIPE_OPTIONAL = 15
     CRAFT_REPAIR_AND_DISENCHANT = 16
     CRAFT_LOOM = 17
-    CRAFT_RESERVED_ACTION = value(18, since=2225)
+    CRAFT_DISC_PRESS = value(18, since=2225)
     CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = auto()
     CRAFT_RESULTS_DEPRECATEDASKTYLAING = auto()
     TEST = value(20, since=776, until=786)
@@ -333,7 +333,7 @@ class ItemStackRequestCereal:
 
     @type(since=2225)
     class CraftDiscPressActionData:
-        action_type: Literal[ItemStackRequestActionType.CRAFT_RESERVED_ACTION]
+        action_type: Literal[ItemStackRequestActionType.CRAFT_DISC_PRESS]
         reserved_id: str
         num_crafts: uint8
 
