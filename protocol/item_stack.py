@@ -115,7 +115,7 @@ class ItemStackNetResult(IntEnum, uint8):
     SCREEN_STACK_ERROR = 67
 
 
-class TextProcessingEventOrigin(IntEnum):
+class TextProcessingEventOrigin(IntEnum, int32):
     UNKNOWN = -1
     SERVER_CHAT_PUBLIC = 0
     SERVER_CHAT_WHISPER = 1

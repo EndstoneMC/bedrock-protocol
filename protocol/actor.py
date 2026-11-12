@@ -33,7 +33,7 @@ type ActorRuntimeID = uvarint64
 type PlayerInputTick = uvarint64
 
 
-class ActorFlags(IntEnum):
+class ActorFlags(IntEnum, int32):
     ONFIRE = 0
     SNEAKING = 1
     RIDING = 2
@@ -465,7 +465,7 @@ class SetActorDataPacket:
 
 
 @type(until=2168)
-class ActorType(IntEnum):
+class ActorType(IntEnum, int32):
     UNDEFINED = 1
     TYPE_MASK = 255
     MOB = 256
@@ -633,7 +633,7 @@ class ActorType(IntEnum):
 
 
 @type(since=2168)
-class ActorType(IntEnum):
+class ActorType(IntEnum, int32):
     UNDEFINED = 1
     TYPE_MASK = 255
     MOB = 256
@@ -1069,7 +1069,7 @@ class NpcRequestPacket:
 
 @packet(id=169)
 class NpcDialoguePacket:
-    class NpcDialogueActionType(IntEnum):
+    class NpcDialogueActionType(IntEnum, int32):
         OPEN = 0
         CLOSE = 1
 

@@ -251,7 +251,7 @@ class ContainerRegistryCleanupPacket:
     removed_containers: list[FullContainerName]
 
 
-class InventoryLayout(IntEnum):
+class InventoryLayout(IntEnum, int32):
     NONE = 0
     INVENTORY_ONLY = 1
     DEFAULT = 2
@@ -259,7 +259,7 @@ class InventoryLayout(IntEnum):
     COUNT = auto()
 
 
-class InventoryLeftTabIndex(IntEnum):
+class InventoryLeftTabIndex(IntEnum, int32):
     NONE = 0
     RECIPE_CONSTRUCTION = 1
     RECIPE_EQUIPMENT = 2
@@ -270,7 +270,7 @@ class InventoryLeftTabIndex(IntEnum):
     COUNT = auto()
 
 
-class InventoryRightTabIndex(IntEnum):
+class InventoryRightTabIndex(IntEnum, int32):
     NONE = 0
     FULL_SCREEN = 1
     CRAFTING = 2
@@ -291,7 +291,7 @@ class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
 
 
-class FurnaceLeftTabIndex(IntEnum):
+class FurnaceLeftTabIndex(IntEnum, int32):
     NONE = 0
     RECIPE_FOOD = 1
     RECIPE_ITEMS = 2
@@ -301,7 +301,7 @@ class FurnaceLeftTabIndex(IntEnum):
     COUNT = auto()
 
 
-class FurnaceLayout(IntEnum):
+class FurnaceLayout(IntEnum, int32):
     NONE = 0
     INVENTORY_ONLY = 1
     DEFAULT = 2

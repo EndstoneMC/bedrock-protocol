@@ -184,10 +184,10 @@ def test_endian_is_big_and_on_a_fixed_width_integer_only(build_package, line, me
         build_package({"a": source})
 
 
-def test_enum_without_an_underlying_type_takes_type(build_package):
+def test_enum_field_takes_type_or_derives_its_wire(build_package):
     source = (
         HEADER
-        + "class E(IntEnum):\n    A = 1\n\n"
+        + "class E(IntEnum, int32):\n    A = 1\n\n"
         + "class A:\n    x: E = field(type=uint8)\n    y: E = field(type=str)\n    z: E\n"
     )
     package = build_package({"a": source})

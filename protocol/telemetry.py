@@ -146,7 +146,7 @@ class MinecraftEventing:
 
 @packet(id=65)
 class LegacyTelemetryEventPacket:
-    class Type(IntEnum):
+    class Type(IntEnum, int32):
         ACHIEVEMENT = 0
         INTERACTION = 1
         PORTAL_CREATED = 2

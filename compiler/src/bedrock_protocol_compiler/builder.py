@@ -527,16 +527,13 @@ class Builder:
     def build_enum(self, pending: PendingEnum) -> None:
         source = pending.source
         node = pending.node
-        if len(node.bases) > 2:
-            raise error(source, node, node.name, "takes an enum base and at most an underlying type")
+        if len(node.bases) != 2:
+            raise error(source, node, node.name, "takes an enum base and an underlying type")
         if self.resolve(source, pending.scope, node.bases[0]) is not enum.IntEnum:
             raise error(source, node.bases[0], node.name, "is not IntEnum")
-        underlying = None
-        if len(node.bases) == 2:
-            base = self.type_of(source, pending.scope, node.bases[1])
-            if not (isinstance(base, Primitive) and base.name in ENUM_UNDERLYING):
-                raise error(source, node.bases[1], node.name, "is not an enum underlying type")
-            underlying = base
+        underlying = self.type_of(source, pending.scope, node.bases[1])
+        if not (isinstance(underlying, Primitive) and underlying.name in ENUM_UNDERLYING):
+            raise error(source, node.bases[1], node.name, "is not an enum underlying type")
         members: list[Member] = []
         for statement in without_docstring(node.body):
             if not (

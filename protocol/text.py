@@ -3,7 +3,7 @@
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, packet, uint8, varint32
+from protocol import field, int32, packet, uint8, varint32
 
 package = "bedrock.protocol"
 
@@ -72,7 +72,7 @@ class ToastRequestPacket:
 
 @packet(id=88)
 class SetTitlePacket:
-    class TitleType(IntEnum):
+    class TitleType(IntEnum, int32):
         CLEAR = 0
         RESET = 1
         TITLE = 2

@@ -16,7 +16,7 @@ class Color255RGBA:
     a: int32
 
 
-class BoolAttributeOperation(IntEnum):
+class BoolAttributeOperation(IntEnum, int32):
     OVERRIDE = 0
     ALPHA_BLEND = 1, "ALPHA_BLEND"
     AND = 2
@@ -27,7 +27,7 @@ class BoolAttributeOperation(IntEnum):
     XNOR = 7
 
 
-class FloatAttributeOperation(IntEnum):
+class FloatAttributeOperation(IntEnum, int32):
     OVERRIDE = 0
     ALPHA_BLEND = 1, "ALPHA_BLEND"
     ADD = 2
@@ -37,7 +37,7 @@ class FloatAttributeOperation(IntEnum):
     MAXIMUM = 6
 
 
-class ColorAttributeOperation(IntEnum):
+class ColorAttributeOperation(IntEnum, int32):
     OVERRIDE = 0
     ALPHA_BLEND = 1, "ALPHA_BLEND"
     ADD = 2

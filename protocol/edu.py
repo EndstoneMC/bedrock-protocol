@@ -110,7 +110,7 @@ class AgentAnimationPacket:
     runtime_id: ActorRuntimeID
 
 
-class AgentActionType(IntEnum):
+class AgentActionType(IntEnum, int32):
     ATTACK = 1
     COLLECT = 2
     DESTROY = 3

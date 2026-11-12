@@ -4,7 +4,7 @@ util/HudElementsEnum.h -- forms, data-driven UI, HUD elements and the locator ba
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, packet, type, uint8, uint32, uvarint32, uvarint64
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -16,7 +16,7 @@ class ClientboundDataDrivenUIReloadPacket:
     pass
 
 
-class HudElement(IntEnum):
+class HudElement(IntEnum, int32):
     PAPER_DOLL = 0
     ARMOR = 1
     TOOL_TIPS = 2
@@ -33,7 +33,7 @@ class HudElement(IntEnum):
     COUNT = auto()
 
 
-class HudVisibility(IntEnum):
+class HudVisibility(IntEnum, int32):
     HIDE = 0
     RESET = 1
     COUNT = auto()
@@ -51,7 +51,7 @@ class SetHudPacket:
     hud_visible: HudVisibility
 
 
-class ServerboundLoadingScreenPacketType(IntEnum):
+class ServerboundLoadingScreenPacketType(IntEnum, int32):
     UNKNOWN = 0
     START_LOADING_SCREEN = 1
     END_LOADING_SCREEN = 2

@@ -174,7 +174,7 @@ class CommandOriginData:
     player_id: ActorUniqueID = field(type=int64)
 
 
-class CurrentCmdVersion(IntEnum):
+class CurrentCmdVersion(IntEnum, int32):
     INVALID = -1
     INITIAL = 1
     TP_ROTATION_CLAMPING = 2
@@ -245,7 +245,7 @@ class CommandRequestPacket:
     version: CurrentCmdVersion = field(type=str)
 
 
-class CommandOutputType(IntEnum):
+class CommandOutputType(IntEnum, int32):
     NONE = 0
     LAST_OUTPUT = 1
     SILENT = 2

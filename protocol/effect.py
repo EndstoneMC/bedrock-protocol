@@ -2,13 +2,13 @@
 
 from enum import IntEnum, auto
 
-from protocol import field, packet, uint8, uint64, value, varint32
+from protocol import field, int32, packet, uint8, uint64, value, varint32
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
 
 
-class MovementEffectType(IntEnum):
+class MovementEffectType(IntEnum, int32):
     INVALID = -1
     GLIDE_BOOST = 0
     DOLPHIN_BOOST = value(1, since=776)

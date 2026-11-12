@@ -16,7 +16,7 @@ class HandSlot(IntEnum, uint8):
     COUNT = auto()
 
 
-class ItemVersion(IntEnum):
+class ItemVersion(IntEnum, int32):
     LEGACY = 0
     DATA_DRIVEN = 1
     NONE = value(2, since=776)

@@ -36,7 +36,7 @@ class StructShape:
 @dataclass(eq=False)
 class EnumShape:
     family: Enum
-    underlying: Primitive | None
+    underlying: Primitive
     members: tuple[Member, ...]
     numbers: dict[str, int]
     ranges: list[Range] = field(default_factory=list)

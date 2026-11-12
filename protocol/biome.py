@@ -30,7 +30,7 @@ class BiomeTemperatureCategory(IntEnum, uint8):
     COUNT = auto()
 
 
-class CoordinateEvaluationOrder(IntEnum):
+class CoordinateEvaluationOrder(IntEnum, int32):
     XYZ = value(0, cpp_name="XYZ")
     XZY = value(1, cpp_name="XZY")
     YXZ = value(2, cpp_name="YXZ")
@@ -39,7 +39,7 @@ class CoordinateEvaluationOrder(IntEnum):
     ZYX = value(5, cpp_name="ZYX")
 
 
-class RandomDistributionType(IntEnum):
+class RandomDistributionType(IntEnum, int32):
     SINGLE_VALUED = 0
     UNIFORM = 1
     GAUSSIAN = 2

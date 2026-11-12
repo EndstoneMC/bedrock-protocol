@@ -4,7 +4,7 @@ the packets that play, stop and update sound, and the LevelSoundEvent table."""
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import field, int64, packet, type, uint8, uint32, uint64, value, varint32
+from protocol import field, int32, int64, packet, type, uint8, uint32, uint64, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.network import NetworkBlockPosition
@@ -728,7 +728,7 @@ class SignedAudioContent:
     compact_jwt: str
 
 
-class AudioContentPlaybackType(IntEnum):
+class AudioContentPlaybackType(IntEnum, int32):
     MUSIC = 0
     SOUND = 1
 
@@ -754,7 +754,7 @@ class ServerboundRegisterAudioContentPacket:
 
 
 @type(until=2168)
-class SoundDataEvent(IntEnum):
+class SoundDataEvent(IntEnum, int32):
     STOP = 0
 
 

@@ -18,7 +18,7 @@ from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
 package = "bedrock.protocol"
 
 
-class GameType(IntEnum):
+class GameType(IntEnum, int32):
     UNDEFINED = -1
     SURVIVAL = 0
     CREATIVE = 1
@@ -28,7 +28,7 @@ class GameType(IntEnum):
     WORLD_DEFAULT = 0
 
 
-class Difficulty(IntEnum):
+class Difficulty(IntEnum, int32):
     PEACEFUL = 0
     EASY = 1
     NORMAL = 2
@@ -37,7 +37,7 @@ class Difficulty(IntEnum):
     UNKNOWN = 5
 
 
-class GeneratorType(IntEnum):
+class GeneratorType(IntEnum, int32):
     LEGACY = 0
     OVERWORLD = 1
     FLAT = 2
@@ -57,7 +57,7 @@ class SpawnBiomeType(IntEnum, int16):
     USER_DEFINED = 1
 
 
-class WorldType(IntEnum):
+class WorldType(IntEnum, int32):
     NON_EDITOR = 0
     EDITOR_PROJECT = 1
     EDITOR_TEST_LEVEL = 2
@@ -371,7 +371,7 @@ class SetPlayerGameTypePacket:
 
 @packet(id=75)
 class ShowCreditsPacket:
-    class CreditsState(IntEnum):
+    class CreditsState(IntEnum, int32):
         START = 0
         FINISHED = 1
 
@@ -384,7 +384,7 @@ class SetDefaultGameTypePacket:
     default_game_type: GameType
 
 
-class MultiplayerSettingsPacketType(IntEnum):
+class MultiplayerSettingsPacketType(IntEnum, int32):
     ENABLE_MULTIPLAYER = 0
     DISABLE_MULTIPLAYER = 1
     REFRESH_JOINCODE = 2

@@ -22,7 +22,7 @@ class CreativeItemCategory(IntEnum, uint8):
     NUM_CATEGORIES = auto()
 
 
-class CraftingDataEntryType(IntEnum):
+class CraftingDataEntryType(IntEnum, int32):
     SHAPELESS_RECIPE = 0
     SHAPED_RECIPE = 1
     FURNACE_RECIPE = value(2, until=975)
@@ -85,7 +85,7 @@ class SerializedRecipeIngredient:
 
 @type(until=2168)
 class SerializedRecipeUnlockingRequirement:
-    class UnlockingContext(IntEnum):
+    class UnlockingContext(IntEnum, int32):
         NONE = 0
         ALWAYS_UNLOCKED = 1
         PLAYER_IN_WATER = 2
@@ -97,7 +97,7 @@ class SerializedRecipeUnlockingRequirement:
 
 @type(since=2168)
 class SerializedRecipeUnlockingRequirement:
-    class UnlockingContext(IntEnum):
+    class UnlockingContext(IntEnum, int32):
         NONE = 0
         ALWAYS_UNLOCKED = 1
         PLAYER_IN_WATER = 2

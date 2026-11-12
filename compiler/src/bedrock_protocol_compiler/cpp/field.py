@@ -34,10 +34,6 @@ ENUM_WIRES = {
 }
 
 
-def underlying_of(shape: EnumShape) -> str:
-    return "int32" if shape.underlying is None else shape.underlying.name
-
-
 def primitive_includes(node: Primitive) -> set[str]:
     if node.name == "str":
         return {"<string>"}
@@ -114,7 +110,7 @@ class EnumField(ScalarField):
     def __init__(self, schema: Schema, node: EnumRef, version: int, where: str) -> None:
         shape = schema.shape_at(node.enum, version)
         assert isinstance(shape, EnumShape)
-        stored = underlying_of(shape)
+        stored = shape.underlying.name
         super().__init__(where, names.qualified(schema, shape), stored, node.wire or ENUM_WIRES[stored], node.endian)
         self.node = node
 
@@ -193,7 +189,7 @@ class LiteralField:
             case MemberRef() as member:
                 shape = schema.shape_at(member.enum, version)
                 assert isinstance(shape, EnumShape)
-                self.wire = ENUM_WIRES[underlying_of(shape)]
+                self.wire = ENUM_WIRES[shape.underlying.name]
                 self.constant = names.enumerator(schema, member, version)
                 self.expected = f"static_cast<{names.PRIMITIVES[self.wire]}>({self.constant})"
 

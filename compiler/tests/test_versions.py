@@ -54,7 +54,7 @@ def test_members_are_clipped_to_their_declaration(build_package):
         ("@packet(id=1, since=9)\nclass A:\n    pass\n", "A: since 9 is not a modelled version"),
         ("@type(until=9)\nclass A:\n    pass\n", "A: until 9 is not a modelled version"),
         ("class A:\n    x: uint8 = field(since=9)\n", "x: since 9 is not a modelled version"),
-        ("class E(IntEnum):\n    A = value(1, until=9)\n", "A: until 9 is not a modelled version"),
+        ("class E(IntEnum, uint8):\n    A = value(1, until=9)\n", "A: until 9 is not a modelled version"),
         ("@type(since=3, until=3)\nclass A:\n    pass\n", "A: has an empty version range"),
         ("class A:\n    x: uint8 = field(since=4, until=2)\n", "x: has an empty version range"),
         (
@@ -98,7 +98,7 @@ def test_members_are_clipped_to_their_declaration(build_package):
             "A: a with block holds only fields",
         ),
         (
-            "@type(until=3)\nclass E(IntEnum):\n    A = value(1, until=4)\n",
+            "@type(until=3)\nclass E(IntEnum, uint8):\n    A = value(1, until=4)\n",
             "A: has a gate its enclosing range already decides",
         ),
     ],
@@ -178,7 +178,7 @@ def test_a_packet_and_a_type_do_not_share_a_name(build_package):
 
 
 def test_a_struct_and_an_enum_do_not_share_a_name(build_package):
-    source = "@type(until=3)\nclass A:\n    pass\n\n@type(since=3)\nclass A(IntEnum):\n    B = 1\n"
+    source = "@type(until=3)\nclass A:\n    pass\n\n@type(since=3)\nclass A(IntEnum, uint8):\n    B = 1\n"
 
     with pytest.raises(CompilerError, match="A: is already declared"):
         build_package({"a": HEADER + source})

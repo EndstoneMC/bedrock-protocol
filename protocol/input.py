@@ -3,7 +3,7 @@
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import bitset, field, packet, type, uint32, uvarint32, value, varint32
+from protocol import bitset, field, int32, packet, type, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.item import ItemStackLegacyRequestId
@@ -36,14 +36,14 @@ class ClientPlayMode(IntEnum, uint32):
     NUM_MODES = auto()
 
 
-class NewInteractionModel(IntEnum):
+class NewInteractionModel(IntEnum, int32):
     TOUCH = 0
     CROSSHAIR = 1
     CLASSIC = 2
     COUNT = auto()
 
 
-class PlayerActionType(IntEnum):
+class PlayerActionType(IntEnum, int32):
     UNKNOWN = -1
     START_DESTROY_BLOCK = 0
     ABORT_DESTROY_BLOCK = 1
@@ -232,7 +232,7 @@ class PlayerAuthInputPacket:
 
 @packet(id=144, since=2168)
 class PlayerAuthInputPacket:
-    class InputData(IntEnum):
+    class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2

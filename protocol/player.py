@@ -38,7 +38,7 @@ class RespawnPacket:
     runtime_id: ActorRuntimeID
 
 
-class ActorDamageCause(IntEnum):
+class ActorDamageCause(IntEnum, int32):
     NONE = -1
     OVERRIDE = 0
     CONTACT = 1
@@ -110,7 +110,7 @@ class InteractPacket:
     pos: Vec3 | None
 
 
-class SpawnPositionType(IntEnum):
+class SpawnPositionType(IntEnum, int32):
     PLAYER_RESPAWN = 0
     WORLD_SPAWN = 1
 
@@ -136,7 +136,7 @@ class SetLocalPlayerAsInitializedPacket:
     player_id: ActorRuntimeID
 
 
-class ArmorSlot(IntEnum):
+class ArmorSlot(IntEnum, int32):
     HEAD = 0
     TORSO = 1
     LEGS = 2
@@ -189,7 +189,7 @@ class PlayerListPacketType(IntEnum, uint8):
     REMOVE = 1
 
 
-class BuildPlatform(IntEnum):
+class BuildPlatform(IntEnum, int32):
     UNKNOWN = -1
     GOOGLE = 1
     IOS = value(2, cpp_name="IOS")
@@ -281,7 +281,7 @@ class PlayerUpdateEntityOverridesPacket:
 
 @packet(id=326, since=800, until=2168)
 class PlayerLocationPacket:
-    class Type(IntEnum):
+    class Type(IntEnum, int32):
         PLAYER_LOCATION_COORDINATES = 0
         PLAYER_LOCATION_HIDE = 1
 
@@ -292,7 +292,7 @@ class PlayerLocationPacket:
 
 @packet(id=326, since=2168)
 class PlayerLocationPacket:
-    class Type(IntEnum):
+    class Type(IntEnum, int32):
         PLAYER_LOCATION_COORDINATES = 0
         PLAYER_LOCATION_HIDE = 1
 

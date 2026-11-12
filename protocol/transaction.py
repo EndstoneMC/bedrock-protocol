@@ -5,7 +5,7 @@ Not container state -- world/containers/, in inventory.py."""
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, packet, type, uint8, uint32, uvarint32, value, varint32
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, BlockRuntimeId, Vec3
 from protocol.inventory import ContainerEnumName, ContainerID
@@ -89,7 +89,7 @@ class InventoryMismatchData:
 
 @type(until=944)
 class ItemUseInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         PLACE = 0
         USE = 1
         DESTROY = 2
@@ -123,7 +123,7 @@ class ItemUseInventoryTransaction:
 
 @type(since=944, until=1001)
 class ItemUseInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         PLACE = 0
         USE = 1
         DESTROY = 2
@@ -158,7 +158,7 @@ class ItemUseInventoryTransaction:
 
 @type(since=1001)
 class ItemUseInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         PLACE = 0
         USE = 1
         DESTROY = 2
@@ -241,7 +241,7 @@ class ItemUseInventoryTransaction:
 
 @type(until=1001)
 class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         INTERACT = 0
         ATTACK = 1
         ITEM_INTERACT = 2
@@ -257,7 +257,7 @@ class ItemUseOnActorInventoryTransaction:
 
 @type(since=1001)
 class ItemUseOnActorInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         INTERACT = 0
         ATTACK = 1
         ITEM_INTERACT = 2
@@ -274,7 +274,7 @@ class ItemUseOnActorInventoryTransaction:
 
 @type(until=1001)
 class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         RELEASE = 0
         USE = 1
 
@@ -287,7 +287,7 @@ class ItemReleaseInventoryTransaction:
 
 @type(since=1001)
 class ItemReleaseInventoryTransaction:
-    class ActionType(IntEnum):
+    class ActionType(IntEnum, int32):
         RELEASE = 0
         USE = 1
 

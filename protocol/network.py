@@ -9,7 +9,7 @@ from protocol import field, int32, packet, type, uint8, uint16, uint64, uvarint3
 package = "bedrock.protocol"
 
 
-class MinecraftPacketIds(IntEnum):
+class MinecraftPacketIds(IntEnum, int32):
     LOGIN = 1
     PLAY_STATUS = 2
     SERVER_TO_CLIENT_HANDSHAKE = 3
@@ -265,7 +265,7 @@ class MinecraftPacketIds(IntEnum):
     END_ID = auto()
 
 
-class DisconnectFailReason(IntEnum):
+class DisconnectFailReason(IntEnum, int32):
     UNKNOWN = 0
     CANT_CONNECT_NO_INTERNET = 1
     NO_PERMISSIONS = 2
@@ -420,19 +420,19 @@ class DisconnectFailReason(IntEnum):
     MAX_DISCONNECT_FAIL_REASON = auto()
 
 
-class PacketViolationType(IntEnum):
+class PacketViolationType(IntEnum, int32):
     UNKNOWN = -1
     PACKET_MALFORMED = 0
 
 
-class PacketViolationSeverity(IntEnum):
+class PacketViolationSeverity(IntEnum, int32):
     UNKNOWN = -1
     WARNING = 0
     FINAL_WARNING = 1
     TERMINATING_CONNECTION = 2
 
 
-class PlayStatus(IntEnum):
+class PlayStatus(IntEnum, int32):
     LOGIN_SUCCESS = 0
     LOGIN_FAILED_CLIENT_OLD = 1
     LOGIN_FAILED_SERVER_OLD = 2
@@ -560,7 +560,7 @@ class ClientCacheBlobStatusPacket:
     found_ids: list[uint64]
 
 
-class GamePublishSetting(IntEnum):
+class GamePublishSetting(IntEnum, int32):
     NO_MULTI_PLAY = 0
     INVITE_ONLY = 1
     FRIENDS_ONLY = 2
@@ -568,7 +568,7 @@ class GamePublishSetting(IntEnum):
     PUBLIC = 4
 
 
-class ServerEditorConnectionPolicy(IntEnum):
+class ServerEditorConnectionPolicy(IntEnum, int32):
     MATCH_WORLD_TYPE = 0
     EDITOR_ONLY = 1
     VANILLA_ONLY = 2

@@ -9,7 +9,7 @@ from protocol.actor import ActorRuntimeID, PlayerInputTick
 package = "bedrock.protocol"
 
 
-class AttributeModifierOperation(IntEnum):
+class AttributeModifierOperation(IntEnum, int32):
     OPERATION_ADDITION = 0
     OPERATION_MULTIPLY_BASE = 1
     OPERATION_MULTIPLY_TOTAL = 2
@@ -18,7 +18,7 @@ class AttributeModifierOperation(IntEnum):
     OPERATION_INVALID = 4
 
 
-class AttributeOperands(IntEnum):
+class AttributeOperands(IntEnum, int32):
     OPERAND_MIN = 0
     OPERAND_MAX = 1
     OPERAND_CURRENT = 2

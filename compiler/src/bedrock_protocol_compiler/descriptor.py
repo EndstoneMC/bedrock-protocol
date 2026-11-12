@@ -183,7 +183,7 @@ class Member:
 @dataclass(frozen=True)
 class EnumDeclaration:
     range: Range
-    underlying: Primitive | None
+    underlying: Primitive
     members: tuple[Member, ...]
 
 
