@@ -30,6 +30,11 @@ class ItemData:
     component_data: CompoundTag
 
 
+class ItemComponentEntry:
+    name: str
+    component_data: CompoundTag
+
+
 @packet(id=162, since=776)
 class ItemRegistryPacket:
     items: list[ItemData]
@@ -165,12 +170,6 @@ class BookEditAction(IntEnum, uint8):
     DELETE_PAGE = 2
     SWAP_PAGES = 3
     FINALIZE = 4
-
-
-@type(until=776)
-class ItemComponentEntry:
-    name: str
-    component_data: CompoundTag
 
 
 @packet(id=162, until=776)
