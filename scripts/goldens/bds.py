@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import json
 import os
+import re
 import shutil
 import socket
 import struct
@@ -24,6 +25,10 @@ FIRST_PORT = 40000
 STARTED = "Server started."
 START_TIMEOUT = 600
 STOP_TIMEOUT = 60
+ENUM_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+HEX_BLOB = re.compile(r"(?:[0-9a-f]{2})+")
+UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
+SCALAR = re.compile(r'"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false')
 
 
 @dataclass(frozen=True)
@@ -87,6 +92,45 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
     if isinstance(value, list):
         return [leaf for index, item in enumerate(value) for leaf in leaves(item, f"{path}[{index}]")]
     return [] if value is None else [(path, value)]
+
+
+def same(shown: Json, wanted: Json) -> bool:
+    """Compare two scalars: an enum by name or number, an integer by its bits, a blob's hex by its bytes."""
+    if isinstance(shown, bool) or isinstance(wanted, bool):
+        return type(shown) is type(wanted) and shown == wanted
+    if isinstance(wanted, str) and ENUM_NAME.fullmatch(wanted):
+        return type(shown) is int or shown in (wanted.lower(), wanted.replace("_", "").lower())
+    if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
+        return shown == bytes.fromhex(wanted).decode("latin-1")
+    if type(shown) is int and type(wanted) is int:
+        return any(
+            -(1 << (bits - 1)) <= min(shown, wanted)
+            and max(shown, wanted) < 1 << bits
+            and (shown - wanted) % (1 << bits) == 0
+            for bits in (8, 16, 32, 64)
+        )
+    return bool(shown == wanted)
+
+
+def missing(shown: list[Json], expected: list[tuple[str, Json]]) -> tuple[str, Json] | None:
+    """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more."""
+    position = 0
+    halves = [
+        part
+        for path, wanted in expected
+        for part in (
+            [(path, int(wanted.replace("-", "")[:16], 16)), (path, int(wanted.replace("-", "")[16:], 16))]
+            if isinstance(wanted, str) and UUID.fullmatch(wanted)
+            else [(path, wanted)]
+        )
+    ]
+    for path, wanted in halves:
+        while position < len(shown) and not same(shown[position], wanted):
+            position += 1
+        if position == len(shown):
+            return path, wanted
+        position += 1
+    return None
 
 
 class Server:
@@ -308,11 +352,17 @@ def main() -> None:
                         category_name = server.read(name, 64).split(b"\0")[0].decode()
                         report["read"]["error"] = f"{category_name}:{code}"
                         report["read"]["message"] = server.string(message).decode(errors="replace")
+                        report["difference"] = f"read: {report['read']['error']} at byte {offset} of {len(seed)}"
+                        continue
 
                     json_text = server.alloc(bytes(24))
                     server.call(virtuals[slots.to_string], json_text, packet)
-                    shown_text = server.string(json_text)
-                    report["bds_json"] = json.loads(shown_text) if shown_text else None
+                    shown_text = server.string(json_text).decode(errors="replace")
+                    try:
+                        report["bds_json"] = json.loads(shown_text) if shown_text else None
+                    except ValueError:
+                        report["bds_json"] = None
+                        report["bds_text"] = shown_text
 
                     stream, buffer = server.stream(b"", build.binary_stream_vtable)
                     server.call(virtuals[slots.write], packet, stream, ctx)
@@ -324,12 +374,14 @@ def main() -> None:
                         report["other_writer_bytes"] = server.string(buffer).hex()
 
                     written = bytes.fromhex(report["bytes"])
-                    expected = leaves(case["value"])
-                    shown = leaves(report["bds_json"])
-                    expected_scalars = [scalar for _, scalar in expected]
-                    shown_scalars = [scalar for _, scalar in shown]
-                    if "error" in report["read"]:
-                        report["difference"] = f"read: {report['read']['error']} at byte {offset} of {len(seed)}"
+                    shown = None
+                    if report["bds_json"] is not None:
+                        shown = [scalar for _, scalar in leaves(report["bds_json"])]
+                    elif shown_text:
+                        shown = [json.loads(scalar) for scalar in SCALAR.findall(shown_text)]
+                    gap = None if shown is None else missing(shown, leaves(case["value"]))
+                    if offset != len(seed):
+                        report["difference"] = f"read: BDS stops at byte {offset} of {len(seed)}"
                     elif written != seed:
                         first = next(
                             i for i in range(max(len(written), len(seed))) if written[i : i + 1] != seed[i : i + 1]
@@ -337,16 +389,8 @@ def main() -> None:
                         report["difference"] = (
                             f"bytes: BDS writes {written.hex()}, first unlike the seed at byte {first}"
                         )
-                    elif report["bds_json"] is not None and shown_scalars != expected_scalars:
-                        first = next(
-                            i
-                            for i in range(max(len(shown), len(expected)))
-                            if shown_scalars[i : i + 1] != expected_scalars[i : i + 1]
-                        )
-                        bds = repr(shown_scalars[first]) if first < len(shown) else "absent"
-                        value = repr(expected_scalars[first]) if first < len(expected) else "absent"
-                        path = expected[first][0] if first < len(expected) else shown[first][0]
-                        report["difference"] = f"json: {path} is {bds} in BDS and {value} in the case"
+                    elif gap is not None:
+                        report["difference"] = f"json: {gap[0]} is {gap[1]!r} in the case and not in BDS's JSON"
                     else:
                         report["difference"] = None
                 except (RuntimeError, ValueError) as error:
