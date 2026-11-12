@@ -1,0 +1,39 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "action": "ABORT_DESTROY_BLOCK",
+   "pos": {
+    "x": -593,
+    "y": 724,
+    "z": 855
+   },
+   "result_pos": {
+    "x": -986,
+    "y": 1117,
+    "z": 1248
+   },
+   "face": -1379
+  },
+  "bytes": "cb0202a109a80bae0db30fba11c013c515",
+  "bds_json": {
+   "Player Runtime ID": {
+    "Actor Runtime ID": 331
+   },
+   "Action": 1,
+   "Block Position": {
+    "X": -593,
+    "Y": 724,
+    "Z": 855
+   },
+   "Result Pos": {
+    "X": -986,
+    "Y": 1117,
+    "Z": 1248
+   },
+   "Face": -1379
+  }
+ }
+]
