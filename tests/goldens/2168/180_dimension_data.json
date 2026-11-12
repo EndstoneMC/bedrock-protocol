@@ -1,0 +1,36 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "dimension_definition_group": {
+    "dimension_definitions": {
+     "s1": {
+      "height_maximum": 462,
+      "height_minimum": -593,
+      "generator_type": "THE_END",
+      "dimension_type": 855,
+      "pack_id": "00000000-0000-0000-0000-000000000006"
+     }
+    }
+   }
+  },
+  "bytes": "010273319c07a10908ae0d00000000000000000600000000000000",
+  "bds_json": {
+   "Definitions": {
+    "s1": {
+     "Height Maximum": 462,
+     "Height Minimum": -593,
+     "Generator Type": 4,
+     "Dimension Type": {
+      "value": 855
+     },
+     "Pack Id": {
+      "Most Significant Bits": 0,
+      "Least Significant Bits": 6
+     }
+    }
+   }
+  }
+ }
+]
