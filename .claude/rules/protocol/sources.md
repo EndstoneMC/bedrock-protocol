@@ -48,7 +48,6 @@ An era is one modelled protocol and the BDS build that reports it.
 - Re-check a reference's known error at the era you model; `ref X is wrong about Y` always carries an era.
 - Trust a capture over a string literal where they disagree.
 - Decompile the writer in the era's IDA database where the header and the dump disagree, or gophertunnel and CloudburstMC do; the binary is the arbiter.
-- Settle a disagreement between a golden and the dump in the header, then in the binary; never side with the dump by default.
 - Where symbols are absent, count the functions that reference a cereal field-name string literal to learn how many times a member is bound.
 - Never decide wire presence from a cereal `bind`, which says only what is bound; decompile `write` and count what it emits.
 - Never decide cerealisation by grepping the binary for cereal display strings.

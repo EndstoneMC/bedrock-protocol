@@ -29,14 +29,13 @@ paths:
 - Never re-derive a whole pre-cereal body from Sandertv/gophertunnel; its Marshal history says only what differed at the time.
 - First ask whether a back-port is only a gate edit.
 - Never re-baseline, and never fold a drive-by correction into a version bump; land it separately.
+- A packet is dirty when a member, a member's type or any type in its nesting changed, never because its branch is new; list the dirty packets between two protocol-docs branches before modelling with `uv run --no-project scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`.
 
 ## Forward
 
-- Take a new version's wire from its protocol-docs dump; names and members the dump lacks still follow `naming.md` and `sources.md`.
-- Read the dump as primary evidence with known blind spots (`sources.md`).
+- Take a new version's wire from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.
 - Take the four categories from two fetched `origin/` protocol-docs branches: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
 - Compare two-dot, because the branches share no merge base; always pass `-M`, or a rename reads as a delete plus an add.
-- A packet is dirty when a member, a member's type or any type in its nesting changed, so diff its whole transitive type closure between EndstoneMC/protocol-docs branches before modelling it (a new branch is not evidence of change); list the dirty packets between two branches with `uv run --no-project scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`.
 - A `constraints` block is not wire, except `RequestNetworkSettingsPacket`'s, which carries the version.
 - Classify every hunk into exactly one category; never write a diff off as constraint churn in bulk.
 - Take a packet's id from its own `packets/*.json`; `enums/MinecraftPacketIds.json` is an index that leaves ids out.
@@ -51,7 +50,7 @@ paths:
 ## Cerealisation
 
 - A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
-- Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`). From 2168 model every packet from the dump, and where BDS writes it by hand, check the hand-written writer against the dump in the binary (`wire.md`).
+- Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`); from 2168, where BDS writes a packet by hand, check its hand-written writer against the dump in the binary (`wire.md`).
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
 - Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.
