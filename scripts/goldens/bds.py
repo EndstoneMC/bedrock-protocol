@@ -51,6 +51,13 @@ class Stream:
 
 
 @dataclass(frozen=True)
+class Frame:
+    size: int
+    context: int
+    has_context: int
+
+
+@dataclass(frozen=True)
 class Build:
     """Where one bedrock_server keeps what the script calls, as file addresses and offsets."""
 
@@ -66,6 +73,8 @@ class Build:
     stream: Stream
     slots: Slots
     result_ok: int
+    result_frames: int
+    frame: Frame
     run_events: int
 
 
@@ -83,6 +92,8 @@ BUILDS = {
         stream=Stream(view=0x20, read_pointer=0x30, overflowed=0x38, buffer=0x40, size=0x48),
         slots=Slots(write_with_mode=6, write=7, read=9, serialization_mode=13, to_string=15),
         result_ok=0x40,
+        result_frames=0x10,
+        frame=Frame(size=0x50, context=0x20, has_context=0x48),
         run_events=0x8597890,
     ),
 }
@@ -366,6 +377,12 @@ def main() -> None:
                         category_name = server.read(name, 64).split(b"\0")[0].decode()
                         report["read"]["error"] = f"{category_name}:{code}"
                         report["read"]["message"] = server.string(message).decode(errors="replace")
+                        first, last = struct.unpack("<QQ", server.read(result + build.result_frames, 16))
+                        report["read"]["context"] = [
+                            server.string(frame + build.frame.context).decode(errors="replace")
+                            for frame in range(first, last, build.frame.size)
+                            if server.read(frame + build.frame.has_context, 1)[0]
+                        ]
                         report["difference"] = f"read: {report['read']['error']} at byte {offset} of {len(seed)}"
                         continue
 
