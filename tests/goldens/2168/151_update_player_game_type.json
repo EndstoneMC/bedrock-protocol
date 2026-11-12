@@ -7,15 +7,6 @@
    "target_player": 462,
    "tick": 593
   },
-  "bytes": "009c07d104",
-  "bds_json": {
-   "Player Game Type": 0,
-   "Target player": {
-    "Actor Unique ID": 462
-   },
-   "Tick": {
-    "Input tick": 593
-   }
-  }
+  "bytes": "009c07d104"
  }
 ]

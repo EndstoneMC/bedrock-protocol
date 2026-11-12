@@ -5,9 +5,6 @@
   "value": {
    "status": "LOGIN_FAILED_CLIENT_OLD"
   },
-  "bytes": "00000001",
-  "bds_json": {
-   "Status": 1
-  }
+  "bytes": "00000001"
  }
 ]

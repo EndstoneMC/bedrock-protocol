@@ -105,110 +105,7 @@
     "detach_from_entity": false
    }
   },
-  "bytes": "014b01000001020000e03f0100001040000030400000504001000070400000884001000098400000a8400000b840010000c8400000d840010000e8400000f84000000441010001010001010000244100002c41000034410100003c410000444100004c4101010000544100005c41000064419f0f00000000000001010100007c410000824106737072696e67010100008e4100010000964100009a4100009e41010000a2410000a6410c696e5f6f75745f7175617274010000ae410000b2410000b6410000ba41086f75745f73696e650373343800015e1a0000000000000100",
-  "bds_json": {
-   "Camera Instruction": {
-    "Set": {
-     "preset": 331,
-     "ease": {
-      "type": 2,
-      "time": 1.75
-     },
-     "pos": {
-      "Pos": {
-       "X": 2.25,
-       "Y": 2.75,
-       "Z": 3.25
-      }
-     },
-     "rot": {
-      "x": 3.75,
-      "y": 4.25
-     },
-     "facing": {
-      "pos": {
-       "X": 4.75,
-       "Y": 5.25,
-       "Z": 5.75
-      }
-     },
-     "view_offset": {
-      "x": 6.25,
-      "y": 6.75
-     },
-     "entity_offset": {
-      "entity_offset_x": 7.25,
-      "entity_offset_y": 7.75,
-      "entity_offset_z": 8.25
-     },
-     "default": false,
-     "removeIgnoreStartingValuesComponent": true
-    },
-    "Clear": false,
-    "Fade": {
-     "Time": {
-      "Fade In Time": 10.25,
-      "Hold Time": 10.75,
-      "Fade Out Time": 11.25
-     },
-     "Color": {
-      "Red": 11.75,
-      "Green": 12.25,
-      "Blue": 12.75
-     }
-    },
-    "Target": {
-     "Target Center Offset": {
-      "X": 13.25,
-      "Y": 13.75,
-      "Z": 14.25
-     },
-     "Target Actor ID": 3999
-    },
-    "RemoveTarget": true,
-    "FieldOfView": {
-     "Field of View": 15.75,
-     "FOV Ease Time": 16.25,
-     "FOV Ease Type": "spring",
-     "Field of View Clear": true
-    },
-    "Spline": {
-     "totalTime": 17.75,
-     "type": 0,
-     "curve": [
-      {
-       "X": 18.75,
-       "Y": 19.25,
-       "Z": 19.75
-      }
-     ],
-     "progressKeyFrames": [
-      {
-       "Key frame value": 20.25,
-       "Key frame time": 20.75,
-       "Key frame easing func": "in_out_quart"
-      }
-     ],
-     "rotationOption": [
-      {
-       "Key frame value": {
-        "X": 21.75,
-        "Y": 22.25,
-        "Z": 22.75
-       },
-       "Key frame time": 23.25,
-       "Key frame easing func": "out_sine"
-      }
-     ],
-     "splineIdentifier": "s48",
-     "loadFromJson": false
-    },
-    "AttachToEntity": {
-     "Entity Actor ID": 6750
-    },
-    "DetachFromEntity": false
-   }
-  }
+  "bytes": "014b01000001020000e03f0100001040000030400000504001000070400000884001000098400000a8400000b840010000c8400000d840010000e8400000f84000000441010001010001010000244100002c41000034410100003c410000444100004c4101010000544100005c41000064419f0f00000000000001010100007c410000824106737072696e67010100008e4100010000964100009a4100009e41010000a2410000a6410c696e5f6f75745f7175617274010000ae410000b2410000b6410000ba41086f75745f73696e650373343800015e1a0000000000000100"
  },
  {
   "id": "v1",
@@ -226,10 +123,7 @@
     "detach_from_entity": null
    }
   },
-  "bytes": "000000000000000000",
-  "bds_json": {
-   "Camera Instruction": {}
-  }
+  "bytes": "000000000000000000"
  },
  {
   "id": "v2",
@@ -300,61 +194,6 @@
     "detach_from_entity": false
    }
   },
-  "bytes": "01641b0000000000000000000001010100000100ed1c0000000000000101010000e6410000ea41086f75745f6261636b01010000f64100010000fe4100000142000003420100000542000007420b696e5f6f75745f717561640100000b4200000d4200000f4200001142096f75745f7175617274037337340001ac270000000000000100",
-  "bds_json": {
-   "Camera Instruction": {
-    "Set": {
-     "preset": 7012,
-     "removeIgnoreStartingValuesComponent": false
-    },
-    "Clear": true,
-    "Fade": {},
-    "Target": {
-     "Target Actor ID": 7405
-    },
-    "RemoveTarget": true,
-    "FieldOfView": {
-     "Field of View": 28.75,
-     "FOV Ease Time": 29.25,
-     "FOV Ease Type": "out_back",
-     "Field of View Clear": true
-    },
-    "Spline": {
-     "totalTime": 30.75,
-     "type": 0,
-     "curve": [
-      {
-       "X": 31.75,
-       "Y": 32.25,
-       "Z": 32.75
-      }
-     ],
-     "progressKeyFrames": [
-      {
-       "Key frame value": 33.25,
-       "Key frame time": 33.75,
-       "Key frame easing func": "in_out_quad"
-      }
-     ],
-     "rotationOption": [
-      {
-       "Key frame value": {
-        "X": 34.75,
-        "Y": 35.25,
-        "Z": 35.75
-       },
-       "Key frame time": 36.25,
-       "Key frame easing func": "out_quart"
-      }
-     ],
-     "splineIdentifier": "s74",
-     "loadFromJson": false
-    },
-    "AttachToEntity": {
-     "Entity Actor ID": 10156
-    },
-    "DetachFromEntity": false
-   }
-  }
+  "bytes": "01641b0000000000000000000001010100000100ed1c0000000000000101010000e6410000ea41086f75745f6261636b01010000f64100010000fe4100000142000003420100000542000007420b696e5f6f75745f717561640100000b4200000d4200000f4200001142096f75745f7175617274037337340001ac270000000000000100"
  }
 ]

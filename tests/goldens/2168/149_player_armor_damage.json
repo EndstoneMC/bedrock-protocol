@@ -10,14 +10,6 @@
     }
    ]
   },
-  "bytes": "0102ce01",
-  "bds_json": {
-   "Armor Slot and Damage Pairs": [
-    {
-     "Armor Slot": 1,
-     "Damage": 462
-    }
-   ]
-  }
+  "bytes": "0102ce01"
  }
 ]

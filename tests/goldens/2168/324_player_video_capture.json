@@ -10,10 +10,6 @@
     "StopVideoCapture": {}
    }
   },
-  "bytes": "0101",
-  "bds_json": {
-   "Start Video Capture": {},
-   "Stop Video Capture": {}
-  }
+  "bytes": "0101"
  }
 ]

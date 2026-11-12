@@ -11,15 +11,6 @@
    "owner_id": -986,
    "new_photo_name": "s7"
   },
-  "bytes": "02733103020102027333010226fcffffffffffff027337",
-  "bds_json": {
-   "Photo Name": "s1",
-   "Photo Data": "\u0002\u0001\u0002",
-   "Book ID": "s3",
-   "Type": 1,
-   "Source Type": 2,
-   "Owner ID": -986,
-   "New Photo Name": "s7"
-  }
+  "bytes": "02733103020102027333010226fcffffffffffff027337"
  }
 ]

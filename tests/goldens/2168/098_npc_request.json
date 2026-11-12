@@ -9,15 +9,6 @@
    "action_index": 29,
    "scene_name": "s5"
   },
-  "bytes": "cb02020273331d027335",
-  "bds_json": {
-   "NPC Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Request Type": 2,
-   "Actions": "s3",
-   "Action Index": 29,
-   "Scene Name": "s5"
-  }
+  "bytes": "cb02020273331d027335"
  }
 ]

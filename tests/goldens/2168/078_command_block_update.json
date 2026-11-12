@@ -16,21 +16,7 @@
    "tick_delay": 1117,
    "execute_on_first_tick": true
   },
-  "bytes": "00cb02027332027333027334027335015d04000001",
-  "bds_json": {
-   "Target": {
-    "Target Runtime ID": {
-     "Actor Runtime ID": 331
-    }
-   },
-   "Command": "s2",
-   "Last Output": "s3",
-   "Name": "s4",
-   "FilteredName": "s5",
-   "Track Output": true,
-   "Tick Delay": 1117,
-   "Execute On First Tick": true
-  }
+  "bytes": "00cb02027332027333027334027335015d04000001"
  },
  {
   "id": "v1",
@@ -56,25 +42,6 @@
    "tick_delay": 2820,
    "execute_on_first_tick": false
   },
-  "bytes": "01c515cc17d2190000010373313503733136037331370373313800040b000000",
-  "bds_json": {
-   "Target": {
-    "Block Position": {
-     "X": -1379,
-     "Y": 1510,
-     "Z": 1641
-    },
-    "Command Block Mode": 0,
-    "Redstone Mode": false,
-    "Is Conditional": true
-   },
-   "Command": "s15",
-   "Last Output": "s16",
-   "Name": "s17",
-   "FilteredName": "s18",
-   "Track Output": false,
-   "Tick Delay": 2820,
-   "Execute On First Tick": false
-  }
+  "bytes": "01c515cc17d2190000010373313503733136037331370373313800040b000000"
  }
 ]

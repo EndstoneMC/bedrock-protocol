@@ -12,16 +12,6 @@
    "update_flags": 36,
    "layer": 986
   },
-  "bytes": "96059c07a109d40524da07",
-  "bds_json": {
-   "Block Position": {
-    "X": 331,
-    "Y": 462,
-    "Z": -593
-   },
-   "Block Runtime ID": 724,
-   "Flags": 36,
-   "Layer": 986
-  }
+  "bytes": "96059c07a109d40524da07"
  }
 ]

@@ -8,14 +8,6 @@
    },
    "dimension_type": 462
   },
-  "bytes": "cb029c07",
-  "bds_json": {
-   "Entity Network Id": {
-    "Raw Id": 331
-   },
-   "Dimension Type": {
-    "value": 462
-   }
-  }
+  "bytes": "cb029c07"
  }
 ]

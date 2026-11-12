@@ -7,11 +7,6 @@
    "stop_all": true,
    "stop_music_legacy": false
   },
-  "bytes": "0273310100",
-  "bds_json": {
-   "Sound Name": "s1",
-   "Stop All Sounds?": true,
-   "Stop Music (Legacy)": false
-  }
+  "bytes": "0273310100"
  }
 ]

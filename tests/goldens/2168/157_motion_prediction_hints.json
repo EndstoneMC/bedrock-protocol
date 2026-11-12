@@ -11,17 +11,6 @@
    },
    "on_ground": false
   },
-  "bytes": "cb020000a03f0000e03f0000104000",
-  "bds_json": {
-   "mRuntimeId": {
-    "Actor Runtime ID": 331
-   },
-   "mMotion": {
-    "X": 1.25,
-    "Y": 1.75,
-    "Z": 2.25
-   },
-   "mOnGround": false
-  }
+  "bytes": "cb020000a03f0000e03f0000104000"
  }
 ]

@@ -7,11 +7,6 @@
    "player_permissions": "OPERATOR",
    "custom_permission_flags": 593
   },
-  "bytes": "4b01000000000000045102",
-  "bds_json": {
-   "Target Player Id's Raw ID": 331,
-   "Player Permission Level": 2,
-   "Custom Permission Flags": 593
-  }
+  "bytes": "4b01000000000000045102"
  }
 ]

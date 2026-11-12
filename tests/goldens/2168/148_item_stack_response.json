@@ -13,16 +13,6 @@
     }
    ]
   },
-  "bytes": "010cde1d0100",
-  "bds_json": {
-   "Responses": [
-    {
-     "Result": 12,
-     "Client Request Id": {
-      "ID": 1903
-     }
-    }
-   ]
-  }
+  "bytes": "010cde1d0100"
  }
 ]

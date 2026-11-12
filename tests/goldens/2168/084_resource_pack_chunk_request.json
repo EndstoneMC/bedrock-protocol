@@ -6,10 +6,6 @@
    "resource_name": "s1",
    "chunk": 462
   },
-  "bytes": "027331ce010000",
-  "bds_json": {
-   "Resource Name": "s1",
-   "Chunk": 462
-  }
+  "bytes": "027331ce010000"
  }
 ]

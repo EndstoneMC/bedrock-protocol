@@ -13,18 +13,7 @@
     }
    ]
   },
-  "bytes": "01019c0701a109",
-  "bds_json": {
-   "Scoreboard Identity Packet Type": 1,
-   "Scoreboard Identity Info": [
-    {
-     "Scoreboard Id": {
-      "Scoreboard Id": 462
-     },
-     "Player Unique Id": -593
-    }
-   ]
-  }
+  "bytes": "01019c0701a109"
  },
  {
   "id": "v1",
@@ -40,16 +29,6 @@
     }
    ]
   },
-  "bytes": "0001ae0d00",
-  "bds_json": {
-   "Scoreboard Identity Packet Type": 0,
-   "Scoreboard Identity Info": [
-    {
-     "Scoreboard Id": {
-      "Scoreboard Id": 855
-     }
-    }
-   ]
-  }
+  "bytes": "0001ae0d00"
  }
 ]

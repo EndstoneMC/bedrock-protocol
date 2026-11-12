@@ -5,9 +5,6 @@
   "value": {
    "enabled": false
   },
-  "bytes": "00",
-  "bds_json": {
-   "Is cache supported?": false
-  }
+  "bytes": "00"
  }
 ]

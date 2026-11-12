@@ -7,11 +7,6 @@
    "category": "INSTANTIATION",
    "code_status": "PAUSED"
   },
-  "bytes": "010203",
-  "bds_json": {
-   "Operation": 1,
-   "Category": 2,
-   "CodeStatus": 3
-  }
+  "bytes": "010203"
  }
 ]

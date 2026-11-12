@@ -8,16 +8,6 @@
    "effect_duration": -593,
    "tick": 724
   },
-  "bytes": "cb0202a109d405",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Effect ID": 1,
-   "Effect Duration": -593,
-   "Tick": {
-    "Input tick": 724
-   }
-  }
+  "bytes": "cb0202a109d405"
  }
 ]

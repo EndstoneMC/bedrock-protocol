@@ -12,15 +12,7 @@
     }
    }
   },
-  "bytes": "9605009c07027333027334",
-  "bds_json": {
-   "Book Slot": 331,
-   "Operation": {
-    "Page Index": 462,
-    "Page Text": "s3",
-    "Photo Name": "s4"
-   }
-  }
+  "bytes": "9605009c07027333027334"
  },
  {
   "id": "v1",
@@ -35,15 +27,7 @@
     }
    }
   },
-  "bytes": "ae0d01b30f027337027338",
-  "bds_json": {
-   "Book Slot": 855,
-   "Operation": {
-    "Page Index": -986,
-    "Page Text": "s7",
-    "Photo Name": "s8"
-   }
-  }
+  "bytes": "ae0d01b30f027337027338"
  },
  {
   "id": "v2",
@@ -56,13 +40,7 @@
     }
    }
   },
-  "bytes": "c51502cc17",
-  "bds_json": {
-   "Book Slot": -1379,
-   "Operation": {
-    "Page Index": 1510
-   }
-  }
+  "bytes": "c51502cc17"
  },
  {
   "id": "v3",
@@ -76,14 +54,7 @@
     }
    }
   },
-  "bytes": "d21903d71bde1d",
-  "bds_json": {
-   "Book Slot": 1641,
-   "Operation": {
-    "Page Index": -1772,
-    "Swap With Index": 1903
-   }
-  }
+  "bytes": "d21903d71bde1d"
  },
  {
   "id": "v4",
@@ -98,14 +69,6 @@
     }
    }
   },
-  "bytes": "e41f04037331350373313603733137",
-  "bds_json": {
-   "Book Slot": 2034,
-   "Operation": {
-    "Title": "s15",
-    "Author": "s16",
-    "XUID": "s17"
-   }
-  }
+  "bytes": "e41f04037331350373313603733137"
  }
 ]

@@ -11,15 +11,6 @@
     "auto_jump": false
    }
   },
-  "bytes": "0001000100",
-  "bds_json": {
-   "Adventure Settings": {
-    "no PvM": false,
-    "no MvP": true,
-    "Immutable World": false,
-    "Show Name Tags": true,
-    "Auto Jump": false
-   }
-  }
+  "bytes": "0001000100"
  }
 ]

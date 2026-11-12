@@ -8,12 +8,6 @@
    "bool_": false,
    "float_": 2.25
   },
-  "bytes": "00020000001040",
-  "bds_json": {
-   "Ability": 0,
-   "Value Type": 2,
-   "Bool": false,
-   "Float": 2.25
-  }
+  "bytes": "00020000001040"
  }
 ]

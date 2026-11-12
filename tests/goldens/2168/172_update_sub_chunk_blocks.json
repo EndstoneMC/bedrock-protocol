@@ -37,41 +37,6 @@
     ]
    }
   },
-  "bytes": "96059c07a10901a80bae0db30fdd08399df5ffffffffffffff010101d219d71bde1df20f06f81102",
-  "bds_json": {
-   "Sub Chunk Block Position": {
-    "X": 331,
-    "Y": 462,
-    "Z": -593
-   },
-   "Blocks Changed": {
-    "Blocks Changed - Standards": [
-     {
-      "Pos": {
-       "X": 724,
-       "Y": 855,
-       "Z": -986
-      },
-      "Runtime Id": 1117,
-      "Update Flags": 57,
-      "Sync Message - Entity Unique ID": 18446744073709550237,
-      "Sync Message - Message": 1
-     }
-    ],
-    "Blocks Changed - Extras": [
-     {
-      "Pos": {
-       "X": 1641,
-       "Y": -1772,
-       "Z": 1903
-      },
-      "Runtime Id": 2034,
-      "Update Flags": 6,
-      "Sync Message - Entity Unique ID": 2296,
-      "Sync Message - Message": 2
-     }
-    ]
-   }
-  }
+  "bytes": "96059c07a10901a80bae0db30fdd08399df5ffffffffffffff010101d219d71bde1df20f06f81102"
  }
 ]

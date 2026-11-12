@@ -8,12 +8,6 @@
    "byte_offset": 593,
    "data": "040102"
   },
-  "bytes": "027331ce010000510200000000000003040102",
-  "bds_json": {
-   "Resource Name": "s1",
-   "Chunk ID": 462,
-   "Byte Offset": 593,
-   "Chunk Data": "\u0004\u0001\u0002"
-  }
+  "bytes": "027331ce010000510200000000000003040102"
  }
 ]

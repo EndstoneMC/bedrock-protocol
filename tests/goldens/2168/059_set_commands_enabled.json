@@ -5,9 +5,6 @@
   "value": {
    "commands_enabled": false
   },
-  "bytes": "00",
-  "bds_json": {
-   "Commands Enabled": false
-  }
+  "bytes": "00"
  }
 ]

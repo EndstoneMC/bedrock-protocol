@@ -17,23 +17,6 @@
     "z": 1117
    }
   },
-  "bytes": "9605010fea1d5703000026fcffff5d040000",
-  "bds_json": {
-   "Dimension Type": {
-    "value": 331
-   },
-   "SubChunk Position Offset List": [
-    {
-     "Subchunk Offset X": 15,
-     "Subchunk Offset Y": -22,
-     "Subchunk Offset Z": 29
-    }
-   ],
-   "Center Pos": {
-    "Subchunk Position X": 855,
-    "Subchunk Position Y": -986,
-    "Subchunk Position Z": 1117
-   }
-  }
+  "bytes": "9605010fea1d5703000026fcffff5d040000"
  }
 ]

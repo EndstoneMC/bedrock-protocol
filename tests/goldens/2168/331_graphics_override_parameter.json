@@ -21,29 +21,7 @@
    "parameter_id": "CDOM",
    "reset_parameter": true
   },
-  "bytes": "010000403f0000a03f0000e03f0000104001000030400100005040000070400000884002733901037331300b01",
-  "bds_json": {
-   "Parameter Keyframe Values": [
-    {
-     "key": 0.75,
-     "value": [
-      1.25,
-      1.75,
-      2.25
-     ]
-    }
-   ],
-   "Float Value": 2.75,
-   "Vec3 Value": [
-    3.25,
-    3.75,
-    4.25
-   ],
-   "Biome Identifier": "s9",
-   "Player Identifier": "s10",
-   "Identifier for Parameter": 11,
-   "Reset Parameter": true
-  }
+  "bytes": "010000403f0000a03f0000e03f0000104001000030400100005040000070400000884002733901037331300b01"
  },
  {
   "id": "v1",
@@ -63,21 +41,6 @@
    "parameter_id": "WAVES_SHAPE",
    "reset_parameter": false
   },
-  "bytes": "010000d8400000e8400000f84000000441000003733137001200",
-  "bds_json": {
-   "Parameter Keyframe Values": [
-    {
-     "key": 6.75,
-     "value": [
-      7.25,
-      7.75,
-      8.25
-     ]
-    }
-   ],
-   "Biome Identifier": "s17",
-   "Identifier for Parameter": 18,
-   "Reset Parameter": false
-  }
+  "bytes": "010000d8400000e8400000f84000000441000003733137001200"
  }
 ]

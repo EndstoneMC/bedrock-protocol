@@ -22,28 +22,7 @@
     }
    }
   },
-  "bytes": "027331027332000102733502733601010001027338000102733903733130",
-  "bds_json": {
-   "Education Level Settings": {
-    "Code Builder Default URI": "s1",
-    "Code Builder Title": "s2",
-    "Can resize Code Builder": false,
-    "Disable legacy title bar": true,
-    "Post Process Filter": "s5",
-    "Screenshot Border Resource Path": "s6",
-    "Agent Capabilities": {
-     "Can Modify Blocks": false
-    },
-    "Local Settings": {
-     "Code Builder Override Uri": "s8"
-    },
-    "(Deprecated) Always False": false,
-    "External Link Settings": {
-     "URL": "s9",
-     "Display Name": "s10"
-    }
-   }
-  }
+  "bytes": "027331027332000102733502733601010001027338000102733903733130"
  },
  {
   "id": "v1",
@@ -63,19 +42,7 @@
     "external_link_settings": null
    }
   },
-  "bytes": "03733131037331320001037331350373313600000000",
-  "bds_json": {
-   "Education Level Settings": {
-    "Code Builder Default URI": "s11",
-    "Code Builder Title": "s12",
-    "Can resize Code Builder": false,
-    "Disable legacy title bar": true,
-    "Post Process Filter": "s15",
-    "Screenshot Border Resource Path": "s16",
-    "Local Settings": {},
-    "(Deprecated) Always False": false
-   }
-  }
+  "bytes": "03733131037331320001037331350373313600000000"
  },
  {
   "id": "v2",
@@ -100,25 +67,6 @@
     }
    }
   },
-  "bytes": "0373313703733138000103733231037332320100010373323300010373323403733235",
-  "bds_json": {
-   "Education Level Settings": {
-    "Code Builder Default URI": "s17",
-    "Code Builder Title": "s18",
-    "Can resize Code Builder": false,
-    "Disable legacy title bar": true,
-    "Post Process Filter": "s21",
-    "Screenshot Border Resource Path": "s22",
-    "Agent Capabilities": {},
-    "Local Settings": {
-     "Code Builder Override Uri": "s23"
-    },
-    "(Deprecated) Always False": false,
-    "External Link Settings": {
-     "URL": "s24",
-     "Display Name": "s25"
-    }
-   }
-  }
+  "bytes": "0373313703733138000103733231037332320100010373323300010373323403733235"
  }
 ]

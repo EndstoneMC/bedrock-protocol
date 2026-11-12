@@ -11,15 +11,6 @@
    "is_premium": true,
    "pack_type": "SKINS"
   },
-  "bytes": "027331ce010000affdffffd402000000000000030501020107",
-  "bds_json": {
-   "Resource Name": "s1",
-   "Chunk Size": 462,
-   "Number of Chunks": 4294966703,
-   "File Size": 724,
-   "File Hash": "\u0005\u0001\u0002",
-   "Is Premium Pack": true,
-   "Pack Type": 7
-  }
+  "bytes": "027331ce010000affdffffd402000000000000030501020107"
  }
 ]

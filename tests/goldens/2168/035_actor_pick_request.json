@@ -7,11 +7,6 @@
    "max_slots": 15,
    "with_data": false
   },
-  "bytes": "4b010000000000000f00",
-  "bds_json": {
-   "Actor ID": 331,
-   "Max Slots": 15,
-   "With Data": false
-  }
+  "bytes": "4b010000000000000f00"
  }
 ]

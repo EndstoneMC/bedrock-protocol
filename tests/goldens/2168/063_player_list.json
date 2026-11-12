@@ -12,17 +12,6 @@
     }
    ]
   },
-  "bytes": "01000100000000000000000200000000000000",
-  "bds_json": {
-   "Entries": [
-    {
-     "Action": 1,
-     "UUID": {
-      "Most Significant Bits": 0,
-      "Least Significant Bits": 2
-     }
-    }
-   ]
-  }
+  "bytes": "01000100000000000000000200000000000000"
  }
 ]

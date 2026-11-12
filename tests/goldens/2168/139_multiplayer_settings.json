@@ -5,9 +5,6 @@
   "value": {
    "packet_type": "DISABLE_MULTIPLAYER"
   },
-  "bytes": "02",
-  "bds_json": {
-   "PacketType": 1
-  }
+  "bytes": "02"
  }
 ]

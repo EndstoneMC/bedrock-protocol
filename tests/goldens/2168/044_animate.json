@@ -8,15 +8,7 @@
    "data": 1.75,
    "swing_source": "ATTACK"
   },
-  "bytes": "01ce030000e03f010661747461636b",
-  "bds_json": {
-   "Action": 1,
-   "Target Actor Runtime ID": {
-    "Actor Runtime ID": 462
-   },
-   "Data": 1.75,
-   "Swing Source": "attack"
-  }
+  "bytes": "01ce030000e03f010661747461636b"
  },
  {
   "id": "v1",
@@ -27,13 +19,6 @@
    "data": 3.75,
    "swing_source": null
   },
-  "bytes": "00da070000704000",
-  "bds_json": {
-   "Action": 0,
-   "Target Actor Runtime ID": {
-    "Actor Runtime ID": 986
-   },
-   "Data": 3.75
-  }
+  "bytes": "00da070000704000"
  }
 ]

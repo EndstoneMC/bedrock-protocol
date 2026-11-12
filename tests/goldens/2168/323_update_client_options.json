@@ -8,11 +8,7 @@
     "filter_profanity": true
    }
   },
-  "bytes": "01010101",
-  "bds_json": {
-   "Graphics Mode Change": 1,
-   "Filter Profanity Change": true
-  }
+  "bytes": "01010101"
  },
  {
   "id": "v1",
@@ -23,7 +19,6 @@
     "filter_profanity": null
    }
   },
-  "bytes": "0000",
-  "bds_json": {}
+  "bytes": "0000"
  }
 ]

@@ -13,19 +13,6 @@
     1117
    ]
   },
-  "bytes": "027331027332027333030000000273350000504001dd08",
-  "bds_json": {
-   "mAnimation": "s1",
-   "mNextState": "s2",
-   "mStopExpression": "s3",
-   "mStopExpressionVersion": 3,
-   "mController": "s5",
-   "mBlendOutTime": 3.25,
-   "mRuntimeIds": [
-    {
-     "Actor Runtime ID": 1117
-    }
-   ]
-  }
+  "bytes": "027331027332027333030000000273350000504001dd08"
  }
 ]

@@ -11,15 +11,6 @@
    "with_data": true,
    "max_slots": 36
   },
-  "bytes": "96059c07a1090124",
-  "bds_json": {
-   "Position": {
-    "X": 331,
-    "Y": 462,
-    "Z": -593
-   },
-   "With Data?": true,
-   "Max Slots": 36
-  }
+  "bytes": "96059c07a1090124"
  }
 ]

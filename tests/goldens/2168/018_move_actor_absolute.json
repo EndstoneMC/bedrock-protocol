@@ -18,22 +18,6 @@
     "rot_y_head": 57
    }
   },
-  "bytes": "cb020f0000e03f0000104000003040d53239",
-  "bds_json": {
-   "Move Data": {
-    "ActorRuntimeID": {
-     "Actor Runtime ID": 331
-    },
-    "Header": 15,
-    "Position": {
-     "X": 1.75,
-     "Y": 2.25,
-     "Z": 2.75
-    },
-    "Rotation X": 213,
-    "Rotation Y": 50,
-    "Rotation Y Head": 57
-   }
-  }
+  "bytes": "cb020f0000e03f0000104000003040d53239"
  }
 ]

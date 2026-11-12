@@ -14,18 +14,6 @@
    "total_length_in_ticks": 1117,
    "enabled": true
   },
-  "bytes": "0102733202733302733401027335da07dd0801",
-  "bds_json": {
-   "Action ID": 1,
-   "Collection Name": "s2",
-   "From Step": "s3",
-   "To Step": "s4",
-   "All Steps": [
-    "s5"
-   ],
-   "Current Length In Ticks": 986,
-   "Total Length In Ticks": 1117,
-   "Enabled": true
-  }
+  "bytes": "0102733202733302733401027335da07dd0801"
  }
 ]

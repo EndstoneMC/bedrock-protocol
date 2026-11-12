@@ -27,38 +27,7 @@
     }
    ]
   },
-  "bytes": "01cb020102010000e03f0000104000003040010000504001000070400000884000009840010000a840010000b8400114f9ffff01de1d01e41f00",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 331,
-     "Shape Type": 2,
-     "Location": {
-      "X": 1.75,
-      "Y": 2.25,
-      "Z": 2.75
-     },
-     "Scale": 3.25,
-     "Rotation": {
-      "X": 3.75,
-      "Y": 4.25,
-      "Z": 4.75
-     },
-     "Total Time Left": 5.25,
-     "Maximum Render Distance": 5.75,
-     "Color": {
-      "Color": -1772
-     },
-     "Dimension ID": {
-      "value": 1903
-     },
-     "Attached To Entity ID": {
-      "Actor Unique ID": 2034
-     },
-     "Extra Shape Data": null
-    }
-   ]
-  }
+  "bytes": "01cb020102010000e03f0000104000003040010000504001000070400000884000009840010000a840010000b8400114f9ffff01de1d01e41f00"
  },
  {
   "id": "v1",
@@ -91,24 +60,7 @@
     }
    ]
   },
-  "bytes": "01f51000000000000000000001010000044100000c41000014410100001c4101000024410130",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 2165,
-     "Extra Shape Data": {
-      "Arrow End Location": {
-       "X": 8.25,
-       "Y": 8.75,
-       "Z": 9.25
-      },
-      "Arrow Head Length": 9.75,
-      "Arrow Head Radius": 10.25,
-      "Num Segments": 48
-     }
-    }
-   ]
-  }
+  "bytes": "01f51000000000000000000001010000044100000c41000014410100001c4101000024410130"
  },
  {
   "id": "v2",
@@ -147,47 +99,7 @@
     }
    ]
   },
-  "bytes": "018a180101010000444100004c41000054410100005c41010000644100006c41000074410100007c4101000082410155eeffff01dc4801e24a020373333600013a140000000100",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 3082,
-     "Shape Type": 1,
-     "Location": {
-      "X": 12.25,
-      "Y": 12.75,
-      "Z": 13.25
-     },
-     "Scale": 13.75,
-     "Rotation": {
-      "X": 14.25,
-      "Y": 14.75,
-      "Z": 15.25
-     },
-     "Total Time Left": 15.75,
-     "Maximum Render Distance": 16.25,
-     "Color": {
-      "Color": -4523
-     },
-     "Dimension ID": {
-      "value": 4654
-     },
-     "Attached To Entity ID": {
-      "Actor Unique ID": 4785
-     },
-     "Extra Shape Data": {
-      "Text": "s36",
-      "UseRotation": false,
-      "BackgroundColor": {
-       "Color": 5178
-      },
-      "DepthTest": false,
-      "ShowBackface": true,
-      "ShowTextBackface": false
-     }
-    }
-   ]
-  }
+  "bytes": "018a180101010000444100004c41000054410100005c41010000644100006c41000074410100007c4101000082410155eeffff01dc4801e24a020373333600013a140000000100"
  },
  {
   "id": "v3",
@@ -217,21 +129,7 @@
     }
    ]
   },
-  "bytes": "01c62c000000000000000000030000ae410000b2410000b641",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 5702,
-     "Extra Shape Data": {
-      "Box Bound": {
-       "X": 21.75,
-       "Y": 22.25,
-       "Z": 22.75
-      }
-     }
-    }
-   ]
-  }
+  "bytes": "01c62c000000000000000000030000ae410000b2410000b641"
  },
  {
   "id": "v4",
@@ -269,44 +167,7 @@
     }
    ]
   },
-  "bytes": "01d2300103010000c2410000c6410000ca41010000ce41010000d2410000d6410000da41010000de41010000e241010de2ffff01ec7901f27b040000f2410000f6410000fa41",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 6226,
-     "Shape Type": 3,
-     "Location": {
-      "X": 24.25,
-      "Y": 24.75,
-      "Z": 25.25
-     },
-     "Scale": 25.75,
-     "Rotation": {
-      "X": 26.25,
-      "Y": 26.75,
-      "Z": 27.25
-     },
-     "Total Time Left": 27.75,
-     "Maximum Render Distance": 28.25,
-     "Color": {
-      "Color": -7667
-     },
-     "Dimension ID": {
-      "value": 7798
-     },
-     "Attached To Entity ID": {
-      "Actor Unique ID": 7929
-     },
-     "Extra Shape Data": {
-      "Line End Location": {
-       "X": 30.25,
-       "Y": 30.75,
-       "Z": 31.25
-      }
-     }
-    }
-   ]
-  }
+  "bytes": "01d2300103010000c2410000c6410000ca41010000ce41010000d2410000d6410000da41010000de41010000e241010de2ffff01ec7901f27b040000f2410000f6410000fa41"
  },
  {
   "id": "v5",
@@ -332,17 +193,7 @@
     }
    ]
   },
-  "bytes": "0185420000000000000000000531",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 8453,
-     "Extra Shape Data": {
-      "Num Segments": 49
-     }
-    }
-   ]
-  }
+  "bytes": "0185420000000000000000000531"
  },
  {
   "id": "v7",
@@ -370,19 +221,7 @@
     }
    ]
   },
-  "bytes": "01c7580000000000000000000700002d420100002f4200003142",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 11335,
-     "Extra Shape Data": {
-      "Width": 43.25,
-      "Depth": 43.75,
-      "Height": 44.25
-     }
-    }
-   ]
-  }
+  "bytes": "01c7580000000000000000000700002d420100002f4200003142"
  },
  {
   "id": "v8",
@@ -421,45 +260,7 @@
     }
    ]
   },
-  "bytes": "01d35c010201000037420000394200003b420100003d420100003f4200004142000043420100004542010000474201f433000001eed10101f3d3010800004f4200005142000053422b",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 11859,
-     "Shape Type": 2,
-     "Location": {
-      "X": 45.75,
-      "Y": 46.25,
-      "Z": 46.75
-     },
-     "Scale": 47.25,
-     "Rotation": {
-      "X": 47.75,
-      "Y": 48.25,
-      "Z": 48.75
-     },
-     "Total Time Left": 49.25,
-     "Maximum Render Distance": 49.75,
-     "Color": {
-      "Color": 13300
-     },
-     "Dimension ID": {
-      "value": 13431
-     },
-     "Attached To Entity ID": {
-      "Actor Unique ID": -13562
-     },
-     "Extra Shape Data": {
-      "Radii": {
-       "X": 51.75,
-       "Y": 52.25,
-       "Z": 52.75
-      },
-      "Segments Per Axis": 43
-     }
-    }
-   ]
-  }
+  "bytes": "01d35c010201000037420000394200003b420100003d420100003f4200004142000043420100004542010000474201f433000001eed10101f3d3010800004f4200005142000053422b"
  },
  {
   "id": "v9",
@@ -490,22 +291,7 @@
     }
    ]
   },
-  "bytes": "01896f000000000000000000090000594200005b4200005d424e",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 14217,
-     "Extra Shape Data": {
-      "Radii": {
-       "X": 54.25,
-       "Y": 54.75
-      },
-      "Height": 55.25,
-      "Num Segments": 78
-     }
-    }
-   ]
-  }
+  "bytes": "01896f000000000000000000090000594200005b4200005d424e"
  },
  {
   "id": "v10",
@@ -534,15 +320,7 @@
     }
    ]
   },
-  "bytes": "01c282010000000000000000000100000000",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 16706,
-     "Extra Shape Data": {}
-    }
-   ]
-  }
+  "bytes": "01c282010000000000000000000100000000"
  },
  {
   "id": "v11",
@@ -581,44 +359,7 @@
     }
    ]
   },
-  "bytes": "01c5830101070100808142008082420080834201008084420100808542008086420080874201008088420100808942019ab8ffff01d29f0201d8a1020204733134310100000100",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 16837,
-     "Shape Type": 7,
-     "Location": {
-      "X": 64.75,
-      "Y": 65.25,
-      "Z": 65.75
-     },
-     "Scale": 66.25,
-     "Rotation": {
-      "X": 66.75,
-      "Y": 67.25,
-      "Z": 67.75
-     },
-     "Total Time Left": 68.25,
-     "Maximum Render Distance": 68.75,
-     "Color": {
-      "Color": -18278
-     },
-     "Dimension ID": {
-      "value": 18409
-     },
-     "Attached To Entity ID": {
-      "Actor Unique ID": 18540
-     },
-     "Extra Shape Data": {
-      "Text": "s141",
-      "UseRotation": true,
-      "DepthTest": false,
-      "ShowBackface": true,
-      "ShowTextBackface": false
-     }
-    }
-   ]
-  }
+  "bytes": "01c5830101070100808142008082420080834201008084420100808542008086420080874201008088420100808942019ab8ffff01d29f0201d8a1020204733134310100000100"
  },
  {
   "id": "v12",
@@ -646,17 +387,6 @@
     }
    ]
   },
-  "bytes": "01ffc201000000000000000000070080be42000080bf42",
-  "bds_json": {
-   "Array of primitive shapes (can be a mix of new, updated or removed)": [
-    {
-     "NetworkId": 24959,
-     "Extra Shape Data": {
-      "Width": 95.25,
-      "Height": 95.75
-     }
-    }
-   ]
-  }
+  "bytes": "01ffc201000000000000000000070080be42000080bf42"
  }
 ]

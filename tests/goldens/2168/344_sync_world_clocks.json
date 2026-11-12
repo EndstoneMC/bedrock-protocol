@@ -15,18 +15,7 @@
     }
    }
   },
-  "bytes": "0001cb029c0700",
-  "bds_json": {
-   "Data": {
-    "ClockData": [
-     {
-      "ClockId": 331,
-      "Time": 462,
-      "IsPaused": false
-     }
-    ]
-   }
-  }
+  "bytes": "0001cb029c0700"
  },
  {
   "id": "v1",
@@ -53,27 +42,7 @@
     }
    }
   },
-  "bytes": "0101d405027335b30f0001e009027339cc170169060000",
-  "bds_json": {
-   "Data": {
-    "ClockData": [
-     {
-      "Id": 724,
-      "Name": "s5",
-      "Time": -986,
-      "IsPaused": false,
-      "TimeMarkers": [
-       {
-        "Id": 1248,
-        "Name": "s9",
-        "Time": 1510,
-        "Period": 1641
-       }
-      ]
-     }
-    ]
-   }
-  }
+  "bytes": "0101d405027335b30f0001e009027339cc170169060000"
  },
  {
   "id": "v2",
@@ -93,19 +62,7 @@
     }
    }
   },
-  "bytes": "02ec0d01ef0e03733134e92100",
-  "bds_json": {
-   "Data": {
-    "ClockId": 1772,
-    "TimeMarkers": [
-     {
-      "Id": 1903,
-      "Name": "s14",
-      "Time": -2165
-     }
-    ]
-   }
-  }
+  "bytes": "02ec0d01ef0e03733134e92100"
  },
  {
   "id": "v3",
@@ -120,14 +77,6 @@
     }
    }
   },
-  "bytes": "03f81101fb12",
-  "bds_json": {
-   "Data": {
-    "ClockId": 2296,
-    "TimeMarkerIds": [
-     2427
-    ]
-   }
-  }
+  "bytes": "03f81101fb12"
  }
 ]

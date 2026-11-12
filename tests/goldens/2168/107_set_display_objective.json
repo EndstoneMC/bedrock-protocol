@@ -9,13 +9,6 @@
    "criteria_name": "s4",
    "sort_order": "DESCENDING"
   },
-  "bytes": "02733102733202733302733402",
-  "bds_json": {
-   "DisplaySlotName": "s1",
-   "ObjectiveName": "s2",
-   "ObjectiveDisplayName": "s3",
-   "CriteriaName": "s4",
-   "SortOrder": 1
-  }
+  "bytes": "02733102733202733302733402"
  }
 ]

@@ -15,22 +15,6 @@
     }
    }
   },
-  "bytes": "010273319c07a10908ae0d00000000000000000600000000000000",
-  "bds_json": {
-   "Definitions": {
-    "s1": {
-     "Height Maximum": 462,
-     "Height Minimum": -593,
-     "Generator Type": 4,
-     "Dimension Type": {
-      "value": 855
-     },
-     "Pack Id": {
-      "Most Significant Bits": 0,
-      "Least Significant Bits": 6
-     }
-    }
-   }
-  }
+  "bytes": "010273319c07a10908ae0d00000000000000000600000000000000"
  }
 ]

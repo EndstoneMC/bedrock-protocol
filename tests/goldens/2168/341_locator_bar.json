@@ -32,46 +32,7 @@
     }
    ]
   },
-  "bytes": "0100000000000000000100000000000000ce010000010001000010400000304000005040ba110102733801000098400000a8400169060000010101de1d02",
-  "bds_json": {
-   "Waypoints": [
-    {
-     "GroupHandle": {
-      "UUID": {
-       "Most Significant Bits": 0,
-       "Least Significant Bits": 1
-      }
-     },
-     "ServerWaypointPayload": {
-      "UpdateFlag": 462,
-      "IsVisible": false,
-      "WorldPosition": {
-       "Position": {
-        "X": 2.25,
-        "Y": 2.75,
-        "Z": 3.25
-       },
-       "DimensionType": {
-        "value": 1117
-       }
-      },
-      "TexturePath": "s8",
-      "IconSize": {
-       "X": 4.75,
-       "Y": 5.25
-      },
-      "Color": {
-       "Color": 1641
-      },
-      "ClientPositionAuthority": true,
-      "ActorUniqueID": {
-       "Actor Unique ID": 1903
-      }
-     },
-     "ActionFlag": 2
-    }
-   ]
-  }
+  "bytes": "0100000000000000000100000000000000ce010000010001000010400000304000005040ba110102733801000098400000a8400169060000010101de1d02"
  },
  {
   "id": "v1",
@@ -96,22 +57,6 @@
     }
    ]
   },
-  "bytes": "0100000000000000000f00000000000000f80800000000000000000001",
-  "bds_json": {
-   "Waypoints": [
-    {
-     "GroupHandle": {
-      "UUID": {
-       "Most Significant Bits": 0,
-       "Least Significant Bits": 15
-      }
-     },
-     "ServerWaypointPayload": {
-      "UpdateFlag": 2296
-     },
-     "ActionFlag": 1
-    }
-   ]
-  }
+  "bytes": "0100000000000000000f00000000000000f80800000000000000000001"
  }
 ]

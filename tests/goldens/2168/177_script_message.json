@@ -6,10 +6,6 @@
    "message_id": "s1",
    "message_value": "s2"
   },
-  "bytes": "027331027332",
-  "bds_json": {
-   "Message Id": "s1",
-   "Message Value": "s2"
-  }
+  "bytes": "027331027332"
  }
 ]

@@ -5,9 +5,6 @@
   "value": {
    "player_game_type": "SURVIVAL"
   },
-  "bytes": "00",
-  "bds_json": {
-   "Player Game Type": 0
-  }
+  "bytes": "00"
  }
 ]

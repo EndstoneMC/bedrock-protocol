@@ -5,11 +5,6 @@
   "value": {
    "player_id": 331
   },
-  "bytes": "cb02",
-  "bds_json": {
-   "Player ID": {
-    "Actor Runtime ID": 331
-   }
-  }
+  "bytes": "cb02"
  }
 ]

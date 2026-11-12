@@ -8,13 +8,7 @@
     "is_leader": true
    }
   },
-  "bytes": "0102733101",
-  "bds_json": {
-   "party_info": {
-    "party_id": "s1",
-    "is_party_leader": true
-   }
-  }
+  "bytes": "0102733101"
  },
  {
   "id": "v1",
@@ -22,7 +16,6 @@
   "value": {
    "party_info": null
   },
-  "bytes": "00",
-  "bds_json": {}
+  "bytes": "00"
  }
 ]

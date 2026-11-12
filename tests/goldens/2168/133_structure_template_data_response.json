@@ -73,10 +73,6 @@
    "structure_tag": null,
    "response_type": "EXPORT"
   },
-  "bytes": "0273330001",
-  "bds_json": {
-   "Structure Name": "s3",
-   "Response Type": 1
-  }
+  "bytes": "0273330001"
  }
 ]

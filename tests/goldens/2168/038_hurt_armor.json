@@ -7,11 +7,6 @@
    "dmg": 462,
    "armor_slots": 17
   },
-  "bytes": "009c0711",
-  "bds_json": {
-   "Cause": 0,
-   "Damage": 462,
-   "Armor Slots": 17
-  }
+  "bytes": "009c0711"
  }
 ]

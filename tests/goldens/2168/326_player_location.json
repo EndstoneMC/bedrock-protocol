@@ -15,20 +15,7 @@
     }
    }
   },
-  "bytes": "960500000000e03f0000104000003040",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 331
-   },
-   "Location": {
-    "Packet Type": 0,
-    "Position": {
-     "X": 1.75,
-     "Y": 2.25,
-     "Z": 2.75
-    }
-   }
-  }
+  "bytes": "960500000000e03f0000104000003040"
  },
  {
   "id": "v1",
@@ -41,14 +28,6 @@
     }
    }
   },
-  "bytes": "b30f0102",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -986
-   },
-   "Location": {
-    "Packet Type": 1
-   }
-  }
+  "bytes": "b30f0102"
  }
 ]

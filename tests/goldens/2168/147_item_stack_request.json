@@ -31,35 +31,7 @@
     }
    ]
   },
-  "bytes": "01d546010303272301341300003c3a14000000010373343004000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -4523
-     },
-     "Actions": [
-      {
-       "Action type": 3,
-       "Amount": 39,
-       "Source": {
-        "Full container name.": {
-         "Container Name": 35,
-         "Dynamic ID": 4916
-        },
-        "Slot": 60,
-        "Net Id Variant": 5178
-       },
-       "Randomly": false
-      }
-     ],
-     "Strings To Filter": [
-      "s40"
-     ],
-     "StringsToFilterOrigin": 4
-    }
-   ]
-  }
+  "bytes": "01d546010303272301341300003c3a14000000010373343004000000"
  },
  {
   "id": "v6",
@@ -84,26 +56,7 @@
     }
    ]
   },
-  "bytes": "01e57701060607010373353905000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -7667
-     },
-     "Actions": [
-      {
-       "Action type": 6,
-       "Results Index": 7
-      }
-     ],
-     "Strings To Filter": [
-      "s59"
-     ],
-     "StringsToFilterOrigin": 5
-    }
-   ]
-  }
+  "bytes": "01e57701060607010373353905000000"
  },
  {
   "id": "v9",
@@ -130,28 +83,7 @@
     }
    ]
   },
-  "bytes": "01ad900101090bb49201ba940160daffff010373373301000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -9239
-     },
-     "Actions": [
-      {
-       "Action type": 11,
-       "Slot": 9370,
-       "Predicted Durability": 9501,
-       "Net Id Variant": -9632
-      }
-     ],
-     "Strings To Filter": [
-      "s73"
-     ],
-     "StringsToFilterOrigin": 1
-    }
-   ]
-  }
+  "bytes": "01ad900101090bb49201ba940160daffff010373373301000000"
  },
  {
   "id": "v10",
@@ -179,29 +111,7 @@
     }
    ]
   },
-  "bytes": "01d19c01010a0cac4f28010373373806000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -10025
-     },
-     "Actions": [
-      {
-       "Action type": 12,
-       "Recipe Net Id": {
-        "Raw Id": 10156
-       },
-       "Number of requested crafts": 40
-      }
-     ],
-     "Strings To Filter": [
-      "s78"
-     ],
-     "StringsToFilterOrigin": 6
-    }
-   ]
-  }
+  "bytes": "01d19c01010a0cac4f28010373373806000000"
  },
  {
   "id": "v18",
@@ -240,39 +150,7 @@
     }
    ]
   },
-  "bytes": "01a19203010b0d94ca01500101010473313938ba9a03206701047332303103000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -25745
-     },
-     "Actions": [
-      {
-       "Action type": 13,
-       "Recipe Net Id": {
-        "Raw Id": 25876
-       },
-       "Number of requested crafts": 80,
-       "Ingredients": [
-        {
-         "Item Descriptor": {
-          "Descriptor Type": 1,
-          "Full Name": "s198",
-          "Aux Value": 26269
-         },
-         "StackSize": 26400
-        }
-       ]
-      }
-     ],
-     "Strings To Filter": [
-      "s201"
-     ],
-     "StringsToFilterOrigin": 3
-    }
-   ]
-  }
+  "bytes": "01a19203010b0d94ca01500101010473313938ba9a03206701047332303103000000"
  },
  {
   "id": "v20",
@@ -311,38 +189,6 @@
     }
    ]
   },
-  "bytes": "0191b301010b0dcc5a1401020204733331380e00582f0104733332310f000000",
-  "bds_json": {
-   "Requests": [
-    {
-     "Client Request Id": {
-      "ID": -11465
-     },
-     "Actions": [
-      {
-       "Action type": 13,
-       "Recipe Net Id": {
-        "Raw Id": 11596
-       },
-       "Number of requested crafts": 20,
-       "Ingredients": [
-        {
-         "Item Descriptor": {
-          "Descriptor Type": 2,
-          "Tag Expression": "s318",
-          "Molang Version": 14
-         },
-         "StackSize": 12120
-        }
-       ]
-      }
-     ],
-     "Strings To Filter": [
-      "s321"
-     ],
-     "StringsToFilterOrigin": 15
-    }
-   ]
-  }
+  "bytes": "0191b301010b0dcc5a1401020204733331380e00582f0104733332310f000000"
  }
 ]

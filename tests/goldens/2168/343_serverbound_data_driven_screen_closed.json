@@ -6,10 +6,6 @@
    "form_id": 331,
    "close_reason": "CLIENT_CANCELED"
   },
-  "bytes": "4b0100000e636c69656e7463616e63656c6564",
-  "bds_json": {
-   "FormId": 331,
-   "CloseReason": "clientcanceled"
-  }
+  "bytes": "4b0100000e636c69656e7463616e63656c6564"
  }
 ]

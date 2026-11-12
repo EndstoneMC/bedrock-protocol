@@ -12,20 +12,6 @@
     "vehicle_angular_velocity": 3.25
    }
   },
-  "bytes": "96059c0700010000005040",
-  "bds_json": {
-   "Link": {
-    "Target A": {
-     "Actor Unique ID": 331
-    },
-    "Target B": {
-     "Actor Unique ID": 462
-    },
-    "Type": 0,
-    "Immediate": true,
-    "Passenger Initiated": false,
-    "Vehicle Angular Velocity": 3.25
-   }
-  }
+  "bytes": "96059c0700010000005040"
  }
 ]

@@ -11,15 +11,6 @@
    },
    "reaction": "HEAT_BLOCK"
   },
-  "bytes": "019c07a109a80b05",
-  "bds_json": {
-   "Type": 1,
-   "Position": {
-    "X": 462,
-    "Y": -593,
-    "Z": 724
-   },
-   "Reaction": 5
-  }
+  "bytes": "019c07a109a80b05"
  }
 ]

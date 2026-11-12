@@ -7,12 +7,7 @@
     "rich_presence_id": "s1"
    }
   },
-  "bytes": "0101027331",
-  "bds_json": {
-   "presence_configuration": {
-    "richPresenceId": "s1"
-   }
-  }
+  "bytes": "0101027331"
  },
  {
   "id": "v1",
@@ -20,8 +15,7 @@
   "value": {
    "presence_configuration": null
   },
-  "bytes": "00",
-  "bds_json": {}
+  "bytes": "00"
  },
  {
   "id": "v2",
@@ -31,9 +25,6 @@
     "rich_presence_id": null
    }
   },
-  "bytes": "0100",
-  "bds_json": {
-   "presence_configuration": {}
-  }
+  "bytes": "0100"
  }
 ]

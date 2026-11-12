@@ -13,21 +13,6 @@
    "dir": -986,
    "motif": "s7"
   },
-  "bytes": "9605ce030000e03f0000104000003040b30f027337",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 331
-   },
-   "Target Runtime ID": {
-    "Actor Runtime ID": 462
-   },
-   "Position": {
-    "X": 1.75,
-    "Y": 2.25,
-    "Z": 2.75
-   },
-   "Direction": -986,
-   "Motif": "s7"
-  }
+  "bytes": "9605ce030000e03f0000104000003040b30f027337"
  }
 ]

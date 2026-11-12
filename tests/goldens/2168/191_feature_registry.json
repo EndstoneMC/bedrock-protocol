@@ -10,14 +10,6 @@
     }
    ]
   },
-  "bytes": "01027331027332",
-  "bds_json": {
-   "FeaturesDataList": [
-    {
-     "Feature Name": "s1",
-     "Binary Json Output": "s2"
-    }
-   ]
-  }
+  "bytes": "01027331027332"
  }
 ]

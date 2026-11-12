@@ -12,17 +12,7 @@
     }
    }
   },
-  "bytes": "96050400001d",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 331
-   },
-   "Event Type": 2,
-   "Use Player ID": false,
-   "Event Data": {
-    "Achievement ID": 29
-   }
-  }
+  "bytes": "96050400001d"
  },
  {
   "id": "v1",
@@ -41,21 +31,7 @@
     }
    }
   },
-  "bytes": "ae0d0c0001c0130acc17d21955",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 855
-   },
-   "Event Type": 6,
-   "Use Player ID": false,
-   "Event Data": {
-    "Interacted Entity ID": 1248,
-    "Interaction Type": 10,
-    "Interaction Actor Type": 1510,
-    "Interaction Actor Variant": 1641,
-    "Interaction Actor Color": 85
-   }
-  }
+  "bytes": "ae0d0c0001c0130acc17d21955"
  },
  {
   "id": "v2",
@@ -70,17 +46,7 @@
     }
    }
   },
-  "bytes": "de1d1c0002f023",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 1903
-   },
-   "Event Type": 14,
-   "Use Player ID": false,
-   "Event Data": {
-    "Dimension ID": 2296
-   }
-  }
+  "bytes": "de1d1c0002f023"
  },
  {
   "id": "v3",
@@ -96,18 +62,7 @@
     }
    }
   },
-  "bytes": "f625240003882c8d2e",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 2427
-   },
-   "Event Type": 18,
-   "Use Player ID": false,
-   "Event Data": {
-    "Source Dimension ID": 2820,
-    "Target Dimension ID": -2951
-   }
-  }
+  "bytes": "f625240003882c8d2e"
  },
  {
   "id": "v4",
@@ -127,22 +82,7 @@
     }
    }
   },
-  "bytes": "94302e0104a636ac38fc04b83cbe3e03733330",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 3082
-   },
-   "Event Type": 23,
-   "Use Player ID": true,
-   "Event Data": {
-    "Instigator Actor ID": 3475,
-    "Target Actor ID": 3606,
-    "Instigator's Child Actor Type": 318,
-    "Damage Source": 3868,
-    "Trade Tier": 3999,
-    "Trader Name": "s30"
-   }
-  }
+  "bytes": "94302e0104a636ac38fc04b83cbe3e03733330"
  },
  {
   "id": "v5",
@@ -159,19 +99,7 @@
     }
    }
   },
-  "bytes": "ca42000005ae24b112ccec",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 4261
-   },
-   "Event Type": 0,
-   "Use Player ID": false,
-   "Event Data": {
-    "Contents Color": 4654,
-    "Contents Type": 4785,
-    "Fill Level": -4916
-   }
-  }
+  "bytes": "ca42000005ae24b112ccec"
  },
  {
   "id": "v6",
@@ -189,20 +117,7 @@
     }
    }
   },
-  "bytes": "ee4e0c0006805586578b5900",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 5047
-   },
-   "Event Type": 6,
-   "Use Player ID": false,
-   "Event Data": {
-    "Instigator Actor ID": 5440,
-    "Instigator Mob Variant": 5571,
-    "Damage Source": -5702,
-    "Died in Raid?": false
-   }
-  }
+  "bytes": "ee4e0c0006805586578b5900"
  },
  {
   "id": "v7",
@@ -219,19 +134,7 @@
     }
    }
   },
-  "bytes": "985d1a0107aa63af65b667",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 5964
-   },
-   "Event Type": 13,
-   "Use Player ID": true,
-   "Event Data": {
-    "Boss Actor ID": 6357,
-    "Party Size": -6488,
-    "Boss Type": 6619
-   }
-  }
+  "bytes": "985d1a0107aa63af65b667"
  },
  {
   "id": "v8",
@@ -249,20 +152,7 @@
     }
    }
   },
-  "bytes": "bc69260108ce6fd3710373353503733536",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 6750
-   },
-   "Event Type": 19,
-   "Use Player ID": true,
-   "Event Data": {
-    "Success Count": 7143,
-    "Error Count": -7274,
-    "Command Name": "s55",
-    "Error List": "s56"
-   }
-  }
+  "bytes": "bc69260108ce6fd3710373353503733536"
  },
  {
   "id": "v9",
@@ -279,19 +169,7 @@
     }
    }
   },
-  "bytes": "e577340009f77dfe7f23",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -7667
-   },
-   "Event Type": 26,
-   "Use Player ID": false,
-   "Event Data": {
-    "Born Baby: Entity Type": -8060,
-    "Born Baby: Entity Variant": 8191,
-    "Born Baby: Color": 35
-   }
-  }
+  "bytes": "e577340009f77dfe7f23"
  },
  {
   "id": "v10",
@@ -307,18 +185,7 @@
     }
    }
   },
-  "bytes": "89840100000a0e1123",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -8453
-   },
-   "Event Type": 0,
-   "Use Player ID": false,
-   "Event Data": {
-    "Block Interaction Type": 14,
-    "Item Id": 8977
-   }
-  }
+  "bytes": "89840100000a0e1123"
  },
  {
   "id": "v11",
@@ -334,18 +201,7 @@
     }
    }
   },
-  "bytes": "a88e010a010b1360da",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 9108
-   },
-   "Event Type": 5,
-   "Use Player ID": true,
-   "Event Data": {
-    "Block Interaction Type": 19,
-    "Item Id": -9632
-   }
-  }
+  "bytes": "a88e010a010b1360da"
  },
  {
   "id": "v12",
@@ -360,17 +216,7 @@
     }
    }
   },
-  "bytes": "c6980114000cac27",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 9763
-   },
-   "Event Type": 10,
-   "Use Player ID": false,
-   "Event Data": {
-    "Item Id": 10156
-   }
-  }
+  "bytes": "c6980114000cac27"
  },
  {
   "id": "v13",
@@ -385,17 +231,7 @@
     }
    }
   },
-  "bytes": "dea0011c000d03733830",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 10287
-   },
-   "Event Type": 14,
-   "Use Player ID": false,
-   "Event Data": {
-    "Event Name": "s80"
-   }
-  }
+  "bytes": "dea0011c000d03733830"
  },
  {
   "id": "v14",
@@ -412,19 +248,7 @@
     }
    }
   },
-  "bytes": "f5a80124000e87af018eb10101",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -10811
-   },
-   "Event Type": 18,
-   "Use Player ID": false,
-   "Event Data": {
-    "Current Wave": -11204,
-    "Total Waves": 11335,
-    "Success": true
-   }
-  }
+  "bytes": "f5a80124000e87af018eb10101"
  },
  {
   "id": "v15",
@@ -439,17 +263,7 @@
     }
    }
   },
-  "bytes": "99b50130000fabbb01",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -11597
-   },
-   "Event Type": 24,
-   "Use Player ID": false,
-   "Event Data": {
-    "Redstone Level": -11990
-   }
-  }
+  "bytes": "99b50130000fabbb01"
  },
  {
   "id": "v16",
@@ -465,18 +279,7 @@
     }
    }
   },
-  "bytes": "b2bd01380010c4c30100",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 12121
-   },
-   "Event Type": 28,
-   "Use Player ID": false,
-   "Event Data": {
-    "Item Id": 12514,
-    "Was Targeting Bartering Player": false
-   }
-  }
+  "bytes": "b2bd01380010c4c30100"
  },
  {
   "id": "v17",
@@ -491,17 +294,7 @@
     }
    }
   },
-  "bytes": "cfc701020111e1cd01",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": -12776
-   },
-   "Event Type": 1,
-   "Use Player ID": true,
-   "Event Data": {
-    "Player Waxed or Unwaxed Copper Block ID": -13169
-   }
-  }
+  "bytes": "cfc701020111e1cd01"
  },
  {
   "id": "v18",
@@ -516,17 +309,7 @@
     }
    }
   },
-  "bytes": "e8cf010a01120473313033",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 13300
-   },
-   "Event Type": 5,
-   "Use Player ID": true,
-   "Event Data": {
-    "CodeBuilder Runtime Action": "s103"
-   }
-  }
+  "bytes": "e8cf010a01120473313033"
  },
  {
   "id": "v19",
@@ -542,18 +325,7 @@
     }
    }
   },
-  "bytes": "80d801120113047331303797e001",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 13824
-   },
-   "Event Type": 9,
-   "Use Player ID": true,
-   "Event Data": {
-    "Objective Name": "s107",
-    "Score": -14348
-   }
-  }
+  "bytes": "80d801120113047331303797e001"
  },
  {
   "id": "v20",
@@ -571,20 +343,7 @@
     }
    }
   },
-  "bytes": "9ee2011c0014183a9b3a0000e2c4ffffa13b0000",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 14479
-   },
-   "Event Type": 14,
-   "Use Player ID": false,
-   "Event Data": {
-    "Item Id": 14872,
-    "Item Aux": 15003,
-    "Use Method": -15134,
-    "Count": 15265
-   }
-  }
+  "bytes": "9ee2011c0014183a9b3a0000e2c4ffffa13b0000"
  },
  {
   "id": "v21",
@@ -597,14 +356,6 @@
     "Empty": {}
    }
   },
-  "bytes": "c8f0012a0115",
-  "bds_json": {
-   "Target Actor ID": {
-    "Actor Unique ID": 15396
-   },
-   "Event Type": 21,
-   "Use Player ID": true,
-   "Event Data": {}
-  }
+  "bytes": "c8f0012a0115"
  }
 ]

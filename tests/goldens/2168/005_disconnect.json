@@ -11,14 +11,7 @@
     }
    }
   },
-  "bytes": "0200027332027333",
-  "bds_json": {
-   "Reason": 1,
-   "Messages": {
-    "Message": "s2",
-    "Filtered Message": "s3"
-   }
-  }
+  "bytes": "0200027332027333"
  },
  {
   "id": "v1",
@@ -27,10 +20,6 @@
    "reason": "THIRD_PARTY_BLOCKED",
    "messages": null
   },
-  "bytes": "0801",
-  "bds_json": {
-   "Reason": 4,
-   "Messages": null
-  }
+  "bytes": "0801"
  }
 ]

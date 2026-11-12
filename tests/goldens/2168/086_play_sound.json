@@ -16,21 +16,7 @@
     "value": 1248
    }
   },
-  "bytes": "0273319c07a109a80b0000304000005040ba1101e004000000000000",
-  "bds_json": {
-   "Name": "s1",
-   "Position": {
-    "X": 462,
-    "Y": -593,
-    "Z": 724
-   },
-   "Volume": 2.75,
-   "Pitch": 3.25,
-   "Loop Count": 1117,
-   "Server Sound Handle": {
-    "Server Sound Handle": 1248
-   }
-  }
+  "bytes": "0273319c07a109a80b0000304000005040ba1101e004000000000000"
  },
  {
   "id": "v1",
@@ -47,17 +33,6 @@
    "loop_count": -2165,
    "server_sound_handle": null
   },
-  "bytes": "027339cc17d219d71b0000d8400000e840e92100",
-  "bds_json": {
-   "Name": "s9",
-   "Position": {
-    "X": 1510,
-    "Y": 1641,
-    "Z": -1772
-   },
-   "Volume": 6.75,
-   "Pitch": 7.25,
-   "Loop Count": -2165
-  }
+  "bytes": "027339cc17d219d71b0000d8400000e840e92100"
  }
 ]

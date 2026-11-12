@@ -12,16 +12,6 @@
     }
    ]
   },
-  "bytes": "014b010000ce010000affdffffd4020000",
-  "bds_json": {
-   "Camera Aim-Assist Actor Priority List": [
-    {
-     "Preset Index": 331,
-     "Category Index": 462,
-     "Actor Index": -593,
-     "Priority Value": 724
-    }
-   ]
-  }
+  "bytes": "014b010000ce010000affdffffd4020000"
  }
 ]

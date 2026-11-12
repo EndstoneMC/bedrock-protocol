@@ -28,19 +28,7 @@
     "Stop": {}
    }
   },
-  "bytes": "4b0100000000000000000000000000",
-  "bds_json": {
-   "Server Sound Handle": {
-    "Server Sound Handle": 331
-   },
-   "Stop": {},
-   "SetVolume": {},
-   "SetPitch": {},
-   "Fade": {},
-   "SeekTo": {},
-   "Pause": {},
-   "Resume": {}
-  }
+  "bytes": "4b0100000000000000000000000000"
  },
  {
   "id": "v5",
@@ -71,19 +59,7 @@
     "Pause": {}
    }
   },
-  "bytes": "c31500000000000005050505050505",
-  "bds_json": {
-   "Server Sound Handle": {
-    "Server Sound Handle": 5571
-   },
-   "Stop": {},
-   "SetVolume": {},
-   "SetPitch": {},
-   "Fade": {},
-   "SeekTo": {},
-   "Pause": {},
-   "Resume": {}
-  }
+  "bytes": "c31500000000000005050505050505"
  },
  {
   "id": "v6",
@@ -114,18 +90,6 @@
     "Resume": {}
    }
   },
-  "bytes": "461600000000000006060606060606",
-  "bds_json": {
-   "Server Sound Handle": {
-    "Server Sound Handle": 5702
-   },
-   "Stop": {},
-   "SetVolume": {},
-   "SetPitch": {},
-   "Fade": {},
-   "SeekTo": {},
-   "Pause": {},
-   "Resume": {}
-  }
+  "bytes": "461600000000000006060606060606"
  }
 ]

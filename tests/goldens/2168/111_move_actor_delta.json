@@ -17,24 +17,7 @@
     "force_completion": false
    }
   },
-  "bytes": "cb02010000a03f010000e03f0100001040012401d5013201000100",
-  "bds_json": {
-   "Move Data": {
-    "Actor Runtime ID": {
-     "Actor Runtime ID": 331
-    },
-    "New Position X": 1.25,
-    "New Position Y": 1.75,
-    "New Position Z": 2.25,
-    "Rotation X": 36,
-    "Rotation Y": -43,
-    "Rotation Y Head": 50,
-    "Is On Ground": true,
-    "Force Move": false,
-    "Force Move Local Entity": true,
-    "Force Completion": false
-   }
-  }
+  "bytes": "cb02010000a03f010000e03f0100001040012401d5013201000100"
  },
  {
   "id": "v1",
@@ -54,17 +37,6 @@
     "force_completion": true
    }
   },
-  "bytes": "ec0d00000000000000010001",
-  "bds_json": {
-   "Move Data": {
-    "Actor Runtime ID": {
-     "Actor Runtime ID": 1772
-    },
-    "Is On Ground": false,
-    "Force Move": true,
-    "Force Move Local Entity": false,
-    "Force Completion": true
-   }
-  }
+  "bytes": "ec0d00000000000000010001"
  }
 ]

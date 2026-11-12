@@ -15,19 +15,6 @@
    "tests_per_row": 1248,
    "test_name": "s9"
   },
-  "bytes": "96059c070301ae0db30fba11c013027339",
-  "bds_json": {
-   "MaxTestsPerBatch": 331,
-   "RepeatCount": 462,
-   "Rotation": 3,
-   "StopOnFailure": true,
-   "TestPos": {
-    "X": 855,
-    "Y": -986,
-    "Z": 1117
-   },
-   "TestsPerRow": 1248,
-   "TestName": "s9"
-  }
+  "bytes": "96059c070301ae0db30fba11c013027339"
  }
 ]

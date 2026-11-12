@@ -7,12 +7,7 @@
     "Cancel": {}
    }
   },
-  "bytes": "000663616e63656c",
-  "bds_json": {
-   "Response": {
-    "Response Type": "cancel"
-   }
-  }
+  "bytes": "000663616e63656c"
  },
  {
   "id": "v1",
@@ -26,15 +21,7 @@
     }
    }
   },
-  "bytes": "010b646f776e6c6f6164696e6701027331",
-  "bds_json": {
-   "Response": {
-    "Response Type": "downloading",
-    "Downloading Packs": [
-     "s1"
-    ]
-   }
-  }
+  "bytes": "010b646f776e6c6f6164696e6701027331"
  },
  {
   "id": "v2",
@@ -44,12 +31,7 @@
     "DownloadingFinished": {}
    }
   },
-  "bytes": "0213646f776e6c6f6164696e6766696e6973686564",
-  "bds_json": {
-   "Response": {
-    "Response Type": "downloadingfinished"
-   }
-  }
+  "bytes": "0213646f776e6c6f6164696e6766696e6973686564"
  },
  {
   "id": "v3",
@@ -59,11 +41,6 @@
     "ResourcePackStackFinished": {}
    }
   },
-  "bytes": "03197265736f757263657061636b737461636b66696e6973686564",
-  "bds_json": {
-   "Response": {
-    "Response Type": "resourcepackstackfinished"
-   }
-  }
+  "bytes": "03197265736f757263657061636b737461636b66696e6973686564"
  }
 ]

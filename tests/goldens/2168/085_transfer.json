@@ -17,31 +17,7 @@
     "server_id": "s11"
    }
   },
-  "bytes": "027331ce01000100000000000000000400000000000000027335010000000000000000060000000000000001027337027338010000000000000000090000000000000001037331300103733131",
-  "bds_json": {
-   "Server Address": "s1",
-   "Server Port": 462,
-   "Reload World": false,
-   "Gatherings Configuration": {
-    "experienceId": {
-     "Most Significant Bits": 0,
-     "Least Significant Bits": 4
-    },
-    "experienceName": "s5",
-    "worldId": {
-     "Most Significant Bits": 0,
-     "Least Significant Bits": 6
-    },
-    "worldName": "s7",
-    "creatorId": "s8",
-    "targetId": {
-     "Most Significant Bits": 0,
-     "Least Significant Bits": 9
-    },
-    "scenarioId": "s10",
-    "serverId": "s11"
-   }
-  }
+  "bytes": "027331ce01000100000000000000000400000000000000027335010000000000000000060000000000000001027337027338010000000000000000090000000000000001037331300103733131"
  },
  {
   "id": "v1",
@@ -52,12 +28,7 @@
    "reload_world": true,
    "gatherings_configuration": null
   },
-  "bytes": "037331326f070100",
-  "bds_json": {
-   "Server Address": "s12",
-   "Server Port": 1903,
-   "Reload World": true
-  }
+  "bytes": "037331326f070100"
  },
  {
   "id": "v2",
@@ -77,19 +48,6 @@
     "server_id": null
    }
   },
-  "bytes": "03733135f80800010000000000000000120000000000000003733139000003733230000000",
-  "bds_json": {
-   "Server Address": "s15",
-   "Server Port": 2296,
-   "Reload World": false,
-   "Gatherings Configuration": {
-    "experienceId": {
-     "Most Significant Bits": 0,
-     "Least Significant Bits": 18
-    },
-    "experienceName": "s19",
-    "creatorId": "s20"
-   }
-  }
+  "bytes": "03733135f80800010000000000000000120000000000000003733139000003733230000000"
  }
 ]

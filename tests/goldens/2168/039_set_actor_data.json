@@ -32,40 +32,7 @@
    },
    "tick": 1248
   },
-  "bytes": "cb0201ce030000ea01d405ae0d01da0700007040e009",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 462,
-      "Payload": {
-       "Type": 0,
-       "Value": -22
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 724,
-      "Data": 855
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 986,
-      "Data": 3.75
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 1248
-   }
-  }
+  "bytes": "cb0201ce030000ea01d405ae0d01da0700007040e009"
  },
  {
   "id": "v1",
@@ -100,40 +67,7 @@
    },
    "tick": 2296
   },
-  "bytes": "e30a01e60b0101690601ec0dde1d01f20f0000f840f811",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 1379
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 1510,
-      "Payload": {
-       "Type": 1,
-       "Value": 1641
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 1772,
-      "Data": 1903
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 2034,
-      "Data": 7.75
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 2296
-   }
-  }
+  "bytes": "e30a01e60b0101690601ec0dde1d01f20f0000f840f811"
  },
  {
   "id": "v2",
@@ -168,40 +102,7 @@
    },
    "tick": 3344
   },
-  "bytes": "fb1201fe130202822a0184168d2e018a1800003c41901a",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 2427
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 2558,
-      "Payload": {
-       "Type": 2,
-       "Value": 2689
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 2820,
-      "Data": -2951
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 3082,
-      "Data": 11.75
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 3344
-   }
-  }
+  "bytes": "fb1201fe130202822a0184168d2e018a1800003c41901a"
  },
  {
   "id": "v3",
@@ -236,40 +137,7 @@
    },
    "tick": 4392
   },
-  "bytes": "931b01961c030300005c41019c1ebe3e01a22000007c41a822",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 3475
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 3606,
-      "Payload": {
-       "Type": 3,
-       "Value": 13.75
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 3868,
-      "Data": 3999
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 4130,
-      "Data": 15.75
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 4392
-   }
-  }
+  "bytes": "931b01961c030300005c41019c1ebe3e01a22000007c41a822"
  },
  {
   "id": "v4",
@@ -304,40 +172,7 @@
    },
    "tick": 5440
   },
-  "bytes": "ab2301ae2404040373333501b426ee4e01ba2800009e41c02a",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 4523
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 4654,
-      "Payload": {
-       "Type": 4,
-       "Value": "s35"
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 4916,
-      "Data": 5047
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 5178,
-      "Data": 19.75
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 5440
-   }
-  }
+  "bytes": "ab2301ae2404040373333501b426ee4e01ba2800009e41c02a"
  },
  {
   "id": "v5",
@@ -467,44 +302,7 @@
    },
    "tick": 7667
   },
-  "bytes": "d83201db330606bc69c16bc86d01e737d37101ed390000e241f33b",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 6488
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 6619,
-      "Payload": {
-       "Type": 6,
-       "Value": {
-        "X": 6750,
-        "Y": -6881,
-        "Z": 7012
-       }
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 7143,
-      "Data": -7274
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 7405,
-      "Data": 28.25
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 7667
-   }
-  }
+  "bytes": "d83201db330606bc69c16bc86d01e737d37101ed390000e241f33b"
  },
  {
   "id": "v7",
@@ -539,40 +337,7 @@
    },
    "tick": 8715
   },
-  "bytes": "f63c01f93d0707f77d01ff3f848201018542000001428b44",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 7798
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 7929,
-      "Payload": {
-       "Type": 7,
-       "Value": -8060
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 8191,
-      "Data": 8322
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 8453,
-      "Data": 32.25
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 8715
-   }
-  }
+  "bytes": "f63c01f93d0707f77d01ff3f848201018542000001428b44"
  },
  {
   "id": "v8",
@@ -611,43 +376,6 @@
    },
    "tick": 10025
   },
-  "bytes": "8e4501914608080000094200000b4200000d42019d4abf960101a34c00001542a94e",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 8846
-   },
-   "Actor Data": {
-    "Data": [
-     {
-      "ID": 8977,
-      "Payload": {
-       "Type": 8,
-       "Value": {
-        "X": 34.25,
-        "Y": 34.75,
-        "Z": 35.25
-       }
-      }
-     }
-    ]
-   },
-   "Synched Properties": {
-    "Int Entries List": [
-     {
-      "Property Index": 9501,
-      "Data": -9632
-     }
-    ],
-    "Float Entries List": [
-     {
-      "Property Index": 9763,
-      "Data": 37.25
-     }
-    ]
-   },
-   "Tick": {
-    "Input tick": 10025
-   }
-  }
+  "bytes": "8e4501914608080000094200000b4200000d42019d4abf960101a34c00001542a94e"
  }
 ]

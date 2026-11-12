@@ -21,18 +21,6 @@
    "start_y": null,
    "map_pixels": null
   },
-  "bytes": "a6365300b83cbe3ec340000000000000000000",
-  "bds_json": {
-   "Map ID": {
-    "Actor Unique ID": 3475
-   },
-   "Dimension": 83,
-   "Is Locked": false,
-   "Map Origin": {
-    "X": 3868,
-    "Y": 3999,
-    "Z": -4130
-   }
-  }
+  "bytes": "a6365300b83cbe3ec340000000000000000000"
  }
 ]

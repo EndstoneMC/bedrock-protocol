@@ -5,10 +5,7 @@
   "value": {
    "form_id": 331
   },
-  "bytes": "014b010000",
-  "bds_json": {
-   "FormId": 331
-  }
+  "bytes": "014b010000"
  },
  {
   "id": "v1",
@@ -16,7 +13,6 @@
   "value": {
    "form_id": null
   },
-  "bytes": "00",
-  "bds_json": {}
+  "bytes": "00"
  }
 ]

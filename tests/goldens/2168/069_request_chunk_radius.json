@@ -6,10 +6,6 @@
    "chunk_radius": 331,
    "max_chunk_radius": 15
   },
-  "bytes": "96050f",
-  "bds_json": {
-   "Chunk Radius": 331,
-   "Max ChunkRadius": 15
-  }
+  "bytes": "96050f"
  }
 ]

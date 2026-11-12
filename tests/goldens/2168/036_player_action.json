@@ -17,23 +17,6 @@
    },
    "face": -1379
   },
-  "bytes": "cb0202a109a80bae0db30fba11c013c515",
-  "bds_json": {
-   "Player Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Action": 1,
-   "Block Position": {
-    "X": -593,
-    "Y": 724,
-    "Z": 855
-   },
-   "Result Pos": {
-    "X": -986,
-    "Y": 1117,
-    "Z": 1248
-   },
-   "Face": -1379
-  }
+  "bytes": "cb0202a109a80bae0db30fba11c013c515"
  }
 ]

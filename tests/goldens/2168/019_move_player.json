@@ -23,34 +23,7 @@
    },
    "tick": 1903
   },
-  "bytes": "cb020000a03f0000e03f000010400000304000005040000070400000e60b016906000014f9ffffef0e",
-  "bds_json": {
-   "Player Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Position": {
-    "X": 1.25,
-    "Y": 1.75,
-    "Z": 2.25
-   },
-   "Rotation": {
-    "X": 2.75,
-    "Y": 3.25
-   },
-   "Y-Head Rotation": 3.75,
-   "Position Mode": 0,
-   "On Ground": false,
-   "Riding Runtime ID": {
-    "Actor Runtime ID": 1510
-   },
-   "Teleport Data": {
-    "Teleportation Cause": 1641,
-    "Source Actor Type": -1772
-   },
-   "Tick": {
-    "Input tick": 1903
-   }
-  }
+  "bytes": "cb020000a03f0000e03f000010400000304000005040000070400000e60b016906000014f9ffffef0e"
  },
  {
   "id": "v1",
@@ -73,29 +46,6 @@
    "teleport_data": null,
    "tick": 3344
   },
-  "bytes": "f20f0000f8400000044100000c410000144100001c410000244101018d1900901a",
-  "bds_json": {
-   "Player Runtime ID": {
-    "Actor Runtime ID": 2034
-   },
-   "Position": {
-    "X": 7.75,
-    "Y": 8.25,
-    "Z": 8.75
-   },
-   "Rotation": {
-    "X": 9.25,
-    "Y": 9.75
-   },
-   "Y-Head Rotation": 10.25,
-   "Position Mode": 1,
-   "On Ground": true,
-   "Riding Runtime ID": {
-    "Actor Runtime ID": 3213
-   },
-   "Tick": {
-    "Input tick": 3344
-   }
-  }
+  "bytes": "f20f0000f8400000044100000c410000144100001c410000244101018d1900901a"
  }
 ]

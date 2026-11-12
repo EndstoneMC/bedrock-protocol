@@ -7,12 +7,7 @@
    "form_id": 462,
    "data_instance_id": 593
   },
-  "bytes": "027331ce0100000151020000",
-  "bds_json": {
-   "ScreenId": "s1",
-   "FormId": 462,
-   "DataInstanceId": 593
-  }
+  "bytes": "027331ce0100000151020000"
  },
  {
   "id": "v1",
@@ -22,10 +17,6 @@
    "form_id": 855,
    "data_instance_id": null
   },
-  "bytes": "0273345703000000",
-  "bds_json": {
-   "ScreenId": "s4",
-   "FormId": 855
-  }
+  "bytes": "0273345703000000"
  }
 ]

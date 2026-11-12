@@ -11,17 +11,6 @@
    "state": "READY_TO_SPAWN",
    "runtime_id": 855
   },
-  "bytes": "0000403f0000a03f0000e03f01d706",
-  "bds_json": {
-   "Position": {
-    "X": 0.75,
-    "Y": 1.25,
-    "Z": 1.75
-   },
-   "State": 1,
-   "Player Runtime Id": {
-    "Actor Runtime ID": 855
-   }
-  }
+  "bytes": "0000403f0000a03f0000e03f01d706"
  }
 ]

@@ -17,21 +17,6 @@
     }
    ]
   },
-  "bytes": "0102733102733201027333027334027335",
-  "bds_json": {
-   "TrimPattern List": [
-    {
-     "Item Name": "s1",
-     "Pattern Id": "s2"
-    }
-   ],
-   "TrimMaterial List": [
-    {
-     "Material Id": "s3",
-     "Color": "s4",
-     "Item Name": "s5"
-    }
-   ]
-  }
+  "bytes": "0102733102733201027333027334027335"
  }
 ]

@@ -8,13 +8,7 @@
     "store_name": "s2"
    }
   },
-  "bytes": "01027331027332",
-  "bds_json": {
-   "client_store_entry_point_configuration": {
-    "storeId": "s1",
-    "storeName": "s2"
-   }
-  }
+  "bytes": "01027331027332"
  },
  {
   "id": "v1",
@@ -22,7 +16,6 @@
   "value": {
    "client_store_entry_point_configuration": null
   },
-  "bytes": "00",
-  "bds_json": {}
+  "bytes": "00"
  }
 ]

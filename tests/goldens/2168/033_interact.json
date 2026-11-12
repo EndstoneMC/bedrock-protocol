@@ -11,18 +11,7 @@
     "z": 2.75
    }
   },
-  "bytes": "03ce03010000e03f0000104000003040",
-  "bds_json": {
-   "Action": 3,
-   "Target Runtime ID": {
-    "Actor Runtime ID": 462
-   },
-   "Position": {
-    "X": 1.75,
-    "Y": 2.25,
-    "Z": 2.75
-   }
-  }
+  "bytes": "03ce03010000e03f0000104000003040"
  },
  {
   "id": "v1",
@@ -32,12 +21,6 @@
    "target_id": 1117,
    "pos": null
   },
-  "bytes": "03dd0800",
-  "bds_json": {
-   "Action": 3,
-   "Target Runtime ID": {
-    "Actor Runtime ID": 1117
-   }
-  }
+  "bytes": "03dd0800"
  }
 ]

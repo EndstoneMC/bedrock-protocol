@@ -11,17 +11,6 @@
     }
    ]
   },
-  "bytes": "960501000000ce0100005102",
-  "bds_json": {
-   "Map Unique ID": {
-    "Actor Unique ID": 331
-   },
-   "Client Pixels List": [
-    {
-     "pixel": 462,
-     "index": 593
-    }
-   ]
-  }
+  "bytes": "960501000000ce0100005102"
  }
 ]

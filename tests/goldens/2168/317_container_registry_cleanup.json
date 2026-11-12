@@ -10,15 +10,7 @@
     }
    ]
   },
-  "bytes": "010101ce010000",
-  "bds_json": {
-   "Removed Containers": [
-    {
-     "Container Name": 1,
-     "Dynamic ID": 462
-    }
-   ]
-  }
+  "bytes": "010101ce010000"
  },
  {
   "id": "v1",
@@ -31,13 +23,6 @@
     }
    ]
   },
-  "bytes": "010300",
-  "bds_json": {
-   "Removed Containers": [
-    {
-     "Container Name": 3
-    }
-   ]
-  }
+  "bytes": "010300"
  }
 ]

@@ -6,14 +6,6 @@
    "item_id": 331,
    "actor_id": 462
   },
-  "bytes": "cb02ce03",
-  "bds_json": {
-   "Item Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Actor Runtime ID": {
-    "Actor Runtime ID": 462
-   }
-  }
+  "bytes": "cb02ce03"
  }
 ]

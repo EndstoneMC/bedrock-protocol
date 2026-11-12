@@ -9,13 +9,6 @@
    ],
    "type": "ADD"
   },
-  "bytes": "0273310102733200",
-  "bds_json": {
-   "Enum Name": "s1",
-   "Values": [
-    "s2"
-   ],
-   "Update Type": 0
-  }
+  "bytes": "0273310102733200"
  }
 ]

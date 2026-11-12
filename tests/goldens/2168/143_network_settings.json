@@ -9,13 +9,6 @@
    "client_throttle_threshold": 29,
    "client_throttle_scalar": 2.75
   },
-  "bytes": "4b01ffff001d00003040",
-  "bds_json": {
-   "Compression Threshold": 331,
-   "CompressionAlgorithm": 65535,
-   "Client Throttle Enabled": false,
-   "Client Throttle Threshold": 29,
-   "Client Throttle Scalar": 2.75
-  }
+  "bytes": "4b01ffff001d00003040"
  }
 ]

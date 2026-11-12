@@ -12,19 +12,7 @@
     "z": 3.25
    }
   },
-  "bytes": "cb0202a10901000010400000304000005040",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 331
-   },
-   "Event ID": 2,
-   "Data": -593,
-   "Fire At Position": {
-    "X": 2.25,
-    "Y": 2.75,
-    "Z": 3.25
-   }
-  }
+  "bytes": "cb0202a10901000010400000304000005040"
  },
  {
   "id": "v1",
@@ -35,13 +23,6 @@
    "data": -1379,
    "fire_at_position": null
   },
-  "bytes": "dd0808c51500",
-  "bds_json": {
-   "Target Runtime ID": {
-    "Actor Runtime ID": 1117
-   },
-   "Event ID": 8,
-   "Data": -1379
-  }
+  "bytes": "dd0808c51500"
  }
 ]

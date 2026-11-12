@@ -12,19 +12,7 @@
    "respawn": false,
    "loading_screen_id": 986
   },
-  "bytes": "96050000a03f0000e03f000010400001da030000",
-  "bds_json": {
-   "Dimension ID": {
-    "value": 331
-   },
-   "Position": {
-    "X": 1.25,
-    "Y": 1.75,
-    "Z": 2.25
-   },
-   "Respawn": false,
-   "Loading Screen Id": 986
-  }
+  "bytes": "96050000a03f0000e03f000010400001da030000"
  },
  {
   "id": "v1",
@@ -39,17 +27,6 @@
    "respawn": false,
    "loading_screen_id": null
   },
-  "bytes": "ba1100008840000098400000a8400000",
-  "bds_json": {
-   "Dimension ID": {
-    "value": 1117
-   },
-   "Position": {
-    "X": 4.25,
-    "Y": 4.75,
-    "Z": 5.25
-   },
-   "Respawn": false
-  }
+  "bytes": "ba1100008840000098400000a8400000"
  }
 ]

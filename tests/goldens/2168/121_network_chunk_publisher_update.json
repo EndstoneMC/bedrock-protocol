@@ -16,20 +16,6 @@
     }
    ]
   },
-  "bytes": "96059c07a109d40501000000ae0db30f",
-  "bds_json": {
-   "New position for view": {
-    "X": 331,
-    "Y": 462,
-    "Z": -593
-   },
-   "New radius for view": 724,
-   "Server Built Chunks List": [
-    {
-     "X": 855,
-     "Z": -986
-    }
-   ]
-  }
+  "bytes": "96059c07a109d40501000000ae0db30f"
  }
 ]

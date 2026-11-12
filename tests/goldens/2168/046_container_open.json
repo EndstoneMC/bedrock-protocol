@@ -12,18 +12,6 @@
    },
    "entity_unique_id": -986
   },
-  "bytes": "0000a109a80bae0db30f",
-  "bds_json": {
-   "Container Id": 0,
-   "Container Type": 0,
-   "Position": {
-    "X": -593,
-    "Y": 724,
-    "Z": 855
-   },
-   "Target Actor ID": {
-    "Actor Unique ID": -986
-   }
-  }
+  "bytes": "0000a109a80bae0db30f"
  }
 ]

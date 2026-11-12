@@ -50,57 +50,7 @@
    "trigger": false,
    "is_waterlogged": true
   },
-  "bytes": "96059c07a1090273340102733502733600010403733130000100e41fe921f023f625fb27822a882c0102020000444100004c41160e000000005c410000644100006c41000001",
-  "bds_json": {
-   "Block Position": {
-    "X": 331,
-    "Y": 462,
-    "Z": -593
-   },
-   "Structure Data": {
-    "Structure Name": {
-     "Unredacted": "s4",
-     "Redacted": "s5"
-    },
-    "Data Field": "s6",
-    "Should include players?": false,
-    "Should show bounding box?": true,
-    "Structure Block Type": 2,
-    "Structure Settings": {
-     "Structure Palette Name": "s10",
-     "Should ignore entities?": false,
-     "Should ignore blocks?": true,
-     "Should Allow Non Ticking Player and Ticking Area Chunks": false,
-     "Structure Size": {
-      "X": 2034,
-      "Y": -2165,
-      "Z": 2296
-     },
-     "Structure Offset": {
-      "X": 2427,
-      "Y": -2558,
-      "Z": 2689
-     },
-     "Last Edit Player": {
-      "Actor Unique ID": 2820
-     },
-     "Rotation": 1,
-     "Mirror": 2,
-     "Animation Mode": 2,
-     "Animation Seconds": 12.25,
-     "Integrity Value": 12.75,
-     "Integrity Seed": 3606,
-     "Rotation Pivot": {
-      "X": 13.75,
-      "Y": 14.25,
-      "Z": 14.75
-     }
-    },
-    "Redstone Save Mode": 0
-   },
-   "Trigger?": false,
-   "IsWaterlogged": true
-  }
+  "bytes": "96059c07a1090273340102733502733600010403733130000100e41fe921f023f625fb27822a882c0102020000444100004c41160e000000005c410000644100006c41000001"
  },
  {
   "id": "v1",
@@ -153,55 +103,6 @@
    "trigger": true,
    "is_waterlogged": false
   },
-  "bytes": "d546dc48e24a03733336000373333701000a037334310100019d5fa461aa63af65b667bc69c16b0201000000de410000e241f31d00000000ea410000ee410000f241010100",
-  "bds_json": {
-   "Block Position": {
-    "X": -4523,
-    "Y": 4654,
-    "Z": 4785
-   },
-   "Structure Data": {
-    "Structure Name": {
-     "Unredacted": "s36"
-    },
-    "Data Field": "s37",
-    "Should include players?": true,
-    "Should show bounding box?": false,
-    "Structure Block Type": 5,
-    "Structure Settings": {
-     "Structure Palette Name": "s41",
-     "Should ignore entities?": true,
-     "Should ignore blocks?": false,
-     "Should Allow Non Ticking Player and Ticking Area Chunks": true,
-     "Structure Size": {
-      "X": -6095,
-      "Y": 6226,
-      "Z": 6357
-     },
-     "Structure Offset": {
-      "X": -6488,
-      "Y": 6619,
-      "Z": 6750
-     },
-     "Last Edit Player": {
-      "Actor Unique ID": -6881
-     },
-     "Rotation": 2,
-     "Mirror": 1,
-     "Animation Mode": 0,
-     "Animation Seconds": 27.75,
-     "Integrity Value": 28.25,
-     "Integrity Seed": 7667,
-     "Rotation Pivot": {
-      "X": 29.25,
-      "Y": 29.75,
-      "Z": 30.25
-     }
-    },
-    "Redstone Save Mode": 1
-   },
-   "Trigger?": true,
-   "IsWaterlogged": false
-  }
+  "bytes": "d546dc48e24a03733336000373333701000a037334310100019d5fa461aa63af65b667bc69c16b0201000000de410000e241f31d00000000ea410000ee410000f241010100"
  }
 ]

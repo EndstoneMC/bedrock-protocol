@@ -13,18 +13,7 @@
     ]
    }
   },
-  "bytes": "010273310100",
-  "bds_json": {
-   "Rule Data": {
-    "Rules List": [
-     {
-      "Rule Name": "s1",
-      "Rule Can Be Modified": true,
-      "Rule Value": null
-     }
-    ]
-   }
-  }
+  "bytes": "010273310100"
  },
  {
   "id": "v1",
@@ -42,18 +31,7 @@
     ]
    }
   },
-  "bytes": "01027333010100",
-  "bds_json": {
-   "Rule Data": {
-    "Rules List": [
-     {
-      "Rule Name": "s3",
-      "Rule Can Be Modified": true,
-      "Rule Value": false
-     }
-    ]
-   }
-  }
+  "bytes": "01027333010100"
  },
  {
   "id": "v2",
@@ -71,18 +49,7 @@
     ]
    }
   },
-  "bytes": "010273360002e0040000",
-  "bds_json": {
-   "Rule Data": {
-    "Rules List": [
-     {
-      "Rule Name": "s6",
-      "Rule Can Be Modified": false,
-      "Rule Value": 1248
-     }
-    ]
-   }
-  }
+  "bytes": "010273360002e0040000"
  },
  {
   "id": "v3",
@@ -100,17 +67,6 @@
     ]
    }
   },
-  "bytes": "0102733901030000b840",
-  "bds_json": {
-   "Rule Data": {
-    "Rules List": [
-     {
-      "Rule Name": "s9",
-      "Rule Can Be Modified": true,
-      "Rule Value": 5.75
-     }
-    ]
-   }
-  }
+  "bytes": "0102733901030000b840"
  }
 ]
