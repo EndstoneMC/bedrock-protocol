@@ -158,6 +158,7 @@ FIXED: dict[str, Json] = {
     "CameraSplineProgressKeyFrame.alpha": 0.5,
     "SkinImage.width": 64,
     "SkinImage.height": 32,
+    "ItemStackRequestId.raw_id": -5,
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
     "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
