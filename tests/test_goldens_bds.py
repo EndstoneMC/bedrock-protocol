@@ -15,8 +15,8 @@ def bds():
     return module
 
 
-def gap(bds, shown, value, enums=None):
-    return bds.missing([scalar for _, scalar in bds.leaves(shown)], bds.leaves(value), enums)
+def gap(bds, shown, value, enums=None, printed=None):
+    return bds.missing([scalar for _, scalar in bds.leaves(shown)], bds.leaves(value), enums, printed)
 
 
 def test_an_enum_the_case_names_matches_the_number_bds_shows(bds):
@@ -68,9 +68,14 @@ def scanned(bds, text, value):
 
 
 def test_scalars_scanned_from_text_that_is_not_json_hold_the_values(bds):
-    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,{"data":2.5}:5,"str":{"data":"text"},0}'
-    value = {"b": {"ByteTag": 7}, "bytes": {"ByteArrayTag": [1, -2, 3]}, "str": {"StringTag": "text"}}
+    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,2:3,{"data":2.5}:5,"str":{"data":"text"},0}'
+    value = {"b": {"ByteTag": 7}, "bytes": {"ByteArrayTag": [1, 2, 3]}, "str": {"StringTag": "text"}}
     assert scanned(bds, text, value) is None
+
+
+def test_a_byte_bds_prints_unsigned_does_not_match_the_signed_byte_of_the_case(bds):
+    text = '{"Data":10,"":1,7:"bytes",3:1,254:3,0}'
+    assert scanned(bds, text, {"bytes": {"ByteArrayTag": [1, -2, 3]}}) == ("bytes.ByteArrayTag[1]", -2)
 
 
 def test_scanned_text_that_lacks_a_value_is_reported(bds):
@@ -86,8 +91,12 @@ def test_an_enum_matches_the_lower_case_name_bds_shows(bds, name):
     assert gap(bds, {"Reason": name}, {"reason": "CLIENT_CANCELED"}) is None
 
 
-def test_a_signed_integer_matches_the_unsigned_one_bds_shows(bds):
-    assert gap(bds, {"Rotation X": 213}, {"rot_x": -43}) is None
+def test_an_integer_matches_the_number_its_wire_type_prints(bds):
+    assert gap(bds, {"Rotation X": 213}, {"rot_x": -43}, printed={"rot_x": 213}) is None
+
+
+def test_an_integer_does_not_match_its_bits_at_another_signedness(bds):
+    assert gap(bds, {"Rotation X": 213}, {"rot_x": -43}) == ("rot_x", -43)
 
 
 def test_integers_that_differ_in_value_do_not_match(bds):
@@ -233,3 +242,17 @@ def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema,
 def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, schema):
     rules = generated(values, schema, "LevelSettings")[0]["game_rules"]["rules"]
     assert (len(rules), rules[0]["name"], rules[-1]["name"]) == (39, "commandBlockOutput", "tntExplosionDropDecay")
+
+
+@pytest.mark.parametrize(
+    ("name", "value", "printed"),
+    [
+        ("MoveActorAbsolutePacket", {"move_data": {"rot_x": -43, "rot_y": 5}}, {"move_data.rot_x": 213}),
+        ("ResourcePackDataInfoPacket", {"chunk_size": 7, "nb_chunks": -593}, {"nb_chunks": 4294966703}),
+        ("SetTimePacket", {"time": -5}, {}),
+    ],
+    ids=["int8-as-uint8", "int32-as-uint32", "same-signedness"],
+)
+def test_an_integer_leaf_is_printed_at_its_wire_type(values, schema, name, value, printed):
+    family = next(each for each in schema.order if each.name == name)
+    assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed

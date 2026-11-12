@@ -95,7 +95,7 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
 
 
 def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
-    """Compare two scalars: an enum by number or lower-case name, an integer by its bits, a blob's hex by its bytes."""
+    """Compare two scalars: an enum by number or lower-case name, a blob's hex by its bytes, the rest exactly."""
     if isinstance(shown, bool) or isinstance(wanted, bool):
         return type(shown) is type(wanted) and bool(shown == wanted)
     if isinstance(wanted, str) and ENUM_NAME.fullmatch(wanted):
@@ -104,24 +104,22 @@ def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
         return shown in (wanted.lower(), wanted.replace("_", "").lower())
     if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
         return isinstance(shown, str) and shown.encode(errors="surrogateescape") == bytes.fromhex(wanted)
-    if type(shown) is int and type(wanted) is int:
-        return any(
-            -(1 << (bits - 1)) <= min(shown, wanted)
-            and max(shown, wanted) < 1 << bits
-            and (shown - wanted) % (1 << bits) == 0
-            for bits in (8, 16, 32, 64)
-        )
     return type(shown) is type(wanted) and bool(shown == wanted)
 
 
 def missing(
-    shown: list[Json], expected: list[tuple[str, Json]], enums: dict[str, int] | None = None
+    shown: list[Json],
+    expected: list[tuple[str, Json]],
+    enums: dict[str, int] | None = None,
+    printed: dict[str, Json] | None = None,
 ) -> tuple[str, Json] | None:
     """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more.
 
-    `enums` maps the key path of each enum leaf to its number.
+    `enums` maps each enum leaf's key path to its number, `printed` each leaf BDS prints otherwise to what it prints.
     """
     enums = enums or {}
+    printed = printed or {}
+    expected = [(path, printed.get(path, wanted)) for path, wanted in expected]
     position = 0
     halves = [
         part
@@ -236,7 +234,7 @@ class Server:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes", "enums"}')
+    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes", "enums", "printed"}')
     parser.add_argument("--server", type=Path, required=True, help="unpacked stock BDS; its ports are moved off 19132")
     parser.add_argument("--lldb", default="lldb", help="lldb executable whose Python module matches this python")
     args = parser.parse_args()
@@ -386,7 +384,11 @@ def main() -> None:
                         shown = [scalar for _, scalar in leaves(report["bds_json"])]
                     elif shown_text:
                         shown = [json.loads(scalar) for scalar in SCALAR.findall(shown_text)]
-                    gap = None if shown is None else missing(shown, leaves(case["value"]), case.get("enums"))
+                    gap = (
+                        None
+                        if shown is None
+                        else missing(shown, leaves(case["value"]), case.get("enums"), case.get("printed"))
+                    )
                     if offset != len(seed):
                         report["difference"] = f"read: BDS stops at byte {offset} of {len(seed)}"
                     elif written != seed:

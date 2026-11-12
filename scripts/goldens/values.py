@@ -609,6 +609,37 @@ class Generator:
                 env[each.name] = int(value)
         return env, bits
 
+    def printed(self, node: Type, value: Json, path: str = "") -> dict[str, Json]:
+        """Map the key path of each leaf BDS's JSON prints otherwise than `value` spells it to what BDS prints."""
+        inner: list[tuple[Type, Json, str]] = []
+        match node:
+            case StructRef(struct=struct):
+                inner = [
+                    (each.type, value[each.name], f"{path}.{each.name}" if path else each.name)
+                    for each in self.shape(struct).fields
+                    if each.name in value
+                ]
+            case Optional(element=element) if value is not None:
+                inner = [(element, value, path)]
+            case List(element=element) | Array(element=element):
+                inner = [(element, item, f"{path}[{index}]") for index, item in enumerate(value)]
+            case Map(value=element):
+                inner = [(element, item, f"{path}.{key}" if path else key) for key, item in value.items()]
+            case Variant(cases=cases) if value is not None:
+                ((name, item),) = value.items()
+                case = next(each for each in cases if each is not None and self.alternative(each) == name)
+                inner = [(case, item, f"{path}.{name}" if path else name)]
+            case Primitive() | AliasRef():
+                primitive = node if isinstance(node, Primitive) else node.alias.primitive
+                wire = node.wire or primitive.wire or primitive.name
+                if primitive.name in INTEGER_BITS and wire in INTEGER_BITS:
+                    bits, signed = INTEGER_BITS[wire]
+                    number = value % (1 << bits)
+                    if signed and number >> (bits - 1):
+                        number -= 1 << bits
+                    return {} if number == value else {path: number}
+        return {key: shown for each in inner for key, shown in self.printed(*each).items()}
+
 
 def packets(schema: Schema, version: int) -> list[Any]:
     found = [
@@ -757,6 +788,7 @@ def main() -> None:
                             "version": version,
                             "value": value,
                             "enums": enum_numbers(cls.from_json(value), value),
+                            "printed": Generator(schema, version).printed(StructRef(family), value),
                             "bytes": data.hex(),
                         }
                     )
