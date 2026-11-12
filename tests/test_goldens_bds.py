@@ -47,13 +47,23 @@ def test_a_null_in_the_case_needs_nothing_from_bds(bds):
     assert gap(bds, {"Tick": 5}, {"tags": None, "tick": 5}) is None
 
 
+def scanned(bds, text, value):
+    shown = [bds.json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
+    return bds.missing(shown, bds.leaves(value), ordered=False)
+
+
 def test_scalars_scanned_from_text_that_is_not_json_hold_the_values(bds):
     text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,{"data":2.5}:5,"str":{"data":"text"},0}'
-    shown = [bds.json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
-    assert (
-        bds.missing(shown, bds.leaves({"b": {"ByteTag": 7}, "d": {"DoubleTag": 2.5}, "str": {"StringTag": "text"}}))
-        is None
-    )
+    value = {"str": {"StringTag": "text"}, "b": {"ByteTag": 7}, "bytes": {"ByteArrayTag": [1, -2, 3]}}
+    assert scanned(bds, text, value) is None
+
+
+def test_scanned_text_that_lacks_a_value_is_reported(bds):
+    assert scanned(bds, '{"b":{"data":7}}', {"i": {"IntTag": 70000}}) == ("i.IntTag", 70000)
+
+
+def test_scanned_text_holds_a_repeated_value_once_per_appearance(bds):
+    assert scanned(bds, '{"a":7}', {"x": 7, "y": 7}) == ("y", 7)
 
 
 @pytest.mark.parametrize("name", ["clientcanceled", "client_canceled"])

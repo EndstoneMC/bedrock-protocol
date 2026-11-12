@@ -112,8 +112,8 @@ def same(shown: Json, wanted: Json) -> bool:
     return bool(shown == wanted)
 
 
-def missing(shown: list[Json], expected: list[tuple[str, Json]]) -> tuple[str, Json] | None:
-    """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more."""
+def missing(shown: list[Json], expected: list[tuple[str, Json]], ordered: bool = True) -> tuple[str, Json] | None:
+    """Find the first expected scalar that BDS's scalars do not hold, in order or not; BDS may show more."""
     position = 0
     halves = [
         part
@@ -125,11 +125,13 @@ def missing(shown: list[Json], expected: list[tuple[str, Json]]) -> tuple[str, J
         )
     ]
     for path, wanted in halves:
-        while position < len(shown) and not same(shown[position], wanted):
-            position += 1
-        if position == len(shown):
+        found = next((i for i in range(position, len(shown)) if same(shown[i], wanted)), None)
+        if found is None:
             return path, wanted
-        position += 1
+        if ordered:
+            position = found + 1
+        else:
+            del shown[found]
     return None
 
 
@@ -379,7 +381,9 @@ def main() -> None:
                         shown = [scalar for _, scalar in leaves(report["bds_json"])]
                     elif shown_text:
                         shown = [json.loads(scalar) for scalar in SCALAR.findall(shown_text)]
-                    gap = None if shown is None else missing(shown, leaves(case["value"]))
+                    gap = (
+                        None if shown is None else missing(shown, leaves(case["value"]), report["bds_json"] is not None)
+                    )
                     if offset != len(seed):
                         report["difference"] = f"read: BDS stops at byte {offset} of {len(seed)}"
                     elif written != seed:
