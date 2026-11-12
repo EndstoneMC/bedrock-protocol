@@ -87,7 +87,7 @@ class Source:
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
     order: list[Family] = field(default_factory=list)
-    pre_cereal_shapes: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
+    pre_cereal_families: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
     unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
 
@@ -286,7 +286,7 @@ class Builder:
         self.versions: tuple[int, ...] = ()
         self.homes: dict[tuple[str, bool], Source] = {}
         self.packets: dict[int, list[tuple[Struct, Range]]] = {}
-        self.pre_cereal_shapes: dict[Struct | Enum, Struct | Enum] = {}
+        self.pre_cereal_families: dict[Struct | Enum, Struct | Enum] = {}
         self.structs: list[PendingStruct] = []
         self.enums: list[PendingEnum] = []
         self.aliases: list[PendingAlias] = []
@@ -298,7 +298,7 @@ class Builder:
         for source in self.sources.values():
             self.declare_module(source)
         for source in self.sources.values():
-            self.pair_legacies(source)
+            self.pair_pre_cereal_families(source)
             self.bind_family_imports(source)
         for pending_enum in self.enums:
             self.build_enum(pending_enum)
@@ -423,12 +423,12 @@ class Builder:
                 raise error(source, alias, alias.name, f"is not exported by {module}")
             self.add(source, source.scope, statement, alias.asname or alias.name, imported)
 
-    def pair_legacies(self, source: Source) -> None:
-        for name, (node, pre_cereal) in source.pre_cereal_shapes.items():
+    def pair_pre_cereal_families(self, source: Source) -> None:
+        for name, (node, pre_cereal) in source.pre_cereal_families.items():
             family = source.families.get(name)
             if not isinstance(family, type(pre_cereal)):
                 raise error(source, node, name, "a cereal=False declaration needs a cereal one beside it")
-            self.pre_cereal_shapes[family] = pre_cereal
+            self.pre_cereal_families[family] = pre_cereal
 
     def bind_family_imports(self, source: Source) -> None:
         for statement in source.family_imports:
@@ -489,7 +489,7 @@ class Builder:
         elif cereal:
             existing = source.families.get(node.name)
         else:
-            existing = source.pre_cereal_shapes[node.name][1] if node.name in source.pre_cereal_shapes else None
+            existing = source.pre_cereal_families[node.name][1] if node.name in source.pre_cereal_families else None
         family: Struct | Enum
         if existing is None:
             family = (
@@ -502,7 +502,7 @@ class Builder:
                 self.add(source, scope, node, node.name, family)
             elif not cereal:
                 self.claim(source, node, node.name, False)
-                source.pre_cereal_shapes[node.name] = (node, family)
+                source.pre_cereal_families[node.name] = (node, family)
                 source.order.append(family)
             else:
                 self.declare_family(source, node, family)
@@ -856,7 +856,7 @@ class Builder:
             raise error(source, node, ast.unparse(node), "is not a type")
         target = self.resolve(source, scope, node)
         if not cereal:
-            pre_cereal = self.pre_cereal_shapes.get(target) if isinstance(target, Struct | Enum) else None
+            pre_cereal = self.pre_cereal_families.get(target) if isinstance(target, Struct | Enum) else None
             if pre_cereal is None:
                 raise error(source, node, ast.unparse(node), "has no cereal=False declaration")
             target = pre_cereal
