@@ -1,0 +1,83 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "structure_name": "s1",
+   "structure_block_pos": {
+    "x": 462,
+    "y": -593,
+    "z": 724
+   },
+   "structure_settings": {
+    "palette_name": "s5",
+    "ignore_entities": true,
+    "ignore_blocks": false,
+    "allow_non_ticking_player_and_ticking_area_chunks": true,
+    "structure_size": {
+     "x": -1379,
+     "y": 1510,
+     "z": 1641
+    },
+    "structure_offset": {
+     "x": -1772,
+     "y": 1903,
+     "z": 2034
+    },
+    "last_touched_by_player": -2165,
+    "rotation": "ROTATE_90",
+    "mirror": "X",
+    "animation_mode": "NONE",
+    "animation_seconds": 9.75,
+    "integrity_value": 10.25,
+    "integrity_seed": 2951,
+    "pivot": {
+     "x": 11.25,
+     "y": 11.75,
+     "z": 12.25
+    }
+   },
+   "request_operation": "EXPORT_FROM_SAVE_MODE"
+  },
+  "bytes": "0273319c07a109a80b027335010001c515cc17d219d71bde1de41fe92101010000001c4100002441870b00000000344100003c410000444101",
+  "bds_json": {
+   "Structure Name": "s1",
+   "Structure Position": {
+    "X": 462,
+    "Y": -593,
+    "Z": 724
+   },
+   "Structure Settings": {
+    "Structure Palette Name": "s5",
+    "Should ignore entities?": true,
+    "Should ignore blocks?": false,
+    "Should Allow Non Ticking Player and Ticking Area Chunks": true,
+    "Structure Size": {
+     "X": -1379,
+     "Y": 1510,
+     "Z": 1641
+    },
+    "Structure Offset": {
+     "X": -1772,
+     "Y": 1903,
+     "Z": 2034
+    },
+    "Last Edit Player": {
+     "Actor Unique ID": -2165
+    },
+    "Rotation": 1,
+    "Mirror": 1,
+    "Animation Mode": 0,
+    "Animation Seconds": 9.75,
+    "Integrity Value": 10.25,
+    "Integrity Seed": 2951,
+    "Rotation Pivot": {
+     "X": 11.25,
+     "Y": 11.75,
+     "Z": 12.25
+    }
+   },
+   "Requested Operation": 1
+  }
+ }
+]

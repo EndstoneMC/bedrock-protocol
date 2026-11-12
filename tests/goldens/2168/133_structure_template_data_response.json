@@ -1,0 +1,82 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "structure_name": "s1",
+   "structure_tag": {
+    "b": {
+     "ByteTag": 7
+    },
+    "s": {
+     "ShortTag": 300
+    },
+    "i": {
+     "IntTag": 70000
+    },
+    "l": {
+     "Int64Tag": 5000000000
+    },
+    "f": {
+     "FloatTag": 1.5
+    },
+    "d": {
+     "DoubleTag": 2.5
+    },
+    "str": {
+     "StringTag": "text"
+    },
+    "bytes": {
+     "ByteArrayTag": [
+      1,
+      -2,
+      3
+     ]
+    },
+    "ints": {
+     "IntArrayTag": [
+      4,
+      -5,
+      6
+     ]
+    },
+    "list": {
+     "ListTag": {
+      "type": 3,
+      "tags": [
+       {
+        "IntTag": 1
+       },
+       {
+        "IntTag": 2
+       }
+      ]
+     }
+    },
+    "nested": {
+     "CompoundTag": {
+      "k": {
+       "StringTag": "v"
+      }
+     }
+    }
+   },
+   "response_type": "QUERY"
+  },
+  "bytes": "027331010a0001016207070562797465730601fe0306016400000000000004400501660000c03f030169e0c5080b04696e74730608090c04016c80c8afa02509046c697374030402040a066e657374656408016b0176000201732c01080373747204746578740002"
+ },
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "structure_name": "s3",
+   "structure_tag": null,
+   "response_type": "EXPORT"
+  },
+  "bytes": "0273330001",
+  "bds_json": {
+   "Structure Name": "s3",
+   "Response Type": 1
+  }
+ }
+]
