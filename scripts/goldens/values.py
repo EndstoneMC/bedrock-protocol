@@ -30,6 +30,7 @@ from bedrock_protocol_compiler.descriptor import (
     Not,
     Optional,
     Primitive,
+    Struct,
     StructRef,
     Test,
     Type,
@@ -72,34 +73,33 @@ NBT_TAGS = {
 }
 
 
-def integer_range(name: str) -> tuple[int, int]:
-    bits, signed = INTEGER_BITS[name]
+def integer_range(name: str, wire: str | None) -> tuple[int, int]:
+    narrower = wire if wire in INTEGER_BITS and INTEGER_BITS[wire][0] < INTEGER_BITS[name][0] else name
+    bits, signed = INTEGER_BITS[narrower]
     return (-(1 << (bits - 1)), (1 << (bits - 1)) - 1) if signed else (0, (1 << bits) - 1)
-
-
-def snake(name: str) -> str:
-    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", name.removesuffix("Packet")).lower()
-
-
-class UnsatisfiableError(Exception):
-    pass
 
 
 class Generator:
     def __init__(self, schema: Schema, version: int) -> None:
         self.schema = schema
         self.version = version
-        self.cursors: dict[Point, int] = {}
+        self.cursors: dict[str, int] = {}
         self.hits: set[Point] = set()
         self.counter = 0
 
     def label(self, shape: StructShape) -> str:
         names = []
-        family = shape.family
+        family: Struct | None = shape.family
         while family is not None:
             names.append(family.name)
             family = family.owner
         return ".".join(reversed(names))
+
+    def shape(self, struct: Any) -> StructShape:
+        shape = self.schema.shape_at(struct, self.version)
+        if not isinstance(shape, StructShape):
+            raise TypeError(f"{struct.name}: not a struct shape")
+        return shape
 
     def numbers(self, enum: Any) -> dict[str, int]:
         shape = self.schema.shape_at(enum, self.version)
@@ -127,7 +127,7 @@ class Generator:
     def type_points(self, node: Type, key: str, seen: set[int]) -> Iterator[Point]:
         match node:
             case StructRef(struct=struct):
-                yield from self.points(self.schema.shape_at(struct, self.version), seen)
+                yield from self.points(self.shape(struct), seen)
             case Optional(element=element):
                 yield (key + "?", "present")
                 yield (key + "?", "absent")
@@ -151,8 +151,8 @@ class Generator:
         return found
 
     def pick(self, key: str, states: list[str], record: bool = True) -> int:
-        cursor = self.cursors.get((key, ""), 0)
-        self.cursors[(key, "")] = cursor + 1
+        cursor = self.cursors.get(key, 0)
+        self.cursors[key] = cursor + 1
         index = cursor % len(states)
         if record:
             self.hits.add((key, states[index]))
@@ -162,19 +162,17 @@ class Generator:
         self.counter += 1
         return self.counter
 
-    def integer(self, name: str) -> int:
-        low, high = integer_range(name)
-        bits = INTEGER_BITS[name][0]
+    def integer(self, name: str, wire: str | None) -> int:
+        low, high = integer_range(name, wire)
         count = self.next()
-        magnitude = (count * 7) % 100 + 1 if bits == 8 else (count * 131) % 30000 + 200
+        magnitude = (count * 7) % 100 + 1 if high <= 255 else (count * 131) % 30000 + 200
         if low < 0 and count % 3 == 0:
             magnitude = -magnitude
         return min(max(magnitude, low), high)
 
     def leaf(self, node: Primitive, wire: str | None = None) -> Json:
-        wire = wire or node.wire
-        if wire in INTEGER_BITS and node.name in INTEGER_BITS:
-            return self.integer(wire if INTEGER_BITS[wire][0] < INTEGER_BITS[node.name][0] else node.name)
+        if node.name in INTEGER_BITS:
+            return self.integer(node.name, wire or node.wire)
         match node.name:
             case "bool":
                 return self.next() % 2 == 0
@@ -184,17 +182,7 @@ class Generator:
                 return f"s{self.next()}"
             case "bytes":
                 return bytes([self.next() % 256, 1, 2]).hex()
-        return self.integer(node.name)
-
-    def enum_name(self, enum: Any) -> Json:
-        names = self.named(enum)
-        if not names:
-            return 0
-        ordered = sorted(names)
-        return names[ordered[self.next() % len(ordered)]]
-
-    def default_enum(self, enum: Any) -> Json:
-        return self.named(enum).get(0, 0)
+        raise TypeError(f"{node.name}: no generator for primitive")
 
     def default(self, node: Type) -> Json:
         match node:
@@ -203,9 +191,9 @@ class Generator:
             case AliasRef():
                 return 0
             case EnumRef(enum=enum) | EnumName(enum=enum):
-                return self.default_enum(enum)
+                return self.named(enum).get(0, 0)
             case StructRef(struct=struct):
-                shape = self.schema.shape_at(struct, self.version)
+                shape = self.shape(struct)
                 return {
                     each.name: self.default(each.type) for each in shape.fields if not isinstance(each.type, Literal)
                 }
@@ -247,11 +235,20 @@ class Generator:
             case AliasRef(alias=alias):
                 return self.leaf(alias.primitive, node.wire)
             case EnumRef(enum=enum) | EnumName(enum=enum):
-                return self.enum_name(enum)
+                names = self.named(enum)
+                if not names:
+                    return 0
+                ordered = sorted(names)
+                return names[ordered[self.next() % len(ordered)]]
             case StructRef(struct=struct):
-                return self.struct(self.schema.shape_at(struct, self.version), depth + 1)
+                return self.struct(self.shape(struct), depth + 1)
             case BuiltinRef(builtin=builtin):
-                return self.builtin(builtin.name)
+                match builtin.name:
+                    case "UUID":
+                        return str(uuid.UUID(int=self.next()))
+                    case "DynamicValue":
+                        return {"k": [1, 2.5, "s", True, None, {"n": 3}]}
+                return dict(NBT_TAGS)
             case Optional(element=element):
                 if depth > MAX_DEPTH:
                     return None
@@ -277,14 +274,6 @@ class Generator:
                 return 1 | (1 << (bits - 1))
         raise TypeError(f"{node!r}: cannot generate")
 
-    def builtin(self, name: str) -> Json:
-        match name:
-            case "UUID":
-                return str(uuid.UUID(int=self.next()))
-            case "DynamicValue":
-                return {"k": [1, 2.5, "s", True, None, {"n": 3}]}
-        return dict(NBT_TAGS)
-
     def evaluate(self, expression: Expression, env: dict[str, int], bits: set[tuple[str, str]]) -> int:
         match expression:
             case FieldRef(name=name):
@@ -300,18 +289,28 @@ class Generator:
             case Binary(operator=operator, left=left, right=right):
                 a = self.evaluate(left, env, bits)
                 b = self.evaluate(right, env, bits)
-                return {
-                    "==": lambda: int(a == b),
-                    "!=": lambda: int(a != b),
-                    "<": lambda: int(a < b),
-                    ">": lambda: int(a > b),
-                    "<=": lambda: int(a <= b),
-                    ">=": lambda: int(a >= b),
-                    "&": lambda: a & b,
-                    "|": lambda: a | b,
-                    "and": lambda: int(bool(a) and bool(b)),
-                    "or": lambda: int(bool(a) or bool(b)),
-                }[operator]()
+                match operator:
+                    case "==":
+                        return int(a == b)
+                    case "!=":
+                        return int(a != b)
+                    case "<":
+                        return int(a < b)
+                    case ">":
+                        return int(a > b)
+                    case "<=":
+                        return int(a <= b)
+                    case ">=":
+                        return int(a >= b)
+                    case "&":
+                        return a & b
+                    case "|":
+                        return a | b
+                    case "and":
+                        return int(bool(a) and bool(b))
+                    case "or":
+                        return int(bool(a) or bool(b))
+                raise TypeError(f"{operator}: unknown operator")
         raise TypeError(f"{expression!r}: cannot evaluate")
 
     def atoms(self, expression: Expression) -> Iterator[Expression]:
@@ -339,11 +338,17 @@ class Generator:
             return chosen + [each for each in numbers if each not in constants][:1]
         if isinstance(declared, Primitive) and declared.name == "bool":
             return [0, 1]
-        primitive = declared.primitive if isinstance(declared, AliasRef) else declared
-        if not isinstance(primitive, Primitive) or primitive.name not in INTEGER_BITS:
-            raise UnsatisfiableError(f"{name}: not an integer variable")
-        wire = declared.wire if declared.wire in INTEGER_BITS else primitive.name
-        low, high = integer_range(wire if INTEGER_BITS[wire][0] < INTEGER_BITS[primitive.name][0] else primitive.name)
+        if isinstance(declared, AliasRef):
+            primitive = declared.alias.primitive
+            wire = declared.wire or primitive.wire
+        elif isinstance(declared, Primitive):
+            primitive = declared
+            wire = declared.wire
+        else:
+            raise TypeError(f"{name}: not an integer variable")
+        if primitive.name not in INTEGER_BITS:
+            raise TypeError(f"{name}: not an integer variable")
+        low, high = integer_range(primitive.name, wire)
         return sorted(each for each in constants if low <= each <= high)
 
     def solve(
@@ -353,11 +358,8 @@ class Generator:
         variables: list[tuple[str, str]] = []
         for expression, _ in wanted:
             for atom in self.atoms(expression):
-                if isinstance(atom, FieldRef):
-                    variable = ("field", atom.name)
-                elif isinstance(atom, Test):
-                    variable = (atom.field, atom.member.name)
-                else:
+                variable = self.variable(atom)
+                if variable is None:
                     continue
                 if variable not in variables:
                     variables.append(variable)
@@ -365,7 +367,7 @@ class Generator:
         domains = [[0, 1] if kind != "field" else self.candidates(shape, name, expressions) for kind, name in variables]
         for kind, name in variables:
             if kind == "field" and name not in fields:
-                raise UnsatisfiableError(f"{name}: not a field of {shape.family.name}")
+                raise TypeError(f"{name}: not a field of {shape.family.name}")
         kept: list[tuple[Expression, bool]] = []
         best: tuple[dict[str, int], set[tuple[str, str]]] = ({}, set())
         for each in wanted:
@@ -409,14 +411,14 @@ class Generator:
                 return found
         return None
 
-    def length(self, each: Any, values: dict[str, Json]) -> int | None:
+    def length(self, each: Any, values: dict[str, Json], counted: dict[str, int]) -> int | None:
         match each.type:
             case List(count=Len(field=name)):
                 return len(values[name])
-            case List(count=FieldRef()):
-                return 1
-            case List(count=Binary(operator="*")):
-                return 2
+            case List(count=FieldRef(name=name)):
+                return counted[name]
+            case List(count=Binary(operator="*", left=FieldRef(name=left), right=FieldRef(name=right))):
+                return counted[left] * counted[right]
         return None
 
     def struct(self, shape: StructShape, depth: int) -> Json:
@@ -435,10 +437,14 @@ class Generator:
             plain = each.when is None and not isinstance(each.type, Literal | List)
             counts = isinstance(each.type, List) and each.when is None and not isinstance(each.type.count, Len)
             if plain or counts:
-                values[each.name] = self.generate(each.type, f"{label}.{each.name}", depth, self.length(each, values))
+                values[each.name] = self.generate(
+                    each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
+                )
         for each in shape.fields:
             if isinstance(each.type, List) and each.when is None and isinstance(each.type.count, Len):
-                values[each.name] = self.generate(each.type, f"{label}.{each.name}", depth, self.length(each, values))
+                values[each.name] = self.generate(
+                    each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
+                )
         values.update(counted)
         wanted: list[Any] = []
         for index, expression in enumerate(whens):
@@ -467,7 +473,9 @@ class Generator:
             if each.when is None:
                 continue
             if bool(self.evaluate(each.when, final, flags)):
-                values[each.name] = self.generate(each.type, f"{label}.{each.name}", depth, self.length(each, values))
+                values[each.name] = self.generate(
+                    each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
+                )
             else:
                 values[each.name] = self.default(each.type)
         return {each.name: values[each.name] for each in shape.fields if each.name in values}
@@ -501,7 +509,7 @@ def packets(schema: Schema, version: int) -> list[Any]:
 
 def values_of(schema: Schema, version: int, family: Any) -> tuple[list[Json], set[Point], set[Point]]:
     generator = Generator(schema, version)
-    shape = schema.shape_at(family, version)
+    shape = generator.shape(family)
     wanted = set(generator.points(shape, set()))
     chosen: list[Json] = []
     attempts = 0
@@ -534,32 +542,30 @@ def differs(expected: Json, actual: Json, path: str = "") -> str | None:
 
 def round_trip(cls: Any, value: Json) -> tuple[str, str, str, bytes | None]:
     """Return the failing step, its path and error, and the seed bytes when every step held."""
+    decode_error = importlib.import_module("bedrock_protocol").DecodeError
     try:
         packet = cls.from_json(value)
-    except (ValueError, TypeError, OverflowError) as error:
+    except ValueError as error:
         return "from_json", str(error).split(":")[0].partition(".")[2], str(error), None
-    try:
-        data = bytes(packet)
-    except (ValueError, TypeError, OverflowError) as error:
-        return "bytes", "", str(error), None
+    data = bytes(packet)
     try:
         again = cls.from_bytes(data)
-    except (ValueError, TypeError, OverflowError) as error:
-        return "from_bytes", "", str(error), None
-    try:
-        back = again.to_json()
-    except (ValueError, TypeError, OverflowError) as error:
-        return "to_json", "", str(error), None
-    path = differs(value, back)
-    if path is not None:
-        return "to_json", path, f"differs: {value!r} != {back!r}"[:600], None
+    except decode_error as error:
+        path = "".join(f"[{each}]" if isinstance(each, int) else f".{each}" for each in error.path)
+        return "from_bytes", path.lstrip("."), str(error), None
+    back = again.to_json()
+    changed = differs(value, back)
+    if changed is not None:
+        return "to_json", changed, f"differs: {value!r} != {back!r}"[:600], None
     return "", "", "", data
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("version", nargs="?", type=int, help="protocol number; every modelled version when omitted")
-    parser.add_argument("packets", nargs="*", help="packet class names or ids; every packet when omitted")
+    parser.add_argument(
+        "packets", nargs="*", help="packet stems (144_player_auth_input), class names or ids; every packet when omitted"
+    )
     parser.add_argument(
         "--check", action="store_true", help="round-trip every value through the bedrock_protocol binding"
     )
@@ -567,22 +573,29 @@ def main() -> None:
     parser.add_argument("--cases", type=Path, help="write the values that held, with their seed bytes, here")
     arguments = parser.parse_args()
     schema = Schema(build(PROTOCOL_DIR))
+    if arguments.version and arguments.version not in schema.versions:
+        raise ValueError(f"{arguments.version}: not a modelled protocol version")
     versions = [arguments.version] if arguments.version else list(schema.versions)
+    check = arguments.check or bool(arguments.cases or arguments.disagreements)
+    matched: set[str] = set()
     failures: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
     total = hit = 0
     for version in versions:
-        module = importlib.import_module(f"bedrock_protocol.v{version}") if arguments.check else None
+        module = importlib.import_module(f"bedrock_protocol.v{version}") if check else None
         for family in packets(schema, version):
-            if arguments.packets and not {family.name, family.name.removesuffix("Packet"), str(family.packet_id)} & set(
-                arguments.packets
-            ):
+            snake = re.sub(
+                r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", family.name.removesuffix("Packet")
+            ).lower()
+            stem = f"{family.packet_id:03}_{snake}"
+            names = {stem, family.name, family.name.removesuffix("Packet"), str(family.packet_id)}
+            if arguments.packets and not names & set(arguments.packets):
                 continue
+            matched |= names
             chosen, hits, misses = values_of(schema, version, family)
             total += len(hits) + len(misses)
             hit += len(hits)
-            name = f"{version}/{family.packet_id:03}_{snake(family.name)}"
-            print(f"{name}: {len(hits)} of {len(hits) + len(misses)} states hit")
+            print(f"{version}/{stem}: {len(hits)} of {len(hits) + len(misses)} states hit")
             for key, state in sorted(misses):
                 print(f"  missed {key} {state}")
             if module is None:
@@ -611,15 +624,18 @@ def main() -> None:
                             "bytes": data.hex(),
                         }
                     )
+    unmatched = [each for each in arguments.packets if each not in matched]
+    if unmatched:
+        raise ValueError(f"{', '.join(unmatched)}: matches no packet at the chosen versions")
     print(f"{hit} of {total} states hit")
-    if arguments.check:
+    if check:
         print(f"{len(failures)} failures, {len(cases)} values held")
     if arguments.disagreements:
         arguments.disagreements.parent.mkdir(parents=True, exist_ok=True)
         arguments.disagreements.write_text(json.dumps(failures, indent=1))
     if arguments.cases:
         arguments.cases.write_text(json.dumps(cases))
-    if arguments.check and failures:
+    if check and failures:
         sys.exit(1)
 
 
