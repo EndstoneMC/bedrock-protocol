@@ -11,8 +11,7 @@
 #include <nanobind/stl/bind_map.h>
 #include <nanobind/stl/vector.h>
 
-#include "casters.hpp"
-#include "module.h"
+#include "_core.h"
 
 namespace bedrock::protocol::python {
 

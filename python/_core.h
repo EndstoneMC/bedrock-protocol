@@ -22,9 +22,28 @@
 #include "bedrock/protocol/stream.hpp"
 #include "bedrock/protocol/version.hpp"
 #include "casters.hpp"
-#include "module.h"
 
 namespace bedrock::protocol::python {
+
+namespace nb = nanobind;
+
+struct Codec {
+    nb::object (*decode)(BinaryReader &stream);
+};
+
+struct Version {
+    int number;
+    nb::handle module;
+    nb::handle pre_cereal;
+    nb::dict packets;
+};
+
+[[noreturn]] void throw_decode_error(DecodeError error);
+
+void init_nbt(nb::module_ &parent);
+void init_versions(nb::module_ &parent);
+
+void init_types(std::span<const Version> bound);
 
 template <typename T>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {

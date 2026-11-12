@@ -1,5 +1,5 @@
 #include "bedrock/protocol/@_module@.h"
-#include "binder.hpp"
+#include "_core.h"
 
 namespace bedrock::protocol::python {
 

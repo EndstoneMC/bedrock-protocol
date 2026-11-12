@@ -6,35 +6,13 @@
 
 #include <nanobind/nanobind.h>
 
+#include "_core.h"
 #include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
 #include "bedrock/protocol/version.hpp"
-#include "binder.hpp"
-#include "module.h"
 
 namespace bedrock::protocol::python {
-
-void throw_decode_error(DecodeError error)
-{
-    std::vector<std::string> names;
-    names.reserve(error.path.size());
-    nb::list path;
-    for (auto &segment : error.path) {
-        if (const auto *name = std::get_if<std::string_view>(&segment)) {
-            segment = std::string_view(names.emplace_back(python_name(*name)));
-            path.append(nb::str(names.back().c_str()));
-        }
-        else {
-            path.append(std::get<std::size_t>(segment));
-        }
-    }
-    nb::object type = nb::module_::import_("bedrock_protocol").attr("DecodeError");
-    nb::object exception =
-        type(std::format("{}", error), std::format("{}", error.reason), nb::tuple(path), error.offset);
-    PyErr_SetObject(type.ptr(), exception.ptr());
-    throw nb::python_error();
-}
 
 void init_versions(nb::module_ &parent)
 {

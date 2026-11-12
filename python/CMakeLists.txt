@@ -1,7 +1,7 @@
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 find_package(nanobind CONFIG REQUIRED)
 
-set(_sources module.cpp nbt.cpp versions.cpp)
+set(_sources _core.cpp nbt.cpp versions.cpp)
 set(_declarations "")
 set(_calls "")
 foreach (_module IN LISTS BEDROCK_PROTOCOL_MODULES)
