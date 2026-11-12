@@ -82,6 +82,7 @@ class Schema:
     def __init__(self, package: Package) -> None:
         self.modules = package.modules
         self.package = package.modules[0].package
+        self.java_package = package.modules[0].java_package
         self.versions = package.versions
         self.releases = package.releases
         self.latest = package.versions[-1]

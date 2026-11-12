@@ -8,6 +8,7 @@ A = """
 from enum import IntEnum
 from protocol import field, packet, type, uint8
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 class E(IntEnum, uint8):
     X = 1
@@ -20,6 +21,7 @@ class P:
 B = """
 from protocol import type, uint8
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 class B:
     x: uint8
@@ -29,6 +31,7 @@ class B:
 C = """
 from protocol import packet, uint8
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 @packet(id=2)
 class Q:
@@ -40,6 +43,7 @@ BITSET = """
 from enum import IntEnum
 from protocol import bitset, type, uint8
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -88,7 +92,9 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
     build_package({"a": B})
-    (tmp_path / "protocol/a.py").write_text('package = "bedrock.protocol"\nclass A:\n    x: Missing\n')
+    (tmp_path / "protocol/a.py").write_text(
+        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\nclass A:\n    x: Missing\n'
+    )
 
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
@@ -105,7 +111,9 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     before = {path.name: path.read_bytes() for path in out.iterdir()}
     for path in out.iterdir():
         os.utime(path, ns=(1, 1))
-    (tmp_path / "protocol/b.py").write_text('package = "bedrock.protocol"\nclass B:\n    x: Missing\n')
+    (tmp_path / "protocol/b.py").write_text(
+        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\nclass B:\n    x: Missing\n'
+    )
 
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])

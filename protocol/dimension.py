@@ -8,6 +8,7 @@ from protocol.common import DimensionType, Vec3
 from protocol.game import GeneratorType
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class DimensionDefinitionGroup:

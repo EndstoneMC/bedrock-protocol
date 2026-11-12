@@ -16,6 +16,7 @@ from protocol.network import GamePublishSetting, NetworkBlockPosition, NetworkPe
 from protocol.presence import ServerConfigurationJoinInfo, ServerTelemetryData
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class GameType(IntEnum, int32):

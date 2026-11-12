@@ -7,6 +7,7 @@ from enum import IntEnum, auto
 from typing import Literal
 from protocol import array, bitset, field, packet, type, uint8, uint16, value
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 

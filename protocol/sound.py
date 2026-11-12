@@ -10,6 +10,7 @@ from protocol.common import BlockPos, Vec3
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class LevelSoundEvent(IntEnum, uint32):

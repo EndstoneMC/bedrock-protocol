@@ -23,6 +23,7 @@ from protocol.network import NetworkBlockPosition
 from protocol.skin import SerializedSkinRef
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class PlayerRespawnState(IntEnum, uint8):

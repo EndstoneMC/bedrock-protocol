@@ -9,6 +9,7 @@ from protocol.common import Vec2, Vec3
 from protocol.eas import EasingType
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class Scheme(IntEnum, uint8):

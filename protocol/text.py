@@ -6,6 +6,7 @@ from typing import Literal
 from protocol import field, int32, packet, uint8, varint32
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class TextPacketType(IntEnum, uint8):

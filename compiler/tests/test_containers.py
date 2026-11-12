@@ -22,6 +22,7 @@ from enum import IntEnum
 from typing import Literal, Union
 from protocol import array, bitset, field, int8, int32, uint8, uint16, uint32, uvarint32, varint32
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 
@@ -101,7 +102,11 @@ def test_union_alias_naming_a_later_primitive_alias_builds(build_package):
 
 
 def test_union_alias_naming_an_alias_from_a_later_module_builds(build_package):
-    imports = "from bedrock_protocol_compiler.dsl import uint8, uint32\npackage = 'bedrock.protocol'\n"
+    imports = (
+        "from bedrock_protocol_compiler.dsl import uint8, uint32\n"
+        "package = 'bedrock.protocol'\n"
+        "java_package = 'dev.endstone.protocol'\n"
+    )
     a = imports + "from protocol.b import Id\n\ntype V = Id | uint8\n"
     b = imports + "type Id = uint32\n"
     package = build_package({"a": a, "b": b})
@@ -120,7 +125,11 @@ def test_union_aliases_naming_each_other_are_rejected(build_package):
 
 
 def test_union_alias_imported_by_another_module_resolves_to_its_variant(build_package):
-    imports = "from bedrock_protocol_compiler.dsl import uint8, uint16\npackage = 'bedrock.protocol'\n"
+    imports = (
+        "from bedrock_protocol_compiler.dsl import uint8, uint16\n"
+        "package = 'bedrock.protocol'\n"
+        "java_package = 'dev.endstone.protocol'\n"
+    )
     a = imports + "type V = uint8 | uint16\n"
     b = imports + "from protocol.a import V\n\nclass B:\n    x: V\n"
     package = build_package({"a": a, "b": b})

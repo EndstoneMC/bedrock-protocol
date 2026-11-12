@@ -10,6 +10,7 @@ from protocol.actor import ActorFlags, ActorRuntimeID, ActorUniqueID, PlayerInpu
 from protocol.common import Vec2, Vec3
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class PlayerPositionModeComponent:

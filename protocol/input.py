@@ -12,6 +12,7 @@ from protocol.network import NetworkBlockPosition
 from protocol.transaction import ItemUseInventoryTransaction, LegacySetSlot
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class InputMode(IntEnum, uint32):

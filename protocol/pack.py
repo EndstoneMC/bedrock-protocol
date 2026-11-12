@@ -9,6 +9,7 @@ from protocol import field, int8, int32, packet, type, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class SemVersion:

@@ -9,6 +9,7 @@ from protocol.common import BlockPos, Color
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MapItemTrackedActor:

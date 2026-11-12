@@ -8,6 +8,7 @@ from protocol import array, field, int32, packet, uint8, uvarint32, value
 from protocol.crafting import RecipeNetId
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class Enchant:

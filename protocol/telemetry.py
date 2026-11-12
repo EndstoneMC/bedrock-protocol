@@ -6,6 +6,7 @@ from protocol import field, int16, int32, packet, uint8, uvarint32, value, varin
 from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MinecraftEventing:

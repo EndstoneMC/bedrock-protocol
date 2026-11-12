@@ -7,6 +7,7 @@ from protocol import field, packet, uint8
 from protocol.actor import ActorUniqueID
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class BossEventUpdateType(IntEnum, uint8):

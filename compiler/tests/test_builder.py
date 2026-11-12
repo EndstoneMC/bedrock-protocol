@@ -13,11 +13,18 @@ INIT_123 = 'versions = (1, 2, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"
 HEADER = """
 from protocol import builtin, field, packet, type, uint8, uint32, double
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 
 def test_package_lists_versions_and_modules(build_package):
-    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "a.b"\n'}, INIT_123)
+    package = build_package(
+        {
+            "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
+            "b": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
+        },
+        INIT_123,
+    )
 
     assert package.versions == (1, 2, 3)
     assert [(module.stem, module.package) for module in package.modules] == [("a", "a.b"), ("b", "a.b")]
@@ -25,7 +32,8 @@ def test_package_lists_versions_and_modules(build_package):
 
 def test_package_lists_releases(build_package):
     package = build_package(
-        {"a": 'package = "a"\n'}, 'versions = (1, 2, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n'
+        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        'versions = (1, 2, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n',
     )
 
     assert [(release.number, release.first, release.last) for release in package.releases] == [
@@ -37,21 +45,26 @@ def test_package_lists_releases(build_package):
 
 def test_a_number_that_is_not_a_snapshot_is_accepted(build_package):
     package = build_package(
-        {"a": 'package = "a"\n'}, 'versions = (1, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
+        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        'versions = (1, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n',
     )
 
     assert [release.number for release in package.releases] == [1, 2, 3]
 
 
 def test_a_snapshot_above_the_newest_release_needs_no_entry(build_package):
-    package = build_package({"a": 'package = "a"\n'}, 'versions = (1, 4)\nreleases = {1: "1.1.0", 2: "1.2.0"}\n')
+    package = build_package(
+        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        'versions = (1, 4)\nreleases = {1: "1.1.0", 2: "1.2.0"}\n',
+    )
 
     assert [release.number for release in package.releases] == [1, 2]
 
 
 def test_a_closed_newest_entry_is_accepted(build_package):
     package = build_package(
-        {"a": 'package = "a"\n'}, 'versions = (2225,)\nreleases = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n'
+        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        'versions = (2225,)\nreleases = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n',
     )
 
     assert package.releases[-1].last == "1.26.64"
@@ -59,7 +72,21 @@ def test_a_closed_newest_entry_is_accepted(build_package):
 
 def test_modules_declare_one_package(build_package):
     with pytest.raises(CompilerError, match=r"b\.py: package: 'a\.c' differs from a\.py's 'a\.b'"):
-        build_package({"a": 'package = "a.b"\n', "b": 'package = "a.c"\n'})
+        build_package(
+            {
+                "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
+                "b": 'package = "a.c"\njava_package = "dev.endstone.protocol"\n',
+            }
+        )
+
+
+def test_modules_declare_one_java_package(build_package):
+    modules = {
+        "a": 'package = "a"\njava_package = "x.y"\n',
+        "b": 'package = "a"\njava_package = "x.z"\n',
+    }
+    with pytest.raises(CompilerError, match=r"b\.py: java_package: 'x\.z' differs from a\.py's 'x\.y'"):
+        build_package(modules)
 
 
 def test_docstrings_declare_nothing(build_package):
@@ -195,7 +222,9 @@ def test_import_may_precede_the_module_it_names(build_package):
 
 def test_protocol_exports_only_what_its_init_binds(build_package):
     with pytest.raises(CompilerError, match="uint8: is not exported by protocol"):
-        build_package({"a": 'from protocol import uint8\npackage = "a"\n'}, INIT_123)
+        build_package(
+            {"a": 'from protocol import uint8\npackage = "a"\njava_package = "dev.endstone.protocol"\n'}, INIT_123
+        )
 
 
 def test_class_scopes_resolve_outward_before_the_module(build_package):
@@ -249,6 +278,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ('x = "a"\n', "module: holds only imports"),
         ("package = 3\n", "module: holds only imports"),
         ('package = "bedrock.protocol"\n', "package: is declared twice"),
+        ('java_package = "dev.endstone.protocol"\n', "java_package: is declared twice"),
         ("from . import a\n", r"\.: is not an importable module"),
         ("from .enum import IntEnum\n", r"\.enum: is not an importable module"),
         ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
@@ -267,13 +297,18 @@ def test_module_without_package_is_rejected(build_package):
         build_package({"a": "class A:\n    pass\n"})
 
 
+def test_module_without_java_package_is_rejected(build_package):
+    with pytest.raises(CompilerError, match=r"a\.py: java_package: missing"):
+        build_package({"a": 'package = "a"\n'})
+
+
 def test_family_name_repeated_across_modules_is_rejected(build_package):
     with pytest.raises(CompilerError, match="A: is already declared"):
         build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER + "class A:\n    pass\n"})
 
 
 def test_error_names_the_file_and_position(build_package):
-    with pytest.raises(CompilerError, match=r"protocol/a.py:5:8: Missing: is not defined"):
+    with pytest.raises(CompilerError, match=r"protocol/a.py:6:8: Missing: is not defined"):
         build_package({"a": HEADER + "class A:\n    x: Missing\n"})
 
 

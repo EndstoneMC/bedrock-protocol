@@ -8,6 +8,7 @@ from protocol.molang import ExpressionOp
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class VillageType(IntEnum, uint8):

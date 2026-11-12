@@ -9,6 +9,7 @@ from protocol import field, int16, int32, packet, type, uint8, uint16, uint32, u
 from protocol.common import BlockPos, BlockRuntimeId
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class CreativeItemCategory(IntEnum, uint8):

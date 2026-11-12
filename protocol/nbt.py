@@ -3,6 +3,7 @@
 from protocol import builtin
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 @builtin

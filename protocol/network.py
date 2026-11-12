@@ -7,6 +7,7 @@ from typing import Union
 from protocol import field, int32, packet, type, uint8, uint16, uint64, uvarint32, value, varint32
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MinecraftPacketIds(IntEnum, int32):

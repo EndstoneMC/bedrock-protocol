@@ -15,6 +15,7 @@ HEADER = """
 from enum import IntEnum, auto
 from protocol import builtin, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, value
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 

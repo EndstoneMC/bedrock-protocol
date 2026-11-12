@@ -4,6 +4,7 @@ BlockPos, Color, DimensionType -- and world/level/block/'s BlockRuntimeId."""
 from protocol import int32, uvarint32, varint32
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 type BlockRuntimeId = uvarint32

@@ -8,6 +8,7 @@ from protocol import field, int8, int32, packet, uint8, varint32
 from protocol.actor import ActorRuntimeID
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class EduSharedUriResource:

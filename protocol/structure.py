@@ -11,6 +11,7 @@ from protocol.nbt import CompoundTag
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 type RandomSeed = uint32

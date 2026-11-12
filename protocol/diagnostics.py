@@ -9,6 +9,7 @@ from protocol.common import Color, Vec3
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MemoryCategory(IntEnum, uint8):

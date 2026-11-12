@@ -8,6 +8,7 @@ from protocol import int32, packet, uint8, uvarint64, varint32
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 @packet(id=10)

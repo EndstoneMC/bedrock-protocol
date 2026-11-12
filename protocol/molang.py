@@ -6,6 +6,7 @@ from enum import IntEnum, auto
 from protocol import int16, value
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MolangVersion(IntEnum, int16):

@@ -5,12 +5,14 @@ HEADER = """
 from enum import IntEnum, auto
 from protocol import field, packet, type, uint8, uint16, value
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 BOSS = """
 from enum import IntEnum
 from protocol import field, packet, int64, uint8
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 type ActorUniqueID = int64
 

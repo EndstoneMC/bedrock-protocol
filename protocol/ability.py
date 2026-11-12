@@ -9,6 +9,7 @@ from protocol.actor import ActorUniqueID
 from protocol.command import CommandPermissionLevel, PlayerPermissionLevel
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 @packet(id=185)

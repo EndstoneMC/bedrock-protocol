@@ -8,6 +8,7 @@ from protocol.common import BlockRuntimeId
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class HandSlot(IntEnum, uint8):

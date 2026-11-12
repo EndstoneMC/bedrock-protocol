@@ -7,6 +7,7 @@ from protocol import field, packet, uint8
 from protocol.presence import ClientStoreEntryPointConfiguration
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 @packet(id=104)

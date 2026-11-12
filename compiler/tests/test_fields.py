@@ -22,6 +22,7 @@ from protocol import (
 )
 from typing import Union
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 """
 
 

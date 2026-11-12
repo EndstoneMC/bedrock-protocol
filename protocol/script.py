@@ -8,6 +8,7 @@ from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 @packet(id=177)

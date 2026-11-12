@@ -7,6 +7,7 @@ from protocol import field, int32, packet, type, uint8, uint32, uvarint32
 from protocol.common import DimensionType
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class Color255RGBA:

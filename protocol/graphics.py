@@ -6,6 +6,7 @@ from protocol import field, packet, uint8, value
 from protocol.common import Vec3
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class GraphicsOverrideParameterType(IntEnum, uint8):

@@ -6,6 +6,7 @@ from protocol import field, int32, packet, uint8, uint64, value, varint32
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class MovementEffectType(IntEnum, int32):

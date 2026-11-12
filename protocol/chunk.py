@@ -21,6 +21,7 @@ from protocol import (
 from protocol.common import BlockPos, DimensionType
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class ChunkPos:

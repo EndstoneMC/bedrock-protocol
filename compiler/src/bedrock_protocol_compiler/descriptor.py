@@ -227,6 +227,7 @@ type Family = Struct | Enum | Alias | Builtin
 class Module:
     stem: str
     package: str
+    java_package: str
     families: tuple[Family, ...]
 
 

@@ -7,6 +7,7 @@ from protocol import field, int32, packet
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class AttributeModifierOperation(IntEnum, int32):

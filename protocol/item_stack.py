@@ -17,6 +17,7 @@ from protocol.item import ItemStackNetId, ItemStackRequestId
 from protocol.molang import MolangVersion
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class ItemStackRequestActionType(IntEnum, uint8):

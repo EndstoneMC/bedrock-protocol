@@ -9,6 +9,7 @@ from protocol.actor import ActorRuntimeID
 from protocol.common import Color
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class ArmSizeType(IntEnum, uint8):

@@ -18,6 +18,7 @@ from protocol.item import (
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
 
 
 class InventorySourceType(IntEnum, uint32):
