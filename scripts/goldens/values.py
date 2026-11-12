@@ -89,6 +89,47 @@ PRESENT_WHEN = {
     "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
 }
+LEVEL_GAME_RULES = (
+    ("commandBlockOutput", {"bool": True}),
+    ("doDayLightCycle", {"bool": True}),
+    ("doEntityDrops", {"bool": True}),
+    ("doFireTick", {"bool": True}),
+    ("recipesUnlock", {"bool": True}),
+    ("doLimitedCrafting", {"bool": False}),
+    ("doMobLoot", {"bool": True}),
+    ("doMobSpawning", {"bool": True}),
+    ("doTileDrops", {"bool": True}),
+    ("doWeatherCycle", {"bool": True}),
+    ("drowningDamage", {"bool": True}),
+    ("fallDamage", {"bool": True}),
+    ("fireDamage", {"bool": True}),
+    ("keepInventory", {"bool": False}),
+    ("mobGriefing", {"bool": True}),
+    ("pvp", {"bool": True}),
+    ("showCoordinates", {"bool": False}),
+    ("playerWaypoints", {"int": 1}),
+    ("locatorbar", {"bool": True}),
+    ("showDaysPlayed", {"bool": False}),
+    ("naturalRegeneration", {"bool": True}),
+    ("tntExplodes", {"bool": True}),
+    ("sendCommandFeedback", {"bool": True}),
+    ("maxCommandChainLength", {"int": 65535}),
+    ("doInsomnia", {"bool": True}),
+    ("commandBlocksEnabled", {"bool": True}),
+    ("randomTickSpeed", {"int": 1}),
+    ("doImmediateRespawn", {"bool": False}),
+    ("showDeathMessages", {"bool": True}),
+    ("functionCommandLimit", {"int": 10000}),
+    ("spawnRadius", {"int": 10}),
+    ("showTags", {"bool": True}),
+    ("freezeDamage", {"bool": True}),
+    ("respawnBlocksExplode", {"bool": True}),
+    ("showBorderEffect", {"bool": True}),
+    ("showRecipeMessages", {"bool": True}),
+    ("playersSleepingPercentage", {"int": 100}),
+    ("projectilesCanBreakBlocks", {"bool": True}),
+    ("tntExplosionDropDecay", {"bool": False}),
+)
 CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x00\x00\x00'.hex()
 FIXED: dict[str, Json] = {
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
@@ -113,6 +154,9 @@ FIXED: dict[str, Json] = {
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
     "NetworkStackLatencyPacket.create_time": 0,
+    "LevelSettings.game_rules": {
+        "rules": [{"name": name, "can_be_modified_by_player": True, "value": value} for name, value in LEVEL_GAME_RULES]
+    },
 }
 
 

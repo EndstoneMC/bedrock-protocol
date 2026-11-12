@@ -224,3 +224,8 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
     chosen = generated(values, schema, name)
     assert [each[field] for each in chosen] == [kept for _ in chosen]
+
+
+def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, schema):
+    rules = generated(values, schema, "LevelSettings")[0]["game_rules"]["rules"]
+    assert (len(rules), rules[0]["name"], rules[-1]["name"]) == (39, "commandBlockOutput", "tntExplosionDropDecay")
