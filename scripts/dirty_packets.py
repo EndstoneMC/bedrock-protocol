@@ -2,9 +2,7 @@
 
 import argparse
 import json
-import re
 import subprocess
-import sys
 from itertools import zip_longest
 from pathlib import Path
 from typing import Any
@@ -12,27 +10,12 @@ from typing import Any
 Json = dict[str, Any]
 Kinds = dict[str, dict[str, Json]]
 
-TOKEN = re.compile(r"[A-Za-z_][\w:]*")
-NOT_WIRE = {"description", "notes"}
 WIRE_CONSTRAINTS = "RequestNetworkSettingsPacket"
 
 
 def git(clone: Path, *args: str) -> str:
     """Run git in the clone and return its stdout."""
-    return subprocess.run(["git", "-C", str(clone), *args], check=True, capture_output=True, text=True).stdout
-
-
-def strip(node: Any, keep_constraints: bool) -> Any:
-    """Drop the keys that never reach the wire."""
-    if isinstance(node, list):
-        return [strip(item, keep_constraints) for item in node]
-    if isinstance(node, dict):
-        return {
-            key: strip(value, keep_constraints)
-            for key, value in node.items()
-            if key not in NOT_WIRE and (key != "constraints" or keep_constraints)
-        }
-    return node
+    return subprocess.run(["git", "-C", str(clone), *args], check=True, stdout=subprocess.PIPE, text=True).stdout
 
 
 def load(clone: Path, ref: str) -> Kinds:
@@ -42,20 +25,10 @@ def load(clone: Path, ref: str) -> Kinds:
         kind, _, file = path.partition("/")
         if kind in kinds and file.endswith(".json"):
             node = json.loads(git(clone, "show", f"{ref}:{path}"))
-            kinds[kind][node["name"]] = strip(node, node["name"] == WIRE_CONSTRAINTS)
+            for member in node.get("fields", []) if node["name"] != WIRE_CONSTRAINTS else []:
+                member.pop("constraints", None)
+            kinds[kind][node["name"]] = node
     return kinds
-
-
-def renames(clone: Path, old: str, new: str) -> dict[str, str]:
-    """Map each type or enum name git sees renamed to its new name."""
-    mapping: dict[str, str] = {}
-    for line in git(clone, "diff", "--name-status", "-M", old, new).splitlines():
-        status, *paths = line.split("\t")
-        if status.startswith("R") and paths[0].split("/")[0] in ("types", "enums"):
-            old_name = paths[0].split("/", 1)[1].removesuffix(".json").replace("__", "::")
-            new_name = paths[1].split("/", 1)[1].removesuffix(".json").replace("__", "::")
-            mapping[old_name] = new_name
-    return mapping
 
 
 class Differ:
@@ -67,24 +40,21 @@ class Differ:
         self.renamed = renamed
         self.done: dict[tuple[str, str, str, bool], str | None] = {}
 
-    def spell(self, text: str) -> str:
-        """Rewrite every renamed name in a type string to its new spelling."""
-        return TOKEN.sub(lambda match: self.renamed.get(match.group(), match.group()), text)
-
-    def refs(self, value: Any) -> list[str]:
-        """List the names a type or enum value mentions, in order."""
+    def refs(self, value: Any) -> list[tuple[str, str, bool]]:
+        """List the types and enums a type or member value references, in order."""
         if isinstance(value, str):
-            return TOKEN.findall(value)
+            return [("types", value, False)]
         if isinstance(value, list):
-            return [name for item in value for name in self.refs(item)]
+            return [ref for item in value for ref in self.refs(item)]
         if isinstance(value, dict):
-            return [name for item in value.values() for name in self.refs(item)]
+            refs = [("enums", value["enum"], value.get("type") == "string")] if "enum" in value else []
+            return refs + [ref for key, item in value.items() if key not in ("name", "enum") for ref in self.refs(item)]
         return []
 
     def respell(self, value: Any) -> Any:
         """Apply the renames to every string in a type or enum value."""
         if isinstance(value, str):
-            return self.spell(value)
+            return self.renamed.get(value, value)
         if isinstance(value, list):
             return [self.respell(item) for item in value]
         if isinstance(value, dict):
@@ -98,46 +68,45 @@ class Differ:
         if key not in self.done:
             self.done[key] = None
             old_node, new_node = self.old[kind].get(old_name), self.new[kind].get(new_name)
-            if old_node and new_node and kind == "enums":
-                self.done[key] = self.values(old_node["values"], new_node["values"], by_name)
+            if old_node and new_node and kind == "enums" and by_name:
+                self.done[key] = next(
+                    (
+                        f"value {show(a)} -> {show(b)}"
+                        for a, b in zip_longest(old_node["values"], new_node["values"])
+                        if a != b
+                    ),
+                    None,
+                )
+            elif old_node and new_node and kind == "enums":
+                changed = {v["value"] for v in old_node["values"]} ^ {v["value"] for v in new_node["values"]}
+                self.done[key] = f"value {min(changed)} added or removed" if changed else None
             elif old_node and new_node:
                 self.done[key] = self.members(old_node["fields"], new_node["fields"], new_name)
         return self.done[key]
-
-    def values(self, old: list[Json], new: list[Json], by_name: bool) -> str | None:
-        """Compare two enum value lists; names are wire only for an enum a string field carries."""
-        if not by_name:
-            changed = {value["value"] for value in old} ^ {value["value"] for value in new}
-            return f"value {min(changed)} added or removed" if changed else None
-        for old_value, new_value in zip_longest(old, new):
-            if old_value != new_value:
-                return f"value {_show(old_value)} -> {_show(new_value)}"
-        return None
 
     def members(self, old: list[Json], new: list[Json], path: str) -> str | None:
         """Compare two member lists in order and describe the first difference."""
         for old_member, new_member in zip_longest(old, new):
             if old_member is None:
-                return f"{path}: member '{new_member['name']}' added"
+                return f"{path}: member '{new_member.get('name')}' added"
             if new_member is None:
-                return f"{path}: member '{old_member['name']}' removed"
-            where = f"{path}.{new_member['name']}"
+                return f"{path}: member '{old_member.get('name')}' removed"
+            where = f"{path}.{new_member.get('name')}"
             for key in sorted(old_member.keys() | new_member.keys()):
                 before, after = old_member.get(key), new_member.get(key)
                 if key in ("type", "enum"):
                     before = self.respell(before)
                 if before != after:
-                    return f"{where}: {key} {_show(old_member.get(key))} -> {_show(after)}"
-            for key, kind in (("type", "types"), ("enum", "enums")):
-                for name in self.refs(old_member[key]) if key in old_member else []:
-                    if (name in self.old[kind]) != (self.renamed.get(name, name) in self.new[kind]):
-                        return f"{where}: {kind[:-1]} {name} added or removed"
-                    if (found := self.named(kind, name, old_member["type"] == "string")) is not None:
-                        return f"{where} > {found}"
+                    return f"{where}: {key} {show(old_member.get(key))} -> {show(after)}"
+            for kind, name, by_name in self.refs(old_member):
+                if (name in self.old[kind]) != (self.renamed.get(name, name) in self.new[kind]):
+                    return f"{where}: {kind[:-1]} {name} added or removed"
+                if (found := self.named(kind, name, by_name)) is not None:
+                    return f"{where} > {found}"
         return None
 
 
-def _show(value: Any) -> str:
+def show(value: Any) -> str:
     """Render a value for the report."""
     return "none" if value is None else json.dumps(value, separators=(",", ":"))
 
@@ -151,16 +120,23 @@ def main() -> None:
     args = parser.parse_args()
 
     old, new = load(args.clone, args.old), load(args.clone, args.new)
-    differ = Differ(old, new, renames(args.clone, args.old, args.new))
-    lines = [f"added\t{name}" for name in sorted(new["packets"].keys() - old["packets"].keys())]
-    lines += [f"removed\t{name}" for name in sorted(old["packets"].keys() - new["packets"].keys())]
+    renamed: dict[str, str] = {}
+    for line in git(args.clone, "diff", "--name-status", "-M", args.old, args.new).splitlines():
+        status, *paths = line.split("\t")
+        if status.startswith("R") and paths[0].split("/")[0] in ("types", "enums"):
+            old_name = json.loads(git(args.clone, "show", f"{args.old}:{paths[0]}"))["name"]
+            renamed[old_name] = json.loads(git(args.clone, "show", f"{args.new}:{paths[1]}"))["name"]
+    differ = Differ(old, new, renamed)
+    for name in sorted(new["packets"].keys() - old["packets"].keys()):
+        print(f"added\t{name}")
+    for name in sorted(old["packets"].keys() - new["packets"].keys()):
+        print(f"removed\t{name}")
     for name in sorted(old["packets"].keys() & new["packets"].keys()):
         before, after = old["packets"][name], new["packets"][name]
         if before["id"] != after["id"]:
-            lines.append(f"moved\t{name}\tid {before['id']} -> {after['id']}")
+            print(f"moved\t{name}\tid {before['id']} -> {after['id']}")
         if (found := differ.members(before["fields"], after["fields"], name)) is not None:
-            lines.append(f"dirty\t{name}\t{found}")
-    sys.stdout.write("".join(f"{line}\n" for line in lines))
+            print(f"dirty\t{name}\t{found}")
 
 
 if __name__ == "__main__":

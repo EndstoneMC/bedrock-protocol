@@ -21,6 +21,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `include/bedrock/`: the hand-written C++ runtime.
 - `python/`: the nanobind binding.
 - `tests/`: pytest only; tests reach the C++ through the binding, and there are no C++ tests.
+- `scripts/`: stdlib-only tools run by hand.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
 - Build with README's Building section. `uv sync && uv run pytest` runs `tests/`; `uv run --directory compiler pytest` runs the compiler's.
 - Rules under `.claude/rules/` load with the files they cover. Adding, back-porting or renumbering a protocol version starts at `.claude/rules/protocol/workflow.md`.
