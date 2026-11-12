@@ -89,6 +89,7 @@ PRESENT_WHEN = {
     "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
 }
+CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x00\x00\x00'.hex()
 FIXED: dict[str, Json] = {
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
@@ -99,6 +100,8 @@ FIXED: dict[str, Json] = {
     "ExperimentToggle.name": "gametest",
     "ExperimentToggle.enabled": True,
     "Experiments.experiments_ever_toggled": True,
+    "LoginPacket.connection_request": CONNECTION_REQUEST,
+    "SubClientLoginPacket.connection_request": CONNECTION_REQUEST,
 }
 
 

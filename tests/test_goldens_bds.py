@@ -180,6 +180,11 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("ExperimentToggle", "name", "gametest"),
         ("ExperimentToggle", "enabled", True),
         ("Experiments", "experiments_ever_toggled", True),
+        (
+            "SubClientLoginPacket",
+            "connection_request",
+            "250000007b2241757468656e7469636174696f6e54797065223a2d312c22546f6b656e223a22227d0a00000000",
+        ),
     ],
     ids=[
         "content-identity",
@@ -191,6 +196,7 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         "experiment-name",
         "experiment-enabled",
         "experiments-ever-toggled",
+        "sub-client-connection-request",
     ],
 )
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
