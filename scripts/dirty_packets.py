@@ -3,6 +3,7 @@
 import argparse
 import json
 import subprocess
+from difflib import SequenceMatcher
 from itertools import zip_longest
 from pathlib import Path
 from typing import Any
@@ -85,24 +86,39 @@ class Differ:
         return self.done[key]
 
     def members(self, old: list[Json], new: list[Json], path: str) -> str | None:
-        """Compare two member lists in order and describe the first difference."""
-        for old_member, new_member in zip_longest(old, new):
-            if old_member is None:
-                return f"{path}: member '{new_member.get('name')}' added"
-            if new_member is None:
-                return f"{path}: member '{old_member.get('name')}' removed"
-            where = f"{path}.{new_member.get('name')}"
-            for key in sorted(old_member.keys() | new_member.keys()):
-                before, after = old_member.get(key), new_member.get(key)
-                if key in ("type", "enum"):
-                    before = self.respell(before)
-                if before != after:
-                    return f"{where}: {key} {show(old_member.get(key))} -> {show(after)}"
-            for kind, name, by_name in self.refs(old_member):
-                if (name in self.old[kind]) != (self.renamed.get(name, name) in self.new[kind]):
-                    return f"{where}: {kind[:-1]} {name} added or removed"
-                if (found := self.named(kind, name, by_name)) is not None:
-                    return f"{where} > {found}"
+        """Align two member lists by name and describe the first difference."""
+        matcher = SequenceMatcher(None, [m.get("name") for m in old], [m.get("name") for m in new], autojunk=False)
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == "equal":
+                for old_member, new_member in zip(old[i1:i2], new[j1:j2], strict=True):
+                    if (found := self.member(old_member, new_member, path)) is not None:
+                        return found
+            elif tag == "insert":
+                return f"{path}: member '{new[j1].get('name') or show(new[j1].get('type'))}' added"
+            elif tag == "delete":
+                return f"{path}: member '{old[i1].get('name') or show(old[i1].get('type'))}' removed"
+            else:
+                old_member, new_member = old[i1], new[j1]
+                renamed = i2 - i1 == j2 - j1 and {**old_member, "name": 0} == {**new_member, "name": 0}
+                if renamed:
+                    return f"{path}.{new_member.get('name')}: renamed from '{old_member.get('name')}'"
+                return f"{path}: member '{old_member.get('name') or show(old_member.get('type'))}' removed"
+        return None
+
+    def member(self, old_member: Json, new_member: Json, path: str) -> str | None:
+        """Compare two members of the same name and recurse into the types they reference."""
+        where = f"{path}.{new_member.get('name')}"
+        for key in sorted(old_member.keys() | new_member.keys()):
+            before, after = old_member.get(key), new_member.get(key)
+            if key in ("type", "enum"):
+                before = self.respell(before)
+            if before != after:
+                return f"{where}: {key} {show(old_member.get(key))} -> {show(after)}"
+        for kind, name, by_name in self.refs({k: v for k, v in old_member.items() if k in ("type", "enum")}):
+            if (name in self.old[kind]) != (self.renamed.get(name, name) in self.new[kind]):
+                return f"{where}: {kind[:-1]} {name} added or removed"
+            if (found := self.named(kind, name, by_name)) is not None:
+                return f"{where} > {found}"
         return None
 
 
