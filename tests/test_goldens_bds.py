@@ -296,6 +296,7 @@ def test_an_enum_count_sentinel_is_never_generated(values, schema):
         ("CameraSplineProgressKeyFrame", "alpha", 0.5),
         ("SkinImage", "width", 64),
         ("ItemStackRequestId", "raw_id", -5),
+        ("CameraAimAssistPacket", "view_angle", {"x": 45.5, "y": 30.25}),
     ],
     ids=[
         "stack-size",
@@ -312,6 +313,7 @@ def test_an_enum_count_sentinel_is_never_generated(values, schema):
         "spline-progress",
         "skin-width",
         "request-id",
+        "aim-view-angle",
     ],
 )
 def test_a_leaf_bds_reads_only_within_a_limit_is_generated_inside_it(values, schema, name, field, read):
