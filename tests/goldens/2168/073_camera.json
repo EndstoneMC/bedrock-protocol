@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "camera_id": 331,
+   "target_player_id": 462
+  },
+  "bytes": "96059c07",
+  "bds_json": {
+   "Camera ID": {
+    "Actor Unique ID": 331
+   },
+   "Target Player ID": {
+    "Actor Unique ID": 462
+   }
+  }
+ }
+]
