@@ -37,12 +37,12 @@ uv pip install ./bedrock-protocol
 ```
 
 ```python
-from bedrock_protocol import TextPacket, TextPacketType
+import bedrock_protocol as bp
 
-packet = TextPacket()
-packet.body = TextPacket.MessageOnly(type=TextPacketType.CHAT, message="hello")
+packet = bp.TextPacket()
+packet.body = bp.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
 data = bytes(packet)
-assert TextPacket.from_bytes(data) == packet
+assert bp.TextPacket.from_bytes(data) == packet
 ```
 
 `versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. `packets` maps packet ids to packet classes.
@@ -74,17 +74,16 @@ Python. The library needs C++23.
 #include <bedrock/protocol.hpp>
 
 namespace bp = bedrock::protocol;
-using Packet = bp::TextPacket;
 
-Packet packet;
-packet.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
+bp::TextPacket packet;
+packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 
 std::string data;
 bp::BinaryWriter writer{data};
 bp::serialize(writer, packet);
 
 bp::BinaryReader reader{data};
-std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
+std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<bp::TextPacket>(reader);
 assert(decoded && *decoded == packet);
 ```
 
@@ -94,18 +93,22 @@ assert(decoded && *decoded == packet);
 
 ## Pinning a Protocol Version
 
-The bare names follow the latest protocol. To stay on protocol 2225, name it.
+The `bp` names follow the latest protocol. To stay on protocol 2225, name it for each type that differs between protocols; a type that never changed, such as `TextPacketType`, keeps its `bp` name.
 
-In Python, import from its module:
+In Python, import its module:
 
 ```python
-from bedrock_protocol.v2225 import TextPacket, TextPacketType
+from bedrock_protocol import v2225
+
+packet = v2225.TextPacket()
+packet.body = v2225.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
 ```
 
 In C++, pass it as the template argument:
 
 ```cpp
-using Packet = bp::TextPacket_<2225>;
+bp::TextPacket_<2225> packet;
+packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 ```
 
 The rest is unchanged.

@@ -25,7 +25,7 @@ paths:
 - Renumber every gate the superseded preview carried, and model the new delta in the same commit.
 - After a renumber, grep for the bare number and for `v<number>`; a word-boundary match misses the namespace form.
 - With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one) and bump README's pinned examples to the new number.
-- README shows one example: the same packet and steps in every language, the packet built empty and each field set in its own statement with its value built whole in place; every block is laid out by ruff format or clang-format.
+- README shows one example: the same packet and steps in every language, the library imported as `bp`, a pin naming `v<N>` only for a type that differs between protocols, the packet built empty and each field set in its own statement with its value built whole in place; every block is laid out by ruff format or clang-format.
 
 ## Releases
 
