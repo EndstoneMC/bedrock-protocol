@@ -61,7 +61,7 @@ def generate(build_package, tmp_path):
     return run
 
 
-def test_a_header_and_a_source_per_module_packets_h_and_version_hpp(generate):
+def test_a_header_and_a_source_per_module_packets_hpp_and_version_hpp(generate):
     out = generate({"a": A, "b": B})
 
     assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.hpp", "version.hpp"]
@@ -114,7 +114,7 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1}
 
 
-def test_packets_h_names_every_packet_of_every_module(generate):
+def test_packets_hpp_names_every_packet_of_every_module(generate):
     out = generate({"a": A, "c": C})
 
     registry = (out / "packets.hpp").read_text()
@@ -128,7 +128,7 @@ def test_a_module_header_specialises_no_packet_of(generate):
     assert "packet_of" not in (out / "a.h").read_text()
 
 
-def test_packets_h_includes_every_module_header(generate):
+def test_packets_hpp_includes_every_module_header(generate):
     out = generate({"a": A, "b": B})
 
     assert "#include <bedrock/protocol/b.h>" in (out / "packets.hpp").read_text()
