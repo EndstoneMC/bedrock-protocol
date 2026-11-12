@@ -46,8 +46,8 @@ class ColorAttributeOperation(IntEnum, int32):
 
 
 class EasingType(IntEnum, uint32):
-    LINEAR = 0, "linear"
-    SPRING = 1, "spring"
+    LINEAR = 0
+    SPRING = 1
     IN_QUAD = 2, "in_quad"
     OUT_QUAD = 3, "out_quad"
     IN_OUT_QUAD = 4, "in_out_quad"
