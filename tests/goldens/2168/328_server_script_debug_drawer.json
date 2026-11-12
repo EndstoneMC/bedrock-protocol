@@ -1,5 +1,66 @@
 [
  {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 331,
+     "shape_type": "SPHERE",
+     "location": {
+      "x": 1.75,
+      "y": 2.25,
+      "z": 2.75
+     },
+     "scale": 3.25,
+     "rotation": {
+      "x": 3.75,
+      "y": 4.25,
+      "z": 4.75
+     },
+     "time_left_total_sec": 5.25,
+     "max_render_distance": 5.75,
+     "color": -1772,
+     "dimension_id": 1903,
+     "attached_to_id": 2034,
+     "extra_data_payload": null
+    }
+   ]
+  },
+  "bytes": "01cb020102010000e03f0000104000003040010000504001000070400000884000009840010000a840010000b8400114f9ffff01de1d01e41f00",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 331,
+     "Shape Type": 2,
+     "Location": {
+      "X": 1.75,
+      "Y": 2.25,
+      "Z": 2.75
+     },
+     "Scale": 3.25,
+     "Rotation": {
+      "X": 3.75,
+      "Y": 4.25,
+      "Z": 4.75
+     },
+     "Total Time Left": 5.25,
+     "Maximum Render Distance": 5.75,
+     "Color": {
+      "Color": -1772
+     },
+     "Dimension ID": {
+      "value": 1903
+     },
+     "Attached To Entity ID": {
+      "Actor Unique ID": 2034
+     },
+     "Extra Shape Data": null
+    }
+   ]
+  }
+ },
+ {
   "id": "v1",
   "writer": "cereal",
   "value": {
@@ -50,6 +111,85 @@
   }
  },
  {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 3082,
+     "shape_type": "BOX",
+     "location": {
+      "x": 12.25,
+      "y": 12.75,
+      "z": 13.25
+     },
+     "scale": 13.75,
+     "rotation": {
+      "x": 14.25,
+      "y": 14.75,
+      "z": 15.25
+     },
+     "time_left_total_sec": 15.75,
+     "max_render_distance": 16.25,
+     "color": -4523,
+     "dimension_id": 4654,
+     "attached_to_id": 4785,
+     "extra_data_payload": {
+      "TextDataPayload": {
+       "text": "s36",
+       "use_rotation": false,
+       "background_color": 5178,
+       "depth_test": false,
+       "show_backface": true,
+       "show_text_backface": false
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "018a180101010000444100004c41000054410100005c41010000644100006c41000074410100007c4101000082410155eeffff01dc4801e24a020373333600013a140000000100",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 3082,
+     "Shape Type": 1,
+     "Location": {
+      "X": 12.25,
+      "Y": 12.75,
+      "Z": 13.25
+     },
+     "Scale": 13.75,
+     "Rotation": {
+      "X": 14.25,
+      "Y": 14.75,
+      "Z": 15.25
+     },
+     "Total Time Left": 15.75,
+     "Maximum Render Distance": 16.25,
+     "Color": {
+      "Color": -4523
+     },
+     "Dimension ID": {
+      "value": 4654
+     },
+     "Attached To Entity ID": {
+      "Actor Unique ID": 4785
+     },
+     "Extra Shape Data": {
+      "Text": "s36",
+      "UseRotation": false,
+      "BackgroundColor": {
+       "Color": 5178
+      },
+      "DepthTest": false,
+      "ShowBackface": true,
+      "ShowTextBackface": false
+     }
+    }
+   ]
+  }
+ },
+ {
   "id": "v3",
   "writer": "cereal",
   "value": {
@@ -87,6 +227,81 @@
        "X": 21.75,
        "Y": 22.25,
        "Z": 22.75
+      }
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v4",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 6226,
+     "shape_type": "CIRCLE",
+     "location": {
+      "x": 24.25,
+      "y": 24.75,
+      "z": 25.25
+     },
+     "scale": 25.75,
+     "rotation": {
+      "x": 26.25,
+      "y": 26.75,
+      "z": 27.25
+     },
+     "time_left_total_sec": 27.75,
+     "max_render_distance": 28.25,
+     "color": -7667,
+     "dimension_id": 7798,
+     "attached_to_id": 7929,
+     "extra_data_payload": {
+      "LineDataPayload": {
+       "end_location": {
+        "x": 30.25,
+        "y": 30.75,
+        "z": 31.25
+       }
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01d2300103010000c2410000c6410000ca41010000ce41010000d2410000d6410000da41010000de41010000e241010de2ffff01ec7901f27b040000f2410000f6410000fa41",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 6226,
+     "Shape Type": 3,
+     "Location": {
+      "X": 24.25,
+      "Y": 24.75,
+      "Z": 25.25
+     },
+     "Scale": 25.75,
+     "Rotation": {
+      "X": 26.25,
+      "Y": 26.75,
+      "Z": 27.25
+     },
+     "Total Time Left": 27.75,
+     "Maximum Render Distance": 28.25,
+     "Color": {
+      "Color": -7667
+     },
+     "Dimension ID": {
+      "value": 7798
+     },
+     "Attached To Entity ID": {
+      "Actor Unique ID": 7929
+     },
+     "Extra Shape Data": {
+      "Line End Location": {
+       "X": 30.25,
+       "Y": 30.75,
+       "Z": 31.25
       }
      }
     }
@@ -164,6 +379,83 @@
       "Width": 43.25,
       "Depth": 43.75,
       "Height": 44.25
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v8",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 11859,
+     "shape_type": "SPHERE",
+     "location": {
+      "x": 45.75,
+      "y": 46.25,
+      "z": 46.75
+     },
+     "scale": 47.25,
+     "rotation": {
+      "x": 47.75,
+      "y": 48.25,
+      "z": 48.75
+     },
+     "time_left_total_sec": 49.25,
+     "max_render_distance": 49.75,
+     "color": 13300,
+     "dimension_id": 13431,
+     "attached_to_id": -13562,
+     "extra_data_payload": {
+      "EllipsoidDataPayload": {
+       "radii": {
+        "x": 51.75,
+        "y": 52.25,
+        "z": 52.75
+       },
+       "segments_per_axis": 43
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01d35c010201000037420000394200003b420100003d420100003f4200004142000043420100004542010000474201f433000001eed10101f3d3010800004f4200005142000053422b",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 11859,
+     "Shape Type": 2,
+     "Location": {
+      "X": 45.75,
+      "Y": 46.25,
+      "Z": 46.75
+     },
+     "Scale": 47.25,
+     "Rotation": {
+      "X": 47.75,
+      "Y": 48.25,
+      "Z": 48.75
+     },
+     "Total Time Left": 49.25,
+     "Maximum Render Distance": 49.75,
+     "Color": {
+      "Color": 13300
+     },
+     "Dimension ID": {
+      "value": 13431
+     },
+     "Attached To Entity ID": {
+      "Actor Unique ID": -13562
+     },
+     "Extra Shape Data": {
+      "Radii": {
+       "X": 51.75,
+       "Y": 52.25,
+       "Z": 52.75
+      },
+      "Segments Per Axis": 43
      }
     }
    ]
@@ -248,6 +540,82 @@
     {
      "NetworkId": 16706,
      "Extra Shape Data": {}
+    }
+   ]
+  }
+ },
+ {
+  "id": "v11",
+  "writer": "cereal",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 16837,
+     "shape_type": "PYRAMID",
+     "location": {
+      "x": 64.75,
+      "y": 65.25,
+      "z": 65.75
+     },
+     "scale": 66.25,
+     "rotation": {
+      "x": 66.75,
+      "y": 67.25,
+      "z": 67.75
+     },
+     "time_left_total_sec": 68.25,
+     "max_render_distance": 68.75,
+     "color": -18278,
+     "dimension_id": 18409,
+     "attached_to_id": 18540,
+     "extra_data_payload": {
+      "TextDataPayload": {
+       "text": "s141",
+       "use_rotation": true,
+       "background_color": null,
+       "depth_test": false,
+       "show_backface": true,
+       "show_text_backface": false
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01c5830101070100808142008082420080834201008084420100808542008086420080874201008088420100808942019ab8ffff01d29f0201d8a1020204733134310100000100",
+  "bds_json": {
+   "Array of primitive shapes (can be a mix of new, updated or removed)": [
+    {
+     "NetworkId": 16837,
+     "Shape Type": 7,
+     "Location": {
+      "X": 64.75,
+      "Y": 65.25,
+      "Z": 65.75
+     },
+     "Scale": 66.25,
+     "Rotation": {
+      "X": 66.75,
+      "Y": 67.25,
+      "Z": 67.75
+     },
+     "Total Time Left": 68.25,
+     "Maximum Render Distance": 68.75,
+     "Color": {
+      "Color": -18278
+     },
+     "Dimension ID": {
+      "value": 18409
+     },
+     "Attached To Entity ID": {
+      "Actor Unique ID": 18540
+     },
+     "Extra Shape Data": {
+      "Text": "s141",
+      "UseRotation": true,
+      "DepthTest": false,
+      "ShowBackface": true,
+      "ShowTextBackface": false
+     }
     }
    ]
   }
