@@ -33,7 +33,11 @@ SERIALIZABLE = list(
 BINDING_GAP = {
     f"bedrock_protocol.v{version}.CommandRequestPacket" for version in (776, 800, 859, 944, 975, 1001, 2168, 2193, 2225)
 } | {"bedrock_protocol.v2225.pre_cereal.SerializedPersonaPieceHandle", "bedrock_protocol.v2225.pre_cereal.TintMapColor"}
-GAP = pytest.mark.xfail(strict=True, reason="binding gap: a name-coded enum defaults to an unnamed value")
+GAP = pytest.mark.xfail(
+    raises=bedrock_protocol.DecodeError,
+    strict=True,
+    reason="binding gap: a name-coded enum defaults to an unnamed value",
+)
 
 
 def packet_id(value):
@@ -48,6 +52,9 @@ def gap(cls):
     return GAP if value_id(cls) in BINDING_GAP else ()
 
 
+VALUES = [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE]
+
+
 def test_every_version_binds_packets(protocol):
     assert len(protocol.PACKETS) > 200
 
@@ -60,13 +67,13 @@ def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     assert framed == packet
 
 
-@pytest.mark.parametrize("cls", [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE], ids=value_id)
+@pytest.mark.parametrize("cls", VALUES, ids=value_id)
 def test_a_default_value_decodes_to_itself(cls):
     value = cls()
     assert cls.from_bytes(bytes(value)) == value
 
 
-@pytest.mark.parametrize("cls", [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE], ids=value_id)
+@pytest.mark.parametrize("cls", VALUES, ids=value_id)
 def test_a_default_value_encodes_again_to_the_same_bytes(cls):
     data = bytes(cls())
     assert bytes(cls.from_bytes(data)) == data
