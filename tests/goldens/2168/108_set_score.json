@@ -1,0 +1,159 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "score_info": [
+    {
+     "RemoveScore": {
+      "scoreboard_id": {
+       "raw_id": 331
+      },
+      "objective_name": "s2"
+     }
+    }
+   ]
+  },
+  "bytes": "01000672656d6f7665960501027332",
+  "bds_json": {
+   "Score Info": [
+    {
+     "Action": "remove",
+     "Scoreboard Id": {
+      "Scoreboard Id": 331
+     },
+     "Objective Name": "s2"
+    }
+   ]
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "score_info": [
+    {
+     "ChangePlayerScore": {
+      "scoreboard_id": {
+       "raw_id": -593
+      },
+      "objective_name": "s4",
+      "score_value": 855,
+      "player_id": {
+       "actor_unique_id": -986
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "01010c6368616e6765706c61796572a10902733457030000b30f",
+  "bds_json": {
+   "Score Info": [
+    {
+     "Action": "changeplayer",
+     "Scoreboard Id": {
+      "Scoreboard Id": -593
+     },
+     "Objective Name": "s4",
+     "Score Value": 855,
+     "Player Unique Id": {
+      "Player Unique Id": -986
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "score_info": [
+    {
+     "ChangeEntityScore": {
+      "scoreboard_id": {
+       "raw_id": 1117
+      },
+      "objective_name": "s8",
+      "score_value": -1379,
+      "entity_id": 1510
+     }
+    }
+   ]
+  },
+  "bytes": "01020c6368616e6765656e74697479ba110273389dfaffffcc17",
+  "bds_json": {
+   "Score Info": [
+    {
+     "Action": "changeentity",
+     "Scoreboard Id": {
+      "Scoreboard Id": 1117
+     },
+     "Objective Name": "s8",
+     "Score Value": -1379,
+     "Actor Id": {
+      "Actor Unique ID": 1510
+     }
+    }
+   ]
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "score_info": [
+    {
+     "ChangeFakePlayerScore": {
+      "scoreboard_id": {
+       "raw_id": 1641
+      },
+      "objective_name": "s12",
+      "score_value": 1903,
+      "fake_player_name": "s14"
+     }
+    }
+   ]
+  },
+  "bytes": "0103106368616e676566616b65706c61796572d219037331326f07000003733134",
+  "bds_json": {
+   "Score Info": [
+    {
+     "Action": "changefakeplayer",
+     "Scoreboard Id": {
+      "Scoreboard Id": 1641
+     },
+     "Objective Name": "s12",
+     "Score Value": 1903,
+     "Fake Player Name": "s14"
+    }
+   ]
+  }
+ },
+ {
+  "id": "v4",
+  "writer": "cereal",
+  "value": {
+   "score_info": [
+    {
+     "RemoveScore": {
+      "scoreboard_id": {
+       "raw_id": -2165
+      },
+      "objective_name": null
+     }
+    }
+   ]
+  },
+  "bytes": "01000672656d6f7665e92100",
+  "bds_json": {
+   "Score Info": [
+    {
+     "Action": "remove",
+     "Scoreboard Id": {
+      "Scoreboard Id": -2165
+     }
+    }
+   ]
+  }
+ }
+]
