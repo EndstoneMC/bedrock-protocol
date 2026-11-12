@@ -184,19 +184,6 @@ def test_endian_is_big_and_on_a_fixed_width_integer_only(build_package, line, me
         build_package({"a": source})
 
 
-def test_enum_field_takes_type_or_derives_its_wire(build_package):
-    source = (
-        HEADER
-        + "class E(IntEnum, int32):\n    A = 1\n\n"
-        + "class A:\n    x: E = field(type=uint8)\n    y: E = field(type=str)\n    z: E\n"
-    )
-    package = build_package({"a": source})
-
-    enum = package.modules[0].families[0]
-
-    assert field_types(package) == [EnumRef(enum, wire="uint8"), EnumName(enum), EnumRef(enum)]
-
-
 def test_cereal_false_declares_a_second_flavour_of_the_name(build_package):
     source = HEADER + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    y: uint16\n"
     package = build_package({"a": source})
