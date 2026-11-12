@@ -455,12 +455,13 @@ template <template <int> class Types>
 void bind_schema_types(std::span<const Version> bound)
 {
     [&]<std::size_t... I>(std::index_sequence<I...>) {
+        constexpr std::size_t newest = versions.size() - 1;
         (
             [&]<typename... C, typename... L>(const Version &version, type_list<C...>, type_list<L...>) {
                 (bind_type<C>(version.module, &version), ...);
                 (bind_type<L>(version.legacy, &version), ...);
-            }(bound[versions.size() - 1 - I], typename Types<versions[versions.size() - 1 - I]>::cereal{},
-              typename Types<versions[versions.size() - 1 - I]>::legacy{}),
+            }(bound[newest - I], typename Types<versions[newest - I]>::cereal{},
+              typename Types<versions[newest - I]>::legacy{}),
             ...);
     }(std::make_index_sequence<versions.size()>{});
 }
