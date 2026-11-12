@@ -529,8 +529,8 @@ class Builder:
         node = pending.node
         if len(node.bases) > 2:
             raise error(source, node, node.name, "takes an enum base and at most an underlying type")
-        if self.resolve(source, pending.scope, node.bases[0]) not in (enum.IntEnum, enum.Enum):
-            raise error(source, node.bases[0], node.name, "is not IntEnum or Enum")
+        if self.resolve(source, pending.scope, node.bases[0]) is not enum.IntEnum:
+            raise error(source, node.bases[0], node.name, "is not IntEnum")
         underlying = None
         if len(node.bases) == 2:
             base = self.type_of(source, pending.scope, node.bases[1])
@@ -571,6 +571,8 @@ class Builder:
                             source, expression, name, f"cpp_name {cpp_name!r} is not a case variant of {derived!r}"
                         )
                 own = self.read_range(source, expression, name, arguments)
+                if "name" in arguments and "cpp_name" not in arguments and own == Range(None, None):
+                    raise error(source, expression, name, "an ungated member takes a pair, not value()")
                 value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
             elif (
                 isinstance(expression, ast.Call)

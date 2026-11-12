@@ -1,9 +1,9 @@
 """The Environment Attribute System: world/eas/ and world/eas/attributes/ --
 bool/float/colour environment attributes, their operations and easing, and attribute layers."""
 
-from enum import Enum, IntEnum
+from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8, uint32, uvarint32, value
+from protocol import field, int32, packet, type, uint8, uint32, uvarint32
 from protocol.common import DimensionType
 
 package = "bedrock.protocol"
@@ -18,7 +18,7 @@ class Color255RGBA:
 
 class BoolAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = value(1, "ALPHA_BLEND")
+    ALPHA_BLEND = 1, "ALPHA_BLEND"
     AND = 2
     NAND = 3
     OR = 4
@@ -29,7 +29,7 @@ class BoolAttributeOperation(IntEnum):
 
 class FloatAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = value(1, "ALPHA_BLEND")
+    ALPHA_BLEND = 1, "ALPHA_BLEND"
     ADD = 2
     SUBTRACT = 3
     MULTIPLY = 4
@@ -39,13 +39,13 @@ class FloatAttributeOperation(IntEnum):
 
 class ColorAttributeOperation(IntEnum):
     OVERRIDE = 0
-    ALPHA_BLEND = value(1, "ALPHA_BLEND")
+    ALPHA_BLEND = 1, "ALPHA_BLEND"
     ADD = 2
     SUBTRACT = 3
     MULTIPLY = 4
 
 
-class EasingType(Enum, uint32):
+class EasingType(IntEnum, uint32):
     LINEAR = 0, "linear"
     SPRING = 1, "spring"
     IN_QUAD = 2, "in_quad"

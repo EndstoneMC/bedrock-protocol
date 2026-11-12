@@ -2,7 +2,7 @@
 world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
 
 import uuid
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 
 from protocol import array, field, int8, packet, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
@@ -18,7 +18,7 @@ class ArmSizeType(IntEnum, uint8):
     UNKNOWN = auto()
 
 
-class PieceType(Enum, uint32):
+class PieceType(IntEnum, uint32):
     UNKNOWN = 0
     SKELETON = 1
     BODY = 2
@@ -53,7 +53,7 @@ class PieceType(Enum, uint32):
 
 
 @type(cereal=False)
-class PieceType(Enum, uint32):
+class PieceType(IntEnum, uint32):
     """persona::stringFromPieceType."""
 
     SKELETON = 1, "persona_skeleton"

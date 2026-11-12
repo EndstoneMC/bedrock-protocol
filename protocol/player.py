@@ -3,7 +3,7 @@ slots, client options, the player list, location and property overrides, AddPlay
 Not abilities -- those are in ability.py."""
 
 import uuid
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int16, int32, packet, type, uint8, uvarint32, uvarint64, value, varint32
@@ -242,7 +242,7 @@ class PlayerListPacket:
     entries: list[RemoveEntry | AddEntry]
 
 
-class UpdateType(Enum, uint8):
+class UpdateType(IntEnum, uint8):
     CLEAR_OVERRIDES = 0
     REMOVE_OVERRIDE = 1
     SET_INT_OVERRIDE = 2

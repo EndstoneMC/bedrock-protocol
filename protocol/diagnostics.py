@@ -1,7 +1,7 @@
 """What the client reports for diagnosis: profile/ Whisker scopes, memory categories,
 frame and system timings, plus debug/ markers and the editor channel."""
 
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 
 from protocol import field, packet, type, uint8, uint64, value
 from protocol.actor import ActorUniqueID
@@ -208,7 +208,7 @@ class DebugInfoPacket:
 
 @packet(id=164)
 class ClientboundDebugRendererPacket:
-    class PayloadType(Enum, uint8):
+    class PayloadType(IntEnum, uint8):
         INVALID = 0
         CLEAR_DEBUG_MARKERS = 1
         ADD_DEBUG_MARKER_CUBE = 2

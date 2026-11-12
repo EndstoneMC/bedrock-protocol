@@ -1,7 +1,7 @@
 """Sound events and handles: sound/ and world/level/LevelSoundEvent.h --
 the packets that play, stop and update sound, and the LevelSoundEvent table."""
 
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int64, packet, type, uint8, uint32, uint64, value, varint32
@@ -728,7 +728,7 @@ class SignedAudioContent:
     compact_jwt: str
 
 
-class AudioContentPlaybackType(Enum):
+class AudioContentPlaybackType(IntEnum):
     MUSIC = 0
     SOUND = 1
 

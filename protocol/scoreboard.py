@@ -1,6 +1,6 @@
 """Scoreboard ids, identities, objectives and scores: world/scores/."""
 
-from enum import Enum, IntEnum
+from enum import IntEnum
 from typing import Literal
 
 from protocol import field, int32, packet, type, uint8, varint32, varint64
@@ -31,7 +31,7 @@ class ScorePacketType(IntEnum, uint8):
 
 
 @type(since=2168)
-class ScorePacketEntryAction(Enum, uint8):
+class ScorePacketEntryAction(IntEnum, uint8):
     REMOVE = 0
     CHANGE_PLAYER = 1
     CHANGE_ENTITY = 2

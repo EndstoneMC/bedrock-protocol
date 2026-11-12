@@ -2,7 +2,7 @@
 telemetry identity, the player's party, matchmaking, and transfer."""
 
 import uuid
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 from protocol import field, int8, packet, type, uint8, uint16
 
@@ -115,7 +115,7 @@ class PartyChangedPacket:
     party_info: PlayerPartyInfo | None
 
 
-class PartyDestinationCookieIntent(Enum, int8):
+class PartyDestinationCookieIntent(IntEnum, int8):
     NOTIFY = 0
     OPT_IN = 1
     OPT_OUT = 2

@@ -2,7 +2,7 @@
 and both permission ladders."""
 
 import uuid
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 
 from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID, ActorUniqueID
@@ -148,7 +148,7 @@ class CommandBlockUpdatePacket:
     execute_on_first_tick: bool
 
 
-class CommandOriginType(Enum, uint8):
+class CommandOriginType(IntEnum, uint8):
     PLAYER = 0
     COMMAND_BLOCK = 1
     MINECART_COMMAND_BLOCK = 2
@@ -174,7 +174,7 @@ class CommandOriginData:
     player_id: ActorUniqueID = field(type=int64)
 
 
-class CurrentCmdVersion(Enum):
+class CurrentCmdVersion(IntEnum):
     INVALID = -1
     INITIAL = 1
     TP_ROTATION_CLAMPING = 2
@@ -245,7 +245,7 @@ class CommandRequestPacket:
     version: CurrentCmdVersion = field(type=str)
 
 
-class CommandOutputType(Enum):
+class CommandOutputType(IntEnum):
     NONE = 0
     LAST_OUTPUT = 1
     SILENT = 2

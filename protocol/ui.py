@@ -2,7 +2,7 @@
 util/HudElementsEnum.h -- forms, data-driven UI, HUD elements and the locator bar."""
 
 import uuid
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 
 from protocol import field, packet, type, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
@@ -147,7 +147,7 @@ class LocatorBarPacket:
     waypoints: list[LocatorBarWaypointPayload]
 
 
-class DataDrivenScreenClosedReason(Enum, uint8):
+class DataDrivenScreenClosedReason(IntEnum, uint8):
     PROGRAMMATIC_CLOSE = 0
     PROGRAMMATIC_CLOSE_ALL = 1
     CLIENT_CANCELED = 2

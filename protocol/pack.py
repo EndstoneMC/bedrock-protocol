@@ -2,7 +2,7 @@
 pack identity, versions, the download handshake, the applied stack, pack settings."""
 
 import uuid
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int8, int32, packet, type, uint16, uint32, uint64
@@ -43,7 +43,7 @@ class PackInfoData:
     cdn_url: str = field(since=748)
 
 
-class ResourcePackResponse(Enum, int8):
+class ResourcePackResponse(IntEnum, int8):
     CANCEL = 1
     DOWNLOADING = 2
     DOWNLOADING_FINISHED = 3

@@ -12,7 +12,7 @@ from bedrock_protocol_compiler.descriptor import (
 )
 
 HEADER = """
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 from protocol import builtin, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, value
 package = "bedrock.protocol"
 """
@@ -26,13 +26,12 @@ def members(package):
     ("bases", "underlying"),
     [
         ("IntEnum", None),
-        ("Enum", None),
         ("IntEnum, uint8", Primitive("uint8")),
-        ("Enum, int8", Primitive("int8")),
+        ("IntEnum, int8", Primitive("int8")),
         ("IntEnum, int16", Primitive("int16")),
         ("IntEnum, uint16", Primitive("uint16")),
         ("IntEnum, int32", Primitive("int32")),
-        ("Enum, uint32", Primitive("uint32")),
+        ("IntEnum, uint32", Primitive("uint32")),
         ("IntEnum, bool", Primitive("bool")),
     ],
 )
@@ -81,8 +80,8 @@ def test_pair_and_value_name_give_the_wire_name(build_package):
     package = build_package(
         {
             "a": HEADER
-            + "class E(Enum, uint8):\n    A = 1, 'a_name'\n    B = value(2, 'b_name')\n"
-            + "    ALPHA_BLEND = value(3, 'ALPHA_BLEND')\n    C = 4, 'Persona_High'\n"
+            + "class E(IntEnum, uint8):\n    A = 1, 'a_name'\n    B = value(2, 'b_name', since=2)\n"
+            + "    ALPHA_BLEND = value(3, 'ALPHA_BLEND', until=4)\n    C = 4, 'Persona_High'\n"
             + "class F(IntEnum, uint8):\n    A = 1, 'a_name'\n"
         }
     )
@@ -162,7 +161,9 @@ def test_an_enum_takes_type(build_package):
 @pytest.mark.parametrize(
     ("source", "message"),
     [
-        ("class E(uint8):\n    A = 1\n", "E: is not IntEnum or Enum"),
+        ("class E(uint8):\n    A = 1\n", "E: is not IntEnum"),
+        ("from enum import Enum\nclass E(Enum, uint8):\n    A = 1\n", "E: is not IntEnum"),
+        ("class E(IntEnum):\n    A = value(1, 'a')\n", "A: an ungated member takes a pair, not value()"),
         ("class E(IntEnum, IntEnum):\n    A = 1\n", "IntEnum: is not a type"),
         ("class E(IntEnum, int64):\n    A = 1\n", "E: is not an enum underlying type"),
         ("class E(IntEnum, uint64):\n    A = 1\n", "E: is not an enum underlying type"),

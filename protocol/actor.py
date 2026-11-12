@@ -2,7 +2,7 @@
 registry, and the packets that spawn, move, remove and animate one. world/actor/.
 Not the player -- world/actor/player/ is player.py."""
 
-from enum import Enum, IntEnum, auto
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import (
@@ -940,7 +940,7 @@ class SetPassengerOfBlockPacket:
     passenger_of_block_data: PassengerOfBlockArguments | None
 
 
-class ActorSwingSource(Enum, uint8):
+class ActorSwingSource(IntEnum, uint8):
     NONE = 0
     BUILD = 1
     MINE = 2

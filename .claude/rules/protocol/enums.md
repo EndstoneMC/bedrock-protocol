@@ -11,6 +11,7 @@ paths:
 - Record BDS's spelling in the DSL, never the wire's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
+- Write a gated member's pair as `value(N, "X", since=, until=)`; an ungated `value(N, "X")` is an error.
 - Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
 
 ## Values
@@ -20,7 +21,7 @@ paths:
 
 ## Underlying type
 
-- Declare the underlying type as the second base, taken from bedrock-headers (`class MemoryCategory(IntEnum, uint8)`), and spell it even when the header's is `int` (`int32`).
+- Derive every enum from `IntEnum`, with the underlying type as the second base, taken from bedrock-headers (`class MemoryCategory(IntEnum, uint8)`), and spell it even when the header's is `int` (`int32`).
 - Give every redeclaration of an enum the same underlying type.
 - Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second wire shape.
 - Grep the enum for a negative enumerator before unifying a narrowed width; with one, the eras are two types.
