@@ -2,7 +2,7 @@
 
 from enum import IntEnum, auto
 
-from protocol import int16, int32, packet, uint8, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, type, uint8, uvarint32, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
@@ -183,14 +183,24 @@ class LegacyTelemetryEventPacket:
         ITEM_USED = 31
 
     class Achievement:
-        achievement_id: MinecraftEventing.AchievementIds
+        achievement_id: MinecraftEventing.AchievementIds = field(type=varint32, until=898)
+        achievement_id: MinecraftEventing.AchievementIds = field(since=898)
 
     class Interaction:
         interacted_entity_id: ActorUniqueID
-        interaction_type: MinecraftEventing.InteractionType
+        interaction_type: MinecraftEventing.InteractionType = field(type=varint32, until=898)
+        interaction_type: MinecraftEventing.InteractionType = field(since=898)
         interacted_entity_type: varint32
         interacted_entity_variant: varint32
         interacted_entity_color: uint8
+
+    @type(until=898)
+    class AgentCommandObsolete:
+        int_1: varint32
+        int_2: varint32
+        text_1: str
+        text_2: str
+        text_3: str
 
     class PortalCreated:
         built_in_dimension: varint32
@@ -209,8 +219,10 @@ class LegacyTelemetryEventPacket:
 
     class CauldronUsed:
         contents_color: uvarint32
-        contents_type: int16
-        fill_level: int16
+        contents_type: int16 = field(type=varint32, until=898)
+        contents_type: int16 = field(since=898)
+        fill_level: int16 = field(type=varint32, until=898)
+        fill_level: int16 = field(since=898)
 
     class PlayerDied:
         killer_id: varint32
@@ -235,15 +247,20 @@ class LegacyTelemetryEventPacket:
         baby_color: uint8
 
     class POICauldronUsed:
-        interaction_type: MinecraftEventing.POIBlockInteractionType
-        item_id: int16
+        interaction_type: MinecraftEventing.POIBlockInteractionType = field(type=varint32, until=898)
+        interaction_type: MinecraftEventing.POIBlockInteractionType = field(since=898)
+        item_id: int16 = field(type=varint32, until=898)
+        item_id: int16 = field(since=898)
 
     class ComposterUsed:
-        interaction_type: MinecraftEventing.POIBlockInteractionType
-        item_id: int16
+        interaction_type: MinecraftEventing.POIBlockInteractionType = field(type=varint32, until=898)
+        interaction_type: MinecraftEventing.POIBlockInteractionType = field(since=898)
+        item_id: int16 = field(type=varint32, until=898)
+        item_id: int16 = field(since=898)
 
     class BellUsed:
-        item_id: int16
+        item_id: int16 = field(type=varint32, until=898)
+        item_id: int16 = field(since=898)
 
     class ActorDefinition:
         event_name: str
@@ -276,12 +293,43 @@ class LegacyTelemetryEventPacket:
         use_method: int32
         count: int32
 
+    @type(since=898)
     class Empty:
         pass
 
     player_unique_id: ActorUniqueID
     type: Type
     use_player_id: bool
+    achievement: Achievement = field(until=898, when=lambda p: p.type == Type.ACHIEVEMENT)
+    interaction: Interaction = field(until=898, when=lambda p: p.type == Type.INTERACTION)
+    portal_created: PortalCreated = field(until=898, when=lambda p: p.type == Type.PORTAL_CREATED)
+    portal_used: PortalUsed = field(until=898, when=lambda p: p.type == Type.PORTAL_USED)
+    mob_killed: MobKilled = field(until=898, when=lambda p: p.type == Type.MOB_KILLED)
+    cauldron_used: CauldronUsed = field(until=898, when=lambda p: p.type == Type.CAULDRON_USED)
+    player_died: PlayerDied = field(until=898, when=lambda p: p.type == Type.PLAYER_DIED)
+    boss_killed: BossKilled = field(until=898, when=lambda p: p.type == Type.BOSS_KILLED)
+    agent_command_obsolete: AgentCommandObsolete = field(
+        until=898, when=lambda p: p.type == Type.AGENT_COMMAND_OBSOLETE
+    )
+    slash_command: SlashCommand = field(until=898, when=lambda p: p.type == Type.SLASH_COMMAND)
+    mob_born: MobBorn = field(until=898, when=lambda p: p.type == Type.MOB_BORN)
+    poi_cauldron_used: POICauldronUsed = field(until=898, when=lambda p: p.type == Type.POI_CAULDRON_USED)
+    composter_used: ComposterUsed = field(until=898, when=lambda p: p.type == Type.COMPOSTER_USED)
+    bell_used: BellUsed = field(until=898, when=lambda p: p.type == Type.BELL_USED)
+    actor_definition: ActorDefinition = field(until=898, when=lambda p: p.type == Type.ACTOR_DEFINITION)
+    raid_update: RaidUpdate = field(until=898, when=lambda p: p.type == Type.RAID_UPDATE)
+    target_block_hit: TargetBlockHit = field(until=898, when=lambda p: p.type == Type.TARGET_BLOCK_HIT)
+    piglin_barter: PiglinBarter = field(until=898, when=lambda p: p.type == Type.PIGLIN_BARTER)
+    player_waxed_or_unwaxed_copper: PlayerWaxedOrUnwaxedCopper = field(
+        until=898, when=lambda p: p.type == Type.PLAYER_WAXED_OR_UNWAXED_COPPER
+    )
+    code_builder_runtime_action: CodeBuilderRuntimeAction = field(
+        until=898, when=lambda p: p.type == Type.CODE_BUILDER_RUNTIME_ACTION
+    )
+    code_builder_scoreboard: CodeBuilderScoreboard = field(
+        until=898, when=lambda p: p.type == Type.CODE_BUILDER_SCOREBOARD
+    )
+    item_used: ItemUsed = field(until=898, when=lambda p: p.type == Type.ITEM_USED)
     event_data: (
         Achievement
         | Interaction
@@ -305,4 +353,4 @@ class LegacyTelemetryEventPacket:
         | CodeBuilderScoreboard
         | ItemUsed
         | Empty
-    )
+    ) = field(since=898)
