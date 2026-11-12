@@ -16,7 +16,7 @@ CompileFlags:
     - -std=c++23
     - -xc++
     - -Iinclude
-    - -Ibuild/include
+    - -Ibuild/generated
     - -Wno-unknown-warning-option
     - -Wno-unknown-attributes
     - -Wno-unused-command-line-argument
