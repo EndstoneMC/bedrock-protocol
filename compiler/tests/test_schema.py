@@ -231,6 +231,18 @@ def test_enum_values_are_evaluated_over_the_members_present(build_package):
     assert late.numbers == {"A": 4, "B": 5, "C": 6, "D": 4, "F": 5}
 
 
+def test_auto_inside_an_enum_block_counts_the_members_present(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 1\n    with value(since=3):\n        B = 2, 'Bee'\n        C = auto()\n"
+        + "    D = auto()\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert [shape.numbers for shape in schema.shapes(family)] == [{"A": 1, "D": 2}, {"A": 1, "B": 2, "C": 3, "D": 4}]
+
+
 def test_an_enum_member_renamed_at_the_same_value_is_a_new_shape(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n    C = value(2, until=3)\n"
     schema = Schema(build_package({"a": source}))

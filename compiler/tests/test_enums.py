@@ -170,7 +170,10 @@ def test_an_enum_takes_type(build_package):
     [
         ("class E(uint8, uint8):\n    A = 1\n", "E: is not IntEnum"),
         ("from enum import Enum\nclass E(Enum, uint8):\n    A = 1\n", "E: is not IntEnum"),
-        ("class E(IntEnum, int32):\n    A = value(1, 'a')\n", "A: an ungated member takes a pair, not value()"),
+        (
+            "class E(IntEnum, int32):\n    A = value(1, 'a')\n",
+            "A: a member without its own gate takes a pair, not value()",
+        ),
         ("class E(IntEnum, IntEnum):\n    A = 1\n", "IntEnum: is not a type"),
         ("class E(IntEnum, int64):\n    A = 1\n", "E: is not an enum underlying type"),
         ("class E(IntEnum, uint64):\n    A = 1\n", "E: is not an enum underlying type"),

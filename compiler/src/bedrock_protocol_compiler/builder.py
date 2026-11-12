@@ -11,7 +11,7 @@ from functools import reduce
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, TypeAliasType
+from typing import TypeAliasType
 
 from bedrock_protocol_compiler import dsl
 from bedrock_protocol_compiler.descriptor import (
@@ -536,7 +536,7 @@ class Builder:
             raise error(source, node.bases[1], node.name, "is not an enum underlying type")
         members: list[Member] = []
         for statement, within, _ in self.blocks(
-            source, pending.scope, node, node.name, pending.range, dsl.value, ("since", "until"), ast.Assign
+            source, pending.scope, node, node.name, pending.range, dsl.value, ("since", "until"), ast.Assign, "members"
         ):
             if not (
                 isinstance(statement, ast.Assign)
@@ -571,7 +571,7 @@ class Builder:
                         )
                 own = self.read_range(source, expression, name, arguments)
                 if "name" in arguments and "cpp_name" not in arguments and own == Range(None, None):
-                    raise error(source, expression, name, "an ungated member takes a pair, not value()")
+                    raise error(source, expression, name, "a member without its own gate takes a pair, not value()")
                 value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
             elif (
                 isinstance(expression, ast.Call)
@@ -637,6 +637,7 @@ class Builder:
             dsl.field,
             ("since", "until", "when"),
             ast.AnnAssign,
+            "fields",
         )
         for statement, within, block_when in statements:
             if isinstance(statement, ast.Pass | ast.ClassDef):
@@ -750,9 +751,10 @@ class Builder:
         node: ast.ClassDef,
         name: str,
         range: Range,
-        opener: Callable[..., Any],
+        opener: Callable[..., object],
         allowed: tuple[str, ...],
         holds: type[ast.stmt],
+        noun: str,
     ) -> list[tuple[ast.stmt, Range, ast.expr | None]]:
         statements: list[tuple[ast.stmt, Range, ast.expr | None]] = []
         for statement in without_docstring(node.body):
@@ -767,7 +769,6 @@ class Builder:
             if not arguments or not arguments.keys() <= set(allowed):
                 keys = [f"{key}=" for key in allowed]
                 raise error(source, block, name, f"a with block takes only {', '.join(keys[:-1])} and {keys[-1]}")
-            noun = "fields" if holds is ast.AnnAssign else "members"
             if any(not isinstance(inner, holds) for inner in statement.body):
                 raise error(source, statement, name, f"a with block holds only {noun}")
             within = self.narrow(source, statement, name, self.read_range(source, block, name, arguments), range)

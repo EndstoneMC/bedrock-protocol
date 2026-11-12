@@ -527,7 +527,7 @@ def test_a_pair_and_auto_inside_an_enum_block(build_package):
         ),
         (
             "class E(IntEnum, uint8):\n    with value(since=2):\n        A = value(1, 'Aye')\n",
-            "A: an ungated member takes a pair, not value\\(\\)",
+            "A: a member without its own gate takes a pair, not value\\(\\)",
         ),
     ],
 )

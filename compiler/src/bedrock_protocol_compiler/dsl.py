@@ -15,8 +15,8 @@ def value(
     cpp_name: str | None = None,
     since: int | None = None,
     until: int | None = None,
-) -> int:
-    """Mark a member a pair cannot spell (gated or `cpp_name`), or with `with` gate a run; no `v` means previous + 1."""
+) -> Any:
+    """Mark a member a pair cannot spell (gated or `cpp_name`); no `v` means the previous present member's plus one."""
     return 0 if v is None else v
 
 

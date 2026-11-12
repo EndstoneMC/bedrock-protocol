@@ -11,7 +11,7 @@ paths:
 - Record BDS's spelling in the DSL, never the wire's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
-- Write a gated member's pair as `value(N, "X", since=, until=)`; an ungated `value(N, "X")` is an error.
+- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` with no gate of its own is an error.
 - Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
 
 ## Values
@@ -33,8 +33,7 @@ paths:
 
 ## Across versions
 
-- Gate a member arriving or leaving with `value(N, since=)` or `value(N, until=)`.
-- Write a run of two or more consecutive members that share one gate as a `with value(since=, until=):` block, and a single gated member as `value(N, since=)`; a gated pair inside a block is a plain pair (`X = N, "Name"`).
+- Gate a member arriving or leaving with `value(N, since=)` or `value(N, until=)`, and a run of two or more consecutive members that share one gate with a `with value(since=, until=):` block.
 - Declare a moved member once per value, over disjoint ranges (`RECORD_LAVA_CHICKEN = value(561, since=819, until=827)` and `value(562, since=827)`).
 - Redeclare an enum over adjacent ranges only for a wholesale renumbering.
 - Gate an appended value with `value(N, since=)` and let a trailing `COUNT = auto()` follow it.
