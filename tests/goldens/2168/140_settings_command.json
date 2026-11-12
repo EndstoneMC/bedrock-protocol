@@ -1,0 +1,15 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "command_string": "s1",
+   "suppress_output": true
+  },
+  "bytes": "02733101",
+  "bds_json": {
+   "Command": "s1",
+   "Suppress Output?": true
+  }
+ }
+]
