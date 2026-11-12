@@ -469,8 +469,7 @@ class Generator:
             raise TypeError(f"{enum.name}: not an enum shape")
         names: dict[int, str] = {}
         for member in sorted(shape.members, key=lambda member: not isinstance(member.value, MemberRef | Binary)):
-            if member.name in shape.numbers and member.name != "COUNT":
-                names.setdefault(shape.numbers[member.name], member.name)
+            names.setdefault(shape.numbers[member.name], member.name)
         return names
 
     def fields(self, shape: StructShape) -> list[Field]:
