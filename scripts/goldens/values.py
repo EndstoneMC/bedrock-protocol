@@ -97,7 +97,7 @@ SAME_MEMBER = {
     "ClientboundUpdateSoundDataPacket.resume": "stop",
     "CylinderDataPayload.radius_z": "radius_x",
 }
-PRESENT_WHEN = {
+PRESENT_WHEN: dict[str, tuple[str, ...] | Expression] = {
     "ItemStackResponseInfo.containers": ("result", "SUCCESS"),
     "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
@@ -108,6 +108,7 @@ PRESENT_WHEN = {
     "PlayerAuthInputPacket.player_block_actions": ("input_data", "PERFORM_BLOCK_ACTIONS"),
     "PlayerAuthInputPacket.vehicle_rot": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
     "PlayerAuthInputPacket.client_predicted_vehicle": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
+    "ItemStackResponseSlotInfo.item_stack_net_id": Binary("!=", FieldRef("amount"), Int(0)),
 }
 LEVEL_GAME_RULES = (
     ("commandBlockOutput", {"bool": True}),
@@ -321,6 +322,9 @@ class Generator:
             gate = PRESENT_WHEN.get(f"{label}.{each.name}")
             if gate is None or not isinstance(each.type, Optional):
                 found.append(each)
+                continue
+            if not isinstance(gate, tuple):
+                found.append(dataclasses.replace(each, type=each.type.element, when=gate))
                 continue
             name, *members = gate
             declared = next(field.type for field in shape.fields if field.name == name)
