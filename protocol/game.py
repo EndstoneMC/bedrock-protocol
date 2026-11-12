@@ -108,12 +108,6 @@ class SyncedPlayerMovementSettings:
     server_auth_block_breaking: bool
 
 
-@type(until=2168)
-class BlockEntry:
-    name: str
-    properties: CompoundTag
-
-
 @type(since=2168)
 class ServerBlockProperty:
     name: str
@@ -428,6 +422,12 @@ class GameRule:
     name: str
     can_be_modified_by_player: bool
     value: None | bool | uvarint32 | float
+
+
+@type(until=2168)
+class BlockEntry:
+    name: str
+    properties: CompoundTag
 
 
 @type(until=776)

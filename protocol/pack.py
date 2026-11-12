@@ -130,7 +130,7 @@ class PackType(IntEnum, int8):
 class ResourcePackDataInfoPacket:
     resource_name: str
     chunk_size: uint32
-    nb_chunks: uint32
+    nb_chunks: int32 = field(type=uint32)
     file_size: uint64
     file_hash: bytes
     is_premium: bool
@@ -140,7 +140,7 @@ class ResourcePackDataInfoPacket:
 @packet(id=83)
 class ResourcePackChunkDataPacket:
     resource_name: str
-    chunk_id: uint32
+    chunk_id: int32 = field(type=uint32)
     byte_offset: uint64
     data: bytes
 

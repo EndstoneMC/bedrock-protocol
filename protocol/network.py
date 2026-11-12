@@ -238,7 +238,9 @@ class MinecraftPacketIds(IntEnum, int32):
     SERVERBOUND_DATA_STORE = value(332, since=898)
     with value(since=924):
         CLIENTBOUND_DATA_DRIVEN_UI_SHOW_SCREEN = value(333, cpp_name="ClientboundDataDrivenUIShowScreen")
-        CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_ALL_SCREENS = value(334, until=944)
+        CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_ALL_SCREENS = value(
+            334, cpp_name="ClientboundDataDrivenUICloseAllScreens", until=944
+        )
         CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_SCREEN = value(334, cpp_name="ClientboundDataDrivenUICloseScreen", since=944)
         CLIENTBOUND_DATA_DRIVEN_UI_RELOAD = value(335, cpp_name="ClientboundDataDrivenUIReload")
         CLIENTBOUND_TEXTURE_SHIFT_PACKET = 336

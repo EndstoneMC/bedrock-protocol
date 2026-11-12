@@ -31,10 +31,12 @@ class DimensionDefinitionGroup:
             cloud_height: varint32
             render_clouds: bool
 
+    dimension_definitions: dict[str, DimensionDefinition]
+
 
 @packet(id=180)
 class DimensionDataPacket:
-    dimension_definitions: dict[str, DimensionDefinitionGroup.DimensionDefinition]
+    dimension_definition_group: DimensionDefinitionGroup
 
 
 @packet(id=61)
