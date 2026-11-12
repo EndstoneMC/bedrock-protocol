@@ -1,0 +1,83 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "update": {
+    "data_store_name": "s1",
+    "property": "s2",
+    "path": "s3",
+    "data": {
+     "float": 2.25
+    },
+    "property_update_count": 855,
+    "path_update_count": 986
+   }
+  },
+  "bytes": "02733102733202733300000000000000024057030000da030000",
+  "bds_json": {
+   "Update": {
+    "Data Store Name": "s1",
+    "Property": "s2",
+    "Path": "s3",
+    "Data": 2.25,
+    "Property Update Count": 855,
+    "Path Update Count": 986
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "update": {
+    "data_store_name": "s7",
+    "property": "s8",
+    "path": "s9",
+    "data": {
+     "bool": true
+    },
+    "property_update_count": 1641,
+    "path_update_count": 1772
+   }
+  },
+  "bytes": "027337027338027339010169060000ec060000",
+  "bds_json": {
+   "Update": {
+    "Data Store Name": "s7",
+    "Property": "s8",
+    "Path": "s9",
+    "Data": true,
+    "Property Update Count": 1641,
+    "Path Update Count": 1772
+   }
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "update": {
+    "data_store_name": "s13",
+    "property": "s14",
+    "path": "s15",
+    "data": {
+     "str": "s16"
+    },
+    "property_update_count": 2427,
+    "path_update_count": 2558
+   }
+  },
+  "bytes": "03733133037331340373313502037331367b090000fe090000",
+  "bds_json": {
+   "Update": {
+    "Data Store Name": "s13",
+    "Property": "s14",
+    "Path": "s15",
+    "Data": "s16",
+    "Property Update Count": 2427,
+    "Path Update Count": 2558
+   }
+  }
+ }
+]
