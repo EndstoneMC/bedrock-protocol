@@ -1,0 +1,38 @@
+[
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "map_id": 3475,
+   "dimension": 83,
+   "locked": false,
+   "map_origin": {
+    "x": 3868,
+    "y": 3999,
+    "z": -4130
+   },
+   "creation_map_ids": null,
+   "scale": null,
+   "unique_ids": null,
+   "decorations": null,
+   "width": null,
+   "height": null,
+   "start_x": null,
+   "start_y": null,
+   "map_pixels": null
+  },
+  "bytes": "a6365300b83cbe3ec340000000000000000000",
+  "bds_json": {
+   "Map ID": {
+    "Actor Unique ID": 3475
+   },
+   "Dimension": 83,
+   "Is Locked": false,
+   "Map Origin": {
+    "X": 3868,
+    "Y": 3999,
+    "Z": -4130
+   }
+  }
+ }
+]

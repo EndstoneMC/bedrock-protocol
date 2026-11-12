@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "id": 331,
+   "photo_name": "s2",
+   "photo_item_name": "s3"
+  },
+  "bytes": "4b01000000000000027332027333",
+  "bds_json": {
+   "Raw ID": 331,
+   "Photo Name": "s2",
+   "Photo Item Name": "s3"
+  }
+ }
+]

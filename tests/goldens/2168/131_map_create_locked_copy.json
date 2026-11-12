@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "original_map_id": 331,
+   "new_map_id": 462
+  },
+  "bytes": "96059c07",
+  "bds_json": {
+   "Original Map Id": {
+    "Actor Unique ID": 331
+   },
+   "New Map Id": {
+    "Actor Unique ID": 462
+   }
+  }
+ }
+]
