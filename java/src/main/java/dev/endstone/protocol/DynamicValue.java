@@ -12,14 +12,6 @@ import java.util.TreeMap;
 
 /** A data store value: null, bool, int64, double, string, array or object. */
 public sealed interface DynamicValue {
-    int NULL = 0;
-    int BOOL = 1;
-    int INTEGER = 2;
-    int NUMBER = 3;
-    int STRING = 4;
-    int ARRAY = 5;
-    int OBJECT = 6;
-
     record NullValue() implements DynamicValue {}
 
     record BoolValue(boolean value) implements DynamicValue {}
@@ -55,32 +47,32 @@ public sealed interface DynamicValue {
 
     default void encode(ByteBuf buf) {
         switch (this) {
-            case NullValue v -> buf.writeIntLE(NULL);
+            case NullValue v -> buf.writeIntLE(0);
             case BoolValue v -> {
-                buf.writeIntLE(BOOL);
+                buf.writeIntLE(1);
                 buf.writeBoolean(v.value());
             }
             case IntegerValue v -> {
-                buf.writeIntLE(INTEGER);
+                buf.writeIntLE(2);
                 buf.writeLongLE(v.value());
             }
             case NumberValue v -> {
-                buf.writeIntLE(NUMBER);
+                buf.writeIntLE(3);
                 buf.writeDoubleLE(v.value());
             }
             case StringValue v -> {
-                buf.writeIntLE(STRING);
+                buf.writeIntLE(4);
                 Wire.writeStr(buf, v.value());
             }
             case ArrayValue v -> {
-                buf.writeIntLE(ARRAY);
+                buf.writeIntLE(5);
                 Wire.writeUvarint32(buf, v.values().size());
                 for (DynamicValue element : v.values()) {
                     element.encode(buf);
                 }
             }
             case ObjectValue v -> {
-                buf.writeIntLE(OBJECT);
+                buf.writeIntLE(6);
                 Wire.writeUvarint32(buf, v.entries().size());
                 for (Map.Entry<String, DynamicValue> entry : v.entries().entrySet()) {
                     Wire.writeStr(buf, entry.getKey());
@@ -93,34 +85,31 @@ public sealed interface DynamicValue {
     static DynamicValue read(ByteBuf buf, DecodeBudget budget) {
         budget.enter(buf.readerIndex());
         try {
-            long tag = Integer.toUnsignedLong(Wire.readInt32(buf));
-            if (tag == NULL) {
-                return new NullValue();
-            } else if (tag == BOOL) {
-                return new BoolValue(Wire.readBool(buf));
-            } else if (tag == INTEGER) {
-                return new IntegerValue(Wire.readInt64(buf));
-            } else if (tag == NUMBER) {
-                return new NumberValue(Wire.readDouble(buf));
-            } else if (tag == STRING) {
-                return new StringValue(Wire.readStr(buf, budget));
-            } else if (tag == ARRAY) {
-                int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
-                List<DynamicValue> values = new ArrayList<>(Wire.initialCapacity(count));
-                for (int i = 0; i < count; i++) {
-                    values.add(read(buf, budget));
+            return switch (Wire.readInt32(buf)) {
+                case 0 -> new NullValue();
+                case 1 -> new BoolValue(Wire.readBool(buf));
+                case 2 -> new IntegerValue(Wire.readInt64(buf));
+                case 3 -> new NumberValue(Wire.readDouble(buf));
+                case 4 -> new StringValue(Wire.readStr(buf, budget));
+                case 5 -> {
+                    int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
+                    List<DynamicValue> values = new ArrayList<>(Wire.initialCapacity(count));
+                    for (int i = 0; i < count; i++) {
+                        values.add(read(buf, budget));
+                    }
+                    yield new ArrayValue(values);
                 }
-                return new ArrayValue(values);
-            } else if (tag == OBJECT) {
-                int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
-                Map<String, DynamicValue> entries = new HashMap<>();
-                for (int i = 0; i < count; i++) {
-                    String key = Wire.readStr(buf, budget);
-                    entries.putIfAbsent(key, read(buf, budget));
+                case 6 -> {
+                    int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
+                    Map<String, DynamicValue> entries = new HashMap<>();
+                    for (int i = 0; i < count; i++) {
+                        String key = Wire.readStr(buf, budget);
+                        entries.putIfAbsent(key, read(buf, budget));
+                    }
+                    yield new ObjectValue(entries);
                 }
-                return new ObjectValue(entries);
-            }
-            throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                default -> throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            };
         } finally {
             budget.leave();
         }

@@ -16,6 +16,7 @@ import dev.endstone.protocol.DynamicValue.StringValue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -34,6 +35,10 @@ class DynamicValueTest {
                 argumentSet("string", new StringValue("hi"), "04000000026869"),
                 argumentSet(
                         "array", new ArrayValue(List.of(new NullValue())), "050000000100000000"),
+                argumentSet(
+                        "array two groups",
+                        new ArrayValue(Collections.nCopies(128, new NullValue())),
+                        "05000000" + "8001" + "00000000".repeat(128)),
                 argumentSet(
                         "object",
                         new ObjectValue(Map.of("b", new NullValue(), "a", new BoolValue(true))),
