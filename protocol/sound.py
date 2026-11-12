@@ -763,7 +763,7 @@ class LevelSoundEventPacketV1:
     event_id: LevelSoundEvent = field(type=uint8)
     pos: Vec3
     data: varint32
-    entity_type: ActorType = field(type=varint32)
+    entity_type: ActorType
     is_baby_mob: bool
     is_global: bool
 
