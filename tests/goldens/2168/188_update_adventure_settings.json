@@ -1,0 +1,25 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "adventure_settings": {
+    "no_pv_m": false,
+    "no_mv_p": true,
+    "immutable_world": false,
+    "show_name_tags": true,
+    "auto_jump": false
+   }
+  },
+  "bytes": "0001000100",
+  "bds_json": {
+   "Adventure Settings": {
+    "no PvM": false,
+    "no MvP": true,
+    "Immutable World": false,
+    "Show Name Tags": true,
+    "Auto Jump": false
+   }
+  }
+ }
+]
