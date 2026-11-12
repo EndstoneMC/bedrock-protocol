@@ -1,16 +1,11 @@
 import enum
 import importlib
-import pkgutil
 
 import pytest
 
 import bedrock_protocol
 
-VERSIONS = [
-    importlib.import_module(f"bedrock_protocol.{module.name}")
-    for module in pkgutil.iter_modules(bedrock_protocol.__path__)
-    if module.name.startswith("v") and module.name[1:].isdigit()
-]
+MODULES = [importlib.import_module(f"bedrock_protocol.v{version}") for version in bedrock_protocol.VERSIONS]
 
 
 def _classes(scope, seen):
@@ -45,13 +40,13 @@ def _decodes(decode, *args):
     return True
 
 
-PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
+PACKETS = [(m, cls) for m in MODULES for cls in m.PACKETS.values()]
 ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(m.decode, cls.ID, m.encode(cls()))]
 UNDECODABLE_PACKETS = [(m, cls) for m, cls in PACKETS if (m, cls) not in ROUND_TRIPPING_PACKETS]
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
-        for m in VERSIONS
+        for m in MODULES
         for scope in (m, m.legacy)
         for cls in _classes(scope, set())
         if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)

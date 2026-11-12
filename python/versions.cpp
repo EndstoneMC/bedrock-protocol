@@ -89,14 +89,12 @@ void init_versions(nb::module_ &parent)
     for (const int number : versions) {
         auto module = parent.def_submodule(std::format("v{}", number).c_str());
         auto legacy = module.def_submodule("legacy", "The pre-cereal shapes, where one name has two encodings.");
-        module.attr("nbt") = parent.attr("nbt");
         bound.push_back({.number = number, .module = module, .legacy = legacy});
     }
     init_types(bound);
     for (Version &version : bound) {
         auto m = nb::borrow<nb::module_>(version.module);
         m.attr("PROTOCOL") = version.number;
-        m.attr("PacketHeader") = nb::type<PacketHeader>();
         m.attr("PACKETS") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
         m.def(
             "decode",

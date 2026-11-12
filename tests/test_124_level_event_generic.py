@@ -1,8 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
-
-nbt = v2225.nbt
+from bedrock_protocol import nbt, v1001, v2168, v2225
 
 # TODO: pending BDS golden: gophertunnel cannot marshal the raw SerialisedEventData, so bedrock-dumper has to write it
 # LevelEventGenericPacket{event_id: 9801, data: {ableToSleep: 1, overworldPlayerCount: 1, sleepingPlayerCount: 0}}

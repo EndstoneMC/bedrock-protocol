@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import nbt, v1001, v2168, v2225
 
 Action = v2225.PositionTrackingDBServerBroadcastPacket.Action
 
@@ -27,7 +27,7 @@ GOLDENS = [
         v2225.PositionTrackingDBServerBroadcastPacket(
             action=Action.UPDATE,
             id=v2225.PositionTrackingId(raw_id=7),
-            data=v2225.nbt.CompoundTag({"id": v2225.nbt.StringTag("00000007")}),
+            data=nbt.CompoundTag({"id": nbt.StringTag("00000007")}),
         ),
         UPDATE,
         id="update",
@@ -36,7 +36,7 @@ GOLDENS = [
         v2225.PositionTrackingDBServerBroadcastPacket(
             action=Action.NOT_FOUND,
             id=v2225.PositionTrackingId(raw_id=-1),
-            data=v2225.nbt.CompoundTag(),
+            data=nbt.CompoundTag(),
         ),
         NOT_FOUND,
         id="not-found",
@@ -45,7 +45,7 @@ GOLDENS = [
         v2225.PositionTrackingDBServerBroadcastPacket(
             action=Action.DESTROY,
             id=v2225.PositionTrackingId(raw_id=300),
-            data=v2225.nbt.CompoundTag(),
+            data=nbt.CompoundTag(),
         ),
         WIDE,
         id="wide-id",

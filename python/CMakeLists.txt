@@ -1,15 +1,8 @@
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 find_package(nanobind CONFIG REQUIRED)
 
-file(STRINGS "${BEDROCK_PROTOCOL_HEADER_DIR}/version.hpp" _latest REGEX "^inline constexpr int latest_version = [0-9]+;$")
-string(REGEX MATCH "[0-9]+" _latest "${_latest}")
-set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS} ${_latest})
-list(REMOVE_DUPLICATES _versions)
+set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS})
 list(SORT _versions COMPARE NATURAL)
-foreach (BP_VERSION IN LISTS _versions)
-    configure_file(version.py.in "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" @ONLY)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/v${BP_VERSION}.py" DESTINATION bedrock_protocol)
-endforeach ()
 list(JOIN _versions ", " _versions)
 configure_file(versions.hpp.in bind/versions.hpp @ONLY)
 

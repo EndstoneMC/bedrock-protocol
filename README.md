@@ -20,7 +20,7 @@ from bedrock_protocol import v2193
 packet = v2193.TextPacket(body=v2193.TextPacket.MessageOnly(type=v2193.TextPacketType.CHAT, message="hello"))
 header, back = v2193.decode_packet(v2193.encode_packet(packet))
 assert back == packet and header.packet_id == v2193.TextPacket.ID
-assert bp.TextPacket is getattr(bp, f"v{bp.LATEST_PROTOCOL}").TextPacket
+assert bp.TextPacket is getattr(bp, f"v{bp.VERSIONS[-1]}").TextPacket
 ```
 
 ## C++
@@ -69,8 +69,7 @@ such as `<bedrock/protocol/inventory.h>` when only that family is needed.
 
 Both runtimes cover the active packet shapes and their dependent types in these
 schema versions. Retired packets and declaration gaps remain absent in the
-corresponding version. Python exposes the exact list as `SUPPORTED_VERSIONS` and
-active IDs through `Codec.supported_packet_ids`.
+corresponding version. Python exposes the bound list as `VERSIONS` and each version's packets as `PACKETS`.
 
 | Protocol | Minecraft Bedrock |
 | --- | --- |

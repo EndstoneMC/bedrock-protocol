@@ -2,7 +2,7 @@
 
 from importlib import import_module
 
-from ._core import LATEST_PROTOCOL
+from ._core import VERSIONS
 
 
 class DecodeError(ValueError):
@@ -18,6 +18,6 @@ class DecodeError(ValueError):
         return type(self), (str(self), self.reason, self.path, self.offset)
 
 
-_latest = import_module(f".v{LATEST_PROTOCOL}", __name__)
+_latest = import_module(f".v{VERSIONS[-1]}", __name__)
 globals().update({name: getattr(_latest, name) for name in dir(_latest) if not name.startswith("_")})
 del import_module, _latest

@@ -1,8 +1,9 @@
 #include "module.hpp"
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/array.h>
 
-#include "bedrock/protocol/version.hpp"
+#include "versions.hpp"
 
 namespace bedrock::protocol::python {
 
@@ -16,8 +17,10 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
 
 NB_MODULE(_core, m)
 {
+    namespace nb = nanobind;
     namespace bpy = bedrock::protocol::python;
-    m.attr("LATEST_PROTOCOL") = bedrock::protocol::latest_version;
-    bpy::init_nbt(m);
-    bpy::init_versions(m);
+    m.attr("VERSIONS") = nb::tuple(nb::cast(bpy::versions));
+    auto package = nb::module_::import_("bedrock_protocol");
+    bpy::init_nbt(package);
+    bpy::init_versions(package);
 }

@@ -1,3 +1,0 @@
-from ._core import v@BP_VERSION@ as _protocol
-
-globals().update({name: getattr(_protocol, name) for name in dir(_protocol) if not name.startswith("_")})

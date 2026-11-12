@@ -19,12 +19,12 @@ TRUNCATED_ATTRIBUTES = bytes(proto.UpdateAttributesPacket(attribute_data=[HEALTH
 
 
 def test_the_bare_names_are_the_latest_protocol():
-    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.LATEST_PROTOCOL}")
+    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}")
     assert bedrock_protocol.TextPacket is latest.TextPacket
 
 
 def test_the_bare_protocol_number_is_the_latest_protocol():
-    assert bedrock_protocol.PROTOCOL == bedrock_protocol.LATEST_PROTOCOL
+    assert bedrock_protocol.VERSIONS[-1] == bedrock_protocol.PROTOCOL
 
 
 def test_the_bare_codec_round_trips_a_packet():
