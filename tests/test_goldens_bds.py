@@ -329,6 +329,21 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
 
 
 @pytest.mark.parametrize(
+    ("name", "field", "read"),
+    [
+        ("CameraSplineDefinition", "name", "test:spline"),
+        ("CameraSplineDefinition", "spline_type", "linear"),
+    ],
+    ids=[
+        "spline-name",
+        "spline-type",
+    ],
+)
+def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):
+    assert {each[field] for each in generated(values, schema, name)} - {None} == {read}
+
+
+@pytest.mark.parametrize(
     ("name", "value", "printed"),
     [
         (
