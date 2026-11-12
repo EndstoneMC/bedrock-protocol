@@ -46,8 +46,7 @@ UNDECODABLE_PACKETS = [(m, cls) for m, cls in PACKETS if (m, cls) not in ROUND_T
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
-        for m in VERSIONS
-        for scope in (bedrock_protocol, m, m.legacy)
+        for scope in (bedrock_protocol, *VERSIONS, *(m.legacy for m in VERSIONS))
         for cls in _classes(scope, set())
         if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
     )
