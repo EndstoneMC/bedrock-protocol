@@ -336,7 +336,6 @@ class ItemStackRequestCereal:
         craft_results: list[NetworkItemInstanceDescriptorData]
         num_crafts: uint8
 
-    @type(until=2225)
     class RequestData:
         client_request_id: ItemStackRequestId
         actions: list[
@@ -358,13 +357,7 @@ class ItemStackRequestCereal:
             | CraftLoomActionData
             | CraftNonImplementedActionData
             | CraftResultsActionData
-        ]
-        strings_to_filter: list[str]
-        strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
-
-    @type(since=2225)
-    class RequestData:
-        client_request_id: ItemStackRequestId
+        ] = field(until=2225)
         actions: list[
             TakeActionData
             | PlaceActionData
@@ -385,7 +378,7 @@ class ItemStackRequestCereal:
             | CraftDiscPressActionData
             | CraftNonImplementedActionData
             | CraftResultsActionData
-        ]
+        ] = field(since=2225)
         strings_to_filter: list[str]
         strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
 
