@@ -1,6 +1,7 @@
 """Emit JSON values that hit every path of a packet at a protocol version, and round-trip them through the binding."""
 
 import argparse
+import dataclasses
 import enum
 import importlib
 import json
@@ -21,6 +22,7 @@ from bedrock_protocol_compiler.descriptor import (
     EnumName,
     EnumRef,
     Expression,
+    Field,
     FieldRef,
     Int,
     Len,
@@ -82,6 +84,11 @@ SAME_MEMBER = {
     "ClientboundUpdateSoundDataPacket.resume": "stop",
     "CylinderDataPayload.radius_z": "radius_x",
 }
+PRESENT_WHEN = {
+    "ItemStackResponseInfo.containers": ("result", "SUCCESS"),
+    "MapItemTrackedActor.UniqueId.key_entity_id": ("type", "ENTITY"),
+    "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
+}
 
 
 def integer_range(name: str, wire: str | None) -> tuple[int, int]:
@@ -124,6 +131,22 @@ class Generator:
             names.setdefault(number, name)
         return names
 
+    def fields(self, shape: StructShape) -> list[Field]:
+        label = self.label(shape)
+        found: list[Field] = []
+        for each in shape.fields:
+            gate = PRESENT_WHEN.get(f"{label}.{each.name}")
+            if gate is None or not isinstance(each.type, Optional):
+                found.append(each)
+                continue
+            name, member = gate
+            declared = next(field.type for field in shape.fields if field.name == name)
+            if not isinstance(declared, EnumRef | EnumName):
+                raise TypeError(f"{label}.{name}: not an enum field")
+            when = Binary("==", FieldRef(name), MemberRef(declared.enum, member))
+            found.append(dataclasses.replace(each, type=each.type.element, when=when))
+        return found
+
     def points(self, shape: StructShape, seen: set[int]) -> Iterator[Point]:
         if id(shape) in seen:
             return
@@ -132,7 +155,7 @@ class Generator:
         for index in range(len(self.whens(shape))):
             yield (f"{label} when#{index}", "true")
             yield (f"{label} when#{index}", "false")
-        for each in shape.fields:
+        for each in self.fields(shape):
             if f"{label}.{each.name}" not in SAME_MEMBER:
                 yield from self.type_points(each.type, f"{label}.{each.name}", seen)
 
@@ -157,7 +180,7 @@ class Generator:
 
     def whens(self, shape: StructShape) -> list[Expression]:
         found: list[Expression] = []
-        for each in shape.fields:
+        for each in self.fields(shape):
             if each.when is not None and each.when not in found:
                 found.append(each.when)
         return found
@@ -435,24 +458,25 @@ class Generator:
 
     def struct(self, shape: StructShape, depth: int) -> Json:
         label = self.label(shape)
+        fields = self.fields(shape)
         whens = self.whens(shape)
         values: dict[str, Json] = {}
         counted: dict[str, int] = {}
-        for each in shape.fields:
+        for each in fields:
             match each.type:
                 case List(count=FieldRef(name=name)):
                     counted[name] = 1
                 case List(count=Binary(operator="*", left=FieldRef(name=left), right=FieldRef(name=right))):
                     counted[left] = 1
                     counted[right] = 2
-        for each in shape.fields:
+        for each in fields:
             plain = each.when is None and not isinstance(each.type, Literal | List)
             counts = isinstance(each.type, List) and each.when is None and not isinstance(each.type.count, Len)
             if (plain or counts) and f"{label}.{each.name}" not in SAME_MEMBER:
                 values[each.name] = self.generate(
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
                 )
-        for each in shape.fields:
+        for each in fields:
             if isinstance(each.type, List) and each.when is None and isinstance(each.type.count, Len):
                 values[each.name] = self.generate(
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
@@ -473,7 +497,7 @@ class Generator:
                 values[name] = bool(number)
             else:
                 values[name] = number
-        for each in shape.fields:
+        for each in fields:
             if isinstance(each.type, Bitset) and any(field == each.name for field, _ in bits):
                 width = self.numbers(each.type.width.enum)
                 values[each.name] = sum(1 << width[member] for field, member in bits if field == each.name)
@@ -481,7 +505,7 @@ class Generator:
         for index, expression in enumerate(whens):
             state = bool(self.evaluate(expression, final, flags))
             self.hits.add((f"{label} when#{index}", "true" if state else "false"))
-        for each in shape.fields:
+        for each in fields:
             if each.when is None:
                 continue
             if bool(self.evaluate(each.when, final, flags)):
@@ -489,11 +513,11 @@ class Generator:
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
                 )
             else:
-                values[each.name] = self.default(each.type)
-        for each in shape.fields:
+                values[each.name] = None if f"{label}.{each.name}" in PRESENT_WHEN else self.default(each.type)
+        for each in fields:
             if f"{label}.{each.name}" in SAME_MEMBER:
                 values[each.name] = values[SAME_MEMBER[f"{label}.{each.name}"]]
-        return {each.name: values[each.name] for each in shape.fields if each.name in values}
+        return {each.name: values[each.name] for each in fields if each.name in values}
 
     def environment(self, shape: StructShape, values: dict[str, Json]) -> tuple[dict[str, int], set[tuple[str, str]]]:
         env: dict[str, int] = {}
