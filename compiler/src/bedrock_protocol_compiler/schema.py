@@ -83,6 +83,7 @@ class Schema:
         self.modules = package.modules
         self.package = package.modules[0].package
         self.versions = package.versions
+        self.releases = package.releases
         self.latest = package.versions[-1]
         self.order: list[Struct | Enum] = []
         self.family_shapes: dict[Struct | Enum, list[Shape]] = {}

@@ -53,8 +53,8 @@ class P:
 
 @pytest.fixture
 def generate(build_package, tmp_path):
-    def run(modules: dict[str, str]):
-        build_package(modules)
+    def run(modules: dict[str, str], **options):
+        build_package(modules, **options)
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
         return tmp_path / "out/bedrock/protocol"
 
@@ -132,3 +132,20 @@ def test_packets_hpp_includes_every_module_header(generate):
     out = generate({"a": A, "b": B})
 
     assert "#include <bedrock/protocol/b.h>" in (out / "packets.hpp").read_text()
+
+
+def test_version_hpp_gives_a_release_the_newest_snapshot_at_or_below_it(generate):
+    init = """
+from bedrock_protocol_compiler.dsl import field, packet, type, uint8
+
+versions = (1, 3)
+
+releases = {1: "1.1.0-1.1.4", 2: "1.2.0", 3: "1.3.x"}
+"""
+
+    out = generate({"a": A}, init=init)
+
+    rows = (out / "version.hpp").read_text()
+    assert 'ProtocolVersion{1, 1, "1.1.0-1.1.4", "1.1.0", "1.1.4"},' in rows
+    assert 'ProtocolVersion{2, 1, "1.2.0", "1.2.0", "1.2.0"},' in rows
+    assert 'ProtocolVersion{3, 3, "1.3.x", "1.3.0", "1.3.9"},' in rows
