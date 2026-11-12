@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "current_structure_feature": "s1"
+  },
+  "bytes": "027331",
+  "bds_json": {
+   "Current Structure Feature": "s1"
+  }
+ }
+]
