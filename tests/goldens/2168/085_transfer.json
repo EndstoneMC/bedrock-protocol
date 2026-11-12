@@ -1,0 +1,18 @@
+[
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "destination": "s12",
+   "destination_port": 1903,
+   "reload_world": true,
+   "gatherings_configuration": null
+  },
+  "bytes": "037331326f070100",
+  "bds_json": {
+   "Server Address": "s12",
+   "Server Port": 1903,
+   "Reload World": true
+  }
+ }
+]

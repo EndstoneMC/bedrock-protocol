@@ -1,0 +1,39 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "presence_configuration": {
+    "rich_presence_id": "s1"
+   }
+  },
+  "bytes": "0101027331",
+  "bds_json": {
+   "presence_configuration": {
+    "richPresenceId": "s1"
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "presence_configuration": null
+  },
+  "bytes": "00",
+  "bds_json": {}
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "presence_configuration": {
+    "rich_presence_id": null
+   }
+  },
+  "bytes": "0100",
+  "bds_json": {
+   "presence_configuration": {}
+  }
+ }
+]
