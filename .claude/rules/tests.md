@@ -37,7 +37,6 @@ paths:
 ## Files
 
 - Add a case to the test that owns its packet or topic; never open a second file for it.
-- Take a packet's id at each version from `tests/packet_ids.json` (protocol-docs, else gophertunnel; `unlisted` holds a live packet neither lists), checked in `test_packet.py`; never assert it in a per-packet file.
 - Run every golden through `test_goldens.py`, which `conftest.py` parametrizes over `tests/goldens/*/*.json`; never copy a golden's bytes into another test.
 - Per-packet tests live in `test_{id:03}_{name}.py` (`test_009_text.py`); topics live in `test_<topic>.py`.
 - Give a type that no modelled packet reaches its own test, named for the type.
