@@ -1,0 +1,25 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "piece_id": "s2",
+   "emote_ticks": 593,
+   "xuid": "s4",
+   "platform_id": "s5",
+   "flags": 43
+  },
+  "bytes": "cb02027332d1040273340273352b",
+  "bds_json": {
+   "Actor Runtime Id": {
+    "Actor Runtime ID": 331
+   },
+   "Emote Id": "s2",
+   "Emote Length Ticks": 593,
+   "Xuid": "s4",
+   "PlatformId": "s5",
+   "Flags": 43
+  }
+ }
+]
