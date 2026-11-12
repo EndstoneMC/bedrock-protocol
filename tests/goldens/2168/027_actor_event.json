@@ -1,0 +1,47 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "event_id": "HURT",
+   "data": -593,
+   "fire_at_position": {
+    "x": 2.25,
+    "y": 2.75,
+    "z": 3.25
+   }
+  },
+  "bytes": "cb0202a10901000010400000304000005040",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 331
+   },
+   "Event ID": 2,
+   "Data": -593,
+   "Fire At Position": {
+    "X": 2.25,
+    "Y": 2.75,
+    "Z": 3.25
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 1117,
+   "event_id": "SHAKE_WETNESS",
+   "data": -1379,
+   "fire_at_position": null
+  },
+  "bytes": "dd0808c51500",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 1117
+   },
+   "Event ID": 8,
+   "Data": -1379
+  }
+ }
+]

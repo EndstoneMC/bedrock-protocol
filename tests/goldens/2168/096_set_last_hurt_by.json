@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "last_hurt_by": "ITEM_ENTITY"
+  },
+  "bytes": "8001",
+  "bds_json": {
+   "LastHurtBy": 64
+  }
+ }
+]

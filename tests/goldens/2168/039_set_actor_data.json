@@ -1,0 +1,653 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "id": 331,
+   "packed_items": {
+    "data": [
+     {
+      "id": 462,
+      "payload": {
+       "DataItemBytePayload": {
+        "value": -22
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 724,
+      "data": 855
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 986,
+      "data": 3.75
+     }
+    ]
+   },
+   "tick": 1248
+  },
+  "bytes": "cb0201ce030000ea01d405ae0d01da0700007040e009",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 331
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 462,
+      "Payload": {
+       "Type": 0,
+       "Value": -22
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 724,
+      "Data": 855
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 986,
+      "Data": 3.75
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 1248
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "id": 1379,
+   "packed_items": {
+    "data": [
+     {
+      "id": 1510,
+      "payload": {
+       "DataItemShortPayload": {
+        "value": 1641
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1772,
+      "data": 1903
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2034,
+      "data": 7.75
+     }
+    ]
+   },
+   "tick": 2296
+  },
+  "bytes": "e30a01e60b0101690601ec0dde1d01f20f0000f840f811",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 1379
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 1510,
+      "Payload": {
+       "Type": 1,
+       "Value": 1641
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 1772,
+      "Data": 1903
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 2034,
+      "Data": 7.75
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 2296
+   }
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "id": 2427,
+   "packed_items": {
+    "data": [
+     {
+      "id": 2558,
+      "payload": {
+       "DataItemIntPayload": {
+        "value": 2689
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 2820,
+      "data": -2951
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 3082,
+      "data": 11.75
+     }
+    ]
+   },
+   "tick": 3344
+  },
+  "bytes": "fb1201fe130202822a0184168d2e018a1800003c41901a",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 2427
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 2558,
+      "Payload": {
+       "Type": 2,
+       "Value": 2689
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 2820,
+      "Data": -2951
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 3082,
+      "Data": 11.75
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 3344
+   }
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "id": 3475,
+   "packed_items": {
+    "data": [
+     {
+      "id": 3606,
+      "payload": {
+       "DataItemFloatPayload": {
+        "value": 13.75
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 3868,
+      "data": 3999
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 4130,
+      "data": 15.75
+     }
+    ]
+   },
+   "tick": 4392
+  },
+  "bytes": "931b01961c030300005c41019c1ebe3e01a22000007c41a822",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 3475
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 3606,
+      "Payload": {
+       "Type": 3,
+       "Value": 13.75
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 3868,
+      "Data": 3999
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 4130,
+      "Data": 15.75
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 4392
+   }
+  }
+ },
+ {
+  "id": "v4",
+  "writer": "cereal",
+  "value": {
+   "id": 4523,
+   "packed_items": {
+    "data": [
+     {
+      "id": 4654,
+      "payload": {
+       "DataItemStringPayload": {
+        "value": "s35"
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 4916,
+      "data": 5047
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 5178,
+      "data": 19.75
+     }
+    ]
+   },
+   "tick": 5440
+  },
+  "bytes": "ab2301ae2404040373333501b426ee4e01ba2800009e41c02a",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 4523
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 4654,
+      "Payload": {
+       "Type": 4,
+       "Value": "s35"
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 4916,
+      "Data": 5047
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 5178,
+      "Data": 19.75
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 5440
+   }
+  }
+ },
+ {
+  "id": "v5",
+  "writer": "cereal",
+  "value": {
+   "id": 5571,
+   "packed_items": {
+    "data": [
+     {
+      "id": 5702,
+      "payload": {
+       "DataItemCompoundTagPayload": {
+        "value": {
+         "b": {
+          "ByteTag": 7
+         },
+         "s": {
+          "ShortTag": 300
+         },
+         "i": {
+          "IntTag": 70000
+         },
+         "l": {
+          "Int64Tag": 5000000000
+         },
+         "f": {
+          "FloatTag": 1.5
+         },
+         "d": {
+          "DoubleTag": 2.5
+         },
+         "str": {
+          "StringTag": "text"
+         },
+         "bytes": {
+          "ByteArrayTag": [
+           1,
+           -2,
+           3
+          ]
+         },
+         "ints": {
+          "IntArrayTag": [
+           4,
+           -5,
+           6
+          ]
+         },
+         "list": {
+          "ListTag": {
+           "type": 3,
+           "tags": [
+            {
+             "IntTag": 1
+            },
+            {
+             "IntTag": 2
+            }
+           ]
+          }
+         },
+         "nested": {
+          "CompoundTag": {
+           "k": {
+            "StringTag": "v"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 5833,
+      "data": 5964
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 6095,
+      "data": 23.25
+     }
+    ]
+   },
+   "tick": 6357
+  },
+  "bytes": "c32b01c62c05050a0001016207070562797465730601fe0306016400000000000004400501660000c03f030169e0c5080b04696e74730608090c04016c80c8afa02509046c697374030402040a066e657374656408016b0176000201732c01080373747204746578740001c92d985d01cf2f0000ba41d531"
+ },
+ {
+  "id": "v6",
+  "writer": "cereal",
+  "value": {
+   "id": 6488,
+   "packed_items": {
+    "data": [
+     {
+      "id": 6619,
+      "payload": {
+       "DataItemPosPayload": {
+        "value": {
+         "x": 6750,
+         "y": -6881,
+         "z": 7012
+        }
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 7143,
+      "data": -7274
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 7405,
+      "data": 28.25
+     }
+    ]
+   },
+   "tick": 7667
+  },
+  "bytes": "d83201db330606bc69c16bc86d01e737d37101ed390000e241f33b",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 6488
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 6619,
+      "Payload": {
+       "Type": 6,
+       "Value": {
+        "X": 6750,
+        "Y": -6881,
+        "Z": 7012
+       }
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 7143,
+      "Data": -7274
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 7405,
+      "Data": 28.25
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 7667
+   }
+  }
+ },
+ {
+  "id": "v7",
+  "writer": "cereal",
+  "value": {
+   "id": 7798,
+   "packed_items": {
+    "data": [
+     {
+      "id": 7929,
+      "payload": {
+       "DataItemInt64Payload": {
+        "value": -8060
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 8191,
+      "data": 8322
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 8453,
+      "data": 32.25
+     }
+    ]
+   },
+   "tick": 8715
+  },
+  "bytes": "f63c01f93d0707f77d01ff3f848201018542000001428b44",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 7798
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 7929,
+      "Payload": {
+       "Type": 7,
+       "Value": -8060
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 8191,
+      "Data": 8322
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 8453,
+      "Data": 32.25
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 8715
+   }
+  }
+ },
+ {
+  "id": "v8",
+  "writer": "cereal",
+  "value": {
+   "id": 8846,
+   "packed_items": {
+    "data": [
+     {
+      "id": 8977,
+      "payload": {
+       "DataItemVec3Payload": {
+        "value": {
+         "x": 34.25,
+         "y": 34.75,
+         "z": 35.25
+        }
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 9501,
+      "data": -9632
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 9763,
+      "data": 37.25
+     }
+    ]
+   },
+   "tick": 10025
+  },
+  "bytes": "8e4501914608080000094200000b4200000d42019d4abf960101a34c00001542a94e",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 8846
+   },
+   "Actor Data": {
+    "Data": [
+     {
+      "ID": 8977,
+      "Payload": {
+       "Type": 8,
+       "Value": {
+        "X": 34.25,
+        "Y": 34.75,
+        "Z": 35.25
+       }
+      }
+     }
+    ]
+   },
+   "Synched Properties": {
+    "Int Entries List": [
+     {
+      "Property Index": 9501,
+      "Data": -9632
+     }
+    ],
+    "Float Entries List": [
+     {
+      "Property Index": 9763,
+      "Data": 37.25
+     }
+    ]
+   },
+   "Tick": {
+    "Input tick": 10025
+   }
+  }
+ }
+]
