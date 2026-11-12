@@ -209,6 +209,8 @@ FIXED: dict[str, Json] = {
     "TextPacket.MessageOnly.type": "RAW",
     "TextPacket.AuthorAndMessage.type": "CHAT",
     "TextPacket.MessageAndParams.type": "TRANSLATE",
+    "PlayerListPacket.RemoveEntry.action": "REMOVE",
+    "PlayerListPacket.AddEntry.action": "ADD",
     "LevelSettings.game_rules": {
         "rules": [{"name": name, "can_be_modified_by_player": True, "value": value} for name, value in LEVEL_GAME_RULES]
     },
