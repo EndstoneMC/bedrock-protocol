@@ -102,6 +102,7 @@ FIXED: dict[str, Json] = {
     "Experiments.experiments_ever_toggled": True,
     "LoginPacket.connection_request": CONNECTION_REQUEST,
     "SubClientLoginPacket.connection_request": CONNECTION_REQUEST,
+    "AgentActionEventPacket.response": "null\n",
 }
 
 
