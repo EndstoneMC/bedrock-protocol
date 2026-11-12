@@ -8,19 +8,12 @@ from bedrock_protocol import v786, v844, v859, v898, v975, v1001, v2168, v2225
 
 PACKET_IDS = json.loads((Path(__file__).parent / "packet_ids.json").read_text())
 
+ROWS = PACKET_IDS["packets"] + PACKET_IDS["unlisted"]
+
 NAMES = [
     pytest.param(version, entry["id"], entry["name"], id=f"v{version}-{entry['id']}")
-    for entry in PACKET_IDS["packets"]
+    for entry in ROWS
     for version in entry["versions"]
-]
-
-IDS = [
-    pytest.param(
-        version,
-        sorted(entry["id"] for entry in PACKET_IDS["packets"] + PACKET_IDS["unlisted"] if version in entry["versions"]),
-        id=f"v{version}",
-    )
-    for version in map(int, PACKET_IDS["suppliers"])
 ]
 
 
@@ -37,13 +30,13 @@ def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
 
 
 @pytest.mark.parametrize(("version", "packet_id", "name"), NAMES)
-def test_a_packet_id_names_the_suppliers_packet(version, packet_id, name):
+def test_a_packet_id_names_the_listed_packet(version, packet_id, name):
     assert importlib.import_module(f"bedrock_protocol.v{version}").packets[packet_id].__name__ == name
 
 
-@pytest.mark.parametrize(("version", "packet_ids"), IDS)
-def test_a_version_has_exactly_the_suppliers_packet_ids(version, packet_ids):
-    assert sorted(importlib.import_module(f"bedrock_protocol.v{version}").packets) == packet_ids
+def test_a_version_binds_exactly_the_listed_packet_ids(protocol):
+    version = int(protocol.__name__.rpartition(".")[2].removeprefix("v"))
+    assert sorted(protocol.packets) == sorted(entry["id"] for entry in ROWS if version in entry["versions"])
 
 
 @pytest.mark.parametrize(

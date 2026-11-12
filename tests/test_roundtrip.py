@@ -55,10 +55,6 @@ def gap(cls):
 VALUES = [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE]
 
 
-def test_every_version_binds_packets(protocol):
-    assert len(protocol.packets) > 200
-
-
 @pytest.mark.parametrize(("module", "cls"), [pytest.param(m, cls, marks=gap(cls)) for m, cls in packets], ids=packet_id)
 def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     packet = cls()
