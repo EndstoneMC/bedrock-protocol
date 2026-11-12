@@ -70,10 +70,62 @@ def test_a_keyword_the_schema_does_not_name_is_rejected():
         proto.Vec3(w=1)
 
 
-def test_a_nullable_field_takes_none():
-    packet = v2225.MovePlayerPacket(teleport_data=v2225.MovePlayerTeleportData())
-    packet.teleport_data = None
-    assert packet.teleport_data is None
+@pytest.mark.parametrize(
+    ("cls", "field", "value"),
+    [
+        pytest.param(proto.MovePlayerPacket, "teleport_data", proto.MovePlayerTeleportData(), id="optional-struct"),
+        pytest.param(
+            proto.CameraAimAssistCommandPresetDefinition,
+            "target_mode",
+            proto.TargetMode.DISTANCE,
+            id="optional-enum",
+        ),
+        pytest.param(proto.GameRule, "value", True, id="variant-with-monostate"),
+        pytest.param(proto.DataStoreChange, "new_data", 3, id="dynamic-value"),
+    ],
+)
+def test_a_nullable_field_takes_none(cls, field, value):
+    packet = cls(**{field: value})
+    setattr(packet, field, None)
+    assert getattr(packet, field) is None
+
+
+def test_none_for_a_field_that_cannot_be_none_is_rejected():
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        proto.Vec3(x=None)
+
+
+@pytest.mark.parametrize(
+    ("cls", "field", "value", "shown"),
+    [
+        pytest.param(proto.ContainerClosePacket, "container_id", 1000, "1000", id="enum"),
+        pytest.param(proto.ResourcePackChunkDataPacket, "resource_name", b"p", "b'p'", id="string"),
+    ],
+)
+def test_a_setter_raises_the_constructors_message(cls, field, value, shown):
+    with pytest.raises(TypeError, match=rf"^{cls.__name__}\.{field}: cannot hold {shown}$"):
+        setattr(cls(), field, value)
+
+
+@pytest.mark.parametrize(
+    ("cls", "field", "value", "shown"),
+    [
+        pytest.param(proto.DeathInfoPacket, "death_cause_message_list", "abc", "'abc'", id="list-from-str"),
+        pytest.param(proto.DeathInfoPacket, "death_cause_message_list", 5, "5", id="list-from-int"),
+        pytest.param(proto.ActorDataBoundingBoxComponent, "value", [1.0], r"\[1\.0\]", id="array-wrong-length"),
+    ],
+)
+def test_a_sequence_field_rejects_a_value_that_is_not_one(cls, field, value, shown):
+    with pytest.raises(TypeError, match=rf"^{cls.__name__}\.{field}: cannot hold {shown}$"):
+        cls(**{field: value})
+
+
+def test_the_constructor_signature_is_typed_and_keyword_only():
+    assert proto.Vec3.__init__.__doc__ == "__init__(self, *, x: float = ..., y: float = ..., z: float = ...) -> None"
+
+
+def test_an_enum_argument_also_takes_an_int():
+    assert "ContainerID | int = ..." in proto.ContainerClosePacket.__init__.__doc__
 
 
 def test_a_struct_field_is_a_live_reference():

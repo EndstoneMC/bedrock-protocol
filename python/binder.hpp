@@ -128,8 +128,6 @@ inline constexpr bool nullable_v = is_optional_v<F>;
 template <typename... Ts>
 inline constexpr bool nullable_v<std::variant<Ts...>> = (std::is_same_v<Ts, std::monostate> || ...);
 template <>
-inline constexpr bool nullable_v<Tag> = true;
-template <>
 inline constexpr bool nullable_v<DynamicValue> = true;
 
 template <typename F>
@@ -152,10 +150,6 @@ struct python_type<std::vector<T, A>> {
 template <>
 struct python_type<std::vector<std::byte>> {
     using type = std::vector<std::byte>;
-};
-template <typename T, std::size_t N>
-struct python_type<std::array<T, N>> {
-    using type = std::array<typename python_type<T>::type, N>;
 };
 template <typename F>
 using python_type_t = typename python_type<F>::type;
@@ -217,22 +211,22 @@ F from_python(nb::handle src, const std::string &label)
         return src.is_none() ? F{} : F{from_python<typename F::value_type>(src, label)};
     }
     else if constexpr (is_list_v<F>) {
-        F out;
-        for (nb::handle item : nb::iter(src)) {
-            out.push_back(from_python<typename F::value_type>(item, label));
+        std::vector<nb::object> items;
+        if (nb::try_cast(src, items)) {
+            F out;
+            for (const nb::object &item : items) {
+                out.push_back(from_python<typename F::value_type>(item, label));
+            }
+            return out;
         }
-        return out;
     }
     else if constexpr (is_array_v<F>) {
+        std::vector<nb::object> items;
         F out{};
-        std::size_t i = 0;
-        for (nb::handle item : nb::iter(src)) {
-            if (i < out.size()) {
-                out[i] = from_python<typename F::value_type>(item, label);
+        if (nb::try_cast(src, items) && items.size() == out.size()) {
+            for (std::size_t i = 0; i < out.size(); ++i) {
+                out[i] = from_python<typename F::value_type>(items[i], label);
             }
-            ++i;
-        }
-        if (i == out.size()) {
             return out;
         }
     }
@@ -272,20 +266,20 @@ void bind_field(nb::class_<T> &cls)
     const auto setter = [](T &self, nb::typed<nb::handle, python_type_t<nb::remove_opt_mono_t<F>>> value) {
         field_get<I>(self) = from_python<F>(value, field_label<T, I>());
     };
-    const auto none = nb::for_setter(nb::arg("value").none(nullable_v<F>));
+    const auto value_arg = nb::for_setter(nb::arg("value").none(nullable_v<F>));
     if constexpr (holds_enum<F>()) {
         cls.def_prop_rw(
             name,
             [](const T &self) -> nb::typed<nb::object, python_type_t<F>> { return to_python(field_get<I>(self)); },
-            setter, none);
+            setter, value_arg);
     }
     else if constexpr (Reflected<F>) {
         cls.def_prop_rw(
-            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal, none);
+            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal, value_arg);
     }
     else {
         cls.def_prop_rw(
-            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy, none);
+            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy, value_arg);
     }
 }
 
