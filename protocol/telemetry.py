@@ -2,7 +2,7 @@
 
 from enum import IntEnum, auto
 
-from protocol import field, int16, int32, packet, uint8, uvarint32, value, varint32
+from protocol import int16, int32, packet, uint8, uvarint32, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
@@ -209,8 +209,8 @@ class LegacyTelemetryEventPacket:
 
     class CauldronUsed:
         contents_color: uvarint32
-        contents_type: int16 = field(type=varint32)
-        fill_level: int16 = field(type=varint32)
+        contents_type: int16
+        fill_level: int16
 
     class PlayerDied:
         killer_id: varint32
@@ -236,14 +236,14 @@ class LegacyTelemetryEventPacket:
 
     class POICauldronUsed:
         interaction_type: MinecraftEventing.POIBlockInteractionType
-        item_id: int16 = field(type=varint32)
+        item_id: int16
 
     class ComposterUsed:
         interaction_type: MinecraftEventing.POIBlockInteractionType
-        item_id: int16 = field(type=varint32)
+        item_id: int16
 
     class BellUsed:
-        item_id: int16 = field(type=varint32)
+        item_id: int16
 
     class ActorDefinition:
         event_name: str
