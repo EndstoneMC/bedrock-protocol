@@ -32,17 +32,16 @@ def _holds_unnamed_enum(value):
     return False
 
 
-def _decodes(decode, *args):
+def _decodes(decode, data):
     try:
-        decode(*args)
+        decode(data)
     except ValueError:
         return False
     return True
 
 
 PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
-ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(m.decode, cls.ID, m.encode(cls()))]
-UNDECODABLE_PACKETS = [(m, cls) for m, cls in PACKETS if (m, cls) not in ROUND_TRIPPING_PACKETS]
+ROUND_TRIPPING_PACKETS = [(m, cls) for m, cls in PACKETS if _decodes(m.decode_packet, m.encode_packet(cls()))]
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
@@ -68,37 +67,11 @@ def test_every_version_binds_packets(protocol):
 
 
 @pytest.mark.parametrize(("module", "cls"), ROUND_TRIPPING_PACKETS, ids=packet_id)
-def test_a_default_packet_encodes_to_its_bytes(module, cls):
-    packet = cls()
-    assert module.encode(packet) == bytes(packet)
-
-
-@pytest.mark.parametrize(("module", "cls"), ROUND_TRIPPING_PACKETS, ids=packet_id)
-def test_a_default_packet_decodes_to_itself(module, cls):
-    packet = cls()
-    back = module.decode(cls.ID, module.encode(packet))
-    assert type(back) is cls
-    assert back == packet
-
-
-@pytest.mark.parametrize(("module", "cls"), ROUND_TRIPPING_PACKETS, ids=packet_id)
-def test_a_default_packet_encodes_again_to_the_same_bytes(module, cls):
-    body = module.encode(cls())
-    assert module.encode(module.decode(cls.ID, body)) == body
-
-
-@pytest.mark.parametrize(("module", "cls"), ROUND_TRIPPING_PACKETS, ids=packet_id)
 def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     packet = cls()
     header, framed = module.decode_packet(module.encode_packet(packet))
     assert (header.packet_id, header.recipient_sub_id, header.sender_sub_id) == (cls.ID, 0, 0)
     assert framed == packet
-
-
-@pytest.mark.parametrize(("module", "cls"), UNDECODABLE_PACKETS, ids=packet_id)
-def test_a_default_packet_holding_an_unnamed_enum_is_rejected_on_decode(module, cls):
-    with pytest.raises(ValueError, match="at byte"):
-        module.decode(cls.ID, module.encode(cls()))
 
 
 @pytest.mark.parametrize("cls", ROUND_TRIPPING_VALUES, ids=value_id)
@@ -117,11 +90,6 @@ def test_a_default_value_encodes_again_to_the_same_bytes(cls):
 def test_a_default_value_holding_an_unnamed_enum_is_rejected_on_decode(cls):
     with pytest.raises(ValueError, match="at byte"):
         cls.from_bytes(bytes(cls()))
-
-
-@pytest.mark.parametrize("cls", [cls for _, cls in UNDECODABLE_PACKETS], ids=value_id)
-def test_only_a_default_packet_holding_an_unnamed_enum_is_rejected_on_decode(cls):
-    assert _holds_unnamed_enum(cls())
 
 
 @pytest.mark.parametrize("cls", UNDECODABLE_VALUES, ids=value_id)

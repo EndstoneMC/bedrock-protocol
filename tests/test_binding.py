@@ -42,7 +42,7 @@ def test_the_bare_protocol_number_is_the_latest_protocol():
 
 def test_the_bare_codec_round_trips_a_packet():
     packet = bedrock_protocol.PlayStatusPacket(status=bedrock_protocol.PlayStatus.PLAYER_SPAWN)
-    assert bedrock_protocol.decode(packet.ID, bedrock_protocol.encode(packet)) == packet
+    assert bedrock_protocol.PACKETS[packet.ID].from_bytes(bytes(packet)) == packet
 
 
 def test_the_header_packs_recipient_then_sender_as_bds_does():
@@ -184,12 +184,12 @@ def test_a_python_keyword_member_keeps_the_dsl_underscore():
 
 def test_decode_rejects_trailing_bytes():
     with pytest.raises(bedrock_protocol.DecodeError, match=r"^PlayStatusPacket: trailing bytes at byte 4 of 5$"):
-        proto.decode(PLAY_STATUS.ID, bytes(PLAY_STATUS) + b"\x00")
+        proto.PACKETS[PLAY_STATUS.ID].from_bytes(bytes(PLAY_STATUS) + b"\x00")
 
 
 def test_decode_rejects_a_truncated_body():
     with pytest.raises(bedrock_protocol.DecodeError, match=r"^PlayStatusPacket.status: truncated at byte 0 of 3$"):
-        proto.decode(PLAY_STATUS.ID, bytes(PLAY_STATUS)[:-1])
+        proto.PACKETS[PLAY_STATUS.ID].from_bytes(bytes(PLAY_STATUS)[:-1])
 
 
 def test_a_decode_error_is_a_value_error():
@@ -282,9 +282,15 @@ def test_a_decode_error_spells_a_keyword_field_as_python_does():
     assert caught.value.path == ("pass_",)
 
 
-def test_decode_rejects_an_unknown_packet_id():
-    with pytest.raises(KeyError, match="no packet 1023"):
-        proto.decode(1023, b"")
+def test_decode_packet_rejects_an_unknown_packet_id():
+    with pytest.raises(bedrock_protocol.DecodeError, match=r"^PacketHeader\.packet_id: unknown value at byte 2 of 2$"):
+        proto.decode_packet(bytes.fromhex("ff07"))
+
+
+def test_encode_packet_rejects_a_packet_of_another_version():
+    oldest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.VERSIONS[0]}")
+    with pytest.raises(TypeError, match="is not a packet of protocol"):
+        oldest.encode_packet(bedrock_protocol.VoxelShapesPacket())
 
 
 @pytest.mark.parametrize(
