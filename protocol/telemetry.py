@@ -103,15 +103,16 @@ class MinecraftEventing:
         MOB_KABOB = value(115, since=898)
         ADVENTURING_TIME = value(116, since=924)
         UH_OH = value(117, since=1001)
-        GETTING_WOOD = value(118, since=2168)
-        BENCH_MAKING = value(119, since=2168)
-        TIME_TO_MINE = value(120, since=2168)
-        HOT_TOPIC = value(121, since=2168)
-        ACQUIRE_HARDWARE = value(122, since=2168)
-        GETTING_AN_UPGRADE = value(123, since=2168)
-        MONSTER_HUNTER = value(124, since=2168)
-        DIAMONDS = value(125, since=2168)
-        PLETHORA_OF_CATS = value(126, since=2168)
+        with value(since=2168):
+            GETTING_WOOD = 118
+            BENCH_MAKING = 119
+            TIME_TO_MINE = 120
+            HOT_TOPIC = 121
+            ACQUIRE_HARDWARE = 122
+            GETTING_AN_UPGRADE = 123
+            MONSTER_HUNTER = 124
+            DIAMONDS = 125
+            PLETHORA_OF_CATS = 126
         WHAT_GOES_AROUND_COMES_AROUND = value(127, since=2225)
         COUNT = auto()
 

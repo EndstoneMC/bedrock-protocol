@@ -102,11 +102,12 @@ class MapDecoration:
         JUNGLE_TEMPLE = 22
         WITCH_HUT = 23
         TRIAL_CHAMBERS = 24
-        ABANDONED_CAMP = value(25, since=2193)
-        BURIED_ANCIENT_CITY = value(26, since=2193)
-        BURIED_MINESHAFT = value(27, since=2193)
-        DESERT_PYRAMID = value(28, since=2193)
-        WARM_OCEAN_RUINS = value(29, since=2193)
+        with value(since=2193):
+            ABANDONED_CAMP = 25
+            BURIED_ANCIENT_CITY = 26
+            BURIED_MINESHAFT = 27
+            DESERT_PYRAMID = 28
+            WARM_OCEAN_RUINS = 29
         COUNT = auto()
 
     image: Type

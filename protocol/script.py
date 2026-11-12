@@ -34,10 +34,11 @@ class ScriptPrimitiveShapeType(IntEnum, uint8):
     CIRCLE = 3
     TEXT = 4
     ARROW = 5
-    CYLINDER = value(6, since=1001)
-    PYRAMID = value(7, since=1001)
-    ELLIPSOID = value(8, since=1001)
-    CONE = value(9, since=1001)
+    with value(since=1001):
+        CYLINDER = 6
+        PYRAMID = 7
+        ELLIPSOID = 8
+        CONE = 9
     NUM_SHAPE_TYPES = auto()
 
 

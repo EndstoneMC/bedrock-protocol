@@ -509,86 +509,96 @@ class LevelSoundEvent(IntEnum, uint32):
     IMITATE_DROWNED = 531
     IMITATE_CREAKING = value(532, since=766)
     BUNDLE_INSERT_FAIL = 533
-    SPONGE_ABSORB = value(534, since=766)
-    CREAKING_HEART_TRAIL = value(536, since=766)
-    CREAKING_HEART_SPAWN = value(537, since=766)
-    ACTIVATE = value(538, since=766)
-    DEACTIVATE = value(539, since=766)
-    FREEZE = value(540, since=766)
-    UNFREEZE = value(541, since=766)
-    OPEN = value(542, since=766)
-    OPEN_LONG = value(543, since=766)
-    CLOSE = value(544, since=766)
-    CLOSE_LONG = value(545, since=766)
-    IMITATE_PHANTOM = value(546, since=800)
-    IMITATE_ZOGLIN = value(547, since=800)
-    IMITATE_GUARDIAN = value(548, since=800)
-    IMITATE_RAVAGER = value(549, since=800)
-    IMITATE_PILLAGER = value(550, since=800)
-    PLACE_IN_WATER = value(551, since=800)
-    STATE_CHANGE = value(552, since=800)
-    IMITATE_HAPPY_GHAST = value(553, since=800)
-    UNEQUIP_GENERIC = value(554, since=800)
-    RECORD_TEARS = value(555, since=818)
-    THE_END_LIGHT_FLASH = value(556, since=818)
-    LEAD_LEASH = value(557, since=818)
-    LEAD_UNLEASH = value(558, since=818)
-    LEAD_BREAK = value(559, since=818)
-    UNSADDLE = value(560, since=818)
+    with value(since=766):
+        SPONGE_ABSORB = 534
+        CREAKING_HEART_TRAIL = 536
+        CREAKING_HEART_SPAWN = 537
+        ACTIVATE = 538
+        DEACTIVATE = 539
+        FREEZE = 540
+        UNFREEZE = 541
+        OPEN = 542
+        OPEN_LONG = 543
+        CLOSE = 544
+        CLOSE_LONG = 545
+    with value(since=800):
+        IMITATE_PHANTOM = 546
+        IMITATE_ZOGLIN = 547
+        IMITATE_GUARDIAN = 548
+        IMITATE_RAVAGER = 549
+        IMITATE_PILLAGER = 550
+        PLACE_IN_WATER = 551
+        STATE_CHANGE = 552
+        IMITATE_HAPPY_GHAST = 553
+        UNEQUIP_GENERIC = 554
+    with value(since=818):
+        RECORD_TEARS = 555
+        THE_END_LIGHT_FLASH = 556
+        LEAD_LEASH = 557
+        LEAD_UNLEASH = 558
+        LEAD_BREAK = 559
+        UNSADDLE = 560
     EQUIP_COPPER = value(561, since=827)
     RECORD_LAVA_CHICKEN = value(561, since=819, until=827)
     RECORD_LAVA_CHICKEN = value(562, since=827)
-    PLACE_ITEM = value(563, since=844)
-    SINGLE_ITEM_SWAP = value(564, since=844)
-    MULTI_ITEM_SWAP = value(565, since=844)
-    LUNGE1 = value(566, since=898)
-    LUNGE2 = value(567, since=898)
-    LUNGE3 = value(568, since=898)
-    ATTACK_CRITICAL = value(569, since=898)
-    SPEAR_ATTACK_HIT = value(570, since=898)
-    SPEAR_ATTACK_MISS = value(571, since=898)
-    WOODEN_SPEAR_ATTACK_HIT = value(572, since=898)
-    WOODEN_SPEAR_ATTACK_MISS = value(573, since=898)
-    IMITATE_PARCHED = value(574, since=898)
-    IMITATE_CAMEL_HUSK = value(575, since=898)
-    SPEAR_USE = value(576, since=898)
-    WOODEN_SPEAR_USE = value(577, since=898)
-    SADDLE_IN_WATER = value(578, since=924)
-    STONE_SPEAR_ATTACK_HIT = value(579, since=924)
-    IRON_SPEAR_ATTACK_HIT = value(580, since=924)
-    COPPER_SPEAR_ATTACK_HIT = value(581, since=924)
-    GOLDEN_SPEAR_ATTACK_HIT = value(582, since=924)
-    DIAMOND_SPEAR_ATTACK_HIT = value(583, since=924)
-    NETHERITE_SPEAR_ATTACK_HIT = value(584, since=924)
-    STONE_SPEAR_ATTACK_MISS = value(585, since=924)
-    IRON_SPEAR_ATTACK_MISS = value(586, since=924)
-    COPPER_SPEAR_ATTACK_MISS = value(587, since=924)
-    GOLDEN_SPEAR_ATTACK_MISS = value(588, since=924)
-    DIAMOND_SPEAR_ATTACK_MISS = value(589, since=924)
-    NETHERITE_SPEAR_ATTACK_MISS = value(590, since=924)
-    STONE_SPEAR_USE = value(591, since=924)
-    IRON_SPEAR_USE = value(592, since=924)
-    COPPER_SPEAR_USE = value(593, since=924)
-    GOLDEN_SPEAR_USE = value(594, since=924)
-    DIAMOND_SPEAR_USE = value(595, since=924)
-    NETHERITE_SPEAR_USE = value(596, since=924)
-    PAUSE_GROWTH = value(597, since=944)
-    RESET_GROWTH = value(598, since=944)
-    PUSHED_BY_PLAYER = value(599, since=975)
-    BOUNCE = value(600, since=975)
-    SLIME_LANDING = value(601, since=1001)
-    ABSORB_BLOCK = value(602, since=1001)
-    EJECT_BLOCK = value(603, since=1001)
-    GEYSER_ERUPTION_START = value(604, since=1001)
-    GEYSER_ERUPTION_ACTIVE = value(605, since=1001)
-    RECORD_BOUNCE = value(606, since=1001)
-    BUCKET_FILL_LAND_ANIMAL = value(607, since=1001)
-    BUCKET_EMPTY_LAND_ANIMAL = value(608, since=1001)
-    GEYSER_CONTINUOUS_ERUPTION_START = value(609, since=1001)
-    GEYSER_CONTINUOUS_ERUPTION_ACTIVE = value(610, since=1001)
-    MOUNT = value(611, since=2168)
-    DISMOUNT = value(612, since=2168)
-    STRAW_BED_BREAK_LEAVE = value(613, since=2168)
+    with value(since=844):
+        PLACE_ITEM = 563
+        SINGLE_ITEM_SWAP = 564
+        MULTI_ITEM_SWAP = 565
+    with value(since=898):
+        LUNGE1 = 566
+        LUNGE2 = 567
+        LUNGE3 = 568
+        ATTACK_CRITICAL = 569
+        SPEAR_ATTACK_HIT = 570
+        SPEAR_ATTACK_MISS = 571
+        WOODEN_SPEAR_ATTACK_HIT = 572
+        WOODEN_SPEAR_ATTACK_MISS = 573
+        IMITATE_PARCHED = 574
+        IMITATE_CAMEL_HUSK = 575
+        SPEAR_USE = 576
+        WOODEN_SPEAR_USE = 577
+    with value(since=924):
+        SADDLE_IN_WATER = 578
+        STONE_SPEAR_ATTACK_HIT = 579
+        IRON_SPEAR_ATTACK_HIT = 580
+        COPPER_SPEAR_ATTACK_HIT = 581
+        GOLDEN_SPEAR_ATTACK_HIT = 582
+        DIAMOND_SPEAR_ATTACK_HIT = 583
+        NETHERITE_SPEAR_ATTACK_HIT = 584
+        STONE_SPEAR_ATTACK_MISS = 585
+        IRON_SPEAR_ATTACK_MISS = 586
+        COPPER_SPEAR_ATTACK_MISS = 587
+        GOLDEN_SPEAR_ATTACK_MISS = 588
+        DIAMOND_SPEAR_ATTACK_MISS = 589
+        NETHERITE_SPEAR_ATTACK_MISS = 590
+        STONE_SPEAR_USE = 591
+        IRON_SPEAR_USE = 592
+        COPPER_SPEAR_USE = 593
+        GOLDEN_SPEAR_USE = 594
+        DIAMOND_SPEAR_USE = 595
+        NETHERITE_SPEAR_USE = 596
+    with value(since=944):
+        PAUSE_GROWTH = 597
+        RESET_GROWTH = 598
+    with value(since=975):
+        PUSHED_BY_PLAYER = 599
+        BOUNCE = 600
+    with value(since=1001):
+        SLIME_LANDING = 601
+        ABSORB_BLOCK = 602
+        EJECT_BLOCK = 603
+        GEYSER_ERUPTION_START = 604
+        GEYSER_ERUPTION_ACTIVE = 605
+        RECORD_BOUNCE = 606
+        BUCKET_FILL_LAND_ANIMAL = 607
+        BUCKET_EMPTY_LAND_ANIMAL = 608
+        GEYSER_CONTINUOUS_ERUPTION_START = 609
+        GEYSER_CONTINUOUS_ERUPTION_ACTIVE = 610
+    with value(since=2168):
+        MOUNT = 611
+        DISMOUNT = 612
+        STRAW_BED_BREAK_LEAVE = 613
     ICE_BALL_BREAK = value(614, since=2225)
     UNDEFINED = auto()
 

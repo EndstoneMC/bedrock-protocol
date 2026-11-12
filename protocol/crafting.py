@@ -25,8 +25,9 @@ class CreativeItemCategory(IntEnum, uint8):
 class CraftingDataEntryType(IntEnum, int32):
     SHAPELESS_RECIPE = 0
     SHAPED_RECIPE = 1
-    FURNACE_RECIPE = value(2, until=975)
-    FURNACE_AUX_RECIPE = value(3, until=975)
+    with value(until=975):
+        FURNACE_RECIPE = 2
+        FURNACE_AUX_RECIPE = 3
     MULTI_RECIPE = 4
     USER_DATA_SHAPELESS_RECIPE = 5
     SHAPELESS_CHEMISTRY_RECIPE = 6

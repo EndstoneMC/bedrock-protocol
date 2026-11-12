@@ -153,16 +153,18 @@ class ActorFlags(IntEnum, int32):
     TIMER_FLAG_3 = 117
     BODY_ROTATION_BLOCKED = 118
     RENDERS_WHEN_INVISIBLE = value(119, since=776)
-    ROTATION_AXIS_ALIGNED = value(120, since=786)
-    COLLIDABLE = value(121, since=786)
-    WASD_FREE_CAMERA_CONTROLLED = value(122, since=786)
+    with value(since=786):
+        ROTATION_AXIS_ALIGNED = 120
+        COLLIDABLE = 121
+        WASD_FREE_CAMERA_CONTROLLED = 122
     DOES_SERVER_AUTH_ONLY_DISMOUNT = value(123, since=800)
     BODY_ROTATION_ALWAYS_FOLLOWS_HEAD = value(124, since=818)
     CAN_USE_VERTICAL_MOVEMENT_ACTION = value(125, since=844)
     ROTATION_LOCKED_TO_VEHICLE = value(126, since=898)
-    USES_LEGACY_FRICTION = value(127, since=975)
-    USES_UNIFORM_AIR_DRAG = value(128, since=975)
-    NAMEPLATE_DEPTH_TESTED = value(129, since=975)
+    with value(since=975):
+        USES_LEGACY_FRICTION = 127
+        USES_UNIFORM_AIR_DRAG = 128
+        NAMEPLATE_DEPTH_TESTED = 129
     NOT_PICKABLE_FROM_INSIDE = value(130, since=2168)
     COUNT = auto()
 
@@ -300,15 +302,19 @@ class ActorDataIDs(IntEnum, uint8):
     PLAYER_HAS_DIED = 129
     COLLISION_BOX = 130
     VISIBLE_MOB_EFFECTS = 131
-    FILTERED_NAME = value(132, since=776)
-    ENTER_BED_POSITION = value(133, since=776)
-    SEAT_THIRD_PERSON_CAMERA_RADIUS = value(134, since=800)
-    SEAT_CAMERA_RELAX_DISTANCE_SMOOTHING = value(135, since=800)
-    AIM_ASSIST_PRIORITY_PRESET_ID = value(136, since=924)
-    AIM_ASSIST_PRIORITY_CATEGORY_ID = value(137, since=924)
-    AIM_ASSIST_PRIORITY_ACTOR_ID = value(138, since=924)
-    RESERVED_139 = value(139, since=975)
-    NAMEPLATE_RENDER_DISTANCE_MAX = value(140, since=975)
+    with value(since=776):
+        FILTERED_NAME = 132
+        ENTER_BED_POSITION = 133
+    with value(since=800):
+        SEAT_THIRD_PERSON_CAMERA_RADIUS = 134
+        SEAT_CAMERA_RELAX_DISTANCE_SMOOTHING = 135
+    with value(since=924):
+        AIM_ASSIST_PRIORITY_PRESET_ID = 136
+        AIM_ASSIST_PRIORITY_CATEGORY_ID = 137
+        AIM_ASSIST_PRIORITY_ACTOR_ID = 138
+    with value(since=975):
+        RESERVED_139 = 139
+        NAMEPLATE_RENDER_DISTANCE_MAX = 140
     COUNT = auto()
 
 
@@ -628,10 +634,12 @@ class ActorType(IntEnum, int32):
     CAMEL_HUSK = value(68504, until=924)
     CAMEL_HUSK = value(70552, since=924)
     SULFUR_CUBE = value(2969, since=975, until=2168)
-    SULFUR_CUBE = value(921, since=2168)
-    CUSHION = value(154, since=2168)
-    FROSTBITE = value(199579, since=2225)
-    ICE_BALL = value(4194460, since=2225)
+    with value(since=2168):
+        SULFUR_CUBE = 921
+        CUSHION = 154
+    with value(since=2225):
+        FROSTBITE = 199579
+        ICE_BALL = 4194460
 
 
 @packet(id=96)
@@ -795,8 +803,9 @@ class AnimatePacket:
         WAKE_UP = 3
         CRITICAL_HIT = 4
         MAGIC_CRITICAL_HIT = 5
-        ROW_RIGHT = value(128, until=800)
-        ROW_LEFT = value(129, until=800)
+        with value(until=800):
+            ROW_RIGHT = 128
+            ROW_LEFT = 129
 
     action: varint32
     runtime_id: ActorRuntimeID

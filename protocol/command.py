@@ -224,15 +224,18 @@ class CurrentCmdVersion(IntEnum, int32):
     TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE = value(44, since=818)
     CLONE_EXTRA_BLOCK_FILTER_FIX = value(45, since=898)
     FILL_COMMAND_UNFILLABLE_ERROR_OUTPUT = value(46, since=975)
-    STOP_SOUND_OUTPUT_FIX = value(47, since=1001)
-    PLAY_SOUND_OUTPUT_FIX = value(48, since=1001)
-    PLAYER_WAYPOINTS_GAMERULE = value(49, since=1001)
+    with value(since=1001):
+        STOP_SOUND_OUTPUT_FIX = 47
+        PLAY_SOUND_OUTPUT_FIX = 48
+        PLAYER_WAYPOINTS_GAMERULE = 49
     CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
-    TELEPORT_ENTITY_DIMENSION_POSITION_FIX = value(51, since=2193)
-    TIME_OF_COMMAND_OVERLOADS = value(52, since=2193)
-    UNKNOWN_053 = value(53, since=2225)  # TODO: 53 to 55 unnamed until a header branch above r26_u5
-    UNKNOWN_054 = value(54, since=2225)
-    UNKNOWN_055 = value(55, since=2225)
+    with value(since=2193):
+        TELEPORT_ENTITY_DIMENSION_POSITION_FIX = 51
+        TIME_OF_COMMAND_OVERLOADS = 52
+    with value(since=2225):
+        UNKNOWN_053 = 53  # TODO: 53 to 55 unnamed until a header branch above r26_u5
+        UNKNOWN_054 = 54
+        UNKNOWN_055 = 55
     COUNT = auto()
     LATEST = COUNT - 1
 

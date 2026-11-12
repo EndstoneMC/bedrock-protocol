@@ -185,18 +185,20 @@ class PlayerAuthInputPacket:
         VERTICAL_COLLISION = 50
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
-        START_USING_ITEM = value(53, since=748)
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = value(54, since=748)
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = value(55, since=748)
-        START_SPIN_ATTACK = value(56, since=748)
-        STOP_SPIN_ATTACK = value(57, since=748)
-        IS_HOTBAR_ONLY_TOUCH = value(58, since=766)
-        JUMP_RELEASED_RAW = value(59, since=766)
-        JUMP_PRESSED_RAW = value(60, since=766)
-        JUMP_CURRENT_RAW = value(61, since=766)
-        SNEAK_RELEASED_RAW = value(62, since=766)
-        SNEAK_PRESSED_RAW = value(63, since=766)
-        SNEAK_CURRENT_RAW = value(64, since=766)
+        with value(since=748):
+            START_USING_ITEM = 53
+            IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
+            IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
+            START_SPIN_ATTACK = 56
+            STOP_SPIN_ATTACK = 57
+        with value(since=766):
+            IS_HOTBAR_ONLY_TOUCH = 58
+            JUMP_RELEASED_RAW = 59
+            JUMP_PRESSED_RAW = 60
+            JUMP_CURRENT_RAW = 61
+            SNEAK_RELEASED_RAW = 62
+            SNEAK_PRESSED_RAW = 63
+            SNEAK_CURRENT_RAW = 64
         INPUT_NUM = auto()
 
     rot: Vec2
