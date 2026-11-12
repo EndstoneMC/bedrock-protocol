@@ -1,4 +1,5 @@
 import importlib
+import pickle
 import uuid
 
 import pytest
@@ -185,6 +186,11 @@ def test_a_decode_error_is_a_value_error():
 
 def test_a_decode_error_built_in_python_carries_its_fields():
     error = bedrock_protocol.DecodeError("message", "truncated", ("a", 1), 7)
+    assert (str(error), error.reason, error.path, error.offset) == ("message", "truncated", ("a", 1), 7)
+
+
+def test_a_decode_error_pickles_with_its_fields():
+    error = pickle.loads(pickle.dumps(bedrock_protocol.DecodeError("message", "truncated", ("a", 1), 7)))
     assert (str(error), error.reason, error.path, error.offset) == ("message", "truncated", ("a", 1), 7)
 
 
