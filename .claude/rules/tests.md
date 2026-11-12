@@ -18,7 +18,7 @@ paths:
   - patch the bytes so the suite says what the schema encodes, and mark them `# TODO: patched, confirm against BDS`;
   - open the golden's comment with `# TODO: confirm against BDS`, naming what the reference wrote, what the dump says and which side has to give;
   - settle it per `.claude/rules/protocol/sources.md`.
-- When a snapshot materializes, re-check every test that builds one era's types against another era's golden.
+- When a change materializes a snapshot (`versions.md`), re-check every test that builds one era's types against another era's golden.
 - Check every golden both ways: encoding the packet yields the bytes, and decoding the bytes yields the packet.
 - Write expected bytes only as literals; never compute them by re-implementing varints, zigzag, header packing or the codec.
 

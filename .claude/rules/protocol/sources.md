@@ -35,6 +35,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Transcribe an enum with `[A-Za-z0-9_]+`, never `[A-Z0-9_]+`, and check the member count against the header before believing a gap.
 - Never paste EndstoneMC/bedrock-headers source (access-restricted) into the schema, a commit or any file; read it and cite the branch.
 - Clone a missing reference repository rather than working around it.
+- Never merge or rebase the `prototype` branch, an unrelated history; re-verify any wire detail taken from it.
 
 ## Weighing evidence
 
