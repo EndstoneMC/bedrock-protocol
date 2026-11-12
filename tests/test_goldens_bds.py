@@ -93,3 +93,33 @@ def test_a_uuid_matches_the_two_halves_bds_shows(bds):
 
 def test_a_blob_in_hex_matches_the_characters_bds_shows(bds):
     assert gap(bds, {"Chunk Data": "\u0004\u0001\u0002"}, {"data": "040102"}) is None
+
+
+@pytest.fixture(scope="module")
+def values():
+    pytest.importorskip("bedrock_protocol_compiler")
+    spec = importlib.util.spec_from_file_location("goldens_values", SCRIPT.with_name("values.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_an_enum_leaf_is_numbered_by_its_key_path(values):
+    from bedrock_protocol import v2168
+
+    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
+    assert values.enum_numbers(v2168.packets[2].from_json(value), value) == {"status": 1}
+
+
+def test_an_enum_inside_a_variant_alternative_is_numbered(values):
+    from bedrock_protocol import v2168
+
+    value = {
+        "localize": False,
+        "body": {"MessageOnly": {"type": "TRANSLATE", "message": "s3"}},
+        "xuid": "s4",
+        "platform_id": "s5",
+        "filtered_message": "s6",
+    }
+    packet = v2168.packets[9].from_json(value)
+    assert values.enum_numbers(packet, value) == {"body.MessageOnly.type": int(packet.body.type)}

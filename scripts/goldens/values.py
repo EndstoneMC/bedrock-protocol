@@ -1,6 +1,7 @@
 """Emit JSON values that hit every path of a packet at a protocol version, and round-trip them through the binding."""
 
 import argparse
+import enum
 import importlib
 import json
 import re
@@ -554,6 +555,29 @@ def differs(expected: Json, actual: Json, path: str = "") -> str | None:
     return None if expected == actual and type(expected) is type(actual) else path.lstrip(".")
 
 
+def enum_numbers(packet: Any, value: Json, path: str = "") -> dict[str, int]:
+    """Map the key path of each enum leaf in `value` to the number of the bound enum member it names."""
+    if isinstance(packet, enum.IntEnum):
+        return {path: int(packet)}
+    if isinstance(value, dict):
+        children = []
+        for key, item in value.items():
+            if isinstance(packet, dict):
+                member = packet.get(int(key) if key.lstrip("-").isdigit() else key)
+            else:
+                member = packet if type(packet).__name__ == key else getattr(packet, key, None)
+            children.append((f"{path}.{key}" if path else key, member, item))
+    elif isinstance(value, list) and isinstance(packet, list | tuple):
+        children = [
+            (f"{path}[{index}]", item, each) for index, (item, each) in enumerate(zip(packet, value, strict=False))
+        ]
+    else:
+        return {}
+    return {
+        key: number for child, member, item in children for key, number in enum_numbers(member, item, child).items()
+    }
+
+
 def round_trip(cls: Any, value: Json) -> tuple[str, str, str, bytes | None]:
     """Return the failing step, its path and error, and the seed bytes when every step held."""
     decode_error = importlib.import_module("bedrock_protocol").DecodeError
@@ -635,6 +659,7 @@ def main() -> None:
                             "id": f"v{index}",
                             "version": version,
                             "value": value,
+                            "enums": enum_numbers(cls.from_json(value), value),
                             "bytes": data.hex(),
                         }
                     )
