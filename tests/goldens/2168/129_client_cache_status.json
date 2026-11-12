@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "enabled": false
+  },
+  "bytes": "00",
+  "bds_json": {
+   "Is cache supported?": false
+  }
+ }
+]

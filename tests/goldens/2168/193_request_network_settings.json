@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "client_network_version": 331
+  },
+  "bytes": "0000014b",
+  "bds_json": {
+   "ClientNetworkVersion": 331
+  }
+ }
+]

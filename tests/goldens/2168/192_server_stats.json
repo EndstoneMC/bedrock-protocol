@@ -1,0 +1,15 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "server_time": 0.75,
+   "network_time": 1.25
+  },
+  "bytes": "0000403f0000a03f",
+  "bds_json": {
+   "ServerTime": 0.75,
+   "NetworkTime": 1.25
+  }
+ }
+]
