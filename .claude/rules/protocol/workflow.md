@@ -40,7 +40,7 @@ paths:
   - run `scripts/goldens/values.py`, then `scripts/goldens/bds.py` on the new version's BDS, release or preview, and fix every difference as a DSL defect before its case freezes into `tests/goldens/<new>/`;
   - land the version with its complete folder.
 - Diff both ways from the base: `tests/goldens/2168/` holds every packet, a version above it diffs against the version below, and a version below it against the version above.
-- Run the new build over the cases of every clean packet's newest older folder too; a difference means the DSL missed a dirty packet.
+- Run the new build over the cases of every clean packet's nearest folder toward 2168 that holds it too; a difference means the DSL missed a dirty packet.
 - When a version's bedrock-headers land after its DSL was written, study the version against them and fix the DSL.
 - Take a new version's wire from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.
 - Take the four categories from two fetched `origin/` protocol-docs branches: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
