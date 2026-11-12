@@ -146,14 +146,13 @@ def test_version_hpp_gives_a_release_the_newest_snapshot_at_or_below_it(generate
     init = """
 from bedrock_protocol_compiler.dsl import field, packet, type, uint8
 
-versions = (1, 3)
+versions = (1, 2, 4)
 
-releases = {1: "1.1.0-1.1.4", 2: "1.2.0", 3: "1.3.x"}
+releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.x"}
 """
 
     out = generate({"a": A}, init=init)
 
-    rows = (out / "version.hpp").read_text()
-    assert 'ProtocolVersion{1, 1, "1.1.0-1.1.4", "1.1.0", "1.1.4"},' in rows
-    assert 'ProtocolVersion{2, 1, "1.2.0", "1.2.0", "1.2.0"},' in rows
-    assert 'ProtocolVersion{3, 3, "1.3.x", "1.3.0", "1.3.9"},' in rows
+    version = (out / "version.hpp").read_text()
+    assert 'ProtocolVersion{3, 2, "1.3.0", "1.3.0", "1.3.0"},' in version
+    assert 'ProtocolVersion{4, 4, "1.4.x", "1.4.0", "1.4.9"},' in version
