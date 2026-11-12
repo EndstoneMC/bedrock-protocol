@@ -14,7 +14,7 @@ paths:
 - Generate `value` from the schema with `scripts/goldens/values.py` exactly as `to_json` returns it, key order included (a field by its schema name, an enum by the bound member's `.name`, a `CompoundTag` sorted by key); never write one by hand.
 - Seed the bytes with the library at HEAD; BDS of that version reads them and writes its own bytes, and its JSON where the build prints one.
 - A difference in either, or a read BDS rejects, is a schema defect; fix the schema first.
-- Freeze a case once BDS's bytes and JSON agree with the library's; never regenerate it or change its `bytes` (a rename rewrites only the names in its `value`), and never run BDS from a test.
+- Freeze a case once BDS's bytes and JSON agree with the library's; never regenerate it or change its `bytes` (a rename or a library type fix rewrites only its `value`), and never run BDS from a test.
 - Record `writer` as the one the packet's own `SerializationMode` picks, `manual` or `cereal`; a golden is that default write, compared with the other writer only below `SerializationMode` 5 (`CerealOnly` has none).
 - Pin a new field a second way: two bodies that differ only in it must differ only in its bytes.
 - Never assert a reorder by size; pin the order with a body whose bytes move.

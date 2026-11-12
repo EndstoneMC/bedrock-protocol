@@ -63,7 +63,7 @@ INTEGER_BITS = {
 ALTERNATIVE_BY_PRIMITIVE = {"bool": "bool", "float": "float", "double": "float", "str": "str", "bytes": "bytes"}
 NBT_TAGS = {
     "b": {"ByteTag": 7},
-    "bytes": {"ByteArrayTag": [1, -2, 3]},
+    "bytes": {"ByteArrayTag": [1, 254, 3]},
     "d": {"DoubleTag": 2.5},
     "f": {"FloatTag": 1.5},
     "i": {"IntTag": 70000},

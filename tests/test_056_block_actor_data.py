@@ -190,3 +190,15 @@ def test_nbt_type_has_only_the_twelve_members():
 def test_a_tag_class_cannot_be_subclassed(cls):
     with pytest.raises(TypeError, match="prohibits subclassing"):
         type("Sub", (cls,), {})
+
+
+def test_a_byte_tag_json_shows_the_unsigned_byte():
+    packet = v2225.BlockActorDataPacket(data=nbt.CompoundTag({"b": nbt.ByteTag(254), "a": nbt.ByteArrayTag([1, 254])}))
+    assert packet.to_json()["data"] == {"b": {"ByteTag": 254}, "a": {"ByteArrayTag": [1, 254]}}
+
+
+@pytest.mark.parametrize("make", [nbt.ByteTag, lambda value: nbt.ByteArrayTag([value])], ids=["byte", "byte-array"])
+@pytest.mark.parametrize("value", [-2, 256])
+def test_a_byte_tag_rejects_a_value_outside_zero_to_255(make, value):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        make(value)

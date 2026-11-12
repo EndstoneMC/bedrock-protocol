@@ -113,14 +113,14 @@ private:
 
 }  // namespace nbt
 
-using ByteTag = nbt::ValueTag<std::int8_t>;
+using ByteTag = nbt::ValueTag<std::uint8_t>;
 using ShortTag = nbt::ValueTag<std::int16_t>;
 using IntTag = nbt::ValueTag<std::int32_t>;
 using Int64Tag = nbt::ValueTag<std::int64_t>;
 using FloatTag = nbt::ValueTag<float>;
 using DoubleTag = nbt::ValueTag<double>;
 using StringTag = nbt::ValueTag<std::string>;
-using ByteArrayTag = nbt::ArrayTag<std::int8_t>;
+using ByteArrayTag = nbt::ArrayTag<std::uint8_t>;
 using IntArrayTag = nbt::ArrayTag<std::int32_t>;
 
 class Tag;
@@ -700,7 +700,7 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
         if constexpr (std::is_same_v<V, std::monostate>) {
         }
         else if constexpr (std::is_same_v<V, ByteTag>) {
-            stream.write<std::int8_t>(payload.value());
+            stream.write<std::uint8_t>(payload.value());
         }
         else if constexpr (std::is_same_v<V, ShortTag>) {
             stream.write<std::int16_t>(payload.value());
@@ -723,7 +723,7 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
         else if constexpr (std::is_same_v<V, ByteArrayTag>) {
             stream.writeVarInt<std::int32_t>(static_cast<std::int32_t>(payload.size()));
             for (auto element : payload) {
-                stream.write<std::int8_t>(element);
+                stream.write<std::uint8_t>(element);
             }
         }
         else if constexpr (std::is_same_v<V, IntArrayTag>) {
@@ -758,7 +758,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
     case Type::End:
         return Tag{};
     case Type::Byte: {
-        auto v = stream.read<std::int8_t>();
+        auto v = stream.read<std::uint8_t>();
         if (!v) {
             return std::unexpected(v.error());
         }
@@ -811,7 +811,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
         if (!count) {
             return std::unexpected(count.error());
         }
-        if (auto r = stream.account(*count, sizeof(std::int8_t)); !r) {
+        if (auto r = stream.account(*count, sizeof(std::uint8_t)); !r) {
             return std::unexpected(r.error());
         }
         if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
@@ -820,7 +820,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
         ByteArrayTag out;
         out.reserve(static_cast<std::size_t>(*count));
         for (std::int32_t i = 0; i < *count; ++i) {
-            auto element = stream.read<std::int8_t>();
+            auto element = stream.read<std::uint8_t>();
             if (!element) {
                 return std::unexpected(element.error());
             }
