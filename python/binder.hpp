@@ -1,18 +1,15 @@
 #pragma once
 
 #include <array>
-#include <bitset>
 #include <concepts>
 #include <cstddef>
 #include <format>
-#include <map>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <nanobind/nanobind.h>
@@ -124,18 +121,6 @@ template <typename T>
 inline constexpr bool is_array_v = false;
 template <typename T, std::size_t N>
 inline constexpr bool is_array_v<std::array<T, N>> = true;
-template <typename T>
-inline constexpr bool is_map_v = false;
-template <typename K, typename V, typename C, typename A>
-inline constexpr bool is_map_v<std::map<K, V, C, A>> = true;
-template <typename T>
-inline constexpr bool is_variant_v = false;
-template <typename... T>
-inline constexpr bool is_variant_v<std::variant<T...>> = true;
-template <typename T>
-inline constexpr bool is_bitset_v = false;
-template <std::size_t N>
-inline constexpr bool is_bitset_v<std::bitset<N>> = true;
 
 template <typename F>
 constexpr bool holds_enum()
