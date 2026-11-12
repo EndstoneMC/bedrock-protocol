@@ -111,6 +111,7 @@ FIXED: dict[str, Json] = {
     "SerializableCells.y_size": 2,
     "SerializableCells.z_size": 3,
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
+    "EffectDuration.value": 600,
 }
 
 
