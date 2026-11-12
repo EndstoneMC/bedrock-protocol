@@ -218,6 +218,6 @@ jobs:
           rm -rf protocol compiler
           cp -r package/generated generated
           uv venv --python 3.12
-          uv pip install . pytest
+          uv pip install --no-config . pytest
       - name: Test it
         run: uv run --no-project pytest tests
