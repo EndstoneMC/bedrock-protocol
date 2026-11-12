@@ -35,6 +35,24 @@ jobs:
       - name: pytest
         run: uv run --directory compiler pytest -n auto
 
+  java:
+    name: Java (Gradle)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: |
+            java/*.gradle.kts
+            java/gradle/wrapper/gradle-wrapper.properties
+      - uses: gradle/actions/wrapper-validation@v6.4.1
+      - name: Build
+        working-directory: java
+        run: ./gradlew --no-daemon build
+
   wheel:
     name: Wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

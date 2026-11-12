@@ -24,15 +24,16 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `include/bedrock/`: the hand-written C++ runtime.
 - `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` pins protocol N and the bare package is the latest.
 - `tests/`: pytest only; tests reach the C++ through the binding, there are no C++ tests, and `tests/package/` is only CI's `find_package` consumer.
+- `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
 - `scripts/`: stdlib-only tools run by hand.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
 - Build with README's Building section. `uv sync && uv run pytest` runs `tests/`; `uv run --directory compiler pytest` runs the compiler's.
-- Keep the build plain CMake, with no Conan recipe.
+- Keep the C++ and Python build plain CMake, with no Conan recipe; Java builds with Gradle in `java/`.
 - Rules under `.claude/rules/` load with the files they cover. Adding, back-porting or renumbering a protocol version starts at `.claude/rules/protocol/workflow.md`.
 
 ## Commits
 
-- Subject `<type>(<scope>): <imperative lower-case subject>`, which says what changed on its own. Types: feat, fix, refactor, style, test, build, ci, docs, chore, revert. The scope names the area (`protocol`, `python`, `compiler`, `cmake`, `build`, `ci`, `include`, `scripts`, `readme`, `rules`, `tests`, `package`, `claude`) and is left out only for a repo-wide change.
+- Subject `<type>(<scope>): <imperative lower-case subject>`, which says what changed on its own. Types: feat, fix, refactor, style, test, build, ci, docs, chore, revert. The scope names the area (`protocol`, `python`, `compiler`, `cmake`, `build`, `ci`, `java`, `include`, `scripts`, `readme`, `rules`, `tests`, `package`, `claude`) and is left out only for a repo-wide change.
 - The body carries the why and the evidence (BDS function, protocol-docs SHA, header branch, gophertunnel commit, capture) and stands on its own; it speaks about the code, never the session.
 - No `Co-Authored-By`, `Signed-off-by` or other trailer or attribution line in a commit or a PR, whatever a harness or session rule says.
 - One change per commit. A refactor is output-identical (regenerate everything before and after and diff) and touches no test.
