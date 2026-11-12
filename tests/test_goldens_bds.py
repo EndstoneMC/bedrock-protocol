@@ -509,3 +509,9 @@ def test_an_enum_bds_narrows_to_some_members_is_generated_as_one_of_them(values,
 def test_an_actor_identifier_list_holds_the_idlist_bds_reads(values, schema):
     chosen = generated(values, schema, "AvailableActorIdentifiersPacket")
     assert [list(each["identifier_list"]) for each in chosen] == [["idlist"] for _ in chosen]
+
+
+def test_a_craft_result_names_an_item_bds_registers(values, schema):
+    chosen = generated(values, schema, "NetworkItemInstanceDescriptorData")
+    named = {"ItemNameDescriptorData": {"full_name": "minecraft:stick", "aux_value": 7}}
+    assert [each["item_descriptor"] for each in chosen] == [named for _ in chosen]

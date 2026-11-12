@@ -146,7 +146,12 @@ CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x
 ITEM_STACKS = ("SerializedNetworkItemStackDescriptor", "SerializedNetworkItemInstanceDescriptor")
 ITEMS: dict[int, dict[int, int | None]] = {2168: {462: None, 855: None, -593: 0}}
 FIXED_AT: dict[int, dict[str, Json]] = {
-    2168: {"SerializedRecipeIngredient.descriptor": {"name": "minecraft:apple"}},
+    2168: {
+        "SerializedRecipeIngredient.descriptor": {"name": "minecraft:apple"},
+        "ItemStackRequestCereal.NetworkItemInstanceDescriptorData.item_descriptor": {
+            "ItemNameDescriptorData": {"full_name": "minecraft:stick", "aux_value": 7}
+        },
+    },
 }
 FIXED: dict[str, Json] = {
     "SerializedNetworkItemStackDescriptor.stack_size": 3,
