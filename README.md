@@ -37,11 +37,11 @@ uv pip install ./bedrock-protocol
 ```
 
 ```python
-from bedrock_protocol import TextPacket, TextPacketType, decode_packet, encode_packet
+from bedrock_protocol import TextPacket, TextPacketType
 
 packet = TextPacket(body=TextPacket.MessageOnly(type=TextPacketType.CHAT, message="hello"))
-header, back = decode_packet(encode_packet(packet))
-assert back == packet and header.packet_id == TextPacket.ID
+data = bytes(packet)
+assert TextPacket.from_bytes(data) == packet
 ```
 
 `VERSIONS` lists the protocol numbers. `PACKETS` maps packet ids to packet classes.
@@ -71,18 +71,17 @@ Python. The library needs C++23.
 #include <bedrock/protocol.hpp>
 
 namespace bp = bedrock::protocol;
-using Packet = bp::SubChunkRequestPacket;
+using Packet = bp::TextPacket;
 
-Packet packet;
-packet.dimension_type = bp::DimensionType{0};
-packet.center_pos = {.x = 1, .y = 2, .z = 3};
+Packet packet{.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"}};
 
-std::string bytes;
-bp::BinaryWriter writer{bytes};
+std::string data;
+bp::BinaryWriter writer{data};
 bp::serialize(writer, packet);
 
-bp::BinaryReader reader{bytes};
+bp::BinaryReader reader{data};
 std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
+assert(decoded && *decoded == packet);
 ```
 
 `<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
@@ -97,13 +96,17 @@ In Python, import its module:
 from bedrock_protocol import v2225
 
 packet = v2225.TextPacket(body=v2225.TextPacket.MessageOnly(type=v2225.TextPacketType.CHAT, message="hello"))
+data = bytes(packet)
+assert v2225.TextPacket.from_bytes(data) == packet
 ```
 
 In C++, pass it as the template argument:
 
 ```cpp
-using Packet = bedrock::protocol::SubChunkRequestPacket_<2225>;
+using Packet = bp::TextPacket_<2225>;
 ```
+
+The rest is unchanged.
 
 ## Supported Protocols
 
