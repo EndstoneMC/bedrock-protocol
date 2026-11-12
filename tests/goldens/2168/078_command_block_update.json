@@ -31,5 +31,50 @@
    "Tick Delay": 1117,
    "Execute On First Tick": true
   }
+ },
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "target": {
+    "BlockCommandData": {
+     "block_pos": {
+      "x": -1379,
+      "y": 1510,
+      "z": 1641
+     },
+     "mode": "NORMAL",
+     "redstone_mode": false,
+     "is_conditional": true
+    }
+   },
+   "command": "s15",
+   "last_output": "s16",
+   "name": "s17",
+   "filtered_name": "s18",
+   "track_output": false,
+   "tick_delay": 2820,
+   "execute_on_first_tick": false
+  },
+  "bytes": "01c515cc17d2190000010373313503733136037331370373313800040b000000",
+  "bds_json": {
+   "Target": {
+    "Block Position": {
+     "X": -1379,
+     "Y": 1510,
+     "Z": 1641
+    },
+    "Command Block Mode": 0,
+    "Redstone Mode": false,
+    "Is Conditional": true
+   },
+   "Command": "s15",
+   "Last Output": "s16",
+   "Name": "s17",
+   "FilteredName": "s18",
+   "Track Output": false,
+   "Tick Delay": 2820,
+   "Execute On First Tick": false
+  }
  }
 ]

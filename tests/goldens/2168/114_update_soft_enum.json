@@ -1,0 +1,21 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "enum_name": "s1",
+   "values": [
+    "s2"
+   ],
+   "type": "ADD"
+  },
+  "bytes": "0273310102733200",
+  "bds_json": {
+   "Enum Name": "s1",
+   "Values": [
+    "s2"
+   ],
+   "Update Type": 0
+  }
+ }
+]
