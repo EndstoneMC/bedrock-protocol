@@ -1,0 +1,14 @@
+[
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "update": {
+    "graphics_mode": null,
+    "filter_profanity": null
+   }
+  },
+  "bytes": "0000",
+  "bds_json": {}
+ }
+]

@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "health": 331
+  },
+  "bytes": "9605",
+  "bds_json": {
+   "Health": 331
+  }
+ }
+]
