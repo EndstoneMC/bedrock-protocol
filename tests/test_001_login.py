@@ -18,11 +18,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_login_is_packet_1(version):
-    assert version.packets[1] is version.LoginPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_login_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

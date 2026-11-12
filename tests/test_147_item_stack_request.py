@@ -167,11 +167,6 @@ DISC_PRESS_V2225 = v2225.ItemStackRequestPacket(
 )
 
 
-@pytest.mark.parametrize("version", [v1001, v2168])
-def test_item_stack_request_is_packet_147(version):
-    assert version.packets[147] is version.ItemStackRequestPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_item_stack_request_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

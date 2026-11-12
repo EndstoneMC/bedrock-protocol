@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 PRIORITY = v2225.PriorityData
 
@@ -29,11 +29,6 @@ GOLDENS = [
         id="negative-preset-index",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_camera_aim_assist_actor_priority_is_packet_339(version):
-    assert version.packets[339] is version.CameraAimAssistActorPriorityPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

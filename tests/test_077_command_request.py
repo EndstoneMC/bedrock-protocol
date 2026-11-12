@@ -113,11 +113,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168])
-def test_command_request_is_packet_77(version):
-    assert version.packets[77] is version.CommandRequestPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_command_request_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

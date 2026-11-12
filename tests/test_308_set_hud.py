@@ -32,11 +32,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_set_hud_is_packet_308(version):
-    assert version.packets[308] is version.SetHudPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_set_hud_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

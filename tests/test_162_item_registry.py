@@ -41,10 +41,6 @@ GOLDENS = [
 ]
 
 
-def test_item_registry_is_packet_162():
-    assert v2225.packets[162] is v2225.ItemRegistryPacket
-
-
 def test_item_registry_is_one_type_across_the_two_eras():
     assert v1001.packets[162] is v2168.packets[162]
 

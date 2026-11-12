@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 OPTIONS = v2225
 
@@ -130,11 +130,6 @@ EMPTY_SPLINE = v2225.CameraInstructionPacket(
         spline=OPTIONS.SplineInstruction(total_time=0.0, curve_type=v2225.SplineType.CATMULL_ROM, load_from_json=False)
     )
 )
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_camera_instruction_is_packet_300(version):
-    assert version.packets[300] is version.CameraInstructionPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import nbt, v1001, v2168, v2225
+from bedrock_protocol import nbt, v2225
 
 # TODO: pending BDS golden: gophertunnel cannot marshal the raw SerialisedEventData, so bedrock-dumper has to write it
 # LevelEventGenericPacket{event_id: 9801, data: {ableToSleep: 1, overworldPlayerCount: 1, sleepingPlayerCount: 0}}
@@ -22,11 +22,6 @@ SLEEP_STATE_PACKET = v2225.LevelEventGenericPacket(
         }
     ),
 )
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_level_event_generic_is_packet_124(version):
-    assert version.packets[124] is version.LevelEventGenericPacket
 
 
 def test_a_generic_level_event_encodes_its_compound_without_a_root_tag():

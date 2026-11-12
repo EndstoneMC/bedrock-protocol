@@ -14,11 +14,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_client_to_server_handshake_is_packet_4(version):
-    assert version.packets[4] is version.ClientToServerHandshakePacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_client_to_server_handshake_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

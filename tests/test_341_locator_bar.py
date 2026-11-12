@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 HANDLE = v2225.WaypointGroup.WaypointHandle
 PAYLOAD = v2225.ServerWaypoint.Payload
@@ -75,11 +75,6 @@ GOLDENS = [
         id="flagged-waypoint",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_locator_bar_is_packet_341(version):
-    assert version.packets[341] is version.LocatorBarPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

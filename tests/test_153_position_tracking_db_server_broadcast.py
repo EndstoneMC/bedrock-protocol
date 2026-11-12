@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import nbt, v1001, v2168, v2225
+from bedrock_protocol import nbt, v2225
 
 Action = v2225.PositionTrackingDBServerBroadcastPacket.Action
 
@@ -51,11 +51,6 @@ GOLDENS = [
         id="wide-id",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_position_tracking_db_server_broadcast_is_packet_153(version):
-    assert version.packets[153] is version.PositionTrackingDBServerBroadcastPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

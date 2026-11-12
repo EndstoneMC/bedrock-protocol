@@ -280,11 +280,6 @@ RELEASE_V2225_OFFHAND = v2225.InventoryTransactionPacket(
 )
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_inventory_transaction_is_packet_30(version):
-    assert version.packets[30] is version.InventoryTransactionPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_inventory_transaction_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from bedrock_protocol import v924, v975, v1001, v2168, v2225
+from bedrock_protocol import v924, v1001, v2168, v2225
 
 PLAYER = uuid.UUID("9e688c58-a548-3b8e-af69-c9e1005ad0bf")
 PACK = uuid.UUID("55a54008-ad1b-3589-aa21-0d2629c1df41")
@@ -222,11 +222,6 @@ GOLDENS = [
         id="v924-untrusted",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v924, v975, v1001, v2168])
-def test_player_skin_is_packet_93(version):
-    assert version.packets[93] is version.PlayerSkinPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

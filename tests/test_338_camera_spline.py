@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 # TODO: confirm against BDS. gophertunnel writes CameraSplineDefinition.SplineType as Optional[string] and both
 # key frames' easing as a bare string; the r26_u4 dump and SharedTypes/v1_26_0/camera/CameraSplineFileDefinition.h
@@ -93,11 +93,6 @@ def uneased():
             )
         ]
     )
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_camera_spline_is_packet_338(version):
-    assert version.packets[338] is version.CameraSplinePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

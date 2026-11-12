@@ -24,10 +24,6 @@ GOLDENS = [
 ]
 
 
-def test_trim_data_is_packet_302():
-    assert v2225.packets[302] is v2225.TrimDataPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_trim_data_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

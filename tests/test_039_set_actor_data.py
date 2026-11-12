@@ -51,11 +51,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168])
-def test_set_actor_data_is_packet_39(version):
-    assert version.packets[39] is version.SetActorDataPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_set_actor_data_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

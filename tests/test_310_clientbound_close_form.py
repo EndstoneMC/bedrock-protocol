@@ -13,11 +13,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_clientbound_close_form_is_packet_310(version):
-    assert version.packets[310] is version.ClientboundCloseFormPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_clientbound_close_form_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

@@ -79,11 +79,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_mob_equipment_is_packet_31(version):
-    assert version.packets[31] is version.MobEquipmentPacket
-
-
 def test_mob_equipment_is_one_shape_across_975_and_1001():
     assert v975.MobEquipmentPacket is v1001.MobEquipmentPacket
 

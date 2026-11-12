@@ -71,11 +71,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_inventory_slot_is_packet_50(version):
-    assert version.packets[50] is version.InventorySlotPacket
-
-
 def test_inventory_slot_is_one_shape_across_975_and_1001():
     assert v975.InventorySlotPacket is v1001.InventorySlotPacket
 

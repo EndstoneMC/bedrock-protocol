@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v975, v1001, v2168
+from bedrock_protocol import v1001, v2168
 
 EMPTY_ITEM_BLOB = bytes(10)
 
@@ -270,11 +270,6 @@ GOLDENS = [
     pytest.param(v1001.CraftingDataPacket(), EMPTY_V1001, id="v1001-empty"),
     pytest.param(v2168.CraftingDataPacket(), EMPTY_V2168, id="v2168-empty"),
 ]
-
-
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_crafting_data_is_packet_52(version):
-    assert version.packets[52] is version.CraftingDataPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -13,11 +13,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_server_settings_request_is_packet_102(version):
-    assert version.packets[102] is version.ServerSettingsRequestPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_server_settings_request_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

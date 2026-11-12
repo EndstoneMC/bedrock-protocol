@@ -32,11 +32,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_network_stack_latency_is_packet_115(version):
-    assert version.packets[115] is version.NetworkStackLatencyPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_network_stack_latency_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

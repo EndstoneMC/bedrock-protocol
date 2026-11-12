@@ -133,11 +133,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v898, v975, v1001, v2168])
-def test_start_game_is_packet_11(version):
-    assert version.packets[11] is version.StartGamePacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_start_game_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

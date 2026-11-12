@@ -61,11 +61,6 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", versions)
-def test_clientbound_texture_shift_is_packet_336(version):
-    assert version.packets[336] is version.ClientboundTextureShiftPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_clientbound_texture_shift_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

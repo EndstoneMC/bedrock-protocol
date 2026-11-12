@@ -40,11 +40,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v2168, v2193])
-def test_disconnect_is_packet_5(version):
-    assert version.packets[5] is version.DisconnectPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_disconnect_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

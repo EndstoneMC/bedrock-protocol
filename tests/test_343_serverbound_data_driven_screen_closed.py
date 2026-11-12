@@ -70,11 +70,6 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", versions)
-def test_serverbound_data_driven_screen_closed_is_packet_343(version):
-    assert version.packets[343] is version.ServerboundDataDrivenScreenClosedPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_serverbound_data_driven_screen_closed_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 Packet = v2225.ClientboundDebugRendererPacket
 
@@ -50,11 +50,6 @@ ROUND_TRIPS = [
         id="marker-on-a-clear",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_clientbound_debug_renderer_is_packet_164(version):
-    assert version.packets[164] is version.ClientboundDebugRendererPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

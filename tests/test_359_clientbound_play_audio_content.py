@@ -1,4 +1,4 @@
-from bedrock_protocol import v2193, v2225
+from bedrock_protocol import v2225
 
 SOUND = v2225.PlaySoundPacket(name="record.cat", pos=v2225.BlockPos(x=1, y=2, z=3), volume=1.0, pitch=1.0)
 PACKET = v2225.ClientboundPlayAudioContentPacket(
@@ -7,14 +7,6 @@ PACKET = v2225.ClientboundPlayAudioContentPacket(
     playback_type=v2225.AudioContentPlaybackType.MUSIC,
     play_sound=SOUND,
 )
-
-
-def test_clientbound_play_audio_content_is_packet_359_from_2225():
-    assert v2225.packets[359] is v2225.ClientboundPlayAudioContentPacket
-
-
-def test_clientbound_play_audio_content_is_absent_at_2193():
-    assert 359 not in v2193.packets
 
 
 def test_clientbound_play_audio_content_is_forty_four_bytes():

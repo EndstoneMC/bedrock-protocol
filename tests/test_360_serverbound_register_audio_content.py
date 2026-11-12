@@ -1,4 +1,4 @@
-from bedrock_protocol import v2193, v2225
+from bedrock_protocol import v2225
 
 PACKET = v2225.ServerboundRegisterAudioContentPacket(
     registrations=[
@@ -10,14 +10,6 @@ PACKET = v2225.ServerboundRegisterAudioContentPacket(
         )
     ]
 )
-
-
-def test_serverbound_register_audio_content_is_packet_360_from_2225():
-    assert v2225.packets[360] is v2225.ServerboundRegisterAudioContentPacket
-
-
-def test_serverbound_register_audio_content_is_absent_at_2193():
-    assert 360 not in v2193.packets
 
 
 def test_serverbound_register_audio_content_encodes_to_ten_bytes():

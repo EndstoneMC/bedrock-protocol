@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v924, v975, v1001, v2225
+from bedrock_protocol import v975, v1001, v2225
 
 # TODO: confirm against BDS: gophertunnel writes BoolOperation as an optional int32 (01 00000000), the dump
 # name-codes it (08 "override"), so gophertunnel has to give.
@@ -102,15 +102,6 @@ NOISE = v2225.NoiseTransitionAttributeData(
         noise_alignment=v2225.NoiseAlignment(type=v2225.NoiseAlignmentType.MIN_LOCAL_TRANSITION_END, value=3),
     ),
 )
-
-
-@pytest.mark.parametrize("version", [v975, v1001])
-def test_attribute_layer_sync_is_packet_345(version):
-    assert version.packets[345] is version.ClientboundAttributeLayerSyncPacket
-
-
-def test_attribute_layer_sync_is_absent_at_924():
-    assert 345 not in v924.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

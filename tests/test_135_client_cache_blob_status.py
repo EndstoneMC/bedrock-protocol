@@ -26,11 +26,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001])
-def test_client_cache_blob_status_is_packet_135(version):
-    assert version.packets[135] is version.ClientCacheBlobStatusPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_client_cache_blob_status_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

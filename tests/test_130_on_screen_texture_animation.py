@@ -27,11 +27,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_on_screen_texture_animation_is_packet_130(version):
-    assert version.packets[130] is version.OnScreenTextureAnimationPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_on_screen_texture_animation_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

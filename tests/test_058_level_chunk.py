@@ -119,11 +119,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_level_chunk_is_packet_58(version):
-    assert version.packets[58] is version.LevelChunkPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_level_chunk_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

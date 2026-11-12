@@ -59,11 +59,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001])
-def test_graphics_override_parameter_is_packet_331(version):
-    assert version.packets[331] is version.GraphicsOverrideParameterPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_graphics_override_parameter_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

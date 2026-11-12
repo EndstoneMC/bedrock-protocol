@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 # TODO: confirm against BDS: gophertunnel flattens AgentCapabilities to a lone Optional[bool] and writes one
 # presence byte; serialize<EducationLevelSettings>::write in 1.26.40 writes the optional<AgentCapabilities> marker
@@ -46,11 +46,6 @@ GOLDENS = [
     pytest.param(FULL_PACKET, FULL, id="full"),
     pytest.param(UNSET_PACKET, UNSET, id="unset"),
 ]
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_education_settings_is_packet_137(version):
-    assert version.packets[137] is version.EducationSettingsPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

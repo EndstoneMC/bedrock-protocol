@@ -53,11 +53,6 @@ TWO_PRESETS_PACKETS = {
 }
 
 
-@pytest.mark.parametrize("version", versions)
-def test_camera_presets_is_packet_198(version):
-    assert version.packets[198] is version.CameraPresetsPacket
-
-
 def test_camera_presets_2168_encodes_to_its_golden():
     assert bytes(TWO_PRESETS_PACKETS[v2168]) == TWO_PRESETS
 

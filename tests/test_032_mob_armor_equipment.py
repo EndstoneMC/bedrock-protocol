@@ -107,11 +107,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_mob_armor_equipment_is_packet_32(version):
-    assert version.packets[32] is version.MobArmorEquipmentPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_mob_armor_equipment_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

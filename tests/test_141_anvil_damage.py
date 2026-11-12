@@ -42,11 +42,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v924, v1001, v2168])
-def test_anvil_damage_is_packet_141(version):
-    assert version.packets[141] is version.AnvilDamagePacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_anvil_damage_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

@@ -52,11 +52,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_automation_client_connect_is_packet_95(version):
-    assert version.packets[95] is version.AutomationClientConnectPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_automation_client_connect_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

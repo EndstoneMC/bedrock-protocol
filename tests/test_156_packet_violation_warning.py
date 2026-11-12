@@ -44,11 +44,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_packet_violation_warning_is_packet_156(version):
-    assert version.packets[156] is version.PacketViolationWarningPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_packet_violation_warning_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

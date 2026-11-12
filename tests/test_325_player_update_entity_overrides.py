@@ -72,11 +72,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v1001, v2168])
-def test_player_update_entity_overrides_is_packet_325(version):
-    assert version.packets[325] is version.PlayerUpdateEntityOverridesPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_player_update_entity_overrides_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

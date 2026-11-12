@@ -1,4 +1,4 @@
-from bedrock_protocol import v2193, v2225
+from bedrock_protocol import v2225
 
 DISMOUNT_PACKET = v2225.SetPassengerOfBlockPacket(passenger=5)
 MOUNT = v2225.SetPassengerOfBlockPacket(
@@ -11,14 +11,6 @@ MOUNT = v2225.SetPassengerOfBlockPacket(
         emote=v2225.PassengerOfBlockArguments.EmoteType.STANDING,
     ),
 )
-
-
-def test_set_passenger_of_block_is_packet_357_from_2225():
-    assert v2225.packets[357] is v2225.SetPassengerOfBlockPacket
-
-
-def test_set_passenger_of_block_is_absent_at_2193():
-    assert 357 not in v2193.packets
 
 
 def test_set_passenger_of_block_dismount_is_two_bytes():

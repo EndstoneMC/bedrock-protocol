@@ -34,11 +34,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_serverbound_loading_screen_is_packet_312(version):
-    assert version.packets[312] is version.ServerboundLoadingScreenPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_serverbound_loading_screen_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

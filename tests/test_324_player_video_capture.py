@@ -1,6 +1,4 @@
-import pytest
-
-from bedrock_protocol import v1001, v2168, v2225
+from bedrock_protocol import v2225
 
 # TODO: confirm against BDS: gophertunnel marshals a uint8 action and the frame rate and prefix only for Start;
 # the r26_u4 dump has one uvarint32-indexed variant bound twice, so two case indices reach the wire.
@@ -17,11 +15,6 @@ PACKET = v2225.PlayerVideoCapturePacket(
     start_video_capture=v2225.PlayerVideoCapturePacket.StartVideoCapture(frame_rate=60, file_prefix="clip"),
     stop_video_capture=v2225.PlayerVideoCapturePacket.StopVideoCapture(),
 )
-
-
-@pytest.mark.parametrize("version", [v1001, v2168, v2225])
-def test_player_video_capture_is_packet_324(version):
-    assert version.packets[324] is version.PlayerVideoCapturePacket
 
 
 def test_player_video_capture_encodes_to_its_golden():

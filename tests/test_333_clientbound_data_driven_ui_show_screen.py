@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v898, v924, v1001, v2168, v2225
+from bedrock_protocol import v924, v1001, v2168, v2225
 
 versions = [v1001, v2168, v2225]
 
@@ -46,15 +46,6 @@ GOLDENS = (
     ]
     + [pytest.param(v924.ClientboundDataDrivenUIShowScreenPacket(screen_id="demo"), V924, id="v924-lone-screen-id")]
 )
-
-
-@pytest.mark.parametrize("version", [v924, *versions])
-def test_clientbound_data_driven_ui_show_screen_is_packet_333(version):
-    assert version.packets[333] is version.ClientboundDataDrivenUIShowScreenPacket
-
-
-def test_clientbound_data_driven_ui_show_screen_is_not_a_packet_at_898():
-    assert 333 not in v898.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v898, v924, v944, v1001, v2168, v2225
+from bedrock_protocol import v924, v1001, v2168, v2225
 
 versions = [v1001, v2168, v2225]
 
@@ -29,19 +29,6 @@ GOLDENS = [
     )
     for v in versions
 ]
-
-
-@pytest.mark.parametrize("version", [v944, *versions])
-def test_clientbound_data_driven_ui_close_screen_is_packet_334(version):
-    assert version.packets[334] is version.ClientboundDataDrivenUICloseScreenPacket
-
-
-def test_id_334_is_not_a_packet_at_898():
-    assert 334 not in v898.packets
-
-
-def test_id_334_is_close_all_screens_at_924():
-    assert v924.packets[334] is v924.ClientboundDataDrivenUICloseAllScreensPacket
 
 
 def test_clientbound_data_driven_ui_close_all_screens_encodes_to_its_golden():

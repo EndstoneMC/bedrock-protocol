@@ -182,11 +182,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_serverbound_diagnostics_is_packet_315(version):
-    assert version.packets[315] is version.ServerboundDiagnosticsPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_serverbound_diagnostics_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

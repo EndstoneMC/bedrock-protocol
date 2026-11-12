@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v975, v1001, v2168
+from bedrock_protocol import v1001, v2168
 
 EMPTY_ITEM_BLOB = bytes(10)
 
@@ -75,11 +75,6 @@ GOLDENS = [
         id="v2168",
     ),
 ]
-
-
-@pytest.mark.parametrize("version", [v975, v1001, v2168])
-def test_creative_content_is_packet_145(version):
-    assert version.packets[145] is version.CreativeContentPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

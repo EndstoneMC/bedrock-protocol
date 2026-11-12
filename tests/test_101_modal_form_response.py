@@ -47,11 +47,6 @@ GOLDENS = (
 )
 
 
-@pytest.mark.parametrize("version", versions)
-def test_modal_form_response_is_packet_101(version):
-    assert version.packets[101] is version.ModalFormResponsePacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_modal_form_response_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden

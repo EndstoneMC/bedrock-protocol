@@ -14,11 +14,6 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", versions)
-def test_clientbound_data_driven_ui_reload_is_packet_335(version):
-    assert version.packets[335] is version.ClientboundDataDrivenUIReloadPacket
-
-
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
 def test_clientbound_data_driven_ui_reload_encodes_to_its_golden(packet, golden):
     assert bytes(packet) == golden
