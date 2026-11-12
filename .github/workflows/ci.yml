@@ -111,7 +111,6 @@ jobs:
             generator: Visual Studio 17 2022
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: astral-sh/setup-uv@v10.3.2
 
       - name: Install Clang ${{ matrix.llvm }} + libc++
         if: matrix.llvm
