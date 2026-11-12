@@ -3,9 +3,9 @@ container ids and types, screen options, furnace, stonecutter and trade windows,
 Not the item-stack request/response protocol -- world/inventory/network/, in item_stack.py.
 Not the legacy transaction family -- world/inventory/transaction/, in transaction.py."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uvarint32, value, varint32
+from protocol import field, int8, int16, int32, packet, sentinel, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -94,7 +94,11 @@ class ContainerEnumName(IntEnum, uint8):
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
     CRAFTER_LEVEL_ENTITY_CONTAINER = 62
     DYNAMIC_CONTAINER = 63
-    with value(since=924):
+    with value(since=924, until=944):
+        RECIPE_FOOD_CONTAINER = sentinel()
+        RECIPE_BLOCKS_CONTAINER = sentinel()
+        RECIPE_FURNACE_ITEMS_CONTAINER = sentinel()
+    with value(since=944):
         RECIPE_FOOD_CONTAINER = 64
         RECIPE_BLOCKS_CONTAINER = 65
         RECIPE_FURNACE_ITEMS_CONTAINER = 66
@@ -252,7 +256,7 @@ class InventoryLayout(IntEnum, int32):
     INVENTORY_ONLY = 1
     DEFAULT = 2
     RECIPE_BOOK_ONLY = 3
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class InventoryLeftTabIndex(IntEnum, int32):
@@ -263,7 +267,7 @@ class InventoryLeftTabIndex(IntEnum, int32):
     RECIPE_NATURE = 4
     RECIPE_SEARCH = 5
     SURVIVAL = 6
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class InventoryRightTabIndex(IntEnum, int32):
@@ -271,7 +275,7 @@ class InventoryRightTabIndex(IntEnum, int32):
     FULL_SCREEN = 1
     CRAFTING = 2
     ARMOR = 3
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class InventoryOptions:
@@ -294,14 +298,14 @@ class FurnaceLeftTabIndex(IntEnum, int32):
     RECIPE_BLOCKS = 3
     RECIPE_SEARCH = 4
     INVENTORY = 5
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class FurnaceLayout(IntEnum, int32):
     NONE = 0
     INVENTORY_ONLY = 1
     DEFAULT = 2
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class FurnaceOptions:
@@ -317,7 +321,7 @@ class SetPlayerFurnaceOptionsPacket:
         FURNACE = 1
         BLAST_FURNACE = 2
         SMOKER = 3
-        COUNT = auto()
+        COUNT = sentinel()
 
     furnace_type: FurnaceType
     furnace_options: FurnaceOptions

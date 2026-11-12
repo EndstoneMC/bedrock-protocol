@@ -1,9 +1,9 @@
 """The item as a subject: world/item/ -- the registry, the stack descriptors and the
 net ids they carry, the hand slots, trims, cooldowns, book editing."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, sentinel, type, uint8, uint16, uvarint32, value, varint32
 from protocol.common import BlockRuntimeId
 from protocol.nbt import CompoundTag
 
@@ -14,7 +14,7 @@ java_package = "dev.endstone.protocol"
 class HandSlot(IntEnum, uint8):
     MAINHAND = 0
     OFFHAND = 1
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class ItemVersion(IntEnum, int32):

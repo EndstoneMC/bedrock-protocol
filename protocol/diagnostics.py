@@ -3,7 +3,7 @@ frame and system timings, plus debug/ markers and the editor channel."""
 
 from enum import IntEnum, auto
 
-from protocol import field, packet, type, uint8, uint64, value
+from protocol import field, packet, sentinel, type, uint8, uint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
 from protocol.nbt import CompoundTag
@@ -135,7 +135,7 @@ class MemoryCategory(IntEnum, uint8):
         GAMEFACE_SCRIPT = auto()
         GAMEFACE_LAYOUT = auto()
     EXECUTABLE = value(since=2225)
-    MEMORY_CATEGORY_COUNT = auto()
+    MEMORY_CATEGORY_COUNT = sentinel()
 
 
 @type(since=924)

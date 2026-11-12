@@ -97,9 +97,9 @@ def test_a_nested_enum_that_gates_a_member_is_a_type_per_snapshot():
     [
         pytest.param(v827.ItemUseInventoryTransaction.ActionType, 3, id="v827-action-type"),
         pytest.param(v844.ItemUseInventoryTransaction.ActionType, 4, id="v844-action-type"),
-        pytest.param(v748.MovementEffectType, 3, id="v748-movement-effect"),
-        pytest.param(v786.MovementEffectType, 4, id="v786-movement-effect"),
-        pytest.param(v1001.MovementEffectType, 5, id="v1001-movement-effect"),
+        pytest.param(v748.MovementEffectType, 2, id="v748-movement-effect"),
+        pytest.param(v786.MovementEffectType, 3, id="v786-movement-effect"),
+        pytest.param(v1001.MovementEffectType, 4, id="v1001-movement-effect"),
     ],
 )
 def test_a_versioned_enum_holds_the_members_of_its_snapshot(enum, count):
@@ -113,8 +113,8 @@ def test_a_member_added_later_is_absent_before_it():
 @pytest.mark.parametrize(
     ("member", "value"),
     [
-        pytest.param(v975.MovementEffectType.COUNT, 2, id="v975"),
-        pytest.param(v1001.MovementEffectType.COUNT, 3, id="v1001"),
+        pytest.param(v786.MolangVersion.NUM_VALID_VERSIONS, 13, id="v786"),
+        pytest.param(v827.MolangVersion.NUM_VALID_VERSIONS, 14, id="v827"),
     ],
 )
 def test_a_trailing_count_follows_the_members_of_its_snapshot(member, value):
@@ -160,3 +160,11 @@ def test_the_trailing_undefined_sentinel_follows_the_members_of_its_snapshot(mem
 
 def test_2168_adds_three_level_sound_events():
     assert len(v2168.LevelSoundEvent) == len(v1001.LevelSoundEvent) + 3
+
+
+def test_a_sentinel_is_no_member():
+    assert "COUNT" not in v2225.InventoryLayout.__members__
+
+
+def test_the_number_of_a_sentinel_is_no_member():
+    assert 4 not in v2225.InventoryLayout

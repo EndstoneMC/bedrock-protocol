@@ -1,8 +1,8 @@
 """Legacy telemetry events and the MinecraftEventing enum namespace: Events/."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int16, int32, packet, type, uint8, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, sentinel, type, uint8, uvarint32, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
@@ -115,7 +115,7 @@ class MinecraftEventing:
             DIAMONDS = 125
             PLETHORA_OF_CATS = 126
         WHAT_GOES_AROUND_COMES_AROUND = value(127, since=2225)
-        COUNT = auto()
+        COUNT = sentinel()
 
     class POIBlockInteractionType(IntEnum, uint8):
         NONE = 0

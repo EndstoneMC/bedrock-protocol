@@ -391,5 +391,11 @@ def test_2168_appends_internal_update_to_the_input_flags():
     assert V2168_FLAG.INTERNAL_UPDATE == 65
 
 
-def test_the_v1001_input_flag_count_is_the_bitset_width():
-    assert V1001_FLAG.INPUT_NUM == 65
+def test_v1001_input_data_holds_its_last_flag():
+    packet = v1001.PlayerAuthInputPacket(**BODY, input_data=1 << 64)
+    assert v1001.PlayerAuthInputPacket.from_bytes(bytes(packet)) == packet
+
+
+def test_v1001_input_data_refuses_a_flag_past_its_width():
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        v1001.PlayerAuthInputPacket(**BODY, input_data=1 << 65)

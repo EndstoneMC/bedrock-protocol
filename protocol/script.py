@@ -1,9 +1,9 @@
 """The scripting surface: scripting/ -- script messages and the primitive debug shapes
 ScriptModuleMinecraft exposes."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, packet, type, uint8, uint16, uvarint64, value
+from protocol import field, packet, sentinel, type, uint8, uint16, uvarint64, value
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -40,7 +40,7 @@ class ScriptPrimitiveShapeType(IntEnum, uint8):
         PYRAMID = 7
         ELLIPSOID = 8
         CONE = 9
-    NUM_SHAPE_TYPES = auto()
+    NUM_SHAPE_TYPES = sentinel()
 
 
 class ArrowDataPayload:

@@ -1,10 +1,10 @@
 """The item-stack request/response protocol: world/inventory/network/ --
 request actions, responses, and the cereal namespace carrier."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, sentinel, type, uint8, uint16, uvarint32, value, varint32
 from protocol.common import BlockRuntimeId
 from protocol.crafting import (
     CreativeItemNetId,
@@ -138,7 +138,7 @@ class TextProcessingEventOrigin(IntEnum, int32):
     SUMMON_COMMAND = 13
     SERVER_FORM = 14
     DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI", since=975)
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 @type(since=766, until=2168)

@@ -3,7 +3,7 @@ SharedTypes/versionless/Molang/."""
 
 from enum import IntEnum, auto
 
-from protocol import int16, value
+from protocol import int16, sentinel, value
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -142,4 +142,4 @@ class ExpressionOp(IntEnum, int16):
         EASE_IN_ELASTIC = 106
         EASE_OUT_ELASTIC = 107
         EASE_IN_OUT_ELASTIC = 108
-    COUNT = auto()
+    COUNT = sentinel()

@@ -2,9 +2,9 @@
 util/HudElementsEnum.h -- forms, data-driven UI, HUD elements and the locator bar."""
 
 import uuid
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8, uint32, uvarint32, uvarint64
+from protocol import field, int32, packet, sentinel, type, uint8, uint32, uvarint32, uvarint64
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -31,13 +31,13 @@ class HudElement(IntEnum, int32):
     HORSE_HEALTH = 10
     STATUS_EFFECTS = 11
     ITEM_TEXT = 12
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class HudVisibility(IntEnum, int32):
     HIDE = 0
     RESET = 1
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 @packet(id=308, until=786)

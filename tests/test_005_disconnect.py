@@ -53,13 +53,12 @@ def test_disconnect_decodes_from_its_golden(packet, golden):
 @pytest.mark.parametrize(
     ("member", "value"),
     [
-        pytest.param(v2168.DisconnectFailReason.MAX_DISCONNECT_FAIL_REASON, 148, id="v2168-sentinel"),
+        pytest.param(v2168.DisconnectFailReason.EDITOR_NOT_ALLOWED, 147, id="v2168-editor-not-allowed"),
         pytest.param(v2193.DisconnectFailReason.MISSING_STRUCTURE_DATA, 148, id="v2193-missing-structure-data"),
         pytest.param(v2193.DisconnectFailReason.UNSUPPORTED_TRANSPORT, 149, id="v2193-unsupported-transport"),
-        pytest.param(v2193.DisconnectFailReason.MAX_DISCONNECT_FAIL_REASON, 150, id="v2193-sentinel"),
     ],
 )
-def test_2193_appends_two_fail_reasons_ahead_of_the_sentinel(member, value):
+def test_2193_appends_two_fail_reasons_after_editor_not_allowed(member, value):
     assert member == value
 
 

@@ -1,10 +1,10 @@
 """The connection itself: network/ -- the packet id registry, login and handshake,
 disconnect, compression, blob-cache negotiation and server stats."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 from typing import Union
 
-from protocol import field, int32, packet, type, uint8, uint16, uint64, uvarint32, value, varint32
+from protocol import field, int32, packet, sentinel, type, uint8, uint16, uint64, uvarint32, value, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -274,7 +274,7 @@ class MinecraftPacketIds(IntEnum, int32):
         SERVERBOUND_CURSOR_ITEM_DRAG = 358
         CLIENTBOUND_PLAY_AUDIO_CONTENT = 359
         SERVERBOUND_REGISTER_AUDIO_CONTENT = 360
-    END_ID = auto()
+    END_ID = sentinel()
 
 
 class DisconnectFailReason(IntEnum, int32):
@@ -436,7 +436,7 @@ class DisconnectFailReason(IntEnum, int32):
         MISSING_STRUCTURE_DATA = 148
         UNSUPPORTED_TRANSPORT = 149
     SUB_CLIENT_LOGIN_NOT_BOUND = value(150, since=2225)
-    MAX_DISCONNECT_FAIL_REASON = auto()
+    MAX_DISCONNECT_FAIL_REASON = sentinel()
 
 
 class PacketViolationType(IntEnum, int32):

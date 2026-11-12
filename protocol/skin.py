@@ -2,9 +2,9 @@
 world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
 
 import uuid
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import array, field, int8, packet, type, uint8, uint32, uvarint32, value
+from protocol import array, field, int8, packet, sentinel, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import Color
 
@@ -15,8 +15,8 @@ java_package = "dev.endstone.protocol"
 class ArmSizeType(IntEnum, uint8):
     SLIM = 0
     WIDE = 1
-    COUNT = auto()
-    UNKNOWN = 3
+    COUNT = sentinel()
+    UNKNOWN = sentinel()
 
 
 class PieceType(IntEnum, uint32):
@@ -49,8 +49,10 @@ class PieceType(IntEnum, uint32):
     CLASSIC_SKIN = 26
     EMOTE = 27
     CO_CO = value(28, since=2225)
-    UNSUPPORTED = auto()
-    COUNT = auto()
+    with value(until=2168):
+        UNSUPPORTED = sentinel()
+    UNSUPPORTED = value(since=2168)
+    COUNT = sentinel()
 
 
 @type(cereal=False)

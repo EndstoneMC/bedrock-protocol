@@ -11,6 +11,7 @@ from bedrock_protocol_compiler.dsl import (
     int32,
     int64,
     packet,
+    sentinel,
     type,
     uint8,
     uint16,

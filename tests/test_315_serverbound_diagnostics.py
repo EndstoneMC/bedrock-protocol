@@ -201,8 +201,6 @@ def test_the_memory_categories_are_renumbered_at_2168():
 @pytest.mark.parametrize(
     ("member", "value"),
     [
-        pytest.param(v1001.MemoryCategory.MEMORY_CATEGORY_COUNT, 92, id="v1001-count"),
-        pytest.param(v2168.MemoryCategory.MEMORY_CATEGORY_COUNT, 111, id="v2168-count"),
         pytest.param(v1001.MemoryCategory.BIOME_STORAGE, 6, id="v1001-biome-storage"),
         pytest.param(v2168.MemoryCategory.BIOME_STORAGE, 6, id="v2168-biome-storage"),
         pytest.param(v1001.MemoryCategory.CEREAL, 7, id="v1001-cereal"),
@@ -228,10 +226,8 @@ def test_the_memory_category_ordinals_move_at_2168(member, value):
     ("member", "value"),
     [
         pytest.param(v2193.MemoryCategory.GAMEFACE_LAYOUT, 109, id="v2193-gameface-layout"),
-        pytest.param(v2193.MemoryCategory.MEMORY_CATEGORY_COUNT, 110, id="v2193-count"),
         pytest.param(v2225.MemoryCategory.GAMEFACE_LAYOUT, 109, id="v2225-gameface-layout"),
         pytest.param(v2225.MemoryCategory.EXECUTABLE, 110, id="v2225-executable"),
-        pytest.param(v2225.MemoryCategory.MEMORY_CATEGORY_COUNT, 111, id="v2225-count"),
     ],
 )
 def test_the_memory_categories_gain_executable_at_2225(member, value):

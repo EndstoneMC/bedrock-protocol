@@ -1,8 +1,8 @@
 """Biome definitions as serialized to the client: world/level/biome/serialization/."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8, uint16, uint32, value, varint32
+from protocol import field, int32, packet, sentinel, type, uint8, uint16, uint32, value, varint32
 from protocol.common import BlockRuntimeId
 from protocol.molang import ExpressionOp
 from protocol.nbt import CompoundTag
@@ -25,7 +25,7 @@ class BiomeTemperatureCategory(IntEnum, uint8):
     LUKEWARM = 2
     COLD = 3
     FROZEN = 4
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class CoordinateEvaluationOrder(IntEnum, int32):

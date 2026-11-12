@@ -283,10 +283,8 @@ def test_a_2225_skin_round_trips(minimal_2225):
     ("member", "value"),
     [
         pytest.param(v2168.PieceType.UNSUPPORTED, 28, id="v2168-unsupported"),
-        pytest.param(v2168.PieceType.COUNT, 29, id="v2168-count"),
         pytest.param(v2225.PieceType.CO_CO, 28, id="v2225-coco"),
         pytest.param(v2225.PieceType.UNSUPPORTED, 29, id="v2225-unsupported"),
-        pytest.param(v2225.PieceType.COUNT, 30, id="v2225-count"),
     ],
 )
 def test_2225_inserts_coco_into_the_persona_piece_types(member, value):

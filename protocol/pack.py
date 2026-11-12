@@ -2,10 +2,10 @@
 pack identity, versions, the download handshake, the applied stack, pack settings."""
 
 import uuid
-from enum import IntEnum, auto
+from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int8, int32, packet, type, uint16, uint32, uint64
+from protocol import field, int8, int32, packet, sentinel, type, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
@@ -124,7 +124,7 @@ class PackType(IntEnum, int8):
     RESOURCES = 6
     SKINS = 7
     WORLD_TEMPLATE = 8
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 @packet(id=82)

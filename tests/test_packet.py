@@ -26,5 +26,5 @@ def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
         pytest.param(v2225, 361, id="v2225"),
     ],
 )
-def test_the_packet_id_range_ends_at_the_end_marker(version, end_id):
-    assert end_id == version.MinecraftPacketIds.END_ID
+def test_the_highest_packet_id_sits_just_below_the_end_marker(version, end_id):
+    assert max(version.MinecraftPacketIds) == end_id - 1

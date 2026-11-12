@@ -5,7 +5,7 @@ Not enchanting -- world/item/enchanting/, in enchanting.py."""
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int16, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, sentinel, type, uint8, uint16, uint32, uvarint32, value, varint32
 from protocol.common import BlockPos, BlockRuntimeId
 
 package = "bedrock.protocol"
@@ -20,7 +20,7 @@ class CreativeItemCategory(IntEnum, uint8):
     ITEMS = 4
     ITEM_COMMAND_ONLY = 5
     UNDEFINED = 6
-    NUM_CATEGORIES = 7, "NUM_CATEGORIES"
+    NUM_CATEGORIES = sentinel()
 
 
 class RecipeNetId:

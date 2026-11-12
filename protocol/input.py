@@ -3,7 +3,7 @@
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import bitset, field, int32, packet, type, uint32, uvarint32, value, varint32
+from protocol import bitset, field, int32, packet, sentinel, type, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import BlockPos, Vec2, Vec3
 from protocol.item import ItemStackLegacyRequestId
@@ -200,7 +200,7 @@ class PlayerAuthInputPacket:
             SNEAK_RELEASED_RAW = 62
             SNEAK_PRESSED_RAW = 63
             SNEAK_CURRENT_RAW = 64
-        INPUT_NUM = auto()
+        INPUT_NUM = sentinel()
 
     rot: Vec2
     pos: Vec3
@@ -302,7 +302,7 @@ class PlayerAuthInputPacket:
         SNEAK_PRESSED_RAW = 63
         SNEAK_CURRENT_RAW = 64
         INTERNAL_UPDATE = 65
-        INPUT_NUM = 66, "INPUT_NUM"
+        INPUT_NUM = sentinel()
 
     rot: Vec2
     pos: Vec3

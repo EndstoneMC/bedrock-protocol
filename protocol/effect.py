@@ -1,8 +1,8 @@
 """Status and movement effects applied to an actor: world/effect/."""
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
-from protocol import field, int32, packet, uint8, uint64, value, varint32
+from protocol import field, int32, packet, sentinel, uint8, uint64, value, varint32
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
@@ -14,7 +14,7 @@ class MovementEffectType(IntEnum, int32):
     GLIDE_BOOST = 0
     DOLPHIN_BOOST = value(1, since=776)
     GEYSER_BOOST = value(2, since=1001)
-    COUNT = auto()
+    COUNT = sentinel()
 
 
 class EffectDuration:
