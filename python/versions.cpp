@@ -88,8 +88,9 @@ void init_versions(nb::module_ &parent)
     std::vector<Version> bound;
     for (const int number : versions) {
         auto module = parent.def_submodule(std::format("v{}", number).c_str());
-        auto legacy = module.def_submodule("legacy", "The pre-cereal shapes, where one name has two encodings.");
-        bound.push_back({.number = number, .module = module, .legacy = legacy});
+        auto pre_cereal =
+            module.def_submodule("pre_cereal", "The pre-cereal shapes, where one name has two encodings.");
+        bound.push_back({.number = number, .module = module, .pre_cereal = pre_cereal});
     }
     init_types(bound);
     for (Version &version : bound) {
@@ -125,7 +126,7 @@ void init_versions(nb::module_ &parent)
         nb::list all;
         for (nb::handle name : m.attr("__dict__")) {
             const std::string_view text = nb::borrow<nb::str>(name).c_str();
-            if (!text.starts_with('_') && text != "legacy") {
+            if (!text.starts_with('_') && text != "pre_cereal") {
                 all.append(name);
             }
         }

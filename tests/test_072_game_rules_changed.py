@@ -33,7 +33,7 @@ LEGACY_RULE = bytes.fromhex("156d6178636f6d6d616e64636861696e6c656e6774680002fef
 RULE = bytes.fromhex("156d6178636f6d6d616e64636861696e6c656e6774680002feff0100")
 
 RULE_GOLDENS = [
-    pytest.param(v1001.legacy.GameRule(name="maxcommandchainlength", value=131070), LEGACY_RULE, id="legacy"),
+    pytest.param(v1001.pre_cereal.GameRule(name="maxcommandchainlength", value=131070), LEGACY_RULE, id="pre_cereal"),
     pytest.param(v2225.GameRule(name="maxcommandchainlength", value=131070), RULE, id="v2225"),
 ]
 
@@ -92,7 +92,7 @@ def test_game_rules_changed_before_844_is_a_shape_of_its_own():
 
 
 def test_the_legacy_rule_is_a_shape_of_its_own():
-    assert v1001.legacy.GameRule is not v2225.GameRule
+    assert v1001.pre_cereal.GameRule is not v2225.GameRule
 
 
 @pytest.mark.parametrize(("rule", "golden"), RULE_GOLDENS)

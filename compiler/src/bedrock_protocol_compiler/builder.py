@@ -87,7 +87,7 @@ class Source:
     package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
     order: list[Family] = field(default_factory=list)
-    legacies: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
+    pre_cereal_shapes: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
     unions: dict[str, "UnionAlias"] = field(default_factory=dict)
     family_imports: list[ast.ImportFrom] = field(default_factory=list)
 
@@ -286,7 +286,7 @@ class Builder:
         self.versions: tuple[int, ...] = ()
         self.homes: dict[tuple[str, bool], Source] = {}
         self.packets: dict[int, list[tuple[Struct, Range]]] = {}
-        self.legacies: dict[Struct | Enum, Struct | Enum] = {}
+        self.pre_cereal_shapes: dict[Struct | Enum, Struct | Enum] = {}
         self.structs: list[PendingStruct] = []
         self.enums: list[PendingEnum] = []
         self.aliases: list[PendingAlias] = []
@@ -424,11 +424,11 @@ class Builder:
             self.add(source, source.scope, statement, alias.asname or alias.name, imported)
 
     def pair_legacies(self, source: Source) -> None:
-        for name, (node, legacy) in source.legacies.items():
+        for name, (node, pre_cereal) in source.pre_cereal_shapes.items():
             family = source.families.get(name)
-            if not isinstance(family, type(legacy)):
+            if not isinstance(family, type(pre_cereal)):
                 raise error(source, node, name, "a cereal=False declaration needs a cereal one beside it")
-            self.legacies[family] = legacy
+            self.pre_cereal_shapes[family] = pre_cereal
 
     def bind_family_imports(self, source: Source) -> None:
         for statement in source.family_imports:
@@ -489,7 +489,7 @@ class Builder:
         elif cereal:
             existing = source.families.get(node.name)
         else:
-            existing = source.legacies[node.name][1] if node.name in source.legacies else None
+            existing = source.pre_cereal_shapes[node.name][1] if node.name in source.pre_cereal_shapes else None
         family: Struct | Enum
         if existing is None:
             family = (
@@ -502,7 +502,7 @@ class Builder:
                 self.add(source, scope, node, node.name, family)
             elif not cereal:
                 self.claim(source, node, node.name, False)
-                source.legacies[node.name] = (node, family)
+                source.pre_cereal_shapes[node.name] = (node, family)
                 source.order.append(family)
             else:
                 self.declare_family(source, node, family)
@@ -856,10 +856,10 @@ class Builder:
             raise error(source, node, ast.unparse(node), "is not a type")
         target = self.resolve(source, scope, node)
         if not cereal:
-            legacy = self.legacies.get(target) if isinstance(target, Struct | Enum) else None
-            if legacy is None:
+            pre_cereal = self.pre_cereal_shapes.get(target) if isinstance(target, Struct | Enum) else None
+            if pre_cereal is None:
                 raise error(source, node, ast.unparse(node), "has no cereal=False declaration")
-            target = legacy
+            target = pre_cereal
         if isinstance(target, TypeAliasType | type) and target in PRIMITIVES:
             return Primitive(PRIMITIVES[target])
         if target is uuid.UUID:

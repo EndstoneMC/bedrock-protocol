@@ -459,9 +459,9 @@ void bind_schema_types(std::span<const Version> bound)
         (
             [&]<typename... C, typename... L>(const Version &version, type_list<C...>, type_list<L...>) {
                 (bind_type<C>(version.module, &version), ...);
-                (bind_type<L>(version.legacy, &version), ...);
+                (bind_type<L>(version.pre_cereal, &version), ...);
             }(bound[newest - I], typename Types<versions[newest - I]>::cereal{},
-              typename Types<versions[newest - I]>::legacy{}),
+              typename Types<versions[newest - I]>::pre_cereal{}),
             ...);
     }(std::make_index_sequence<versions.size()>{});
 }

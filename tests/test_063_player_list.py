@@ -89,7 +89,7 @@ V2168_ADD = bytes.fromhex(
 V2168_REMOVE_ZERO_UUID = bytes.fromhex("01000100000000000000000000000000000000")
 
 
-V1001_SKIN = v1001.legacy.SerializedSkinRef(
+V1001_SKIN = v1001.pre_cereal.SerializedSkinRef(
     id="sid",
     play_fab_id="pfid",
     resource_patch="patch",
@@ -214,7 +214,7 @@ def test_player_list_changes_shape_at_2168():
 
 
 def test_the_legacy_skin_is_not_the_1001_skin():
-    assert v1001.legacy.SerializedSkinRef is not v1001.SerializedSkinRef
+    assert v1001.pre_cereal.SerializedSkinRef is not v1001.SerializedSkinRef
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

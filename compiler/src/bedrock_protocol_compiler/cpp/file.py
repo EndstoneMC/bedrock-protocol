@@ -195,13 +195,13 @@ class FileGenerator:
         plans: list[tuple[int | None, list[str], list[str]]] = []
         for version in self.schema.versions:
             cereal: list[str] = []
-            legacy: list[str] = []
+            pre_cereal: list[str] = []
             for family in self.families:
                 shape = self.schema.live.get((family, version))
                 if shape is not None:
-                    (cereal if family.cereal else legacy).extend(listed(self.schema, shape))
-            if not plans or plans[-1][1:] != (cereal, legacy):
-                plans.append((version if plans else None, cereal, legacy))
+                    (cereal if family.cereal else pre_cereal).extend(listed(self.schema, shape))
+            if not plans or plans[-1][1:] != (cereal, pre_cereal):
+                plans.append((version if plans else None, cereal, pre_cereal))
         if len(plans) > 1:
             p.emit(
                 """
@@ -211,7 +211,7 @@ class FileGenerator:
                 """,
                 name=name,
             )
-        for index, (since, cereal, legacy) in enumerate(plans):
+        for index, (since, cereal, pre_cereal) in enumerate(plans):
             until = plans[index + 1][0] if index + 1 < len(plans) else None
             if len(plans) == 1:
                 p.emit("template <int V>")
@@ -220,7 +220,7 @@ class FileGenerator:
                 p.emit("template <int V> requires ($clause$)", clause=names.clause(Range(since, until)))
                 p.emit("struct $name$<V> {", name=name)
             with p.indent():
-                for member, entries in (("cereal", cereal), ("legacy", legacy)):
+                for member, entries in (("cereal", cereal), ("pre_cereal", pre_cereal)):
                     if not entries:
                         p.emit("using $member$ = type_list<>;", member=member)
                         continue

@@ -93,8 +93,8 @@ SETTINGS = {
 }
 
 LEGACY_RULES = [
-    v1001.legacy.GameRule(name="dodaylightcycle", value=True),
-    v1001.legacy.GameRule(name="maxcommandchainlength", value=131070),
+    v1001.pre_cereal.GameRule(name="dodaylightcycle", value=True),
+    v1001.pre_cereal.GameRule(name="maxcommandchainlength", value=131070),
 ]
 
 RULE_DATA = v2168.GameRulesChangedPacketData(

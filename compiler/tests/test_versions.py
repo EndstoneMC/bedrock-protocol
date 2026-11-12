@@ -210,9 +210,9 @@ def test_the_legacy_flavour_is_redeclared_beside_its_cereal_family(build_package
         }
     )
 
-    legacy = package.modules[0].families[1]
+    pre_cereal = package.modules[0].families[1]
 
-    assert [declaration.range for declaration in legacy.declarations] == [Range(None, 2), Range(2, None)]
+    assert [declaration.range for declaration in pre_cereal.declarations] == [Range(None, 2), Range(2, None)]
 
 
 def test_nested_families_merge_across_owner_redeclarations(build_package):

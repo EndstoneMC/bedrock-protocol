@@ -185,7 +185,7 @@ BODY = {
 V1001_FLAG = v1001.PlayerAuthInputPacket.InputData
 V2168_FLAG = v2168.PlayerAuthInputPacket.InputData
 
-V1001_ITEM_TRANSACTION = v1001.legacy.ItemUseInventoryTransaction(
+V1001_ITEM_TRANSACTION = v1001.pre_cereal.ItemUseInventoryTransaction(
     actions=[
         v1001.InventoryAction(
             source=v1001.InventorySource(type=v1001.InventorySourceType.CONTAINER_INVENTORY, container_id=7),

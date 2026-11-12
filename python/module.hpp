@@ -20,7 +20,7 @@ struct Codec {
 struct Version {
     int number;
     nb::handle module;
-    nb::handle legacy;
+    nb::handle pre_cereal;
     nb::dict packets;
 };
 

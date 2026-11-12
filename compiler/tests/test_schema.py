@@ -192,10 +192,10 @@ def test_a_struct_that_reaches_a_legacy_family_does_not_change_with_the_cereal_o
         + "class A:\n    b: B = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
-    cereal, legacy, a = schema.order
+    cereal, pre_cereal, a = schema.order
 
     assert len(schema.shapes(cereal)) == 2
-    assert len(schema.shapes(legacy)) == 1
+    assert len(schema.shapes(pre_cereal)) == 1
     assert len(schema.shapes(a)) == 1
 
 

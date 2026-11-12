@@ -68,7 +68,7 @@ V2168_MINIMAL = bytes.fromhex(
     "00000000000000000000000000000000000566616c73650468617368036e6577036f6c64"
 )
 
-V924_SKIN = v924.legacy.SerializedSkinRef(
+V924_SKIN = v924.pre_cereal.SerializedSkinRef(
     id="sid",
     play_fab_id="pfid",
     resource_patch="patch",

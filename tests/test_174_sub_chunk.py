@@ -56,7 +56,7 @@ GOLDENS = [
         v1001.SubChunkPacket(
             cache_enabled=False,
             dimension_type=1,
-            center_pos=v1001.legacy.SubChunkPos(x=1, y=2, z=3),
+            center_pos=v1001.pre_cereal.SubChunkPos(x=1, y=2, z=3),
             uncached_sub_chunk_data=[
                 v1001.SubChunkPacket.UncachedSubChunkPacketData(
                     sub_chunk_pos_offset=v1001.SubChunkPacket.SubChunkPosOffset(x=-1, y=0, z=1),
@@ -76,7 +76,7 @@ GOLDENS = [
         v1001.SubChunkPacket(
             cache_enabled=True,
             dimension_type=1,
-            center_pos=v1001.legacy.SubChunkPos(x=1, y=2, z=3),
+            center_pos=v1001.pre_cereal.SubChunkPos(x=1, y=2, z=3),
             sub_chunk_data=[
                 v1001.SubChunkPacket.SubChunkPacketData(
                     sub_chunk_pos_offset=v1001.SubChunkPacket.SubChunkPosOffset(x=-1, y=0, z=1),
@@ -156,7 +156,7 @@ def test_sub_chunk_is_unchanged_between_v975_and_v1001():
     packet = v975.SubChunkPacket(
         cache_enabled=False,
         dimension_type=1,
-        center_pos=v975.legacy.SubChunkPos(x=1, y=2, z=3),
+        center_pos=v975.pre_cereal.SubChunkPos(x=1, y=2, z=3),
         uncached_sub_chunk_data=[
             v975.SubChunkPacket.UncachedSubChunkPacketData(
                 sub_chunk_pos_offset=v975.SubChunkPacket.SubChunkPosOffset(x=-1, y=0, z=1),

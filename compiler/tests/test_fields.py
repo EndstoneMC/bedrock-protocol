@@ -201,11 +201,11 @@ def test_cereal_false_declares_a_second_flavour_of_the_name(build_package):
     source = HEADER + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    y: uint16\n"
     package = build_package({"a": source})
 
-    cereal, legacy = package.modules[0].families
+    cereal, pre_cereal = package.modules[0].families
 
-    assert (cereal.cereal, legacy.cereal) == (True, False)
+    assert (cereal.cereal, pre_cereal.cereal) == (True, False)
     assert [field.name for field in cereal.declarations[0].fields] == ["x"]
-    assert [field.name for field in legacy.declarations[0].fields] == ["y"]
+    assert [field.name for field in pre_cereal.declarations[0].fields] == ["y"]
 
 
 def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_package):
@@ -218,15 +218,15 @@ def test_field_cereal_false_reaches_the_legacy_family_through_containers(build_p
     )
     package = build_package({"a": source})
 
-    cereal, legacy, _ = package.modules[0].families
+    cereal, pre_cereal, _ = package.modules[0].families
 
     assert field_types(package) == [
         StructRef(cereal),
-        StructRef(legacy),
-        Optional(List(StructRef(legacy), Primitive("uvarint32"))),
-        Map(StructRef(legacy), StructRef(legacy)),
-        Variant((StructRef(legacy), None)),
-        Array(StructRef(legacy), 2),
+        StructRef(pre_cereal),
+        Optional(List(StructRef(pre_cereal), Primitive("uvarint32"))),
+        Map(StructRef(pre_cereal), StructRef(pre_cereal)),
+        Variant((StructRef(pre_cereal), None)),
+        Array(StructRef(pre_cereal), 2),
     ]
 
 
@@ -238,9 +238,9 @@ def test_cereal_false_enum_name_codes_through_type(build_package):
     )
     package = build_package({"a": source})
 
-    legacy = package.modules[0].families[1]
+    pre_cereal = package.modules[0].families[1]
 
-    assert field_types(package) == [EnumName(legacy)]
+    assert field_types(package) == [EnumName(pre_cereal)]
 
 
 def test_cereal_false_family_imports_by_its_cereal_name(build_package):
@@ -250,9 +250,9 @@ def test_cereal_false_family_imports_by_its_cereal_name(build_package):
     }
     package = build_package(modules)
 
-    legacy = package.modules[0].families[1]
+    pre_cereal = package.modules[0].families[1]
 
-    assert field_types(package, 1) == [StructRef(legacy)]
+    assert field_types(package, 1) == [StructRef(pre_cereal)]
 
 
 @pytest.mark.parametrize(
@@ -294,9 +294,9 @@ def test_a_class_nested_in_a_legacy_owner_is_legacy(build_package):
     source = HEADER + "class B:\n    pass\n\n@type(cereal=False)\nclass B:\n    class C:\n        pass\n"
     package = build_package({"a": source})
 
-    cereal, legacy = package.modules[0].families
+    cereal, pre_cereal = package.modules[0].families
 
-    assert [family.cereal for family in legacy.nested] == [False]
+    assert [family.cereal for family in pre_cereal.nested] == [False]
     assert cereal.nested == []
     assert [family.name for family in package.modules[0].families] == ["B", "B"]
 
@@ -309,7 +309,7 @@ def test_a_legacy_declared_before_its_cereal_sibling_is_reached(build_package):
     )
     package = build_package({"a": source})
 
-    legacy, cereal, _ = package.modules[0].families
+    pre_cereal, cereal, _ = package.modules[0].families
 
-    assert (cereal.cereal, legacy.cereal) == (True, False)
-    assert field_types(package) == [StructRef(legacy)]
+    assert (cereal.cereal, pre_cereal.cereal) == (True, False)
+    assert field_types(package) == [StructRef(pre_cereal)]
