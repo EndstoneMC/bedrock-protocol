@@ -64,6 +64,7 @@ class Build:
     stream: Stream
     slots: Slots
     result_ok: int
+    run_events: int
 
 
 BUILDS = {
@@ -80,6 +81,7 @@ BUILDS = {
         stream=Stream(view=0x20, read_pointer=0x30, overflowed=0x38, buffer=0x40, size=0x48),
         slots=Slots(write_with_mode=6, write=7, read=9, serialization_mode=13, to_string=15),
         result_ok=0x40,
+        run_events=0x8597890,
     ),
 }
 
@@ -309,7 +311,9 @@ def main() -> None:
                 if not listener.WaitForEvent(STOP_TIMEOUT, event):
                     raise RuntimeError(f"bedrock_server: not stopped {STOP_TIMEOUT}s after Stop")
             server.debugger.SetAsync(False)
-            server.frame = server.stop_at(server.target.BreakpointCreateByName("nanosleep"))
+            server.frame = server.stop_at(
+                server.target.BreakpointCreateBySBAddress(server.target.ResolveFileAddress(build.run_events))
+            )
             ctx = server.u64(server_network_system + build.reflection_ctx)
             if server.u64(ctx) != server.address(build.reflection_ctx_vtable):
                 raise RuntimeError(f"reflection_ctx: {ctx:#x} is not a cereal::ReflectionCtx")

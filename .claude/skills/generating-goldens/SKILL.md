@@ -18,7 +18,7 @@ Where a golden goes and how it is labelled is `.claude/rules/tests.md`; this is 
 
 ## When it goes wrong
 
-- `no build in BUILDS has sha256` -> add the build to `BUILDS`, every address read from that binary: `create_packet` by its byte signature (the id switch behind `cmp esi, <highest id>`); each vtable by its RTTI name; `server_network_system` as the constructor that stores `ServerNetworkSystem`'s vtable, and `reflection_ctx` as where its `NetworkSystem` base keeps the `make_unique<cereal::ReflectionCtx>()` result; `stream` and `result_ok` from what slot 9 reads; the slots from `Packet.h` at the era's bedrock-headers branch, checked on one packet's vtable.
+- `no build in BUILDS has sha256` -> add the build to `BUILDS`, every address read from that binary: `create_packet` by its byte signature (the id switch behind `cmp esi, <highest id>`); each vtable by its RTTI name; `server_network_system` as the constructor that stores `ServerNetworkSystem`'s vtable, and `reflection_ctx` as where its `NetworkSystem` base keeps the `make_unique<cereal::ReflectionCtx>()` result; `run_events` as `NetworkSystem::runEvents`, the function that loads the string `NetworkSystem::runEvents task`; `stream` and `result_ok` from what slot 9 reads; the slots from `Packet.h` at the era's bedrock-headers branch, checked on one packet's vtable.
 - `--lldb: no lldb-server beside` -> pass `--lldb` an lldb installed with its `lldb-server`.
 - `no 'Server started.'` or `before 'Server started.'` -> read `<dir>/bds.log`.
 - `createPacket builds nothing for this id` -> add the packet's entt default constructor (it stores the packet's vtable into a fresh allocation) to `default_constructors`.
