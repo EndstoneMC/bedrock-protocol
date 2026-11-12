@@ -317,12 +317,7 @@ class ItemDescriptor:
     name: str = field(
         when=lambda d: (
             d.internal_type
-            in {
-                InternalType.MOLANG,
-                InternalType.ITEM_TAG,
-                InternalType.DEFERRED,
-                InternalType.COMPLEX_ALIAS,
-            }
+            in {InternalType.MOLANG, InternalType.ITEM_TAG, InternalType.DEFERRED, InternalType.COMPLEX_ALIAS}
         )
     )
     molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
@@ -367,10 +362,7 @@ class CraftingDataEntry:
     shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
         when=lambda e: (
             e.entry_type
-            in {
-                CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE,
-                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-            }
+            in {CraftingDataEntryType.SHAPELESS_CHEMISTRY_RECIPE, CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE}
         )
     )
     shaped_recipe: ShapedRecipePayload = field(when=lambda e: e.entry_type == CraftingDataEntryType.SHAPED_RECIPE)
@@ -385,23 +377,11 @@ class CraftingDataEntry:
         when=lambda e: e.entry_type == CraftingDataEntryType.SMITHING_TRIM_RECIPE
     )
     item_data: varint32 = field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        )
+        when=lambda e: e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
     )
     item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE)
     with field(
-        when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.FURNACE_RECIPE,
-                CraftingDataEntryType.FURNACE_AUX_RECIPE,
-            }
-        )
+        when=lambda e: e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
     ):
         item_result: SerializedNetworkItemInstanceDescriptor
         tag: str
@@ -412,11 +392,7 @@ class CraftingDataEntry:
     entry_type: CraftingDataEntryType
     shapeless_recipe: ShapelessRecipePayload = field(
         when=lambda e: (
-            e.entry_type
-            in {
-                CraftingDataEntryType.SHAPELESS_RECIPE,
-                CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE,
-            }
+            e.entry_type in {CraftingDataEntryType.SHAPELESS_RECIPE, CraftingDataEntryType.USER_DATA_SHAPELESS_RECIPE}
         )
     )
     shapeless_chemistry_recipe: ShapelessChemistryRecipePayload = field(
@@ -436,29 +412,17 @@ class CraftingDataEntry:
     with field(until=975):
         item_data: varint32 = field(
             when=lambda e: (
-                e.entry_type
-                in {
-                    CraftingDataEntryType.FURNACE_RECIPE,
-                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
-                }
+                e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
             )
         )
         item_aux: varint32 = field(when=lambda e: e.entry_type == CraftingDataEntryType.FURNACE_AUX_RECIPE)
         item_result: SerializedNetworkItemInstanceDescriptor = field(
             when=lambda e: (
-                e.entry_type
-                in {
-                    CraftingDataEntryType.FURNACE_RECIPE,
-                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
-                }
+                e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
             )
         )
         tag: str = field(
             when=lambda e: (
-                e.entry_type
-                in {
-                    CraftingDataEntryType.FURNACE_RECIPE,
-                    CraftingDataEntryType.FURNACE_AUX_RECIPE,
-                }
+                e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
             )
         )
