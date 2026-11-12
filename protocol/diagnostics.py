@@ -13,10 +13,10 @@ package = "bedrock.protocol"
 
 class MemoryCategory(IntEnum, uint8):
     UNKNOWN = 0
-    INVALID_SIZE_UNKNOWN = auto()
-    ACTOR = auto()
-    ACTOR_ANIMATION = auto()
-    ACTOR_RENDERING = auto()
+    INVALID_SIZE_UNKNOWN = 1
+    ACTOR = 2
+    ACTOR_ANIMATION = 3
+    ACTOR_RENDERING = 4
     BALANCER = value(until=944)
     BLOCK_TICKING_QUEUES = auto()
     BIOME_STORAGE = auto()

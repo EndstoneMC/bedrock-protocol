@@ -15,7 +15,7 @@ class ArmSizeType(IntEnum, uint8):
     SLIM = 0
     WIDE = 1
     COUNT = auto()
-    UNKNOWN = auto()
+    UNKNOWN = 3
 
 
 class PieceType(IntEnum, uint32):
