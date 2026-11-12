@@ -139,6 +139,7 @@ FIXED: dict[str, Json] = {
     "SemVersion.version": "1.2.3",
     "PackInstanceId.version": "2.3.4",
     "ResourcePackStackPacket.base_game_version": "1.21.0",
+    "LevelSettings.base_game_version": "1.21.0",
     "ExperimentToggle.name": "gametest",
     "ExperimentToggle.enabled": True,
     "Experiments.experiments_ever_toggled": True,
