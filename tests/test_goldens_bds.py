@@ -334,11 +334,19 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
         ("CameraSplineDefinition", "name", "test:spline"),
         ("CameraSplineDefinition", "spline_type", "linear"),
         ("ServerToClientHandshakePacket", "token", "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln"),
+        ("ModalFormResponsePacket", "json_response", "null\n"),
+        ("SerializedSkinRef", "geometry_data", "null\n"),
+        ("NpcDialoguePacket", "action_json", "[]"),
+        ("SpawnParticleEffectPacket", "molang_variables", "[]\n"),
     ],
     ids=[
         "spline-name",
         "spline-type",
         "handshake-token",
+        "form-response",
+        "skin-geometry",
+        "npc-actions",
+        "molang-variables",
     ],
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):
