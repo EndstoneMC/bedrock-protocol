@@ -1,0 +1,18 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "preset_id": "s1",
+   "view_angle": {
+    "x": 45.5,
+    "y": 30.25
+   },
+   "distance": 8.0,
+   "target_mode": "ANGLE",
+   "action": "CLEAR",
+   "show_debug_render": true
+  },
+  "bytes": "027331000036420000f24100000041000101"
+ }
+]

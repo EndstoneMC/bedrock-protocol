@@ -342,5 +342,638 @@
    ]
   },
   "bytes": "01bd9c03010b0da2cf011201030304733433322b6901047334333409000000"
+ },
+ {
+  "id": "v7",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "TakeActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "ANVIL_MATERIAL_CONTAINER",
+          "dynamic_id": 462
+         },
+         "slot": 22,
+         "net_id_variant": 724
+        },
+        "destination": {
+         "full_container_name": {
+          "name": "SMITHING_TABLE_RESULT_PREVIEW_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 43,
+         "net_id_variant": 1117
+        }
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s8"
+     ],
+     "strings_to_filter_origin": "LEAVE_EVENT_TEXT"
+    }
+   ]
+  },
+  "bytes": "0109010000020101ce01000016d402000005002b5d0400000102733808000000"
+ },
+ {
+  "id": "v8",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "PlaceActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "BREWING_STAND_RESULT_CONTAINER",
+          "dynamic_id": 1641
+         },
+         "slot": 85,
+         "net_id_variant": 1903
+        },
+        "destination": {
+         "full_container_name": {
+          "name": "CRAFTING_OUTPUT_PREVIEW_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 6,
+         "net_id_variant": 2296
+        }
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s17"
+     ],
+     "strings_to_filter_origin": "SERVER_CHAT_PUBLIC"
+    }
+   ]
+  },
+  "bytes": "0109010101020a0169060000556f0700000e0006f8080000010373313700000000"
+ },
+ {
+  "id": "v11",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "SwapActionData": {
+        "source": {
+         "full_container_name": {
+          "name": "RECIPE_SEARCH_BAR_CONTAINER",
+          "dynamic_id": 2820
+         },
+         "slot": 48,
+         "net_id_variant": 3082
+        },
+        "destination": {
+         "full_container_name": {
+          "name": "ENCHANTING_MATERIAL_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 69,
+         "net_id_variant": 3475
+        }
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s26"
+     ],
+     "strings_to_filter_origin": "SLASH_COMMAND_CHAT"
+    }
+   ]
+  },
+  "bytes": "01090102021301040b0000300a0c0000170045930d0000010373323609000000"
+ },
+ {
+  "id": "v12",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "DropActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": 3999
+         },
+         "slot": 11,
+         "net_id_variant": 4261
+        },
+        "randomly": true
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s33"
+     ],
+     "strings_to_filter_origin": "UNKNOWN"
+    }
+   ]
+  },
+  "bytes": "0109010303021c019f0f00000ba5100000010103733333ffffffff"
+ },
+ {
+  "id": "v13",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "DestroyActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "COMPOUND_CREATOR_INPUT",
+          "dynamic_id": null
+         },
+         "slot": 53,
+         "net_id_variant": 5047
+        }
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s38"
+     ],
+     "strings_to_filter_origin": "BOOK_AND_QUILL_TEXT"
+    }
+   ]
+  },
+  "bytes": "010901040402230035b7130000010373333804000000"
+ },
+ {
+  "id": "v14",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "ConsumeActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "LAB_TABLE_INPUT",
+          "dynamic_id": 5571
+         },
+         "slot": 95,
+         "net_id_variant": 5833
+        }
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s44"
+     ],
+     "strings_to_filter_origin": "CARTOGRAPHY_TEXT"
+    }
+   ]
+  },
+  "bytes": "0109010505022801c31500005fc916000001037334340a000000"
+ },
+ {
+  "id": "v15",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CreateActionData": {
+        "results_index": 23
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s47"
+     ],
+     "strings_to_filter_origin": "SUMMON_COMMAND"
+    }
+   ]
+  },
+  "bytes": "01090106061701037334370d000000"
+ },
+ {
+  "id": "v16",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "LabTableCombineActionData": {}
+      }
+     ],
+     "strings_to_filter": [
+      "s49"
+     ],
+     "strings_to_filter_origin": "DATA_DRIVEN_UI"
+    }
+   ]
+  },
+  "bytes": "010901070901037334390f000000"
+ },
+ {
+  "id": "v17",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "BeaconPaymentActionData": {
+        "primary_effect_id": 1,
+        "secondary_effect_id": 10
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s51"
+     ],
+     "strings_to_filter_origin": "SERVER_CHAT_PUBLIC"
+    }
+   ]
+  },
+  "bytes": "010901080a0214010373353100000000"
+ },
+ {
+  "id": "v19",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "MineBlockActionData": {
+        "slot": 7143,
+        "predicted_durability": -7274,
+        "net_id_variant": 7405
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s56"
+     ],
+     "strings_to_filter_origin": "COMMAND_BLOCK_TEXT"
+    }
+   ]
+  },
+  "bytes": "010901090bce6fd371ed1c0000010373353605000000"
+ },
+ {
+  "id": "v21",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeActionData": {
+        "recipe_net_id": {
+         "raw_id": 7798
+        },
+        "num_crafts": 14
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s60"
+     ],
+     "strings_to_filter_origin": "SLASH_COMMAND_CHAT"
+    }
+   ]
+  },
+  "bytes": "0109010a0cf63c0e010373363009000000"
+ },
+ {
+  "id": "v22",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 8322
+        },
+        "num_crafts": 42,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "EmptyItemDescriptorData": {}
+          },
+          "stack_size": 8584
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s65"
+     ],
+     "strings_to_filter_origin": "SERVER_FORM"
+    }
+   ]
+  },
+  "bytes": "0109010b0d82412a010000882101037336350e000000"
+ },
+ {
+  "id": "v23",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftCreativeActionData": {
+        "creative_item_net_id": 8977,
+        "num_crafts": 77
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s69"
+     ],
+     "strings_to_filter_origin": "SERVER_CHAT_WHISPER"
+    }
+   ]
+  },
+  "bytes": "0109010c0e91464d010373363901000000"
+ },
+ {
+  "id": "v24",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeOptionalActionData": {
+        "recipe_net_id": {
+         "raw_id": 9501
+        },
+        "filtered_string_index": -9632
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s73"
+     ],
+     "strings_to_filter_origin": "COMMAND_BLOCK_TEXT"
+    }
+   ]
+  },
+  "bytes": "0109010d0f9d4a60daffff010373373305000000"
+ },
+ {
+  "id": "v25",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRepairAndDisenchantActionData": {
+        "recipe_net_id": -10025,
+        "num_crafts": 33,
+        "repair_cost": 5
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s77"
+     ],
+     "strings_to_filter_origin": "SLASH_COMMAND_CHAT"
+    }
+   ]
+  },
+  "bytes": "0109010e10d7d8ffff210a010373373709000000"
+ },
+ {
+  "id": "v26",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftLoomActionData": {
+        "pattern_name_id": "s79",
+        "num_crafts": 61
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s81"
+     ],
+     "strings_to_filter_origin": "SUMMON_COMMAND"
+    }
+   ]
+  },
+  "bytes": "0109010f11037337393d01037338310d000000"
+ },
+ {
+  "id": "v27",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftNonImplementedActionData": {}
+      }
+     ],
+     "strings_to_filter": [
+      "s83"
+     ],
+     "strings_to_filter_origin": "DATA_DRIVEN_UI"
+    }
+   ]
+  },
+  "bytes": "010901101201037338330f000000"
+ },
+ {
+  "id": "v28",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 19850
+        },
+        "num_crafts": 58,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "ItemNameDescriptorData": {
+            "full_name": "s152",
+            "aux_value": 7
+           }
+          },
+          "stack_size": 20243
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s154"
+     ],
+     "strings_to_filter_origin": "SERVER_CHAT_WHISPER"
+    }
+   ]
+  },
+  "bytes": "0109010b0d8a9b013a01010104733135320e134f01047331353401000000"
+ },
+ {
+  "id": "v29",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 1771
+        },
+        "num_crafts": 95,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "MolangItemDescriptorData": {
+            "tag_expression": "s243",
+            "molang_version": "EXPRESSION_ERROR_MESSAGES"
+           }
+          },
+          "stack_size": 2295
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s246"
+     ],
+     "strings_to_filter_origin": "LEAVE_EVENT_TEXT"
+    }
+   ]
+  },
+  "bytes": "0109010b0deb0d5f01020204733234330300f70801047332343608000000"
+ },
+ {
+  "id": "v30",
+  "writer": "cereal",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 13823
+        },
+        "num_crafts": 39,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "ItemTagDescriptorData": {
+            "item_tag": "s335"
+           }
+          },
+          "stack_size": 14216
+         }
+        ]
+       }
+      }
+     ],
+     "strings_to_filter": [
+      "s337"
+     ],
+     "strings_to_filter_origin": "SERVER_FORM"
+    }
+   ]
+  },
+  "bytes": "0109010b0dff6b27010303047333333588370104733333370e000000"
  }
 ]

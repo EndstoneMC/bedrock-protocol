@@ -68,5 +68,59 @@
    ]
   },
   "bytes": "0101de1d0100"
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "responses": [
+    {
+     "result": "SUCCESS",
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": "ANVIL_RESULT_PREVIEW_CONTAINER",
+        "dynamic_id": 593
+       },
+       "slots": [
+        {
+         "requested_slot": 29,
+         "slot": 36,
+         "amount": 43,
+         "item_stack_net_id": {
+          "raw_id": 1117
+         },
+         "custom_name": {
+          "unredacted_string": "s8",
+          "redacted_string": "s9"
+         },
+         "durability_correction": 1510
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "010009010101020151020000011d242b0101ba1102733801027339cc17"
+ },
+ {
+  "id": "v4",
+  "writer": "cereal",
+  "value": {
+   "responses": [
+    {
+     "result": "ERROR",
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "containers": null
+    }
+   ]
+  },
+  "bytes": "0101090100"
  }
 ]

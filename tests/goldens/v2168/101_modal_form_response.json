@@ -8,5 +8,25 @@
    "form_cancel_reason": null
   },
   "bytes": "d4050000"
+ },
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "form_id": 331,
+   "json_response": "null\n",
+   "form_cancel_reason": "USER_CLOSED"
+  },
+  "bytes": "cb0201056e756c6c0a0100"
+ },
+ {
+  "id": "v2",
+  "writer": "manual",
+  "value": {
+   "form_id": 593,
+   "json_response": null,
+   "form_cancel_reason": null
+  },
+  "bytes": "d1040000"
  }
 ]

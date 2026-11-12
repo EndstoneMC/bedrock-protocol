@@ -1,0 +1,15 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "npc_id": 331,
+   "npc_dialogue_action_type": "OPEN",
+   "dialogue": "s3",
+   "scene_name": "s4",
+   "npc_name": "s5",
+   "action_json": "[]"
+  },
+  "bytes": "4b0100000000000000027333027334027335025b5d"
+ }
+]

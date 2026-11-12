@@ -14,5 +14,37 @@
    "molang_variables": null
   },
   "bytes": "39c5150000a8400000b8400000c8400373313300"
+ },
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "vanilla_dimension_id": 8,
+   "actor_id": 462,
+   "pos": {
+    "x": 1.75,
+    "y": 2.25,
+    "z": 2.75
+   },
+   "effect_name": "s6",
+   "molang_variables": "[]\n"
+  },
+  "bytes": "089c070000e03f000010400000304002733601035b5d0a"
+ },
+ {
+  "id": "v2",
+  "writer": "manual",
+  "value": {
+   "vanilla_dimension_id": 50,
+   "actor_id": 1248,
+   "pos": {
+    "x": 4.75,
+    "y": 5.25,
+    "z": 5.75
+   },
+   "effect_name": "s12",
+   "molang_variables": null
+  },
+  "bytes": "32c013000098400000a8400000b8400373313200"
  }
 ]

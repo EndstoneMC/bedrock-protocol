@@ -1,0 +1,114 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "categories": [
+    {
+     "name": "s1",
+     "priorities": {
+      "entities": {
+       "s2": 10
+      },
+      "blocks": {
+       "s3": 20
+      },
+      "block_tags": {
+       "s4": 30
+      },
+      "entity_type_families": {
+       "s5": 40
+      },
+      "entity_default": 50,
+      "block_default": 60
+     }
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "s6",
+     "exclusion_settings": {
+      "block_exclusion_list": [
+       "s7"
+      ],
+      "actor_exclusion_list": [
+       "s8"
+      ],
+      "block_tag_exclusion_list": [
+       "s9"
+      ],
+      "entity_type_family_exclusion_list": [
+       "s10"
+      ]
+     },
+     "liquid_targeting_list": [
+      "s11"
+     ],
+     "item_settings": {
+      "s12": "s13"
+     },
+     "default_item_settings": "s14",
+     "hand_settings": "s15"
+    }
+   ],
+   "operation": "SET"
+  },
+  "bytes": "01027331010273320a0000000102733314000000010273341e00000001027335280000000132000000013c00000001027336010273370102733801027339010373313001037331310103733132037331330103733134010373313500"
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "categories": [
+    {
+     "name": "s17",
+     "priorities": {
+      "entities": {
+       "s18": 10
+      },
+      "blocks": {
+       "s19": 20
+      },
+      "block_tags": {
+       "s20": 30
+      },
+      "entity_type_families": {
+       "s21": 40
+      },
+      "entity_default": null,
+      "block_default": null
+     }
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "s22",
+     "exclusion_settings": {
+      "block_exclusion_list": [
+       "s23"
+      ],
+      "actor_exclusion_list": [
+       "s24"
+      ],
+      "block_tag_exclusion_list": [
+       "s25"
+      ],
+      "entity_type_family_exclusion_list": [
+       "s26"
+      ]
+     },
+     "liquid_targeting_list": [
+      "s27"
+     ],
+     "item_settings": {
+      "s28": "s29"
+     },
+     "default_item_settings": null,
+     "hand_settings": null
+    }
+   ],
+   "operation": "SET"
+  },
+  "bytes": "010373313701037331380a00000001037331391400000001037332301e0000000103733231280000000000010373323201037332330103733234010373323501037332360103733237010373323803733239000000"
+ }
+]
