@@ -19,5 +19,7 @@ class DecodeError(ValueError):
 
 
 _latest = import_module(f".v{VERSIONS[-1]}", __name__)
-globals().update({name: getattr(_latest, name) for name in dir(_latest) if not name.startswith("_")})
+globals().update({name: getattr(_latest, name) for name in _latest.__all__})
+__all__ = ["VERSIONS", "DecodeError", "PacketHeader", "nbt"]
+__all__ += _latest.__all__
 del import_module, _latest

@@ -122,6 +122,14 @@ void init_versions(nb::module_ &parent)
         m.def("encode", &encode_body, nb::arg("packet"), "The packet body, without its header.");
         m.def("encode_packet", &encode_framed, nb::arg("packet"), nb::arg("recipient_sub_id") = 0,
               nb::arg("sender_sub_id") = 0, "Header and body, the bytes a batch length-prefixes.");
+        nb::list all;
+        for (nb::handle name : nb::steal<nb::list>(PyObject_Dir(m.ptr()))) {
+            const std::string_view text = nb::borrow<nb::str>(name).c_str();
+            if (!text.starts_with('_') && text != "legacy") {
+                all.append(name);
+            }
+        }
+        m.attr("__all__") = all;
     }
     for (const auto &[cls, annotations] : annotators()) {
         cls.attr("__annotations__") = annotations();

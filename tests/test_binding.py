@@ -23,6 +23,15 @@ def test_the_bare_names_are_the_latest_protocol():
     assert bedrock_protocol.TextPacket is latest.TextPacket
 
 
+def test_the_bare_names_are_the_latest_versions_all():
+    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}")
+    assert set(bedrock_protocol.__all__) == {"VERSIONS", "DecodeError", "PacketHeader", "nbt", *latest.__all__}
+
+
+def test_the_package_has_no_legacy():
+    assert not hasattr(bedrock_protocol, "legacy")
+
+
 def test_the_bare_protocol_number_is_the_latest_protocol():
     assert bedrock_protocol.VERSIONS[-1] == bedrock_protocol.PROTOCOL
 
