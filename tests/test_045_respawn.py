@@ -30,7 +30,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_respawn_is_packet_45(version):
-    assert version.PACKETS[45] is version.RespawnPacket
+    assert version.packets[45] is version.RespawnPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

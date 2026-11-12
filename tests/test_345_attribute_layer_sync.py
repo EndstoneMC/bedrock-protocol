@@ -106,11 +106,11 @@ NOISE = v2225.NoiseTransitionAttributeData(
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_attribute_layer_sync_is_packet_345(version):
-    assert version.PACKETS[345] is version.ClientboundAttributeLayerSyncPacket
+    assert version.packets[345] is version.ClientboundAttributeLayerSyncPacket
 
 
 def test_attribute_layer_sync_is_absent_at_924():
-    assert 345 not in v924.PACKETS
+    assert 345 not in v924.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

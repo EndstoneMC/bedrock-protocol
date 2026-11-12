@@ -73,15 +73,15 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_serverbound_data_store_is_packet_332(version):
-    assert version.PACKETS[332] is version.ServerboundDataStorePacket
+    assert version.packets[332] is version.ServerboundDataStorePacket
 
 
 def test_packet_332_is_not_in_v859():
-    assert 332 not in v859.PACKETS
+    assert 332 not in v859.packets
 
 
 def test_packet_332_is_in_v898():
-    assert 332 in v898.PACKETS
+    assert 332 in v898.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

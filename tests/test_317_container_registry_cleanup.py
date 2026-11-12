@@ -23,7 +23,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_container_registry_cleanup_is_packet_317(version):
-    assert version.PACKETS[317] is version.ContainerRegistryCleanupPacket
+    assert version.packets[317] is version.ContainerRegistryCleanupPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

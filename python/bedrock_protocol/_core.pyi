@@ -1,1 +1,1 @@
-VERSIONS: tuple[int, ...]
+versions: tuple[int, ...]

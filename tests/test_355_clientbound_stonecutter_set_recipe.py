@@ -4,11 +4,11 @@ PACKET = v2225.ClientboundStonecutterSetRecipePacket(player_id=5, container_id=v
 
 
 def test_clientbound_stonecutter_set_recipe_is_packet_355_from_2225():
-    assert v2225.PACKETS[355] is v2225.ClientboundStonecutterSetRecipePacket
+    assert v2225.packets[355] is v2225.ClientboundStonecutterSetRecipePacket
 
 
 def test_clientbound_stonecutter_set_recipe_is_absent_at_2193():
-    assert 355 not in v2193.PACKETS
+    assert 355 not in v2193.packets
 
 
 def test_clientbound_stonecutter_set_recipe_encodes_to_three_bytes():

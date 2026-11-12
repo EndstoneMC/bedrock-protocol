@@ -135,7 +135,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v898, v975, v1001, v2168])
 def test_start_game_is_packet_11(version):
-    assert version.PACKETS[11] is version.StartGamePacket
+    assert version.packets[11] is version.StartGamePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

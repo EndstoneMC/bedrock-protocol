@@ -37,7 +37,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_npc_request_is_packet_98(version):
-    assert version.PACKETS[98] is version.NpcRequestPacket
+    assert version.packets[98] is version.NpcRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

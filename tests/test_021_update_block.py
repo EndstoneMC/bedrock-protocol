@@ -27,7 +27,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_update_block_is_packet_21(version):
-    assert version.PACKETS[21] is version.UpdateBlockPacket
+    assert version.packets[21] is version.UpdateBlockPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

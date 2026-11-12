@@ -80,7 +80,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_command_output_is_packet_79(version):
-    assert version.PACKETS[79] is version.CommandOutputPacket
+    assert version.packets[79] is version.CommandOutputPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

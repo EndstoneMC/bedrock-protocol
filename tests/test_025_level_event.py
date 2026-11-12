@@ -27,7 +27,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_level_event_is_packet_25(version):
-    assert version.PACKETS[25] is version.LevelEventPacket
+    assert version.packets[25] is version.LevelEventPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

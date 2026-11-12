@@ -14,11 +14,11 @@ WITH_OPTIONS = v2225.ClientboundMatchmakingStatePacket(
 
 
 def test_clientbound_matchmaking_state_is_packet_353_from_2225():
-    assert v2225.PACKETS[353] is v2225.ClientboundMatchmakingStatePacket
+    assert v2225.packets[353] is v2225.ClientboundMatchmakingStatePacket
 
 
 def test_clientbound_matchmaking_state_is_absent_at_2193():
-    assert 353 not in v2193.PACKETS
+    assert 353 not in v2193.packets
 
 
 @pytest.mark.parametrize(

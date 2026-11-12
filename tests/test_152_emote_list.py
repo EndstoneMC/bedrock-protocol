@@ -31,7 +31,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_emote_list_is_packet_152(version):
-    assert version.PACKETS[152] is version.EmoteListPacket
+    assert version.packets[152] is version.EmoteListPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

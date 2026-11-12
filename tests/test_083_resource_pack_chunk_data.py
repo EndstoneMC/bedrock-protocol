@@ -44,7 +44,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_resource_pack_chunk_data_is_packet_83(version):
-    assert version.PACKETS[83] is version.ResourcePackChunkDataPacket
+    assert version.packets[83] is version.ResourcePackChunkDataPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

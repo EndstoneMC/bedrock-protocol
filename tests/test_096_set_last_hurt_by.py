@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_set_last_hurt_by_is_packet_96(version):
-    assert version.PACKETS[96] is version.SetLastHurtByPacket
+    assert version.packets[96] is version.SetLastHurtByPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -25,7 +25,7 @@ GOLDENS = [
 
 
 def test_trim_data_is_packet_302():
-    assert v2225.PACKETS[302] is v2225.TrimDataPacket
+    assert v2225.packets[302] is v2225.TrimDataPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
@@ -40,4 +40,4 @@ def test_trim_data_decodes_from_its_golden(packet, golden):
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_1001_and_2168_resolve_trim_data_to_the_latest_type(version):
-    assert version.PACKETS[302] is v2225.TrimDataPacket
+    assert version.packets[302] is v2225.TrimDataPacket

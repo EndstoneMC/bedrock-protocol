@@ -206,7 +206,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_player_list_is_packet_63(version):
-    assert version.PACKETS[63] is version.PlayerListPacket
+    assert version.packets[63] is version.PlayerListPacket
 
 
 def test_player_list_changes_shape_at_2168():

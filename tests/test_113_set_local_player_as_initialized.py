@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_set_local_player_as_initialized_is_packet_113(version):
-    assert version.PACKETS[113] is version.SetLocalPlayerAsInitializedPacket
+    assert version.packets[113] is version.SetLocalPlayerAsInitializedPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

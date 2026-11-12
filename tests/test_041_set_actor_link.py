@@ -45,7 +45,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_set_actor_link_is_packet_41(version):
-    assert version.PACKETS[41] is version.SetActorLinkPacket
+    assert version.packets[41] is version.SetActorLinkPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

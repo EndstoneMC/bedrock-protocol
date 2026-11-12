@@ -81,11 +81,11 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_update_sound_data_is_packet_348(version):
-    assert version.PACKETS[348] is version.ClientboundUpdateSoundDataPacket
+    assert version.packets[348] is version.ClientboundUpdateSoundDataPacket
 
 
 def test_update_sound_data_is_absent_at_975():
-    assert 348 not in v975.PACKETS
+    assert 348 not in v975.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_set_time_is_packet_10(version):
-    assert version.PACKETS[10] is version.SetTimePacket
+    assert version.packets[10] is version.SetTimePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

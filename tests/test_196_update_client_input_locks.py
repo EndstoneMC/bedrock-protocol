@@ -44,7 +44,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_update_client_input_locks_is_packet_196(version):
-    assert version.PACKETS[196] is version.UpdateClientInputLocksPacket
+    assert version.packets[196] is version.UpdateClientInputLocksPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

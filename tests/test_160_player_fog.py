@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_player_fog_is_packet_160(version):
-    assert version.PACKETS[160] is version.PlayerFogPacket
+    assert version.packets[160] is version.PlayerFogPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

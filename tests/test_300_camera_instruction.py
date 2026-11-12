@@ -134,7 +134,7 @@ EMPTY_SPLINE = v2225.CameraInstructionPacket(
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_camera_instruction_is_packet_300(version):
-    assert version.PACKETS[300] is version.CameraInstructionPacket
+    assert version.packets[300] is version.CameraInstructionPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

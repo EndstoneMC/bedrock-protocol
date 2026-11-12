@@ -10,11 +10,11 @@ PACKET = v2225.ClientboundPlayAudioContentPacket(
 
 
 def test_clientbound_play_audio_content_is_packet_359_from_2225():
-    assert v2225.PACKETS[359] is v2225.ClientboundPlayAudioContentPacket
+    assert v2225.packets[359] is v2225.ClientboundPlayAudioContentPacket
 
 
 def test_clientbound_play_audio_content_is_absent_at_2193():
-    assert 359 not in v2193.PACKETS
+    assert 359 not in v2193.packets
 
 
 def test_clientbound_play_audio_content_is_forty_four_bytes():

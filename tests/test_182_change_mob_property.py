@@ -30,7 +30,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_change_mob_property_is_packet_182(version):
-    assert version.PACKETS[182] is version.ChangeMobPropertyPacket
+    assert version.packets[182] is version.ChangeMobPropertyPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

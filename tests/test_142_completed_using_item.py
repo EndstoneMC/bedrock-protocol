@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_completed_using_item_is_packet_142(version):
-    assert version.PACKETS[142] is version.CompletedUsingItemPacket
+    assert version.packets[142] is version.CompletedUsingItemPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

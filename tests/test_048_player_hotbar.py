@@ -30,7 +30,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_player_hotbar_is_packet_48(version):
-    assert version.PACKETS[48] is version.PlayerHotbarPacket
+    assert version.packets[48] is version.PlayerHotbarPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

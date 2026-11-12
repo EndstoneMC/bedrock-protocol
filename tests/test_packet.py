@@ -4,20 +4,20 @@ from bedrock_protocol import v786, v844, v859, v898, v975, v1001, v2168, v2225
 
 
 def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
-    assert v975.PACKETS[74] is v786.BossEventPacket
+    assert v975.packets[74] is v786.BossEventPacket
 
 
 def test_a_packet_unchanged_since_1001_resolves_to_that_type_at_2168():
-    assert v2168.PACKETS[74] is v1001.BossEventPacket
+    assert v2168.packets[74] is v1001.BossEventPacket
 
 
 def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
-    assert v975.PACKETS[1] is v2225.LoginPacket
+    assert v975.packets[1] is v2225.LoginPacket
 
 
 @pytest.mark.parametrize("packet_id", [0, 999])
 def test_an_unmodelled_id_is_absent(packet_id):
-    assert packet_id not in v1001.PACKETS
+    assert packet_id not in v1001.packets
 
 
 @pytest.mark.parametrize(

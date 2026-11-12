@@ -32,7 +32,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_update_client_options_is_packet_323(version):
-    assert version.PACKETS[323] is version.UpdateClientOptionsPacket
+    assert version.packets[323] is version.UpdateClientOptionsPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

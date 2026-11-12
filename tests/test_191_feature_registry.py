@@ -27,7 +27,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_feature_registry_is_packet_191(version):
-    assert version.PACKETS[191] is version.FeatureRegistryPacket
+    assert version.packets[191] is version.FeatureRegistryPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

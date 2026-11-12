@@ -31,7 +31,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_camera_shake_is_packet_159(version):
-    assert version.PACKETS[159] is version.CameraShakePacket
+    assert version.packets[159] is version.CameraShakePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

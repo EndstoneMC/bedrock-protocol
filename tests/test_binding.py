@@ -20,13 +20,13 @@ TRUNCATED_ATTRIBUTES = bytes(proto.UpdateAttributesPacket(attribute_data=[HEALTH
 
 
 def test_the_bare_names_are_the_latest_protocol():
-    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}")
+    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.versions[-1]}")
     assert bedrock_protocol.TextPacket is latest.TextPacket
 
 
 def test_the_bare_names_are_the_latest_versions_all():
-    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}")
-    assert set(bedrock_protocol.__all__) == {"VERSIONS", "DecodeError", "PacketHeader", "nbt", *latest.__all__}
+    latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.versions[-1]}")
+    assert set(bedrock_protocol.__all__) == {"versions", "DecodeError", "PacketHeader", "nbt", *latest.__all__}
 
 
 def test_the_package_has_no_pre_cereal():
@@ -37,13 +37,9 @@ def test_a_version_leaves_pre_cereal_out_of_its_all(protocol):
     assert "pre_cereal" not in protocol.__all__
 
 
-def test_the_bare_protocol_number_is_the_latest_protocol():
-    assert bedrock_protocol.VERSIONS[-1] == bedrock_protocol.PROTOCOL
-
-
 def test_the_bare_codec_round_trips_a_packet():
     packet = bedrock_protocol.PlayStatusPacket(status=bedrock_protocol.PlayStatus.PLAYER_SPAWN)
-    assert bedrock_protocol.PACKETS[packet.ID].from_bytes(bytes(packet)) == packet
+    assert bedrock_protocol.packets[packet.ID].from_bytes(bytes(packet)) == packet
 
 
 def test_the_header_packs_recipient_then_sender_as_bds_does():
@@ -377,7 +373,7 @@ def test_encode_rejects_positional_sub_ids():
 
 
 @pytest.mark.parametrize(
-    ("packet_id", "cls"), proto.PACKETS.items(), ids=lambda value: getattr(value, "__name__", str(value))
+    ("packet_id", "cls"), proto.packets.items(), ids=lambda value: getattr(value, "__name__", str(value))
 )
 def test_every_packet_class_is_registered_under_its_id(packet_id, cls):
     assert packet_id == cls.ID
@@ -398,11 +394,11 @@ def test_a_pre_cereal_submodule_imports_by_its_dotted_name(protocol):
 
 
 def test_the_bound_versions_ascend():
-    assert list(bedrock_protocol.VERSIONS) == sorted(bedrock_protocol.VERSIONS)
+    assert list(bedrock_protocol.versions) == sorted(bedrock_protocol.versions)
 
 
 def test_a_shared_class_belongs_to_the_newest_version():
-    assert proto.PlayStatusPacket.__module__ == f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}"
+    assert proto.PlayStatusPacket.__module__ == f"bedrock_protocol.v{bedrock_protocol.versions[-1]}"
 
 
 @pytest.mark.parametrize("cls", [bedrock_protocol.PacketHeader, proto.PlayStatusPacket, proto.AttributeData])

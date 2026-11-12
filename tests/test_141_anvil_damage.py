@@ -44,7 +44,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v924, v1001, v2168])
 def test_anvil_damage_is_packet_141(version):
-    assert version.PACKETS[141] is version.AnvilDamagePacket
+    assert version.packets[141] is version.AnvilDamagePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

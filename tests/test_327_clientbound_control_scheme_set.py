@@ -26,7 +26,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_clientbound_control_scheme_set_is_packet_327(version):
-    assert version.PACKETS[327] is version.ClientboundControlSchemeSetPacket
+    assert version.packets[327] is version.ClientboundControlSchemeSetPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

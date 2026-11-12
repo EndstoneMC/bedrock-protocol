@@ -34,7 +34,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_create_photo_is_packet_171(version):
-    assert version.PACKETS[171] is version.CreatePhotoPacket
+    assert version.packets[171] is version.CreatePhotoPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

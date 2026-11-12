@@ -60,7 +60,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_camera_aim_assist_presets_is_packet_320(version):
-    assert version.PACKETS[320] is version.CameraAimAssistPresetsPacket
+    assert version.packets[320] is version.CameraAimAssistPresetsPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -35,7 +35,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_hurt_armor_is_packet_38(version):
-    assert version.PACKETS[38] is version.HurtArmorPacket
+    assert version.packets[38] is version.HurtArmorPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

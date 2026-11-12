@@ -32,7 +32,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_toast_request_is_packet_186(version):
-    assert version.PACKETS[186] is version.ToastRequestPacket
+    assert version.packets[186] is version.ToastRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

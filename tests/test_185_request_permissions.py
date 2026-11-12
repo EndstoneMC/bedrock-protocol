@@ -48,7 +48,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_request_permissions_is_packet_185(version):
-    assert version.PACKETS[185] is version.RequestPermissionsPacket
+    assert version.packets[185] is version.RequestPermissionsPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

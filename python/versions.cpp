@@ -24,8 +24,7 @@ void init_versions(nb::module_ &parent)
     init_types(bound);
     for (Version &version : bound) {
         auto m = nb::borrow<nb::module_>(version.module);
-        m.attr("PROTOCOL") = version.number;
-        m.attr("PACKETS") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
+        m.attr("packets") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
         m.def(
             "decode_packet",
             [version](nb::bytes data) {

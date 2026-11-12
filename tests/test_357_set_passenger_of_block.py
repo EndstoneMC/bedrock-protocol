@@ -14,11 +14,11 @@ MOUNT = v2225.SetPassengerOfBlockPacket(
 
 
 def test_set_passenger_of_block_is_packet_357_from_2225():
-    assert v2225.PACKETS[357] is v2225.SetPassengerOfBlockPacket
+    assert v2225.packets[357] is v2225.SetPassengerOfBlockPacket
 
 
 def test_set_passenger_of_block_is_absent_at_2193():
-    assert 357 not in v2193.PACKETS
+    assert 357 not in v2193.packets
 
 
 def test_set_passenger_of_block_dismount_is_two_bytes():

@@ -51,7 +51,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_update_sub_chunk_blocks_is_packet_172(version):
-    assert version.PACKETS[172] is version.UpdateSubChunkBlocksPacket
+    assert version.packets[172] is version.UpdateSubChunkBlocksPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

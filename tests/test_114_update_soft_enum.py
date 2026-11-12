@@ -36,7 +36,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_update_soft_enum_is_packet_114(version):
-    assert version.PACKETS[114] is version.UpdateSoftEnumPacket
+    assert version.packets[114] is version.UpdateSoftEnumPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -118,7 +118,7 @@ STONE_V2225 = v2225.SerializedNetworkItemStackDescriptor(id=5, stack_size=1, use
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_add_player_is_packet_12(version):
-    assert version.PACKETS[12] is version.AddPlayerPacket
+    assert version.packets[12] is version.AddPlayerPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

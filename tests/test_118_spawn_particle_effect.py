@@ -50,7 +50,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_spawn_particle_effect_is_packet_118(version):
-    assert version.PACKETS[118] is version.SpawnParticleEffectPacket
+    assert version.packets[118] is version.SpawnParticleEffectPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -13,7 +13,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_jigsaw_structure_data_is_packet_313(version):
-    assert version.PACKETS[313] is version.JigsawStructureDataPacket
+    assert version.packets[313] is version.JigsawStructureDataPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -119,19 +119,19 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_clientbound_data_store_is_packet_330(version):
-    assert version.PACKETS[330] is version.ClientboundDataStorePacket
+    assert version.packets[330] is version.ClientboundDataStorePacket
 
 
 def test_packet_330_is_not_in_v844():
-    assert 330 not in v844.PACKETS
+    assert 330 not in v844.packets
 
 
 def test_v859_hands_packet_330_to_the_data_store_sync_packet():
-    assert v859.PACKETS[330] is v859.DataStoreSyncPacket
+    assert v859.packets[330] is v859.DataStoreSyncPacket
 
 
 def test_v898_hands_packet_330_to_the_clientbound_data_store_packet():
-    assert v898.PACKETS[330] is v898.ClientboundDataStorePacket
+    assert v898.packets[330] is v898.ClientboundDataStorePacket
 
 
 def test_the_v859_sync_packet_tags_a_removal_with_case_one():

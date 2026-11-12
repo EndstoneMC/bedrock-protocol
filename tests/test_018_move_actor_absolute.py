@@ -36,7 +36,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_move_actor_absolute_is_packet_18(version):
-    assert version.PACKETS[18] is version.MoveActorAbsolutePacket
+    assert version.packets[18] is version.MoveActorAbsolutePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

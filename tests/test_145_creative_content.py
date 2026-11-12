@@ -79,7 +79,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_creative_content_is_packet_145(version):
-    assert version.PACKETS[145] is version.CreativeContentPacket
+    assert version.packets[145] is version.CreativeContentPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

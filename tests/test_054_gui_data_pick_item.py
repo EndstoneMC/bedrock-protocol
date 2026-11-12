@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_gui_data_pick_item_is_packet_54(version):
-    assert version.PACKETS[54] is version.GuiDataPickItemPacket
+    assert version.packets[54] is version.GuiDataPickItemPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

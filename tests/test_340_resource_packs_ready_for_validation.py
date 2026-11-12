@@ -9,7 +9,7 @@ EMPTY = bytes.fromhex("")
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_resource_packs_ready_for_validation_is_packet_340(version):
-    assert version.PACKETS[340] is version.ResourcePacksReadyForValidationPacket
+    assert version.packets[340] is version.ResourcePacksReadyForValidationPacket
 
 
 def test_resource_packs_ready_for_validation_encodes_to_its_golden():

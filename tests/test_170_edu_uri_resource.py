@@ -24,7 +24,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_edu_uri_resource_is_packet_170(version):
-    assert version.PACKETS[170] is version.EduUriResourcePacket
+    assert version.packets[170] is version.EduUriResourcePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

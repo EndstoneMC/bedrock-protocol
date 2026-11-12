@@ -74,7 +74,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_structure_template_data_request_is_packet_132(version):
-    assert version.PACKETS[132] is version.StructureTemplateDataRequestPacket
+    assert version.packets[132] is version.StructureTemplateDataRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

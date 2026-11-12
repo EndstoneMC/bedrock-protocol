@@ -44,7 +44,7 @@ data = bytes(packet)
 assert TextPacket.from_bytes(data) == packet
 ```
 
-`VERSIONS` lists the protocol numbers. `PACKETS` maps packet ids to packet classes.
+`versions` lists the protocol numbers. `packets` maps packet ids to packet classes.
 
 ## C++
 

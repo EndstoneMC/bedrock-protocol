@@ -34,7 +34,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_current_structure_feature_is_packet_314(version):
-    assert version.PACKETS[314] is version.CurrentStructureFeaturePacket
+    assert version.packets[314] is version.CurrentStructureFeaturePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

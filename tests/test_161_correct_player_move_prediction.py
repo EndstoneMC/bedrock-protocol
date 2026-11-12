@@ -110,7 +110,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_correct_player_move_prediction_is_packet_161(version):
-    assert version.PACKETS[161] is version.CorrectPlayerMovePredictionPacket
+    assert version.packets[161] is version.CorrectPlayerMovePredictionPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

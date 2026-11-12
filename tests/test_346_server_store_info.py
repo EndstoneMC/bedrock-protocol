@@ -26,7 +26,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_server_store_info_is_packet_346(version):
-    assert version.PACKETS[346] is version.ServerStoreInfoPacket
+    assert version.packets[346] is version.ServerStoreInfoPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -27,7 +27,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_remove_objective_is_packet_106(version):
-    assert version.PACKETS[106] is version.RemoveObjectivePacket
+    assert version.packets[106] is version.RemoveObjectivePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

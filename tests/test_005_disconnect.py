@@ -42,7 +42,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v2168, v2193])
 def test_disconnect_is_packet_5(version):
-    assert version.PACKETS[5] is version.DisconnectPacket
+    assert version.packets[5] is version.DisconnectPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

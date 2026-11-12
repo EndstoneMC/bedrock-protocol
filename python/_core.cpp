@@ -42,7 +42,7 @@ NB_MODULE(_core, m)
 {
     namespace nb = nanobind;
     namespace bpy = bedrock::protocol::python;
-    m.attr("VERSIONS") = nb::tuple(nb::cast(bedrock::protocol::versions));
+    m.attr("versions") = nb::tuple(nb::cast(bedrock::protocol::versions));
     auto package = nb::module_::import_("bedrock_protocol");
     bpy::init_nbt(package);
     bpy::init_versions(package);

@@ -21,7 +21,7 @@ PACKET = v2225.PlayerVideoCapturePacket(
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_player_video_capture_is_packet_324(version):
-    assert version.PACKETS[324] is version.PlayerVideoCapturePacket
+    assert version.packets[324] is version.PlayerVideoCapturePacket
 
 
 def test_player_video_capture_encodes_to_its_golden():

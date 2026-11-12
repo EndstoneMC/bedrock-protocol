@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_script_message_is_packet_177(version):
-    assert version.PACKETS[177] is version.ScriptMessagePacket
+    assert version.packets[177] is version.ScriptMessagePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

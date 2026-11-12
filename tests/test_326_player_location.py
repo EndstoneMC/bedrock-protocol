@@ -56,7 +56,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_player_location_is_packet_326(version):
-    assert version.PACKETS[326] is version.PlayerLocationPacket
+    assert version.packets[326] is version.PlayerLocationPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

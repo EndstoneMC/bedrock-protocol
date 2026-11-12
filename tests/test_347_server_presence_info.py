@@ -73,7 +73,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v975, v1001, v2168])
 def test_server_presence_info_is_packet_347(version):
-    assert version.PACKETS[347] is version.ServerPresenceInfoPacket
+    assert version.packets[347] is version.ServerPresenceInfoPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -34,7 +34,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_position_tracking_db_client_request_is_packet_154(version):
-    assert version.PACKETS[154] is version.PositionTrackingDBClientRequestPacket
+    assert version.packets[154] is version.PositionTrackingDBClientRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

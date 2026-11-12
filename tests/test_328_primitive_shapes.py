@@ -206,7 +206,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_primitive_shapes_is_packet_328(version):
-    assert version.PACKETS[328] is version.PrimitiveShapesPacket
+    assert version.packets[328] is version.PrimitiveShapesPacket
 
 
 @pytest.mark.parametrize(
@@ -220,7 +220,7 @@ def test_primitive_shapes_is_packet_328(version):
     ],
 )
 def test_id_328_changes_owner_at_859_and_again_at_975(version, packet_type):
-    assert version.PACKETS[328] is packet_type
+    assert version.packets[328] is packet_type
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

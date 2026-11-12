@@ -52,7 +52,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_add_volume_entity_is_packet_166(version):
-    assert version.PACKETS[166] is version.AddVolumeEntityPacket
+    assert version.packets[166] is version.AddVolumeEntityPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

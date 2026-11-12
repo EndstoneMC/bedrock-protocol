@@ -30,7 +30,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_map_info_request_is_packet_68(version):
-    assert version.PACKETS[68] is version.MapInfoRequestPacket
+    assert version.packets[68] is version.MapInfoRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

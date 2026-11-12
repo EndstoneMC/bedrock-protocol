@@ -28,7 +28,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_movement_effect_is_packet_318(version):
-    assert version.PACKETS[318] is version.MovementEffectPacket
+    assert version.packets[318] is version.MovementEffectPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

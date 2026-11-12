@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_set_default_game_type_is_packet_105(version):
-    assert version.PACKETS[105] is version.SetDefaultGameTypePacket
+    assert version.packets[105] is version.SetDefaultGameTypePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

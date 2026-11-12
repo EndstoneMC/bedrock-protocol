@@ -13,11 +13,11 @@ PACKET = v2225.ServerboundRegisterAudioContentPacket(
 
 
 def test_serverbound_register_audio_content_is_packet_360_from_2225():
-    assert v2225.PACKETS[360] is v2225.ServerboundRegisterAudioContentPacket
+    assert v2225.packets[360] is v2225.ServerboundRegisterAudioContentPacket
 
 
 def test_serverbound_register_audio_content_is_absent_at_2193():
-    assert 360 not in v2193.PACKETS
+    assert 360 not in v2193.packets
 
 
 def test_serverbound_register_audio_content_encodes_to_ten_bytes():

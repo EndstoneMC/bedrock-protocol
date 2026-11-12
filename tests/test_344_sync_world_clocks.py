@@ -72,7 +72,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_sync_world_clocks_is_packet_344(version):
-    assert version.PACKETS[344] is version.SyncWorldClocksPacket
+    assert version.packets[344] is version.SyncWorldClocksPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -41,11 +41,11 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_party_destination_cookie_response_is_packet_350(version):
-    assert version.PACKETS[350] is version.PartyDestinationCookieResponsePacket
+    assert version.packets[350] is version.PartyDestinationCookieResponsePacket
 
 
 def test_packet_350_is_not_in_v975():
-    assert 350 not in v975.PACKETS
+    assert 350 not in v975.packets
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

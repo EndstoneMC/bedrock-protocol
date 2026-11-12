@@ -40,7 +40,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_set_spawn_position_is_packet_43(version):
-    assert version.PACKETS[43] is version.SetSpawnPositionPacket
+    assert version.packets[43] is version.SetSpawnPositionPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

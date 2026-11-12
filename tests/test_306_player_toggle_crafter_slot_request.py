@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_player_toggle_crafter_slot_request_is_packet_306(version):
-    assert version.PACKETS[306] is version.PlayerToggleCrafterSlotRequestPacket
+    assert version.packets[306] is version.PlayerToggleCrafterSlotRequestPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

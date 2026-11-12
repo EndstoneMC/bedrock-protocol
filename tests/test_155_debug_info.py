@@ -29,7 +29,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_debug_info_is_packet_155(version):
-    assert version.PACKETS[155] is version.DebugInfoPacket
+    assert version.packets[155] is version.DebugInfoPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

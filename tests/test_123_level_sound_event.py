@@ -53,7 +53,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_level_sound_event_is_packet_123(version):
-    assert version.PACKETS[123] is version.LevelSoundEventPacket
+    assert version.packets[123] is version.LevelSoundEventPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

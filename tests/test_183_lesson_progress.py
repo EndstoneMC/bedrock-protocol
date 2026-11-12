@@ -26,7 +26,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_lesson_progress_is_packet_183(version):
-    assert version.PACKETS[183] is version.LessonProgressPacket
+    assert version.packets[183] is version.LessonProgressPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

@@ -60,7 +60,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_voxel_shapes_is_packet_337(version):
-    assert version.PACKETS[337] is version.VoxelShapesPacket
+    assert version.packets[337] is version.VoxelShapesPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

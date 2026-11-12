@@ -46,7 +46,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_change_dimension_is_packet_61(version):
-    assert version.PACKETS[61] is version.ChangeDimensionPacket
+    assert version.packets[61] is version.ChangeDimensionPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

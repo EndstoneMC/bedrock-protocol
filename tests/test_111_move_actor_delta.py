@@ -65,7 +65,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_move_actor_delta_is_packet_111(version):
-    assert version.PACKETS[111] is version.MoveActorDeltaPacket
+    assert version.packets[111] is version.MoveActorDeltaPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

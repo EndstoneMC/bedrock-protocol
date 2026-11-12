@@ -26,7 +26,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_lectern_update_is_packet_125(version):
-    assert version.PACKETS[125] is version.LecternUpdatePacket
+    assert version.packets[125] is version.LecternUpdatePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

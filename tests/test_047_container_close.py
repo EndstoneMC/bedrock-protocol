@@ -34,7 +34,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_container_close_is_packet_47(version):
-    assert version.PACKETS[47] is version.ContainerClosePacket
+    assert version.packets[47] is version.ContainerClosePacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

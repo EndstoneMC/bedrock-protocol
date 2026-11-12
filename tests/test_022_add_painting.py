@@ -29,7 +29,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_add_painting_is_packet_22(version):
-    assert version.PACKETS[22] is version.AddPaintingPacket
+    assert version.packets[22] is version.AddPaintingPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

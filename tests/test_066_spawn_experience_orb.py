@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_spawn_experience_orb_is_packet_66(version):
-    assert version.PACKETS[66] is version.SpawnExperienceOrbPacket
+    assert version.packets[66] is version.SpawnExperienceOrbPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

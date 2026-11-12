@@ -145,7 +145,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_boss_event_is_packet_74(version):
-    assert version.PACKETS[74] is version.BossEventPacket
+    assert version.packets[74] is version.BossEventPacket
 
 
 @pytest.mark.parametrize(("event_type", "golden"), V975_GOLDENS)

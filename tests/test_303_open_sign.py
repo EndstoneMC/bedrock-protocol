@@ -22,7 +22,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_open_sign_is_packet_303(version):
-    assert version.PACKETS[303] is version.OpenSignPacket
+    assert version.packets[303] is version.OpenSignPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

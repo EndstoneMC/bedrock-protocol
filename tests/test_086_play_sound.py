@@ -50,7 +50,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_play_sound_is_packet_86(version):
-    assert version.PACKETS[86] is version.PlaySoundPacket
+    assert version.packets[86] is version.PlaySoundPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

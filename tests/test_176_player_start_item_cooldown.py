@@ -33,7 +33,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_player_start_item_cooldown_is_packet_176(version):
-    assert version.PACKETS[176] is version.PlayerStartItemCooldownPacket
+    assert version.packets[176] is version.PlayerStartItemCooldownPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

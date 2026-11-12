@@ -5,7 +5,7 @@ import pytest
 
 import bedrock_protocol
 
-VERSIONS = [importlib.import_module(f"bedrock_protocol.v{version}") for version in bedrock_protocol.VERSIONS]
+versions = [importlib.import_module(f"bedrock_protocol.v{version}") for version in bedrock_protocol.versions]
 
 
 def _classes(scope, seen):
@@ -19,11 +19,11 @@ def _classes(scope, seen):
             yield from _classes(cls, seen)
 
 
-PACKETS = [(m, cls) for m in VERSIONS for cls in m.PACKETS.values()]
+packets = [(m, cls) for m in versions for cls in m.packets.values()]
 SERIALIZABLE = list(
     dict.fromkeys(
         cls
-        for scope in (bedrock_protocol, *VERSIONS, *(m.pre_cereal for m in VERSIONS))
+        for scope in (bedrock_protocol, *versions, *(m.pre_cereal for m in versions))
         for cls in _classes(scope, set())
         if hasattr(cls, "from_bytes") and not issubclass(cls, enum.Enum)
     )
@@ -56,10 +56,10 @@ VALUES = [pytest.param(cls, marks=gap(cls)) for cls in SERIALIZABLE]
 
 
 def test_every_version_binds_packets(protocol):
-    assert len(protocol.PACKETS) > 200
+    assert len(protocol.packets) > 200
 
 
-@pytest.mark.parametrize(("module", "cls"), [pytest.param(m, cls, marks=gap(cls)) for m, cls in PACKETS], ids=packet_id)
+@pytest.mark.parametrize(("module", "cls"), [pytest.param(m, cls, marks=gap(cls)) for m, cls in packets], ids=packet_id)
 def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
     packet = cls()
     header, framed = module.decode_packet(module.encode_packet(packet))

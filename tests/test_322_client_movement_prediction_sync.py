@@ -48,7 +48,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168])
 def test_client_movement_prediction_sync_is_packet_322(version):
-    assert version.PACKETS[322] is version.ClientMovementPredictionSyncPacket
+    assert version.packets[322] is version.ClientMovementPredictionSyncPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

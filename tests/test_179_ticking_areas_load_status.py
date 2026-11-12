@@ -18,7 +18,7 @@ GOLDENS = [
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_ticking_areas_load_status_is_packet_179(version):
-    assert version.PACKETS[179] is version.TickingAreasLoadStatusPacket
+    assert version.packets[179] is version.TickingAreasLoadStatusPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)

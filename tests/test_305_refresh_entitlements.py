@@ -9,7 +9,7 @@ EMPTY = bytes.fromhex("")
 
 @pytest.mark.parametrize("version", [v1001, v2168, v2225])
 def test_refresh_entitlements_is_packet_305(version):
-    assert version.PACKETS[305] is version.RefreshEntitlementsPacket
+    assert version.packets[305] is version.RefreshEntitlementsPacket
 
 
 def test_refresh_entitlements_encodes_to_its_golden():

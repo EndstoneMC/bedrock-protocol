@@ -2,7 +2,7 @@ import pytest
 
 from bedrock_protocol import v975, v1001, v2168
 
-VERSIONS = [v975, v1001, v2168]
+versions = [v975, v1001, v2168]
 
 EMPTY_ITEM_BLOB = bytes(10)
 
@@ -107,9 +107,9 @@ GOLDENS = [
 ]
 
 
-@pytest.mark.parametrize("version", VERSIONS)
+@pytest.mark.parametrize("version", versions)
 def test_mob_armor_equipment_is_packet_32(version):
-    assert version.PACKETS[32] is version.MobArmorEquipmentPacket
+    assert version.packets[32] is version.MobArmorEquipmentPacket
 
 
 @pytest.mark.parametrize(("packet", "golden"), GOLDENS)
