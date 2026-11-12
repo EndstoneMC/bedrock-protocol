@@ -1,0 +1,31 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "pos": {
+    "x": 331,
+    "y": 462,
+    "z": -593
+   },
+   "runtime_id": 724,
+   "update_flags": 36,
+   "layer": 986,
+   "entity_unique_id": 1117,
+   "message": "DESTROY"
+  },
+  "bytes": "96059c07a109d40524da07dd0802",
+  "bds_json": {
+   "Block Position": {
+    "X": 331,
+    "Y": 462,
+    "Z": -593
+   },
+   "Block Runtime ID": 724,
+   "Flags": 36,
+   "Layer": 986,
+   "Unique Actor Id": 1117,
+   "Actor Sync Message": 2
+  }
+ }
+]
