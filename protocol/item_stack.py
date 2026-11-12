@@ -387,6 +387,55 @@ class ItemStackRequestCereal:
         strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
 
 
+@type(since=2168)
+class ItemStackRequestPacketData:
+    class RequestData:
+        client_request_id: ItemStackRequestId
+        actions: list[
+            ItemStackRequestCereal.TakeActionData
+            | ItemStackRequestCereal.PlaceActionData
+            | ItemStackRequestCereal.SwapActionData
+            | ItemStackRequestCereal.DropActionData
+            | ItemStackRequestCereal.DestroyActionData
+            | ItemStackRequestCereal.ConsumeActionData
+            | ItemStackRequestCereal.CreateActionData
+            | ItemStackRequestCereal.LabTableCombineActionData
+            | ItemStackRequestCereal.BeaconPaymentActionData
+            | ItemStackRequestCereal.MineBlockActionData
+            | ItemStackRequestCereal.CraftRecipeActionData
+            | ItemStackRequestCereal.CraftRecipeAutoActionData
+            | ItemStackRequestCereal.CraftCreativeActionData
+            | ItemStackRequestCereal.CraftRecipeOptionalActionData
+            | ItemStackRequestCereal.CraftRepairAndDisenchantActionData
+            | ItemStackRequestCereal.CraftLoomActionData
+            | ItemStackRequestCereal.CraftNonImplementedActionData
+            | ItemStackRequestCereal.CraftResultsActionData
+        ] = field(until=2225)
+        actions: list[
+            ItemStackRequestCereal.TakeActionData
+            | ItemStackRequestCereal.PlaceActionData
+            | ItemStackRequestCereal.SwapActionData
+            | ItemStackRequestCereal.DropActionData
+            | ItemStackRequestCereal.DestroyActionData
+            | ItemStackRequestCereal.ConsumeActionData
+            | ItemStackRequestCereal.CreateActionData
+            | ItemStackRequestCereal.LabTableCombineActionData
+            | ItemStackRequestCereal.BeaconPaymentActionData
+            | ItemStackRequestCereal.MineBlockActionData
+            | ItemStackRequestCereal.CraftRecipeActionData
+            | ItemStackRequestCereal.CraftRecipeAutoActionData
+            | ItemStackRequestCereal.CraftCreativeActionData
+            | ItemStackRequestCereal.CraftRecipeOptionalActionData
+            | ItemStackRequestCereal.CraftRepairAndDisenchantActionData
+            | ItemStackRequestCereal.CraftLoomActionData
+            | ItemStackRequestCereal.CraftDiscPressActionData
+            | ItemStackRequestCereal.CraftNonImplementedActionData
+            | ItemStackRequestCereal.CraftResultsActionData
+        ] = field(since=2225)
+        strings_to_filter: list[str]
+        strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
+
+
 @packet(id=147, until=2168)
 class ItemStackRequestPacket:
     requests: list[ItemStackRequestData]
@@ -394,7 +443,7 @@ class ItemStackRequestPacket:
 
 @packet(id=147, since=2168)
 class ItemStackRequestPacket:
-    requests: list[ItemStackRequestCereal.RequestData]
+    requests: list[ItemStackRequestPacketData.RequestData]
 
 
 @type(until=2168)

@@ -160,7 +160,7 @@ class FeatureRegistry:
 
 @packet(id=191)
 class FeatureRegistryPacket:
-    features_data_list: list[FeatureRegistry.FeatureBinaryJsonFormat]
+    features_data: list[FeatureRegistry.FeatureBinaryJsonFormat]
 
 
 @packet(id=195)

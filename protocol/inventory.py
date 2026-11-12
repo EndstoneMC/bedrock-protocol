@@ -330,7 +330,7 @@ class ServerboundStonecutterSetRecipePacket:
 
 @packet(id=355, since=2225)
 class ClientboundStonecutterSetRecipePacket:
-    player_id: ActorUniqueID
+    player_unique_id: ActorUniqueID
     container_id: ContainerID
     recipe_index: varint32
 

@@ -134,7 +134,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP_DEPRECATED = 2
+        NORTH_JUMP_DEPRECATED = 2, "NorthJump_DEPRECATED"
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -187,8 +187,8 @@ class PlayerAuthInputPacket:
         DOWN_RIGHT = 52
         with value(since=748):
             START_USING_ITEM = 53
-            IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
-            IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
+            IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54, "IsCameraRelativeMovementEnabled_DEPRECATED"
+            IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55, "IsRotControlledByMoveDirection_DEPRECATED"
             START_SPIN_ATTACK = 56
             STOP_SPIN_ATTACK = 57
         with value(since=766):

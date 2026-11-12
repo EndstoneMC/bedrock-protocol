@@ -22,22 +22,6 @@ class CreativeItemCategory(IntEnum, uint8):
     NUM_CATEGORIES = 7, "NUM_CATEGORIES"
 
 
-@type(until=2168)
-class CraftingDataEntryType(IntEnum, int32):
-    SHAPELESS_RECIPE = 0
-    SHAPED_RECIPE = 1
-    with value(until=975):
-        FURNACE_RECIPE = 2
-        FURNACE_AUX_RECIPE = 3
-    MULTI_RECIPE = 4
-    USER_DATA_SHAPELESS_RECIPE = 5
-    SHAPELESS_CHEMISTRY_RECIPE = 6
-    SHAPED_CHEMISTRY_RECIPE = 7
-    SMITHING_TRANSFORM_RECIPE = 8
-    SMITHING_TRIM_RECIPE = 9
-    COUNT = auto()
-
-
 class RecipeNetId:
     raw_id: uvarint32
 
@@ -85,27 +69,25 @@ class SerializedRecipeIngredient:
     stack_size: varint32
 
 
-@type(until=2168)
-class SerializedRecipeUnlockingRequirement:
+class RecipeUnlockingRequirement:
     class UnlockingContext(IntEnum, int32):
         NONE = 0
         ALWAYS_UNLOCKED = 1
         PLAYER_IN_WATER = 2
         PLAYER_HAS_MANY_ITEMS = 3
 
-    context: UnlockingContext = field(type=uint8)
-    ingredients: list[SerializedRecipeIngredient] = field(when=lambda r: r.context == UnlockingContext.NONE)
+
+@type(until=2168)
+class SerializedRecipeUnlockingRequirement:
+    context: RecipeUnlockingRequirement.UnlockingContext = field(type=uint8)
+    ingredients: list[SerializedRecipeIngredient] = field(
+        when=lambda r: r.context == RecipeUnlockingRequirement.UnlockingContext.NONE
+    )
 
 
 @type(since=2168)
 class SerializedRecipeUnlockingRequirement:
-    class UnlockingContext(IntEnum, int32):
-        NONE = 0
-        ALWAYS_UNLOCKED = 1
-        PLAYER_IN_WATER = 2
-        PLAYER_HAS_MANY_ITEMS = 3
-
-    context: UnlockingContext
+    context: RecipeUnlockingRequirement.UnlockingContext
     ingredients: list[SerializedRecipeIngredient] | None
 
 
@@ -353,6 +335,22 @@ class ShapelessChemistryRecipePayload:
     tag: str
     priority: varint32
     net_id: RecipeNetId
+
+
+@type(until=2168)
+class CraftingDataEntryType(IntEnum, int32):
+    SHAPELESS_RECIPE = 0
+    SHAPED_RECIPE = 1
+    with value(until=975):
+        FURNACE_RECIPE = 2
+        FURNACE_AUX_RECIPE = 3
+    MULTI_RECIPE = 4
+    USER_DATA_SHAPELESS_RECIPE = 5
+    SHAPELESS_CHEMISTRY_RECIPE = 6
+    SHAPED_CHEMISTRY_RECIPE = 7
+    SMITHING_TRANSFORM_RECIPE = 8
+    SMITHING_TRIM_RECIPE = 9
+    COUNT = auto()
 
 
 @type(until=748)

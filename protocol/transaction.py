@@ -9,7 +9,12 @@ from protocol import field, int32, packet, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import BlockPos, BlockRuntimeId, Vec3
 from protocol.inventory import ContainerEnumName, ContainerID
-from protocol.item import HandSlot, NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.item import (
+    HandSlot,
+    ItemStackLegacyRequestId,
+    NetworkItemStackDescriptor,
+    SerializedNetworkItemStackDescriptor,
+)
 from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
@@ -295,10 +300,10 @@ class InventoryTransactionPacket:
 
 @packet(id=30, since=1001)
 class InventoryTransactionPacket:
-    legacy_request_id: varint32
+    legacy_request_id: ItemStackLegacyRequestId
     legacy_set_item_slots: list[LegacySetSlot] | None
     _true: Literal[True] = field(until=2193)
-    transaction: (
+    variant_transaction: (
         NormalTransactionData
         | InventoryMismatchData
         | ItemUseInventoryTransaction

@@ -30,11 +30,6 @@ class ItemData:
     component_data: CompoundTag
 
 
-class ItemComponentEntry:
-    name: str
-    component_data: CompoundTag
-
-
 @packet(id=162, since=776)
 class ItemRegistryPacket:
     items: list[ItemData]
@@ -71,15 +66,6 @@ class Finalize:
     title: str
     author: str
     xuid: str
-
-
-@type(until=924)
-class BookEditAction(IntEnum, uint8):
-    REPLACE_PAGE = 0
-    ADD_PAGE = 1
-    DELETE_PAGE = 2
-    SWAP_PAGES = 3
-    FINALIZE = 4
 
 
 @packet(id=97, until=924)
@@ -170,6 +156,21 @@ class SerializedNetworkItemStackDescriptor:
     net_id_variant: varint32 | None
     block_runtime_id: BlockRuntimeId
     user_data_buffer: bytes
+
+
+@type(until=924)
+class BookEditAction(IntEnum, uint8):
+    REPLACE_PAGE = 0
+    ADD_PAGE = 1
+    DELETE_PAGE = 2
+    SWAP_PAGES = 3
+    FINALIZE = 4
+
+
+@type(until=776)
+class ItemComponentEntry:
+    name: str
+    component_data: CompoundTag
 
 
 @packet(id=162, until=776)

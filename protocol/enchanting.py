@@ -69,7 +69,7 @@ class ItemEnchants:
 
 
 class ItemEnchantOption:
-    cost: uvarint32 = field(until=975)
+    cost: int32 = field(type=uvarint32, until=975)
     cost: int32 = field(type=uint8, since=975)
     enchants: ItemEnchants
     enchant_name: str
