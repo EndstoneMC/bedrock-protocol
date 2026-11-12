@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     api("org.jspecify:jspecify:1.0.1")
+    api("io.netty:netty-buffer:4.2.19.Final")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
