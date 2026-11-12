@@ -1,0 +1,31 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "boss_id": 331,
+   "player_id": 462,
+   "event_type": "PLAYER_REMOVED",
+   "name": "s4",
+   "filtered_name": "s5",
+   "health_percent": 3.25,
+   "color": "WHITE",
+   "overlay": "NOTCHED_12"
+  },
+  "bytes": "96059c0703027334027335000050400703",
+  "bds_json": {
+   "Target Actor ID": {
+    "Actor Unique ID": 331
+   },
+   "Player ID": {
+    "Actor Unique ID": 462
+   },
+   "Event Type": 3,
+   "Name": "s4",
+   "FilteredName": "s5",
+   "Health Percent": 3.25,
+   "Color": 7,
+   "Overlay": 3
+  }
+ }
+]
