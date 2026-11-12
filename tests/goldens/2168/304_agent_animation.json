@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "anim": "SHRUG",
+   "runtime_id": 462
+  },
+  "bytes": "01ce03",
+  "bds_json": {
+   "Agent Animation": 1,
+   "Runtime Id": {
+    "Actor Runtime ID": 462
+   }
+  }
+ }
+]
