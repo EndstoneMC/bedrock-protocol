@@ -1,4 +1,5 @@
 import importlib.util
+import uuid
 from pathlib import Path
 
 import pytest
@@ -188,10 +189,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
 @pytest.mark.parametrize(
     ("name", "field", "kept"),
     [
-        ("ContentIdentity", "identity", "11111111-2222-4333-8444-555555555555"),
-        ("PackInstanceId", "pack_id", "22222222-3333-4444-8555-666666666666"),
-        ("AttributeModifier", "id", "33333333-4444-4555-8666-777777777777"),
-        ("StartGamePacket", "template_content_identity", "44444444-5555-4666-8777-888888888888"),
         ("SemVersion", "version", "1.2.3"),
         ("PackInstanceId", "version", "2.3.4"),
         ("ResourcePackStackPacket", "base_game_version", "1.21.0"),
@@ -211,10 +208,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("NetworkStackLatencyPacket", "create_time", 0),
     ],
     ids=[
-        "content-identity",
-        "pack-id",
-        "modifier-id",
-        "template-content-identity",
         "sem-version",
         "pack-version",
         "base-game-version",
@@ -233,6 +226,22 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
     chosen = generated(values, schema, name)
     assert [each[field] for each in chosen] == [kept for _ in chosen]
+
+
+@pytest.mark.parametrize(
+    ("name", "field"),
+    [
+        ("ContentIdentity", "identity"),
+        ("PackInstanceId", "pack_id"),
+        ("AttributeModifier", "id"),
+        ("StartGamePacket", "template_content_identity"),
+    ],
+    ids=["content-identity", "pack-id", "modifier-id", "template-content-identity"],
+)
+def test_a_uuid_carried_as_text_is_generated_as_the_text_bds_writes(values, schema, name, field):
+    texts = [each[field] for each in generated(values, schema, name)]
+    assert texts
+    assert texts == [str(uuid.UUID(text)) for text in texts]
 
 
 def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, schema):
