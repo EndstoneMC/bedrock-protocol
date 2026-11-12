@@ -29,11 +29,11 @@ paths:
 
 ## Releases
 
-- Record every number a release reports in `releases` beside `versions`, with the releases that report it; a number nothing gates on goes in `releases` only and decodes with the newest snapshot below it.
-- Take a range's ends from each stable build's dump, one protocol-docs commit per stable release, and from minecraft.wiki's list; a BDS-only build reports its line's number.
+- Record every number a stable client release reports in `releases` beside `versions`, with the releases that report it; a number nothing gates on goes in `releases` only and decodes with the newest snapshot below it.
+- Take a range's ends from each stable build's dump, one protocol-docs commit per stable release, and from minecraft.wiki's list; a BDS-only build widens its line's range only when it reports the line's number.
 - Spell an entry as a release (`"1.26.45"`) or a range (`"1.26.40-1.26.44"`); only the newest may be its line's wildcard (`"1.26.6x"`).
 - A hotfix that keeps an open entry's number changes nothing; when a new number ships, close the open entry to the last release that reported it.
-- A mid-line renumber is a closed entry (`2226: "1.26.64"`); a later hotfix on its line widens it in a release.
+- A mid-line renumber is a closed entry (`2226: "1.26.64"`); a later hotfix that reports its number widens it.
 - A preview stays out of `releases`; its entry lands with the renumber to the shipped number.
 
 ## Snapshots

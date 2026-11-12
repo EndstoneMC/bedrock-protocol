@@ -61,7 +61,7 @@ BYTE_ORDERED = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
 INTEGERS = ("int8", "uint8", *BYTE_ORDERED, "varint32", "varint64", "uvarint32", "uvarint64")
 RELEASE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
 RELEASE_NAME = re.compile(rf"(?P<first>{RELEASE})(?:-(?P<last>{RELEASE}))?")
-RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?P<prefix>(?:[1-9]\d*)?)x")
+RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:[1-9]\d*)?x")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -366,7 +366,7 @@ class Builder:
         if not (
             isinstance(entries, ast.Dict)
             and entries.keys
-            and all(isinstance(key, ast.Constant) and type(key.value) is int and key.value >= 0 for key in entries.keys)
+            and all(isinstance(key, ast.Constant) and type(key.value) is int for key in entries.keys)
             and all(isinstance(entry, ast.Constant) and type(entry.value) is str for entry in entries.values)
         ):
             raise error(source, table, "releases", shape)
@@ -378,10 +378,8 @@ class Builder:
         ends: list[tuple[int, ...]] = []
         for number, node in zip(numbers, entries.values, strict=True):
             name = ast.literal_eval(node)
-            if wildcard := RELEASE_WILDCARD.fullmatch(name):
-                head = name.rsplit(".", 1)[0]
-                first = f"{head}.{wildcard.group('prefix')}0"
-                last = f"{head}.{wildcard.group('prefix')}9"
+            if RELEASE_WILDCARD.fullmatch(name):
+                first, last = name.replace("x", "0"), name.replace("x", "9")
             elif matched := RELEASE_NAME.fullmatch(name):
                 first = matched.group("first")
                 last = matched.group("last") or first

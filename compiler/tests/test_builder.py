@@ -25,13 +25,13 @@ def test_package_lists_versions_and_modules(build_package):
 
 def test_package_lists_releases(build_package):
     package = build_package(
-        {"a": 'package = "a"\n'}, 'versions = (1, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.x"}\n'
+        {"a": 'package = "a"\n'}, 'versions = (1, 2, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n'
     )
 
     assert [(release.number, release.first, release.last) for release in package.releases] == [
         (1, "1.1.0", "1.1.2"),
         (2, "1.2.0", "1.2.0"),
-        (3, "1.3.0", "1.3.9"),
+        (3, "1.3.60", "1.3.69"),
     ]
 
 
@@ -330,10 +330,6 @@ def test_error_names_the_file_and_position(build_package):
         (
             'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.02.0"}\n',
             r"releases\[2\]: '1.02.0' is not a release, a range of releases or a wildcard",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0-1.2.6x"}\n',
-            r"releases\[2\]: '1.2.0-1.2.6x' is not a release, a range of releases or a wildcard",
         ),
         (
             'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.26.64-1.26.6x"}\n',
