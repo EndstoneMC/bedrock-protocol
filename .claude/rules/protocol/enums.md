@@ -9,7 +9,7 @@ paths:
 
 - Spell members PEP 8 UPPER_CASE, converted from BDS's spelling (`JsonUI_ControlTree_PopulateTTS` becomes `JSON_UI_CONTROL_TREE_POPULATE_TTS`).
 - Record BDS's spelling in the DSL, never the wire's.
-- Pair a member with BDS's spelling only where it differs from the member's fold (`dsl.py`) by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
+- Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
 - Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
 
