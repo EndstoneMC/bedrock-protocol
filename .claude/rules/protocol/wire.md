@@ -33,6 +33,6 @@ paths:
 - Before 2168, `PackedItemUseLegacyInventoryTransaction` writes its slots only when `id < -1 and (id & 1) == 0`.
 - Write two `Vec2`s for `CylinderDataPayload`, not the header's one.
 - Before 2168, the chemistry recipe writers do not write the unlocking requirement; the other four recipe writers do.
-- Never unify `ContainerID`: it is `uvarint32` in packet 49 and, from 975, `int8` in packet 50; they part at `NONE = -1`.
+- Never unify `ContainerID`: it is `uvarint32` in packet 49 and, from 975, `uint8` in packet 50; they part at `NONE = -1`.
 - `TextPacket`'s twelve constant strings are on the wire, folded, over `[898, 924)`.
 - Spell packet 124's event data `CompoundTagData`: a compound's entries plus `TAG_End`, no root tag, at every version.

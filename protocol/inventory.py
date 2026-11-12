@@ -139,7 +139,7 @@ class InventorySlotPacket:
 
 @packet(id=50, since=975)
 class InventorySlotPacket:
-    inventory_id: ContainerID
+    inventory_id: ContainerID = field(type=uint8)
     slot: uvarint32
     full_container_name: FullContainerName | None
     storage_item: SerializedNetworkItemStackDescriptor | None
@@ -192,7 +192,7 @@ class ContainerType(IntEnum, int8):
 
 @packet(id=47)
 class ContainerClosePacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     container_type: ContainerType
     server_initiated_close: bool
 
@@ -200,13 +200,13 @@ class ContainerClosePacket:
 @packet(id=48)
 class PlayerHotbarPacket:
     selected_slot: uvarint32
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     should_select_slot: bool
 
 
 @packet(id=51)
 class ContainerSetDataPacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     id: varint32
     value: varint32
 
@@ -235,7 +235,7 @@ class PlayerToggleCrafterSlotRequestPacket:
 
 @packet(id=46)
 class ContainerOpenPacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     type: ContainerType
     pos: NetworkBlockPosition = field(until=944)
     pos: BlockPos = field(since=944)
@@ -325,14 +325,14 @@ class SetPlayerFurnaceOptionsPacket:
 
 @packet(id=354, since=2225)
 class ServerboundStonecutterSetRecipePacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     recipe_index: varint32
 
 
 @packet(id=355, since=2225)
 class ClientboundStonecutterSetRecipePacket:
     player_unique_id: ActorUniqueID
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     recipe_index: varint32
 
 
@@ -349,7 +349,7 @@ class ServerboundCursorItemDragPacket:
 
 @packet(id=80)
 class UpdateTradePacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     type: ContainerType
     size: varint32
     trader_tier: varint32
@@ -363,7 +363,7 @@ class UpdateTradePacket:
 
 @packet(id=81)
 class UpdateEquipPacket:
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
     type: ContainerType
     size: varint32
     entity_unique_id: ActorUniqueID
@@ -377,7 +377,7 @@ class MobEquipmentPacket:
     item: SerializedNetworkItemStackDescriptor = field(since=975)
     slot: int32 = field(type=uint8)
     selected_slot: int32 = field(type=uint8)
-    container_id: ContainerID
+    container_id: ContainerID = field(type=uint8)
 
 
 @packet(id=32, until=1001)
