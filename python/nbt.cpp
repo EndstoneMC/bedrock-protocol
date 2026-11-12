@@ -12,7 +12,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "casters.hpp"
-#include "module.hpp"
+#include "module.h"
 
 namespace bedrock::protocol::python {
 

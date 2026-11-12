@@ -11,7 +11,7 @@
 #include "bedrock/protocol/stream.hpp"
 #include "bedrock/protocol/version.hpp"
 #include "binder.hpp"
-#include "module.hpp"
+#include "module.h"
 
 namespace bedrock::protocol::python {
 

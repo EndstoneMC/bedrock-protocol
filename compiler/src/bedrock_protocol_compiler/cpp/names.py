@@ -2,6 +2,7 @@ from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef
 from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape
 
 INCLUDE_DIR = "bedrock/protocol"
+REGISTRY_HEADER = f"{INCLUDE_DIR}/packets.hpp"
 PRE_CEREAL = "pre_cereal"
 PRIMITIVES = {
     "str": "std::string",

@@ -34,7 +34,7 @@
 #include "bedrock/protocol/network.h"
 #include "bedrock/protocol/pack.h"
 #include "bedrock/protocol/packet.hpp"
-#include "bedrock/protocol/packets.h"
+#include "bedrock/protocol/packets.hpp"
 #include "bedrock/protocol/player.h"
 #include "bedrock/protocol/presence.h"
 #include "bedrock/protocol/scoreboard.h"

@@ -10,7 +10,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
     for file in files:
         file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
         file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))
-    registry = context.open(f"{names.INCLUDE_DIR}/packets.h")
+    registry = context.open(names.REGISTRY_HEADER)
     registry.emit("#pragma once")
     registry.emit("")
     registry.emit("#include <type_traits>")

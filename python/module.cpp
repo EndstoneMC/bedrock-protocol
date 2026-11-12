@@ -1,4 +1,4 @@
-#include "module.hpp"
+#include "module.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/array.h>

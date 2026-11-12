@@ -2,11 +2,13 @@
 paths:
   - "include/**"
   - "python/**/*.{cpp,hpp,h}"
+  - "compiler/src/bedrock_protocol_compiler/cpp/**"
 ---
 
 # Hand-written C++
 
 - Include the repo's own headers with quotes and the full path from the include root (`"bedrock/protocol/stream.hpp"`); use `<>` only for the standard library and third-party headers; never use `./` or `../`.
+- Name a header with its own `.cpp` `.h` and a header-only one `.hpp`; this holds for the generated headers too.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
 - Keep one namespace block per file with inner namespaces nested inside it; never close a namespace and reopen it.

@@ -1,4 +1,4 @@
-#include "module.hpp"
+#include "module.h"
 
 namespace bedrock::protocol::python {
 

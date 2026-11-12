@@ -64,7 +64,7 @@ def generate(build_package, tmp_path):
 def test_a_header_and_a_source_per_module_packets_h_and_version_hpp(generate):
     out = generate({"a": A, "b": B})
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.hpp", "version.hpp"]
 
 
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
@@ -83,7 +83,7 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "packets.h", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "packets.hpp", "version.hpp"]
 
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
@@ -117,7 +117,7 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
 def test_packets_h_names_every_packet_of_every_module(generate):
     out = generate({"a": A, "c": C})
 
-    registry = (out / "packets.h").read_text()
+    registry = (out / "packets.hpp").read_text()
     assert "struct packet_of<V, 1>" in registry
     assert "struct packet_of<V, 2>" in registry
 
@@ -131,4 +131,4 @@ def test_a_module_header_specialises_no_packet_of(generate):
 def test_packets_h_includes_every_module_header(generate):
     out = generate({"a": A, "b": B})
 
-    assert "#include <bedrock/protocol/b.h>" in (out / "packets.h").read_text()
+    assert "#include <bedrock/protocol/b.h>" in (out / "packets.hpp").read_text()
