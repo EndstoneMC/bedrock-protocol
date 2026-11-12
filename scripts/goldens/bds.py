@@ -103,7 +103,7 @@ def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
             return shown == number
         return shown in (wanted.lower(), wanted.replace("_", "").lower())
     if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
-        return bool(shown == bytes.fromhex(wanted).decode("latin-1"))
+        return isinstance(shown, str) and shown.encode(errors="surrogateescape") == bytes.fromhex(wanted)
     if type(shown) is int and type(wanted) is int:
         return any(
             -(1 << (bits - 1)) <= min(shown, wanted)
@@ -364,7 +364,7 @@ def main() -> None:
 
                     json_text = server.alloc(bytes(24))
                     server.call(virtuals[slots.to_string], json_text, packet)
-                    shown_text = server.string(json_text).decode(errors="replace")
+                    shown_text = server.string(json_text).decode(errors="surrogateescape")
                     try:
                         report["bds_json"] = json.loads(shown_text) if shown_text else None
                     except ValueError:

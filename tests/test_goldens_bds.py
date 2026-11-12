@@ -103,6 +103,14 @@ def test_a_blob_in_hex_matches_the_characters_bds_shows(bds):
     assert gap(bds, {"Chunk Data": "\u0004\u0001\u0002"}, {"data": "040102"}) is None
 
 
+def test_a_blob_byte_past_0x7f_matches_the_raw_byte_bds_writes(bds):
+    assert gap(bds, {"Chunk Data": "\udc80\u0001\u0002"}, {"data": "800102"}) is None
+
+
+def test_a_blob_byte_past_0x7f_does_not_match_its_latin_1_character(bds):
+    assert gap(bds, {"Chunk Data": "\u0080\u0001\u0002"}, {"data": "800102"}) == ("data", "800102")
+
+
 @pytest.fixture(scope="module")
 def values():
     pytest.importorskip("bedrock_protocol_compiler")
