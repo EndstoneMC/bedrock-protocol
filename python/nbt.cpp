@@ -8,6 +8,7 @@
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/bind_map.h>
 #include <nanobind/stl/vector.h>
 
 #include "casters.hpp"
@@ -99,61 +100,7 @@ void init_nbt(nb::module_ &parent)
             return std::format("ListTag([{}])", tags);
         });
 
-    nb::class_<CompoundTag>(m, "CompoundTag")
-        .def(
-            "__init__",
-            [](CompoundTag *self, nb::dict entries) {
-                CompoundTag out;
-                for (auto [key, tag] : entries) {
-                    out.insert_or_assign(nb::cast<std::string>(key), nb::cast<Tag>(tag));
-                }
-                new (self) CompoundTag(std::move(out));
-            },
-            nb::arg("entries") = nb::dict())
-        .def("__len__", &CompoundTag::size)
-        .def("__contains__", [](const CompoundTag &self, const std::string &key) { return self.contains(key); })
-        .def("__getitem__",
-             [](const CompoundTag &self, const std::string &key) -> Tag {
-                 const auto it = self.find(key);
-                 if (it == self.end()) {
-                     throw nb::key_error(key.c_str());
-                 }
-                 return it->second;
-             })
-        .def("__setitem__",
-             [](CompoundTag &self, const std::string &key, const Tag &tag) { self.insert_or_assign(key, tag); })
-        .def("__delitem__",
-             [](CompoundTag &self, const std::string &key) {
-                 if (self.erase(key) == 0) {
-                     throw nb::key_error(key.c_str());
-                 }
-             })
-        .def("keys",
-             [](const CompoundTag &self) {
-                 std::vector<std::string> out;
-                 for (const auto &[key, _] : self) {
-                     out.push_back(key);
-                 }
-                 return out;
-             })
-        .def("__iter__", [](nb::handle self) { return nb::iter(self.attr("keys")()); })
-        .def("items",
-             [](const CompoundTag &self) {
-                 nb::list out;
-                 for (const auto &[key, tag] : self) {
-                     out.append(nb::make_tuple(nb::cast(key), nb::cast(tag)));
-                 }
-                 return out;
-             })
-        .def(nb::self == nb::self)
-        .def("__repr__", [](const CompoundTag &self) {
-            std::string entries;
-            for (const auto &[key, tag] : self) {
-                entries += std::format("{}{}: {}", entries.empty() ? "" : ", ", nb::repr(nb::cast(key)).c_str(),
-                                       nb::repr(nb::cast(tag)).c_str());
-            }
-            return std::format("CompoundTag({{{}}})", entries);
-        });
+    nb::bind_map<CompoundTag>(m, "CompoundTag").attr("__hash__") = nb::none();
 
     m.attr("Tag") = m.attr("ByteTag") | m.attr("ShortTag") | m.attr("IntTag") | m.attr("Int64Tag") |
                     m.attr("FloatTag") | m.attr("DoubleTag") | m.attr("StringTag") | m.attr("ByteArrayTag") |

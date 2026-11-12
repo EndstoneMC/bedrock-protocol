@@ -106,6 +106,17 @@ def test_a_signature_names_a_tag_as_nbt_tag(function, shown):
     assert shown in function.__doc__
 
 
+def test_a_compound_lists_its_keys_and_items():
+    tag = nbt.CompoundTag({"id": nbt.StringTag("Chest")})
+    assert list(tag.keys()) == ["id"]
+    assert list(tag.items()) == [("id", nbt.StringTag("Chest"))]
+
+
+def test_a_compound_raises_key_error_for_a_missing_key():
+    with pytest.raises(KeyError, match="^$"):
+        nbt.CompoundTag()["id"]
+
+
 def test_a_list_built_in_code_takes_its_type_from_the_first_element():
     tags = nbt.ListTag()
     assert tags.type == 0
