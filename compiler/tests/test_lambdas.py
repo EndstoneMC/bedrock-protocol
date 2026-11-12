@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol_compiler.descriptor import Binary, CompilerError, FieldRef, Int, Len, MemberRef, Not, Test
+from bedrock_protocol_compiler.descriptor import Binary, CompilerError, FieldRef, Int, Len, MemberRef, Not, Range, Test
 
 HEADER = """
 from enum import IntEnum
@@ -109,6 +109,24 @@ def test_a_field_and_its_block_both_guard(build_package):
     assert family_of(package).declarations[0].fields[1].when == Binary(
         "and", Binary("==", FieldRef("k"), Int(1)), Binary("==", FieldRef("k"), Int(2))
     )
+
+
+def test_a_block_takes_a_gate_beside_its_guard(build_package):
+    source = HEADER + ("class S:\n    k: E\n    with field(since=3, when=lambda p: p.k == E.C):\n        x: uint8\n")
+    package = build_package({"a": source})
+    block_field = family_of(package).declarations[0].fields[1]
+
+    assert block_field.range == Range(3, None)
+    assert block_field.when == Binary("==", FieldRef("k"), MemberRef(family_of(package, "E"), "C"))
+
+
+def test_a_guard_in_a_gated_block_names_a_field_the_block_gates(build_package):
+    source = HEADER + (
+        "class S:\n    with field(since=2):\n        k: uint8\n        x: uint8 = field(when=lambda p: p.k == 1)\n"
+    )
+    package = build_package({"a": source})
+
+    assert when_of(package, "x") == Binary("==", FieldRef("k"), Int(1))
 
 
 def test_count_is_a_field_a_length_or_a_product(build_package):

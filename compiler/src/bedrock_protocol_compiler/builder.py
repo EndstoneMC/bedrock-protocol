@@ -764,7 +764,7 @@ class Builder:
     def narrow(self, source: Source, node: ast.stmt, name: str, own: Range, within: Range) -> Range:
         for gate in (Range(own.since, None), Range(None, own.until)):
             if gate != Range(None, None) and (not gate.overlaps(within) or gate.intersect(within) == within):
-                raise error(source, node, name, "has a gate its declaration already decides")
+                raise error(source, node, name, "has a gate its enclosing range already decides")
         return own.intersect(within)
 
     def tile(self, source: Source, node: ast.ClassDef, family: Struct | Enum, range: Range) -> None:
