@@ -320,11 +320,6 @@ class StartGamePacket:
         server_telemetry_data: ServerTelemetryData
 
 
-@packet(id=72)
-class GameRulesChangedPacket:
-    rule_data: GameRulesChangedPacketData
-
-
 @packet(id=11, since=2168)
 class StartGamePacket:
     entity_id: ActorUniqueID
@@ -352,6 +347,11 @@ class StartGamePacket:
     network_permissions: NetworkPermissions
     server_configuration_join_info: ServerConfigurationJoinInfo | None
     server_telemetry_data: ServerTelemetryData
+
+
+@packet(id=72)
+class GameRulesChangedPacket:
+    rule_data: GameRulesChangedPacketData
 
 
 @packet(id=59)
