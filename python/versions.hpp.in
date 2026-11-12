@@ -1,9 +1,0 @@
-#pragma once
-
-#include <array>
-
-namespace bedrock::protocol::python {
-
-inline constexpr std::array versions{@_versions@};
-
-}  // namespace bedrock::protocol::python
