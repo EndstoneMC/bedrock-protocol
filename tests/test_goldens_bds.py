@@ -256,3 +256,8 @@ def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, sch
 def test_an_integer_leaf_is_printed_at_its_wire_type(values, schema, name, value, printed):
     family = next(each for each in schema.order if each.name == name)
     assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed
+
+
+def test_an_enum_count_sentinel_is_never_generated(values, schema):
+    options = generated(values, schema, "InventoryOptions")
+    assert "COUNT" not in [each["layout_inv"] for each in options]

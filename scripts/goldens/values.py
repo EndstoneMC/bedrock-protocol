@@ -199,7 +199,8 @@ class Generator:
     def named(self, enum: Any) -> dict[int, str]:
         names: dict[int, str] = {}
         for name, number in self.numbers(enum).items():
-            names.setdefault(number, name)
+            if name != "COUNT":
+                names.setdefault(number, name)
         return names
 
     def fields(self, shape: StructShape) -> list[Field]:
