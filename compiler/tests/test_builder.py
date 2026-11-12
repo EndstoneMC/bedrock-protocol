@@ -9,6 +9,7 @@ from bedrock_protocol_compiler.descriptor import (
     StructRef,
 )
 
+INIT_123 = 'versions = (1, 2, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
 HEADER = """
 from protocol import builtin, field, packet, type, uint8, uint32, double
 package = "bedrock.protocol"
@@ -16,10 +17,44 @@ package = "bedrock.protocol"
 
 
 def test_package_lists_versions_and_modules(build_package):
-    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "a.b"\n'}, "versions = (1, 2, 3)\n")
+    package = build_package({"a": 'package = "a.b"\n', "b": 'package = "a.b"\n'}, INIT_123)
 
     assert package.versions == (1, 2, 3)
     assert [(module.stem, module.package) for module in package.modules] == [("a", "a.b"), ("b", "a.b")]
+
+
+def test_package_lists_releases(build_package):
+    package = build_package(
+        {"a": 'package = "a"\n'}, 'versions = (1, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.x"}\n'
+    )
+
+    assert [(release.number, release.first, release.last) for release in package.releases] == [
+        (1, "1.1.0", "1.1.2"),
+        (2, "1.2.0", "1.2.0"),
+        (3, "1.3.0", "1.3.9"),
+    ]
+
+
+def test_a_number_that_is_not_a_snapshot_is_accepted(build_package):
+    package = build_package(
+        {"a": 'package = "a"\n'}, 'versions = (1, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
+    )
+
+    assert [release.number for release in package.releases] == [1, 2, 3]
+
+
+def test_a_snapshot_above_the_newest_release_needs_no_entry(build_package):
+    package = build_package({"a": 'package = "a"\n'}, 'versions = (1, 4)\nreleases = {1: "1.1.0", 2: "1.2.0"}\n')
+
+    assert [release.number for release in package.releases] == [1, 2]
+
+
+def test_a_closed_newest_entry_is_accepted(build_package):
+    package = build_package(
+        {"a": 'package = "a"\n'}, 'versions = (2225,)\nreleases = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n'
+    )
+
+    assert package.releases[-1].last == "1.26.64"
 
 
 def test_modules_declare_one_package(build_package):
@@ -31,8 +66,7 @@ def test_docstrings_declare_nothing(build_package):
     package = build_package(
         {"a": '"""Module."""\n' + HEADER + 'class A:\n    """Struct."""\n    x: uint8\n'},
         '"""Init."""\n'
-        "from bedrock_protocol_compiler.dsl import builtin, double, field, packet, type, uint8, uint32\n"
-        "versions = (1, 2, 3)\n",
+        "from bedrock_protocol_compiler.dsl import builtin, double, field, packet, type, uint8, uint32\n" + INIT_123,
     )
 
     assert [field.name for field in package.modules[0].families[0].declarations[0].fields] == ["x"]
@@ -161,7 +195,7 @@ def test_import_may_precede_the_module_it_names(build_package):
 
 def test_protocol_exports_only_what_its_init_binds(build_package):
     with pytest.raises(CompilerError, match="uint8: is not exported by protocol"):
-        build_package({"a": 'from protocol import uint8\npackage = "a"\n'}, "versions = (1, 2, 3)\n")
+        build_package({"a": 'from protocol import uint8\npackage = "a"\n'}, INIT_123)
 
 
 def test_class_scopes_resolve_outward_before_the_module(build_package):
@@ -256,9 +290,85 @@ def test_error_names_the_file_and_position(build_package):
         ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
         ("versions = (True, 2)\n", "versions: is not a tuple of ascending integers"),
         ("versions = (1, 2, 3)\nversions = (1, 2, 3)\n", "versions: is declared twice"),
-        ("versions = (1, 2, 3)\n__version__ = 3\n", "module: holds only imports"),
-        ("versions = (1, 2, 3)\nclass A:\n    pass\n", "module: holds only imports"),
-        ("from protocol.a import A\nversions = (1, 2, 3)\n", "protocol.a: is not importable from __init__"),
+        (INIT_123 + "__version__ = 3\n", "module: holds only imports, a docstring, versions and releases"),
+        (INIT_123 + "class A:\n    pass\n", "module: holds only imports, a docstring, versions and releases"),
+        ("from protocol.a import A\n" + INIT_123, "protocol.a: is not importable from __init__"),
+        ("versions = (1, 2, 3)\n", "releases: missing"),
+        (INIT_123 + 'releases = {1: "1.1.0"}\n', "releases: is declared twice"),
+        (
+            "versions = (1, 2)\nreleases = [1, 2]\n",
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            "versions = (1, 2)\nreleases = {}\n",
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {2: "1.2.0", 1: "1.1.0"}\n',
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 1: "1.1.1"}\n',
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", "2": "1.2.0"}\n',
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {True: "1.1.0", 2: "1.2.0"}\n',
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: 120}\n',
+            "releases: is not a dict of ascending protocol numbers to release names",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0.30"}\n',
+            r"releases\[2\]: '1.2.0.30' is not a release, a range of releases or a wildcard",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.02.0"}\n',
+            r"releases\[2\]: '1.02.0' is not a release, a range of releases or a wildcard",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0-1.2.6x"}\n',
+            r"releases\[2\]: '1.2.0-1.2.6x' is not a release, a range of releases or a wildcard",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.26.64-1.26.6x"}\n',
+            r"releases\[2\]: '1.26.64-1.26.6x' is not a release, a range of releases or a wildcard",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0x"}\n',
+            r"releases\[2\]: '1.2.0x' is not a release, a range of releases or a wildcard",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.4-1.2.0"}\n',
+            r"releases\[2\]: '1.2.4-1.2.0' does not ascend",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.4-1.2.4"}\n',
+            r"releases\[2\]: '1.2.4-1.2.4' does not ascend",
+        ),
+        ('versions = (1, 2)\nreleases = {2: "1.2.0"}\n', "releases: starts at 2, not at the oldest version 1"),
+        (
+            'versions = (2, 3)\nreleases = {1: "1.1.0", 3: "1.3.0"}\n',
+            "releases: starts at 1, not at the oldest version 2",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.0-1.1.5", 2: "1.1.5"}\n',
+            r"releases\[2\]: 1.1.5 is not after releases\[1\]'s 1.1.0-1.1.5",
+        ),
+        (
+            'versions = (1, 2)\nreleases = {1: "1.1.x", 2: "1.1.5"}\n',
+            r"releases\[2\]: 1.1.5 is not after releases\[1\]'s 1.1.x",
+        ),
+        (
+            'versions = (1, 2, 3)\nreleases = {1: "1.1.0", 2: "1.2.x", 3: "1.3.0"}\n',
+            r"releases\[2\]: is open, but only the newest release may be",
+        ),
+        ('versions = (1, 2, 3)\nreleases = {1: "1.1.0", 3: "1.3.0"}\n', "versions: 2 has no release"),
     ],
 )
 def test_init_is_rejected(build_package, init, message):

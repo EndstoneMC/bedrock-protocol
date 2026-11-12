@@ -10,6 +10,8 @@ from bedrock_protocol_compiler.dsl import (
 )
 
 versions = (1, 2, 3, 4, 5)
+
+releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.x"}
 """
 
 

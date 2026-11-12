@@ -231,6 +231,15 @@ class Module:
 
 
 @dataclass(frozen=True)
+class Release:
+    number: int
+    name: str
+    first: str
+    last: str
+
+
+@dataclass(frozen=True)
 class Package:
     versions: tuple[int, ...]
+    releases: tuple[Release, ...]
     modules: tuple[Module, ...]

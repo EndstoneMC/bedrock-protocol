@@ -2,6 +2,7 @@ import ast
 import builtins
 import enum
 import inspect
+import re
 import typing
 import uuid
 from collections import Counter
@@ -42,6 +43,7 @@ from bedrock_protocol_compiler.descriptor import (
     Package,
     Primitive,
     Range,
+    Release,
     Struct,
     StructDeclaration,
     StructRef,
@@ -57,6 +59,9 @@ ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32"
 LIST_PREFIXES = ("uint32", "uint16", "varint32")
 BYTE_ORDERED = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
 INTEGERS = ("int8", "uint8", *BYTE_ORDERED, "varint32", "varint64", "uvarint32", "uvarint64")
+RELEASE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
+RELEASE_NAME = re.compile(rf"(?P<first>{RELEASE})(?:-(?P<last>{RELEASE}))?")
+RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?P<prefix>(?:[1-9]\d*)?)x")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
@@ -285,6 +290,7 @@ class Builder:
             raise CompilerError(f"{package_dir}: has no schema module")
         self.scopes: dict[Struct, Scope] = {}
         self.versions: tuple[int, ...] = ()
+        self.releases: tuple[Release, ...] = ()
         self.homes: dict[tuple[str, bool], Source] = {}
         self.packets: dict[int, list[tuple[Struct, Range]]] = {}
         self.pre_cereal_families: dict[Struct | Enum, Struct | Enum] = {}
@@ -295,7 +301,7 @@ class Builder:
         self.expanding: list[UnionAlias] = []
 
     def build(self) -> Package:
-        self.versions = self.declare_init(self.init)
+        self.versions, self.releases = self.declare_init(self.init)
         for source in self.sources.values():
             self.declare_module(source)
         for source in self.sources.values():
@@ -317,12 +323,13 @@ class Builder:
             )
             for source in self.sources.values()
         )
-        package = Package(self.versions, modules)
+        package = Package(self.versions, self.releases, modules)
         check(package)
         return package
 
-    def declare_init(self, source: Source) -> tuple[int, ...]:
+    def declare_init(self, source: Source) -> tuple[tuple[int, ...], tuple[Release, ...]]:
         versions: tuple[int, ...] | None = None
+        table: ast.Assign | None = None
         for statement in without_docstring(source.tree.body):
             match statement:
                 case ast.ImportFrom(module=str() as module) if module.startswith(f"{self.name}."):
@@ -344,11 +351,64 @@ class Builder:
                     ):
                         raise error(source, statement, "versions", "is not a tuple of ascending integers")
                     versions = parsed
+                case ast.Assign(targets=[ast.Name(id="releases")]):
+                    if table is not None:
+                        raise error(source, statement, "releases", "is declared twice")
+                    table = statement
                 case _:
-                    raise error(source, statement, "module", "holds only imports, a docstring and versions")
+                    raise error(source, statement, "module", "holds only imports, a docstring, versions and releases")
         if versions is None:
             raise CompilerError(f"{source.path}: versions: missing")
-        return versions
+        if table is None:
+            raise CompilerError(f"{source.path}: releases: missing")
+        shape = "is not a dict of ascending protocol numbers to release names"
+        entries = table.value
+        if not (
+            isinstance(entries, ast.Dict)
+            and entries.keys
+            and all(isinstance(key, ast.Constant) and type(key.value) is int and key.value >= 0 for key in entries.keys)
+            and all(isinstance(entry, ast.Constant) and type(entry.value) is str for entry in entries.values)
+        ):
+            raise error(source, table, "releases", shape)
+        numbers = [ast.literal_eval(key) for key in entries.keys if key is not None]
+        if numbers != sorted(set(numbers)):
+            raise error(source, table, "releases", shape)
+        releases: list[Release] = []
+        starts: list[tuple[int, ...]] = []
+        ends: list[tuple[int, ...]] = []
+        for number, node in zip(numbers, entries.values, strict=True):
+            name = ast.literal_eval(node)
+            if wildcard := RELEASE_WILDCARD.fullmatch(name):
+                head = name.rsplit(".", 1)[0]
+                first = f"{head}.{wildcard.group('prefix')}0"
+                last = f"{head}.{wildcard.group('prefix')}9"
+            elif matched := RELEASE_NAME.fullmatch(name):
+                first = matched.group("first")
+                last = matched.group("last") or first
+            else:
+                reason = f"{name!r} is not a release, a range of releases or a wildcard"
+                raise error(source, node, f"releases[{number}]", reason)
+            starts.append(tuple(map(int, first.split("."))))
+            ends.append(tuple(map(int, last.split("."))))
+            if "-" in name and starts[-1] >= ends[-1]:
+                raise error(source, node, f"releases[{number}]", f"{name!r} does not ascend")
+            releases.append(Release(number, name, first, last))
+        if releases[0].number != versions[0]:
+            raise error(
+                source, table, "releases", f"starts at {releases[0].number}, not at the oldest version {versions[0]}"
+            )
+        for index, node in enumerate(entries.values[1:], 1):
+            if starts[index] <= ends[index - 1]:
+                after, before = releases[index], releases[index - 1]
+                reason = f"{after.first} is not after releases[{before.number}]'s {before.name}"
+                raise error(source, node, f"releases[{after.number}]", reason)
+        for release, node in zip(releases[:-1], entries.values, strict=False):
+            if release.name.endswith("x"):
+                raise error(source, node, f"releases[{release.number}]", "is open, but only the newest release may be")
+        for version in versions:
+            if version <= releases[-1].number and version not in numbers:
+                raise error(source, table, "versions", f"{version} has no release")
+        return versions, tuple(releases)
 
     def declare_module(self, source: Source) -> None:
         for statement in without_docstring(source.tree.body):
