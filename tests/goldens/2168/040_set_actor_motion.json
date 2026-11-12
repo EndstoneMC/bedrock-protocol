@@ -1,0 +1,29 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "motion": {
+    "x": 1.25,
+    "y": 1.75,
+    "z": 2.25
+   },
+   "tick": 855
+  },
+  "bytes": "cb020000a03f0000e03f00001040d706",
+  "bds_json": {
+   "Target Runtime ID": {
+    "Actor Runtime ID": 331
+   },
+   "Motion": {
+    "X": 1.25,
+    "Y": 1.75,
+    "Z": 2.25
+   },
+   "Tick": {
+    "Input tick": 855
+   }
+  }
+ }
+]

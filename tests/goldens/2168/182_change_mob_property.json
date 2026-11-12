@@ -1,0 +1,25 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "actor_id": 331,
+   "prop_name": "s2",
+   "bool_component_val": false,
+   "string_component_val": "s4",
+   "int_component_val": 855,
+   "float_component_val": 3.25
+  },
+  "bytes": "960502733200027334ae0d00005040",
+  "bds_json": {
+   "Actor Id": {
+    "Actor Unique ID": 331
+   },
+   "Property Name": "s2",
+   "BoolComponent Value": false,
+   "StringComponent Value": "s4",
+   "IntComponent Value": 855,
+   "FloatComponent Value": 3.25
+  }
+ }
+]

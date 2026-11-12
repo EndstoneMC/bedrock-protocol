@@ -1,0 +1,21 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "death_cause_attack_name": "s1",
+   "death_cause_message_list": [
+    "s2"
+   ]
+  },
+  "bytes": "02733101027332",
+  "bds_json": {
+   "Death Cause Message": {
+    "Death Cause Attack Name": "s1",
+    "Death Cause Message List": [
+     "s2"
+    ]
+   }
+  }
+ }
+]

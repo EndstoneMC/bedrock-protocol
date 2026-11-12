@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "id": 331,
+   "max_slots": 15,
+   "with_data": false
+  },
+  "bytes": "4b010000000000000f00",
+  "bds_json": {
+   "Actor ID": 331,
+   "Max Slots": 15,
+   "With Data": false
+  }
+ }
+]
