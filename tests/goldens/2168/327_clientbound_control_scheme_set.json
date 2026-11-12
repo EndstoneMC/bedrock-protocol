@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "control_scheme": "CAMERA_RELATIVE"
+  },
+  "bytes": "01",
+  "bds_json": {
+   "Control Scheme": 1
+  }
+ }
+]

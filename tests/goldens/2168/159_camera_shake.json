@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "intensity": 0.75,
+   "seconds": 1.25,
+   "shake_type": "ROTATIONAL",
+   "shake_action": "ADD"
+  },
+  "bytes": "0000403f0000a03f0100",
+  "bds_json": {
+   "Intensity": 0.75,
+   "Seconds": 1.25,
+   "Shake Type": 1,
+   "Shake Action": 0
+  }
+ }
+]
