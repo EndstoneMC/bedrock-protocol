@@ -74,8 +74,36 @@ def test_clearing_a_list_resets_its_type():
     assert tags.type == 0
 
 
-def test_every_tag_class_is_a_tag():
-    assert isinstance(nbt.IntTag(1), nbt.Tag)
+@pytest.mark.parametrize(
+    "cls",
+    [
+        nbt.ByteTag,
+        nbt.ShortTag,
+        nbt.IntTag,
+        nbt.Int64Tag,
+        nbt.FloatTag,
+        nbt.DoubleTag,
+        nbt.StringTag,
+        nbt.ByteArrayTag,
+        nbt.IntArrayTag,
+        nbt.ListTag,
+        nbt.CompoundTag,
+    ],
+    ids=lambda cls: cls.__name__,
+)
+def test_every_tag_class_is_a_tag(cls):
+    assert isinstance(cls(), nbt.Tag)
+
+
+@pytest.mark.parametrize(
+    ("function", "shown"),
+    [
+        pytest.param(nbt.ListTag.append, "arg: bedrock_protocol.nbt.Tag, /", id="argument"),
+        pytest.param(nbt.CompoundTag.__getitem__, "-> bedrock_protocol.nbt.Tag | None", id="return"),
+    ],
+)
+def test_a_signature_names_a_tag_as_nbt_tag(function, shown):
+    assert shown in function.__doc__
 
 
 def test_a_list_built_in_code_takes_its_type_from_the_first_element():

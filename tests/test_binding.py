@@ -128,6 +128,23 @@ def test_an_enum_argument_also_takes_an_int():
     assert "ContainerID | int = ..." in proto.ContainerClosePacket.__init__.__doc__
 
 
+@pytest.mark.parametrize(
+    ("function", "shown"),
+    [
+        pytest.param(
+            proto.DataStoreChange.__init__,
+            "new_data: bool | int | float | str | list | dict | None = ...",
+            id="argument",
+        ),
+        pytest.param(
+            proto.DataStoreChange.new_data.fget, "-> bool | int | float | str | list | dict | None", id="return"
+        ),
+    ],
+)
+def test_a_signature_names_a_dynamic_value_by_its_python_types(function, shown):
+    assert shown in function.__doc__
+
+
 def test_a_struct_field_is_a_live_reference():
     packet = proto.MovePlayerPacket()
     pos = packet.pos
