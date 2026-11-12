@@ -98,7 +98,6 @@ class SubChunkPacket:
         height_map_data: HeightmapData
         blob_id: uint64
 
-    @type(until=2168)
     class UncachedSubChunkPacketData:
         sub_chunk_pos_offset: SubChunkPosOffset
         result: SubChunkRequestResult
@@ -132,7 +131,7 @@ class SubChunkPacket:
         INDEX_OUT_OF_BOUNDS = 5
         SUCCESS_ALL_AIR = 6
 
-    @type(since=2168, until=2193)
+    @type(until=2193)
     class HeightmapData:
         height_map_type: HeightMapDataType
         subchunk_height_map: array[array[int8, 16], 16] | None

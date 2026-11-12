@@ -345,7 +345,7 @@ class ItemStackRequestCereal:
         craft_results: list[NetworkItemInstanceDescriptorData]
         num_crafts: uint8
 
-    @type(since=2168, until=2225)
+    @type(until=2225)
     class RequestData:
         client_request_id: ItemStackRequestId
         actions: list[
