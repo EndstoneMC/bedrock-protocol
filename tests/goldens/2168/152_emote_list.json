@@ -1,0 +1,24 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "runtime_id": 331,
+   "emote_piece_ids": [
+    "00000000-0000-0000-0000-000000000002"
+   ]
+  },
+  "bytes": "cb020100000000000000000200000000000000",
+  "bds_json": {
+   "Runtime id": {
+    "Actor Runtime ID": 331
+   },
+   "Emote piece ids": [
+    {
+     "Most Significant Bits": 0,
+     "Least Significant Bits": 2
+    }
+   ]
+  }
+ }
+]
