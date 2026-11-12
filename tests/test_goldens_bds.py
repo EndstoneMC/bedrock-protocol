@@ -288,6 +288,13 @@ def test_an_enum_count_sentinel_is_never_generated(values, schema):
         ("SerializedRecipeIngredient", "stack_size", 2),
         ("SerializedRecipeIngredient", "aux_value", 6),
         ("ItemNameDescriptorData", "aux_value", 7),
+        ("TakeActionData", "amount", 2),
+        ("BeaconPaymentActionData", "secondary_effect_id", 10),
+        ("CraftRepairAndDisenchantActionData", "repair_cost", 5),
+        ("LevelChunkPacket", "sub_chunks_count", 4),
+        ("CameraAimAssistPacket", "distance", 8.0),
+        ("CameraSplineProgressKeyFrame", "alpha", 0.5),
+        ("SkinImage", "width", 64),
     ],
     ids=[
         "stack-size",
@@ -296,6 +303,13 @@ def test_an_enum_count_sentinel_is_never_generated(values, schema):
         "ingredient-stack-size",
         "ingredient-aux",
         "name-aux",
+        "take-amount",
+        "beacon-effect",
+        "repair-cost",
+        "sub-chunks",
+        "aim-distance",
+        "spline-progress",
+        "skin-width",
     ],
 )
 def test_a_leaf_bds_reads_only_within_a_limit_is_generated_inside_it(values, schema, name, field, read):
@@ -335,3 +349,20 @@ def test_a_name_coded_enum_leaf_is_printed_by_its_wire_name(values, schema, name
 def test_a_number_two_members_share_is_named_as_to_json_names_it(values, schema, name, number, named):
     family = next(each for each in schema.order if each.name == name)
     assert values.Generator(schema, 2168).named(family)[number] == named
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "read"),
+    [
+        ("CameraAimAssistCategoryPriorities", "entity_default", 50),
+        ("LevelChunkPacket", "client_request_sub_chunk_limit", 8),
+    ],
+    ids=["entity-default", "sub-chunk-limit"],
+)
+def test_an_optional_bds_reads_only_within_a_limit_is_absent_or_inside_it(values, schema, name, field, read):
+    assert {each[field] for each in generated(values, schema, name)} == {read, None}
+
+
+def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values, schema):
+    chosen = generated(values, schema, "CameraAimAssistCategoryPriorities")
+    assert {priority for each in chosen for priority in each["blocks"].values()} == {20}
