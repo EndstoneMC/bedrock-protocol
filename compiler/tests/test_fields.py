@@ -1,8 +1,10 @@
 import pytest
 
+from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
+    BuiltinRef,
     CompilerError,
     EnumName,
     EnumRef,
@@ -90,7 +92,41 @@ def test_type_on_a_dict_reaches_its_one_scalar_half(build_package):
     ]
 
 
+def test_type_str_carries_a_uuid_as_text(build_package):
+    source = (
+        HEADER
+        + "import uuid\n\n"
+        + "class A:\n    x: uuid.UUID = field(type=str)\n    y: list[uuid.UUID | None] = field(type=str)\n"
+        + "    z: dict[uuid.UUID, int16] = field(type=str)\n    w: uuid.UUID\n"
+    )
+    package = build_package({"a": source})
+
+    assert field_types(package) == [
+        BuiltinRef(UUID, wire="str"),
+        List(Optional(BuiltinRef(UUID, wire="str")), Primitive("uvarint32")),
+        Map(BuiltinRef(UUID, wire="str"), Primitive("int16")),
+        BuiltinRef(UUID),
+    ]
+
+
 REWIRE = "type and endian do not reach exactly one scalar that takes them"
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        pytest.param("x: uuid.UUID = field(type=varint32)", id="uuid-integer"),
+        pytest.param("x: uuid.UUID = field(type=str, endian='big')", id="uuid-str-big"),
+        pytest.param("x: uuid.UUID = field(endian='big')", id="uuid-big"),
+        pytest.param("x: C = field(type=str)", id="builtin-str"),
+    ],
+)
+def test_a_builtin_takes_no_wire_but_str_on_a_uuid(build_package, line):
+    source = HEADER + "import uuid\nfrom protocol import builtin\n\n@builtin\nclass C:\n    pass\n\n"
+    source += "class A:\n    " + line + "\n"
+
+    with pytest.raises(CompilerError, match=REWIRE):
+        build_package({"a": source})
 
 
 @pytest.mark.parametrize(

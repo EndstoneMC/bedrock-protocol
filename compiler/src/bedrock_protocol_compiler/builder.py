@@ -177,6 +177,10 @@ def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
             if alias.primitive.name not in INTEGERS or wire == "str" or endian:
                 return None
             return replace(node, wire=wire)
+        case BuiltinRef(builtin=builtin):
+            if builtin is not UUID or wire != "str" or endian:
+                return None
+            return replace(node, wire=wire)
     return None
 
 

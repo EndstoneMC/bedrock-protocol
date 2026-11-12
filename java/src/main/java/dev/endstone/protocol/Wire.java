@@ -293,6 +293,49 @@ public final class Wire {
         buf.writeLongLE(value.getLeastSignificantBits());
     }
 
+    /** Reads a string of 36 hex digits and hyphens 8-4-4-4-12, or of 32 hex digits, either case. */
+    public static UUID readUuidText(ByteBuf buf, DecodeBudget budget) {
+        String text = readStr(buf, budget);
+        boolean hyphenated = text.length() == 36;
+        if (!hyphenated && text.length() != 32) {
+            throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+        }
+        long most = 0;
+        long least = 0;
+        int digits = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (hyphenated && (i == 8 || i == 13 || i == 18 || i == 23)) {
+                if (c != '-') {
+                    throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                }
+                continue;
+            }
+            int nibble;
+            if (c >= '0' && c <= '9') {
+                nibble = c - '0';
+            } else if (c >= 'a' && c <= 'f') {
+                nibble = c - 'a' + 10;
+            } else if (c >= 'A' && c <= 'F') {
+                nibble = c - 'A' + 10;
+            } else {
+                throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            }
+            if (digits < 16) {
+                most = most << 4 | nibble;
+            } else {
+                least = least << 4 | nibble;
+            }
+            digits++;
+        }
+        return new UUID(most, least);
+    }
+
+    /** Writes a UUID as a string of lower-case hex digits and hyphens 8-4-4-4-12. */
+    public static void writeUuidText(ByteBuf buf, UUID value) {
+        writeStr(buf, value.toString());
+    }
+
     /** Reads base-128 groups into a bitset of the given width. */
     public static BitSet readBitset(ByteBuf buf, int width) {
         BitSet out = new BitSet();

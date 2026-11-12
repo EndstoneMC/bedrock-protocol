@@ -311,6 +311,62 @@ class WireTest {
         assertEquals("0807060504030201100f0e0d0c0b0a09", written(buf));
     }
 
+    static Stream<Arguments> uuidTexts() {
+        return Stream.of(
+                argumentSet(
+                        "hyphenated",
+                        "2430313032303330342d303530362d303730382d303930612d306230633064306530663130"),
+                argumentSet(
+                        "upper case",
+                        "2430313032303330342d303530362d303730382d303930412d304230433044304530463130"),
+                argumentSet(
+                        "bare digits",
+                        "203031303230333034303530363037303830393061306230633064306530663130"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("uuidTexts")
+    void uuidTextReads(String hex) {
+        assertEquals(
+                new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L),
+                Wire.readUuidText(hex(hex), budget()));
+    }
+
+    @Test
+    void uuidTextWritesLowerCaseHyphenated() {
+        ByteBuf buf = Unpooled.buffer();
+        Wire.writeUuidText(buf, new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L));
+        assertEquals(
+                "2430313032303330342d303530362d303730382d303930612d306230633064306530663130",
+                written(buf));
+    }
+
+    static Stream<Arguments> notUuidTexts() {
+        return Stream.of(
+                argumentSet("empty", "00", 1),
+                argumentSet("wrong length", "046e6f7065", 5),
+                argumentSet(
+                        "hyphen out of place",
+                        "243031303230333034302d3530362d303730382d303930612d306230633064306530663130",
+                        37),
+                argumentSet(
+                        "not hex",
+                        "2430313032303330342d303530362d303730382d303930612d306230633064306530663167",
+                        37),
+                argumentSet(
+                        "hyphen among bare digits",
+                        "20303130323033303430353036303730383039306130623063306430653066312d",
+                        33),
+                argumentSet("non-ascii digits", "40" + "d9a1".repeat(32), 65));
+    }
+
+    @ParameterizedTest
+    @MethodSource("notUuidTexts")
+    void uuidTextThatDoesNotParseIsAnUnknownValueAfterTheString(String hex, int offset) {
+        DecodeException error = failure(() -> Wire.readUuidText(hex(hex), budget()));
+        assertEquals(List.of(Reason.UNKNOWN_VALUE, offset), reasonAndOffset(error));
+    }
+
     static Stream<Arguments> bitsets() {
         return Stream.of(
                 argumentSet("empty", "00", 30, new BitSet()),

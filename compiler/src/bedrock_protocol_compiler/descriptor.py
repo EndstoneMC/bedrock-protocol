@@ -26,6 +26,7 @@ class StructRef:
 @dataclass(frozen=True)
 class BuiltinRef:
     builtin: "Builtin"
+    wire: str | None = None
 
 
 @dataclass(frozen=True)

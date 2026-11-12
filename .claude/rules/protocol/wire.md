@@ -19,6 +19,10 @@ paths:
 - A one-byte enum is one byte on the wire, whatever cereal Compression trait the member carries.
 - cereal prefixes a dynamic member with an always-true member-present byte (`dsl.md`). It is a BDS bug.
 
+## Text
+
+- A `mce::UUID` on the wire as text is `mce::UUID::asString`'s lower-case 8-4-4-4-12; BDS reads 36 hyphenated or 32 bare hex digits, either case, and any other text as the nil UUID.
+
 ## The frame
 
 - The packet header is one `uvarint32`, `id | recipient << 10 | sender << 12`, with sub-client ids 0..3. gophertunnel swaps the two.
