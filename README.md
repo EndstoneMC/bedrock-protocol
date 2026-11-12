@@ -142,4 +142,4 @@ golden bytes. See `.claude/rules/protocol/` for schema conventions and source at
 
 ## License
 
-The original C++ library, schema and compiler use [MIT](LICENSE).
+[MIT](LICENSE).

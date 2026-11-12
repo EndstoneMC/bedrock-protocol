@@ -3,7 +3,7 @@ name = "bedrock-protocol"
 version = "0.5.0.dev0"
 description = "Bedrock packets and codecs for Python, bound from the generated C++."
 requires-python = ">=3.12"
-license = "MIT AND BSD-3-Clause"
+license = "MIT"
 license-files = ["LICENSE"]
 
 [dependency-groups]
