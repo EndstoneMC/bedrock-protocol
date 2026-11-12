@@ -261,3 +261,34 @@ def test_an_integer_leaf_is_printed_at_its_wire_type(values, schema, name, value
 def test_an_enum_count_sentinel_is_never_generated(values, schema):
     options = generated(values, schema, "InventoryOptions")
     assert "COUNT" not in [each["layout_inv"] for each in options]
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "read"),
+    [
+        ("SerializedNetworkItemStackDescriptor", "stack_size", 3),
+        ("SerializedNetworkItemInstanceDescriptor", "stack_size", 4),
+        ("NetworkItemInstanceDescriptorData", "stack_size", 5),
+        ("SerializedRecipeIngredient", "stack_size", 2),
+        ("SerializedRecipeIngredient", "aux_value", 6),
+        ("ItemNameDescriptorData", "aux_value", 7),
+    ],
+    ids=[
+        "stack-size",
+        "instance-stack-size",
+        "request-stack-size",
+        "ingredient-stack-size",
+        "ingredient-aux",
+        "name-aux",
+    ],
+)
+def test_a_leaf_bds_reads_only_within_a_limit_is_generated_inside_it(values, schema, name, field, read):
+    chosen = generated(values, schema, name)
+    assert [each[field] for each in chosen] == [read for _ in chosen]
+
+
+def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema):
+    family = next(each for each in schema.order if each.name == "SerializedNetworkItemInstanceDescriptor")
+    version = max(each for each in schema.versions if each < 2168)
+    chosen = values.values_of(schema, version, family)[0]
+    assert {(each["id"] != 0, each["stack_size"]) for each in chosen} == {(True, 4), (False, 0)}

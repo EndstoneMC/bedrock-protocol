@@ -132,6 +132,12 @@ LEVEL_GAME_RULES = (
 )
 CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x00\x00\x00'.hex()
 FIXED: dict[str, Json] = {
+    "SerializedNetworkItemStackDescriptor.stack_size": 3,
+    "SerializedNetworkItemInstanceDescriptor.stack_size": 4,
+    "ItemStackRequestCereal.NetworkItemInstanceDescriptorData.stack_size": 5,
+    "SerializedRecipeIngredient.stack_size": 2,
+    "SerializedRecipeIngredient.aux_value": 6,
+    "ItemStackRequestCereal.ItemNameDescriptorData.aux_value": 7,
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
     "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
@@ -336,6 +342,8 @@ class Generator:
         raise TypeError(f"{node!r}: no variant tag")
 
     def generate(self, node: Type, key: str, depth: int, length: int | None = None) -> Json:
+        if key in FIXED:
+            return FIXED[key]
         match node:
             case Primitive():
                 return self.leaf(node)
@@ -587,7 +595,7 @@ class Generator:
             else:
                 values[each.name] = None if f"{label}.{each.name}" in PRESENT_WHEN else self.default(each.type)
         for each in fields:
-            if f"{label}.{each.name}" in FIXED:
+            if f"{label}.{each.name}" in FIXED and each.when is None and each.name not in env:
                 values[each.name] = FIXED[f"{label}.{each.name}"]
             if f"{label}.{each.name}" in SAME_MEMBER:
                 values[each.name] = values[SAME_MEMBER[f"{label}.{each.name}"]]
