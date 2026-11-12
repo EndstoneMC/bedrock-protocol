@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "route_to_manager": false,
+   "raw_variant_name": "s2",
+   "raw_variant_data": "s3"
+  },
+  "bytes": "00027332027333",
+  "bds_json": {
+   "Route To Manager": false,
+   "Raw Variant Name": "s2",
+   "Raw Variant Data": "s3"
+  }
+ }
+]
