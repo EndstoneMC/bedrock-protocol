@@ -36,6 +36,7 @@ paths:
 - Read the dump as primary evidence with known blind spots (`sources.md`).
 - Take the four categories from two fetched `origin/` protocol-docs branches: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
 - Compare two-dot, because the branches share no merge base; always pass `-M`, or a rename reads as a delete plus an add.
+- List the dirty packets between the two branches with `python scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`; it applies the two lines above.
 - A `constraints` block is not wire, except `RequestNetworkSettingsPacket`'s, which carries the version.
 - Classify every hunk into exactly one category; never write a diff off as constraint churn in bulk.
 - Take a packet's id from its own `packets/*.json`; `enums/MinecraftPacketIds.json` is an index that leaves ids out.
