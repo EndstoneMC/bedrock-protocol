@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "item_name": "s1",
+   "item_effect_name": "s2",
+   "slot": -593
+  },
+  "bytes": "027331027332affdffff",
+  "bds_json": {
+   "Item Name": "s1",
+   "Item Effect Name": "s2",
+   "Slot": -593
+  }
+ }
+]
