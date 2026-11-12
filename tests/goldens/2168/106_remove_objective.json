@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "objective_name": "s1"
+  },
+  "bytes": "027331",
+  "bds_json": {
+   "Objective Name": "s1"
+  }
+ }
+]
