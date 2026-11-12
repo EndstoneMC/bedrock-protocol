@@ -33,6 +33,14 @@ paths:
 
 ## Forward
 
+- Add a version in five steps:
+  - list the packets added, removed, moved and dirty with `scripts/dirty_packets.py`, a read of the dump below;
+  - update the DSL from the new dump alone;
+  - compare the library's dirty set, the classes of `v<new>.packets` that `v<old>.packets` lacks, with the dump's, where `<old>` is the modelled neighbour toward 2168; any other difference is a DSL defect;
+  - run `scripts/goldens/values.py`, then `scripts/goldens/bds.py` on the new version's BDS, release or preview, and fix every difference as a DSL defect before its case freezes into `tests/goldens/<new>/`;
+  - land the version with its complete folder.
+- Diff both ways from the base: `tests/goldens/2168/` holds every packet, a version above it diffs against the version below, and a version below it against the version above.
+- Run the new build over the cases of every clean packet's newest older folder too; a difference means the DSL missed a dirty packet.
 - When a version's bedrock-headers land after its DSL was written, study the version against them and fix the DSL.
 - Take a new version's wire from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.
 - Take the four categories from two fetched `origin/` protocol-docs branches: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
@@ -51,7 +59,7 @@ paths:
 ## Cerealisation
 
 - In a cerealisation, check every field's order, every count's type and every nested type's shape.
-- Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`); from 2168, where BDS writes a packet by hand, check its hand-written writer against the dump in the binary (`wire.md`).
+- Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`); from 2168, where BDS writes a packet by hand, the BDS run checks its hand-written writer against the library (`wire.md`).
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
 - Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.
@@ -67,7 +75,7 @@ paths:
 
 ## Land it
 
-- Land a schema change with BDS goldens for all paths of every dirty packet in the same commit, frozen only once BDS agrees (`.claude/rules/tests.md`); it is not done until the suite runs.
+- Land a schema change with its complete `tests/goldens/<new>/` folder, every path of every dirty packet frozen once BDS agrees (`.claude/rules/tests.md`), in the same commit; it is not done until the suite runs.
 - Write a version commit as `feat(protocol): follow <build> to protocol <new>`, with a body that reports all four categories.
 
 ## Consumers

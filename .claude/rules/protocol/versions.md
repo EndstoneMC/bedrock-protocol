@@ -10,9 +10,9 @@ paths:
 
 - Model the protocol number the released build reports, never the preview number in a Mojang changelog title.
 - Read the number from the dump: `constraints.minimum` on `RequestNetworkSettingsPacket`'s first field.
-- Confirm it with CloudburstMC/Protocol's `Bedrock_v<N>.java` `protocolVersion` and `minecraftVersion` pair.
-- Cross-check it against EndstoneMC/bedrock-server-data's `versions.json` and minecraft.wiki's Protocol version page.
-- Stop and ask before modelling a number that none of them carries.
+- Confirm it with the BDS build that writes the version's golden folder; it must report the same number (`tests/goldens/builds.json`).
+- Take the list of builds from EndstoneMC/bedrock-server-data's `versions.json`.
+- Stop and ask before modelling a number that no build reports.
 - An EndstoneMC/protocol-docs branch is a network version, not a release order, and it can bump within itself; re-read its README after every fetch.
 - Pin the protocol-docs SHA you diffed and the build you dumped.
 - A protocol number does not identify a wire format: Mojang changes the wire within one number, and `since=` cannot express that.
@@ -23,6 +23,7 @@ paths:
 
 - A newer preview on the same update line replaces the older number; it never becomes a second snapshot beside it.
 - Renumber every gate the superseded preview carried, and model the new delta in the same commit.
+- Delete the superseded number's `tests/goldens/` folder and write the new number's from the replacing build, with `builds.json` naming it.
 - After a renumber, grep for the bare number and for `v<number>`; a word-boundary match misses the namespace form.
 - With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one) and bump README's pinned examples to the new number.
 - README shows one example: the same packet and steps in every language, the library imported as `bp`, a pin naming `v<N>` only for a type that differs between protocols, the packet built empty and each field set in its own statement with its value built whole in place; every block is laid out by ruff format or clang-format.
