@@ -49,13 +49,18 @@ def test_a_null_in_the_case_needs_nothing_from_bds(bds):
 
 def scanned(bds, text, value):
     shown = [bds.json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
-    return bds.missing(shown, bds.leaves(value), ordered=False)
+    return bds.missing(shown, bds.leaves(value))
 
 
 def test_scalars_scanned_from_text_that_is_not_json_hold_the_values(bds):
     text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,{"data":2.5}:5,"str":{"data":"text"},0}'
     value = {"str": {"StringTag": "text"}, "b": {"ByteTag": 7}, "bytes": {"ByteArrayTag": [1, -2, 3]}}
     assert scanned(bds, text, value) is None
+
+
+def test_a_compound_is_compared_with_its_keys_sorted(bds):
+    text = '{"a":{"data":1},"b":{"data":2}}'
+    assert scanned(bds, text, {"b": {"IntTag": 2}, "a": {"IntTag": 1}}) is None
 
 
 def test_scanned_text_that_lacks_a_value_is_reported(bds):
