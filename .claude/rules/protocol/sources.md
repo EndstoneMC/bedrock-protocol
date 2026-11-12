@@ -71,7 +71,3 @@ An era is one modelled protocol and the BDS build that reports it.
 - Run known-live packets through any presence probe as controls, in the same command.
 - Never use `make_packet` instantiations as the packet list, since they cover one construction path.
 - Never treat a `getId` symbol as present for every packet in a stripped build.
-
-## prototype
-
-- Never merge or rebase across the `prototype` branch, an unrelated history; port its ideas rather than its code, and re-verify every wire detail it holds.

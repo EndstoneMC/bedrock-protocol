@@ -8,7 +8,6 @@ paths:
 ## The number
 
 - Model the protocol number the released build reports, never the preview number in a Mojang changelog title.
-- Check every cycle for a preview number that differs from the released one; not every cycle has one.
 - Read the number from the dump: `constraints.minimum` on `RequestNetworkSettingsPacket`'s first field.
 - Confirm it with CloudburstMC/Protocol's `Bedrock_v<N>.java` `protocolVersion` and `minecraftVersion` pair.
 - Cross-check it against EndstoneMC/bedrock-server-data's `versions.json` and minecraft.wiki's Protocol version page.

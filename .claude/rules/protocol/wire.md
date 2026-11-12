@@ -5,9 +5,7 @@ paths:
   - "include/**"
 ---
 
-# Settled wire
-
-- Every answer here was settled from the binary or the headers. Never re-open one without new evidence from either.
+# Wire facts
 
 ## cereal
 
@@ -17,18 +15,18 @@ paths:
 - A name-coded enum goes on the wire folded to lower case. The string literal at the bind site never reaches the wire.
 - A cereal-bound constant folds like an enum value: the wire carries the value's folded name, never the member's own name.
 - A one-byte enum is one byte on the wire, whatever cereal Compression trait the member carries.
-- cereal prefixes a dynamic member with an always-true member-present byte (`dsl.md`). It is a BDS bug, not a design.
+- cereal prefixes a dynamic member with an always-true member-present byte (`dsl.md`). It is a BDS bug.
 
 ## The frame
 
 - The packet header is one `uvarint32`, `id | recipient << 10 | sender << 12`, with sub-client ids 0..3. gophertunnel swaps the two.
 
-## Settled packets
+## Packets
 
-- `PlayerAuthInputPacket.input_data` is a length-prefixed list of `InputData` from 2168 and a bitset before it. The header's `std::bitset` is the in-memory member.
+- Model `PlayerAuthInputPacket.input_data` as a length-prefixed list of `InputData` from 2168 and a bitset before it; the header's `std::bitset` is the in-memory member.
 - Before 2168, `PackedItemUseLegacyInventoryTransaction` writes its slots only when `id < -1 and (id & 1) == 0`.
-- `CylinderDataPayload` puts two `Vec2`s on the wire, not the header's one.
+- Write two `Vec2`s for `CylinderDataPayload`, not the header's one.
 - Before 2168, the chemistry recipe writers do not write the unlocking requirement; the other four recipe writers do.
-- `ContainerID` is `uvarint32` in packet 49 and, from 975, `int8` in packet 50. Never unify them: they part at `NONE = -1`.
+- Never unify `ContainerID`: it is `uvarint32` in packet 49 and, from 975, `int8` in packet 50; they part at `NONE = -1`.
 - `TextPacket`'s twelve constant strings are on the wire, folded, over `[898, 924)`.
-- Packet 124's event data is a compound's entries plus `TAG_End` with no root tag, at every version, spelled `CompoundTagData`.
+- Spell packet 124's event data `CompoundTagData`: a compound's entries plus `TAG_End`, no root tag, at every version.

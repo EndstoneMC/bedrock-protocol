@@ -17,7 +17,6 @@ paths:
   - type: a field added, removed, renamed or moved; a type added, removed or renamed;
   - wire: the same field, encoded differently;
   - enum: a value added, removed, renamed or shifted; a sentinel moved.
-- `Run it` and `dry run it` both mean all four categories; a partial pass is a wrong answer.
 - When the four do not fit one pass, fan out one `version-delta` agent per category, each given the interval, the sources and the schema.
 - Treat a change to a packet the schema does not model as a finding, and model the packet.
 - Never stop at the first category with hits; a name-level read cannot see wire and enum changes.
@@ -40,7 +39,7 @@ paths:
 - A `constraints` block is not wire, except `RequestNetworkSettingsPacket`'s, which carries the version.
 - Classify every hunk into exactly one category; never write a diff off as constraint churn in bulk.
 - Take a packet's id from its own `packets/*.json`; `enums/MinecraftPacketIds.json` is an index that leaves ids out.
-- Diff `MinecraftPacketIds.json` as a second view: below 2168 an id there with no packet file is not cerealised, if it is live at all (`sources.md`). Merge the two lists as a union, never an intersection.
+- Diff `MinecraftPacketIds.json` as a second view and merge the two lists as a union, never an intersection.
 - Compare fields as an ordered sequence, because cereal is positional, and compare the whole field object, not only its name.
 - A change to a field's type string, `optional` or `enum` binding is a wire change; follow nested type objects, a repeat's element type included.
 - Read `repeat` exactly: an integer means `array[T, N]`; a string is a `list[T]`'s length prefix.
@@ -51,7 +50,7 @@ paths:
 ## Cerealisation
 
 - A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
-- Decide cerealisation per packet below 2168 from dump presence (`sources.md`); a packet file new between branches is a candidate. From 2168 model every packet from the dump, and where BDS writes it by hand (`SerializationMode` 0 to 2 in its constructor), check the hand-written writer against the dump in the binary before trusting the dump's shape.
+- Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`). From 2168 model every packet from the dump, and where BDS writes it by hand (`SerializationMode` 0 to 2 in its constructor), check the hand-written writer against the dump in the binary before trusting the dump's shape.
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
 - Take the pre-cereal delta from gophertunnel's Marshal history or CloudburstMC/Protocol's older serializer.
@@ -74,5 +73,5 @@ paths:
 
 - A schema change reaches EndstoneMC/endweave only through a bedrock-protocol release it pins; a renamed generated name or a renumbered version is a breaking change there.
 - A renumber also renames every endweave `protocols/` directory that carries the old number.
-- Never report a version endweave lacks as a bedrock-protocol limitation; a missing hop is endweave transform work.
+- A version endweave lacks is endweave transform work, not a bedrock-protocol limitation.
 - Diff the generated public type set before and after any gate change; consumers bind to that set, not to the schema.
