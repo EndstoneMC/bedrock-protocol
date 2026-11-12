@@ -129,19 +129,13 @@ class SubChunkPacket:
         INDEX_OUT_OF_BOUNDS = 5
         SUCCESS_ALL_AIR = 6
 
-    @type(until=2193)
     class HeightmapData:
         height_map_type: HeightMapDataType
-        subchunk_height_map: array[array[int8, 16], 16] | None
+        subchunk_height_map: array[array[int8, 16], 16] | None = field(until=2193)
+        subchunk_height_map: array[list[int8], 16] | None = field(since=2193)
         render_height_map_type: HeightMapDataType
-        subchunk_render_height_map: array[array[int8, 16], 16] | None
-
-    @type(since=2193)
-    class HeightmapData:
-        height_map_type: HeightMapDataType
-        subchunk_height_map: array[list[int8], 16] | None
-        render_height_map_type: HeightMapDataType
-        subchunk_render_height_map: array[list[int8], 16] | None
+        subchunk_render_height_map: array[array[int8, 16], 16] | None = field(until=2193)
+        subchunk_render_height_map: array[list[int8], 16] | None = field(since=2193)
 
     class SubChunkPosOffset:
         x: int8

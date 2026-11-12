@@ -330,21 +330,16 @@ class PlayerAuthInputPacket:
     raw_move_vector: Vec2
 
 
-@packet(id=36, until=944)
+@packet(id=36)
 class PlayerActionPacket:
     runtime_id: ActorRuntimeID
     action: PlayerActionType
-    pos: NetworkBlockPosition
-    result_pos: NetworkBlockPosition
-    face: varint32
-
-
-@packet(id=36, since=944)
-class PlayerActionPacket:
-    runtime_id: ActorRuntimeID
-    action: PlayerActionType
-    pos: BlockPos
-    result_pos: BlockPos
+    with field(until=944):
+        pos: NetworkBlockPosition
+        result_pos: NetworkBlockPosition
+    with field(since=944):
+        pos: BlockPos
+        result_pos: BlockPos
     face: varint32
 
 

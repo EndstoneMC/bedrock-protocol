@@ -58,20 +58,15 @@ class InventorySource:
     flags: InventorySourceFlags | None
 
 
-@type(until=1001)
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
-    from_item_descriptor: NetworkItemStackDescriptor
-    to_item_descriptor: NetworkItemStackDescriptor
-
-
-@type(since=1001)
-class InventoryAction:
-    source: InventorySource
-    slot: uvarint32
-    from_item_descriptor: SerializedNetworkItemStackDescriptor
-    to_item_descriptor: SerializedNetworkItemStackDescriptor
+    with field(until=1001):
+        from_item_descriptor: NetworkItemStackDescriptor
+        to_item_descriptor: NetworkItemStackDescriptor
+    with field(since=1001):
+        from_item_descriptor: SerializedNetworkItemStackDescriptor
+        to_item_descriptor: SerializedNetworkItemStackDescriptor
 
 
 class InventoryTransaction:
@@ -207,7 +202,7 @@ class ItemUseInventoryTransaction:
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
 
 
-@type(cereal=False, since=944, until=1001)
+@type(cereal=False, since=944)
 class ItemUseInventoryTransaction:
     actions: list[InventoryAction]
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
@@ -215,27 +210,13 @@ class ItemUseInventoryTransaction:
     pos: BlockPos
     face: varint32
     slot: varint32
-    item: NetworkItemStackDescriptor
+    item: NetworkItemStackDescriptor = field(until=1001)
+    item: SerializedNetworkItemStackDescriptor = field(since=1001)
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
-    client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
-
-
-@type(cereal=False, since=1001)
-class ItemUseInventoryTransaction:
-    actions: list[InventoryAction]
-    action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType
-    pos: BlockPos
-    face: varint32
-    slot: varint32
-    item: SerializedNetworkItemStackDescriptor
-    from_pos: Vec3
-    click_pos: Vec3
-    target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32, until=1001)
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(since=1001)
     client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
 
 

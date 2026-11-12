@@ -148,23 +148,14 @@ class RedactableString:
     redacted_string: str | None
 
 
-@type(until=766)
+@type(until=2168)
 class ItemStackResponseSlotInfo:
     requested_slot: uint8
     slot: uint8
     amount: uint8
     item_stack_net_id: ItemStackNetId
-    custom_name: str
-    durability_correction: int16 = field(type=varint32)
-
-
-@type(since=766, until=2168)
-class ItemStackResponseSlotInfo:
-    requested_slot: uint8
-    slot: uint8
-    amount: uint8
-    item_stack_net_id: ItemStackNetId
-    custom_name: RedactableString
+    custom_name: str = field(until=766)
+    custom_name: RedactableString = field(since=766)
     durability_correction: int16 = field(type=varint32)
 
 

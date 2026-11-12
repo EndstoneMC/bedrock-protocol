@@ -232,19 +232,12 @@ class PlayerToggleCrafterSlotRequestPacket:
     is_disabled: bool
 
 
-@packet(id=46, until=944)
+@packet(id=46)
 class ContainerOpenPacket:
     container_id: ContainerID
     type: ContainerType
-    pos: NetworkBlockPosition
-    entity_unique_id: ActorUniqueID
-
-
-@packet(id=46, since=944)
-class ContainerOpenPacket:
-    container_id: ContainerID
-    type: ContainerType
-    pos: BlockPos
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     entity_unique_id: ActorUniqueID
 
 
@@ -375,19 +368,11 @@ class UpdateEquipPacket:
     data: CompoundTag
 
 
-@packet(id=31, until=975)
+@packet(id=31)
 class MobEquipmentPacket:
     runtime_id: ActorRuntimeID
-    item: NetworkItemStackDescriptor
-    slot: int32 = field(type=uint8)
-    selected_slot: int32 = field(type=uint8)
-    container_id: ContainerID
-
-
-@packet(id=31, since=975)
-class MobEquipmentPacket:
-    runtime_id: ActorRuntimeID
-    item: SerializedNetworkItemStackDescriptor
+    item: NetworkItemStackDescriptor = field(until=975)
+    item: SerializedNetworkItemStackDescriptor = field(since=975)
     slot: int32 = field(type=uint8)
     selected_slot: int32 = field(type=uint8)
     container_id: ContainerID

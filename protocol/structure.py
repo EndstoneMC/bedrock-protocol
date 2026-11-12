@@ -55,14 +55,17 @@ class AnimationMode(IntEnum, uint8):
     BLOCKS = 2
 
 
-@type(until=944)
 class StructureSettings:
     palette_name: str
     ignore_entities: bool
     ignore_blocks: bool
     allow_non_ticking_player_and_ticking_area_chunks: bool
-    structure_size: NetworkBlockPosition
-    structure_offset: NetworkBlockPosition
+    with field(until=944):
+        structure_size: NetworkBlockPosition
+        structure_offset: NetworkBlockPosition
+    with field(since=944):
+        structure_size: BlockPos
+        structure_offset: BlockPos
     last_touched_by_player: ActorUniqueID
     rotation: Rotation
     mirror: Mirror
@@ -73,38 +76,10 @@ class StructureSettings:
     pivot: Vec3
 
 
-@type(since=944)
-class StructureSettings:
-    palette_name: str
-    ignore_entities: bool
-    ignore_blocks: bool
-    allow_non_ticking_player_and_ticking_area_chunks: bool
-    structure_size: BlockPos
-    structure_offset: BlockPos
-    last_touched_by_player: ActorUniqueID
-    rotation: Rotation
-    mirror: Mirror
-    animation_mode: AnimationMode
-    animation_seconds: float
-    integrity_value: float
-    integrity_seed: RandomSeed
-    pivot: Vec3
-
-
-@type(until=776)
+@type(until=2168)
 class StructureEditorData:
-    structure_name: str
-    data_field: str
-    include_players: bool
-    show_bounding_box: bool
-    type: StructureBlockType
-    settings: StructureSettings
-    redstone_save_mode: StructureRedstoneSaveMode = field(type=varint32)
-
-
-@type(since=776, until=2168)
-class StructureEditorData:
-    structure_name: RedactableString
+    structure_name: str = field(until=776)
+    structure_name: RedactableString = field(since=776)
     data_field: str
     include_players: bool
     show_bounding_box: bool
@@ -124,17 +99,10 @@ class StructureEditorData:
     redstone_save_mode: StructureRedstoneSaveMode
 
 
-@packet(id=90, until=944)
+@packet(id=90)
 class StructureBlockUpdatePacket:
-    block_pos: NetworkBlockPosition
-    data: StructureEditorData
-    trigger: bool
-    is_waterlogged: bool
-
-
-@packet(id=90, since=944)
-class StructureBlockUpdatePacket:
-    block_pos: BlockPos
+    block_pos: NetworkBlockPosition = field(until=944)
+    block_pos: BlockPos = field(since=944)
     data: StructureEditorData
     trigger: bool
     is_waterlogged: bool
@@ -157,18 +125,11 @@ class StructureTemplateRequestOperation(IntEnum, uint8):
     QUERY_SAVED_STRUCTURE = 3
 
 
-@packet(id=132, until=944)
+@packet(id=132)
 class StructureTemplateDataRequestPacket:
     structure_name: str
-    structure_block_pos: NetworkBlockPosition
-    structure_settings: StructureSettings
-    request_operation: StructureTemplateRequestOperation
-
-
-@packet(id=132, since=944)
-class StructureTemplateDataRequestPacket:
-    structure_name: str
-    structure_block_pos: BlockPos
+    structure_block_pos: NetworkBlockPosition = field(until=944)
+    structure_block_pos: BlockPos = field(since=944)
     structure_settings: StructureSettings
     request_operation: StructureTemplateRequestOperation
 

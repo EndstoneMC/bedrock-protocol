@@ -128,22 +128,7 @@ class PrimitiveShapeDataPayload:
     extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
 
 
-@type(since=975, until=1001)
-class PrimitiveShapeDataPayload:
-    network_id: uvarint64
-    shape_type: ScriptPrimitiveShapeType | None
-    location: Vec3 | None
-    scale: float | None
-    rotation: Vec3 | None
-    time_left_total_sec: float | None
-    max_render_distance: float | None
-    color: Color | None
-    dimension_id: DimensionType | None
-    attached_to_id: ActorUniqueID | None
-    extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
-
-
-@type(since=1001)
+@type(since=975)
 class PrimitiveShapeDataPayload:
     network_id: uvarint64
     shape_type: ScriptPrimitiveShapeType | None
@@ -156,6 +141,9 @@ class PrimitiveShapeDataPayload:
     dimension_id: DimensionType | None
     attached_to_id: ActorUniqueID | None
     extra_data_payload: (
+        None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
+    ) = field(until=1001)
+    extra_data_payload: (
         None
         | ArrowDataPayload
         | TextDataPayload
@@ -166,7 +154,7 @@ class PrimitiveShapeDataPayload:
         | PyramidDataPayload
         | EllipsoidDataPayload
         | ConeDataPayload
-    )
+    ) = field(since=1001)
 
 
 @packet(id=328, since=975)

@@ -414,18 +414,11 @@ class SimulationTypePacket:
     sim_type: SimulationType
 
 
-@type(until=844)
 class GameRule:
     name: str
     can_be_modified_by_player: bool
-    value: None | bool | uvarint32 | float
-
-
-@type(since=844)
-class GameRule:
-    name: str
-    can_be_modified_by_player: bool
-    value: None | bool | int32 | float
+    value: None | bool | uvarint32 | float = field(until=844)
+    value: None | bool | int32 | float = field(since=844)
 
 
 @type(cereal=False, until=2168)

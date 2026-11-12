@@ -4,7 +4,7 @@ Not chunk transfer -- world/level/chunk/, in chunk.py."""
 
 from enum import IntEnum
 
-from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, uvarint64, varint32
+from protocol import field, int32, packet, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, BlockRuntimeId, DimensionType, Vec3
 from protocol.nbt import CompoundTag, CompoundTagData
@@ -13,44 +13,26 @@ from protocol.network import NetworkBlockPosition
 package = "bedrock.protocol"
 
 
-@packet(id=141, until=944)
-class AnvilDamagePacket:
-    damage: int32 = field(type=uint8)
-    position: NetworkBlockPosition
-
-
-@packet(id=141, since=944)
+@packet(id=141)
 class AnvilDamagePacket:
     damage: int32 = field(type=uint8, until=2168)
-    position: BlockPos
+    position: NetworkBlockPosition = field(until=944)
+    position: BlockPos = field(since=944)
 
 
-@packet(id=21, until=944)
+@packet(id=21)
 class UpdateBlockPacket:
-    pos: NetworkBlockPosition
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
 
 
-@packet(id=21, since=944)
-class UpdateBlockPacket:
-    pos: BlockPos
-    runtime_id: BlockRuntimeId
-    update_flags: uint8 = field(type=uvarint32)
-    layer: uvarint32
-
-
-@packet(id=26, until=944)
+@packet(id=26)
 class BlockEventPacket:
-    pos: NetworkBlockPosition
-    b0: varint32
-    b1: varint32
-
-
-@packet(id=26, since=944)
-class BlockEventPacket:
-    pos: BlockPos
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     b0: varint32
     b1: varint32
 
@@ -62,15 +44,10 @@ class BlockPickRequestPacket:
     max_slots: uint8
 
 
-@packet(id=56, until=944)
+@packet(id=56)
 class BlockActorDataPacket:
-    pos: NetworkBlockPosition
-    data: CompoundTag
-
-
-@packet(id=56, since=944)
-class BlockActorDataPacket:
-    pos: BlockPos
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     data: CompoundTag
 
 
@@ -81,9 +58,10 @@ class ActorBlockSyncMessage:
         DESTROY = 2
 
 
-@packet(id=110, until=944)
+@packet(id=110)
 class UpdateBlockSyncedPacket:
-    pos: NetworkBlockPosition
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     layer: uvarint32
@@ -91,54 +69,24 @@ class UpdateBlockSyncedPacket:
     message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
 
 
-@packet(id=110, since=944)
-class UpdateBlockSyncedPacket:
-    pos: BlockPos
-    runtime_id: BlockRuntimeId
-    update_flags: uint8 = field(type=uvarint32)
-    layer: uvarint32
-    entity_unique_id: ActorUniqueID = field(type=uvarint64)
-    message: ActorBlockSyncMessage.MessageId = field(type=uvarint64)
-
-
-@packet(id=125, until=944)
+@packet(id=125)
 class LecternUpdatePacket:
     page: int32 = field(type=uint8)
     total_pages: int32 = field(type=uint8)
-    pos: NetworkBlockPosition
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
 
 
-@packet(id=125, since=944)
-class LecternUpdatePacket:
-    page: int32 = field(type=uint8)
-    total_pages: int32 = field(type=uint8)
-    pos: BlockPos
-
-
-@packet(id=303, until=944)
+@packet(id=303)
 class OpenSignPacket:
-    pos: NetworkBlockPosition
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     is_front_side: bool
 
 
-@packet(id=303, since=944)
-class OpenSignPacket:
-    pos: BlockPos
-    is_front_side: bool
-
-
-@type(until=944)
 class UpdateSubChunkNetworkBlockInfo:
-    pos: NetworkBlockPosition
-    runtime_id: BlockRuntimeId
-    update_flags: uint8 = field(type=uvarint32)
-    entity_unique_id: ActorUniqueID = field(type=uvarint64)
-    message: ActorBlockSyncMessage.MessageId
-
-
-@type(since=944)
-class UpdateSubChunkNetworkBlockInfo:
-    pos: BlockPos
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     runtime_id: BlockRuntimeId
     update_flags: uint8 = field(type=uvarint32)
     entity_unique_id: ActorUniqueID = field(type=uvarint64)
@@ -150,15 +98,10 @@ class UpdateSubChunkBlocksChangedInfo:
     extras: list[UpdateSubChunkNetworkBlockInfo]
 
 
-@packet(id=172, until=944)
+@packet(id=172)
 class UpdateSubChunkBlocksPacket:
-    sub_chunk_block_position: NetworkBlockPosition
-    blocks_changed: UpdateSubChunkBlocksChangedInfo
-
-
-@packet(id=172, since=944)
-class UpdateSubChunkBlocksPacket:
-    sub_chunk_block_position: BlockPos
+    sub_chunk_block_position: NetworkBlockPosition = field(until=944)
+    sub_chunk_block_position: BlockPos = field(since=944)
     blocks_changed: UpdateSubChunkBlocksChangedInfo
 
 
@@ -171,26 +114,18 @@ class RemoveVolumeEntityPacket:
     dimension_type: DimensionType
 
 
-@packet(id=166, until=944)
+@packet(id=166)
 class AddVolumeEntityPacket:
     entity_net_id: EntityNetId
     components: CompoundTag
     json_identifier: str
     instance_name: str
-    min_bounds: NetworkBlockPosition
-    max_bounds: NetworkBlockPosition
-    dimension_type: DimensionType
-    min_engine_version: str
-
-
-@packet(id=166, since=944)
-class AddVolumeEntityPacket:
-    entity_net_id: EntityNetId
-    components: CompoundTag
-    json_identifier: str
-    instance_name: str
-    min_bounds: BlockPos
-    max_bounds: BlockPos
+    with field(until=944):
+        min_bounds: NetworkBlockPosition
+        max_bounds: NetworkBlockPosition
+    with field(since=944):
+        min_bounds: BlockPos
+        max_bounds: BlockPos
     dimension_type: DimensionType
     min_engine_version: str
 

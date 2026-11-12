@@ -17,17 +17,12 @@ class MapItemTrackedActor:
         BLOCK_ENTITY = 1
         OTHER = 2
 
-    @type(until=944)
+    @type(until=2168)
     class UniqueId:
         type: Type = field(type=int32)
         key_entity_id: ActorUniqueID = field(when=lambda u: u.type == Type.ENTITY)
-        key_block_pos: NetworkBlockPosition = field(when=lambda u: u.type == Type.BLOCK_ENTITY)
-
-    @type(since=944, until=2168)
-    class UniqueId:
-        type: Type = field(type=int32)
-        key_entity_id: ActorUniqueID = field(when=lambda u: u.type == Type.ENTITY)
-        key_block_pos: BlockPos = field(when=lambda u: u.type == Type.BLOCK_ENTITY)
+        key_block_pos: NetworkBlockPosition = field(until=944, when=lambda u: u.type == Type.BLOCK_ENTITY)
+        key_block_pos: BlockPos = field(since=944, when=lambda u: u.type == Type.BLOCK_ENTITY)
 
     @type(since=2168)
     class UniqueId:

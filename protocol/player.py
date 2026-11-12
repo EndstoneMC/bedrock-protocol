@@ -115,20 +115,14 @@ class SpawnPositionType(IntEnum, int32):
     WORLD_SPAWN = 1
 
 
-@packet(id=43, until=944)
+@packet(id=43)
 class SetSpawnPositionPacket:
     spawn_pos_type: SpawnPositionType
-    pos: NetworkBlockPosition
+    pos: NetworkBlockPosition = field(until=944)
+    pos: BlockPos = field(since=944)
     dimension_type: DimensionType
-    spawn_block_pos: NetworkBlockPosition
-
-
-@packet(id=43, since=944)
-class SetSpawnPositionPacket:
-    spawn_pos_type: SpawnPositionType
-    pos: BlockPos
-    dimension_type: DimensionType
-    spawn_block_pos: BlockPos
+    spawn_block_pos: NetworkBlockPosition = field(until=944)
+    spawn_block_pos: BlockPos = field(since=944)
 
 
 @packet(id=113)

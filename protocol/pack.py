@@ -19,15 +19,9 @@ class ContentIdentity:
     identity: str
 
 
-@type(until=766)
 class PackIdVersion:
-    id: str
-    version: SemVersion
-
-
-@type(since=766)
-class PackIdVersion:
-    id: uuid.UUID
+    id: str = field(until=766)
+    id: uuid.UUID = field(since=766)
     version: SemVersion
 
 
@@ -95,18 +89,12 @@ class ResourcePackClientResponsePacket:
     response: Cancel | Downloading | DownloadingFinished | ResourcePackStackFinished
 
 
-@packet(id=329, since=844, until=2193)
+@packet(id=329, since=844)
 class ServerboundPackSettingChangePacket:
     pack_id: uuid.UUID
     setting_name: str
-    setting_value: float | bool | str
-
-
-@packet(id=329, since=2193)
-class ServerboundPackSettingChangePacket:
-    pack_id: uuid.UUID
-    setting_name: str
-    setting_value: float | bool | str | list[str]
+    setting_value: float | bool | str = field(until=2193)
+    setting_value: float | bool | str | list[str] = field(since=2193)
 
 
 class PackInstanceId:

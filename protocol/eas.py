@@ -173,18 +173,10 @@ class EnvironmentAttributeData:
     payload: AttributeDataPayload
 
 
-@type(until=975)
 class AttributeLayerSettings:
     priority: int32
-    weight: float | str
-    enabled: bool
-    transitions_paused: bool
-
-
-@type(since=975)
-class AttributeLayerSettings:
-    priority: int32
-    weight: float
+    weight: float | str = field(until=975)
+    weight: float = field(since=975)
     enabled: bool
     transitions_paused: bool
 

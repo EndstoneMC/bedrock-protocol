@@ -4,7 +4,7 @@ Not the recipes that consume them -- world/item/crafting/, in crafting.py."""
 
 from enum import IntEnum, auto
 
-from protocol import array, int32, packet, type, uint8, uvarint32, value
+from protocol import array, field, int32, packet, uint8, uvarint32, value
 from protocol.crafting import RecipeNetId
 
 package = "bedrock.protocol"
@@ -68,17 +68,9 @@ class ItemEnchants:
     item_enchants: array[list[EnchantmentInstance], 3]
 
 
-@type(until=975)
 class ItemEnchantOption:
-    cost: uvarint32
-    enchants: ItemEnchants
-    enchant_name: str
-    enchant_net_id: RecipeNetId
-
-
-@type(since=975)
-class ItemEnchantOption:
-    cost: uint8
+    cost: uvarint32 = field(until=975)
+    cost: uint8 = field(since=975)
     enchants: ItemEnchants
     enchant_name: str
     enchant_net_id: RecipeNetId

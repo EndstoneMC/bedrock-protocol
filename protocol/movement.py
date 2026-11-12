@@ -104,22 +104,14 @@ class ActorDataBoundingBoxComponent:
     value: array[float, 3]
 
 
-@packet(id=322, since=776, until=975)
+@packet(id=322, since=776)
 class ClientMovementPredictionSyncPacket:
     actor_data_flag: ActorDataFlagComponent
     actor_bounding_box: ActorDataBoundingBoxComponent
-    movement_attributes: array[float, 6]
+    movement_attributes: array[float, 6] = field(until=975)
+    movement_attributes: array[float, 9] = field(since=975)
     actor_id: ActorUniqueID
     is_flying: bool = field(since=786)
-
-
-@packet(id=322, since=975)
-class ClientMovementPredictionSyncPacket:
-    actor_data_flag: ActorDataFlagComponent
-    actor_bounding_box: ActorDataBoundingBoxComponent
-    movement_attributes: array[float, 9]
-    actor_id: ActorUniqueID
-    is_flying: bool
 
 
 class RewindType(IntEnum, uint8):

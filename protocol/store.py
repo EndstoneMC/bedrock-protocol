@@ -3,7 +3,7 @@
 import uuid
 from enum import IntEnum, auto
 
-from protocol import packet, uint8
+from protocol import field, packet, uint8
 from protocol.presence import ClientStoreEntryPointConfiguration
 
 package = "bedrock.protocol"
@@ -26,15 +26,10 @@ class ShowStoreOfferRedirectType(IntEnum, uint8):
     COUNT = auto()
 
 
-@packet(id=91, until=859)
+@packet(id=91)
 class ShowStoreOfferPacket:
-    offer_id: str
-    redirect_type: ShowStoreOfferRedirectType
-
-
-@packet(id=91, since=859)
-class ShowStoreOfferPacket:
-    offer_id: uuid.UUID
+    offer_id: str = field(until=859)
+    offer_id: uuid.UUID = field(since=859)
     redirect_type: ShowStoreOfferRedirectType
 
 
