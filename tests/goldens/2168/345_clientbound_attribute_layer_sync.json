@@ -1,0 +1,62 @@
+[
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "data": {
+    "UpdateAttributeLayerSettingsData": {
+     "layer_name": "s20",
+     "layer_dimension_id": -2951,
+     "attribute_layer_settings": {
+      "priority": 3082,
+      "weight": 11.75,
+      "enabled": true,
+      "transitions_paused": false
+     }
+    }
+   }
+  },
+  "bytes": "01037332308d2e0a0c000000003c410100",
+  "bds_json": {
+   "Data": {
+    "Attribute Layer Name": "s20",
+    "Attribute Layer Dimension": {
+     "value": -2951
+    },
+    "Attributes Layer Settings": {
+     "Priority": 3082,
+     "Weight": 11.75,
+     "Enabled": true,
+     "TransitionsPaused": false
+    }
+   }
+  }
+ },
+ {
+  "id": "v3",
+  "writer": "cereal",
+  "value": {
+   "data": {
+    "RemoveEnvironmentAttributesData": {
+     "layer_name": "s38",
+     "layer_dimension_id": -5309,
+     "attributes": [
+      "s40"
+     ]
+    }
+   }
+  },
+  "bytes": "0303733338f9520103733430",
+  "bds_json": {
+   "Data": {
+    "Attribute Layer Name": "s38",
+    "Attribute Layer Dimension": {
+     "value": -5309
+    },
+    "Attributes": [
+     "s40"
+    ]
+   }
+  }
+ }
+]
