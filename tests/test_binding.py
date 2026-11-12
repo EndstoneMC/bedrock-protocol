@@ -261,7 +261,7 @@ def test_a_header_read_fails_as_a_decode_error():
         proto.decode_packet(b"")
 
 
-def test_a_decode_error_path_names_the_attribute_the_binding_exposes():
+def test_a_decode_error_spells_a_keyword_field_as_python_does():
     with pytest.raises(
         bedrock_protocol.DecodeError, match=r"^BiomeConsolidatedFeatureData\.pass_: truncated"
     ) as caught:

@@ -26,7 +26,7 @@ struct Version {
 
 std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators();
 
-[[noreturn]] void throw_decode_error(const DecodeError &error);
+[[noreturn]] void throw_decode_error(DecodeError error);
 
 void init_nbt(nb::module_ &parent);
 void init_versions(nb::module_ &parent);

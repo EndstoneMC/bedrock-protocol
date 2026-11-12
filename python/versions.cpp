@@ -61,13 +61,12 @@ nb::object decode_body(const Version &version, int id, BinaryReader &reader)
 
 }  // namespace
 
-void throw_decode_error(const DecodeError &error)
+void throw_decode_error(DecodeError error)
 {
-    DecodeError spelled = error;
     std::vector<std::string> names;
     names.reserve(error.path.size());
     nb::list path;
-    for (auto &segment : spelled.path) {
+    for (auto &segment : error.path) {
         if (const auto *name = std::get_if<std::string_view>(&segment)) {
             segment = std::string_view(names.emplace_back(python_name(*name)));
             path.append(nb::str(names.back().c_str()));
@@ -78,7 +77,7 @@ void throw_decode_error(const DecodeError &error)
     }
     nb::object type = nb::module_::import_("bedrock_protocol").attr("DecodeError");
     nb::object exception =
-        type(std::format("{}", spelled), std::format("{}", error.reason), nb::tuple(path), error.offset);
+        type(std::format("{}", error), std::format("{}", error.reason), nb::tuple(path), error.offset);
     PyErr_SetObject(type.ptr(), exception.ptr());
     throw nb::python_error();
 }
