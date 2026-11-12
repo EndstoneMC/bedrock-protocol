@@ -37,6 +37,10 @@ def test_the_table_starts_at_the_oldest_snapshot():
     assert bedrock_protocol.releases[0].number == bedrock_protocol.versions[0]
 
 
+def test_the_bound_versions_ascend():
+    assert list(bedrock_protocol.versions) == sorted(bedrock_protocol.versions)
+
+
 def test_python_cannot_build_an_entry():
     with pytest.raises(TypeError, match="constructor"):
         bedrock_protocol.ProtocolVersion()

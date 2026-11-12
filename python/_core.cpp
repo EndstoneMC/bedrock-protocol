@@ -46,10 +46,10 @@ NB_MODULE(_core, m)
     namespace bpy = bedrock::protocol::python;
     using bedrock::protocol::ProtocolVersion;
     m.attr("versions") = nb::tuple(nb::cast(bedrock::protocol::versions));
-    nb::class_<ProtocolVersion>(m, "ProtocolVersion",
+    nb::class_<ProtocolVersion>(m, "ProtocolVersion", nb::is_final(),
                                 "A protocol number a release reported, and the releases that report it.")
         .def_ro("number", &ProtocolVersion::number)
-        .def_ro("snapshot", &ProtocolVersion::snapshot, "The `v<N>` that decodes it.")
+        .def_ro("snapshot", &ProtocolVersion::snapshot)
         .def_ro("name", &ProtocolVersion::name)
         .def_ro("first", &ProtocolVersion::first)
         .def_ro("last", &ProtocolVersion::last)
@@ -58,10 +58,9 @@ NB_MODULE(_core, m)
                                version.number, version.snapshot, version.name, version.first, version.last);
         });
     m.attr("releases") = nb::tuple(nb::cast(bedrock::protocol::releases));
-    m.def("protocol_version", nb::overload_cast<int>(&bedrock::protocol::protocol_version), nb::arg("number"),
-          "The release entry for a protocol number, or None.");
+    m.def("protocol_version", nb::overload_cast<int>(&bedrock::protocol::protocol_version), nb::arg("number"));
     m.def("protocol_version", nb::overload_cast<std::string_view>(&bedrock::protocol::protocol_version),
-          nb::arg("release"), "The release entry whose range holds a three-part release, or None.");
+          nb::arg("release"), "The release entry whose range holds a three-part release.");
     auto package = nb::module_::import_("bedrock_protocol");
     bpy::init_nbt(package);
     bpy::init_versions(package);
