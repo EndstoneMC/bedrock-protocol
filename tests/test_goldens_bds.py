@@ -338,6 +338,8 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
         ("SerializedSkinRef", "geometry_data", "null\n"),
         ("NpcDialoguePacket", "action_json", "[]"),
         ("SpawnParticleEffectPacket", "molang_variables", "[]\n"),
+        ("AddVolumeEntityPacket", "min_engine_version", "1.21.0"),
+        ("SerializedSkinRef", "geometry_data_min_engine_version", "1.21.0"),
     ],
     ids=[
         "spline-name",
@@ -347,6 +349,8 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
         "skin-geometry",
         "npc-actions",
         "molang-variables",
+        "volume-engine-version",
+        "skin-engine-version",
     ],
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):

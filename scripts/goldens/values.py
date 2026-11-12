@@ -167,6 +167,8 @@ FIXED: dict[str, Json] = {
     "SerializedSkinRef.geometry_data": "null\n",
     "NpcDialoguePacket.action_json": "[]",
     "SpawnParticleEffectPacket.molang_variables?": "[]\n",
+    "AddVolumeEntityPacket.min_engine_version": "1.21.0",
+    "SerializedSkinRef.geometry_data_min_engine_version": "1.21.0",
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
     "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
