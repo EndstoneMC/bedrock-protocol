@@ -13,10 +13,7 @@ public final class DecodeBudget {
         this.limits = limits;
     }
 
-    /**
-     * Charges count elements, or throws OUT_OF_RANGE if negative or TOO_LARGE past the limit, at
-     * the given byte offset.
-     */
+    /** Charges count elements, or throws OUT_OF_RANGE or TOO_LARGE at the given byte offset. */
     public void chargeElements(long count, int offset) {
         if (count < 0) {
             throw new DecodeException(Reason.OUT_OF_RANGE, offset);
@@ -27,10 +24,7 @@ public final class DecodeBudget {
         elements += count;
     }
 
-    /**
-     * Charges count bytes, or throws OUT_OF_RANGE if negative or TOO_LARGE past the limit, at the
-     * given byte offset.
-     */
+    /** Charges count bytes, or throws OUT_OF_RANGE or TOO_LARGE at the given byte offset. */
     public void chargeBytes(long count, int offset) {
         if (count < 0) {
             throw new DecodeException(Reason.OUT_OF_RANGE, offset);
