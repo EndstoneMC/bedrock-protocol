@@ -40,8 +40,7 @@ uv pip install ./bedrock-protocol
 from bedrock_protocol import TextPacket, TextPacketType
 
 packet = TextPacket()
-packet.body = TextPacket.MessageOnly(type=TextPacketType.CHAT,
-                                     message="hello")
+packet.body = TextPacket.MessageOnly(type=TextPacketType.CHAT, message="hello")
 data = bytes(packet)
 assert TextPacket.from_bytes(data) == packet
 ```
@@ -78,8 +77,7 @@ namespace bp = bedrock::protocol;
 using Packet = bp::TextPacket;
 
 Packet packet;
-packet.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat,
-                                  .message = "hello"};
+packet.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 
 std::string data;
 bp::BinaryWriter writer{data};
