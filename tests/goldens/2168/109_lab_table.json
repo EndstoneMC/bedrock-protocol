@@ -1,0 +1,25 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "type": "START_REACTION",
+   "pos": {
+    "x": 462,
+    "y": -593,
+    "z": 724
+   },
+   "reaction": "HEAT_BLOCK"
+  },
+  "bytes": "019c07a109a80b05",
+  "bds_json": {
+   "Type": 1,
+   "Position": {
+    "X": 462,
+    "Y": -593,
+    "Z": 724
+   },
+   "Reaction": 5
+  }
+ }
+]

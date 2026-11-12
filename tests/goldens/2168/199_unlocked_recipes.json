@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "packet_type": "INITIALLY_UNLOCKED_RECIPES",
+   "unlocked_recipes": [
+    "s2"
+   ]
+  },
+  "bytes": "0100000001027332",
+  "bds_json": {
+   "Packet Type": 1,
+   "Unlocked Recipes List": [
+    "s2"
+   ]
+  }
+ }
+]
