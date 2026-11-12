@@ -239,18 +239,6 @@ F from_python(nb::handle src, const std::string &label)
     throw nb::type_error(std::format("{}: cannot hold {}", label, nb::repr(src).c_str()).c_str());
 }
 
-template <typename T>
-std::string describe(const T &value)
-{
-    try {
-        return nb::repr(to_python(value)).c_str();
-    }
-    catch (const std::exception &) {
-        PyErr_Clear();
-        return "<?>";
-    }
-}
-
 template <typename T, std::size_t I>
 const std::string &field_label()
 {
@@ -321,7 +309,8 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
     cls.def("__repr__", [](const T &self) {
         std::string members;
         [&]<std::size_t... I>(std::index_sequence<I...>) {
-            ((members += std::format("{}{}={}", I ? ", " : "", python_names<T>()[I], describe(field_get<I>(self)))),
+            ((members += std::format("{}{}={}", I ? ", " : "", python_names<T>()[I],
+                                     nb::repr(to_python(field_get<I>(self))).c_str())),
              ...);
         }(std::make_index_sequence<field_count<T>()>{});
         return std::format("{}({})", nb::cast<std::string>(nb::type<T>().attr("__qualname__")), members);
