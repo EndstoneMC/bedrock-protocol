@@ -297,3 +297,7 @@ def test_a_legacy_submodule_imports_by_its_dotted_name(protocol):
 
 def test_the_bound_versions_ascend():
     assert list(bedrock_protocol.VERSIONS) == sorted(bedrock_protocol.VERSIONS)
+
+
+def test_a_shared_class_belongs_to_the_newest_version():
+    assert proto.PlayStatusPacket.__module__ == f"bedrock_protocol.v{bedrock_protocol.VERSIONS[-1]}"
