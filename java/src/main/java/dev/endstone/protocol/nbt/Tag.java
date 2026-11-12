@@ -26,7 +26,7 @@ public sealed interface Tag
         budget.enter(buf.readerIndex());
         try {
             return switch (type) {
-                case BYTE -> new ByteTag(Wire.readInt8(buf));
+                case BYTE -> new ByteTag(Wire.readUint8(buf));
                 case SHORT -> new ShortTag(Wire.readInt16(buf));
                 case INT -> new IntTag(Wire.readVarint32(buf));
                 case INT64 -> new Int64Tag(Wire.readVarint64(buf));

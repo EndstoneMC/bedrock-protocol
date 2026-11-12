@@ -9,10 +9,16 @@ import java.util.Arrays;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/** A byte array tag; two compare equal when their bytes do. */
-public record ByteArrayTag(byte[] value) implements Tag {
+/** A byte array tag of unsigned elements, 0 to 255; two compare equal when their elements do. */
+public record ByteArrayTag(int[] value) implements Tag {
     public ByteArrayTag {
         Objects.requireNonNull(value, "ByteArrayTag.value");
+        for (int element : value) {
+            if (element < 0 || element > 0xFF) {
+                throw new IllegalArgumentException(
+                        "ByteArrayTag.value element out of range: " + element);
+            }
+        }
     }
 
     @Override
@@ -23,7 +29,9 @@ public record ByteArrayTag(byte[] value) implements Tag {
     @Override
     public void encodeData(ByteBuf buf) {
         Wire.writeVarint32(buf, value.length);
-        buf.writeBytes(value);
+        for (int element : value) {
+            buf.writeByte(element);
+        }
     }
 
     static ByteArrayTag readBody(ByteBuf buf, DecodeBudget budget) {
@@ -31,8 +39,10 @@ public record ByteArrayTag(byte[] value) implements Tag {
         if (count > buf.readableBytes()) {
             throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
         }
-        byte[] value = new byte[count];
-        buf.readBytes(value);
+        int[] value = new int[count];
+        for (int i = 0; i < count; i++) {
+            value[i] = Wire.readUint8(buf);
+        }
         return new ByteArrayTag(value);
     }
 

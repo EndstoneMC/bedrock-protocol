@@ -24,7 +24,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class NbtTest {
     static Stream<Arguments> payloads() {
         return Stream.of(
-                argumentSet("byte", new ByteTag((byte) 5), "05"),
+                argumentSet("byte", new ByteTag(5), "05"),
+                argumentSet("byte high bit", new ByteTag(254), "fe"),
                 argumentSet("short", new ShortTag((short) -2), "feff"),
                 argumentSet("int", new IntTag(-1), "01"),
                 argumentSet("int two groups", new IntTag(300), "d804"),
@@ -32,13 +33,15 @@ class NbtTest {
                 argumentSet("float", new FloatTag(1.0f), "0000803f"),
                 argumentSet("double", new DoubleTag(1.0), "000000000000f03f"),
                 argumentSet("string", new StringTag("hi"), "026869"),
-                argumentSet("byte array", new ByteArrayTag(new byte[] {1, 2}), "040102"),
+                argumentSet("byte array", new ByteArrayTag(new int[] {1, 2}), "040102"),
+                argumentSet(
+                        "byte array high bit", new ByteArrayTag(new int[] {254, 255}), "04feff"),
                 argumentSet("int array", new IntArrayTag(new int[] {1, -1}), "040201"),
                 argumentSet("list", new ListTag(TagType.INT, List.of(new IntTag(1))), "030202"),
                 argumentSet("empty list", new ListTag(TagType.END, List.of()), "0000"),
                 argumentSet(
                         "compound",
-                        new CompoundTag(Map.of("b", new ByteTag((byte) 1), "a", new IntTag(1))),
+                        new CompoundTag(Map.of("b", new ByteTag(1), "a", new IntTag(1))),
                         "030161020101620100"));
     }
 
@@ -52,8 +55,8 @@ class NbtTest {
         return Stream.of(
                 argumentSet(
                         "byte arrays",
-                        new ByteArrayTag(new byte[] {1, 2}),
-                        new ByteArrayTag(new byte[] {1, 2})),
+                        new ByteArrayTag(new int[] {1, 2}),
+                        new ByteArrayTag(new int[] {1, 2})),
                 argumentSet(
                         "int arrays",
                         new IntArrayTag(new int[] {1, 2}),
@@ -119,14 +122,20 @@ class NbtTest {
     @Test
     void compoundKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new CompoundTag(
-                        Map.of(
-                                "\ud800\udc00",
-                                new ByteTag((byte) 0),
-                                "\uffff",
-                                new ByteTag((byte) 0)))
+        new CompoundTag(Map.of("\ud800\udc00", new ByteTag(0), "\uffff", new ByteTag(0)))
                 .encodeData(buf);
         assertEquals("0103efbfbf000104f09080800000", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
+    void aByteTagRejectsAValueOutsideZeroTo255() {
+        assertThrows(IllegalArgumentException.class, () -> new ByteTag(256));
+        assertThrows(IllegalArgumentException.class, () -> new ByteTag(-1));
+    }
+
+    @Test
+    void aByteArrayTagRejectsAnElementOutsideZeroTo255() {
+        assertThrows(IllegalArgumentException.class, () -> new ByteArrayTag(new int[] {1, 256}));
     }
 
     @Test
@@ -146,8 +155,7 @@ class NbtTest {
     @Test
     void aDuplicateKeyKeepsTheFirstValue() {
         assertEquals(
-                new CompoundTag(Map.of("a", new ByteTag((byte) 1))),
-                decodeRoot("0a00010161010101610200"));
+                new CompoundTag(Map.of("a", new ByteTag(1))), decodeRoot("0a00010161010101610200"));
     }
 
     @Test
@@ -237,7 +245,7 @@ class NbtTest {
         IllegalArgumentException error =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> new ListTag(TagType.INT, List.of(new ByteTag((byte) 1))));
+                        () -> new ListTag(TagType.INT, List.of(new ByteTag(1))));
         assertEquals("ListTag.elements: BYTE in a list of INT", error.getMessage());
     }
 }
