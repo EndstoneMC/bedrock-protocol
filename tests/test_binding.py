@@ -408,7 +408,8 @@ def test_a_shared_class_belongs_to_the_newest_version():
 
 
 @pytest.mark.parametrize(
-    "cls", [bedrock_protocol.PacketHeader, bedrock_protocol.ProtocolVersion, proto.PlayStatusPacket, proto.AttributeData]
+    "cls",
+    [bedrock_protocol.PacketHeader, bedrock_protocol.ProtocolVersion, proto.PlayStatusPacket, proto.AttributeData],
 )
 def test_a_bound_struct_cannot_be_subclassed(cls):
     with pytest.raises(TypeError, match="prohibits subclassing"):
