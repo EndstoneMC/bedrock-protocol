@@ -103,6 +103,10 @@ FIXED: dict[str, Json] = {
     "LoginPacket.connection_request": CONNECTION_REQUEST,
     "SubClientLoginPacket.connection_request": CONNECTION_REQUEST,
     "AgentActionEventPacket.response": "null\n",
+    "Color255RGBA.r": 16,
+    "Color255RGBA.g": 32,
+    "Color255RGBA.b": 64,
+    "Color255RGBA.a": 128,
 }
 
 
