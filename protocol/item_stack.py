@@ -334,7 +334,7 @@ class ItemStackRequestCereal:
     @type(since=2225)
     class CraftDiscPressActionData:
         action_type: Literal[ItemStackRequestActionType.CRAFT_DISC_PRESS]
-        reserved_id: str
+        track_sound_event_id: str
         num_crafts: uint8
 
     class CraftNonImplementedActionData:

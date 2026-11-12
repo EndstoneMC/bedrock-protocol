@@ -161,7 +161,7 @@ DISC_PRESS_V2225 = v2225.ItemStackRequestPacket(
     requests=[
         v2225.ItemStackRequestCereal.RequestData(
             client_request_id=v2225.ItemStackRequestId(raw_id=-1),
-            actions=[v2225.ItemStackRequestCereal.CraftDiscPressActionData(reserved_id="disc", num_crafts=1)],
+            actions=[v2225.ItemStackRequestCereal.CraftDiscPressActionData(track_sound_event_id="disc", num_crafts=1)],
         )
     ]
 )
