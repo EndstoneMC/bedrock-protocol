@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "selected_slot": 331,
+   "container_id": "FIRST",
+   "should_select_slot": false
+  },
+  "bytes": "cb020100",
+  "bds_json": {
+   "Selected Slot": 331,
+   "Container ID": 1,
+   "Should select slot?": false
+  }
+ }
+]

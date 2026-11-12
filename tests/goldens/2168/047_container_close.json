@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "container_id": "INVENTORY",
+   "container_type": "CONTAINER",
+   "server_initiated_close": false
+  },
+  "bytes": "000000",
+  "bds_json": {
+   "Container Id": 0,
+   "Container Type": 0,
+   "Server Initiated Close": false
+  }
+ }
+]

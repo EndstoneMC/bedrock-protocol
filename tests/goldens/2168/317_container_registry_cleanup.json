@@ -1,0 +1,43 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "removed_containers": [
+    {
+     "name": "ANVIL_MATERIAL_CONTAINER",
+     "dynamic_id": 462
+    }
+   ]
+  },
+  "bytes": "010101ce010000",
+  "bds_json": {
+   "Removed Containers": [
+    {
+     "Container Name": 1,
+     "Dynamic ID": 462
+    }
+   ]
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "removed_containers": [
+    {
+     "name": "SMITHING_TABLE_INPUT_CONTAINER",
+     "dynamic_id": null
+    }
+   ]
+  },
+  "bytes": "010300",
+  "bds_json": {
+   "Removed Containers": [
+    {
+     "Container Name": 3
+    }
+   ]
+  }
+ }
+]
