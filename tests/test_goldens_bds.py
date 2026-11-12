@@ -26,6 +26,10 @@ def test_an_enum_the_case_names_matches_the_number_bds_shows(bds):
 def test_an_enum_the_case_names_does_not_match_another_number(bds):
     value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
     assert gap(bds, {"Status": 99}, value, {"status": 1}) == ("status", "LOGIN_FAILED_CLIENT_OLD")
+
+
+def test_an_enum_leaf_the_case_gives_no_number_for_does_not_match(bds):
+    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
     assert gap(bds, {"Status": 1}, value) == ("status", "LOGIN_FAILED_CLIENT_OLD")
 
 
@@ -97,7 +101,6 @@ def test_a_blob_in_hex_matches_the_characters_bds_shows(bds):
 
 @pytest.fixture(scope="module")
 def values():
-    pytest.importorskip("bedrock_protocol_compiler")
     spec = importlib.util.spec_from_file_location("goldens_values", SCRIPT.with_name("values.py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
