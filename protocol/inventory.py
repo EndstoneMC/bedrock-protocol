@@ -5,7 +5,7 @@ Not the legacy transaction family -- world/inventory/transaction/, in transactio
 
 from enum import IntEnum, auto
 
-from protocol import field, int8, int16, int32, packet, uint8, uint32, uvarint32, value, varint32
+from protocol import field, int8, int16, int32, packet, type, uint8, uint32, uvarint32, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -16,15 +16,15 @@ package = "bedrock.protocol"
 
 
 class ContainerID(IntEnum, int8):
-    NONE = -1
-    INVENTORY = 0
-    FIRST = 1
-    LAST = 100
-    OFFHAND = 119
-    ARMOR = 120
-    SELECTION_SLOTS = 122
-    PLAYER_ONLY_UI = 124
-    REGISTRY = 125
+    NONE = -1, "CONTAINER_ID_NONE"
+    INVENTORY = 0, "CONTAINER_ID_INVENTORY"
+    FIRST = 1, "CONTAINER_ID_FIRST"
+    LAST = 100, "CONTAINER_ID_LAST"
+    OFFHAND = 119, "CONTAINER_ID_OFFHAND"
+    ARMOR = 120, "CONTAINER_ID_ARMOR"
+    SELECTION_SLOTS = 122, "CONTAINER_ID_SELECTION_SLOTS"
+    PLAYER_ONLY_UI = 124, "CONTAINER_ID_PLAYER_ONLY_UI"
+    REGISTRY = 125, "CONTAINER_ID_REGISTRY"
     REGISTRY_INVENTORY = value(126, until=748)
 
 
@@ -152,41 +152,41 @@ class ContainerType(IntEnum, int8):
     WORKBENCH = 1
     FURNACE = 2
     ENCHANTMENT = 3
-    BREWING_STAND = 4
+    BREWING_STAND = 4, "BREWING_STAND"
     ANVIL = 5
     DISPENSER = 6
     DROPPER = 7
     HOPPER = 8
     CAULDRON = 9
-    MINECART_CHEST = 10
-    MINECART_HOPPER = 11
+    MINECART_CHEST = 10, "MINECART_CHEST"
+    MINECART_HOPPER = 11, "MINECART_HOPPER"
     HORSE = 12
     BEACON = 13
-    STRUCTURE_EDITOR = 14
+    STRUCTURE_EDITOR = 14, "STRUCTURE_EDITOR"
     TRADE = 15
-    COMMAND_BLOCK = 16
+    COMMAND_BLOCK = 16, "COMMAND_BLOCK"
     JUKEBOX = 17
     ARMOR = 18
     HAND = 19
-    COMPOUND_CREATOR = 20
-    ELEMENT_CONSTRUCTOR = 21
-    MATERIAL_REDUCER = 22
-    LAB_TABLE = 23
+    COMPOUND_CREATOR = 20, "COMPOUND_CREATOR"
+    ELEMENT_CONSTRUCTOR = 21, "ELEMENT_CONSTRUCTOR"
+    MATERIAL_REDUCER = 22, "MATERIAL_REDUCER"
+    LAB_TABLE = 23, "LAB_TABLE"
     LOOM = 24
     LECTERN = 25
     GRINDSTONE = 26
-    BLAST_FURNACE = 27
+    BLAST_FURNACE = 27, "BLAST_FURNACE"
     SMOKER = 28
     STONECUTTER = 29
     CARTOGRAPHY = 30
     HUD = 31
-    JIGSAW_EDITOR = 32
-    SMITHING_TABLE = 33
-    CHEST_BOAT = 34
-    DECORATED_POT = 35
+    JIGSAW_EDITOR = 32, "JIGSAW_EDITOR"
+    SMITHING_TABLE = 33, "SMITHING_TABLE"
+    CHEST_BOAT = 34, "CHEST_BOAT"
+    DECORATED_POT = 35, "DECORATED_POT"
     CRAFTER = 36
-    DATA_DRIVEN_CONTAINER = value(37, since=2193)
-    DISC_PRESS = value(38, since=2225)
+    DATA_DRIVEN_CONTAINER = value(37, "DATA_DRIVEN_CONTAINER", since=2193)
+    DISC_PRESS = value(38, "DISC_PRESS", since=2225)
 
 
 @packet(id=47)
@@ -335,6 +335,7 @@ class ClientboundStonecutterSetRecipePacket:
     recipe_index: varint32
 
 
+@type(since=2225)
 class CursorItemDragState(IntEnum, uint8):
     START = 0
     STOP = 1

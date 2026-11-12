@@ -60,7 +60,7 @@ class Enchant:
 
 class EnchantmentInstance:
     enchant_type: Enchant.Type
-    level: uint8
+    level: int32 = field(type=uint8)
 
 
 class ItemEnchants:
@@ -70,7 +70,7 @@ class ItemEnchants:
 
 class ItemEnchantOption:
     cost: uvarint32 = field(until=975)
-    cost: uint8 = field(since=975)
+    cost: int32 = field(type=uint8, since=975)
     enchants: ItemEnchants
     enchant_name: str
     enchant_net_id: RecipeNetId

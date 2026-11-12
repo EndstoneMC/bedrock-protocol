@@ -16,7 +16,7 @@ package = "bedrock.protocol"
 
 
 class InventorySourceType(IntEnum, uint32):
-    INVALID_INVENTORY = -1
+    INVALID_INVENTORY = 4294967295
     CONTAINER_INVENTORY = 0
     GLOBAL_INVENTORY = 1
     WORLD_INTERACTION = 2
@@ -33,7 +33,7 @@ class LegacySetSlot:
 class InventorySource:
     class InventorySourceFlags(IntEnum, uint32):
         NO_FLAG = 0
-        WORLD_INTERACTION_RANDOM = 1
+        WORLD_INTERACTION_RANDOM = 1, "WorldInteraction_Random"
 
     type: InventorySourceType
     container_id: ContainerID = field(
@@ -49,7 +49,7 @@ class InventorySource:
 class InventorySource:
     class InventorySourceFlags(IntEnum, uint32):
         NO_FLAG = 0
-        WORLD_INTERACTION_RANDOM = 1
+        WORLD_INTERACTION_RANDOM = 1, "WorldInteraction_Random"
 
     type: InventorySourceType
     _true_1: Literal[True] = field(until=2193)
@@ -280,20 +280,17 @@ class ItemReleaseInventoryTransaction:
     hand: HandSlot = field(since=2225)
 
 
-type TransactionData = (
-    NormalTransactionData
-    | InventoryMismatchData
-    | ItemUseInventoryTransaction
-    | ItemUseOnActorInventoryTransaction
-    | ItemReleaseInventoryTransaction
-)
-
-
 @packet(id=30, until=1001)
 class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] = field(when=lambda p: p.legacy_request_id != 0)
-    transaction: TransactionData
+    transaction: (
+        NormalTransactionData
+        | InventoryMismatchData
+        | ItemUseInventoryTransaction
+        | ItemUseOnActorInventoryTransaction
+        | ItemReleaseInventoryTransaction
+    )
 
 
 @packet(id=30, since=1001)
@@ -301,4 +298,10 @@ class InventoryTransactionPacket:
     legacy_request_id: varint32
     legacy_set_item_slots: list[LegacySetSlot] | None
     _true: Literal[True] = field(until=2193)
-    transaction: TransactionData
+    transaction: (
+        NormalTransactionData
+        | InventoryMismatchData
+        | ItemUseInventoryTransaction
+        | ItemUseOnActorInventoryTransaction
+        | ItemReleaseInventoryTransaction
+    )

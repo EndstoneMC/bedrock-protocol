@@ -73,6 +73,7 @@ class Finalize:
     xuid: str
 
 
+@type(until=924)
 class BookEditAction(IntEnum, uint8):
     REPLACE_PAGE = 0
     ADD_PAGE = 1

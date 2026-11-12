@@ -19,9 +19,10 @@ class CreativeItemCategory(IntEnum, uint8):
     ITEMS = 4
     ITEM_COMMAND_ONLY = 5
     UNDEFINED = 6
-    NUM_CATEGORIES = auto()
+    NUM_CATEGORIES = 7, "NUM_CATEGORIES"
 
 
+@type(until=2168)
 class CraftingDataEntryType(IntEnum, int32):
     SHAPELESS_RECIPE = 0
     SHAPED_RECIPE = 1
@@ -80,8 +81,8 @@ class SerializedRecipeIngredient:
     """cerealizer<RecipeIngredient>::SerializedData."""
 
     descriptor: dict[str, str]
-    aux_value: int16 = field(type=varint32)
-    stack_size: uint16 = field(type=varint32)
+    aux_value: varint32
+    stack_size: varint32
 
 
 @type(until=2168)

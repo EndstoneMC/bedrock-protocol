@@ -19,7 +19,7 @@ class InputMode(IntEnum, uint32):
     MOUSE = 1
     TOUCH = 2
     GAME_PAD = 3
-    MOTION_CONTROLLER_DEPRECATED = 4
+    MOTION_CONTROLLER_DEPRECATED = 4, "MotionController_Deprecated"
     COUNT = auto()
 
 
@@ -27,12 +27,12 @@ class ClientPlayMode(IntEnum, uint32):
     NORMAL = 0
     TEASER = 1
     SCREEN = 2
-    VIEWER_DEPRECATED = 3
-    REALITY_DEPRECATED = 4
-    PLACEMENT_DEPRECATED = 5
-    LIVING_ROOM_DEPRECATED = 6
+    VIEWER_DEPRECATED = 3, "Viewer_Deprecated"
+    REALITY_DEPRECATED = 4, "Reality_Deprecated"
+    PLACEMENT_DEPRECATED = 5, "Placement_Deprecated"
+    LIVING_ROOM_DEPRECATED = 6, "LivingRoom_Deprecated"
     EXIT_LEVEL = 7
-    EXIT_LEVEL_LIVING_ROOM_DEPRECATED = 8
+    EXIT_LEVEL_LIVING_ROOM_DEPRECATED = 8, "ExitLevelLivingRoom_Deprecated"
     NUM_MODES = auto()
 
 
@@ -65,7 +65,7 @@ class PlayerActionType(IntEnum, int32):
     DENY_DESTROY_BLOCK = 17
     CRACK_BLOCK = 18
     CHANGE_SKIN = 19
-    DEPRECATED_UPDATED_ENCHANTING_SEED = 20
+    DEPRECATED_UPDATED_ENCHANTING_SEED = 20, "DEPRECATED_UpdatedEnchantingSeed"
     START_SWIMMING = 21
     STOP_SWIMMING = 22
     START_SPIN_ATTACK = 23
@@ -81,7 +81,7 @@ class PlayerActionType(IntEnum, int32):
     STOP_CRAWLING = 33
     START_FLYING = 34
     STOP_FLYING = 35
-    DEPRECATED_CLIENT_ACK_SERVER_DATA = 36
+    DEPRECATED_CLIENT_ACK_SERVER_DATA = 36, "DEPRECATED_ClientAckServerData"
     START_USING_ITEM = value(37, since=748)
     INTERNAL_UPDATE = value(38, since=2168)
     COUNT = auto()
@@ -237,7 +237,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP_DEPRECATED = 2
+        NORTH_JUMP_DEPRECATED = 2, "NorthJump_DEPRECATED"
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -289,8 +289,8 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
         START_USING_ITEM = 53
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54, "IsCameraRelativeMovementEnabled_DEPRECATED"
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55, "IsRotControlledByMoveDirection_DEPRECATED"
         START_SPIN_ATTACK = 56
         STOP_SPIN_ATTACK = 57
         IS_HOTBAR_ONLY_TOUCH = 58
@@ -301,7 +301,7 @@ class PlayerAuthInputPacket:
         SNEAK_PRESSED_RAW = 63
         SNEAK_CURRENT_RAW = 64
         INTERNAL_UPDATE = 65
-        INPUT_NUM = auto()
+        INPUT_NUM = 66, "INPUT_NUM"
 
     rot: Vec2
     pos: Vec3
