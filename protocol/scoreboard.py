@@ -25,12 +25,6 @@ class IdentityDefinition:
         FAKE_PLAYER = 3
 
 
-@type(until=2168)
-class ScorePacketType(IntEnum, uint8):
-    CHANGE = 0
-    REMOVE = 1
-
-
 @type(since=2168)
 class ScorePacketEntryAction(IntEnum, uint8):
     REMOVE = 0
@@ -42,17 +36,6 @@ class ScorePacketEntryAction(IntEnum, uint8):
 class ScoreboardIdentityPacketType(IntEnum, uint8):
     UPDATE = 0
     REMOVE = 1
-
-
-@type(until=2168)
-class ScorePacketInfo:
-    scoreboard_id: ScoreboardId
-    objective_name: str
-    score_value: int32
-    identity_type: IdentityDefinition.Type
-    player_id: PlayerScoreboardId = field(when=lambda i: i.identity_type == IdentityDefinition.Type.PLAYER)
-    entity_id: ActorUniqueID = field(when=lambda i: i.identity_type == IdentityDefinition.Type.ENTITY)
-    fake_player_name: str = field(when=lambda i: i.identity_type == IdentityDefinition.Type.FAKE_PLAYER)
 
 
 @type(since=2168)
@@ -152,3 +135,20 @@ class SetDisplayObjectivePacket:
     objective_display_name: str
     criteria_name: str
     sort_order: ObjectiveSortOrder = field(type=varint32)
+
+
+@type(until=2168)
+class ScorePacketType(IntEnum, uint8):
+    CHANGE = 0
+    REMOVE = 1
+
+
+@type(until=2168)
+class ScorePacketInfo:
+    scoreboard_id: ScoreboardId
+    objective_name: str
+    score_value: int32
+    identity_type: IdentityDefinition.Type
+    player_id: PlayerScoreboardId = field(when=lambda i: i.identity_type == IdentityDefinition.Type.PLAYER)
+    entity_id: ActorUniqueID = field(when=lambda i: i.identity_type == IdentityDefinition.Type.ENTITY)
+    fake_player_name: str = field(when=lambda i: i.identity_type == IdentityDefinition.Type.FAKE_PLAYER)

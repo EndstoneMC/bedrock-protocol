@@ -16,6 +16,10 @@ class MovementEffectType(IntEnum, int32):
     COUNT = auto()
 
 
+class EffectDuration:
+    value: varint32
+
+
 @packet(id=28, until=748)
 class MobEffectPacket:
     class Event(IntEnum, uint8):
@@ -31,10 +35,6 @@ class MobEffectPacket:
     show_particles: bool
     effect_duration_ticks: varint32
     tick: PlayerInputTick = field(type=uint64)
-
-
-class EffectDuration:
-    value: varint32
 
 
 @packet(id=28, since=748)

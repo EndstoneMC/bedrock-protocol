@@ -673,11 +673,10 @@ class TakeItemActorPacket:
 
 
 class MoveActorAbsoluteData:
-    runtime_id: ActorRuntimeID
-
     class Header:
         raw: uint8
 
+    runtime_id: ActorRuntimeID
     header: Header
     pos: Vec3
     rot_x: int8 = field(type=uint8)
