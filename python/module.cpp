@@ -14,7 +14,7 @@ std::vector<std::pair<nb::handle, nb::dict (*)()>> &annotators()
 
 }  // namespace bedrock::protocol::python
 
-NB_MODULE(_native, m)
+NB_MODULE(_core, m)
 {
     namespace bpy = bedrock::protocol::python;
     m.attr("LATEST_PROTOCOL") = bedrock::protocol::latest_version;

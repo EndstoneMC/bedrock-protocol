@@ -2,7 +2,7 @@
 
 from importlib import import_module
 
-from ._native import LATEST_PROTOCOL
+from ._core import LATEST_PROTOCOL
 
 
 class DecodeError(ValueError):
