@@ -1,0 +1,19 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "violation_type": "PACKET_MALFORMED",
+   "violation_severity": "FINAL_WARNING",
+   "violating_packet_id": "CLIENT_TO_SERVER_HANDSHAKE",
+   "violation_context": "s4"
+  },
+  "bytes": "000208027334",
+  "bds_json": {
+   "Violation Type": 0,
+   "Violation Severity": 1,
+   "Violation PacketId": 4,
+   "Violation Context": "s4"
+  }
+ }
+]

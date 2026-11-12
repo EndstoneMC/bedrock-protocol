@@ -1,0 +1,23 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "blobs": [
+    {
+     "blob_id": 331,
+     "blob_data": "020102"
+    }
+   ]
+  },
+  "bytes": "014b0100000000000003020102",
+  "bds_json": {
+   "Missing Blobs": [
+    {
+     "Blob Id": 331,
+     "Blob Data": "\u0002\u0001\u0002"
+    }
+   ]
+  }
+ }
+]

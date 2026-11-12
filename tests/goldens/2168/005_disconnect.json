@@ -1,0 +1,36 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "reason": "CANT_CONNECT_NO_INTERNET",
+   "messages": {
+    "DisconnectPacketMessages": {
+     "message": "s2",
+     "filtered_message": "s3"
+    }
+   }
+  },
+  "bytes": "0200027332027333",
+  "bds_json": {
+   "Reason": 1,
+   "Messages": {
+    "Message": "s2",
+    "Filtered Message": "s3"
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "reason": "THIRD_PARTY_BLOCKED",
+   "messages": null
+  },
+  "bytes": "0801",
+  "bds_json": {
+   "Reason": 4,
+   "Messages": null
+  }
+ }
+]
