@@ -126,3 +126,26 @@ def test_an_enum_inside_a_variant_alternative_is_numbered(values):
     }
     packet = v2168.packets[9].from_json(value)
     assert values.enum_numbers(packet, value) == {"body.MessageOnly.type": int(packet.body.type)}
+
+
+@pytest.fixture(scope="module")
+def schema(values):
+    return values.Schema(values.build(values.PROTOCOL_DIR))
+
+
+def generated(values, schema, name):
+    return values.values_of(schema, 2168, next(each for each in schema.order if each.name == name))[0]
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "bound"),
+    [
+        ("PlayerVideoCapturePacket", "stop_video_capture", "start_video_capture"),
+        ("ClientboundUpdateSoundDataPacket", "resume", "stop"),
+        ("CylinderDataPayload", "radius_z", "radius_x"),
+    ],
+    ids=["video-capture", "sound-data", "cylinder"],
+)
+def test_a_name_bds_binds_to_another_names_member_repeats_its_value(values, schema, name, field, bound):
+    chosen = generated(values, schema, name)
+    assert [each[field] for each in chosen] == [each[bound] for each in chosen]
