@@ -25,7 +25,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` pins protocol N and the bare package is the latest.
 - `tests/`: pytest only; tests reach the C++ through the binding, there are no C++ tests, and `tests/package/` is only CI's `find_package` consumer.
 - `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
-- `scripts/`: tools run by hand that need only the stdlib and lldb's Python module.
+- `scripts/`: tools run by hand; `scripts/goldens/values.py` needs `PYTHONPATH=compiler/src` and, for `--check`, the built `bedrock_protocol` binding, and the rest need only the stdlib and lldb's Python module.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
 - Build with README's Building section. `uv sync && uv run pytest` runs `tests/`; `uv run --directory compiler pytest` runs the compiler's.
 - Keep the C++ and Python build plain CMake, with no Conan recipe; Java builds with Gradle in `java/`.
