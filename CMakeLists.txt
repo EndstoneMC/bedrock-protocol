@@ -14,17 +14,23 @@ set(BEDROCK_PROTOCOL_PYTHON_VERSIONS "729;748;766;776;786;800;818;819;827;844;85
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# A source release ships `generated/` already compiled from the schema, so building
-# from one needs neither uv nor the Python compiler. A checkout has no such tree and
-# runs bpc during the build instead.
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/include/bedrock/protocol.hpp")
-    set(BEDROCK_PROTOCOL_PREGENERATED ON)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/bedrock/protocol/version.hpp")
     set(BEDROCK_PROTOCOL_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated")
 else ()
-    set(BEDROCK_PROTOCOL_PREGENERATED OFF)
     set(BEDROCK_PROTOCOL_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    find_package(Python 3.12 REQUIRED COMPONENTS Interpreter)
+    file(GLOB_RECURSE BEDROCK_PROTOCOL_COMPILER_INPUTS CONFIGURE_DEPENDS
+            "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/compiler/src/*.py")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${BEDROCK_PROTOCOL_COMPILER_INPUTS})
+    execute_process(
+            COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/compiler/src"
+                    "${Python_EXECUTABLE}" -m bedrock_protocol_compiler
+                    "${CMAKE_CURRENT_SOURCE_DIR}/protocol" --out "${BEDROCK_PROTOCOL_GENERATED_DIR}"
+            COMMAND_ERROR_IS_FATAL ANY)
 endif ()
-set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedrock/protocol")
+set(BEDROCK_PROTOCOL_HEADER_DIR "${BEDROCK_PROTOCOL_GENERATED_DIR}/bedrock/protocol")
+file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${BEDROCK_PROTOCOL_HEADER_DIR}/*.cpp")
 
 add_library(bedrock_protocol STATIC)
 add_library(bedrock::protocol ALIAS bedrock_protocol)
@@ -32,68 +38,13 @@ set_target_properties(bedrock_protocol PROPERTIES EXPORT_NAME protocol)
 target_compile_features(bedrock_protocol PUBLIC cxx_std_23)
 target_include_directories(bedrock_protocol PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${BEDROCK_PROTOCOL_GENERATED_DIR}/include>"
+        "$<BUILD_INTERFACE:${BEDROCK_PROTOCOL_GENERATED_DIR}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
-if (BEDROCK_PROTOCOL_PREGENERATED)
-    file(GLOB BEDROCK_PROTOCOL_GENERATED CONFIGURE_DEPENDS "${BEDROCK_PROTOCOL_HEADER_DIR}/*.cpp")
-    target_sources(bedrock_protocol PRIVATE ${BEDROCK_PROTOCOL_GENERATED})
-    set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_GENERATED})
-else ()
-    # The latest protocol the schema targets, read off the DSL surface so the C++
-    # side and the compiler cannot disagree about it.
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/__init__.py" _version_line
-            REGEX "^__version__[ \t]*=[ \t]*[0-9]+")
-    if (NOT _version_line)
-        message(FATAL_ERROR "bedrock-protocol: no __version__ in protocol/__init__.py")
-    endif ()
-    string(REGEX MATCH "[0-9]+" BEDROCK_PROTOCOL_LATEST "${_version_line}")
+target_sources(bedrock_protocol PRIVATE ${BEDROCK_PROTOCOL_SOURCES})
 
-    if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
-        find_package(Python 3.12 REQUIRED COMPONENTS Interpreter)
-        set(BEDROCK_PROTOCOL_COMPILER_PYTHON "${Python_EXECUTABLE}")
-    endif ()
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-    include(BedrockProtocol)
-    file(GLOB BEDROCK_PROTOCOL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protocol/*.py")
-    list(FILTER BEDROCK_PROTOCOL_SOURCES EXCLUDE REGEX "/_[^/]*\\.py$")
-    set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_SOURCES})
-    bedrock_protocol_generate(
-            TARGET bedrock_protocol
-            INPUTS ${BEDROCK_PROTOCOL_SOURCES}
-            # The DSL surface is not an input, but every generated file reads __version__ off it.
-            DEPENDENCIES ${CMAKE_CURRENT_SOURCE_DIR}/protocol/__init__.py
-            IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
-            COMPILER_OUT_DIR ${BEDROCK_PROTOCOL_HEADER_DIR}
-            OUT_VAR BEDROCK_PROTOCOL_GENERATED
-    )
-
-    configure_file(
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/bedrock/protocol/version.hpp.in"
-            "${BEDROCK_PROTOCOL_HEADER_DIR}/version.hpp"
-            @ONLY
-    )
-
-    # Configure the umbrella header (<bedrock/protocol.hpp>) by stamping one
-    # `#include` line per generated packet header into protocol.hpp.in.
-    # BEDROCK_PROTOCOL_GENERATED holds every generated file; keep only the headers.
-    set(BEDROCK_PROTOCOL_INCLUDES "")
-    set(_includes ${BEDROCK_PROTOCOL_GENERATED})
-    list(FILTER _includes INCLUDE REGEX "\\.h$")
-    list(SORT _includes)
-    foreach (_gen IN LISTS _includes)
-        file(RELATIVE_PATH _rel "${BEDROCK_PROTOCOL_GENERATED_DIR}/include" "${_gen}")
-        string(APPEND BEDROCK_PROTOCOL_INCLUDES "#include <${_rel}>\n")
-    endforeach ()
-    configure_file(
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/bedrock/protocol.hpp.in"
-            "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/bedrock/protocol.hpp"
-            @ONLY
-    )
-endif ()
-
-# The schema modules, by stem: one generated header and source pair each.
-list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.[a-z]+$" "\\1")
+set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_SOURCES})
+list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.cpp$" "\\1")
 
 if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
     add_subdirectory(python)
@@ -103,7 +54,7 @@ elseif (BEDROCK_PROTOCOL_INSTALL)
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
             FILES_MATCHING PATTERN "*.hpp")
-    install(DIRECTORY "${BEDROCK_PROTOCOL_GENERATED_DIR}/include/"
+    install(DIRECTORY "${BEDROCK_PROTOCOL_GENERATED_DIR}/"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
             FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

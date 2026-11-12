@@ -114,9 +114,8 @@ metadata preserves declaration order and the wire names of name-coded fields.
 
 ## Building
 
-Requires CMake and a C++23 compiler. Building a checkout also requires uv,
-which runs the compiler, or an interpreter with its dependencies named by
-`BEDROCK_PROTOCOL_COMPILER_PYTHON`. Pregenerated C++
+Requires CMake and a C++23 compiler. Building a checkout also requires Python 3.12,
+which runs the compiler. Pregenerated C++
 source releases and installed C++ packages need no Python.
 
 ```shell
@@ -125,7 +124,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Code generation is part of the build. `BEDROCK_PROTOCOL_BUILD_TESTS` and
+Code generation runs at configure time. `BEDROCK_PROTOCOL_BUILD_TESTS` and
 `BEDROCK_PROTOCOL_INSTALL` default to on for top-level builds and off for
 subprojects.
 

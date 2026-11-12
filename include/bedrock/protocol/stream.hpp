@@ -71,37 +71,6 @@ inline std::expected<std::size_t, Errc> countProduct(std::expected<std::size_t, 
     }
     return *a * *b;
 }
-
-inline std::expected<std::size_t, Errc> countOperation(std::expected<std::size_t, Errc> a,
-                                                       std::expected<std::size_t, Errc> b, char operation)
-{
-    if (!a) {
-        return a;
-    }
-    if (!b) {
-        return b;
-    }
-    switch (operation) {
-    case '*':
-        if (*b && *a > std::numeric_limits<std::size_t>::max() / *b) {
-            break;
-        }
-        return *a * *b;
-    case '+':
-        if (*a > std::numeric_limits<std::size_t>::max() - *b) {
-            break;
-        }
-        return *a + *b;
-    case '-':
-        if (*a < *b) {
-            break;
-        }
-        return *a - *b;
-    case '&':
-        return *a & *b;
-    }
-    return std::unexpected(Errc::out_of_range);
-}
 }  // namespace detail
 
 struct DecodeLimits {

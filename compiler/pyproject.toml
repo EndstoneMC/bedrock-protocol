@@ -5,10 +5,10 @@ description = "bpc, the compiler that emits the Bedrock protocol schema's C++ co
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = ["click", "griffe"]
+dependencies = []
 
 [project.scripts]
-bpc = "bedrock_protocol_compiler.compiler.cli:main"
+bpc = "bedrock_protocol_compiler.__main__:main"
 
 [dependency-groups]
 dev = ["mypy", "pytest", "pytest-xdist"]

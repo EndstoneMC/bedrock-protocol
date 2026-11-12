@@ -5,7 +5,7 @@ paths:
 
 # Hand-written Python
 
-The schema modules under `protocol/` follow `.claude/rules/protocol/` instead of this file; the DSL in `protocol/__init__.py` follows this file.
+The schema modules under `protocol/` follow `.claude/rules/protocol/` instead of this file; the DSL in `compiler/src/bedrock_protocol_compiler/dsl.py` follows this file.
 
 - Annotate hand-written code so it passes `mypy --strict` with no `# type: ignore`; tests need no annotations.
 - Limit a comprehension to two `for` clauses and one `if`; write longer ones as loops.

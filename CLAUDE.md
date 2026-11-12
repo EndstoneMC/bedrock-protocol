@@ -16,10 +16,10 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 
 ## Layout
 
-- `protocol/`: the schema DSL, one module per BDS domain.
-- `compiler/`: the compiler, self-contained, with its own `pyproject.toml`; the root holds exactly one `pyproject.toml`, for the runtime.
+- `protocol/`: the schema, one module per BDS domain; `__init__.py` re-exports the DSL and holds `versions`.
+- `compiler/`: the compiler, which CMake runs once at configure time over all of `protocol/`; self-contained, with its own `pyproject.toml`; the root holds exactly one `pyproject.toml`, for the runtime.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
-- `include/bedrock/protocol/`: the hand-written C++ runtime.
+- `include/bedrock/`: the hand-written C++ runtime and the umbrella header `protocol.hpp`.
 - `python/`: the nanobind binding.
 - `tests/`: pytest only. Tests reach the C++ through the Python binding, and there are no C++ tests.
 - Rules under `.claude/rules/` load with the files they cover. Adding, back-porting or renumbering a protocol version starts at `.claude/rules/protocol/workflow.md`.

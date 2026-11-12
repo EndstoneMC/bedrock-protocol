@@ -10,7 +10,7 @@ license-files = ["LICENSE", "python/NOTICE"]
 dev = ["pytest"]
 
 [build-system]
-requires = ["scikit-build-core>=1.1", "nanobind==2.13.0", "click", "griffe"]
+requires = ["scikit-build-core>=1.1", "nanobind==2.13.0"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]

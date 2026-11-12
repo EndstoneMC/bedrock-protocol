@@ -168,14 +168,9 @@ jobs:
       name: ${{ steps.package.outputs.name }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: astral-sh/setup-uv@v10.3.2
-        with:
-          enable-cache: false
 
       - name: Generate
-        run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBEDROCK_PROTOCOL_BUILD_TESTS=OFF
-          cmake --build build
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Stage
         id: package
@@ -187,8 +182,6 @@ jobs:
           cp cmake/bedrock-protocol-config.cmake.in "stage/$name/cmake/"
           cp -r include "stage/$name/include"
           cp -r build/generated "stage/$name/generated"
-          rm "stage/$name/include/bedrock/protocol.hpp.in"
-          rm "stage/$name/include/bedrock/protocol/version.hpp.in"
           echo "name=$name" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v7.0.2
@@ -197,14 +190,8 @@ jobs:
           path: stage/${{ steps.package.outputs.name }}/
           if-no-files-found: error
 
-      # No uv on PATH: were a generated file missing from the package, the configure
-      # would fall through to bpc and fail here rather than in a consumer.
       - name: Build it without the compiler
         run: |
-          for tool in uv uvx; do
-            path=$(command -v $tool || true)
-            [ -n "$path" ] && sudo mv "$path" "$path.disabled"
-          done
           cmake -S stage/${{ steps.package.outputs.name }} -B verify -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/verify-stage

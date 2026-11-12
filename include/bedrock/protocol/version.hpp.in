@@ -1,7 +1,0 @@
-#pragma once
-
-namespace bedrock::protocol {
-
-inline constexpr int latest_version = @BEDROCK_PROTOCOL_LATEST@;
-
-}  // namespace bedrock::protocol

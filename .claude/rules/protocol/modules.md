@@ -9,6 +9,7 @@ paths:
 
 - Name every schema module after a BDS game-tree folder, and open it with a docstring of a line or two naming what it holds, then one `Not ...` line per exclusion.
 - Settle placement by grepping the docstrings (`head -qn 4 protocol/*.py`, `grep -n "^Not " protocol/*.py`), never by re-deriving the taxonomy.
+- Declare `package = "bedrock.protocol"` after a module's imports, and add the module's header to `include/bedrock/protocol.hpp` in the same commit.
 - Change a module's docstring in the same commit that adds a declaration it excludes.
 - Place a declaration by its BDS header's domain folder:
   - a reusable type goes to its domain's module;
@@ -21,6 +22,6 @@ paths:
 
 ## Order
 
-- Order a module live-first: classes live at `__version__` on top, then the dead ones, newest `until=` first, with no banner between them.
+- Order a module live-first: classes live at the last of `versions` on top, then the dead ones, newest `until=` first, with no banner between them.
 - Keep a redeclaration chain together in ascending order; it moves to the tail only when its last declaration carries `until=`.
 - Treat declaration order as meaningless beyond that layout.

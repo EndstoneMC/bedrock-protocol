@@ -5,7 +5,7 @@ paths:
 
 # Declarations
 
-`protocol/__init__.py` documents what each construct means on the wire; these rules say which construct to choose. Never restate those docstrings: what `when=` may read, presence bytes, prefixes, defaults.
+`compiler/src/bedrock_protocol_compiler/dsl.py` documents what each construct means on the wire; these rules say which construct to choose. Never restate those docstrings: what `when=` may read, presence bytes, prefixes, defaults.
 
 ## Nesting
 
