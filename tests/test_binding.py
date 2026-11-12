@@ -60,23 +60,20 @@ def test_a_framed_packet_decodes_to_its_body():
     assert packet == PLAY_STATUS
 
 
-def test_positionals_fill_fields_in_order_and_keywords_by_name():
-    assert proto.Vec3(1, 2, z=3) == proto.Vec3(x=1, y=2, z=3)
-
-
-def test_a_positional_and_a_keyword_for_one_field_are_rejected():
-    with pytest.raises(TypeError, match="multiple values"):
-        proto.Vec3(1, x=2)
+def test_a_positional_argument_is_rejected():
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        proto.Vec3(1, 2, 3)
 
 
 def test_a_keyword_the_schema_does_not_name_is_rejected():
-    with pytest.raises(TypeError, match="no field 'w'"):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
         proto.Vec3(w=1)
 
 
-def test_more_positionals_than_fields_are_rejected():
-    with pytest.raises(TypeError, match="at most 3"):
-        proto.Vec3(1, 2, 3, 4)
+def test_a_nullable_field_takes_none():
+    packet = v2225.MovePlayerPacket(teleport_data=v2225.MovePlayerTeleportData())
+    packet.teleport_data = None
+    assert packet.teleport_data is None
 
 
 def test_a_struct_field_is_a_live_reference():
@@ -135,7 +132,7 @@ def test_a_named_value_assigned_to_an_int_field_comes_back_as_the_enum_member():
 
 
 def test_a_value_that_does_not_fit_the_enum_is_rejected():
-    with pytest.raises(TypeError, match="does not fit the enum"):
+    with pytest.raises(TypeError, match=r"^ContainerClosePacket\.container_id: cannot hold 1000$"):
         proto.ContainerClosePacket(container_id=1000)
 
 
@@ -150,12 +147,12 @@ def test_a_bytes_field_round_trips():
 
 
 def test_a_bytes_field_rejects_text():
-    with pytest.raises(TypeError, match=r"^LevelChunkPacket\.serialized_chunk cannot hold 'héllo'$"):
+    with pytest.raises(TypeError, match=r"^LevelChunkPacket\.serialized_chunk: cannot hold 'héllo'$"):
         proto.LevelChunkPacket(serialized_chunk="héllo")
 
 
 def test_a_string_field_rejects_bytes():
-    with pytest.raises(TypeError, match=r"^ResourcePackChunkDataPacket\.resource_name cannot hold b'p'$"):
+    with pytest.raises(TypeError, match=r"^ResourcePackChunkDataPacket\.resource_name: cannot hold b'p'$"):
         proto.ResourcePackChunkDataPacket(resource_name=b"p")
 
 
@@ -180,7 +177,7 @@ def test_a_uuid_crosses_as_uuid():
 
 
 def test_a_python_keyword_member_keeps_the_dsl_underscore():
-    assert "pass_" in proto.BiomeConsolidatedFeatureData.__match_args__
+    assert hasattr(proto.BiomeConsolidatedFeatureData, "pass_")
 
 
 def test_decode_rejects_trailing_bytes():

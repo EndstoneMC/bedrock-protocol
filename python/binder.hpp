@@ -10,6 +10,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <nanobind/nanobind.h>
@@ -123,6 +124,43 @@ template <typename T, std::size_t N>
 inline constexpr bool is_array_v<std::array<T, N>> = true;
 
 template <typename F>
+inline constexpr bool nullable_v = is_optional_v<F>;
+template <typename... Ts>
+inline constexpr bool nullable_v<std::variant<Ts...>> = (std::is_same_v<Ts, std::monostate> || ...);
+template <>
+inline constexpr bool nullable_v<Tag> = true;
+template <>
+inline constexpr bool nullable_v<DynamicValue> = true;
+
+template <typename F>
+struct python_type {
+    using type = F;
+};
+template <typename F>
+    requires std::is_enum_v<F>
+struct python_type<F> {
+    using type = std::variant<F, int>;
+};
+template <typename T>
+struct python_type<std::optional<T>> {
+    using type = std::optional<typename python_type<T>::type>;
+};
+template <typename T, typename A>
+struct python_type<std::vector<T, A>> {
+    using type = std::vector<typename python_type<T>::type>;
+};
+template <>
+struct python_type<std::vector<std::byte>> {
+    using type = std::vector<std::byte>;
+};
+template <typename T, std::size_t N>
+struct python_type<std::array<T, N>> {
+    using type = std::array<typename python_type<T>::type, N>;
+};
+template <typename F>
+using python_type_t = typename python_type<F>::type;
+
+template <typename F>
 constexpr bool holds_enum()
 {
     if constexpr (std::is_enum_v<F>) {
@@ -161,29 +199,27 @@ nb::object to_python(const F &value)
 }
 
 template <typename F>
-F from_python(nb::handle src)
+F from_python(nb::handle src, const std::string &label)
 {
     if constexpr (std::is_enum_v<F>) {
-        if (!PyLong_Check(src.ptr())) {
-            throw nb::type_error("expected an int or an enum member");
+        if (PyLong_Check(src.ptr())) {
+            F member;
+            if (nb::try_cast(src, member)) {
+                return member;
+            }
+            std::underlying_type_t<F> integer;
+            if (nb::try_cast(src, integer)) {
+                return static_cast<F>(integer);
+            }
         }
-        F member;
-        if (nb::try_cast(src, member)) {
-            return member;
-        }
-        std::underlying_type_t<F> integer;
-        if (!nb::try_cast(src, integer)) {
-            throw nb::type_error(std::format("value {} does not fit the enum", nb::str(src).c_str()).c_str());
-        }
-        return static_cast<F>(integer);
     }
     else if constexpr (is_optional_v<F>) {
-        return src.is_none() ? F{} : F{from_python<typename F::value_type>(src)};
+        return src.is_none() ? F{} : F{from_python<typename F::value_type>(src, label)};
     }
     else if constexpr (is_list_v<F>) {
         F out;
         for (nb::handle item : nb::iter(src)) {
-            out.push_back(from_python<typename F::value_type>(item));
+            out.push_back(from_python<typename F::value_type>(item, label));
         }
         return out;
     }
@@ -191,19 +227,22 @@ F from_python(nb::handle src)
         F out{};
         std::size_t i = 0;
         for (nb::handle item : nb::iter(src)) {
-            if (i == out.size()) {
-                throw nb::type_error("too many elements");
+            if (i < out.size()) {
+                out[i] = from_python<typename F::value_type>(item, label);
             }
-            out[i++] = from_python<typename F::value_type>(item);
+            ++i;
         }
-        if (i != out.size()) {
-            throw nb::type_error("too few elements");
+        if (i == out.size()) {
+            return out;
         }
-        return out;
     }
     else {
-        return nb::cast<F>(src);
+        F out;
+        if (nb::try_cast(src, out)) {
+            return out;
+        }
     }
+    throw nb::type_error(std::format("{}: cannot hold {}", label, nb::repr(src).c_str()).c_str());
 }
 
 template <typename T>
@@ -219,80 +258,35 @@ std::string describe(const T &value)
 }
 
 template <typename T, std::size_t I>
+const std::string &field_label()
+{
+    static const std::string label = std::format("{}.{}", struct_name<T>(), python_names<T>()[I]);
+    return label;
+}
+
+template <typename T, std::size_t I>
 void bind_field(nb::class_<T> &cls)
 {
     using F = field_t<T, I>;
     const char *name = python_names<T>()[I].c_str();
+    const auto setter = [](T &self, nb::typed<nb::handle, python_type_t<nb::remove_opt_mono_t<F>>> value) {
+        field_get<I>(self) = from_python<F>(value, field_label<T, I>());
+    };
+    const auto none = nb::for_setter(nb::arg("value").none(nullable_v<F>));
     if constexpr (holds_enum<F>()) {
         cls.def_prop_rw(
-            name, [](const T &self) { return to_python(field_get<I>(self)); },
-            [](T &self, nb::handle value) { field_get<I>(self) = from_python<F>(value); });
+            name,
+            [](const T &self) -> nb::typed<nb::object, python_type_t<F>> { return to_python(field_get<I>(self)); },
+            setter, none);
     }
     else if constexpr (Reflected<F>) {
         cls.def_prop_rw(
-            name, [](T &self) -> F & { return field_get<I>(self); },
-            [](T &self, const F &value) { field_get<I>(self) = value; }, nb::rv_policy::reference_internal);
+            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal, none);
     }
     else {
         cls.def_prop_rw(
-            name, [](const T &self) -> const F & { return field_get<I>(self); },
-            [](T &self, const F &value) { field_get<I>(self) = value; }, nb::rv_policy::copy);
+            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy, none);
     }
-}
-
-template <typename T, std::size_t I>
-void assign(T &value, nb::handle src)
-{
-    try {
-        field_get<I>(value) = from_python<field_t<T, I>>(src);
-    }
-    catch (const nb::cast_error &) {
-        throw nb::type_error(
-            std::format("{}.{} cannot hold {}", struct_name<T>(), python_names<T>()[I], nb::repr(src).c_str()).c_str());
-    }
-}
-
-template <typename T>
-T construct(nb::args args, nb::kwargs kwargs)
-{
-    constexpr std::size_t N = field_count<T>();
-    if (args.size() > N) {
-        throw nb::type_error(std::format("{} takes at most {} positional arguments", struct_name<T>(), N).c_str());
-    }
-    T value{};
-    std::size_t used = 0;
-    [&]<std::size_t... I>(std::index_sequence<I...>) {
-        (
-            [&] {
-                const char *name = python_names<T>()[I].c_str();
-                const bool keyword = kwargs.contains(name);
-                if (I < args.size()) {
-                    if (keyword) {
-                        throw nb::type_error(
-                            std::format("{} got multiple values for '{}'", struct_name<T>(), name).c_str());
-                    }
-                    assign<T, I>(value, args[I]);
-                }
-                else if (keyword) {
-                    assign<T, I>(value, kwargs[name]);
-                    ++used;
-                }
-            }(),
-            ...);
-    }(std::make_index_sequence<N>{});
-    if (used != kwargs.size()) {
-        for (auto [key, _] : kwargs) {
-            bool known = false;
-            [&]<std::size_t... I>(std::index_sequence<I...>) {
-                ((known = known || nb::str(python_names<T>()[I].c_str()).equal(key)), ...);
-            }(std::make_index_sequence<N>{});
-            if (!known) {
-                throw nb::type_error(
-                    std::format("{} has no field '{}'", struct_name<T>(), nb::cast<std::string>(key)).c_str());
-            }
-        }
-    }
-    return value;
 }
 
 template <typename T>
@@ -300,16 +294,30 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
 {
     static_assert(!field_contains<T>("from_bytes"), "a member named from_bytes hides T.from_bytes");
     nb::class_<T> cls(scope, name, nb::supplement<Codec>());
-    cls.def("__init__", [](T *self, nb::args args, nb::kwargs kwargs) { new (self) T(construct<T>(args, kwargs)); });
     [&]<std::size_t... I>(std::index_sequence<I...>) {
+        if constexpr (sizeof...(I) == 0) {
+            cls.def(nb::init<>());
+        }
+        else {
+            cls.def(
+                "__init__",
+                [](T *self, nb::typed<nb::handle, python_type_t<nb::remove_opt_mono_t<field_t<T, I>>>>... values) {
+                    T value{};
+                    (
+                        [&] {
+                            if (!values.is(nb::ellipsis())) {
+                                field_get<I>(value) = from_python<field_t<T, I>>(values, field_label<T, I>());
+                            }
+                        }(),
+                        ...);
+                    new (self) T(std::move(value));
+                },
+                nb::kw_only(),
+                (nb::arg(python_names<T>()[I].c_str()).none(nullable_v<field_t<T, I>>).sig("...") = nb::ellipsis())...);
+        }
         (bind_field<T, I>(cls), ...);
     }(std::make_index_sequence<field_count<T>()>{});
 
-    nb::list fields;
-    for (std::size_t i = 0; i < field_count<T>(); ++i) {
-        fields.append(nb::str(python_names<T>()[i].c_str()));
-    }
-    cls.attr("__match_args__") = nb::tuple(fields);
     cls.def(nb::self == nb::self);
     cls.attr("__hash__") = nb::none();
     cls.def("__copy__", [](const T &self) { return T(self); });
