@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "sim_type": "EDITOR"
+  },
+  "bytes": "01",
+  "bds_json": {
+   "Sim Type": 1
+  }
+ }
+]

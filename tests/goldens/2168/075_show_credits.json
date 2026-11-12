@@ -1,0 +1,17 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "player_id": 331,
+   "credits_state": "START"
+  },
+  "bytes": "cb0200",
+  "bds_json": {
+   "Player Runtime ID": {
+    "Actor Runtime ID": 331
+   },
+   "Credits State": 0
+  }
+ }
+]
