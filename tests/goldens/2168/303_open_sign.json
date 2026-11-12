@@ -1,0 +1,23 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "pos": {
+    "x": 331,
+    "y": 462,
+    "z": -593
+   },
+   "is_front_side": true
+  },
+  "bytes": "96059c07a10901",
+  "bds_json": {
+   "Pos": {
+    "X": 331,
+    "Y": 462,
+    "Z": -593
+   },
+   "Is Front Side": true
+  }
+ }
+]

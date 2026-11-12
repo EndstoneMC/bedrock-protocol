@@ -1,0 +1,30 @@
+[
+ {
+  "id": "v1",
+  "writer": "manual",
+  "value": {
+   "vanilla_dimension_id": 57,
+   "actor_id": -1379,
+   "pos": {
+    "x": 5.25,
+    "y": 5.75,
+    "z": 6.25
+   },
+   "effect_name": "s13",
+   "molang_variables": null
+  },
+  "bytes": "39c5150000a8400000b8400000c8400373313300",
+  "bds_json": {
+   "Dimension Id": 57,
+   "Actor Id": {
+    "Actor Unique ID": -1379
+   },
+   "Position": {
+    "X": 5.25,
+    "Y": 5.75,
+    "Z": 6.25
+   },
+   "Effect Name": "s13"
+  }
+ }
+]

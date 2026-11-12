@@ -1,0 +1,21 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "entity_net_id": {
+    "raw_id": 331
+   },
+   "dimension_type": 462
+  },
+  "bytes": "cb029c07",
+  "bds_json": {
+   "Entity Network Id": {
+    "Raw Id": 331
+   },
+   "Dimension Type": {
+    "value": 462
+   }
+  }
+ }
+]
