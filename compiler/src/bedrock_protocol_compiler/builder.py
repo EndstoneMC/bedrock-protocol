@@ -639,6 +639,10 @@ class Builder:
             ast.AnnAssign,
             "fields",
         )
+        owners: dict[int, ast.stmt] = {
+            id(inner): block for block in pending.node.body if isinstance(block, ast.With) for inner in block.body
+        }
+        runs: list[tuple[ast.stmt, list[str], bool]] = []
         for statement, within, block_when in statements:
             if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
@@ -647,8 +651,13 @@ class Builder:
                     source, statement, pending.struct.name, "holds only fields, nested classes, a docstring and pass"
                 )
             name = field_name(statement.target.id)
-            if any(name == existing.name for existing in fields):
-                raise error(source, statement, name, "is declared twice")
+            twin = any(name == existing.name for existing in fields)
+            owner = owners.get(id(statement), statement)
+            if not runs or runs[-1][0] is not owner:
+                runs.append((owner, [], False))
+            runs[-1][1].append(name)
+            if twin:
+                runs[-1] = (owner, runs[-1][1], True)
             call = statement.value
             if call is not None:
                 if not (isinstance(call, ast.Call) and self.resolve(source, scope, call.func) is dsl.field):
@@ -700,6 +709,9 @@ class Builder:
                 field_type = rewired
             own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
             field_range = self.narrow(source, statement, name, own, within)
+            for existing in fields:
+                if existing.name == name and existing.range.overlaps(field_range):
+                    raise error(source, statement, name, "is declared twice over overlapping versions")
             if call is not None and "count" in arguments:
                 if not isinstance(field_type, List):
                     raise error(source, call, name, "count is given to something other than a bare list")
@@ -732,6 +744,17 @@ class Builder:
             ]
             when = reduce(lambda left, right: Binary("and", left, right), predicates) if predicates else None
             fields.append(Field(name, field_type, field_range, when))
+        for position, (owner, names, twin) in enumerate(runs):
+            if not twin:
+                continue
+            above = runs[position - 1][1] if position else []
+            if names != above:
+                reason = (
+                    "is declared twice away from its first declaration"
+                    if len(names) == 1 and len(above) == 1
+                    else "is declared twice over a run that does not repeat the run above it in order"
+                )
+                raise error(source, owner, names[0], reason)
         struct = pending.struct
         self.tile(source, pending.node, struct, pending.range)
         if struct.packet_id is not None:

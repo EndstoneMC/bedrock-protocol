@@ -60,11 +60,12 @@ def earlier_field(context: Lambda, node: ast.expr) -> Field:
     if not (isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == context.param):
         raise context.error(node, f"{ast.unparse(node)} is not {context.param}.<field>")
     name = field_name(node.attr)
-    for earlier in context.earlier:
-        if earlier.name == name:
-            for version in context.versions:
-                if context.range.contains(version) and not earlier.range.contains(version):
-                    raise context.error(node, f"{ast.unparse(node)} is absent at {version}")
+    declared = [earlier for earlier in context.earlier if earlier.name == name]
+    for version in context.versions:
+        if declared and context.range.contains(version) and not any(each.range.contains(version) for each in declared):
+            raise context.error(node, f"{ast.unparse(node)} is absent at {version}")
+    for earlier in declared:
+        if any(context.range.contains(version) and earlier.range.contains(version) for version in context.versions):
             return earlier
     raise context.error(node, f"{ast.unparse(node)} is not an earlier field")
 

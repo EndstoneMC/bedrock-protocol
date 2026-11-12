@@ -25,6 +25,8 @@ paths:
 
 - Turn a pre-cereal switch into `when=`: `field(when=...)` for one field, `with field(when=...):` for a run.
 - Write a run of fields that share one gate as `with field(since=, until=):`, and keep a field that narrows the gate inside the run with its own `since=`, `until=` or `when=`; a block never nests in another and takes `when=` beside the gate.
+- Swap a field's type at one version by declaring it twice in place, `x: A = field(until=N)` then `x: B = field(since=N)`; swap a run as a `with field(until=N):` block directly followed by a `with field(since=N):` block with the same names in the same order.
+- Swap a field's type in place where that reads cleaner than a second declaration of the class; redeclare the class where most of its body changes.
 - Write a run of two or more consecutive enum members that share one gate as `with value(since=, until=):`, and keep a member that narrows the gate inside the run with its own `value(N, since=)` or `value(N, until=)`; a block never nests in another and holds a plain literal, a pair, `auto()` or `value()`.
 - Use `when=` for any implicit presence rule, such as a field gated on a sentinel value. Never use an optional for it, because an optional adds a byte BDS never wrote.
 
