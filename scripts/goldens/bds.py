@@ -111,7 +111,7 @@ def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
             and (shown - wanted) % (1 << bits) == 0
             for bits in (8, 16, 32, 64)
         )
-    return bool(shown == wanted)
+    return type(shown) is type(wanted) and bool(shown == wanted)
 
 
 def missing(
