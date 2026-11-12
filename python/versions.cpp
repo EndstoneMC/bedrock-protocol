@@ -1,14 +1,11 @@
-#include <cstddef>
 #include <format>
 #include <string>
 #include <string_view>
-#include <variant>
 
 #include <nanobind/nanobind.h>
 
 #include "_core.h"
 #include "bedrock/protocol/packet.hpp"
-#include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
 #include "bedrock/protocol/version.hpp"
 

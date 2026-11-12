@@ -1,8 +1,16 @@
 #include "_core.h"
 
+#include <cstddef>
+#include <format>
+#include <string>
+#include <string_view>
+#include <variant>
+#include <vector>
+
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/array.h>
 
+#include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/version.hpp"
 
 namespace bedrock::protocol::python {
