@@ -103,6 +103,11 @@ PRESENT_WHEN = {
     "MapItemTrackedActor.UniqueId.key_block_pos": ("type", "BLOCK_ENTITY"),
     "InventorySource.container_id": ("type", "CONTAINER_INVENTORY", "NON_IMPLEMENTED_FEATURE_TODO"),
     "InventorySource.flags": ("type", "WORLD_INTERACTION"),
+    "PlayerAuthInputPacket.item_use_transaction": ("input_data", "PERFORM_ITEM_INTERACTION"),
+    "PlayerAuthInputPacket.item_stack_request": ("input_data", "PERFORM_ITEM_STACK_REQUEST"),
+    "PlayerAuthInputPacket.player_block_actions": ("input_data", "PERFORM_BLOCK_ACTIONS"),
+    "PlayerAuthInputPacket.vehicle_rot": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
+    "PlayerAuthInputPacket.client_predicted_vehicle": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
 }
 LEVEL_GAME_RULES = (
     ("commandBlockOutput", {"bool": True}),
@@ -319,9 +324,14 @@ class Generator:
                 continue
             name, *members = gate
             declared = next(field.type for field in shape.fields if field.name == name)
-            if not isinstance(declared, EnumRef | EnumName):
-                raise TypeError(f"{label}.{name}: not an enum field")
-            tests = [Binary("==", FieldRef(name), MemberRef(declared.enum, member)) for member in members]
+            tests: list[Expression]
+            match declared:
+                case EnumRef(enum=enum) | EnumName(enum=enum):
+                    tests = [Binary("==", FieldRef(name), MemberRef(enum, member)) for member in members]
+                case List(element=EnumRef(enum=enum) | EnumName(enum=enum)):
+                    tests = [Test(name, MemberRef(enum, member)) for member in members]
+                case _:
+                    raise TypeError(f"{label}.{name}: not an enum or a list of enums")
             when = functools.reduce(lambda left, right: Binary("or", left, right), tests)
             found.append(dataclasses.replace(each, type=each.type.element, when=when))
         return found
@@ -686,6 +696,10 @@ class Generator:
             if isinstance(each.type, Bitset) and any(field == each.name for field, _ in bits):
                 width = self.numbers(each.type.width.enum)
                 values[each.name] = sum(1 << width[member] for field, member in bits if field == each.name)
+            held = [member for field, member in bits if field == each.name]
+            if isinstance(each.type, List) and isinstance(each.type.element, EnumRef | EnumName) and held:
+                numbers = self.numbers(each.type.element.enum)
+                values[each.name] = sorted(held, key=lambda member: numbers[member])
         final, flags = self.environment(shape, values)
         for index, expression in enumerate(whens):
             state = bool(self.evaluate(expression, final, flags))
@@ -724,6 +738,8 @@ class Generator:
                 width = self.numbers(declared.width.enum)
                 number = int(value or 0)
                 bits |= {(each.name, member) for member, index in width.items() if number >> index & 1}
+            elif isinstance(declared, List) and isinstance(declared.element, EnumRef | EnumName):
+                bits |= {(each.name, member) for member in value or []}
             elif isinstance(value, bool | int):
                 env[each.name] = int(value)
         return env, bits
