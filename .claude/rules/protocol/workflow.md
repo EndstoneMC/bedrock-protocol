@@ -37,9 +37,9 @@ paths:
   - list the packets added, removed, moved and dirty with `scripts/dirty_packets.py`, a read of the dump below;
   - update the DSL from the new dump alone;
   - compare the library's dirty set, the classes of `v<new>.packets` that `v<old>.packets` lacks, with the dump's, where `<old>` is the modelled neighbour toward 2168; any other difference is a DSL defect;
-  - run `scripts/goldens/values.py`, then `scripts/goldens/bds.py` on the new version's BDS, release or preview, and fix every difference as a DSL defect before its case freezes into `tests/goldens/<new>/`;
+  - run `scripts/goldens/values.py`, then `scripts/goldens/bds.py` on the new version's BDS, release or preview, and fix every difference as a DSL defect before its case freezes into `tests/goldens/v<new>/`;
   - land the version with its complete folder.
-- Diff both ways from the base: `tests/goldens/2168/` holds every packet, a version above it diffs against the version below, and a version below it against the version above.
+- Diff both ways from the base: `tests/goldens/v2168/` holds every packet, a version above it diffs against the version below, and a version below it against the version above.
 - Run the new build over the cases of every clean packet's nearest folder toward 2168 that holds it too; a difference means the DSL missed a dirty packet.
 - When a version's bedrock-headers land after its DSL was written, study the version against them and fix the DSL.
 - Take a new version's wire from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.
@@ -75,7 +75,7 @@ paths:
 
 ## Land it
 
-- Land a schema change with its complete `tests/goldens/<new>/` folder, every path of every dirty packet frozen once BDS agrees (`.claude/rules/tests.md`), in the same commit; it is not done until the suite runs.
+- Land a schema change with its complete `tests/goldens/v<new>/` folder, every path of every dirty packet frozen once BDS agrees (`.claude/rules/tests.md`), in the same commit; it is not done until the suite runs.
 - Write a version commit as `feat(protocol): follow <build> to protocol <new>`, with a body that reports all four categories.
 
 ## Consumers

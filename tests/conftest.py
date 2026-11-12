@@ -29,7 +29,7 @@ def pytest_generate_tests(metafunc):
     if "cls" in metafunc.fixturenames and "case" in metafunc.fixturenames:
         params = []
         for path, cases in CASES.items():
-            packets = importlib.import_module(f"bedrock_protocol.v{path.parent.name}").packets
+            packets = importlib.import_module(f"bedrock_protocol.{path.parent.name}").packets
             params.extend(
                 pytest.param(packets[int(path.stem[:3])], case, id=f"{path.parent.name}/{path.stem}/{case['id']}")
                 for case in cases
