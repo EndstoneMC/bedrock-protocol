@@ -17,8 +17,6 @@ namespace bedrock::protocol::python {
 
 namespace {
 
-PyObject *decode_error = nullptr;
-
 std::uint16_t id_of(nb::handle packet)
 {
     nb::object id = nb::getattr(packet.type(), "ID", nb::none());
@@ -74,18 +72,15 @@ void throw_decode_error(const DecodeError &error)
             path.append(std::get<std::size_t>(segment));
         }
     }
-    nb::object exception = nb::borrow(decode_error)(nb::str(std::format("{}", error).c_str()));
-    exception.attr("reason") = nb::str(std::format("{}", error.reason).c_str());
-    exception.attr("path") = nb::tuple(path);
-    exception.attr("offset") = error.offset;
-    PyErr_SetObject(decode_error, exception.ptr());
+    nb::object type = nb::module_::import_("bedrock_protocol").attr("DecodeError");
+    nb::object exception =
+        type(std::format("{}", error), std::format("{}", error.reason), nb::tuple(path), error.offset);
+    PyErr_SetObject(type.ptr(), exception.ptr());
     throw nb::python_error();
 }
 
 void init_versions(nb::module_ &parent)
 {
-    decode_error = PyErr_NewException("bedrock_protocol.DecodeError", PyExc_ValueError, nullptr);
-    parent.attr("DecodeError") = nb::borrow(decode_error);
     bind_type<PacketHeader>(parent, nullptr);
     std::vector<Version> bound;
     for (const int number : versions) {

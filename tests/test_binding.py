@@ -183,6 +183,11 @@ def test_a_decode_error_is_a_value_error():
         proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
 
 
+def test_a_decode_error_built_in_python_carries_its_fields():
+    error = bedrock_protocol.DecodeError("message", "truncated", ("a", 1), 7)
+    assert (str(error), error.reason, error.path, error.offset) == ("message", "truncated", ("a", 1), 7)
+
+
 def test_a_decode_error_carries_its_reason():
     with pytest.raises(bedrock_protocol.DecodeError, match="truncated") as caught:
         proto.UpdateAttributesPacket.from_bytes(TRUNCATED_ATTRIBUTES)
