@@ -27,7 +27,10 @@ def test_package_lists_versions_and_modules(build_package):
     )
 
     assert package.versions == (1, 2, 3)
-    assert [(module.stem, module.package) for module in package.modules] == [("a", "a.b"), ("b", "a.b")]
+    assert [(module.stem, module.package, module.java_package) for module in package.modules] == [
+        ("a", "a.b", "dev.endstone.protocol"),
+        ("b", "a.b", "dev.endstone.protocol"),
+    ]
 
 
 def test_package_lists_releases(build_package):
@@ -81,12 +84,13 @@ def test_modules_declare_one_package(build_package):
 
 
 def test_modules_declare_one_java_package(build_package):
-    modules = {
-        "a": 'package = "a"\njava_package = "x.y"\n',
-        "b": 'package = "a"\njava_package = "x.z"\n',
-    }
     with pytest.raises(CompilerError, match=r"b\.py: java_package: 'x\.z' differs from a\.py's 'x\.y'"):
-        build_package(modules)
+        build_package(
+            {
+                "a": 'package = "a"\njava_package = "x.y"\n',
+                "b": 'package = "a"\njava_package = "x.z"\n',
+            }
+        )
 
 
 def test_docstrings_declare_nothing(build_package):

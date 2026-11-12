@@ -383,4 +383,8 @@ def test_an_owner_reaches_what_its_nested_types_reach_but_not_itself(build_packa
 def test_the_package_is_the_modules_namespace(build_package):
     schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
 
-    assert (schema.package, [module.stem for module in schema.modules]) == ("bedrock.protocol", ["a"])
+    assert (schema.package, schema.java_package, [module.stem for module in schema.modules]) == (
+        "bedrock.protocol",
+        "dev.endstone.protocol",
+        ["a"],
+    )
