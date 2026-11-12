@@ -1,7 +1,10 @@
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 find_package(nanobind CONFIG REQUIRED)
 
-set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS})
+file(STRINGS "${BEDROCK_PROTOCOL_HEADER_DIR}/version.hpp" _latest REGEX "^inline constexpr int latest_version = [0-9]+;$")
+string(REGEX MATCH "[0-9]+" _latest "${_latest}")
+set(_versions ${BEDROCK_PROTOCOL_PYTHON_VERSIONS} ${_latest})
+list(REMOVE_DUPLICATES _versions)
 list(SORT _versions COMPARE NATURAL)
 list(JOIN _versions ", " _versions)
 configure_file(versions.hpp.in bind/versions.hpp @ONLY)

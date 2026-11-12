@@ -69,7 +69,8 @@ such as `<bedrock/protocol/inventory.h>` when only that family is needed.
 
 Both runtimes cover the active packet shapes and their dependent types in these
 schema versions. Retired packets and declaration gaps remain absent in the
-corresponding version. Python exposes the bound list as `VERSIONS` and each version's packets as `PACKETS`.
+corresponding version. Python exposes the bound list as `VERSIONS` and each
+version's packets as `PACKETS`.
 
 | Protocol | Minecraft Bedrock |
 | --- | --- |

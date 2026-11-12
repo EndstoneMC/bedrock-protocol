@@ -279,3 +279,21 @@ def test_decode_rejects_an_unknown_packet_id():
 )
 def test_every_packet_class_is_registered_under_its_id(packet_id, cls):
     assert packet_id == cls.ID
+
+
+def test_a_header_round_trips_through_its_bytes():
+    header, _ = proto.decode_packet(FRAMED_PLAY_STATUS)
+    assert bedrock_protocol.PacketHeader.from_bytes(bytes(header)) == header
+
+
+def test_every_version_frames_with_the_package_header(protocol):
+    header, _ = protocol.decode_packet(protocol.encode_packet(protocol.PlayStatusPacket()))
+    assert type(header) is bedrock_protocol.PacketHeader
+
+
+def test_a_legacy_submodule_imports_by_its_dotted_name(protocol):
+    assert importlib.import_module(f"{protocol.__name__}.legacy") is protocol.legacy
+
+
+def test_the_bound_versions_ascend():
+    assert list(bedrock_protocol.VERSIONS) == sorted(bedrock_protocol.VERSIONS)
