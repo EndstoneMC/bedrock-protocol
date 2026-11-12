@@ -1,5 +1,98 @@
 [
  {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "data": {
+    "UpdateAttributeLayersData": {
+     "attribute_layers": [
+      {
+       "name": "s1",
+       "noise_name": "s2",
+       "dimension_id": -593,
+       "settings": {
+        "priority": 724,
+        "weight": 2.75,
+        "enabled": true,
+        "transitions_paused": false
+       },
+       "attributes": [
+        {
+         "name": "s8",
+         "from_attribute": {
+          "BoolAttributeData": {
+           "value": false,
+           "operation": "AND"
+          }
+         },
+         "attribute": {
+          "BoolAttributeData": {
+           "value": false,
+           "operation": "OR"
+          }
+         },
+         "to_attribute": {
+          "BoolAttributeData": {
+           "value": false,
+           "operation": "XOR"
+          }
+         },
+         "current_transition_ticks": 2165,
+         "total_transition_ticks": 2296,
+         "easing": "IN_EXPO",
+         "local_transition_ticks": 2558,
+         "noise_transition": false
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "000102733101027332a109d40200000000304001000102733801000003616e640000026f7201000003786f7275080000f808000007696e5f6578706ffe09000000",
+  "bds_json": {
+   "Data": {
+    "Attribute Layers": [
+     {
+      "Name": "s1",
+      "NoiseName": "s2",
+      "Dimension": {
+       "value": -593
+      },
+      "Settings": {
+       "Priority": 724,
+       "Weight": 2.75,
+       "Enabled": true,
+       "TransitionsPaused": false
+      },
+      "Attributes": [
+       {
+        "AttributeName": "s8",
+        "FromAttribute": {
+         "value": false,
+         "operation": "and"
+        },
+        "Attribute": {
+         "value": false,
+         "operation": "or"
+        },
+        "ToAttribute": {
+         "value": false,
+         "operation": "xor"
+        },
+        "CurrentTransitionTicks": 2165,
+        "TotalTransitionTicks": 2296,
+        "Easing": "in_expo",
+        "LocalTransitionTicks": 2558,
+        "NoiseTransition": false
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
   "id": "v1",
   "writer": "cereal",
   "value": {
@@ -29,6 +122,63 @@
      "Enabled": true,
      "TransitionsPaused": false
     }
+   }
+  }
+ },
+ {
+  "id": "v2",
+  "writer": "cereal",
+  "value": {
+   "data": {
+    "UpdateEnvironmentAttributesData": {
+     "layer_name": "s26",
+     "layer_dimension_id": -3737,
+     "attributes": [
+      {
+       "name": "s28",
+       "from_attribute": null,
+       "attribute": {
+        "FloatAttributeData": {
+         "value": 14.75,
+         "operation": "ADD",
+         "constraint_min_value": 15.75,
+         "constraint_max_value": 16.25
+        }
+       },
+       "to_attribute": null,
+       "current_transition_ticks": 4523,
+       "total_transition_ticks": 4654,
+       "easing": "OUT_QUAD",
+       "local_transition_ticks": 4916,
+       "noise_transition": false
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0203733236b13a0103733238000100006c41036164640100007c41010000824100ab1100002e120000086f75745f717561643413000000",
+  "bds_json": {
+   "Data": {
+    "Attribute Layer Name": "s26",
+    "Attribute Layer Dimension": {
+     "value": -3737
+    },
+    "Attributes": [
+     {
+      "AttributeName": "s28",
+      "Attribute": {
+       "value": 14.75,
+       "operation": "add",
+       "constraintMin": 15.75,
+       "constraintMax": 16.25
+      },
+      "CurrentTransitionTicks": 4523,
+      "TotalTransitionTicks": 4654,
+      "Easing": "out_quad",
+      "LocalTransitionTicks": 4916,
+      "NoiseTransition": false
+     }
+    ]
    }
   }
  },
