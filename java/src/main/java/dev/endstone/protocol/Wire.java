@@ -2,7 +2,6 @@ package dev.endstone.protocol;
 
 import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -10,13 +9,12 @@ import java.util.UUID;
 
 /** The wire formats ByteBuf lacks, with every read checked before it touches the buffer. */
 public final class Wire {
-    /** The most a decoded collection reserves up front. */
-    public static final int MAX_INITIAL_CAPACITY = 65_536;
 
     /** Orders strings by the unsigned bytes writeStr writes. */
     public static final Comparator<String> STR_ORDER =
             (a, b) -> Arrays.compareUnsigned(utf8(a), utf8(b));
 
+    private static final int MAX_INITIAL_CAPACITY = 65_536;
     private static final int ESCAPE_BASE = 0xDC00;
 
     private Wire() {}
@@ -73,19 +71,9 @@ public final class Wire {
         return buf.readDoubleLE();
     }
 
-    public static short readInt16Be(ByteBuf buf) {
-        need(buf, 2);
-        return buf.readShort();
-    }
-
     public static int readInt32Be(ByteBuf buf) {
         need(buf, 4);
         return buf.readInt();
-    }
-
-    public static long readInt64Be(ByteBuf buf) {
-        need(buf, 8);
-        return buf.readLong();
     }
 
     /** Reads an unsigned varint of at most 5 bytes, as raw bits. */
@@ -154,6 +142,69 @@ public final class Wire {
         writeUvarint64(buf, (value << 1) ^ (value >> 63));
     }
 
+    /** Reads a uvarint32 count as an unsigned value. */
+    public static long readUvarint32Count(ByteBuf buf) {
+        return Integer.toUnsignedLong(readUvarint32(buf));
+    }
+
+    /** Reads a uint32 count as an unsigned value. */
+    public static long readUint32Count(ByteBuf buf) {
+        return Integer.toUnsignedLong(readInt32(buf));
+    }
+
+    /** Reads a uint16 count. */
+    public static long readUint16Count(ByteBuf buf) {
+        return readUint16(buf);
+    }
+
+    /** Reads a varint32 count; a negative one is OUT_OF_RANGE once charged. */
+    public static long readVarint32Count(ByteBuf buf) {
+        return readVarint32(buf);
+    }
+
+    /** Throws OUT_OF_RANGE for a negative count factor. */
+    public static long countValue(ByteBuf buf, long value) {
+        if (value < 0) {
+            throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+        }
+        return value;
+    }
+
+    /** Multiplies two count factors as unsigned 64-bit values; overflow is OUT_OF_RANGE. */
+    public static long countProduct(ByteBuf buf, long a, long b) {
+        countValue(buf, a);
+        countValue(buf, b);
+        if (Math.unsignedMultiplyHigh(a, b) != 0) {
+            throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+        }
+        return a * b;
+    }
+
+    /**
+     * Charges count elements and, where width is above 0, count * width bytes; returns the count.
+     */
+    public static int charge(ByteBuf buf, DecodeBudget budget, long count, int width) {
+        budget.chargeElements(count, buf.readerIndex());
+        if (width > 0) {
+            budget.chargeBytes(count * width, buf.readerIndex());
+        }
+        return (int) count;
+    }
+
+    /** Caps what a decoded collection reserves up front. */
+    public static int initialCapacity(int count) {
+        return Math.min(count, MAX_INITIAL_CAPACITY);
+    }
+
+    /** Throws TRUNCATED at the first element that does not fit, with its index in the path. */
+    public static void needElements(ByteBuf buf, int count, int width) {
+        if ((long) count * width > buf.readableBytes()) {
+            int fits = buf.readableBytes() / width;
+            throw new DecodeException(Reason.TRUNCATED, buf.readerIndex() + fits * width)
+                    .prepend(fits);
+        }
+    }
+
     /** Reads a length-prefixed byte array. */
     public static byte[] readBytes(ByteBuf buf, DecodeBudget budget) {
         int length = readUvarint32(buf);
@@ -175,7 +226,54 @@ public final class Wire {
      * Reads a length-prefixed string; bytes that are not well-formed UTF-8 become U+DC80..U+DCFF.
      */
     public static String readStr(ByteBuf buf, DecodeBudget budget) {
-        return unescape(readBytes(buf, budget));
+        byte[] bytes = readBytes(buf, budget);
+        StringBuilder out = new StringBuilder(bytes.length);
+        int i = 0;
+        while (i < bytes.length) {
+            int lead = bytes[i] & 0xFF;
+            if (lead < 0x80) {
+                out.append((char) lead);
+                i++;
+                continue;
+            }
+            int size = 0;
+            int low = 0x80;
+            int high = 0xBF;
+            if (lead >= 0xC2 && lead <= 0xDF) {
+                size = 2;
+            } else if (lead >= 0xE0 && lead <= 0xEF) {
+                size = 3;
+                if (lead == 0xE0) {
+                    low = 0xA0;
+                } else if (lead == 0xED) {
+                    high = 0x9F;
+                }
+            } else if (lead >= 0xF0 && lead <= 0xF4) {
+                size = 4;
+                if (lead == 0xF0) {
+                    low = 0x90;
+                } else if (lead == 0xF4) {
+                    high = 0x8F;
+                }
+            }
+            boolean valid = size > 0 && i + size <= bytes.length;
+            for (int k = 1; valid && k < size; k++) {
+                int next = bytes[i + k] & 0xFF;
+                valid = next >= (k == 1 ? low : 0x80) && next <= (k == 1 ? high : 0xBF);
+            }
+            if (!valid) {
+                out.append((char) (ESCAPE_BASE + lead));
+                i++;
+            } else {
+                int codePoint = lead & (0xFF >> (size + 1));
+                for (int k = 1; k < size; k++) {
+                    codePoint = codePoint << 6 | bytes[i + k] & 0x3F;
+                }
+                out.appendCodePoint(codePoint);
+                i += size;
+            }
+        }
+        return out.toString();
     }
 
     /**
@@ -187,10 +285,7 @@ public final class Wire {
     }
 
     public static UUID readUuid(ByteBuf buf) {
-        need(buf, 16);
-        long most = buf.readLongLE();
-        long least = buf.readLongLE();
-        return new UUID(most, least);
+        return new UUID(readInt64(buf), readInt64(buf));
     }
 
     public static void writeUuid(ByteBuf buf, UUID value) {
@@ -222,10 +317,10 @@ public final class Wire {
     }
 
     /** Writes base-128 groups up to the highest set bit, at least one. */
-    public static void writeBitset(ByteBuf buf, BitSet value, int width) {
+    public static void writeBitset(ByteBuf buf, BitSet value, int width, String field) {
         if (value.length() > width) {
             throw new IllegalStateException(
-                    "bitset: bit " + (value.length() - 1) + " is past the width " + width);
+                    field + ": bit " + (value.length() - 1) + " is past the width " + width);
         }
         int groups = Math.max(1, (value.length() + 6) / 7);
         for (int group = 0; group < groups; group++) {
@@ -253,7 +348,7 @@ public final class Wire {
     /** Runs a reader over the whole value; on failure the buffer is left where it was. */
     public static <T> T decode(ByteBuf buf, DecodeLimits limits, String type, Decoder<T> decoder) {
         int start = buf.readerIndex();
-        int length = buf.writerIndex() - start;
+        int length = buf.readableBytes();
         try {
             T value = decoder.read(buf, new DecodeBudget(limits));
             if (buf.isReadable()) {
@@ -298,65 +393,5 @@ public final class Wire {
             }
         }
         return Arrays.copyOf(out, size);
-    }
-
-    private static String unescape(byte[] bytes) {
-        StringBuilder out = new StringBuilder(bytes.length);
-        int i = 0;
-        while (i < bytes.length) {
-            int b = bytes[i] & 0xFF;
-            int size = sequenceLength(bytes, i);
-            if (size == 0) {
-                out.append((char) (ESCAPE_BASE + b));
-                i++;
-            } else {
-                out.append(new String(bytes, i, size, StandardCharsets.UTF_8));
-                i += size;
-            }
-        }
-        return out.toString();
-    }
-
-    private static int sequenceLength(byte[] bytes, int i) {
-        int b = bytes[i] & 0xFF;
-        if (b < 0x80) {
-            return 1;
-        }
-        int size;
-        int low = 0x80;
-        int high = 0xBF;
-        if (b >= 0xC2 && b <= 0xDF) {
-            size = 2;
-        } else if (b >= 0xE0 && b <= 0xEF) {
-            size = 3;
-            if (b == 0xE0) {
-                low = 0xA0;
-            } else if (b == 0xED) {
-                high = 0x9F;
-            }
-        } else if (b >= 0xF0 && b <= 0xF4) {
-            size = 4;
-            if (b == 0xF0) {
-                low = 0x90;
-            } else if (b == 0xF4) {
-                high = 0x8F;
-            }
-        } else {
-            return 0;
-        }
-        if (i + size > bytes.length) {
-            return 0;
-        }
-        int second = bytes[i + 1] & 0xFF;
-        if (second < low || second > high) {
-            return 0;
-        }
-        for (int k = 2; k < size; k++) {
-            int next = bytes[i + k] & 0xC0;
-            if (next != 0x80) {
-                return 0;
-            }
-        }
-        return size;
     }
 }
