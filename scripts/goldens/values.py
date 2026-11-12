@@ -93,6 +93,9 @@ FIXED: dict[str, Json] = {
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
     "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
+    "SemVersion.version": "1.2.3",
+    "PackInstanceId.version": "2.3.4",
+    "ResourcePackStackPacket.base_game_version": "1.21.0",
 }
 
 
