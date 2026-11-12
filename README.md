@@ -20,6 +20,9 @@ Every language exposes the same packets, types and enums, and encodes the same b
 | --- | --- |
 | [Python](#python) | Download a wheel from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). It is not on PyPI. |
 | [C++](#c) | Download a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). |
+| Java | Planned. |
+| Rust | Planned. |
+| TypeScript | Planned. |
 
 ## Python
 
