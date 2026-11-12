@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "chunk_radius": 331
+  },
+  "bytes": "9605",
+  "bds_json": {
+   "Chunk Radius": 331
+  }
+ }
+]
