@@ -89,7 +89,7 @@ GOLDENS = [
     pytest.param(
         v2168.ItemStackRequestPacket(
             requests=[
-                v2168.ItemStackRequestCereal.RequestData(
+                v2168.ItemStackRequestPacketData.RequestData(
                     client_request_id=v2168.ItemStackRequestId(raw_id=-1),
                     actions=[
                         v2168.ItemStackRequestCereal.TakeActionData(
@@ -120,7 +120,7 @@ GOLDENS = [
     pytest.param(
         v2168.ItemStackRequestPacket(
             requests=[
-                v2168.ItemStackRequestCereal.RequestData(
+                v2168.ItemStackRequestPacketData.RequestData(
                     client_request_id=v2168.ItemStackRequestId(raw_id=-3),
                     actions=[
                         v2168.ItemStackRequestCereal.LabTableCombineActionData(),
@@ -137,7 +137,7 @@ GOLDENS = [
     pytest.param(
         v2168.ItemStackRequestPacket(
             requests=[
-                v2168.ItemStackRequestCereal.RequestData(
+                v2168.ItemStackRequestPacketData.RequestData(
                     client_request_id=v2168.ItemStackRequestId(raw_id=-1),
                     actions=[v2168.ItemStackRequestCereal.CraftNonImplementedActionData()],
                 )
@@ -150,7 +150,7 @@ GOLDENS = [
 
 NON_IMPLEMENTED_V2225 = v2225.ItemStackRequestPacket(
     requests=[
-        v2225.ItemStackRequestCereal.RequestData(
+        v2225.ItemStackRequestPacketData.RequestData(
             client_request_id=v2225.ItemStackRequestId(raw_id=-1),
             actions=[v2225.ItemStackRequestCereal.CraftNonImplementedActionData()],
         )
@@ -159,7 +159,7 @@ NON_IMPLEMENTED_V2225 = v2225.ItemStackRequestPacket(
 
 DISC_PRESS_V2225 = v2225.ItemStackRequestPacket(
     requests=[
-        v2225.ItemStackRequestCereal.RequestData(
+        v2225.ItemStackRequestPacketData.RequestData(
             client_request_id=v2225.ItemStackRequestId(raw_id=-1),
             actions=[v2225.ItemStackRequestCereal.CraftDiscPressActionData(track_sound_event_id="disc", num_crafts=1)],
         )

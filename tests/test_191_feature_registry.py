@@ -14,7 +14,7 @@ NO_FEATURES = bytes.fromhex("00")
 GOLDENS = [
     pytest.param(
         v2225.FeatureRegistryPacket(
-            features_data_list=[
+            features_data=[
                 v2225.FeatureRegistry.FeatureBinaryJsonFormat(feature_name="minecraft:oak", binary_json_output="{}")
             ]
         ),

@@ -90,29 +90,39 @@ FLOATS = {
 }
 
 PACKET_975 = v975.ServerboundDiagnosticsPacket(
-    **FLOATS,
-    category_counters=[v975.MemoryCategoryCounter(category=v975.MemoryCategory.ORE_UI, current_bytes=1024)],
-    entity_timings=[
-        v975.EntityDiagnosticTimingInfo(
-            display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
-        )
-    ],
-    system_timings=[
-        v975.SystemDiagnosticTimingInfo(display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25)
-    ],
+    telemetry=v975.ProfilerLiteTelemetry(
+        **FLOATS,
+        category_counters=[v975.MemoryCategoryCounter(category=v975.MemoryCategory.ORE_UI, current_bytes=1024)],
+    ),
+    entity_system_diagnostics=v975.EntitySystemDiagnosticSummary(
+        entity_timings=[
+            v975.EntityDiagnosticTimingInfo(
+                display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
+            )
+        ],
+        system_timings=[
+            v975.SystemDiagnosticTimingInfo(display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25)
+        ],
+    ),
 )
 
 PACKET_1001 = v1001.ServerboundDiagnosticsPacket(
-    **FLOATS,
-    category_counters=[v1001.MemoryCategoryCounter(category=v1001.MemoryCategory.ORE_UI, current_bytes=1024)],
-    entity_timings=[
-        v1001.EntityDiagnosticTimingInfo(
-            display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
-        )
-    ],
-    system_timings=[
-        v1001.SystemDiagnosticTimingInfo(display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25)
-    ],
+    telemetry=v1001.ProfilerLiteTelemetry(
+        **FLOATS,
+        category_counters=[v1001.MemoryCategoryCounter(category=v1001.MemoryCategory.ORE_UI, current_bytes=1024)],
+    ),
+    entity_system_diagnostics=v1001.EntitySystemDiagnosticSummary(
+        entity_timings=[
+            v1001.EntityDiagnosticTimingInfo(
+                display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
+            )
+        ],
+        system_timings=[
+            v1001.SystemDiagnosticTimingInfo(
+                display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25
+            )
+        ],
+    ),
     whisker_data=[
         v1001.ScopeDataSummary(
             label="Frame", indentation="  ", total_high_cost_ns=900, total_mid_cost_ns=600, total_low_cost_ns=300
@@ -121,17 +131,23 @@ PACKET_1001 = v1001.ServerboundDiagnosticsPacket(
 )
 
 PACKET_2168 = v2168.ServerboundDiagnosticsPacket(
-    **FLOATS,
-    category_counters=[v2168.MemoryCategoryCounter(category=v2168.MemoryCategory.ORE_UI, current_bytes=1024)],
-    entity_timings=[
-        v2168.EntityDiagnosticTimingInfo(
-            display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
-        )
-    ],
-    system_timings=[
-        v2168.SystemDiagnosticTimingInfo(display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25)
-    ],
-    system_categories=[v2168.SystemCategory(category_name="Movement", system_index=3)],
+    telemetry=v2168.ProfilerLiteTelemetry(
+        **FLOATS,
+        category_counters=[v2168.MemoryCategoryCounter(category=v2168.MemoryCategory.ORE_UI, current_bytes=1024)],
+    ),
+    entity_system_diagnostics=v2168.EntitySystemDiagnosticSummary(
+        entity_timings=[
+            v2168.EntityDiagnosticTimingInfo(
+                display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
+            )
+        ],
+        system_timings=[
+            v2168.SystemDiagnosticTimingInfo(
+                display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25
+            )
+        ],
+        system_categories=[v2168.SystemCategory(category_name="Movement", system_index=3)],
+    ),
     whisker_data=[
         v2168.ScopeDataSummary(
             label="Frame", indentation="  ", total_high_cost_ns=900, total_mid_cost_ns=600, total_low_cost_ns=300
@@ -140,16 +156,22 @@ PACKET_2168 = v2168.ServerboundDiagnosticsPacket(
 )
 
 PACKET_2168_WITHOUT_SYSTEM_CATEGORIES = v2168.ServerboundDiagnosticsPacket(
-    **FLOATS,
-    category_counters=[v2168.MemoryCategoryCounter(category=v2168.MemoryCategory.ORE_UI, current_bytes=1024)],
-    entity_timings=[
-        v2168.EntityDiagnosticTimingInfo(
-            display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
-        )
-    ],
-    system_timings=[
-        v2168.SystemDiagnosticTimingInfo(display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25)
-    ],
+    telemetry=v2168.ProfilerLiteTelemetry(
+        **FLOATS,
+        category_counters=[v2168.MemoryCategoryCounter(category=v2168.MemoryCategory.ORE_UI, current_bytes=1024)],
+    ),
+    entity_system_diagnostics=v2168.EntitySystemDiagnosticSummary(
+        entity_timings=[
+            v2168.EntityDiagnosticTimingInfo(
+                display_name="Zombie", entity="minecraft:zombie", time_in_ns=500, percent_of_total=50
+            )
+        ],
+        system_timings=[
+            v2168.SystemDiagnosticTimingInfo(
+                display_name="Physics", system_index=3, time_in_ns=250, percent_of_total=25
+            )
+        ],
+    ),
 )
 
 GOLDENS = [
@@ -186,8 +208,8 @@ def test_the_memory_categories_are_renumbered_at_2168():
 @pytest.mark.parametrize(
     ("member", "value"),
     [
-        pytest.param(v1001.MemoryCategory.COUNT, 92, id="v1001-count"),
-        pytest.param(v2168.MemoryCategory.COUNT, 111, id="v2168-count"),
+        pytest.param(v1001.MemoryCategory.MEMORY_CATEGORY_COUNT, 92, id="v1001-count"),
+        pytest.param(v2168.MemoryCategory.MEMORY_CATEGORY_COUNT, 111, id="v2168-count"),
         pytest.param(v1001.MemoryCategory.BIOME_STORAGE, 6, id="v1001-biome-storage"),
         pytest.param(v2168.MemoryCategory.BIOME_STORAGE, 6, id="v2168-biome-storage"),
         pytest.param(v1001.MemoryCategory.CEREAL, 7, id="v1001-cereal"),
@@ -213,10 +235,10 @@ def test_the_memory_category_ordinals_move_at_2168(member, value):
     ("member", "value"),
     [
         pytest.param(v2193.MemoryCategory.GAMEFACE_LAYOUT, 109, id="v2193-gameface-layout"),
-        pytest.param(v2193.MemoryCategory.COUNT, 110, id="v2193-count"),
+        pytest.param(v2193.MemoryCategory.MEMORY_CATEGORY_COUNT, 110, id="v2193-count"),
         pytest.param(v2225.MemoryCategory.GAMEFACE_LAYOUT, 109, id="v2225-gameface-layout"),
         pytest.param(v2225.MemoryCategory.EXECUTABLE, 110, id="v2225-executable"),
-        pytest.param(v2225.MemoryCategory.COUNT, 111, id="v2225-count"),
+        pytest.param(v2225.MemoryCategory.MEMORY_CATEGORY_COUNT, 111, id="v2225-count"),
     ],
 )
 def test_the_memory_categories_gain_executable_at_2225(member, value):
@@ -225,7 +247,7 @@ def test_the_memory_categories_gain_executable_at_2225(member, value):
 
 def test_a_v1001_category_byte_reads_as_another_category_at_2168():
     back = v1001.ServerboundDiagnosticsPacket.from_bytes(V1001)
-    assert back.category_counters[0].category == v2168.MemoryCategory.MOLANG
+    assert back.telemetry.category_counters[0].category == v2168.MemoryCategory.MOLANG
 
 
 def test_the_same_category_is_a_different_byte_either_side_of_2168():

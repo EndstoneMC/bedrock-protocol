@@ -25,7 +25,7 @@ WIDE = bytes.fromhex("ac020a000000000101010000000100")
 GOLDENS = [
     pytest.param(
         v2225.AddVolumeEntityPacket(
-            entity_net_id=7,
+            entity_net_id=v2225.EntityNetId(raw_id=7),
             components=nbt.CompoundTag({"minecraft:fog": nbt.StringTag("spooky")}),
             json_identifier="endstone:volume",
             instance_name="instance",
@@ -40,7 +40,7 @@ GOLDENS = [
     pytest.param(v2225.AddVolumeEntityPacket(), DEFAULT, id="default"),
     pytest.param(
         v2225.AddVolumeEntityPacket(
-            entity_net_id=300,
+            entity_net_id=v2225.EntityNetId(raw_id=300),
             min_bounds=v2225.BlockPos(x=-1, y=-1, z=-1),
             dimension_type=-1,
         ),

@@ -16,11 +16,11 @@ GOLDENS = [
         v2225.MoveActorAbsolutePacket(
             move_data=v2225.MoveActorAbsoluteData(
                 runtime_id=300,
-                header=0x8D,
+                header=v2225.MoveActorAbsoluteData.Header(raw=0x8D),
                 pos=v2225.Vec3(x=1.0, y=2.0, z=3.0),
-                rot_x=0xC0,
+                rot_x=-64,
                 rot_y=0x2D,
-                rot_y_head=0x91,
+                rot_y_head=-111,
             )
         ),
         GOLDEN,

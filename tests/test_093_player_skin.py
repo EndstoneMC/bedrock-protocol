@@ -98,8 +98,8 @@ PERSONA_2168 = v2168.PlayerSkinPacket(
         id="sid",
         play_fab_id="pfid",
         resource_patch="patch",
-        image_data=v2168.SkinImage(width=1, height=1, image_bytes=b"\x01\x02\x03\x04"),
-        animated_image_data=[
+        skin_image=v2168.SkinImage(width=1, height=1, image_bytes=b"\x01\x02\x03\x04"),
+        skin_animated_images=[
             v2168.AnimatedImageData(
                 image=v2168.SkinImage(width=1, height=1, image_bytes=b"\x09\x0a\x0b\x0c"),
                 type=v2168.AnimatedTextureType.FACE,
@@ -107,13 +107,13 @@ PERSONA_2168 = v2168.PlayerSkinPacket(
                 animation_expression=v2168.AnimationExpression.LINEAR,
             )
         ],
-        cape_image_data=v2168.SkinImage(width=1, height=1, image_bytes=b"\x05\x06\x07\x08"),
+        cape_image=v2168.SkinImage(width=1, height=1, image_bytes=b"\x05\x06\x07\x08"),
         geometry_data="geo",
         geometry_data_min_engine_version="gev",
         animation_data="anim",
         cape_id="cape",
         full_id="full",
-        arm_size=v2168.ArmSizeType.WIDE,
+        arm_size_type=v2168.ArmSizeType.WIDE,
         skin_color=0x04030201,
         persona_pieces=[
             v2168.SerializedPersonaPieceHandle(
@@ -130,7 +130,7 @@ PERSONA_2168 = v2168.PlayerSkinPacket(
         is_persona_cape_on_classic_skin=False,
         is_primary_user=True,
         overrides_player_appearance=True,
-        trusted_skin_flag=v2168.TrustedSkinFlag.FALSE,
+        is_trusted_skin=v2168.TrustedSkinFlag.FALSE,
         profile_hash="hash",
     ),
     localized_new_skin_name="new",
@@ -143,8 +143,8 @@ PERSONA_1001 = v1001.PlayerSkinPacket(
         id="sid",
         play_fab_id="pfid",
         resource_patch="patch",
-        image_data=v1001.SkinImage(width=1, height=1, image_bytes=b"\x01\x02\x03\x04"),
-        animated_image_data=[
+        skin_image=v1001.SkinImage(width=1, height=1, image_bytes=b"\x01\x02\x03\x04"),
+        skin_animated_images=[
             v1001.AnimatedImageData(
                 image=v1001.SkinImage(width=1, height=1, image_bytes=b"\x09\x0a\x0b\x0c"),
                 type=v1001.AnimatedTextureType.FACE,
@@ -152,13 +152,13 @@ PERSONA_1001 = v1001.PlayerSkinPacket(
                 animation_expression=v1001.AnimationExpression.LINEAR,
             )
         ],
-        cape_image_data=v1001.SkinImage(width=1, height=1, image_bytes=b"\x05\x06\x07\x08"),
+        cape_image=v1001.SkinImage(width=1, height=1, image_bytes=b"\x05\x06\x07\x08"),
         geometry_data="geo",
         geometry_data_min_engine_version="gev",
         animation_data="anim",
         cape_id="cape",
         full_id="full",
-        arm_size=v1001.ArmSizeType.WIDE,
+        arm_size_type=v1001.ArmSizeType.WIDE,
         skin_color=0x04030201,
         persona_pieces=[
             v1001.SerializedPersonaPieceHandle(
@@ -175,7 +175,7 @@ PERSONA_1001 = v1001.PlayerSkinPacket(
         is_persona_cape_on_classic_skin=False,
         is_primary_user=True,
         overrides_player_appearance=True,
-        trusted_skin_flag=v1001.TrustedSkinFlag.FALSE,
+        is_trusted_skin=v1001.TrustedSkinFlag.FALSE,
     ),
     localized_new_skin_name="new",
     localized_old_skin_name="old",
@@ -190,7 +190,7 @@ GOLDENS = [
                 id="sid",
                 play_fab_id="pfid",
                 resource_patch="patch",
-                trusted_skin_flag=v2168.TrustedSkinFlag.FALSE,
+                is_trusted_skin=v2168.TrustedSkinFlag.FALSE,
                 profile_hash="hash",
             ),
             localized_new_skin_name="new",
@@ -268,7 +268,7 @@ def minimal_2225():
         skin=v2225.SerializedSkinRef(
             id="sid",
             resource_patch="patch",
-            trusted_skin_flag=v2225.TrustedSkinFlag.FALSE,
+            is_trusted_skin=v2225.TrustedSkinFlag.FALSE,
             profile_hash="hash",
         ),
         localized_new_skin_name="new",
@@ -289,7 +289,7 @@ def test_a_2225_skin_round_trips(minimal_2225):
     [
         pytest.param(v2168.PieceType.UNSUPPORTED, 28, id="v2168-unsupported"),
         pytest.param(v2168.PieceType.COUNT, 29, id="v2168-count"),
-        pytest.param(v2225.PieceType.COCO, 28, id="v2225-coco"),
+        pytest.param(v2225.PieceType.CO_CO, 28, id="v2225-coco"),
         pytest.param(v2225.PieceType.UNSUPPORTED, 29, id="v2225-unsupported"),
         pytest.param(v2225.PieceType.COUNT, 30, id="v2225-count"),
     ],

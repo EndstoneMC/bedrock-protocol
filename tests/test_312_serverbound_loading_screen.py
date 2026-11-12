@@ -15,7 +15,8 @@ ABSENT = bytes.fromhex("0400")
 GOLDENS = [
     pytest.param(
         v.ServerboundLoadingScreenPacket(
-            loading_screen_packet_type=v.ServerboundLoadingScreenPacketType.START_LOADING_SCREEN, loading_screen_id=9
+            serverbound_loading_screen_packet_type=v.ServerboundLoadingScreenPacketType.START_LOADING_SCREEN,
+            loading_screen_id=9,
         ),
         LOADING,
         id=f"{v.__name__.rpartition('.')[2]}-with-screen-id",
@@ -24,7 +25,7 @@ GOLDENS = [
 ] + [
     pytest.param(
         v.ServerboundLoadingScreenPacket(
-            loading_screen_packet_type=v.ServerboundLoadingScreenPacketType.END_LOADING_SCREEN
+            serverbound_loading_screen_packet_type=v.ServerboundLoadingScreenPacketType.END_LOADING_SCREEN
         ),
         ABSENT,
         id=f"{v.__name__.rpartition('.')[2]}-without-screen-id",

@@ -121,7 +121,7 @@ def swing_attack_2225():
         runtime_id=300,
         data=1.5,
         swing_source=v2225.ActorSwingSource.ATTACK,
-        hand=v2225.HandSlot.MAINHAND,
+        hand_slot=v2225.HandSlot.MAINHAND,
     )
 
 
@@ -135,11 +135,11 @@ def test_2225_adds_one_byte_for_the_hand(swing_attack_2225):
 
 def test_2225_swinging_hand_changes_only_its_own_byte(swing_attack_2225):
     offhand = copy.copy(swing_attack_2225)
-    offhand.hand = v2225.HandSlot.OFFHAND
+    offhand.hand_slot = v2225.HandSlot.OFFHAND
     assert bytes(offhand)[:-1] == bytes(swing_attack_2225)[:-1]
     assert bytes(offhand) != bytes(swing_attack_2225)
 
 
 def test_2225_offhand_round_trips():
-    packet = v2225.AnimatePacket(action=v2225.AnimatePacket.Action.SWING, hand=v2225.HandSlot.OFFHAND)
+    packet = v2225.AnimatePacket(action=v2225.AnimatePacket.Action.SWING, hand_slot=v2225.HandSlot.OFFHAND)
     assert v2225.AnimatePacket.from_bytes(bytes(packet)) == packet

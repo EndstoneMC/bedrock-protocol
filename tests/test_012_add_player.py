@@ -157,9 +157,9 @@ def test_add_player_2225_round_trips_the_passenger_block_data():
     packet = v2225.AddPlayerPacket(
         **FIELDS,
         carried_item=STONE_V2225,
-        passenger_block_data=v2225.PassengerOfBlockArguments(
+        passenger_of_block_data=v2225.PassengerOfBlockArguments(
             block_pos=v2225.BlockPos(x=1, y=2, z=3),
-            emote_type=v2225.PassengerOfBlockArguments.EmoteType.RIDING,
+            emote=v2225.PassengerOfBlockArguments.EmoteType.RIDING,
         ),
     )
     assert v2225.AddPlayerPacket.from_bytes(bytes(packet)) == packet

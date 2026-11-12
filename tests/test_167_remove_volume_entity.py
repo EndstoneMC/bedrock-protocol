@@ -12,9 +12,15 @@ LARGE_NET_ID = bytes.fromhex("ac0204")
 
 GOLDENS = [
     pytest.param(
-        v2225.RemoveVolumeEntityPacket(entity_net_id=7, dimension_type=-1), NEGATIVE_DIMENSION, id="negative-dimension"
+        v2225.RemoveVolumeEntityPacket(entity_net_id=v2225.EntityNetId(raw_id=7), dimension_type=-1),
+        NEGATIVE_DIMENSION,
+        id="negative-dimension",
     ),
-    pytest.param(v2225.RemoveVolumeEntityPacket(entity_net_id=300, dimension_type=2), LARGE_NET_ID, id="large-net-id"),
+    pytest.param(
+        v2225.RemoveVolumeEntityPacket(entity_net_id=v2225.EntityNetId(raw_id=300), dimension_type=2),
+        LARGE_NET_ID,
+        id="large-net-id",
+    ),
 ]
 
 

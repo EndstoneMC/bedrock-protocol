@@ -13,13 +13,13 @@ INVALID = bytes.fromhex("00010000")
 GOLDENS = [
     pytest.param(
         v2168.MovementEffectPacket(
-            target_runtime_id=7, effect_id=v2168.MovementEffectType.DOLPHIN_BOOST, effect_duration=40, tick=300
+            runtime_id=7, effect_type=v2168.MovementEffectType.DOLPHIN_BOOST, effect_duration=40, tick=300
         ),
         DOLPHIN_BOOST,
         id="v2168-dolphin-boost",
     ),
     pytest.param(
-        v2168.MovementEffectPacket(effect_id=v2168.MovementEffectType.INVALID),
+        v2168.MovementEffectPacket(effect_type=v2168.MovementEffectType.INVALID),
         INVALID,
         id="v2168-invalid",
     ),

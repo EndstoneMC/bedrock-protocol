@@ -22,7 +22,7 @@ GOLDENS = [
             animation="animation.creeper.swelling",
             next_state="default",
             stop_expression="query.any_animation_finished",
-            stop_expression_version=13,
+            stop_expression_version=v2225.MolangVersion.CARRYING_BLOCK_QUERY_ALL_ACTORS,
             controller="controller.animation.creeper_swelling",
             blend_out_time=0.5,
             runtime_ids=[7, 300],
@@ -30,7 +30,7 @@ GOLDENS = [
         SWELLING,
         id="swelling",
     ),
-    pytest.param(v2225.AnimateEntityPacket(stop_expression_version=-1), EMPTY, id="empty"),
+    pytest.param(v2225.AnimateEntityPacket(stop_expression_version=v2225.MolangVersion.INVALID), EMPTY, id="empty"),
 ]
 
 

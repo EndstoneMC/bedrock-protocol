@@ -84,7 +84,7 @@ PASSENGER_BLOCK_DATA = v2225.PassengerOfBlockArguments(
     offset=v2225.Vec3(x=0.0, y=0.5, z=0.0),
     rotation=90.0,
     rotation_limit=45.0,
-    emote_type=v2225.PassengerOfBlockArguments.EmoteType.LAYING,
+    emote=v2225.PassengerOfBlockArguments.EmoteType.LAYING,
 )
 
 
@@ -127,10 +127,10 @@ def test_2225_adds_one_byte_for_an_absent_passenger_block_data():
 
 def test_2225_passenger_block_data_adds_24_bytes():
     absent = bytes(v2225.AddActorPacket(**COMMON))
-    present = bytes(v2225.AddActorPacket(**COMMON, passenger_block_data=PASSENGER_BLOCK_DATA))
+    present = bytes(v2225.AddActorPacket(**COMMON, passenger_of_block_data=PASSENGER_BLOCK_DATA))
     assert len(present) == len(absent) + 24
 
 
 def test_2225_passenger_block_data_round_trips():
-    packet = v2225.AddActorPacket(**COMMON, passenger_block_data=PASSENGER_BLOCK_DATA)
+    packet = v2225.AddActorPacket(**COMMON, passenger_of_block_data=PASSENGER_BLOCK_DATA)
     assert v2225.AddActorPacket.from_bytes(bytes(packet)) == packet

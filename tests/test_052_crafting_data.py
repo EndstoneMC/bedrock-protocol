@@ -130,7 +130,7 @@ GOLDENS = [
                         priority=3,
                         assume_symmetry=True,
                         unlocking_requirement=v1001.SerializedRecipeUnlockingRequirement(
-                            context=v1001.SerializedRecipeUnlockingRequirement.UnlockingContext.ALWAYS_UNLOCKED
+                            context=v1001.RecipeUnlockingRequirement.UnlockingContext.ALWAYS_UNLOCKED
                         ),
                         net_id=v1001.RecipeNetId(raw_id=11),
                     ),
@@ -144,7 +144,7 @@ GOLDENS = [
                         tag="crafting_table",
                         priority=0,
                         unlocking_requirement=v1001.SerializedRecipeUnlockingRequirement(
-                            context=v1001.SerializedRecipeUnlockingRequirement.UnlockingContext.NONE,
+                            context=v1001.RecipeUnlockingRequirement.UnlockingContext.NONE,
                             ingredients=[STICK_V1001],
                         ),
                         net_id=v1001.RecipeNetId(raw_id=12),
@@ -208,7 +208,7 @@ GOLDENS = [
                     priority=3,
                     assume_symmetry=True,
                     unlocking_requirement=v2168.SerializedRecipeUnlockingRequirement(
-                        context=v2168.SerializedRecipeUnlockingRequirement.UnlockingContext.ALWAYS_UNLOCKED,
+                        context=v2168.RecipeUnlockingRequirement.UnlockingContext.ALWAYS_UNLOCKED,
                         ingredients=None,
                     ),
                     net_id=v2168.RecipeNetId(raw_id=11),
@@ -222,7 +222,7 @@ GOLDENS = [
                     tag="crafting_table",
                     priority=0,
                     unlocking_requirement=v2168.SerializedRecipeUnlockingRequirement(
-                        context=v2168.SerializedRecipeUnlockingRequirement.UnlockingContext.NONE,
+                        context=v2168.RecipeUnlockingRequirement.UnlockingContext.NONE,
                         ingredients=[STICK_V2168],
                     ),
                     net_id=v2168.RecipeNetId(raw_id=12),

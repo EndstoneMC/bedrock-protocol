@@ -90,13 +90,13 @@ PLACE_V975 = v975.ItemUseInventoryTransaction(
 
 GOLDENS = [
     pytest.param(
-        v1001.InventoryTransactionPacket(transaction=v1001.NormalTransactionData()),
+        v1001.InventoryTransactionPacket(variant_transaction=v1001.NormalTransactionData()),
         V1001_NORMAL_EMPTY,
         id="v1001-normal-empty",
     ),
     pytest.param(
         v1001.InventoryTransactionPacket(
-            transaction=v1001.NormalTransactionData(
+            variant_transaction=v1001.NormalTransactionData(
                 transaction=v1001.InventoryTransaction(
                     actions=[
                         v1001.InventoryAction(
@@ -115,7 +115,7 @@ GOLDENS = [
     ),
     pytest.param(
         v1001.InventoryTransactionPacket(
-            transaction=v1001.NormalTransactionData(
+            variant_transaction=v1001.NormalTransactionData(
                 transaction=v1001.InventoryTransaction(
                     actions=[
                         v1001.InventoryAction(
@@ -138,10 +138,12 @@ GOLDENS = [
         V1001_NORMAL_ACTION_NET_ID,
         id="v1001-normal-container-action-with-net-id",
     ),
-    pytest.param(v1001.InventoryTransactionPacket(transaction=PLACE_V1001), V1001_USE_ITEM, id="v1001-use-item"),
+    pytest.param(
+        v1001.InventoryTransactionPacket(variant_transaction=PLACE_V1001), V1001_USE_ITEM, id="v1001-use-item"
+    ),
     pytest.param(
         v2168.InventoryTransactionPacket(
-            transaction=v2168.NormalTransactionData(
+            variant_transaction=v2168.NormalTransactionData(
                 transaction=v2168.InventoryTransaction(
                     actions=[
                         v2168.InventoryAction(
@@ -160,7 +162,7 @@ GOLDENS = [
     ),
     pytest.param(
         v2168.InventoryTransactionPacket(
-            transaction=v2168.NormalTransactionData(
+            variant_transaction=v2168.NormalTransactionData(
                 transaction=v2168.InventoryTransaction(
                     actions=[
                         v2168.InventoryAction(
@@ -255,21 +257,21 @@ USE_V2193_OFFHAND = v2193.ItemUseInventoryTransaction(
     target_block_id=9,
 )
 USE_ON_ACTOR_V2225_MAINHAND = v2225.InventoryTransactionPacket(
-    transaction=v2225.ItemUseOnActorInventoryTransaction(
+    variant_transaction=v2225.ItemUseOnActorInventoryTransaction(
         action_type=v2225.ItemUseOnActorInventoryTransaction.ActionType.ATTACK,
         hand=v2225.HandSlot.MAINHAND,
         **USE_ON_ACTOR_FIELDS,
     )
 )
 USE_ON_ACTOR_V2225_OFFHAND = v2225.InventoryTransactionPacket(
-    transaction=v2225.ItemUseOnActorInventoryTransaction(
+    variant_transaction=v2225.ItemUseOnActorInventoryTransaction(
         action_type=v2225.ItemUseOnActorInventoryTransaction.ActionType.ATTACK,
         hand=v2225.HandSlot.OFFHAND,
         **USE_ON_ACTOR_FIELDS,
     )
 )
 RELEASE_V2225_OFFHAND = v2225.InventoryTransactionPacket(
-    transaction=v2225.ItemReleaseInventoryTransaction(
+    variant_transaction=v2225.ItemReleaseInventoryTransaction(
         action_type=v2225.ItemReleaseInventoryTransaction.ActionType.RELEASE,
         slot=3,
         from_pos=v2225.Vec3(x=1.0, y=2.0, z=3.0),
@@ -308,13 +310,13 @@ def test_inventory_transaction_2168_net_id_body_is_rejected_at_1001():
 
 
 def test_inventory_transaction_2193_use_item_is_one_byte_shorter_than_2168():
-    packet = v2193.InventoryTransactionPacket(transaction=PLACE_V2193)
-    older = v2168.InventoryTransactionPacket(transaction=PLACE_V2168)
+    packet = v2193.InventoryTransactionPacket(variant_transaction=PLACE_V2193)
+    older = v2168.InventoryTransactionPacket(variant_transaction=PLACE_V2168)
     assert len(bytes(older)) == len(bytes(packet)) + 1
 
 
 def test_inventory_transaction_2193_use_item_round_trips_the_offhand():
-    packet = v2193.InventoryTransactionPacket(transaction=USE_V2193_OFFHAND)
+    packet = v2193.InventoryTransactionPacket(variant_transaction=USE_V2193_OFFHAND)
     assert v2193.InventoryTransactionPacket.from_bytes(bytes(packet)) == packet
 
 
@@ -328,8 +330,8 @@ def test_inventory_transaction_2193_hand_is_one_byte_of_its_own():
         hand=v2193.HandSlot.MAINHAND,
         target_block_id=9,
     )
-    main_hand = bytes(v2193.InventoryTransactionPacket(transaction=main_hand_use))
-    off_hand = bytes(v2193.InventoryTransactionPacket(transaction=USE_V2193_OFFHAND))
+    main_hand = bytes(v2193.InventoryTransactionPacket(variant_transaction=main_hand_use))
+    off_hand = bytes(v2193.InventoryTransactionPacket(variant_transaction=USE_V2193_OFFHAND))
     assert main_hand[:11] == off_hand[:11]
     assert main_hand[12:] == off_hand[12:]
     assert main_hand[11:12] != off_hand[11:12]
@@ -337,7 +339,7 @@ def test_inventory_transaction_2193_hand_is_one_byte_of_its_own():
 
 def test_inventory_transaction_2225_use_on_actor_gains_the_hand():
     older = v2193.InventoryTransactionPacket(
-        transaction=v2193.ItemUseOnActorInventoryTransaction(
+        variant_transaction=v2193.ItemUseOnActorInventoryTransaction(
             action_type=v2193.ItemUseOnActorInventoryTransaction.ActionType.ATTACK, **USE_ON_ACTOR_FIELDS
         )
     )
@@ -360,7 +362,7 @@ def test_inventory_transaction_2225_use_on_actor_round_trips_the_offhand():
 
 def test_inventory_transaction_2225_release_appends_the_hand():
     older = v2193.InventoryTransactionPacket(
-        transaction=v2193.ItemReleaseInventoryTransaction(
+        variant_transaction=v2193.ItemReleaseInventoryTransaction(
             action_type=v2193.ItemReleaseInventoryTransaction.ActionType.RELEASE,
             slot=3,
             from_pos=v2193.Vec3(x=1.0, y=2.0, z=3.0),

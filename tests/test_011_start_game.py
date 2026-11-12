@@ -109,7 +109,7 @@ EDITOR_MIGRATED = v2225.StartGamePacket(
     settings=v2225.LevelSettings(
         **SETTINGS,
         time=1000,
-        rule_data=RULE_DATA,
+        game_rules=RULE_DATA,
         editor_level_migration_version=v2225.EditorLevelMigrationVersion.EDITOR_ACHIEVEMENTS,
     ),
 )
@@ -126,7 +126,7 @@ GOLDENS = [
         id="v1001",
     ),
     pytest.param(
-        v2168.StartGamePacket(**PACKET, settings=v2168.LevelSettings(**SETTINGS, rule_data=RULE_DATA)),
+        v2168.StartGamePacket(**PACKET, settings=v2168.LevelSettings(**SETTINGS, game_rules=RULE_DATA)),
         V2168,
         id="v2168",
     ),
@@ -149,7 +149,7 @@ def test_start_game_decodes_from_its_golden(packet, golden):
 
 
 def test_2225_puts_the_editor_level_migration_version_ahead_of_the_time():
-    older = v2193.StartGamePacket(**PACKET, settings=v2193.LevelSettings(**SETTINGS, time=1000, rule_data=RULE_DATA))
+    older = v2193.StartGamePacket(**PACKET, settings=v2193.LevelSettings(**SETTINGS, time=1000, game_rules=RULE_DATA))
     old = bytes(older)
     new = bytes(EDITOR_MIGRATED)
     assert len(new) == len(old) + 1

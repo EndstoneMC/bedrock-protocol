@@ -34,7 +34,7 @@ GOLDENS = [
                     z_coords=[0.0, 0.25, 0.75, 1.0],
                 )
             ],
-            name_map={"minecraft:slab": 258},
+            name_map={"minecraft:slab": v2225.RegistryHandle(value=258)},
             custom_shape_count=300,
         ),
         SLAB,

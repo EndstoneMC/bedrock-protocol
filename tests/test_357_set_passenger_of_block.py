@@ -8,7 +8,7 @@ MOUNT = v2225.SetPassengerOfBlockPacket(
         offset=v2225.Vec3(x=0.5, y=0.25, z=0.5),
         rotation=180.0,
         rotation_limit=30.0,
-        emote_type=v2225.PassengerOfBlockArguments.EmoteType.STANDING,
+        emote=v2225.PassengerOfBlockArguments.EmoteType.STANDING,
     ),
 )
 

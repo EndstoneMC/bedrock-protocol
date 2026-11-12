@@ -17,13 +17,15 @@ UNFILTERED = bytes.fromhex("000100")
 
 GOLDENS = [
     pytest.param(
-        v2225.UpdateClientOptionsPacket(graphics_mode=v2225.GraphicsMode.RAY_TRACED, filter_profanity=True),
+        v2225.UpdateClientOptionsPacket(
+            update=v2225.SyncedClientOptionsUpdate(graphics_mode=v2225.GraphicsMode.RAY_TRACED, filter_profanity=True)
+        ),
         BOTH,
         id="both-present",
     ),
     pytest.param(v2225.UpdateClientOptionsPacket(), ABSENT, id="both-absent"),
     pytest.param(
-        v2225.UpdateClientOptionsPacket(filter_profanity=False),
+        v2225.UpdateClientOptionsPacket(update=v2225.SyncedClientOptionsUpdate(filter_profanity=False)),
         UNFILTERED,
         id="absent-is-not-a-present-false",
     ),

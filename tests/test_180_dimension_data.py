@@ -20,29 +20,33 @@ V2168 = bytes.fromhex("0108746573743a64696d80057f02d00f0807060504030201100f0e0d0
 GOLDENS = [
     pytest.param(
         v1001.DimensionDataPacket(
-            dimension_definitions={
-                "test:dim": v1001.DimensionDefinitionGroup.DimensionDefinition(
-                    height_maximum=320,
-                    height_minimum=-64,
-                    generator_type=v1001.GeneratorType.OVERWORLD,
-                    dimension_type=1000,
-                )
-            }
+            dimension_definition_group=v1001.DimensionDefinitionGroup(
+                dimension_definitions={
+                    "test:dim": v1001.DimensionDefinitionGroup.DimensionDefinition(
+                        height_maximum=320,
+                        height_minimum=-64,
+                        generator_type=v1001.GeneratorType.OVERWORLD,
+                        dimension_type=1000,
+                    )
+                }
+            )
         ),
         V1001,
         id="v1001",
     ),
     pytest.param(
         v2168.DimensionDataPacket(
-            dimension_definitions={
-                "test:dim": v2168.DimensionDefinitionGroup.DimensionDefinition(
-                    height_maximum=320,
-                    height_minimum=-64,
-                    generator_type=v2168.GeneratorType.OVERWORLD,
-                    dimension_type=1000,
-                    pack_id=PACK_ID,
-                )
-            }
+            dimension_definition_group=v2168.DimensionDefinitionGroup(
+                dimension_definitions={
+                    "test:dim": v2168.DimensionDefinitionGroup.DimensionDefinition(
+                        height_maximum=320,
+                        height_minimum=-64,
+                        generator_type=v2168.GeneratorType.OVERWORLD,
+                        dimension_type=1000,
+                        pack_id=PACK_ID,
+                    )
+                }
+            )
         ),
         V2168,
         id="v2168",
@@ -77,30 +81,34 @@ def test_a_v2168_dimension_data_body_does_not_decode_as_a_v1001_one():
 
 def test_dimension_data_2225_appends_the_cloud_height_and_its_flag():
     older = v2193.DimensionDataPacket(
-        dimension_definitions={
-            "test:dim": v2193.DimensionDefinitionGroup.DimensionDefinition(
-                min_y=-64,
-                height_range=384,
-                generator_type=v2193.GeneratorType.OVERWORLD,
-                dimension_type=1000,
-                pack_id=PACK_ID,
-                default_biome="plains",
-            )
-        }
+        dimension_definition_group=v2193.DimensionDefinitionGroup(
+            dimension_definitions={
+                "test:dim": v2193.DimensionDefinitionGroup.DimensionDefinition(
+                    min_y=-64,
+                    height_range=384,
+                    generator_type=v2193.GeneratorType.OVERWORLD,
+                    dimension_type=1000,
+                    pack_id=PACK_ID,
+                    default_biome="plains",
+                )
+            }
+        )
     )
     newer = v2225.DimensionDataPacket(
-        dimension_definitions={
-            "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(
-                min_y=-64,
-                height_range=384,
-                generator_type=v2225.GeneratorType.OVERWORLD,
-                dimension_type=1000,
-                pack_id=PACK_ID,
-                default_biome="plains",
-                cloud_height=192,
-                render_clouds=True,
-            )
-        }
+        dimension_definition_group=v2225.DimensionDefinitionGroup(
+            dimension_definitions={
+                "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(
+                    min_y=-64,
+                    height_range=384,
+                    generator_type=v2225.GeneratorType.OVERWORLD,
+                    dimension_type=1000,
+                    pack_id=PACK_ID,
+                    default_biome="plains",
+                    cloud_height=192,
+                    render_clouds=True,
+                )
+            }
+        )
     )
     assert bytes(newer)[: len(bytes(older))] == bytes(older)
     assert len(bytes(newer)) == len(bytes(older)) + 3
@@ -108,8 +116,10 @@ def test_dimension_data_2225_appends_the_cloud_height_and_its_flag():
 
 def test_dimension_data_2225_round_trips_the_cloud_height_and_its_flag():
     packet = v2225.DimensionDataPacket(
-        dimension_definitions={
-            "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(cloud_height=192, render_clouds=True)
-        }
+        dimension_definition_group=v2225.DimensionDefinitionGroup(
+            dimension_definitions={
+                "test:dim": v2225.DimensionDefinitionGroup.DimensionDefinition(cloud_height=192, render_clouds=True)
+            }
+        )
     )
     assert v2225.DimensionDataPacket.from_bytes(bytes(packet)) == packet
