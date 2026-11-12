@@ -200,6 +200,10 @@ def test_a_name_the_schema_does_not_hold_is_rejected():
         proto.CommandOutput.from_bytes(b"\x04nope")
 
 
+def test_a_name_in_any_case_decodes_as_bds_folds_it():
+    assert proto.CommandOutput.from_bytes(b"\x04NONE" + bytes(6)).type is proto.CommandOutputType.NONE
+
+
 def test_a_container_id_the_schema_does_not_name_round_trips():
     window = proto.ContainerClosePacket(container_id=5)
     assert proto.ContainerClosePacket.from_bytes(bytes(window)) == window
