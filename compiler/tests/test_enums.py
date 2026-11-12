@@ -195,7 +195,7 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 1, 'a', 'b'\n", "A: a pair is a value and a wire name"),
         ("class E(IntEnum, int32):\n    A = 1, 2\n", "A: is not a literal str"),
         ("class E(IntEnum, int32):\n    A = 1, ''\n", "A: is an empty string"),
-        ("class E(IntEnum, int32):\n    A = value(1, name='y')\n", "value: got .* 'name'"),
+        ("class E(IntEnum, int32):\n    A = value(1, name='y')\n", "value: (got .* 'name'|'name' parameter is positional only)"),
         ("class E(IntEnum, int32):\n    A = 1,\n", "A: a pair is a value and a wire name"),
         ("class E(IntEnum, int32):\n    A = value(1, 2)\n", "A: is not a literal str"),
         ("class E(IntEnum, int32):\n    A = value(1, until='3')\n", "A: is not a literal int"),
