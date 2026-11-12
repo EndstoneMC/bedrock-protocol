@@ -171,7 +171,10 @@ class Generator:
             magnitude = -magnitude
         return min(max(magnitude, low), high)
 
-    def leaf(self, node: Primitive) -> Json:
+    def leaf(self, node: Primitive, wire: str | None = None) -> Json:
+        wire = wire or node.wire
+        if wire in INTEGER_BITS and node.name in INTEGER_BITS:
+            return self.integer(wire if INTEGER_BITS[wire][0] < INTEGER_BITS[node.name][0] else node.name)
         match node.name:
             case "bool":
                 return self.next() % 2 == 0
@@ -242,7 +245,7 @@ class Generator:
             case Primitive():
                 return self.leaf(node)
             case AliasRef(alias=alias):
-                return self.leaf(alias.primitive)
+                return self.leaf(alias.primitive, node.wire)
             case EnumRef(enum=enum) | EnumName(enum=enum):
                 return self.enum_name(enum)
             case StructRef(struct=struct):
@@ -339,7 +342,8 @@ class Generator:
         primitive = declared.primitive if isinstance(declared, AliasRef) else declared
         if not isinstance(primitive, Primitive) or primitive.name not in INTEGER_BITS:
             raise UnsatisfiableError(f"{name}: not an integer variable")
-        low, high = integer_range(primitive.name)
+        wire = declared.wire if declared.wire in INTEGER_BITS else primitive.name
+        low, high = integer_range(wire if INTEGER_BITS[wire][0] < INTEGER_BITS[primitive.name][0] else primitive.name)
         return sorted(each for each in constants if low <= each <= high)
 
     def solve(
