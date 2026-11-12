@@ -142,5 +142,4 @@ golden bytes. See `.claude/rules/protocol/` for schema conventions and source at
 
 ## License
 
-The original C++ library, schema and compiler use [MIT](LICENSE). Native attribution
-is in [the Python extension notice](python/NOTICE).
+The original C++ library, schema and compiler use [MIT](LICENSE).
