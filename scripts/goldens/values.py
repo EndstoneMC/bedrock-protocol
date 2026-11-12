@@ -109,6 +109,16 @@ PRESENT_WHEN: dict[str, tuple[str, ...] | Expression] = {
     "PlayerAuthInputPacket.vehicle_rot": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
     "PlayerAuthInputPacket.client_predicted_vehicle": ("input_data", "IS_IN_CLIENT_PREDICTED_VEHICLE"),
     "ItemStackResponseSlotInfo.item_stack_net_id": Binary("!=", FieldRef("amount"), Int(0)),
+    "InventoryTransactionPacket.legacy_set_item_slots": Binary(
+        "and",
+        Binary("<", FieldRef("legacy_request_id.raw_id"), Int(-1)),
+        Binary("==", Binary("&", FieldRef("legacy_request_id.raw_id"), Int(1)), Int(0)),
+    ),
+    "PackedItemUseLegacyInventoryTransaction.slots": Binary(
+        "and",
+        Binary("<", FieldRef("id.raw_id"), Int(-1)),
+        Binary("==", Binary("&", FieldRef("id.raw_id"), Int(1)), Int(0)),
+    ),
 }
 LEVEL_GAME_RULES = (
     ("commandBlockOutput", {"bool": True}),
@@ -553,8 +563,17 @@ class Generator:
                 yield from self.atoms(left)
                 yield from self.atoms(right)
 
+    def declared(self, shape: StructShape, name: str) -> Type:
+        outer, _, inner = name.partition(".")
+        found = next(each.type for each in shape.fields if each.name == outer)
+        if not inner:
+            return found
+        if not isinstance(found, StructRef):
+            raise TypeError(f"{outer}: not a struct field")
+        return next(each.type for each in self.shape(found.struct).fields if each.name == inner)
+
     def candidates(self, shape: StructShape, name: str, whens: list[Expression]) -> list[int]:
-        declared = next(each.type for each in shape.fields if each.name == name)
+        declared = self.declared(shape, name)
         constants: set[int] = {0, 1}
         for expression in whens:
             for atom in self.atoms(expression):
@@ -596,7 +615,7 @@ class Generator:
         expressions = [each for each, _ in wanted]
         domains = [[0, 1] if kind != "field" else self.candidates(shape, name, expressions) for kind, name in variables]
         for kind, name in variables:
-            if kind == "field" and name not in fields:
+            if kind == "field" and name.partition(".")[0] not in fields:
                 raise TypeError(f"{name}: not a field of {shape.family.name}")
         kept: list[tuple[Expression, bool]] = []
         best: tuple[dict[str, int], set[tuple[str, str]]] = ({}, set())
@@ -689,13 +708,14 @@ class Generator:
         wanted = [(expression, want) for expression, want, _ in sorted(wanted, key=lambda each: each[2])]
         env, bits = self.solve(shape, wanted) if wanted else ({}, set())
         for name, number in env.items():
-            declared = next(each.type for each in shape.fields if each.name == name)
+            declared = self.declared(shape, name)
+            value: Json = number
             if isinstance(declared, EnumRef | EnumName):
-                values[name] = self.named(declared.enum).get(number, number)
+                value = self.named(declared.enum).get(number, number)
             elif isinstance(declared, Primitive) and declared.name == "bool":
-                values[name] = bool(number)
-            else:
-                values[name] = number
+                value = bool(number)
+            outer, _, inner = name.partition(".")
+            values[outer] = {**values[outer], inner: value} if inner else value
         for each in fields:
             if isinstance(each.type, Bitset) and any(field == each.name for field, _ in bits):
                 width = self.numbers(each.type.width.enum)
@@ -744,6 +764,8 @@ class Generator:
                 bits |= {(each.name, member) for member, index in width.items() if number >> index & 1}
             elif isinstance(declared, List) and isinstance(declared.element, EnumRef | EnumName):
                 bits |= {(each.name, member) for member in value or []}
+            elif isinstance(declared, StructRef) and isinstance(value, dict):
+                env |= {f"{each.name}.{key}": item for key, item in value.items() if type(item) is int}
             elif isinstance(value, bool | int):
                 env[each.name] = int(value)
         return env, bits
