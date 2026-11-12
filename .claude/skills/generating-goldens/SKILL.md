@@ -1,45 +1,24 @@
 ---
 name: generating-goldens
-description: Generates golden wire bytes for a bedrock-protocol test by marshalling a packet or type with Sandertv/gophertunnel, at its current shape or at an older protocol's commit. Use whenever a test needs expected bytes, when adding, back-porting or renumbering a protocol version, or when a golden and the schema disagree.
+description: Produces a frozen golden for a bedrock-protocol test by having the era's official BDS read library-encoded bytes and write its own bytes and JSON. Use whenever a test needs expected bytes, when a new protocol version drops, when a packet is dirty at a version, or when a golden and the schema disagree.
 ---
 
 # Generating goldens
 
-Where a golden goes and how it is labelled is `.claude/rules/tests.md`; this is the procedure.
+Where a golden goes and how it is labelled is `.claude/rules/tests.md`; this is the procedure. BDS is the only golden source; BDS is never run from a test.
 
 ## Steps
 
-1. In a Sandertv/gophertunnel clone (clone it if missing), pick the commit: HEAD for the latest protocol, otherwise the era's commit from `git log --reverse --format=%h -S'CurrentProtocol = <N>' -- minecraft/protocol/info.go | head -n 1`.
-2. Run `git worktree add <dir> <commit>` rather than moving the clone.
-3. In a scratch directory outside both repositories, write two files:
-   - `go.mod` with `module golden`, `require github.com/sandertv/gophertunnel v0.0.0` and `replace github.com/sandertv/gophertunnel => <dir>`;
-   - `main.go`, with the packet literal you need:
-     ```go
-     package main
-
-     import (
-     	"bytes"
-     	"fmt"
-
-     	"github.com/sandertv/gophertunnel/minecraft/protocol"
-     	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
-     )
-
-     func main() {
-     	pk := &packet.PlayStatus{Status: packet.PlayStatusPlayerSpawn}
-     	buf := bytes.NewBuffer(nil)
-     	pk.Marshal(protocol.NewWriter(buf, 0))
-     	fmt.Printf("%x\n", buf.Bytes())
-     }
-     ```
-4. Run `go mod tidy && go run .`, then paste the hex and the literal into the test the way `tests.md` says, naming the commit.
-5. Run `git worktree remove <dir>`.
+1. List the dirty packets of the version (`.claude/rules/protocol/workflow.md`); each gets goldens for all its paths.
+2. Fetch the version's official Linux BDS zip, `https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-<version>.zip`, into its own new directory; never unpack over another build.
+3. Run that `bedrock_server` under lldb with `server-port` and `server-portv6` set off the defaults; kill only the pid you started.
+4. Encode every path of each dirty packet with the library at HEAD: each variant alternative, optional present and absent, each gated or `when=` branch.
+5. Let BDS read the bytes, write its default write (the packet's own `SerializationMode`, `wire.md`), and dump its JSON.
+6. Compare BDS's bytes and JSON with the library's, and the default write with the other writer.
+7. On any difference, or a read BDS rejects, fix the schema (`sources.md` weighs the evidence) and repeat from step 4.
+8. On agreement, freeze: paste the BDS bytes into the test as `tests.md` says; never regenerate them.
 
 ## When it goes wrong
 
-- `Marshal` wants `protocol.IO` at one commit and `*protocol.Writer` at another -> pass `protocol.NewWriter(buf, 0)`, which satisfies both.
-- `go` refuses the commit's `go` directive -> run with `GOTOOLCHAIN=auto`.
-- The value is a type, not a packet -> call its `Marshal` on the same writer.
-- gophertunnel lacks a field the schema has at that era -> it cannot marshal the shape; assert it structurally (`tests.md`).
-- The bytes disagree with the schema -> follow the patch rule in `tests.md`.
-- The header of a framed packet disagrees with BDS -> golden the body only (`.claude/rules/protocol/wire.md`).
+- BDS rejects trailing bytes or fails a read -> the library encodes a shape BDS does not; fix the schema.
+- BDS's default write and its other writer disagree -> model the writer BDS uses and record the disagreement in the commit body (`sources.md`).
