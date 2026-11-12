@@ -26,7 +26,16 @@ def test_the_bare_names_are_the_latest_protocol():
 
 def test_the_bare_names_are_the_latest_versions_all():
     latest = importlib.import_module(f"bedrock_protocol.v{bedrock_protocol.versions[-1]}")
-    assert set(bedrock_protocol.__all__) == {"versions", "DecodeError", "PacketHeader", "nbt", *latest.__all__}
+    assert set(bedrock_protocol.__all__) == {
+        "versions",
+        "releases",
+        "protocol_version",
+        "ProtocolVersion",
+        "DecodeError",
+        "PacketHeader",
+        "nbt",
+        *latest.__all__,
+    }
 
 
 def test_the_package_has_no_pre_cereal():

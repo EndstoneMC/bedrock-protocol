@@ -2,7 +2,7 @@
 
 from importlib import import_module
 
-from ._core import versions
+from ._core import ProtocolVersion, protocol_version, releases, versions
 
 
 class DecodeError(ValueError):
@@ -20,6 +20,6 @@ class DecodeError(ValueError):
 
 _latest = import_module(f".v{versions[-1]}", __name__)
 globals().update({name: getattr(_latest, name) for name in _latest.__all__})
-__all__ = ["DecodeError", "PacketHeader", "nbt", "versions"]
+__all__ = ["DecodeError", "PacketHeader", "ProtocolVersion", "nbt", "protocol_version", "releases", "versions"]
 __all__ += _latest.__all__
 del import_module, _latest
