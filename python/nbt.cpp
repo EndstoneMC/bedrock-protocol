@@ -62,6 +62,20 @@ void init_nbt(nb::module_ &parent)
     bind_array_tag<ByteArrayTag>(m, "ByteArrayTag");
     bind_array_tag<IntArrayTag>(m, "IntArrayTag");
 
+    nb::enum_<nbt::Type>(m, "Type", nb::is_arithmetic())
+        .value("END", nbt::Type::End)
+        .value("BYTE", nbt::Type::Byte)
+        .value("SHORT", nbt::Type::Short)
+        .value("INT", nbt::Type::Int)
+        .value("INT64", nbt::Type::Int64)
+        .value("FLOAT", nbt::Type::Float)
+        .value("DOUBLE", nbt::Type::Double)
+        .value("BYTE_ARRAY", nbt::Type::ByteArray)
+        .value("STRING", nbt::Type::String)
+        .value("LIST", nbt::Type::List)
+        .value("COMPOUND", nbt::Type::Compound)
+        .value("INT_ARRAY", nbt::Type::IntArray);
+
     nb::class_<ListTag>(m, "ListTag", nb::is_final())
         .def(
             "__init__",
@@ -76,7 +90,7 @@ void init_nbt(nb::module_ &parent)
                 new (self) ListTag(std::move(out));
             },
             nb::arg("tags") = std::vector<Tag>{}, nb::arg("type") = 0)
-        .def_prop_ro("type", [](const ListTag &self) { return static_cast<int>(self.type()); })
+        .def_prop_ro("type", [](const ListTag &self) { return self.type(); })
         .def("__len__", &ListTag::size)
         .def("__getitem__",
              [](const ListTag &self, std::ptrdiff_t i) -> Tag {

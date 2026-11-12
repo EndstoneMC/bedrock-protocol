@@ -150,6 +150,47 @@ def test_a_list_rejects_a_type_that_is_not_a_tag_type():
         nbt.ListTag(type=12)
 
 
+def test_a_list_type_is_an_nbt_type_equal_to_its_int():
+    tags = nbt.ListTag([nbt.IntTag(1)])
+    assert isinstance(tags.type, nbt.Type)
+    assert tags.type == 3
+
+
+@pytest.mark.parametrize("type", [nbt.Type.COMPOUND, 10], ids=["enum", "int"])
+def test_a_list_takes_its_type_as_an_nbt_type_or_an_int(type):
+    assert nbt.ListTag(type=type).type is nbt.Type.COMPOUND
+
+
+def test_an_empty_list_defaults_to_the_end_type():
+    assert nbt.ListTag().type is nbt.Type.END
+
+
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("END", 0),
+        ("BYTE", 1),
+        ("SHORT", 2),
+        ("INT", 3),
+        ("INT64", 4),
+        ("FLOAT", 5),
+        ("DOUBLE", 6),
+        ("BYTE_ARRAY", 7),
+        ("STRING", 8),
+        ("LIST", 9),
+        ("COMPOUND", 10),
+        ("INT_ARRAY", 11),
+    ],
+)
+def test_an_nbt_type_member_has_its_name_and_value(name, value):
+    assert nbt.Type[name] == value
+    assert nbt.Type(value).name == name
+
+
+def test_nbt_type_has_only_the_twelve_members():
+    assert len(nbt.Type) == 12
+
+
 @pytest.mark.parametrize("cls", [nbt.IntTag, nbt.StringTag, nbt.IntArrayTag, nbt.ListTag, nbt.CompoundTag])
 def test_a_tag_class_cannot_be_subclassed(cls):
     with pytest.raises(TypeError, match="prohibits subclassing"):
