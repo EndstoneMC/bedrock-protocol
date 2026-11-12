@@ -61,7 +61,7 @@ def generate(build_package, tmp_path):
     return run
 
 
-def test_a_header_and_a_source_per_module_and_a_version_header(generate):
+def test_a_header_and_a_source_per_module_packets_h_and_version_hpp(generate):
     out = generate({"a": A, "b": B})
 
     assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.h", "version.hpp"]
@@ -120,4 +120,15 @@ def test_packets_h_names_every_packet_of_every_module(generate):
     registry = (out / "packets.h").read_text()
     assert "struct packet_of<V, 1>" in registry
     assert "struct packet_of<V, 2>" in registry
+
+
+def test_a_module_header_specialises_no_packet_of(generate):
+    out = generate({"a": A})
+
     assert "packet_of" not in (out / "a.h").read_text()
+
+
+def test_packets_h_includes_every_module_header(generate):
+    out = generate({"a": A, "b": B})
+
+    assert "#include <bedrock/protocol/b.h>" in (out / "packets.h").read_text()
