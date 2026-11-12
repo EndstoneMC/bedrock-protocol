@@ -23,5 +23,6 @@ Where a golden goes and how it is labelled is `.claude/rules/tests.md`; this is 
 - `no 'Server started.'` or `before 'Server started.'` -> read `<dir>/bds.log`.
 - `createPacket builds nothing for this id` -> add the packet's entt default constructor (it stores the packet's vtable into a fresh allocation) to `default_constructors`.
 - `read:` with error code 74 -> BDS stopped short of the seed's end or ran past it; `offset` is where it stopped; fix the schema.
-- `bytes:` or `json:` -> BDS reads the seed but means something else by it; `json:` names the key path, in `value` or in BDS's JSON past the end of `value`, of the first scalar BDS shows differently; fix the schema, or the value where it is not what the library holds; never loosen `bds.py`'s comparison.
+- `read: BDS stops at byte N of M` -> BDS read without an error but left bytes unread; the schema ends before the seed does.
+- `bytes:` or `json:` -> BDS reads the seed but means something else by it; `json:` names the case's key path of the first scalar BDS's JSON does not hold; fix the schema, or the value where it is not what the library holds; never loosen `bds.py`'s comparison.
 - `bytes` and `other_writer_bytes` disagree -> model the writer BDS uses and record the disagreement in the commit body (`.claude/rules/protocol/sources.md`).
