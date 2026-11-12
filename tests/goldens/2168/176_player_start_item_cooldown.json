@@ -1,0 +1,15 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "item_category": "s1",
+   "duration_ticks": 462
+  },
+  "bytes": "0273319c07",
+  "bds_json": {
+   "Item Category": "s1",
+   "Duration Ticks": 462
+  }
+ }
+]
