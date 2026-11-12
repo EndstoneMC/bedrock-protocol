@@ -172,6 +172,11 @@ def test_a_value_the_schema_does_not_name_shows_in_the_repr(unnamed_status):
     assert "status=255" in repr(unnamed_status)
 
 
+def test_a_nested_struct_names_its_qualname_in_the_repr():
+    value = proto.TextPacket.MessageOnly(type=proto.TextPacketType.CHAT, message="hello")
+    assert repr(value) == "TextPacket.MessageOnly(type=TextPacketType.CHAT, message='hello')"
+
+
 def test_a_value_the_schema_does_not_name_encodes_again(unnamed_status):
     assert bytes(unnamed_status) == bytes([0, 0, 0, 0xFF])
 

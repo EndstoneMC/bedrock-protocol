@@ -324,7 +324,7 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
             ((members += std::format("{}{}={}", I ? ", " : "", python_names<T>()[I], describe(field_get<I>(self)))),
              ...);
         }(std::make_index_sequence<field_count<T>()>{});
-        return std::format("{}({})", struct_name<T>().substr(struct_name<T>().rfind(':') + 1), members);
+        return std::format("{}({})", nb::cast<std::string>(nb::type<T>().attr("__qualname__")), members);
     });
 
     if constexpr (Serializable<T>) {
