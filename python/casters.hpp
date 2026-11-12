@@ -177,7 +177,8 @@ template <>
 struct type_caster<bedrock::protocol::DynamicValue> {
     using DynamicValue = bedrock::protocol::DynamicValue;
 
-    NB_TYPE_CASTER(DynamicValue, const_name("object"))
+    NB_TYPE_CASTER(DynamicValue,
+                   io_name("bool | int | float | str | list | dict", "bool | int | float | str | list | dict | None"))
 
     bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
     {
@@ -298,7 +299,7 @@ struct type_caster<bedrock::protocol::CompoundTagData> {
 
 template <>
 struct type_caster<bedrock::protocol::Tag> {
-    NB_TYPE_CASTER(bedrock::protocol::Tag, const_name("object"))
+    NB_TYPE_CASTER(bedrock::protocol::Tag, io_name("bedrock_protocol.nbt.Tag", "bedrock_protocol.nbt.Tag | None"))
 
     bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
     {

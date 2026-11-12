@@ -74,6 +74,10 @@ def test_clearing_a_list_resets_its_type():
     assert tags.type == 0
 
 
+def test_every_tag_class_is_a_tag():
+    assert isinstance(nbt.IntTag(1), nbt.Tag)
+
+
 def test_a_list_built_in_code_takes_its_type_from_the_first_element():
     tags = nbt.ListTag()
     assert tags.type == 0

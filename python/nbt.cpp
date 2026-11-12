@@ -154,6 +154,10 @@ void init_nbt(nb::module_ &parent)
             }
             return std::format("CompoundTag({{{}}})", entries);
         });
+
+    m.attr("Tag") = m.attr("ByteTag") | m.attr("ShortTag") | m.attr("IntTag") | m.attr("Int64Tag") |
+                    m.attr("FloatTag") | m.attr("DoubleTag") | m.attr("StringTag") | m.attr("ByteArrayTag") |
+                    m.attr("IntArrayTag") | m.attr("ListTag") | m.attr("CompoundTag");
 }
 
 }  // namespace bedrock::protocol::python
