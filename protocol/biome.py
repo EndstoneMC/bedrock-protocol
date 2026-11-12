@@ -10,9 +10,6 @@ from protocol.nbt import CompoundTag
 package = "bedrock.protocol"
 
 
-type BiomeStringIndex = uint16
-
-
 class VillageType(IntEnum, uint8):
     DESERT = 0
     ICE = 1
@@ -134,9 +131,9 @@ class BiomeClimateData:
 
 class BiomeCoordinateData:
     min_value_type: ExpressionOp
-    min_value: BiomeStringIndex
+    min_value: uint16
     max_value_type: ExpressionOp
-    max_value: BiomeStringIndex
+    max_value: uint16
     grid_offset: uint32
     grid_step_size: uint32
     distribution: RandomDistributionType
@@ -146,18 +143,18 @@ class BiomeScatterParamData:
     coordinates: list[BiomeCoordinateData]
     eval_order: CoordinateEvaluationOrder
     chance_percent_type: ExpressionOp
-    chance_percent: BiomeStringIndex
+    chance_percent: uint16
     chance_numerator: int32
     chance_denominator: int32
     iterations_type: ExpressionOp
-    iterations: BiomeStringIndex
+    iterations: uint16
 
 
 class BiomeConsolidatedFeatureData:
     scatter: BiomeScatterParamData
-    feature: BiomeStringIndex
-    identifier: BiomeStringIndex
-    pass_: BiomeStringIndex
+    feature: uint16
+    identifier: uint16
+    pass_: uint16
     can_use_internal_feature: bool
 
 
@@ -179,9 +176,9 @@ class BiomeElementData:
     noise_lower_bound: float
     noise_upper_bound: float
     height_min_type: ExpressionOp
-    height_min: BiomeStringIndex
+    height_min: uint16
     height_max_type: ExpressionOp
-    height_max: BiomeStringIndex
+    height_max: uint16
     adjusted_materials: BiomeSurfaceMaterialData
 
 
@@ -190,13 +187,13 @@ class BiomeSurfaceMaterialAdjustmentData:
 
 
 class BiomeWeightedData:
-    biome_identifier: BiomeStringIndex
+    biome_identifier: uint16
     weight: uint32
 
 
 class BiomeConditionalTransformationData:
     transforms_into: list[BiomeWeightedData]
-    condition_json: BiomeStringIndex
+    condition_json: uint16
     min_passing_neighbors: uint32
 
 
@@ -228,8 +225,8 @@ class BiomeLegacyWorldGenRulesData:
 
 
 class BiomeReplacementData:
-    replacement_biome: BiomeStringIndex
-    dimension: BiomeStringIndex
+    replacement_biome: uint16
+    dimension: uint16
     target_biomes: list[uint16]
     amount: float
     noise_frequency_scale: float
@@ -314,7 +311,7 @@ class BiomeDefinitionListPacket:
 
 @packet(id=122, since=800)
 class BiomeDefinitionListPacket:
-    biome_data: dict[BiomeStringIndex, BiomeDefinitionData]
+    biome_data: dict[uint16, BiomeDefinitionData]
     string_list: BiomeStringList
 
 

@@ -149,7 +149,7 @@ class NoiseTransitionAttributeData:
     settings: NoiseTransitionSettingsData
 
 
-type AttributeDataPayload = ConstantAttributeData | TransitionAttributeData | NoiseTransitionAttributeData
+type AttributePayloadVariant = ConstantAttributeData | TransitionAttributeData | NoiseTransitionAttributeData
 
 
 @type(until=2225)
@@ -170,7 +170,7 @@ class EnvironmentAttributeData:
 @type(since=2225)
 class EnvironmentAttributeData:
     name: str
-    payload: AttributeDataPayload
+    payload: AttributePayloadVariant
 
 
 class AttributeLayerSettings:

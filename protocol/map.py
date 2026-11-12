@@ -106,9 +106,9 @@ class MapDecoration:
         COUNT = auto()
 
     image: Type
-    rotation: int8
-    x: int8
-    y: int8
+    rotation: int8 = field(type=uint8)
+    x: int8 = field(type=uint8)
+    y: int8 = field(type=uint8)
     label: str
     color: Color
 

@@ -192,9 +192,9 @@ class LevelSoundEvent(IntEnum, uint32):
     PORTAL_TRAVEL = 177
     TRIDENT_HIT = 178
     TRIDENT_RETURN = 179
-    TRIDENT_RIPTIDE_1 = 180
-    TRIDENT_RIPTIDE_2 = 181
-    TRIDENT_RIPTIDE_3 = 182
+    TRIDENT_RIPTIDE_1 = 180, "TridentRiptide_1"
+    TRIDENT_RIPTIDE_2 = 181, "TridentRiptide_2"
+    TRIDENT_RIPTIDE_3 = 182, "TridentRiptide_3"
     TRIDENT_THROW = 183
     TRIDENT_THUNDER = 184
     TRIDENT_HIT_GROUND = 185
@@ -404,8 +404,8 @@ class LevelSoundEvent(IntEnum, uint32):
     GOAT_CALL7 = 390
     IMITATE_WARDEN = 426
     LISTENING_ANGRY = 427
-    ITEM_GIVEN = 428
-    ITEM_TAKEN = 429
+    ITEM_GIVEN = 428, "Item_Given"
+    ITEM_TAKEN = 429, "Item_Taken"
     DISAPPEARED = 430
     REAPPEARED = 431
     DRINK_MILK = 432
@@ -414,7 +414,7 @@ class LevelSoundEvent(IntEnum, uint32):
     FROGSPAWN_BREAK = 435
     SONIC_BOOM = 436
     SONIC_CHARGE = 437
-    ITEM_THROWN = 438
+    ITEM_THROWN = 438, "Item_Thrown"
     RECORD5 = 439
     CONVERT_TO_FROG = 440
     RECORD_PLAYING = 441
@@ -633,6 +633,7 @@ class ClientboundUpdateSoundDataPacket:
     sound_event: SoundDataEvent = field(type=str)
 
 
+@type(since=2225)
 class SoundDataEventType(IntEnum, uint8):
     STOP = 0
     SET_VOLUME = 1
@@ -734,11 +735,13 @@ class StopSoundPacket:
     stop_music_legacy: bool
 
 
+@type(since=2225)
 class SignedAudioContent:
     compact_jwt: str
 
 
-class AudioContentPlaybackType(IntEnum, int32):
+@type(since=2225)
+class AudioContentPlaybackType(IntEnum, uint8):
     MUSIC = 0
     SOUND = 1
 
@@ -751,6 +754,7 @@ class ClientboundPlayAudioContentPacket:
     play_sound: PlaySoundPacket
 
 
+@type(since=2225)
 class AudioContentRegistrationEntry:
     audio_content_id: str
     shared_metadata: SignedAudioContent

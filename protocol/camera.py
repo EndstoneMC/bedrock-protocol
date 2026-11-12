@@ -101,17 +101,16 @@ class CameraShakePacket:
     shake_action: CameraShakeAction
 
 
-class CameraAimAssistActorPriority:
-    class PriorityData:
-        preset_index: int32
-        category_index: int32
-        actor_index: int32
-        priority_value: int32
+class PriorityData:
+    preset_idx: int32
+    category_idx: int32
+    actor_idx: int32
+    priority: int32
 
 
 @packet(id=339, since=924)
 class CameraAimAssistActorPriorityPacket:
-    camera_aim_assist_actor_priority_list: list[CameraAimAssistActorPriority.PriorityData]
+    priorities: list[PriorityData]
 
 
 @type(since=776)
@@ -208,112 +207,117 @@ class SplineType(IntEnum, uint8):
     LINEAR = 1
 
 
-class CameraInstructionOptions:
-    class SetInstruction:
-        class EaseOption:
-            easing_type: EasingType = field(type=uint8)
-            easing_time: float
+class SetInstruction:
+    class EaseOption:
+        easing_type: EasingType = field(type=uint8)
+        easing_time: float
 
-        class PosOption:
-            pos: Vec3
+    class PosOption:
+        pos: Vec3
 
-        class RotOption:
-            rot_x: float
-            rot_y: float
+    class RotOption:
+        rot_x: float
+        rot_y: float
 
-        class FacingOption:
-            facing_pos: Vec3
+    class FacingOption:
+        facing_pos: Vec3
 
-        class ViewOffsetOption:
-            view_offset_x: float
-            view_offset_y: float
+    class ViewOffsetOption:
+        view_offset_x: float
+        view_offset_y: float
 
-        class EntityOffsetOption:
-            entity_offset_x: float
-            entity_offset_y: float
-            entity_offset_z: float
+    class EntityOffsetOption:
+        entity_offset_x: float
+        entity_offset_y: float
+        entity_offset_z: float
 
-        preset_index: uint32
-        ease: EaseOption | None
-        pos: PosOption | None
-        rot: RotOption | None
-        facing: FacingOption | None
-        view_offset: ViewOffsetOption | None
-        entity_offset: EntityOffsetOption | None = field(since=748)
-        default_: bool | None
-        remove_ignore_starting_values_component: bool = field(since=818)
+    preset_index: uint32
+    ease: EaseOption | None
+    pos: PosOption | None
+    rot: RotOption | None
+    facing: FacingOption | None
+    view_offset: ViewOffsetOption | None
+    entity_offset: EntityOffsetOption | None = field(since=748)
+    default_: bool | None
+    remove_ignore_starting_values_component: bool = field(since=818)
 
-    class FadeInstruction:
-        class TimeOption:
-            fade_in_time: float
-            hold_time: float
-            fade_out_time: float
 
-        class ColorOption:
-            red: float
-            green: float
-            blue: float
+class FadeInstruction:
+    class TimeOption:
+        fade_in_time: float
+        hold_time: float
+        fade_out_time: float
 
-        time: TimeOption | None
-        color: ColorOption | None
+    class ColorOption:
+        red: float
+        green: float
+        blue: float
 
-    class TargetInstruction:
-        target_center_offset: Vec3 | None
-        target_actor_id: ActorUniqueID = field(type=int64)
+    time: TimeOption | None
+    color: ColorOption | None
 
-    class FovInstruction:
-        fov: float
-        fov_ease_time: float
-        fov_ease_type: EasingType = field(type=str)
-        fov_clear: bool
 
-    class AttachToEntityInstruction:
-        attach_to_entity_id: ActorUniqueID = field(type=int64)
+class TargetInstruction:
+    target_center_offset: Vec3 | None
+    target_actor_id: ActorUniqueID = field(type=int64)
 
-    @type(until=924)
-    class SplineInstruction:
-        class SplineRotationOption:
-            rotation_key_frame_value: Vec3
-            rotation_key_frame_time: float
 
-        total_time: float
-        curve_type: SplineType
-        curve: list[Vec3]
-        progress_key_frames: list[Vec2]
-        spline_rotation_option: list[SplineRotationOption]
+class FovInstruction:
+    fov: float
+    fov_ease_time: float
+    fov_ease_type: EasingType = field(type=str)
+    fov_clear: bool
 
-    @type(since=924)
-    class SplineInstruction:
-        class SplineProgressOption:
-            progress_key_frame_value: float
-            progress_key_frame_time: float
-            progress_key_frames_easing_func: EasingType = field(type=str)
 
-        class SplineRotationOption:
-            rotation_key_frame_value: Vec3
-            rotation_key_frame_time: float
-            rotation_key_frames_easing_func: EasingType = field(type=str)
+class AttachToEntityInstruction:
+    attach_to_entity_id: ActorUniqueID = field(type=int64)
 
-        total_time: float
-        curve_type: SplineType
-        curve: list[Vec3]
-        progress_key_frames: list[SplineProgressOption]
-        spline_rotation_option: list[SplineRotationOption]
-        with field(since=944):
-            spline_identifier: str
-            load_from_json: bool
+
+@type(until=924)
+class SplineInstruction:
+    class SplineRotationOption:
+        rotation_key_frame_value: Vec3
+        rotation_key_frame_time: float
+
+    total_time: float
+    curve_type: SplineType
+    curve: list[Vec3]
+    progress_key_frames: list[Vec2]
+    spline_rotation_option: list[SplineRotationOption]
+
+
+@type(since=924)
+class SplineInstruction:
+    class SplineProgressOption:
+        progress_key_frame_value: float
+        progress_key_frame_time: float
+        progress_key_frames_easing_func: EasingType = field(type=str)
+
+    class SplineRotationOption:
+        rotation_key_frame_value: Vec3
+        rotation_key_frame_time: float
+        rotation_key_frames_easing_func: EasingType = field(type=str)
+
+    total_time: float
+    curve_type: SplineType
+    curve: list[Vec3]
+    progress_key_frames: list[SplineProgressOption]
+    spline_rotation_option: list[SplineRotationOption]
+    with field(since=944):
+        spline_identifier: str
+        load_from_json: bool
 
 
 class CameraInstruction:
-    set: CameraInstructionOptions.SetInstruction | None
+    set: SetInstruction | None
     clear: bool | None
-    fade: CameraInstructionOptions.FadeInstruction | None
-    target: CameraInstructionOptions.TargetInstruction | None
+    fade: FadeInstruction | None
+    target: TargetInstruction | None
     remove_target: bool | None
-    field_of_view: CameraInstructionOptions.FovInstruction | None = field(since=827)
+    field_of_view: FovInstruction | None = field(since=827)
     with field(since=859):
-        spline: CameraInstructionOptions.SplineInstruction | None
-        attach_to_entity: CameraInstructionOptions.AttachToEntityInstruction | None
+        spline: SplineInstruction | None
+        attach_to_entity: AttachToEntityInstruction | None
         detach_from_entity: bool | None
 
 
