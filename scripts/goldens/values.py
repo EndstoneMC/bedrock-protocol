@@ -112,6 +112,7 @@ FIXED: dict[str, Json] = {
     "SerializableCells.z_size": 3,
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
+    "NetworkStackLatencyPacket.create_time": 0,
 }
 
 

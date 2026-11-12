@@ -50,8 +50,12 @@ def test_a_bool_does_not_match_a_number(bds):
     assert gap(bds, {"Flag": 1}, {"flag": True}) == ("flag", True)
 
 
-def test_a_whole_number_matches_the_float_bds_shows(bds):
-    assert gap(bds, {"Value": 2.0}, {"value": 2}) is None
+def test_a_whole_number_does_not_match_the_float_bds_shows(bds):
+    assert gap(bds, {"Value": 2.0}, {"value": 2}) == ("value", 2)
+
+
+def test_a_float_matches_the_same_float_bds_shows(bds):
+    assert gap(bds, {"Value": 2.0}, {"value": 2.0}) is None
 
 
 def test_a_null_in_the_case_needs_nothing_from_bds(bds):
@@ -189,6 +193,7 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("Color255RGBA", "a", 128),
         ("SerializableCells", "storage", [1, 2, 3, 4, 5, 6]),
         ("EffectDuration", "value", 600),
+        ("NetworkStackLatencyPacket", "create_time", 0),
     ],
     ids=[
         "content-identity",
@@ -205,6 +210,7 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         "color-alpha",
         "cell-storage",
         "effect-duration",
+        "latency-create-time",
     ],
 )
 def test_a_leaf_bds_normalises_is_generated_as_a_value_bds_keeps(values, schema, name, field, kept):
