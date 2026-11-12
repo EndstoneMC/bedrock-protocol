@@ -27,7 +27,10 @@ START_TIMEOUT = 600
 STOP_TIMEOUT = 60
 HEX_BLOB = re.compile(r"(?:[0-9a-f]{2})+")
 UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
-SCALAR = re.compile(r'"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false')
+TOKEN = re.compile(
+    r'(?P<separator>[:,]?)(?:(?P<close>[}\]])|(?P<open>[{\[])|(?P<scalar>"(?:[^"\\]|\\.)*"'
+    r"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null))"
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +96,40 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
     if isinstance(value, list):
         return [leaf for index, item in enumerate(value) for leaf in leaves(item, f"{path}[{index}]")]
     return [] if value is None else [(path, value)]
+
+
+def tokens(text: str) -> list[tuple[Json, bool]]:
+    """Split BDS's JSON text, valid or not, into its scalars in order, each marked when a string stands for a name."""
+    found: list[tuple[Json, bool]] = []
+    brackets = ["["]
+    counts = [0]
+    position = 0
+    while position < len(text):
+        match = TOKEN.match(text, position)
+        if match is None:
+            raise ValueError(f"BDS's JSON: no token at {text[position : position + 20]!r}")
+        position = match.end()
+        separator, close, opened, scalar = match.group("separator", "close", "open", "scalar")
+        if close:
+            if separator or len(brackets) == 1 or {"{": "}", "[": "]"}[brackets[-1]] != close:
+                raise ValueError(f"BDS's JSON: {close!r} closes nothing at {match.start()}")
+            brackets.pop()
+            counts.pop()
+            continue
+        wanted = "" if counts[-1] == 0 else ":" if brackets[-1] == "{" and counts[-1] % 2 else ","
+        if separator != wanted:
+            raise ValueError(f"BDS's JSON: {separator!r} where rapidjson writes {wanted!r} at {match.start()}")
+        named = brackets[-1] == "{" and counts[-1] % 2 == 0
+        counts[-1] += 1
+        if opened:
+            brackets.append(opened)
+            counts.append(0)
+        else:
+            item = json.loads(scalar)
+            found.append((item, named and isinstance(item, str)))
+    if len(brackets) != 1:
+        raise ValueError("BDS's JSON: an object or array is left open")
+    return found
 
 
 def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
@@ -378,16 +415,6 @@ def main() -> None:
                         report["other_writer_bytes"] = server.string(buffer).hex()
 
                     written = bytes.fromhex(report["bytes"])
-                    shown = None
-                    if report["bds_json"] is not None:
-                        shown = [scalar for _, scalar in leaves(report["bds_json"])]
-                    elif shown_text:
-                        shown = [json.loads(scalar) for scalar in SCALAR.findall(shown_text)]
-                    gap = (
-                        None
-                        if shown is None
-                        else missing(shown, leaves(case["value"]), case.get("enums"), case.get("printed"))
-                    )
                     if offset != len(seed):
                         report["difference"] = f"read: BDS stops at byte {offset} of {len(seed)}"
                     elif written != seed:
@@ -397,7 +424,14 @@ def main() -> None:
                         report["difference"] = (
                             f"bytes: BDS writes {written.hex()}, first unlike the seed at byte {first}"
                         )
-                    elif gap is not None:
+                    elif (
+                        gap := missing(
+                            [scalar for scalar, named in tokens(shown_text) if not named],
+                            leaves(case["value"]),
+                            case.get("enums"),
+                            case.get("printed"),
+                        )
+                    ) is not None:
                         report["difference"] = f"json: {gap[0]} is {gap[1]!r} in the case and not in BDS's JSON"
                     else:
                         report["difference"] = None

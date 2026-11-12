@@ -1,5 +1,4 @@
 import importlib.util
-import json
 from pathlib import Path
 
 import pytest
@@ -67,8 +66,36 @@ def test_a_null_in_the_case_needs_nothing_from_bds(bds):
 
 
 def scanned(bds, text, value):
-    shown = [json.loads(scalar) for scalar in bds.SCALAR.findall(text)]
-    return bds.missing(shown, bds.leaves(value))
+    return bds.missing([scalar for scalar, named in bds.tokens(text) if not named], bds.leaves(value))
+
+
+def test_text_that_is_not_json_splits_by_the_separators_rapidjson_alternates(bds):
+    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,0}'
+    assert bds.tokens(text) == [
+        ("Data", True),
+        (10, False),
+        ("", True),
+        (1, False),
+        ("b", True),
+        ("data", True),
+        (7, False),
+        (7, False),
+        ("bytes", False),
+        (3, False),
+        (1, False),
+        (254, False),
+        (3, False),
+        (0, False),
+    ]
+
+
+def test_a_separator_rapidjson_does_not_write_there_is_refused(bds):
+    with pytest.raises(ValueError, match="where rapidjson writes"):
+        bds.tokens('{"a",1}')
+
+
+def test_a_string_in_a_names_place_does_not_match_a_value(bds):
+    assert scanned(bds, '{"s1":1}', {"name": "s1", "count": 1}) == ("name", "s1")
 
 
 def test_scalars_scanned_from_text_that_is_not_json_hold_the_values(bds):
