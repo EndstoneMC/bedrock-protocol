@@ -1,33 +1,70 @@
-# bedrock-protocol
+<div align="center">
 
-Typed packet codecs for Minecraft Bedrock, generated from one version-aware
-Python schema. Use the C++ library for native applications, the Python runtime
-for the same packets in Python, or `bpc` to compile schemas.
+<h3>bedrock-protocol</h3>
+
+<p>
+  <b>The Minecraft: Bedrock Edition network protocol as one schema</b><br>
+  Typed packet libraries for C++ and Python, one per protocol version
+</p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+</div>
+
+## Languages
+
+Every language exposes the same packets, types and enums, and encodes the same bytes.
+
+| Language | Get it |
+| --- | --- |
+| [Python](#python) | Build the wheel from a checkout. It is not on PyPI. |
+| [C++](#c) | Download a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). |
 
 ## Python
 
-`bedrock-protocol` is the runtime: the schema's packets, types and enums, bound from
-the generated C++, so Python encodes exactly the bytes the C++ codecs do. A bare name
-is the latest protocol and `v<N>` pins one, as in C++. `bedrock-protocol-compiler`
-is `bpc`, the compiler.
+You need Python 3.12 or newer, CMake and a C++23 compiler:
+
+```shell
+git clone https://github.com/EndstoneMC/bedrock-protocol
+uv pip install ./bedrock-protocol
+```
+
+`v<N>` is the module for protocol `N`. A bare name is the latest protocol.
 
 ```python
-import bedrock_protocol as bp
 from bedrock_protocol import v2193
 
 packet = v2193.TextPacket(body=v2193.TextPacket.MessageOnly(type=v2193.TextPacketType.CHAT, message="hello"))
 header, back = v2193.decode_packet(v2193.encode_packet(packet))
 assert back == packet and header.packet_id == v2193.TextPacket.ID
-assert bp.TextPacket is getattr(bp, f"v{bp.VERSIONS[-1]}").TextPacket
 ```
+
+`VERSIONS` lists the protocol numbers. `PACKETS` maps packet ids to packet classes, in the package and in each `v<N>`.
 
 ## C++
 
-Choose a protocol explicitly with the generated selector aliases. A type without
-a version suffix names the latest shape; fields unavailable in the selected era
-are absent from that type.
+Each release carries one package per toolchain. The names end in the platform and standard library the archive was
+built with:
+
+| Asset | Contents |
+| --- | --- |
+| `bedrock-protocol-X.Y.Z-linux-x86_64-gcc13.zip` | Linux, GCC 13, libstdc++ |
+| `bedrock-protocol-X.Y.Z-linux-x86_64-clang18-libcxx.zip` | Linux, Clang 18, libc++ |
+| `bedrock-protocol-X.Y.Z-windows-x86_64-msvc2022.zip` | Windows, MSVC 2022 |
+| `bedrock-protocol-X.Y.Z-src.zip` | Sources, for `add_subdirectory` |
+
+Unpack a package and point `CMAKE_PREFIX_PATH` at the folder:
+
+```cmake
+find_package(bedrock-protocol CONFIG REQUIRED)
+target_link_libraries(my_target PRIVATE bedrock::protocol)
+```
+
+With the source package, replace `find_package` with `add_subdirectory(bedrock-protocol-X.Y.Z-src)`. Neither needs
+Python. The library needs C++23.
+
+`SubChunkRequestPacket_<975>` is the packet at protocol 975. `SubChunkRequestPacket` is the latest.
 
 ```cpp
 #include <bedrock/protocol.hpp>
@@ -38,7 +75,6 @@ using Packet = bp::SubChunkRequestPacket_<975>;
 Packet packet;
 packet.dimension_type = bp::DimensionType{0};
 packet.center_pos = {.x = 1, .y = 2, .z = 3};
-packet.sub_chunk_pos_offsets.push_back({.x = -1, .y = 0, .z = 1});
 
 std::string bytes;
 bp::BinaryWriter writer{bytes};
@@ -48,29 +84,9 @@ bp::BinaryReader reader{bytes};
 std::expected<Packet, bp::DecodeError> decoded = bp::decode<Packet>(reader);
 ```
 
-Link the library as a subproject:
-
-```cmake
-add_subdirectory(bedrock-protocol)
-target_link_libraries(my_target PRIVATE bedrock::protocol)
-```
-
-Or consume an installed package:
-
-```cmake
-find_package(bedrock-protocol CONFIG REQUIRED)
-target_link_libraries(my_target PRIVATE bedrock::protocol)
-```
-
-The umbrella header includes every generated family. Include an individual header
-such as `<bedrock/protocol/inventory.h>` when only that family is needed.
+`<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/inventory.h>` and its siblings include one family.
 
 ## Supported protocols
-
-Both runtimes cover the active packet shapes and their dependent types in these
-schema versions. Retired packets and declaration gaps remain absent in the
-corresponding version. Python exposes the bound list as `VERSIONS` and each
-version's packets as `PACKETS`.
 
 | Protocol | Minecraft Bedrock |
 | --- | --- |
@@ -94,52 +110,16 @@ version's packets as `PACKETS`.
 | 2193 | 1.26.50.5 |
 | 2225 | 1.26.60.30 |
 
-## Reflection
+## Building from Source
 
-Generated enums, structs and packets carry compile-time metadata from the same
-schema as their codecs:
-
-```cpp
-static_assert(bp::enum_name(bp::BossBarColor::Red) == "red");
-static_assert(bp::enum_cast<bp::BossBarColor>("RED") == bp::BossBarColor::Red);
-static_assert(std::is_same_v<bp::packet_of_t<975, 175>, Packet>);
-static_assert(!bp::has_packet_v<2193, 353>);
-static_assert(bp::field_name<1, Packet>() == "center_pos");
-```
-
-Use `for_each_named_field` to visit members with their static types, and
-`field_get<field_index<T>("name")>` to access a member by compile-time name.
-`Reflected<T>` is safe to test for types outside the generated schema. Enum
-metadata preserves declaration order and the wire names of name-coded fields.
-
-## Building
-
-Requires CMake and a C++23 compiler. Building a checkout also requires Python 3.12,
-which runs the compiler. Pregenerated C++
-source releases and installed C++ packages need no Python.
+You need CMake, Ninja, Python 3.12 and a C++23 compiler.
 
 ```shell
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
+cmake --install build --prefix stage
 ```
-
-Code generation runs at configure time. `BEDROCK_PROTOCOL_INSTALL` defaults
-to on for a top-level build and off for a subproject.
-
-Install the C++ headers, library and CMake package with `cmake --install build`.
-Set `CMAKE_INSTALL_PREFIX` at configuration time to choose the destination.
-
-## Contributing
-
-Schemas live in `protocol/`; the compiler and its backends live in
-`compiler/src/bedrock_protocol_compiler/`. Hand-written C++ runtime headers are under
-`include/bedrock/protocol/`. Keep schema changes version-aware and retain older
-shapes when the wire format changes.
-
-Wire definitions draw on [protocol-docs](https://github.com/EndstoneMC/protocol-docs),
-BDS type information and [gophertunnel](https://github.com/Sandertv/gophertunnel)
-golden bytes. See `.claude/rules/protocol/` for schema conventions and source attribution.
 
 ## License
 
-[MIT](LICENSE).
+MIT, see [LICENSE](LICENSE).
