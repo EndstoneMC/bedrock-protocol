@@ -1,0 +1,13 @@
+[
+ {
+  "id": "v0",
+  "writer": "manual",
+  "value": {
+   "input_lock_component_data": 331
+  },
+  "bytes": "cb02",
+  "bds_json": {
+   "Input Lock ComponentData": 331
+  }
+ }
+]
