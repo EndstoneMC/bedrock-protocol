@@ -22,7 +22,7 @@ template <typename T>
 void bind_value_tag(nb::module_ &m, const char *name)
 {
     using V = typename T::value_type;
-    nb::class_<T>(m, name)
+    nb::class_<T>(m, name, nb::is_final())
         .def(nb::init<V>(), nb::arg("value") = V{})
         .def_prop_ro("value", [](const T &self) { return self.value(); })
         .def(nb::self == nb::self)
@@ -35,7 +35,7 @@ template <typename T>
 void bind_array_tag(nb::module_ &m, const char *name)
 {
     using V = typename T::value_type;
-    nb::class_<T>(m, name)
+    nb::class_<T>(m, name, nb::is_final())
         .def(
             "__init__", [](T *self, const std::vector<V> &values) { new (self) T(values); },
             nb::arg("value") = std::vector<V>{})
@@ -63,7 +63,7 @@ void init_nbt(nb::module_ &parent)
     bind_array_tag<ByteArrayTag>(m, "ByteArrayTag");
     bind_array_tag<IntArrayTag>(m, "IntArrayTag");
 
-    nb::class_<ListTag>(m, "ListTag")
+    nb::class_<ListTag>(m, "ListTag", nb::is_final())
         .def(
             "__init__",
             [](ListTag *self, const std::vector<Tag> &tags, int type) {
@@ -100,7 +100,7 @@ void init_nbt(nb::module_ &parent)
             return std::format("ListTag([{}])", tags);
         });
 
-    nb::bind_map<CompoundTag>(m, "CompoundTag").attr("__hash__") = nb::none();
+    nb::bind_map<CompoundTag>(m, "CompoundTag", nb::is_final()).attr("__hash__") = nb::none();
 
     m.attr("Tag") = m.attr("ByteTag") | m.attr("ShortTag") | m.attr("IntTag") | m.attr("Int64Tag") |
                     m.attr("FloatTag") | m.attr("DoubleTag") | m.attr("StringTag") | m.attr("ByteArrayTag") |

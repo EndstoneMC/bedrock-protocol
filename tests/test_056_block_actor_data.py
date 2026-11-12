@@ -148,3 +148,9 @@ def test_a_typed_empty_list_differs_from_an_untyped_one():
 def test_a_list_rejects_a_type_that_is_not_a_tag_type():
     with pytest.raises(ValueError, match=r"^type: 12 is not a tag type$"):
         nbt.ListTag(type=12)
+
+
+@pytest.mark.parametrize("cls", [nbt.IntTag, nbt.StringTag, nbt.IntArrayTag, nbt.ListTag, nbt.CompoundTag])
+def test_a_tag_class_cannot_be_subclassed(cls):
+    with pytest.raises(TypeError, match="prohibits subclassing"):
+        type("Sub", (cls,), {})
