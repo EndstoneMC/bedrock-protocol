@@ -37,6 +37,10 @@ def test_a_string_that_is_no_enum_name_does_not_match_a_number(bds):
     assert gap(bds, {"Type": 4}, {"value": "s35"}) == ("value", "s35")
 
 
+def test_an_upper_case_string_that_is_no_enum_does_not_match_its_lower_case(bds):
+    assert gap(bds, {"Name": "abc"}, {"name": "ABC"}) == ("name", "ABC")
+
+
 def test_a_leaf_bds_adds_is_skipped(bds):
     shown = {"Response": {"Response Type": "downloading", "Downloading Packs": ["s1"]}}
     assert gap(bds, shown, {"response": {"Downloading": {"downloading_packs": ["s1"]}}}) is None
@@ -86,9 +90,21 @@ def test_scanned_text_holds_a_repeated_value_once_per_appearance(bds):
     assert scanned(bds, '{"a":7}', {"x": 7, "y": 7}) == ("y", 7)
 
 
-@pytest.mark.parametrize("name", ["clientcanceled", "client_canceled"])
-def test_an_enum_matches_the_lower_case_name_bds_shows(bds, name):
-    assert gap(bds, {"Reason": name}, {"reason": "CLIENT_CANCELED"}) is None
+def test_a_name_coded_enum_matches_the_wire_name_bds_shows(bds):
+    shown = {"Reason": "clientcanceled"}
+    assert gap(bds, shown, {"reason": "CLIENT_CANCELED"}, {"reason": 2}, {"reason": "clientcanceled"}) is None
+
+
+def test_a_name_coded_enum_does_not_match_another_spelling_of_its_name(bds):
+    shown = {"Reason": "client_canceled"}
+    value = {"reason": "CLIENT_CANCELED"}
+    assert gap(bds, shown, value, {"reason": 2}, {"reason": "clientcanceled"}) == ("reason", "clientcanceled")
+
+
+def test_a_name_coded_enum_does_not_match_its_number(bds):
+    shown = {"Reason": 2}
+    value = {"reason": "CLIENT_CANCELED"}
+    assert gap(bds, shown, value, {"reason": 2}, {"reason": "clientcanceled"}) == ("reason", "clientcanceled")
 
 
 def test_an_integer_matches_the_number_its_wire_type_prints(bds):
@@ -292,3 +308,20 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
     version = max(each for each in schema.versions if each < 2168)
     chosen = values.values_of(schema, version, family)[0]
     assert {(each["id"] != 0, each["stack_size"]) for each in chosen} == {(True, 4), (False, 0)}
+
+
+@pytest.mark.parametrize(
+    ("name", "value", "printed"),
+    [
+        (
+            "ServerboundDataDrivenScreenClosedPacket",
+            {"close_reason": "CLIENT_CANCELED"},
+            {"close_reason": "clientcanceled"},
+        ),
+        ("AnimatePacket", {"swing_source": "ATTACK"}, {"swing_source": "attack"}),
+    ],
+    ids=["dropped-separator", "optional"],
+)
+def test_a_name_coded_enum_leaf_is_printed_by_its_wire_name(values, schema, name, value, printed):
+    family = next(each for each in schema.order if each.name == name)
+    assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed

@@ -647,6 +647,11 @@ class Generator:
                     if signed and number >> (bits - 1):
                         number -= 1 << bits
                     return {} if number == value else {path: number}
+            case EnumName(enum=enum) if isinstance(value, str):
+                shape = self.schema.shape_at(enum, self.version)
+                if not isinstance(shape, EnumShape):
+                    raise TypeError(f"{enum.name}: not an enum shape")
+                return {path: next(member.wire_name for member in shape.members if member.name == value)}
         return {key: shown for each in inner for key, shown in self.printed(*each).items()}
 
 

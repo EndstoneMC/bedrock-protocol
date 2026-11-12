@@ -25,7 +25,6 @@ FIRST_PORT = 40000
 STARTED = "Server started."
 START_TIMEOUT = 600
 STOP_TIMEOUT = 60
-ENUM_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
 HEX_BLOB = re.compile(r"(?:[0-9a-f]{2})+")
 UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 SCALAR = re.compile(r'"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false')
@@ -95,13 +94,9 @@ def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
 
 
 def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
-    """Compare two scalars: an enum by number or lower-case name, a blob's hex by its bytes, the rest exactly."""
-    if isinstance(shown, bool) or isinstance(wanted, bool):
-        return type(shown) is type(wanted) and bool(shown == wanted)
-    if isinstance(wanted, str) and ENUM_NAME.fullmatch(wanted):
-        if type(shown) is int:
-            return shown == number
-        return shown in (wanted.lower(), wanted.replace("_", "").lower())
+    """Compare two scalars: an enum leaf by its number, a blob's hex by its bytes, the rest exactly."""
+    if number is not None:
+        return type(shown) is int and shown == number
     if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
         return isinstance(shown, str) and shown.encode(errors="surrogateescape") == bytes.fromhex(wanted)
     return type(shown) is type(wanted) and bool(shown == wanted)
@@ -117,8 +112,8 @@ def missing(
 
     `enums` maps each enum leaf's key path to its number, `printed` each leaf BDS prints otherwise to what it prints.
     """
-    enums = enums or {}
     printed = printed or {}
+    enums = {path: number for path, number in (enums or {}).items() if path not in printed}
     expected = [(path, printed.get(path, wanted)) for path, wanted in expected]
     position = 0
     halves = [
