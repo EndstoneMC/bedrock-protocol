@@ -143,6 +143,11 @@ LEVEL_GAME_RULES = (
     ("tntExplosionDropDecay", {"bool": False}),
 )
 CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x00\x00\x00'.hex()
+ITEM_STACKS = ("SerializedNetworkItemStackDescriptor", "SerializedNetworkItemInstanceDescriptor")
+ITEMS: dict[int, dict[int, int | None]] = {2168: {462: None, 855: None, -593: 0}}
+FIXED_AT: dict[int, dict[str, Json]] = {
+    2168: {"SerializedRecipeIngredient.descriptor": {"name": "minecraft:apple"}},
+}
 FIXED: dict[str, Json] = {
     "SerializedNetworkItemStackDescriptor.stack_size": 3,
     "SerializedNetworkItemInstanceDescriptor.stack_size": 4,
@@ -240,6 +245,7 @@ class Generator:
     def __init__(self, schema: Schema, version: int) -> None:
         self.schema = schema
         self.version = version
+        self.fixed = FIXED | FIXED_AT.get(version, {})
         self.cursors: dict[str, int] = {}
         self.hits: set[Point] = set()
         self.counter = 0
@@ -299,7 +305,7 @@ class Generator:
             yield (f"{label} when#{index}", "true")
             yield (f"{label} when#{index}", "false")
         for each in self.fields(shape):
-            if f"{label}.{each.name}" not in SAME_MEMBER and f"{label}.{each.name}" not in FIXED:
+            if f"{label}.{each.name}" not in SAME_MEMBER and f"{label}.{each.name}" not in self.fixed:
                 yield from self.type_points(each.type, f"{label}.{each.name}", seen)
 
     def type_points(self, node: Type, key: str, seen: set[int]) -> Iterator[Point]:
@@ -407,8 +413,8 @@ class Generator:
         raise TypeError(f"{node!r}: no variant tag")
 
     def generate(self, node: Type, key: str, depth: int, length: int | None = None) -> Json:
-        if key in FIXED:
-            return FIXED[key]
+        if key in self.fixed:
+            return self.fixed[key]
         match node:
             case Primitive():
                 return self.leaf(node)
@@ -617,7 +623,11 @@ class Generator:
         for each in fields:
             plain = each.when is None and not isinstance(each.type, Literal | List)
             counts = isinstance(each.type, List) and each.when is None and not isinstance(each.type.count, Len)
-            if (plain or counts) and f"{label}.{each.name}" not in SAME_MEMBER and f"{label}.{each.name}" not in FIXED:
+            if (
+                (plain or counts)
+                and f"{label}.{each.name}" not in SAME_MEMBER
+                and f"{label}.{each.name}" not in self.fixed
+            ):
                 values[each.name] = self.generate(
                     each.type, f"{label}.{each.name}", depth, self.length(each, values, counted)
                 )
@@ -660,10 +670,15 @@ class Generator:
             else:
                 values[each.name] = None if f"{label}.{each.name}" in PRESENT_WHEN else self.default(each.type)
         for each in fields:
-            if f"{label}.{each.name}" in FIXED and each.when is None and each.name not in env:
-                values[each.name] = FIXED[f"{label}.{each.name}"]
+            if f"{label}.{each.name}" in self.fixed and each.when is None and each.name not in env:
+                values[each.name] = self.fixed[f"{label}.{each.name}"]
             if f"{label}.{each.name}" in SAME_MEMBER:
                 values[each.name] = values[SAME_MEMBER[f"{label}.{each.name}"]]
+        if label in ITEM_STACKS and self.version in ITEMS:
+            ids = list(ITEMS[self.version])
+            values["id"] = ids[self.pick("item", list(map(str, ids)), False)]
+            aux = ITEMS[self.version][values["id"]]
+            values["aux_value"] = values["aux_value"] if aux is None else aux
         return {each.name: values[each.name] for each in fields if each.name in values}
 
     def environment(self, shape: StructShape, values: dict[str, Json]) -> tuple[dict[str, int], set[tuple[str, str]]]:
