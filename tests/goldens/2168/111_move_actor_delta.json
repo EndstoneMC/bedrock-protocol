@@ -1,0 +1,70 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "move_data": {
+    "runtime_id": 331,
+    "new_position_x": 1.25,
+    "new_position_y": 1.75,
+    "new_position_z": 2.25,
+    "rot_x": 36,
+    "rot_y": -43,
+    "rot_y_head": 50,
+    "is_on_ground": true,
+    "force_move": false,
+    "force_move_local_entity": true,
+    "force_completion": false
+   }
+  },
+  "bytes": "cb02010000a03f010000e03f0100001040012401d5013201000100",
+  "bds_json": {
+   "Move Data": {
+    "Actor Runtime ID": {
+     "Actor Runtime ID": 331
+    },
+    "New Position X": 1.25,
+    "New Position Y": 1.75,
+    "New Position Z": 2.25,
+    "Rotation X": 36,
+    "Rotation Y": -43,
+    "Rotation Y Head": 50,
+    "Is On Ground": true,
+    "Force Move": false,
+    "Force Move Local Entity": true,
+    "Force Completion": false
+   }
+  }
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "move_data": {
+    "runtime_id": 1772,
+    "new_position_x": null,
+    "new_position_y": null,
+    "new_position_z": null,
+    "rot_x": null,
+    "rot_y": null,
+    "rot_y_head": null,
+    "is_on_ground": false,
+    "force_move": true,
+    "force_move_local_entity": false,
+    "force_completion": true
+   }
+  },
+  "bytes": "ec0d00000000000000010001",
+  "bds_json": {
+   "Move Data": {
+    "Actor Runtime ID": {
+     "Actor Runtime ID": 1772
+    },
+    "Is On Ground": false,
+    "Force Move": true,
+    "Force Move Local Entity": false,
+    "Force Completion": true
+   }
+  }
+ }
+]
