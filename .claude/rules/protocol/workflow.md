@@ -29,10 +29,11 @@ paths:
 - Never re-derive a whole pre-cereal body from Sandertv/gophertunnel; its Marshal history says only what differed at the time.
 - First ask whether a back-port is only a gate edit.
 - Never re-baseline, and never fold a drive-by correction into a version bump; land it separately.
-- A packet is dirty when a member, a member's type or any type in its nesting changed, never because its branch is new; list the dirty packets between two protocol-docs branches before modelling with `uv run --no-project scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`.
+- A packet is dirty when a member, a member's type or any type in its nesting changed, never because a protocol-docs branch is new; before modelling, list the dirty packets between two branches with `uv run --no-project scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`.
 
 ## Forward
 
+- When a version's bedrock-headers land after its DSL was written, study the version against them and fix the DSL.
 - Take a new version's wire from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.
 - Take the four categories from two fetched `origin/` protocol-docs branches: `git diff --name-status -M origin/<old> origin/<new>`, then `git diff -U1 -M origin/<old> origin/<new>`.
 - Compare two-dot, because the branches share no merge base; always pass `-M`, or a rename reads as a delete plus an add.
@@ -49,7 +50,7 @@ paths:
 
 ## Cerealisation
 
-- A cerealisation is the highest-risk change: one changelog line can reorder fields, retype counts and reshape nested types.
+- In a cerealisation, check every field's order, every count's type and every nested type's shape.
 - Below 2168 a packet file new between branches is a cerealisation candidate (`sources.md`); from 2168, where BDS writes a packet by hand, check its hand-written writer against the dump in the binary (`wire.md`).
 - Confirm a candidate against Mojang/bedrock-protocol-docs' `legacy_changelogs/` and the era's gophertunnel Marshal; a new dump file can also mean the dumper's coverage grew.
 - Never use size to prove or disprove a reorder; a cerealisation can leave the size unchanged.
