@@ -7,6 +7,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - The schema in `protocol/` is the product, written for a human to read. The compiler bends to the DSL, never the DSL to the compiler, and a DSL change must make the schema read better.
 - Keep the schema and hand-written code DRY, and take protobuf as the design reference; generated code may repeat itself.
 - Fix a defect's cause, never work around it. Build nothing ahead of need: no speculative option, layer or file.
+- A failing check has found a defect: fix what it found, never loosen the check (ignore order, widen a match, drop a case) until it passes.
 - Write no explanatory comment: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`) or a golden's provenance.
 - A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale or a walkthrough.
 - Write no one-use helper function or lambda: inline the expression or bind a named local. A lambda passed as an argument, or invoked in place to expand a parameter pack, is fine.

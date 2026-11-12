@@ -11,7 +11,7 @@ paths:
 - Keep goldens in `tests/goldens/<protocol>/<id:03>_<snake_name>.json` (`<snake_name>` is the class name without its trailing `Packet`, in snake case, keeping any Clientbound or Serverbound prefix), one file per packet, a JSON array of cases `{"id", "writer", "value", "bytes"}` plus `bds_json` where the build prints one and `other_writer_bytes` where BDS's other writer differs; `tests/goldens/builds.json` names the BDS build that wrote each folder.
 - Hold every packet live at 2168, the base, in `tests/goldens/2168/`; a folder of another protocol holds a packet only when it is dirty against its neighbour toward 2168.
 - Cover every path of a packet in its file: each variant alternative, optional present and absent, each gated or `when=` branch.
-- Generate `value` from the schema with `scripts/goldens/values.py`, spelling a field by its schema name and an enum by the bound member's `.name`; never write one by hand.
+- Generate `value` from the schema with `scripts/goldens/values.py` exactly as `to_json` returns it, key order included (a field by its schema name, an enum by the bound member's `.name`, a `CompoundTag` sorted by key); never write one by hand.
 - Seed the bytes with the library at HEAD; BDS of that version reads them and writes its own bytes, and its JSON where the build prints one.
 - A difference in either, or a read BDS rejects, is a schema defect; fix the schema first.
 - Freeze a case once BDS's bytes and JSON agree with the library's; never regenerate it or change its `bytes` or `bds_json` (a rename rewrites only the names in its `value`), and never run BDS from a test.

@@ -354,24 +354,6 @@
          "b": {
           "ByteTag": 7
          },
-         "s": {
-          "ShortTag": 300
-         },
-         "i": {
-          "IntTag": 70000
-         },
-         "l": {
-          "Int64Tag": 5000000000
-         },
-         "f": {
-          "FloatTag": 1.5
-         },
-         "d": {
-          "DoubleTag": 2.5
-         },
-         "str": {
-          "StringTag": "text"
-         },
          "bytes": {
           "ByteArrayTag": [
            1,
@@ -379,12 +361,24 @@
            3
           ]
          },
+         "d": {
+          "DoubleTag": 2.5
+         },
+         "f": {
+          "FloatTag": 1.5
+         },
+         "i": {
+          "IntTag": 70000
+         },
          "ints": {
           "IntArrayTag": [
            4,
            -5,
            6
           ]
+         },
+         "l": {
+          "Int64Tag": 5000000000
          },
          "list": {
           "ListTag": {
@@ -405,6 +399,12 @@
             "StringTag": "v"
            }
           }
+         },
+         "s": {
+          "ShortTag": 300
+         },
+         "str": {
+          "StringTag": "text"
          }
         }
        }

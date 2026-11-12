@@ -60,16 +60,16 @@ INTEGER_BITS = {
 ALTERNATIVE_BY_PRIMITIVE = {"bool": "bool", "float": "float", "double": "float", "str": "str", "bytes": "bytes"}
 NBT_TAGS = {
     "b": {"ByteTag": 7},
-    "s": {"ShortTag": 300},
-    "i": {"IntTag": 70000},
-    "l": {"Int64Tag": 5000000000},
-    "f": {"FloatTag": 1.5},
-    "d": {"DoubleTag": 2.5},
-    "str": {"StringTag": "text"},
     "bytes": {"ByteArrayTag": [1, -2, 3]},
+    "d": {"DoubleTag": 2.5},
+    "f": {"FloatTag": 1.5},
+    "i": {"IntTag": 70000},
     "ints": {"IntArrayTag": [4, -5, 6]},
+    "l": {"Int64Tag": 5000000000},
     "list": {"ListTag": {"type": 3, "tags": [{"IntTag": 1}, {"IntTag": 2}]}},
     "nested": {"CompoundTag": {"k": {"StringTag": "v"}}},
+    "s": {"ShortTag": 300},
+    "str": {"StringTag": "text"},
 }
 
 
@@ -524,9 +524,9 @@ def values_of(schema: Schema, version: int, family: Any) -> tuple[list[Json], se
 
 def differs(expected: Json, actual: Json, path: str = "") -> str | None:
     if isinstance(expected, dict) and isinstance(actual, dict):
-        for key in expected.keys() | actual.keys():
-            if key not in expected or key not in actual:
-                return f"{path}.{key}".lstrip(".")
+        if list(expected) != list(actual):
+            return path.lstrip(".")
+        for key in expected:
             found = differs(expected[key], actual[key], f"{path}.{key}")
             if found is not None:
                 return found

@@ -86,12 +86,9 @@ BUILDS = {
 
 
 def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
-    """Flatten a JSON value to its key paths and scalars in order, sorting a compound's keys as BDS's std::map does."""
+    """Flatten a JSON value to its scalars in order, each with its key path, dropping nulls."""
     if isinstance(value, dict):
-        items = list(value.items())
-        if all(isinstance(item, dict) and len(item) == 1 and next(iter(item)).endswith("Tag") for _, item in items):
-            items.sort()
-        return [leaf for key, item in items for leaf in leaves(item, f"{path}.{key}" if path else key)]
+        return [leaf for key, item in value.items() for leaf in leaves(item, f"{path}.{key}" if path else key)]
     if isinstance(value, list):
         return [leaf for index, item in enumerate(value) for leaf in leaves(item, f"{path}[{index}]")]
     return [] if value is None else [(path, value)]
