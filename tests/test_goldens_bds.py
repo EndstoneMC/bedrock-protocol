@@ -333,10 +333,12 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
     [
         ("CameraSplineDefinition", "name", "test:spline"),
         ("CameraSplineDefinition", "spline_type", "linear"),
+        ("ServerToClientHandshakePacket", "token", "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln"),
     ],
     ids=[
         "spline-name",
         "spline-type",
+        "handshake-token",
     ],
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):

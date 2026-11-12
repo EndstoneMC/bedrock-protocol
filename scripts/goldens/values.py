@@ -162,6 +162,7 @@ FIXED: dict[str, Json] = {
     "CameraAimAssistPacket.view_angle": {"x": 45.5, "y": 30.25},
     "CameraSplineDefinition.name": "test:spline",
     "CameraSplineDefinition.spline_type": "linear",
+    "ServerToClientHandshakePacket.token": "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln",
     "ContentIdentity.identity": "11111111-2222-4333-8444-555555555555",
     "PackInstanceId.pack_id": "22222222-3333-4444-8555-666666666666",
     "AttributeModifier.id": "33333333-4444-4555-8666-777777777777",
