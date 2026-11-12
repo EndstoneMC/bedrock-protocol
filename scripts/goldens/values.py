@@ -2,7 +2,6 @@
 
 import argparse
 import dataclasses
-import enum
 import importlib
 import json
 import re
@@ -73,6 +72,19 @@ NBT_TAGS = {
     "nested": {"CompoundTag": {"k": {"StringTag": "v"}}},
     "s": {"ShortTag": 300},
     "str": {"StringTag": "text"},
+}
+NBT_TYPES = {
+    "ByteTag": 1,
+    "ShortTag": 2,
+    "IntTag": 3,
+    "Int64Tag": 4,
+    "FloatTag": 5,
+    "DoubleTag": 6,
+    "ByteArrayTag": 7,
+    "StringTag": 8,
+    "ListTag": 9,
+    "CompoundTag": 10,
+    "IntArrayTag": 11,
 }
 SAME_MEMBER = {
     "PlayerVideoCapturePacket.stop_video_capture": "start_video_capture",
@@ -203,6 +215,25 @@ def integer_range(name: str, wire: str | None) -> tuple[int, int]:
     narrower = wire if wire in INTEGER_BITS and INTEGER_BITS[wire][0] < INTEGER_BITS[name][0] else name
     bits, signed = INTEGER_BITS[narrower]
     return (-(1 << (bits - 1)), (1 << (bits - 1)) - 1) if signed else (0, (1 << bits) - 1)
+
+
+def tag_printed(tag: Json, path: str) -> list[list[Json]]:
+    """List the scalars BDS's JSON prints for an NBT tag's payload in order, each as [key path, scalar]."""
+    ((name, value),) = tag.items()
+    match name:
+        case "ByteArrayTag" | "IntArrayTag":
+            return [[path, len(value)], *([f"{path}[{index}]", each] for index, each in enumerate(value))]
+        case "ListTag":
+            tags = [item for index, each in enumerate(value["tags"]) for item in tag_printed(each, f"{path}[{index}]")]
+            return [[path, value["type"]], [path, len(value["tags"])], *tags]
+        case "CompoundTag":
+            found: list[list[Json]] = []
+            for key in sorted(value):
+                ((child, _),) = value[key].items()
+                found += [[f"{path}.{key}", NBT_TYPES[child]], [f"{path}.{key}", key]]
+                found += tag_printed(value[key], f"{path}.{key}")
+            return [*found, [path, 0]]
+    return [[path, value]]
 
 
 class Generator:
@@ -652,41 +683,88 @@ class Generator:
                 env[each.name] = int(value)
         return env, bits
 
-    def printed(self, node: Type, value: Json, path: str = "") -> dict[str, Json]:
-        """Map the key path of each leaf BDS's JSON prints otherwise than `value` spells it to what BDS prints."""
-        inner: list[tuple[Type, Json, str]] = []
+    def printed(self, node: Type, value: Json, path: str = "") -> list[list[Json]]:
+        """List the [key path, scalar] BDS's JSON prints for `value` in order, a third true where one value runs on."""
+        found: list[list[Json]] = []
         match node:
             case StructRef(struct=struct):
-                inner = [
-                    (each.type, value[each.name], f"{path}.{each.name}" if path else each.name)
-                    for each in self.shape(struct).fields
-                    if each.name in value
-                ]
-            case Optional(element=element) if value is not None:
-                inner = [(element, value, path)]
+                for each in self.shape(struct).fields:
+                    key = f"{path}.{each.name}" if path else each.name
+                    if not isinstance(each.type, Literal):
+                        found += self.printed(each.type, value[each.name], key)
+                    elif isinstance(each.type.value, MemberRef):
+                        found += self.printed(EnumRef(each.type.value.enum), each.type.value.name, key)
+                    elif not each.name.startswith("_true"):
+                        found.append([key, each.type.value])
+                return found
+            case Optional(element=element):
+                return [] if value is None else self.printed(element, value, path)
+            case List(element=Primitive(name="uint8")):
+                return [[path, bytes(value).decode(errors="surrogateescape")]]
             case List(element=element) | Array(element=element):
-                inner = [(element, item, f"{path}[{index}]") for index, item in enumerate(value)]
-            case Map(value=element):
-                inner = [(element, item, f"{path}.{key}" if path else key) for key, item in value.items()]
-            case Variant(cases=cases) if value is not None:
+                for index, each in enumerate(value):
+                    found += self.printed(element, each, f"{path}[{index}]")
+                return found
+            case Map(key=key, value=element):
+                primitive = key.alias.primitive if isinstance(key, AliasRef) else key
+                parse: Any = str
+                if isinstance(primitive, Primitive) and primitive.name in INTEGER_BITS:
+                    parse = int
+                elif isinstance(primitive, Primitive) and primitive.name in ("float", "double"):
+                    parse = float
+                for entry, each in value.items():
+                    inner = f"{path}.{entry}" if path else entry
+                    found += [*self.printed(key, parse(entry), inner), *self.printed(element, each, inner)]
+                return found
+            case Variant(cases=cases):
+                if value is None:
+                    return [[path, None]]
                 ((name, item),) = value.items()
                 case = next(each for each in cases if each is not None and self.alternative(each) == name)
-                inner = [(case, item, f"{path}.{name}" if path else name)]
+                return self.printed(case, item, f"{path}.{name}" if path else name)
             case Primitive() | AliasRef():
                 primitive = node if isinstance(node, Primitive) else node.alias.primitive
                 wire = node.wire or primitive.wire or primitive.name
                 if primitive.name in INTEGER_BITS and wire in INTEGER_BITS:
                     bits, signed = INTEGER_BITS[wire]
                     number = value % (1 << bits)
-                    if signed and number >> (bits - 1):
-                        number -= 1 << bits
-                    return {} if number == value else {path: number}
-            case EnumName(enum=enum) if isinstance(value, str):
+                    return [[path, number - (1 << bits) if signed and number >> (bits - 1) else number]]
+                if primitive.name == "bytes":
+                    return [[path, bytes.fromhex(value).decode(errors="surrogateescape")]]
+                return [[path, value]]
+            case EnumRef(enum=enum) | EnumName(enum=enum):
                 shape = self.schema.shape_at(enum, self.version)
                 if not isinstance(shape, EnumShape):
                     raise TypeError(f"{enum.name}: not an enum shape")
-                return {path: next(member.wire_name for member in shape.members if member.name == value)}
-        return {key: shown for each in inner for key, shown in self.printed(*each).items()}
+                if isinstance(node, EnumName):
+                    return [[path, next((member.wire_name for member in shape.members if member.name == value), value)]]
+                number = shape.numbers[value] if isinstance(value, str) else value
+                if shape.underlying.name == "bool":
+                    return [[path, bool(number)]]
+                return self.printed(Primitive(shape.underlying.name, node.wire or shape.underlying.wire), number, path)
+            case Bitset():
+                groups = [value >> shift & 0x7F for shift in range(0, max(value.bit_length(), 1), 7)]
+                found = [[path, each | (0x80 if index + 1 < len(groups) else 0)] for index, each in enumerate(groups)]
+                return [found[0], *([*each, True] for each in found[1:])]
+            case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
+                number = uuid.UUID(value).int
+                return [[path, number >> 64], [path, number & (1 << 64) - 1]]
+            case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
+                if isinstance(value, dict):
+                    for entry, each in value.items():
+                        found += [[f"{path}.{entry}", entry], *self.printed(node, each, f"{path}.{entry}")]
+                    return found
+                if isinstance(value, list):
+                    for index, each in enumerate(value):
+                        found += self.printed(node, each, f"{path}[{index}]")
+                    return found
+                return [[path, value]]
+            case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
+                found = tag_printed({"CompoundTag": value}, path)
+                if builtin.name == "CompoundTag":
+                    found = [[path, NBT_TYPES["CompoundTag"]], [path, ""], *found]
+                return [found[0], *([*each, True] for each in found[1:])]
+        raise TypeError(f"{node!r}: no printed form")
 
 
 def packets(schema: Schema, version: int) -> list[Any]:
@@ -729,29 +807,6 @@ def differs(expected: Json, actual: Json, path: str = "") -> str | None:
                 return found
         return None
     return None if expected == actual and type(expected) is type(actual) else path.lstrip(".")
-
-
-def enum_numbers(packet: Any, value: Json, path: str = "") -> dict[str, int]:
-    """Map the key path of each enum leaf in `value` to the number of the bound enum member it names."""
-    if isinstance(packet, enum.IntEnum):
-        return {path: int(packet)}
-    if isinstance(value, dict):
-        children = []
-        for key, item in value.items():
-            if isinstance(packet, dict):
-                member = packet.get(int(key) if key.lstrip("-").isdigit() else key)
-            else:
-                member = packet if type(packet).__name__ == key else getattr(packet, key, None)
-            children.append((f"{path}.{key}" if path else key, member, item))
-    elif isinstance(value, list) and isinstance(packet, list | tuple):
-        children = [
-            (f"{path}[{index}]", item, each) for index, (item, each) in enumerate(zip(packet, value, strict=False))
-        ]
-    else:
-        return {}
-    return {
-        key: number for child, member, item in children for key, number in enum_numbers(member, item, child).items()
-    }
 
 
 def round_trip(cls: Any, value: Json) -> tuple[str, str, str, bytes | None]:
@@ -835,7 +890,6 @@ def main() -> None:
                             "id": f"v{index}",
                             "version": version,
                             "value": value,
-                            "enums": enum_numbers(cls.from_json(value), value),
                             "printed": Generator(schema, version).printed(StructRef(family), value),
                             "bytes": data.hex(),
                         }

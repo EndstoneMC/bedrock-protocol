@@ -14,153 +14,127 @@ def bds():
     return module
 
 
-def gap(bds, shown, value, enums=None, printed=None):
-    return bds.missing([scalar for _, scalar in bds.leaves(shown)], bds.leaves(value), enums, printed)
-
-
-def test_an_enum_the_case_names_matches_the_number_bds_shows(bds):
-    assert gap(bds, {"Status": 1}, {"status": "LOGIN_FAILED_CLIENT_OLD"}, {"status": 1}) is None
-
-
-def test_an_enum_the_case_names_does_not_match_another_number(bds):
-    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
-    assert gap(bds, {"Status": 99}, value, {"status": 1}) == ("status", "LOGIN_FAILED_CLIENT_OLD")
-
-
-def test_an_enum_leaf_the_case_gives_no_number_for_does_not_match(bds):
-    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
-    assert gap(bds, {"Status": 1}, value) == ("status", "LOGIN_FAILED_CLIENT_OLD")
-
-
-def test_a_string_that_is_no_enum_name_does_not_match_a_number(bds):
-    assert gap(bds, {"Type": 4}, {"value": "s35"}) == ("value", "s35")
-
-
-def test_an_upper_case_string_that_is_no_enum_does_not_match_its_lower_case(bds):
-    assert gap(bds, {"Name": "abc"}, {"name": "ABC"}) == ("name", "ABC")
-
-
-def test_a_leaf_bds_adds_is_skipped(bds):
-    shown = {"Response": {"Response Type": "downloading", "Downloading Packs": ["s1"]}}
-    assert gap(bds, shown, {"response": {"Downloading": {"downloading_packs": ["s1"]}}}) is None
-
-
-def test_a_value_bds_shows_otherwise_is_reported_by_its_case_path(bds):
-    assert gap(bds, {"X": 1, "Y": 2}, {"pos": {"x": 1, "y": 3}}) == ("pos.y", 3)
-
-
-def test_a_bool_does_not_match_a_number(bds):
-    assert gap(bds, {"Flag": 1}, {"flag": True}) == ("flag", True)
-
-
-def test_a_whole_number_does_not_match_the_float_bds_shows(bds):
-    assert gap(bds, {"Value": 2.0}, {"value": 2}) == ("value", 2)
-
-
-def test_a_float_matches_the_same_float_bds_shows(bds):
-    assert gap(bds, {"Value": 2.0}, {"value": 2.0}) is None
-
-
-def test_a_null_in_the_case_needs_nothing_from_bds(bds):
-    assert gap(bds, {"Tick": 5}, {"tags": None, "tick": 5}) is None
-
-
-def scanned(bds, text, value):
-    return bds.missing([scalar for scalar, named in bds.tokens(text) if not named], bds.leaves(value))
-
-
-def test_text_that_is_not_json_splits_by_the_separators_rapidjson_alternates(bds):
-    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,0}'
-    assert bds.tokens(text) == [
-        ("Data", True),
-        (10, False),
-        ("", True),
-        (1, False),
-        ("b", True),
-        ("data", True),
-        (7, False),
-        (7, False),
-        ("bytes", False),
-        (3, False),
-        (1, False),
-        (254, False),
-        (3, False),
-        (0, False),
-    ]
-
-
 def test_a_separator_rapidjson_does_not_write_there_is_refused(bds):
     with pytest.raises(ValueError, match="where rapidjson writes"):
         bds.tokens('{"a",1}')
 
 
-def test_a_string_in_a_names_place_does_not_match_a_value(bds):
-    assert scanned(bds, '{"s1":1}', {"name": "s1", "count": 1}) == ("name", "s1")
+def test_each_scalar_carries_the_bracket_and_index_that_hold_it(bds):
+    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,0}'
+    assert [(scalar, place[-1]) for scalar, place in bds.tokens(text)] == [
+        ("Data", ("{", 0)),
+        (10, ("{", 1)),
+        ("", ("{", 2)),
+        (1, ("{", 3)),
+        ("b", ("{", 4)),
+        ("data", ("{", 0)),
+        (7, ("{", 1)),
+        (7, ("{", 6)),
+        ("bytes", ("{", 7)),
+        (3, ("{", 8)),
+        (1, ("{", 9)),
+        (254, ("{", 10)),
+        (3, ("{", 11)),
+        (0, ("{", 12)),
+    ]
+    assert bds.tokens(text)[5][1] == (("[", 0), ("{", 5), ("{", 0))
 
 
-def test_scalars_scanned_from_text_that_is_not_json_hold_the_values(bds):
-    text = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,2:3,{"data":2.5}:5,"str":{"data":"text"},0}'
-    value = {"b": {"ByteTag": 7}, "bytes": {"ByteArrayTag": [1, 2, 3]}, "str": {"StringTag": "text"}}
-    assert scanned(bds, text, value) is None
+def unmatched(bds, text, printed):
+    return bds.unmatched(bds.tokens(text), printed)
 
 
-def test_a_byte_bds_prints_unsigned_does_not_match_the_signed_byte_of_the_case(bds):
-    text = '{"Data":10,"":1,7:"bytes",3:1,254:3,0}'
-    assert scanned(bds, text, {"bytes": {"ByteArrayTag": [1, -2, 3]}}) == ("bytes.ByteArrayTag[1]", -2)
+def test_json_that_prints_each_listed_scalar_in_order_agrees(bds):
+    assert unmatched(bds, '{"Status":1,"Player":{"Name":"s1"}}', [["status", 1], ["player.name", "s1"]]) is None
 
 
-def test_scanned_text_that_lacks_a_value_is_reported(bds):
-    assert scanned(bds, '{"b":{"data":7}}', {"i": {"IntTag": 70000}}) == ("i.IntTag", 70000)
+def test_a_scalar_bds_prints_that_the_list_lacks_is_reported(bds):
+    text = '{"Response Type":"downloading","Downloading Packs":["s1"]}'
+    found = unmatched(bds, text, [["downloading_packs[0]", "s1"]])
+    assert found == "downloading_packs[0] is 's1' in the case and 'downloading' in BDS's JSON"
 
 
-def test_scanned_text_holds_a_repeated_value_once_per_appearance(bds):
-    assert scanned(bds, '{"a":7}', {"x": 7, "y": 7}) == ("y", 7)
+def test_a_listed_scalar_bds_does_not_print_is_reported(bds):
+    assert unmatched(bds, '{"X":1}', [["x", 1], ["y", 2]]) == "y is 2 in the case and not in BDS's JSON"
 
 
-def test_a_name_coded_enum_matches_the_wire_name_bds_shows(bds):
-    shown = {"Reason": "clientcanceled"}
-    assert gap(bds, shown, {"reason": "CLIENT_CANCELED"}, {"reason": 2}, {"reason": "clientcanceled"}) is None
+def test_a_scalar_bds_prints_past_the_list_is_reported(bds):
+    assert unmatched(bds, '{"X":1,"Y":2}', [["x", 1]]) == "BDS's JSON prints 2 past the case's last scalar"
 
 
-def test_a_name_coded_enum_does_not_match_another_spelling_of_its_name(bds):
-    shown = {"Reason": "client_canceled"}
-    value = {"reason": "CLIENT_CANCELED"}
-    assert gap(bds, shown, value, {"reason": 2}, {"reason": "clientcanceled"}) == ("reason", "clientcanceled")
+def test_a_null_bds_prints_is_reported_unless_listed(bds):
+    assert unmatched(bds, '{"Messages":null}', []) == "BDS's JSON prints None past the case's last scalar"
+    assert unmatched(bds, '{"Messages":null}', [["messages", None]]) is None
 
 
-def test_a_name_coded_enum_does_not_match_its_number(bds):
-    shown = {"Reason": 2}
-    value = {"reason": "CLIENT_CANCELED"}
-    assert gap(bds, shown, value, {"reason": 2}, {"reason": "clientcanceled"}) == ("reason", "clientcanceled")
+def test_a_repeated_scalar_needs_one_appearance_per_entry(bds):
+    assert unmatched(bds, '{"A":7}', [["x", 7], ["y", 7]]) == "y is 7 in the case and not in BDS's JSON"
 
 
-def test_an_integer_matches_the_number_its_wire_type_prints(bds):
-    assert gap(bds, {"Rotation X": 213}, {"rot_x": -43}, printed={"rot_x": 213}) is None
+def test_a_map_key_bds_prints_as_a_name_must_be_the_listed_key(bds):
+    printed = [["entities.s1", "s1"], ["entities.s1", 10]]
+    assert unmatched(bds, '{"Entities":{"s1":10}}', printed) is None
+    assert unmatched(bds, '{"Entities":{"s2":10}}', printed) == "entities.s1 is 's1' in the case and 10 in BDS's JSON"
 
 
-def test_an_integer_does_not_match_its_bits_at_another_signedness(bds):
-    assert gap(bds, {"Rotation X": 213}, {"rot_x": -43}) == ("rot_x", -43)
+def test_a_bool_does_not_match_a_number(bds):
+    assert unmatched(bds, '{"Flag":1}', [["flag", True]]) == "flag is True in the case and 1 in BDS's JSON"
 
 
-def test_integers_that_differ_in_value_do_not_match(bds):
-    assert gap(bds, {"Rotation X": 212}, {"rot_x": -43}) == ("rot_x", -43)
+def test_a_whole_number_does_not_match_the_float_bds_shows(bds):
+    assert unmatched(bds, '{"Value":2.0}', [["value", 2]]) == "value is 2 in the case and 2.0 in BDS's JSON"
 
 
-def test_a_uuid_matches_the_two_halves_bds_shows(bds):
-    shown = {"UUID": {"Most Significant Bits": 0, "Least Significant Bits": 2}}
-    assert gap(bds, shown, {"uuid": "00000000-0000-0000-0000-000000000002"}) is None
+def test_a_float_matches_the_same_float_bds_shows(bds):
+    assert unmatched(bds, '{"Value":2.0}', [["value", 2.0]]) is None
 
 
-def test_a_blob_in_hex_matches_the_characters_bds_shows(bds):
-    assert gap(bds, {"Chunk Data": "\u0004\u0001\u0002"}, {"data": "040102"}) is None
+def test_a_byte_past_0x7f_matches_the_raw_byte_bds_writes(bds):
+    assert unmatched(bds, '{"Chunk Data":"\udc80\\u0001"}', [["data", "\udc80\u0001"]]) is None
 
 
-def test_a_blob_byte_past_0x7f_matches_the_raw_byte_bds_writes(bds):
-    assert gap(bds, {"Chunk Data": "\udc80\u0001\u0002"}, {"data": "800102"}) is None
+def test_a_byte_past_0x7f_does_not_match_its_latin_1_character(bds):
+    found = unmatched(bds, '{"Chunk Data":"\u0080"}', [["data", "\udc80"]])
+    assert found == "data is '\\udc80' in the case and '\\x80' in BDS's JSON"
 
 
-def test_a_blob_byte_past_0x7f_does_not_match_its_latin_1_character(bds):
-    assert gap(bds, {"Chunk Data": "\u0080\u0001\u0002"}, {"data": "800102"}) == ("data", "800102")
+COMPOUND = '{"Data":10,"":1,"b":{"data":7},7:"bytes",3:1,254:3,0}'
+COMPOUND_PRINTED = [
+    ["data", 10],
+    ["data", "", True],
+    ["data.b", 1, True],
+    ["data.b", "b", True],
+    ["data.b", 7, True],
+    ["data.bytes", 7, True],
+    ["data.bytes", "bytes", True],
+    ["data.bytes", 3, True],
+    ["data.bytes[0]", 1, True],
+    ["data.bytes[1]", 254, True],
+    ["data.bytes[2]", 3, True],
+    ["data", 0, True],
+]
+
+
+def test_a_compound_tag_bds_prints_without_names_agrees_item_by_item(bds):
+    assert unmatched(bds, COMPOUND, COMPOUND_PRINTED) is None
+
+
+def test_a_byte_bds_prints_unsigned_does_not_match_a_signed_byte(bds):
+    printed = [["data.bytes[1]", -2, True] if each[0] == "data.bytes[1]" else each for each in COMPOUND_PRINTED]
+    assert unmatched(bds, COMPOUND, printed) == "data.bytes[1] is -2 in the case and 254 in BDS's JSON"
+
+
+def test_a_tag_name_bds_prints_otherwise_is_reported(bds):
+    found = unmatched(bds, COMPOUND.replace('"b":', '"c":'), COMPOUND_PRINTED)
+    assert found == "data.b is 'b' in the case and 'c' in BDS's JSON"
+
+
+def test_a_name_after_a_compound_tag_stands_where_the_tags_items_put_it(bds):
+    text = '{"Data":10,"":1,"b":{"data":7},0:"Response Type",2}'
+    printed = [*(each for each in COMPOUND_PRINTED if not each[0].startswith("data.bytes")), ["response_type", 2]]
+    assert unmatched(bds, text, printed) is None
+    found = unmatched(bds, text, [each[:2] for each in printed])
+    assert found == "response_type is 2 in the case and 'Response Type' in BDS's JSON"
 
 
 @pytest.fixture(scope="module")
@@ -170,27 +144,6 @@ def values():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-def test_an_enum_leaf_is_numbered_by_its_key_path(values):
-    from bedrock_protocol import v2168
-
-    value = {"status": "LOGIN_FAILED_CLIENT_OLD"}
-    assert values.enum_numbers(v2168.packets[2].from_json(value), value) == {"status": 1}
-
-
-def test_an_enum_inside_a_variant_alternative_is_numbered(values):
-    from bedrock_protocol import v2168
-
-    value = {
-        "localize": False,
-        "body": {"MessageOnly": {"type": "TRANSLATE", "message": "s3"}},
-        "xuid": "s4",
-        "platform_id": "s5",
-        "filtered_message": "s6",
-    }
-    packet = v2168.packets[9].from_json(value)
-    assert values.enum_numbers(packet, value) == {"body.MessageOnly.type": int(packet.body.type)}
 
 
 @pytest.fixture(scope="module")
@@ -288,16 +241,116 @@ def test_level_settings_carry_the_game_rules_bds_writes_in_its_order(values, sch
 
 
 @pytest.mark.parametrize(
+    ("name", "field", "value", "printed"),
+    [
+        ("MoveActorAbsoluteData", "rot_x", -43, [["rot_x", 213]]),
+        ("ResourcePackDataInfoPacket", "nb_chunks", -593, [["nb_chunks", 4294966703]]),
+        ("SetTimePacket", "time", -5, [["time", -5]]),
+        ("PlayStatusPacket", "status", "LOGIN_FAILED_CLIENT_OLD", [["status", 1]]),
+        ("LevelSettings", "nether_type", "FLAT", [["nether_type", True]]),
+        (
+            "ServerboundDataDrivenScreenClosedPacket",
+            "close_reason",
+            "CLIENT_CANCELED",
+            [["close_reason", "clientcanceled"]],
+        ),
+        ("AnimatePacket", "swing_source", "ATTACK", [["swing_source", "attack"]]),
+        ("AnimatePacket", "swing_source", None, []),
+        ("DisconnectPacket", "messages", None, [["messages", None]]),
+        ("ResourcePackClientResponsePacket", "response", {"Cancel": {}}, [["response.Cancel.response_type", "cancel"]]),
+        ("CameraAimAssistCategoryPriorities", "entities", {"s1": 10}, [["entities.s1", "s1"], ["entities.s1", 10]]),
+        (
+            "GraphicsOverrideParameterPacket",
+            "keyframes",
+            {"0.75": {"x": 1.5, "y": 2.5, "z": 3.5}},
+            [["keyframes.0.75", 0.75], ["keyframes.0.75.x", 1.5], ["keyframes.0.75.y", 2.5], ["keyframes.0.75.z", 3.5]],
+        ),
+        ("SerializableCells", "storage", [1, 2, 128], [["storage", "\x01\x02\udc80"]]),
+        ("LevelChunkPacket", "serialized_chunk", "800102", [["serialized_chunk", "\udc80\x01\x02"]]),
+        (
+            "ServerboundPackSettingChangePacket",
+            "pack_id",
+            "00000000-0000-0001-0000-000000000002",
+            [["pack_id", 1], ["pack_id", 2]],
+        ),
+        ("ActorDataFlagComponent", "value", 1 | 1 << 13, [["value", 129], ["value", 64, True]]),
+        (
+            "DataStoreChange",
+            "new_data",
+            {"k": [1, None]},
+            [["new_data.k", "k"], ["new_data.k[0]", 1], ["new_data.k[1]", None]],
+        ),
+        (
+            "BlockActorDataPacket",
+            "data",
+            {"z": {"ByteTag": 7}, "a": {"ListTag": {"type": 3, "tags": [{"IntTag": 1}]}}},
+            [
+                ["data", 10],
+                ["data", "", True],
+                ["data.a", 9, True],
+                ["data.a", "a", True],
+                ["data.a", 3, True],
+                ["data.a", 1, True],
+                ["data.a[0]", 1, True],
+                ["data.z", 1, True],
+                ["data.z", "z", True],
+                ["data.z", 7, True],
+                ["data", 0, True],
+            ],
+        ),
+        (
+            "LevelEventGenericPacket",
+            "data",
+            {"n": {"CompoundTag": {"s": {"StringTag": "v"}}}},
+            [
+                ["data.n", 10],
+                ["data.n", "n", True],
+                ["data.n.s", 8, True],
+                ["data.n.s", "s", True],
+                ["data.n.s", "v", True],
+                ["data.n", 0, True],
+                ["data", 0, True],
+            ],
+        ),
+    ],
+    ids=[
+        "int8-as-uint8",
+        "int32-as-uint32",
+        "same-signedness",
+        "enum-number",
+        "bool-enum",
+        "name-coded-enum",
+        "name-coded-optional",
+        "absent-optional",
+        "absent-variant",
+        "literal-tag",
+        "string-key",
+        "float-key",
+        "byte-vector",
+        "blob",
+        "uuid",
+        "bitset",
+        "dynamic-value",
+        "compound-tag",
+        "compound-tag-data",
+    ],
+)
+def test_a_value_is_listed_as_bds_json_prints_it(values, schema, name, field, value, printed):
+    generator = values.Generator(schema, 2168)
+    shape = generator.shape(next(each for each in schema.order if each.name == name and (each, 2168) in schema.live))
+    assert generator.printed(next(each.type for each in shape.fields if each.name == field), value, field) == printed
+
+
+@pytest.mark.parametrize(
     ("name", "value", "printed"),
     [
-        ("MoveActorAbsolutePacket", {"move_data": {"rot_x": -43, "rot_y": 5}}, {"move_data.rot_x": 213}),
-        ("ResourcePackDataInfoPacket", {"chunk_size": 7, "nb_chunks": -593}, {"nb_chunks": 4294966703}),
-        ("SetTimePacket", {"time": -5}, {}),
+        ("DataItemBytePayload", {"value": 7}, [["type", 0], ["value", 7]]),
+        ("InventoryTransaction", {"actions": []}, []),
     ],
-    ids=["int8-as-uint8", "int32-as-uint32", "same-signedness"],
+    ids=["literal", "true-marker"],
 )
-def test_an_integer_leaf_is_printed_at_its_wire_type(values, schema, name, value, printed):
-    family = next(each for each in schema.order if each.name == name)
+def test_a_struct_lists_its_literals_but_not_its_true_markers(values, schema, name, value, printed):
+    family = next(each for each in schema.order if each.name == name and (each, 2168) in schema.live)
     assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed
 
 
@@ -382,23 +435,6 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):
     assert {each[field] for each in generated(values, schema, name)} - {None} == {read}
-
-
-@pytest.mark.parametrize(
-    ("name", "value", "printed"),
-    [
-        (
-            "ServerboundDataDrivenScreenClosedPacket",
-            {"close_reason": "CLIENT_CANCELED"},
-            {"close_reason": "clientcanceled"},
-        ),
-        ("AnimatePacket", {"swing_source": "ATTACK"}, {"swing_source": "attack"}),
-    ],
-    ids=["dropped-separator", "optional"],
-)
-def test_a_name_coded_enum_leaf_is_printed_by_its_wire_name(values, schema, name, value, printed):
-    family = next(each for each in schema.order if each.name == name)
-    assert values.Generator(schema, 2168).printed(values.StructRef(family), value) == printed
 
 
 @pytest.mark.parametrize(

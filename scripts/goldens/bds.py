@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 Json = Any
+Place = tuple[tuple[str, int], ...]
 
 CEREAL_FIRST = 3
 CEREAL_ONLY = 5
@@ -25,8 +26,6 @@ FIRST_PORT = 40000
 STARTED = "Server started."
 START_TIMEOUT = 600
 STOP_TIMEOUT = 60
-HEX_BLOB = re.compile(r"(?:[0-9a-f]{2})+")
-UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 TOKEN = re.compile(
     r'(?P<separator>[:,]?)(?:(?P<close>[}\]])|(?P<open>[{\[])|(?P<scalar>"(?:[^"\\]|\\.)*"'
     r"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null))"
@@ -89,18 +88,9 @@ BUILDS = {
 }
 
 
-def leaves(value: Json, path: str = "") -> list[tuple[str, Json]]:
-    """Flatten a JSON value to its scalars in order, each with its key path, dropping nulls."""
-    if isinstance(value, dict):
-        return [leaf for key, item in value.items() for leaf in leaves(item, f"{path}.{key}" if path else key)]
-    if isinstance(value, list):
-        return [leaf for index, item in enumerate(value) for leaf in leaves(item, f"{path}[{index}]")]
-    return [] if value is None else [(path, value)]
-
-
-def tokens(text: str) -> list[tuple[Json, bool]]:
-    """Split BDS's JSON text, valid or not, into its scalars in order, each marked when a string stands for a name."""
-    found: list[tuple[Json, bool]] = []
+def tokens(text: str) -> list[tuple[Json, Place]]:
+    """Split BDS's JSON text, valid or not, into its scalars in order, each with the bracket and index at each depth."""
+    found: list[tuple[Json, Place]] = []
     brackets = ["["]
     counts = [0]
     position = 0
@@ -119,56 +109,39 @@ def tokens(text: str) -> list[tuple[Json, bool]]:
         wanted = "" if counts[-1] == 0 else ":" if brackets[-1] == "{" and counts[-1] % 2 else ","
         if separator != wanted:
             raise ValueError(f"BDS's JSON: {separator!r} where rapidjson writes {wanted!r} at {match.start()}")
-        named = brackets[-1] == "{" and counts[-1] % 2 == 0
         counts[-1] += 1
         if opened:
             brackets.append(opened)
             counts.append(0)
         else:
-            item = json.loads(scalar)
-            found.append((item, named and isinstance(item, str)))
+            found.append((json.loads(scalar), tuple(zip(brackets, [count - 1 for count in counts], strict=True))))
     if len(brackets) != 1:
         raise ValueError("BDS's JSON: an object or array is left open")
     return found
 
 
-def same(shown: Json, wanted: Json, number: int | None = None) -> bool:
-    """Compare two scalars: an enum leaf by its number, a blob's hex by its bytes, the rest exactly."""
-    if number is not None:
-        return type(shown) is int and shown == number
-    if isinstance(wanted, str) and HEX_BLOB.fullmatch(wanted):
-        return isinstance(shown, str) and shown.encode(errors="surrogateescape") == bytes.fromhex(wanted)
-    return type(shown) is type(wanted) and bool(shown == wanted)
-
-
-def missing(
-    shown: list[Json],
-    expected: list[tuple[str, Json]],
-    enums: dict[str, int] | None = None,
-    printed: dict[str, Json] | None = None,
-) -> tuple[str, Json] | None:
-    """Find the first expected scalar that BDS's scalars, taken in order, do not hold; BDS may show more.
-
-    `enums` maps each enum leaf's key path to its number, `printed` each leaf BDS prints otherwise to what it prints.
-    """
-    printed = printed or {}
-    enums = {path: number for path, number in (enums or {}).items() if path not in printed}
-    expected = [(path, printed.get(path, wanted)) for path, wanted in expected]
+def unmatched(shown: list[tuple[Json, Place]], printed: list[list[Json]]) -> str | None:
+    """Describe the first scalar BDS's JSON and the case's printed list part on; only a name BDS gives goes unlisted."""
+    shifts: dict[Place, int] = {}
+    run: tuple[Place, int, int] = ((), 0, 0)
     position = 0
-    halves = [
-        part
-        for path, wanted in expected
-        for part in (
-            [(path, int(wanted.replace("-", "")[:16], 16)), (path, int(wanted.replace("-", "")[16:], 16))]
-            if isinstance(wanted, str) and UUID.fullmatch(wanted)
-            else [(path, wanted)]
-        )
-    ]
-    for path, wanted in halves:
-        found = next((i for i in range(position, len(shown)) if same(shown[i], wanted, enums.get(path))), None)
-        if found is None:
-            return path, wanted
-        position = found + 1
+    for scalar, place in shown:
+        outer, (bracket, index) = place[:-1], place[-1]
+        entry = printed[position] if position < len(printed) else None
+        running = entry is not None and len(entry) > 2 and outer == run[0]
+        named = bracket == "{" and (index - shifts.get(outer, 0)) % 2 == 0 and isinstance(scalar, str) and not running
+        if entry is not None and type(scalar) is type(entry[1]) and scalar == entry[1]:
+            if len(entry) > 2:
+                shifts[run[0]] = run[2] + place[len(run[0])][1] - run[1]
+            else:
+                run = (outer, index, shifts.get(outer, 0))
+            position += 1
+        elif not named:
+            if entry is None:
+                return f"BDS's JSON prints {scalar!r} past the case's last scalar"
+            return f"{entry[0]} is {entry[1]!r} in the case and {scalar!r} in BDS's JSON"
+    if position < len(printed):
+        return f"{printed[position][0]} is {printed[position][1]!r} in the case and not in BDS's JSON"
     return None
 
 
@@ -268,7 +241,7 @@ class Server:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes", "enums", "printed"}')
+    parser.add_argument("cases", type=Path, help='JSON array of {"packet", "id", "value", "bytes", "printed"}')
     parser.add_argument("--server", type=Path, required=True, help="unpacked stock BDS; its ports are moved off 19132")
     parser.add_argument("--lldb", default="lldb", help="lldb executable whose Python module matches this python")
     args = parser.parse_args()
@@ -424,15 +397,8 @@ def main() -> None:
                         report["difference"] = (
                             f"bytes: BDS writes {written.hex()}, first unlike the seed at byte {first}"
                         )
-                    elif (
-                        gap := missing(
-                            [scalar for scalar, named in tokens(shown_text) if not named],
-                            leaves(case["value"]),
-                            case.get("enums"),
-                            case.get("printed"),
-                        )
-                    ) is not None:
-                        report["difference"] = f"json: {gap[0]} is {gap[1]!r} in the case and not in BDS's JSON"
+                    elif (gap := unmatched(tokens(shown_text), case["printed"])) is not None:
+                        report["difference"] = f"json: {gap}"
                     else:
                         report["difference"] = None
                 except (RuntimeError, ValueError) as error:
