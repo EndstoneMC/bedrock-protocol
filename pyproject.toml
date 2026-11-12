@@ -28,7 +28,6 @@ cache-keys = [
     { file = "CMakeLists.txt" },
     { file = "include/**" },
     { file = "python/*" },
-    { file = "python/bedrock_protocol/_core.pyi" },
     { file = "protocol/*.py" },
     { file = "compiler/src/**/*.py" },
 ]
