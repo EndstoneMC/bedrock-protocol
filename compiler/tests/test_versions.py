@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol_compiler.descriptor import CompilerError, Range
+from bedrock_protocol_compiler.descriptor import CompilerError, Int, Range
 
 HEADER = """
 from enum import IntEnum, auto
@@ -474,3 +474,63 @@ def test_a_block_is_clipped_to_its_declaration(build_package):
     package = build_package({"a": HEADER + source})
 
     assert package.modules[0].families[0].declarations[0].fields[0].range == Range(3, 4)
+
+
+def test_an_enum_block_gives_each_member_its_range(build_package):
+    source = (
+        "class E(IntEnum, uint8):\n    A = 1\n    with value(since=2, until=5):\n        B = 2\n"
+        "        C = value(3, since=3)\n        D = value(4, until=4)\n"
+    )
+    package = build_package({"a": HEADER + source})
+
+    assert [member.range for member in package.modules[0].families[0].declarations[0].members] == [
+        Range(None, None),
+        Range(2, 5),
+        Range(3, 5),
+        Range(2, 4),
+    ]
+
+
+def test_a_pair_and_auto_inside_an_enum_block(build_package):
+    source = (
+        "class E(IntEnum, uint8):\n    A = 1\n    with value(since=3):\n        B = 2, 'Bee'\n"
+        "        C = auto()\n    D = auto()\n"
+    )
+    members = build_package({"a": HEADER + source}).modules[0].families[0].declarations[0].members
+
+    assert [(member.name, member.value, member.wire_name, member.range) for member in members] == [
+        ("A", Int(1), "a", Range(None, None)),
+        ("B", Int(2), "bee", Range(3, None)),
+        ("C", None, "c", Range(3, None)),
+        ("D", None, "d", Range(None, None)),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        (
+            "@type(until=3)\nclass E(IntEnum, uint8):\n    with value(until=4):\n        A = 1\n",
+            "E: has a gate its enclosing range already decides",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    with value(since=2):\n        A = value(1, since=2)\n",
+            "A: has a gate its enclosing range already decides",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    with value(since=2):\n        with value(until=4):\n            A = 1\n",
+            "E: a with block holds only members",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    with value():\n        A = 1\n",
+            "E: a with block takes only since= and until=",
+        ),
+        (
+            "class E(IntEnum, uint8):\n    with value(since=2):\n        A = value(1, 'Aye')\n",
+            "A: an ungated member takes a pair, not value\\(\\)",
+        ),
+    ],
+)
+def test_a_bad_enum_block_is_rejected(build_package, source, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + source})

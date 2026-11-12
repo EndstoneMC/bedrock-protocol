@@ -11,7 +11,7 @@ from functools import reduce
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import TypeAliasType
+from typing import Any, TypeAliasType
 
 from bedrock_protocol_compiler import dsl
 from bedrock_protocol_compiler.descriptor import (
@@ -535,7 +535,9 @@ class Builder:
         if not (isinstance(underlying, Primitive) and underlying.name in ENUM_UNDERLYING):
             raise error(source, node.bases[1], node.name, "is not an enum underlying type")
         members: list[Member] = []
-        for statement in without_docstring(node.body):
+        for statement, within, _ in self.blocks(
+            source, pending.scope, node, node.name, pending.range, dsl.value, ("since", "until"), ast.Assign
+        ):
             if not (
                 isinstance(statement, ast.Assign)
                 and len(statement.targets) == 1
@@ -593,7 +595,7 @@ class Builder:
             else:
                 value = Int(literal(source, expression, int, name))
             wire_name = wire_name.lower()
-            member_range = self.narrow(source, statement, name, own, pending.range)
+            member_range = self.narrow(source, statement, name, own, within)
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
@@ -626,23 +628,16 @@ class Builder:
         source = pending.source
         scope = self.scopes[pending.struct]
         fields: list[Field] = []
-        statements: list[tuple[ast.stmt, Range, ast.expr | None]] = []
-        for statement in without_docstring(pending.node.body):
-            if not isinstance(statement, ast.With):
-                statements.append((statement, pending.range, None))
-                continue
-            single = len(statement.items) == 1 and statement.items[0].optional_vars is None
-            block = statement.items[0].context_expr if single else None
-            if not (isinstance(block, ast.Call) and self.resolve(source, scope, block.func) is dsl.field):
-                raise error(source, statement, pending.struct.name, "is not a with field(...) block")
-            arguments = self.bind(source, block, dsl.field)
-            if not arguments or not arguments.keys() <= {"since", "until", "when"}:
-                raise error(source, block, pending.struct.name, "a with block takes only since=, until= and when=")
-            if any(not isinstance(inner, ast.AnnAssign) for inner in statement.body):
-                raise error(source, statement, pending.struct.name, "a with block holds only fields")
-            own = self.read_range(source, block, pending.struct.name, arguments)
-            within = self.narrow(source, statement, pending.struct.name, own, pending.range)
-            statements.extend((inner, within, arguments.get("when")) for inner in statement.body)
+        statements = self.blocks(
+            source,
+            scope,
+            pending.node,
+            pending.struct.name,
+            pending.range,
+            dsl.field,
+            ("since", "until", "when"),
+            ast.AnnAssign,
+        )
         for statement, within, block_when in statements:
             if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
@@ -747,6 +742,37 @@ class Builder:
                     )
             claimed.append((struct, pending.range))
         struct.declarations.append(StructDeclaration(pending.range, tuple(fields)))
+
+    def blocks(
+        self,
+        source: Source,
+        scope: Scope,
+        node: ast.ClassDef,
+        name: str,
+        range: Range,
+        opener: Callable[..., Any],
+        allowed: tuple[str, ...],
+        holds: type[ast.stmt],
+    ) -> list[tuple[ast.stmt, Range, ast.expr | None]]:
+        statements: list[tuple[ast.stmt, Range, ast.expr | None]] = []
+        for statement in without_docstring(node.body):
+            if not isinstance(statement, ast.With):
+                statements.append((statement, range, None))
+                continue
+            single = len(statement.items) == 1 and statement.items[0].optional_vars is None
+            block = statement.items[0].context_expr if single else None
+            if not (isinstance(block, ast.Call) and self.resolve(source, scope, block.func) is opener):
+                raise error(source, statement, name, f"is not a with {opener.__name__}(...) block")
+            arguments = self.bind(source, block, opener)
+            if not arguments or not arguments.keys() <= set(allowed):
+                keys = [f"{key}=" for key in allowed]
+                raise error(source, block, name, f"a with block takes only {', '.join(keys[:-1])} and {keys[-1]}")
+            noun = "fields" if holds is ast.AnnAssign else "members"
+            if any(not isinstance(inner, holds) for inner in statement.body):
+                raise error(source, statement, name, f"a with block holds only {noun}")
+            within = self.narrow(source, statement, name, self.read_range(source, block, name, arguments), range)
+            statements.extend((inner, within, arguments.get("when")) for inner in statement.body)
+        return statements
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}
