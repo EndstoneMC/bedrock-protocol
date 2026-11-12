@@ -131,7 +131,7 @@ class PackedItemUseLegacyInventoryTransaction:
 
 @packet(id=144, until=2168)
 class PlayerAuthInputPacket:
-    class InputData(IntEnum, uint32):
+    class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
         NORTH_JUMP_DEPRECATED = 2
