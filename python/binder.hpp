@@ -289,7 +289,7 @@ template <typename T>
 void bind_struct(nb::handle scope, const char *name, const Version *version)
 {
     static_assert(!field_contains<T>("from_bytes"), "a member named from_bytes hides T.from_bytes");
-    nb::class_<T> cls(scope, name, nb::supplement<Codec>());
+    nb::class_<T> cls(scope, name, nb::supplement<Codec>(), nb::is_final());
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         if constexpr (sizeof...(I) == 0) {
             cls.def(nb::init<>());
