@@ -39,7 +39,9 @@ uv pip install ./bedrock-protocol
 ```python
 from bedrock_protocol import TextPacket, TextPacketType
 
-packet = TextPacket(body=TextPacket.MessageOnly(type=TextPacketType.CHAT, message="hello"))
+packet = TextPacket()
+packet.body = TextPacket.MessageOnly(type=TextPacketType.CHAT,
+                                     message="hello")
 data = bytes(packet)
 assert TextPacket.from_bytes(data) == packet
 ```
@@ -75,7 +77,9 @@ Python. The library needs C++23.
 namespace bp = bedrock::protocol;
 using Packet = bp::TextPacket;
 
-Packet packet{.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"}};
+Packet packet;
+packet.body = Packet::MessageOnly{.type = bp::TextPacketType::Chat,
+                                  .message = "hello"};
 
 std::string data;
 bp::BinaryWriter writer{data};
