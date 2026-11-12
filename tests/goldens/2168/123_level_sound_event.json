@@ -1,0 +1,77 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "sound_event": "s1",
+   "pos": {
+    "x": 1.25,
+    "y": 1.75,
+    "z": 2.25
+   },
+   "data": 855,
+   "actor_identifier": "s6",
+   "is_baby": false,
+   "is_global": true,
+   "actor": -1379,
+   "fire_at_position": {
+    "x": 5.25,
+    "y": 5.75,
+    "z": 6.25
+   }
+  },
+  "bytes": "0273310000a03f0000e03f00001040ae0d02733600019dfaffffffffffff010000a8400000b8400000c840",
+  "bds_json": {
+   "Sound Event": "s1",
+   "Position": {
+    "X": 1.25,
+    "Y": 1.75,
+    "Z": 2.25
+   },
+   "Data": 855,
+   "Actor Identifier": "s6",
+   "Is Baby": false,
+   "Is Global": true,
+   "Actor Unique Id": -1379,
+   "Fire At Position": {
+    "X": 5.25,
+    "Y": 5.75,
+    "Z": 6.25
+   }
+  },
+  "other_writer_bytes": "010273310000a03f0000e03f00001040ae0d02733600019dfaffffffffffff010000a8400000b8400000c840"
+ },
+ {
+  "id": "v1",
+  "writer": "cereal",
+  "value": {
+   "sound_event": "s13",
+   "pos": {
+    "x": 7.25,
+    "y": 7.75,
+    "z": 8.25
+   },
+   "data": 2427,
+   "actor_identifier": "s18",
+   "is_baby": false,
+   "is_global": true,
+   "actor": -2951,
+   "fire_at_position": null
+  },
+  "bytes": "037331330000e8400000f84000000441f62503733138000179f4ffffffffffff00",
+  "bds_json": {
+   "Sound Event": "s13",
+   "Position": {
+    "X": 7.25,
+    "Y": 7.75,
+    "Z": 8.25
+   },
+   "Data": 2427,
+   "Actor Identifier": "s18",
+   "Is Baby": false,
+   "Is Global": true,
+   "Actor Unique Id": -2951
+  },
+  "other_writer_bytes": "01037331330000e8400000f84000000441f62503733138000179f4ffffffffffff00"
+ }
+]

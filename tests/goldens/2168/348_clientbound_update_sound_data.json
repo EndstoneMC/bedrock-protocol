@@ -1,0 +1,131 @@
+[
+ {
+  "id": "v0",
+  "writer": "cereal",
+  "value": {
+   "server_sound_handle": {
+    "value": 331
+   },
+   "stop": {
+    "Stop": {}
+   },
+   "set_volume": {
+    "Stop": {}
+   },
+   "set_pitch": {
+    "Stop": {}
+   },
+   "fade": {
+    "Stop": {}
+   },
+   "seek_to": {
+    "Stop": {}
+   },
+   "pause": {
+    "Stop": {}
+   },
+   "resume": {
+    "Stop": {}
+   }
+  },
+  "bytes": "4b0100000000000000000000000000",
+  "bds_json": {
+   "Server Sound Handle": {
+    "Server Sound Handle": 331
+   },
+   "Stop": {},
+   "SetVolume": {},
+   "SetPitch": {},
+   "Fade": {},
+   "SeekTo": {},
+   "Pause": {},
+   "Resume": {}
+  }
+ },
+ {
+  "id": "v5",
+  "writer": "cereal",
+  "value": {
+   "server_sound_handle": {
+    "value": 5571
+   },
+   "stop": {
+    "Pause": {}
+   },
+   "set_volume": {
+    "Pause": {}
+   },
+   "set_pitch": {
+    "Pause": {}
+   },
+   "fade": {
+    "Pause": {}
+   },
+   "seek_to": {
+    "Pause": {}
+   },
+   "pause": {
+    "Pause": {}
+   },
+   "resume": {
+    "Pause": {}
+   }
+  },
+  "bytes": "c31500000000000005050505050505",
+  "bds_json": {
+   "Server Sound Handle": {
+    "Server Sound Handle": 5571
+   },
+   "Stop": {},
+   "SetVolume": {},
+   "SetPitch": {},
+   "Fade": {},
+   "SeekTo": {},
+   "Pause": {},
+   "Resume": {}
+  }
+ },
+ {
+  "id": "v6",
+  "writer": "cereal",
+  "value": {
+   "server_sound_handle": {
+    "value": 5702
+   },
+   "stop": {
+    "Resume": {}
+   },
+   "set_volume": {
+    "Resume": {}
+   },
+   "set_pitch": {
+    "Resume": {}
+   },
+   "fade": {
+    "Resume": {}
+   },
+   "seek_to": {
+    "Resume": {}
+   },
+   "pause": {
+    "Resume": {}
+   },
+   "resume": {
+    "Resume": {}
+   }
+  },
+  "bytes": "461600000000000006060606060606",
+  "bds_json": {
+   "Server Sound Handle": {
+    "Server Sound Handle": 5702
+   },
+   "Stop": {},
+   "SetVolume": {},
+   "SetPitch": {},
+   "Fade": {},
+   "SeekTo": {},
+   "Pause": {},
+   "Resume": {}
+  }
+ }
+]
