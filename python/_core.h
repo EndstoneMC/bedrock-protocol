@@ -32,6 +32,8 @@ namespace bedrock::protocol::python {
 
 namespace nb = nanobind;
 
+inline constexpr const char *eq_signature = "def __eq__(self, arg: object, /) -> bool";
+
 struct Codec {
     nb::object (*decode)(BinaryReader &stream);
 };
@@ -784,7 +786,7 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
         (bind_field<T, I>(cls), ...);
     }(std::make_index_sequence<field_count<T>()>{});
 
-    cls.def(nb::self == nb::self);
+    cls.def(nb::self == nb::self, nb::sig(eq_signature));
     cls.attr("__hash__") = nb::none();
     cls.def("__copy__", [](const T &self) { return T(self); });
     cls.def("__deepcopy__", [](const T &self, nb::handle) { return T(self); }, nb::arg("memo"));

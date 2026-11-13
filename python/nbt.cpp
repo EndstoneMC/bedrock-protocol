@@ -24,7 +24,7 @@ void bind_value_tag(nb::module_ &m, const char *name)
     nb::class_<T>(m, name, nb::is_final())
         .def(nb::init<V>(), nb::arg("value") = V{})
         .def_prop_ro("value", [](const T &self) { return self.value(); })
-        .def(nb::self == nb::self)
+        .def(nb::self == nb::self, nb::sig(eq_signature))
         .def("__hash__", [](const T &self) { return nb::hash(nb::cast(self.value())); })
         .def("__repr__",
              [name](const T &self) { return std::format("{}({})", name, nb::repr(nb::cast(self.value())).c_str()); });
@@ -40,7 +40,7 @@ void bind_array_tag(nb::module_ &m, const char *name)
             nb::arg("value") = std::vector<V>{})
         .def_prop_ro("value", [](const T &self) { return std::vector<V>(self.begin(), self.end()); })
         .def("__len__", &T::size)
-        .def(nb::self == nb::self)
+        .def(nb::self == nb::self, nb::sig(eq_signature))
         .def("__repr__", [name](const T &self) {
             return std::format("{}({})", name, nb::repr(nb::cast(std::vector<V>(self.begin(), self.end()))).c_str());
         });
@@ -104,7 +104,7 @@ void init_nbt(nb::module_ &parent)
                  return self[static_cast<std::size_t>(i)];
              })
         .def("append", [](ListTag &self, const Tag &tag) { self.push_back(tag); })
-        .def(nb::self == nb::self)
+        .def(nb::self == nb::self, nb::sig(eq_signature))
         .def("__repr__", [](const ListTag &self) {
             std::string tags;
             for (std::size_t i = 0; i < self.size(); ++i) {
