@@ -1,14 +1,14 @@
 [
  {
   "value": {
-   "achievement_id": 300
+   "achievement_id": 10
   },
-  "bytes": "2c010000"
+  "bytes": "0a000000"
  },
  {
   "value": {
-   "achievement_id": -1
+   "achievement_id": 7
   },
-  "bytes": "ffffffff"
+  "bytes": "07000000"
  }
 ]
