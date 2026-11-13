@@ -159,5 +159,37 @@
    }
   },
   "bytes": "0000000000000001ffffffffffffffff00"
+ },
+ {
+  "value": {
+   "camera_instruction": {
+    "set": {
+     "preset_index": 2,
+     "ease": null,
+     "pos": null,
+     "rot": null,
+     "facing": null,
+     "view_offset": null,
+     "entity_offset": null,
+     "default_": null,
+     "remove_ignore_starting_values_component": true
+    },
+    "clear": null,
+    "fade": {
+     "time": null,
+     "color": null
+    },
+    "target": {
+     "target_center_offset": null,
+     "target_actor_id": 301
+    },
+    "remove_target": null,
+    "field_of_view": null,
+    "spline": null,
+    "attach_to_entity": null,
+    "detach_from_entity": null
+   }
+  },
+  "bytes": "010200000000000000000000010001000001002d010000000000000000000000"
  }
 ]
