@@ -397,5 +397,5 @@ def test_v1001_input_data_holds_its_last_flag():
 
 
 def test_v1001_input_data_refuses_a_flag_past_its_width():
-    with pytest.raises(TypeError, match="incompatible function arguments"):
+    with pytest.raises(TypeError, match=r"^PlayerAuthInputPacket\.input_data: cannot hold 36893488147419103232$"):
         v1001.PlayerAuthInputPacket(**BODY, input_data=1 << 65)
