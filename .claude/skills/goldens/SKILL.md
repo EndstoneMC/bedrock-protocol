@@ -101,11 +101,11 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
 | `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
-| `unprinted` | The printer has no form for the type `bds_json_error` names. Add one to the clone's printer from `_core.h`'s `to_json`. |
+| `unprinted` | The printer has no form for the type `bds_json_error` names. Add one to the clone's printer from the form `tests/cereal.py` writes for that type. |
 | `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
 | `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
 | `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the wire's; otherwise report it. |
-| `json_differs` on a value | The library's `to_json` mislabels or mis-nests a field: fix the schema or the binding. |
+| `json_differs` on a value | `tests/cereal.py`'s `save` labels or nests a field wrongly: fix the helper's schema for that type, or the DSL when its type is not BDS's type. |
 | `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |
 | BDS exits 130 or 143, or logs no `Quit correctly` | It was signalled. Stop it through the console `stop`. |
