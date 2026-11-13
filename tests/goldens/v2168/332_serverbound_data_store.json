@@ -1,5 +1,6 @@
 [
  {
+  "id": "string_data_with_large_counts",
   "value": {
    "update": {
     "data_store_name": "inventory",
@@ -15,6 +16,7 @@
   "bytes": "09696e76656e746f727906686f7462617207736c6f74732f30020d6469616d6f6e645f73776f72642c010000feffffff"
  },
  {
+  "id": "float_data",
   "value": {
    "update": {
     "data_store_name": "hud",
@@ -30,6 +32,7 @@
   "bytes": "03687564076f706163697479016100000000000000e03f0100000001000000"
  },
  {
+  "id": "bool_data",
   "value": {
    "update": {
     "data_store_name": "hud",
