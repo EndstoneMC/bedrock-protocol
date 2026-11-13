@@ -279,7 +279,7 @@ struct type_caster<bedrock::protocol::CompoundTagData> {
     using CompoundTag = bedrock::protocol::CompoundTag;
     using CompoundTagData = bedrock::protocol::CompoundTagData;
 
-    NB_TYPE_CASTER(CompoundTagData, const_name("CompoundTag"))
+    NB_TYPE_CASTER(CompoundTagData, const_name("bedrock_protocol.nbt.CompoundTag"))
 
     bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
     {
