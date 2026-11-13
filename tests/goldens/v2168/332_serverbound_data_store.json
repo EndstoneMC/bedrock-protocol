@@ -19,29 +19,29 @@
    "update": {
     "data_store_name": "hud",
     "property": "opacity",
-    "path": "",
+    "path": "a",
     "data": {
      "float": 0.5
     },
     "property_update_count": 1,
-    "path_update_count": 0
+    "path_update_count": 1
    }
   },
-  "bytes": "03687564076f7061636974790000000000000000e03f0100000000000000"
+  "bytes": "03687564076f706163697479016100000000000000e03f0100000001000000"
  },
  {
   "value": {
    "update": {
     "data_store_name": "hud",
     "property": "visible",
-    "path": "",
+    "path": "a",
     "data": {
      "bool": true
     },
     "property_update_count": 1,
-    "path_update_count": 0
+    "path_update_count": 1
    }
   },
-  "bytes": "036875640776697369626c650001010100000000000000"
+  "bytes": "036875640776697369626c65016101010100000001000000"
  }
 ]
