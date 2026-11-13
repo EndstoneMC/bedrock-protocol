@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_custom_dimension",
   "value": {
    "dimension_definition_group": {
     "dimension_definitions": {
