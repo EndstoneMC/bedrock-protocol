@@ -1,5 +1,6 @@
 [
  {
+  "id": "fall_death_message",
   "value": {
    "death_cause_attack_name": "fall",
    "death_cause_message_list": ["death.fell.accident.generic"]
