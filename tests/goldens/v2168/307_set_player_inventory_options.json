@@ -1,5 +1,6 @@
 [
  {
+  "id": "survival_and_armor_tabs",
   "value": {
    "inventory_options": {
     "left_inventory_tab": "SURVIVAL",
