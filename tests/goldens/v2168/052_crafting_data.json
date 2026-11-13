@@ -187,5 +187,173 @@
    "clear_recipes": true
   },
   "bytes": "0102723102020101046e616d650f6d696e6563726166743a737469636b0204017404000080b381870d0a00000000000000000000000000000000000001000000000000000e6372616674696e675f7461626c6506010102000b010272320101046e616d650f6d696e6563726166743a737469636b0204017404000080b381870d0a00000000000000000000000000000000000002000000000000000e6372616674696e675f7461626c65020100010101046e616d650f6d696e6563726166743a737469636b02040c01000000000000000003000000000000000d0000000102723401046e616d650f6d696e6563726166743a737469636b020401046e616d650f6d696e6563726166743a737469636b020401046e616d650f6d696e6563726166743a737469636b02047404000080b381870d0a000000000000000000000e736d697468696e675f7461626c650e0102723501046e616d650f6d696e6563726166743a737469636b020401046e616d650f6d696e6563726166743a737469636b020401046e616d650f6d696e6563726166743a737469636b02040e736d697468696e675f7461626c650f01dc0608d80d02dc065601dc069605f608018080901301e0040401"
+ },
+ {
+  "value": {
+   "shaped_recipes": [],
+   "shapeless_recipes": [],
+   "multi_recipes": [],
+   "user_data_shapeless_recipes": [
+    {
+     "recipe_id": "bundle_dye_0",
+     "ingredients": [
+      {
+       "descriptor": {
+        "name": "minecraft:bundle"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      },
+      {
+       "descriptor": {
+        "name": "minecraft:ink_sac"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      }
+     ],
+     "results": [
+      {
+       "id": 859,
+       "stack_size": 1,
+       "aux_value": 0,
+       "block_runtime_id": 0,
+       "user_data_buffer": "00000000000000000000"
+      }
+     ],
+     "uuid": "b3840292-a2a7-4762-a814-32e3e7ee7dc0",
+     "tag": "crafting_table",
+     "priority": 0,
+     "unlocking_requirement": {
+      "context": "NONE",
+      "ingredients": [
+       {
+        "descriptor": {
+         "name": "minecraft:ink_sac"
+        },
+        "aux_value": 32767,
+        "stack_size": 1
+       }
+      ]
+     },
+     "net_id": {
+      "raw_id": 2825
+     }
+    }
+   ],
+   "shapeless_chemistry_recipes": [
+    {
+     "recipe_id": "minecraft:furnace_log",
+     "ingredients": [
+      {
+       "descriptor": {
+        "item_tag": "minecraft:logs_that_burn"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      }
+     ],
+     "results": [
+      {
+       "id": 305,
+       "stack_size": 1,
+       "aux_value": 0,
+       "block_runtime_id": 0,
+       "user_data_buffer": "00000000000000000000"
+      }
+     ],
+     "uuid": "00000000-0000-0000-0000-000000000004",
+     "tag": "furnace",
+     "priority": 90,
+     "unlocking_requirement": {
+      "context": "NONE",
+      "ingredients": [
+       {
+        "descriptor": {
+         "item_tag": "minecraft:logs_that_burn"
+        },
+        "aux_value": 32767,
+        "stack_size": 1
+       }
+      ]
+     },
+     "net_id": {
+      "raw_id": 239
+     }
+    }
+   ],
+   "shaped_chemistry_recipes": [
+    {
+     "recipe_id": "minecraft:stripped_mangrove_wood",
+     "width": 2,
+     "height": 2,
+     "ingredients": [
+      {
+       "descriptor": {
+        "name": "minecraft:stripped_mangrove_log"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      },
+      {
+       "descriptor": {
+        "name": "minecraft:stripped_mangrove_log"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      },
+      {
+       "descriptor": {
+        "name": "minecraft:stripped_mangrove_log"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      },
+      {
+       "descriptor": {
+        "name": "minecraft:stripped_mangrove_log"
+       },
+       "aux_value": 32767,
+       "stack_size": 1
+      }
+     ],
+     "results": [
+      {
+       "id": -498,
+       "stack_size": 3,
+       "aux_value": 0,
+       "block_runtime_id": 1014956299,
+       "user_data_buffer": "00000000000000000000"
+      }
+     ],
+     "uuid": "00000000-0000-0000-0000-000000000005",
+     "tag": "deprecated",
+     "priority": 0,
+     "assume_symmetry": true,
+     "unlocking_requirement": {
+      "context": "NONE",
+      "ingredients": [
+       {
+        "descriptor": {
+         "name": "minecraft:stripped_mangrove_log"
+        },
+        "aux_value": 32767,
+        "stack_size": 1
+       }
+      ]
+     },
+     "net_id": {
+      "raw_id": 1609
+     }
+    }
+   ],
+   "smithing_transform_recipes": [],
+   "smithing_trim_recipes": [],
+   "potion_mix_entries": [],
+   "container_mix_entries": [],
+   "material_reducer_entries": [],
+   "clear_recipes": false
+  },
+  "bytes": "000000010c62756e646c655f6479655f300201046e616d65106d696e6563726166743a62756e646c65feff030201046e616d65116d696e6563726166743a696e6b5f736163feff030201b60d010000000a000000000000000000006247a7a2920284b3c07deee7e33214a80e6372616674696e675f7461626c65000100010101046e616d65116d696e6563726166743a696e6b5f736163feff0302891601156d696e6563726166743a6675726e6163655f6c6f670101086974656d5f746167186d696e6563726166743a6c6f67735f746861745f6275726efeff030201e204010000000a0000000000000000000000000000000000000400000000000000076675726e616365b4010100010101086974656d5f746167186d696e6563726166743a6c6f67735f746861745f6275726efeff0302ef0101206d696e6563726166743a73747269707065645f6d616e67726f76655f776f6f6404040401046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201e3070300009684f8c7070a00000000000000000000000000000000000005000000000000000a6465707265636174656400010100010101046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff0302c90c000000000000"
  }
 ]
