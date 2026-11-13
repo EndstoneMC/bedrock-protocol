@@ -1,5 +1,6 @@
 [
  {
+  "id": "float_value_with_player_id",
   "value": {
    "keyframes": {
     "0.5": {
@@ -18,6 +19,7 @@
   "bytes": "010000003f0000803f0000004000004040010000803e0006706c61696e73010573746576650d01"
  },
  {
+  "id": "vec3_value_without_player_id",
   "value": {
    "keyframes": {
     "0.5": {
