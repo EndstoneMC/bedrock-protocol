@@ -1,5 +1,6 @@
 [
  {
+  "id": "data_instance_id_present",
   "value": {
    "screen_id": "my_screen",
    "form_id": 300,
@@ -8,6 +9,7 @@
   "bytes": "096d795f73637265656e2c0100000170110100"
  },
  {
+  "id": "data_instance_id_absent",
   "value": {
    "screen_id": "s",
    "form_id": 1,
