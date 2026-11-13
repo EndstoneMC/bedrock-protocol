@@ -1,5 +1,6 @@
 [
  {
+  "id": "transfer_item_response",
   "value": {
    "request_id": "req-1",
    "action": "TRANSFER_ITEM_TO",
