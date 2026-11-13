@@ -131,6 +131,45 @@ llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -igno
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
 ```
 
+The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder's packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches:
+
+```
+D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
+LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
+llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
+llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
+python3 -I - $D/export.json <<'EOF' | sort > $D.missed
+import json, re, sys
+functions = [f for f in json.load(open(sys.argv[1]))['data'][0]['functions'] if re.search(r'/generated/.*\.cpp$', f['filenames'][0])]
+sources = {path: open(path).read().split('\n') for path in {f['filenames'][0] for f in functions}}
+call = re.compile(r'Serializer<(.+?)>::(serialize|deserialize)\(')
+by_signature = {call.search(sources[f['filenames'][0]][f['regions'][0][0] - 2])[0]: f for f in functions}
+reached = [f for f in functions if f['count'] > 0]
+scope = {id(f): f for f in reached}
+while reached:
+    f = reached.pop()
+    for line in sources[f['filenames'][0]][f['regions'][0][0] - 1:f['regions'][0][2]]:
+        for callee in filter(None, (by_signature.get(m[0]) for m in call.finditer(line))):
+            if id(callee) not in scope:
+                scope[id(callee)] = callee
+                reached.append(callee)
+failure = re.compile(r'if \(!(\w+)\) return (stream\.fail|std::unexpected)\(\1\.error\(\)|Errc::')
+outcomes = missed = 0
+for f in scope.values():
+    lines = sources[f['filenames'][0]]
+    for b in f['branches']:
+        line = lines[b[0] - 1].strip()
+        is_failure = failure.search(line) or (line == 'default:' and 'Errc::' in lines[b[0]])
+        for outcome, count in (('true', b[4]), ('false', b[5])):
+            if outcome == 'false' or not is_failure:
+                outcomes += 1
+                if count == 0:
+                    missed += 1
+                    print(f"{f['filenames'][0]}:{b[0]}:{b[1]} {outcome}  {line}")
+print(f'{len(scope)} functions, {outcomes - missed}/{outcomes} valid-path branch outcomes reached', file=sys.stderr)
+EOF
+```
+
 One case's footprint is the branch outcomes it reaches (true count > 0, false count > 0) and the region entries it covers in the generated sources:
 
 ```
@@ -164,3 +203,5 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | `llvm-cov`: `no coverage data found` | The install stripped the coverage mapping. Reinstall with `-C install.strip=false`. |
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
 | A `default.profraw` appears in the working directory | The extension was imported without `LLVM_PROFILE_FILE`. Delete the file. |
+| `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |
+| `$D.missed` lists `switch (<variant>.index()) {` false | The serializer's hidden default, which only a valueless variant takes. No input reaches it: report it as a generator defect. |
