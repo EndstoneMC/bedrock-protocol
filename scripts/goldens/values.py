@@ -1,6 +1,7 @@
 """Emit JSON values that hit every path of a packet at a protocol version, and round-trip them through the binding."""
 
 import argparse
+import base64
 import dataclasses
 import functools
 import importlib
@@ -161,7 +162,109 @@ LEVEL_GAME_RULES = (
     ("projectilesCanBreakBlocks", {"bool": True}),
     ("tntExplosionDropDecay", {"bool": False}),
 )
-CONNECTION_REQUEST = b'%\x00\x00\x00{"AuthenticationType":-1,"Token":""}\n\x00\x00\x00\x00'.hex()
+IDENTITY_KEY = (
+    "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEGnLhvg+WqN8j3xJnLCZK/PoGAUwz7OjIA9p+jOYoJMhr80BZVXxHSItC/jzAZ+PVaM/Z"
+    "Aulb1nqVerFL2+gkoZiekpbWsnmevndov/3yGeZbxnvSNYksW3qhRKZ7eUbD"
+)
+GEOMETRY = (
+    '{"format_version":"1.12.0","minecraft:geometry":[{"bones":[{"name":"body","pivot":[0.0,24.0,0.0]}],'
+    '"description":{"identifier":"geometry.golden","texture_height":32,"texture_width":64}}]}\n'
+)
+PIXELS = bytes(range(256)) * 32
+PLAYER_CLIENT_DATA: dict[str, Json] = {
+    "AnimatedImageData": [
+        {
+            "AnimationExpression": 1,
+            "Frames": 2.0,
+            "Image": base64.b64encode(PIXELS).decode(),
+            "ImageHeight": 64,
+            "ImageWidth": 32,
+            "Type": 1,
+        }
+    ],
+    "ArmSize": "wide",
+    "CapeData": "",
+    "CapeId": "",
+    "CapeImageHeight": 0,
+    "CapeImageWidth": 0,
+    "CapeOnClassicSkin": False,
+    "ClientRandomId": 1234567890123,
+    "CompatibleWithClientSideChunkGen": False,
+    "CurrentInputMode": 1,
+    "DefaultInputMode": 1,
+    "DeviceId": "0123456789abcdef0123456789abcdef",
+    "DeviceModel": "Golden Desktop",
+    "DeviceOS": 8,
+    "GameVersion": "1.26.40",
+    "GuiScale": 0,
+    "LanguageCode": "en_US",
+    "PersonaPieces": [
+        {
+            "IsDefault": True,
+            "PackId": "11111111-2222-4333-8444-555555555555",
+            "PieceId": "66666666-7777-4888-9999-aaaaaaaaaaaa",
+            "PieceType": "persona_body",
+            "ProductId": "",
+        }
+    ],
+    "PersonaSkin": False,
+    "PieceTintColors": [{"Colors": ["#ff1a1a1a", "#ff2b2b2b", "#ff3c3c3c", "#0"], "PieceType": "persona_eyes"}],
+    "PlatformOfflineId": "",
+    "PlatformOnlineId": "",
+    "PlayFabId": "abcdef0123456789",
+    "PremiumSkin": False,
+    "SelfSignedId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+    "ServerAddress": "127.0.0.1:19132",
+    "SkinAnimationData": "",
+    "SkinColor": "#0",
+    "SkinData": base64.b64encode(PIXELS).decode(),
+    "SkinGeometryData": base64.b64encode(GEOMETRY.encode()).decode(),
+    "SkinGeometryDataEngineVersion": base64.b64encode(b"1.21.0").decode(),
+    "SkinId": "c18e65aa-7b21-4637-9b63-8ad63622ef01.Custom",
+    "SkinImageHeight": 32,
+    "SkinImageWidth": 64,
+    "SkinResourcePatch": base64.b64encode(b'{"geometry":{"default":"geometry.golden"}}').decode(),
+    "ThirdPartyName": "GoldenPlayer",
+    "TrustedSkin": True,
+}
+GUEST_CLIENT_DATA = PLAYER_CLIENT_DATA | {
+    "AnimatedImageData": [],
+    "ArmSize": "slim",
+    "ClientRandomId": 2345678901234,
+    "CurrentInputMode": 2,
+    "DefaultInputMode": 2,
+    "DeviceId": "fedcba9876543210fedcba9876543210",
+    "DeviceModel": "Golden Console",
+    "DeviceOS": 13,
+    "PersonaPieces": [],
+    "PieceTintColors": [],
+    "PlayFabId": "9876543210fedcba",
+    "SelfSignedId": "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff",
+    "SkinData": base64.b64encode(PIXELS * 2).decode(),
+    "SkinId": "d29f76bb-8c32-4748-8c74-9be74733f012.Custom",
+    "SkinImageHeight": 64,
+    "ThirdPartyName": "GoldenGuest",
+}
+
+
+def web_token(claims: dict[str, Json], signature: bytes) -> str:
+    """Join an ES384 header naming IDENTITY_KEY, the claims and a signature into a compact JWT."""
+    header = {"alg": "ES384", "x5u": IDENTITY_KEY}
+    segments = [json.dumps(each, separators=(",", ":")).encode() for each in (header, claims)] + [signature]
+    return ".".join(base64.urlsafe_b64encode(each).rstrip(b"=").decode() for each in segments)
+
+
+def connection_request(authentication: int, token: str, client: dict[str, Json], signature: bytes) -> str:
+    """Frame the authentication JSON as BDS writes it and a client-data JWT, each behind its uint32-LE length."""
+    parts = [json.dumps({"AuthenticationType": authentication, "Token": token}, separators=(",", ":")) + "\n"]
+    parts.append(web_token(client, signature))
+    return b"".join(len(each).to_bytes(4, "little") + each.encode() for each in parts).hex()
+
+
+GAME_TOKEN = web_token(
+    {"cpk": IDENTITY_KEY, "exp": 1767225600, "iat": 1767222000, "xid": "2535428000000000", "xname": "GoldenPlayer"},
+    bytes(range(96)),
+)
 ITEM_STACKS = ("SerializedNetworkItemStackDescriptor", "SerializedNetworkItemInstanceDescriptor")
 ITEMS: dict[int, dict[int, int | None]] = {2168: {462: None, 855: None, -593: 0}}
 FIXED_AT: dict[int, dict[str, Json]] = {
@@ -235,8 +338,8 @@ FIXED: dict[str, Json] = {
     "ExperimentToggle.name": "gametest",
     "ExperimentToggle.enabled": True,
     "Experiments.experiments_ever_toggled": True,
-    "LoginPacket.connection_request": CONNECTION_REQUEST,
-    "SubClientLoginPacket.connection_request": CONNECTION_REQUEST,
+    "LoginPacket.connection_request": connection_request(0, GAME_TOKEN, PLAYER_CLIENT_DATA, bytes(range(96, 192))),
+    "SubClientLoginPacket.connection_request": connection_request(1, "", GUEST_CLIENT_DATA, bytes(range(160, 256))),
     "AgentActionEventPacket.response": "null\n",
     "Color255RGBA.r": 16,
     "Color255RGBA.g": 32,
@@ -290,7 +393,7 @@ class Generator:
     def __init__(self, schema: Schema, version: int) -> None:
         self.schema = schema
         self.version = version
-        self.fixed = FIXED | FIXED_AT.get(version, {})
+        self.fixed = FIXED | FIXED_AT.get(version, {}) | {"LoginPacket.client_network_version": version}
         self.cursors: dict[str, int] = {}
         self.hits: set[Point] = set()
         self.counter = 0

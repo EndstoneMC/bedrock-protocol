@@ -1,4 +1,6 @@
+import base64
 import importlib.util
+import json
 import uuid
 from pathlib import Path
 
@@ -196,11 +198,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("ExperimentToggle", "name", "gametest"),
         ("ExperimentToggle", "enabled", True),
         ("Experiments", "experiments_ever_toggled", True),
-        (
-            "SubClientLoginPacket",
-            "connection_request",
-            "250000007b2241757468656e7469636174696f6e54797065223a2d312c22546f6b656e223a22227d0a00000000",
-        ),
         ("AgentActionEventPacket", "response", "null\n"),
         ("Color255RGBA", "a", 128),
         ("SerializableCells", "storage", [1, 2, 3, 4, 5, 6]),
@@ -215,7 +212,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         "experiment-name",
         "experiment-enabled",
         "experiments-ever-toggled",
-        "sub-client-connection-request",
         "agent-response",
         "color-alpha",
         "cell-storage",
@@ -451,6 +447,30 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):
     assert {each[field] for each in generated(values, schema, name)} - {None} == {read}
+
+
+def test_a_login_carries_the_protocol_number_of_its_version(values, schema):
+    login = next(each for each in schema.order if each.name == "LoginPacket")
+    versions = [version for version in schema.versions if (login, version) in schema.live]
+    numbers = [values.values_of(schema, version, login)[0][0]["client_network_version"] for version in versions]
+    assert numbers == versions
+
+
+@pytest.mark.parametrize(
+    ("name", "authentication"), [("LoginPacket", 0), ("SubClientLoginPacket", 1)], ids=["login", "sub-client"]
+)
+def test_a_connection_request_frames_the_authentication_json_and_a_client_data_token(
+    values, schema, name, authentication
+):
+    request = bytes.fromhex(generated(values, schema, name)[0]["connection_request"])
+    size = int.from_bytes(request[:4], "little")
+    first, second = request[4 : 4 + size], request[8 + size :]
+    assert int.from_bytes(request[4 + size : 8 + size], "little") == len(second)
+    assert first.endswith(b"\n")
+    assert json.loads(first) == {"AuthenticationType": authentication, "Token": json.loads(first)["Token"]}
+    segments = [base64.urlsafe_b64decode(each + "=" * (-len(each) % 4)) for each in second.decode().split(".")]
+    assert len(segments) == 3
+    assert [type(json.loads(each)) for each in segments[:2]] == [dict, dict]
 
 
 @pytest.mark.parametrize(
