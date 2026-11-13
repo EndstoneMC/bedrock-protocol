@@ -1,5 +1,6 @@
 [
  {
+  "id": "vertical_fly_speed_float",
   "value": {
    "ability": "VERTICAL_FLY_SPEED",
    "value_type": "FLOAT",
