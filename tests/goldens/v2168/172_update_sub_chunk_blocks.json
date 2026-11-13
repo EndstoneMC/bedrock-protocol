@@ -18,7 +18,7 @@
       "runtime_id": 1921718966,
       "update_flags": 3,
       "entity_unique_id": 9,
-      "message": "DESTROY"
+      "message": 2
      }
     ],
     "extras": [
@@ -31,7 +31,7 @@
       "runtime_id": 1741778478,
       "update_flags": 2,
       "entity_unique_id": 5,
-      "message": "CREATE"
+      "message": 1
      }
     ]
    }

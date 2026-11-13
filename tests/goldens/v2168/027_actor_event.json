@@ -2,8 +2,10 @@
  {
   "id": "hurt_with_fire_position",
   "value": {
-   "runtime_id": 300,
-   "event_id": "HURT",
+   "runtime_id": {
+    "actor_runtime_id": 300
+   },
+   "event_id": 2,
    "data": -3,
    "fire_at_position": {
     "x": 1.0,
@@ -16,10 +18,11 @@
  {
   "id": "hurt_without_damage_no_position",
   "value": {
-   "runtime_id": 7,
-   "event_id": "HURT_WITHOUT_RECEIVING_DAMAGE",
-   "data": 5,
-   "fire_at_position": null
+   "runtime_id": {
+    "actor_runtime_id": 7
+   },
+   "event_id": 81,
+   "data": 5
   },
   "bytes": "07510a00"
  }

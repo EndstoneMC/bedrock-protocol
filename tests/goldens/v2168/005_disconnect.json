@@ -2,12 +2,10 @@
  {
   "id": "message_present",
   "value": {
-   "reason": "EDITOR_NOT_ALLOWED",
+   "reason": 147,
    "messages": {
-    "DisconnectPacketMessages": {
-     "message": "bye",
-     "filtered_message": "b**"
-    }
+    "message": "bye",
+    "filtered_message": "b**"
    }
   },
   "bytes": "a602000362796503622a2a"
@@ -15,7 +13,7 @@
  {
   "id": "message_absent",
   "value": {
-   "reason": "EDITOR_NOT_ALLOWED",
+   "reason": 147,
    "messages": null
   },
   "bytes": "a60201"

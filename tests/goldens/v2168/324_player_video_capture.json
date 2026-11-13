@@ -3,16 +3,12 @@
   "id": "start_in_both_slots",
   "value": {
    "start_video_capture": {
-    "StartVideoCapture": {
-     "frame_rate": 60,
-     "file_prefix": "clip"
-    }
+    "frame_rate": 60,
+    "file_prefix": "clip"
    },
    "stop_video_capture": {
-    "StartVideoCapture": {
-     "frame_rate": 60,
-     "file_prefix": "clip"
-    }
+    "frame_rate": 60,
+    "file_prefix": "clip"
    }
   },
   "bytes": "003c00000004636c6970003c00000004636c6970"
@@ -20,12 +16,8 @@
  {
   "id": "stop_in_both_slots",
   "value": {
-   "start_video_capture": {
-    "StopVideoCapture": {}
-   },
-   "stop_video_capture": {
-    "StopVideoCapture": {}
-   }
+   "start_video_capture": {},
+   "stop_video_capture": {}
   },
   "bytes": "0101"
  }

@@ -4,56 +4,64 @@
   "value": {
    "entries": [
     {
-     "AddEntry": {
-      "action": "ADD",
-      "uuid": "00000000-0000-0000-0000-000000000001",
-      "id": 7,
-      "name": "Steve",
-      "xuid": "2535410000000001",
-      "platform_online_id": "pcid",
-      "build_platform": "WIN32",
-      "skin": {
-       "id": "sid",
-       "play_fab_id": "pfid",
-       "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}",
-       "skin_image": {
-        "width": 1,
-        "height": 1,
-        "image_bytes": "01020304"
-       },
-       "skin_animated_images": [],
-       "cape_image": {
-        "width": 1,
-        "height": 1,
-        "image_bytes": "05060708"
-       },
-       "geometry_data": "{}\n",
-       "geometry_data_min_engine_version": "1.0.0",
-       "animation_data": "[]",
-       "cape_id": "cid",
-       "full_id": "fid",
-       "arm_size_type": "WIDE",
-       "skin_color": 16909060,
-       "persona_pieces": [],
-       "piece_tint_colors": {},
-       "is_premium": true,
-       "is_persona": true,
-       "is_persona_cape_on_classic_skin": true,
-       "is_primary_user": true,
-       "overrides_player_appearance": true,
-       "is_trusted_skin": "TRUE",
-       "profile_hash": "hash"
+     "action": 0,
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 1
+     },
+     "id": {
+      "actor_unique_id": 7
+     },
+     "name": "Steve",
+     "xuid": "2535410000000001",
+     "platform_online_id": "pcid",
+     "build_platform": 8,
+     "skin": {
+      "id": "sid",
+      "play_fab_id": "pfid",
+      "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}",
+      "skin_image": {
+       "width": 1,
+       "height": 1,
+       "image_bytes": "\u0001\u0002\u0003\u0004"
       },
-      "is_teacher": true,
-      "is_host": true,
-      "is_sub_client": true,
+      "skin_animated_images": [],
+      "cape_image": {
+       "width": 1,
+       "height": 1,
+       "image_bytes": "\u0005\u0006\u0007\b"
+      },
+      "geometry_data": "{}\n",
+      "geometry_data_min_engine_version": "1.0.0",
+      "animation_data": "[]",
+      "cape_id": "cid",
+      "full_id": "fid",
+      "arm_size_type": 1,
+      "skin_color": {
+       "color": 16909060
+      },
+      "persona_pieces": [],
+      "piece_tint_colors": [],
+      "is_premium": true,
+      "is_persona": true,
+      "is_persona_cape_on_classic_skin": true,
+      "is_primary_user": true,
+      "overrides_player_appearance": true,
+      "is_trusted_skin": "true",
+      "profile_hash": "hash"
+     },
+     "is_teacher": true,
+     "is_host": true,
+     "is_sub_client": true,
+     "color": {
       "color": 84281096
      }
     },
     {
-     "RemoveEntry": {
-      "action": "REMOVE",
-      "uuid": "00000000-0000-0000-0000-000000000002"
+     "action": 1,
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 2
      }
     }
    ]
@@ -65,72 +73,98 @@
   "value": {
    "entries": [
     {
-     "AddEntry": {
-      "action": "ADD",
-      "uuid": "00000000-0000-0000-0000-000000000001",
-      "id": 7,
-      "name": "Steve",
-      "xuid": "2535410000000001",
-      "platform_online_id": "pcid",
-      "build_platform": "WIN32",
-      "skin": {
-       "id": "sid",
-       "play_fab_id": "pfid",
-       "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}\n",
-       "skin_image": {
-        "width": 1,
-        "height": 1,
-        "image_bytes": "01020304"
-       },
-       "skin_animated_images": [
-        {
-         "image": {
-          "width": 1,
-          "height": 1,
-          "image_bytes": "090a0b0c"
-         },
-         "type": "FACE",
-         "frames": 2.0,
-         "animation_expression": "BLINKING"
-        }
-       ],
-       "cape_image": {
-        "width": 1,
-        "height": 1,
-        "image_bytes": "05060708"
-       },
-       "geometry_data": "{}\n",
-       "geometry_data_min_engine_version": "1.0.0",
-       "animation_data": "[]\n",
-       "cape_id": "cid",
-       "full_id": "fid",
-       "arm_size_type": "WIDE",
-       "skin_color": 16909060,
-       "persona_pieces": [
-        {
-         "piece_id": "pid",
-         "piece_type": "HAIR",
-         "pack_id": "00000000-0000-0000-0000-000000000003",
-         "is_default_piece": true,
-         "product_id": "prod"
-        }
-       ],
-       "piece_tint_colors": {
-        "HAIR": {
-         "colors": [16909060, 84281096, 16909061, 84281097]
-        }
-       },
-       "is_premium": true,
-       "is_persona": true,
-       "is_persona_cape_on_classic_skin": true,
-       "is_primary_user": true,
-       "overrides_player_appearance": true,
-       "is_trusted_skin": "TRUE",
-       "profile_hash": "hash"
+     "action": 0,
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 1
+     },
+     "id": {
+      "actor_unique_id": 7
+     },
+     "name": "Steve",
+     "xuid": "2535410000000001",
+     "platform_online_id": "pcid",
+     "build_platform": 8,
+     "skin": {
+      "id": "sid",
+      "play_fab_id": "pfid",
+      "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}\n",
+      "skin_image": {
+       "width": 1,
+       "height": 1,
+       "image_bytes": "\u0001\u0002\u0003\u0004"
       },
-      "is_teacher": true,
-      "is_host": true,
-      "is_sub_client": true,
+      "skin_animated_images": [
+       {
+        "image": {
+         "width": 1,
+         "height": 1,
+         "image_bytes": "\t\n\u000b\f"
+        },
+        "type": 1,
+        "frames": 2.0,
+        "animation_expression": 1
+       }
+      ],
+      "cape_image": {
+       "width": 1,
+       "height": 1,
+       "image_bytes": "\u0005\u0006\u0007\b"
+      },
+      "geometry_data": "{}\n",
+      "geometry_data_min_engine_version": "1.0.0",
+      "animation_data": "[]\n",
+      "cape_id": "cid",
+      "full_id": "fid",
+      "arm_size_type": 1,
+      "skin_color": {
+       "color": 16909060
+      },
+      "persona_pieces": [
+       {
+        "piece_id": "pid",
+        "piece_type": 14,
+        "pack_id": {
+         "most_significant_bits": 0,
+         "least_significant_bits": 3
+        },
+        "is_default_piece": true,
+        "product_id": "prod"
+       }
+      ],
+      "piece_tint_colors": [
+       {
+        "key": "hair",
+        "value": {
+         "colors": [
+          {
+           "color": 16909060
+          },
+          {
+           "color": 84281096
+          },
+          {
+           "color": 16909061
+          },
+          {
+           "color": 84281097
+          }
+         ]
+        }
+       }
+      ],
+      "is_premium": true,
+      "is_persona": true,
+      "is_persona_cape_on_classic_skin": true,
+      "is_primary_user": true,
+      "overrides_player_appearance": true,
+      "is_trusted_skin": "true",
+      "profile_hash": "hash"
+     },
+     "is_teacher": true,
+     "is_host": true,
+     "is_sub_client": true,
+     "color": {
       "color": 84281096
      }
     }

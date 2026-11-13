@@ -2,7 +2,7 @@
  {
   "id": "spectator_game_type",
   "value": {
-   "player_game_type": "SPECTATOR"
+   "player_game_type": 6
   },
   "bytes": "0c"
  }

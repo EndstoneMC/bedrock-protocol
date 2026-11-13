@@ -3,6 +3,7 @@ import json
 import types
 from pathlib import Path
 
+import cereal
 import pytest
 
 GOLDENS = Path(__file__).parent / "goldens"
@@ -22,6 +23,23 @@ def pytest_generate_tests(metafunc):
         names = [f"v{version}" for version in bedrock_protocol.versions]
         versions = [importlib.import_module(f"bedrock_protocol.{name}") for name in names]
         metafunc.parametrize("protocol", versions, ids=names)
+
+    if "cls" in metafunc.fixturenames and "loadable" in metafunc.fixturenames:
+        params = [
+            pytest.param(
+                importlib.import_module(f"bedrock_protocol.{path.parent.name}").packets[int(path.stem[:3])],
+                case,
+                id=f"{path.parent.name}/{path.stem}/{case['id']}",
+            )
+            for path, cases in CASES.items()
+            for case in cases
+            if not cereal.loses_arms(
+                importlib.import_module(f"bedrock_protocol.{path.parent.name}").packets[int(path.stem[:3])],
+                case["value"],
+                bytes.fromhex(case["bytes"]),
+            )
+        ]
+        metafunc.parametrize("cls, loadable", params)
 
     if "cls" in metafunc.fixturenames and "case" in metafunc.fixturenames:
         params = [

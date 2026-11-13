@@ -3,10 +3,10 @@
   "id": "book_photo_item",
   "value": {
    "photo_name": "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg",
-   "photo_data": "ffd8ffe0",
+   "photo_data": "\u00ff\u00d8\u00ff\u00e0",
    "book_id": "book-7",
-   "type": "PHOTO_ITEM",
-   "source_type": "BOOK",
+   "type": 1,
+   "source_type": 2,
    "owner_id": -12345,
    "new_photo_name": "2f1e0d0c-3b4a-4958-8776-655443322110.jpeg"
   },

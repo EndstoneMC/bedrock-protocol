@@ -2,15 +2,15 @@
  {
   "id": "coordinates_location_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "location": {
-    "CoordinatesLocation": {
-     "type": "PLAYER_LOCATION_COORDINATES",
-     "pos": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
-     }
+    "type": 0,
+    "pos": {
+     "x": 1.0,
+     "y": 2.0,
+     "z": 3.0
     }
    }
   },
@@ -19,11 +19,11 @@
  {
   "id": "hidden_location_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "location": {
-    "HiddenLocation": {
-     "type": "PLAYER_LOCATION_HIDE"
-    }
+    "type": 1
    }
   },
   "bytes": "0e0102"

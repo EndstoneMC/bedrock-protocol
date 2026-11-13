@@ -2,15 +2,18 @@
  {
   "id": "update_with_data_tag",
   "value": {
-   "action": "UPDATE",
+   "action": 0,
    "id": {
     "raw_id": 7
    },
-   "data": {
-    "id": {
-     "StringTag": "00000007"
-    }
-   }
+   "data": [
+    8,
+    "id",
+    {
+     "data": "00000007"
+    },
+    0
+   ]
   },
   "bytes": "000e0a000802696408303030303030303700"
  }

@@ -2,7 +2,7 @@
  {
   "id": "unlock_world_template_settings",
   "value": {
-   "subtype": "UNLOCK_WORLD_TEMPLATE_SETTINGS"
+   "subtype": 3
   },
   "bytes": "0300"
  }

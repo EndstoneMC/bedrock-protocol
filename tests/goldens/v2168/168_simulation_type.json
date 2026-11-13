@@ -2,7 +2,7 @@
  {
   "id": "editor_simulation",
   "value": {
-   "sim_type": "EDITOR"
+   "sim_type": 1
   },
   "bytes": "01"
  }

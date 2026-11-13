@@ -2,7 +2,7 @@
  {
   "id": "complete_chemistry_lesson",
   "value": {
-   "action": "COMPLETE",
+   "action": 1,
    "score": 300,
    "activity_id": "chemistry.intro"
   },

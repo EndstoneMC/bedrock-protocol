@@ -2,7 +2,7 @@
  {
   "id": "player_relative_scheme",
   "value": {
-   "control_scheme": "PLAYER_RELATIVE"
+   "control_scheme": 3
   },
   "bytes": "03"
  }

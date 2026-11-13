@@ -3,7 +3,7 @@
   "id": "opt_in_nether_hub",
   "value": {
    "cookie": "party-cookie",
-   "intent": "OPT_IN",
+   "intent": "optin",
    "destination_name": "Nether Hub"
   },
   "bytes": "0c70617274792d636f6f6b6965056f7074696e0a4e657468657220487562"

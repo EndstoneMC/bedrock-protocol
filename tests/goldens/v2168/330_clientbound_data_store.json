@@ -4,29 +4,21 @@
   "value": {
    "updates": [
     {
-     "DataStoreUpdate": {
-      "data_store_name": "hud",
-      "property": "opacity",
-      "path": "slots",
-      "data": {
-       "float": 0.5
-      },
-      "property_update_count": 1,
-      "path_update_count": 1
-     }
+     "data_store_name": "hud",
+     "property": "opacity",
+     "path": "slots",
+     "data": 0.5,
+     "property_update_count": 1,
+     "path_update_count": 1
     },
     {
-     "DataStoreChange": {
-      "data_store_name": "form",
-      "property": "title",
-      "update_count": 7,
-      "new_data": "Chest"
-     }
+     "data_store_name": "form",
+     "property": "title",
+     "update_count": 7,
+     "new_data": "Chest"
     },
     {
-     "DataStoreRemoval": {
-      "data_store_name": "form"
-     }
+     "data_store_name": "form"
     }
    ]
   },
@@ -37,22 +29,20 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "form",
-      "property": "state",
-      "update_count": 2,
-      "new_data": {
-       "items": [
-        "a",
-        7,
-        true,
-        null,
-        0.25,
-        {
-         "flag": true
-        }
-       ]
-      }
+     "data_store_name": "form",
+     "property": "state",
+     "update_count": 2,
+     "new_data": {
+      "items": [
+       "a",
+       7,
+       true,
+       null,
+       0.25,
+       {
+        "flag": true
+       }
+      ]
      }
     }
    ]
@@ -64,28 +54,20 @@
   "value": {
    "updates": [
     {
-     "DataStoreUpdate": {
-      "data_store_name": "hud",
-      "property": "visible",
-      "path": "slots",
-      "data": {
-       "bool": true
-      },
-      "property_update_count": 2,
-      "path_update_count": 3
-     }
+     "data_store_name": "hud",
+     "property": "visible",
+     "path": "slots",
+     "data": true,
+     "property_update_count": 2,
+     "path_update_count": 3
     },
     {
-     "DataStoreUpdate": {
-      "data_store_name": "form",
-      "property": "title",
-      "path": "lines",
-      "data": {
-       "str": "Chest"
-      },
-      "property_update_count": 4,
-      "path_update_count": 5
-     }
+     "data_store_name": "form",
+     "property": "title",
+     "path": "lines",
+     "data": "Chest",
+     "property_update_count": 4,
+     "path_update_count": 5
     }
    ]
   },

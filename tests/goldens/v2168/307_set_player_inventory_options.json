@@ -3,11 +3,11 @@
   "id": "survival_and_armor_tabs",
   "value": {
    "inventory_options": {
-    "left_inventory_tab": "SURVIVAL",
-    "right_inventory_tab": "ARMOR",
+    "left_inventory_tab": 6,
+    "right_inventory_tab": 3,
     "filtering": true,
-    "layout_inv": "DEFAULT",
-    "layout_craft": "INVENTORY_ONLY"
+    "layout_inv": 2,
+    "layout_craft": 1
    }
   },
   "bytes": "0c06010402"

@@ -3,18 +3,18 @@
   "id": "rotation_and_position_header",
   "value": {
    "move_data": {
-    "runtime_id": 300,
-    "header": {
-     "raw": 141
+    "runtime_id": {
+     "actor_runtime_id": 300
     },
+    "header": 141,
     "pos": {
      "x": 1.0,
      "y": 2.0,
      "z": 3.0
     },
-    "rot_x": -64,
+    "rot_x": 192,
     "rot_y": 45,
-    "rot_y_head": -111
+    "rot_y_head": 145
    }
   },
   "bytes": "ac028d0000803f0000004000004040c02d91"

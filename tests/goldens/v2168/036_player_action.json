@@ -2,8 +2,10 @@
  {
   "id": "start_using_item",
   "value": {
-   "runtime_id": 7,
-   "action": "START_USING_ITEM",
+   "runtime_id": {
+    "actor_runtime_id": 7
+   },
+   "action": 37,
    "pos": {
     "x": 1,
     "y": 2,

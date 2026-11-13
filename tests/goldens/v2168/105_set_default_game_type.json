@@ -2,7 +2,7 @@
  {
   "id": "spectator_default",
   "value": {
-   "default_game_type": "SPECTATOR"
+   "default_game_type": 6
   },
   "bytes": "0c"
  }

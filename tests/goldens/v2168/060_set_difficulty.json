@@ -2,7 +2,7 @@
  {
   "id": "hard_difficulty",
   "value": {
-   "difficulty": "HARD"
+   "difficulty": 3
   },
   "bytes": "03"
  }

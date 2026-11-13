@@ -2,19 +2,23 @@
  {
   "id": "update_two_identities",
   "value": {
-   "type": "UPDATE",
+   "type": 0,
    "identity_info": [
     {
      "scoreboard_id": {
       "raw_id": 1
      },
-     "player_id": 7
+     "player_id": {
+      "actor_unique_id": 7
+     }
     },
     {
      "scoreboard_id": {
       "raw_id": 2
      },
-     "player_id": 8
+     "player_id": {
+      "actor_unique_id": 8
+     }
     }
    ]
   },
@@ -23,13 +27,12 @@
  {
   "id": "remove_without_player_id",
   "value": {
-   "type": "REMOVE",
+   "type": 1,
    "identity_info": [
     {
      "scoreboard_id": {
       "raw_id": 1
-     },
-     "player_id": null
+     }
     }
    ]
   },

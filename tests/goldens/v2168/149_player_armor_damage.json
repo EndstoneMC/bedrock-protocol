@@ -4,7 +4,7 @@
   "value": {
    "slot_and_damage_pairs": [
     {
-     "armor_slot": "TORSO",
+     "armor_slot": 1,
      "damage": 3
     }
    ]

@@ -3,7 +3,7 @@
   "id": "operator_with_custom_flags",
   "value": {
    "target_player_id": 7,
-   "player_permissions": "OPERATOR",
+   "player_permissions": 2,
    "custom_permission_flags": 192
   },
   "bytes": "070000000000000004c000"

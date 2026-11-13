@@ -2,36 +2,39 @@
  {
   "id": "empty_item",
   "value": {
-   "runtime_id": 7,
+   "runtime_id": {
+    "actor_runtime_id": 7
+   },
    "item": {
     "id": 0,
     "stack_size": 0,
     "aux_value": 0,
-    "net_id_variant": null,
     "block_runtime_id": 0,
     "user_data_buffer": ""
    },
    "slot": 2,
    "selected_slot": 2,
-   "container_id": "INVENTORY"
+   "container_id": 0
   },
   "bytes": "070000000000000000020200"
  },
  {
   "id": "item_with_net_id",
   "value": {
-   "runtime_id": 7,
+   "runtime_id": {
+    "actor_runtime_id": 7
+   },
    "item": {
     "id": 323,
     "stack_size": 1,
     "aux_value": 3,
     "net_id_variant": 9,
     "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
+    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
    },
    "slot": 2,
    "selected_slot": 2,
-   "container_id": "INVENTORY"
+   "container_id": 0
   },
   "bytes": "0743010100030112000a00000000000000000000020200"
  }

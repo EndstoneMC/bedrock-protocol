@@ -11,9 +11,7 @@
  },
  {
   "id": "store_entry_point_absent",
-  "value": {
-   "client_store_entry_point_configuration": null
-  },
+  "value": {},
   "bytes": "00"
  }
 ]

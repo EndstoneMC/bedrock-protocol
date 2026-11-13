@@ -4,7 +4,7 @@
   "value": {
    "max_tests_per_batch": 100,
    "repeat_count": 2,
-   "rotation": "ROTATE_90",
+   "rotation": 1,
    "stop_on_failure": true,
    "test_pos": {
     "x": 1,

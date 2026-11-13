@@ -2,7 +2,7 @@
  {
   "id": "mace_smash_all_slots",
   "value": {
-   "cause": "MACE_SMASH",
+   "cause": 34,
    "dmg": 200,
    "armor_slots": 31
   },

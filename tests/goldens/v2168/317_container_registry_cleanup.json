@@ -4,12 +4,11 @@
   "value": {
    "removed_containers": [
     {
-     "name": "LEVEL_ENTITY_CONTAINER",
+     "name": 7,
      "dynamic_id": 9
     },
     {
-     "name": "ANVIL_RESULT_PREVIEW_CONTAINER",
-     "dynamic_id": null
+     "name": 2
     }
    ]
   },

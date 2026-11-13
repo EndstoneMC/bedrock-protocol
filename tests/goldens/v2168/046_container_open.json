@@ -2,14 +2,16 @@
  {
   "id": "horse_container",
   "value": {
-   "container_id": "FIRST",
-   "type": "HORSE",
+   "container_id": 1,
+   "type": 12,
    "pos": {
     "x": 1,
     "y": 70,
     "z": -3
    },
-   "entity_unique_id": 300
+   "entity_unique_id": {
+    "actor_unique_id": 300
+   }
   },
   "bytes": "010c028c0105d804"
  }

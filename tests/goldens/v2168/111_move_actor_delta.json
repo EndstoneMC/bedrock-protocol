@@ -3,13 +3,9 @@
   "id": "every_optional_absent",
   "value": {
    "move_data": {
-    "runtime_id": 2,
-    "new_position_x": null,
-    "new_position_y": null,
-    "new_position_z": null,
-    "rot_x": null,
-    "rot_y": null,
-    "rot_y_head": null,
+    "runtime_id": {
+     "actor_runtime_id": 2
+    },
     "is_on_ground": false,
     "force_move": false,
     "force_move_local_entity": false,
@@ -22,7 +18,9 @@
   "id": "every_optional_present",
   "value": {
    "move_data": {
-    "runtime_id": 2,
+    "runtime_id": {
+     "actor_runtime_id": 2
+    },
     "new_position_x": 1.0,
     "new_position_y": 2.0,
     "new_position_z": 3.0,

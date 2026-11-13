@@ -6,12 +6,13 @@
     "x": 2,
     "z": 3
    },
-   "dimension_id": 0,
+   "dimension_id": {
+    "value": 0
+   },
    "sub_chunks_count": 5,
-   "client_request_sub_chunk_limit": null,
    "cache_enabled": false,
    "cache_metadata": [],
-   "serialized_chunk": "aabb"
+   "serialized_chunk": "\u00aa\u00bb"
   },
   "bytes": "0406000500000002aabb"
  },
@@ -22,7 +23,9 @@
     "x": 2,
     "z": 3
    },
-   "dimension_id": 1,
+   "dimension_id": {
+    "value": 1
+   },
    "sub_chunks_count": 3,
    "client_request_sub_chunk_limit": 7,
    "cache_enabled": true,
@@ -31,7 +34,7 @@
      "blob_id": 1
     }
    ],
-   "serialized_chunk": "aa"
+   "serialized_chunk": "\u00aa"
   },
   "bytes": "04060203010e0101010000000000000001aa"
  }

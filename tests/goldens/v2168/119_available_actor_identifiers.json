@@ -2,34 +2,39 @@
  {
   "id": "pig_identifier_list",
   "value": {
-   "identifier_list": {
-    "idlist": {
-     "ListTag": {
-      "type": 10,
-      "tags": [
-       {
-        "CompoundTag": {
-         "bid": {
-          "StringTag": "minecraft:"
-         },
-         "hasspawnegg": {
-          "ByteTag": 1
-         },
-         "id": {
-          "StringTag": "minecraft:pig"
-         },
-         "rid": {
-          "IntTag": 12
-         },
-         "summonable": {
-          "ByteTag": 1
-         }
-        }
-       }
-      ]
-     }
-    }
-   }
+   "identifier_list": [
+    9,
+    "idlist",
+    10,
+    1,
+    8,
+    "bid",
+    {
+     "data": "minecraft:"
+    },
+    1,
+    "hasspawnegg",
+    {
+     "data": 1
+    },
+    8,
+    "id",
+    {
+     "data": "minecraft:pig"
+    },
+    3,
+    "rid",
+    {
+     "data": 12
+    },
+    1,
+    "summonable",
+    {
+     "data": 1
+    },
+    0,
+    0
+   ]
   },
   "bytes": "0a00090669646c6973740a0208036269640a6d696e6563726166743a010b686173737061776e65676701080269640d6d696e6563726166743a706967030372696418010a73756d6d6f6e61626c65010000"
  }

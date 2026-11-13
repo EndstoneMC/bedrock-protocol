@@ -12,8 +12,7 @@
   "id": "data_instance_id_absent",
   "value": {
    "screen_id": "s",
-   "form_id": 1,
-   "data_instance_id": null
+   "form_id": 1
   },
   "bytes": "01730100000000"
  }

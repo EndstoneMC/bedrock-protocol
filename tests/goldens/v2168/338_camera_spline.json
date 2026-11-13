@@ -27,7 +27,7 @@
       {
        "alpha": 0.5,
        "time_seconds": 1.25,
-       "easing_type": "IN_OUT_QUAD"
+       "easing_type": "in_out_quad"
       }
      ],
      "spline_rotation_frames": [
@@ -38,7 +38,7 @@
         "z": 30.0
        },
        "time_seconds": 2.5,
-       "easing_type": "IN_QUAD"
+       "easing_type": "in_quad"
       }
      ]
     }
@@ -66,8 +66,7 @@
      "spline_progress_frames": [
       {
        "alpha": 0.75,
-       "time_seconds": 1.5,
-       "easing_type": null
+       "time_seconds": 1.5
       }
      ],
      "spline_rotation_frames": [
@@ -77,8 +76,7 @@
         "y": 20.0,
         "z": 30.0
        },
-       "time_seconds": 2.0,
-       "easing_type": null
+       "time_seconds": 2.0
       }
      ]
     }

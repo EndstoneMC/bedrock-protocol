@@ -2,7 +2,7 @@
  {
   "id": "subtitle_title",
   "value": {
-   "type": "SUBTITLE",
+   "type": 3,
    "title_text": "hello",
    "fade_in_time": 10,
    "stay_time": 300,

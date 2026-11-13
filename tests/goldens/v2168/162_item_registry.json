@@ -7,19 +7,22 @@
      "name": "minecraft:stick",
      "id": 323,
      "is_component_based": false,
-     "item_version": "LEGACY",
-     "component_data": {}
+     "item_version": 0,
+     "component_data": 0
     },
     {
      "name": "minecraft:apple",
      "id": 880,
      "is_component_based": true,
-     "item_version": "DATA_DRIVEN",
-     "component_data": {
-      "minecraft:max_stack_size": {
-       "IntTag": 16
-      }
-     }
+     "item_version": 1,
+     "component_data": [
+      3,
+      "minecraft:max_stack_size",
+      {
+       "data": 16
+      },
+      0
+     ]
     }
    ]
   },

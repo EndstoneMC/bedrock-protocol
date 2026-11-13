@@ -2,7 +2,7 @@
  {
   "id": "vehicle_prediction",
   "value": {
-   "prediction_type": "VEHICLE",
+   "prediction_type": 1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -19,14 +19,16 @@
    },
    "vehicle_angular_velocity": 1.5,
    "on_ground": true,
-   "tick": 300
+   "tick": {
+    "input_tick": 300
+   }
   },
   "bytes": "010000803f00000040000040400000003f000000bf0000803e000034420000b442010000c03f01ac02"
  },
  {
   "id": "player_prediction",
   "value": {
-   "prediction_type": "PLAYER",
+   "prediction_type": 0,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -41,9 +43,10 @@
     "x": 45.0,
     "y": 90.0
    },
-   "vehicle_angular_velocity": null,
    "on_ground": false,
-   "tick": 300
+   "tick": {
+    "input_tick": 300
+   }
   },
   "bytes": "000000803f00000040000040400000003f000000bf0000803e000034420000b4420000ac02"
  }

@@ -3,13 +3,16 @@
   "id": "one_custom_dimension",
   "value": {
    "dimension_definition_group": {
-    "dimension_definitions": {
-     "test:dim": {
-      "height_maximum": 320,
-      "height_minimum": -64,
-      "generator_type": "OVERWORLD",
-      "dimension_type": 1000,
-      "pack_id": "01020304-0506-0708-090a-0b0c0d0e0f10"
+    "test:dim": {
+     "height_maximum": 320,
+     "height_minimum": -64,
+     "generator_type": 1,
+     "dimension_type": {
+      "value": 1000
+     },
+     "pack_id": {
+      "most_significant_bits": 72623859790382856,
+      "least_significant_bits": 651345242494996240
      }
     }
    }

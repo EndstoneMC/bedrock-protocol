@@ -2,8 +2,12 @@
  {
   "id": "negative_new_map_id",
   "value": {
-   "original_map_id": 300,
-   "new_map_id": -5
+   "original_map_id": {
+    "actor_unique_id": 300
+   },
+   "new_map_id": {
+    "actor_unique_id": -5
+   }
   },
   "bytes": "d80409"
  }

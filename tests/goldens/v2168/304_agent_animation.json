@@ -2,8 +2,10 @@
  {
   "id": "shrug_animation",
   "value": {
-   "anim": "SHRUG",
-   "runtime_id": 300
+   "anim": 1,
+   "runtime_id": {
+    "actor_runtime_id": 300
+   }
   },
   "bytes": "01ac02"
  }

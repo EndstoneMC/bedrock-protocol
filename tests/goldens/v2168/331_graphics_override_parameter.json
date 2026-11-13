@@ -2,18 +2,20 @@
  {
   "id": "float_value_with_player_id",
   "value": {
-   "keyframes": {
-    "0.5": {
-     "x": 1.0,
-     "y": 2.0,
-     "z": 3.0
+   "keyframes": [
+    {
+     "key": 0.5,
+     "value": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
     }
-   },
+   ],
    "float_value": 0.25,
-   "vec3_value": null,
    "biome_id": "plains",
    "player_id": "steve",
-   "parameter_id": "WAVES_DEPTH",
+   "parameter_id": 13,
    "reset_parameter": true
   },
   "bytes": "010000003f0000803f0000004000004040010000803e0006706c61696e73010573746576650d01"
@@ -21,22 +23,23 @@
  {
   "id": "vec3_value_without_player_id",
   "value": {
-   "keyframes": {
-    "0.5": {
-     "x": 1.0,
-     "y": 2.0,
-     "z": 3.0
+   "keyframes": [
+    {
+     "key": 0.5,
+     "value": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
     }
-   },
-   "float_value": null,
+   ],
    "vec3_value": {
     "x": 4.0,
     "y": 5.0,
     "z": 6.0
    },
    "biome_id": "plains",
-   "player_id": null,
-   "parameter_id": "WAVES_DEPTH",
+   "parameter_id": 13,
    "reset_parameter": true
   },
   "bytes": "010000003f0000803f00000040000040400001000080400000a0400000c04006706c61696e73000d01"

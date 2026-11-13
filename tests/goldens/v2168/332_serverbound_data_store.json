@@ -6,9 +6,7 @@
     "data_store_name": "inventory",
     "property": "hotbar",
     "path": "slots/0",
-    "data": {
-     "str": "diamond_sword"
-    },
+    "data": "diamond_sword",
     "property_update_count": 300,
     "path_update_count": 4294967294
    }
@@ -22,9 +20,7 @@
     "data_store_name": "hud",
     "property": "opacity",
     "path": "a",
-    "data": {
-     "float": 0.5
-    },
+    "data": 0.5,
     "property_update_count": 1,
     "path_update_count": 1
    }
@@ -38,9 +34,7 @@
     "data_store_name": "hud",
     "property": "visible",
     "path": "a",
-    "data": {
-     "bool": true
-    },
+    "data": true,
     "property_update_count": 1,
     "path_update_count": 1
    }

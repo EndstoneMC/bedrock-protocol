@@ -2,8 +2,12 @@
  {
   "id": "camera_without_target",
   "value": {
-   "camera_id": 300,
-   "target_player_id": -1
+   "camera_id": {
+    "actor_unique_id": 300
+   },
+   "target_player_id": {
+    "actor_unique_id": -1
+   }
   },
   "bytes": "d80401"
  }

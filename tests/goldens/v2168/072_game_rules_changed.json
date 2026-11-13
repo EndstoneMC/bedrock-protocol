@@ -7,16 +7,12 @@
      {
       "name": "showcoordinates",
       "can_be_modified_by_player": true,
-      "value": {
-       "bool": true
-      }
+      "value": true
      },
      {
       "name": "maxcommandchainlength",
       "can_be_modified_by_player": false,
-      "value": {
-       "int": 65535
-      }
+      "value": 65535
      }
     ]
    }
@@ -36,9 +32,7 @@
      {
       "name": "keepinventory",
       "can_be_modified_by_player": true,
-      "value": {
-       "float": 0.5
-      }
+      "value": 0.5
      }
     ]
    }

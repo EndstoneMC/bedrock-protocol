@@ -2,8 +2,8 @@
  {
   "id": "reset_three_hud_elements",
   "value": {
-   "hud_element": ["PAPER_DOLL", "HOT_BAR", "ITEM_TEXT"],
-   "hud_visible": "RESET"
+   "hud_element": [0, 5, 12],
+   "hud_visible": 1
   },
   "bytes": "03000a1802"
  }

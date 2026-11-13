@@ -4,15 +4,14 @@
   "value": {
    "responses": [
     {
-     "result": "SUCCESS",
+     "result": 0,
      "client_request_id": {
       "raw_id": -1
      },
      "containers": [
       {
        "full_container_name": {
-        "name": "LEVEL_ENTITY_CONTAINER",
-        "dynamic_id": null
+        "name": 7
        },
        "slots": [
         {
@@ -23,8 +22,7 @@
           "raw_id": 9
          },
          "custom_name": {
-          "unredacted_string": "n",
-          "redacted_string": null
+          "unredacted_string": "n"
          },
          "durability_correction": 5
         }
@@ -41,11 +39,10 @@
   "value": {
    "responses": [
     {
-     "result": "ERROR",
+     "result": 1,
      "client_request_id": {
       "raw_id": -1
-     },
-     "containers": null
+     }
     }
    ]
   },
@@ -56,14 +53,14 @@
   "value": {
    "responses": [
     {
-     "result": "SUCCESS",
+     "result": 0,
      "client_request_id": {
       "raw_id": -3
      },
      "containers": [
       {
        "full_container_name": {
-        "name": "LEVEL_ENTITY_CONTAINER",
+        "name": 7,
         "dynamic_id": 7
        },
        "slots": [
@@ -71,7 +68,6 @@
          "requested_slot": 2,
          "slot": 4,
          "amount": 0,
-         "item_stack_net_id": null,
          "custom_name": {
           "unredacted_string": "nm",
           "redacted_string": "rd"

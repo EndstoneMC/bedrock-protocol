@@ -4,16 +4,16 @@
   "value": {
    "data": {
     "target_player": 7,
-    "player_permissions": "OPERATOR",
-    "command_permissions": "OWNER",
+    "player_permissions": 2,
+    "command_permissions": 4,
     "layers": [
      {
-      "serialized_layer": "BASE",
+      "serialized_layer": 1,
       "abilities_set": 1536,
       "ability_values": 512,
-      "fly_speed": 0.05,
+      "fly_speed": 0.05000000074505806,
       "vertical_fly_speed": 1.0,
-      "walk_speed": 0.1
+      "walk_speed": 0.10000000149011612
      }
     ]
    }

@@ -3,7 +3,7 @@
   "id": "both_options_present",
   "value": {
    "update": {
-    "graphics_mode": "RAY_TRACED",
+    "graphics_mode": 3,
     "filter_profanity": true
    }
   },
@@ -12,10 +12,7 @@
  {
   "id": "both_options_absent",
   "value": {
-   "update": {
-    "graphics_mode": null,
-    "filter_profanity": null
-   }
+   "update": {}
   },
   "bytes": "0000"
  }

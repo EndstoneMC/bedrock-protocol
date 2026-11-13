@@ -8,9 +8,7 @@
  },
  {
   "id": "form_id_absent",
-  "value": {
-   "form_id": null
-  },
+  "value": {},
   "bytes": "00"
  }
 ]

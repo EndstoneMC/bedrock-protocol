@@ -2,15 +2,20 @@
  {
   "id": "horse_equipment",
   "value": {
-   "container_id": "FIRST",
-   "type": "HORSE",
+   "container_id": 1,
+   "type": 12,
    "size": 2,
-   "entity_unique_id": 7,
-   "data": {
-    "Size": {
-     "IntTag": 2
-    }
-   }
+   "entity_unique_id": {
+    "actor_unique_id": 7
+   },
+   "data": [
+    3,
+    "Size",
+    {
+     "data": 2
+    },
+    0
+   ]
   },
   "bytes": "010c040e0a00030453697a650400"
  }

@@ -2,9 +2,9 @@
  {
   "id": "reset_instantiation_succeeded",
   "value": {
-   "operation": "RESET",
-   "category": "INSTANTIATION",
-   "code_status": "SUCCEEDED"
+   "operation": 3,
+   "category": 2,
+   "code_status": 5
   },
   "bytes": "030205"
  }

@@ -22,16 +22,18 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000001",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 1
+     },
      "tag": "crafting_table",
      "priority": 3,
      "assume_symmetry": true,
      "unlocking_requirement": {
-      "context": "ALWAYS_UNLOCKED",
-      "ingredients": null
+      "context": 1
      },
      "net_id": {
       "raw_id": 11
@@ -56,14 +58,17 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000002",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 2
+     },
      "tag": "crafting_table",
      "priority": 1,
      "unlocking_requirement": {
-      "context": "NONE",
+      "context": 0,
       "ingredients": [
        {
         "descriptor": {
@@ -81,7 +86,10 @@
    ],
    "multi_recipes": [
     {
-     "uuid": "00000000-0000-0000-0000-000000000003",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 3
+     },
      "net_id": {
       "raw_id": 13
      }
@@ -119,7 +127,7 @@
       "stack_size": 4,
       "aux_value": 0,
       "block_runtime_id": 1752181952,
-      "user_data_buffer": "00000000000000000000"
+      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
      },
      "tag": "smithing_table",
      "net_id": {
@@ -220,14 +228,17 @@
        "stack_size": 1,
        "aux_value": 0,
        "block_runtime_id": 0,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "b3840292-a2a7-4762-a814-32e3e7ee7dc0",
+     "uuid": {
+      "most_significant_bits": 12935466858532259682,
+      "least_significant_bits": 12111361252336238016
+     },
      "tag": "crafting_table",
      "priority": 0,
      "unlocking_requirement": {
-      "context": "NONE",
+      "context": 0,
       "ingredients": [
        {
         "descriptor": {
@@ -261,14 +272,17 @@
        "stack_size": 1,
        "aux_value": 0,
        "block_runtime_id": 0,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000004",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 4
+     },
      "tag": "furnace",
      "priority": 90,
      "unlocking_requirement": {
-      "context": "NONE",
+      "context": 0,
       "ingredients": [
        {
         "descriptor": {
@@ -325,15 +339,18 @@
        "stack_size": 3,
        "aux_value": 0,
        "block_runtime_id": 1014956299,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000005",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 5
+     },
      "tag": "deprecated",
      "priority": 0,
      "assume_symmetry": true,
      "unlocking_requirement": {
-      "context": "NONE",
+      "context": 0,
       "ingredients": [
        {
         "descriptor": {
@@ -381,14 +398,16 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000001",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 1
+     },
      "tag": "crafting_table",
      "priority": 3,
      "assume_symmetry": true,
-     "unlocking_requirement": null,
      "net_id": {
       "raw_id": 11
      }
@@ -412,13 +431,15 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "00000000000000000000"
+       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
       }
      ],
-     "uuid": "00000000-0000-0000-0000-000000000002",
+     "uuid": {
+      "most_significant_bits": 0,
+      "least_significant_bits": 2
+     },
      "tag": "crafting_table",
      "priority": 1,
-     "unlocking_requirement": null,
      "net_id": {
       "raw_id": 12
      }

@@ -3,8 +3,7 @@
   "id": "json_response_arm",
   "value": {
    "form_id": 300,
-   "json_response": "[true]\n",
-   "form_cancel_reason": null
+   "json_response": "[true]\n"
   },
   "bytes": "ac0201075b747275655d0a00"
  },
@@ -12,8 +11,7 @@
   "id": "cancel_reason_arm",
   "value": {
    "form_id": 1,
-   "json_response": null,
-   "form_cancel_reason": "USER_BUSY"
+   "form_cancel_reason": 1
   },
   "bytes": "01000101"
  }

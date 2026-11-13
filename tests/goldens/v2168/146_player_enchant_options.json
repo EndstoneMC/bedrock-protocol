@@ -10,14 +10,14 @@
       "item_enchants": [
        [
         {
-         "enchant_type": "SHARPNESS",
+         "enchant_type": 9,
          "level": 5
         }
        ],
        [],
        [
         {
-         "enchant_type": "UNBREAKING",
+         "enchant_type": 17,
          "level": 3
         }
        ]

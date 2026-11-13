@@ -27,7 +27,7 @@
      "name": "test",
      "description": "a test",
      "flags": 258,
-     "permission": "ADMIN",
+     "permission": "admin",
      "alias_enum": -1,
      "chained_subcommand_indexes": [0],
      "overloads": [
@@ -55,7 +55,7 @@
     {
      "enum_value_symbol": 0,
      "enum_symbol": 0,
-     "constraints": [1]
+     "constraints": "\u0001"
     }
    ]
   },

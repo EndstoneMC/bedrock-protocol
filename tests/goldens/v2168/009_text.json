@@ -4,14 +4,11 @@
   "value": {
    "localize": false,
    "body": {
-    "MessageOnly": {
-     "type": "TEXT_OBJECT_ANNOUNCEMENT",
-     "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
-    }
+    "type": 11,
+    "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
    },
    "xuid": "2535400000000001",
-   "platform_id": "pc",
-   "filtered_message": null
+   "platform_id": "pc"
   },
   "bytes": "00000b1b7b2272617774657874223a5b7b2274657874223a226869227d5d7d103235333534303030303030303030303102706300"
  },
@@ -20,11 +17,9 @@
   "value": {
    "localize": false,
    "body": {
-    "AuthorAndMessage": {
-     "type": "CHAT",
-     "author": "Steve",
-     "message": "hello"
-    }
+    "type": 1,
+    "author": "Steve",
+    "message": "hello"
    },
    "xuid": "2535400000000000",
    "platform_id": "switch-1",
@@ -37,15 +32,12 @@
   "value": {
    "localize": true,
    "body": {
-    "MessageAndParams": {
-     "type": "TRANSLATE",
-     "message": "commands.kill.successful",
-     "params": ["Alex"]
-    }
+    "type": 2,
+    "message": "commands.kill.successful",
+    "params": ["Alex"]
    },
    "xuid": "2535400000000002",
-   "platform_id": "xbox",
-   "filtered_message": null
+   "platform_id": "xbox"
   },
   "bytes": "01020218636f6d6d616e64732e6b696c6c2e7375636365737366756c0104416c657810323533353430303030303030303030320478626f7800"
  }

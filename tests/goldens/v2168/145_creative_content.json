@@ -4,14 +4,14 @@
   "value": {
    "groups": [
     {
-     "creative_item_category": "NATURE",
+     "creative_item_category": 2,
      "name": "itemGroup.name.planks",
      "icon": {
       "id": 5,
       "stack_size": 1,
       "aux_value": 0,
       "block_runtime_id": 1921718966,
-      "user_data_buffer": "00000000000000000000"
+      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
      }
     }
    ],
@@ -25,7 +25,7 @@
       "stack_size": 1,
       "aux_value": 0,
       "block_runtime_id": 1921718966,
-      "user_data_buffer": "00000000000000000000"
+      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
      },
      "group_index": 0
     }

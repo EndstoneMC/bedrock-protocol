@@ -19,7 +19,7 @@ build-dir = "build/{build_type}"
 cmake.args = ["-GNinja"]
 wheel.py-api = "cp312"
 sdist.inclusion-mode = "explicit"
-sdist.include = ["/pyproject.toml", "/CMakeLists.txt", "/LICENSE", "/README.md", "/cmake/", "/include/", "/protocol/*.py", "/compiler/pyproject.toml", "/compiler/src/", "/python/", "/tests/*.py", "/tests/goldens/"]
+sdist.include = ["/pyproject.toml", "/CMakeLists.txt", "/LICENSE", "/README.md", "/cmake/", "/include/", "/protocol/*.py", "/compiler/pyproject.toml", "/compiler/LICENSE", "/compiler/src/", "/python/", "/tests/*.py", "/tests/goldens/"]
 sdist.exclude = ["__pycache__/"]
 
 [tool.uv]
@@ -42,7 +42,8 @@ skip = "*-musllinux_*"
 archs = ["auto64"]
 test-requires = ["pytest", "mypy"]
 test-command = [
-    "python -I -c \"import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None\"",
+    "python -I -c \"import importlib.util as u, bedrock_protocol; assert u.find_spec('bedrock_protocol_compiler') is None\"",
+    "pip install {project}/compiler",
     "pytest {project}/tests",
     "mypy --strict --config-file {project}/pyproject.toml -p bedrock_protocol",
 ]
@@ -71,8 +72,8 @@ raises-require-match-for = ["*"]
 "compiler/src/bedrock_protocol_compiler/builder.py" = ["B023"]
 "compiler/src/bedrock_protocol_compiler/cpp/field.py" = ["ARG002"]
 "compiler/src/bedrock_protocol_compiler/dsl.py" = ["ARG001", "ARG002", "N801"]
-
 "tests/cereal.py" = ["ARG002"]
+
 [tool.mypy]
 cache_dir = ".cache/mypy"
 

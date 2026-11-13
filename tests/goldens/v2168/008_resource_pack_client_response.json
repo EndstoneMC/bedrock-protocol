@@ -3,9 +3,8 @@
   "id": "downloading_arm",
   "value": {
    "response": {
-    "Downloading": {
-     "downloading_packs": ["5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d_1.2.3"]
-    }
+    "response_type": "downloading",
+    "downloading_packs": ["5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d_1.2.3"]
    }
   },
   "bytes": "010b646f776e6c6f6164696e67012a35613163326233642d346535662d346136622d386337642d3965306631613262336334645f312e322e33"
@@ -14,7 +13,7 @@
   "id": "stack_finished_arm",
   "value": {
    "response": {
-    "ResourcePackStackFinished": {}
+    "response_type": "resourcepackstackfinished"
    }
   },
   "bytes": "03197265736f757263657061636b737461636b66696e6973686564"
@@ -23,7 +22,7 @@
   "id": "cancel_arm",
   "value": {
    "response": {
-    "Cancel": {}
+    "response_type": "cancel"
    }
   },
   "bytes": "000663616e63656c"
@@ -32,7 +31,7 @@
   "id": "downloading_finished_arm",
   "value": {
    "response": {
-    "DownloadingFinished": {}
+    "response_type": "downloadingfinished"
    }
   },
   "bytes": "0213646f776e6c6f6164696e6766696e6973686564"

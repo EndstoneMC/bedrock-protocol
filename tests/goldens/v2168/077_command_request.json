@@ -4,13 +4,16 @@
   "value": {
    "command": "/say hi",
    "origin": {
-    "type": "AUTOMATION_PLAYER",
-    "uuid": "01234567-89ab-cdef-fedc-ba9876543210",
+    "type": "automationplayer",
+    "uuid": {
+     "most_significant_bits": 81985529216486895,
+     "least_significant_bits": 18364758544493064720
+    },
     "request_id": "req-1",
     "player_id": -2
    },
    "internal_source": true,
-   "version": "TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE"
+   "version": "testforblockcommanddoesnotignoreblockstate"
   },
   "bytes": "072f736179206869106175746f6d6174696f6e706c61796572efcdab89674523011032547698badcfe057265712d31feffffffffffffff012a74657374666f72626c6f636b636f6d6d616e64646f65736e6f7469676e6f7265626c6f636b7374617465"
  }

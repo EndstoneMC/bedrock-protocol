@@ -4,7 +4,7 @@
   "value": {
    "enum_name": "kits",
    "values": ["alpha", "beta"],
-   "type": "REMOVE"
+   "type": 1
   },
   "bytes": "046b6974730205616c706861046265746101"
  }

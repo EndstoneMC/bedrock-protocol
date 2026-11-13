@@ -2,7 +2,9 @@
  {
   "id": "every_optional_present",
   "value": {
-   "map_id": 1,
+   "map_id": {
+    "actor_unique_id": 1
+   },
    "dimension": 1,
    "locked": true,
    "map_origin": {
@@ -10,17 +12,21 @@
     "y": 2,
     "z": 3
    },
-   "creation_map_ids": [7],
+   "creation_map_ids": [
+    {
+     "actor_unique_id": 7
+    }
+   ],
    "scale": 4,
    "unique_ids": [
     {
-     "type": "ENTITY",
-     "key_entity_id": 9,
-     "key_block_pos": null
+     "type": 0,
+     "key_entity_id": {
+      "actor_unique_id": 9
+     }
     },
     {
-     "type": "BLOCK_ENTITY",
-     "key_entity_id": null,
+     "type": 1,
      "key_block_pos": {
       "x": 4,
       "y": 5,
@@ -30,12 +36,14 @@
    ],
    "decorations": [
     {
-     "image": "MARKER_RED",
+     "image": 2,
      "rotation": 3,
      "x": 4,
      "y": 5,
      "label": "hi",
-     "color": 67305985
+     "color": {
+      "color": 67305985
+     }
     }
    ],
    "width": 2,
@@ -49,23 +57,16 @@
  {
   "id": "every_optional_absent",
   "value": {
-   "map_id": 5,
+   "map_id": {
+    "actor_unique_id": 5
+   },
    "dimension": 1,
    "locked": false,
    "map_origin": {
     "x": 1,
     "y": 2,
     "z": 3
-   },
-   "creation_map_ids": null,
-   "scale": null,
-   "unique_ids": null,
-   "decorations": null,
-   "width": null,
-   "height": null,
-   "start_x": null,
-   "start_y": null,
-   "map_pixels": null
+   }
   },
   "bytes": "0a0100020406000000000000000000"
  }

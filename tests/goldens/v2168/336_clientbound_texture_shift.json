@@ -2,7 +2,7 @@
  {
   "id": "start_shift_with_three_steps",
   "value": {
-   "action": "START",
+   "action": 2,
    "collection_name": "shift",
    "from_step": "dawn",
    "to_step": "dusk",

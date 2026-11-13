@@ -2,8 +2,8 @@
  {
   "id": "server_initiated_armor_close",
   "value": {
-   "container_id": "ARMOR",
-   "container_type": "ARMOR",
+   "container_id": 120,
+   "container_type": 18,
    "server_initiated_close": true
   },
   "bytes": "781201"

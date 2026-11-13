@@ -4,8 +4,8 @@
   "value": {
    "intensity": 0.5,
    "seconds": 2.0,
-   "shake_type": "ROTATIONAL",
-   "shake_action": "ADD"
+   "shake_type": 1,
+   "shake_action": 0
   },
   "bytes": "0000003f000000400100"
  }

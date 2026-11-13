@@ -2,13 +2,13 @@
  {
   "id": "start_reaction",
   "value": {
-   "type": "START_REACTION",
+   "type": 1,
    "pos": {
     "x": 1,
     "y": -2,
     "z": 300
    },
-   "reaction": "MISC_LARGE_SMOKE"
+   "reaction": 12
   },
   "bytes": "010203d8040c"
  }

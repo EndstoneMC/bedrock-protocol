@@ -2,15 +2,16 @@
  {
   "id": "one_actor_data_item",
   "value": {
-   "id": 2,
+   "id": {
+    "actor_runtime_id": 2
+   },
    "packed_items": {
     "data": [
      {
       "id": 38,
       "payload": {
-       "DataItemFloatPayload": {
-        "value": 0.5
-       }
+       "type": 3,
+       "value": 0.5
       }
      }
     ]
@@ -29,103 +30,98 @@
      }
     ]
    },
-   "tick": 100
+   "tick": {
+    "input_tick": 100
+   }
   },
   "bytes": "02012603030000003f01010301020000003f64"
  },
  {
   "id": "one_of_each_actor_data_arm",
   "value": {
-   "id": 2,
+   "id": {
+    "actor_runtime_id": 2
+   },
    "packed_items": {
     "data": [
      {
       "id": 2,
       "payload": {
-       "DataItemIntPayload": {
-        "value": 7
-       }
+       "type": 2,
+       "value": 7
       }
      },
      {
       "id": 3,
       "payload": {
-       "DataItemBytePayload": {
-        "value": 3
-       }
+       "type": 0,
+       "value": 3
       }
      },
      {
       "id": 4,
       "payload": {
-       "DataItemStringPayload": {
-        "value": "Bob"
-       }
+       "type": 4,
+       "value": "Bob"
       }
      },
      {
       "id": 5,
       "payload": {
-       "DataItemInt64Payload": {
-        "value": -4000000000
-       }
+       "type": 7,
+       "value": -4000000000
       }
      },
      {
       "id": 7,
       "payload": {
-       "DataItemShortPayload": {
-        "value": 300
-       }
+       "type": 1,
+       "value": 300
       }
      },
      {
       "id": 28,
       "payload": {
-       "DataItemPosPayload": {
-        "value": {
-         "x": 1,
-         "y": -2,
-         "z": 3
-        }
+       "type": 6,
+       "value": {
+        "x": 1,
+        "y": -2,
+        "z": 3
        }
       }
      },
      {
       "id": 118,
       "payload": {
-       "DataItemCompoundTagPayload": {
-        "value": {
-         "Hitboxes": {
-          "ListTag": {
-           "type": 10,
-           "tags": [
-            {
-             "CompoundTag": {
-              "Height": {
-               "FloatTag": 1.5
-              },
-              "Width": {
-               "FloatTag": 0.75
-              }
-             }
-            }
-           ]
-          }
-         }
-        }
-       }
+       "type": 5,
+       "value": [
+        9,
+        "Hitboxes",
+        10,
+        1,
+        5,
+        "Height",
+        {
+         "data": 1.5
+        },
+        5,
+        "Width",
+        {
+         "data": 0.75
+        },
+        0,
+        0
+       ]
       }
      },
      {
       "id": 130,
       "payload": {
-       "DataItemVec3Payload": {
-        "value": {
-         "x": 0.5,
-         "y": 1.5,
-         "z": 2.5
-        }
+       "type": 8,
+       "value": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 2.5
        }
       }
      }
@@ -145,7 +141,9 @@
      }
     ]
    },
-   "tick": 100
+   "tick": {
+    "input_tick": 100
+   }
   },
   "bytes": "02080202020e0300000304040403426f62050707ff9fd9e61d0701012c011c06060203067605050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f0000820108080000003f0000c03f0000204001010301020000003f64"
  }

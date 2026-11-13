@@ -2,7 +2,9 @@
  {
   "id": "one_sub_chunk_offset",
   "value": {
-   "dimension_type": 0,
+   "dimension_type": {
+    "value": 0
+   },
    "sub_chunk_pos_offsets": [
     {
      "x": -1,

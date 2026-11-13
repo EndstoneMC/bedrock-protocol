@@ -2,15 +2,18 @@
  {
   "id": "one_actor_data_item",
   "value": {
-   "id": 1,
-   "runtime_id": 2,
+   "id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
    "item": {
     "id": 323,
     "stack_size": 1,
     "aux_value": 0,
-    "net_id_variant": null,
     "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
+    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
    },
    "pos": {
     "x": 1.0,
@@ -27,9 +30,8 @@
      {
       "id": 38,
       "payload": {
-       "DataItemFloatPayload": {
-        "value": 0.5
-       }
+       "type": 3,
+       "value": 0.5
       }
      }
     ]
@@ -41,15 +43,19 @@
  {
   "id": "net_id_and_each_actor_data_arm",
   "value": {
-   "id": 1,
-   "runtime_id": 2,
+   "id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
    "item": {
     "id": 323,
     "stack_size": 1,
     "aux_value": 0,
     "net_id_variant": 9,
     "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
+    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
    },
    "pos": {
     "x": 1.0,
@@ -66,90 +72,81 @@
      {
       "id": 2,
       "payload": {
-       "DataItemIntPayload": {
-        "value": 7
-       }
+       "type": 2,
+       "value": 7
       }
      },
      {
       "id": 3,
       "payload": {
-       "DataItemBytePayload": {
-        "value": 3
-       }
+       "type": 0,
+       "value": 3
       }
      },
      {
       "id": 4,
       "payload": {
-       "DataItemStringPayload": {
-        "value": "Bob"
-       }
+       "type": 4,
+       "value": "Bob"
       }
      },
      {
       "id": 5,
       "payload": {
-       "DataItemInt64Payload": {
-        "value": -4000000000
-       }
+       "type": 7,
+       "value": -4000000000
       }
      },
      {
       "id": 7,
       "payload": {
-       "DataItemShortPayload": {
-        "value": 300
-       }
+       "type": 1,
+       "value": 300
       }
      },
      {
       "id": 28,
       "payload": {
-       "DataItemPosPayload": {
-        "value": {
-         "x": 1,
-         "y": -2,
-         "z": 3
-        }
+       "type": 6,
+       "value": {
+        "x": 1,
+        "y": -2,
+        "z": 3
        }
       }
      },
      {
       "id": 118,
       "payload": {
-       "DataItemCompoundTagPayload": {
-        "value": {
-         "Hitboxes": {
-          "ListTag": {
-           "type": 10,
-           "tags": [
-            {
-             "CompoundTag": {
-              "Height": {
-               "FloatTag": 1.5
-              },
-              "Width": {
-               "FloatTag": 0.75
-              }
-             }
-            }
-           ]
-          }
-         }
-        }
-       }
+       "type": 5,
+       "value": [
+        9,
+        "Hitboxes",
+        10,
+        1,
+        5,
+        "Height",
+        {
+         "data": 1.5
+        },
+        5,
+        "Width",
+        {
+         "data": 0.75
+        },
+        0,
+        0
+       ]
       }
      },
      {
       "id": 130,
       "payload": {
-       "DataItemVec3Payload": {
-        "value": {
-         "x": 0.5,
-         "y": 1.5,
-         "z": 2.5
-        }
+       "type": 8,
+       "value": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 2.5
        }
       }
      }

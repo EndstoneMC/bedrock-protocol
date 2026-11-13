@@ -3,16 +3,14 @@
   "id": "block_command_data_arm",
   "value": {
    "target": {
-    "BlockCommandData": {
-     "block_pos": {
-      "x": 1,
-      "y": -2,
-      "z": 300
-     },
-     "mode": "CHAIN",
-     "redstone_mode": true,
-     "is_conditional": true
-    }
+    "block_pos": {
+     "x": 1,
+     "y": -2,
+     "z": 300
+    },
+    "mode": 2,
+    "redstone_mode": true,
+    "is_conditional": true
    },
    "command": "say hi",
    "last_output": "done",
@@ -28,8 +26,8 @@
   "id": "entity_command_target_arm",
   "value": {
    "target": {
-    "EntityCommandTarget": {
-     "entity_id": 300
+    "entity_id": {
+     "actor_runtime_id": 300
     }
    },
    "command": "say hi",

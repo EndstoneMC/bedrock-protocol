@@ -2,18 +2,22 @@
  {
   "id": "mob_killed_event",
   "value": {
-   "player_unique_id": -5,
-   "type": "MOB_KILLED",
+   "player_unique_id": {
+    "actor_unique_id": -5
+   },
+   "type": 4,
    "use_player_id": true,
    "event_data": {
-    "MobKilled": {
-     "killer_entity_id": 1,
-     "killed_mob_id": 2,
-     "damage_child_type": "PLAYER",
-     "damage_source": 2,
-     "trader_tier": -1,
-     "trader_name": "trader"
-    }
+    "killer_entity_id": {
+     "actor_unique_id": 1
+    },
+    "killed_mob_id": {
+     "actor_unique_id": 2
+    },
+    "damage_child_type": 319,
+    "damage_source": 2,
+    "trader_tier": -1,
+    "trader_name": "trader"
    }
   },
   "bytes": "090801040204fe04040106747261646572"
@@ -21,16 +25,16 @@
  {
   "id": "item_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "ITEM_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 31,
    "use_player_id": false,
    "event_data": {
-    "ItemUsed": {
-     "item_id": 306,
-     "item_aux": 5,
-     "use_method": 1,
-     "count": 2
-    }
+    "item_id": 306,
+    "item_aux": 5,
+    "use_method": 1,
+    "count": 2
    }
   },
   "bytes": "0e3e00143201050000000100000002000000"
@@ -38,14 +42,14 @@
  {
   "id": "poi_cauldron_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "POI_CAULDRON_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 15,
    "use_player_id": false,
    "event_data": {
-    "POICauldronUsed": {
-     "interaction_type": "COOKING",
-     "item_id": 307
-    }
+    "interaction_type": 9,
+    "item_id": 307
    }
   },
   "bytes": "0e1e000a093301"
@@ -53,15 +57,15 @@
  {
   "id": "cauldron_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "CAULDRON_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 5,
    "use_player_id": false,
    "event_data": {
-    "CauldronUsed": {
-     "contents_color": 5,
-     "contents_type": -2,
-     "fill_level": 300
-    }
+    "contents_color": 5,
+    "contents_type": -2,
+    "fill_level": 300
    }
   },
   "bytes": "0e0a000505feff2c01"
@@ -69,13 +73,13 @@
  {
   "id": "achievement_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "ACHIEVEMENT",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 0,
    "use_player_id": false,
    "event_data": {
-    "Achievement": {
-     "achievement_id": "IRON_BELLY"
-    }
+    "achievement_id": 20
    }
   },
   "bytes": "0e00000014"
@@ -83,29 +87,31 @@
  {
   "id": "honey_harvested_empty_arm",
   "value": {
-   "player_unique_id": 7,
-   "type": "HONEY_HARVESTED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 22,
    "use_player_id": false,
-   "event_data": {
-    "Empty": {}
-   }
+   "event_data": {}
   },
   "bytes": "0e2c0015"
  },
  {
   "id": "interaction_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "INTERACTION",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 1,
    "use_player_id": false,
    "event_data": {
-    "Interaction": {
-     "interacted_entity_id": 9,
-     "interaction_type": "TAMING",
-     "interacted_entity_type": 4,
-     "interacted_entity_variant": 2,
-     "interacted_entity_color": 3
-    }
+    "interacted_entity_id": {
+     "actor_unique_id": 9
+    },
+    "interaction_type": 2,
+    "interacted_entity_type": 4,
+    "interacted_entity_variant": 2,
+    "interacted_entity_color": 3
    }
   },
   "bytes": "0e0200011202080403"
@@ -113,13 +119,13 @@
  {
   "id": "portal_created_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "PORTAL_CREATED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 2,
    "use_player_id": false,
    "event_data": {
-    "PortalCreated": {
-     "built_in_dimension": 1
-    }
+    "built_in_dimension": 1
    }
   },
   "bytes": "0e04000202"
@@ -127,14 +133,14 @@
  {
   "id": "portal_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "PORTAL_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 3,
    "use_player_id": false,
    "event_data": {
-    "PortalUsed": {
-     "from_dimension": 0,
-     "to_dimension": 1
-    }
+    "from_dimension": 0,
+    "to_dimension": 1
    }
   },
   "bytes": "0e0600030002"
@@ -142,16 +148,16 @@
  {
   "id": "player_died_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "PLAYER_DIED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 6,
    "use_player_id": false,
    "event_data": {
-    "PlayerDied": {
-     "killer_id": 5,
-     "killer_variant": 2,
-     "damage_source": 3,
-     "in_raid": true
-    }
+    "killer_id": 5,
+    "killer_variant": 2,
+    "damage_source": 3,
+    "in_raid": true
    }
   },
   "bytes": "0e0c00060a040601"
@@ -159,15 +165,17 @@
  {
   "id": "boss_killed_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "BOSS_KILLED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 7,
    "use_player_id": false,
    "event_data": {
-    "BossKilled": {
-     "boss_unique_id": 12,
-     "party_size": 3,
-     "boss_type": 4
-    }
+    "boss_unique_id": {
+     "actor_unique_id": 12
+    },
+    "party_size": 3,
+    "boss_type": 4
    }
   },
   "bytes": "0e0e0007180608"
@@ -175,16 +183,16 @@
  {
   "id": "slash_command_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "SLASH_COMMAND",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 11,
    "use_player_id": false,
    "event_data": {
-    "SlashCommand": {
-     "success_count": 2,
-     "error_count": 1,
-     "command_name": "give",
-     "error_list": "err"
-    }
+    "success_count": 2,
+    "error_count": 1,
+    "command_name": "give",
+    "error_list": "err"
    }
   },
   "bytes": "0e1600080402046769766503657272"
@@ -192,15 +200,15 @@
  {
   "id": "mob_born_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "MOB_BORN",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 13,
    "use_player_id": false,
    "event_data": {
-    "MobBorn": {
-     "baby_type": 5,
-     "baby_variant": 2,
-     "baby_color": 3
-    }
+    "baby_type": 5,
+    "baby_variant": 2,
+    "baby_color": 3
    }
   },
   "bytes": "0e1a00090a0403"
@@ -208,14 +216,14 @@
  {
   "id": "composter_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "COMPOSTER_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 16,
    "use_player_id": false,
    "event_data": {
-    "ComposterUsed": {
-     "interaction_type": "COMPOST_ITEM_PLACED",
-     "item_id": 306
-    }
+    "interaction_type": 19,
+    "item_id": 306
    }
   },
   "bytes": "0e20000b133201"
@@ -223,13 +231,13 @@
  {
   "id": "bell_used_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "BELL_USED",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 17,
    "use_player_id": false,
    "event_data": {
-    "BellUsed": {
-     "item_id": 307
-    }
+    "item_id": 307
    }
   },
   "bytes": "0e22000c3301"
@@ -237,13 +245,13 @@
  {
   "id": "actor_definition_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "ACTOR_DEFINITION",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 18,
    "use_player_id": false,
    "event_data": {
-    "ActorDefinition": {
-     "event_name": "event"
-    }
+    "event_name": "event"
    }
   },
   "bytes": "0e24000d056576656e74"
@@ -251,15 +259,15 @@
  {
   "id": "raid_update_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "RAID_UPDATE",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 19,
    "use_player_id": false,
    "event_data": {
-    "RaidUpdate": {
-     "current_wave": 2,
-     "total_waves": 5,
-     "success": true
-    }
+    "current_wave": 2,
+    "total_waves": 5,
+    "success": true
    }
   },
   "bytes": "0e26000e040a01"
@@ -267,13 +275,13 @@
  {
   "id": "target_block_hit_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "TARGET_BLOCK_HIT",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 23,
    "use_player_id": false,
    "event_data": {
-    "TargetBlockHit": {
-     "redstone_level": 7
-    }
+    "redstone_level": 7
    }
   },
   "bytes": "0e2e000f0e"
@@ -281,14 +289,14 @@
  {
   "id": "piglin_barter_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "PIGLIN_BARTER",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 24,
    "use_player_id": false,
    "event_data": {
-    "PiglinBarter": {
-     "item_id": 306,
-     "was_targeting_bartering_player": true
-    }
+    "item_id": 306,
+    "was_targeting_bartering_player": true
    }
   },
   "bytes": "0e300010e40401"
@@ -296,13 +304,13 @@
  {
   "id": "waxed_or_unwaxed_copper_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "PLAYER_WAXED_OR_UNWAXED_COPPER",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 25,
    "use_player_id": false,
    "event_data": {
-    "PlayerWaxedOrUnwaxedCopper": {
-     "block_id": 5
-    }
+    "block_id": 5
    }
   },
   "bytes": "0e3200110a"
@@ -310,13 +318,13 @@
  {
   "id": "code_builder_runtime_action_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "CODE_BUILDER_RUNTIME_ACTION",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 26,
    "use_player_id": false,
    "event_data": {
-    "CodeBuilderRuntimeAction": {
-     "runtime_action": "run"
-    }
+    "runtime_action": "run"
    }
   },
   "bytes": "0e3400120372756e"
@@ -324,14 +332,14 @@
  {
   "id": "code_builder_scoreboard_event",
   "value": {
-   "player_unique_id": 7,
-   "type": "CODE_BUILDER_SCOREBOARD",
+   "player_unique_id": {
+    "actor_unique_id": 7
+   },
+   "type": 27,
    "use_player_id": false,
    "event_data": {
-    "CodeBuilderScoreboard": {
-     "objective_name": "obj",
-     "score": 9
-    }
+    "objective_name": "obj",
+    "score": 9
    }
   },
   "bytes": "0e360013036f626a12"

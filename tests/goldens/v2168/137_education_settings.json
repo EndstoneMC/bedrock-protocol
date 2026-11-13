@@ -15,6 +15,7 @@
     "local_settings": {
      "code_builder_override_uri": "https://override/"
     },
+    "_deprecated": false,
     "external_link_settings": {
      "url": "https://link/",
      "display_name": "Link"
@@ -33,11 +34,8 @@
     "disable_legacy_title_bar": true,
     "post_process_filter": "c",
     "screenshot_border_resource_path": "d",
-    "agent_capabilities": null,
-    "local_settings": {
-     "code_builder_override_uri": null
-    },
-    "external_link_settings": null
+    "local_settings": {},
+    "_deprecated": false
    }
   },
   "bytes": "0161016201010163016400000000"
@@ -52,13 +50,9 @@
     "disable_legacy_title_bar": true,
     "post_process_filter": "c",
     "screenshot_border_resource_path": "d",
-    "agent_capabilities": {
-     "can_modify_blocks": null
-    },
-    "local_settings": {
-     "code_builder_override_uri": null
-    },
-    "external_link_settings": null
+    "agent_capabilities": {},
+    "local_settings": {},
+    "_deprecated": false
    }
   },
   "bytes": "016101620101016301640100000000"

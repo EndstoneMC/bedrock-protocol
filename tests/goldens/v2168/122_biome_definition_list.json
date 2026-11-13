@@ -2,22 +2,24 @@
  {
   "id": "tags_only",
   "value": {
-   "biome_data": {
-    "0": {
-     "id": 1,
-     "temperature": 0.5,
-     "downfall": 0.25,
-     "foliage_snow": 0.5,
-     "depth": 0.125,
-     "scale": 1.0,
-     "map_water_color_argb": 1146447479,
-     "rain": true,
-     "tags": {
-      "tags": [1]
-     },
-     "chunk_gen_data": null
+   "biome_data": [
+    {
+     "key": 0,
+     "value": {
+      "id": 1,
+      "temperature": 0.5,
+      "downfall": 0.25,
+      "foliage_snow": 0.5,
+      "depth": 0.125,
+      "scale": 1.0,
+      "map_water_color_argb": 1146447479,
+      "rain": true,
+      "tags": {
+       "tags": [1]
+      }
+     }
     }
-   },
+   ],
    "string_list": {
     "strings": ["plains", "tag"]
    }
@@ -27,59 +29,48 @@
  {
   "id": "surface_builder_noise_gradient",
   "value": {
-   "biome_data": {
-    "0": {
-     "id": 1,
-     "temperature": 0.5,
-     "downfall": 0.25,
-     "foliage_snow": 0.5,
-     "depth": 0.125,
-     "scale": 1.0,
-     "map_water_color_argb": 1146447479,
-     "rain": true,
-     "tags": null,
-     "chunk_gen_data": {
-      "climate": null,
-      "consolidated_features": null,
-      "mountain_params": null,
-      "surface_material_adjustments": null,
-      "overworld_gen_rules": null,
-      "multinoise_gen_rules": null,
-      "legacy_world_gen_rules": null,
-      "replace_biomes": null,
-      "village_type": null,
-      "surface_builder_data": {
-       "surface_materials": null,
-       "has_default_overworld_surface": true,
-       "has_swamp_surface": true,
-       "has_frozen_ocean_surface": true,
-       "has_the_end_surface": true,
-       "mesa_surface": null,
-       "capped_surface": null,
-       "noise_gradient_surface": {
-        "non_replaceable_blocks": [1921718966],
-        "gradient_block_ranges": [
-         {
-          "noise": "n",
-          "threshold": 0.25,
-          "range": {
-           "min": 0.5,
-           "max": 1.0
-          },
-          "block_runtime_id": 1741778478
+   "biome_data": [
+    {
+     "key": 0,
+     "value": {
+      "id": 1,
+      "temperature": 0.5,
+      "downfall": 0.25,
+      "foliage_snow": 0.5,
+      "depth": 0.125,
+      "scale": 1.0,
+      "map_water_color_argb": 1146447479,
+      "rain": true,
+      "chunk_gen_data": {
+       "surface_builder_data": {
+        "has_default_overworld_surface": true,
+        "has_swamp_surface": true,
+        "has_frozen_ocean_surface": true,
+        "has_the_end_surface": true,
+        "noise_gradient_surface": {
+         "non_replaceable_blocks": [1921718966],
+         "gradient_block_ranges": [
+          {
+           "noise": "n",
+           "threshold": 0.25,
+           "range": {
+            "min": 0.5,
+            "max": 1.0
+           },
+           "block_runtime_id": 1741778478
+          }
+         ],
+         "noise_descriptor": {
+          "name": "seed",
+          "first_octave": -3,
+          "amplitudes": [1.0]
          }
-        ],
-        "noise_descriptor": {
-         "name": "seed",
-         "first_octave": -3,
-         "amplitudes": [1.0]
         }
        }
-      },
-      "subsurface_builder_data": null
+      }
      }
     }
-   },
+   ],
    "string_list": {
     "strings": ["plains", "tag"]
    }
@@ -89,220 +80,215 @@
  {
   "id": "every_chunk_gen_data_present",
   "value": {
-   "biome_data": {
-    "0": {
-     "id": 1,
-     "temperature": 0.5,
-     "downfall": 0.25,
-     "foliage_snow": 0.5,
-     "depth": 0.125,
-     "scale": 1.0,
-     "map_water_color_argb": 1146447479,
-     "rain": true,
-     "tags": null,
-     "chunk_gen_data": {
-      "climate": {
-       "temperature": 0.5,
-       "downfall": 0.25,
-       "snow_accumulation_min": 0.0625,
-       "snow_accumulation_max": 0.125
-      },
-      "consolidated_features": {
-       "features": [
-        {
-         "scatter": {
-          "coordinates": [
+   "biome_data": [
+    {
+     "key": 0,
+     "value": {
+      "id": 1,
+      "temperature": 0.5,
+      "downfall": 0.25,
+      "foliage_snow": 0.5,
+      "depth": 0.125,
+      "scale": 1.0,
+      "map_water_color_argb": 1146447479,
+      "rain": true,
+      "chunk_gen_data": {
+       "climate": {
+        "temperature": 0.5,
+        "downfall": 0.25,
+        "snow_accumulation_min": 0.0625,
+        "snow_accumulation_max": 0.125
+       },
+       "consolidated_features": {
+        "features": [
+         {
+          "scatter": {
+           "coordinates": [
+            {
+             "min_value_type": 61,
+             "min_value": 0,
+             "max_value_type": 61,
+             "max_value": 1,
+             "grid_offset": 2,
+             "grid_step_size": 3,
+             "distribution": 1
+            }
+           ],
+           "eval_order": 1,
+           "chance_percent_type": 61,
+           "chance_percent": 1,
+           "chance_numerator": 1,
+           "chance_denominator": 2,
+           "iterations_type": 61,
+           "iterations": 0
+          },
+          "feature": 1,
+          "identifier": 0,
+          "pass": 1,
+          "can_use_internal_feature": true
+         }
+        ]
+       },
+       "mountain_params": {
+        "steep_block": 973836165,
+        "north_slopes": true,
+        "south_slopes": true,
+        "west_slopes": true,
+        "east_slopes": true,
+        "top_slide_enabled": true
+       },
+       "surface_material_adjustments": {
+        "adjustments": [
+         {
+          "noise_freq_scale": 0.5,
+          "noise_lower_bound": 0.25,
+          "noise_upper_bound": 0.75,
+          "height_min_type": 61,
+          "height_min": 0,
+          "height_max_type": 61,
+          "height_max": 1,
+          "adjusted_materials": {
+           "top_block": 973836165,
+           "mid_block": 4264272530,
+           "sea_floor_block": 1088625327,
+           "foundation_block": 529200828,
+           "sea_block": 4220034033,
+           "sea_floor_depth": 3
+          }
+         }
+        ]
+       },
+       "overworld_gen_rules": {
+        "hills_transformations": [
+         {
+          "biome_identifier": 1,
+          "weight": 4
+         }
+        ],
+        "mutate_transformations": [
+         {
+          "biome_identifier": 1,
+          "weight": 4
+         }
+        ],
+        "river_transformations": [
+         {
+          "biome_identifier": 1,
+          "weight": 4
+         }
+        ],
+        "shore_transformations": [
+         {
+          "biome_identifier": 1,
+          "weight": 4
+         }
+        ],
+        "pre_hills_edge": [
+         {
+          "transforms_into": [
            {
-            "min_value_type": "FLOAT",
-            "min_value": 0,
-            "max_value_type": "FLOAT",
-            "max_value": 1,
-            "grid_offset": 2,
-            "grid_step_size": 3,
-            "distribution": "UNIFORM"
+            "biome_identifier": 1,
+            "weight": 4
            }
           ],
-          "eval_order": "XZY",
-          "chance_percent_type": "FLOAT",
-          "chance_percent": 1,
-          "chance_numerator": 1,
-          "chance_denominator": 2,
-          "iterations_type": "FLOAT",
-          "iterations": 0
-         },
-         "feature": 1,
-         "identifier": 0,
-         "pass": 1,
-         "can_use_internal_feature": true
-        }
-       ]
-      },
-      "mountain_params": {
-       "steep_block": 973836165,
-       "north_slopes": true,
-       "south_slopes": true,
-       "west_slopes": true,
-       "east_slopes": true,
-       "top_slide_enabled": true
-      },
-      "surface_material_adjustments": {
-       "adjustments": [
-        {
-         "noise_freq_scale": 0.5,
-         "noise_lower_bound": 0.25,
-         "noise_upper_bound": 0.75,
-         "height_min_type": "FLOAT",
-         "height_min": 0,
-         "height_max_type": "FLOAT",
-         "height_max": 1,
-         "adjusted_materials": {
-          "top_block": 973836165,
-          "mid_block": 4264272530,
-          "sea_floor_block": 1088625327,
-          "foundation_block": 529200828,
-          "sea_block": 4220034033,
-          "sea_floor_depth": 3
+          "condition_json": 1,
+          "min_passing_neighbors": 2
          }
-        }
-       ]
-      },
-      "overworld_gen_rules": {
-       "hills_transformations": [
-        {
-         "biome_identifier": 1,
-         "weight": 4
-        }
-       ],
-       "mutate_transformations": [
-        {
-         "biome_identifier": 1,
-         "weight": 4
-        }
-       ],
-       "river_transformations": [
-        {
-         "biome_identifier": 1,
-         "weight": 4
-        }
-       ],
-       "shore_transformations": [
-        {
-         "biome_identifier": 1,
-         "weight": 4
-        }
-       ],
-       "pre_hills_edge": [
-        {
-         "transforms_into": [
-          {
-           "biome_identifier": 1,
-           "weight": 4
-          }
-         ],
-         "condition_json": 1,
-         "min_passing_neighbors": 2
-        }
-       ],
-       "post_shore_edge": [
-        {
-         "transforms_into": [
-          {
-           "biome_identifier": 1,
-           "weight": 4
-          }
-         ],
-         "condition_json": 1,
-         "min_passing_neighbors": 2
-        }
-       ],
-       "climate": [
-        {
-         "temperature": "WARM",
-         "weight": 3
-        }
-       ]
-      },
-      "multinoise_gen_rules": {
-       "temperature": 0.5,
-       "humidity": 0.25,
-       "altitude": 0.75,
-       "weirdness": 0.125,
-       "weight": 1.5
-      },
-      "legacy_world_gen_rules": {
-       "legacy_pre_hills_edge": [
-        {
-         "transforms_into": [
-          {
-           "biome_identifier": 1,
-           "weight": 4
-          }
-         ],
-         "condition_json": 1,
-         "min_passing_neighbors": 2
-        }
-       ]
-      },
-      "replace_biomes": {
-       "biome_replacements": [
-        {
-         "replacement_biome": 1,
-         "dimension": 0,
-         "target_biomes": [0],
-         "amount": 0.5,
-         "noise_frequency_scale": 0.25,
-         "replacement_index": 2
-        }
-       ]
-      },
-      "village_type": "TAIGA",
-      "surface_builder_data": {
-       "surface_materials": {
-        "top_block": 4264272530,
-        "mid_block": 1088625327,
-        "sea_floor_block": 529200828,
-        "foundation_block": 4220034033,
-        "sea_block": 3849244326,
-        "sea_floor_depth": 3
+        ],
+        "post_shore_edge": [
+         {
+          "transforms_into": [
+           {
+            "biome_identifier": 1,
+            "weight": 4
+           }
+          ],
+          "condition_json": 1,
+          "min_passing_neighbors": 2
+         }
+        ],
+        "climate": [
+         {
+          "temperature": 1,
+          "weight": 3
+         }
+        ]
        },
-       "has_default_overworld_surface": true,
-       "has_swamp_surface": true,
-       "has_frozen_ocean_surface": true,
-       "has_the_end_surface": true,
-       "mesa_surface": {
-        "clay_material": 1088625327,
-        "hard_clay_material": 529200828,
-        "bryce_pillars": true,
-        "has_forest": true
+       "multinoise_gen_rules": {
+        "temperature": 0.5,
+        "humidity": 0.25,
+        "altitude": 0.75,
+        "weirdness": 0.125,
+        "weight": 1.5
        },
-       "capped_surface": {
-        "floor_blocks": [4220034033],
-        "ceiling_blocks": [3849244326],
-        "sea_block": 33318756,
-        "foundation_block": 1584507399,
-        "beach_block": 973836165
+       "legacy_world_gen_rules": {
+        "legacy_pre_hills_edge": [
+         {
+          "transforms_into": [
+           {
+            "biome_identifier": 1,
+            "weight": 4
+           }
+          ],
+          "condition_json": 1,
+          "min_passing_neighbors": 2
+         }
+        ]
        },
-       "noise_gradient_surface": null
-      },
-      "subsurface_builder_data": {
-       "surface_materials": null,
-       "has_default_overworld_surface": true,
-       "has_swamp_surface": true,
-       "has_frozen_ocean_surface": true,
-       "has_the_end_surface": true,
-       "mesa_surface": null,
-       "capped_surface": {
-        "floor_blocks": [4264272530],
-        "ceiling_blocks": [1088625327],
-        "sea_block": null,
-        "foundation_block": null,
-        "beach_block": null
+       "replace_biomes": {
+        "biome_replacements": [
+         {
+          "replacement_biome": 1,
+          "dimension": 0,
+          "target_biomes": [0],
+          "amount": 0.5,
+          "noise_frequency_scale": 0.25,
+          "replacement_index": 2
+         }
+        ]
        },
-       "noise_gradient_surface": null
+       "village_type": 3,
+       "surface_builder_data": {
+        "surface_materials": {
+         "top_block": 4264272530,
+         "mid_block": 1088625327,
+         "sea_floor_block": 529200828,
+         "foundation_block": 4220034033,
+         "sea_block": 3849244326,
+         "sea_floor_depth": 3
+        },
+        "has_default_overworld_surface": true,
+        "has_swamp_surface": true,
+        "has_frozen_ocean_surface": true,
+        "has_the_end_surface": true,
+        "mesa_surface": {
+         "clay_material": 1088625327,
+         "hard_clay_material": 529200828,
+         "bryce_pillars": true,
+         "has_forest": true
+        },
+        "capped_surface": {
+         "floor_blocks": [4220034033],
+         "ceiling_blocks": [3849244326],
+         "sea_block": 33318756,
+         "foundation_block": 1584507399,
+         "beach_block": 973836165
+        }
+       },
+       "subsurface_builder_data": {
+        "has_default_overworld_surface": true,
+        "has_swamp_surface": true,
+        "has_frozen_ocean_surface": true,
+        "has_the_end_surface": true,
+        "capped_surface": {
+         "floor_blocks": [4264272530],
+         "ceiling_blocks": [1088625327]
+        }
+       }
       }
      }
     }
-   },
+   ],
    "string_list": {
     "strings": ["plains", "tag"]
    }
@@ -312,47 +298,33 @@
  {
   "id": "subsurface_builder_only",
   "value": {
-   "biome_data": {
-    "0": {
-     "id": 1,
-     "temperature": 0.5,
-     "downfall": 0.25,
-     "foliage_snow": 0.5,
-     "depth": 0.125,
-     "scale": 1.0,
-     "map_water_color_argb": 1146447479,
-     "rain": true,
-     "tags": null,
-     "chunk_gen_data": {
-      "climate": null,
-      "consolidated_features": null,
-      "mountain_params": null,
-      "surface_material_adjustments": null,
-      "overworld_gen_rules": null,
-      "multinoise_gen_rules": null,
-      "legacy_world_gen_rules": null,
-      "replace_biomes": null,
-      "village_type": null,
-      "surface_builder_data": null,
-      "subsurface_builder_data": {
-       "surface_materials": null,
-       "has_default_overworld_surface": true,
-       "has_swamp_surface": true,
-       "has_frozen_ocean_surface": true,
-       "has_the_end_surface": true,
-       "mesa_surface": null,
-       "capped_surface": {
-        "floor_blocks": [4264272530],
-        "ceiling_blocks": [1088625327],
-        "sea_block": null,
-        "foundation_block": null,
-        "beach_block": null
-       },
-       "noise_gradient_surface": null
+   "biome_data": [
+    {
+     "key": 0,
+     "value": {
+      "id": 1,
+      "temperature": 0.5,
+      "downfall": 0.25,
+      "foliage_snow": 0.5,
+      "depth": 0.125,
+      "scale": 1.0,
+      "map_water_color_argb": 1146447479,
+      "rain": true,
+      "chunk_gen_data": {
+       "subsurface_builder_data": {
+        "has_default_overworld_surface": true,
+        "has_swamp_surface": true,
+        "has_frozen_ocean_surface": true,
+        "has_the_end_surface": true,
+        "capped_surface": {
+         "floor_blocks": [4264272530],
+         "ceiling_blocks": [1088625327]
+        }
+       }
       }
      }
     }
-   },
+   ],
    "string_list": {
     "strings": ["plains", "tag"]
    }

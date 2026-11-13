@@ -11,9 +11,7 @@
  },
  {
   "id": "party_info_absent",
-  "value": {
-   "party_info": null
-  },
+  "value": {},
   "bytes": "00"
  }
 ]

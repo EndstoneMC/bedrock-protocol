@@ -6,16 +6,21 @@
     {
      "name": "cat",
      "priorities": {
-      "entities": {
-       "minecraft:cow": 10
-      },
-      "blocks": {
-       "minecraft:stone": 1
-      },
+      "entities": [
+       {
+        "key": "minecraft:cow",
+        "value": 10
+       }
+      ],
+      "blocks": [
+       {
+        "key": "minecraft:stone",
+        "value": 1
+       }
+      ],
       "block_tags": {},
       "entity_type_families": {},
-      "entity_default": 5,
-      "block_default": null
+      "entity_default": 5
      }
     }
    ],
@@ -29,14 +34,16 @@
       "entity_type_family_exclusion_list": []
      },
      "liquid_targeting_list": ["minecraft:water"],
-     "item_settings": {
-      "minecraft:bow": "cat"
-     },
-     "default_item_settings": "cat",
-     "hand_settings": null
+     "item_settings": [
+      {
+       "key": "minecraft:bow",
+       "value": "cat"
+      }
+     ],
+     "default_item_settings": "cat"
     }
    ],
-   "operation": "ADD_TO_EXISTING"
+   "operation": 1
   },
   "bytes": "0103636174010d6d696e6563726166743a636f770a000000010f6d696e6563726166743a73746f6e650100000000000105000000000106707265736574010d6d696e6563726166743a616972000104776f6f6400010f6d696e6563726166743a7761746572010d6d696e6563726166743a626f770363617401036361740001"
  },
@@ -47,15 +54,14 @@
     {
      "name": "cat",
      "priorities": {
-      "entities": {},
-      "blocks": {},
+      "entities": [],
+      "blocks": [],
       "block_tags": {
        "wood": 20
       },
       "entity_type_families": {
        "mob": 30
       },
-      "entity_default": null,
       "block_default": 7
      }
     }
@@ -70,12 +76,11 @@
       "entity_type_family_exclusion_list": ["mob"]
      },
      "liquid_targeting_list": [],
-     "item_settings": {},
-     "default_item_settings": null,
+     "item_settings": [],
      "hand_settings": "cat"
     }
    ],
-   "operation": "SET"
+   "operation": 0
   },
   "bytes": "010363617400000104776f6f641400000001036d6f621e00000000010700000001077072657365743200010d6d696e6563726166743a636f770001036d6f62000000010363617400"
  }

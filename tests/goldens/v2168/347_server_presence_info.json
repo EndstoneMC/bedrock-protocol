@@ -11,17 +11,13 @@
  {
   "id": "rich_presence_id_absent",
   "value": {
-   "presence_configuration": {
-    "rich_presence_id": null
-   }
+   "presence_configuration": {}
   },
   "bytes": "0100"
  },
  {
   "id": "presence_configuration_absent",
-  "value": {
-   "presence_configuration": null
-  },
+  "value": {},
   "bytes": "00"
  }
 ]

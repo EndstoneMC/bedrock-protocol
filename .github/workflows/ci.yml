@@ -218,7 +218,7 @@ jobs:
       - name: Build the binding with coverage
         run: |
           uv venv --python 3.12
-          uv pip install --no-config "scikit-build-core>=1.1" nanobind==2.13.0 pytest
+          uv pip install --no-config "scikit-build-core>=1.1" nanobind==2.13.0 pytest ./compiler
           uv pip install --no-config --no-build-isolation \
               -C install.strip=false \
               -C cmake.build-type=Debug \

@@ -3,30 +3,27 @@
   "id": "initialize_registry_arm",
   "value": {
    "data": {
-    "InitializeRegistryData": {
-     "clock_data": [
-      {
-       "id": 300,
-       "name": "overworld",
-       "time": 1000,
-       "is_paused": true,
-       "time_markers": [
-        {
-         "id": 1,
-         "name": "sunrise",
-         "time": 23000,
-         "period": 24000
-        },
-        {
-         "id": 2,
-         "name": "noon",
-         "time": 6000,
-         "period": null
-        }
-       ]
-      }
-     ]
-    }
+    "clock_data": [
+     {
+      "id": 300,
+      "name": "overworld",
+      "time": 1000,
+      "is_paused": true,
+      "time_markers": [
+       {
+        "id": 1,
+        "name": "sunrise",
+        "time": 23000,
+        "period": 24000
+       },
+       {
+        "id": 2,
+        "name": "noon",
+        "time": 6000
+       }
+      ]
+     }
+    ]
    }
   },
   "bytes": "0101ac02096f766572776f726c64d00f0102010773756e72697365b0e70201c05d000002046e6f6f6ee05d00"
@@ -35,17 +32,15 @@
   "id": "add_time_marker_arm",
   "value": {
    "data": {
-    "AddTimeMarkerData": {
-     "clock_id": 1,
-     "time_markers": [
-      {
-       "id": 1,
-       "name": "dusk",
-       "time": 12000,
-       "period": 24000
-      }
-     ]
-    }
+    "clock_id": 1,
+    "time_markers": [
+     {
+      "id": 1,
+      "name": "dusk",
+      "time": 12000,
+      "period": 24000
+     }
+    ]
    }
   },
   "bytes": "02010101046475736bc0bb0101c05d0000"
@@ -54,10 +49,8 @@
   "id": "remove_time_marker_arm",
   "value": {
    "data": {
-    "RemoveTimeMarkerData": {
-     "clock_id": 300,
-     "time_marker_ids": [1]
-    }
+    "clock_id": 300,
+    "time_marker_ids": [1]
    }
   },
   "bytes": "03ac020101"
@@ -66,15 +59,13 @@
   "id": "sync_state_arm",
   "value": {
    "data": {
-    "SyncStateData": {
-     "clock_data": [
-      {
-       "clock_id": 300,
-       "time": 1000,
-       "is_paused": true
-      }
-     ]
-    }
+    "clock_data": [
+     {
+      "clock_id": 300,
+      "time": 1000,
+      "is_paused": true
+     }
+    ]
    }
   },
   "bytes": "0001ac02d00f01"

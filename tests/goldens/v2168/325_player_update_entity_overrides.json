@@ -2,10 +2,12 @@
  {
   "id": "clear_override_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "property_index": 2,
    "update": {
-    "ClearOverride": {}
+    "update_type": "clearoverrides"
    }
   },
   "bytes": "0e02000e636c6561726f7665727269646573"
@@ -13,12 +15,13 @@
  {
   "id": "int_override_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "property_index": 2,
    "update": {
-    "IntOverride": {
-     "value": 42
-    }
+    "update_type": "setintoverride",
+    "value": 42
    }
   },
   "bytes": "0e02020e736574696e746f766572726964652a000000"
@@ -26,12 +29,13 @@
  {
   "id": "float_override_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "property_index": 2,
    "update": {
-    "FloatOverride": {
-     "value": 0.5
-    }
+    "update_type": "setfloatoverride",
+    "value": 0.5
    }
   },
   "bytes": "0e020310736574666c6f61746f766572726964650000003f"
@@ -39,10 +43,12 @@
  {
   "id": "remove_override_arm",
   "value": {
-   "id": 7,
+   "id": {
+    "actor_unique_id": 7
+   },
    "property_index": 2,
    "update": {
-    "RemoveOverride": {}
+    "update_type": "removeoverride"
    }
   },
   "bytes": "0e02010e72656d6f76656f76657272696465"

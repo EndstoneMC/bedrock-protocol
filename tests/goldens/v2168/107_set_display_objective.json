@@ -6,7 +6,7 @@
    "objective_name": "objective",
    "objective_display_name": "Scores",
    "criteria_name": "dummy",
-   "sort_order": "DESCENDING"
+   "sort_order": 1
   },
   "bytes": "0773696465626172096f626a6563746976650653636f7265730564756d6d7902"
  }

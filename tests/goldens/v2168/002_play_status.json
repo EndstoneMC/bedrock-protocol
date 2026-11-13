@@ -2,7 +2,7 @@
  {
   "id": "player_spawn_status",
   "value": {
-   "status": "PLAYER_SPAWN"
+   "status": 3
   },
   "bytes": "00000003"
  }

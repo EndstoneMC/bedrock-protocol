@@ -8,8 +8,8 @@
     "y": 20.0
    },
    "distance": 8.0,
-   "target_mode": "DISTANCE",
-   "action": "SET",
+   "target_mode": 1,
+   "action": 0,
    "show_debug_render": true
   },
   "bytes": "1161696d5f6173736973745f7072657365740000f0410000a04100000041010001"

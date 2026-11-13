@@ -3,9 +3,13 @@
   "id": "passenger_initiated_link",
   "value": {
    "link": {
-    "a": -1,
-    "b": 300,
-    "type": "PASSENGER",
+    "a": {
+     "actor_unique_id": -1
+    },
+    "b": {
+     "actor_unique_id": 300
+    },
+    "type": 2,
     "immediate": false,
     "passenger_initiated": true,
     "vehicle_angular_velocity": -2.5

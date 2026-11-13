@@ -2,9 +2,13 @@
  {
   "id": "no_experiments_no_join_info",
   "value": {
-   "entity_id": 1,
-   "runtime_id": 2,
-   "entity_game_type": "CREATIVE",
+   "entity_id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
+   "entity_game_type": 1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -17,25 +21,25 @@
    "settings": {
     "seed": 7,
     "spawn_settings": {
-     "type": "DEFAULT",
+     "type": 0,
      "user_defined_biome_name": "plains",
      "dimension": 1
     },
-    "generator": "OVERWORLD",
-    "game_type": "ADVENTURE",
+    "generator": 1,
+    "game_type": 2,
     "is_hardcore": true,
-    "game_difficulty": "NORMAL",
+    "game_difficulty": 2,
     "default_spawn": {
      "x": 1,
      "y": 64,
      "z": 2
     },
     "achievements_disabled": true,
-    "editor_world_type": "NON_EDITOR",
+    "editor_world_type": 0,
     "is_created_in_editor": true,
     "is_exported_from_editor": true,
     "time": 1000,
-    "education_edition_offer": "REST_OF_WORLD",
+    "education_edition_offer": 1,
     "education_features_enabled": true,
     "education_product_id": "edu",
     "rain_level": 0.5,
@@ -43,8 +47,8 @@
     "confirmed_platform_locked_content": true,
     "multiplayer_game_intent": true,
     "lan_broadcast_intent": true,
-    "xbl_broadcast_intent": "FRIENDS_ONLY",
-    "platform_broadcast_intent": "FRIENDS_ONLY",
+    "xbl_broadcast_intent": 2,
+    "platform_broadcast_intent": 2,
     "commands_enabled": true,
     "texture_packs_required": true,
     "game_rules": {
@@ -52,275 +56,197 @@
       {
        "name": "commandBlockOutput",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doDayLightCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doEntityDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doFireTick",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "recipesUnlock",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doLimitedCrafting",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "doMobLoot",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doMobSpawning",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doTileDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doWeatherCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "drowningDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fallDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fireDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "keepInventory",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "mobGriefing",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "pvp",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showCoordinates",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "playerWaypoints",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "locatorbar",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showDaysPlayed",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "naturalRegeneration",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplodes",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "sendCommandFeedback",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "maxCommandChainLength",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 131070
-       }
+       "value": 131070
       },
       {
        "name": "doInsomnia",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "commandBlocksEnabled",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "randomTickSpeed",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "doImmediateRespawn",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "showDeathMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "functionCommandLimit",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10000
-       }
+       "value": 10000
       },
       {
        "name": "spawnRadius",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10
-       }
+       "value": 10
       },
       {
        "name": "showTags",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "freezeDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "respawnBlocksExplode",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showBorderEffect",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showRecipeMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "playersSleepingPercentage",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 100
-       }
+       "value": 100
       },
       {
        "name": "projectilesCanBreakBlocks",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplosionDropDecay",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       }
      ]
     },
@@ -330,7 +256,7 @@
     },
     "bonus_chest_enabled": true,
     "start_with_map_enabled": true,
-    "default_permissions": "MEMBER",
+    "default_permissions": 1,
     "server_chunk_tick_range": 4,
     "has_locked_behavior_pack": true,
     "has_locked_resource_pack": true,
@@ -345,15 +271,14 @@
     "base_game_version": "1.26.40",
     "limited_world_width": 16,
     "limited_world_depth": 16,
-    "nether_type": "FLAT",
+    "nether_type": true,
     "edu_shared_uri_resource": {
      "button_name": "btn",
      "link_uri": "http://edu"
     },
-    "override_force_experimental_gameplay_flag": null,
-    "chat_restriction_level": "DROPPED",
+    "chat_restriction_level": 1,
     "disable_player_interactions": true,
-    "server_editor_connection_policy": "VANILLA_ONLY",
+    "server_editor_connection_policy": 2,
     "allow_anonymous_block_drops_in_editor_worlds": true
    },
    "level_id": "lvl",
@@ -370,15 +295,17 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": 0,
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": "66666666-7777-8888-9999-000000000000",
+   "world_template_id": {
+    "most_significant_bits": 7378697629770156168,
+    "least_significant_bits": 11067877559239704576
+   },
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
     "server_auth_sound_enabled": true
    },
-   "server_configuration_join_info": null,
    "server_telemetry_data": {
     "server_id": "srv",
     "scenario_id": "scn",
@@ -391,9 +318,13 @@
  {
   "id": "gametest_toggle_with_block_property",
   "value": {
-   "entity_id": 1,
-   "runtime_id": 2,
-   "entity_game_type": "CREATIVE",
+   "entity_id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
+   "entity_game_type": 1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -406,25 +337,25 @@
    "settings": {
     "seed": 7,
     "spawn_settings": {
-     "type": "DEFAULT",
+     "type": 0,
      "user_defined_biome_name": "plains",
      "dimension": 1
     },
-    "generator": "OVERWORLD",
-    "game_type": "ADVENTURE",
+    "generator": 1,
+    "game_type": 2,
     "is_hardcore": true,
-    "game_difficulty": "NORMAL",
+    "game_difficulty": 2,
     "default_spawn": {
      "x": 1,
      "y": 64,
      "z": 2
     },
     "achievements_disabled": true,
-    "editor_world_type": "NON_EDITOR",
+    "editor_world_type": 0,
     "is_created_in_editor": true,
     "is_exported_from_editor": true,
     "time": 1000,
-    "education_edition_offer": "REST_OF_WORLD",
+    "education_edition_offer": 1,
     "education_features_enabled": true,
     "education_product_id": "edu",
     "rain_level": 0.5,
@@ -432,8 +363,8 @@
     "confirmed_platform_locked_content": true,
     "multiplayer_game_intent": true,
     "lan_broadcast_intent": true,
-    "xbl_broadcast_intent": "FRIENDS_ONLY",
-    "platform_broadcast_intent": "FRIENDS_ONLY",
+    "xbl_broadcast_intent": 2,
+    "platform_broadcast_intent": 2,
     "commands_enabled": true,
     "texture_packs_required": true,
     "game_rules": {
@@ -441,275 +372,197 @@
       {
        "name": "commandBlockOutput",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doDayLightCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doEntityDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doFireTick",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "recipesUnlock",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doLimitedCrafting",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "doMobLoot",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doMobSpawning",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doTileDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doWeatherCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "drowningDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fallDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fireDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "keepInventory",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "mobGriefing",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "pvp",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showCoordinates",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "playerWaypoints",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "locatorbar",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showDaysPlayed",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "naturalRegeneration",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplodes",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "sendCommandFeedback",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "maxCommandChainLength",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 131070
-       }
+       "value": 131070
       },
       {
        "name": "doInsomnia",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "commandBlocksEnabled",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "randomTickSpeed",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "doImmediateRespawn",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "showDeathMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "functionCommandLimit",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10000
-       }
+       "value": 10000
       },
       {
        "name": "spawnRadius",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10
-       }
+       "value": 10
       },
       {
        "name": "showTags",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "freezeDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "respawnBlocksExplode",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showBorderEffect",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showRecipeMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "playersSleepingPercentage",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 100
-       }
+       "value": 100
       },
       {
        "name": "projectilesCanBreakBlocks",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplosionDropDecay",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       }
      ]
     },
@@ -724,7 +577,7 @@
     },
     "bonus_chest_enabled": true,
     "start_with_map_enabled": true,
-    "default_permissions": "MEMBER",
+    "default_permissions": 1,
     "server_chunk_tick_range": 4,
     "has_locked_behavior_pack": true,
     "has_locked_resource_pack": true,
@@ -739,15 +592,15 @@
     "base_game_version": "1.26.40",
     "limited_world_width": 16,
     "limited_world_depth": 16,
-    "nether_type": "FLAT",
+    "nether_type": true,
     "edu_shared_uri_resource": {
      "button_name": "btn",
      "link_uri": "http://edu"
     },
     "override_force_experimental_gameplay_flag": true,
-    "chat_restriction_level": "DROPPED",
+    "chat_restriction_level": 1,
     "disable_player_interactions": true,
-    "server_editor_connection_policy": "VANILLA_ONLY",
+    "server_editor_connection_policy": 2,
     "allow_anonymous_block_drops_in_editor_worlds": true
    },
    "level_id": "lvl",
@@ -763,19 +616,25 @@
    "block_properties": [
     {
      "name": "custom:block",
-     "tag": {
-      "molangVersion": {
-       "IntTag": 12
-      }
-     }
+     "tag": [
+      3,
+      "molangVersion",
+      {
+       "data": 12
+      },
+      0
+     ]
     }
    ],
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": 0,
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": "66666666-7777-8888-9999-000000000000",
+   "world_template_id": {
+    "most_significant_bits": 7378697629770156168,
+    "least_significant_bits": 11067877559239704576
+   },
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
@@ -783,12 +642,21 @@
    },
    "server_configuration_join_info": {
     "gatherings_configuration": {
-     "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+     "experience_id": {
+      "most_significant_bits": 72623859790382856,
+      "least_significant_bits": 651345242494996240
+     },
      "experience_name": "exp",
-     "experience_world_id": "11121314-1516-1718-191a-1b1c1d1e1f20",
+     "experience_world_id": {
+      "most_significant_bits": 1230066625199609624,
+      "least_significant_bits": 1808788007904223008
+     },
      "experience_world_name": "world",
      "creator_id": "creator",
-     "target_id": "21222324-2526-2728-292a-2b2c2d2e2f30",
+     "target_id": {
+      "most_significant_bits": 2387509390608836392,
+      "least_significant_bits": 2966230773313449776
+     },
      "mpsas_scenario_id": "scenario",
      "server_id": "server"
     },
@@ -812,9 +680,13 @@
  {
   "id": "full_gatherings_join_info",
   "value": {
-   "entity_id": 1,
-   "runtime_id": 2,
-   "entity_game_type": "CREATIVE",
+   "entity_id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
+   "entity_game_type": 1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -827,25 +699,25 @@
    "settings": {
     "seed": 7,
     "spawn_settings": {
-     "type": "DEFAULT",
+     "type": 0,
      "user_defined_biome_name": "plains",
      "dimension": 1
     },
-    "generator": "OVERWORLD",
-    "game_type": "ADVENTURE",
+    "generator": 1,
+    "game_type": 2,
     "is_hardcore": true,
-    "game_difficulty": "NORMAL",
+    "game_difficulty": 2,
     "default_spawn": {
      "x": 1,
      "y": 64,
      "z": 2
     },
     "achievements_disabled": true,
-    "editor_world_type": "NON_EDITOR",
+    "editor_world_type": 0,
     "is_created_in_editor": true,
     "is_exported_from_editor": true,
     "time": 1000,
-    "education_edition_offer": "REST_OF_WORLD",
+    "education_edition_offer": 1,
     "education_features_enabled": true,
     "education_product_id": "edu",
     "rain_level": 0.5,
@@ -853,8 +725,8 @@
     "confirmed_platform_locked_content": true,
     "multiplayer_game_intent": true,
     "lan_broadcast_intent": true,
-    "xbl_broadcast_intent": "FRIENDS_ONLY",
-    "platform_broadcast_intent": "FRIENDS_ONLY",
+    "xbl_broadcast_intent": 2,
+    "platform_broadcast_intent": 2,
     "commands_enabled": true,
     "texture_packs_required": true,
     "game_rules": {
@@ -862,275 +734,197 @@
       {
        "name": "commandBlockOutput",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doDayLightCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doEntityDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doFireTick",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "recipesUnlock",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doLimitedCrafting",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "doMobLoot",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doMobSpawning",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doTileDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doWeatherCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "drowningDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fallDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fireDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "keepInventory",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "mobGriefing",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "pvp",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showCoordinates",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "playerWaypoints",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "locatorbar",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showDaysPlayed",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "naturalRegeneration",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplodes",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "sendCommandFeedback",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "maxCommandChainLength",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 131070
-       }
+       "value": 131070
       },
       {
        "name": "doInsomnia",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "commandBlocksEnabled",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "randomTickSpeed",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "doImmediateRespawn",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "showDeathMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "functionCommandLimit",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10000
-       }
+       "value": 10000
       },
       {
        "name": "spawnRadius",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10
-       }
+       "value": 10
       },
       {
        "name": "showTags",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "freezeDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "respawnBlocksExplode",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showBorderEffect",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showRecipeMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "playersSleepingPercentage",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 100
-       }
+       "value": 100
       },
       {
        "name": "projectilesCanBreakBlocks",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplosionDropDecay",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       }
      ]
     },
@@ -1140,7 +934,7 @@
     },
     "bonus_chest_enabled": true,
     "start_with_map_enabled": true,
-    "default_permissions": "MEMBER",
+    "default_permissions": 1,
     "server_chunk_tick_range": 4,
     "has_locked_behavior_pack": true,
     "has_locked_resource_pack": true,
@@ -1155,15 +949,14 @@
     "base_game_version": "1.26.40",
     "limited_world_width": 16,
     "limited_world_depth": 16,
-    "nether_type": "FLAT",
+    "nether_type": true,
     "edu_shared_uri_resource": {
      "button_name": "btn",
      "link_uri": "http://edu"
     },
-    "override_force_experimental_gameplay_flag": null,
-    "chat_restriction_level": "DROPPED",
+    "chat_restriction_level": 1,
     "disable_player_interactions": true,
-    "server_editor_connection_policy": "VANILLA_ONLY",
+    "server_editor_connection_policy": 2,
     "allow_anonymous_block_drops_in_editor_worlds": true
    },
    "level_id": "lvl",
@@ -1180,9 +973,12 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": 0,
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": "66666666-7777-8888-9999-000000000000",
+   "world_template_id": {
+    "most_significant_bits": 7378697629770156168,
+    "least_significant_bits": 11067877559239704576
+   },
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
@@ -1190,19 +986,14 @@
    },
    "server_configuration_join_info": {
     "gatherings_configuration": {
-     "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+     "experience_id": {
+      "most_significant_bits": 72623859790382856,
+      "least_significant_bits": 651345242494996240
+     },
      "experience_name": "exp",
-     "experience_world_id": null,
-     "experience_world_name": null,
-     "creator_id": "creator",
-     "target_id": null,
-     "mpsas_scenario_id": null,
-     "server_id": null
+     "creator_id": "creator"
     },
-    "client_store_entry_point_configuration": null,
-    "presence_configuration": {
-     "rich_presence_id": null
-    }
+    "presence_configuration": {}
    },
    "server_telemetry_data": {
     "server_id": "srv",
@@ -1216,9 +1007,13 @@
  {
   "id": "empty_join_info_configurations",
   "value": {
-   "entity_id": 1,
-   "runtime_id": 2,
-   "entity_game_type": "CREATIVE",
+   "entity_id": {
+    "actor_unique_id": 1
+   },
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
+   "entity_game_type": 1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -1231,25 +1026,25 @@
    "settings": {
     "seed": 7,
     "spawn_settings": {
-     "type": "DEFAULT",
+     "type": 0,
      "user_defined_biome_name": "plains",
      "dimension": 1
     },
-    "generator": "OVERWORLD",
-    "game_type": "ADVENTURE",
+    "generator": 1,
+    "game_type": 2,
     "is_hardcore": true,
-    "game_difficulty": "NORMAL",
+    "game_difficulty": 2,
     "default_spawn": {
      "x": 1,
      "y": 64,
      "z": 2
     },
     "achievements_disabled": true,
-    "editor_world_type": "NON_EDITOR",
+    "editor_world_type": 0,
     "is_created_in_editor": true,
     "is_exported_from_editor": true,
     "time": 1000,
-    "education_edition_offer": "REST_OF_WORLD",
+    "education_edition_offer": 1,
     "education_features_enabled": true,
     "education_product_id": "edu",
     "rain_level": 0.5,
@@ -1257,8 +1052,8 @@
     "confirmed_platform_locked_content": true,
     "multiplayer_game_intent": true,
     "lan_broadcast_intent": true,
-    "xbl_broadcast_intent": "FRIENDS_ONLY",
-    "platform_broadcast_intent": "FRIENDS_ONLY",
+    "xbl_broadcast_intent": 2,
+    "platform_broadcast_intent": 2,
     "commands_enabled": true,
     "texture_packs_required": true,
     "game_rules": {
@@ -1266,275 +1061,197 @@
       {
        "name": "commandBlockOutput",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doDayLightCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doEntityDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doFireTick",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "recipesUnlock",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doLimitedCrafting",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "doMobLoot",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doMobSpawning",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doTileDrops",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "doWeatherCycle",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "drowningDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fallDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "fireDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "keepInventory",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "mobGriefing",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "pvp",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showCoordinates",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "playerWaypoints",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "locatorbar",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showDaysPlayed",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "naturalRegeneration",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplodes",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "sendCommandFeedback",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "maxCommandChainLength",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 131070
-       }
+       "value": 131070
       },
       {
        "name": "doInsomnia",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "commandBlocksEnabled",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "randomTickSpeed",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 1
-       }
+       "value": 1
       },
       {
        "name": "doImmediateRespawn",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       },
       {
        "name": "showDeathMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "functionCommandLimit",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10000
-       }
+       "value": 10000
       },
       {
        "name": "spawnRadius",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 10
-       }
+       "value": 10
       },
       {
        "name": "showTags",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "freezeDamage",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "respawnBlocksExplode",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showBorderEffect",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "showRecipeMessages",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "playersSleepingPercentage",
        "can_be_modified_by_player": true,
-       "value": {
-        "int": 100
-       }
+       "value": 100
       },
       {
        "name": "projectilesCanBreakBlocks",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": true
-       }
+       "value": true
       },
       {
        "name": "tntExplosionDropDecay",
        "can_be_modified_by_player": true,
-       "value": {
-        "bool": false
-       }
+       "value": false
       }
      ]
     },
@@ -1544,7 +1261,7 @@
     },
     "bonus_chest_enabled": true,
     "start_with_map_enabled": true,
-    "default_permissions": "MEMBER",
+    "default_permissions": 1,
     "server_chunk_tick_range": 4,
     "has_locked_behavior_pack": true,
     "has_locked_resource_pack": true,
@@ -1559,15 +1276,14 @@
     "base_game_version": "1.26.40",
     "limited_world_width": 16,
     "limited_world_depth": 16,
-    "nether_type": "FLAT",
+    "nether_type": true,
     "edu_shared_uri_resource": {
      "button_name": "btn",
      "link_uri": "http://edu"
     },
-    "override_force_experimental_gameplay_flag": null,
-    "chat_restriction_level": "DROPPED",
+    "chat_restriction_level": 1,
     "disable_player_interactions": true,
-    "server_editor_connection_policy": "VANILLA_ONLY",
+    "server_editor_connection_policy": 2,
     "allow_anonymous_block_drops_in_editor_worlds": true
    },
    "level_id": "lvl",
@@ -1584,19 +1300,18 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": 0,
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": "66666666-7777-8888-9999-000000000000",
+   "world_template_id": {
+    "most_significant_bits": 7378697629770156168,
+    "least_significant_bits": 11067877559239704576
+   },
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
     "server_auth_sound_enabled": true
    },
-   "server_configuration_join_info": {
-    "gatherings_configuration": null,
-    "client_store_entry_point_configuration": null,
-    "presence_configuration": null
-   },
+   "server_configuration_join_info": {},
    "server_telemetry_data": {
     "server_id": "srv",
     "scenario_id": "scn",

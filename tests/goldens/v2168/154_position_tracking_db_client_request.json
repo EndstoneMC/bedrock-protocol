@@ -2,7 +2,7 @@
  {
   "id": "query_by_id",
   "value": {
-   "action": "QUERY",
+   "action": 0,
    "id": {
     "raw_id": 7
    }

@@ -9,13 +9,12 @@
    },
    "data": {
     "structure_name": {
-     "unredacted_string": "name",
-     "redacted_string": null
+     "unredacted_string": "name"
     },
     "data_field": "df",
     "include_players": true,
     "show_bounding_box": true,
-    "type": "SAVE",
+    "type": 1,
     "settings": {
      "palette_name": "default",
      "ignore_entities": true,
@@ -31,10 +30,12 @@
       "y": 5,
       "z": 6
      },
-     "last_touched_by_player": 7,
-     "rotation": "ROTATE_90",
-     "mirror": "X",
-     "animation_mode": "BLOCKS",
+     "last_touched_by_player": {
+      "actor_unique_id": 7
+     },
+     "rotation": 1,
+     "mirror": 1,
+     "animation_mode": 2,
      "animation_seconds": 0.5,
      "integrity_value": 1.0,
      "integrity_seed": 9,
@@ -44,7 +45,7 @@
       "z": 2.0
      }
     },
-    "redstone_save_mode": "SAVES_TO_DISK"
+    "redstone_save_mode": 1
    },
    "trigger": true,
    "is_waterlogged": true
@@ -67,7 +68,7 @@
     "data_field": "df",
     "include_players": true,
     "show_bounding_box": true,
-    "type": "SAVE",
+    "type": 1,
     "settings": {
      "palette_name": "default",
      "ignore_entities": true,
@@ -83,10 +84,12 @@
       "y": 5,
       "z": 6
      },
-     "last_touched_by_player": 7,
-     "rotation": "ROTATE_90",
-     "mirror": "X",
-     "animation_mode": "BLOCKS",
+     "last_touched_by_player": {
+      "actor_unique_id": 7
+     },
+     "rotation": 1,
+     "mirror": 1,
+     "animation_mode": 2,
      "animation_seconds": 0.5,
      "integrity_value": 1.0,
      "integrity_seed": 9,
@@ -96,7 +99,7 @@
       "z": 2.0
      }
     },
-    "redstone_save_mode": "SAVES_TO_DISK"
+    "redstone_save_mode": 1
    },
    "trigger": true,
    "is_waterlogged": true

@@ -6,27 +6,7 @@
     "presets": [
      {
       "name": "bare",
-      "inherit_from": "minecraft:first_person",
-      "pos_x": null,
-      "pos_y": null,
-      "pos_z": null,
-      "rot_x": null,
-      "rot_y": null,
-      "camera_rotation_speed": null,
-      "snap_to_target": null,
-      "horizontal_rotation_limit": null,
-      "vertical_rotation_limit": null,
-      "continue_targeting": null,
-      "tracking_radius": null,
-      "view_offset": null,
-      "entity_offset": null,
-      "radius": null,
-      "yaw_limit_min": null,
-      "yaw_limit_max": null,
-      "listener": null,
-      "player_effects": null,
-      "aim_assist": null,
-      "control_scheme": null
+      "inherit_from": "minecraft:first_person"
      },
      {
       "name": "loaded",
@@ -60,47 +40,23 @@
       "radius": 16.0,
       "yaw_limit_min": -90.0,
       "yaw_limit_max": 90.0,
-      "listener": "PLAYER",
+      "listener": 1,
       "player_effects": true,
       "aim_assist": {
        "preset_id": "aim",
-       "target_mode": "DISTANCE",
+       "target_mode": 1,
        "angle": {
         "x": 30.0,
         "y": 40.0
        },
        "distance": 5.0
       },
-      "control_scheme": "CAMERA_RELATIVE_STRAFE"
+      "control_scheme": 2
      },
      {
       "name": "aim",
       "inherit_from": "minecraft:third_person",
-      "pos_x": null,
-      "pos_y": null,
-      "pos_z": null,
-      "rot_x": null,
-      "rot_y": null,
-      "camera_rotation_speed": null,
-      "snap_to_target": null,
-      "horizontal_rotation_limit": null,
-      "vertical_rotation_limit": null,
-      "continue_targeting": null,
-      "tracking_radius": null,
-      "view_offset": null,
-      "entity_offset": null,
-      "radius": null,
-      "yaw_limit_min": null,
-      "yaw_limit_max": null,
-      "listener": null,
-      "player_effects": null,
-      "aim_assist": {
-       "preset_id": null,
-       "target_mode": null,
-       "angle": null,
-       "distance": null
-      },
-      "control_scheme": null
+      "aim_assist": {}
      }
     ]
    }

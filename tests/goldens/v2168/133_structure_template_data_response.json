@@ -3,12 +3,15 @@
   "id": "query_with_structure_tag",
   "value": {
    "structure_name": "mystructure",
-   "structure_tag": {
-    "format_version": {
-     "IntTag": 1
-    }
-   },
-   "response_type": "QUERY"
+   "structure_tag": [
+    3,
+    "format_version",
+    {
+     "data": 1
+    },
+    0
+   ],
+   "response_type": 2
   },
   "bytes": "0b6d79737472756374757265010a00030e666f726d61745f76657273696f6e020002"
  },
@@ -16,8 +19,7 @@
   "id": "export_without_structure_tag",
   "value": {
    "structure_name": "mystructure",
-   "structure_tag": null,
-   "response_type": "EXPORT"
+   "response_type": 1
   },
   "bytes": "0b6d797374727563747572650001"
  }

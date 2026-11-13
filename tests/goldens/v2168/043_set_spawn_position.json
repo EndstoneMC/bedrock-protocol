@@ -2,13 +2,15 @@
  {
   "id": "world_spawn_with_block_pos",
   "value": {
-   "spawn_pos_type": "WORLD_SPAWN",
+   "spawn_pos_type": 1,
    "pos": {
     "x": 1,
     "y": 2,
     "z": 3
    },
-   "dimension_type": 1,
+   "dimension_type": {
+    "value": 1
+   },
    "spawn_block_pos": {
     "x": 4,
     "y": 5,

@@ -2,7 +2,9 @@
  {
   "id": "player_initialized",
   "value": {
-   "player_id": 300
+   "player_id": {
+    "actor_runtime_id": 300
+   }
   },
   "bytes": "ac02"
  }

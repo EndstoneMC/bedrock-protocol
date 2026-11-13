@@ -3,7 +3,9 @@
   "id": "molang_variables_present",
   "value": {
    "vanilla_dimension_id": 2,
-   "actor_id": -1,
+   "actor_id": {
+    "actor_unique_id": -1
+   },
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -18,14 +20,15 @@
   "id": "molang_variables_absent",
   "value": {
    "vanilla_dimension_id": 1,
-   "actor_id": 12345,
+   "actor_id": {
+    "actor_unique_id": 12345
+   },
    "pos": {
     "x": 0.0,
     "y": 0.0,
     "z": 0.0
    },
-   "effect_name": "minecraft:heart_particle",
-   "molang_variables": null
+   "effect_name": "minecraft:heart_particle"
   },
   "bytes": "01f2c001000000000000000000000000186d696e6563726166743a68656172745f7061727469636c6500"
  }

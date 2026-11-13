@@ -23,10 +23,12 @@
      "y": 0,
      "z": 1
     },
-    "last_touched_by_player": 300,
-    "rotation": "ROTATE_90",
-    "mirror": "Z",
-    "animation_mode": "BLOCKS",
+    "last_touched_by_player": {
+     "actor_unique_id": 300
+    },
+    "rotation": 1,
+    "mirror": 2,
+    "animation_mode": 2,
     "animation_seconds": 0.5,
     "integrity_value": 1.0,
     "integrity_seed": 3735928576,
@@ -36,7 +38,7 @@
      "z": 2.5
     }
    },
-   "request_operation": "QUERY_SAVED_STRUCTURE"
+   "request_operation": 3
   },
   "bytes": "0b6d797374727563747572650203060764656661756c740100010a0c0e010002d8040102020000003f0000803f00bfadde0000003f0000c03f0000204003"
  }

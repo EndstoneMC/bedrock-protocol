@@ -2,9 +2,14 @@
  {
   "id": "one_actor_data_item",
   "value": {
-   "uuid": "00000000-0000-0001-0000-000000000002",
+   "uuid": {
+    "most_significant_bits": 1,
+    "least_significant_bits": 2
+   },
    "name": "Steve",
-   "runtime_id": 2,
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
    "platform_online_id": "chat",
    "pos": {
     "x": 1.0,
@@ -25,19 +30,17 @@
     "id": 323,
     "stack_size": 1,
     "aux_value": 0,
-    "net_id_variant": null,
     "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
+    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
    },
-   "player_game_type": "SURVIVAL",
+   "player_game_type": 0,
    "unpack": {
     "data": [
      {
       "id": 38,
       "payload": {
-       "DataItemFloatPayload": {
-        "value": 0.5
-       }
+       "type": 3,
+       "value": 0.5
       }
      }
     ]
@@ -58,40 +61,49 @@
    },
    "abilities_data": {
     "target_player": 1,
-    "player_permissions": "MEMBER",
-    "command_permissions": "ANY",
+    "player_permissions": 1,
+    "command_permissions": 0,
     "layers": [
      {
-      "serialized_layer": "BASE",
+      "serialized_layer": 1,
       "abilities_set": 3,
       "ability_values": 1,
-      "fly_speed": 0.05,
+      "fly_speed": 0.05000000074505806,
       "vertical_fly_speed": 1.0,
-      "walk_speed": 0.1
+      "walk_speed": 0.10000000149011612
      }
     ]
    },
    "links": [
     {
-     "a": 1,
-     "b": 2,
-     "type": "RIDING",
+     "a": {
+      "actor_unique_id": 1
+     },
+     "b": {
+      "actor_unique_id": 2
+     },
+     "type": 1,
      "immediate": true,
      "passenger_initiated": false,
      "vehicle_angular_velocity": 1.5
     }
    ],
    "device_id": "dev",
-   "build_platform": "WIN32"
+   "build_platform": 8
   },
   "bytes": "010000000000000002000000000000000553746576650204636861740000803f0000004000004040000080400000a0400000c0400000e0400000004100001041430101000000000a0000000000000000000000012603030000003f01010301020000003f010000000000000001000101000300000001000000cdcc4c3d0000803fcdcccc3d0102040101000000c03f0364657608000000"
  },
  {
   "id": "one_of_each_actor_data_arm",
   "value": {
-   "uuid": "00000000-0000-0001-0000-000000000002",
+   "uuid": {
+    "most_significant_bits": 1,
+    "least_significant_bits": 2
+   },
    "name": "Steve",
-   "runtime_id": 2,
+   "runtime_id": {
+    "actor_runtime_id": 2
+   },
    "platform_online_id": "chat",
    "pos": {
     "x": 1.0,
@@ -114,98 +126,89 @@
     "aux_value": 0,
     "net_id_variant": 9,
     "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
+    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
    },
-   "player_game_type": "SURVIVAL",
+   "player_game_type": 0,
    "unpack": {
     "data": [
      {
       "id": 2,
       "payload": {
-       "DataItemIntPayload": {
-        "value": 7
-       }
+       "type": 2,
+       "value": 7
       }
      },
      {
       "id": 3,
       "payload": {
-       "DataItemBytePayload": {
-        "value": 3
-       }
+       "type": 0,
+       "value": 3
       }
      },
      {
       "id": 4,
       "payload": {
-       "DataItemStringPayload": {
-        "value": "Bob"
-       }
+       "type": 4,
+       "value": "Bob"
       }
      },
      {
       "id": 5,
       "payload": {
-       "DataItemInt64Payload": {
-        "value": -4000000000
-       }
+       "type": 7,
+       "value": -4000000000
       }
      },
      {
       "id": 7,
       "payload": {
-       "DataItemShortPayload": {
-        "value": 300
-       }
+       "type": 1,
+       "value": 300
       }
      },
      {
       "id": 28,
       "payload": {
-       "DataItemPosPayload": {
-        "value": {
-         "x": 1,
-         "y": -2,
-         "z": 3
-        }
+       "type": 6,
+       "value": {
+        "x": 1,
+        "y": -2,
+        "z": 3
        }
       }
      },
      {
       "id": 118,
       "payload": {
-       "DataItemCompoundTagPayload": {
-        "value": {
-         "Hitboxes": {
-          "ListTag": {
-           "type": 10,
-           "tags": [
-            {
-             "CompoundTag": {
-              "Height": {
-               "FloatTag": 1.5
-              },
-              "Width": {
-               "FloatTag": 0.75
-              }
-             }
-            }
-           ]
-          }
-         }
-        }
-       }
+       "type": 5,
+       "value": [
+        9,
+        "Hitboxes",
+        10,
+        1,
+        5,
+        "Height",
+        {
+         "data": 1.5
+        },
+        5,
+        "Width",
+        {
+         "data": 0.75
+        },
+        0,
+        0
+       ]
       }
      },
      {
       "id": 130,
       "payload": {
-       "DataItemVec3Payload": {
-        "value": {
-         "x": 0.5,
-         "y": 1.5,
-         "z": 2.5
-        }
+       "type": 8,
+       "value": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 2.5
        }
       }
      }
@@ -227,31 +230,35 @@
    },
    "abilities_data": {
     "target_player": 1,
-    "player_permissions": "MEMBER",
-    "command_permissions": "ANY",
+    "player_permissions": 1,
+    "command_permissions": 0,
     "layers": [
      {
-      "serialized_layer": "BASE",
+      "serialized_layer": 1,
       "abilities_set": 3,
       "ability_values": 1,
-      "fly_speed": 0.05,
+      "fly_speed": 0.05000000074505806,
       "vertical_fly_speed": 1.0,
-      "walk_speed": 0.1
+      "walk_speed": 0.10000000149011612
      }
     ]
    },
    "links": [
     {
-     "a": 1,
-     "b": 2,
-     "type": "RIDING",
+     "a": {
+      "actor_unique_id": 1
+     },
+     "b": {
+      "actor_unique_id": 2
+     },
+     "type": 1,
      "immediate": true,
      "passenger_initiated": false,
      "vehicle_angular_velocity": 1.5
     }
    ],
    "device_id": "dev",
-   "build_platform": "WIN32"
+   "build_platform": 8
   },
   "bytes": "010000000000000002000000000000000553746576650204636861740000803f0000004000004040000080400000a0400000c0400000e040000000410000104143010100000112000a0000000000000000000000080202020e0300000304040403426f62050707ff9fd9e61d0701012c011c06060203067605050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f0000820108080000003f0000c03f0000204001010301020000003f010000000000000001000101000300000001000000cdcc4c3d0000803fcdcccc3d0102040101000000c03f0364657608000000"
  }

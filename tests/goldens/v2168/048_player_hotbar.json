@@ -3,7 +3,7 @@
   "id": "selected_slot_in_ui",
   "value": {
    "selected_slot": 4,
-   "container_id": "PLAYER_ONLY_UI",
+   "container_id": 124,
    "should_select_slot": true
   },
   "bytes": "047c01"
