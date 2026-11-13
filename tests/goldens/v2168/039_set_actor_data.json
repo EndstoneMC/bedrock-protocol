@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_actor_data_item",
   "value": {
    "id": 2,
    "packed_items": {
@@ -33,6 +34,7 @@
   "bytes": "02012603030000003f01010301020000003f64"
  },
  {
+  "id": "one_of_each_actor_data_arm",
   "value": {
    "id": 2,
    "packed_items": {
