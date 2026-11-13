@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_command_with_enum",
   "value": {
    "enum_values": ["true"],
    "chained_subcommand_values": ["as"],
