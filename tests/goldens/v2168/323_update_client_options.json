@@ -1,5 +1,6 @@
 [
  {
+  "id": "both_options_present",
   "value": {
    "update": {
     "graphics_mode": "RAY_TRACED",
@@ -9,6 +10,7 @@
   "bytes": "01030101"
  },
  {
+  "id": "both_options_absent",
   "value": {
    "update": {
     "graphics_mode": null,
