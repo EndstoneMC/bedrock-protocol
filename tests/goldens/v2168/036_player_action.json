@@ -16,23 +16,5 @@
    "face": 2
   },
   "bytes": "074a020406080a0c04"
- },
- {
-  "value": {
-   "runtime_id": 7,
-   "action": "INTERNAL_UPDATE",
-   "pos": {
-    "x": 1,
-    "y": 2,
-    "z": 3
-   },
-   "result_pos": {
-    "x": 4,
-    "y": 5,
-    "z": 6
-   },
-   "face": 2
-  },
-  "bytes": "074c020406080a0c04"
  }
 ]

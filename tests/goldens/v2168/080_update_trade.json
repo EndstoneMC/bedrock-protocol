@@ -17,35 +17,5 @@
    }
   },
   "bytes": "010f0604540e16656e746974792e76696c6c616765722e6661726d657201000a00031354696572457870526571756972656d656e74730a00"
- },
- {
-  "value": {
-   "container_id": "NONE",
-   "type": "NONE",
-   "size": -1,
-   "trader_tier": -1,
-   "entity_unique_id": -1,
-   "last_trading_player": -1,
-   "display_name": "",
-   "use_new_trade_screen": false,
-   "using_economy_trade": true,
-   "data": {}
-  },
-  "bytes": "fff7010101010000010a0000"
- },
- {
-  "value": {
-   "container_id": "FIRST",
-   "type": "TRADE",
-   "size": 300,
-   "trader_tier": 0,
-   "entity_unique_id": 0,
-   "last_trading_player": 0,
-   "display_name": "",
-   "use_new_trade_screen": false,
-   "using_economy_trade": false,
-   "data": {}
-  },
-  "bytes": "010fd8040000000000000a0000"
  }
 ]

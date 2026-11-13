@@ -10,29 +10,5 @@
    "new_photo_name": "copy.jpeg"
   },
   "bytes": "2931653264336334622d356136392d346637302d386238312d3963393261646233636563342e6a70656704ffd8ffe006626f6f6b2d370102c7cfffffffffffff09636f70792e6a706567"
- },
- {
-  "value": {
-   "photo_name": "",
-   "photo_data": "",
-   "book_id": "",
-   "type": "PORTFOLIO",
-   "source_type": "PORTFOLIO",
-   "owner_id": 0,
-   "new_photo_name": ""
-  },
-  "bytes": "0000000000000000000000000000"
- },
- {
-  "value": {
-   "photo_name": "",
-   "photo_data": "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-   "book_id": "",
-   "type": "PORTFOLIO",
-   "source_type": "PORTFOLIO",
-   "owner_id": 0,
-   "new_photo_name": ""
-  },
-  "bytes": "00c8017f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f000000000000000000000000"
  }
 ]

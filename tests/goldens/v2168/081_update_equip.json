@@ -12,15 +12,5 @@
    }
   },
   "bytes": "010c040e0a00030453697a650400"
- },
- {
-  "value": {
-   "container_id": "NONE",
-   "type": "NONE",
-   "size": 300,
-   "entity_unique_id": -1,
-   "data": {}
-  },
-  "bytes": "fff7d804010a0000"
  }
 ]

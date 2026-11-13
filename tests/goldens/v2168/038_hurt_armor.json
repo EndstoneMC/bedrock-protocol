@@ -6,21 +6,5 @@
    "armor_slots": 31
   },
   "bytes": "4490031f"
- },
- {
-  "value": {
-   "cause": "NONE",
-   "dmg": 0,
-   "armor_slots": 0
-  },
-  "bytes": "010000"
- },
- {
-  "value": {
-   "cause": "OVERRIDE",
-   "dmg": 0,
-   "armor_slots": 1
-  },
-  "bytes": "000001"
  }
 ]

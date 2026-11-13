@@ -6,21 +6,5 @@
    "value": 200
   },
   "bytes": "05029003"
- },
- {
-  "value": {
-   "container_id": "NONE",
-   "id": 4,
-   "value": -1
-  },
-  "bytes": "ff0801"
- },
- {
-  "value": {
-   "container_id": "INVENTORY",
-   "id": -1,
-   "value": 300
-  },
-  "bytes": "0001d804"
  }
 ]

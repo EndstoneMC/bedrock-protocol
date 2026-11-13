@@ -76,48 +76,5 @@
    ]
   },
   "bytes": "0204747275650566616c73650102617301014c0107426f6f6c65616e0200000000010000000107657865637574650100ac020104746573740661207465737402010561646d696effffffff0100000000010101036172670100100001010104736f6674010161010100000000000000020002"
- },
- {
-  "value": {
-   "enum_values": [],
-   "chained_subcommand_values": [],
-   "postfixes": [],
-   "enums": [],
-   "chained_subcommands": [],
-   "commands": [],
-   "soft_enums": [],
-   "constraints": []
-  },
-  "bytes": "0000000000000000"
- },
- {
-  "value": {
-   "enum_values": [],
-   "chained_subcommand_values": [],
-   "postfixes": [],
-   "enums": [
-    {
-     "name": "",
-     "values": [
-      300
-     ]
-    }
-   ],
-   "chained_subcommands": [
-    {
-     "name": "",
-     "values": [
-      {
-       "sub_command_first_value": 300,
-       "sub_command_second_value": 300
-      }
-     ]
-    }
-   ],
-   "commands": [],
-   "soft_enums": [],
-   "constraints": []
-  },
-  "bytes": "0000000100012c010000010001ac02ac02000000"
  }
 ]

@@ -3,52 +3,6 @@
   "value": {
    "runtime_id": 7,
    "head": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "torso": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "legs": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "feet": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "body": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   }
-  },
-  "bytes": "0700000000000000000000000000000000000000000000000000000000000000000000000000000000"
- },
- {
-  "value": {
-   "runtime_id": 7,
-   "head": {
     "id": 5,
     "stack_size": 1,
     "aux_value": 3,
@@ -90,51 +44,5 @@
    }
   },
   "bytes": "0705000100030112000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
- },
- {
-  "value": {
-   "runtime_id": 7,
-   "head": {
-    "id": 5,
-    "stack_size": 1,
-    "aux_value": 3,
-    "net_id_variant": -3,
-    "block_runtime_id": 0,
-    "user_data_buffer": "00000000000000000000"
-   },
-   "torso": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "legs": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "feet": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   },
-   "body": {
-    "id": 0,
-    "stack_size": 0,
-    "aux_value": 0,
-    "net_id_variant": null,
-    "block_runtime_id": 0,
-    "user_data_buffer": ""
-   }
-  },
-  "bytes": "0705000100030105000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
  }
 ]

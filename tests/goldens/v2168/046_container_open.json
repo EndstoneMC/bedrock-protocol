@@ -11,18 +11,5 @@
    "entity_unique_id": 300
   },
   "bytes": "780c028c0105d804"
- },
- {
-  "value": {
-   "container_id": "NONE",
-   "type": "NONE",
-   "pos": {
-    "x": 0,
-    "y": 0,
-    "z": 0
-   },
-   "entity_unique_id": -1
-  },
-  "bytes": "fff700000001"
  }
 ]

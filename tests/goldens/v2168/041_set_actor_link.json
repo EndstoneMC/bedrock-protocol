@@ -11,18 +11,5 @@
    }
   },
   "bytes": "01d804020001000020c0"
- },
- {
-  "value": {
-   "link": {
-    "a": 4294967296,
-    "b": 0,
-    "type": "NONE",
-    "immediate": false,
-    "passenger_initiated": false,
-    "vehicle_angular_velocity": 0.0
-   }
-  },
-  "bytes": "80808080200000000000000000"
  }
 ]

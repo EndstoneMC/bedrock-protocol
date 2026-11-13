@@ -33,21 +33,5 @@
    ]
   },
   "bytes": "010001007766554433221100ffeeddccbbaa998805312e322e330111100f0e0d0c0b0a191817161514131205322e302e300010000000000000036b6579037375622436663062356532612d316333642d346538662d396137622d3264346336653866306131620100010a687474703a2f2f63646e"
- },
- {
-  "value": {
-   "resource_pack_required": false,
-   "has_addon_packs": false,
-   "has_scripts": false,
-   "force_disable_vibrant_visuals": false,
-   "world_template_id_and_version": {
-    "id": "00112233-4455-6677-8899-aabbccddeeff",
-    "version": {
-     "version": "1.2.3"
-    }
-   },
-   "resource_packs": []
-  },
-  "bytes": "000000007766554433221100ffeeddccbbaa998805312e322e3300"
  }
 ]

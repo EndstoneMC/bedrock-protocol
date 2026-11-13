@@ -6,13 +6,5 @@
    "server_initiated_close": true
   },
   "bytes": "781201"
- },
- {
-  "value": {
-   "container_id": "NONE",
-   "container_type": "NONE",
-   "server_initiated_close": false
-  },
-  "bytes": "fff700"
  }
 ]

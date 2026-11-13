@@ -5,12 +5,5 @@
    "actor_id": 7
   },
   "bytes": "ac0207"
- },
- {
-  "value": {
-   "item_id": 4294967296,
-   "actor_id": 1
-  },
-  "bytes": "808080801001"
  }
 ]

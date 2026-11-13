@@ -20,14 +20,5 @@
    "fire_at_position": null
   },
   "bytes": "07510000"
- },
- {
-  "value": {
-   "runtime_id": 4294967296,
-   "event_id": "DEPRECATED_ADD_PLAYER_LEVELS",
-   "data": -1,
-   "fire_at_position": null
-  },
-  "bytes": "8080808010220100"
  }
 ]

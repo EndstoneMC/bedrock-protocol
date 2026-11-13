@@ -4,17 +4,5 @@
    "chunk_radius": 12
   },
   "bytes": "18"
- },
- {
-  "value": {
-   "chunk_radius": -1
-  },
-  "bytes": "01"
- },
- {
-  "value": {
-   "chunk_radius": 200
-  },
-  "bytes": "9003"
  }
 ]

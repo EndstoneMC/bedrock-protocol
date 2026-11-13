@@ -39,22 +39,5 @@
    "execute_on_first_tick": false
   },
   "bytes": "00ac0200000000000000000000"
- },
- {
-  "value": {
-   "target": {
-    "EntityCommandTarget": {
-     "entity_id": 0
-    }
-   },
-   "command": "",
-   "last_output": "",
-   "name": "",
-   "filtered_name": "",
-   "track_output": false,
-   "tick_delay": -1,
-   "execute_on_first_tick": false
-  },
-  "bytes": "00000000000000ffffffff00"
  }
 ]

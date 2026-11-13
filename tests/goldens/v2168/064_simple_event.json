@@ -4,11 +4,5 @@
    "subtype": "UNLOCK_WORLD_TEMPLATE_SETTINGS"
   },
   "bytes": "0300"
- },
- {
-  "value": {
-   "subtype": 300
-  },
-  "bytes": "2c01"
  }
 ]

@@ -15,22 +15,5 @@
    }
   },
   "bytes": "0202040602080a0c"
- },
- {
-  "value": {
-   "spawn_pos_type": "PLAYER_RESPAWN",
-   "pos": {
-    "x": -1,
-    "y": -64,
-    "z": 300
-   },
-   "dimension_type": 2,
-   "spawn_block_pos": {
-    "x": -2147483648,
-    "y": -2147483648,
-    "z": -2147483648
-   }
-  },
-  "bytes": "00017fd80404ffffffff0fffffffff0fffffffff0f"
  }
 ]

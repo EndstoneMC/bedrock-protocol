@@ -5,12 +5,5 @@
    "target_player_id": -1
   },
   "bytes": "d80401"
- },
- {
-  "value": {
-   "camera_id": -8589934592,
-   "target_player_id": 0
-  },
-  "bytes": "ffffffff3f00"
  }
 ]

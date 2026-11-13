@@ -11,18 +11,5 @@
    "layer": 1
   },
   "bytes": "020306ac020301"
- },
- {
-  "value": {
-   "pos": {
-    "x": 0,
-    "y": 0,
-    "z": 0
-   },
-   "runtime_id": 0,
-   "update_flags": 200,
-   "layer": 0
-  },
-  "bytes": "00000000c80100"
  }
 ]

@@ -10,17 +10,5 @@
    "pack_type": "RESOURCES"
   },
   "bytes": "2430613062306330642d306530662d313031312d313231332d31343135313631373138313900001000100000000000f3000000000004deadbeef0106"
- },
- {
-  "value": {
-   "resource_name": "",
-   "chunk_size": 128,
-   "nb_chunks": 300,
-   "file_size": 72623859790382856,
-   "file_hash": "",
-   "is_premium": false,
-   "pack_type": "WORLD_TEMPLATE"
-  },
-  "bytes": "00800000002c0100000807060504030201000008"
  }
 ]

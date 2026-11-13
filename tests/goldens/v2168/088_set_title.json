@@ -11,18 +11,5 @@
    "filtered_title_text": "hi"
   },
   "bytes": "060568656c6c6f14d80401103235333534363534353132333435363700026869"
- },
- {
-  "value": {
-   "type": "TIMES",
-   "title_text": "",
-   "fade_in_time": -1,
-   "stay_time": 64,
-   "fade_out_time": 1000,
-   "xuid": "",
-   "platform_online_id": "",
-   "filtered_title_text": ""
-  },
-  "bytes": "0a00018001d00f000000"
  }
 ]

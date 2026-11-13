@@ -4,17 +4,5 @@
    "status": "PLAYER_SPAWN"
   },
   "bytes": "00000003"
- },
- {
-  "value": {
-   "status": "LOGIN_SUCCESS"
-  },
-  "bytes": "00000000"
- },
- {
-  "value": {
-   "status": "LOGIN_FAILED_EDITOR_MISMATCH_VANILLA_TO_EDITOR"
-  },
-  "bytes": "00000009"
  }
 ]
