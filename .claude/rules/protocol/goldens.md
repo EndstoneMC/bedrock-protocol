@@ -37,7 +37,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 ## Valid data at 2168
 
 - Read enum bindings, limits, items and blocks from the dump of the build that checks the folder, never from another build's protocol-docs.
-- Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`.
+- Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`; a field whose dump binds no enum takes any integer of its dump type, whatever enum the DSL types it as.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
 - Give a recipe ingredient's descriptor only `name`, `tags` or `item_tag`, and an `item_tag` only a registered item carries.
