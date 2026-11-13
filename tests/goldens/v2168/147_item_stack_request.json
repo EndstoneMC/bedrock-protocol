@@ -1,5 +1,6 @@
 [
  {
+  "id": "take_action_arm",
   "value": {
    "requests": [
     {
@@ -37,6 +38,7 @@
   "bytes": "010101000001070003090000003b0000000000000003000000"
  },
  {
+  "id": "lab_table_and_creative_craft_with_filter",
   "value": {
    "requests": [
     {
@@ -62,6 +64,7 @@
   "bytes": "01050207090c0e0501010a616e76696c206e616d6503000000"
  },
  {
+  "id": "every_remaining_action_arm",
   "value": {
    "requests": [
     {
