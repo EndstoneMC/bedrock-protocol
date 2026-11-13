@@ -1,5 +1,6 @@
 [
  {
+  "id": "reset_three_hud_elements",
   "value": {
    "hud_element": ["PAPER_DOLL", "HOT_BAR", "ITEM_TEXT"],
    "hud_visible": "RESET"
