@@ -18,7 +18,7 @@ paths:
 - Name a test for the behaviour it proves, as a lower-case sentence (`test_decode_rejects_trailing_bytes`), never for the function it calls.
 - Prove one behaviour per test; a name that needs `and` is two tests.
 - Put no loop, `if` or `try` in a test body: parametrize the cases with readable ids, assert a failure with `pytest.raises(..., match=...)`, and mark a known gap with `pytest.mark.xfail(strict=True)`.
-- Reach the code only through the public `bedrock_protocol` package, never through a `_`-prefixed name; a missing public name is a gap in the binding.
+- Reach the code only through the public `bedrock_protocol` package, never through a `_`-prefixed name; a missing public name is a gap in the binding. Only the cereal JSON helper also reflects over the compiler's schema model, which CI installs after a smoke import proves the wheel works without it.
 - Pin a version-specific test by importing that version's module by name, never by position.
 - Run version-independent behaviour over every bound version through one parametrized fixture.
 - Share through fixtures, never `from conftest import`; a fixture never hides a value an assertion depends on.
