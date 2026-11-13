@@ -1,5 +1,6 @@
 [
  {
+  "id": "newly_unlocked_stick",
   "value": {
    "packet_type": "NEWLY_UNLOCKED_RECIPES",
    "unlocked_recipes": ["minecraft:stick"]
