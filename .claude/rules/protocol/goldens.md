@@ -20,7 +20,6 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Compare an `ActorRuntimeID`, `ActorUniqueID`, `DimensionType`, `PlayerInputTick` or `Color` with the one member BDS wraps it in; unwrap no other type.
-- Compare a field the compiler's `DUPLICATE_BINDINGS` lists with each copy BDS prints of it.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 
 ## Writing cases

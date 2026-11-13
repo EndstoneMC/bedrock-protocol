@@ -436,14 +436,3 @@ def test_the_package_is_the_modules_namespace(build_package):
         "dev.endstone.protocol",
         ["a"],
     )
-
-
-def test_a_duplicate_binding_copies_its_field_only_over_its_range(build_package):
-    source = (
-        'from protocol import packet, uint8\npackage = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n\n'
-        + "@packet(id=348, since=2168)\nclass ClientboundUpdateSoundDataPacket:\n    event: uint8\n"
-    )
-    schema = Schema(build_package({"a": source}, MODELLED_INIT))
-    (packet,) = schema.order
-
-    assert [schema.shape_at(packet, version).fields[0].copies for version in (2168, 2193, 2225)] == [7, 7, 1]

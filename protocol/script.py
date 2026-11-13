@@ -76,7 +76,8 @@ class SphereDataPayload:
 
 @type(since=1001)
 class CylinderDataPayload:
-    radii: Vec2
+    radius_x: Vec2
+    radius_z: Vec2
     height: float
     num_segments: uint8
 

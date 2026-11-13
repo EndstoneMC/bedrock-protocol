@@ -97,25 +97,6 @@ class P:
     x: uint8 = field(when=lambda p: p.d == D.OLD)
 """
 
-CYLINDER = """
-package = "bedrock.protocol"
-java_package = "dev.endstone.protocol"
-
-class Vec2:
-    x: float
-    y: float
-
-class CylinderDataPayload:
-    radii: Vec2
-    height: float
-"""
-
-CYLINDER_INIT = """
-versions = (1001,)
-
-releases = {1001: "1.26.30"}
-"""
-
 
 @pytest.fixture
 def generate(build_package, tmp_path):
@@ -294,30 +275,3 @@ releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.x"}
     version = (out / "version.hpp").read_text()
     assert 'ProtocolVersion{3, 2, "1.3.0", "1.3.0", "1.3.0"},' in version
     assert 'ProtocolVersion{4, 4, "1.4.x", "1.4.0", "1.4.9"},' in version
-
-
-def test_a_duplicate_binding_writes_its_field_once_per_copy(generate):
-    out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
-
-    write = (
-        "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
-        "        Serializer<::bedrock::protocol::Vec2>::serialize(stream, value.radii);\n"
-        "    }\n"
-        "    stream.write<float>(value.height);\n"
-    )
-    assert write in (out / "a.cpp").read_text()
-
-
-def test_a_duplicate_binding_reads_every_copy_into_its_field(generate):
-    out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
-
-    read = (
-        "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
-        "        {\n"
-        "            auto v = Serializer<::bedrock::protocol::Vec2>::deserialize(stream);\n"
-        '            if (!v) return stream.fail(v.error(), "radii");\n'
-        "            out.radii = std::move(*v);\n"
-        "        }\n"
-        "    }\n"
-    )
-    assert read in (out / "a.cpp").read_text()

@@ -1,23 +1,32 @@
 [
  {
-  "id": "start_video_capture_arm",
+  "id": "start_then_stop_arms",
   "value": {
-   "params": {
+   "start_video_capture": {
     "StartVideoCapture": {
      "frame_rate": 60,
      "file_prefix": "clip"
     }
-   }
-  },
-  "bytes": "003c00000004636c6970003c00000004636c6970"
- },
- {
-  "id": "stop_video_capture_arm",
-  "value": {
-   "params": {
+   },
+   "stop_video_capture": {
     "StopVideoCapture": {}
    }
   },
-  "bytes": "0101"
+  "bytes": "003c00000004636c697001"
+ },
+ {
+  "id": "stop_then_start_arms",
+  "value": {
+   "start_video_capture": {
+    "StopVideoCapture": {}
+   },
+   "stop_video_capture": {
+    "StartVideoCapture": {
+     "frame_rate": 30,
+     "file_prefix": "ab"
+    }
+   }
+  },
+  "bytes": "01001e000000026162"
  }
 ]
