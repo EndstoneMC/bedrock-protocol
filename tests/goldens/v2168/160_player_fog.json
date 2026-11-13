@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_fog_in_stack",
   "value": {
    "fog_stack": ["minecraft:fog_ocean"]
   },
