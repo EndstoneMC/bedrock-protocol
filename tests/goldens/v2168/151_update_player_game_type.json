@@ -1,5 +1,6 @@
 [
  {
+  "id": "adventure_for_target_player",
   "value": {
    "player_game_type": "ADVENTURE",
    "target_player": 7,
