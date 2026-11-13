@@ -1,5 +1,6 @@
 [
  {
+  "id": "ready_to_spawn",
   "value": {
    "pos": {
     "x": 1.0,
