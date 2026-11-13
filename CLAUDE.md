@@ -23,7 +23,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `compiler/`: the compiler, run by CMake once at configure time over all of `protocol/`; it has its own `pyproject.toml`, and the root holds the one for the runtime.
 - Never commit generated code.
 - `include/bedrock/`: the hand-written C++ runtime.
-- `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` pins protocol N and the bare package is the latest.
+- `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` pins protocol N and the bare package is the latest; its stubs are generated at build time by `python/stubgen.py` with `python/stubgen.pat`.
 - `tests/`: pytest only; tests reach the C++ through the binding, there are no C++ tests, and `tests/package/` is only CI's `find_package` consumer.
 - `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
 - `scripts/`: tools run by hand; `scripts/goldens/values.py` needs `PYTHONPATH=compiler/src` and, for `--check`, the built `bedrock_protocol` binding, and the rest need only the stdlib and lldb's Python module.
