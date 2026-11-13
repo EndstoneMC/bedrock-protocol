@@ -17,6 +17,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Write `value` exactly as `to_json` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
 - Commit a case only once BDS writes the same bytes and the JSON BDS prints matches `value` in its tree and leaf values; keys are not compared.
+- Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 
 ## Writing cases
@@ -29,7 +30,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep a list to one element and a string to a few characters unless a branch needs more.
 - Give every leaf data BDS accepts (below); when BDS rewrites or refuses a value, fix the schema or add the missing line here with its evidence in the commit body, never retry other values until one passes.
 - Never run BDS from a test.
-- Run every step as an inline command; save no script, not even in a scratchpad or `build/`.
+- Compare a BDS run with the `goldens` skill's `compare.py`; run every other step as an inline command and save no other script, not even in a scratchpad or `build/`.
 
 ## Valid data at 2168
 

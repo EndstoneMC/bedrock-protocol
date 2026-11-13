@@ -5,7 +5,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 
 # Goldens handbook
 
-`.claude/rules/protocol/goldens.md` decides what a case holds and when it freezes. This skill produces the BDS evidence it asks for. Run every step as an inline command from the repository root, and save no script.
+`.claude/rules/protocol/goldens.md` decides what a case holds and when it freezes. This skill produces the BDS evidence it asks for. Run every step from the repository root: the comparison with `compare.py` beside this file, every other step as an inline command. Save no other script.
 
 `<protocol>` names the case folder `tests/goldens/v<protocol>`, and `<version>` is the BDS build that goldens.md says checks it.
 
@@ -78,56 +78,13 @@ A clean stop exits 0 and logs `Quit correctly`.
 
 ## Compare
 
-Bytes must be equal. The JSON is walked in order: an object's values in order with keys ignored, arrays element by element, and leaves equal, where an int equals a float of the same value and a bool never equals a number. The command writes `$G/verdicts.json` and prints the verdicts for each file:
+`compare.py` beside this file checks each case against the run. Bytes must be equal. It then walks the case's `value` with the schema's types at `<protocol>` and BDS's JSON with the dump's fields, pairing them field by field. Where BDS prints the same data in another form, a rule named for what BDS does explains it; anything no rule explains is a difference. It prints each case's verdict, the rules it needed and `freezes` when goldens.md accepts all of them, then the totals and each rule's case count:
 
 ```
-python3 -I - tests/goldens/v<protocol> $G <<'EOF'
-import collections, json, pathlib, sys
-folder, out = map(pathlib.Path, sys.argv[1:])
-values = {(p.stem, i): c for p in folder.glob('*.json') for i, c in enumerate(json.loads(p.read_text()))}
-def walk(a, b, path=''):
-    if isinstance(a, dict) and isinstance(b, dict):
-        keys, a, b = list(a), list(a.values()), list(b.values())
-    elif isinstance(a, list) and isinstance(b, list):
-        keys = range(len(a))
-    else:
-        return None if a == b and (type(a) is type(b) or {type(a), type(b)} == {int, float}) else (path, a, b)
-    if len(a) != len(b):
-        return path, f'{len(a)} members', f'{len(b)} members'
-    return next(filter(None, (walk(x, y, f'{path}/{k}') for k, x, y in zip(keys, a, b))), None)
-verdicts = []
-for r in json.loads((out / 'results.json').read_text()):
-    case, v = values[r['stem'], r['index']], {'stem': r['stem'], 'index': r['index']}
-    bds = r.get('bds_json')
-    if r.get('bds_json_valid') is False:
-        try:
-            bds = json.loads(bds)
-        except ValueError:
-            bds = v['bds_json'] = r['bds_json']
-    if 'crash' in r:
-        v |= {'verdict': 'crashed', 'crash': r['crash']}
-    elif not r['read_ok']:
-        v |= {'verdict': 'refused', 'consumed': r['consumed'], 'error': r['error']}
-    elif r['bds_bytes'] != case['bytes']:
-        v |= {'verdict': 'rewritten', 'at': next(i for i in range(0, len(r['bds_bytes']) + 2, 2) if r['bds_bytes'][i:i + 2] != case['bytes'][i:i + 2]) // 2, 'bds_bytes': r['bds_bytes']}
-    elif 'bds_json' in v:
-        v['verdict'] = 'json_unparsable'
-    elif d := walk(case['value'], bds):
-        v |= {'verdict': 'json_differs', 'at': d[0], 'value': d[1], 'bds': d[2]}
-    else:
-        v['verdict'] = 'agrees'
-    verdicts.append(v)
-(out / 'verdicts.json').write_text(json.dumps(verdicts, indent=1) + '\n')
-files = collections.defaultdict(collections.Counter)
-for v in verdicts:
-    files[v['stem']][v['verdict']] += 1
-for stem, counts in sorted(files.items()):
-    print(stem, dict(counts))
-print(collections.Counter(v['verdict'] for v in verdicts))
-EOF
+PYTHONPATH=compiler/src python3 .claude/skills/goldens/compare.py tests/goldens/v<protocol> $G
 ```
 
-Only `agrees` can freeze. Apply a normalisation only once goldens.md states it.
+Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md states; add one there only once goldens.md does.
 
 ## Symptom -> action
 
@@ -139,10 +96,12 @@ Only `agrees` can freeze. Apply a normalisation only once goldens.md states it.
 | `rewritten`, and two fields come back holding the second one's value | BDS binds both schema fields to one member. Report it; don't pick equal values to pass. |
 | `crashed` on every case | A `Packet` slot or stream mirror is wrong. Re-check the slots against a vtable. |
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
-| `crashed: timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
-| `crashed: no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
+| `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
+| `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
 | `json_unparsable` | `toString` printed an NBT tag or a bitset. The bytes decide until goldens.md has a rule. |
-| `json_differs`, the same data in another form (enum name against number, wrapped scalar, absent optional, UUID halves, raw bytes against hex) | No rule decides it yet. Report it with an example and freeze nothing on it. |
+| `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
+| `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
+| `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the wire's; otherwise report it. |
 | `json_differs` on a value | The library's `to_json` mislabels or mis-nests a field: fix the schema or the binding. |
 | `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |
@@ -174,8 +133,8 @@ llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/D
 One case's footprint is the branch outcomes it reaches (true count > 0, false count > 0) and the region entries it covers in the generated sources:
 
 ```
-D=build/Debug/profiles/<stem>.<index>; rm -rf $D; mkdir -p $D
-LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/<stem>/<index>]'
+D=build/Debug/profiles/<stem>.<id>; rm -rf $D; mkdir -p $D
+LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/<stem>/<id>]'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -skip-functions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
 python3 -I - $D/export.json <<'EOF' | sort -u > $D.fp
