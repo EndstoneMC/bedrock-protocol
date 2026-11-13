@@ -8,35 +8,5 @@
    "sort_order": "DESCENDING"
   },
   "bytes": "0773696465626172096f626a6563746976650653636f7265730564756d6d7902"
- },
- {
-  "value": {
-   "display_slot_name": "",
-   "objective_name": "",
-   "objective_display_name": "",
-   "criteria_name": "",
-   "sort_order": "ASCENDING"
-  },
-  "bytes": "0000000000"
- },
- {
-  "value": {
-   "display_slot_name": "",
-   "objective_name": "",
-   "objective_display_name": "",
-   "criteria_name": "",
-   "sort_order": "DESCENDING"
-  },
-  "bytes": "0000000002"
- },
- {
-  "value": {
-   "display_slot_name": "",
-   "objective_name": "",
-   "objective_display_name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-   "criteria_name": "",
-   "sort_order": "ASCENDING"
-  },
-  "bytes": "0000c80178787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780000"
  }
 ]

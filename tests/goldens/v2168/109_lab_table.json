@@ -10,17 +10,5 @@
    "reaction": "MISC_LARGE_SMOKE"
   },
   "bytes": "010203d8040c"
- },
- {
-  "value": {
-   "type": "RESET",
-   "pos": {
-    "x": 0,
-    "y": 0,
-    "z": 0
-   },
-   "reaction": "NONE"
-  },
-  "bytes": "0200000000"
  }
 ]

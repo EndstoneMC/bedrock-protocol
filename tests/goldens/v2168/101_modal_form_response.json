@@ -14,13 +14,5 @@
    "form_cancel_reason": "USER_BUSY"
   },
   "bytes": "01000101"
- },
- {
-  "value": {
-   "form_id": 7,
-   "json_response": "",
-   "form_cancel_reason": "USER_CLOSED"
-  },
-  "bytes": "0701000100"
  }
 ]

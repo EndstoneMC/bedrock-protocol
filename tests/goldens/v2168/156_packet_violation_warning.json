@@ -7,14 +7,5 @@
    "violation_context": "malformed packet"
   },
   "bytes": "00043c106d616c666f726d6564207061636b6574"
- },
- {
-  "value": {
-   "violation_type": "UNKNOWN",
-   "violation_severity": "UNKNOWN",
-   "violating_packet_id": "PACKET_VIOLATION_WARNING",
-   "violation_context": ""
-  },
-  "bytes": "0101b80200"
  }
 ]

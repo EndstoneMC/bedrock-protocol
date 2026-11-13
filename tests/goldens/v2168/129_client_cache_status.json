@@ -4,11 +4,5 @@
    "enabled": true
   },
   "bytes": "01"
- },
- {
-  "value": {
-   "enabled": false
-  },
-  "bytes": "00"
  }
 ]

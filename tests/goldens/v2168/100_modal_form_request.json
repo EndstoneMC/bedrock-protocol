@@ -5,19 +5,5 @@
    "form_json": "{\"type\":\"modal\"}"
   },
   "bytes": "ac02107b2274797065223a226d6f64616c227d"
- },
- {
-  "value": {
-   "form_id": 1,
-   "form_json": ""
-  },
-  "bytes": "0100"
- },
- {
-  "value": {
-   "form_id": 1,
-   "form_json": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  },
-  "bytes": "01820178787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
  }
 ]

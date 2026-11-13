@@ -7,14 +7,5 @@
    "shake_action": "ADD"
   },
   "bytes": "0000003f000000400100"
- },
- {
-  "value": {
-   "intensity": 0.0,
-   "seconds": 0.0,
-   "shake_type": "POSITIONAL",
-   "shake_action": "STOP"
-  },
-  "bytes": "00000000000000000001"
  }
 ]

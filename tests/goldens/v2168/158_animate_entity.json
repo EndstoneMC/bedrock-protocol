@@ -13,17 +13,5 @@
    ]
   },
   "bytes": "1a616e696d6174696f6e2e637265657065722e7377656c6c696e670764656661756c741c71756572792e616e795f616e696d6174696f6e5f66696e69736865640d00000025636f6e74726f6c6c65722e616e696d6174696f6e2e637265657065725f7377656c6c696e670000003f0207ac02"
- },
- {
-  "value": {
-   "animation": "",
-   "next_state": "",
-   "stop_expression": "",
-   "stop_expression_version": "INVALID",
-   "controller": "",
-   "blend_out_time": 0.0,
-   "runtime_ids": []
-  },
-  "bytes": "000000ffffffff000000000000"
  }
 ]

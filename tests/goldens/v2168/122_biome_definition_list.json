@@ -97,39 +97,5 @@
    }
   },
   "bytes": "01000001000000003f0000803e000000000000003e0000803f77665544010001000000000000000000010000000000000001010700000001016e0000803e000000000000803f090000000473656564fdffffff020000803f0000003f000206706c61696e7303746167"
- },
- {
-  "value": {
-   "biome_data": {
-    "2": {
-     "id": 20,
-     "temperature": 0.0,
-     "downfall": 0.0,
-     "foliage_snow": 0.0,
-     "depth": 0.0,
-     "scale": 0.0,
-     "map_water_color_argb": 0,
-     "rain": false,
-     "tags": null,
-     "chunk_gen_data": null
-    },
-    "5": {
-     "id": 50,
-     "temperature": 0.0,
-     "downfall": 0.0,
-     "foliage_snow": 0.0,
-     "depth": 0.0,
-     "scale": 0.0,
-     "map_water_color_argb": 0,
-     "rain": false,
-     "tags": null,
-     "chunk_gen_data": null
-    }
-   },
-   "string_list": {
-    "strings": []
-   }
-  },
-  "bytes": "02020014000000000000000000000000000000000000000000000000000000000500320000000000000000000000000000000000000000000000000000000000"
  }
 ]

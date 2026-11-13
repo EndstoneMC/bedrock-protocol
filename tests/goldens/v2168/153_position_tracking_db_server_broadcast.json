@@ -12,25 +12,5 @@
    }
   },
   "bytes": "000e0a000802696408303030303030303700"
- },
- {
-  "value": {
-   "action": "NOT_FOUND",
-   "id": {
-    "raw_id": -1
-   },
-   "data": {}
-  },
-  "bytes": "02010a0000"
- },
- {
-  "value": {
-   "action": "DESTROY",
-   "id": {
-    "raw_id": 300
-   },
-   "data": {}
-  },
-  "bytes": "01d8040a0000"
  }
 ]

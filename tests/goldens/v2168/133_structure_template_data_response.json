@@ -18,13 +18,5 @@
    "response_type": "EXPORT"
   },
   "bytes": "0b6d797374727563747572650001"
- },
- {
-  "value": {
-   "structure_name": "",
-   "structure_tag": {},
-   "response_type": "NONE"
-  },
-  "bytes": "00010a000000"
  }
 ]

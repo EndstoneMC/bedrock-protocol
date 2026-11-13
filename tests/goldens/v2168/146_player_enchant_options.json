@@ -49,33 +49,5 @@
    ]
   },
   "bytes": "02c802000000020905240100012bff12616e696d616c20696d6275652072616e6765ac0200ffffffff000000017a01"
- },
- {
-  "value": {
-   "options": []
-  },
-  "bytes": "00"
- },
- {
-  "value": {
-   "options": [
-    {
-     "cost": 200,
-     "enchants": {
-      "slot": -1,
-      "item_enchants": [
-       [],
-       [],
-       []
-      ]
-     },
-     "enchant_name": "",
-     "enchant_net_id": {
-      "raw_id": 0
-     }
-    }
-   ]
-  },
-  "bytes": "01c8ffffffff0000000000"
  }
 ]

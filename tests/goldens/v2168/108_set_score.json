@@ -54,21 +54,6 @@
       "scoreboard_id": {
        "raw_id": 1
       },
-      "objective_name": "rm"
-     }
-    }
-   ]
-  },
-  "bytes": "01000672656d6f7665020102726d"
- },
- {
-  "value": {
-   "score_info": [
-    {
-     "RemoveScore": {
-      "scoreboard_id": {
-       "raw_id": 1
-      },
       "objective_name": null
      }
     }
