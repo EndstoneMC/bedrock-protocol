@@ -39,5 +39,190 @@
    }
   },
   "bytes": "0500010001010001010c010003000000000000000001004000000112a19cc481080a00000000000000000000"
+ },
+ {
+  "value": {
+   "legacy_request_id": {
+    "raw_id": -2
+   },
+   "legacy_set_item_slots": [
+    {
+     "container_enum": "ARMOR_CONTAINER",
+     "slots": "0102"
+    }
+   ],
+   "variant_transaction": {
+    "InventoryMismatchData": {
+     "transaction": {
+      "actions": [
+       {
+        "source": {
+         "type": "GLOBAL_INVENTORY",
+         "container_id": null,
+         "flags": null
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "bytes": "0301010602010201010101010100010002000000000000000001004000000112a19cc481080a00000000000000000000"
+ },
+ {
+  "value": {
+   "legacy_request_id": {
+    "raw_id": -3
+   },
+   "legacy_set_item_slots": null,
+   "variant_transaction": {
+    "ItemUseInventoryTransaction": {
+     "transaction": {
+      "actions": [
+       {
+        "source": {
+         "type": "WORLD_INTERACTION",
+         "container_id": null,
+         "flags": "WORLD_INTERACTION_RANDOM"
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       }
+      ]
+     },
+     "action_type": "USE",
+     "trigger_type": "PLAYER_INPUT",
+     "pos": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "face": 4,
+     "slot": 5,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "click_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "target_block_id": 6,
+     "client_predicted_result": "SUCCESS",
+     "client_cooldown_state": "ON"
+    }
+   }
+  },
+  "bytes": "05000102010102010001010102000000000000000001004000000112a19cc481080a000000000000000000000201020406040a01004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403f060101"
+ },
+ {
+  "value": {
+   "legacy_request_id": {
+    "raw_id": -3
+   },
+   "legacy_set_item_slots": null,
+   "variant_transaction": {
+    "ItemUseOnActorInventoryTransaction": {
+     "transaction": {
+      "actions": []
+     },
+     "runtime_id": 7,
+     "action_type": "ATTACK",
+     "slot": 2,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "hit_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     }
+    }
+   }
+  },
+  "bytes": "05000103010007020401004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403f"
+ },
+ {
+  "value": {
+   "legacy_request_id": {
+    "raw_id": -3
+   },
+   "legacy_set_item_slots": null,
+   "variant_transaction": {
+    "ItemReleaseInventoryTransaction": {
+     "transaction": {
+      "actions": []
+     },
+     "action_type": "USE",
+     "slot": 2,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
+    }
+   }
+  },
+  "bytes": "050001040100020401004000000112a19cc481080a000000000000000000000000803f0000004000004040"
  }
 ]
