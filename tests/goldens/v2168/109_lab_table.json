@@ -1,5 +1,6 @@
 [
  {
+  "id": "start_reaction",
   "value": {
    "type": "START_REACTION",
    "pos": {
