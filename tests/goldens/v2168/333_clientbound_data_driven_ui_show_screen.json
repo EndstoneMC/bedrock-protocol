@@ -1,14 +1,26 @@
 [
  {
-  "value": {"screen_id": "my_screen", "form_id": 300, "data_instance_id": 70000},
+  "value": {
+   "screen_id": "my_screen",
+   "form_id": 300,
+   "data_instance_id": 70000
+  },
   "bytes": "096d795f73637265656e2c0100000170110100"
  },
  {
-  "value": {"screen_id": "s", "form_id": 1, "data_instance_id": null},
+  "value": {
+   "screen_id": "s",
+   "form_id": 1,
+   "data_instance_id": null
+  },
   "bytes": "01730100000000"
  },
  {
-  "value": {"screen_id": "t", "form_id": 4294967295, "data_instance_id": 4294967295},
+  "value": {
+   "screen_id": "t",
+   "form_id": 4294967295,
+   "data_instance_id": 4294967295
+  },
   "bytes": "0174ffffffff01ffffffff"
  }
 ]

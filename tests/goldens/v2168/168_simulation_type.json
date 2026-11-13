@@ -1,10 +1,14 @@
 [
  {
-  "value": {"sim_type": "EDITOR"},
+  "value": {
+   "sim_type": "EDITOR"
+  },
   "bytes": "01"
  },
  {
-  "value": {"sim_type": "TEST"},
+  "value": {
+   "sim_type": "TEST"
+  },
   "bytes": "02"
  }
 ]

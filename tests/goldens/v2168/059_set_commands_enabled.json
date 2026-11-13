@@ -1,6 +1,8 @@
 [
  {
-  "value": {"commands_enabled": true},
+  "value": {
+   "commands_enabled": true
+  },
   "bytes": "01"
  }
 ]

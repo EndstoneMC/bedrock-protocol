@@ -5,7 +5,11 @@
    "location": {
     "CoordinatesLocation": {
      "type": "PLAYER_LOCATION_COORDINATES",
-     "pos": {"x": 1.0, "y": 2.0, "z": 3.0}
+     "pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
     }
    }
   },
@@ -15,7 +19,9 @@
   "value": {
    "id": 7,
    "location": {
-    "HiddenLocation": {"type": "PLAYER_LOCATION_HIDE"}
+    "HiddenLocation": {
+     "type": "PLAYER_LOCATION_HIDE"
+    }
    }
   },
   "bytes": "0e0102"

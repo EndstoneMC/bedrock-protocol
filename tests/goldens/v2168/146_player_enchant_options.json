@@ -8,16 +8,24 @@
       "slot": 2,
       "item_enchants": [
        [
-        {"enchant_type": "SHARPNESS", "level": 5}
+        {
+         "enchant_type": "SHARPNESS",
+         "level": 5
+        }
        ],
        [],
        [
-        {"enchant_type": "UNBREAKING", "level": 3}
+        {
+         "enchant_type": "UNBREAKING",
+         "level": 3
+        }
        ]
       ]
      },
      "enchant_name": "imbue",
-     "enchant_net_id": {"raw_id": 300}
+     "enchant_net_id": {
+      "raw_id": 300
+     }
     }
    ]
   },

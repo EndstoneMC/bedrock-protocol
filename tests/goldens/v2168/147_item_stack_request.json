@@ -3,18 +3,26 @@
   "value": {
    "requests": [
     {
-     "client_request_id": {"raw_id": -1},
+     "client_request_id": {
+      "raw_id": -1
+     },
      "actions": [
       {
        "TakeActionData": {
         "amount": 1,
         "source": {
-         "full_container_name": {"name": "LEVEL_ENTITY_CONTAINER", "dynamic_id": null},
+         "full_container_name": {
+          "name": "LEVEL_ENTITY_CONTAINER",
+          "dynamic_id": null
+         },
          "slot": 3,
          "net_id_variant": 9
         },
         "destination": {
-         "full_container_name": {"name": "CURSOR_CONTAINER", "dynamic_id": null},
+         "full_container_name": {
+          "name": "CURSOR_CONTAINER",
+          "dynamic_id": null
+         },
          "slot": 0,
          "net_id_variant": 0
         }
@@ -32,13 +40,18 @@
   "value": {
    "requests": [
     {
-     "client_request_id": {"raw_id": -3},
+     "client_request_id": {
+      "raw_id": -3
+     },
      "actions": [
       {
        "LabTableCombineActionData": {}
       },
       {
-       "CraftCreativeActionData": {"creative_item_net_id": 5, "num_crafts": 1}
+       "CraftCreativeActionData": {
+        "creative_item_net_id": 5,
+        "num_crafts": 1
+       }
       }
      ],
      "strings_to_filter": ["anvil name"],
@@ -52,7 +65,9 @@
   "value": {
    "requests": [
     {
-     "client_request_id": {"raw_id": -1},
+     "client_request_id": {
+      "raw_id": -1
+     },
      "actions": [
       {
        "CraftNonImplementedActionData": {}

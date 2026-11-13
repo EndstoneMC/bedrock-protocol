@@ -2,9 +2,17 @@
  {
   "value": {
    "spawn_pos_type": "WORLD_SPAWN",
-   "pos": {"x": 1, "y": 2, "z": 3},
+   "pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
    "dimension_type": 1,
-   "spawn_block_pos": {"x": 4, "y": 5, "z": 6}
+   "spawn_block_pos": {
+    "x": 4,
+    "y": 5,
+    "z": 6
+   }
   },
   "bytes": "0202040602080a0c"
  }

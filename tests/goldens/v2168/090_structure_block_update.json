@@ -1,9 +1,16 @@
 [
  {
   "value": {
-   "block_pos": {"x": 1, "y": 2, "z": 3},
+   "block_pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
    "data": {
-    "structure_name": {"unredacted_string": "name", "redacted_string": null},
+    "structure_name": {
+     "unredacted_string": "name",
+     "redacted_string": null
+    },
     "data_field": "df",
     "include_players": true,
     "show_bounding_box": true,
@@ -13,8 +20,16 @@
      "ignore_entities": true,
      "ignore_blocks": true,
      "allow_non_ticking_player_and_ticking_area_chunks": true,
-     "structure_size": {"x": 1, "y": 2, "z": 3},
-     "structure_offset": {"x": 4, "y": 5, "z": 6},
+     "structure_size": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "structure_offset": {
+      "x": 4,
+      "y": 5,
+      "z": 6
+     },
      "last_touched_by_player": 7,
      "rotation": "ROTATE_90",
      "mirror": "X",
@@ -22,7 +37,11 @@
      "animation_seconds": 0.5,
      "integrity_value": 1.0,
      "integrity_seed": 9,
-     "pivot": {"x": 0.5, "y": 1.0, "z": 2.0}
+     "pivot": {
+      "x": 0.5,
+      "y": 1.0,
+      "z": 2.0
+     }
     },
     "redstone_save_mode": "SAVES_TO_DISK"
    },

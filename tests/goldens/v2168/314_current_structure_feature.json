@@ -1,14 +1,20 @@
 [
  {
-  "value": {"current_structure_feature": "minecraft:ancient_city"},
+  "value": {
+   "current_structure_feature": "minecraft:ancient_city"
+  },
   "bytes": "166d696e6563726166743a616e6369656e745f63697479"
  },
  {
-  "value": {"current_structure_feature": ""},
+  "value": {
+   "current_structure_feature": ""
+  },
   "bytes": "00"
  },
  {
-  "value": {"current_structure_feature": "abc"},
+  "value": {
+   "current_structure_feature": "abc"
+  },
   "bytes": "03616263"
  }
 ]

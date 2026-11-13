@@ -8,11 +8,21 @@
       "tags": [
        {
         "CompoundTag": {
-         "bid": {"StringTag": ""},
-         "hasspawnegg": {"ByteTag": 1},
-         "id": {"StringTag": "minecraft:pig"},
-         "rid": {"IntTag": 12},
-         "summonable": {"ByteTag": 1}
+         "bid": {
+          "StringTag": ""
+         },
+         "hasspawnegg": {
+          "ByteTag": 1
+         },
+         "id": {
+          "StringTag": "minecraft:pig"
+         },
+         "rid": {
+          "IntTag": 12
+         },
+         "summonable": {
+          "ByteTag": 1
+         }
         }
        }
       ]

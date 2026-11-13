@@ -1,14 +1,29 @@
 [
  {
-  "value": {"ability": "VERTICAL_FLY_SPEED", "value_type": "FLOAT", "bool_": true, "float_": 0.5},
+  "value": {
+   "ability": "VERTICAL_FLY_SPEED",
+   "value_type": "FLOAT",
+   "bool_": true,
+   "float_": 0.5
+  },
   "bytes": "2602010000003f"
  },
  {
-  "value": {"ability": "FLYING", "value_type": "BOOL", "bool_": true, "float_": 0.5},
+  "value": {
+   "ability": "FLYING",
+   "value_type": "BOOL",
+   "bool_": true,
+   "float_": 0.5
+  },
   "bytes": "1201010000003f"
  },
  {
-  "value": {"ability": "MINE", "value_type": "BOOL", "bool_": true, "float_": 0.5},
+  "value": {
+   "ability": "MINE",
+   "value_type": "BOOL",
+   "bool_": true,
+   "float_": 0.5
+  },
   "bytes": "0201010000003f"
  }
 ]

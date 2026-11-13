@@ -1,6 +1,14 @@
 [
  {
-  "value": {"photo_name": "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg", "photo_data": "ffd8ffe0", "book_id": "book-7", "type": "PHOTO_ITEM", "source_type": "BOOK", "owner_id": -12345, "new_photo_name": "2f1e0d0c-3b4a-4958-8776-655443322110.jpeg"},
+  "value": {
+   "photo_name": "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg",
+   "photo_data": "ffd8ffe0",
+   "book_id": "book-7",
+   "type": "PHOTO_ITEM",
+   "source_type": "BOOK",
+   "owner_id": -12345,
+   "new_photo_name": "2f1e0d0c-3b4a-4958-8776-655443322110.jpeg"
+  },
   "bytes": "2931653264336334622d356136392d346637302d386238312d3963393261646233636563342e6a70656704ffd8ffe006626f6f6b2d370102c7cfffffffffffff2932663165306430632d336234612d343935382d383737362d3635353434333332323131302e6a706567"
  }
 ]

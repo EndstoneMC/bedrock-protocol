@@ -1,6 +1,8 @@
 [
  {
-  "value": {"subtype": "UNLOCK_WORLD_TEMPLATE_SETTINGS"},
+  "value": {
+   "subtype": "UNLOCK_WORLD_TEMPLATE_SETTINGS"
+  },
   "bytes": "0300"
  }
 ]

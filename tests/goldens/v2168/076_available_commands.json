@@ -14,7 +14,10 @@
     {
      "name": "execute",
      "values": [
-      {"sub_command_first_value": 0, "sub_command_second_value": 0}
+      {
+       "sub_command_first_value": 0,
+       "sub_command_second_value": 0
+      }
      ]
     }
    ],
@@ -30,7 +33,12 @@
       {
        "is_chaining": true,
        "params": [
-        {"name": "arg", "parse_symbol": 1048577, "optional": true, "param_options": 1}
+        {
+         "name": "arg",
+         "parse_symbol": 1048577,
+         "optional": true,
+         "param_options": 1
+        }
        ]
       }
      ]

@@ -1,6 +1,12 @@
 [
  {
-  "value": {"id": 7, "type": "EXECUTE_ACTION", "actions": "/say hi", "action_index": 2, "scene_name": "scene"},
+  "value": {
+   "id": 7,
+   "type": "EXECUTE_ACTION",
+   "actions": "/say hi",
+   "action_index": 2,
+   "scene_name": "scene"
+  },
   "bytes": "0701072f73617920686902057363656e65"
  }
 ]

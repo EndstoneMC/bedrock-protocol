@@ -4,12 +4,21 @@
    "runtime_id": 300,
    "event_id": "HURT",
    "data": -3,
-   "fire_at_position": {"x": 1.0, "y": 2.0, "z": 3.0}
+   "fire_at_position": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   }
   },
   "bytes": "ac020205010000803f0000004000004040"
  },
  {
-  "value": {"runtime_id": 7, "event_id": "HURT_WITHOUT_RECEIVING_DAMAGE", "data": 5, "fire_at_position": null},
+  "value": {
+   "runtime_id": 7,
+   "event_id": "HURT_WITHOUT_RECEIVING_DAMAGE",
+   "data": 5,
+   "fire_at_position": null
+  },
   "bytes": "07510a00"
  }
 ]

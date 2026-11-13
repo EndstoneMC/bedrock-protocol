@@ -1,6 +1,10 @@
 [
  {
-  "value": {"item_name": "minecraft:diamond_sword", "item_effect_name": "Sharpness V", "slot": 4},
+  "value": {
+   "item_name": "minecraft:diamond_sword",
+   "item_effect_name": "Sharpness V",
+   "slot": 4
+  },
   "bytes": "176d696e6563726166743a6469616d6f6e645f73776f72640b53686172706e657373205604000000"
  }
 ]

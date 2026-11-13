@@ -1,14 +1,23 @@
 [
  {
-  "value": {"item_category": "minecraft:shield", "duration_ticks": 300},
+  "value": {
+   "item_category": "minecraft:shield",
+   "duration_ticks": 300
+  },
   "bytes": "106d696e6563726166743a736869656c64d804"
  },
  {
-  "value": {"item_category": "pearl", "duration_ticks": 20},
+  "value": {
+   "item_category": "pearl",
+   "duration_ticks": 20
+  },
   "bytes": "05706561726c28"
  },
  {
-  "value": {"item_category": "x", "duration_ticks": 1},
+  "value": {
+   "item_category": "x",
+   "duration_ticks": 1
+  },
   "bytes": "017802"
  }
 ]

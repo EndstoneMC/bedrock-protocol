@@ -15,7 +15,9 @@
     }
    ],
    "name_map": {
-    "minecraft:anvil": {"value": 2}
+    "minecraft:anvil": {
+     "value": 2
+    }
    },
    "custom_shape_count": 1
   },

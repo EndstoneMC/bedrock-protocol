@@ -1,14 +1,26 @@
 [
  {
-  "value": {"target_player_id": 7, "player_permissions": "OPERATOR", "custom_permission_flags": 192},
+  "value": {
+   "target_player_id": 7,
+   "player_permissions": "OPERATOR",
+   "custom_permission_flags": 192
+  },
   "bytes": "070000000000000004c000"
  },
  {
-  "value": {"target_player_id": -1, "player_permissions": "CUSTOM", "custom_permission_flags": 255},
+  "value": {
+   "target_player_id": -1,
+   "player_permissions": "CUSTOM",
+   "custom_permission_flags": 255
+  },
   "bytes": "ffffffffffffffff06ff00"
  },
  {
-  "value": {"target_player_id": 9, "player_permissions": "MEMBER", "custom_permission_flags": 1},
+  "value": {
+   "target_player_id": 9,
+   "player_permissions": "MEMBER",
+   "custom_permission_flags": 1
+  },
   "bytes": "0900000000000000020100"
  }
 ]

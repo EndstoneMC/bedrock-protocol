@@ -8,20 +8,33 @@
      "height": 1,
      "ingredients": [
       {
-       "descriptor": {"name": "minecraft:stick"},
+       "descriptor": {
+        "name": "minecraft:stick"
+       },
        "aux_value": 1,
        "stack_size": 2
       }
      ],
      "results": [
-      {"id": 58, "stack_size": 4, "aux_value": 0, "block_runtime_id": 1752181952, "user_data_buffer": "00000000000000000000"}
+      {
+       "id": 58,
+       "stack_size": 4,
+       "aux_value": 0,
+       "block_runtime_id": 1752181952,
+       "user_data_buffer": "00000000000000000000"
+      }
      ],
      "uuid": "00000000-0000-0000-0000-000000000001",
      "tag": "crafting_table",
      "priority": 3,
      "assume_symmetry": true,
-     "unlocking_requirement": {"context": "ALWAYS_UNLOCKED", "ingredients": null},
-     "net_id": {"raw_id": 11}
+     "unlocking_requirement": {
+      "context": "ALWAYS_UNLOCKED",
+      "ingredients": null
+     },
+     "net_id": {
+      "raw_id": 11
+     }
     }
    ],
    "shapeless_recipes": [
@@ -29,13 +42,21 @@
      "recipe_id": "r2",
      "ingredients": [
       {
-       "descriptor": {"name": "minecraft:stick"},
+       "descriptor": {
+        "name": "minecraft:stick"
+       },
        "aux_value": 1,
        "stack_size": 2
       }
      ],
      "results": [
-      {"id": 58, "stack_size": 4, "aux_value": 0, "block_runtime_id": 1752181952, "user_data_buffer": "00000000000000000000"}
+      {
+       "id": 58,
+       "stack_size": 4,
+       "aux_value": 0,
+       "block_runtime_id": 1752181952,
+       "user_data_buffer": "00000000000000000000"
+      }
      ],
      "uuid": "00000000-0000-0000-0000-000000000002",
      "tag": "crafting_table",
@@ -44,19 +65,25 @@
       "context": "NONE",
       "ingredients": [
        {
-        "descriptor": {"name": "minecraft:stick"},
+        "descriptor": {
+         "name": "minecraft:stick"
+        },
         "aux_value": 1,
         "stack_size": 2
        }
       ]
      },
-     "net_id": {"raw_id": 12}
+     "net_id": {
+      "raw_id": 12
+     }
     }
    ],
    "multi_recipes": [
     {
      "uuid": "00000000-0000-0000-0000-000000000003",
-     "net_id": {"raw_id": 13}
+     "net_id": {
+      "raw_id": 13
+     }
     }
    ],
    "user_data_shapeless_recipes": [],
@@ -66,58 +93,94 @@
     {
      "recipe_id": "r4",
      "template_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
      "base_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
      "addition_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
-     "result": {"id": 58, "stack_size": 4, "aux_value": 0, "block_runtime_id": 1752181952, "user_data_buffer": "00000000000000000000"},
+     "result": {
+      "id": 58,
+      "stack_size": 4,
+      "aux_value": 0,
+      "block_runtime_id": 1752181952,
+      "user_data_buffer": "00000000000000000000"
+     },
      "tag": "smithing_table",
-     "net_id": {"raw_id": 14}
+     "net_id": {
+      "raw_id": 14
+     }
     }
    ],
    "smithing_trim_recipes": [
     {
      "recipe_id": "r5",
      "template_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
      "base_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
      "addition_ingredient": {
-      "descriptor": {"name": "minecraft:stick"},
+      "descriptor": {
+       "name": "minecraft:stick"
+      },
       "aux_value": 1,
       "stack_size": 2
      },
      "tag": "smithing_table",
-     "net_id": {"raw_id": 15}
+     "net_id": {
+      "raw_id": 15
+     }
     }
    ],
    "potion_mix_entries": [
-    {"from_item_id": 430, "from_item_aux": 4, "reagent_item_id": 876, "reagent_item_aux": 1, "to_item_id": 430, "to_item_aux": 43}
+    {
+     "from_item_id": 430,
+     "from_item_aux": 4,
+     "reagent_item_id": 876,
+     "reagent_item_aux": 1,
+     "to_item_id": 430,
+     "to_item_aux": 43
+    }
    ],
    "container_mix_entries": [
-    {"from_item_id": 430, "reagent_item_id": 331, "to_item_id": 571}
+    {
+     "from_item_id": 430,
+     "reagent_item_id": 331,
+     "to_item_id": 571
+    }
    ],
    "material_reducer_entries": [
     {
      "from_item_key": 20054016,
      "to_item_ids_and_counts": [
-      {"item_id": 304, "item_count": 2}
+      {
+       "item_id": 304,
+       "item_count": 2
+      }
      ]
     }
    ],

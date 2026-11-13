@@ -15,9 +15,17 @@
        "id": "sid",
        "play_fab_id": "pfid",
        "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}",
-       "skin_image": {"width": 1, "height": 1, "image_bytes": "01020304"},
+       "skin_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "01020304"
+       },
        "skin_animated_images": [],
-       "cape_image": {"width": 1, "height": 1, "image_bytes": "05060708"},
+       "cape_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "05060708"
+       },
        "geometry_data": "{}",
        "geometry_data_min_engine_version": "1.0.0",
        "animation_data": "[]",
@@ -42,7 +50,10 @@
      }
     },
     {
-     "RemoveEntry": {"action": "REMOVE", "uuid": "00000000-0000-0000-0000-000000000002"}
+     "RemoveEntry": {
+      "action": "REMOVE",
+      "uuid": "00000000-0000-0000-0000-000000000002"
+     }
     }
    ]
   },

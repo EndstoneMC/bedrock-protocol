@@ -2,7 +2,11 @@
  {
   "value": {
    "dimension_id": 2,
-   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
    "respawn": true,
    "loading_screen_id": 300
   },
@@ -11,7 +15,11 @@
  {
   "value": {
    "dimension_id": 1,
-   "pos": {"x": -1.0, "y": 64.5, "z": 0.5},
+   "pos": {
+    "x": -1.0,
+    "y": 64.5,
+    "z": 0.5
+   },
    "respawn": false,
    "loading_screen_id": null
   },

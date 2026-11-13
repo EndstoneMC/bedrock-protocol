@@ -4,11 +4,15 @@
    "type": "UPDATE",
    "identity_info": [
     {
-     "scoreboard_id": {"raw_id": 1},
+     "scoreboard_id": {
+      "raw_id": 1
+     },
      "player_id": 7
     },
     {
-     "scoreboard_id": {"raw_id": 2},
+     "scoreboard_id": {
+      "raw_id": 2
+     },
      "player_id": 8
     }
    ]
@@ -20,7 +24,9 @@
    "type": "REMOVE",
    "identity_info": [
     {
-     "scoreboard_id": {"raw_id": 1},
+     "scoreboard_id": {
+      "raw_id": 1
+     },
      "player_id": null
     }
    ]

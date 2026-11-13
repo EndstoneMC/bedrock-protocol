@@ -2,7 +2,11 @@
  {
   "value": {
    "runtime_id": 300,
-   "motion": {"x": 0.5, "y": -1.25, "z": 2.0},
+   "motion": {
+    "x": 0.5,
+    "y": -1.25,
+    "z": 2.0
+   },
    "on_ground": true
   },
   "bytes": "ac020000003f0000a0bf0000004001"

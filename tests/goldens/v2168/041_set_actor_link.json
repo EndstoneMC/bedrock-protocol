@@ -1,7 +1,14 @@
 [
  {
   "value": {
-   "link": {"a": -1, "b": 300, "type": "PASSENGER", "immediate": false, "passenger_initiated": true, "vehicle_angular_velocity": -2.5}
+   "link": {
+    "a": -1,
+    "b": 300,
+    "type": "PASSENGER",
+    "immediate": false,
+    "passenger_initiated": true,
+    "vehicle_angular_velocity": -2.5
+   }
   },
   "bytes": "01d804020001000020c0"
  }

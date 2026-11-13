@@ -4,16 +4,31 @@
    "entity_id": 1,
    "runtime_id": 2,
    "entity_game_type": "CREATIVE",
-   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
-   "rot": {"x": 4.0, "y": 5.0},
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "rot": {
+    "x": 4.0,
+    "y": 5.0
+   },
    "settings": {
     "seed": 7,
-    "spawn_settings": {"type": "DEFAULT", "user_defined_biome_name": "plains", "dimension": 1},
+    "spawn_settings": {
+     "type": "DEFAULT",
+     "user_defined_biome_name": "plains",
+     "dimension": 1
+    },
     "generator": "OVERWORLD",
     "game_type": "ADVENTURE",
     "is_hardcore": true,
     "game_difficulty": "NORMAL",
-    "default_spawn": {"x": 1, "y": 64, "z": 2},
+    "default_spawn": {
+     "x": 1,
+     "y": 64,
+     "z": 2
+    },
     "achievements_disabled": true,
     "editor_world_type": "NON_EDITOR",
     "is_created_in_editor": true,
@@ -36,12 +51,16 @@
       {
        "name": "dodaylightcycle",
        "can_be_modified_by_player": true,
-       "value": {"bool": true}
+       "value": {
+        "bool": true
+       }
       },
       {
        "name": "maxcommandchainlength",
        "can_be_modified_by_player": true,
-       "value": {"int": 131070}
+       "value": {
+        "int": 131070
+       }
       }
      ]
     },
@@ -67,7 +86,10 @@
     "limited_world_width": 16,
     "limited_world_depth": 16,
     "nether_type": "FLAT",
-    "edu_shared_uri_resource": {"button_name": "btn", "link_uri": "http://edu"},
+    "edu_shared_uri_resource": {
+     "button_name": "btn",
+     "link_uri": "http://edu"
+    },
     "override_force_experimental_gameplay_flag": null,
     "chat_restriction_level": "DROPPED",
     "disable_player_interactions": true,
@@ -78,7 +100,10 @@
    "level_name": "world",
    "template_content_identity": "11111111-2222-3333-4444-555555555555",
    "is_trial": true,
-   "movement_settings": {"rewind_history_size": 40, "server_auth_block_breaking": true},
+   "movement_settings": {
+    "rewind_history_size": 40,
+    "server_auth_block_breaking": true
+   },
    "level_current_time": 100,
    "enchantment_seed": 12345,
    "block_properties": [],
@@ -90,9 +115,16 @@
    "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
-   "network_permissions": {"server_auth_sound_enabled": true},
+   "network_permissions": {
+    "server_auth_sound_enabled": true
+   },
    "server_configuration_join_info": null,
-   "server_telemetry_data": {"server_id": "srv", "scenario_id": "scn", "world_id": "wld", "owner_id": "own"}
+   "server_telemetry_data": {
+    "server_id": "srv",
+    "scenario_id": "scn",
+    "world_id": "wld",
+    "owner_id": "own"
+   }
   },
   "bytes": "0202020000803f0000004000004040000080400000a0400700000000000000000006706c61696e7302020401040280010401000101d00f0101036564750000003f0000803e01010104040101020f646f6461796c696768746379636c65010101156d6178636f6d6d616e64636861696e6c656e6774680102feff01000000000001010101040000000101010101010101010107312e32362e34301000000010000000010362746e0a687474703a2f2f6564750001010401036c766c05776f726c642431313131313131312d323232322d333333332d343434342d3535353535353535353535350150016400000000000000f2c0010006636f72722d310107312e32362e34300a0000141a99be1c0000008888777766666666000000000000999901010100037372760373636e03776c64036f776e"
  }

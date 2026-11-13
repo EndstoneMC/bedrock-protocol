@@ -1,6 +1,10 @@
 [
  {
-  "value": {"cause": "MACE_SMASH", "dmg": 200, "armor_slots": 31},
+  "value": {
+   "cause": "MACE_SMASH",
+   "dmg": 200,
+   "armor_slots": 31
+  },
   "bytes": "4490031f"
  }
 ]

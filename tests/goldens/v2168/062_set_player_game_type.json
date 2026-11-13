@@ -1,6 +1,8 @@
 [
  {
-  "value": {"player_game_type": "SPECTATOR"},
+  "value": {
+   "player_game_type": "SPECTATOR"
+  },
   "bytes": "0c"
  }
 ]

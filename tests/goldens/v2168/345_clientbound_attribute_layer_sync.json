@@ -10,7 +10,10 @@
        "name": "temp",
        "from_attribute": null,
        "attribute": {
-        "BoolAttributeData": {"value": true, "operation": "ALPHA_BLEND"}
+        "BoolAttributeData": {
+         "value": true,
+         "operation": "ALPHA_BLEND"
+        }
        },
        "to_attribute": null,
        "current_transition_ticks": 1,

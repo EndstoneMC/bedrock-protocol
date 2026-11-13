@@ -2,10 +2,17 @@
  {
   "value": {
    "trim_patterns": [
-    {"item_name": "minecraft:dune_armor_trim_smithing_template", "pattern_id": "dune"}
+    {
+     "item_name": "minecraft:dune_armor_trim_smithing_template",
+     "pattern_id": "dune"
+    }
    ],
    "trim_materials": [
-    {"material_id": "quartz", "color": "\u00a7h", "item_name": "minecraft:quartz"}
+    {
+     "material_id": "quartz",
+     "color": "\u00a7h",
+     "item_name": "minecraft:quartz"
+    }
    ]
   },
   "bytes": "012b6d696e6563726166743a64756e655f61726d6f725f7472696d5f736d697468696e675f74656d706c6174650464756e65010671756172747a03c2a768106d696e6563726166743a71756172747a"

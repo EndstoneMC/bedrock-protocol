@@ -4,19 +4,38 @@
    "map_id": 1,
    "dimension": 1,
    "locked": true,
-   "map_origin": {"x": 1, "y": 2, "z": 3},
+   "map_origin": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
    "creation_map_ids": [7],
    "scale": 4,
    "unique_ids": [
-    {"type": "ENTITY", "key_entity_id": 9, "key_block_pos": null},
+    {
+     "type": "ENTITY",
+     "key_entity_id": 9,
+     "key_block_pos": null
+    },
     {
      "type": "BLOCK_ENTITY",
      "key_entity_id": null,
-     "key_block_pos": {"x": 4, "y": 5, "z": 6}
+     "key_block_pos": {
+      "x": 4,
+      "y": 5,
+      "z": 6
+     }
     }
    ],
    "decorations": [
-    {"image": "MARKER_RED", "rotation": 3, "x": 4, "y": 5, "label": "hi", "color": 67305985}
+    {
+     "image": "MARKER_RED",
+     "rotation": 3,
+     "x": 4,
+     "y": 5,
+     "label": "hi",
+     "color": 67305985
+    }
    ],
    "width": 2,
    "height": 2,
@@ -31,7 +50,11 @@
    "map_id": 5,
    "dimension": 1,
    "locked": false,
-   "map_origin": {"x": 1, "y": 2, "z": 3},
+   "map_origin": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
    "creation_map_ids": null,
    "scale": null,
    "unique_ids": null,

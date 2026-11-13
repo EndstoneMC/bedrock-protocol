@@ -60,7 +60,10 @@
          {
           "noise": "n",
           "threshold": 0.25,
-          "range": {"min": 0.5, "max": 1.0},
+          "range": {
+           "min": 0.5,
+           "max": 1.0
+          },
           "block_runtime_id": 1741778478
          }
         ],

@@ -1,6 +1,13 @@
 [
  {
-  "value": {"runtime_id": 7, "piece_id": "4c8ae710-df2e-47cd-814d-cc7bf21a3d67", "emote_ticks": 20, "xuid": "2535413418839840", "platform_id": "pc", "flags": 1},
+  "value": {
+   "runtime_id": 7,
+   "piece_id": "4c8ae710-df2e-47cd-814d-cc7bf21a3d67",
+   "emote_ticks": 20,
+   "xuid": "2535413418839840",
+   "platform_id": "pc",
+   "flags": 1
+  },
   "bytes": "072434633861653731302d646632652d343763642d383134642d63633762663231613364363714103235333534313334313838333938343002706301"
  }
 ]

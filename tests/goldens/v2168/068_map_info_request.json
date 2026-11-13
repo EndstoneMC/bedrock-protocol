@@ -3,7 +3,10 @@
   "value": {
    "map_id": -5,
    "client_pixels": [
-    {"pixel": 16909060, "index": 258}
+    {
+     "pixel": 16909060,
+     "index": 258
+    }
    ]
   },
   "bytes": "0901000000040302010201"

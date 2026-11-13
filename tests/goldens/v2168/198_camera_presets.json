@@ -11,7 +11,30 @@
   "value": {
    "camera_presets": {
     "presets": [
-     {"name": "bare", "inherit_from": "minecraft:first_person", "pos_x": null, "pos_y": null, "pos_z": null, "rot_x": null, "rot_y": null, "camera_rotation_speed": null, "snap_to_target": null, "horizontal_rotation_limit": null, "vertical_rotation_limit": null, "continue_targeting": null, "tracking_radius": null, "view_offset": null, "entity_offset": null, "radius": null, "yaw_limit_min": null, "yaw_limit_max": null, "listener": null, "player_effects": null, "aim_assist": null, "control_scheme": null},
+     {
+      "name": "bare",
+      "inherit_from": "minecraft:first_person",
+      "pos_x": null,
+      "pos_y": null,
+      "pos_z": null,
+      "rot_x": null,
+      "rot_y": null,
+      "camera_rotation_speed": null,
+      "snap_to_target": null,
+      "horizontal_rotation_limit": null,
+      "vertical_rotation_limit": null,
+      "continue_targeting": null,
+      "tracking_radius": null,
+      "view_offset": null,
+      "entity_offset": null,
+      "radius": null,
+      "yaw_limit_min": null,
+      "yaw_limit_max": null,
+      "listener": null,
+      "player_effects": null,
+      "aim_assist": null,
+      "control_scheme": null
+     },
      {
       "name": "loaded",
       "inherit_from": "minecraft:free",
@@ -22,12 +45,25 @@
       "rot_y": 0.25,
       "camera_rotation_speed": 4.0,
       "snap_to_target": true,
-      "horizontal_rotation_limit": {"x": 1.0, "y": 2.0},
-      "vertical_rotation_limit": {"x": 3.0, "y": 4.0},
+      "horizontal_rotation_limit": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "vertical_rotation_limit": {
+       "x": 3.0,
+       "y": 4.0
+      },
       "continue_targeting": false,
       "tracking_radius": 8.0,
-      "view_offset": {"x": 5.0, "y": 6.0},
-      "entity_offset": {"x": 7.0, "y": 8.0, "z": 9.0},
+      "view_offset": {
+       "x": 5.0,
+       "y": 6.0
+      },
+      "entity_offset": {
+       "x": 7.0,
+       "y": 8.0,
+       "z": 9.0
+      },
       "radius": 16.0,
       "yaw_limit_min": -90.0,
       "yaw_limit_max": 90.0,
@@ -36,7 +72,10 @@
       "aim_assist": {
        "preset_id": "aim",
        "target_mode": "DISTANCE",
-       "angle": {"x": 30.0, "y": 40.0},
+       "angle": {
+        "x": 30.0,
+        "y": 40.0
+       },
        "distance": 5.0
       },
       "control_scheme": "CAMERA_RELATIVE_STRAFE"
@@ -62,7 +101,12 @@
       "yaw_limit_max": null,
       "listener": null,
       "player_effects": null,
-      "aim_assist": {"preset_id": null, "target_mode": null, "angle": null, "distance": null},
+      "aim_assist": {
+       "preset_id": null,
+       "target_mode": null,
+       "angle": null,
+       "distance": null
+      },
       "control_scheme": null
      }
     ]

@@ -3,7 +3,11 @@
   "value": {
    "container_id": "FIRST",
    "type": "HORSE",
-   "pos": {"x": 1, "y": 70, "z": -3},
+   "pos": {
+    "x": 1,
+    "y": 70,
+    "z": -3
+   },
    "entity_unique_id": 300
   },
   "bytes": "010c028c0105d804"

@@ -6,7 +6,9 @@
    "effect_id": 19,
    "effect_amplifier": 2,
    "show_particles": true,
-   "effect_duration_ticks": {"value": 600},
+   "effect_duration_ticks": {
+    "value": 600
+   },
    "tick": 128,
    "ambient": true
   },

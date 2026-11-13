@@ -1,6 +1,8 @@
 [
  {
-  "value": {"status": "PLAYER_SPAWN"},
+  "value": {
+   "status": "PLAYER_SPAWN"
+  },
   "bytes": "00000003"
  }
 ]

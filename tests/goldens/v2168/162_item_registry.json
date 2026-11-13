@@ -15,7 +15,9 @@
      "is_component_based": true,
      "item_version": "DATA_DRIVEN",
      "component_data": {
-      "minecraft:max_stack_size": {"IntTag": 16}
+      "minecraft:max_stack_size": {
+       "IntTag": 16
+      }
      }
     }
    ]

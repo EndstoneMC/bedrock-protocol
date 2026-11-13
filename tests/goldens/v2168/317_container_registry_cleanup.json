@@ -8,8 +8,14 @@
  {
   "value": {
    "removed_containers": [
-    {"name": "LEVEL_ENTITY_CONTAINER", "dynamic_id": 9},
-    {"name": "ANVIL_RESULT_PREVIEW_CONTAINER", "dynamic_id": null}
+    {
+     "name": "LEVEL_ENTITY_CONTAINER",
+     "dynamic_id": 9
+    },
+    {
+     "name": "ANVIL_RESULT_PREVIEW_CONTAINER",
+     "dynamic_id": null
+    }
    ]
   },
   "bytes": "020701090000000200"

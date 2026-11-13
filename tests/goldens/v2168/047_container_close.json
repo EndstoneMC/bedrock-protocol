@@ -1,6 +1,10 @@
 [
  {
-  "value": {"container_id": "ARMOR", "container_type": "ARMOR", "server_initiated_close": true},
+  "value": {
+   "container_id": "ARMOR",
+   "container_type": "ARMOR",
+   "server_initiated_close": true
+  },
   "bytes": "781201"
  }
 ]

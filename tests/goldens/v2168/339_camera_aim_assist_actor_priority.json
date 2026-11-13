@@ -2,7 +2,12 @@
  {
   "value": {
    "priorities": [
-    {"preset_idx": 1, "category_idx": 2, "actor_idx": 3, "priority": 4}
+    {
+     "preset_idx": 1,
+     "category_idx": 2,
+     "actor_idx": 3,
+     "priority": 4
+    }
    ]
   },
   "bytes": "0101000000020000000300000004000000"
@@ -10,7 +15,12 @@
  {
   "value": {
    "priorities": [
-    {"preset_idx": 5, "category_idx": 6, "actor_idx": 7, "priority": 8}
+    {
+     "preset_idx": 5,
+     "category_idx": 6,
+     "actor_idx": 7,
+     "priority": 8
+    }
    ]
   },
   "bytes": "0105000000060000000700000008000000"

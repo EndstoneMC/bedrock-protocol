@@ -1,10 +1,20 @@
 [
  {
-  "value": {"action": "SWING", "runtime_id": 300, "data": 1.5, "swing_source": "ATTACK"},
+  "value": {
+   "action": "SWING",
+   "runtime_id": 300,
+   "data": 1.5,
+   "swing_source": "ATTACK"
+  },
   "bytes": "01ac020000c03f010661747461636b"
  },
  {
-  "value": {"action": "CRITICAL_HIT", "runtime_id": 7, "data": 0.5, "swing_source": null},
+  "value": {
+   "action": "CRITICAL_HIT",
+   "runtime_id": 7,
+   "data": 0.5,
+   "swing_source": null
+  },
   "bytes": "04070000003f00"
  }
 ]

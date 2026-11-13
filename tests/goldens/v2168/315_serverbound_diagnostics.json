@@ -12,22 +12,44 @@
     "avg_remainder_time_percent": 7.0,
     "avg_unaccounted_time_percent": 8.0,
     "category_counters": [
-     {"category": "ORE_UI", "current_bytes": 1024}
+     {
+      "category": "ORE_UI",
+      "current_bytes": 1024
+     }
     ]
    },
    "entity_system_diagnostics": {
     "entity_timings": [
-     {"display_name": "Zombie", "entity": "minecraft:zombie", "time_in_ns": 500, "percent_of_total": 50}
+     {
+      "display_name": "Zombie",
+      "entity": "minecraft:zombie",
+      "time_in_ns": 500,
+      "percent_of_total": 50
+     }
     ],
     "system_timings": [
-     {"display_name": "Physics", "system_index": 3, "time_in_ns": 250, "percent_of_total": 25}
+     {
+      "display_name": "Physics",
+      "system_index": 3,
+      "time_in_ns": 250,
+      "percent_of_total": 25
+     }
     ],
     "system_categories": [
-     {"category_name": "Movement", "system_index": 3}
+     {
+      "category_name": "Movement",
+      "system_index": 3
+     }
     ]
    },
    "whisker_data": [
-    {"label": "Frame", "indentation": "  ", "total_high_cost_ns": 900, "total_mid_cost_ns": 600, "total_low_cost_ns": 300}
+    {
+     "label": "Frame",
+     "indentation": "  ",
+     "total_high_cost_ns": 900,
+     "total_mid_cost_ns": 600,
+     "total_low_cost_ns": 300
+    }
    ]
   },
   "bytes": "000070420000803f0000004000004040000080400000a0400000c0400000e040000000410136000400000000000001065a6f6d626965106d696e6563726166743a7a6f6d626965f401000000000000320107506879736963730300000000000000fa00000000000000190101084d6f76656d656e74030000000000000001054672616d65022020840300000000000058020000000000002c01000000000000"
@@ -45,15 +67,28 @@
     "avg_remainder_time_percent": 7.0,
     "avg_unaccounted_time_percent": 8.0,
     "category_counters": [
-     {"category": "ORE_UI", "current_bytes": 1024}
+     {
+      "category": "ORE_UI",
+      "current_bytes": 1024
+     }
     ]
    },
    "entity_system_diagnostics": {
     "entity_timings": [
-     {"display_name": "Zombie", "entity": "minecraft:zombie", "time_in_ns": 500, "percent_of_total": 50}
+     {
+      "display_name": "Zombie",
+      "entity": "minecraft:zombie",
+      "time_in_ns": 500,
+      "percent_of_total": 50
+     }
     ],
     "system_timings": [
-     {"display_name": "Physics", "system_index": 3, "time_in_ns": 250, "percent_of_total": 25}
+     {
+      "display_name": "Physics",
+      "system_index": 3,
+      "time_in_ns": 250,
+      "percent_of_total": 25
+     }
     ],
     "system_categories": null
    },

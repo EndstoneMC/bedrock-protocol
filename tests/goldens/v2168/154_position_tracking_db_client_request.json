@@ -2,7 +2,9 @@
  {
   "value": {
    "action": "QUERY",
-   "id": {"raw_id": 7}
+   "id": {
+    "raw_id": 7
+   }
   },
   "bytes": "000e"
  }

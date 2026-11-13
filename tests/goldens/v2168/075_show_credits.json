@@ -1,6 +1,9 @@
 [
  {
-  "value": {"player_id": 300, "credits_state": "FINISHED"},
+  "value": {
+   "player_id": 300,
+   "credits_state": "FINISHED"
+  },
   "bytes": "ac0202"
  }
 ]

@@ -2,7 +2,9 @@
  {
   "value": {
    "property_data": {
-    "id": {"IntTag": 7}
+    "id": {
+     "IntTag": 7
+    }
    }
   },
   "bytes": "0a00030269640e00"

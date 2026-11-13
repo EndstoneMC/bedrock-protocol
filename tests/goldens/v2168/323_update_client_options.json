@@ -1,19 +1,28 @@
 [
  {
   "value": {
-   "update": {"graphics_mode": "RAY_TRACED", "filter_profanity": true}
+   "update": {
+    "graphics_mode": "RAY_TRACED",
+    "filter_profanity": true
+   }
   },
   "bytes": "01030101"
  },
  {
   "value": {
-   "update": {"graphics_mode": null, "filter_profanity": null}
+   "update": {
+    "graphics_mode": null,
+    "filter_profanity": null
+   }
   },
   "bytes": "0000"
  },
  {
   "value": {
-   "update": {"graphics_mode": null, "filter_profanity": true}
+   "update": {
+    "graphics_mode": null,
+    "filter_profanity": true
+   }
   },
   "bytes": "000101"
  }

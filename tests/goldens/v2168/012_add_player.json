@@ -5,28 +5,54 @@
    "name": "Steve",
    "runtime_id": 2,
    "platform_online_id": "chat",
-   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
-   "velocity": {"x": 4.0, "y": 5.0, "z": 6.0},
-   "rot": {"x": 7.0, "y": 8.0},
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "rot": {
+    "x": 7.0,
+    "y": 8.0
+   },
    "y_head_rot": 9.0,
-   "carried_item": {"id": 323, "stack_size": 1, "aux_value": 0, "net_id_variant": null, "block_runtime_id": 0, "user_data_buffer": "00000000000000000000"},
+   "carried_item": {
+    "id": 323,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id_variant": null,
+    "block_runtime_id": 0,
+    "user_data_buffer": "00000000000000000000"
+   },
    "player_game_type": "SURVIVAL",
    "unpack": {
     "data": [
      {
       "id": 38,
       "payload": {
-       "DataItemFloatPayload": {"value": 0.5}
+       "DataItemFloatPayload": {
+        "value": 0.5
+       }
       }
      }
     ]
    },
    "synched_properties": {
     "int_entries": [
-     {"property_index": 1, "data": -2}
+     {
+      "property_index": 1,
+      "data": -2
+     }
     ],
     "float_entries": [
-     {"property_index": 2, "data": 0.5}
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
     ]
    },
    "abilities_data": {
@@ -34,11 +60,25 @@
     "player_permissions": "MEMBER",
     "command_permissions": "ANY",
     "layers": [
-     {"serialized_layer": "BASE", "abilities_set": 3, "ability_values": 1, "fly_speed": 0.05, "vertical_fly_speed": 1.0, "walk_speed": 0.1}
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 3,
+      "ability_values": 1,
+      "fly_speed": 0.05,
+      "vertical_fly_speed": 1.0,
+      "walk_speed": 0.1
+     }
     ]
    },
    "links": [
-    {"a": 1, "b": 2, "type": "RIDING", "immediate": true, "passenger_initiated": false, "vehicle_angular_velocity": 1.5}
+    {
+     "a": 1,
+     "b": 2,
+     "type": "RIDING",
+     "immediate": true,
+     "passenger_initiated": false,
+     "vehicle_angular_velocity": 1.5
+    }
    ],
    "device_id": "dev",
    "build_platform": "WIN32"

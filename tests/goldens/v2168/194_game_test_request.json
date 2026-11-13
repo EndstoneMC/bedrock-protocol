@@ -5,7 +5,11 @@
    "repeat_count": 2,
    "rotation": "ROTATE_90",
    "stop_on_failure": true,
-   "test_pos": {"x": 1, "y": -2, "z": 3},
+   "test_pos": {
+    "x": 1,
+    "y": -2,
+    "z": 3
+   },
    "tests_per_row": 5,
    "test_name": "mytest"
   },
@@ -17,7 +21,11 @@
    "repeat_count": 1,
    "rotation": "ROTATE_270",
    "stop_on_failure": false,
-   "test_pos": {"x": 1, "y": 2, "z": 3},
+   "test_pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
    "tests_per_row": 1,
    "test_name": "t"
   },

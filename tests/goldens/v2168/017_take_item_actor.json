@@ -1,6 +1,9 @@
 [
  {
-  "value": {"item_id": 300, "actor_id": 7},
+  "value": {
+   "item_id": 300,
+   "actor_id": 7
+  },
   "bytes": "ac0207"
  }
 ]

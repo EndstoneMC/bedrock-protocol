@@ -1,17 +1,37 @@
 [
  {
   "value": {
-   "legacy_request_id": {"raw_id": -3},
+   "legacy_request_id": {
+    "raw_id": -3
+   },
    "legacy_set_item_slots": null,
    "variant_transaction": {
     "NormalTransactionData": {
      "transaction": {
       "actions": [
        {
-        "source": {"type": "CONTAINER_INVENTORY", "container_id": 12, "flags": null},
+        "source": {
+         "type": "CONTAINER_INVENTORY",
+         "container_id": 12,
+         "flags": null
+        },
         "slot": 3,
-        "from_item_descriptor": {"id": 0, "stack_size": 0, "aux_value": 0, "net_id_variant": null, "block_runtime_id": 0, "user_data_buffer": ""},
-        "to_item_descriptor": {"id": 1, "stack_size": 64, "aux_value": 0, "net_id_variant": 9, "block_runtime_id": 2150698529, "user_data_buffer": "00000000000000000000"}
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
        }
       ]
      }

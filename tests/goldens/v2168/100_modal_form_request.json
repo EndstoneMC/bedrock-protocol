@@ -1,6 +1,9 @@
 [
  {
-  "value": {"form_id": 300, "form_json": "{\"type\":\"modal\"}"},
+  "value": {
+   "form_id": 300,
+   "form_json": "{\"type\":\"modal\"}"
+  },
   "bytes": "ac02107b2274797065223a226d6f64616c227d"
  }
 ]

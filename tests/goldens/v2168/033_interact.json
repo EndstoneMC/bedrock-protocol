@@ -3,12 +3,20 @@
   "value": {
    "action": "INTERACT_UPDATE",
    "target_id": 300,
-   "pos": {"x": 1.0, "y": 2.0, "z": 3.0}
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   }
   },
   "bytes": "04ac02010000803f0000004000004040"
  },
  {
-  "value": {"action": "OPEN_INVENTORY", "target_id": 7, "pos": null},
+  "value": {
+   "action": "OPEN_INVENTORY",
+   "target_id": 7,
+   "pos": null
+  },
   "bytes": "060700"
  }
 ]

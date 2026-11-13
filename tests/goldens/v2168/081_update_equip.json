@@ -6,7 +6,9 @@
    "size": 2,
    "entity_unique_id": 7,
    "data": {
-    "Size": {"IntTag": 2}
+    "Size": {
+     "IntTag": 2
+    }
    }
   },
   "bytes": "010c040e0a00030453697a650400"

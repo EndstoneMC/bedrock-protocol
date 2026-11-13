@@ -3,12 +3,19 @@
   "value": {
    "texture_pack_required": true,
    "texture_pack_ids_and_versions": [
-    {"pack_id": "5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", "version": "1.2.3", "subpack_name": "hd"}
+    {
+     "pack_id": "5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
+     "version": "1.2.3",
+     "subpack_name": "hd"
+    }
    ],
    "base_game_version": "1.26.44",
    "experiments": {
     "toggles": [
-     {"name": "gametest", "enabled": true}
+     {
+      "name": "gametest",
+      "enabled": true
+     }
     ],
     "experiments_ever_toggled": true
    },

@@ -2,7 +2,10 @@
  {
   "value": {
    "features_data": [
-    {"feature_name": "minecraft:oak", "binary_json_output": "{}\n"}
+    {
+     "feature_name": "minecraft:oak",
+     "binary_json_output": "{}\n"
+    }
    ]
   },
   "bytes": "010d6d696e6563726166743a6f616b037b7d0a"

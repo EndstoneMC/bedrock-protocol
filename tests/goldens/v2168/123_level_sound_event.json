@@ -2,13 +2,21 @@
  {
   "value": {
    "sound_event": "block.bell.hit",
-   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
    "data": -1,
    "actor_identifier": "minecraft:pig",
    "is_baby": true,
    "is_global": false,
    "actor": 7,
-   "fire_at_position": {"x": 4.0, "y": 5.0, "z": 6.0}
+   "fire_at_position": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   }
   },
   "bytes": "0e626c6f636b2e62656c6c2e6869740000803f0000004000004040010d6d696e6563726166743a7069670100070000000000000001000080400000a0400000c040"
  }
