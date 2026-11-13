@@ -1,5 +1,6 @@
 [
  {
+  "id": "hard_difficulty",
   "value": {
    "difficulty": "HARD"
   },
