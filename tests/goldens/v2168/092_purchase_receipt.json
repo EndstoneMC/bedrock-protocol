@@ -2,10 +2,9 @@
  {
   "value": {
    "purchase_receipts": [
-    "receipt-a",
-    "receipt-b"
+    "receipt-a"
    ]
   },
-  "bytes": "0209726563656970742d6109726563656970742d62"
+  "bytes": "0109726563656970742d61"
  }
 ]
