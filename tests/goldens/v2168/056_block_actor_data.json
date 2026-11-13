@@ -1,5 +1,6 @@
 [
  {
+  "id": "chest_at_negative_x",
   "value": {
    "pos": {
     "x": -1,
