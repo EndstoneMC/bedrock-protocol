@@ -1,5 +1,6 @@
 [
  {
+  "id": "vehicle_prediction",
   "value": {
    "prediction_type": "VEHICLE",
    "pos": {
@@ -23,6 +24,7 @@
   "bytes": "010000803f00000040000040400000003f000000bf0000803e000034420000b442010000c03f01ac02"
  },
  {
+  "id": "player_prediction",
   "value": {
    "prediction_type": "PLAYER",
    "pos": {
