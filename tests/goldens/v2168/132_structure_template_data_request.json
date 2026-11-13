@@ -1,5 +1,6 @@
 [
  {
+  "id": "structure_at_negative_y",
   "value": {
    "structure_name": "mystructure",
    "structure_block_pos": {
