@@ -1,5 +1,6 @@
 [
  {
+  "id": "coordinates_location_arm",
   "value": {
    "id": 7,
    "location": {
@@ -16,6 +17,7 @@
   "bytes": "0e00000000803f0000004000004040"
  },
  {
+  "id": "hidden_location_arm",
   "value": {
    "id": 7,
    "location": {
