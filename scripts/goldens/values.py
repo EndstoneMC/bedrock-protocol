@@ -280,6 +280,7 @@ MEMBERS_SINCE: dict[int, dict[str, tuple[str, ...]]] = {
         "TextPacket.AuthorAndMessage.type": ("CHAT", "WHISPER", "ANNOUNCEMENT"),
         "TextPacket.MessageAndParams.type": ("TRANSLATE", "POPUP", "JUKEBOX_POPUP"),
     },
+    2168: {"PlayerListPacket.RemoveEntry.action": ("REMOVE",), "PlayerListPacket.AddEntry.action": ("ADD",)},
 }
 FIXED_AT: dict[int, dict[str, Json]] = {
     2168: {
@@ -397,8 +398,6 @@ FIXED: dict[str, Json] = {
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
     "NetworkStackLatencyPacket.create_time": 0,
-    "PlayerListPacket.RemoveEntry.action": "REMOVE",
-    "PlayerListPacket.AddEntry.action": "ADD",
     "CommandOriginData.type": "PLAYER",
     "ServerboundLoadingScreenPacket.serverbound_loading_screen_packet_type": "START_LOADING_SCREEN",
     "LevelSettings.game_rules": {
