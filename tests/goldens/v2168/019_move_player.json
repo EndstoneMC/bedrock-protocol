@@ -1,5 +1,6 @@
 [
  {
+  "id": "teleport_with_cause",
   "value": {
    "player_id": 2,
    "pos": {
@@ -24,6 +25,7 @@
   "bytes": "020000803f0000004000004040000080400000a0400000c04002010501030000002a00000064"
  },
  {
+  "id": "normal_without_teleport_data",
   "value": {
    "player_id": 2,
    "pos": {
