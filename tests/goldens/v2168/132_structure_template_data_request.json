@@ -29,7 +29,7 @@
     "animation_mode": "BLOCKS",
     "animation_seconds": 0.5,
     "integrity_value": 1.0,
-    "integrity_seed": 3735928559,
+    "integrity_seed": 3735928576,
     "pivot": {
      "x": 0.5,
      "y": 1.5,
@@ -38,6 +38,6 @@
    },
    "request_operation": "QUERY_SAVED_STRUCTURE"
   },
-  "bytes": "0b6d797374727563747572650203060764656661756c740100010a0c0e010002d8040102020000003f0000803fefbeadde0000003f0000c03f0000204003"
+  "bytes": "0b6d797374727563747572650203060764656661756c740100010a0c0e010002d8040102020000003f0000803f00bfadde0000003f0000c03f0000204003"
  }
 ]
