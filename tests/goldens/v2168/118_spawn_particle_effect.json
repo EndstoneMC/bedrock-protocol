@@ -1,5 +1,6 @@
 [
  {
+  "id": "molang_variables_present",
   "value": {
    "vanilla_dimension_id": 2,
    "actor_id": -1,
@@ -14,6 +15,7 @@
   "bytes": "02010000803f0000004000004040186d696e6563726166743a68656172745f7061727469636c6501087b2278223a317d0a"
  },
  {
+  "id": "molang_variables_absent",
   "value": {
    "vanilla_dimension_id": 1,
    "actor_id": 12345,
