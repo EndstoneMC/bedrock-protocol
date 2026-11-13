@@ -24,14 +24,14 @@
    "use_player_id": false,
    "event_data": {
     "ItemUsed": {
-     "item_id": 300,
+     "item_id": 306,
      "item_aux": 5,
      "use_method": 1,
      "count": 2
     }
    }
   },
-  "bytes": "0e3e00142c01050000000100000002000000"
+  "bytes": "0e3e00143201050000000100000002000000"
  },
  {
   "value": {
@@ -41,11 +41,11 @@
    "event_data": {
     "POICauldronUsed": {
      "interaction_type": "COOKING",
-     "item_id": 300
+     "item_id": 307
     }
    }
   },
-  "bytes": "0e1e000a092c01"
+  "bytes": "0e1e000a093301"
  },
  {
   "value": {
