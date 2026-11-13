@@ -18,17 +18,17 @@
  {
   "value": {
    "max_tests_per_batch": 300,
-   "repeat_count": -1,
+   "repeat_count": 1,
    "rotation": "ROTATE_270",
    "stop_on_failure": false,
    "test_pos": {
-    "x": 0,
-    "y": 0,
-    "z": 0
+    "x": 1,
+    "y": 2,
+    "z": 3
    },
-   "tests_per_row": 0,
-   "test_name": ""
+   "tests_per_row": 1,
+   "test_name": "t"
   },
-  "bytes": "d8040103000000000000"
+  "bytes": "d804020300020406020174"
  }
 ]
