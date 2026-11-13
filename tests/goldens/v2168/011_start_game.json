@@ -3,7 +3,7 @@
   "value": {
    "entity_id": 1,
    "runtime_id": 2,
-   "entity_game_type": "SURVIVAL",
+   "entity_game_type": "CREATIVE",
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -17,47 +17,47 @@
     "seed": 7,
     "spawn_settings": {
      "type": "DEFAULT",
-     "user_defined_biome_name": "",
-     "dimension": 0
+     "user_defined_biome_name": "plains",
+     "dimension": 1
     },
     "generator": "OVERWORLD",
-    "game_type": "SURVIVAL",
-    "is_hardcore": false,
+    "game_type": "ADVENTURE",
+    "is_hardcore": true,
     "game_difficulty": "NORMAL",
     "default_spawn": {
-     "x": 0,
+     "x": 1,
      "y": 64,
-     "z": 0
+     "z": 2
     },
     "achievements_disabled": true,
     "editor_world_type": "NON_EDITOR",
-    "is_created_in_editor": false,
-    "is_exported_from_editor": false,
-    "time": 0,
-    "education_edition_offer": "NONE",
-    "education_features_enabled": false,
-    "education_product_id": "",
-    "rain_level": 0.0,
-    "lightning_level": 0.0,
-    "confirmed_platform_locked_content": false,
+    "is_created_in_editor": true,
+    "is_exported_from_editor": true,
+    "time": 1000,
+    "education_edition_offer": "REST_OF_WORLD",
+    "education_features_enabled": true,
+    "education_product_id": "edu",
+    "rain_level": 0.5,
+    "lightning_level": 0.25,
+    "confirmed_platform_locked_content": true,
     "multiplayer_game_intent": true,
     "lan_broadcast_intent": true,
     "xbl_broadcast_intent": "FRIENDS_ONLY",
     "platform_broadcast_intent": "FRIENDS_ONLY",
     "commands_enabled": true,
-    "texture_packs_required": false,
+    "texture_packs_required": true,
     "game_rules": {
      "rules": [
       {
        "name": "dodaylightcycle",
-       "can_be_modified_by_player": false,
+       "can_be_modified_by_player": true,
        "value": {
         "bool": true
        }
       },
       {
        "name": "maxcommandchainlength",
-       "can_be_modified_by_player": false,
+       "can_be_modified_by_player": true,
        "value": {
         "int": 131070
        }
@@ -66,66 +66,66 @@
     },
     "experiments": {
      "toggles": [],
-     "experiments_ever_toggled": false
+     "experiments_ever_toggled": true
     },
-    "bonus_chest_enabled": false,
-    "start_with_map_enabled": false,
+    "bonus_chest_enabled": true,
+    "start_with_map_enabled": true,
     "default_permissions": "MEMBER",
     "server_chunk_tick_range": 4,
-    "has_locked_behavior_pack": false,
-    "has_locked_resource_pack": false,
-    "is_from_locked_template": false,
-    "use_msa_gamertags_only": false,
-    "is_from_world_template": false,
-    "is_world_template_option_locked": false,
-    "spawn_v1_villagers": false,
-    "persona_disabled": false,
-    "custom_skins_disabled": false,
-    "emote_chat_muted": false,
-    "base_game_version": "1.21.0",
-    "limited_world_width": 0,
-    "limited_world_depth": 0,
-    "nether_type": "NORMAL",
+    "has_locked_behavior_pack": true,
+    "has_locked_resource_pack": true,
+    "is_from_locked_template": true,
+    "use_msa_gamertags_only": true,
+    "is_from_world_template": true,
+    "is_world_template_option_locked": true,
+    "spawn_v1_villagers": true,
+    "persona_disabled": true,
+    "custom_skins_disabled": true,
+    "emote_chat_muted": true,
+    "base_game_version": "1.26.40",
+    "limited_world_width": 16,
+    "limited_world_depth": 16,
+    "nether_type": "FLAT",
     "edu_shared_uri_resource": {
-     "button_name": "",
-     "link_uri": ""
+     "button_name": "btn",
+     "link_uri": "http://edu"
     },
     "override_force_experimental_gameplay_flag": null,
-    "chat_restriction_level": "NONE",
-    "disable_player_interactions": false,
-    "server_editor_connection_policy": "MATCH_WORLD_TYPE",
-    "allow_anonymous_block_drops_in_editor_worlds": false
+    "chat_restriction_level": "DROPPED",
+    "disable_player_interactions": true,
+    "server_editor_connection_policy": "VANILLA_ONLY",
+    "allow_anonymous_block_drops_in_editor_worlds": true
    },
    "level_id": "lvl",
    "level_name": "world",
-   "template_content_identity": "00000000-0000-0000-0000-000000000000",
-   "is_trial": false,
+   "template_content_identity": "11111111-2222-3333-4444-555555555555",
+   "is_trial": true,
    "movement_settings": {
     "rewind_history_size": 40,
-    "server_auth_block_breaking": false
+    "server_auth_block_breaking": true
    },
    "level_current_time": 100,
-   "enchantment_seed": 0,
+   "enchantment_seed": 12345,
    "block_properties": [],
-   "multiplayer_correlation_id": "",
+   "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
-   "server_version": "1.21.0",
+   "server_version": "1.26.40",
    "player_property_data": {},
-   "server_block_type_registry_checksum": 0,
-   "world_template_id": "00000000-0000-0000-0000-000000000000",
-   "server_enabled_client_side_generation": false,
+   "server_block_type_registry_checksum": 123456789012,
+   "world_template_id": "66666666-7777-8888-9999-000000000000",
+   "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
-    "server_auth_sound_enabled": false
+    "server_auth_sound_enabled": true
    },
    "server_configuration_join_info": null,
    "server_telemetry_data": {
-    "server_id": "",
-    "scenario_id": "",
-    "world_id": "",
-    "owner_id": ""
+    "server_id": "srv",
+    "scenario_id": "scn",
+    "world_id": "wld",
+    "owner_id": "own"
    }
   },
-  "bytes": "0202000000803f0000004000004040000080400000a04007000000000000000000000002000004008001000100000000000000000000000000000000010104040100020f646f6461796c696768746379636c65000101156d6178636f6d6d616e64636861696e6c656e6774680002feff01000000000000000001040000000000000000000000000006312e32312e3000000000000000000000000000000000036c766c05776f726c642430303030303030302d303030302d303030302d303030302d30303030303030303030303000500064000000000000000000000106312e32312e300a00000000000000000000000000000000000000000000000000000001000000000000"
+  "bytes": "0202020000803f0000004000004040000080400000a0400700000000000000000006706c61696e7302020401040280010401000101d00f0101036564750000003f0000803e01010104040101020f646f6461796c696768746379636c65010101156d6178636f6d6d616e64636861696e6c656e6774680102feff01000000000001010101040000000101010101010101010107312e32362e34301000000010000000010362746e0a687474703a2f2f6564750001010401036c766c05776f726c642431313131313131312d323232322d333333332d343434342d3535353535353535353535350150016400000000000000f2c0010006636f72722d310107312e32362e34300a0000141a99be1c0000008888777766666666000000000000999901010100037372760373636e03776c64036f776e"
  }
 ]
