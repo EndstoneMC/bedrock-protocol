@@ -1,5 +1,6 @@
 [
  {
+  "id": "gatherings_configuration_absent",
   "value": {
    "destination": "play.example.com",
    "destination_port": 19132,
@@ -9,6 +10,7 @@
   "bytes": "10706c61792e6578616d706c652e636f6dbc4a0100"
  },
  {
+  "id": "gatherings_without_world_and_target",
   "value": {
    "destination": "play.example.com",
    "destination_port": 19132,
@@ -27,6 +29,7 @@
   "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a090365787000000763726561746f72000000"
  },
  {
+  "id": "gatherings_every_optional_present",
   "value": {
    "destination": "play.example.com",
    "destination_port": 19132,
