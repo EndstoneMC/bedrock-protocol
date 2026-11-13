@@ -11,43 +11,24 @@
         {
          "enchant_type": "SHARPNESS",
          "level": 5
-        },
-        {
-         "enchant_type": "SOUL_SPEED",
-         "level": 1
         }
        ],
        [],
        [
         {
-         "enchant_type": "INVALID_ENCHANTMENT",
-         "level": 255
+         "enchant_type": "UNBREAKING",
+         "level": 3
         }
        ]
       ]
      },
-     "enchant_name": "animal imbue range",
+     "enchant_name": "imbue",
      "enchant_net_id": {
       "raw_id": 300
-     }
-    },
-    {
-     "cost": 0,
-     "enchants": {
-      "slot": -1,
-      "item_enchants": [
-       [],
-       [],
-       []
-      ]
-     },
-     "enchant_name": "z",
-     "enchant_net_id": {
-      "raw_id": 1
      }
     }
    ]
   },
-  "bytes": "02c802000000020905240100012bff12616e696d616c20696d6275652072616e6765ac0200ffffffff000000017a01"
+  "bytes": "01c8020000000109050001110305696d627565ac02"
  }
 ]
