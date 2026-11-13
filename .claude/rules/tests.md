@@ -25,6 +25,10 @@ paths:
 - Use no mocks, monkeypatching or other doubles; drive the real extension with real values.
 - Before trusting a new test, break the schema or the golden once and watch the test fail.
 
+## Running
+
+- Run pytest as `.venv/bin/python -m pytest` while another build runs; `uv run` rebuilds the binding whenever one of its cache keys changed.
+
 ## Files
 
 - Add a case to the test that owns its packet or topic; never open a second file for it.
