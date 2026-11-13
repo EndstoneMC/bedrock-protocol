@@ -1,5 +1,6 @@
 [
  {
+  "id": "route_to_manager_variant",
   "value": {
    "route_to_manager": true,
    "raw_variant_name": "editor.variant",
