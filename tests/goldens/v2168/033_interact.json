@@ -1,5 +1,6 @@
 [
  {
+  "id": "interact_update_with_position",
   "value": {
    "action": "INTERACT_UPDATE",
    "target_id": 300,
@@ -12,6 +13,7 @@
   "bytes": "04ac02010000803f0000004000004040"
  },
  {
+  "id": "open_inventory_no_position",
   "value": {
    "action": "OPEN_INVENTORY",
    "target_id": 7,
