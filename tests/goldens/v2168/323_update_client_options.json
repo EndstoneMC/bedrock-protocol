@@ -21,9 +21,9 @@
   "value": {
    "update": {
     "graphics_mode": null,
-    "filter_profanity": false
+    "filter_profanity": true
    }
   },
-  "bytes": "000100"
+  "bytes": "000101"
  }
 ]
