@@ -1,5 +1,6 @@
 [
  {
+  "id": "opt_in_nether_hub",
   "value": {
    "cookie": "party-cookie",
    "intent": "OPT_IN",
