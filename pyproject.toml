@@ -72,6 +72,7 @@ raises-require-match-for = ["*"]
 "compiler/src/bedrock_protocol_compiler/cpp/field.py" = ["ARG002"]
 "compiler/src/bedrock_protocol_compiler/dsl.py" = ["ARG001", "ARG002", "N801"]
 
+"tests/cereal.py" = ["ARG002"]
 [tool.mypy]
 cache_dir = ".cache/mypy"
 
