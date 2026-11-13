@@ -46,5 +46,43 @@
    "operation": "SET"
   },
   "bytes": "000000"
+ },
+ {
+  "value": {
+   "categories": [
+    {
+     "name": "cat",
+     "priorities": {
+      "entities": {},
+      "blocks": {},
+      "block_tags": {
+       "wood": 20
+      },
+      "entity_type_families": {
+       "mob": 30
+      },
+      "entity_default": null,
+      "block_default": 7
+     }
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "preset2",
+     "exclusion_settings": {
+      "block_exclusion_list": [],
+      "actor_exclusion_list": ["minecraft:cow"],
+      "block_tag_exclusion_list": [],
+      "entity_type_family_exclusion_list": ["mob"]
+     },
+     "liquid_targeting_list": [],
+     "item_settings": {},
+     "default_item_settings": null,
+     "hand_settings": "cat"
+    }
+   ],
+   "operation": "SET"
+  },
+  "bytes": "010363617400000104776f6f641400000001036d6f621e00000000010700000001077072657365743200010d6d696e6563726166743a636f770001036d6f62000000010363617400"
  }
 ]
