@@ -1,5 +1,6 @@
 [
  {
+  "id": "server_latency_timestamp",
   "value": {
    "create_time": 0,
    "from_server": true
