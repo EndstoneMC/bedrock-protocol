@@ -198,7 +198,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         ("ExperimentToggle", "name", "gametest"),
         ("ExperimentToggle", "enabled", True),
         ("Experiments", "experiments_ever_toggled", True),
-        ("AgentActionEventPacket", "response", "null\n"),
         ("Color255RGBA", "a", 128),
         ("SerializableCells", "storage", [1, 2, 3, 4, 5, 6]),
         ("EffectDuration", "value", 600),
@@ -212,7 +211,6 @@ def test_an_optional_bds_derives_from_an_enum_is_present_exactly_for_its_member(
         "experiment-name",
         "experiment-enabled",
         "experiments-ever-toggled",
-        "agent-response",
         "color-alpha",
         "cell-storage",
         "effect-duration",
@@ -426,10 +424,6 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
         ("CameraSplineDefinition", "name", "test:spline"),
         ("CameraSplineDefinition", "spline_type", "linear"),
         ("ServerToClientHandshakePacket", "token", "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln"),
-        ("ModalFormResponsePacket", "json_response", "null\n"),
-        ("SerializedSkinRef", "geometry_data", "null\n"),
-        ("NpcDialoguePacket", "action_json", "[]"),
-        ("SpawnParticleEffectPacket", "molang_variables", "[]\n"),
         ("AddVolumeEntityPacket", "min_engine_version", "1.21.0"),
         ("SerializedSkinRef", "geometry_data_min_engine_version", "1.21.0"),
     ],
@@ -437,16 +431,43 @@ def test_a_fixed_leaf_behind_a_false_condition_keeps_its_default(values, schema)
         "spline-name",
         "spline-type",
         "handshake-token",
-        "form-response",
-        "skin-geometry",
-        "npc-actions",
-        "molang-variables",
         "volume-engine-version",
         "skin-engine-version",
     ],
 )
 def test_a_string_bds_reads_only_in_a_form_is_generated_in_it(values, schema, name, field, read):
     assert {each[field] for each in generated(values, schema, name)} - {None} == {read}
+
+
+@pytest.mark.parametrize(
+    ("name", "field"),
+    [
+        ("AgentActionEventPacket", "response"),
+        ("ModalFormRequestPacket", "form_json"),
+        ("ModalFormResponsePacket", "json_response"),
+        ("ServerSettingsResponsePacket", "form_json"),
+        ("AddBehaviorTreePacket", "json_input"),
+        ("NpcDialoguePacket", "action_json"),
+        ("SpawnParticleEffectPacket", "molang_variables"),
+        ("SerializedSkinRef", "geometry_data"),
+        ("FeatureBinaryJsonFormat", "binary_json_output"),
+    ],
+    ids=[
+        "agent-response",
+        "form-request",
+        "form-response",
+        "settings-form",
+        "behavior-tree",
+        "npc-actions",
+        "molang-variables",
+        "skin-geometry",
+        "feature-json",
+    ],
+)
+def test_a_json_member_is_generated_as_json_that_holds_something(values, schema, name, field):
+    texts = [each[field] for each in generated(values, schema, name) if each[field] is not None]
+    assert texts
+    assert [json.loads(text) in (None, [], {}) for text in texts] == [False for _ in texts]
 
 
 def test_a_login_carries_the_protocol_number_of_its_version(values, schema):

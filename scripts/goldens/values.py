@@ -307,9 +307,29 @@ FIXED: dict[str, Json] = {
     "CameraSplineDefinition.name": "test:spline",
     "CameraSplineDefinition.spline_type": "linear",
     "ServerToClientHandshakePacket.token": "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln",
-    "ModalFormResponsePacket.json_response?": "null\n",
-    "SerializedSkinRef.geometry_data": "null\n",
-    "NpcDialoguePacket.action_json": "[]",
+    "ModalFormRequestPacket.form_json": (
+        '{"type":"form","title":"Golden","content":"Pick one",'
+        '"buttons":[{"text":"Yes"},{"text":"No","image":{"type":"path","data":"textures/ui/cancel"}}]}'
+    ),
+    "ModalFormResponsePacket.json_response?": '[true,"Steve",3,2.50,-1.0]\n',
+    "ServerSettingsResponsePacket.form_json": (
+        '{"type":"custom_form","title":"Golden settings","content":['
+        '{"type":"toggle","text":"Particles","default":true},'
+        '{"type":"slider","text":"Volume","min":0,"max":10,"step":1,"default":5}]}'
+    ),
+    "AddBehaviorTreePacket.json_input": (
+        '{"format_version":"1.10.0","minecraft:behavior_tree":{"description":{"identifier":"golden:tree"},'
+        '"root":{"sequence":[{"move_to":{"position":[1,2,3]}},{"wait":{"duration":1.5}}]}}}'
+    ),
+    "FeatureRegistry.FeatureBinaryJsonFormat.binary_json_output": (
+        '{"format_version":"1.13.0","minecraft:single_block_feature":{"description":{"identifier":"golden:stone"},'
+        '"places_block":"minecraft:stone","enforce_placement_rules":false,"enforce_survivability_rules":false}}'
+    ),
+    "SerializedSkinRef.geometry_data": GEOMETRY,
+    "NpcDialoguePacket.action_json": (
+        '[{"button_name":"Greet","data":[{"cmd_line":"say hi","cmd_ver":42}],"mode":0,"text":"say hi","type":1},'
+        '{"button_name":"Docs","data":null,"mode":0,"text":"https://minecraft.net","type":0}]'
+    ),
     "AvailableActorIdentifiersPacket.identifier_list": {
         "idlist": {
             "ListTag": {
@@ -328,7 +348,12 @@ FIXED: dict[str, Json] = {
             }
         }
     },
-    "SpawnParticleEffectPacket.molang_variables?": "[]\n",
+    "SpawnParticleEffectPacket.molang_variables?": (
+        '[{"name":"variable.size","value":{"type":"float","value":1.50}},'
+        '{"name":"variable.direction","value":{"type":"member_array","value":['
+        '{"name":".x","value":{"type":"float","value":0.50}},{"name":".y","value":{"type":"float","value":-1.0}},'
+        '{"name":".z","value":{"type":"float","value":2.0}}]}}]\n'
+    ),
     "AddVolumeEntityPacket.min_engine_version": "1.21.0",
     "SerializedSkinRef.geometry_data_min_engine_version": "1.21.0",
     "SemVersion.version": "1.2.3",
@@ -340,7 +365,10 @@ FIXED: dict[str, Json] = {
     "Experiments.experiments_ever_toggled": True,
     "LoginPacket.connection_request": connection_request(0, GAME_TOKEN, PLAYER_CLIENT_DATA, bytes(range(96, 192))),
     "SubClientLoginPacket.connection_request": connection_request(1, "", GUEST_CLIENT_DATA, bytes(range(160, 256))),
-    "AgentActionEventPacket.response": "null\n",
+    "AgentActionEventPacket.response": (
+        '{"action":"move","direction":[1,-2],"result":{"block":"minecraft:stone","distance":2.50,'
+        '"position":[0.10,-1.0,1000.0]},"success":true,"tick":12345678901234,"tool":null,"user":"Agent \u00e9/"}\n'
+    ),
     "Color255RGBA.r": 16,
     "Color255RGBA.g": 32,
     "Color255RGBA.b": 64,
