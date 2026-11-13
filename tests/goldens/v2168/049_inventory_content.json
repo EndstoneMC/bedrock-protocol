@@ -1,5 +1,6 @@
 [
  {
+  "id": "cursor_with_dynamic_id",
   "value": {
    "inventory_id": 12,
    "slots": [
@@ -36,6 +37,7 @@
   "bytes": "0c0243010100030112000a0000000000000000000000000000000000003b01030000000000000000000000"
  },
  {
+  "id": "cursor_without_dynamic_id",
   "value": {
    "inventory_id": 12,
    "slots": [
