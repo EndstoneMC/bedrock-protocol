@@ -1,5 +1,6 @@
 [
  {
+  "id": "rotate_90_test_batch",
   "value": {
    "max_tests_per_batch": 100,
    "repeat_count": 2,
