@@ -96,6 +96,7 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `rewritten` | Read the field at byte `at`. If BDS fills in, drops, rounds or canonicalises the value, the value is data BDS does not keep: change it and add the rule with its evidence. If BDS writes a field the schema lacks or orders differently, fix the schema. |
 | `rewritten`, and two fields come back holding the second one's value | BDS binds one member under several names, each its own field in the schema, and writes the last one it read into every copy. Give the copies the same value. |
 | `rewritten`, and a variant comes back in another arm | BDS converts the value on read and writes back what the conversion kept. Find the value BDS keeps in the case's arm, and never swap the arm. |
+| A case edited since the last run reads `rewritten`, or BDS's JSON describes other bytes | A results file describes the bytes its run read, which `$G/cases.json` holds. When they differ from the folder's current bytes, rerun golden mode before comparing. |
 | `crashed` on every case | A `Packet` slot or stream mirror is wrong. Re-check the slots against a vtable. |
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
