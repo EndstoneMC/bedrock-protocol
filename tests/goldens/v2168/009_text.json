@@ -1,5 +1,6 @@
 [
  {
+  "id": "message_only_arm",
   "value": {
    "localize": false,
    "body": {
@@ -15,6 +16,7 @@
   "bytes": "00000b1b7b2272617774657874223a5b7b2274657874223a226869227d5d7d103235333534303030303030303030303102706300"
  },
  {
+  "id": "author_and_message_arm",
   "value": {
    "localize": false,
    "body": {
@@ -31,6 +33,7 @@
   "bytes": "0001010553746576650568656c6c6f1032353335343030303030303030303030087377697463682d310105682a2a2a6f"
  },
  {
+  "id": "message_and_params_arm",
   "value": {
    "localize": true,
    "body": {
