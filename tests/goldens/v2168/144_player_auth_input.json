@@ -113,5 +113,506 @@
    }
   },
   "bytes": "0000803f00000040000080400000a0400000c0400000e04000000041000040400102465a0200020000104100002041c80100003041000040410000504101000100010101002a2c2e0801010000c0410000c8410101340000604100007041000080410000884100009041000098410000a041"
+ },
+ {
+  "value": {
+   "rot": {
+    "x": 1.0,
+    "y": 2.0
+   },
+   "pos": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "move": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 3.0,
+   "input_data": ["PERFORM_ITEM_INTERACTION", "PERFORM_ITEM_STACK_REQUEST"],
+   "input_mode": "TOUCH",
+   "play_mode": "NORMAL",
+   "new_interaction_model": "CROSSHAIR",
+   "interact_rotation": {
+    "x": 9.0,
+    "y": 10.0
+   },
+   "client_tick": 200,
+   "pos_delta": {
+    "x": 11.0,
+    "y": 12.0,
+    "z": 13.0
+   },
+   "item_use_transaction": {
+    "id": {
+     "raw_id": -2
+    },
+    "slots": [
+     {
+      "container_enum": "ARMOR_CONTAINER",
+      "slots": "0102"
+     }
+    ],
+    "transaction": {
+     "transaction": {
+      "actions": [
+       {
+        "source": {
+         "type": "CONTAINER_INVENTORY",
+         "container_id": 12,
+         "flags": null
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       },
+       {
+        "source": {
+         "type": "WORLD_INTERACTION",
+         "container_id": null,
+         "flags": "WORLD_INTERACTION_RANDOM"
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       },
+       {
+        "source": {
+         "type": "GLOBAL_INVENTORY",
+         "container_id": null,
+         "flags": null
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       }
+      ]
+     },
+     "action_type": "USE",
+     "trigger_type": "PLAYER_INPUT",
+     "pos": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "face": 4,
+     "slot": 5,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "click_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "target_block_id": 6,
+     "client_predicted_result": "SUCCESS",
+     "client_cooldown_state": "ON"
+    }
+   },
+   "item_stack_request": {
+    "client_request_id": {
+     "raw_id": -5
+    },
+    "actions": [
+     {
+      "PlaceActionData": {
+       "amount": 2,
+       "source": {
+        "full_container_name": {
+         "name": "INVENTORY_CONTAINER",
+         "dynamic_id": 5
+        },
+        "slot": 4,
+        "net_id_variant": 9
+       },
+       "destination": {
+        "full_container_name": {
+         "name": "HOTBAR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 1,
+        "net_id_variant": 0
+       }
+      }
+     },
+     {
+      "SwapActionData": {
+       "source": {
+        "full_container_name": {
+         "name": "HOTBAR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 2,
+        "net_id_variant": 10
+       },
+       "destination": {
+        "full_container_name": {
+         "name": "INVENTORY_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 5,
+        "net_id_variant": 11
+       }
+      }
+     },
+     {
+      "DropActionData": {
+       "amount": 3,
+       "source": {
+        "full_container_name": {
+         "name": "HOTBAR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 3,
+        "net_id_variant": 12
+       },
+       "randomly": true
+      }
+     },
+     {
+      "DestroyActionData": {
+       "amount": 4,
+       "source": {
+        "full_container_name": {
+         "name": "HOTBAR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 4,
+        "net_id_variant": 13
+       }
+      }
+     },
+     {
+      "ConsumeActionData": {
+       "amount": 5,
+       "source": {
+        "full_container_name": {
+         "name": "HOTBAR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 5,
+        "net_id_variant": 14
+       }
+      }
+     },
+     {
+      "CreateActionData": {
+       "results_index": 2
+      }
+     },
+     {
+      "BeaconPaymentActionData": {
+       "primary_effect_id": 1,
+       "secondary_effect_id": 3
+      }
+     },
+     {
+      "MineBlockActionData": {
+       "slot": 6,
+       "predicted_durability": 7,
+       "net_id_variant": 15
+      }
+     },
+     {
+      "CraftRecipeActionData": {
+       "recipe_net_id": {
+        "raw_id": 8
+       },
+       "num_crafts": 2
+      }
+     },
+     {
+      "CraftRecipeAutoActionData": {
+       "recipe_net_id": {
+        "raw_id": 9
+       },
+       "num_crafts": 3,
+       "ingredients": [
+        {
+         "item_descriptor": {
+          "EmptyItemDescriptorData": {}
+         },
+         "stack_size": 1
+        },
+        {
+         "item_descriptor": {
+          "ItemNameDescriptorData": {
+           "full_name": "minecraft:stone",
+           "aux_value": 0
+          }
+         },
+         "stack_size": 2
+        },
+        {
+         "item_descriptor": {
+          "MolangItemDescriptorData": {
+           "tag_expression": "query.is_item_name_any('minecraft:apple')",
+           "molang_version": "LATEST"
+          }
+         },
+         "stack_size": 3
+        },
+        {
+         "item_descriptor": {
+          "ItemTagDescriptorData": {
+           "item_tag": "minecraft:boats"
+          }
+         },
+         "stack_size": 4
+        }
+       ]
+      }
+     },
+     {
+      "CraftRecipeOptionalActionData": {
+       "recipe_net_id": {
+        "raw_id": 10
+       },
+       "filtered_string_index": 1
+      }
+     },
+     {
+      "CraftRepairAndDisenchantActionData": {
+       "recipe_net_id": 11,
+       "num_crafts": 1,
+       "repair_cost": 12
+      }
+     },
+     {
+      "CraftLoomActionData": {
+       "pattern_name_id": "creeper",
+       "num_crafts": 1
+      }
+     }
+    ],
+    "strings_to_filter": [],
+    "strings_to_filter_origin": "ANVIL_TEXT"
+   },
+   "player_block_actions": null,
+   "vehicle_rot": null,
+   "client_predicted_vehicle": null,
+   "analog_move_vector": {
+    "x": 14.0,
+    "y": 15.0
+   },
+   "camera_orientation": {
+    "x": 16.0,
+    "y": 17.0,
+    "z": 18.0
+   },
+   "raw_move_vector": {
+    "x": 19.0,
+    "y": 20.0
+   }
+  },
+  "bytes": "0000803f00000040000080400000a0400000c0400000e0400000004100004040010244480200020000104100002041c8010000304100004041000050410101030101060201020101030001010c010002000000000000000001004000000112a19cc481080a0000000000000000000002010001010102000000000000000001004000000112a19cc481080a00000000000000000000010100010002000000000000000001004000000112a19cc481080a000000000000000000000201020406040a01004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403f0601010101090d0101021d010500000004090000001c00010000000002021c00020a0000001d00050b0000000303031c00030c000000010404041c00040d0000000505051c00050e000000060602080a0206090b0c0e0f0000000a0c08020b0d0903040000010001010f6d696e6563726166743a73746f6e6500020002022971756572792e69735f6974656d5f6e616d655f616e7928276d696e6563726166743a6170706c6527290d00030003030f6d696e6563726166743a626f61747304000d0f0a010000000e100b00000001180f1107637265657065720100030000000100010001000000604100007041000080410000884100009041000098410000a041"
+ },
+ {
+  "value": {
+   "rot": {
+    "x": 1.0,
+    "y": 2.0
+   },
+   "pos": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "move": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 3.0,
+   "input_data": ["PERFORM_ITEM_INTERACTION", "PERFORM_ITEM_STACK_REQUEST"],
+   "input_mode": "TOUCH",
+   "play_mode": "NORMAL",
+   "new_interaction_model": "CROSSHAIR",
+   "interact_rotation": {
+    "x": 9.0,
+    "y": 10.0
+   },
+   "client_tick": 200,
+   "pos_delta": {
+    "x": 11.0,
+    "y": 12.0,
+    "z": 13.0
+   },
+   "item_use_transaction": {
+    "id": {
+     "raw_id": -3
+    },
+    "slots": null,
+    "transaction": {
+     "transaction": {
+      "actions": [
+       {
+        "source": {
+         "type": "CONTAINER_INVENTORY",
+         "container_id": 12,
+         "flags": null
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "net_id_variant": null,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "00000000000000000000"
+        }
+       }
+      ]
+     },
+     "action_type": "USE",
+     "trigger_type": "PLAYER_INPUT",
+     "pos": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "face": 4,
+     "slot": 5,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "click_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "target_block_id": 6,
+     "client_predicted_result": "SUCCESS",
+     "client_cooldown_state": "ON"
+    }
+   },
+   "item_stack_request": {
+    "client_request_id": {
+     "raw_id": -7
+    },
+    "actions": [
+     {
+      "TakeActionData": {
+       "amount": 1,
+       "source": {
+        "full_container_name": {
+         "name": "LEVEL_ENTITY_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 3,
+        "net_id_variant": 9
+       },
+       "destination": {
+        "full_container_name": {
+         "name": "CURSOR_CONTAINER",
+         "dynamic_id": null
+        },
+        "slot": 0,
+        "net_id_variant": 0
+       }
+      }
+     },
+     {
+      "LabTableCombineActionData": {}
+     },
+     {
+      "CraftCreativeActionData": {
+       "creative_item_net_id": 5,
+       "num_crafts": 1
+      }
+     }
+    ],
+    "strings_to_filter": ["abc"],
+    "strings_to_filter_origin": "ANVIL_TEXT"
+   },
+   "player_block_actions": null,
+   "vehicle_rot": null,
+   "client_predicted_vehicle": null,
+   "analog_move_vector": {
+    "x": 14.0,
+    "y": 15.0
+   },
+   "camera_orientation": {
+    "x": 16.0,
+    "y": 17.0,
+    "z": 18.0
+   },
+   "raw_move_vector": {
+    "x": 19.0,
+    "y": 20.0
+   }
+  },
+  "bytes": "0000803f00000040000080400000a0400000c0400000e0400000004100004040010244480200020000104100002041c801000030410000404100005041010105000101010001010c010002000000000000000001004000000112a19cc481080a000000000000000000000201020406040a01004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403f06010101010d03000001070003090000003b00000000000007090c0e05010103616263030000000100010001000000604100007041000080410000884100009041000098410000a041"
  }
 ]
