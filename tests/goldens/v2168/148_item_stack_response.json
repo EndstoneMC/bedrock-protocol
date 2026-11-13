@@ -1,5 +1,6 @@
 [
  {
+  "id": "success_with_item_stack_net_id",
   "value": {
    "responses": [
     {
@@ -36,6 +37,7 @@
   "bytes": "010001010101070001030340010112016e000a"
  },
  {
+  "id": "error_without_containers",
   "value": {
    "responses": [
     {
@@ -50,6 +52,7 @@
   "bytes": "0101010100"
  },
  {
+  "id": "success_with_empty_amount_and_redacted_name",
   "value": {
    "responses": [
     {
