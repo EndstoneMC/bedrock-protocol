@@ -203,7 +203,22 @@ class PhotoTransferPacket:
     new_photo_name: str
 
 
-@packet(id=324, since=786)
+@packet(id=324, since=800, until=898)
+class PlayerVideoCapturePacket:
+    class StartVideoCapture:
+        frame_rate: uint32
+        file_prefix: str
+
+    class StopVideoCapture:
+        pass
+
+    action: bool
+    with field(when=lambda p: p.action):
+        frame_rate: uint32
+        file_prefix: str
+
+
+@packet(id=324, since=898)
 class PlayerVideoCapturePacket:
     class StartVideoCapture:
         frame_rate: uint32
