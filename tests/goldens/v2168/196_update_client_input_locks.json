@@ -1,5 +1,6 @@
 [
  {
+  "id": "input_lock_mask",
   "value": {
    "input_lock_component_data": 70
   },
