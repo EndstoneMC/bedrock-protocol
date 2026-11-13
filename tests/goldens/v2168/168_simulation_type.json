@@ -7,8 +7,8 @@
  },
  {
   "value": {
-   "sim_type": "INVALID"
+   "sim_type": "TEST"
   },
-  "bytes": "03"
+  "bytes": "02"
  }
 ]
