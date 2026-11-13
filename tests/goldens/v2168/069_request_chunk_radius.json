@@ -1,5 +1,6 @@
 [
  {
+  "id": "chunk_radius_request",
   "value": {
    "chunk_radius": 12,
    "max_chunk_radius": 200
