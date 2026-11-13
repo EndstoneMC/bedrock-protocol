@@ -1,5 +1,6 @@
 [
  {
+  "id": "float_behavior_tree",
   "value": {
    "json_input": "{\"behaviors\":[\"minecraft:behavior.float\"]}"
   },
