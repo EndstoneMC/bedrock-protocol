@@ -7,15 +7,15 @@
  },
  {
   "value": {
-   "input_lock_component_data": 8190
+   "input_lock_component_data": 2046
   },
-  "bytes": "fe3f"
+  "bytes": "fe0f"
  },
  {
   "value": {
-   "input_lock_component_data": 4294967295
+   "input_lock_component_data": 2
   },
-  "bytes": "ffffffff0f"
+  "bytes": "02"
  },
  {
   "value": {
