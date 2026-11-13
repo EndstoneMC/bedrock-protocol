@@ -1,5 +1,6 @@
 [
  {
+  "id": "editor_simulation",
   "value": {
    "sim_type": "EDITOR"
   },
