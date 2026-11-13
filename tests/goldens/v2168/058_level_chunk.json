@@ -1,5 +1,6 @@
 [
  {
+  "id": "cache_disabled_no_sub_chunk_limit",
   "value": {
    "pos": {
     "x": 2,
@@ -15,6 +16,7 @@
   "bytes": "0406000500000002aabb"
  },
  {
+  "id": "cache_enabled_with_sub_chunk_limit",
   "value": {
    "pos": {
     "x": 2,
