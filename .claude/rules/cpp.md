@@ -29,4 +29,5 @@ paths:
 - Build strings with `std::format`, never with `+` chains of `std::string` and `std::to_string`.
 - Name a std-shaped facility the std way (`packet_of_t`, `has_packet_v`, `enum_cast`); a hand-written type that mirrors a BDS type keeps BDS's names.
 - Name a bound Python attribute in caps when it holds one value (`ID`) and in lower case when it holds a collection (`versions`, `packets`).
+- Give a caster's name and a bound signature the type its stub must read: the module path (`bedrock_protocol.nbt.CompoundTag`), a generic's arguments, `object` for `__eq__`.
 - Never run clang-format or clang-tidy on generated code.

@@ -27,7 +27,7 @@ void init_versions(nb::module_ &parent)
         m.attr("packets") = nb::module_::import_("types").attr("MappingProxyType")(version.packets);
         m.def(
             "decode_packet",
-            [version](nb::bytes data) {
+            [version](nb::bytes data) -> nb::typed<nb::tuple, PacketHeader, nb::object> {
                 BinaryReader reader{std::string_view(data.c_str(), data.size())};
                 auto header = Serializer<PacketHeader>::deserialize(reader);
                 if (!header) {
