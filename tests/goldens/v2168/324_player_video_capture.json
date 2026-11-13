@@ -1,6 +1,6 @@
 [
  {
-  "id": "start_then_stop_arms",
+  "id": "start_in_both_slots",
   "value": {
    "start_video_capture": {
     "StartVideoCapture": {
@@ -9,24 +9,24 @@
     }
    },
    "stop_video_capture": {
-    "StopVideoCapture": {}
+    "StartVideoCapture": {
+     "frame_rate": 60,
+     "file_prefix": "clip"
+    }
    }
   },
-  "bytes": "003c00000004636c697001"
+  "bytes": "003c00000004636c6970003c00000004636c6970"
  },
  {
-  "id": "stop_then_start_arms",
+  "id": "stop_in_both_slots",
   "value": {
    "start_video_capture": {
     "StopVideoCapture": {}
    },
    "stop_video_capture": {
-    "StartVideoCapture": {
-     "frame_rate": 30,
-     "file_prefix": "ab"
-    }
+    "StopVideoCapture": {}
    }
   },
-  "bytes": "01001e000000026162"
+  "bytes": "0101"
  }
 ]
