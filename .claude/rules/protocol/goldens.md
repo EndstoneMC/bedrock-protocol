@@ -16,13 +16,11 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
 - Write `value` exactly as `to_json` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
-- Commit a case only once BDS writes the same bytes and the JSON BDS prints matches `value` in its tree and leaf values; keys are not compared.
+- Commit a case only once BDS writes the same bytes and the JSON the `goldens` skill prints from the packet BDS read matches `value` in its tree and leaf values; keys are not compared, except a variant's arm tag and an NBT tag's names.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
-- Compare a `Vec2` or `Vec3` with BDS's array of its components; reshape no other struct.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Compare an `ActorRuntimeID`, `ActorUniqueID`, `DimensionType`, `PlayerInputTick` or `Color` with the one member BDS wraps it in; unwrap no other type.
-- Compare a `UUID` as its two unsigned 64-bit halves, most significant first, with the two BDS prints; split no other type.
-- Freeze a case whose BDS JSON does not parse on its bytes alone, and only when it holds an NBT tag or a bitset.
+- Compare a field the compiler's `DUPLICATE_BINDINGS` lists with each copy BDS prints of it.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 
 ## Writing cases

@@ -1,11 +1,9 @@
 """Compares each golden case with what BDS wrote and printed for it, naming every rule the match needs."""
 
-import array
 import collections
 import json
 import os
 import sys
-import uuid
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +13,6 @@ from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
-    Bitset,
     BuiltinRef,
     EnumName,
     EnumRef,
@@ -80,24 +77,15 @@ def bds_prints_an_enum_as_its_wire_name(ours: Ours, bds: Bds) -> tuple[Ours, Bds
     return None
 
 
-def bds_prints_a_uuid_as_two_halves(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, BuiltinRef) and ours.type.builtin.name == "UUID" and isinstance(bds.value, dict):
-        whole = uuid.UUID(ours.value).int
-        return Ours((whole >> 64, whole % 2**64), ours.type), Bds(tuple(bds.value.values()), bds.field)
-    return None
-
-
-def bds_prints_a_float_widened_to_double(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if ours.type == Primitive("float") and bds.field["type"] == "float":
-        ours_float, bds_float = array.array("f", (ours.value, bds.value))
-        return Ours(ours_float, ours.type), Bds(bds_float, bds.field)
-    return None
-
-
 def bds_prints_bytes_as_text(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if (ours.type == Primitive("bytes") or isinstance(ours.type, List | Array)) and isinstance(bds.value, str):
-        text = bds.value.encode("utf-8", "surrogateescape")
-        return ours, Bds(text.hex() if ours.type == Primitive("bytes") else list(text), bds.field)
+    if ours.type == Primitive("bytes") and isinstance(bds.value, str):
+        return ours, Bds(bds.value.encode("utf-8", "surrogateescape").hex(), bds.field)
+    return None
+
+
+def bds_prints_bytes_as_numbers(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
+    if ours.type == Primitive("bytes") and bds.field["type"] == "uint8" and isinstance(bds.value, list):
+        return ours, Bds(bytes(bds.value).hex(), bds.field)
     return None
 
 
@@ -107,47 +95,6 @@ def bds_prints_a_literal_field(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
             return Ours(enum_shapes[enum].numbers[name], ours.type), bds
         case Literal(value=value) if "name" in bds.field:
             return Ours(value, ours.type), bds
-    return None
-
-
-def bds_prints_an_empty_compound_tag_as_its_tag_id(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if bds.field["type"] == "CompoundTag" and ours.value == {} and bds.value == 10:
-        return ours, Bds({}, bds.field)
-    return None
-
-
-def bds_prints_an_end_tag_under_an_empty_key(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if bds.fields is not None and isinstance(bds.value, dict) and "" in bds.value:
-        return ours, Bds({key: value for key, value in bds.value.items() if key}, bds.field)
-    return None
-
-
-def bds_nests_fields_under_an_undeclared_key(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if bds.fields is not None and isinstance(bds.value, dict) and len(bds.value) == 1:
-        [(key, value)] = bds.value.items()
-        if key not in {each.get("name") for each in bds.fields}:
-            return ours, Bds(value, bds.field)
-    return None
-
-
-def bds_prints_a_variant_arm_without_its_name(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, Variant) and isinstance(ours.value, dict):
-        [(tag, value)] = ours.value.items()
-        index, arm = next((i, arm) for i, arm in enumerate(ours.type.cases) if arm and variant_tag(arm) == tag)
-        return Ours(value, arm), Bds(bds.value, field_of(bds.field["type"]["cases"][index]))
-    return None
-
-
-def bds_prints_a_map_as_key_value_pairs(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, Map) and isinstance(bds.value, list):
-        return ours, Bds({str(pair["key"]): pair["value"] for pair in bds.value}, bds.field)
-    return None
-
-
-def bds_prints_a_vec_as_an_array(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, StructRef) and ours.type.struct.name in {"Vec2", "Vec3"} and isinstance(bds.value, list):
-        names = [each["name"] for each in bds.fields]
-        return ours, Bds(dict(zip(names, bds.value, strict=True)), bds.field)
     return None
 
 
@@ -170,15 +117,10 @@ def bds_prints_a_one_member_struct_as_its_member(ours: Ours, bds: Bds) -> tuple[
 
 type Rule = Callable[[Ours, Bds], tuple[Ours, Bds] | None]
 
-BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT = "bds_prints_nbt_or_a_bitset_as_text"
-
 ACCEPTED = {
     "bds_prints_the_wire_type",
-    "bds_prints_a_vec_as_an_array",
     "bds_prints_an_enum_as_its_number",
     "bds_wraps_a_value_in_a_one_member_type",
-    "bds_prints_a_uuid_as_two_halves",
-    BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT,
 }
 
 RULES: list[Rule] = [
@@ -186,16 +128,9 @@ RULES: list[Rule] = [
     bds_prints_a_bool_enum_as_a_bool,
     bds_prints_an_enum_as_its_number,
     bds_prints_an_enum_as_its_wire_name,
-    bds_prints_a_uuid_as_two_halves,
-    bds_prints_a_float_widened_to_double,
     bds_prints_bytes_as_text,
+    bds_prints_bytes_as_numbers,
     bds_prints_a_literal_field,
-    bds_prints_an_empty_compound_tag_as_its_tag_id,
-    bds_prints_an_end_tag_under_an_empty_key,
-    bds_nests_fields_under_an_undeclared_key,
-    bds_prints_a_variant_arm_without_its_name,
-    bds_prints_a_map_as_key_value_pairs,
-    bds_prints_a_vec_as_an_array,
     bds_wraps_a_value_in_a_one_member_type,
     bds_prints_a_one_member_struct_as_its_member,
 ]
@@ -222,12 +157,14 @@ def field_of(bds_type: Any) -> dict[str, Any]:
     return bds_type if isinstance(bds_type, dict) and "type" in bds_type else {"type": bds_type}
 
 
-def same(a: Any, b: Any) -> bool:
-    """Whether two values are equal leaves: empty containers, or scalars where an int equals a float of its value
-    and a bool equals no number."""
-    if isinstance(a, dict | list):
-        return a == b and not a
-    return a == b and (type(a) is type(b) or {type(a), type(b)} == {int, float})
+def same(ours: Ours, bds: Bds) -> bool:
+    """Whether the two are equal leaves, an NBT tag being one leaf compared as exact JSON."""
+    if isinstance(ours.type, BuiltinRef) and ours.type.builtin.stem == "nbt":
+        return json.dumps(ours.value) == json.dumps(bds.value)
+    if isinstance(ours.value, dict | list):
+        return ours.value == bds.value and not ours.value
+    kinds = {type(ours.value), type(bds.value)}
+    return ours.value == bds.value and (len(kinds) == 1 or kinds == {int, float})
 
 
 def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
@@ -236,7 +173,7 @@ def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
         case Optional(element=element) if ours.value is not None:
             return [("", Ours(ours.value, element), bds)]
         case StructRef(struct=declared) if isinstance(bds.value, dict) and bds.fields is not None:
-            fields = struct_shapes[declared].fields
+            fields = [each for each in struct_shapes[declared].fields for _ in range(each.copies)]
             if len(fields) != len(bds.fields) or bds.value.keys() - {each.get("name") for each in bds.fields}:
                 return None
             return [
@@ -255,6 +192,10 @@ def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
                 (str(index), Ours(ours_item, element), Bds(bds_item, item_field))
                 for index, (ours_item, bds_item) in enumerate(zip(ours.value, bds.value, strict=True))
             ]
+        case Variant(cases=arms) if isinstance(bds.value, dict) and bds.value.keys() == ours.value.keys():
+            [(tag, value)] = ours.value.items()
+            index, arm = next((i, arm) for i, arm in enumerate(arms) if arm and variant_tag(arm) == tag)
+            return [(tag, Ours(value, arm), Bds(bds.value[tag], field_of(bds.field["type"]["cases"][index])))]
         case Map(key=key_type, value=item_type) if isinstance(bds.value, dict) and len(ours.value) == len(bds.value):
             key_field, item_field = field_of(bds.field["type"]["key"]), field_of(bds.field["type"]["value"])
             items = zip(ours.value.items(), bds.value.items(), strict=True)
@@ -266,30 +207,9 @@ def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
     return None
 
 
-def present_types(ours: Ours) -> Iterator[Type]:
-    """The declared type of every part of our value that is present."""
-    yield ours.type
-    match ours.type:
-        case Optional(element=element) if ours.value is not None:
-            yield from present_types(Ours(ours.value, element))
-        case StructRef(struct=declared):
-            for each in struct_shapes[declared].fields:
-                yield from present_types(Ours(ours.value.get(each.name), each.type))
-        case List(element=element) | Array(element=element):
-            for item in ours.value:
-                yield from present_types(Ours(item, element))
-        case Map(key=key_type, value=item_type):
-            for item in ours.value.values():
-                yield key_type
-                yield from present_types(Ours(item, item_type))
-        case Variant(cases=arms) if ours.value is not None:
-            [(tag, value)] = ours.value.items()
-            yield from present_types(Ours(value, next(arm for arm in arms if arm and variant_tag(arm) == tag)))
-
-
 def walk(ours: Ours, bds: Bds, path: str, rules: list[Rule]) -> Iterator[str]:
     """Yields each rule the match needs and each difference that no rule explains."""
-    if same(ours.value, bds.value):
+    if same(ours, bds):
         return
     if (pairs := children(ours, bds)) is not None:
         for key, ours_part, bds_part in pairs:
@@ -330,29 +250,22 @@ for result in json.loads((evidence / "results.json").read_text()):
         verdict, detail = "refused", f"at {result['consumed']}, {error['category']}:{error['code']} {error['message']}"
     elif result["bds_bytes"] != case["bytes"]:
         verdict, detail = "rewritten", f"at {len(os.path.commonprefix([result['bds_bytes'], case['bytes']])) // 2}"
+    elif "bds_json_error" in result:
+        verdict, detail = "unprinted", result["bds_json_error"]
     else:
         packet = int(result["stem"][:3])
         ours = Ours(case["value"], StructRef(packets[packet]))
-        try:
-            printed = json.loads(result["bds_json"]) if result.get("bds_json_valid") is False else result["bds_json"]
-        except ValueError:
-            verdict, detail = "json_unparsable", ""
-            for part in present_types(ours):
-                if isinstance(part, Bitset) or (isinstance(part, BuiltinRef) and part.builtin.stem == "nbt"):
-                    needed = [BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT]
-        else:
-            bds = Bds(printed, {"type": bds_packet_names[packet]})
-            findings = list(walk(ours, bds, "", RULES))
-            needed = [rule.__name__ for rule in RULES if rule.__name__ in findings]
-            differences = [each for each in findings if each not in needed]
-            verdict, detail = ("json_differs", f"at {differences[0]}") if differences else ("agrees", "")
-    explained = verdict == "agrees" or (verdict == "json_unparsable" and bool(needed))
-    freezes = explained and set(needed) <= ACCEPTED
+        bds = Bds(result["bds_json"], {"type": bds_packet_names[packet]})
+        findings = list(walk(ours, bds, "", RULES))
+        needed = [rule.__name__ for rule in RULES if rule.__name__ in findings]
+        differences = [each for each in findings if each not in needed]
+        verdict, detail = ("json_differs", f"at {differences[0]}") if differences else ("agrees", "")
+    freezes = verdict == "agrees" and set(needed) <= ACCEPTED
     verdicts[verdict] += 1
     needs.update(needed)
     frozen += freezes
     line = [name, verdict, detail, *needed, "freezes" if freezes else ""]
     sys.stdout.write(" ".join(filter(None, line)) + "\n")
 sys.stdout.write(", ".join(f"{count} {verdict}" for verdict, count in verdicts.most_common()) + f"; {frozen} freeze\n")
-for rule_name in [BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT, *(rule.__name__ for rule in RULES)]:
-    sys.stdout.write(f"{needs[rule_name]:4} {rule_name}{' (accepted)' if rule_name in ACCEPTED else ''}\n")
+for rule in RULES:
+    sys.stdout.write(f"{needs[rule.__name__]:4} {rule.__name__}{' (accepted)' if rule.__name__ in ACCEPTED else ''}\n")
