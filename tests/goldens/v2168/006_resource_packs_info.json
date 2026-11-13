@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_addon_pack_with_every_flag",
   "value": {
    "resource_pack_required": true,
    "has_addon_packs": true,
