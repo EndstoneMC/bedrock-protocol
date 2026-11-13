@@ -1,5 +1,6 @@
 [
  {
+  "id": "mace_smash_all_slots",
   "value": {
    "cause": "MACE_SMASH",
    "dmg": 200,
