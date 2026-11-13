@@ -139,11 +139,13 @@ def test_an_enum_argument_also_takes_an_int():
     [
         pytest.param(
             proto.DataStoreChange.__init__,
-            "new_data: bool | int | float | str | list | dict | None = ...",
+            "new_data: bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None = ...",
             id="argument",
         ),
         pytest.param(
-            proto.DataStoreChange.new_data.fget, "-> bool | int | float | str | list | dict | None", id="return"
+            proto.DataStoreChange.new_data.fget,
+            "-> bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None",
+            id="return",
         ),
     ],
 )

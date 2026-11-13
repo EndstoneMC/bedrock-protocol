@@ -177,8 +177,8 @@ template <>
 struct type_caster<bedrock::protocol::DynamicValue> {
     using DynamicValue = bedrock::protocol::DynamicValue;
 
-    NB_TYPE_CASTER(DynamicValue,
-                   io_name("bool | int | float | str | list | dict", "bool | int | float | str | list | dict | None"))
+    NB_TYPE_CASTER(DynamicValue, io_name("bool | int | float | str | list[typing.Any] | dict[str, typing.Any]",
+                                         "bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None"))
 
     bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
     {
