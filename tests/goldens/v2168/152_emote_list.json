@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_emote_piece_id",
   "value": {
    "runtime_id": 300,
    "emote_piece_ids": ["01020304-0506-0708-090a-0b0c0d0e0f10"]
