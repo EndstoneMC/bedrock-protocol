@@ -5,7 +5,7 @@
     "code_builder_default_uri": "https://code.builder/",
     "code_builder_title": "Code Builder",
     "can_resize_code_builder": true,
-    "disable_legacy_title_bar": false,
+    "disable_legacy_title_bar": true,
     "post_process_filter": "sepia",
     "screenshot_border_resource_path": "textures/ui/edu_border",
     "agent_capabilities": {
@@ -20,17 +20,17 @@
     }
    }
   },
-  "bytes": "1568747470733a2f2f636f64652e6275696c6465722f0c436f6465204275696c64657201000573657069611674657874757265732f75692f6564755f626f72646572010101011168747470733a2f2f6f766572726964652f00010d68747470733a2f2f6c696e6b2f044c696e6b"
+  "bytes": "1568747470733a2f2f636f64652e6275696c6465722f0c436f6465204275696c64657201010573657069611674657874757265732f75692f6564755f626f72646572010101011168747470733a2f2f6f766572726964652f00010d68747470733a2f2f6c696e6b2f044c696e6b"
  },
  {
   "value": {
    "education_level_settings": {
-    "code_builder_default_uri": "",
-    "code_builder_title": "",
-    "can_resize_code_builder": false,
-    "disable_legacy_title_bar": false,
-    "post_process_filter": "",
-    "screenshot_border_resource_path": "",
+    "code_builder_default_uri": "a",
+    "code_builder_title": "b",
+    "can_resize_code_builder": true,
+    "disable_legacy_title_bar": true,
+    "post_process_filter": "c",
+    "screenshot_border_resource_path": "d",
     "agent_capabilities": null,
     "local_settings": {
      "code_builder_override_uri": null
@@ -38,6 +38,6 @@
     "external_link_settings": null
    }
   },
-  "bytes": "00000000000000000000"
+  "bytes": "0161016201010163016400000000"
  }
 ]
