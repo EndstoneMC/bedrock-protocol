@@ -14,13 +14,13 @@
  {
   "value": {
    "inventory_options": {
-    "left_inventory_tab": 100,
-    "right_inventory_tab": "NONE",
-    "filtering": false,
-    "layout_inv": -1,
-    "layout_craft": "NONE"
+    "left_inventory_tab": "RECIPE_NATURE",
+    "right_inventory_tab": "CRAFTING",
+    "filtering": true,
+    "layout_inv": "RECIPE_BOOK_ONLY",
+    "layout_craft": "DEFAULT"
    }
   },
-  "bytes": "c80100000100"
+  "bytes": "0804010604"
  }
 ]
