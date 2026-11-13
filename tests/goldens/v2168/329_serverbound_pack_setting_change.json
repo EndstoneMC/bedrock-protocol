@@ -1,5 +1,6 @@
 [
  {
+  "id": "float_setting_value",
   "value": {
    "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
@@ -10,6 +11,7 @@
   "bytes": "3333222211111111555555555555444406766f6c756d65000000c03f"
  },
  {
+  "id": "bool_setting_value",
   "value": {
    "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
@@ -20,6 +22,7 @@
   "bytes": "3333222211111111555555555555444406766f6c756d650101"
  },
  {
+  "id": "string_setting_value",
   "value": {
    "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
