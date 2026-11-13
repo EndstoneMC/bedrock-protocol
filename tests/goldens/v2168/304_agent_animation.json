@@ -1,5 +1,6 @@
 [
  {
+  "id": "shrug_animation",
   "value": {
    "anim": "SHRUG",
    "runtime_id": 300
