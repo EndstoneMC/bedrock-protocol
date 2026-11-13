@@ -1,14 +1,14 @@
 [
  {
   "value": {
-   "client_network_version": 1001
+   "client_network_version": 2168
   },
-  "bytes": "000003e9"
+  "bytes": "00000878"
  },
  {
   "value": {
-   "client_network_version": 975
+   "client_network_version": 2168
   },
-  "bytes": "000003cf"
+  "bytes": "00000878"
  }
 ]
