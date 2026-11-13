@@ -20,8 +20,10 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_classes = []
+cache_dir = ".cache/pytest"
 
 [tool.mypy]
 packages = ["bedrock_protocol_compiler"]
 python_version = "3.12"
 strict = true
+cache_dir = ".cache/mypy"
