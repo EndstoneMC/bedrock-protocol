@@ -19,27 +19,27 @@
  {
   "value": {
    "action": "SET_ENABLED",
-   "collection_name": "",
-   "from_step": "",
-   "to_step": "",
+   "collection_name": "shift",
+   "from_step": "dawn",
+   "to_step": "dusk",
    "all_steps": [],
-   "current_length_in_ticks": 0,
-   "total_length_in_ticks": 0,
-   "enabled": false
+   "current_length_in_ticks": 5,
+   "total_length_in_ticks": 9,
+   "enabled": true
   },
-  "bytes": "0300000000000000"
+  "bytes": "03057368696674046461776e046475736b00050901"
  },
  {
   "value": {
    "action": "SYNC",
-   "collection_name": "",
-   "from_step": "",
-   "to_step": "",
+   "collection_name": "shift",
+   "from_step": "dawn",
+   "to_step": "dusk",
    "all_steps": [],
-   "current_length_in_ticks": 128,
-   "total_length_in_ticks": 1,
+   "current_length_in_ticks": 3,
+   "total_length_in_ticks": 9,
    "enabled": true
   },
-  "bytes": "040000000080010101"
+  "bytes": "04057368696674046461776e046475736b00030901"
  }
 ]
