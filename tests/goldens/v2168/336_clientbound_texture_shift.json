@@ -1,5 +1,6 @@
 [
  {
+  "id": "start_shift_with_three_steps",
   "value": {
    "action": "START",
    "collection_name": "shift",
