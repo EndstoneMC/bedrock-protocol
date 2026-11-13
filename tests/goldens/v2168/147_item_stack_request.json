@@ -30,11 +30,11 @@
       }
      ],
      "strings_to_filter": [],
-     "strings_to_filter_origin": "SERVER_CHAT_PUBLIC"
+     "strings_to_filter_origin": "ANVIL_TEXT"
     }
    ]
   },
-  "bytes": "010101000001070003090000003b0000000000000000000000"
+  "bytes": "010101000001070003090000003b0000000000000003000000"
  },
  {
   "value": {
@@ -76,10 +76,10 @@
       }
      ],
      "strings_to_filter": [],
-     "strings_to_filter_origin": "SERVER_CHAT_PUBLIC"
+     "strings_to_filter_origin": "ANVIL_TEXT"
     }
    ]
   },
-  "bytes": "01010110120000000000"
+  "bytes": "01010110120003000000"
  }
 ]
