@@ -9,18 +9,18 @@
  },
  {
   "value": {
-   "cookie": "",
+   "cookie": "ab",
    "intent": "NOTIFY",
-   "destination_name": ""
+   "destination_name": "x"
   },
-  "bytes": "00066e6f7469667900"
+  "bytes": "026162066e6f746966790178"
  },
  {
   "value": {
-   "cookie": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "cookie": "xyz",
    "intent": "OPT_OUT",
    "destination_name": "d"
   },
-  "bytes": "820178787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878066f70746f75740164"
+  "bytes": "0378797a066f70746f75740164"
  }
 ]
