@@ -1,5 +1,6 @@
 [
  {
+  "id": "start_loading_screen_with_id",
   "value": {
    "serverbound_loading_screen_packet_type": "START_LOADING_SCREEN",
    "loading_screen_id": 9
@@ -7,6 +8,7 @@
   "bytes": "020109000000"
  },
  {
+  "id": "end_loading_screen_without_id",
   "value": {
    "serverbound_loading_screen_packet_type": "END_LOADING_SCREEN",
    "loading_screen_id": null
