@@ -1,5 +1,6 @@
 [
  {
+  "id": "snappy_with_client_throttle",
   "value": {
    "compression_threshold": 1024,
    "compression_algorithm": "SNAPPY",
