@@ -1,5 +1,6 @@
 [
  {
+  "id": "open_code_builder_url",
   "value": {
    "url": "ws://localhost:8080/code",
    "should_open_code_builder": true
