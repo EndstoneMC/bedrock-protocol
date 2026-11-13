@@ -9,18 +9,18 @@
  },
  {
   "value": {
-   "operation": "NONE",
-   "category": "NONE",
-   "code_status": "NONE"
+   "operation": "GET",
+   "category": "CODE_STATUS",
+   "code_status": "NOT_STARTED"
   },
-  "bytes": "000000"
+  "bytes": "010101"
  },
  {
   "value": {
-   "operation": 200,
+   "operation": "SET",
    "category": "CODE_STATUS",
    "code_status": "IN_PROGRESS"
   },
-  "bytes": "c80102"
+  "bytes": "020102"
  }
 ]
