@@ -1,5 +1,6 @@
 [
  {
+  "id": "torso_damage",
   "value": {
    "slot_and_damage_pairs": [
     {
