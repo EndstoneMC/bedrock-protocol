@@ -267,6 +267,20 @@ GAME_TOKEN = web_token(
 )
 ITEM_STACKS = ("SerializedNetworkItemStackDescriptor", "SerializedNetworkItemInstanceDescriptor")
 ITEMS: dict[int, dict[int, int | None]] = {2168: {462: None, 855: None, -593: 0}}
+MEMBERS_SINCE: dict[int, dict[str, tuple[str, ...]]] = {
+    924: {
+        "TextPacket.MessageOnly.type": (
+            "RAW",
+            "TIP",
+            "SYSTEM_MESSAGE",
+            "TEXT_OBJECT_WHISPER",
+            "TEXT_OBJECT",
+            "TEXT_OBJECT_ANNOUNCEMENT",
+        ),
+        "TextPacket.AuthorAndMessage.type": ("CHAT", "WHISPER", "ANNOUNCEMENT"),
+        "TextPacket.MessageAndParams.type": ("TRANSLATE", "POPUP", "JUKEBOX_POPUP"),
+    },
+}
 FIXED_AT: dict[int, dict[str, Json]] = {
     2168: {
         "SerializedRecipeIngredient.descriptor": {"name": "minecraft:apple"},
@@ -383,9 +397,6 @@ FIXED: dict[str, Json] = {
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
     "NetworkStackLatencyPacket.create_time": 0,
-    "TextPacket.MessageOnly.type": "RAW",
-    "TextPacket.AuthorAndMessage.type": "CHAT",
-    "TextPacket.MessageAndParams.type": "TRANSLATE",
     "PlayerListPacket.RemoveEntry.action": "REMOVE",
     "PlayerListPacket.AddEntry.action": "ADD",
     "CommandOriginData.type": "PLAYER",
@@ -426,6 +437,9 @@ class Generator:
         self.schema = schema
         self.version = version
         self.fixed = FIXED | FIXED_AT.get(version, {}) | {"LoginPacket.client_network_version": version}
+        self.members = {
+            key: members for since, table in MEMBERS_SINCE.items() if since <= version for key, members in table.items()
+        }
         self.cursors: dict[str, int] = {}
         self.hits: set[Point] = set()
         self.counter = 0
@@ -499,6 +513,8 @@ class Generator:
 
     def type_points(self, node: Type, key: str, seen: set[int]) -> Iterator[Point]:
         match node:
+            case EnumRef() | EnumName() if key in self.members:
+                yield from ((key, member) for member in self.members[key])
             case StructRef(struct=struct):
                 yield from self.points(self.shape(struct), seen)
             case Optional(element=element):
@@ -611,6 +627,8 @@ class Generator:
                 return self.leaf(node)
             case AliasRef(alias=alias):
                 return self.leaf(alias.primitive, node.wire)
+            case EnumRef() | EnumName() if key in self.members:
+                return self.members[key][self.pick(key, list(self.members[key]))]
             case EnumRef(enum=enum) | EnumName(enum=enum):
                 names = self.named(enum)
                 if not names:

@@ -536,15 +536,19 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
 
 
 @pytest.mark.parametrize(
-    ("name", "field", "read"),
+    ("name", "field", "accepted"),
     [
-        ("MessageOnly", "type", "RAW"),
-        ("AuthorAndMessage", "type", "CHAT"),
-        ("MessageAndParams", "type", "TRANSLATE"),
-        ("RemoveEntry", "action", "REMOVE"),
-        ("AddEntry", "action", "ADD"),
-        ("CommandOriginData", "type", "PLAYER"),
-        ("ServerboundLoadingScreenPacket", "serverbound_loading_screen_packet_type", "START_LOADING_SCREEN"),
+        (
+            "MessageOnly",
+            "type",
+            {"RAW", "TIP", "SYSTEM_MESSAGE", "TEXT_OBJECT_WHISPER", "TEXT_OBJECT", "TEXT_OBJECT_ANNOUNCEMENT"},
+        ),
+        ("AuthorAndMessage", "type", {"CHAT", "WHISPER", "ANNOUNCEMENT"}),
+        ("MessageAndParams", "type", {"TRANSLATE", "POPUP", "JUKEBOX_POPUP"}),
+        ("RemoveEntry", "action", {"REMOVE"}),
+        ("AddEntry", "action", {"ADD"}),
+        ("CommandOriginData", "type", {"PLAYER"}),
+        ("ServerboundLoadingScreenPacket", "serverbound_loading_screen_packet_type", {"START_LOADING_SCREEN"}),
     ],
     ids=[
         "text-message-only",
@@ -556,9 +560,8 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
         "loading-screen",
     ],
 )
-def test_an_enum_bds_narrows_to_some_members_is_generated_as_one_of_them(values, schema, name, field, read):
-    chosen = generated(values, schema, name)
-    assert [each[field] for each in chosen] == [read for _ in chosen]
+def test_an_enum_bds_narrows_to_some_members_is_generated_as_each_of_them(values, schema, name, field, accepted):
+    assert {each[field] for each in generated(values, schema, name)} == accepted
 
 
 def test_an_actor_identifier_list_holds_the_idlist_bds_reads(values, schema):
