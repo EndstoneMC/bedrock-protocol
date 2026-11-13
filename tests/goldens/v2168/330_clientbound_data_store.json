@@ -110,5 +110,36 @@
    ]
   },
   "bytes": "0101016101620100000003000000000000000000d03f"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreUpdate": {
+      "data_store_name": "hud",
+      "property": "visible",
+      "path": "slots",
+      "data": {
+       "bool": true
+      },
+      "property_update_count": 2,
+      "path_update_count": 3
+     }
+    },
+    {
+     "DataStoreUpdate": {
+      "data_store_name": "form",
+      "property": "title",
+      "path": "lines",
+      "data": {
+       "str": "Chest"
+      },
+      "property_update_count": 4,
+      "path_update_count": 5
+     }
+    }
+   ]
+  },
+  "bytes": "0200036875640776697369626c6505736c6f7473010102000000030000000004666f726d057469746c65056c696e6573020543686573740400000005000000"
  }
 ]
