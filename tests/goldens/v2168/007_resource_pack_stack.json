@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_texture_pack_with_gametest_toggle",
   "value": {
    "texture_pack_required": true,
    "texture_pack_ids_and_versions": [
