@@ -1,5 +1,6 @@
 [
  {
+  "id": "local_web_socket",
   "value": {
    "web_socket_data": {
     "ip": "ws://localhost:8000/ws"
