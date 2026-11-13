@@ -48,5 +48,39 @@
    ]
   },
   "bytes": "0101010100"
+ },
+ {
+  "value": {
+   "responses": [
+    {
+     "result": "SUCCESS",
+     "client_request_id": {
+      "raw_id": -3
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": "LEVEL_ENTITY_CONTAINER",
+        "dynamic_id": 7
+       },
+       "slots": [
+        {
+         "requested_slot": 2,
+         "slot": 4,
+         "amount": 0,
+         "item_stack_net_id": null,
+         "custom_name": {
+          "unredacted_string": "nm",
+          "redacted_string": "rd"
+         },
+         "durability_correction": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "010005010101070107000000010204000100026e6d0102726406"
  }
 ]
