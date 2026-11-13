@@ -1,5 +1,6 @@
 [
  {
+  "id": "chunk_radius_updated",
   "value": {
    "chunk_radius": 12
   },
