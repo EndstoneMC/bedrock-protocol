@@ -24,7 +24,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 
 ## Writing cases
 
-- Cover every branch of the packet's generated encode and decode code that a valid packet reaches, with as few cases as a unit test would use; read what is left from the coverage report.
+- Reach every branch of the generated codec at 2168 that valid data takes, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
 - Change a case's leaves without changing its branch identity: each optional stays present or absent, each variant arm and gating bool stays, and an empty list stays empty.
