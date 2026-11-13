@@ -1,5 +1,6 @@
 [
  {
+  "id": "player_spawn_status",
   "value": {
    "status": "PLAYER_SPAWN"
   },
