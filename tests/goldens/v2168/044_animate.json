@@ -1,5 +1,6 @@
 [
  {
+  "id": "swing_with_swing_source",
   "value": {
    "action": "SWING",
    "runtime_id": 300,
@@ -9,6 +10,7 @@
   "bytes": "01ac020000c03f010661747461636b"
  },
  {
+  "id": "critical_hit_no_swing_source",
   "value": {
    "action": "CRITICAL_HIT",
    "runtime_id": 7,
