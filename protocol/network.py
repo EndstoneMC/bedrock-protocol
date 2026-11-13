@@ -224,7 +224,7 @@ class MinecraftPacketIds(IntEnum, int32):
         CLIENT_MOVEMENT_PREDICTION_SYNC_PACKET = 322
     with value(since=786):
         UPDATE_CLIENT_OPTIONS = 323
-        PLAYER_VIDEO_CAPTURE_PACKET = value(324, since=800)
+        PLAYER_VIDEO_CAPTURE_PACKET = 324
         PLAYER_UPDATE_ENTITY_OVERRIDES_PACKET = 325
     with value(since=800):
         PLAYER_LOCATION = 326
