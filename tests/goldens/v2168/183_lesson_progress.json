@@ -1,5 +1,6 @@
 [
  {
+  "id": "complete_chemistry_lesson",
   "value": {
    "action": "COMPLETE",
    "score": 300,
