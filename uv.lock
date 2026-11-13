@@ -59,6 +59,7 @@ source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "bedrock-protocol-compiler" },
     { name = "nanobind" },
     { name = "pytest" },
     { name = "scikit-build-core" },
@@ -68,6 +69,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "bedrock-protocol-compiler", editable = "compiler" },
     { name = "nanobind", specifier = "==2.13.0" },
     { name = "pytest" },
     { name = "scikit-build-core", specifier = ">=1.1" },

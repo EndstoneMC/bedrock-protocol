@@ -7,7 +7,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 [dependency-groups]
-dev = ["nanobind==2.13.0", "pytest", "scikit-build-core>=1.1"]
+dev = ["bedrock-protocol-compiler", "nanobind==2.13.0", "pytest", "scikit-build-core>=1.1"]
 
 [build-system]
 requires = ["scikit-build-core>=1.1", "nanobind==2.13.0"]
@@ -35,6 +35,9 @@ cache-keys = [
 
 [tool.uv.workspace]
 members = ["compiler"]
+
+[tool.uv.sources]
+bedrock-protocol-compiler = { workspace = true }
 
 [tool.cibuildwheel]
 build = "cp312-*"
