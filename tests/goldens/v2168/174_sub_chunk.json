@@ -3,9 +3,7 @@
   "id": "cached_all_air_with_height_map",
   "value": {
    "cache_enabled": true,
-   "dimension_type": {
-    "value": 1
-   },
+   "dimension_type": 1,
    "center_pos": {
     "x": 1,
     "y": 2,
@@ -51,9 +49,7 @@
   "id": "uncached_success_with_render_height_map",
   "value": {
    "cache_enabled": false,
-   "dimension_type": {
-    "value": 1
-   },
+   "dimension_type": 1,
    "center_pos": {
     "x": 1,
     "y": 2,

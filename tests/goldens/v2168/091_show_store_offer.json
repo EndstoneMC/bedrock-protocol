@@ -2,10 +2,7 @@
  {
   "id": "third_party_server_page",
   "value": {
-   "offer_id": {
-    "most_significant_bits": 393438381693619071,
-    "least_significant_bits": 11052396273000285726
-   },
+   "offer_id": "0575c61f-a5da-4b7f-9961-ffda2908861e",
    "redirect_type": 2
   },
   "bytes": "7f4bdaa51fc675051e860829daff619902"

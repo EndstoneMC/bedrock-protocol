@@ -30,9 +30,7 @@
       "y": 5,
       "z": 6
      },
-     "last_touched_by_player": {
-      "actor_unique_id": 7
-     },
+     "last_touched_by_player": 7,
      "rotation": 1,
      "mirror": 1,
      "animation_mode": 2,
@@ -84,9 +82,7 @@
       "y": 5,
       "z": 6
      },
-     "last_touched_by_player": {
-      "actor_unique_id": 7
-     },
+     "last_touched_by_player": 7,
      "rotation": 1,
      "mirror": 1,
      "animation_mode": 2,

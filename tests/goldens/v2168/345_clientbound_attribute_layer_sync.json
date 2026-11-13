@@ -4,9 +4,7 @@
   "value": {
    "data": {
     "layer_name": "wet",
-    "layer_dimension_id": {
-     "value": 1
-    },
+    "layer_dimension_id": 1,
     "attributes": [
      {
       "name": "temp",
@@ -33,9 +31,7 @@
      {
       "name": "rain",
       "noise_name": "gusts",
-      "dimension_id": {
-       "value": 0
-      },
+      "dimension_id": 0,
       "settings": {
        "priority": 5,
        "weight": 0.5,
@@ -56,7 +52,12 @@
          "constraint_max_value": 2.5
         },
         "to_attribute": {
-         "value": [10, 20, 30, 255],
+         "value": {
+          "r": 10,
+          "g": 20,
+          "b": 30,
+          "a": 255
+         },
          "operation": "multiply"
         },
         "current_transition_ticks": 3,
@@ -72,7 +73,12 @@
          "operation": "maximum"
         },
         "attribute": {
-         "value": [10, 20, 30, 255],
+         "value": {
+          "r": 10,
+          "g": 20,
+          "b": 30,
+          "a": 255
+         },
          "operation": "multiply"
         },
         "to_attribute": {
@@ -88,7 +94,12 @@
        {
         "name": "c",
         "from_attribute": {
-         "value": [10, 20, 30, 255],
+         "value": {
+          "r": 10,
+          "g": 20,
+          "b": 30,
+          "a": 255
+         },
          "operation": "multiply"
         },
         "attribute": {
@@ -111,9 +122,7 @@
      },
      {
       "name": "fog",
-      "dimension_id": {
-       "value": 2
-      },
+      "dimension_id": 2,
       "settings": {
        "priority": -3,
        "weight": 1.5,
@@ -132,9 +141,7 @@
   "value": {
    "data": {
     "layer_name": "rain",
-    "layer_dimension_id": {
-     "value": 0
-    },
+    "layer_dimension_id": 0,
     "attribute_layer_settings": {
      "priority": 5,
      "weight": 0.5,
@@ -150,9 +157,7 @@
   "value": {
    "data": {
     "layer_name": "rain",
-    "layer_dimension_id": {
-     "value": 1
-    },
+    "layer_dimension_id": 1,
     "attributes": ["a"]
    }
   },

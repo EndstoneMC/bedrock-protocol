@@ -3,9 +3,7 @@
   "id": "shrug_animation",
   "value": {
    "anim": 1,
-   "runtime_id": {
-    "actor_runtime_id": 300
-   }
+   "runtime_id": 300
   },
   "bytes": "01ac02"
  }

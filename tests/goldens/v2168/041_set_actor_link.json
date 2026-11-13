@@ -3,12 +3,8 @@
   "id": "passenger_initiated_link",
   "value": {
    "link": {
-    "a": {
-     "actor_unique_id": -1
-    },
-    "b": {
-     "actor_unique_id": 300
-    },
+    "a": -1,
+    "b": 300,
     "type": 2,
     "immediate": false,
     "passenger_initiated": true,

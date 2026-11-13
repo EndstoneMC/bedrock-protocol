@@ -26,9 +26,7 @@
   "id": "entity_command_target_arm",
   "value": {
    "target": {
-    "entity_id": {
-     "actor_runtime_id": 300
-    }
+    "entity_id": 300
    },
    "command": "say hi",
    "last_output": "ok",

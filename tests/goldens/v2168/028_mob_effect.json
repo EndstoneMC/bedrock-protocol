@@ -2,17 +2,15 @@
  {
   "id": "effect_added_ambient",
   "value": {
-   "runtime_id": {
-    "actor_runtime_id": 300
-   },
+   "runtime_id": 300,
    "event_id": 1,
    "effect_id": 19,
    "effect_amplifier": 2,
    "show_particles": true,
-   "effect_duration_ticks": 600,
-   "tick": {
-    "input_tick": 128
+   "effect_duration_ticks": {
+    "value": 600
    },
+   "tick": 128,
    "ambient": true
   },
   "bytes": "ac0201260401b009800101"

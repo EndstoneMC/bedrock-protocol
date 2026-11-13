@@ -2,12 +2,8 @@
  {
   "id": "one_actor_data_item",
   "value": {
-   "id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "id": 1,
+   "runtime_id": 2,
    "item": {
     "id": 323,
     "stack_size": 1,
@@ -43,12 +39,8 @@
  {
   "id": "net_id_and_each_actor_data_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "id": 1,
+   "runtime_id": 2,
    "item": {
     "id": 323,
     "stack_size": 1,

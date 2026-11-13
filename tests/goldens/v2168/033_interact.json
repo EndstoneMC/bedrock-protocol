@@ -3,9 +3,7 @@
   "id": "interact_update_with_position",
   "value": {
    "action": 4,
-   "target_id": {
-    "actor_runtime_id": 300
-   },
+   "target_id": 300,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -18,9 +16,7 @@
   "id": "open_inventory_no_position",
   "value": {
    "action": 6,
-   "target_id": {
-    "actor_runtime_id": 7
-   }
+   "target_id": 7
   },
   "bytes": "060700"
  }

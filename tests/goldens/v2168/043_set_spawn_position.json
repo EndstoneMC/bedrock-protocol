@@ -8,9 +8,7 @@
     "y": 2,
     "z": 3
    },
-   "dimension_type": {
-    "value": 1
-   },
+   "dimension_type": 1,
    "spawn_block_pos": {
     "x": 4,
     "y": 5,

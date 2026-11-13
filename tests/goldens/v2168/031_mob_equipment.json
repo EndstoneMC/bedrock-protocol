@@ -2,9 +2,7 @@
  {
   "id": "empty_item",
   "value": {
-   "runtime_id": {
-    "actor_runtime_id": 7
-   },
+   "runtime_id": 7,
    "item": {
     "id": 0,
     "stack_size": 0,
@@ -21,9 +19,7 @@
  {
   "id": "item_with_net_id",
   "value": {
-   "runtime_id": {
-    "actor_runtime_id": 7
-   },
+   "runtime_id": 7,
    "item": {
     "id": 323,
     "stack_size": 1,

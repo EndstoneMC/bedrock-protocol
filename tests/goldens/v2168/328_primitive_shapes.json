@@ -23,15 +23,9 @@
      },
      "time_left_total_sec": 2.0,
      "max_render_distance": 64.0,
-     "color": {
-      "color": 1146447479
-     },
-     "dimension_id": {
-      "value": 1
-     },
-     "attached_to_id": {
-      "actor_unique_id": -7
-     },
+     "color": 1146447479,
+     "dimension_id": 1,
+     "attached_to_id": -7,
      "extra_data_payload": {
       "num_segments": 12
      }
@@ -42,9 +36,7 @@
      "extra_data_payload": {
       "text": "hi",
       "use_rotation": true,
-      "background_color": {
-       "color": 1146447479
-      },
+      "background_color": 1146447479,
       "depth_test": true,
       "show_backface": true,
       "show_text_backface": true

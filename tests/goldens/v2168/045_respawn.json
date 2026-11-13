@@ -8,9 +8,7 @@
     "z": 3.0
    },
    "state": 1,
-   "runtime_id": {
-    "actor_runtime_id": 7
-   }
+   "runtime_id": 7
   },
   "bytes": "0000803f00000040000040400107"
  }

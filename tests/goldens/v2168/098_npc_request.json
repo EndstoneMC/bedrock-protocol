@@ -2,9 +2,7 @@
  {
   "id": "execute_action",
   "value": {
-   "id": {
-    "actor_runtime_id": 7
-   },
+   "id": 7,
    "type": 1,
    "actions": "/say hi",
    "action_index": 2,

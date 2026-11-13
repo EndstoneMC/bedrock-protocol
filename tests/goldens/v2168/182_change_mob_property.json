@@ -2,9 +2,7 @@
  {
   "id": "every_component_value_set",
   "value": {
-   "actor_id": {
-    "actor_unique_id": -5
-   },
+   "actor_id": -5,
    "prop_name": "minecraft:has_nectar",
    "bool_component_val": true,
    "string_component_val": "variant_b",

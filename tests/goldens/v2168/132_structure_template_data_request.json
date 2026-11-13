@@ -23,9 +23,7 @@
      "y": 0,
      "z": 1
     },
-    "last_touched_by_player": {
-     "actor_unique_id": 300
-    },
+    "last_touched_by_player": 300,
     "rotation": 1,
     "mirror": 2,
     "animation_mode": 2,

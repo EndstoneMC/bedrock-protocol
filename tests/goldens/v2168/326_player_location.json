@@ -2,9 +2,7 @@
  {
   "id": "coordinates_location_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "location": {
     "type": 0,
     "pos": {
@@ -19,9 +17,7 @@
  {
   "id": "hidden_location_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "location": {
     "type": 1
    }

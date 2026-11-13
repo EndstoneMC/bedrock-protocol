@@ -155,9 +155,7 @@
     "transaction": {
      "actions": []
     },
-    "runtime_id": {
-     "actor_runtime_id": 7
-    },
+    "runtime_id": 7,
     "action_type": 1,
     "slot": 2,
     "item": {

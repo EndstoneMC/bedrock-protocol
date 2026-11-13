@@ -2,14 +2,10 @@
  {
   "id": "dolphin_boost_effect",
   "value": {
-   "runtime_id": {
-    "actor_runtime_id": 7
-   },
+   "runtime_id": 7,
    "effect_type": 1,
    "effect_duration": 40,
-   "tick": {
-    "input_tick": 300
-   }
+   "tick": 300
   },
   "bytes": "070250ac02"
  }

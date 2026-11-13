@@ -8,17 +8,13 @@
      "scoreboard_id": {
       "raw_id": 1
      },
-     "player_id": {
-      "actor_unique_id": 7
-     }
+     "player_id": 7
     },
     {
      "scoreboard_id": {
       "raw_id": 2
      },
-     "player_id": {
-      "actor_unique_id": 8
-     }
+     "player_id": 8
     }
    ]
   },

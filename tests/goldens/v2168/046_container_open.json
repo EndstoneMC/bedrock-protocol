@@ -9,9 +9,7 @@
     "y": 70,
     "z": -3
    },
-   "entity_unique_id": {
-    "actor_unique_id": 300
-   }
+   "entity_unique_id": 300
   },
   "bytes": "010c028c0105d804"
  }

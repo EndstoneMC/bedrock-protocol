@@ -2,10 +2,7 @@
  {
   "id": "player_skin_update",
   "value": {
-   "uuid": {
-    "most_significant_bits": 11414527567928507278,
-    "least_significant_bits": 12639855797402783935
-   },
+   "uuid": "9e688c58-a548-3b8e-af69-c9e1005ad0bf",
    "skin": {
     "id": "sid",
     "play_fab_id": "pfid",
@@ -38,17 +35,12 @@
     "cape_id": "cape",
     "full_id": "full",
     "arm_size_type": 1,
-    "skin_color": {
-     "color": 67305985
-    },
+    "skin_color": 67305985,
     "persona_pieces": [
      {
       "piece_id": "p1",
       "piece_type": 1,
-      "pack_id": {
-       "most_significant_bits": 6171409270389290377,
-       "least_significant_bits": 12259094118239690561
-      },
+      "pack_id": "55a54008-ad1b-3589-aa21-0d2629c1df41",
       "is_default_piece": true,
       "product_id": "prod"
      }
@@ -57,20 +49,7 @@
      {
       "key": "skeleton",
       "value": {
-       "colors": [
-        {
-         "color": 1
-        },
-        {
-         "color": 2
-        },
-        {
-         "color": 3
-        },
-        {
-         "color": 4
-        }
-       ]
+       "colors": [1, 2, 3, 4]
       }
      }
     ],

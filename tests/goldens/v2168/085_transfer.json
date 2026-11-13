@@ -15,10 +15,7 @@
    "destination_port": 19132,
    "reload_world": true,
    "gatherings_configuration": {
-    "experience_id": {
-     "most_significant_bits": 72623859790382856,
-     "least_significant_bits": 651345242494996240
-    },
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
     "experience_name": "exp",
     "creator_id": "creator"
    }
@@ -32,21 +29,12 @@
    "destination_port": 19132,
    "reload_world": true,
    "gatherings_configuration": {
-    "experience_id": {
-     "most_significant_bits": 72623859790382856,
-     "least_significant_bits": 651345242494996240
-    },
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
     "experience_name": "exp",
-    "experience_world_id": {
-     "most_significant_bits": 1230066625199609624,
-     "least_significant_bits": 1808788007904223008
-    },
+    "experience_world_id": "11121314-1516-1718-191a-1b1c1d1e1f20",
     "experience_world_name": "world",
     "creator_id": "creator",
-    "target_id": {
-     "most_significant_bits": 2387509390608836392,
-     "least_significant_bits": 2966230773313449776
-    },
+    "target_id": "21222324-2526-2728-292a-2b2c2d2e2f30",
     "mpsas_scenario_id": "scenario",
     "server_id": "server"
    }

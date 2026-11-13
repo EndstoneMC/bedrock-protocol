@@ -2,9 +2,7 @@
  {
   "id": "one_client_pixel",
   "value": {
-   "map_id": {
-    "actor_unique_id": -5
-   },
+   "map_id": -5,
    "client_pixels": [
     {
      "pixel": 16909060,

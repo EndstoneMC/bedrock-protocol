@@ -22,9 +22,7 @@
     "y": 5,
     "z": 6
    },
-   "dimension_type": {
-    "value": 1
-   },
+   "dimension_type": 1,
    "min_engine_version": "1.21.0"
   },
   "bytes": "070a00080d6d696e6563726166743a666f670673706f6f6b79000f656e6473746f6e653a766f6c756d6508696e7374616e6365020406080a0c0206312e32312e30"

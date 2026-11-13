@@ -2,10 +2,7 @@
  {
   "id": "float_setting_value",
   "value": {
-   "pack_id": {
-    "most_significant_bits": 1229782938533638963,
-    "least_significant_bits": 4919150517987661141
-   },
+   "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
    "setting_value": 1.5
   },
@@ -14,10 +11,7 @@
  {
   "id": "bool_setting_value",
   "value": {
-   "pack_id": {
-    "most_significant_bits": 1229782938533638963,
-    "least_significant_bits": 4919150517987661141
-   },
+   "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
    "setting_value": true
   },
@@ -26,10 +20,7 @@
  {
   "id": "string_setting_value",
   "value": {
-   "pack_id": {
-    "most_significant_bits": 1229782938533638963,
-    "least_significant_bits": 4919150517987661141
-   },
+   "pack_id": "11111111-2222-3333-4444-555555555555",
    "setting_name": "volume",
    "setting_value": "ab"
   },

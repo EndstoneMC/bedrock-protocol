@@ -2,9 +2,7 @@
  {
   "id": "motion_on_ground",
   "value": {
-   "runtime_id": {
-    "actor_runtime_id": 300
-   },
+   "runtime_id": 300,
    "motion": {
     "x": 0.5,
     "y": -1.25,

@@ -3,9 +3,7 @@
   "id": "swing_with_swing_source",
   "value": {
    "action": 1,
-   "runtime_id": {
-    "actor_runtime_id": 300
-   },
+   "runtime_id": 300,
    "data": 1.5,
    "swing_source": "attack"
   },
@@ -15,9 +13,7 @@
   "id": "critical_hit_no_swing_source",
   "value": {
    "action": 4,
-   "runtime_id": {
-    "actor_runtime_id": 7
-   },
+   "runtime_id": 7,
    "data": 0.5
   },
   "bytes": "04070000003f00"

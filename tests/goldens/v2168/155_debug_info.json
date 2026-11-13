@@ -2,9 +2,7 @@
  {
   "id": "negative_actor_id",
   "value": {
-   "actor_id": {
-    "actor_unique_id": -300
-   },
+   "actor_id": -300,
    "data": "lag spike"
   },
   "bytes": "d704096c6167207370696b65"

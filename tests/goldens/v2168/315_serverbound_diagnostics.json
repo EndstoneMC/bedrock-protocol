@@ -2,43 +2,47 @@
  {
   "id": "every_diagnostic_list_populated",
   "value": {
-   "avg_fps": 60.0,
-   "avg_server_sim_tick_time_ms": 1.0,
-   "avg_client_sim_tick_time_ms": 2.0,
-   "avg_begin_frame_time_ms": 3.0,
-   "avg_input_time_ms": 4.0,
-   "avg_render_time_ms": 5.0,
-   "avg_end_frame_time_ms": 6.0,
-   "avg_remainder_time_percent": 7.0,
-   "avg_unaccounted_time_percent": 8.0,
-   "category_counters": [
-    {
-     "category": 54,
-     "current_bytes": 1024
-    }
-   ],
-   "entity_timings": [
-    {
-     "display_name": "Zombie",
-     "entity": "minecraft:zombie",
-     "time_in_ns": 500,
-     "percent_of_total": 50
-    }
-   ],
-   "system_timings": [
-    {
-     "display_name": "Physics",
-     "system_index": 3,
-     "time_in_ns": 250,
-     "percent_of_total": 25
-    }
-   ],
-   "system_categories": [
-    {
-     "category_name": "Movement",
-     "system_index": 3
-    }
-   ],
+   "telemetry": {
+    "avg_fps": 60.0,
+    "avg_server_sim_tick_time_ms": 1.0,
+    "avg_client_sim_tick_time_ms": 2.0,
+    "avg_begin_frame_time_ms": 3.0,
+    "avg_input_time_ms": 4.0,
+    "avg_render_time_ms": 5.0,
+    "avg_end_frame_time_ms": 6.0,
+    "avg_remainder_time_percent": 7.0,
+    "avg_unaccounted_time_percent": 8.0,
+    "category_counters": [
+     {
+      "category": 54,
+      "current_bytes": 1024
+     }
+    ]
+   },
+   "entity_system_diagnostics": {
+    "entity_timings": [
+     {
+      "display_name": "Zombie",
+      "entity": "minecraft:zombie",
+      "time_in_ns": 500,
+      "percent_of_total": 50
+     }
+    ],
+    "system_timings": [
+     {
+      "display_name": "Physics",
+      "system_index": 3,
+      "time_in_ns": 250,
+      "percent_of_total": 25
+     }
+    ],
+    "system_categories": [
+     {
+      "category_name": "Movement",
+      "system_index": 3
+     }
+    ]
+   },
    "whisker_data": [
     {
      "label": "Frame",
@@ -54,37 +58,41 @@
  {
   "id": "empty_whiskers_and_no_system_categories",
   "value": {
-   "avg_fps": 60.0,
-   "avg_server_sim_tick_time_ms": 1.0,
-   "avg_client_sim_tick_time_ms": 2.0,
-   "avg_begin_frame_time_ms": 3.0,
-   "avg_input_time_ms": 4.0,
-   "avg_render_time_ms": 5.0,
-   "avg_end_frame_time_ms": 6.0,
-   "avg_remainder_time_percent": 7.0,
-   "avg_unaccounted_time_percent": 8.0,
-   "category_counters": [
-    {
-     "category": 54,
-     "current_bytes": 1024
-    }
-   ],
-   "entity_timings": [
-    {
-     "display_name": "Zombie",
-     "entity": "minecraft:zombie",
-     "time_in_ns": 500,
-     "percent_of_total": 50
-    }
-   ],
-   "system_timings": [
-    {
-     "display_name": "Physics",
-     "system_index": 3,
-     "time_in_ns": 250,
-     "percent_of_total": 25
-    }
-   ],
+   "telemetry": {
+    "avg_fps": 60.0,
+    "avg_server_sim_tick_time_ms": 1.0,
+    "avg_client_sim_tick_time_ms": 2.0,
+    "avg_begin_frame_time_ms": 3.0,
+    "avg_input_time_ms": 4.0,
+    "avg_render_time_ms": 5.0,
+    "avg_end_frame_time_ms": 6.0,
+    "avg_remainder_time_percent": 7.0,
+    "avg_unaccounted_time_percent": 8.0,
+    "category_counters": [
+     {
+      "category": 54,
+      "current_bytes": 1024
+     }
+    ]
+   },
+   "entity_system_diagnostics": {
+    "entity_timings": [
+     {
+      "display_name": "Zombie",
+      "entity": "minecraft:zombie",
+      "time_in_ns": 500,
+      "percent_of_total": 50
+     }
+    ],
+    "system_timings": [
+     {
+      "display_name": "Physics",
+      "system_index": 3,
+      "time_in_ns": 250,
+      "percent_of_total": 25
+     }
+    ]
+   },
    "whisker_data": []
   },
   "bytes": "000070420000803f0000004000004040000080400000a0400000c0400000e040000000410136000400000000000001065a6f6d626965106d696e6563726166743a7a6f6d626965f401000000000000320107506879736963730300000000000000fa00000000000000190000"

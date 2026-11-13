@@ -18,9 +18,7 @@
      "objective_name": "obj",
      "score_value": 5,
      "player_id": {
-      "actor_unique_id": {
-       "actor_unique_id": 9
-      }
+      "actor_unique_id": 9
      }
     },
     {
@@ -30,9 +28,7 @@
      },
      "objective_name": "obj",
      "score_value": 6,
-     "entity_id": {
-      "actor_unique_id": 11
-     }
+     "entity_id": 11
     },
     {
      "action": "changefakeplayer",

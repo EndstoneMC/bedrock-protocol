@@ -2,9 +2,7 @@
  {
   "id": "credits_finished",
   "value": {
-   "player_id": {
-    "actor_runtime_id": 300
-   },
+   "player_id": 300,
    "credits_state": 1
   },
   "bytes": "ac0202"

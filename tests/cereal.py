@@ -406,6 +406,7 @@ class RapidJSONSchemaWriter(SchemaWriter):
 
 
 NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
+ESCAPED_UUID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 ESCAPED_BYTES = re.compile(r"(\\x[0-9a-f]{2})*")
 TAG_KINDS = {
     1: "ByteTag",
@@ -427,7 +428,6 @@ class DslShape(enum.Enum):
     FLATTEN = enum.auto()
     GROUP = enum.auto()
     PAIRS = enum.auto()
-    BARE = enum.auto()
     MEMBER_ONLY = enum.auto()
     ARRAY_OF_MEMBERS = enum.auto()
 
@@ -444,20 +444,28 @@ class CaseForm:
         ("CameraAimAssistCategoryPriorities", "blocks"): (DslShape.PAIRS, KeyKind.OTHER),
         ("CameraAimAssistPresetDefinition", "item_settings"): (DslShape.PAIRS, KeyKind.OTHER),
         ("VoxelShapesPacket", "name_map"): (DslShape.PAIRS, KeyKind.HASHED_STRING),
-        ("SpawnSettings", "dimension"): (DslShape.BARE, None),
         ("DimensionDefinitionGroup", None): (DslShape.MEMBER_ONLY, None),
         ("EffectDuration", None): (DslShape.MEMBER_ONLY, None),
         ("MoveActorAbsoluteData.Header", None): (DslShape.MEMBER_ONLY, None),
         ("Color255RGBA", None): (DslShape.ARRAY_OF_MEMBERS, None),
     }
-    WRAPPER_KEYS: ClassVar = {
-        "ActorUniqueID": "actor_unique_id",
-        "ActorRuntimeID": "actor_runtime_id",
-        "PlayerInputTick": "input_tick",
-        "DimensionType": "value",
-        "Color": "color",
-    }
     PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}
+
+    @classmethod
+    def matches(cls, case, bds):
+        """Whether BDS's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
+        if isinstance(case, dict) and isinstance(bds, dict):
+            return len(case) == len(bds) and all(
+                cls.matches(a, b) for a, b in zip(case.values(), bds.values(), strict=True)
+            )
+        if isinstance(case, list) and isinstance(bds, list):
+            return len(case) == len(bds) and all(cls.matches(a, b) for a, b in zip(case, bds, strict=True))
+        if isinstance(case, str) and isinstance(bds, dict) and len(bds) == 2 and ESCAPED_UUID.fullmatch(case):
+            most, least = bds.values()
+            return uuid.UUID(case).int == most << 64 | least
+        if isinstance(bds, dict) and not isinstance(case, dict | list):
+            return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
+        return case == bds
 
     @staticmethod
     def escaped_bytes(raw):
@@ -1321,25 +1329,6 @@ class GenericCompositeSchema(BasicSchema):
         writer.close()
 
 
-class WrapperSchema(GenericCompositeSchema):
-    """BDS's one-member struct around a value that the DSL holds bare."""
-
-    def __init__(self, key, inner):
-        super().__init__(int, [MemberDescriptor(key, inner, ("value",))])
-
-    @override
-    def create(self):
-        return SimpleNamespace(value=0)
-
-    @override
-    def view(self, value):
-        return SimpleNamespace(value=value)
-
-    @override
-    def finish(self, owner):
-        return owner.value
-
-
 class UUIDHalvesSchema(GenericCompositeSchema):
     """mce::UUID as BDS reflects it: the big-endian halves of the 128-bit value."""
 
@@ -1420,6 +1409,7 @@ class ReflectionCtx:
     def __init__(self, protocol, mapped):
         self.protocol = protocol
         self.mapped = mapped
+        self.shapes = {} if mapped else CaseForm.SHAPES
         self.module = importlib.import_module(f"bedrock_protocol.v{protocol}")
         self.composites = {}
 
@@ -1432,7 +1422,7 @@ class ReflectionCtx:
     def composite(self, family):
         if family not in self.composites:
             name = qualified_name(family)
-            kind, _ = CaseForm.SHAPES.get((name, None), (None, None))
+            kind, _ = self.shapes.get((name, None), (None, None))
             cls = reduce(getattr, name.split("."), self.module)
             self.composites[family] = schema = COMPOSITES.get(kind, GenericCompositeSchema)(cls, [])
             schema.members = self.members(family)
@@ -1444,7 +1434,7 @@ class ReflectionCtx:
         for field in self.shape(family).fields:
             if field.name.startswith("_") and field.name not in MARKER_EXCEPTIONS:
                 continue
-            kind, argument = CaseForm.SHAPES.get((name, field.name), (None, None))
+            kind, argument = self.shapes.get((name, field.name), (None, None))
             attribute = f"{field.name}_" if keyword.iskeyword(field.name) else field.name
             if kind is DslShape.FLATTEN:
                 for each in self.members(field.type.struct):
@@ -1471,8 +1461,6 @@ class ReflectionCtx:
                 constant, node = self.shape(enum).numbers[name], EnumRef(enum)
             case Literal(value=constant):
                 node = Primitive("str" if isinstance(constant, str) else "bool")
-        if kind is DslShape.BARE:
-            node = AliasRef(node.alias, node.alias.primitive.name)
         schema = self.schema(node, argument if kind is DslShape.PAIRS else None)
         schema = OptionalSchema(schema) if optional else schema
         member = MemberDescriptor(field.name, schema, (attribute,), self.traits(node), not optional)
@@ -1511,13 +1499,9 @@ class ReflectionCtx:
             case Primitive(name=name, wire=wire):
                 return IntegerSchema(name, wire)
             case AliasRef(alias=alias, wire=wire):
-                integer = IntegerSchema(alias.primitive.name, wire)
-                key = CaseForm.WRAPPER_KEYS.get(alias.name)
-                return integer if wire or key is None else WrapperSchema(key, integer)
-            case BuiltinRef(builtin=builtin, wire="str") if builtin.name == "UUID":
-                return UUIDSchema()
-            case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
-                return UUIDHalvesSchema()
+                return IntegerSchema(alias.primitive.name, wire)
+            case BuiltinRef(builtin=builtin, wire=wire) if builtin.name == "UUID":
+                return UUIDSchema() if wire == "str" or self.mapped else UUIDHalvesSchema()
             case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
                 return self.case(CompoundTagSchema(builtin.name == "CompoundTag"), CompoundTagCase)
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":

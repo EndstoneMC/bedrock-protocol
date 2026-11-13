@@ -3,9 +3,7 @@
   "id": "molang_variables_present",
   "value": {
    "vanilla_dimension_id": 2,
-   "actor_id": {
-    "actor_unique_id": -1
-   },
+   "actor_id": -1,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -20,9 +18,7 @@
   "id": "molang_variables_absent",
   "value": {
    "vanilla_dimension_id": 1,
-   "actor_id": {
-    "actor_unique_id": 12345
-   },
+   "actor_id": 12345,
    "pos": {
     "x": 0.0,
     "y": 0.0,

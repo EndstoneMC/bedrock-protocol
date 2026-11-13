@@ -2,12 +2,8 @@
  {
   "id": "one_actor_data_item",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "actor_type": "minecraft:pig",
    "pos": {
     "x": 1.0,
@@ -60,12 +56,8 @@
    },
    "links": [
     {
-     "a": {
-      "actor_unique_id": 1
-     },
-     "b": {
-      "actor_unique_id": 2
-     },
+     "a": 1,
+     "b": 2,
      "type": 1,
      "immediate": true,
      "passenger_initiated": false,
@@ -78,12 +70,8 @@
  {
   "id": "one_of_each_actor_data_arm",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "actor_type": "minecraft:pig",
    "pos": {
     "x": 1.0,
@@ -211,12 +199,8 @@
    },
    "links": [
     {
-     "a": {
-      "actor_unique_id": 1
-     },
-     "b": {
-      "actor_unique_id": 2
-     },
+     "a": 1,
+     "b": 2,
      "type": 1,
      "immediate": true,
      "passenger_initiated": false,

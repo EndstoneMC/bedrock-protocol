@@ -2,9 +2,7 @@
  {
   "id": "negative_unique_id",
   "value": {
-   "entity_id": {
-    "actor_unique_id": -8589934592
-   }
+   "entity_id": -8589934592
   },
   "bytes": "ffffffff3f"
  }

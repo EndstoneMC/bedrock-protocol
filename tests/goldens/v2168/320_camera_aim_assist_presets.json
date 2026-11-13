@@ -6,18 +6,12 @@
     {
      "name": "cat",
      "priorities": {
-      "entities": [
-       {
-        "key": "minecraft:cow",
-        "value": 10
-       }
-      ],
-      "blocks": [
-       {
-        "key": "minecraft:stone",
-        "value": 1
-       }
-      ],
+      "entities": {
+       "minecraft:cow": 10
+      },
+      "blocks": {
+       "minecraft:stone": 1
+      },
       "block_tags": {},
       "entity_type_families": {},
       "entity_default": 5
@@ -34,12 +28,9 @@
       "entity_type_family_exclusion_list": []
      },
      "liquid_targeting_list": ["minecraft:water"],
-     "item_settings": [
-      {
-       "key": "minecraft:bow",
-       "value": "cat"
-      }
-     ],
+     "item_settings": {
+      "minecraft:bow": "cat"
+     },
      "default_item_settings": "cat"
     }
    ],
@@ -54,8 +45,8 @@
     {
      "name": "cat",
      "priorities": {
-      "entities": [],
-      "blocks": [],
+      "entities": {},
+      "blocks": {},
       "block_tags": {
        "wood": 20
       },
@@ -76,7 +67,7 @@
       "entity_type_family_exclusion_list": ["mob"]
      },
      "liquid_targeting_list": [],
-     "item_settings": [],
+     "item_settings": {},
      "hand_settings": "cat"
     }
    ],

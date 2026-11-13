@@ -2,9 +2,7 @@
  {
   "id": "teleport_with_cause",
   "value": {
-   "player_id": {
-    "actor_runtime_id": 2
-   },
+   "player_id": 2,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -17,25 +15,19 @@
    "y_head_rot": 6.0,
    "reset_position": 2,
    "on_ground": true,
-   "riding_id": {
-    "actor_runtime_id": 5
-   },
+   "riding_id": 5,
    "teleport_data": {
     "cause": 3,
     "source_entity_type": 42
    },
-   "tick": {
-    "input_tick": 100
-   }
+   "tick": 100
   },
   "bytes": "020000803f0000004000004040000080400000a0400000c04002010501030000002a00000064"
  },
  {
   "id": "normal_without_teleport_data",
   "value": {
-   "player_id": {
-    "actor_runtime_id": 2
-   },
+   "player_id": 2,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -48,12 +40,8 @@
    "y_head_rot": 6.0,
    "reset_position": 0,
    "on_ground": true,
-   "riding_id": {
-    "actor_runtime_id": 5
-   },
-   "tick": {
-    "input_tick": 100
-   }
+   "riding_id": 5,
+   "tick": 100
   },
   "bytes": "020000803f0000004000004040000080400000a0400000c0400001050064"
  }

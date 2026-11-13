@@ -5,13 +5,8 @@
    "entries": [
     {
      "action": 0,
-     "uuid": {
-      "most_significant_bits": 0,
-      "least_significant_bits": 1
-     },
-     "id": {
-      "actor_unique_id": 7
-     },
+     "uuid": "00000000-0000-0000-0000-000000000001",
+     "id": 7,
      "name": "Steve",
      "xuid": "2535410000000001",
      "platform_online_id": "pcid",
@@ -37,9 +32,7 @@
       "cape_id": "cid",
       "full_id": "fid",
       "arm_size_type": 1,
-      "skin_color": {
-       "color": 16909060
-      },
+      "skin_color": 16909060,
       "persona_pieces": [],
       "piece_tint_colors": [],
       "is_premium": true,
@@ -53,16 +46,11 @@
      "is_teacher": true,
      "is_host": true,
      "is_sub_client": true,
-     "color": {
-      "color": 84281096
-     }
+     "color": 84281096
     },
     {
      "action": 1,
-     "uuid": {
-      "most_significant_bits": 0,
-      "least_significant_bits": 2
-     }
+     "uuid": "00000000-0000-0000-0000-000000000002"
     }
    ]
   },
@@ -74,13 +62,8 @@
    "entries": [
     {
      "action": 0,
-     "uuid": {
-      "most_significant_bits": 0,
-      "least_significant_bits": 1
-     },
-     "id": {
-      "actor_unique_id": 7
-     },
+     "uuid": "00000000-0000-0000-0000-000000000001",
+     "id": 7,
      "name": "Steve",
      "xuid": "2535410000000001",
      "platform_online_id": "pcid",
@@ -117,17 +100,12 @@
       "cape_id": "cid",
       "full_id": "fid",
       "arm_size_type": 1,
-      "skin_color": {
-       "color": 16909060
-      },
+      "skin_color": 16909060,
       "persona_pieces": [
        {
         "piece_id": "pid",
         "piece_type": 14,
-        "pack_id": {
-         "most_significant_bits": 0,
-         "least_significant_bits": 3
-        },
+        "pack_id": "00000000-0000-0000-0000-000000000003",
         "is_default_piece": true,
         "product_id": "prod"
        }
@@ -136,20 +114,7 @@
        {
         "key": "hair",
         "value": {
-         "colors": [
-          {
-           "color": 16909060
-          },
-          {
-           "color": 84281096
-          },
-          {
-           "color": 16909061
-          },
-          {
-           "color": 84281097
-          }
-         ]
+         "colors": [16909060, 84281096, 16909061, 84281097]
         }
        }
       ],
@@ -164,9 +129,7 @@
      "is_teacher": true,
      "is_host": true,
      "is_sub_client": true,
-     "color": {
-      "color": 84281096
-     }
+     "color": 84281096
     }
    ]
   },

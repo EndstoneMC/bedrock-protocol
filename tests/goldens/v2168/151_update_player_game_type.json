@@ -3,12 +3,8 @@
   "id": "adventure_for_target_player",
   "value": {
    "player_game_type": 2,
-   "target_player": {
-    "actor_unique_id": 7
-   },
-   "tick": {
-    "input_tick": 200
-   }
+   "target_player": 7,
+   "tick": 200
   },
   "bytes": "040ec801"
  }

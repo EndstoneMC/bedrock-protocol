@@ -2,9 +2,7 @@
  {
   "id": "clear_override_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "property_index": 2,
    "update": {
     "update_type": "clearoverrides"
@@ -15,9 +13,7 @@
  {
   "id": "int_override_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "property_index": 2,
    "update": {
     "update_type": "setintoverride",
@@ -29,9 +25,7 @@
  {
   "id": "float_override_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "property_index": 2,
    "update": {
     "update_type": "setfloatoverride",
@@ -43,9 +37,7 @@
  {
   "id": "remove_override_arm",
   "value": {
-   "id": {
-    "actor_unique_id": 7
-   },
+   "id": 7,
    "property_index": 2,
    "update": {
     "update_type": "removeoverride"

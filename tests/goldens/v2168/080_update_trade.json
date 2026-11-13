@@ -6,12 +6,8 @@
    "type": 15,
    "size": 3,
    "trader_tier": 2,
-   "entity_unique_id": {
-    "actor_unique_id": 42
-   },
-   "last_trading_player": {
-    "actor_unique_id": 7
-   },
+   "entity_unique_id": 42,
+   "last_trading_player": 7,
    "display_name": "entity.villager.farmer",
    "use_new_trade_screen": true,
    "using_economy_trade": true,

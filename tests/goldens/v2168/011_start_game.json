@@ -2,12 +2,8 @@
  {
   "id": "no_experiments_no_join_info",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "entity_game_type": 1,
    "pos": {
     "x": 1.0,
@@ -297,10 +293,7 @@
    "server_version": "1.26.40",
    "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": {
-    "most_significant_bits": 7378697629770156168,
-    "least_significant_bits": 11067877559239704576
-   },
+   "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
@@ -318,12 +311,8 @@
  {
   "id": "gametest_toggle_with_block_property",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "entity_game_type": 1,
    "pos": {
     "x": 1.0,
@@ -628,10 +617,7 @@
    "server_version": "1.26.40",
    "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": {
-    "most_significant_bits": 7378697629770156168,
-    "least_significant_bits": 11067877559239704576
-   },
+   "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
@@ -639,21 +625,12 @@
    },
    "server_configuration_join_info": {
     "gatherings_configuration": {
-     "experience_id": {
-      "most_significant_bits": 72623859790382856,
-      "least_significant_bits": 651345242494996240
-     },
+     "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
      "experience_name": "exp",
-     "experience_world_id": {
-      "most_significant_bits": 1230066625199609624,
-      "least_significant_bits": 1808788007904223008
-     },
+     "experience_world_id": "11121314-1516-1718-191a-1b1c1d1e1f20",
      "experience_world_name": "world",
      "creator_id": "creator",
-     "target_id": {
-      "most_significant_bits": 2387509390608836392,
-      "least_significant_bits": 2966230773313449776
-     },
+     "target_id": "21222324-2526-2728-292a-2b2c2d2e2f30",
      "mpsas_scenario_id": "scenario",
      "server_id": "server"
     },
@@ -677,12 +654,8 @@
  {
   "id": "full_gatherings_join_info",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "entity_game_type": 1,
    "pos": {
     "x": 1.0,
@@ -972,10 +945,7 @@
    "server_version": "1.26.40",
    "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": {
-    "most_significant_bits": 7378697629770156168,
-    "least_significant_bits": 11067877559239704576
-   },
+   "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {
@@ -983,10 +953,7 @@
    },
    "server_configuration_join_info": {
     "gatherings_configuration": {
-     "experience_id": {
-      "most_significant_bits": 72623859790382856,
-      "least_significant_bits": 651345242494996240
-     },
+     "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
      "experience_name": "exp",
      "creator_id": "creator"
     },
@@ -1004,12 +971,8 @@
  {
   "id": "empty_join_info_configurations",
   "value": {
-   "entity_id": {
-    "actor_unique_id": 1
-   },
-   "runtime_id": {
-    "actor_runtime_id": 2
-   },
+   "entity_id": 1,
+   "runtime_id": 2,
    "entity_game_type": 1,
    "pos": {
     "x": 1.0,
@@ -1299,10 +1262,7 @@
    "server_version": "1.26.40",
    "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
-   "world_template_id": {
-    "most_significant_bits": 7378697629770156168,
-    "least_significant_bits": 11067877559239704576
-   },
+   "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
    "block_network_ids_are_hashes": true,
    "network_permissions": {

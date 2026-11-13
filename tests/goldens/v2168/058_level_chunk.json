@@ -6,9 +6,7 @@
     "x": 2,
     "z": 3
    },
-   "dimension_id": {
-    "value": 0
-   },
+   "dimension_id": 0,
    "sub_chunks_count": 5,
    "cache_enabled": false,
    "cache_metadata": [],
@@ -23,9 +21,7 @@
     "x": 2,
     "z": 3
    },
-   "dimension_id": {
-    "value": 1
-   },
+   "dimension_id": 1,
    "sub_chunks_count": 3,
    "client_request_sub_chunk_limit": 7,
    "cache_enabled": true,

@@ -2,9 +2,7 @@
  {
   "id": "nether_with_loading_screen_respawn",
   "value": {
-   "dimension_id": {
-    "value": 2
-   },
+   "dimension_id": 2,
    "pos": {
     "x": 1.0,
     "y": 2.0,
@@ -18,9 +16,7 @@
  {
   "id": "overworld_without_loading_screen",
   "value": {
-   "dimension_id": {
-    "value": 1
-   },
+   "dimension_id": 1,
    "pos": {
     "x": -1.0,
     "y": 64.5,

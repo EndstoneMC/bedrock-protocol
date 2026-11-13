@@ -7,10 +7,7 @@
    "has_scripts": true,
    "force_disable_vibrant_visuals": true,
    "world_template_id_and_version": {
-    "id": {
-     "most_significant_bits": 4822678189205111,
-     "least_significant_bits": 9843086184167632639
-    },
+    "id": "00112233-4455-6677-8899-aabbccddeeff",
     "version": {
      "version": "1.2.3"
     }
@@ -18,10 +15,7 @@
    "resource_packs": [
     {
      "pack_id_version": {
-      "id": {
-       "most_significant_bits": 723685415333072913,
-       "least_significant_bits": 1302406798037686297
-      },
+      "id": "0a0b0c0d-0e0f-1011-1213-141516171819",
       "version": {
        "version": "2.0.0"
       }
