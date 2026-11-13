@@ -5,7 +5,7 @@
    "skin": {
     "id": "sid",
     "play_fab_id": "pfid",
-    "resource_patch": "patch",
+    "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}",
     "skin_image": {
      "width": 1,
      "height": 1,
@@ -20,7 +20,7 @@
       },
       "type": "FACE",
       "frames": 1.0,
-      "animation_expression": "LINEAR"
+      "animation_expression": "BLINKING"
      }
     ],
     "cape_image": {
@@ -28,9 +28,9 @@
      "height": 1,
      "image_bytes": "05060708"
     },
-    "geometry_data": "geo",
+    "geometry_data": "{}",
     "geometry_data_min_engine_version": "gev",
-    "animation_data": "anim",
+    "animation_data": "[]",
     "cape_id": "cape",
     "full_id": "full",
     "arm_size_type": "WIDE",
@@ -55,8 +55,8 @@
      }
     },
     "is_premium": true,
-    "is_persona": false,
-    "is_persona_cape_on_classic_skin": false,
+    "is_persona": true,
+    "is_persona_cape_on_classic_skin": true,
     "is_primary_user": true,
     "overrides_player_appearance": true,
     "is_trusted_skin": "FALSE",
@@ -65,6 +65,6 @@
    "localized_new_skin_name": "new",
    "localized_old_skin_name": "old"
   },
-  "bytes": "8e3b48a5588c689ebfd05a00e1c969af0373696404706669640570617463680100000001000000040102030401010000000100000004090a0b0c010000803f00010000000100000004050607080367656f0367657604616e696d04636170650466756c6c0101020304010270310100000089351bad0840a55541dfc129260d21aa010470726f640108736b656c65746f6e0100000002000000030000000400000001000001010566616c73650468617368036e6577036f6c64"
+  "bytes": "8e3b48a5588c689ebfd05a00e1c969af037369640470666964257b2267656f6d65747279223a7b2264656661756c74223a2267656f6d657472792e61227d7d0100000001000000040102030401010000000100000004090a0b0c010000803f0101000000010000000405060708027b7d03676576025b5d04636170650466756c6c0101020304010270310100000089351bad0840a55541dfc129260d21aa010470726f640108736b656c65746f6e0100000002000000030000000400000001010101010566616c73650468617368036e6577036f6c64"
  }
 ]
