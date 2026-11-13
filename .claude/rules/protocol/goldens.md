@@ -40,6 +40,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists.
 - Give a recipe ingredient's descriptor only `name`, `tags` or `item_tag`, and an `item_tag` only a registered item carries.
+- Use only `query.any_tag` and `query.all_tags` in the `tag_expression` of a Molang descriptor inside `PlayerAuthInputPacket.item_stack_request`.
 - Fill `AvailableActorIdentifiersPacket`'s tag with an `idlist` ListTag of actor entries, each `bid` as `minecraft:` when it has no other id.
 - Sort a `CompoundTag`'s keys, as BDS's `std::map` holds them.
 - Give a data store compound one key and hold several values in a list: BDS writes the keys of a compound in an order of its own, and a list keeps its order.
