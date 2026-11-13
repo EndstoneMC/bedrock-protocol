@@ -27,5 +27,169 @@
    }
   },
   "bytes": "020377657402010474656d700000010b616c7068615f626c656e6400010000001400000007696e5f717561640200000001"
+ },
+ {
+  "value": {
+   "data": {
+    "UpdateAttributeLayersData": {
+     "attribute_layers": [
+      {
+       "name": "rain",
+       "noise_name": "gusts",
+       "dimension_id": 0,
+       "settings": {
+        "priority": 5,
+        "weight": 0.5,
+        "enabled": true,
+        "transitions_paused": false
+       },
+       "attributes": [
+        {
+         "name": "a",
+         "from_attribute": {
+          "BoolAttributeData": {
+           "value": true,
+           "operation": "XOR"
+          }
+         },
+         "attribute": {
+          "FloatAttributeData": {
+           "value": 0.75,
+           "operation": "ADD",
+           "constraint_min_value": 0.5,
+           "constraint_max_value": 2.5
+          }
+         },
+         "to_attribute": {
+          "ColorAttributeData": {
+           "value": {
+            "r": 10,
+            "g": 20,
+            "b": 30,
+            "a": 255
+           },
+           "operation": "MULTIPLY"
+          }
+         },
+         "current_transition_ticks": 3,
+         "total_transition_ticks": 40,
+         "easing": "OUT_QUAD",
+         "local_transition_ticks": 5,
+         "noise_transition": false
+        },
+        {
+         "name": "b",
+         "from_attribute": {
+          "FloatAttributeData": {
+           "value": 1.25,
+           "operation": "MAXIMUM",
+           "constraint_min_value": null,
+           "constraint_max_value": null
+          }
+         },
+         "attribute": {
+          "ColorAttributeData": {
+           "value": {
+            "r": 10,
+            "g": 20,
+            "b": 30,
+            "a": 255
+           },
+           "operation": "MULTIPLY"
+          }
+         },
+         "to_attribute": {
+          "BoolAttributeData": {
+           "value": true,
+           "operation": "XOR"
+          }
+         },
+         "current_transition_ticks": 3,
+         "total_transition_ticks": 40,
+         "easing": "OUT_QUAD",
+         "local_transition_ticks": 5,
+         "noise_transition": false
+        },
+        {
+         "name": "c",
+         "from_attribute": {
+          "ColorAttributeData": {
+           "value": {
+            "r": 10,
+            "g": 20,
+            "b": 30,
+            "a": 255
+           },
+           "operation": "MULTIPLY"
+          }
+         },
+         "attribute": {
+          "BoolAttributeData": {
+           "value": true,
+           "operation": "XOR"
+          }
+         },
+         "to_attribute": {
+          "FloatAttributeData": {
+           "value": 0.75,
+           "operation": "ADD",
+           "constraint_min_value": 0.5,
+           "constraint_max_value": 2.5
+          }
+         },
+         "current_transition_ticks": 3,
+         "total_transition_ticks": 40,
+         "easing": "OUT_QUAD",
+         "local_transition_ticks": 5,
+         "noise_transition": false
+        }
+       ]
+      },
+      {
+       "name": "fog",
+       "noise_name": null,
+       "dimension_id": 2,
+       "settings": {
+        "priority": -3,
+        "weight": 1.5,
+        "enabled": false,
+        "transitions_paused": true
+       },
+       "attributes": []
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0002047261696e0105677573747300050000000000003f010003016101000103786f72010000403f03616464010000003f010000204001020a000000140000001e000000ff000000086d756c7469706c790300000028000000086f75745f717561640500000000016201010000a03f076d6178696d756d0000020a000000140000001e000000ff000000086d756c7469706c7901000103786f720300000028000000086f75745f717561640500000000016301020a000000140000001e000000ff000000086d756c7469706c79000103786f7201010000403f03616464010000003f01000020400300000028000000086f75745f71756164050000000003666f670004fdffffff0000c03f000100"
+ },
+ {
+  "value": {
+   "data": {
+    "UpdateAttributeLayerSettingsData": {
+     "layer_name": "rain",
+     "layer_dimension_id": 0,
+     "attribute_layer_settings": {
+      "priority": 5,
+      "weight": 0.5,
+      "enabled": true,
+      "transitions_paused": false
+     }
+    }
+   }
+  },
+  "bytes": "01047261696e00050000000000003f0100"
+ },
+ {
+  "value": {
+   "data": {
+    "RemoveEnvironmentAttributesData": {
+     "layer_name": "rain",
+     "layer_dimension_id": 1,
+     "attributes": ["a"]
+    }
+   }
+  },
+  "bytes": "03047261696e02010161"
  }
 ]
