@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_sub_chunk_offset",
   "value": {
    "dimension_type": 0,
    "sub_chunk_pos_offsets": [
