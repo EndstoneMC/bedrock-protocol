@@ -1,5 +1,6 @@
 [
  {
+  "id": "shared_uri_resource",
   "value": {
    "edu_shared_uri_resource": {
     "button_name": "btn",
