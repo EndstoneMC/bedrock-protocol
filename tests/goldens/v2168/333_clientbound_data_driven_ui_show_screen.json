@@ -9,18 +9,18 @@
  },
  {
   "value": {
-   "screen_id": "",
+   "screen_id": "s",
    "form_id": 1,
    "data_instance_id": null
   },
-  "bytes": "000100000000"
+  "bytes": "01730100000000"
  },
  {
   "value": {
-   "screen_id": "",
+   "screen_id": "t",
    "form_id": 4294967295,
    "data_instance_id": 4294967295
   },
-  "bytes": "00ffffffff01ffffffff"
+  "bytes": "0174ffffffff01ffffffff"
  }
 ]
