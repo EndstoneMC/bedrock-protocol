@@ -1,5 +1,6 @@
 [
  {
+  "id": "every_component_value_set",
   "value": {
    "actor_id": -5,
    "prop_name": "minecraft:has_nectar",
