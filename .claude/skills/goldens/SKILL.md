@@ -5,7 +5,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 
 # Goldens handbook
 
-`.claude/rules/protocol/goldens.md` decides what a case holds and when it freezes. This skill produces the BDS evidence it asks for. Run every step from the repository root: the comparison with `compare.py` beside this file, every other step as an inline command. Save no other script.
+`.claude/rules/protocol/goldens.md` decides what a case holds and when it freezes. This skill produces the BDS evidence it asks for. Run every step from the repository root: the comparison with `compare.py` beside this file, every other step as an inline command. Save no other script anywhere, the scratchpad included.
 
 `<protocol>` names the case folder `tests/goldens/v<protocol>`, and `<version>` is the BDS build that goldens.md says checks it.
 
