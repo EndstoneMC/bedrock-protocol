@@ -85,5 +85,233 @@
    }
   },
   "bytes": "0e2c0015"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "INTERACTION",
+   "use_player_id": false,
+   "event_data": {
+    "Interaction": {
+     "interacted_entity_id": 9,
+     "interaction_type": "TAMING",
+     "interacted_entity_type": 4,
+     "interacted_entity_variant": 2,
+     "interacted_entity_color": 3
+    }
+   }
+  },
+  "bytes": "0e0200011202080403"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "PORTAL_CREATED",
+   "use_player_id": false,
+   "event_data": {
+    "PortalCreated": {
+     "built_in_dimension": 1
+    }
+   }
+  },
+  "bytes": "0e04000202"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "PORTAL_USED",
+   "use_player_id": false,
+   "event_data": {
+    "PortalUsed": {
+     "from_dimension": 0,
+     "to_dimension": 1
+    }
+   }
+  },
+  "bytes": "0e0600030002"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "PLAYER_DIED",
+   "use_player_id": false,
+   "event_data": {
+    "PlayerDied": {
+     "killer_id": 5,
+     "killer_variant": 2,
+     "damage_source": 3,
+     "in_raid": true
+    }
+   }
+  },
+  "bytes": "0e0c00060a040601"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "BOSS_KILLED",
+   "use_player_id": false,
+   "event_data": {
+    "BossKilled": {
+     "boss_unique_id": 12,
+     "party_size": 3,
+     "boss_type": 4
+    }
+   }
+  },
+  "bytes": "0e0e0007180608"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "SLASH_COMMAND",
+   "use_player_id": false,
+   "event_data": {
+    "SlashCommand": {
+     "success_count": 2,
+     "error_count": 1,
+     "command_name": "give",
+     "error_list": "err"
+    }
+   }
+  },
+  "bytes": "0e1600080402046769766503657272"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "MOB_BORN",
+   "use_player_id": false,
+   "event_data": {
+    "MobBorn": {
+     "baby_type": 5,
+     "baby_variant": 2,
+     "baby_color": 3
+    }
+   }
+  },
+  "bytes": "0e1a00090a0403"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "COMPOSTER_USED",
+   "use_player_id": false,
+   "event_data": {
+    "ComposterUsed": {
+     "interaction_type": "COMPOST_ITEM_PLACED",
+     "item_id": 306
+    }
+   }
+  },
+  "bytes": "0e20000b133201"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "BELL_USED",
+   "use_player_id": false,
+   "event_data": {
+    "BellUsed": {
+     "item_id": 307
+    }
+   }
+  },
+  "bytes": "0e22000c3301"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "ACTOR_DEFINITION",
+   "use_player_id": false,
+   "event_data": {
+    "ActorDefinition": {
+     "event_name": "event"
+    }
+   }
+  },
+  "bytes": "0e24000d056576656e74"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "RAID_UPDATE",
+   "use_player_id": false,
+   "event_data": {
+    "RaidUpdate": {
+     "current_wave": 2,
+     "total_waves": 5,
+     "success": true
+    }
+   }
+  },
+  "bytes": "0e26000e040a01"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "TARGET_BLOCK_HIT",
+   "use_player_id": false,
+   "event_data": {
+    "TargetBlockHit": {
+     "redstone_level": 7
+    }
+   }
+  },
+  "bytes": "0e2e000f0e"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "PIGLIN_BARTER",
+   "use_player_id": false,
+   "event_data": {
+    "PiglinBarter": {
+     "item_id": 306,
+     "was_targeting_bartering_player": true
+    }
+   }
+  },
+  "bytes": "0e300010e40401"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "PLAYER_WAXED_OR_UNWAXED_COPPER",
+   "use_player_id": false,
+   "event_data": {
+    "PlayerWaxedOrUnwaxedCopper": {
+     "block_id": 5
+    }
+   }
+  },
+  "bytes": "0e3200110a"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "CODE_BUILDER_RUNTIME_ACTION",
+   "use_player_id": false,
+   "event_data": {
+    "CodeBuilderRuntimeAction": {
+     "runtime_action": "run"
+    }
+   }
+  },
+  "bytes": "0e3400120372756e"
+ },
+ {
+  "value": {
+   "player_unique_id": 7,
+   "type": "CODE_BUILDER_SCOREBOARD",
+   "use_player_id": false,
+   "event_data": {
+    "CodeBuilderScoreboard": {
+     "objective_name": "obj",
+     "score": 9
+    }
+   }
+  },
+  "bytes": "0e360013036f626a12"
  }
 ]
