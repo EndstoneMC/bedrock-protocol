@@ -1,5 +1,6 @@
 [
  {
+  "id": "negative_new_map_id",
   "value": {
    "original_map_id": 300,
    "new_map_id": -5
