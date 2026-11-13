@@ -120,5 +120,149 @@
    }
   },
   "bytes": "2a0000000000000006060606060606"
+ },
+ {
+  "value": {
+   "server_sound_handle": {
+    "value": 42
+   },
+   "stop": {
+    "Stop": {}
+   },
+   "set_volume": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "set_pitch": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "fade": {
+    "Pause": {}
+   },
+   "seek_to": {
+    "Stop": {}
+   },
+   "pause": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "resume": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   }
+  },
+  "bytes": "2a0000000000000000020000c03f04000020400500020000c03f0400002040"
+ },
+ {
+  "value": {
+   "server_sound_handle": {
+    "value": 42
+   },
+   "stop": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "set_volume": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "set_pitch": {
+    "Pause": {}
+   },
+   "fade": {
+    "Stop": {}
+   },
+   "seek_to": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "pause": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "resume": {
+    "Pause": {}
+   }
+  },
+  "bytes": "2a00000000000000020000c03f04000020400500020000c03f040000204005"
+ },
+ {
+  "value": {
+   "server_sound_handle": {
+    "value": 42
+   },
+   "stop": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "set_volume": {
+    "Pause": {}
+   },
+   "set_pitch": {
+    "Stop": {}
+   },
+   "fade": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "seek_to": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "pause": {
+    "Pause": {}
+   },
+   "resume": {
+    "Stop": {}
+   }
+  },
+  "bytes": "2a0000000000000004000020400500020000c03f04000020400500"
+ },
+ {
+  "value": {
+   "server_sound_handle": {
+    "value": 42
+   },
+   "stop": {
+    "Pause": {}
+   },
+   "set_volume": {
+    "Stop": {}
+   },
+   "set_pitch": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   },
+   "fade": {
+    "SeekTo": {
+     "seconds": 2.5
+    }
+   },
+   "seek_to": {
+    "Pause": {}
+   },
+   "pause": {
+    "Stop": {}
+   },
+   "resume": {
+    "SetPitch": {
+     "pitch": 1.5
+    }
+   }
+  },
+  "bytes": "2a000000000000000500020000c03f04000020400500020000c03f"
  }
 ]
