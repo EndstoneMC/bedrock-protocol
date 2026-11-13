@@ -1,5 +1,6 @@
 [
  {
+  "id": "horse_container",
   "value": {
    "container_id": "FIRST",
    "type": "HORSE",
