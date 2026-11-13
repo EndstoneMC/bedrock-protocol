@@ -203,6 +203,6 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | --- | --- |
 | `llvm-cov`: `no coverage data found` | The install stripped the coverage mapping. Reinstall with `-C install.strip=false`. |
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
-| A `default.profraw` appears in the working directory | The extension was imported without `LLVM_PROFILE_FILE`. Delete the file. |
+| A `default.profraw` appears in the repository root | A pytest ran from the coverage venv without `LLVM_PROFILE_FILE`. Delete the file and rerun with `LLVM_PROFILE_FILE` pointing into the profile directory. |
 | `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |
 | `$D.missed` lists `switch (<variant>.index()) {` false | The serializer's hidden default, which only a valueless variant takes. No input reaches it: report it as a generator defect. |
