@@ -55,7 +55,7 @@
     {
      "enum_value_symbol": 0,
      "enum_symbol": 0,
-     "constraints": "\u0001"
+     "constraints": "\\x01"
     }
    ]
   },

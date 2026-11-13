@@ -2,16 +2,11 @@
  {
   "id": "int_property_tag",
   "value": {
-   "property_data": [
-    10,
-    "",
-    3,
-    "id",
-    {
-     "data": 7
-    },
-    0
-   ]
+   "property_data": {
+    "id": {
+     "IntTag": 7
+    }
+   }
   },
   "bytes": "0a00030269640e00"
  }

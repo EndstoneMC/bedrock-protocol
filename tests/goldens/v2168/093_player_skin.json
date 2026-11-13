@@ -13,14 +13,14 @@
     "skin_image": {
      "width": 1,
      "height": 1,
-     "image_bytes": "\u0001\u0002\u0003\u0004"
+     "image_bytes": "\\x01\\x02\\x03\\x04"
     },
     "skin_animated_images": [
      {
       "image": {
        "width": 1,
        "height": 1,
-       "image_bytes": "\t\n\u000b\f"
+       "image_bytes": "\\x09\\x0a\\x0b\\x0c"
       },
       "type": 1,
       "frames": 1.0,
@@ -30,7 +30,7 @@
     "cape_image": {
      "width": 1,
      "height": 1,
-     "image_bytes": "\u0005\u0006\u0007\b"
+     "image_bytes": "\\x05\\x06\\x07\\x08"
     },
     "geometry_data": "{}\n",
     "geometry_data_min_engine_version": "1.0.0",

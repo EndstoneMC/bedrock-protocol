@@ -11,9 +11,9 @@
       "serialized_layer": 1,
       "abilities_set": 1536,
       "ability_values": 512,
-      "fly_speed": 0.05000000074505806,
+      "fly_speed": 0.05,
       "vertical_fly_speed": 1.0,
-      "walk_speed": 0.10000000149011612
+      "walk_speed": 0.1
      }
     ]
    }

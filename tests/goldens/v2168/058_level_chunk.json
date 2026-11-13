@@ -12,7 +12,7 @@
    "sub_chunks_count": 5,
    "cache_enabled": false,
    "cache_metadata": [],
-   "serialized_chunk": "\u00aa\u00bb"
+   "serialized_chunk": "\\xaa\\xbb"
   },
   "bytes": "0406000500000002aabb"
  },
@@ -34,7 +34,7 @@
      "blob_id": 1
     }
    ],
-   "serialized_chunk": "\u00aa"
+   "serialized_chunk": "\\xaa"
   },
   "bytes": "04060203010e0101010000000000000001aa"
  }

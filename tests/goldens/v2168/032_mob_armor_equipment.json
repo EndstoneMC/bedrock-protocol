@@ -11,7 +11,7 @@
     "aux_value": 3,
     "net_id_variant": 9,
     "block_runtime_id": 0,
-    "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
    },
    "torso": {
     "id": 0,

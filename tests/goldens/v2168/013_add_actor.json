@@ -161,26 +161,25 @@
       "id": 118,
       "payload": {
        "type": 5,
-       "value": [
-        10,
-        "",
-        9,
-        "Hitboxes",
-        10,
-        1,
-        5,
-        "Height",
-        {
-         "data": 1.5
-        },
-        5,
-        "Width",
-        {
-         "data": 0.75
-        },
-        0,
-        0
-       ]
+       "value": {
+        "Hitboxes": {
+         "ListTag": {
+          "type": 10,
+          "tags": [
+           {
+            "CompoundTag": {
+             "Height": {
+              "FloatTag": 1.5
+             },
+             "Width": {
+              "FloatTag": 0.75
+             }
+            }
+           }
+          ]
+         }
+        }
+       }
       }
      },
      {

@@ -22,7 +22,7 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -58,7 +58,7 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -127,7 +127,7 @@
       "stack_size": 4,
       "aux_value": 0,
       "block_runtime_id": 1752181952,
-      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
      },
      "tag": "smithing_table",
      "net_id": {
@@ -228,7 +228,7 @@
        "stack_size": 1,
        "aux_value": 0,
        "block_runtime_id": 0,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -272,7 +272,7 @@
        "stack_size": 1,
        "aux_value": 0,
        "block_runtime_id": 0,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -339,7 +339,7 @@
        "stack_size": 3,
        "aux_value": 0,
        "block_runtime_id": 1014956299,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -398,7 +398,7 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {
@@ -431,7 +431,7 @@
        "stack_size": 4,
        "aux_value": 0,
        "block_runtime_id": 1752181952,
-       "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
       }
      ],
      "uuid": {

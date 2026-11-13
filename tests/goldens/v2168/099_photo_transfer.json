@@ -3,7 +3,7 @@
   "id": "book_photo_item",
   "value": {
    "photo_name": "1e2d3c4b-5a69-4f70-8b81-9c92adb3cec4.jpeg",
-   "photo_data": "\u00ff\u00d8\u00ff\u00e0",
+   "photo_data": "\\xff\\xd8\\xff\\xe0",
    "book_id": "book-7",
    "type": 1,
    "source_type": 2,

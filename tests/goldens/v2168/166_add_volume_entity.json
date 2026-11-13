@@ -5,16 +5,11 @@
    "entity_net_id": {
     "raw_id": 7
    },
-   "components": [
-    10,
-    "",
-    8,
-    "minecraft:fog",
-    {
-     "data": "spooky"
-    },
-    0
-   ],
+   "components": {
+    "minecraft:fog": {
+     "StringTag": "spooky"
+    }
+   },
    "json_identifier": "endstone:volume",
    "instance_name": "instance",
    "min_bounds": {

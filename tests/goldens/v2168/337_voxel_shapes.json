@@ -8,7 +8,7 @@
       "x_size": 2,
       "y_size": 1,
       "z_size": 3,
-      "storage": "*"
+      "storage": "\\x2a"
      },
      "x_coords": [0.0, 0.5, 1.0],
      "y_coords": [0.0, 1.0],

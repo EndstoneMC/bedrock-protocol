@@ -8,16 +8,11 @@
    "entity_unique_id": {
     "actor_unique_id": 7
    },
-   "data": [
-    10,
-    "",
-    3,
-    "Size",
-    {
-     "data": 2
-    },
-    0
-   ]
+   "data": {
+    "Size": {
+     "IntTag": 2
+    }
+   }
   },
   "bytes": "010c040e0a00030453697a650400"
  }

@@ -27,7 +27,7 @@
         "aux_value": 0,
         "net_id_variant": 9,
         "block_runtime_id": 2150698529,
-        "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
        }
       }
      ]
@@ -45,7 +45,7 @@
    "legacy_set_item_slots": [
     {
      "container_enum": 6,
-     "slots": "\u0001\u0002"
+     "slots": "\\x01\\x02"
     }
    ],
    "variant_transaction": {
@@ -69,7 +69,7 @@
         "aux_value": 0,
         "net_id_variant": 9,
         "block_runtime_id": 2150698529,
-        "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
        }
       }
      ]
@@ -106,7 +106,7 @@
         "aux_value": 0,
         "net_id_variant": 9,
         "block_runtime_id": 2150698529,
-        "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
        }
       }
      ]
@@ -126,7 +126,7 @@
      "aux_value": 0,
      "net_id_variant": 9,
      "block_runtime_id": 2150698529,
-     "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
     },
     "from_pos": {
      "x": 1.0,
@@ -166,7 +166,7 @@
      "aux_value": 0,
      "net_id_variant": 9,
      "block_runtime_id": 2150698529,
-     "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
     },
     "from_pos": {
      "x": 1.0,
@@ -200,7 +200,7 @@
      "aux_value": 0,
      "net_id_variant": 9,
      "block_runtime_id": 2150698529,
-     "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
     },
     "from_pos": {
      "x": 1.0,

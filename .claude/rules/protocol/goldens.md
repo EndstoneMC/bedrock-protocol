@@ -16,6 +16,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
 - Write `value` exactly as `save` in `tests/cereal.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Keep a case's `value` readable by a person: BDS's cereal JSON shape with our field names, departing from it only where one named, deterministic mapping in `tests/cereal.py` turns it into BDS's form, or BDS's into it, for comparing.
+- Write a byte blob, and a `std::string` that is not valid UTF-8, as a string of lowercase `\xNN` escapes, one per byte, and read any case string made only of them back as those bytes.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
 - Land a case on origin only once a BDS run writes its bytes back unchanged.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.

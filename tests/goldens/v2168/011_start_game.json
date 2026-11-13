@@ -295,7 +295,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": [10, "", 0],
+   "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": {
     "most_significant_bits": 7378697629770156168,
@@ -616,22 +616,17 @@
    "block_properties": [
     {
      "name": "custom:block",
-     "tag": [
-      10,
-      "",
-      3,
-      "molangVersion",
-      {
-       "data": 12
-      },
-      0
-     ]
+     "tag": {
+      "molangVersion": {
+       "IntTag": 12
+      }
+     }
     }
    ],
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": [10, "", 0],
+   "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": {
     "most_significant_bits": 7378697629770156168,
@@ -975,7 +970,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": [10, "", 0],
+   "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": {
     "most_significant_bits": 7378697629770156168,
@@ -1302,7 +1297,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": [10, "", 0],
+   "player_property_data": {},
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": {
     "most_significant_bits": 7378697629770156168,

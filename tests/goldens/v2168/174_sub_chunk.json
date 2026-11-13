@@ -67,7 +67,7 @@
       "z": 1
      },
      "result": 1,
-     "serialized_sub_chunk": "\u00aa",
+     "serialized_sub_chunk": "\\xaa",
      "height_map_data": {
       "height_map_type": 0,
       "render_height_map_type": 1,

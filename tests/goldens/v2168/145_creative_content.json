@@ -11,7 +11,7 @@
       "stack_size": 1,
       "aux_value": 0,
       "block_runtime_id": 1921718966,
-      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
      }
     }
    ],
@@ -25,7 +25,7 @@
       "stack_size": 1,
       "aux_value": 0,
       "block_runtime_id": 1921718966,
-      "user_data_buffer": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
      },
      "group_index": 0
     }

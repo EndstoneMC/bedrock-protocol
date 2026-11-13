@@ -9,9 +9,10 @@ import struct
 import uuid
 from copy import copy
 from functools import cache, reduce
-from operator import or_
+from operator import methodcaller, or_
 from pathlib import Path
 from types import SimpleNamespace
+from typing import ClassVar, override
 
 from bedrock_protocol import nbt
 from bedrock_protocol_compiler.builder import build
@@ -51,10 +52,11 @@ class SchemaRWType(enum.IntFlag):
     OTHER = 4
 
 
-class ErrorCode(enum.IntEnum):
+class ResultCode(enum.IntEnum):
     UNRECOGNIZED_FIELD = 4
     ERROR = 8
     MISSING_REQUIRED_FIELD = 128
+    INVALID_DYNAMIC_VALUE = 256
     INVALID_ENUM_VALUE = 4096
 
 
@@ -62,6 +64,12 @@ class SerializationTraits(enum.IntFlag):
     NONE = 0
     COMPRESSION = 1
     ENUM_AS_VALUE = 4
+
+
+class KeyKind(enum.Enum):
+    STD_STRING = enum.auto()
+    HASHED_STRING = enum.auto()
+    OTHER = enum.auto()
 
 
 class LoadError(ValueError):
@@ -90,57 +98,63 @@ class SerializerContext:
 
 
 FLOAT_LIMIT = struct.unpack(">d", bytes.fromhex("47EFFFFFD586B834"))[0]
-NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
+MISSING = object()
 
 
-class CaseForm:
-    """The case spelling of what BDS prints outside JSON, which is one place to change."""
-
-    @classmethod
-    def number_out(cls, value):
-        if isinstance(value, float) and not math.isfinite(value):
-            return "NaN" if math.isnan(value) else "Infinity" if value > 0 else "-Infinity"
-        return value
-
-    @classmethod
-    def number_in(cls, value):
-        return NON_FINITE.get(value, value) if isinstance(value, str) else value
-
-    @staticmethod
-    def text(raw):
-        return raw.decode("latin-1")
-
-    @staticmethod
-    def raw(text):
-        try:
-            return text.encode("latin-1")
-        except UnicodeEncodeError:
-            return None
-
-    @classmethod
-    def stream(cls, tokens):
-        tokens = [
-            {key: cls.number_out(each) for key, each in token.items()} if isinstance(token, dict) else token
-            for token in tokens
-        ]
-        return tokens[0] if len(tokens) == 1 else tokens
-
-    @staticmethod
-    def tokens(node):
-        return node if isinstance(node, list) else [node]
+class TokenList(list):
+    """Values that a writer gathered into one member slot, which is how BDS prints a token stream."""
 
 
 class SchemaReader:
     def expected_type(self):
         raise NotImplementedError
 
+    def as_null(self):
+        raise NotImplementedError
+
     def as_bool(self):
+        raise NotImplementedError
+
+    def as_int8(self):
+        raise NotImplementedError
+
+    def as_uint8(self):
+        raise NotImplementedError
+
+    def as_int16(self):
+        raise NotImplementedError
+
+    def as_uint16(self):
+        raise NotImplementedError
+
+    def as_int32(self):
+        raise NotImplementedError
+
+    def as_uint32(self):
+        raise NotImplementedError
+
+    def as_int64(self):
+        raise NotImplementedError
+
+    def as_uint64(self):
+        raise NotImplementedError
+
+    def as_float(self):
+        raise NotImplementedError
+
+    def as_double(self):
         raise NotImplementedError
 
     def as_string(self):
         raise NotImplementedError
 
     def as_raw_bytes(self):
+        raise NotImplementedError
+
+    def additional_data_as_bool(self):
+        raise NotImplementedError
+
+    def additional_data_as_uint32(self):
         raise NotImplementedError
 
     def members(self):
@@ -161,23 +175,29 @@ class SchemaReader:
     def pop(self):
         raise NotImplementedError
 
-    def additional_data_as_bool(self):
-        raise NotImplementedError
 
-    def additional_data_as_uint32(self):
-        raise NotImplementedError
-
-
-class RapidJSONSchemaReader(SchemaReader):
-    """A reader over a parsed value, strict about numbers and exact about keys."""
+class StrictRapidJSONSchemaReader(SchemaReader):
+    """A reader over a parsed value: exact keys, strict numbers, and scalars read in turn from a token list."""
 
     def __init__(self, value):
-        self.stack = [[value, None]]
+        self.stack = [[value, 0]]
 
     @property
     def node(self):
         return self.stack[-1][0]
 
+    def scalar(self):
+        frame = self.stack[-1]
+        if not isinstance(frame[0], TokenList):
+            return frame[0]
+        frame[1] += 1
+        return frame[0][frame[1] - 1] if frame[1] <= len(frame[0]) else MISSING
+
+    def integer(self, low, high):
+        value = self.scalar()
+        return value if type(value) is int and low <= value < high else None
+
+    @override
     def expected_type(self):
         match self.node:
             case dict():
@@ -186,89 +206,110 @@ class RapidJSONSchemaReader(SchemaReader):
                 return SchemaRWType.ARRAY
         return SchemaRWType.OTHER
 
+    @override
     def as_null(self):
-        return True if self.node is None else None
+        return True if self.scalar() is None else None
 
+    @override
     def as_bool(self):
-        return self.node if type(self.node) is bool else None
+        value = self.scalar()
+        return value if type(value) is bool else None
 
-    def integer(self, low, high):
-        return self.node if type(self.node) is int and low <= self.node < high else None
-
+    @override
     def as_int8(self):
         return self.integer(-(1 << 7), 1 << 7)
 
+    @override
     def as_uint8(self):
         return self.integer(0, 1 << 8)
 
+    @override
     def as_int16(self):
         return self.integer(-(1 << 15), 1 << 15)
 
+    @override
     def as_uint16(self):
         return self.integer(0, 1 << 16)
 
+    @override
     def as_int32(self):
         return self.integer(-(1 << 31), 1 << 31)
 
+    @override
     def as_uint32(self):
         return self.integer(0, 1 << 32)
 
+    @override
     def as_int64(self):
         return self.integer(-(1 << 63), 1 << 63)
 
+    @override
     def as_uint64(self):
         return self.integer(0, 1 << 64)
 
+    @override
     def as_double(self):
-        node = CaseForm.number_in(self.node)
-        return float(node) if type(node) in (int, float) else None
+        value = self.scalar()
+        return float(value) if type(value) in (int, float) else None
 
+    @override
     def as_float(self):
         value = self.as_double()
-        return value if value is None or not math.isfinite(value) or abs(value) <= FLOAT_LIMIT else None
+        return value if value is None or abs(value) <= FLOAT_LIMIT else None
 
+    @override
     def as_string(self):
-        return self.node if isinstance(self.node, str) else None
+        value = self.scalar()
+        return value if isinstance(value, str) else None
 
+    @override
     def as_raw_bytes(self):
-        return CaseForm.raw(self.node) if isinstance(self.node, str) else None
+        value = self.as_string()
+        return None if value is None else value.encode("utf-8", "surrogateescape")
 
-    def as_tokens(self):
-        return CaseForm.tokens(self.node)
-
-    def members(self):
-        return len(self.node)
-
-    def length(self, hint):
-        return len(self.node)
-
-    def push_member(self, name):
-        if not isinstance(self.node, dict) or name not in self.node:
-            return False
-        self.stack.append([self.node[name], None])
-        return True
-
-    def push_next_member(self):
-        frame = self.stack[-1]
-        frame[1] = frame[1] or iter(frame[0])
-        key = next(frame[1], None)
-        if key is None:
-            frame[1] = None
-        else:
-            self.stack.append([frame[0][key], None])
-        return key
-
-    def push_element(self, index):
-        self.stack.append([self.node[index], None])
-
-    def pop(self):
-        self.stack.pop()
-
+    @override
     def additional_data_as_bool(self):
         return None
 
+    @override
     def additional_data_as_uint32(self):
         return None
+
+    @override
+    def members(self):
+        return len(self.node)
+
+    @override
+    def length(self, hint):
+        return len(self.node)
+
+    @override
+    def push_member(self, name):
+        frame = self.stack[-1]
+        node = frame[0]
+        if isinstance(node, TokenList):
+            node = self.scalar()
+        if not isinstance(node, dict) or name not in node:
+            return False
+        self.stack.append([node[name], 0])
+        return True
+
+    @override
+    def push_next_member(self):
+        frame = self.stack[-1]
+        keys = list(frame[0])
+        key = keys[frame[1] % len(keys)]
+        frame[1] += 1
+        self.stack.append([frame[0][key], 0])
+        return key
+
+    @override
+    def push_element(self, index):
+        self.stack.append([self.node[index], 0])
+
+    @override
+    def pop(self):
+        self.stack.pop()
 
 
 class SchemaWriter:
@@ -295,53 +336,215 @@ class SchemaWriter:
 
 
 class RapidJSONSchemaWriter(SchemaWriter):
-    """A writer that builds the value, giving a member a key only once a value follows."""
+    """A writer that builds the value, with a key only once a value follows and later values gathered into its slot."""
 
     def __init__(self):
         self.result = None
+        self.written = False
         self.stack = []
         self.pending = None
-        self.additional = []
 
     def place(self, value):
         if not self.stack:
-            self.result = value
-        elif isinstance(self.stack[-1], dict):
-            self.stack[-1][self.pending] = value
+            if not self.written:
+                self.result = value
+            elif isinstance(self.result, TokenList):
+                self.result.append(value)
+            else:
+                self.result = TokenList([self.result, value])
+            self.written = True
+            return
+        self.written = True
+        container, last = self.stack[-1]
+        if isinstance(container, list):
+            container.append(value)
+        elif self.pending is not None:
+            container[self.pending] = value
+            self.stack[-1][1] = self.pending
+            self.pending = None
+        elif isinstance(container[last], TokenList):
+            container[last].append(value)
         else:
-            self.stack[-1].append(value)
+            container[last] = TokenList([container[last], value])
 
+    @override
     def write(self, value):
-        if isinstance(value, bytes):
-            value = CaseForm.text(value)
-        self.place(CaseForm.number_out(value))
+        if isinstance(value, float) and not math.isfinite(value):
+            return False
+        self.place(value.decode("utf-8", "surrogateescape") if isinstance(value, bytes) else value)
+        return True
 
-    def write_tokens(self, tokens):
-        self.place(CaseForm.stream(tokens))
-
+    @override
     def write_additional_data(self, data):
-        self.additional.append(data)
+        return True
 
+    @override
     def push_member(self, name):
         self.pending = name
 
+    @override
     def pop_member(self):
         self.pending = None
 
     def open(self, container):
         self.place(container)
-        self.stack.append(container)
+        self.stack.append([container, None])
 
+    @override
     def open_object(self):
         self.open({})
         return SchemaRWType.OBJECT
 
+    @override
     def open_array(self, dynamic, size):
         self.open([])
         return SchemaRWType.ARRAY
 
+    @override
     def close(self):
         self.stack.pop()
+
+
+NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
+ESCAPED_BYTES = re.compile(r"(\\x[0-9a-f]{2})*")
+TAG_KINDS = {
+    1: "ByteTag",
+    2: "ShortTag",
+    3: "IntTag",
+    4: "Int64Tag",
+    5: "FloatTag",
+    6: "DoubleTag",
+    7: "ByteArrayTag",
+    8: "StringTag",
+    9: "ListTag",
+    10: "CompoundTag",
+    11: "IntArrayTag",
+}
+TAG_IDS = {kind: number for number, kind in TAG_KINDS.items()}
+
+
+class DslShape(enum.Enum):
+    FLATTEN = enum.auto()
+    GROUP = enum.auto()
+    PAIRS = enum.auto()
+    BARE = enum.auto()
+    MEMBER_ONLY = enum.auto()
+    ARRAY_OF_MEMBERS = enum.auto()
+
+
+class CaseForm:
+    """Where a golden's JSON departs from BDS's: each mapping is deterministic and goes both ways."""
+
+    SHAPES: ClassVar = {
+        ("ServerboundDiagnosticsPacket", "telemetry"): (DslShape.FLATTEN, None),
+        ("ServerboundDiagnosticsPacket", "entity_system_diagnostics"): (DslShape.FLATTEN, None),
+        ("DeathInfoPacket", "death_cause_attack_name"): (DslShape.GROUP, "death_cause_message"),
+        ("DeathInfoPacket", "death_cause_message_list"): (DslShape.GROUP, "death_cause_message"),
+        ("CameraAimAssistCategoryPriorities", "entities"): (DslShape.PAIRS, KeyKind.OTHER),
+        ("CameraAimAssistCategoryPriorities", "blocks"): (DslShape.PAIRS, KeyKind.OTHER),
+        ("CameraAimAssistPresetDefinition", "item_settings"): (DslShape.PAIRS, KeyKind.OTHER),
+        ("VoxelShapesPacket", "name_map"): (DslShape.PAIRS, KeyKind.HASHED_STRING),
+        ("SpawnSettings", "dimension"): (DslShape.BARE, None),
+        ("DimensionDefinitionGroup", None): (DslShape.MEMBER_ONLY, None),
+        ("EffectDuration", None): (DslShape.MEMBER_ONLY, None),
+        ("MoveActorAbsoluteData.Header", None): (DslShape.MEMBER_ONLY, None),
+        ("Color255RGBA", None): (DslShape.ARRAY_OF_MEMBERS, None),
+    }
+    WRAPPER_KEYS: ClassVar = {
+        "ActorUniqueID": "actor_unique_id",
+        "ActorRuntimeID": "actor_runtime_id",
+        "PlayerInputTick": "input_tick",
+        "DimensionType": "value",
+        "Color": "color",
+    }
+    PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}
+
+    @staticmethod
+    def escaped_bytes(raw):
+        return "".join(f"\\x{byte:02x}" for byte in raw)
+
+    @staticmethod
+    def raw_string(text):
+        pairs = re.findall(r"\\x(..)", text)
+        return bytes.fromhex("".join(pairs)).decode("utf-8", "surrogateescape")
+
+    @staticmethod
+    def shortest_float32(value):
+        packed = struct.pack("f", value)
+        return next(
+            each
+            for each in (float(f"{value:.{digits}g}") for digits in range(1, 10))
+            if struct.pack("f", each) == packed
+        )
+
+    @staticmethod
+    def widened_float32(value):
+        return struct.unpack("f", struct.pack("f", value))[0]
+
+    @staticmethod
+    def non_finite_name(value):
+        return "NaN" if math.isnan(value) else "Infinity" if value > 0 else "-Infinity"
+
+    @staticmethod
+    def varint_groups(value):
+        groups = [(value >> shift) & 0x7F for shift in range(0, max(value.bit_length(), 1), 7)]
+        return [group | 0x80 for group in groups[:-1]] + groups[-1:]
+
+    @staticmethod
+    def tokens(stream):
+        return iter(stream if isinstance(stream, list) else [stream])
+
+    @classmethod
+    def stream(cls, tokens):
+        return tokens[0] if len(tokens) == 1 else TokenList(tokens)
+
+    @classmethod
+    def nbt_payload(cls, number, tokens):
+        kind = TAG_KINDS[number]
+        match kind:
+            case "CompoundTag":
+                return {kind: cls.nbt_entries(tokens)}
+            case "ListTag":
+                element, count = next(tokens), next(tokens)
+                return {kind: {"type": element, "tags": [cls.nbt_payload(element, tokens) for _ in range(count)]}}
+            case "ByteArrayTag" | "IntArrayTag":
+                return {kind: [next(tokens) for _ in range(next(tokens))]}
+            case "FloatTag":
+                return {kind: cls.shortest_float32(next(tokens)["data"])}
+        return {kind: next(tokens)["data"]}
+
+    @classmethod
+    def nbt_entries(cls, tokens):
+        entries = {}
+        while (number := next(tokens)) != 0:
+            name = next(tokens)
+            entries[name] = cls.nbt_payload(number, tokens)
+        return entries
+
+    @classmethod
+    def nbt_tokens(cls, tag, tokens):
+        [(kind, payload)] = tag.items()
+        match kind:
+            case "CompoundTag":
+                cls.nbt_entry_tokens(payload, tokens)
+            case "ListTag":
+                tokens += [payload["type"], len(payload["tags"])]
+                for each in payload["tags"]:
+                    cls.nbt_tokens(each, tokens)
+            case "ByteArrayTag" | "IntArrayTag":
+                tokens += [len(payload), *payload]
+            case "FloatTag":
+                tokens.append({"data": cls.widened_float32(payload)})
+            case _:
+                tokens.append({"data": payload})
+
+    @classmethod
+    def nbt_entry_tokens(cls, entries, tokens):
+        for name, tag in entries.items():
+            [(kind, _)] = tag.items()
+            tokens += [TAG_IDS[kind], name]
+            cls.nbt_tokens(tag, tokens)
+        tokens.append(0)
 
 
 class BasicSchema:
@@ -367,12 +570,14 @@ class BasicSchema:
 class BoolSchema(BasicSchema):
     bound_type = bool
 
+    @override
     def do_load(self, reader, context, traits):
         value = reader.as_bool()
         if value is None:
-            context.log(ErrorCode.ERROR, "invalid numeric value")
+            context.log(ResultCode.ERROR, "invalid numeric value")
         return bool(value)
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(bool(value))
 
@@ -381,11 +586,21 @@ class IntegerSchema(BasicSchema):
     """An integer member, printed in the range of its wire type as BDS's member holds it."""
 
     bound_type = int
+    READS: ClassVar = {
+        "int8": methodcaller("as_int8"),
+        "uint8": methodcaller("as_uint8"),
+        "int16": methodcaller("as_int16"),
+        "uint16": methodcaller("as_uint16"),
+        "int32": methodcaller("as_int32"),
+        "uint32": methodcaller("as_uint32"),
+        "int64": methodcaller("as_int64"),
+        "uint64": methodcaller("as_uint64"),
+    }
 
     def __init__(self, declared, wire=None):
         self.declared = self.bounds(declared)
         self.wire = self.bounds(wire or declared)
-        self.reader_method = "as_" + (wire or declared).replace("varint", "int")
+        self.read = self.READS[(wire or declared).replace("varint", "int")]
 
     @staticmethod
     def bounds(name):
@@ -396,13 +611,15 @@ class IntegerSchema(BasicSchema):
     def fit(value, bounds):
         return (value - bounds.start) % (bounds.stop - bounds.start) + bounds.start
 
+    @override
     def do_load(self, reader, context, traits):
-        value = getattr(reader, self.reader_method)()
+        value = self.read(reader)
         if value is None:
-            context.log(ErrorCode.ERROR, "invalid numeric value")
+            context.log(ResultCode.ERROR, "invalid numeric value")
             value = 0
         return self.fit(value, self.declared)
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(self.fit(int(value), self.wire))
 
@@ -411,46 +628,53 @@ class FloatSchema(BasicSchema):
     bound_type = float
 
     def __init__(self, width):
-        self.reader_method = "as_float" if width == 32 else "as_double"
+        self.read = methodcaller("as_float" if width == 32 else "as_double")
 
+    @override
     def do_load(self, reader, context, traits):
-        value = getattr(reader, self.reader_method)()
+        value = self.read(reader)
         if value is None:
-            context.log(ErrorCode.ERROR, "invalid numeric value")
+            context.log(ResultCode.ERROR, "invalid numeric value")
             value = 0.0
         return value
 
+    @override
     def do_save(self, value, writer, context, traits):
-        writer.write(float(value))
+        if not writer.write(float(value)):
+            context.log(ResultCode.ERROR, "unexpected writer error while saving numeric value")
 
 
 class StringSchema(BasicSchema):
     bound_type = str
 
+    @override
     def do_load(self, reader, context, traits):
         value = reader.as_string()
         if value is None:
-            context.log(ErrorCode.ERROR, "invalid string")
+            context.log(ResultCode.ERROR, "invalid string")
         return value or ""
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(value)
 
 
 class BlobSchema(BasicSchema):
-    """BDS's std::vector<uint8_t>, bound as bytes or as a list of integers."""
+    """BDS's std::vector<uint8_t>, read and written as raw bytes."""
 
     def __init__(self, listed):
         self.bound_type = list if listed else bytes
         self.listed = listed
 
+    @override
     def do_load(self, reader, context, traits):
         value = reader.as_raw_bytes()
         if value is None:
-            context.log(ErrorCode.ERROR, "invalid string")
+            context.log(ResultCode.ERROR, "invalid blob: failed to parse input as binary data")
             value = b""
         return list(value) if self.listed else value
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(bytes(value))
 
@@ -458,53 +682,28 @@ class BlobSchema(BasicSchema):
 class UUIDSchema(BasicSchema):
     bound_type = uuid.UUID
 
+    @override
     def do_load(self, reader, context, traits):
-        text = reader.as_string()
         try:
-            return uuid.UUID(text)
-        except (AttributeError, TypeError, ValueError):
-            context.log(ErrorCode.ERROR, "invalid string")
+            return uuid.UUID(reader.as_string())
+        except (TypeError, ValueError):
+            context.log(ResultCode.ERROR, "invalid string")
             return uuid.UUID(int=0)
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(str(value))
-
-
-class DynamicValueSchema(BasicSchema):
-    def do_load(self, reader, context, traits):
-        for read in (reader.as_string, reader.as_bool, reader.as_int64, reader.as_double):
-            value = read()
-            if value is not None:
-                return value
-        if reader.expected_type() & SchemaRWType.ARRAY:
-            return [self.element(reader, context, index) for index in range(reader.length(-1))]
-        if reader.expected_type() & SchemaRWType.OBJECT:
-            values = {}
-            while (key := reader.push_next_member()) is not None:
-                values[key] = self.load(reader, context)
-                reader.pop()
-            return values
-        if not reader.as_null():
-            context.log(ErrorCode.ERROR, "invalid dynamic value")
-        return None
-
-    def element(self, reader, context, index):
-        reader.push_element(index)
-        value = self.load(reader, context)
-        reader.pop()
-        return value
-
-    def do_save(self, value, writer, context, traits):
-        writer.write(value)
 
 
 class NullTypeSchema(BasicSchema):
     bound_type = type(None)
 
+    @override
     def do_load(self, reader, context, traits):
         if not reader.as_null():
-            context.log(ErrorCode.ERROR, "expected null")
+            context.log(ResultCode.ERROR, 'Expected "null"')
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write(None)
 
@@ -521,23 +720,25 @@ class EnumSchema(BasicSchema):
             self.wire_names.setdefault(number, member.wire_name)
             self.numbers.setdefault(member.wire_name, number)
 
+    @override
     def do_load(self, reader, context, traits):
         if traits & SerializationTraits.ENUM_AS_VALUE:
             number = self.underlying.load(reader, context)
             if number not in self.wire_names:
-                context.log(ErrorCode.INVALID_ENUM_VALUE, f"{number}: invalid enum value")
+                context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: invalid enum value")
             return number
         name = reader.as_string()
         if name is None:
-            context.log(ErrorCode.ERROR, "invalid string")
+            context.log(ResultCode.ERROR, "invalid string")
         elif name.lower() not in self.numbers:
-            context.log(ErrorCode.INVALID_ENUM_VALUE, f"{name!r}: invalid enum value")
+            context.log(ResultCode.INVALID_ENUM_VALUE, f"{name!r}: invalid enum value")
         return self.numbers.get((name or "").lower(), 0)
 
+    @override
     def do_save(self, value, writer, context, traits):
         number = int(value)
         if number not in self.wire_names:
-            context.log(ErrorCode.INVALID_ENUM_VALUE, f"{number}: not bound")
+            context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: not bound")
         elif traits & SerializationTraits.ENUM_AS_VALUE:
             self.underlying.save(number, writer, context)
         else:
@@ -548,9 +749,13 @@ class OptionalSchema(BasicSchema):
     def __init__(self, element):
         self.element = element
 
+    @override
     def do_load(self, reader, context, traits):
+        if reader.additional_data_as_bool() is False:
+            return None
         return self.element.load(reader, context, traits)
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.write_additional_data(value is not None)
         if value is not None:
@@ -563,9 +768,10 @@ class VectorSchema(BasicSchema):
     def __init__(self, element):
         self.element = element
 
+    @override
     def do_load(self, reader, context, traits):
         if not reader.expected_type() & SchemaRWType.ARRAY:
-            context.log(ErrorCode.ERROR, "expected an array")
+            context.log(ResultCode.ERROR, "expected an array")
             return []
         values = []
         checkpoint = context.get_log_checkpoint()
@@ -577,6 +783,7 @@ class VectorSchema(BasicSchema):
             reader.pop()
         return values
 
+    @override
     def do_save(self, value, writer, context, traits):
         writer.open_array(True, len(value))
         for each in value:
@@ -591,55 +798,77 @@ class ArraySchema(VectorSchema):
         super().__init__(element)
         self.size = size
 
+    @override
     def do_load(self, reader, context, traits):
         if reader.expected_type() & SchemaRWType.ARRAY and reader.length(self.size) != self.size:
-            context.log(ErrorCode.ERROR, f"expected exactly {self.size} elements")
+            context.log(
+                ResultCode.ERROR, f"wrong number of elements in fixed size container, expected exactly {self.size}"
+            )
             return []
         return super().do_load(reader, context, traits)
 
+    @override
+    def do_save(self, value, writer, context, traits):
+        writer.open_array(False, self.size)
+        for each in value:
+            if context.has_error():
+                break
+            self.element.save(each, writer, context, traits)
+        writer.close()
+
 
 class MapSchema(BasicSchema):
-    """An object for a std::string key and key and value objects in an array for any other."""
+    """An object for a std::string key and key and value objects in an array for any other, both read."""
 
     bound_type = dict
 
-    def __init__(self, key, value, keyed_by_string):
+    def __init__(self, key, value, key_kind):
         self.key = key
         self.value = value
-        self.keyed_by_string = keyed_by_string
+        self.key_kind = key_kind
 
+    @override
     def do_load(self, reader, context, traits):
         values = {}
-        if self.keyed_by_string:
-            if not reader.expected_type() & SchemaRWType.OBJECT:
-                context.log(ErrorCode.ERROR, "expected an object")
-                return values
-            while (key := reader.push_next_member()) is not None:
-                values[key] = self.value.load(reader, context, traits)
+        expected = reader.expected_type()
+        checkpoint = context.get_log_checkpoint()
+        if expected & SchemaRWType.OBJECT:
+            for _ in range(reader.members()):
+                if context.has_error(checkpoint):
+                    break
+                key = reader.push_next_member()
+                if self.key_kind is KeyKind.OTHER:
+                    context.log(ResultCode.ERROR, "invalid key type: map keys must be strings or string-convertible")
+                else:
+                    values[key] = self.value.load(reader, context, traits)
                 reader.pop()
-            return values
-        if not reader.expected_type() & SchemaRWType.ARRAY:
-            context.log(ErrorCode.ERROR, "expected an array")
-            return values
-        for index in range(reader.length(-1)):
-            reader.push_element(index)
-            if reader.members() != 2 or not reader.push_member("key"):
-                context.log(ErrorCode.ERROR, "expected a key/value object")
+        elif expected & SchemaRWType.ARRAY:
+            for index in range(reader.length(-1)):
+                if context.has_error(checkpoint):
+                    break
+                reader.push_element(index)
+                if not reader.expected_type() & SchemaRWType.OBJECT or reader.members() != 2:
+                    context.log(ResultCode.ERROR, "expected a key/value object")
+                elif not reader.push_member("key"):
+                    context.log(ResultCode.ERROR, "invalid or missing 'key' member in key/value pair object")
+                else:
+                    key = self.key.load(reader, context, traits)
+                    reader.pop()
+                    if reader.push_member("value"):
+                        values[key] = self.value.load(reader, context, traits)
+                        reader.pop()
+                    else:
+                        context.log(ResultCode.ERROR, "invalid or missing 'value' member in key/value pair object")
                 reader.pop()
-                break
-            key = self.key.load(reader, context, traits)
-            reader.pop()
-            if not reader.push_member("value"):
-                context.log(ErrorCode.ERROR, "invalid or missing 'value' member")
-                reader.pop()
-                break
-            values[key] = self.value.load(reader, context, traits)
-            reader.pop()
-            reader.pop()
+        else:
+            context.log(
+                ResultCode.ERROR, "expected an array" if self.key_kind is KeyKind.OTHER else "expected an object"
+            )
         return values
 
+    @override
     def do_save(self, value, writer, context, traits):
-        if self.keyed_by_string:
+        if self.key_kind is KeyKind.STD_STRING:
             writer.open_object()
             for key, each in value.items():
                 writer.push_member(key)
@@ -666,7 +895,12 @@ class VariantSchema(BasicSchema):
     def __init__(self, arms):
         self.arms = arms
 
+    @override
     def do_load(self, reader, context, traits):
+        traits |= SerializationTraits.COMPRESSION
+        index = reader.additional_data_as_uint32()
+        if index is not None:
+            return self.arms[index].load(reader, context, traits)
         start = context.get_log_checkpoint()
         for arm in self.arms:
             attempt = context.get_log_checkpoint()
@@ -676,10 +910,58 @@ class VariantSchema(BasicSchema):
         context.clear_generations(start, attempt)
         return value
 
+    @override
     def do_save(self, value, writer, context, traits):
+        traits |= SerializationTraits.COMPRESSION
         index = next(index for index, arm in enumerate(self.arms) if type(value) is arm.bound_type)
         writer.write_additional_data(index)
         self.arms[index].save(value, writer, context, traits)
+
+
+class DynamicValueSchema(BasicSchema):
+    def __init__(self):
+        self.array = VectorSchema(self)
+        self.object = MapSchema(StringSchema(), self, KeyKind.STD_STRING)
+        self.integer = IntegerSchema("int64")
+        self.float = FloatSchema(64)
+        self.string = StringSchema()
+        self.boolean = BoolSchema()
+
+    @override
+    def do_load(self, reader, context, traits):
+        index = reader.additional_data_as_uint32()
+        expected = reader.expected_type()
+        if index is None and expected & SchemaRWType.OBJECT:
+            return self.object.load(reader, context, traits)
+        if index is None and expected & SchemaRWType.ARRAY:
+            return self.array.load(reader, context, traits)
+        for read in (reader.as_string, reader.as_bool, reader.as_int64, reader.as_double):
+            value = read()
+            if value is not None:
+                return value
+        if not reader.as_null():
+            context.log(ResultCode.INVALID_DYNAMIC_VALUE, "Invalid data: impossible to load into a DynamicValue")
+        return None
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        kinds = (type(None), bool, int, float, str, list, dict)
+        if type(value) not in kinds:
+            context.log(ResultCode.INVALID_DYNAMIC_VALUE, "Invalid data: impossible to save from a DynamicValue")
+            return
+        writer.write_additional_data(kinds.index(type(value)))
+        schemas = {
+            bool: self.boolean,
+            int: self.integer,
+            float: self.float,
+            str: self.string,
+            list: self.array,
+            dict: self.object,
+        }
+        if value is None:
+            writer.write(None)
+        else:
+            schemas[type(value)].save(value, writer, context, traits)
 
 
 class BitsetSchema(BasicSchema):
@@ -688,110 +970,266 @@ class BitsetSchema(BasicSchema):
     bound_type = int
 
     def __init__(self, width):
-        self.groups = -(-width // 7)
+        self.bits = -(-width // 7) * 7
+        self.uint8 = IntegerSchema("uint8")
 
+    @override
     def do_load(self, reader, context, traits):
-        value = 0
-        for index, token in enumerate(reader.as_tokens()):
-            if type(token) is not int or not 0 <= token < 256 or index >= self.groups:
-                context.log(ErrorCode.ERROR, "failed to read bitset byte")
-                break
-            value |= (token & 0x7F) << (7 * index)
-        return value
+        value, shift = 0, 0
+        while True:
+            checkpoint = context.get_log_checkpoint()
+            group = self.uint8.load(reader, context)
+            if context.has_error(checkpoint):
+                context.log(ResultCode.ERROR, "failed to read bitset byte")
+                return value
+            value |= (group & 0x7F) << shift
+            shift += 7
+            if not group & 0x80:
+                return value
+            if shift >= self.bits:
+                context.log(ResultCode.ERROR, "bitset read overflow")
+                return value
 
+    @override
     def do_save(self, value, writer, context, traits):
-        groups = [(value >> shift) & 0x7F for shift in range(0, max(value.bit_length(), 1), 7)]
-        writer.write_tokens([group | 0x80 for group in groups[:-1]] + groups[-1:])
-
-
-NBT_IDS = {
-    nbt.ByteTag: 1,
-    nbt.ShortTag: 2,
-    nbt.IntTag: 3,
-    nbt.Int64Tag: 4,
-    nbt.FloatTag: 5,
-    nbt.DoubleTag: 6,
-    nbt.ByteArrayTag: 7,
-    nbt.StringTag: 8,
-    nbt.ListTag: 9,
-    nbt.CompoundTag: 10,
-    nbt.IntArrayTag: 11,
-}
-NBT_CLASSES = {number: cls for cls, number in NBT_IDS.items()}
+        while True:
+            group, value = value & 0x7F, value >> 7
+            self.uint8.save(group | (0x80 if value else 0), writer, context)
+            if not value:
+                return
 
 
 class CompoundTagSchema(BasicSchema):
-    """A compound as BDS's token stream: an optional header, entries of type id, name and payload, then 0."""
+    """A compound as BDS writes it: an optional header, then type, name and payload per entry, then 0."""
 
     bound_type = nbt.CompoundTag
+    CLASSES: ClassVar = {
+        1: nbt.ByteTag,
+        2: nbt.ShortTag,
+        3: nbt.IntTag,
+        4: nbt.Int64Tag,
+        5: nbt.FloatTag,
+        6: nbt.DoubleTag,
+        7: nbt.ByteArrayTag,
+        8: nbt.StringTag,
+        9: nbt.ListTag,
+        10: nbt.CompoundTag,
+        11: nbt.IntArrayTag,
+    }
+    IDS: ClassVar = {cls: number for number, cls in CLASSES.items()}
 
     def __init__(self, header):
         self.header = header
+        self.uint8 = IntegerSchema("uint8")
+        self.count = IntegerSchema("int32")
+        self.string = StringSchema()
+        self.int32 = IntegerSchema("int32")
+        self.primitives = {
+            1: IntegerSchema("int8"),
+            2: IntegerSchema("int16"),
+            3: self.int32,
+            4: IntegerSchema("int64"),
+            5: FloatSchema(32),
+            6: FloatSchema(64),
+            8: self.string,
+        }
 
-    def entries(self, compound, tokens):
+    def save_entries(self, compound, writer, context):
         for name, tag in compound.items():
-            tokens += [NBT_IDS[type(tag)], name]
-            self.payload(tag, tokens)
-        tokens.append(0)
+            self.uint8.save(self.IDS[type(tag)], writer, context)
+            self.string.save(name, writer, context)
+            self.save_payload(tag, writer, context)
+        self.uint8.save(0, writer, context)
 
-    def payload(self, tag, tokens):
-        match tag:
-            case nbt.CompoundTag():
-                self.entries(tag, tokens)
-            case nbt.ListTag():
-                tokens += [int(tag.type), len(tag)]
-                for index in range(len(tag)):
-                    self.payload(tag[index], tokens)
-            case nbt.ByteArrayTag() | nbt.IntArrayTag():
-                tokens += [len(tag.value), *tag.value]
-            case _:
-                tokens.append({"data": tag.value})
+    def save_payload(self, tag, writer, context):
+        number = self.IDS[type(tag)]
+        if number == 10:
+            self.save_entries(tag, writer, context)
+        elif number == 9:
+            self.uint8.save(int(tag.type), writer, context)
+            self.count.save(len(tag), writer, context)
+            for index in range(len(tag)):
+                if self.IDS[type(tag[index])] != int(tag.type):
+                    context.log(ResultCode.ERROR, "Unexpected type")
+                else:
+                    self.save_payload(tag[index], writer, context)
+        elif number in (7, 11):
+            self.count.save(len(tag.value), writer, context)
+            for each in tag.value:
+                (self.uint8 if number == 7 else self.int32).save(each, writer, context)
+        else:
+            writer.open_object()
+            writer.push_member("data")
+            self.primitives[number].save(tag.value, writer, context)
+            writer.pop_member()
+            writer.close()
 
-    def read_entries(self, tokens):
+    def load_entries(self, reader, context):
         compound = nbt.CompoundTag()
-        while (number := next(tokens)) != 0:
-            name = next(tokens)
-            compound[name] = self.read_payload(number, tokens)
+        checkpoint = context.get_log_checkpoint()
+        while not context.has_error(checkpoint) and (number := self.uint8.load(reader, context)) != 0:
+            name = self.string.load(reader, context)
+            compound[name] = self.load_payload(number, reader, context)
         return compound
 
-    def read_payload(self, number, tokens):
-        cls = NBT_CLASSES[number]
-        if cls is nbt.CompoundTag:
-            return self.read_entries(tokens)
-        if cls is nbt.ListTag:
-            element, count = next(tokens), next(tokens)
-            return nbt.ListTag([self.read_payload(element, tokens) for _ in range(count)], element)
+    def load_payload(self, number, reader, context):
+        if number not in self.CLASSES:
+            context.log(ResultCode.ERROR, f"{number}: unknown tag type")
+            return nbt.ByteTag()
+        if number == 10:
+            return self.load_entries(reader, context)
+        if number == 9:
+            checkpoint = context.get_log_checkpoint()
+            element, count = self.uint8.load(reader, context), self.count.load(reader, context)
+            tags = [self.load_payload(element, reader, context) for _ in range(count)]
+            return nbt.ListTag() if context.has_error(checkpoint) else nbt.ListTag(tags, element)
         if number in (7, 11):
-            return cls([next(tokens) for _ in range(next(tokens))])
-        data = next(tokens)["data"]
-        return cls(CaseForm.number_in(data) if number in (5, 6) else data)
+            count = self.count.load(reader, context)
+            values = [(self.uint8 if number == 7 else self.int32).load(reader, context) for _ in range(count)]
+            return self.CLASSES[number](values)
+        if not reader.push_member("data"):
+            context.log(ResultCode.MISSING_REQUIRED_FIELD, "data: missing required field")
+            return self.CLASSES[number]()
+        value = self.primitives[number].load(reader, context)
+        reader.pop()
+        return self.CLASSES[number](value)
 
+    @override
     def do_load(self, reader, context, traits):
-        try:
-            tokens = iter(reader.as_tokens())
-            if self.header:
-                next(tokens), next(tokens)
-            return self.read_entries(tokens)
-        except (StopIteration, KeyError, TypeError, ValueError, OverflowError):
-            context.log(ErrorCode.ERROR, "invalid tag stream")
-            return nbt.CompoundTag()
+        if self.header:
+            self.uint8.load(reader, context)
+            self.string.load(reader, context)
+        return self.load_entries(reader, context)
 
+    @override
     def do_save(self, value, writer, context, traits):
-        tokens = [NBT_IDS[nbt.CompoundTag], ""] if self.header else []
-        self.entries(value, tokens)
-        writer.write_tokens(tokens)
+        if self.header:
+            self.uint8.save(10, writer, context)
+            self.string.save("", writer, context)
+        self.save_entries(value, writer, context)
+
+
+class CaseSchema(BasicSchema):
+    """A schema whose JSON the case spells in another form than BDS."""
+
+    def __init__(self, inner):
+        self.inner = inner
+        self.bound_type = inner.bound_type
+
+    def to_case(self, bds):
+        raise NotImplementedError
+
+    def to_bds(self, case):
+        raise NotImplementedError
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        scratch = RapidJSONSchemaWriter()
+        self.inner.save(value, scratch, context, traits)
+        if scratch.written:
+            writer.place(self.to_case(scratch.result))
+
+    @override
+    def do_load(self, reader, context, traits):
+        return self.inner.load(StrictRapidJSONSchemaReader(self.to_bds(reader.node)), context, traits)
+
+
+class FloatCase(CaseSchema):
+    """A float32 as its shortest spelling and a non-finite float by its name."""
+
+    def __init__(self, inner, width):
+        super().__init__(inner)
+        self.width = width
+
+    @override
+    def to_case(self, bds):
+        return CaseForm.shortest_float32(bds) if self.width == 32 else bds
+
+    @override
+    def to_bds(self, case):
+        return CaseForm.widened_float32(case) if self.width == 32 and type(case) in (int, float) else case
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        if math.isfinite(value):
+            super().do_save(value, writer, context, traits)
+        else:
+            writer.place(CaseForm.non_finite_name(value))
+
+    @override
+    def do_load(self, reader, context, traits):
+        if isinstance(reader.node, str) and reader.node in NON_FINITE:
+            return NON_FINITE[reader.node]
+        return super().do_load(reader, context, traits)
+
+
+class StringCase(CaseSchema):
+    """A std::string as its text, or as escaped bytes when it is not valid UTF-8."""
+
+    @override
+    def to_case(self, bds):
+        raw = bds.encode("utf-8", "surrogateescape")
+        try:
+            raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return CaseForm.escaped_bytes(raw)
+        return bds
+
+    @override
+    def to_bds(self, case):
+        return CaseForm.raw_string(case) if isinstance(case, str) and ESCAPED_BYTES.fullmatch(case) else case
+
+
+class BlobCase(StringCase):
+    """A byte blob as escaped bytes."""
+
+    @override
+    def to_case(self, bds):
+        return CaseForm.escaped_bytes(bds.encode("utf-8", "surrogateescape"))
+
+
+class BitsetCase(CaseSchema):
+    """A compressed bitset as a plain integer."""
+
+    @override
+    def to_case(self, bds):
+        return sum((token & 0x7F) << (7 * index) for index, token in enumerate(CaseForm.tokens(bds)))
+
+    @override
+    def to_bds(self, case):
+        return CaseForm.stream(CaseForm.varint_groups(case)) if type(case) is int and case >= 0 else case
+
+
+class CompoundTagCase(CaseSchema):
+    """A compound as the typed tags of its entries."""
+
+    def __init__(self, inner):
+        super().__init__(inner)
+        self.header = inner.header
+
+    @override
+    def to_case(self, bds):
+        tokens = CaseForm.tokens(bds)
+        if self.header:
+            next(tokens), next(tokens)
+        return CaseForm.nbt_entries(tokens)
+
+    @override
+    def to_bds(self, case):
+        tokens = [10, ""] if self.header else []
+        CaseForm.nbt_entry_tokens(case, tokens)
+        return CaseForm.stream(tokens)
 
 
 class MemberDescriptor:
     """A struct member, reached from the owner through the bound attributes of its path."""
 
-    def __init__(self, name, schema, path, traits=SerializationTraits.NONE, is_required=True, marker=False):
+    def __init__(self, name, schema, path, traits=SerializationTraits.NONE, is_required=True):
         self.name = name
         self.schema = schema
         self.path = path
         self.traits = traits
         self.is_required = is_required
-        self.marker = marker
         self.is_const_selector = False
         self.constant = None
 
@@ -801,15 +1239,8 @@ class MemberDescriptor:
     def set(self, owner, value):
         setattr(reduce(getattr, self.path[:-1], owner), self.path[-1], value)
 
-    def under(self, attribute):
-        member = copy(self)
-        member.path = (attribute, *self.path)
-        return member
-
     def save(self, owner, writer, context):
         writer.push_member(self.name)
-        if self.marker:
-            writer.write_additional_data(True)
         value = self.constant if self.is_const_selector else self.get(owner)
         self.schema.save(value, writer, context, self.traits)
         writer.pop_member()
@@ -817,7 +1248,7 @@ class MemberDescriptor:
     def load(self, reader, context, owner):
         if not reader.push_member(self.name):
             if self.is_required:
-                context.log(ErrorCode.MISSING_REQUIRED_FIELD, f"{self.name}: missing required field")
+                context.log(ResultCode.MISSING_REQUIRED_FIELD, f"{self.name}: missing required field")
             return False
         checkpoint = context.get_log_checkpoint()
         value = self.schema.load(reader, context, self.traits)
@@ -826,7 +1257,7 @@ class MemberDescriptor:
             return True
         if self.is_const_selector:
             if value != self.constant:
-                context.log(ErrorCode.ERROR, f"wrong const value for member {self.name!r}")
+                context.log(ResultCode.ERROR, f"wrong const value for member {self.name!r}")
         else:
             self.set(owner, value)
         return True
@@ -835,12 +1266,13 @@ class MemberDescriptor:
 class GroupMember(MemberDescriptor):
     """A member that BDS nests and the DSL keeps flat, read from and written into the owner itself."""
 
+    @override
     def set(self, owner, value):
         for attribute, each in vars(value).items():
             setattr(owner, attribute, each)
 
 
-class CompositeSchema(BasicSchema):
+class GenericCompositeSchema(BasicSchema):
     """A struct prints one key per member in registration order and loads schema-driven."""
 
     def __init__(self, cls, members):
@@ -857,10 +1289,11 @@ class CompositeSchema(BasicSchema):
     def finish(self, owner):
         return owner
 
+    @override
     def do_load(self, reader, context, traits):
         owner = self.create()
         if not reader.expected_type() & SchemaRWType.OBJECT:
-            context.log(ErrorCode.ERROR, "expected an object")
+            context.log(ResultCode.ERROR, "expected an object")
             return self.finish(owner)
         checkpoint = context.get_log_checkpoint()
         found = 0
@@ -870,12 +1303,14 @@ class CompositeSchema(BasicSchema):
                 return self.finish(owner)
         names = {member.name for member in self.members}
         if reader.members() > found:
-            while (key := reader.push_next_member()) is not None:
+            for _ in range(reader.members()):
+                key = reader.push_next_member()
                 reader.pop()
                 if key not in names:
-                    context.log(ErrorCode.UNRECOGNIZED_FIELD, f"{key}: found in the input, but not in the schema")
+                    context.log(ResultCode.UNRECOGNIZED_FIELD, f"{key}: found in the input, but not in the schema")
         return self.finish(owner)
 
+    @override
     def do_save(self, value, writer, context, traits):
         owner = self.view(value)
         writer.open_object()
@@ -886,23 +1321,26 @@ class CompositeSchema(BasicSchema):
         writer.close()
 
 
-class WrapperSchema(CompositeSchema):
+class WrapperSchema(GenericCompositeSchema):
     """BDS's one-member struct around a value that the DSL holds bare."""
 
     def __init__(self, key, inner):
         super().__init__(int, [MemberDescriptor(key, inner, ("value",))])
 
+    @override
     def create(self):
         return SimpleNamespace(value=0)
 
+    @override
     def view(self, value):
         return SimpleNamespace(value=value)
 
+    @override
     def finish(self, owner):
         return owner.value
 
 
-class UUIDHalvesSchema(CompositeSchema):
+class UUIDHalvesSchema(GenericCompositeSchema):
     """mce::UUID as BDS reflects it: the big-endian halves of the 128-bit value."""
 
     def __init__(self):
@@ -913,19 +1351,23 @@ class UUIDHalvesSchema(CompositeSchema):
         ]
         super().__init__(uuid.UUID, members)
 
+    @override
     def create(self):
         return SimpleNamespace(most=0, least=0)
 
+    @override
     def view(self, value):
         return SimpleNamespace(most=value.int >> 64, least=value.int & (1 << 64) - 1)
 
+    @override
     def finish(self, owner):
         return uuid.UUID(int=owner.most << 64 | owner.least)
 
 
-class MemberOnlySchema(CompositeSchema):
+class MemberOnlySchema(GenericCompositeSchema):
     """A one-member struct that BDS prints as its member."""
 
+    @override
     def do_load(self, reader, context, traits):
         owner = self.create()
         [member] = self.members
@@ -935,18 +1377,20 @@ class MemberOnlySchema(CompositeSchema):
             member.set(owner, value)
         return self.finish(owner)
 
+    @override
     def do_save(self, value, writer, context, traits):
         [member] = self.members
         member.schema.save(member.get(self.view(value)), writer, context, member.traits)
 
 
-class ArrayOfMembersSchema(CompositeSchema):
+class ArrayOfMembersSchema(GenericCompositeSchema):
     """A struct that BDS prints as an array of its members."""
 
+    @override
     def do_load(self, reader, context, traits):
         owner = self.create()
         if not reader.expected_type() & SchemaRWType.ARRAY or reader.length(len(self.members)) != len(self.members):
-            context.log(ErrorCode.ERROR, f"expected exactly {len(self.members)} elements")
+            context.log(ResultCode.ERROR, f"expected exactly {len(self.members)} elements")
             return self.finish(owner)
         for index, member in enumerate(self.members):
             checkpoint = context.get_log_checkpoint()
@@ -957,6 +1401,7 @@ class ArrayOfMembersSchema(CompositeSchema):
                 member.set(owner, value)
         return self.finish(owner)
 
+    @override
     def do_save(self, value, writer, context, traits):
         owner = self.view(value)
         writer.open_array(False, len(self.members))
@@ -965,100 +1410,59 @@ class ArrayOfMembersSchema(CompositeSchema):
         writer.close()
 
 
-class DslShape(enum.Enum):
-    FLATTEN = enum.auto()
-    GROUP = enum.auto()
-    PAIRS = enum.auto()
-    PLAIN_INTEGER = enum.auto()
-    BARE = enum.auto()
-    MEMBER_ONLY = enum.auto()
-    ARRAY_OF_MEMBERS = enum.auto()
-
-
-SHAPES = {
-    ("ServerboundDiagnosticsPacket", "telemetry"): (DslShape.FLATTEN, None),
-    ("ServerboundDiagnosticsPacket", "entity_system_diagnostics"): (DslShape.FLATTEN, None),
-    ("DeathInfoPacket", "death_cause_attack_name"): (DslShape.GROUP, "death_cause_message"),
-    ("DeathInfoPacket", "death_cause_message_list"): (DslShape.GROUP, "death_cause_message"),
-    ("CameraAimAssistCategoryPriorities", "entities"): (DslShape.PAIRS, None),
-    ("CameraAimAssistCategoryPriorities", "blocks"): (DslShape.PAIRS, None),
-    ("CameraAimAssistPresetDefinition", "item_settings"): (DslShape.PAIRS, None),
-    ("VoxelShapesPacket", "name_map"): (DslShape.PAIRS, None),
-    ("SpawnSettings", "dimension"): (DslShape.BARE, None),
-    ("InventorySource", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("InventoryContentPacket", "inventory_id"): (DslShape.PLAIN_INTEGER, None),
-    ("InventorySlotPacket", "inventory_id"): (DslShape.PLAIN_INTEGER, None),
-    ("ContainerClosePacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("PlayerHotbarPacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("ContainerSetDataPacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("ContainerOpenPacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("UpdateTradePacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("UpdateEquipPacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("MobEquipmentPacket", "container_id"): (DslShape.PLAIN_INTEGER, None),
-    ("DimensionDefinitionGroup", None): (DslShape.MEMBER_ONLY, None),
-    ("EffectDuration", None): (DslShape.MEMBER_ONLY, None),
-    ("MoveActorAbsoluteData.Header", None): (DslShape.MEMBER_ONLY, None),
-    ("Color255RGBA", None): (DslShape.ARRAY_OF_MEMBERS, None),
-}
-
-WRAPPER_KEYS = {
-    "ActorUniqueID": "actor_unique_id",
-    "ActorRuntimeID": "actor_runtime_id",
-    "PlayerInputTick": "input_tick",
-    "DimensionType": "value",
-    "Color": "color",
-}
-MARKER = re.compile(r"_true(_\d+)?")
+MARKER_EXCEPTIONS = {"_deprecated"}
 COMPOSITES = {DslShape.MEMBER_ONLY: MemberOnlySchema, DslShape.ARRAY_OF_MEMBERS: ArrayOfMembersSchema}
 
 
 class ReflectionCtx:
     """The schemas of one protocol, built from the model on first use."""
 
-    def __init__(self, protocol):
+    def __init__(self, protocol, mapped):
         self.protocol = protocol
+        self.mapped = mapped
         self.module = importlib.import_module(f"bedrock_protocol.v{protocol}")
         self.composites = {}
 
     def shape(self, family):
         return MODEL.live[family, self.protocol]
 
+    def case(self, schema, case_class, *arguments):
+        return case_class(schema, *arguments) if self.mapped else schema
+
     def composite(self, family):
         if family not in self.composites:
             name = qualified_name(family)
-            kind, _ = SHAPES.get((name, None), (None, None))
+            kind, _ = CaseForm.SHAPES.get((name, None), (None, None))
             cls = reduce(getattr, name.split("."), self.module)
-            self.composites[family] = schema = COMPOSITES.get(kind, CompositeSchema)(cls, [])
+            self.composites[family] = schema = COMPOSITES.get(kind, GenericCompositeSchema)(cls, [])
             schema.members = self.members(family)
         return self.composites[family]
 
     def members(self, family):
         name = qualified_name(family)
-        members, groups, marker = [], {}, False
+        members, groups = [], {}
         for field in self.shape(family).fields:
-            if MARKER.fullmatch(field.name):
-                marker = True
+            if field.name.startswith("_") and field.name not in MARKER_EXCEPTIONS:
                 continue
-            kind, argument = SHAPES.get((name, field.name), (None, None))
+            kind, argument = CaseForm.SHAPES.get((name, field.name), (None, None))
             attribute = f"{field.name}_" if keyword.iskeyword(field.name) else field.name
             if kind is DslShape.FLATTEN:
-                members += [each.under(attribute) for each in self.members(field.type.struct)]
+                for each in self.members(field.type.struct):
+                    flattened = copy(each)
+                    flattened.path = (attribute, *each.path)
+                    members.append(flattened)
                 continue
-            member = self.member(field, kind, attribute, marker)
-            marker = False
-            if kind is DslShape.GROUP:
-                groups.setdefault(argument, []).append(member)
-                members += [] if len(groups[argument]) > 1 else [argument]
-            else:
+            member = self.member(field, kind, argument, attribute)
+            if kind is not DslShape.GROUP:
                 members.append(member)
-        return [
-            GroupMember(each, CompositeSchema(SimpleNamespace, groups[each]), (), SerializationTraits.NONE)
-            if isinstance(each, str)
-            else each
-            for each in members
-        ]
+                continue
+            if argument not in groups:
+                groups[argument] = GroupMember(argument, GenericCompositeSchema(SimpleNamespace, []), ())
+                members.append(groups[argument])
+            groups[argument].schema.members.append(member)
+        return members
 
-    def member(self, field, kind, attribute, marker):
+    def member(self, field, kind, argument, attribute):
         node = field.type
         optional = isinstance(node, OptionalType)
         node = node.element if optional else node
@@ -1067,23 +1471,21 @@ class ReflectionCtx:
                 constant, node = self.shape(enum).numbers[name], EnumRef(enum)
             case Literal(value=constant):
                 node = Primitive("str" if isinstance(constant, str) else "bool")
-        if kind is DslShape.PLAIN_INTEGER:
-            node = Primitive(self.shape(node.enum).underlying.name, node.wire)
         if kind is DslShape.BARE:
             node = AliasRef(node.alias, node.alias.primitive.name)
-        schema = self.schema(node)
-        if kind is DslShape.PAIRS:
-            schema.keyed_by_string = False
+        schema = self.schema(node, argument if kind is DslShape.PAIRS else None)
         schema = OptionalSchema(schema) if optional else schema
-        member = MemberDescriptor(field.name, schema, (attribute,), self.traits(node), not optional, marker)
+        member = MemberDescriptor(field.name, schema, (attribute,), self.traits(node), not optional)
         if isinstance(field.type, Literal):
             member.is_const_selector, member.constant = True, constant
         return member
 
     def traits(self, node):
         match node:
-            case EnumRef():
-                return SerializationTraits.ENUM_AS_VALUE
+            case EnumRef(enum=enum):
+                return (
+                    SerializationTraits.NONE if enum.name in CaseForm.PLAIN_ENUMS else SerializationTraits.ENUM_AS_VALUE
+                )
             case Bitset():
                 return SerializationTraits.COMPRESSION
             case OptionalType(element=element) | List(element=element) | Array(element=element):
@@ -1094,32 +1496,34 @@ class ReflectionCtx:
                 return reduce(or_, (self.traits(arm) for arm in arms if arm), SerializationTraits.NONE)
         return SerializationTraits.NONE
 
-    def schema(self, node):
+    def schema(self, node, key_kind=None):
         match node:
             case Primitive(name="bool"):
                 return BoolSchema()
             case Primitive(name="str"):
-                return StringSchema()
+                return self.case(StringSchema(), StringCase)
             case Primitive(name="bytes"):
-                return BlobSchema(False)
+                return self.case(BlobSchema(False), BlobCase)
             case Primitive(name="float"):
-                return FloatSchema(32)
+                return self.case(FloatSchema(32), FloatCase, 32)
             case Primitive(name="double"):
-                return FloatSchema(64)
+                return self.case(FloatSchema(64), FloatCase, 64)
             case Primitive(name=name, wire=wire):
                 return IntegerSchema(name, wire)
             case AliasRef(alias=alias, wire=wire):
                 integer = IntegerSchema(alias.primitive.name, wire)
-                key = WRAPPER_KEYS.get(alias.name)
+                key = CaseForm.WRAPPER_KEYS.get(alias.name)
                 return integer if wire or key is None else WrapperSchema(key, integer)
             case BuiltinRef(builtin=builtin, wire="str") if builtin.name == "UUID":
                 return UUIDSchema()
             case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
                 return UUIDHalvesSchema()
             case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
-                return CompoundTagSchema(builtin.name == "CompoundTag")
+                return self.case(CompoundTagSchema(builtin.name == "CompoundTag"), CompoundTagCase)
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
                 return DynamicValueSchema()
+            case EnumRef(enum=enum, wire=wire) if enum.name in CaseForm.PLAIN_ENUMS:
+                return self.schema(Primitive(self.shape(enum).underlying.name, wire))
             case EnumRef(enum=enum):
                 return EnumSchema(self.shape(enum), self.schema(self.shape(enum).underlying))
             case EnumName(enum=enum):
@@ -1127,54 +1531,42 @@ class ReflectionCtx:
             case StructRef(struct=family):
                 return self.composite(family)
             case List(element=Primitive(name="uint8", wire=None)):
-                return BlobSchema(True)
+                return self.case(BlobSchema(True), BlobCase)
             case List(element=element):
                 return VectorSchema(self.schema(element))
             case Array(element=element, size=size):
                 return ArraySchema(self.schema(element), size)
             case Map(key=key, value=value):
-                return MapSchema(self.schema(key), self.schema(value), key == Primitive("str"))
+                kind = key_kind or (KeyKind.STD_STRING if key == Primitive("str") else KeyKind.OTHER)
+                return MapSchema(self.schema(key), self.schema(value), kind)
             case Variant(cases=arms):
                 return VariantSchema([NullTypeSchema() if arm is None else self.schema(arm) for arm in arms])
             case Bitset(width=MemberRef(enum=enum, name=name)):
-                return BitsetSchema(self.shape(enum).numbers[name])
+                return self.case(BitsetSchema(self.shape(enum).numbers[name]), BitsetCase)
         raise LookupError(f"{node!r}: has no schema")
 
 
-REFLECTIONS = {protocol: ReflectionCtx(protocol) for protocol in MODEL.versions}
+REFLECTIONS = {
+    (protocol, mapped): ReflectionCtx(protocol, mapped) for protocol in MODEL.versions for mapped in (False, True)
+}
 
 
 @cache
-def schema_of(cls):
-    return REFLECTIONS[int(cls.__module__.rpartition(".v")[2])].composite(FAMILIES[cls.__qualname__])
+def schema_of(cls, mapped):
+    return REFLECTIONS[int(cls.__module__.rpartition(".v")[2]), mapped].composite(FAMILIES[cls.__qualname__])
 
 
-def save(value):
-    """The JSON BDS writes for a bound struct."""
+def save(value, bds=False):
+    """The case JSON for a bound struct, or BDS's own JSON with `bds`."""
     writer = RapidJSONSchemaWriter()
-    schema_of(type(value)).save(value, writer, SerializerContext())
+    schema_of(type(value), not bds).save(value, writer, SerializerContext())
     return writer.result
 
 
-def load(cls, value):
-    """The bound struct BDS reads from JSON, raising the entries a strict load logged."""
+def load(cls, value, bds=False):
+    """The bound struct for case JSON, or for BDS's own JSON with `bds`, loaded strictly."""
     context = SerializerContext()
-    loaded = schema_of(cls).load(RapidJSONSchemaReader(value), context)
-    if context.entries:
+    loaded = schema_of(cls, not bds).load(StrictRapidJSONSchemaReader(value), context)
+    if context.has_error():
         raise LoadError(context.entries)
     return loaded
-
-
-def additional_data(value):
-    """The variant indexes and optional flags that saving a bound struct passes along."""
-    writer = RapidJSONSchemaWriter()
-    schema_of(type(value)).save(value, writer, SerializerContext())
-    return writer.additional
-
-
-def loses_arms(cls, value, data):
-    """Whether loading the JSON value gives another variant arm than the bytes decode to."""
-    try:
-        return additional_data(load(cls, value)) != additional_data(cls.from_bytes(data))
-    except LoadError:
-        return False

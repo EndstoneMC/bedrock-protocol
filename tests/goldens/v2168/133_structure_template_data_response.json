@@ -3,16 +3,11 @@
   "id": "query_with_structure_tag",
   "value": {
    "structure_name": "mystructure",
-   "structure_tag": [
-    10,
-    "",
-    3,
-    "format_version",
-    {
-     "data": 1
-    },
-    0
-   ],
+   "structure_tag": {
+    "format_version": {
+     "IntTag": 1
+    }
+   },
    "response_type": 2
   },
   "bytes": "0b6d79737472756374757265010a00030e666f726d61745f76657273696f6e020002"

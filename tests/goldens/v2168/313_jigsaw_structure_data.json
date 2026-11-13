@@ -2,7 +2,7 @@
  {
   "id": "empty_jigsaw_tag",
   "value": {
-   "jigsaw_structure_data_tag": [10, "", 0]
+   "jigsaw_structure_data_tag": {}
   },
   "bytes": "0a0000"
  }
