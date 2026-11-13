@@ -14,14 +14,14 @@
    "y_head_rot": 6.0,
    "reset_position": "TELEPORT",
    "on_ground": true,
-   "riding_id": 0,
+   "riding_id": 5,
    "teleport_data": {
     "cause": 3,
     "source_entity_type": 42
    },
    "tick": 100
   },
-  "bytes": "020000803f0000004000004040000080400000a0400000c04002010001030000002a00000064"
+  "bytes": "020000803f0000004000004040000080400000a0400000c04002010501030000002a00000064"
  },
  {
   "value": {
@@ -38,10 +38,10 @@
    "y_head_rot": 6.0,
    "reset_position": "NORMAL",
    "on_ground": true,
-   "riding_id": 0,
+   "riding_id": 5,
    "teleport_data": null,
    "tick": 100
   },
-  "bytes": "020000803f0000004000004040000080400000a0400000c0400001000064"
+  "bytes": "020000803f0000004000004040000080400000a0400000c0400001050064"
  }
 ]
