@@ -110,5 +110,183 @@
    ]
   },
   "bytes": "050100000000000000000000030102010000803f0000004000004040010000003f010000003f0000803e0000403f0100000040010000804201776655440102010d050c0401040000000000000000020268690101776655440101010501060000000000000000060000803f00000040000040400000804000004040080601070000000000000000070000004001000080400000c040"
+ },
+ {
+  "value": {
+   "shapes": [
+    {
+     "network_id": 10,
+     "shape_type": "ARROW",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ArrowDataPayload": {
+       "end_location": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 3.0
+       },
+       "arrow_head_length": 0.5,
+       "arrow_head_radius": 0.25,
+       "num_segments": 6
+      }
+     }
+    },
+    {
+     "network_id": 17,
+     "shape_type": "ARROW",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ArrowDataPayload": {
+       "end_location": null,
+       "arrow_head_length": null,
+       "arrow_head_radius": null,
+       "num_segments": null
+      }
+     }
+    },
+    {
+     "network_id": 11,
+     "shape_type": "BOX",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "BoxDataPayload": {
+       "box_bound": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 3.0
+       }
+      }
+     }
+    },
+    {
+     "network_id": 12,
+     "shape_type": "LINE",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "LineDataPayload": {
+       "end_location": {
+        "x": 4.0,
+        "y": 5.0,
+        "z": 6.0
+       }
+      }
+     }
+    },
+    {
+     "network_id": 13,
+     "shape_type": "ELLIPSOID",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "EllipsoidDataPayload": {
+       "radii": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 3.0
+       },
+       "segments_per_axis": 8
+      }
+     }
+    },
+    {
+     "network_id": 14,
+     "shape_type": "CONE",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "ConeDataPayload": {
+       "radii": {
+        "x": 1.0,
+        "y": 2.0
+       },
+       "height": 3.0,
+       "num_segments": 8
+      }
+     }
+    },
+    {
+     "network_id": 15,
+     "shape_type": "PYRAMID",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 2.0,
+       "depth": null,
+       "height": 6.0
+      }
+     }
+    },
+    {
+     "network_id": 16,
+     "shape_type": "TEXT",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "TextDataPayload": {
+       "text": "hi",
+       "use_rotation": true,
+       "background_color": null,
+       "depth_test": true,
+       "show_backface": true,
+       "show_text_backface": true
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "080a0105000000000000000001010000803f0000004000004040010000003f010000803e0106110105000000000000000001000000000b01010000000000000000030000803f00000040000040400c0100000000000000000004000080400000a0400000c0400d01080000000000000000080000803f0000004000004040080e01090000000000000000090000803f0000004000004040080f010700000000000000000700000040000000c0401001040000000000000000020268690100010101"
  }
 ]
