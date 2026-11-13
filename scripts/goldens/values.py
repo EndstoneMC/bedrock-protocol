@@ -275,6 +275,12 @@ FIXED_AT: dict[int, dict[str, Json]] = {
         },
     },
 }
+KEPT_FORMS: dict[str, tuple[str, ...]] = {
+    "AddVolumeEntityPacket.min_engine_version": ("1.21.0-beta.1+build.5", "1.21.0"),
+    "SerializedSkinRef.geometry_data_min_engine_version": ("1.21.0-beta.1+build.5", "1.21.0"),
+    "ResourcePackStackPacket.base_game_version": ("*", "1.21.0"),
+    "LevelSettings.base_game_version": ("*", "1.21.0"),
+}
 FIXED: dict[str, Json] = {
     "SerializedNetworkItemStackDescriptor.stack_size": 3,
     "SerializedNetworkItemInstanceDescriptor.stack_size": 4,
@@ -356,12 +362,8 @@ FIXED: dict[str, Json] = {
         '{"name":".x","value":{"type":"float","value":0.50}},{"name":".y","value":{"type":"float","value":-1.0}},'
         '{"name":".z","value":{"type":"float","value":2.0}}]}}]\n'
     ),
-    "AddVolumeEntityPacket.min_engine_version": "1.21.0",
-    "SerializedSkinRef.geometry_data_min_engine_version": "1.21.0",
     "SemVersion.version": "1.2.3",
     "PackInstanceId.version": "2.3.4",
-    "ResourcePackStackPacket.base_game_version": "1.21.0",
-    "LevelSettings.base_game_version": "1.21.0",
     "ExperimentToggle.name": "gametest",
     "ExperimentToggle.enabled": True,
     "Experiments.experiments_ever_toggled": True,
@@ -602,6 +604,8 @@ class Generator:
     def generate(self, node: Type, key: str, depth: int, length: int | None = None) -> Json:
         if key in self.fixed:
             return self.fixed[key]
+        if key in KEPT_FORMS:
+            return KEPT_FORMS[key][self.pick(key, list(KEPT_FORMS[key]), False)]
         match node:
             case Primitive():
                 return self.leaf(node)
