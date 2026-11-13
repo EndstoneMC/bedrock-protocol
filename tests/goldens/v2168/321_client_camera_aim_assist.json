@@ -1,5 +1,6 @@
 [
  {
+  "id": "clear_action_allowing_aim_assist",
   "value": {
    "camera_preset_id": "minecraft:first_person",
    "action": "CLEAR",
