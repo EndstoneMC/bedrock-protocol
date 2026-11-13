@@ -1,5 +1,6 @@
 [
  {
+  "id": "start_then_stop_arms",
   "value": {
    "start_video_capture": {
     "StartVideoCapture": {
@@ -14,6 +15,7 @@
   "bytes": "003c00000004636c697001"
  },
  {
+  "id": "stop_then_start_arms",
   "value": {
    "start_video_capture": {
     "StopVideoCapture": {}
