@@ -1,5 +1,6 @@
 [
  {
+  "id": "accepted_cookie",
   "value": {
    "cookie": "party-cookie",
    "accepted": true
