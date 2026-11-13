@@ -1,5 +1,6 @@
 [
  {
+  "id": "negative_unique_id",
   "value": {
    "entity_id": -8589934592
   },
