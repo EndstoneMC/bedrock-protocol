@@ -14,9 +14,9 @@
  {
   "value": {
    "action": "OPEN_INVENTORY",
-   "target_id": 0,
+   "target_id": 7,
    "pos": null
   },
-  "bytes": "060000"
+  "bytes": "060700"
  }
 ]
