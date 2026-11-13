@@ -22,5 +22,27 @@
    }
   },
   "bytes": "020f73686f77636f6f7264696e61746573010101156d6178636f6d6d616e64636861696e6c656e6774680002ffff0000"
+ },
+ {
+  "id": "none_and_float_rules",
+  "value": {
+   "rule_data": {
+    "rules": [
+     {
+      "name": "pvp",
+      "can_be_modified_by_player": false,
+      "value": null
+     },
+     {
+      "name": "keepinventory",
+      "can_be_modified_by_player": true,
+      "value": {
+       "float": 0.5
+      }
+     }
+    ]
+   }
+  },
+  "bytes": "020370767000000d6b656570696e76656e746f727901030000003f"
  }
 ]
