@@ -1,0 +1,117 @@
+[
+ {
+  "value": {
+   "camera_presets": {
+    "presets": []
+   }
+  },
+  "bytes": "00"
+ },
+ {
+  "value": {
+   "camera_presets": {
+    "presets": [
+     {
+      "name": "bare",
+      "inherit_from": "",
+      "pos_x": null,
+      "pos_y": null,
+      "pos_z": null,
+      "rot_x": null,
+      "rot_y": null,
+      "camera_rotation_speed": null,
+      "snap_to_target": null,
+      "horizontal_rotation_limit": null,
+      "vertical_rotation_limit": null,
+      "continue_targeting": null,
+      "tracking_radius": null,
+      "view_offset": null,
+      "entity_offset": null,
+      "radius": null,
+      "yaw_limit_min": null,
+      "yaw_limit_max": null,
+      "listener": null,
+      "player_effects": null,
+      "aim_assist": null,
+      "control_scheme": null
+     },
+     {
+      "name": "loaded",
+      "inherit_from": "minecraft:free",
+      "pos_x": 1.0,
+      "pos_y": 2.0,
+      "pos_z": 3.0,
+      "rot_x": 0.5,
+      "rot_y": 0.25,
+      "camera_rotation_speed": 4.0,
+      "snap_to_target": true,
+      "horizontal_rotation_limit": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "vertical_rotation_limit": {
+       "x": 3.0,
+       "y": 4.0
+      },
+      "continue_targeting": false,
+      "tracking_radius": 8.0,
+      "view_offset": {
+       "x": 5.0,
+       "y": 6.0
+      },
+      "entity_offset": {
+       "x": 7.0,
+       "y": 8.0,
+       "z": 9.0
+      },
+      "radius": 16.0,
+      "yaw_limit_min": -90.0,
+      "yaw_limit_max": 90.0,
+      "listener": "PLAYER",
+      "player_effects": true,
+      "aim_assist": {
+       "preset_id": "aim",
+       "target_mode": "DISTANCE",
+       "angle": {
+        "x": 30.0,
+        "y": 40.0
+       },
+       "distance": 5.0
+      },
+      "control_scheme": "CAMERA_RELATIVE_STRAFE"
+     },
+     {
+      "name": "aim",
+      "inherit_from": "",
+      "pos_x": null,
+      "pos_y": null,
+      "pos_z": null,
+      "rot_x": null,
+      "rot_y": null,
+      "camera_rotation_speed": null,
+      "snap_to_target": null,
+      "horizontal_rotation_limit": null,
+      "vertical_rotation_limit": null,
+      "continue_targeting": null,
+      "tracking_radius": null,
+      "view_offset": null,
+      "entity_offset": null,
+      "radius": null,
+      "yaw_limit_min": null,
+      "yaw_limit_max": null,
+      "listener": null,
+      "player_effects": null,
+      "aim_assist": {
+       "preset_id": null,
+       "target_mode": null,
+       "angle": null,
+       "distance": null
+      },
+      "control_scheme": null
+     }
+    ]
+   }
+  },
+  "bytes": "030462617265000000000000000000000000000000000000000000066c6f616465640e6d696e6563726166743a66726565010000803f01000000400100004040010000003f010000803e01000080400101010000803f0000004001000040400000804001000100000041010000a0400000c040010000e04000000041000010410100008041010000b4c2010000b4420101010101010361696d0101010000f04100002042010000a04001020361696d00000000000000000000000000000000000000010000000000"
+ }
+]
