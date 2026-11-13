@@ -1,5 +1,6 @@
 [
  {
+  "id": "automation_player_origin",
   "value": {
    "command": "/say hi",
    "origin": {
