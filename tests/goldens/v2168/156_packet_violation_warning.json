@@ -1,5 +1,6 @@
 [
  {
+  "id": "malformed_inventory_transaction",
   "value": {
    "violation_type": "PACKET_MALFORMED",
    "violation_severity": "TERMINATING_CONNECTION",
