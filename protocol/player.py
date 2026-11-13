@@ -193,15 +193,15 @@ class BuildPlatform(IntEnum, int32):
     IOS = value(2, cpp_name="IOS")
     OSX = value(3, cpp_name="OSX")
     AMAZON = 4
-    GEAR_VR_DEPRECATED = value(5, cpp_name="GearVRDeprecated")
-    UWP_DEPRECATED = value(7, cpp_name="UWPDeprecated")
+    GEAR_VR_DEPRECATED = value(5, cpp_name="GearVRDeprecated", deprecated=True)
+    UWP_DEPRECATED = value(7, cpp_name="UWPDeprecated", deprecated=True)
     WIN32 = 8
     DEDICATED = 9
-    TV_OS_DEPRECATED = value(10, cpp_name="TvOSDeprecated")
+    TV_OS_DEPRECATED = value(10, cpp_name="TvOSDeprecated", deprecated=True)
     SONY = 11
     NINTENDO = 12
     XBOX = 13
-    WINDOWS_PHONE_DEPRECATED = 14
+    WINDOWS_PHONE_DEPRECATED = value(14, deprecated=True)
     LINUX = 15
     UNKNOWN = -1
 

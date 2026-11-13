@@ -5,7 +5,7 @@ Not player spawning -- world/actor/player/, in player.py."""
 
 from enum import IntEnum
 
-from protocol import array, bitset, field, int8, int32, packet, type, uint8, uint16, uvarint64
+from protocol import array, bitset, field, int8, int32, packet, type, uint8, uint16, uvarint64, value
 from protocol.actor import ActorFlags, ActorRuntimeID, ActorUniqueID, PlayerInputTick
 from protocol.common import Vec2, Vec3
 
@@ -145,7 +145,7 @@ class CorrectPlayerMovePredictionPacket:
 
 @type(until=818)
 class ServerAuthMovementMode(IntEnum, uint8):
-    LEGACY_CLIENT_AUTHORITATIVE_V1_DEPRECATED = 0
+    LEGACY_CLIENT_AUTHORITATIVE_V1_DEPRECATED = value(0, deprecated=True)
     CLIENT_AUTHORITATIVE_V2 = 1
     SERVER_AUTHORITATIVE_V3 = 2
 

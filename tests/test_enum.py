@@ -168,3 +168,7 @@ def test_a_sentinel_is_no_member():
 
 def test_the_number_of_a_sentinel_is_no_member():
     assert 4 not in v2225.InventoryLayout
+
+
+def test_a_deprecated_member_says_so_in_its_docstring():
+    assert v2225.InputMode.MOTION_CONTROLLER_DEPRECATED.__doc__ == "Deprecated."

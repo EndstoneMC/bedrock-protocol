@@ -28,8 +28,8 @@ class ItemStackRequestActionType(IntEnum, uint8):
     DESTROY = 4
     CONSUME = 5
     CREATE = 6
-    PLACE_IN_ITEM_CONTAINER_DEPRECATED = 7, "PlaceInItemContainer_DEPRECATED"
-    TAKE_FROM_ITEM_CONTAINER_DEPRECATED = 8, "TakeFromItemContainer_DEPRECATED"
+    PLACE_IN_ITEM_CONTAINER_DEPRECATED = value(7, "PlaceInItemContainer_DEPRECATED", deprecated=True)
+    TAKE_FROM_ITEM_CONTAINER_DEPRECATED = value(8, "TakeFromItemContainer_DEPRECATED", deprecated=True)
     SCREEN_LAB_TABLE_COMBINE = 9
     SCREEN_BEACON_PAYMENT = 10
     SCREEN_HUD_MINE_BLOCK = value(11, cpp_name="ScreenHUDMineBlock")
@@ -40,12 +40,16 @@ class ItemStackRequestActionType(IntEnum, uint8):
     CRAFT_REPAIR_AND_DISENCHANT = 16
     CRAFT_LOOM = 17
     with value(until=2225):
-        CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = 18, "CraftNonImplemented_DEPRECATEDASKTYLAING"
-        CRAFT_RESULTS_DEPRECATEDASKTYLAING = 19, "CraftResults_DEPRECATEDASKTYLAING"
+        CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = value(
+            18, "CraftNonImplemented_DEPRECATEDASKTYLAING", deprecated=True
+        )
+        CRAFT_RESULTS_DEPRECATEDASKTYLAING = value(19, "CraftResults_DEPRECATEDASKTYLAING", deprecated=True)
     with value(since=2225):
         CRAFT_DISC_PRESS = 18
-        CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = 19, "CraftNonImplemented_DEPRECATEDASKTYLAING"
-        CRAFT_RESULTS_DEPRECATEDASKTYLAING = 20, "CraftResults_DEPRECATEDASKTYLAING"
+        CRAFT_NON_IMPLEMENTED_DEPRECATEDASKTYLAING = value(
+            19, "CraftNonImplemented_DEPRECATEDASKTYLAING", deprecated=True
+        )
+        CRAFT_RESULTS_DEPRECATEDASKTYLAING = value(20, "CraftResults_DEPRECATEDASKTYLAING", deprecated=True)
     TEST = value(20, since=776, until=786)
 
 

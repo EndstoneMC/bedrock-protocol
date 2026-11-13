@@ -74,7 +74,7 @@ class EditorLevelMigrationVersion(IntEnum, int8):
 class EducationEditionOffer(IntEnum, uint32):
     NONE = 0
     REST_OF_WORLD = 1
-    CHINA_DEPRECATED = 2
+    CHINA_DEPRECATED = value(2, deprecated=True)
 
 
 class ChatRestrictionLevel(IntEnum, uint8):

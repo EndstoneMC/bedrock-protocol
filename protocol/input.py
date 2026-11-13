@@ -20,7 +20,7 @@ class InputMode(IntEnum, uint32):
     MOUSE = 1
     TOUCH = 2
     GAME_PAD = 3
-    MOTION_CONTROLLER_DEPRECATED = 4, "MotionController_Deprecated"
+    MOTION_CONTROLLER_DEPRECATED = value(4, "MotionController_Deprecated", deprecated=True)
     COUNT = auto()
 
 
@@ -28,12 +28,12 @@ class ClientPlayMode(IntEnum, uint32):
     NORMAL = 0
     TEASER = 1
     SCREEN = 2
-    VIEWER_DEPRECATED = 3, "Viewer_Deprecated"
-    REALITY_DEPRECATED = 4, "Reality_Deprecated"
-    PLACEMENT_DEPRECATED = 5, "Placement_Deprecated"
-    LIVING_ROOM_DEPRECATED = 6, "LivingRoom_Deprecated"
+    VIEWER_DEPRECATED = value(3, "Viewer_Deprecated", deprecated=True)
+    REALITY_DEPRECATED = value(4, "Reality_Deprecated", deprecated=True)
+    PLACEMENT_DEPRECATED = value(5, "Placement_Deprecated", deprecated=True)
+    LIVING_ROOM_DEPRECATED = value(6, "LivingRoom_Deprecated", deprecated=True)
     EXIT_LEVEL = 7
-    EXIT_LEVEL_LIVING_ROOM_DEPRECATED = 8, "ExitLevelLivingRoom_Deprecated"
+    EXIT_LEVEL_LIVING_ROOM_DEPRECATED = value(8, "ExitLevelLivingRoom_Deprecated", deprecated=True)
     NUM_MODES = auto()
 
 
@@ -66,7 +66,7 @@ class PlayerActionType(IntEnum, int32):
     DENY_DESTROY_BLOCK = 17
     CRACK_BLOCK = 18
     CHANGE_SKIN = 19
-    DEPRECATED_UPDATED_ENCHANTING_SEED = 20, "DEPRECATED_UpdatedEnchantingSeed"
+    DEPRECATED_UPDATED_ENCHANTING_SEED = value(20, "DEPRECATED_UpdatedEnchantingSeed", deprecated=True)
     START_SWIMMING = 21
     STOP_SWIMMING = 22
     START_SPIN_ATTACK = 23
@@ -82,7 +82,7 @@ class PlayerActionType(IntEnum, int32):
     STOP_CRAWLING = 33
     START_FLYING = 34
     STOP_FLYING = 35
-    DEPRECATED_CLIENT_ACK_SERVER_DATA = 36, "DEPRECATED_ClientAckServerData"
+    DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", deprecated=True)
     START_USING_ITEM = value(37, since=748)
     INTERNAL_UPDATE = value(38, since=2168)
     COUNT = auto()
@@ -135,7 +135,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP_DEPRECATED = 2, "NorthJump_DEPRECATED"
+        NORTH_JUMP_DEPRECATED = value(2, "NorthJump_DEPRECATED", deprecated=True)
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -188,8 +188,12 @@ class PlayerAuthInputPacket:
         DOWN_RIGHT = 52
         with value(since=748):
             START_USING_ITEM = 53
-            IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54, "IsCameraRelativeMovementEnabled_DEPRECATED"
-            IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55, "IsRotControlledByMoveDirection_DEPRECATED"
+            IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = value(
+                54, "IsCameraRelativeMovementEnabled_DEPRECATED", deprecated=True
+            )
+            IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = value(
+                55, "IsRotControlledByMoveDirection_DEPRECATED", deprecated=True
+            )
             START_SPIN_ATTACK = 56
             STOP_SPIN_ATTACK = 57
         with value(since=766):
@@ -238,7 +242,7 @@ class PlayerAuthInputPacket:
     class InputData(IntEnum, int32):
         ASCEND = 0
         DESCEND = 1
-        NORTH_JUMP_DEPRECATED = 2, "NorthJump_DEPRECATED"
+        NORTH_JUMP_DEPRECATED = value(2, "NorthJump_DEPRECATED", deprecated=True)
         JUMP_DOWN = 3
         SPRINT_DOWN = 4
         CHANGE_HEIGHT = 5
@@ -290,8 +294,12 @@ class PlayerAuthInputPacket:
         DOWN_LEFT = 51
         DOWN_RIGHT = 52
         START_USING_ITEM = 53
-        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = 54, "IsCameraRelativeMovementEnabled_DEPRECATED"
-        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = 55, "IsRotControlledByMoveDirection_DEPRECATED"
+        IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = value(
+            54, "IsCameraRelativeMovementEnabled_DEPRECATED", deprecated=True
+        )
+        IS_ROT_CONTROLLED_BY_MOVE_DIRECTION_DEPRECATED = value(
+            55, "IsRotControlledByMoveDirection_DEPRECATED", deprecated=True
+        )
         START_SPIN_ATTACK = 56
         STOP_SPIN_ATTACK = 57
         IS_HOTBAR_ONLY_TOUCH = 58
