@@ -629,6 +629,7 @@ class Builder:
             cpp_name = derived
             own = Range(None, None)
             sentinel = False
+            deprecated = False
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -646,7 +647,13 @@ class Builder:
                             source, expression, name, f"cpp_name {cpp_name!r} is not a case variant of {derived!r}"
                         )
                 own = self.read_range(source, expression, name, arguments)
-                if "name" in arguments and "cpp_name" not in arguments and own == Range(None, None):
+                if "deprecated" in arguments:
+                    deprecated = literal(source, arguments["deprecated"], bool, name)
+                if (
+                    "name" in arguments
+                    and not {"cpp_name", "deprecated"} & arguments.keys()
+                    and own == Range(None, None)
+                ):
                     raise error(source, expression, name, "a member without its own gate takes a pair, not value()")
                 value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
             elif (
@@ -657,6 +664,11 @@ class Builder:
             ):
                 value = None
                 sentinel = function is dsl.sentinel
+            elif isinstance(expression, ast.Call) and function is dsl.auto:
+                arguments = self.bind(source, expression, dsl.auto)
+                if "deprecated" in arguments:
+                    deprecated = literal(source, arguments["deprecated"], bool, name)
+                value = None
             elif isinstance(expression, ast.Name | ast.BinOp):
                 offset = None
                 if isinstance(expression, ast.BinOp):
@@ -676,7 +688,7 @@ class Builder:
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, wire_name, sentinel))
+            members.append(Member(name, value, member_range, cpp_name, wire_name, sentinel, deprecated))
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
         self.tile(source, node, pending.enum, pending.range)

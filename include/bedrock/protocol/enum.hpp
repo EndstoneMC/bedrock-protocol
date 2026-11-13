@@ -27,6 +27,9 @@ template <typename E>
 inline constexpr std::array<std::string_view, 0> schema_names_v{};
 
 template <typename E>
+inline constexpr std::array<bool, 0> deprecated_v{};
+
+template <typename E>
 inline constexpr auto count_v = values_v<E>.size();
 
 template <typename E>
@@ -160,6 +163,13 @@ template <typename E>
 [[nodiscard]] constexpr const auto &enum_schema_names() noexcept
 {
     return detail::schema_names_v<E>;
+}
+
+template <typename E>
+    requires detail::is_reflected_v<E>
+[[nodiscard]] constexpr bool enum_deprecated(std::size_t index) noexcept
+{
+    return index < detail::deprecated_v<E>.size() && detail::deprecated_v<E>[index];
 }
 
 template <typename E>

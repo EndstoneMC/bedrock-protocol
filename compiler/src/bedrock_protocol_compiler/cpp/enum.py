@@ -19,7 +19,7 @@ class EnumGenerator:
         return includes
 
     def definition(self, p: Printer) -> None:
-        cpp_names = {member.name: member.cpp_name for member in self.shape.members}
+        cpp_names = {member.name: member.cpp_name for member in self.shape.members if not member.deprecated}
         p.emit("enum class $name$ : $underlying$ {", name=self.shape.family.name, underlying=self.underlying)
         with p.indent():
             for member in self.shape.members:
@@ -33,18 +33,27 @@ class EnumGenerator:
                         spelled = f"static_cast<{self.underlying}>({number})"
                     case _:
                         spelled = str(number)
-                p.emit("$name$ = $value$,", name=member.cpp_name, value=spelled)
+                attribute = " [[deprecated]]" if member.deprecated else ""
+                p.emit("$name$$attribute$ = $value$,", name=member.cpp_name, attribute=attribute, value=spelled)
         p.emit("};")
 
     def reflection(self, p: Printer) -> None:
         if not self.shape.members:
             return
         members = sorted(self.shape.members, key=lambda member: not isinstance(member.value, MemberRef | Binary))
-        tables = (
-            ("values_v", self.qualified, [f"{self.qualified}::{member.cpp_name}" for member in members]),
+        values = [
+            f"static_cast<{self.qualified}>({self.shape.numbers[member.name]})"
+            if member.deprecated
+            else f"{self.qualified}::{member.cpp_name}"
+            for member in members
+        ]
+        tables = [
+            ("values_v", self.qualified, values),
             ("names_v", "std::string_view", [f'"{member.wire_name}"' for member in members]),
             ("schema_names_v", "std::string_view", [f'"{member.name}"' for member in members]),
-        )
+        ]
+        if any(member.deprecated for member in members):
+            tables.append(("deprecated_v", "bool", [str(member.deprecated).lower() for member in members]))
         for table, element, rows in tables:
             p.emit(
                 """

@@ -2,6 +2,7 @@
 
 from bedrock_protocol_compiler.dsl import (
     array,
+    auto,
     bitset,
     builtin,
     double,

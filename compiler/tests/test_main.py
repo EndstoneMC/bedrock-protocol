@@ -79,6 +79,24 @@ class P:
     f: F
 """
 
+DEPRECATED = """
+from enum import IntEnum
+from protocol import auto, field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class D(IntEnum, uint8):
+    A = 1
+    OLD = value(2, "Old_Deprecated", deprecated=True)
+    NEXT = auto(deprecated=True)
+    LATEST = OLD
+
+@packet(id=1)
+class P:
+    d: D = field(type=str)
+    x: uint8 = field(when=lambda p: p.d == D.OLD)
+"""
+
 
 @pytest.fixture
 def generate(build_package, tmp_path):
@@ -162,6 +180,49 @@ def test_a_predicate_reads_a_sentinel_as_its_number(generate):
     out = generate({"a": SENTINEL})
 
     assert "(value.e) == (static_cast<::bedrock::protocol::E>(3))" in (out / "a.cpp").read_text()
+
+
+def test_a_deprecated_member_is_a_deprecated_enumerator(generate):
+    out = generate({"a": DEPRECATED})
+
+    assert "    Old [[deprecated]] = 2,\n    Next [[deprecated]] = 3,\n" in (out / "a.h").read_text()
+
+
+def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
+    out = generate({"a": DEPRECATED})
+
+    assert "    Latest = 2,\n};" in (out / "a.h").read_text()
+
+
+def test_a_deprecated_member_reflects_its_number_and_wire_name(generate):
+    header = (generate({"a": DEPRECATED}) / "a.h").read_text()
+    values = (
+        "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::Latest,\n    ::bedrock::protocol::D::A,\n"
+        "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n}};"
+    )
+
+    names = 'names_v<::bedrock::protocol::D>{{\n    "latest",\n    "a",\n    "old_deprecated",\n    "next",\n}};'
+
+    assert values in header
+    assert names in header
+
+
+def test_an_enum_with_a_deprecated_member_flags_each_reflected_member(generate):
+    header = (generate({"a": DEPRECATED}) / "a.h").read_text()
+
+    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    false,\n    true,\n    true,\n}};" in header
+
+
+def test_an_enum_without_a_deprecated_member_has_no_deprecated_flags(generate):
+    out = generate({"a": SENTINEL})
+
+    assert "deprecated_v" not in (out / "a.h").read_text()
+
+
+def test_a_predicate_reads_a_deprecated_member_as_its_number(generate):
+    out = generate({"a": DEPRECATED})
+
+    assert "(value.d) == (static_cast<::bedrock::protocol::D>(2))" in (out / "a.cpp").read_text()
 
 
 def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):

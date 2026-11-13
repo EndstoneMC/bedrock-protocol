@@ -11,7 +11,7 @@ paths:
 - Record BDS's spelling in the DSL, never the wire's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
-- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` with no gate of its own is an error.
+- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=` or `deprecated=True`.
 - Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
 
 ## Values
@@ -19,6 +19,7 @@ paths:
 - Give a real member an explicit int literal.
 - Use `auto()` (previous + 1) only for a count every era's dump holding its enum binds, or a run that shifts behind a gate, and check that the line above holds the right value.
 - Write `sentinel()`, one ungated line, for a count or end marker the header declares that any era's dump holding its enum does not bind (by name if name-coded, else by value).
+- Mark a member bedrock-headers names deprecated with `deprecated=True`: `value(N, deprecated=True)`, or `auto(deprecated=True)` imported from `protocol` in auto position; bpc keeps it, marked deprecated.
 - Leave any other member the dump does not bind as declared, and report it.
 
 ## Underlying type

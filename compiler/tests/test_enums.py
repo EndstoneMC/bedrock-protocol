@@ -69,6 +69,34 @@ def test_a_sentinel_has_no_number_and_is_marked(build_package):
     ]
 
 
+def test_a_deprecated_value_keeps_its_number_and_is_marked(build_package):
+    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, deprecated=True)\n"})
+
+    assert [(member.value, member.deprecated) for member in members(package)] == [(Int(1), False), (Int(2), True)]
+
+
+def test_a_deprecated_auto_has_no_number_and_is_marked(build_package):
+    source = (
+        "from enum import IntEnum\nfrom protocol import auto, uint8\n"
+        + 'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n'
+        + "class E(IntEnum, uint8):\n    A = 1\n    B = auto(deprecated=True)\n    C = auto()\n"
+    )
+
+    assert [(member.value, member.deprecated) for member in members(build_package({"a": source}))] == [
+        (Int(1), False),
+        (None, True),
+        (None, False),
+    ]
+
+
+def test_a_deprecated_value_may_carry_its_bds_spelling_ungated(build_package):
+    package = build_package(
+        {"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, 'B_Deprecated', deprecated=True)\n"}
+    )
+
+    assert members(package)[1].wire_name == "b_deprecated"
+
+
 def test_value_carries_a_number_and_a_range(build_package):
     package = build_package(
         {
@@ -231,6 +259,8 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 1\n    B = sentinel(2)\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1\n    B = value(sentinel(), since=2)\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1\n    B = (sentinel(), 'x')\n", "B: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = 1\n    B = sentinel(deprecated=True)\n", "B: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = value(1, deprecated=1)\n", "A: is not a literal bool"),
         ("class E(IntEnum, int32):\n    A = 1\n    A = 2\n", "A: is declared twice over overlapping versions"),
         (
             "class E(IntEnum, int32):\n    A = value(1, until=3)\n    A = value(2, since=2)\n",

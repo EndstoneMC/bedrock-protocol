@@ -130,7 +130,7 @@ void bind_enum(nb::handle scope, const char *name)
     const auto &values = enum_values<E>();
     const auto &names = enum_schema_names<E>();
     for (std::size_t i = 0; i < values.size(); ++i) {
-        cls.value(std::string(names[i]).c_str(), values[i]);
+        cls.value(std::string(names[i]).c_str(), values[i], enum_deprecated<E>(i) ? "Deprecated." : nullptr);
     }
 }
 

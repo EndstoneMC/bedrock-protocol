@@ -3,6 +3,7 @@
 A field named after a Python keyword carries one trailing underscore, which the compiler drops (`pass_`).
 """
 
+import enum
 from collections.abc import Callable
 from typing import Any
 
@@ -15,14 +16,22 @@ def value(
     cpp_name: str | None = None,
     since: int | None = None,
     until: int | None = None,
+    deprecated: bool = False,
 ) -> Any:
-    """Mark a member a pair cannot spell (gated or `cpp_name`); no `v` means the previous present member's plus one."""
+    """Spell a member a pair cannot (gated, `cpp_name`, deprecated); no `v` numbers it as `auto()` does."""
     return 0 if v is None else v
 
 
 def sentinel() -> Any:
     """Number a member as `auto()` does, for the schema to read but never to generate."""
     return 0
+
+
+class auto(enum.auto):
+    """`enum.auto` that can also mark its member deprecated."""
+
+    def __init__(self, *, deprecated: bool = False) -> None:
+        super().__init__()
 
 
 def field(

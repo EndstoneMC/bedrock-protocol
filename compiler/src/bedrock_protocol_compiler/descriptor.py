@@ -180,6 +180,7 @@ class Member:
     cpp_name: str
     wire_name: str
     sentinel: bool = False
+    deprecated: bool = False
 
 
 @dataclass(frozen=True)

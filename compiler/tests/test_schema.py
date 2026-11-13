@@ -281,6 +281,15 @@ def test_a_sentinel_takes_the_number_auto_would_give_and_is_no_member(build_pack
     )
 
 
+def test_a_deprecated_member_stays_a_member_of_its_shape(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, deprecated=True)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (shape,) = schema.shapes(family)
+
+    assert [(member.name, member.deprecated) for member in shape.members] == [("A", False), ("B", True)]
+
+
 def test_a_gated_sentinel_is_a_member_outside_its_gate(build_package):
     source = (
         HEADER
