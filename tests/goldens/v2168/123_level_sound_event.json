@@ -1,5 +1,6 @@
 [
  {
+  "id": "fire_at_position_present",
   "value": {
    "sound_event": "block.bell.hit",
    "pos": {
@@ -21,6 +22,7 @@
   "bytes": "0e626c6f636b2e62656c6c2e6869740000803f0000004000004040010d6d696e6563726166743a7069670100070000000000000001000080400000a0400000c040"
  },
  {
+  "id": "fire_at_position_absent",
   "value": {
    "sound_event": "block.bell.hit",
    "pos": {
