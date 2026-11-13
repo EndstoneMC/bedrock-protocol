@@ -79,5 +79,191 @@
    ]
   },
   "bytes": "01010110120003000000"
+ },
+ {
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "PlaceActionData": {
+        "amount": 2,
+        "source": {
+         "full_container_name": {
+          "name": "INVENTORY_CONTAINER",
+          "dynamic_id": 5
+         },
+         "slot": 4,
+         "net_id_variant": 9
+        },
+        "destination": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 1,
+         "net_id_variant": 0
+        }
+       }
+      },
+      {
+       "SwapActionData": {
+        "source": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 2,
+         "net_id_variant": 10
+        },
+        "destination": {
+         "full_container_name": {
+          "name": "INVENTORY_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 5,
+         "net_id_variant": 11
+        }
+       }
+      },
+      {
+       "DropActionData": {
+        "amount": 3,
+        "source": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 3,
+         "net_id_variant": 12
+        },
+        "randomly": true
+       }
+      },
+      {
+       "DestroyActionData": {
+        "amount": 4,
+        "source": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 4,
+         "net_id_variant": 13
+        }
+       }
+      },
+      {
+       "ConsumeActionData": {
+        "amount": 5,
+        "source": {
+         "full_container_name": {
+          "name": "HOTBAR_CONTAINER",
+          "dynamic_id": null
+         },
+         "slot": 5,
+         "net_id_variant": 14
+        }
+       }
+      },
+      {
+       "CreateActionData": {
+        "results_index": 2
+       }
+      },
+      {
+       "BeaconPaymentActionData": {
+        "primary_effect_id": 1,
+        "secondary_effect_id": 3
+       }
+      },
+      {
+       "MineBlockActionData": {
+        "slot": 6,
+        "predicted_durability": 7,
+        "net_id_variant": 15
+       }
+      },
+      {
+       "CraftRecipeActionData": {
+        "recipe_net_id": {
+         "raw_id": 8
+        },
+        "num_crafts": 2
+       }
+      },
+      {
+       "CraftRecipeAutoActionData": {
+        "recipe_net_id": {
+         "raw_id": 9
+        },
+        "num_crafts": 3,
+        "ingredients": [
+         {
+          "item_descriptor": {
+           "EmptyItemDescriptorData": {}
+          },
+          "stack_size": 1
+         },
+         {
+          "item_descriptor": {
+           "ItemNameDescriptorData": {
+            "full_name": "minecraft:stone",
+            "aux_value": 0
+           }
+          },
+          "stack_size": 2
+         },
+         {
+          "item_descriptor": {
+           "MolangItemDescriptorData": {
+            "tag_expression": "query.is_item_name_any('minecraft:apple')",
+            "molang_version": "LATEST"
+           }
+          },
+          "stack_size": 3
+         },
+         {
+          "item_descriptor": {
+           "ItemTagDescriptorData": {
+            "item_tag": "minecraft:boats"
+           }
+          },
+          "stack_size": 4
+         }
+        ]
+       }
+      },
+      {
+       "CraftRecipeOptionalActionData": {
+        "recipe_net_id": {
+         "raw_id": 10
+        },
+        "filtered_string_index": 1
+       }
+      },
+      {
+       "CraftRepairAndDisenchantActionData": {
+        "recipe_net_id": 11,
+        "num_crafts": 1,
+        "repair_cost": 12
+       }
+      },
+      {
+       "CraftLoomActionData": {
+        "pattern_name_id": "creeper",
+        "num_crafts": 1
+       }
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": "ANVIL_TEXT"
+    }
+   ]
+  },
+  "bytes": "01090d0101021d010500000004090000001c00010000000002021c00020a0000001d00050b0000000303031c00030c000000010404041c00040d0000000505051c00050e000000060602080a0206090b0c0e0f0000000a0c08020b0d0903040000010001010f6d696e6563726166743a73746f6e6500020002022971756572792e69735f6974656d5f6e616d655f616e7928276d696e6563726166743a6170706c6527290d00030003030f6d696e6563726166743a626f61747304000d0f0a010000000e100b00000001180f110763726565706572010003000000"
  }
 ]
