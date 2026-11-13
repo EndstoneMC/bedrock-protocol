@@ -1,5 +1,6 @@
 [
  {
+  "id": "bool_and_int_rules",
   "value": {
    "rule_data": {
     "rules": [
