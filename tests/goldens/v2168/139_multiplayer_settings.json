@@ -1,5 +1,6 @@
 [
  {
+  "id": "refresh_joincode",
   "value": {
    "packet_type": "REFRESH_JOINCODE"
   },
