@@ -17,8 +17,8 @@ def layout(cases):
     )
 
 
-def test_a_case_value_encodes_to_its_bytes(cls, loadable):
-    assert bytes(load(cls, loadable["value"])).hex() == loadable["bytes"]
+def test_a_case_value_encodes_to_its_bytes(cls, round_trip):
+    assert bytes(load(cls, round_trip["value"])).hex() == round_trip["bytes"]
 
 
 def test_a_case_bytes_decode_to_its_value(cls, case):
