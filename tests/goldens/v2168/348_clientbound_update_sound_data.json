@@ -125,17 +125,19 @@
   "bytes": "2a0000000000000006060606060606"
  },
  {
-  "id": "mixed_arms_starting_with_stop",
+  "id": "seek_to_in_every_slot",
   "value": {
    "server_sound_handle": {
     "value": 42
    },
    "stop": {
-    "Stop": {}
+    "SeekTo": {
+     "seconds": 2.5
+    }
    },
    "set_volume": {
-    "SetPitch": {
-     "pitch": 1.5
+    "SeekTo": {
+     "seconds": 2.5
     }
    },
    "set_pitch": {
@@ -144,14 +146,18 @@
     }
    },
    "fade": {
-    "Pause": {}
+    "SeekTo": {
+     "seconds": 2.5
+    }
    },
    "seek_to": {
-    "Stop": {}
+    "SeekTo": {
+     "seconds": 2.5
+    }
    },
    "pause": {
-    "SetPitch": {
-     "pitch": 1.5
+    "SeekTo": {
+     "seconds": 2.5
     }
    },
    "resume": {
@@ -160,93 +166,83 @@
     }
    }
   },
-  "bytes": "2a0000000000000000020000c03f04000020400500020000c03f0400002040"
+  "bytes": "2a000000000000000400002040040000204004000020400400002040040000204004000020400400002040"
  },
  {
-  "id": "mixed_arms_starting_with_set_pitch",
+  "id": "pause_in_every_slot",
   "value": {
    "server_sound_handle": {
     "value": 42
    },
    "stop": {
-    "SetPitch": {
-     "pitch": 1.5
-    }
+    "Pause": {}
    },
    "set_volume": {
-    "SeekTo": {
-     "seconds": 2.5
-    }
+    "Pause": {}
    },
    "set_pitch": {
     "Pause": {}
    },
    "fade": {
-    "Stop": {}
+    "Pause": {}
    },
    "seek_to": {
-    "SetPitch": {
-     "pitch": 1.5
-    }
+    "Pause": {}
    },
    "pause": {
-    "SeekTo": {
-     "seconds": 2.5
-    }
+    "Pause": {}
    },
    "resume": {
     "Pause": {}
    }
   },
-  "bytes": "2a00000000000000020000c03f04000020400500020000c03f040000204005"
+  "bytes": "2a0000000000000005050505050505"
  },
  {
-  "id": "mixed_arms_starting_with_seek_to",
+  "id": "stop_in_every_slot",
   "value": {
    "server_sound_handle": {
     "value": 42
    },
    "stop": {
-    "SeekTo": {
-     "seconds": 2.5
-    }
+    "Stop": {}
    },
    "set_volume": {
-    "Pause": {}
+    "Stop": {}
    },
    "set_pitch": {
     "Stop": {}
    },
    "fade": {
-    "SetPitch": {
-     "pitch": 1.5
-    }
+    "Stop": {}
    },
    "seek_to": {
-    "SeekTo": {
-     "seconds": 2.5
-    }
+    "Stop": {}
    },
    "pause": {
-    "Pause": {}
+    "Stop": {}
    },
    "resume": {
     "Stop": {}
    }
   },
-  "bytes": "2a0000000000000004000020400500020000c03f04000020400500"
+  "bytes": "2a0000000000000000000000000000"
  },
  {
-  "id": "mixed_arms_starting_with_pause",
+  "id": "set_pitch_in_every_slot",
   "value": {
    "server_sound_handle": {
     "value": 42
    },
    "stop": {
-    "Pause": {}
+    "SetPitch": {
+     "pitch": 1.5
+    }
    },
    "set_volume": {
-    "Stop": {}
+    "SetPitch": {
+     "pitch": 1.5
+    }
    },
    "set_pitch": {
     "SetPitch": {
@@ -254,15 +250,19 @@
     }
    },
    "fade": {
-    "SeekTo": {
-     "seconds": 2.5
+    "SetPitch": {
+     "pitch": 1.5
     }
    },
    "seek_to": {
-    "Pause": {}
+    "SetPitch": {
+     "pitch": 1.5
+    }
    },
    "pause": {
-    "Stop": {}
+    "SetPitch": {
+     "pitch": 1.5
+    }
    },
    "resume": {
     "SetPitch": {
@@ -270,6 +270,6 @@
     }
    }
   },
-  "bytes": "2a000000000000000500020000c03f04000020400500020000c03f"
+  "bytes": "2a00000000000000020000c03f020000c03f020000c03f020000c03f020000c03f020000c03f020000c03f"
  }
 ]
