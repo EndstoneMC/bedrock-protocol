@@ -1,5 +1,6 @@
 [
  {
+  "id": "message_present",
   "value": {
    "reason": "EDITOR_NOT_ALLOWED",
    "messages": {
@@ -12,6 +13,7 @@
   "bytes": "a602000362796503622a2a"
  },
  {
+  "id": "message_absent",
   "value": {
    "reason": "EDITOR_NOT_ALLOWED",
    "messages": null
