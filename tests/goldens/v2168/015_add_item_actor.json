@@ -36,5 +36,125 @@
    "is_from_fishing": true
   },
   "bytes": "0202430101000000000a000000000000000000000000803f0000004000004040000080400000a0400000c040012603030000003f01"
+ },
+ {
+  "value": {
+   "id": 1,
+   "runtime_id": 2,
+   "item": {
+    "id": 323,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id_variant": 9,
+    "block_runtime_id": 0,
+    "user_data_buffer": "00000000000000000000"
+   },
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "data": {
+    "data": [
+     {
+      "id": 2,
+      "payload": {
+       "DataItemIntPayload": {
+        "value": 7
+       }
+      }
+     },
+     {
+      "id": 3,
+      "payload": {
+       "DataItemBytePayload": {
+        "value": 3
+       }
+      }
+     },
+     {
+      "id": 4,
+      "payload": {
+       "DataItemStringPayload": {
+        "value": "Bob"
+       }
+      }
+     },
+     {
+      "id": 5,
+      "payload": {
+       "DataItemInt64Payload": {
+        "value": -4000000000
+       }
+      }
+     },
+     {
+      "id": 7,
+      "payload": {
+       "DataItemShortPayload": {
+        "value": 300
+       }
+      }
+     },
+     {
+      "id": 28,
+      "payload": {
+       "DataItemPosPayload": {
+        "value": {
+         "x": 1,
+         "y": -2,
+         "z": 3
+        }
+       }
+      }
+     },
+     {
+      "id": 118,
+      "payload": {
+       "DataItemCompoundTagPayload": {
+        "value": {
+         "Hitboxes": {
+          "ListTag": {
+           "type": 10,
+           "tags": [
+            {
+             "CompoundTag": {
+              "Height": {
+               "FloatTag": 1.5
+              },
+              "Width": {
+               "FloatTag": 0.75
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "id": 130,
+      "payload": {
+       "DataItemVec3Payload": {
+        "value": {
+         "x": 0.5,
+         "y": 1.5,
+         "z": 2.5
+        }
+       }
+      }
+     }
+    ]
+   },
+   "is_from_fishing": true
+  },
+  "bytes": "020243010100000112000a000000000000000000000000803f0000004000004040000080400000a0400000c040080202020e0300000304040403426f62050707ff9fd9e61d0701012c011c06060203067605050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f0000820108080000003f0000c03f0000204001"
  }
 ]
