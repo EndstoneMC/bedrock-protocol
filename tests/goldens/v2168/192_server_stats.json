@@ -1,5 +1,6 @@
 [
  {
+  "id": "server_and_network_time",
   "value": {
    "server_time": 12.5,
    "network_time": 0.25
