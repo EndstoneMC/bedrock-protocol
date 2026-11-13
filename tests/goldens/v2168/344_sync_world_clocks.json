@@ -10,18 +10,8 @@
        "time": 1000,
        "is_paused": true,
        "time_markers": [
-        {
-         "id": 1,
-         "name": "sunrise",
-         "time": 23000,
-         "period": 24000
-        },
-        {
-         "id": 2,
-         "name": "noon",
-         "time": 6000,
-         "period": null
-        }
+        {"id": 1, "name": "sunrise", "time": 23000, "period": 24000},
+        {"id": 2, "name": "noon", "time": 6000, "period": null}
        ]
       }
      ]
@@ -36,12 +26,7 @@
     "AddTimeMarkerData": {
      "clock_id": 1,
      "time_markers": [
-      {
-       "id": 1,
-       "name": "dusk",
-       "time": 12000,
-       "period": 24000
-      }
+      {"id": 1, "name": "dusk", "time": 12000, "period": 24000}
      ]
     }
    }
@@ -53,9 +38,7 @@
    "data": {
     "RemoveTimeMarkerData": {
      "clock_id": 300,
-     "time_marker_ids": [
-      1
-     ]
+     "time_marker_ids": [1]
     }
    }
   },

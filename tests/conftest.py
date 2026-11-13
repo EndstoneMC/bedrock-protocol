@@ -34,3 +34,6 @@ def pytest_generate_tests(metafunc):
             for index, case in enumerate(cases)
         ]
         metafunc.parametrize("cls, case", params)
+
+    if "case_file" in metafunc.fixturenames:
+        metafunc.parametrize("case_file", list(CASES), ids=[f"{path.parent.name}/{path.stem}" for path in CASES])

@@ -1,15 +1,6 @@
 [
  {
-  "value": {
-   "boss_id": -3,
-   "player_id": 7,
-   "event_type": "ADD",
-   "name": "boss",
-   "filtered_name": "bo**",
-   "health_percent": 0.5,
-   "color": "GREEN",
-   "overlay": "NOTCHED_6"
-  },
+  "value": {"boss_id": -3, "player_id": 7, "event_type": "ADD", "name": "boss", "filtered_name": "bo**", "health_percent": 0.5, "color": "GREEN", "overlay": "NOTCHED_6"},
   "bytes": "050e0004626f737304626f2a2a0000003f0301"
  }
 ]

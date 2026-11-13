@@ -1,22 +1,10 @@
 [
  {
-  "value": {
-   "pos_x": 1,
-   "pos_y": -2,
-   "pos_z": 300,
-   "slot_index": 4,
-   "is_disabled": true
-  },
+  "value": {"pos_x": 1, "pos_y": -2, "pos_z": 300, "slot_index": 4, "is_disabled": true},
   "bytes": "01000000feffffff2c0100000401"
  },
  {
-  "value": {
-   "pos_x": 5,
-   "pos_y": 64,
-   "pos_z": 7,
-   "slot_index": 8,
-   "is_disabled": true
-  },
+  "value": {"pos_x": 5, "pos_y": 64, "pos_z": 7, "slot_index": 8, "is_disabled": true},
   "bytes": "0500000040000000070000000801"
  }
 ]

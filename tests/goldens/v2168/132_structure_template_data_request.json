@@ -2,26 +2,14 @@
  {
   "value": {
    "structure_name": "mystructure",
-   "structure_block_pos": {
-    "x": 1,
-    "y": -2,
-    "z": 3
-   },
+   "structure_block_pos": {"x": 1, "y": -2, "z": 3},
    "structure_settings": {
     "palette_name": "default",
     "ignore_entities": true,
     "ignore_blocks": false,
     "allow_non_ticking_player_and_ticking_area_chunks": true,
-    "structure_size": {
-     "x": 5,
-     "y": 6,
-     "z": 7
-    },
-    "structure_offset": {
-     "x": -1,
-     "y": 0,
-     "z": 1
-    },
+    "structure_size": {"x": 5, "y": 6, "z": 7},
+    "structure_offset": {"x": -1, "y": 0, "z": 1},
     "last_touched_by_player": 300,
     "rotation": "ROTATE_90",
     "mirror": "Z",
@@ -29,11 +17,7 @@
     "animation_seconds": 0.5,
     "integrity_value": 1.0,
     "integrity_seed": 3735928559,
-    "pivot": {
-     "x": 0.5,
-     "y": 1.5,
-     "z": 2.5
-    }
+    "pivot": {"x": 0.5, "y": 1.5, "z": 2.5}
    },
    "request_operation": "QUERY_SAVED_STRUCTURE"
   },

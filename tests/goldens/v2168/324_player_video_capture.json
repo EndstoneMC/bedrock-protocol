@@ -2,10 +2,7 @@
  {
   "value": {
    "start_video_capture": {
-    "StartVideoCapture": {
-     "frame_rate": 60,
-     "file_prefix": "clip"
-    }
+    "StartVideoCapture": {"frame_rate": 60, "file_prefix": "clip"}
    },
    "stop_video_capture": {
     "StopVideoCapture": {}
@@ -19,10 +16,7 @@
     "StopVideoCapture": {}
    },
    "stop_video_capture": {
-    "StartVideoCapture": {
-     "frame_rate": 30,
-     "file_prefix": "ab"
-    }
+    "StartVideoCapture": {"frame_rate": 30, "file_prefix": "ab"}
    }
   },
   "bytes": "01001e000000026162"

@@ -1,17 +1,10 @@
 [
  {
   "value": {
-   "position": {
-    "x": 1,
-    "y": -2,
-    "z": 3
-   },
+   "position": {"x": 1, "y": -2, "z": 3},
    "radius": 160,
    "server_built_chunks": [
-    {
-     "x": -1,
-     "z": 5
-    }
+    {"x": -1, "z": 5}
    ]
   },
   "bytes": "020306a00101000000010a"

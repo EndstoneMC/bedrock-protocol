@@ -6,16 +6,12 @@
      {
       "name": "showcoordinates",
       "can_be_modified_by_player": true,
-      "value": {
-       "bool": true
-      }
+      "value": {"bool": true}
      },
      {
       "name": "maxcommandchainlength",
       "can_be_modified_by_player": false,
-      "value": {
-       "int": 65535
-      }
+      "value": {"int": 65535}
      }
     ]
    }

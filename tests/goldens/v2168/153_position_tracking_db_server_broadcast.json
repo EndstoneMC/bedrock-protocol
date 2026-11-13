@@ -2,13 +2,9 @@
  {
   "value": {
    "action": "UPDATE",
-   "id": {
-    "raw_id": 7
-   },
+   "id": {"raw_id": 7},
    "data": {
-    "id": {
-     "StringTag": "00000007"
-    }
+    "id": {"StringTag": "00000007"}
    }
   },
   "bytes": "000e0a000802696408303030303030303700"

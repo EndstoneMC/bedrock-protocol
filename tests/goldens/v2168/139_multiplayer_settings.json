@@ -1,8 +1,6 @@
 [
  {
-  "value": {
-   "packet_type": "REFRESH_JOINCODE"
-  },
+  "value": {"packet_type": "REFRESH_JOINCODE"},
   "bytes": "04"
  }
 ]

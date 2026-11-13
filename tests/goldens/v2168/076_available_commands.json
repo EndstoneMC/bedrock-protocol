@@ -1,31 +1,20 @@
 [
  {
   "value": {
-   "enum_values": [
-    "true"
-   ],
-   "chained_subcommand_values": [
-    "as"
-   ],
-   "postfixes": [
-    "L"
-   ],
+   "enum_values": ["true"],
+   "chained_subcommand_values": ["as"],
+   "postfixes": ["L"],
    "enums": [
     {
      "name": "Boolean",
-     "values": [
-      0
-     ]
+     "values": [0]
     }
    ],
    "chained_subcommands": [
     {
      "name": "execute",
      "values": [
-      {
-       "sub_command_first_value": 0,
-       "sub_command_second_value": 0
-      }
+      {"sub_command_first_value": 0, "sub_command_second_value": 0}
      ]
     }
    ],
@@ -36,19 +25,12 @@
      "flags": 258,
      "permission": "ADMIN",
      "alias_enum": -1,
-     "chained_subcommand_indexes": [
-      0
-     ],
+     "chained_subcommand_indexes": [0],
      "overloads": [
       {
        "is_chaining": true,
        "params": [
-        {
-         "name": "arg",
-         "parse_symbol": 1048577,
-         "optional": true,
-         "param_options": 1
-        }
+        {"name": "arg", "parse_symbol": 1048577, "optional": true, "param_options": 1}
        ]
       }
      ]
@@ -57,18 +39,14 @@
    "soft_enums": [
     {
      "name": "soft",
-     "values": [
-      "a"
-     ]
+     "values": ["a"]
     }
    ],
    "constraints": [
     {
      "enum_value_symbol": 0,
      "enum_symbol": 0,
-     "constraints": [
-      1
-     ]
+     "constraints": [1]
     }
    ]
   },

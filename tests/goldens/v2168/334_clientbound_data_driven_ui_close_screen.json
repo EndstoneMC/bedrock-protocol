@@ -1,14 +1,10 @@
 [
  {
-  "value": {
-   "form_id": 300
-  },
+  "value": {"form_id": 300},
   "bytes": "012c010000"
  },
  {
-  "value": {
-   "form_id": null
-  },
+  "value": {"form_id": null},
   "bytes": "00"
  }
 ]

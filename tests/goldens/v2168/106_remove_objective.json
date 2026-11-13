@@ -1,8 +1,6 @@
 [
  {
-  "value": {
-   "objective_name": "kills"
-  },
+  "value": {"objective_name": "kills"},
   "bytes": "056b696c6c73"
  }
 ]

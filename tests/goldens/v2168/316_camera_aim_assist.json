@@ -2,10 +2,7 @@
  {
   "value": {
    "preset_id": "aim_assist_preset",
-   "view_angle": {
-    "x": 30.0,
-    "y": 20.0
-   },
+   "view_angle": {"x": 30.0, "y": 20.0},
    "distance": 8.0,
    "target_mode": "DISTANCE",
    "action": "SET",
@@ -16,10 +13,7 @@
  {
   "value": {
    "preset_id": "preset",
-   "view_angle": {
-    "x": 10.0,
-    "y": 15.0
-   },
+   "view_angle": {"x": 10.0, "y": 15.0},
    "distance": 4.0,
    "target_mode": "ANGLE",
    "action": "CLEAR",

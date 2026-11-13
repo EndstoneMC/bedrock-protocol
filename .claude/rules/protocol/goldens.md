@@ -14,7 +14,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep a packet's cases in `tests/goldens/v<protocol>/<id:03>_<snake_name>.json`, `<snake_name>` being the class the folder's module binds at `<id>` without its trailing `Packet`, in snake case: a JSON array of `{"value", "bytes"}`.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
 - Write `value` exactly as `to_json` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
-- Write a case file as `json.dumps(cases, indent=1)` plus a newline, regenerated from the library after every edit.
+- Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list and object on one line, regenerated from the library after every edit.
 - Commit a case only once BDS writes the same bytes and the JSON BDS prints matches `value` in its tree and leaf values; keys are not compared.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 

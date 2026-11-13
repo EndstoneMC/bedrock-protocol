@@ -5,11 +5,7 @@
    "collection_name": "shift",
    "from_step": "dawn",
    "to_step": "dusk",
-   "all_steps": [
-    "dawn",
-    "noon",
-    "dusk"
-   ],
+   "all_steps": ["dawn", "noon", "dusk"],
    "current_length_in_ticks": 200,
    "total_length_in_ticks": 400,
    "enabled": true

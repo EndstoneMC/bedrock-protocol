@@ -4,65 +4,34 @@
    "entity_id": 1,
    "runtime_id": 2,
    "actor_type": "minecraft:pig",
-   "pos": {
-    "x": 1.0,
-    "y": 2.0,
-    "z": 3.0
-   },
-   "velocity": {
-    "x": 4.0,
-    "y": 5.0,
-    "z": 6.0
-   },
-   "rot": {
-    "x": 7.0,
-    "y": 8.0
-   },
+   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
+   "velocity": {"x": 4.0, "y": 5.0, "z": 6.0},
+   "rot": {"x": 7.0, "y": 8.0},
    "y_head_rotation": 9.0,
    "y_body_rotation": 10.0,
    "attributes": [
-    {
-     "name": "minecraft:health",
-     "min_value": 1.0,
-     "current_value": 20.0,
-     "max_value": 20.0
-    }
+    {"name": "minecraft:health", "min_value": 1.0, "current_value": 20.0, "max_value": 20.0}
    ],
    "data": {
     "data": [
      {
       "id": 38,
       "payload": {
-       "DataItemFloatPayload": {
-        "value": 0.5
-       }
+       "DataItemFloatPayload": {"value": 0.5}
       }
      }
     ]
    },
    "synched_properties": {
     "int_entries": [
-     {
-      "property_index": 1,
-      "data": -2
-     }
+     {"property_index": 1, "data": -2}
     ],
     "float_entries": [
-     {
-      "property_index": 2,
-      "data": 0.5
-     }
+     {"property_index": 2, "data": 0.5}
     ]
    },
    "links": [
-    {
-     "a": 1,
-     "b": 2,
-     "type": "RIDING",
-     "immediate": true,
-     "passenger_initiated": false,
-     "vehicle_angular_velocity": 1.5
-    }
+    {"a": 1, "b": 2, "type": "RIDING", "immediate": true, "passenger_initiated": false, "vehicle_angular_velocity": 1.5}
    ]
   },
   "bytes": "02020d6d696e6563726166743a7069670000803f0000004000004040000080400000a0400000c0400000e04000000041000010410000204101106d696e6563726166743a6865616c74680000803f0000a0410000a041012603030000003f01010301020000003f0102040101000000c03f"

@@ -1,8 +1,6 @@
 [
  {
-  "value": {
-   "chunk_radius": 12
-  },
+  "value": {"chunk_radius": 12},
   "bytes": "18"
  }
 ]

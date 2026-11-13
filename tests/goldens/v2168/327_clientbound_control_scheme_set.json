@@ -1,14 +1,10 @@
 [
  {
-  "value": {
-   "control_scheme": "PLAYER_RELATIVE"
-  },
+  "value": {"control_scheme": "PLAYER_RELATIVE"},
   "bytes": "03"
  },
  {
-  "value": {
-   "control_scheme": "PLAYER_RELATIVE_STRAFE"
-  },
+  "value": {"control_scheme": "PLAYER_RELATIVE_STRAFE"},
   "bytes": "04"
  }
 ]

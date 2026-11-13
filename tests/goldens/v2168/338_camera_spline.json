@@ -8,34 +8,18 @@
      "spline_type": "catmullrom",
      "spline_control_points": [
       {
-       "position": {
-        "x": 1.0,
-        "y": 2.0,
-        "z": 3.0
-       }
+       "position": {"x": 1.0, "y": 2.0, "z": 3.0}
       },
       {
-       "position": {
-        "x": 4.0,
-        "y": 5.0,
-        "z": 6.0
-       }
+       "position": {"x": 4.0, "y": 5.0, "z": 6.0}
       }
      ],
      "spline_progress_frames": [
-      {
-       "alpha": 0.5,
-       "time_seconds": 1.25,
-       "easing_type": "IN_OUT_QUAD"
-      }
+      {"alpha": 0.5, "time_seconds": 1.25, "easing_type": "IN_OUT_QUAD"}
      ],
      "spline_rotation_frames": [
       {
-       "rotation": {
-        "x": 10.0,
-        "y": 20.0,
-        "z": 30.0
-       },
+       "rotation": {"x": 10.0, "y": 20.0, "z": 30.0},
        "time_seconds": 2.5,
        "easing_type": "IN_QUAD"
       }

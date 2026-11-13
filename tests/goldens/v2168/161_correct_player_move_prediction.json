@@ -2,20 +2,9 @@
  {
   "value": {
    "prediction_type": "VEHICLE",
-   "pos": {
-    "x": 1.0,
-    "y": 2.0,
-    "z": 3.0
-   },
-   "pos_delta": {
-    "x": 0.5,
-    "y": -0.5,
-    "z": 0.25
-   },
-   "vehicle_rotation": {
-    "x": 45.0,
-    "y": 90.0
-   },
+   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
+   "pos_delta": {"x": 0.5, "y": -0.5, "z": 0.25},
+   "vehicle_rotation": {"x": 45.0, "y": 90.0},
    "vehicle_angular_velocity": 1.5,
    "on_ground": true,
    "tick": 300
@@ -25,20 +14,9 @@
  {
   "value": {
    "prediction_type": "PLAYER",
-   "pos": {
-    "x": 1.0,
-    "y": 2.0,
-    "z": 3.0
-   },
-   "pos_delta": {
-    "x": 0.5,
-    "y": -0.5,
-    "z": 0.25
-   },
-   "vehicle_rotation": {
-    "x": 45.0,
-    "y": 90.0
-   },
+   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
+   "pos_delta": {"x": 0.5, "y": -0.5, "z": 0.25},
+   "vehicle_rotation": {"x": 45.0, "y": 90.0},
    "vehicle_angular_velocity": null,
    "on_ground": false,
    "tick": 300

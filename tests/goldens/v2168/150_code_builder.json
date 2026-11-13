@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "url": "ws://localhost:8080/code",
-   "should_open_code_builder": true
-  },
+  "value": {"url": "ws://localhost:8080/code", "should_open_code_builder": true},
   "bytes": "1877733a2f2f6c6f63616c686f73743a383038302f636f646501"
  }
 ]

@@ -1,8 +1,6 @@
 [
  {
-  "value": {
-   "json_input": "{\"behaviors\":[\"minecraft:behavior.float\"]}"
-  },
+  "value": {"json_input": "{\"behaviors\":[\"minecraft:behavior.float\"]}"},
   "bytes": "2a7b226265686176696f7273223a5b226d696e6563726166743a6265686176696f722e666c6f6174225d7d"
  }
 ]

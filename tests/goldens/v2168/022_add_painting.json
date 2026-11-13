@@ -3,11 +3,7 @@
   "value": {
    "entity_id": -5,
    "runtime_id": 300,
-   "pos": {
-    "x": 1.0,
-    "y": 2.0,
-    "z": 3.0
-   },
+   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
    "dir": 3,
    "motif": "Kebab"
   },

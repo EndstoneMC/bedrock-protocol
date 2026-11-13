@@ -2,11 +2,7 @@
  {
   "value": {
    "type": "START_REACTION",
-   "pos": {
-    "x": 1,
-    "y": -2,
-    "z": 300
-   },
+   "pos": {"x": 1, "y": -2, "z": 300},
    "reaction": "MISC_LARGE_SMOKE"
   },
   "bytes": "010203d8040c"

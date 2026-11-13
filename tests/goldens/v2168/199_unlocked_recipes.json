@@ -2,9 +2,7 @@
  {
   "value": {
    "packet_type": "NEWLY_UNLOCKED_RECIPES",
-   "unlocked_recipes": [
-    "minecraft:stick"
-   ]
+   "unlocked_recipes": ["minecraft:stick"]
   },
   "bytes": "02000000010f6d696e6563726166743a737469636b"
  },

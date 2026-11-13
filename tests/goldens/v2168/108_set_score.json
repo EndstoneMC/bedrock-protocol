@@ -4,29 +4,21 @@
    "score_info": [
     {
      "RemoveScore": {
-      "scoreboard_id": {
-       "raw_id": 1
-      },
+      "scoreboard_id": {"raw_id": 1},
       "objective_name": "rm"
      }
     },
     {
      "ChangePlayerScore": {
-      "scoreboard_id": {
-       "raw_id": 2
-      },
+      "scoreboard_id": {"raw_id": 2},
       "objective_name": "obj",
       "score_value": 5,
-      "player_id": {
-       "actor_unique_id": 9
-      }
+      "player_id": {"actor_unique_id": 9}
      }
     },
     {
      "ChangeEntityScore": {
-      "scoreboard_id": {
-       "raw_id": 3
-      },
+      "scoreboard_id": {"raw_id": 3},
       "objective_name": "obj",
       "score_value": 6,
       "entity_id": 11
@@ -34,9 +26,7 @@
     },
     {
      "ChangeFakePlayerScore": {
-      "scoreboard_id": {
-       "raw_id": 4
-      },
+      "scoreboard_id": {"raw_id": 4},
       "objective_name": "obj",
       "score_value": 7,
       "fake_player_name": "fake"
@@ -51,9 +41,7 @@
    "score_info": [
     {
      "RemoveScore": {
-      "scoreboard_id": {
-       "raw_id": 1
-      },
+      "scoreboard_id": {"raw_id": 1},
       "objective_name": null
      }
     }

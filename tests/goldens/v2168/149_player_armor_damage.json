@@ -2,10 +2,7 @@
  {
   "value": {
    "slot_and_damage_pairs": [
-    {
-     "armor_slot": "TORSO",
-     "damage": 3
-    }
+    {"armor_slot": "TORSO", "damage": 3}
    ]
   },
   "bytes": "01020300"

@@ -1,10 +1,6 @@
 [
  {
-  "value": {
-   "name": "record.pigstep",
-   "stop_all": true,
-   "stop_music_legacy": true
-  },
+  "value": {"name": "record.pigstep", "stop_all": true, "stop_music_legacy": true},
   "bytes": "0e7265636f72642e706967737465700101"
  }
 ]

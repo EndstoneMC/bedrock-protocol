@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "actor_id": -300,
-   "data": "lag spike"
-  },
+  "value": {"actor_id": -300, "data": "lag spike"},
   "bytes": "d704096c6167207370696b65"
  }
 ]

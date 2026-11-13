@@ -3,11 +3,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
-    "ReplacePage": {
-     "page_index": 2,
-     "page_text": "hello",
-     "photo_name": "photo.png"
-    }
+    "ReplacePage": {"page_index": 2, "page_text": "hello", "photo_name": "photo.png"}
    }
   },
   "bytes": "0600040568656c6c6f0970686f746f2e706e67"
@@ -16,11 +12,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
-    "AddPage": {
-     "page_index": 2,
-     "page_text": "hello",
-     "photo_name": "photo.png"
-    }
+    "AddPage": {"page_index": 2, "page_text": "hello", "photo_name": "photo.png"}
    }
   },
   "bytes": "0601040568656c6c6f0970686f746f2e706e67"
@@ -29,9 +21,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
-    "DeletePage": {
-     "page_index": 1
-    }
+    "DeletePage": {"page_index": 1}
    }
   },
   "bytes": "060202"
@@ -40,10 +30,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
-    "SwapPages": {
-     "page_index": 1,
-     "swap_with_index": 2
-    }
+    "SwapPages": {"page_index": 1, "swap_with_index": 2}
    }
   },
   "bytes": "06030204"
@@ -52,11 +39,7 @@
   "value": {
    "book_slot": 4,
    "operation": {
-    "Finalize": {
-     "title": "Diary",
-     "author": "Steve",
-     "xuid": "2535465"
-    }
+    "Finalize": {"title": "Diary", "author": "Steve", "xuid": "2535465"}
    }
   },
   "bytes": "08040544696172790553746576650732353335343635"

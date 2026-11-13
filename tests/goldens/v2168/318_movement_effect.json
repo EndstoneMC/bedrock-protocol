@@ -1,20 +1,10 @@
 [
  {
-  "value": {
-   "runtime_id": 7,
-   "effect_type": "DOLPHIN_BOOST",
-   "effect_duration": 40,
-   "tick": 300
-  },
+  "value": {"runtime_id": 7, "effect_type": "DOLPHIN_BOOST", "effect_duration": 40, "tick": 300},
   "bytes": "070250ac02"
  },
  {
-  "value": {
-   "runtime_id": 3,
-   "effect_type": "GEYSER_BOOST",
-   "effect_duration": 20,
-   "tick": 9
-  },
+  "value": {"runtime_id": 3, "effect_type": "GEYSER_BOOST", "effect_duration": 20, "tick": 9},
   "bytes": "03042809"
  }
 ]

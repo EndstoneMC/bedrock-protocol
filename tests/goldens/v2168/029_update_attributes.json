@@ -12,14 +12,7 @@
      "default_value": 20.0,
      "name": "minecraft:health",
      "modifiers": [
-      {
-       "id": "00000000-0000-0000-0000-000000000001",
-       "name": "buff",
-       "amount": 2.5,
-       "operation": "OPERATION_MULTIPLY_BASE",
-       "operand": "OPERAND_CURRENT",
-       "serialize": true
-      }
+      {"id": "00000000-0000-0000-0000-000000000001", "name": "buff", "amount": 2.5, "operation": "OPERATION_MULTIPLY_BASE", "operand": "OPERAND_CURRENT", "serialize": true}
      ]
     },
     {

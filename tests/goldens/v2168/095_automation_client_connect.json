@@ -1,9 +1,7 @@
 [
  {
   "value": {
-   "web_socket_data": {
-    "ip": "ws://localhost:8000/ws"
-   }
+   "web_socket_data": {"ip": "ws://localhost:8000/ws"}
   },
   "bytes": "1677733a2f2f6c6f63616c686f73743a383030302f7773"
  }

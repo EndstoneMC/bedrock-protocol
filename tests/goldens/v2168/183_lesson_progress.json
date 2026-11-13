@@ -1,18 +1,10 @@
 [
  {
-  "value": {
-   "action": "COMPLETE",
-   "score": 300,
-   "activity_id": "chemistry.intro"
-  },
+  "value": {"action": "COMPLETE", "score": 300, "activity_id": "chemistry.intro"},
   "bytes": "02d8040f6368656d69737472792e696e74726f"
  },
  {
-  "value": {
-   "action": "RESTART",
-   "score": 1,
-   "activity_id": "a"
-  },
+  "value": {"action": "RESTART", "score": 1, "activity_id": "a"},
   "bytes": "04020161"
  }
 ]

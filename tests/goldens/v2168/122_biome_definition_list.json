@@ -12,18 +12,13 @@
      "map_water_color_argb": 1146447479,
      "rain": true,
      "tags": {
-      "tags": [
-       1
-      ]
+      "tags": [1]
      },
      "chunk_gen_data": null
     }
    },
    "string_list": {
-    "strings": [
-     "plains",
-     "tag"
-    ]
+    "strings": ["plains", "tag"]
    }
   },
   "bytes": "01000001000000003f0000803e0000003f0000003e0000803f776655440101010100000206706c61696e7303746167"
@@ -60,26 +55,19 @@
        "mesa_surface": null,
        "capped_surface": null,
        "noise_gradient_surface": {
-        "non_replaceable_blocks": [
-         1921718966
-        ],
+        "non_replaceable_blocks": [1921718966],
         "gradient_block_ranges": [
          {
           "noise": "n",
           "threshold": 0.25,
-          "range": {
-           "min": 0.5,
-           "max": 1.0
-          },
+          "range": {"min": 0.5, "max": 1.0},
           "block_runtime_id": 1741778478
          }
         ],
         "noise_descriptor": {
          "name": "seed",
          "first_octave": -3,
-         "amplitudes": [
-          1.0
-         ]
+         "amplitudes": [1.0]
         }
        }
       },
@@ -88,10 +76,7 @@
     }
    },
    "string_list": {
-    "strings": [
-     "plains",
-     "tag"
-    ]
+    "strings": ["plains", "tag"]
    }
   },
   "bytes": "01000001000000003f0000803e0000003f0000003e0000803f7766554401000100000000000000000001000101010100000101b61a8b7201016e0000803e0000003f0000803f2e6ed1670473656564fdffffff010000803f000206706c61696e7303746167"

@@ -4,27 +4,17 @@
    "responses": [
     {
      "result": "SUCCESS",
-     "client_request_id": {
-      "raw_id": -1
-     },
+     "client_request_id": {"raw_id": -1},
      "containers": [
       {
-       "full_container_name": {
-        "name": "LEVEL_ENTITY_CONTAINER",
-        "dynamic_id": null
-       },
+       "full_container_name": {"name": "LEVEL_ENTITY_CONTAINER", "dynamic_id": null},
        "slots": [
         {
          "requested_slot": 3,
          "slot": 3,
          "amount": 64,
-         "item_stack_net_id": {
-          "raw_id": 9
-         },
-         "custom_name": {
-          "unredacted_string": "n",
-          "redacted_string": null
-         },
+         "item_stack_net_id": {"raw_id": 9},
+         "custom_name": {"unredacted_string": "n", "redacted_string": null},
          "durability_correction": 5
         }
        ]
@@ -40,9 +30,7 @@
    "responses": [
     {
      "result": "ERROR",
-     "client_request_id": {
-      "raw_id": -1
-     },
+     "client_request_id": {"raw_id": -1},
      "containers": null
     }
    ]

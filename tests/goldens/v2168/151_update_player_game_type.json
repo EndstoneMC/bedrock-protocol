@@ -1,10 +1,6 @@
 [
  {
-  "value": {
-   "player_game_type": "ADVENTURE",
-   "target_player": 7,
-   "tick": 200
-  },
+  "value": {"player_game_type": "ADVENTURE", "target_player": 7, "tick": 200},
   "bytes": "040ec801"
  }
 ]

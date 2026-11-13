@@ -1,11 +1,6 @@
 [
  {
-  "value": {
-   "violation_type": "PACKET_MALFORMED",
-   "violation_severity": "TERMINATING_CONNECTION",
-   "violating_packet_id": "INVENTORY_TRANSACTION",
-   "violation_context": "malformed packet"
-  },
+  "value": {"violation_type": "PACKET_MALFORMED", "violation_severity": "TERMINATING_CONNECTION", "violating_packet_id": "INVENTORY_TRANSACTION", "violation_context": "malformed packet"},
   "bytes": "00043c106d616c666f726d6564207061636b6574"
  }
 ]

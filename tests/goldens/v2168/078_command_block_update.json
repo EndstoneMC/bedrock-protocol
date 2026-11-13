@@ -3,11 +3,7 @@
   "value": {
    "target": {
     "BlockCommandData": {
-     "block_pos": {
-      "x": 1,
-      "y": -2,
-      "z": 300
-     },
+     "block_pos": {"x": 1, "y": -2, "z": 300},
      "mode": "CHAIN",
      "redstone_mode": true,
      "is_conditional": true
@@ -26,9 +22,7 @@
  {
   "value": {
    "target": {
-    "EntityCommandTarget": {
-     "entity_id": 300
-    }
+    "EntityCommandTarget": {"entity_id": 300}
    },
    "command": "say hi",
    "last_output": "ok",

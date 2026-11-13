@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "command_string": "gamerule showcoordinates true",
-   "suppress_output": true
-  },
+  "value": {"command_string": "gamerule showcoordinates true", "suppress_output": true},
   "bytes": "1d67616d6572756c652073686f77636f6f7264696e61746573207472756501"
  }
 ]

@@ -3,25 +3,16 @@
   "value": {
    "waypoints": [
     {
-     "handle": {
-      "uuid": "01234567-89ab-cdef-fedc-ba9876543210"
-     },
+     "handle": {"uuid": "01234567-89ab-cdef-fedc-ba9876543210"},
      "payload": {
       "update_flag": 63,
       "is_visible": true,
       "world_position": {
-       "pos": {
-        "x": 1.0,
-        "y": 2.0,
-        "z": 3.0
-       },
+       "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
        "dimension_type": 1
       },
       "texture_path": "textures/ui/waypoint",
-      "icon_size": {
-       "x": 16.0,
-       "y": 16.0
-      },
+      "icon_size": {"x": 16.0, "y": 16.0},
       "color": 16744767,
       "client_position_authority": true,
       "actor_id": 300
@@ -29,19 +20,8 @@
      "action": "UPDATE"
     },
     {
-     "handle": {
-      "uuid": "00000000-0000-0001-0000-000000000002"
-     },
-     "payload": {
-      "update_flag": 1,
-      "is_visible": null,
-      "world_position": null,
-      "texture_path": null,
-      "icon_size": null,
-      "color": null,
-      "client_position_authority": null,
-      "actor_id": null
-     },
+     "handle": {"uuid": "00000000-0000-0001-0000-000000000002"},
+     "payload": {"update_flag": 1, "is_visible": null, "world_position": null, "texture_path": null, "icon_size": null, "color": null, "client_position_authority": null, "actor_id": null},
      "action": "REMOVE"
     }
    ]
@@ -58,19 +38,8 @@
   "value": {
    "waypoints": [
     {
-     "handle": {
-      "uuid": "00000000-0000-0001-0000-000000000002"
-     },
-     "payload": {
-      "update_flag": 63,
-      "is_visible": null,
-      "world_position": null,
-      "texture_path": null,
-      "icon_size": null,
-      "color": null,
-      "client_position_authority": null,
-      "actor_id": null
-     },
+     "handle": {"uuid": "00000000-0000-0001-0000-000000000002"},
+     "payload": {"update_flag": 63, "is_visible": null, "world_position": null, "texture_path": null, "icon_size": null, "color": null, "client_position_authority": null, "actor_id": null},
      "action": "REMOVE"
     }
    ]

@@ -1,8 +1,6 @@
 [
  {
-  "value": {
-   "player_id": 300
-  },
+  "value": {"player_id": 300},
   "bytes": "ac02"
  }
 ]

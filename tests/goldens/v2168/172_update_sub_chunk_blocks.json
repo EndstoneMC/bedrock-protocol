@@ -1,19 +1,11 @@
 [
  {
   "value": {
-   "sub_chunk_block_position": {
-    "x": 4,
-    "y": -5,
-    "z": 6
-   },
+   "sub_chunk_block_position": {"x": 4, "y": -5, "z": 6},
    "blocks_changed": {
     "standards": [
      {
-      "pos": {
-       "x": 1,
-       "y": 2,
-       "z": 3
-      },
+      "pos": {"x": 1, "y": 2, "z": 3},
       "runtime_id": 1921718966,
       "update_flags": 3,
       "entity_unique_id": 9,
@@ -22,11 +14,7 @@
     ],
     "extras": [
      {
-      "pos": {
-       "x": -1,
-       "y": 0,
-       "z": 1
-      },
+      "pos": {"x": -1, "y": 0, "z": 1},
       "runtime_id": 1741778478,
       "update_flags": 2,
       "entity_unique_id": 5,
@@ -39,11 +27,7 @@
  },
  {
   "value": {
-   "sub_chunk_block_position": {
-    "x": 3,
-    "y": 64,
-    "z": 5
-   },
+   "sub_chunk_block_position": {"x": 3, "y": 64, "z": 5},
    "blocks_changed": {
     "standards": [],
     "extras": []

@@ -1,12 +1,8 @@
 [
  {
   "value": {
-   "missing_ids": [
-    1
-   ],
-   "found_ids": [
-    3
-   ]
+   "missing_ids": [1],
+   "found_ids": [3]
   },
   "bytes": "010100000000000000010300000000000000"
  }

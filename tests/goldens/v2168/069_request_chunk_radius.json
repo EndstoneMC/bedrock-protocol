@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "chunk_radius": 12,
-   "max_chunk_radius": 200
-  },
+  "value": {"chunk_radius": 12, "max_chunk_radius": 200},
   "bytes": "18c8"
  }
 ]

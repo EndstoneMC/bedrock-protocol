@@ -7,25 +7,16 @@
       "data_store_name": "hud",
       "property": "opacity",
       "path": "slots",
-      "data": {
-       "float": 0.5
-      },
+      "data": {"float": 0.5},
       "property_update_count": 1,
       "path_update_count": 1
      }
     },
     {
-     "DataStoreChange": {
-      "data_store_name": "form",
-      "property": "title",
-      "update_count": 7,
-      "new_data": "Chest"
-     }
+     "DataStoreChange": {"data_store_name": "form", "property": "title", "update_count": 7, "new_data": "Chest"}
     },
     {
-     "DataStoreRemoval": {
-      "data_store_name": "form"
-     }
+     "DataStoreRemoval": {"data_store_name": "form"}
     }
    ]
   },
@@ -41,10 +32,7 @@
       "update_count": 2,
       "new_data": {
        "flag": true,
-       "items": [
-        "a",
-        7
-       ],
+       "items": ["a", 7],
        "nothing": null,
        "ratio": 0.25
       }
@@ -58,12 +46,7 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": null
-     }
+     "DataStoreChange": {"data_store_name": "a", "property": "b", "update_count": 1, "new_data": null}
     }
    ]
   },
@@ -73,12 +56,7 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": true
-     }
+     "DataStoreChange": {"data_store_name": "a", "property": "b", "update_count": 1, "new_data": true}
     }
    ]
   },
@@ -88,12 +66,7 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": 7
-     }
+     "DataStoreChange": {"data_store_name": "a", "property": "b", "update_count": 1, "new_data": 7}
     }
    ]
   },
@@ -103,12 +76,7 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": 0.25
-     }
+     "DataStoreChange": {"data_store_name": "a", "property": "b", "update_count": 1, "new_data": 0.25}
     }
    ]
   },

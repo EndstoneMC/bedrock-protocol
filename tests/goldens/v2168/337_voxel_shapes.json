@@ -7,31 +7,15 @@
       "x_size": 2,
       "y_size": 1,
       "z_size": 3,
-      "storage": [
-       42
-      ]
+      "storage": [42]
      },
-     "x_coords": [
-      0.0,
-      0.5,
-      1.0
-     ],
-     "y_coords": [
-      0.0,
-      1.0
-     ],
-     "z_coords": [
-      0.0,
-      0.25,
-      0.75,
-      1.0
-     ]
+     "x_coords": [0.0, 0.5, 1.0],
+     "y_coords": [0.0, 1.0],
+     "z_coords": [0.0, 0.25, 0.75, 1.0]
     }
    ],
    "name_map": {
-    "minecraft:anvil": {
-     "value": 2
-    }
+    "minecraft:anvil": {"value": 2}
    },
    "custom_shape_count": 1
   },
@@ -53,22 +37,11 @@
       "x_size": 1,
       "y_size": 1,
       "z_size": 1,
-      "storage": [
-       1
-      ]
+      "storage": [1]
      },
-     "x_coords": [
-      0.0,
-      1.0
-     ],
-     "y_coords": [
-      0.0,
-      0.5
-     ],
-     "z_coords": [
-      0.0,
-      0.25
-     ]
+     "x_coords": [0.0, 1.0],
+     "y_coords": [0.0, 0.5],
+     "z_coords": [0.0, 0.25]
     }
    ],
    "name_map": {},

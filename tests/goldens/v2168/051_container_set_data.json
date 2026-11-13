@@ -1,10 +1,6 @@
 [
  {
-  "value": {
-   "container_id": 5,
-   "id": 1,
-   "value": 200
-  },
+  "value": {"container_id": 5, "id": 1, "value": 200},
   "bytes": "05029003"
  }
 ]

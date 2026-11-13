@@ -1,10 +1,6 @@
 [
  {
-  "value": {
-   "id": 4294967298,
-   "max_slots": 200,
-   "with_data": true
-  },
+  "value": {"id": 4294967298, "max_slots": 200, "with_data": true},
   "bytes": "0200000001000000c801"
  }
 ]

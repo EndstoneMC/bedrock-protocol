@@ -5,12 +5,8 @@
     {
      "name": "cat",
      "priorities": {
-      "entities": {
-       "minecraft:cow": 10
-      },
-      "blocks": {
-       "minecraft:stone": 1
-      },
+      "entities": {"minecraft:cow": 10},
+      "blocks": {"minecraft:stone": 1},
       "block_tags": {},
       "entity_type_families": {},
       "entity_default": 5,
@@ -22,21 +18,13 @@
     {
      "identifier": "preset",
      "exclusion_settings": {
-      "block_exclusion_list": [
-       "minecraft:air"
-      ],
+      "block_exclusion_list": ["minecraft:air"],
       "actor_exclusion_list": [],
-      "block_tag_exclusion_list": [
-       "wood"
-      ],
+      "block_tag_exclusion_list": ["wood"],
       "entity_type_family_exclusion_list": []
      },
-     "liquid_targeting_list": [
-      "minecraft:water"
-     ],
-     "item_settings": {
-      "minecraft:bow": "cat"
-     },
+     "liquid_targeting_list": ["minecraft:water"],
+     "item_settings": {"minecraft:bow": "cat"},
      "default_item_settings": "cat",
      "hand_settings": null
     }

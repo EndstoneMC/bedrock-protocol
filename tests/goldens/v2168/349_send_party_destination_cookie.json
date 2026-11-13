@@ -1,26 +1,14 @@
 [
  {
-  "value": {
-   "cookie": "party-cookie",
-   "intent": "OPT_IN",
-   "destination_name": "Nether Hub"
-  },
+  "value": {"cookie": "party-cookie", "intent": "OPT_IN", "destination_name": "Nether Hub"},
   "bytes": "0c70617274792d636f6f6b6965056f7074696e0a4e657468657220487562"
  },
  {
-  "value": {
-   "cookie": "ab",
-   "intent": "NOTIFY",
-   "destination_name": "x"
-  },
+  "value": {"cookie": "ab", "intent": "NOTIFY", "destination_name": "x"},
   "bytes": "026162066e6f746966790178"
  },
  {
-  "value": {
-   "cookie": "xyz",
-   "intent": "OPT_OUT",
-   "destination_name": "d"
-  },
+  "value": {"cookie": "xyz", "intent": "OPT_OUT", "destination_name": "d"},
   "bytes": "0378797a066f70746f75740164"
  }
 ]

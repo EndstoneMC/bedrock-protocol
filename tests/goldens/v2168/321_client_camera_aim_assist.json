@@ -1,18 +1,10 @@
 [
  {
-  "value": {
-   "camera_preset_id": "minecraft:first_person",
-   "action": "CLEAR",
-   "allow_aim_assist": true
-  },
+  "value": {"camera_preset_id": "minecraft:first_person", "action": "CLEAR", "allow_aim_assist": true},
   "bytes": "166d696e6563726166743a66697273745f706572736f6e0101"
  },
  {
-  "value": {
-   "camera_preset_id": "minecraft:third_person",
-   "action": "SET_FROM_CAMERA_PRESET",
-   "allow_aim_assist": true
-  },
+  "value": {"camera_preset_id": "minecraft:third_person", "action": "SET_FROM_CAMERA_PRESET", "allow_aim_assist": true},
   "bytes": "166d696e6563726166743a74686972645f706572736f6e0001"
  }
 ]

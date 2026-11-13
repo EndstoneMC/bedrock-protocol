@@ -3,11 +3,7 @@
   "value": {
    "vanilla_dimension_id": 2,
    "actor_id": -1,
-   "pos": {
-    "x": 1.0,
-    "y": 2.0,
-    "z": 3.0
-   },
+   "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
    "effect_name": "minecraft:heart_particle",
    "molang_variables": "{\"x\":1}\n"
   },
@@ -17,11 +13,7 @@
   "value": {
    "vanilla_dimension_id": 1,
    "actor_id": 12345,
-   "pos": {
-    "x": 0.0,
-    "y": 0.0,
-    "z": 0.0
-   },
+   "pos": {"x": 0.0, "y": 0.0, "z": 0.0},
    "effect_name": "minecraft:heart_particle",
    "molang_variables": null
   },

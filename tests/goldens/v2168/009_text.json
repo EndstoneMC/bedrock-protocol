@@ -3,10 +3,7 @@
   "value": {
    "localize": false,
    "body": {
-    "MessageOnly": {
-     "type": "TEXT_OBJECT_ANNOUNCEMENT",
-     "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
-    }
+    "MessageOnly": {"type": "TEXT_OBJECT_ANNOUNCEMENT", "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"}
    },
    "xuid": "2535400000000001",
    "platform_id": "pc",
@@ -18,11 +15,7 @@
   "value": {
    "localize": false,
    "body": {
-    "AuthorAndMessage": {
-     "type": "CHAT",
-     "author": "Steve",
-     "message": "hello"
-    }
+    "AuthorAndMessage": {"type": "CHAT", "author": "Steve", "message": "hello"}
    },
    "xuid": "2535400000000000",
    "platform_id": "switch-1",
@@ -37,9 +30,7 @@
     "MessageAndParams": {
      "type": "TRANSLATE",
      "message": "commands.kill.successful",
-     "params": [
-      "Alex"
-     ]
+     "params": ["Alex"]
     }
    },
    "xuid": "2535400000000002",

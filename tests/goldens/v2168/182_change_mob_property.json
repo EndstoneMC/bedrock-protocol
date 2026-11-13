@@ -1,24 +1,10 @@
 [
  {
-  "value": {
-   "actor_id": -5,
-   "prop_name": "minecraft:has_nectar",
-   "bool_component_val": true,
-   "string_component_val": "variant_b",
-   "int_component_val": 300,
-   "float_component_val": 1.5
-  },
+  "value": {"actor_id": -5, "prop_name": "minecraft:has_nectar", "bool_component_val": true, "string_component_val": "variant_b", "int_component_val": 300, "float_component_val": 1.5},
   "bytes": "09146d696e6563726166743a6861735f6e6563746172010976617269616e745f62d8040000c03f"
  },
  {
-  "value": {
-   "actor_id": 4,
-   "prop_name": "minecraft:has_nectar",
-   "bool_component_val": true,
-   "string_component_val": "s",
-   "int_component_val": 1,
-   "float_component_val": 0.5
-  },
+  "value": {"actor_id": 4, "prop_name": "minecraft:has_nectar", "bool_component_val": true, "string_component_val": "s", "int_component_val": 1, "float_component_val": 0.5},
   "bytes": "08146d696e6563726166743a6861735f6e6563746172010173020000003f"
  }
 ]

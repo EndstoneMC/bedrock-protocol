@@ -11,9 +11,7 @@
    "use_new_trade_screen": true,
    "using_economy_trade": true,
    "data": {
-    "TierExpRequirements": {
-     "IntTag": 5
-    }
+    "TierExpRequirements": {"IntTag": 5}
    }
   },
   "bytes": "010f0604540e16656e746974792e76696c6c616765722e6661726d657201010a00031354696572457870526571756972656d656e74730a00"

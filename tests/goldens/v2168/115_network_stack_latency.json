@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "create_time": 0,
-   "from_server": true
-  },
+  "value": {"create_time": 0, "from_server": true},
   "bytes": "000000000000000001"
  }
 ]

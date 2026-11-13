@@ -5,14 +5,7 @@
    "type": "MOB_KILLED",
    "use_player_id": true,
    "event_data": {
-    "MobKilled": {
-     "killer_entity_id": 1,
-     "killed_mob_id": 2,
-     "damage_child_type": "PLAYER",
-     "damage_source": 2,
-     "trader_tier": -1,
-     "trader_name": "trader"
-    }
+    "MobKilled": {"killer_entity_id": 1, "killed_mob_id": 2, "damage_child_type": "PLAYER", "damage_source": 2, "trader_tier": -1, "trader_name": "trader"}
    }
   },
   "bytes": "090801040204fe04040106747261646572"
@@ -23,12 +16,7 @@
    "type": "ITEM_USED",
    "use_player_id": false,
    "event_data": {
-    "ItemUsed": {
-     "item_id": 306,
-     "item_aux": 5,
-     "use_method": 1,
-     "count": 2
-    }
+    "ItemUsed": {"item_id": 306, "item_aux": 5, "use_method": 1, "count": 2}
    }
   },
   "bytes": "0e3e00143201050000000100000002000000"
@@ -39,10 +27,7 @@
    "type": "POI_CAULDRON_USED",
    "use_player_id": false,
    "event_data": {
-    "POICauldronUsed": {
-     "interaction_type": "COOKING",
-     "item_id": 307
-    }
+    "POICauldronUsed": {"interaction_type": "COOKING", "item_id": 307}
    }
   },
   "bytes": "0e1e000a093301"
@@ -53,11 +38,7 @@
    "type": "CAULDRON_USED",
    "use_player_id": false,
    "event_data": {
-    "CauldronUsed": {
-     "contents_color": 5,
-     "contents_type": -2,
-     "fill_level": 300
-    }
+    "CauldronUsed": {"contents_color": 5, "contents_type": -2, "fill_level": 300}
    }
   },
   "bytes": "0e0a000505feff2c01"
@@ -68,9 +49,7 @@
    "type": "ACHIEVEMENT",
    "use_player_id": false,
    "event_data": {
-    "Achievement": {
-     "achievement_id": "IRON_BELLY"
-    }
+    "Achievement": {"achievement_id": "IRON_BELLY"}
    }
   },
   "bytes": "0e00000014"

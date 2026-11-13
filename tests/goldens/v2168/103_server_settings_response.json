@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "form_id": 300,
-   "form_json": "{\"type\":\"custom_form\"}"
-  },
+  "value": {"form_id": 300, "form_json": "{\"type\":\"custom_form\"}"},
   "bytes": "ac02167b2274797065223a22637573746f6d5f666f726d227d"
  }
 ]

@@ -1,26 +1,14 @@
 [
  {
-  "value": {
-   "operation": "RESET",
-   "category": "INSTANTIATION",
-   "code_status": "SUCCEEDED"
-  },
+  "value": {"operation": "RESET", "category": "INSTANTIATION", "code_status": "SUCCEEDED"},
   "bytes": "030205"
  },
  {
-  "value": {
-   "operation": "GET",
-   "category": "CODE_STATUS",
-   "code_status": "NOT_STARTED"
-  },
+  "value": {"operation": "GET", "category": "CODE_STATUS", "code_status": "NOT_STARTED"},
   "bytes": "010101"
  },
  {
-  "value": {
-   "operation": "SET",
-   "category": "CODE_STATUS",
-   "code_status": "IN_PROGRESS"
-  },
+  "value": {"operation": "SET", "category": "CODE_STATUS", "code_status": "IN_PROGRESS"},
   "bytes": "020102"
  }
 ]

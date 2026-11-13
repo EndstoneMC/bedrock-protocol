@@ -1,9 +1,7 @@
 [
  {
   "value": {
-   "fog_stack": [
-    "minecraft:fog_ocean"
-   ]
+   "fog_stack": ["minecraft:fog_ocean"]
   },
   "bytes": "01136d696e6563726166743a666f675f6f6365616e"
  }

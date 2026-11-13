@@ -1,27 +1,11 @@
 [
  {
   "value": {
-   "actor_data_flag": {
-    "value": 680564733841876927000536191158374629377
-   },
+   "actor_data_flag": {"value": 680564733841876927000536191158374629377},
    "actor_bounding_box": {
-    "value": [
-     0.5,
-     0.75,
-     1.875
-    ]
+    "value": [0.5, 0.75, 1.875]
    },
-   "movement_attributes": [
-    4.5,
-    0.25,
-    0.125,
-    6.5,
-    20.0,
-    17.5,
-    1.25,
-    0.0625,
-    0.5
-   ],
+   "movement_attributes": [4.5, 0.25, 0.125, 6.5, 20.0, 17.5, 1.25, 0.0625, 0.5],
    "actor_id": -300,
    "is_flying": true
   },
@@ -29,27 +13,11 @@
  },
  {
   "value": {
-   "actor_data_flag": {
-    "value": 3
-   },
+   "actor_data_flag": {"value": 3},
    "actor_bounding_box": {
-    "value": [
-     0.5,
-     1.5,
-     0.25
-    ]
+    "value": [0.5, 1.5, 0.25]
    },
-   "movement_attributes": [
-    1.0,
-    2.0,
-    3.0,
-    4.0,
-    5.0,
-    6.0,
-    7.0,
-    8.0,
-    9.0
-   ],
+   "movement_attributes": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
    "actor_id": 7,
    "is_flying": false
   },
@@ -57,27 +25,11 @@
  },
  {
   "value": {
-   "actor_data_flag": {
-    "value": 12
-   },
+   "actor_data_flag": {"value": 12},
    "actor_bounding_box": {
-    "value": [
-     0.5,
-     1.5,
-     0.25
-    ]
+    "value": [0.5, 1.5, 0.25]
    },
-   "movement_attributes": [
-    1.0,
-    2.0,
-    3.0,
-    4.0,
-    5.0,
-    6.0,
-    7.0,
-    8.0,
-    9.0
-   ],
+   "movement_attributes": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
    "actor_id": 8589934592,
    "is_flying": false
   },

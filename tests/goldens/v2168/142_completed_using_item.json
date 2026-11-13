@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "item_id": 880,
-   "item_use_method": 1
-  },
+  "value": {"item_id": 880, "item_use_method": 1},
   "bytes": "700301000000"
  }
 ]

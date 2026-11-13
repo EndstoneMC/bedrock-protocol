@@ -1,26 +1,14 @@
 [
  {
-  "value": {
-   "succeeded": true,
-   "error": "boom",
-   "test_name": "mytest"
-  },
+  "value": {"succeeded": true, "error": "boom", "test_name": "mytest"},
   "bytes": "0104626f6f6d066d7974657374"
  },
  {
-  "value": {
-   "succeeded": true,
-   "error": "ok",
-   "test_name": "t"
-  },
+  "value": {"succeeded": true, "error": "ok", "test_name": "t"},
   "bytes": "01026f6b0174"
  },
  {
-  "value": {
-   "succeeded": false,
-   "error": "e",
-   "test_name": "n"
-  },
+  "value": {"succeeded": false, "error": "e", "test_name": "n"},
   "bytes": "000165016e"
  }
 ]

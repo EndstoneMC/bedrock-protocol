@@ -2,9 +2,7 @@
  {
   "value": {
    "runtime_id": 300,
-   "emote_piece_ids": [
-    "01020304-0506-0708-090a-0b0c0d0e0f10"
-   ]
+   "emote_piece_ids": ["01020304-0506-0708-090a-0b0c0d0e0f10"]
   },
   "bytes": "ac02010807060504030201100f0e0d0c0b0a09"
  }

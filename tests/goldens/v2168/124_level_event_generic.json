@@ -3,15 +3,9 @@
   "value": {
    "event_id": 9801,
    "data": {
-    "ableToSleep": {
-     "IntTag": 1
-    },
-    "overworldPlayerCount": {
-     "IntTag": 1
-    },
-    "sleepingPlayerCount": {
-     "IntTag": 0
-    }
+    "ableToSleep": {"IntTag": 1},
+    "overworldPlayerCount": {"IntTag": 1},
+    "sleepingPlayerCount": {"IntTag": 0}
    }
   },
   "bytes": "929901030b61626c65546f536c6565700203146f766572776f726c64506c61796572436f756e74020313736c656570696e67506c61796572436f756e740000"

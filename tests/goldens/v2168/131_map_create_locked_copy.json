@@ -1,9 +1,6 @@
 [
  {
-  "value": {
-   "original_map_id": 300,
-   "new_map_id": -5
-  },
+  "value": {"original_map_id": 300, "new_map_id": -5},
   "bytes": "d80409"
  }
 ]

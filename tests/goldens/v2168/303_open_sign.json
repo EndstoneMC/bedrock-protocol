@@ -1,22 +1,14 @@
 [
  {
   "value": {
-   "pos": {
-    "x": 1,
-    "y": 2,
-    "z": 3
-   },
+   "pos": {"x": 1, "y": 2, "z": 3},
    "is_front_side": true
   },
   "bytes": "02040601"
  },
  {
   "value": {
-   "pos": {
-    "x": -1,
-    "y": 64,
-    "z": 5
-   },
+   "pos": {"x": -1, "y": 64, "z": 5},
    "is_front_side": true
   },
   "bytes": "0180010a01"

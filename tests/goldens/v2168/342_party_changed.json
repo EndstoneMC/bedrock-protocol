@@ -1,25 +1,17 @@
 [
  {
   "value": {
-   "party_info": {
-    "party_id": "d1e2f3a4-5b6c-7d8e-9f01-234567890abc",
-    "is_leader": true
-   }
+   "party_info": {"party_id": "d1e2f3a4-5b6c-7d8e-9f01-234567890abc", "is_leader": true}
   },
   "bytes": "012464316532663361342d356236632d376438652d396630312d32333435363738393061626301"
  },
  {
-  "value": {
-   "party_info": null
-  },
+  "value": {"party_info": null},
   "bytes": "00"
  },
  {
   "value": {
-   "party_info": {
-    "party_id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
-    "is_leader": true
-   }
+   "party_info": {"party_id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9", "is_leader": true}
   },
   "bytes": "012430613162326333642d346535662d363037312d383239332d61346235633664376538663901"
  }

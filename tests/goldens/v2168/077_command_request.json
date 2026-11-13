@@ -2,12 +2,7 @@
  {
   "value": {
    "command": "/say hi",
-   "origin": {
-    "type": "AUTOMATION_PLAYER",
-    "uuid": "01234567-89ab-cdef-fedc-ba9876543210",
-    "request_id": "req-1",
-    "player_id": -2
-   },
+   "origin": {"type": "AUTOMATION_PLAYER", "uuid": "01234567-89ab-cdef-fedc-ba9876543210", "request_id": "req-1", "player_id": -2},
    "internal_source": true,
    "version": "TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE"
   },

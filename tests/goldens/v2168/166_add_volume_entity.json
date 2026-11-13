@@ -1,26 +1,14 @@
 [
  {
   "value": {
-   "entity_net_id": {
-    "raw_id": 7
-   },
+   "entity_net_id": {"raw_id": 7},
    "components": {
-    "minecraft:fog": {
-     "StringTag": "spooky"
-    }
+    "minecraft:fog": {"StringTag": "spooky"}
    },
    "json_identifier": "endstone:volume",
    "instance_name": "instance",
-   "min_bounds": {
-    "x": 1,
-    "y": 2,
-    "z": 3
-   },
-   "max_bounds": {
-    "x": 4,
-    "y": 5,
-    "z": 6
-   },
+   "min_bounds": {"x": 1, "y": 2, "z": 3},
+   "max_bounds": {"x": 4, "y": 5, "z": 6},
    "dimension_type": 1,
    "min_engine_version": "1.21.0"
   },

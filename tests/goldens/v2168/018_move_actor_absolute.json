@@ -3,14 +3,8 @@
   "value": {
    "move_data": {
     "runtime_id": 300,
-    "header": {
-     "raw": 141
-    },
-    "pos": {
-     "x": 1.0,
-     "y": 2.0,
-     "z": 3.0
-    },
+    "header": {"raw": 141},
+    "pos": {"x": 1.0, "y": 2.0, "z": 3.0},
     "rot_x": -64,
     "rot_y": 45,
     "rot_y_head": -111

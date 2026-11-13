@@ -2,42 +2,20 @@
  {
   "value": {
    "shapes": [
-    {
-     "network_id": 1,
-     "shape_type": null,
-     "location": null,
-     "scale": null,
-     "rotation": null,
-     "time_left_total_sec": null,
-     "max_render_distance": null,
-     "color": null,
-     "dimension_id": null,
-     "attached_to_id": null,
-     "extra_data_payload": null
-    },
+    {"network_id": 1, "shape_type": null, "location": null, "scale": null, "rotation": null, "time_left_total_sec": null, "max_render_distance": null, "color": null, "dimension_id": null, "attached_to_id": null, "extra_data_payload": null},
     {
      "network_id": 3,
      "shape_type": "SPHERE",
-     "location": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
-     },
+     "location": {"x": 1.0, "y": 2.0, "z": 3.0},
      "scale": 0.5,
-     "rotation": {
-      "x": 0.5,
-      "y": 0.25,
-      "z": 0.75
-     },
+     "rotation": {"x": 0.5, "y": 0.25, "z": 0.75},
      "time_left_total_sec": 2.0,
      "max_render_distance": 64.0,
      "color": 1146447479,
      "dimension_id": 1,
      "attached_to_id": -7,
      "extra_data_payload": {
-      "SphereDataPayload": {
-       "num_segments": 12
-      }
+      "SphereDataPayload": {"num_segments": 12}
      }
     },
     {
@@ -52,14 +30,7 @@
      "dimension_id": null,
      "attached_to_id": null,
      "extra_data_payload": {
-      "TextDataPayload": {
-       "text": "hi",
-       "use_rotation": true,
-       "background_color": 1146447479,
-       "depth_test": true,
-       "show_backface": true,
-       "show_text_backface": true
-      }
+      "TextDataPayload": {"text": "hi", "use_rotation": true, "background_color": 1146447479, "depth_test": true, "show_backface": true, "show_text_backface": true}
      }
     },
     {
@@ -75,14 +46,8 @@
      "attached_to_id": null,
      "extra_data_payload": {
       "CylinderDataPayload": {
-       "radius_x": {
-        "x": 1.0,
-        "y": 2.0
-       },
-       "radius_z": {
-        "x": 3.0,
-        "y": 4.0
-       },
+       "radius_x": {"x": 1.0, "y": 2.0},
+       "radius_z": {"x": 3.0, "y": 4.0},
        "height": 3.0,
        "num_segments": 8
       }
@@ -100,11 +65,7 @@
      "dimension_id": null,
      "attached_to_id": null,
      "extra_data_payload": {
-      "PyramidDataPayload": {
-       "width": 2.0,
-       "depth": 4.0,
-       "height": 6.0
-      }
+      "PyramidDataPayload": {"width": 2.0, "depth": 4.0, "height": 6.0}
      }
     }
    ]
