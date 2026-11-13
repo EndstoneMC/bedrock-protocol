@@ -1,5 +1,6 @@
 [
  {
+  "id": "user_busy_close_reason",
   "value": {
    "form_id": 7,
    "close_reason": "USER_BUSY"
