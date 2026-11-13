@@ -1,5 +1,6 @@
 [
  {
+  "id": "player_relative_scheme",
   "value": {
    "control_scheme": "PLAYER_RELATIVE"
   },
