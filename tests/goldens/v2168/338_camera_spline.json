@@ -50,5 +50,44 @@
    "splines": []
   },
   "bytes": "00"
+ },
+ {
+  "value": {
+   "splines": [
+    {
+     "name": "mypack:flyby2",
+     "total_time": 3.5,
+     "spline_type": "catmullrom",
+     "spline_control_points": [
+      {
+       "position": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 3.0
+       }
+      }
+     ],
+     "spline_progress_frames": [
+      {
+       "alpha": 0.75,
+       "time_seconds": 1.5,
+       "easing_type": null
+      }
+     ],
+     "spline_rotation_frames": [
+      {
+       "rotation": {
+        "x": 10.0,
+        "y": 20.0,
+        "z": 30.0
+       },
+       "time_seconds": 2.0,
+       "easing_type": null
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "010d6d797061636b3a666c79627932000060400a6361746d756c6c726f6d010000803f0000004000004040010000403f0000c03f0001000020410000a0410000f0410000004000"
  }
 ]
