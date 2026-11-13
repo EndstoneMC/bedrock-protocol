@@ -34,3 +34,4 @@ paths:
 - Add a case to the test that owns its packet or topic; never open a second file for it.
 - Packet cases live in `tests/goldens/` and run through `test_goldens.py` (`.claude/rules/protocol/goldens.md`); topics live in `test_<topic>.py`.
 - Give a type that no modelled packet reaches its own test, named for the type.
+- Build a tests-only helper that copies a BDS component, such as the cereal JSON reader and writer, as BDS's own classes and virtuals under BDS's names in Python style, never as a flat set of functions.
