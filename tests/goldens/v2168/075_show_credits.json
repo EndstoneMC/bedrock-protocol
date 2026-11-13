@@ -1,5 +1,6 @@
 [
  {
+  "id": "credits_finished",
   "value": {
    "player_id": 300,
    "credits_state": "FINISHED"
