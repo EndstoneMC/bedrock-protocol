@@ -68,5 +68,21 @@
    }
   },
   "bytes": "0000"
+ },
+ {
+  "value": {
+   "data": {
+    "SyncStateData": {
+     "clock_data": [
+      {
+       "clock_id": 300,
+       "time": 1000,
+       "is_paused": true
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0001ac02d00f01"
  }
 ]
