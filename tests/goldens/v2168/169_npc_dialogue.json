@@ -1,5 +1,6 @@
 [
  {
+  "id": "close_action_with_empty_actions",
   "value": {
    "npc_id": 258,
    "npc_dialogue_action_type": "CLOSE",
