@@ -56,5 +56,6 @@ paths:
 - A step number is not the release that reports that number; only the dump, `MinecraftPacketIds::EndId` in EndstoneMC/bedrock-headers and the binary say which release has a change.
 - Never treat Mojang's changelog as complete.
 - Date packet ids by diffing bedrock-headers' `MinecraftPacketIds` across its `origin/android/*` branches; `EndId` is the quick read and stays out when parsing the enum.
+- Date a packet's arrival, body and id together, from the first era whose `MinecraftPacketIds` holds the id and whose CloudburstMC/Protocol codec or Mojang/bedrock-protocol-docs commit carries the packet; a class missing from that era's BDS or bedrock-headers build does not delay it.
 - Never assume a packet id from memory or from another era; ids change and are reused once a packet is deprecated.
 - Never date a packet's removal from its id-enum name.

@@ -65,8 +65,8 @@ An era is one modelled protocol and the BDS build that reports it.
 
 ## Is a packet live
 
-- Never take an id-enum entry as evidence that a packet exists; BDS keeps ids long after the class is gone.
-- Take a packet as live when bedrock-headers has its `<Name>Packet.h`, after dropping any `_DEPRECATED`, `_deprecated` or `_Deprecated` suffix from the id name.
+- Never take an id-enum entry alone as evidence that a packet still exists; BDS keeps ids long after the class is gone.
+- Take an arrived packet (`versions.md`) as still live while bedrock-headers has its `<Name>Packet.h`, after dropping any `_DEPRECATED`, `_deprecated` or `_Deprecated` suffix from the id name.
 - Run known-live packets through any presence probe as controls, in the same command.
 - Never use `make_packet` instantiations as the packet list, since they cover one construction path.
 - Never treat a `getId` symbol as present for every packet in a stripped build.
