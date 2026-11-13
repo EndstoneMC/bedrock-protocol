@@ -58,5 +58,82 @@
    ]
   },
   "bytes": "020100000000000000000001000000000000000e0553746576651032353335343130303030303030303031047063696408000000037369640470666964257b2267656f6d65747279223a7b2264656661756c74223a2267656f6d657472792e61227d7d010000000100000004010203040001000000010000000405060708027b7d05312e302e30025b5d03636964036669640104030201000001010101010474727565046861736801010108070605000100000000000000000200000000000000"
+ },
+ {
+  "value": {
+   "entries": [
+    {
+     "AddEntry": {
+      "action": "ADD",
+      "uuid": "00000000-0000-0000-0000-000000000001",
+      "id": 7,
+      "name": "Steve",
+      "xuid": "2535410000000001",
+      "platform_online_id": "pcid",
+      "build_platform": "WIN32",
+      "skin": {
+       "id": "sid",
+       "play_fab_id": "pfid",
+       "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}\n",
+       "skin_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "01020304"
+       },
+       "skin_animated_images": [
+        {
+         "image": {
+          "width": 1,
+          "height": 1,
+          "image_bytes": "090a0b0c"
+         },
+         "type": "FACE",
+         "frames": 2.0,
+         "animation_expression": "BLINKING"
+        }
+       ],
+       "cape_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "05060708"
+       },
+       "geometry_data": "{}\n",
+       "geometry_data_min_engine_version": "1.0.0",
+       "animation_data": "[]\n",
+       "cape_id": "cid",
+       "full_id": "fid",
+       "arm_size_type": "WIDE",
+       "skin_color": 16909060,
+       "persona_pieces": [
+        {
+         "piece_id": "pid",
+         "piece_type": "HAIR",
+         "pack_id": "00000000-0000-0000-0000-000000000003",
+         "is_default_piece": true,
+         "product_id": "prod"
+        }
+       ],
+       "piece_tint_colors": {
+        "HAIR": {
+         "colors": [16909060, 84281096, 16909061, 84281097]
+        }
+       },
+       "is_premium": true,
+       "is_persona": true,
+       "is_persona_cape_on_classic_skin": true,
+       "is_primary_user": true,
+       "overrides_player_appearance": true,
+       "is_trusted_skin": "TRUE",
+       "profile_hash": "hash"
+      },
+      "is_teacher": true,
+      "is_host": true,
+      "is_sub_client": true,
+      "color": 84281096
+     }
+    }
+   ]
+  },
+  "bytes": "010100000000000000000001000000000000000e0553746576651032353335343130303030303030303031047063696408000000037369640470666964267b2267656f6d65747279223a7b2264656661756c74223a2267656f6d657472792e61227d7d0a0100000001000000040102030401010000000100000004090a0b0c01000000400101000000010000000405060708037b7d0a05312e302e30035b5d0a0363696403666964010403020101037069640e00000000000000000000000300000000000000010470726f640104686169720403020108070605050302010907060501010101010474727565046861736801010108070605"
  }
 ]
