@@ -1,5 +1,6 @@
 [
  {
+  "id": "store_entry_point_present",
   "value": {
    "client_store_entry_point_configuration": {
     "store_id": "sid",
@@ -9,6 +10,7 @@
   "bytes": "01037369640553746f7265"
  },
  {
+  "id": "store_entry_point_absent",
   "value": {
    "client_store_entry_point_configuration": null
   },
