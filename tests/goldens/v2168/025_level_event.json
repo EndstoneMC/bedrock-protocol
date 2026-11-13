@@ -1,5 +1,6 @@
 [
  {
+  "id": "negative_event_data",
   "value": {
    "event_id": 3600,
    "pos": {
