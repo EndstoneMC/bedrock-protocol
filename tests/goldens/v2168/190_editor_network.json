@@ -1,0 +1,10 @@
+[
+ {
+  "value": {
+   "route_to_manager": true,
+   "raw_variant_name": "editor.variant",
+   "raw_variant_data": "abc"
+  },
+  "bytes": "010e656469746f722e76617269616e7403616263"
+ }
+]
