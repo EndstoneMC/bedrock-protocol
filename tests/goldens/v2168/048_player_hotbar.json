@@ -1,10 +1,10 @@
 [
  {
   "value": {
-   "selected_slot": 300,
+   "selected_slot": 4,
    "container_id": "PLAYER_ONLY_UI",
    "should_select_slot": true
   },
-  "bytes": "ac027c01"
+  "bytes": "047c01"
  }
 ]
