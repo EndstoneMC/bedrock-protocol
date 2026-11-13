@@ -1,5 +1,6 @@
 [
  {
+  "id": "modal_form",
   "value": {
    "form_id": 300,
    "form_json": "{\"type\":\"modal\"}"
