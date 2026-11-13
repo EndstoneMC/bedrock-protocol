@@ -25,5 +25,23 @@
    }
   },
   "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a090365787000000763726561746f72000000"
+ },
+ {
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true,
+   "gatherings_configuration": {
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+    "experience_name": "exp",
+    "experience_world_id": "11121314-1516-1718-191a-1b1c1d1e1f20",
+    "experience_world_name": "world",
+    "creator_id": "creator",
+    "target_id": "21222324-2526-2728-292a-2b2c2d2e2f30",
+    "mpsas_scenario_id": "scenario",
+    "server_id": "server"
+   }
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a0903657870011817161514131211201f1e1d1c1b1a190105776f726c640763726561746f72012827262524232221302f2e2d2c2b2a2901087363656e6172696f0106736572766572"
  }
 ]
