@@ -8,9 +8,9 @@
  },
  {
   "value": {
-   "server_time": -1.0,
+   "server_time": 1.0,
    "network_time": 2.5
   },
-  "bytes": "000080bf00002040"
+  "bytes": "0000803f00002040"
  }
 ]
