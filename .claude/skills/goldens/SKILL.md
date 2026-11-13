@@ -57,7 +57,7 @@ mkdir -p $G
 The stock dump comes first. Case files read their enum bindings, limits, items and blocks from it (goldens.md):
 
 ```
-mkfifo $G/console
+rm -f $G/dump.log && mkfifo $G/console
 (cd $S && exec ./bedrock_server) <> $G/console > $G/dump.log 2>&1 & P=$!
 until grep -qE 'dump (written|failed|crashed)' $G/dump.log || ! kill -0 $P 2>/dev/null; do sleep 5; done
 echo stop 1<> $G/console; wait $P; rm $G/console
@@ -68,7 +68,7 @@ Golden mode, over the folder's current case files. Narrow `'*.json'` to rerun so
 
 ```
 python3 -I -c "import json, pathlib, sys; cases = [{'id': int(p.stem[:3]), 'stem': p.stem, 'index': i, 'bytes': c['bytes']} for p in sorted(pathlib.Path(sys.argv[1]).glob(sys.argv[3])) for i, c in enumerate(json.loads(p.read_text()))]; pathlib.Path(sys.argv[2]).write_text(json.dumps(cases))" tests/goldens/v<protocol> $G/cases.json '*.json'
-mkfifo $G/console
+rm -f $G/golden.log && mkfifo $G/console
 (cd $S && DUMPER_GOLDEN=$G/cases.json exec ./bedrock_server) <> $G/console > $G/golden.log 2>&1 & P=$!
 until grep -qE 'golden: [0-9]+ cases written|dump failed' $G/golden.log || ! kill -0 $P 2>/dev/null; do sleep 5; done
 echo stop 1<> $G/console; wait $P; rm $G/console
@@ -147,6 +147,7 @@ Only `agrees` can freeze. Apply a normalisation only once goldens.md states it.
 | `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |
 | BDS exits 130 or 143, or logs no `Quit correctly` | It was signalled. Stop it through the console `stop`. |
+| `stop` went out before BDS started | The wait matched the last run's log. Remove the log before launching, as the run blocks do, and send `stop` again. |
 | BDS still runs after `stop` | `kill -KILL $P`, with your own pid only. |
 
 ## Coverage
