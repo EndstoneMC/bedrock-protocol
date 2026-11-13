@@ -1,5 +1,6 @@
 [
  {
+  "id": "block_at_negative_y",
   "value": {
    "pos": {
     "x": 1,
