@@ -1,5 +1,6 @@
 [
  {
+  "id": "negative_actor_id",
   "value": {
    "actor_id": -300,
    "data": "lag spike"
