@@ -21,6 +21,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Compare a `Vec2` or `Vec3` with BDS's array of its components; reshape no other struct.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Compare an `ActorRuntimeID`, `ActorUniqueID`, `DimensionType`, `PlayerInputTick` or `Color` with the one member BDS wraps it in; unwrap no other type.
+- Compare a `UUID` as its two unsigned 64-bit halves, most significant first, with the two BDS prints; split no other type.
 - Freeze a case whose BDS JSON does not parse on its bytes alone, and only when it holds an NBT tag or a bitset.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 

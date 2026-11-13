@@ -81,9 +81,9 @@ def bds_prints_an_enum_as_its_wire_name(ours: Ours, bds: Bds) -> tuple[Ours, Bds
 
 
 def bds_prints_a_uuid_as_two_halves(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, BuiltinRef) and bds.field["type"] == "mce::UUID":
-        most, least = (half % 2**64 for half in bds.value.values())
-        return ours, Bds(str(uuid.UUID(int=most << 64 | least)), bds.field)
+    if isinstance(ours.type, BuiltinRef) and ours.type.builtin.name == "UUID" and isinstance(bds.value, dict):
+        whole = uuid.UUID(ours.value).int
+        return Ours((whole >> 64, whole % 2**64), ours.type), Bds(tuple(bds.value.values()), bds.field)
     return None
 
 
@@ -177,6 +177,7 @@ ACCEPTED = {
     "bds_prints_a_vec_as_an_array",
     "bds_prints_an_enum_as_its_number",
     "bds_wraps_a_value_in_a_one_member_type",
+    "bds_prints_a_uuid_as_two_halves",
     BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT,
 }
 
