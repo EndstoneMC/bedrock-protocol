@@ -10,8 +10,8 @@
     "value": 600
    },
    "tick": 128,
-   "ambient": false
+   "ambient": true
   },
-  "bytes": "ac0201260401b009800100"
+  "bytes": "ac0201260401b009800101"
  }
 ]
