@@ -1,5 +1,6 @@
 [
  {
+  "id": "replace_page_arm",
   "value": {
    "book_slot": 3,
    "operation": {
@@ -13,6 +14,7 @@
   "bytes": "0600040568656c6c6f0970686f746f2e706e67"
  },
  {
+  "id": "add_page_arm",
   "value": {
    "book_slot": 3,
    "operation": {
@@ -26,6 +28,7 @@
   "bytes": "0601040568656c6c6f0970686f746f2e706e67"
  },
  {
+  "id": "delete_page_arm",
   "value": {
    "book_slot": 3,
    "operation": {
@@ -37,6 +40,7 @@
   "bytes": "060202"
  },
  {
+  "id": "swap_pages_arm",
   "value": {
    "book_slot": 3,
    "operation": {
@@ -49,6 +53,7 @@
   "bytes": "06030204"
  },
  {
+  "id": "finalize_arm",
   "value": {
    "book_slot": 4,
    "operation": {
