@@ -268,6 +268,7 @@ GAME_TOKEN = web_token(
 ITEM_STACKS = ("SerializedNetworkItemStackDescriptor", "SerializedNetworkItemInstanceDescriptor")
 ITEMS: dict[int, dict[int, int | None]] = {2168: {462: None, 855: None, -593: 0}}
 MEMBERS_SINCE: dict[int, dict[str, tuple[str, ...]]] = {
+    898: {"CommandOriginData.type": ("PLAYER", "DEV_CONSOLE", "TEST", "AUTOMATION_PLAYER")},
     924: {
         "TextPacket.MessageOnly.type": (
             "RAW",
@@ -398,7 +399,6 @@ FIXED: dict[str, Json] = {
     "SerializableCells.storage": [1, 2, 3, 4, 5, 6],
     "EffectDuration.value": 600,
     "NetworkStackLatencyPacket.create_time": 0,
-    "CommandOriginData.type": "PLAYER",
     "ServerboundLoadingScreenPacket.serverbound_loading_screen_packet_type": "START_LOADING_SCREEN",
     "LevelSettings.game_rules": {
         "rules": [{"name": name, "can_be_modified_by_player": True, "value": value} for name, value in LEVEL_GAME_RULES]

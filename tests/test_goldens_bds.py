@@ -547,7 +547,7 @@ def test_a_map_value_bds_reads_only_within_a_limit_is_generated_inside_it(values
         ("MessageAndParams", "type", {"TRANSLATE", "POPUP", "JUKEBOX_POPUP"}),
         ("RemoveEntry", "action", {"REMOVE"}),
         ("AddEntry", "action", {"ADD"}),
-        ("CommandOriginData", "type", {"PLAYER"}),
+        ("CommandOriginData", "type", {"PLAYER", "DEV_CONSOLE", "TEST", "AUTOMATION_PLAYER"}),
         ("ServerboundLoadingScreenPacket", "serverbound_loading_screen_packet_type", {"START_LOADING_SCREEN"}),
     ],
     ids=[
