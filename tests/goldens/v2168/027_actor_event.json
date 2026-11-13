@@ -1,5 +1,6 @@
 [
  {
+  "id": "hurt_with_fire_position",
   "value": {
    "runtime_id": 300,
    "event_id": "HURT",
@@ -13,6 +14,7 @@
   "bytes": "ac020205010000803f0000004000004040"
  },
  {
+  "id": "hurt_without_damage_no_position",
   "value": {
    "runtime_id": 7,
    "event_id": "HURT_WITHOUT_RECEIVING_DAMAGE",
