@@ -1,5 +1,6 @@
 [
  {
+  "id": "world_spawn_with_block_pos",
   "value": {
    "spawn_pos_type": "WORLD_SPAWN",
    "pos": {
