@@ -1,7 +1,7 @@
 [
  {
   "value": {
-   "container_id": "ARMOR",
+   "container_id": "FIRST",
    "type": "HORSE",
    "pos": {
     "x": 1,
@@ -10,6 +10,6 @@
    },
    "entity_unique_id": 300
   },
-  "bytes": "780c028c0105d804"
+  "bytes": "010c028c0105d804"
  }
 ]
