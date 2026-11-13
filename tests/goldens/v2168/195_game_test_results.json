@@ -1,5 +1,6 @@
 [
  {
+  "id": "failed_test_with_error",
   "value": {
    "succeeded": true,
    "error": "boom",
