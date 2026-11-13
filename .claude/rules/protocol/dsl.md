@@ -17,6 +17,7 @@ paths:
 
 - Write a cerealised form as bare `name: Type` lines. Annotation clutter on one means the pre-cereal shape is being modelled.
 - Write a split between declared and wire type as `name: DeclaredType = field(type=<wire>)`. Never drop to the raw primitive.
+- Use `field(type=<primitive>)` on an alias only for the members BDS holds as that plain primitive; its cereal JSON is a bare value there and a one-member wrapper object everywhere else.
 - Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length written elsewhere, as an expression over earlier fields, never as a constant.
 - Spell an alias that BDS nests in a class inline at its use; never hoist it to a module-scope `type`.
 - Never put a version-dependent width behind a `type X = <primitive>` alias; spell it inline.
@@ -32,7 +33,7 @@ paths:
 
 - Model a dumped field that carries `"value"` as a `Literal`, under the name BDS bound it to.
 - Spell an integer-coded constant as its enumerator (`Literal[ItemStackRequestActionType.TAKE]`), never as `Literal[0] = field(type=uint8)`. Spell a name-coded constant as the folded string it puts on the wire (`Literal["changeentity"]`).
-- Start a field name with `_` only for bug noise. A tag BDS means to send keeps its own name.
+- Start a field name with `_` only for bug noise or cereal's marker bytes, which print nothing in JSON; `_deprecated` is a real BDS member and prints. A tag BDS means to send keeps its own name.
 - Give every variant alternative its tag `Literal`. A member that the dump gives `constraints.enum_values` instead of a `value` stays an ordinary field.
 
 ## Markers
