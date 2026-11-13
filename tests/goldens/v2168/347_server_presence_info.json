@@ -1,5 +1,6 @@
 [
  {
+  "id": "rich_presence_id_present",
   "value": {
    "presence_configuration": {
     "rich_presence_id": "rp1"
@@ -8,6 +9,7 @@
   "bytes": "010103727031"
  },
  {
+  "id": "rich_presence_id_absent",
   "value": {
    "presence_configuration": {
     "rich_presence_id": null
@@ -16,6 +18,7 @@
   "bytes": "0100"
  },
  {
+  "id": "presence_configuration_absent",
   "value": {
    "presence_configuration": null
   },
