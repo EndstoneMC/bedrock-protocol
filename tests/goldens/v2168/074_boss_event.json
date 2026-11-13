@@ -1,5 +1,6 @@
 [
  {
+  "id": "add_boss_bar",
   "value": {
    "boss_id": -3,
    "player_id": 7,
