@@ -1,5 +1,6 @@
 [
  {
+  "id": "block_command_data_arm",
   "value": {
    "target": {
     "BlockCommandData": {
@@ -24,6 +25,7 @@
   "bytes": "010203d8040201010673617920686904646f6e6507677265657465720767726565746572012c01000001"
  },
  {
+  "id": "entity_command_target_arm",
   "value": {
    "target": {
     "EntityCommandTarget": {
