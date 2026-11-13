@@ -3,7 +3,7 @@ from itertools import groupby
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator
 from bedrock_protocol_compiler.cpp.expression import render
-from bedrock_protocol_compiler.cpp.field import FieldGenerator, make_field_generator
+from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, make_field_generator
 from bedrock_protocol_compiler.descriptor import Field
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape, reached_by
@@ -22,6 +22,8 @@ class StructGenerator:
         self.fields: list[tuple[Field, FieldGenerator]] = []
         for each in shape.fields:
             generator = make_field_generator(schema, each.type, self.version, f'"{each.name}"', 0)
+            if each.copies > 1:
+                generator = DuplicatedField(generator, each.copies)
             self.fields.append((each, generator))
             spelled = generator.cpp_type()
             if spelled is not None:

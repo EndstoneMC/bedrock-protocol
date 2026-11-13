@@ -21,6 +21,11 @@ from bedrock_protocol_compiler.descriptor import (
 )
 
 ALWAYS = Range(None, None)
+DUPLICATE_BINDINGS = {
+    ("PlayerVideoCapturePacket", "params"): (2, Range(898, None)),
+    ("CylinderDataPayload", "radii"): (2, Range(1001, None)),
+    ("ClientboundUpdateSoundDataPacket", "event"): (7, Range(2168, 2225)),
+}
 
 
 @dataclass(eq=False)
@@ -131,8 +136,15 @@ class Schema:
                 continue
             if isinstance(family, Struct):
                 struct_declaration = next(each for each in family.declarations if each.range.contains(version))
+                copies = {
+                    name: count
+                    for (owner, name), (count, bound) in DUPLICATE_BINDINGS.items()
+                    if owner == family.name and bound.contains(version)
+                }
                 present = tuple(
-                    replace(each, range=ALWAYS) for each in struct_declaration.fields if each.range.contains(version)
+                    replace(each, range=ALWAYS, copies=copies.get(each.name, 1))
+                    for each in struct_declaration.fields
+                    if each.range.contains(version)
                 )
                 nested = tuple(self.live[child, version] for child in family.nested if (child, version) in self.live)
                 reached = tuple(self.shape_at(target, version) for each in present for target in reached_by(each))

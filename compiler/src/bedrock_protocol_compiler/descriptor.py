@@ -122,6 +122,7 @@ class Field:
     type: Type
     range: Range
     when: "Expression | None" = None
+    copies: int = 1
 
 
 @dataclass(frozen=True)

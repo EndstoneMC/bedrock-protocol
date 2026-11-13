@@ -212,5 +212,4 @@ class PlayerVideoCapturePacket:
     class StopVideoCapture:
         pass
 
-    start_video_capture: StartVideoCapture | StopVideoCapture
-    stop_video_capture: StartVideoCapture | StopVideoCapture
+    params: StartVideoCapture | StopVideoCapture
