@@ -1,5 +1,6 @@
 [
  {
+  "id": "disable_crafter_slot",
   "value": {
    "pos_x": 1,
    "pos_y": -2,
