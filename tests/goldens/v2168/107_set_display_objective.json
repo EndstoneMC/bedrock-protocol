@@ -1,5 +1,6 @@
 [
  {
+  "id": "sidebar_descending",
   "value": {
    "display_slot_name": "sidebar",
    "objective_name": "objective",
