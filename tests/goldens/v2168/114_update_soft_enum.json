@@ -1,5 +1,6 @@
 [
  {
+  "id": "remove_soft_enum_values",
   "value": {
    "enum_name": "kits",
    "values": ["alpha", "beta"],
