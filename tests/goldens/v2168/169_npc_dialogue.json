@@ -6,19 +6,19 @@
    "dialogue": "Hello",
    "scene_name": "greeting",
    "npc_name": "Guide",
-   "action_json": "[]"
+   "action_json": "[]\n"
   },
-  "bytes": "0201000000000000020548656c6c6f086772656574696e67054775696465025b5d"
+  "bytes": "0201000000000000020548656c6c6f086772656574696e67054775696465035b5d0a"
  },
  {
   "value": {
    "npc_id": 4294967296,
    "npc_dialogue_action_type": "OPEN",
-   "dialogue": "",
-   "scene_name": "",
-   "npc_name": "",
-   "action_json": ""
+   "dialogue": "Hi",
+   "scene_name": "s",
+   "npc_name": "N",
+   "action_json": "[]\n"
   },
-  "bytes": "00000000010000000000000000"
+  "bytes": "0000000001000000000248690173014e035b5d0a"
  }
 ]
