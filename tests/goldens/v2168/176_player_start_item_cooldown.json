@@ -1,5 +1,6 @@
 [
  {
+  "id": "shield_cooldown",
   "value": {
    "item_category": "minecraft:shield",
    "duration_ticks": 300
