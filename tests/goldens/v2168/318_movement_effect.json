@@ -1,5 +1,6 @@
 [
  {
+  "id": "dolphin_boost_effect",
   "value": {
    "runtime_id": 7,
    "effect_type": "DOLPHIN_BOOST",
