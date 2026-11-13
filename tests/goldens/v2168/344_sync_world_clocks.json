@@ -1,5 +1,6 @@
 [
  {
+  "id": "initialize_registry_arm",
   "value": {
    "data": {
     "InitializeRegistryData": {
@@ -31,6 +32,7 @@
   "bytes": "0101ac02096f766572776f726c64d00f0102010773756e72697365b0e70201c05d000002046e6f6f6ee05d00"
  },
  {
+  "id": "add_time_marker_arm",
   "value": {
    "data": {
     "AddTimeMarkerData": {
@@ -49,6 +51,7 @@
   "bytes": "02010101046475736bc0bb0101c05d0000"
  },
  {
+  "id": "remove_time_marker_arm",
   "value": {
    "data": {
     "RemoveTimeMarkerData": {
@@ -60,6 +63,7 @@
   "bytes": "03ac020101"
  },
  {
+  "id": "sync_state_arm",
   "value": {
    "data": {
     "SyncStateData": {
