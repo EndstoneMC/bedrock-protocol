@@ -2,10 +2,10 @@
  {
   "value": {
    "form_id": 300,
-   "json_response": "[true]",
+   "json_response": "[true]\n",
    "form_cancel_reason": null
   },
-  "bytes": "ac0201065b747275655d00"
+  "bytes": "ac0201075b747275655d0a00"
  },
  {
   "value": {
