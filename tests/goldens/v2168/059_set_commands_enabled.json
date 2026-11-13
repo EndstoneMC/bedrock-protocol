@@ -1,5 +1,6 @@
 [
  {
+  "id": "commands_enabled",
   "value": {
    "commands_enabled": true
   },
