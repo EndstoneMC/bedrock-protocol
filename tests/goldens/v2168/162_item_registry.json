@@ -4,14 +4,14 @@
    "items": [
     {
      "name": "minecraft:stick",
-     "id": 320,
+     "id": 323,
      "is_component_based": false,
      "item_version": "LEGACY",
      "component_data": {}
     },
     {
-     "name": "custom:widget",
-     "id": -1,
+     "name": "minecraft:apple",
+     "id": 880,
      "is_component_based": true,
      "item_version": "DATA_DRIVEN",
      "component_data": {
@@ -22,6 +22,6 @@
     }
    ]
   },
-  "bytes": "020f6d696e6563726166743a737469636b400100000a00000d637573746f6d3a776964676574ffff01020a0003186d696e6563726166743a6d61785f737461636b5f73697a652000"
+  "bytes": "020f6d696e6563726166743a737469636b430100000a00000f6d696e6563726166743a6170706c65700301020a0003186d696e6563726166743a6d61785f737461636b5f73697a652000"
  }
 ]
