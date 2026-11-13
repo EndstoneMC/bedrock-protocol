@@ -1,5 +1,6 @@
 [
  {
+  "id": "update_two_identities",
   "value": {
    "type": "UPDATE",
    "identity_info": [
@@ -20,6 +21,7 @@
   "bytes": "000202010e040110"
  },
  {
+  "id": "remove_without_player_id",
   "value": {
    "type": "REMOVE",
    "identity_info": [
