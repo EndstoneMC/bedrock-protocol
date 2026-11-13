@@ -98,7 +98,8 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
 | `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
-| `json_unparsable` | `toString` printed an NBT tag or a bitset. The bytes decide until goldens.md has a rule. |
+| `json_unparsable` with `bds_prints_nbt_or_a_bitset_as_text` | `toString` printed an NBT tag or a bitset as text that isn't JSON; the bytes decide. |
+| `json_unparsable` alone | BDS's JSON broke on a case holding neither an NBT tag nor a bitset. Report it; the bytes do not decide. |
 | `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
 | `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
 | `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the wire's; otherwise report it. |

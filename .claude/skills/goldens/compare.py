@@ -15,6 +15,7 @@ from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
+    Bitset,
     BuiltinRef,
     EnumName,
     EnumRef,
@@ -166,7 +167,9 @@ def bds_prints_a_one_member_struct_as_its_member(ours: Ours, bds: Bds) -> tuple[
 
 type Rule = Callable[[Ours, Bds], tuple[Ours, Bds] | None]
 
-ACCEPTED = {"bds_prints_the_wire_type", "bds_prints_a_vec_as_an_array"}
+BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT = "bds_prints_nbt_or_a_bitset_as_text"
+
+ACCEPTED = {"bds_prints_the_wire_type", "bds_prints_a_vec_as_an_array", BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT}
 
 RULES: list[Rule] = [
     bds_prints_the_wire_type,
@@ -253,6 +256,27 @@ def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
     return None
 
 
+def present_types(ours: Ours) -> Iterator[Type]:
+    """The declared type of every part of our value that is present."""
+    yield ours.type
+    match ours.type:
+        case Optional(element=element) if ours.value is not None:
+            yield from present_types(Ours(ours.value, element))
+        case StructRef(struct=declared):
+            for each in struct_shapes[declared].fields:
+                yield from present_types(Ours(ours.value.get(each.name), each.type))
+        case List(element=element) | Array(element=element):
+            for item in ours.value:
+                yield from present_types(Ours(item, element))
+        case Map(key=key_type, value=item_type):
+            for item in ours.value.values():
+                yield key_type
+                yield from present_types(Ours(item, item_type))
+        case Variant(cases=arms) if ours.value is not None:
+            [(tag, value)] = ours.value.items()
+            yield from present_types(Ours(value, next(arm for arm in arms if arm and variant_tag(arm) == tag)))
+
+
 def walk(ours: Ours, bds: Bds, path: str, rules: list[Rule]) -> Iterator[str]:
     """Yields each rule the match needs and each difference that no rule explains."""
     if same(ours.value, bds.value):
@@ -297,24 +321,28 @@ for result in json.loads((evidence / "results.json").read_text()):
     elif result["bds_bytes"] != case["bytes"]:
         verdict, detail = "rewritten", f"at {len(os.path.commonprefix([result['bds_bytes'], case['bytes']])) // 2}"
     else:
+        packet = int(result["stem"][:3])
+        ours = Ours(case["value"], StructRef(packets[packet]))
         try:
             printed = json.loads(result["bds_json"]) if result.get("bds_json_valid") is False else result["bds_json"]
         except ValueError:
             verdict, detail = "json_unparsable", ""
+            for part in present_types(ours):
+                if isinstance(part, Bitset) or (isinstance(part, BuiltinRef) and part.builtin.stem == "nbt"):
+                    needed = [BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT]
         else:
-            packet = int(result["stem"][:3])
-            ours = Ours(case["value"], StructRef(packets[packet]))
             bds = Bds(printed, {"type": bds_packet_names[packet]})
             findings = list(walk(ours, bds, "", RULES))
             needed = [rule.__name__ for rule in RULES if rule.__name__ in findings]
             differences = [each for each in findings if each not in needed]
             verdict, detail = ("json_differs", f"at {differences[0]}") if differences else ("agrees", "")
-    freezes = verdict == "agrees" and set(needed) <= ACCEPTED
+    explained = verdict == "agrees" or (verdict == "json_unparsable" and bool(needed))
+    freezes = explained and set(needed) <= ACCEPTED
     verdicts[verdict] += 1
     needs.update(needed)
     frozen += freezes
     line = [name, verdict, detail, *needed, "freezes" if freezes else ""]
     sys.stdout.write(" ".join(filter(None, line)) + "\n")
 sys.stdout.write(", ".join(f"{count} {verdict}" for verdict, count in verdicts.most_common()) + f"; {frozen} freeze\n")
-for rule in RULES:
-    sys.stdout.write(f"{needs[rule.__name__]:4} {rule.__name__}{' (accepted)' if rule.__name__ in ACCEPTED else ''}\n")
+for rule_name in [BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT, *(rule.__name__ for rule in RULES)]:
+    sys.stdout.write(f"{needs[rule_name]:4} {rule_name}{' (accepted)' if rule_name in ACCEPTED else ''}\n")
