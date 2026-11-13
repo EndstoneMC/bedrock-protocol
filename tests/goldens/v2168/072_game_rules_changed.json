@@ -14,19 +14,12 @@
       "name": "maxcommandchainlength",
       "can_be_modified_by_player": false,
       "value": {
-       "int": 131070
-      }
-     },
-     {
-      "name": "playerssleepingpercentage",
-      "can_be_modified_by_player": true,
-      "value": {
-       "int": 100
+       "int": 65535
       }
      }
     ]
    }
   },
-  "bytes": "030f73686f77636f6f7264696e61746573010101156d6178636f6d6d616e64636861696e6c656e6774680002feff010019706c6179657273736c656570696e6770657263656e74616765010264000000"
+  "bytes": "020f73686f77636f6f7264696e61746573010101156d6178636f6d6d616e64636861696e6c656e6774680002ffff0000"
  }
 ]
