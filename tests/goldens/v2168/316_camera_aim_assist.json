@@ -1,5 +1,6 @@
 [
  {
+  "id": "distance_target_set_action",
   "value": {
    "preset_id": "aim_assist_preset",
    "view_angle": {
