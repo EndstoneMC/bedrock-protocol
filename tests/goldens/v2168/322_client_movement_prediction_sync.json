@@ -1,5 +1,6 @@
 [
  {
+  "id": "flying_actor_with_negative_id",
   "value": {
    "actor_data_flag": {
     "value": 680564733841876927000536191158374629377
