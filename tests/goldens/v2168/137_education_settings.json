@@ -39,5 +39,25 @@
    }
   },
   "bytes": "0161016201010163016400000000"
+ },
+ {
+  "value": {
+   "education_level_settings": {
+    "code_builder_default_uri": "a",
+    "code_builder_title": "b",
+    "can_resize_code_builder": true,
+    "disable_legacy_title_bar": true,
+    "post_process_filter": "c",
+    "screenshot_border_resource_path": "d",
+    "agent_capabilities": {
+     "can_modify_blocks": null
+    },
+    "local_settings": {
+     "code_builder_override_uri": null
+    },
+    "external_link_settings": null
+   }
+  },
+  "bytes": "016101620101016301640100000000"
  }
 ]
