@@ -1,5 +1,6 @@
 [
  {
+  "id": "ping_message",
   "value": {
    "message_id": "endstone:ping",
    "message_value": "hello"
