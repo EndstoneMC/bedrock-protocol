@@ -1,5 +1,6 @@
 [
  {
+  "id": "player_initialized",
   "value": {
    "player_id": 300
   },
