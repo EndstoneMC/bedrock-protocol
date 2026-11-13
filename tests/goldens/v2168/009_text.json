@@ -5,14 +5,14 @@
    "body": {
     "MessageOnly": {
      "type": "TEXT_OBJECT_ANNOUNCEMENT",
-     "message": "{}"
+     "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
     }
    },
-   "xuid": "",
-   "platform_id": "",
+   "xuid": "2535400000000001",
+   "platform_id": "pc",
    "filtered_message": null
   },
-  "bytes": "00000b027b7d000000"
+  "bytes": "00000b1b7b2272617774657874223a5b7b2274657874223a226869227d5d7d103235333534303030303030303030303102706300"
  },
  {
   "value": {
@@ -36,17 +36,16 @@
    "body": {
     "MessageAndParams": {
      "type": "TRANSLATE",
-     "message": "chat.type.text",
+     "message": "commands.kill.successful",
      "params": [
-      "Alex",
-      "hi"
+      "Alex"
      ]
     }
    },
-   "xuid": "",
-   "platform_id": "",
+   "xuid": "2535400000000002",
+   "platform_id": "xbox",
    "filtered_message": null
   },
-  "bytes": "0102020e636861742e747970652e746578740204416c6578026869000000"
+  "bytes": "01020218636f6d6d616e64732e6b696c6c2e7375636365737366756c0104416c657810323533353430303030303030303030320478626f7800"
  }
 ]
