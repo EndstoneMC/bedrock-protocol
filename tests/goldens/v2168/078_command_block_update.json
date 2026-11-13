@@ -10,7 +10,7 @@
      },
      "mode": "CHAIN",
      "redstone_mode": true,
-     "is_conditional": false
+     "is_conditional": true
     }
    },
    "command": "say hi",
@@ -21,7 +21,7 @@
    "tick_delay": 300,
    "execute_on_first_tick": true
   },
-  "bytes": "010203d8040201000673617920686904646f6e6507677265657465720767726565746572012c01000001"
+  "bytes": "010203d8040201010673617920686904646f6e6507677265657465720767726565746572012c01000001"
  },
  {
   "value": {
@@ -30,14 +30,14 @@
      "entity_id": 300
     }
    },
-   "command": "",
-   "last_output": "",
-   "name": "",
-   "filtered_name": "",
-   "track_output": false,
-   "tick_delay": 0,
-   "execute_on_first_tick": false
+   "command": "say hi",
+   "last_output": "ok",
+   "name": "n",
+   "filtered_name": "n",
+   "track_output": true,
+   "tick_delay": 20,
+   "execute_on_first_tick": true
   },
-  "bytes": "00ac0200000000000000000000"
+  "bytes": "00ac0206736179206869026f6b016e016e011400000001"
  }
 ]
