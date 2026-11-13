@@ -34,6 +34,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Transcribe an enum with `[A-Za-z0-9_]+`, never `[A-Z0-9_]+`, and check the member count against the header before believing a gap.
 - Never paste EndstoneMC/bedrock-headers source (access-restricted) into the schema, a commit or any file; read it and cite the branch.
 - Clone a missing reference repository rather than working around it.
+- Share one open IDA database between agents by attaching to its session (`idb_open` on the same path); an attached agent stays read-only, and no agent closes a shared session.
 - Never merge or rebase the `prototype` branch, an unrelated history; re-verify any wire detail taken from it.
 
 ## Weighing evidence

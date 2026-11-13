@@ -16,11 +16,11 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
 - Write `value` exactly as `to_json` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
-- Commit a case only once BDS writes the same bytes and the JSON the `goldens` skill prints from the packet BDS read matches `value` in its tree and leaf values; keys are not compared, except a variant's arm tag and an NBT tag's names.
+- Land a case on origin only once a BDS run writes its bytes back unchanged.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Compare an `ActorRuntimeID`, `ActorUniqueID`, `DimensionType`, `PlayerInputTick` or `Color` with the one member BDS wraps it in; unwrap no other type.
-- Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
+- Never change the bytes of a case BDS writes back unchanged; change its value only for a rename or a library type fix.
 
 ## Writing cases
 
@@ -51,6 +51,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - List an item-use transaction's actions in ascending `InventorySource` type order.
 - Keep `RequestAbilityPacket`'s bool member false when its `value_type` is `FLOAT`.
 - Make `NpcDialoguePacket.action_json` an array of actions BDS accepts.
+- Make `SpawnParticleEffectPacket.molang_variables` a JSON array of `{"name", "value"}` variables, each value `{"type": "float", "value": N}` or `{"type": "member_array", "value": [...]}`, each name lowercase letters, digits and `_` with at most one `.`.
 - Keep a colour channel in 0..255, an effect duration at 0 or above, and a voxel shape's cell storage at one bit per cell.
 - Set an optional BDS derives from an earlier field exactly when BDS writes it: `InventorySource`'s container id for `CONTAINER_INVENTORY` and `NON_IMPLEMENTED_FEATURE_TODO` and its flags for `WORLD_INTERACTION`; the legacy set item slots when `raw_id < -1 and raw_id & 1 == 0`; a response slot's item stack net id when its amount is not 0; `PlayerAuthInputPacket`'s optionals from their `input_data` bits; `ItemStackResponseInfo`'s containers only on `SUCCESS`; `MapItemTrackedActor`'s entity id only for `ENTITY` and block position only for `BLOCK_ENTITY`.
 - Send `NetworkStackLatencyPacket.create_time` as 0; BDS reads it in milliseconds and writes it in nanoseconds.
