@@ -3,11 +3,10 @@
   "value": {
    "packet_type": "NEWLY_UNLOCKED_RECIPES",
    "unlocked_recipes": [
-    "minecraft:stick",
-    "minecraft:torch"
+    "minecraft:stick"
    ]
   },
-  "bytes": "02000000020f6d696e6563726166743a737469636b0f6d696e6563726166743a746f726368"
+  "bytes": "02000000010f6d696e6563726166743a737469636b"
  },
  {
   "value": {
