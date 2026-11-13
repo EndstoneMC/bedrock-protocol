@@ -22,10 +22,10 @@
           "raw_id": 9
          },
          "custom_name": {
-          "unredacted_string": "",
+          "unredacted_string": "n",
           "redacted_string": null
          },
-         "durability_correction": 0
+         "durability_correction": 5
         }
        ]
       }
@@ -33,7 +33,7 @@
     }
    ]
   },
-  "bytes": "010001010101070001030340010112000000"
+  "bytes": "010001010101070001030340010112016e000a"
  },
  {
   "value": {
