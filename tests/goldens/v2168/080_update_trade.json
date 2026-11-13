@@ -1,5 +1,6 @@
 [
  {
+  "id": "tiered_trade_with_data",
   "value": {
    "container_id": "FIRST",
    "type": "TRADE",
