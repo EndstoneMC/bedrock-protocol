@@ -1,5 +1,6 @@
 [
  {
+  "id": "empty_item",
   "value": {
    "runtime_id": 7,
    "item": {
@@ -17,6 +18,7 @@
   "bytes": "070000000000000000020200"
  },
  {
+  "id": "item_with_net_id",
   "value": {
    "runtime_id": 7,
    "item": {
