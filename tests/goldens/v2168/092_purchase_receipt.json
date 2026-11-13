@@ -1,5 +1,6 @@
 [
  {
+  "id": "one_receipt",
   "value": {
    "purchase_receipts": ["receipt-a"]
   },
