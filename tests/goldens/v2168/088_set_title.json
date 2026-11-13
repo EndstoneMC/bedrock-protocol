@@ -5,11 +5,11 @@
    "title_text": "hello",
    "fade_in_time": 10,
    "stay_time": 300,
-   "fade_out_time": -1,
+   "fade_out_time": 20,
    "xuid": "2535465451234567",
-   "platform_online_id": "",
+   "platform_online_id": "pid",
    "filtered_title_text": "hi"
   },
-  "bytes": "060568656c6c6f14d80401103235333534363534353132333435363700026869"
+  "bytes": "060568656c6c6f14d80428103235333534363534353132333435363703706964026869"
  }
 ]
