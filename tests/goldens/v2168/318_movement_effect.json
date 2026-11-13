@@ -10,11 +10,11 @@
  },
  {
   "value": {
-   "runtime_id": 0,
-   "effect_type": "INVALID",
-   "effect_duration": 0,
-   "tick": 0
+   "runtime_id": 3,
+   "effect_type": "GEYSER_BOOST",
+   "effect_duration": 20,
+   "tick": 9
   },
-  "bytes": "00010000"
+  "bytes": "03042809"
  }
 ]
