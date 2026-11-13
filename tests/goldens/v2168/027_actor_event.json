@@ -16,9 +16,9 @@
   "value": {
    "runtime_id": 7,
    "event_id": "HURT_WITHOUT_RECEIVING_DAMAGE",
-   "data": 0,
+   "data": 5,
    "fire_at_position": null
   },
-  "bytes": "07510000"
+  "bytes": "07510a00"
  }
 ]
