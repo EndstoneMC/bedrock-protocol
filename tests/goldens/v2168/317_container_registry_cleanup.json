@@ -1,5 +1,6 @@
 [
  {
+  "id": "dynamic_id_present_and_absent",
   "value": {
    "removed_containers": [
     {
