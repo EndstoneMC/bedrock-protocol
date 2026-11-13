@@ -2,7 +2,7 @@
 world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
 
 import uuid
-from enum import IntEnum
+from enum import IntEnum, auto
 
 from protocol import array, field, int8, packet, sentinel, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
@@ -16,7 +16,7 @@ class ArmSizeType(IntEnum, uint8):
     SLIM = 0
     WIDE = 1
     COUNT = sentinel()
-    UNKNOWN = sentinel()
+    UNKNOWN = 3
 
 
 class PieceType(IntEnum, uint32):
@@ -49,9 +49,7 @@ class PieceType(IntEnum, uint32):
     CLASSIC_SKIN = 26
     EMOTE = 27
     CO_CO = value(28, since=2225)
-    with value(until=2168):
-        UNSUPPORTED = sentinel()
-    UNSUPPORTED = value(since=2168)
+    UNSUPPORTED = auto()
     COUNT = sentinel()
 
 

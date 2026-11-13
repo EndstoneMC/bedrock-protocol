@@ -4,7 +4,7 @@ and both permission ladders."""
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, int64, packet, sentinel, uint8, uint16, uint32, uvarint32, value
+from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.network import NetworkBlockPosition
@@ -223,23 +223,20 @@ class CurrentCmdVersion(IntEnum, int32):
     LOCATE_STRUCTURE_OUTPUT = 42
     POST_BLOCK_FLATTENING = value(43, since=786)
     TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE = value(44, since=818)
-    with value(since=898):
-        CLONE_EXTRA_BLOCK_FILTER_FIX = sentinel()
-    with value(since=975):
-        FILL_COMMAND_UNFILLABLE_ERROR_OUTPUT = sentinel()
+    CLONE_EXTRA_BLOCK_FILTER_FIX = value(45, since=898)
+    FILL_COMMAND_UNFILLABLE_ERROR_OUTPUT = value(46, since=975)
     with value(since=1001):
-        STOP_SOUND_OUTPUT_FIX = sentinel()
-        PLAY_SOUND_OUTPUT_FIX = sentinel()
-        PLAYER_WAYPOINTS_GAMERULE = sentinel()
-    with value(since=2168):
-        CLONE_PARTIAL_BED_BLOCK_FIX = sentinel()
+        STOP_SOUND_OUTPUT_FIX = 47
+        PLAY_SOUND_OUTPUT_FIX = 48
+        PLAYER_WAYPOINTS_GAMERULE = 49
+    CLONE_PARTIAL_BED_BLOCK_FIX = value(50, since=2168)
     with value(since=2193):
-        TELEPORT_ENTITY_DIMENSION_POSITION_FIX = sentinel()
-        TIME_OF_COMMAND_OVERLOADS = sentinel()
+        TELEPORT_ENTITY_DIMENSION_POSITION_FIX = 51
+        TIME_OF_COMMAND_OVERLOADS = 52
     with value(since=2225):
-        REDSTONE_CIRCUIT_STATE_CHANGE_FIX = sentinel()
-        TIME_COMMAND_PREVENT_NEGATIVE_TIME = sentinel()
-        TIME_COMMAND_CLOCKS_RELEASE = sentinel()
+        REDSTONE_CIRCUIT_STATE_CHANGE_FIX = 53
+        TIME_COMMAND_PREVENT_NEGATIVE_TIME = 54
+        TIME_COMMAND_CLOCKS_RELEASE = 55
     COUNT = auto()
     LATEST = COUNT - 1
 

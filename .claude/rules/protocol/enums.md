@@ -17,9 +17,9 @@ paths:
 ## Values
 
 - Give a real member an explicit int literal.
-- Use `auto()` (previous + 1) only for a count the dump binds or a run that shifts behind a gate, and check that the line above holds the right value.
-- Write `sentinel()` for a member the header declares and the era's dump, holding its enum, does not bind (by name if name-coded, else by value); where no dumped field reads the enum, only for its trailing count.
-- Gate a sentinel with a `with value(since=, until=):` block even when it stands alone, beside the member's bound line over the disjoint range (`UNSUPPORTED = value(since=2168)`).
+- Use `auto()` (previous + 1) only for a count every era's dump holding its enum binds, or a run that shifts behind a gate, and check that the line above holds the right value.
+- Write `sentinel()`, one ungated line, for a count or end marker the header declares that any era's dump holding its enum does not bind (by name if name-coded, else by value).
+- Leave any other member the dump does not bind as declared, and report it.
 
 ## Underlying type
 
@@ -48,7 +48,7 @@ paths:
 ## Sentinels and gaps
 
 - Check both sentinel sums every time: the sentinel's change equals added minus removed, and the sentinel equals the last named member plus one.
-- Where the sum shows enumerators the dump does not bind, declare each from bedrock-headers as `sentinel()`.
+- Where the sum shows enumerators the dump does not bind, declare each from bedrock-headers and report it.
 - The dump lists only bound enumerators; never assume it lists them all.
 - Sort a value the dump has and the DSL lacks by the field's encoding: an alias on a numeric field is noise, a member of a name-coded enum is a decode hole to report.
 - Date an enum that sizes a `std::bitset` from the bitset's instantiation in the binary; on arithmetic the binary outranks the changelog.

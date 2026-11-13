@@ -3,7 +3,7 @@ slots, client options, the player list, location and property overrides, AddPlay
 Not abilities -- those are in ability.py."""
 
 import uuid
-from enum import IntEnum
+from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import bitset, field, int16, int32, packet, sentinel, type, uint8, uvarint32, value, varint32
@@ -77,7 +77,7 @@ class ActorDamageCause(IntEnum, int32):
     SOUL_CAMPFIRE = 33
     MACE_SMASH = 34
     DEHYDRATION = value(35, since=898, until=924)
-    ALL = sentinel()
+    ALL = auto()
 
 
 @packet(id=38)

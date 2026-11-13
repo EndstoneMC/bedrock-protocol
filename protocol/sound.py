@@ -4,7 +4,7 @@ the packets that play, stop and update sound, and the LevelSoundEvent table."""
 from enum import IntEnum, auto
 from typing import Literal
 
-from protocol import field, int32, int64, packet, sentinel, type, uint8, uint32, uint64, value, varint32
+from protocol import field, int32, int64, packet, type, uint8, uint32, uint64, value, varint32
 from protocol.actor import ActorType, ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.network import NetworkBlockPosition
@@ -539,13 +539,10 @@ class LevelSoundEvent(IntEnum, uint32):
         LEAD_UNLEASH = 558
         LEAD_BREAK = 559
         UNSADDLE = 560
+    EQUIP_COPPER = value(561, since=827)
     RECORD_LAVA_CHICKEN = value(561, since=819, until=827)
-    with value(since=827, until=844):
-        EQUIP_COPPER = sentinel()
-        RECORD_LAVA_CHICKEN = sentinel()
+    RECORD_LAVA_CHICKEN = value(562, since=827)
     with value(since=844):
-        EQUIP_COPPER = 561
-        RECORD_LAVA_CHICKEN = 562
         PLACE_ITEM = 563
         SINGLE_ITEM_SWAP = 564
         MULTI_ITEM_SWAP = 565

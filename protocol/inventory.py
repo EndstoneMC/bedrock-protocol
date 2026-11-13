@@ -94,11 +94,7 @@ class ContainerEnumName(IntEnum, uint8):
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
     CRAFTER_LEVEL_ENTITY_CONTAINER = 62
     DYNAMIC_CONTAINER = 63
-    with value(since=924, until=944):
-        RECIPE_FOOD_CONTAINER = sentinel()
-        RECIPE_BLOCKS_CONTAINER = sentinel()
-        RECIPE_FURNACE_ITEMS_CONTAINER = sentinel()
-    with value(since=944):
+    with value(since=924):
         RECIPE_FOOD_CONTAINER = 64
         RECIPE_BLOCKS_CONTAINER = 65
         RECIPE_FURNACE_ITEMS_CONTAINER = 66

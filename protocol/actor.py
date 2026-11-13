@@ -12,7 +12,6 @@ from protocol import (
     int32,
     int64,
     packet,
-    sentinel,
     uint8,
     uint64,
     uvarint32,
@@ -332,7 +331,7 @@ class DataItemType(IntEnum, uint8):
     POS = 6
     INT64 = 7
     VEC3 = 8
-    UNKNOWN = sentinel()
+    UNKNOWN = 9
 
 
 class DataItemBytePayload:
