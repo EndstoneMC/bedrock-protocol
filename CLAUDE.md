@@ -28,6 +28,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
 - Build with README's Building section. `uv sync && uv run pytest` runs `tests/`; `uv run --directory compiler pytest` runs the compiler's.
+- `build/Release` is shared by `uv sync` and the `release` preset, and `build/Debug` by the `debug` preset and the coverage build; nothing else gets a tree except `build/java`, `build/bedrock-dumper` and the like.
 - Keep the C++ and Python build plain CMake, with no Conan recipe; Java builds with Gradle in `java/`.
 - Rules under `.claude/rules/` load with the files they cover. Adding, back-porting or renumbering a protocol version starts at `.claude/rules/protocol/workflow.md`.
 

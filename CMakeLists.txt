@@ -46,6 +46,7 @@ set(BEDROCK_PROTOCOL_MODULES ${BEDROCK_PROTOCOL_SOURCES})
 list(TRANSFORM BEDROCK_PROTOCOL_MODULES REPLACE "^.*/([^/]+)\\.cpp$" "\\1")
 
 if (SKBUILD AND PROJECT_IS_TOP_LEVEL)
+    unset(SKBUILD CACHE)
     add_subdirectory(python)
 elseif (BEDROCK_PROTOCOL_INSTALL)
     install(TARGETS bedrock_protocol EXPORT bedrock-protocol-targets)

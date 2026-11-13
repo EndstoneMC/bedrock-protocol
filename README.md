@@ -149,10 +149,12 @@ A number with no `v<N>` module decodes with the newest one below it: 2169 with `
 You need CMake, Ninja, Python 3.12 or newer and a C++23 compiler:
 
 ```shell
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-cmake --install build --prefix stage
+cmake --preset release
+cmake --build --preset release
+cmake --install build/Release --prefix stage
 ```
+
+On Windows, run these and `uv sync` from a Visual Studio developer prompt.
 
 `stage` holds the same tree as a C++ release package.
 
