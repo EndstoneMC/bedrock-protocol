@@ -1,5 +1,6 @@
 [
  {
+  "id": "rotational_add",
   "value": {
    "intensity": 0.5,
    "seconds": 2.0,
