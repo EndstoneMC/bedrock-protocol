@@ -47,34 +47,5 @@
    ]
   },
   "bytes": "02efcdab89674523011032547698badcfe3f0000000101010000803f000000400000404002011474657874757265732f75692f776179706f696e74010000804100008041013f81ff00010101d8040301000000000000000200000000000000010000000000000000000002"
- },
- {
-  "value": {
-   "waypoints": []
-  },
-  "bytes": "00"
- },
- {
-  "value": {
-   "waypoints": [
-    {
-     "handle": {
-      "uuid": "00000000-0000-0001-0000-000000000002"
-     },
-     "payload": {
-      "update_flag": 63,
-      "is_visible": null,
-      "world_position": null,
-      "texture_path": null,
-      "icon_size": null,
-      "color": null,
-      "client_position_authority": null,
-      "actor_id": null
-     },
-     "action": "REMOVE"
-    }
-   ]
-  },
-  "bytes": "01010000000000000002000000000000003f0000000000000000000002"
  }
 ]

@@ -4,23 +4,5 @@
    "input_lock_component_data": 70
   },
   "bytes": "46"
- },
- {
-  "value": {
-   "input_lock_component_data": 2046
-  },
-  "bytes": "fe0f"
- },
- {
-  "value": {
-   "input_lock_component_data": 2
-  },
-  "bytes": "02"
- },
- {
-  "value": {
-   "input_lock_component_data": 6
-  },
-  "bytes": "06"
  }
 ]

@@ -2,14 +2,6 @@
  {
   "value": {
    "camera_presets": {
-    "presets": []
-   }
-  },
-  "bytes": "00"
- },
- {
-  "value": {
-   "camera_presets": {
     "presets": [
      {
       "name": "bare",

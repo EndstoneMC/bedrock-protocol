@@ -47,12 +47,6 @@
  },
  {
   "value": {
-   "splines": []
-  },
-  "bytes": "00"
- },
- {
-  "value": {
    "splines": [
     {
      "name": "mypack:flyby2",

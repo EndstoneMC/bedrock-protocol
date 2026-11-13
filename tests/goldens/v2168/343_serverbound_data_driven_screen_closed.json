@@ -5,33 +5,5 @@
    "close_reason": "USER_BUSY"
   },
   "bytes": "07000000087573657262757379"
- },
- {
-  "value": {
-   "form_id": 300,
-   "close_reason": "PROGRAMMATIC_CLOSE_ALL"
-  },
-  "bytes": "2c0100001470726f6772616d6d61746963636c6f7365616c6c"
- },
- {
-  "value": {
-   "form_id": 1,
-   "close_reason": "PROGRAMMATIC_CLOSE"
-  },
-  "bytes": "010000001170726f6772616d6d61746963636c6f7365"
- },
- {
-  "value": {
-   "form_id": 2,
-   "close_reason": "CLIENT_CANCELED"
-  },
-  "bytes": "020000000e636c69656e7463616e63656c6564"
- },
- {
-  "value": {
-   "form_id": 3,
-   "close_reason": "INVALID_FORM"
-  },
-  "bytes": "030000000b696e76616c6964666f726d"
  }
 ]

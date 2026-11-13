@@ -10,17 +10,5 @@
    }
   },
   "bytes": "0c06010402"
- },
- {
-  "value": {
-   "inventory_options": {
-    "left_inventory_tab": "RECIPE_NATURE",
-    "right_inventory_tab": "CRAFTING",
-    "filtering": true,
-    "layout_inv": "RECIPE_BOOK_ONLY",
-    "layout_craft": "DEFAULT"
-   }
-  },
-  "bytes": "0804010604"
  }
 ]

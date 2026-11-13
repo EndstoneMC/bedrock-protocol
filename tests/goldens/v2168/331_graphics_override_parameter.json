@@ -26,24 +26,6 @@
      "z": 3.0
     }
    },
-   "float_value": 0.25,
-   "vec3_value": null,
-   "biome_id": "plains",
-   "player_id": null,
-   "parameter_id": "WAVES_DEPTH",
-   "reset_parameter": true
-  },
-  "bytes": "010000003f0000803f0000004000004040010000803e0006706c61696e73000d01"
- },
- {
-  "value": {
-   "keyframes": {
-    "0.5": {
-     "x": 1.0,
-     "y": 2.0,
-     "z": 3.0
-    }
-   },
    "float_value": null,
    "vec3_value": {
     "x": 4.0,

@@ -5,12 +5,5 @@
    "runtime_id": 300
   },
   "bytes": "01ac02"
- },
- {
-  "value": {
-   "anim": "ARM_SWING",
-   "runtime_id": 5
-  },
-  "bytes": "0005"
  }
 ]

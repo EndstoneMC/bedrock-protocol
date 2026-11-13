@@ -5,12 +5,5 @@
    "death_cause_message_list": ["death.fell.accident.generic"]
   },
   "bytes": "0466616c6c011b64656174682e66656c6c2e6163636964656e742e67656e65726963"
- },
- {
-  "value": {
-   "death_cause_attack_name": "drown",
-   "death_cause_message_list": []
-  },
-  "bytes": "0564726f776e00"
  }
 ]

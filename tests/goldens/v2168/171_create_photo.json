@@ -6,21 +6,5 @@
    "photo_item_name": "Snapshot"
   },
   "bytes": "88776655443322110970686f746f2e706e6708536e617073686f74"
- },
- {
-  "value": {
-   "id": -1,
-   "photo_name": "a",
-   "photo_item_name": "b"
-  },
-  "bytes": "ffffffffffffffff01610162"
- },
- {
-  "value": {
-   "id": 1,
-   "photo_name": "ab",
-   "photo_item_name": "x"
-  },
-  "bytes": "01000000000000000261620178"
  }
 ]

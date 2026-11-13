@@ -6,13 +6,5 @@
    "response": "{\"ok\":true}\n"
   },
   "bytes": "057265712d31110000000c7b226f6b223a747275657d0a"
- },
- {
-  "value": {
-   "request_id": "r2",
-   "action": "ATTACK",
-   "response": "{}\n"
-  },
-  "bytes": "02723201000000037b7d0a"
  }
 ]

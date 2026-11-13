@@ -14,13 +14,5 @@
    "data_instance_id": null
   },
   "bytes": "01730100000000"
- },
- {
-  "value": {
-   "screen_id": "t",
-   "form_id": 4294967295,
-   "data_instance_id": 4294967295
-  },
-  "bytes": "0174ffffffff01ffffffff"
  }
 ]

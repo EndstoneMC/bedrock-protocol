@@ -1,36 +1,6 @@
 [
  {
   "value": {
-   "cache_enabled": false,
-   "dimension_type": 1,
-   "center_pos": {
-    "x": 1,
-    "y": 2,
-    "z": 3
-   },
-   "sub_chunk_data": [
-    {
-     "sub_chunk_pos_offset": {
-      "x": -1,
-      "y": 0,
-      "z": 1
-     },
-     "result": "SUCCESS",
-     "serialized_sub_chunk": "aa",
-     "height_map_data": {
-      "height_map_type": "NO_DATA",
-      "subchunk_height_map": null,
-      "render_height_map_type": "NO_DATA",
-      "subchunk_render_height_map": null
-     },
-     "blob_id": null
-    }
-   ]
-  },
-  "bytes": "000201000000020000000300000001ff0001010101aa0000000000"
- },
- {
-  "value": {
    "cache_enabled": true,
    "dimension_type": 1,
    "center_pos": {

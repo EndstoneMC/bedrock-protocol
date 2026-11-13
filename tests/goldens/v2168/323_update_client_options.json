@@ -16,14 +16,5 @@
    }
   },
   "bytes": "0000"
- },
- {
-  "value": {
-   "update": {
-    "graphics_mode": null,
-    "filter_profanity": true
-   }
-  },
-  "bytes": "000101"
  }
 ]

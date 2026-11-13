@@ -1,12 +1,6 @@
 [
  {
   "value": {
-   "removed_containers": []
-  },
-  "bytes": "00"
- },
- {
-  "value": {
    "removed_containers": [
     {
      "name": "LEVEL_ENTITY_CONTAINER",

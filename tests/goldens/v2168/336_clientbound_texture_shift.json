@@ -11,31 +11,5 @@
    "enabled": true
   },
   "bytes": "02057368696674046461776e046475736b03046461776e046e6f6f6e046475736bc801900301"
- },
- {
-  "value": {
-   "action": "SET_ENABLED",
-   "collection_name": "shift",
-   "from_step": "dawn",
-   "to_step": "dusk",
-   "all_steps": [],
-   "current_length_in_ticks": 5,
-   "total_length_in_ticks": 9,
-   "enabled": true
-  },
-  "bytes": "03057368696674046461776e046475736b00050901"
- },
- {
-  "value": {
-   "action": "SYNC",
-   "collection_name": "shift",
-   "from_step": "dawn",
-   "to_step": "dusk",
-   "all_steps": [],
-   "current_length_in_ticks": 3,
-   "total_length_in_ticks": 9,
-   "enabled": true
-  },
-  "bytes": "04057368696674046461776e046475736b00030901"
  }
 ]

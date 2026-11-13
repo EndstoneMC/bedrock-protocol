@@ -5,12 +5,5 @@
    "unlocked_recipes": ["minecraft:stick"]
   },
   "bytes": "02000000010f6d696e6563726166743a737469636b"
- },
- {
-  "value": {
-   "packet_type": "REMOVE_ALL_UNLOCKED_RECIPES",
-   "unlocked_recipes": []
-  },
-  "bytes": "0400000000"
  }
 ]

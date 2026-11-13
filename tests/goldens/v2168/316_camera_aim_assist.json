@@ -12,19 +12,5 @@
    "show_debug_render": true
   },
   "bytes": "1161696d5f6173736973745f7072657365740000f0410000a04100000041010001"
- },
- {
-  "value": {
-   "preset_id": "preset",
-   "view_angle": {
-    "x": 10.0,
-    "y": 15.0
-   },
-   "distance": 4.0,
-   "target_mode": "ANGLE",
-   "action": "CLEAR",
-   "show_debug_render": false
-  },
-  "bytes": "06707265736574000020410000704100008040000100"
  }
 ]

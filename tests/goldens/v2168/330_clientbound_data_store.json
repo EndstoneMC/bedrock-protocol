@@ -55,66 +55,6 @@
   "value": {
    "updates": [
     {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": null
-     }
-    }
-   ]
-  },
-  "bytes": "0101016101620100000000000000"
- },
- {
-  "value": {
-   "updates": [
-    {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": true
-     }
-    }
-   ]
-  },
-  "bytes": "010101610162010000000100000001"
- },
- {
-  "value": {
-   "updates": [
-    {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": 7
-     }
-    }
-   ]
-  },
-  "bytes": "01010161016201000000020000000700000000000000"
- },
- {
-  "value": {
-   "updates": [
-    {
-     "DataStoreChange": {
-      "data_store_name": "a",
-      "property": "b",
-      "update_count": 1,
-      "new_data": 0.25
-     }
-    }
-   ]
-  },
-  "bytes": "0101016101620100000003000000000000000000d03f"
- },
- {
-  "value": {
-   "updates": [
-    {
      "DataStoreUpdate": {
       "data_store_name": "hud",
       "property": "visible",

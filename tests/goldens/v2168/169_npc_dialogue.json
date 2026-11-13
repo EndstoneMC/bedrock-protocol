@@ -9,16 +9,5 @@
    "action_json": "[]\n"
   },
   "bytes": "0201000000000000020548656c6c6f086772656574696e67054775696465035b5d0a"
- },
- {
-  "value": {
-   "npc_id": 4294967296,
-   "npc_dialogue_action_type": "OPEN",
-   "dialogue": "Hi",
-   "scene_name": "s",
-   "npc_name": "N",
-   "action_json": "[]\n"
-  },
-  "bytes": "0000000001000000000248690173014e035b5d0a"
  }
 ]

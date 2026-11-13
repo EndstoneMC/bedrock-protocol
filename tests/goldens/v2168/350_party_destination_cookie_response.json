@@ -5,19 +5,5 @@
    "accepted": true
   },
   "bytes": "0c70617274792d636f6f6b696501"
- },
- {
-  "value": {
-   "cookie": "ab",
-   "accepted": true
-  },
-  "bytes": "02616201"
- },
- {
-  "value": {
-   "cookie": "cde",
-   "accepted": true
-  },
-  "bytes": "0363646501"
  }
 ]

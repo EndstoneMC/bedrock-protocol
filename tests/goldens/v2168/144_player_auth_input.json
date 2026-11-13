@@ -15,57 +15,6 @@
     "y": 8.0
    },
    "y_head_rot": 3.0,
-   "input_data": ["JUMPING"],
-   "input_mode": "TOUCH",
-   "play_mode": "NORMAL",
-   "new_interaction_model": "CROSSHAIR",
-   "interact_rotation": {
-    "x": 9.0,
-    "y": 10.0
-   },
-   "client_tick": 200,
-   "pos_delta": {
-    "x": 11.0,
-    "y": 12.0,
-    "z": 13.0
-   },
-   "item_use_transaction": null,
-   "item_stack_request": null,
-   "player_block_actions": null,
-   "vehicle_rot": null,
-   "client_predicted_vehicle": null,
-   "analog_move_vector": {
-    "x": 14.0,
-    "y": 15.0
-   },
-   "camera_orientation": {
-    "x": 16.0,
-    "y": 17.0,
-    "z": 18.0
-   },
-   "raw_move_vector": {
-    "x": 19.0,
-    "y": 20.0
-   }
-  },
-  "bytes": "0000803f00000040000080400000a0400000c0400000e040000000410000404001010c0200020000104100002041c801000030410000404100005041010001000100010001000000604100007041000080410000884100009041000098410000a041"
- },
- {
-  "value": {
-   "rot": {
-    "x": 1.0,
-    "y": 2.0
-   },
-   "pos": {
-    "x": 4.0,
-    "y": 5.0,
-    "z": 6.0
-   },
-   "move": {
-    "x": 7.0,
-    "y": 8.0
-   },
-   "y_head_rot": 3.0,
    "input_data": ["PERFORM_BLOCK_ACTIONS", "IS_IN_CLIENT_PREDICTED_VEHICLE"],
    "input_mode": "TOUCH",
    "play_mode": "NORMAL",

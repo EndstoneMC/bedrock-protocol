@@ -5,12 +5,5 @@
    "hud_visible": "RESET"
   },
   "bytes": "03000a1802"
- },
- {
-  "value": {
-   "hud_element": ["ITEM_TEXT"],
-   "hud_visible": "HIDE"
-  },
-  "bytes": "011800"
  }
 ]

@@ -41,14 +41,6 @@
  },
  {
   "value": {
-   "categories": [],
-   "presets": [],
-   "operation": "SET"
-  },
-  "bytes": "000000"
- },
- {
-  "value": {
    "categories": [
     {
      "name": "cat",

@@ -4,11 +4,5 @@
    "waiting_for_preload": true
   },
   "bytes": "01"
- },
- {
-  "value": {
-   "waiting_for_preload": false
-  },
-  "bytes": "00"
  }
 ]

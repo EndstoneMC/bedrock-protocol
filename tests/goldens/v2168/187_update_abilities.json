@@ -18,36 +18,5 @@
    }
   },
   "bytes": "070000000000000002040101000006000000020000cdcc4c3d0000803fcdcccc3d"
- },
- {
-  "value": {
-   "data": {
-    "target_player": -1,
-    "player_permissions": "MEMBER",
-    "command_permissions": "GAME_DIRECTORS",
-    "layers": []
-   }
-  },
-  "bytes": "ffffffffffffffff010100"
- },
- {
-  "value": {
-   "data": {
-    "target_player": 5,
-    "player_permissions": "MEMBER",
-    "command_permissions": "GAME_DIRECTORS",
-    "layers": [
-     {
-      "serialized_layer": "BASE",
-      "abilities_set": 1,
-      "ability_values": 1,
-      "fly_speed": 0.5,
-      "vertical_fly_speed": 0.5,
-      "walk_speed": 0.5
-     }
-    ]
-   }
-  },
-  "bytes": "0500000000000000010101010001000000010000000000003f0000003f0000003f"
  }
 ]

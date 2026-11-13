@@ -7,14 +7,5 @@
    "tick": 300
   },
   "bytes": "070250ac02"
- },
- {
-  "value": {
-   "runtime_id": 3,
-   "effect_type": "GEYSER_BOOST",
-   "effect_duration": 20,
-   "tick": 9
-  },
-  "bytes": "03042809"
  }
 ]

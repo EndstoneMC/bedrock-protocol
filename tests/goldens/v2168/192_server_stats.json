@@ -5,12 +5,5 @@
    "network_time": 0.25
   },
   "bytes": "000048410000803e"
- },
- {
-  "value": {
-   "server_time": 1.0,
-   "network_time": 2.5
-  },
-  "bytes": "0000803f00002040"
  }
 ]

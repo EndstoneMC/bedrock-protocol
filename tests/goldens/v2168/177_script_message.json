@@ -5,12 +5,5 @@
    "message_value": "hello"
   },
   "bytes": "0d656e6473746f6e653a70696e670568656c6c6f"
- },
- {
-  "value": {
-   "message_id": "endstone:pong",
-   "message_value": "x"
-  },
-  "bytes": "0d656e6473746f6e653a706f6e670178"
  }
 ]

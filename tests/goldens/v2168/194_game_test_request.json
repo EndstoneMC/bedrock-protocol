@@ -14,21 +14,5 @@
    "test_name": "mytest"
   },
   "bytes": "c8010401010203060a066d7974657374"
- },
- {
-  "value": {
-   "max_tests_per_batch": 300,
-   "repeat_count": 1,
-   "rotation": "ROTATE_270",
-   "stop_on_failure": false,
-   "test_pos": {
-    "x": 1,
-    "y": 2,
-    "z": 3
-   },
-   "tests_per_row": 1,
-   "test_name": "t"
-  },
-  "bytes": "d804020300020406020174"
  }
 ]

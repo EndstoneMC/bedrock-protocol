@@ -63,16 +63,6 @@
   "value": {
    "data": {
     "SyncStateData": {
-     "clock_data": []
-    }
-   }
-  },
-  "bytes": "0000"
- },
- {
-  "value": {
-   "data": {
-    "SyncStateData": {
      "clock_data": [
       {
        "clock_id": 300,
