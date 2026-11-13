@@ -66,5 +66,155 @@
    ]
   },
   "bytes": "02020d6d696e6563726166743a7069670000803f0000004000004040000080400000a0400000c0400000e04000000041000010410000204101106d696e6563726166743a6865616c74680000803f0000a0410000a041012603030000003f01010301020000003f0102040101000000c03f"
+ },
+ {
+  "value": {
+   "entity_id": 1,
+   "runtime_id": 2,
+   "actor_type": "minecraft:pig",
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "rot": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rotation": 9.0,
+   "y_body_rotation": 10.0,
+   "attributes": [
+    {
+     "name": "minecraft:health",
+     "min_value": 1.0,
+     "current_value": 20.0,
+     "max_value": 20.0
+    }
+   ],
+   "data": {
+    "data": [
+     {
+      "id": 2,
+      "payload": {
+       "DataItemIntPayload": {
+        "value": 7
+       }
+      }
+     },
+     {
+      "id": 3,
+      "payload": {
+       "DataItemBytePayload": {
+        "value": 3
+       }
+      }
+     },
+     {
+      "id": 4,
+      "payload": {
+       "DataItemStringPayload": {
+        "value": "Bob"
+       }
+      }
+     },
+     {
+      "id": 5,
+      "payload": {
+       "DataItemInt64Payload": {
+        "value": -4000000000
+       }
+      }
+     },
+     {
+      "id": 7,
+      "payload": {
+       "DataItemShortPayload": {
+        "value": 300
+       }
+      }
+     },
+     {
+      "id": 28,
+      "payload": {
+       "DataItemPosPayload": {
+        "value": {
+         "x": 1,
+         "y": -2,
+         "z": 3
+        }
+       }
+      }
+     },
+     {
+      "id": 118,
+      "payload": {
+       "DataItemCompoundTagPayload": {
+        "value": {
+         "Hitboxes": {
+          "ListTag": {
+           "type": 10,
+           "tags": [
+            {
+             "CompoundTag": {
+              "Height": {
+               "FloatTag": 1.5
+              },
+              "Width": {
+               "FloatTag": 0.75
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "id": 130,
+      "payload": {
+       "DataItemVec3Payload": {
+        "value": {
+         "x": 0.5,
+         "y": 1.5,
+         "z": 2.5
+        }
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "links": [
+    {
+     "a": 1,
+     "b": 2,
+     "type": "RIDING",
+     "immediate": true,
+     "passenger_initiated": false,
+     "vehicle_angular_velocity": 1.5
+    }
+   ]
+  },
+  "bytes": "02020d6d696e6563726166743a7069670000803f0000004000004040000080400000a0400000c0400000e04000000041000010410000204101106d696e6563726166743a6865616c74680000803f0000a0410000a041080202020e0300000304040403426f62050707ff9fd9e61d0701012c011c06060203067605050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f0000820108080000003f0000c03f0000204001010301020000003f0102040101000000c03f"
  }
 ]
