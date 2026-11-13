@@ -1,5 +1,6 @@
 [
  {
+  "id": "cache_enabled",
   "value": {
    "enabled": true
   },
