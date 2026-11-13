@@ -1,5 +1,6 @@
 [
  {
+  "id": "spectator_game_type",
   "value": {
    "player_game_type": "SPECTATOR"
   },
