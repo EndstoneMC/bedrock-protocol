@@ -19,7 +19,7 @@ paths:
 - Give a real member an explicit int literal.
 - Use `auto()` (previous + 1) only for a count every era's dump holding its enum binds, or a run that shifts behind a gate, and check that the line above holds the right value.
 - Write `sentinel()`, one ungated line, for a count or end marker the header declares that any era's dump holding its enum does not bind (by name if name-coded, else by value).
-- Mark a member bedrock-headers names deprecated with `deprecated=True`: `value(N, deprecated=True)`, or `auto(deprecated=True)` imported from `protocol` in auto position; bpc keeps it, marked deprecated.
+- Mark a member bedrock-headers names deprecated with `deprecated=True`: `value(N, deprecated=True)`, or `auto(deprecated=True)` imported from `protocol` in auto position; bpc keeps it, marked deprecated, and the goldens never pick it.
 - Leave any other member the dump does not bind as declared, and report it.
 
 ## Underlying type

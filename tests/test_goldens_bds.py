@@ -365,6 +365,11 @@ def test_an_enum_count_sentinel_is_never_generated(values, schema):
     assert "COUNT" not in [each["layout_inv"] for each in options]
 
 
+def test_a_deprecated_member_is_never_picked(values, schema):
+    family = next(each for each in schema.order if each.name == "InputMode")
+    assert 4 not in values.Generator(schema, 2168).named(family)
+
+
 @pytest.mark.parametrize(
     ("name", "field", "read"),
     [
