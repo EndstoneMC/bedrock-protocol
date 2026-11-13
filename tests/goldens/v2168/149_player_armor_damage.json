@@ -5,13 +5,9 @@
     {
      "armor_slot": "TORSO",
      "damage": 3
-    },
-    {
-     "armor_slot": "BODY",
-     "damage": -300
     }
    ]
   },
-  "bytes": "0202030008d4fe"
+  "bytes": "01020300"
  }
 ]
