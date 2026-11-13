@@ -306,7 +306,9 @@ FIXED: dict[str, Json] = {
     "CameraAimAssistPacket.view_angle": {"x": 45.5, "y": 30.25},
     "CameraSplineDefinition.name": "test:spline",
     "CameraSplineDefinition.spline_type": "linear",
-    "ServerToClientHandshakePacket.token": "eyJhbGciOiJFUzM4NCJ9.eyJzYWx0IjoiYWJjZCJ9.c2ln",
+    "ServerToClientHandshakePacket.token": web_token(
+        {"salt": base64.b64encode(bytes(range(16))).decode()}, bytes(range(48, 144))
+    ),
     "ModalFormRequestPacket.form_json": (
         '{"type":"form","title":"Golden","content":"Pick one",'
         '"buttons":[{"text":"Yes"},{"text":"No","image":{"type":"path","data":"textures/ui/cancel"}}]}'
