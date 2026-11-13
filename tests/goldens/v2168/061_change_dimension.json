@@ -14,15 +14,15 @@
  },
  {
   "value": {
-   "dimension_id": -1,
+   "dimension_id": 1,
    "pos": {
     "x": -1.0,
-    "y": 0.0,
+    "y": 64.5,
     "z": 0.5
    },
    "respawn": false,
    "loading_screen_id": null
   },
-  "bytes": "01000080bf000000000000003f0000"
+  "bytes": "02000080bf000081420000003f0000"
  }
 ]
