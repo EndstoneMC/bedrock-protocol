@@ -151,8 +151,11 @@ def bds_prints_a_vec_as_an_array(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | Non
     return None
 
 
+BDS_WRAPPERS = {"ActorRuntimeID", "ActorUniqueID", "DimensionType", "PlayerInputTick", "mce::Color"}
+
+
 def bds_wraps_a_value_in_a_one_member_type(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if bds.fields is not None and len(bds.fields) == 1 and isinstance(bds.value, dict):
+    if bds.fields is not None and bds.field["type"] in BDS_WRAPPERS and isinstance(bds.value, dict):
         [member] = bds.fields
         return ours, Bds(bds.value[member["name"]], member)
     return None
@@ -173,6 +176,7 @@ ACCEPTED = {
     "bds_prints_the_wire_type",
     "bds_prints_a_vec_as_an_array",
     "bds_prints_an_enum_as_its_number",
+    "bds_wraps_a_value_in_a_one_member_type",
     BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT,
 }
 
