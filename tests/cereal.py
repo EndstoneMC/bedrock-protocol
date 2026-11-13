@@ -5,6 +5,7 @@ import importlib
 import keyword
 import math
 import re
+import struct
 import uuid
 from copy import copy
 from functools import cache, reduce
@@ -47,7 +48,7 @@ class SchemaRWType(enum.IntFlag):
     NONE = 0
     OBJECT = 1
     ARRAY = 2
-    NULL = 4
+    OTHER = 4
 
 
 class ErrorCode(enum.IntEnum):
@@ -88,6 +89,7 @@ class SerializerContext:
         return any(code & self.STRICT_ERROR_CODES for code, _ in self.entries[checkpoint:])
 
 
+FLOAT_LIMIT = struct.unpack(">d", bytes.fromhex("47EFFFFFD586B834"))[0]
 NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
 
 
@@ -182,9 +184,10 @@ class RapidJSONSchemaReader(SchemaReader):
                 return SchemaRWType.OBJECT
             case list():
                 return SchemaRWType.ARRAY
-            case None:
-                return SchemaRWType.NULL
-        return SchemaRWType.NONE
+        return SchemaRWType.OTHER
+
+    def as_null(self):
+        return True if self.node is None else None
 
     def as_bool(self):
         return self.node if type(self.node) is bool else None
@@ -222,7 +225,7 @@ class RapidJSONSchemaReader(SchemaReader):
 
     def as_float(self):
         value = self.as_double()
-        return value if value is None or not math.isfinite(value) or abs(value) < 3.4028235677973366e38 else None
+        return value if value is None or not math.isfinite(value) or abs(value) <= FLOAT_LIMIT else None
 
     def as_string(self):
         return self.node if isinstance(self.node, str) else None
@@ -481,7 +484,7 @@ class DynamicValueSchema(BasicSchema):
                 values[key] = self.load(reader, context)
                 reader.pop()
             return values
-        if not reader.expected_type() & SchemaRWType.NULL:
+        if not reader.as_null():
             context.log(ErrorCode.ERROR, "invalid dynamic value")
         return None
 
@@ -499,7 +502,7 @@ class NullTypeSchema(BasicSchema):
     bound_type = type(None)
 
     def do_load(self, reader, context, traits):
-        if not reader.expected_type() & SchemaRWType.NULL:
+        if not reader.as_null():
             context.log(ErrorCode.ERROR, "expected null")
 
     def do_save(self, value, writer, context, traits):
@@ -680,7 +683,7 @@ class VariantSchema(BasicSchema):
 
 
 class BitsetSchema(BasicSchema):
-    """A bitset on the Compression path: base-128 groups, each written as a uint8."""
+    """A bitset on the Compression path: a little-endian varint, each group written as a uint8."""
 
     bound_type = int
 
@@ -689,8 +692,7 @@ class BitsetSchema(BasicSchema):
 
     def do_load(self, reader, context, traits):
         value = 0
-        tokens = reader.as_tokens()
-        for index, token in enumerate(tokens):
+        for index, token in enumerate(reader.as_tokens()):
             if type(token) is not int or not 0 <= token < 256 or index >= self.groups:
                 context.log(ErrorCode.ERROR, "failed to read bitset byte")
                 break
@@ -698,10 +700,8 @@ class BitsetSchema(BasicSchema):
         return value
 
     def do_save(self, value, writer, context, traits):
-        last = self.groups - 1
-        writer.write_tokens(
-            [(value >> (7 * index)) & 0x7F | (0x80 if index < last else 0) for index in range(self.groups)]
-        )
+        groups = [(value >> shift) & 0x7F for shift in range(0, max(value.bit_length(), 1), 7)]
+        writer.write_tokens([group | 0x80 for group in groups[:-1]] + groups[-1:])
 
 
 NBT_IDS = {
@@ -718,13 +718,15 @@ NBT_IDS = {
     nbt.IntArrayTag: 11,
 }
 NBT_CLASSES = {number: cls for cls, number in NBT_IDS.items()}
-NBT_ARRAY_ELEMENTS = {7: 1, 11: 3}
 
 
 class CompoundTagSchema(BasicSchema):
-    """A compound as BDS's token stream: type id, name and payload per entry, then 0."""
+    """A compound as BDS's token stream: an optional header, entries of type id, name and payload, then 0."""
 
     bound_type = nbt.CompoundTag
+
+    def __init__(self, header):
+        self.header = header
 
     def entries(self, compound, tokens):
         for name, tag in compound.items():
@@ -741,7 +743,7 @@ class CompoundTagSchema(BasicSchema):
                 for index in range(len(tag)):
                     self.payload(tag[index], tokens)
             case nbt.ByteArrayTag() | nbt.IntArrayTag():
-                tokens += [NBT_ARRAY_ELEMENTS[NBT_IDS[type(tag)]], len(tag.value), *tag.value]
+                tokens += [len(tag.value), *tag.value]
             case _:
                 tokens.append({"data": tag.value})
 
@@ -759,21 +761,23 @@ class CompoundTagSchema(BasicSchema):
         if cls is nbt.ListTag:
             element, count = next(tokens), next(tokens)
             return nbt.ListTag([self.read_payload(element, tokens) for _ in range(count)], element)
-        if number in NBT_ARRAY_ELEMENTS:
-            next(tokens)
+        if number in (7, 11):
             return cls([next(tokens) for _ in range(next(tokens))])
         data = next(tokens)["data"]
         return cls(CaseForm.number_in(data) if number in (5, 6) else data)
 
     def do_load(self, reader, context, traits):
         try:
-            return self.read_entries(iter(reader.as_tokens()))
+            tokens = iter(reader.as_tokens())
+            if self.header:
+                next(tokens), next(tokens)
+            return self.read_entries(tokens)
         except (StopIteration, KeyError, TypeError, ValueError, OverflowError):
             context.log(ErrorCode.ERROR, "invalid tag stream")
             return nbt.CompoundTag()
 
     def do_save(self, value, writer, context, traits):
-        tokens = []
+        tokens = [NBT_IDS[nbt.CompoundTag], ""] if self.header else []
         self.entries(value, tokens)
         writer.write_tokens(tokens)
 
@@ -1113,7 +1117,7 @@ class ReflectionCtx:
             case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
                 return UUIDHalvesSchema()
             case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
-                return CompoundTagSchema()
+                return CompoundTagSchema(builtin.name == "CompoundTag")
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
                 return DynamicValueSchema()
             case EnumRef(enum=enum):

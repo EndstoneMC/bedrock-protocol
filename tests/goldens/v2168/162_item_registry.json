@@ -8,7 +8,7 @@
      "id": 323,
      "is_component_based": false,
      "item_version": 0,
-     "component_data": 0
+     "component_data": [10, "", 0]
     },
     {
      "name": "minecraft:apple",
@@ -16,6 +16,8 @@
      "is_component_based": true,
      "item_version": 1,
      "component_data": [
+      10,
+      "",
       3,
       "minecraft:max_stack_size",
       {

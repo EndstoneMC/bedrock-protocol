@@ -16,6 +16,8 @@
    "use_new_trade_screen": true,
    "using_economy_trade": true,
    "data": [
+    10,
+    "",
     3,
     "TierExpRequirements",
     {

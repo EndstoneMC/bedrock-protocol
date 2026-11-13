@@ -162,6 +162,8 @@
       "payload": {
        "type": 5,
        "value": [
+        10,
+        "",
         9,
         "Hitboxes",
         10,
