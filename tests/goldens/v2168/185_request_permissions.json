@@ -1,5 +1,6 @@
 [
  {
+  "id": "operator_with_custom_flags",
   "value": {
    "target_player_id": 7,
    "player_permissions": "OPERATOR",
