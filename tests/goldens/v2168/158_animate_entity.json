@@ -1,5 +1,6 @@
 [
  {
+  "id": "creeper_swelling_animation",
   "value": {
    "animation": "animation.creeper.swelling",
    "next_state": "default",
