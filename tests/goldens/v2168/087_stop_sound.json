@@ -1,5 +1,6 @@
 [
  {
+  "id": "stop_all_sounds",
   "value": {
    "name": "record.pigstep",
    "stop_all": true,
