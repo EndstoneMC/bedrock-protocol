@@ -1,5 +1,6 @@
 [
  {
+  "id": "premium_resource_pack",
   "value": {
    "resource_name": "0a0b0c0d-0e0f-1011-1213-141516171819_1.0.0",
    "chunk_size": 1048576,
