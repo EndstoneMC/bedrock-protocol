@@ -18,6 +18,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
 - Commit a case only once BDS writes the same bytes and the JSON BDS prints matches `value` in its tree and leaf values; keys are not compared.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
+- Compare a `Vec2` or `Vec3` with BDS's array of its components; reshape no other struct.
 - Never change a committed case's `bytes`; change its `value` only for a rename or a library type fix.
 
 ## Writing cases

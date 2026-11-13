@@ -143,8 +143,8 @@ def bds_prints_a_map_as_key_value_pairs(ours: Ours, bds: Bds) -> tuple[Ours, Bds
     return None
 
 
-def bds_prints_a_struct_as_an_array(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, StructRef) and isinstance(bds.value, list) and bds.fields is not None:
+def bds_prints_a_vec_as_an_array(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
+    if isinstance(ours.type, StructRef) and ours.type.struct.name in {"Vec2", "Vec3"} and isinstance(bds.value, list):
         names = [each["name"] for each in bds.fields]
         return ours, Bds(dict(zip(names, bds.value, strict=True)), bds.field)
     return None
@@ -166,7 +166,7 @@ def bds_prints_a_one_member_struct_as_its_member(ours: Ours, bds: Bds) -> tuple[
 
 type Rule = Callable[[Ours, Bds], tuple[Ours, Bds] | None]
 
-ACCEPTED = {"bds_prints_the_wire_type"}
+ACCEPTED = {"bds_prints_the_wire_type", "bds_prints_a_vec_as_an_array"}
 
 RULES: list[Rule] = [
     bds_prints_the_wire_type,
@@ -182,7 +182,7 @@ RULES: list[Rule] = [
     bds_nests_fields_under_an_undeclared_key,
     bds_prints_a_variant_arm_without_its_name,
     bds_prints_a_map_as_key_value_pairs,
-    bds_prints_a_struct_as_an_array,
+    bds_prints_a_vec_as_an_array,
     bds_wraps_a_value_in_a_one_member_type,
     bds_prints_a_one_member_struct_as_its_member,
 ]
