@@ -29,12 +29,12 @@ paths:
 - Never re-derive a whole pre-cereal body from Sandertv/gophertunnel; its Marshal history says only what differed at the time.
 - First ask whether a back-port is only a gate edit.
 - Never re-baseline, and never fold a drive-by correction into a version bump; land it separately.
-- A packet is dirty when a member, a member's type or any type in its nesting changed, never because a protocol-docs branch is new; before modelling, list the dirty packets between two branches with `uv run --no-project scripts/dirty_packets.py <protocol-docs clone> origin/<old> origin/<new>`.
+- A packet is dirty when a member, a member's type or any type in its nesting changed, never because a protocol-docs branch is new.
 
 ## Forward
 
 - Add a version in three steps:
-  - list the packets added, removed, moved and dirty with `scripts/dirty_packets.py`, a read of the dump below;
+  - list the packets added, removed, moved and dirty from the dump, read as below;
   - update the DSL from the new dump alone;
   - compare the library's dirty set, the classes of `v<new>.packets` that `v<old>.packets` lacks, with the dump's, where `<old>` is the modelled neighbour toward 2168; any other difference is a DSL defect.
 - Diff both ways from the base, 2168: a version above it diffs against the version below, and a version below it against the version above.
