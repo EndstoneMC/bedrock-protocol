@@ -36,3 +36,6 @@ __pycache__/
 !.claude/skills/
 !.claude/settings.json
 CLAUDE.local.md
+
+# Local backups
+backup/

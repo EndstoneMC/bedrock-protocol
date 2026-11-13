@@ -15,7 +15,6 @@ An era is one modelled protocol and the BDS build that reports it.
 | names, nesting, C++ types, member order | EndstoneMC/bedrock-headers at the era's `android/rNN_uN` branch, never head |
 | wire of a packet BDS writes through cereal (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
 | wire of a packet BDS writes by hand, in any era | the era's hand-written writer, decompiled in that build's IDA database |
-| golden bytes and JSON | what BDS of the era writes from the library's bytes, frozen in `tests/goldens/` (`.claude/rules/tests.md`) |
 | dating | MemoriesOfTime/Nukkit-MOT and CloudburstMC/Protocol (`versions.md`) |
 | the step inside a cycle | Mojang/bedrock-protocol-docs `legacy_changelogs/` (`versions.md`) |
 

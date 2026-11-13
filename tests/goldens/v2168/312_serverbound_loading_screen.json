@@ -1,9 +1,0 @@
-[
- {
-  "value": {
-   "serverbound_loading_screen_packet_type": "START_LOADING_SCREEN",
-   "loading_screen_id": 462
-  },
-  "bytes": "0201ce010000"
- }
-]
