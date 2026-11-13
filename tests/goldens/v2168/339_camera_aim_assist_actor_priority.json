@@ -6,23 +6,23 @@
      "preset_idx": 1,
      "category_idx": 2,
      "actor_idx": 3,
-     "priority": -4
+     "priority": 4
     }
    ]
   },
-  "bytes": "01010000000200000003000000fcffffff"
+  "bytes": "0101000000020000000300000004000000"
  },
  {
   "value": {
    "priorities": [
     {
-     "preset_idx": -1,
-     "category_idx": 0,
-     "actor_idx": 0,
-     "priority": 0
+     "preset_idx": 5,
+     "category_idx": 6,
+     "actor_idx": 7,
+     "priority": 8
     }
    ]
   },
-  "bytes": "01ffffffff000000000000000000000000"
+  "bytes": "0105000000060000000700000008000000"
  }
 ]
