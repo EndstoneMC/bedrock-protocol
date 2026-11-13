@@ -1,5 +1,6 @@
 [
  {
+  "id": "no_container_name_or_storage_item",
   "value": {
    "inventory_id": 12,
    "slot": 3,
@@ -17,6 +18,7 @@
   "bytes": "0c0300000000000000000000"
  },
  {
+  "id": "cursor_with_dynamic_id",
   "value": {
    "inventory_id": 12,
    "slot": 3,
@@ -44,6 +46,7 @@
   "bytes": "0c03013b010300000001000000000000000005000100000112b6b5ac94070a00000000000000000000"
  },
  {
+  "id": "cursor_without_dynamic_id",
   "value": {
    "inventory_id": 12,
    "slot": 3,
