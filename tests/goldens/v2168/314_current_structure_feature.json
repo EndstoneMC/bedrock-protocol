@@ -1,5 +1,6 @@
 [
  {
+  "id": "ancient_city_feature",
   "value": {
    "current_structure_feature": "minecraft:ancient_city"
   },
