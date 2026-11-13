@@ -11,29 +11,182 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint (ruff + mypy)
-    runs-on: ubuntu-24.04
+  # Three compilers across three standard libraries. Clang pairs with libc++
+  # rather than libstdc++ because libstdc++'s <expected> is incompatible with
+  # Clang's concepts front end; libstdc++ itself is still covered by the GCC job.
+  #
+  # Each job also uploads its install tree. A static library carries its standard
+  # library's ABI, so the triple in the artifact name is part of the contract: a
+  # libstdc++ build and a libc++ build are not interchangeable.
+  #
+  # The source package is the C++ the compiler emits, shipped next to the
+  # hand-written runtime. Building from it needs neither uv nor bpc, which is what
+  # its last step checks.
+  cpp:
+    name: C++ (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC (libstdc++)
+            os: ubuntu-24.04
+            triple: linux-x86_64-gcc13
+            cmakeflags: -DCMAKE_CXX_COMPILER=g++
+          - name: Linux Clang (libc++)
+            os: ubuntu-24.04
+            triple: linux-x86_64-clang18-libcxx
+            llvm: "18"
+            cmakeflags: -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS=-stdlib=libc++
+          - name: Windows MSVC
+            os: windows-2022
+            triple: windows-x86_64-msvc2022
+          - name: Source package
+            os: ubuntu-24.04
+            triple: src
+            source: true
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
-      - run: uv sync --directory compiler
+
+      - name: Install Clang ${{ matrix.llvm }} + libc++
+        if: matrix.llvm
+        run: |
+          sudo apt-get update -y -q
+          sudo apt-get install -y -q lsb-release wget software-properties-common gnupg
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{ matrix.llvm }}
+          sudo apt-get install -y -q libc++-${{ matrix.llvm }}-dev libc++abi-${{ matrix.llvm }}-dev
+
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        if: runner.os == 'Windows'
+
+      - name: Test the compiler
+        run: uv run --directory compiler pytest -n auto
+
+      - name: Configure
+        run: cmake --preset release -DCMAKE_INSTALL_PREFIX='${{ github.workspace }}/stage' ${{ matrix.cmakeflags }}
+
+      - name: Name the package
+        id: package
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          echo "name=bedrock-protocol-${version}-${GITHUB_SHA::7}-${{ matrix.triple }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        if: ${{ !matrix.source }}
+        run: cmake --build --preset release
+
+      - name: Install
+        if: ${{ !matrix.source }}
+        run: cmake --install build/Release
+
+      - name: Stage the source package
+        if: matrix.source
+        run: |
+          name=${{ steps.package.outputs.name }}
+          mkdir -p "stage/$name/cmake"
+          cp CMakeLists.txt pyproject.toml LICENSE README.md "stage/$name/"
+          cp cmake/bedrock-protocol-config.cmake.in "stage/$name/cmake/"
+          cp -r include "stage/$name/include"
+          cp -r build/Release/generated "stage/$name/generated"
+
+      - name: Build the source package without the compiler
+        if: matrix.source
+        run: |
+          rm -rf build/Release stage-build
+          cmake -S stage/${{ steps.package.outputs.name }} -B build/Release -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX='${{ github.workspace }}/stage-build'
+          cmake --build build/Release
+          cmake --install build/Release
+
+      # The install tree has to stand on its own: a consumer resolves it through
+      # find_package, includes the umbrella and links the archive, with no part of
+      # the build tree and no Python in sight.
+      - name: Consume the install tree
+        run: |
+          cmake -S tests/package -B package-build -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_PREFIX_PATH='${{ github.workspace }}/${{ matrix.source && 'stage-build' || 'stage' }}' \
+                ${{ matrix.cmakeflags }}
+          cmake --build package-build
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: stage/${{ matrix.source && steps.package.outputs.name || '' }}
+          if-no-files-found: error
+
+  python:
+    name: Python (cibw)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    env:
+      PYTHONUTF8: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        if: runner.os == 'Windows'
+
       - name: ruff
+        if: runner.os == 'Linux'
         run: uvx ruff check .
       - name: ruff format
+        if: runner.os == 'Linux'
         run: uvx ruff format --check .
       - name: mypy
+        if: runner.os == 'Linux'
         run: uv run --directory compiler mypy
 
-  test:
-    name: Compiler tests
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: astral-sh/setup-uv@v10.3.2
-      - run: uv sync --directory compiler
-      - name: pytest
-        run: uv run --directory compiler pytest -n auto
+      - name: Build the sdist
+        id: sdist
+        run: |
+          uv build --no-config --sdist -o dist
+          echo "path=$(ls dist/*.tar.gz)" >> "$GITHUB_OUTPUT"
+      - name: Build the compiler wheel
+        if: runner.os == 'Linux'
+        run: uv build --no-config --package bedrock-protocol-compiler --wheel -o dist-compiler
+
+      - name: Build and test the wheel from the sdist
+        uses: pypa/cibuildwheel@v4.3.5
+        with:
+          package-dir: ${{ steps.sdist.outputs.path }}
+          output-dir: wheelhouse
+      - name: Check the wheel is abi3
+        run: |
+          wheels=(wheelhouse/*.whl)
+          test "${#wheels[@]}" -eq 1
+          case "${wheels[0]}" in *-cp312-abi3-*) ;; *) echo "not an abi3 wheel: ${wheels[0]}"; exit 1 ;; esac
+
+      - uses: actions/upload-artifact@v7.0.2
+        if: runner.os == 'Linux'
+        with:
+          name: python-compiler
+          path: dist-compiler/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: python-runtime-${{ runner.os }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.2
+        if: runner.os == 'Linux'
+        with:
+          name: python-runtime-source
+          path: dist/*.tar.gz
+          if-no-files-found: error
 
   java:
     name: Java (Gradle)
@@ -50,188 +203,42 @@ jobs:
         working-directory: java
         run: ./gradlew --no-daemon build
 
-  wheel:
-    name: Wheel (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, windows-2022]
-    env:
-      PYTHONUTF8: "1"
-    defaults:
-      run:
-        shell: bash
+  coverage:
+    name: Coverage (llvm-cov)
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
-      - name: Build the sdist and the wheel
-        run: uv build --no-config -o dist
-      - name: Build the compiler wheel
-        run: uv build --no-config --package bedrock-protocol-compiler --wheel -o dist-compiler
-      - name: Test the installed wheel
-        run: |
-          wheels=(dist/*.whl)
-          test "${#wheels[@]}" -eq 1
-          case "${wheels[0]}" in *-cp312-abi3-*) ;; *) echo "not an abi3 wheel: ${wheels[0]}"; exit 1 ;; esac
-          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" python -I -c "import importlib.util as u; assert u.find_spec('bedrock_protocol_compiler') is None"
-          uv run --isolated --no-project --python 3.12 --with "${wheels[0]}" --with dist-compiler/*.whl --with pytest pytest
-      - name: Type-check the stubs the wheel ships
-        run: uv run --isolated --no-project --python 3.12 --with dist/*.whl --with mypy mypy --strict -p bedrock_protocol
-      - uses: actions/upload-artifact@v7.0.2
-        if: runner.os == 'Linux'
-        with:
-          name: python-compiler
-          path: dist-compiler/*
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7.0.2
-        with:
-          name: python-runtime-${{ runner.os }}
-          path: dist/*.whl
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7.0.2
-        if: runner.os == 'Linux'
-        with:
-          name: python-runtime-source
-          path: dist/*.tar.gz
-          if-no-files-found: error
 
-  # Three compilers across three standard libraries. Clang pairs with libc++
-  # rather than libstdc++ because libstdc++'s <expected> is incompatible with
-  # Clang's concepts front end; libstdc++ itself is still covered by the GCC job.
-  #
-  # Each job also uploads its install tree. A static library carries its standard
-  # library's ABI, so the triple in the artifact name is part of the contract: a
-  # libstdc++ build and a libc++ build are not interchangeable.
-  build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Linux GCC (libstdc++)
-            os: ubuntu-24.04
-            triple: linux-x86_64-gcc13
-            generator: Ninja
-            cmakeflags: -DCMAKE_CXX_COMPILER=g++
-          - name: Linux Clang (libc++)
-            os: ubuntu-24.04
-            triple: linux-x86_64-clang18-libcxx
-            generator: Ninja
-            llvm: "18"
-            cmakeflags: -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS=-stdlib=libc++
-          - name: Windows MSVC
-            os: windows-2022
-            triple: windows-x86_64-msvc2022
-            generator: Visual Studio 17 2022
-    steps:
-      - uses: actions/checkout@v7.0.1
-
-      - name: Install Clang ${{ matrix.llvm }} + libc++
-        if: matrix.llvm
+      - name: Install Clang 18, libc++ and the LLVM tools
         run: |
           sudo apt-get update -y -q
-          sudo apt-get install -y -q lsb-release wget software-properties-common gnupg
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh ${{ matrix.llvm }}
-          sudo apt-get install -y -q libc++-${{ matrix.llvm }}-dev libc++abi-${{ matrix.llvm }}-dev
+          sudo apt-get install -y -q clang-18 llvm-18 libc++-18-dev libc++abi-18-dev
 
-      - name: Configure
-        run: cmake -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/stage ${{ matrix.cmakeflags }}
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Install
-        run: cmake --install build --config Release
-
-      # The install tree has to stand on its own: a consumer resolves it through
-      # find_package, includes the umbrella and links the archive, with no part of
-      # the build tree and no Python in sight.
-      - name: Consume the install tree
-        shell: bash
+      - name: Build the binding with coverage
         run: |
-          cmake -S tests/package -B package-build -G "${{ matrix.generator }}" \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_PREFIX_PATH='${{ github.workspace }}/stage' \
-                ${{ matrix.cmakeflags }}
-          cmake --build package-build --config Release
-
-      - name: Name the package
-        id: package
-        shell: bash
-        run: |
-          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
-          echo "name=bedrock-protocol-${version}-${GITHUB_SHA::7}-${{ matrix.triple }}" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/upload-artifact@v7.0.2
-        with:
-          name: ${{ steps.package.outputs.name }}
-          path: stage/
-          if-no-files-found: error
-
-  # The C++ the compiler emits, shipped next to the hand-written runtime. Building
-  # from this package needs neither uv nor bpc, which is what the last step checks.
-  sources:
-    name: Source package
-    runs-on: ubuntu-24.04
-    outputs:
-      name: ${{ steps.package.outputs.name }}
-    steps:
-      - uses: actions/checkout@v7.0.1
-
-      - name: Generate
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
-      - name: Stage
-        id: package
-        run: |
-          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
-          name=bedrock-protocol-${version}-${GITHUB_SHA::7}-src
-          mkdir -p "stage/$name/cmake"
-          cp CMakeLists.txt pyproject.toml LICENSE README.md "stage/$name/"
-          cp cmake/bedrock-protocol-config.cmake.in "stage/$name/cmake/"
-          cp -r include "stage/$name/include"
-          cp -r build/generated "stage/$name/generated"
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/upload-artifact@v7.0.2
-        with:
-          name: ${{ steps.package.outputs.name }}
-          path: stage/${{ steps.package.outputs.name }}/
-          if-no-files-found: error
-
-      - name: Build it without the compiler
-        run: |
-          cmake -S stage/${{ steps.package.outputs.name }} -B verify -G Ninja \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/verify-stage
-          cmake --build verify
-          cmake --install verify
-          cmake -S tests/package -B verify-package -G Ninja \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_PREFIX_PATH=${{ github.workspace }}/verify-stage
-          cmake --build verify-package
-
-  python-from-sources:
-    name: Python from the source package
-    needs: sources
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: astral-sh/setup-uv@v10.3.2
-      - uses: actions/download-artifact@v8.0.2
-        with:
-          name: ${{ needs.sources.outputs.name }}
-          path: package
-      - name: Build the binding from the generated sources
-        run: |
-          rm -rf protocol compiler
-          cp -r package/generated generated
           uv venv --python 3.12
-          uv pip install --no-config . pytest mypy
-      - name: Test it
+          uv pip install --no-config "scikit-build-core>=1.1" nanobind==2.13.0 pytest
+          uv pip install --no-config --no-build-isolation \
+              -C install.strip=false \
+              -C cmake.build-type=Debug \
+              -C cmake.define.CMAKE_CXX_COMPILER=clang++-18 \
+              -C "cmake.define.CMAKE_CXX_FLAGS=-stdlib=libc++ -fprofile-instr-generate -fcoverage-mapping" \
+              -C "cmake.define.CMAKE_MODULE_LINKER_FLAGS=-stdlib=libc++ -fprofile-instr-generate" \
+              .
+
+      - name: Run the tests
+        env:
+          LLVM_PROFILE_FILE: ${{ github.workspace }}/profiles/%p.profraw
         run: uv run --no-project pytest tests
-      - name: Type-check its stubs
-        run: uv run --no-project mypy --strict -p bedrock_protocol
+
+      - name: Report the C++ coverage
+        run: |
+          llvm-profdata-18 merge -sparse -o coverage.profdata profiles/*.profraw
+          core=$(uv run --no-project python -c "import bedrock_protocol._core as m; print(m.__file__)")
+          {
+            echo '```'
+            llvm-cov-18 report "$core" -instr-profile=coverage.profdata -show-branch-summary \
+                -ignore-filename-regex='(/nanobind/|^/usr/)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
