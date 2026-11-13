@@ -14,8 +14,8 @@
        "y": 2,
        "z": 3
       },
-      "runtime_id": 300,
-      "update_flags": 200,
+      "runtime_id": 1921718966,
+      "update_flags": 3,
       "entity_unique_id": 9,
       "message": "DESTROY"
      }
@@ -27,28 +27,28 @@
        "y": 0,
        "z": 1
       },
-      "runtime_id": 5,
-      "update_flags": 0,
-      "entity_unique_id": 0,
-      "message": "NONE"
+      "runtime_id": 1741778478,
+      "update_flags": 2,
+      "entity_unique_id": 5,
+      "message": "CREATE"
      }
     ]
    }
   },
-  "bytes": "08090c01020406ac02c80109020101000205000000"
+  "bytes": "08090c01020406b6b5ac940703090201010002aedcc5be06020501"
  },
  {
   "value": {
    "sub_chunk_block_position": {
-    "x": 0,
+    "x": 3,
     "y": 64,
-    "z": 0
+    "z": 5
    },
    "blocks_changed": {
     "standards": [],
     "extras": []
    }
   },
-  "bytes": "008001000000"
+  "bytes": "0680010a0000"
  }
 ]
