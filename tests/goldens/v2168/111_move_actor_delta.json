@@ -1,5 +1,6 @@
 [
  {
+  "id": "every_optional_absent",
   "value": {
    "move_data": {
     "runtime_id": 2,
@@ -18,6 +19,7 @@
   "bytes": "0200000000000000000000"
  },
  {
+  "id": "every_optional_present",
   "value": {
    "move_data": {
     "runtime_id": 2,
