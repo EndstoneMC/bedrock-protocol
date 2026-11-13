@@ -68,7 +68,7 @@ def bds_prints_a_bool_enum_as_a_bool(ours: Ours, bds: Bds) -> tuple[Ours, Bds] |
 
 
 def bds_prints_an_enum_as_its_number(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
-    if isinstance(ours.type, EnumRef) and isinstance(ours.value, str):
+    if isinstance(ours.type, EnumRef) and isinstance(ours.value, str) and type(bds.value) is int:
         return Ours(enum_shapes[ours.type.enum].numbers[ours.value], ours.type), bds
     return None
 
@@ -169,7 +169,12 @@ type Rule = Callable[[Ours, Bds], tuple[Ours, Bds] | None]
 
 BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT = "bds_prints_nbt_or_a_bitset_as_text"
 
-ACCEPTED = {"bds_prints_the_wire_type", "bds_prints_a_vec_as_an_array", BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT}
+ACCEPTED = {
+    "bds_prints_the_wire_type",
+    "bds_prints_a_vec_as_an_array",
+    "bds_prints_an_enum_as_its_number",
+    BDS_PRINTS_NBT_OR_A_BITSET_AS_TEXT,
+}
 
 RULES: list[Rule] = [
     bds_prints_the_wire_type,
