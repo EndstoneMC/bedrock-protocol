@@ -21,19 +21,16 @@
     "z": 3
    },
    "dimension_id": 1,
-   "sub_chunks_count": 0,
+   "sub_chunks_count": 3,
    "client_request_sub_chunk_limit": 7,
    "cache_enabled": true,
    "cache_metadata": [
     {
      "blob_id": 1
-    },
-    {
-     "blob_id": 2
     }
    ],
    "serialized_chunk": "aa"
   },
-  "bytes": "04060200010e01020100000000000000020000000000000001aa"
+  "bytes": "04060203010e0101010000000000000001aa"
  }
 ]
