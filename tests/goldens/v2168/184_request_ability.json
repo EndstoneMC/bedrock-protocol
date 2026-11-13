@@ -4,9 +4,9 @@
   "value": {
    "ability": "VERTICAL_FLY_SPEED",
    "value_type": "FLOAT",
-   "bool_": true,
+   "bool_": false,
    "float_": 0.5
   },
-  "bytes": "2602010000003f"
+  "bytes": "2602000000003f"
  }
 ]
