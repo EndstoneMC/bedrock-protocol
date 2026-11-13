@@ -12,9 +12,9 @@
   "value": {
    "action": "CRITICAL_HIT",
    "runtime_id": 7,
-   "data": 0.0,
+   "data": 0.5,
    "swing_source": null
   },
-  "bytes": "04070000000000"
+  "bytes": "04070000003f00"
  }
 ]
