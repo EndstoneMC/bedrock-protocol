@@ -1,5 +1,6 @@
 [
  {
+  "id": "gamerule_with_suppressed_output",
   "value": {
    "command_string": "gamerule showcoordinates true",
    "suppress_output": true
