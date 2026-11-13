@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "player_game_type": "ADVENTURE",
+   "target_player": 7,
+   "tick": 200
+  },
+  "bytes": "040ec801"
+ },
+ {
+  "value": {
+   "player_game_type": "UNDEFINED",
+   "target_player": -5,
+   "tick": 0
+  },
+  "bytes": "010900"
+ },
+ {
+  "value": {
+   "player_game_type": "SPECTATOR",
+   "target_player": -9007199254740993,
+   "tick": 4294967296
+  },
+  "bytes": "0c81808080808080208080808010"
+ }
+]

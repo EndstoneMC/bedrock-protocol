@@ -1,0 +1,117 @@
+[
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreUpdate": {
+      "data_store_name": "hud",
+      "property": "opacity",
+      "path": "",
+      "data": {
+       "float": 0.5
+      },
+      "property_update_count": 1,
+      "path_update_count": 0
+     }
+    },
+    {
+     "DataStoreChange": {
+      "data_store_name": "form",
+      "property": "title",
+      "update_count": 7,
+      "new_data": "Chest"
+     }
+    },
+    {
+     "DataStoreRemoval": {
+      "data_store_name": "form"
+     }
+    }
+   ]
+  },
+  "bytes": "030003687564076f7061636974790000000000000000e03f01000000000000000104666f726d057469746c6507000000040000000543686573740204666f726d"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreChange": {
+      "data_store_name": "form",
+      "property": "state",
+      "update_count": 2,
+      "new_data": {
+       "flag": true,
+       "items": [
+        "a",
+        7
+       ],
+       "nothing": null,
+       "ratio": 0.25
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "010104666f726d05737461746502000000060000000404666c61670100000001056974656d730500000002040000000161020000000700000000000000076e6f7468696e670000000005726174696f03000000000000000000d03f"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreChange": {
+      "data_store_name": "a",
+      "property": "b",
+      "update_count": 0,
+      "new_data": null
+     }
+    }
+   ]
+  },
+  "bytes": "0101016101620000000000000000"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreChange": {
+      "data_store_name": "a",
+      "property": "b",
+      "update_count": 0,
+      "new_data": true
+     }
+    }
+   ]
+  },
+  "bytes": "010101610162000000000100000001"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreChange": {
+      "data_store_name": "a",
+      "property": "b",
+      "update_count": 0,
+      "new_data": 7
+     }
+    }
+   ]
+  },
+  "bytes": "01010161016200000000020000000700000000000000"
+ },
+ {
+  "value": {
+   "updates": [
+    {
+     "DataStoreChange": {
+      "data_store_name": "a",
+      "property": "b",
+      "update_count": 0,
+      "new_data": 0.25
+     }
+    }
+   ]
+  },
+  "bytes": "0101016101620000000003000000000000000000d03f"
+ }
+]

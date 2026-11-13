@@ -1,0 +1,29 @@
+[
+ {
+  "value": {
+   "ability": "VERTICAL_FLY_SPEED",
+   "value_type": "FLOAT",
+   "bool_": false,
+   "float_": 0.5
+  },
+  "bytes": "2602000000003f"
+ },
+ {
+  "value": {
+   "ability": "FLYING",
+   "value_type": "BOOL",
+   "bool_": true,
+   "float_": 0.0
+  },
+  "bytes": "12010100000000"
+ },
+ {
+  "value": {
+   "ability": "INVALID",
+   "value_type": "BOOL",
+   "bool_": false,
+   "float_": 0.0
+  },
+  "bytes": "01010000000000"
+ }
+]

@@ -1,0 +1,16 @@
+[
+ {
+  "value": {
+   "player_id": 300,
+   "credits_state": "FINISHED"
+  },
+  "bytes": "ac0202"
+ },
+ {
+  "value": {
+   "player_id": 4294967303,
+   "credits_state": "START"
+  },
+  "bytes": "878080801000"
+ }
+]

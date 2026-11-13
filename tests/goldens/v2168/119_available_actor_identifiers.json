@@ -1,0 +1,32 @@
+[
+ {
+  "value": {
+   "identifier_list": {
+    "idlist": {
+     "ListTag": {
+      "type": 10,
+      "tags": [
+       {
+        "CompoundTag": {
+         "id": {
+          "StringTag": "minecraft:pig"
+         },
+         "rid": {
+          "IntTag": 200
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "bytes": "0a00090669646c6973740a02080269640d6d696e6563726166743a706967030372696490030000"
+ },
+ {
+  "value": {
+   "identifier_list": {}
+  },
+  "bytes": "0a0000"
+ }
+]

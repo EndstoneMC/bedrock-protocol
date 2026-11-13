@@ -1,0 +1,44 @@
+[
+ {
+  "value": {
+   "vanilla_dimension_id": 2,
+   "actor_id": -1,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "effect_name": "minecraft:heart_particle",
+   "molang_variables": "{\"x\":1}"
+  },
+  "bytes": "02010000803f0000004000004040186d696e6563726166743a68656172745f7061727469636c6501077b2278223a317d"
+ },
+ {
+  "value": {
+   "vanilla_dimension_id": 200,
+   "actor_id": 12345,
+   "pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   },
+   "effect_name": "minecraft:heart_particle",
+   "molang_variables": null
+  },
+  "bytes": "c8f2c001000000000000000000000000186d696e6563726166743a68656172745f7061727469636c6500"
+ },
+ {
+  "value": {
+   "vanilla_dimension_id": 0,
+   "actor_id": 0,
+   "pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   },
+   "effect_name": "minecraft:heart_particle",
+   "molang_variables": ""
+  },
+  "bytes": "0000000000000000000000000000186d696e6563726166743a68656172745f7061727469636c650100"
+ }
+]

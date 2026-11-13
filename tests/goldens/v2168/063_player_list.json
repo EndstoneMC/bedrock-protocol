@@ -1,0 +1,129 @@
+[
+ {
+  "value": {
+   "entries": [
+    {
+     "AddEntry": {
+      "action": "ADD",
+      "uuid": "00000000-0000-0000-0000-000000000001",
+      "id": 7,
+      "name": "Steve",
+      "xuid": "xuid",
+      "platform_online_id": "pcid",
+      "build_platform": "WIN32",
+      "skin": {
+       "id": "sid",
+       "play_fab_id": "pfid",
+       "resource_patch": "patch",
+       "skin_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "00000000"
+       },
+       "skin_animated_images": [],
+       "cape_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "00000000"
+       },
+       "geometry_data": "geo",
+       "geometry_data_min_engine_version": "1.0.0",
+       "animation_data": "anim",
+       "cape_id": "cid",
+       "full_id": "fid",
+       "arm_size_type": "WIDE",
+       "skin_color": 16909060,
+       "persona_pieces": [],
+       "piece_tint_colors": {},
+       "is_premium": true,
+       "is_persona": false,
+       "is_persona_cape_on_classic_skin": false,
+       "is_primary_user": true,
+       "overrides_player_appearance": false,
+       "is_trusted_skin": "TRUE",
+       "profile_hash": "hash"
+      },
+      "is_teacher": false,
+      "is_host": true,
+      "is_sub_client": false,
+      "color": 84281096
+     }
+    }
+   ]
+  },
+  "bytes": "010100000000000000000001000000000000000e05537465766504787569640470636964080000000373696404706669640570617463680100000001000000040000000000010000000100000004000000000367656f05312e302e3004616e696d03636964036669640104030201000001000001000474727565046861736800010008070605"
+ },
+ {
+  "value": {
+   "entries": [
+    {
+     "AddEntry": {
+      "action": "ADD",
+      "uuid": "00000000-0000-0000-0000-000000000001",
+      "id": 7,
+      "name": "Steve",
+      "xuid": "xuid",
+      "platform_online_id": "pcid",
+      "build_platform": "WIN32",
+      "skin": {
+       "id": "sid",
+       "play_fab_id": "pfid",
+       "resource_patch": "patch",
+       "skin_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "00000000"
+       },
+       "skin_animated_images": [],
+       "cape_image": {
+        "width": 1,
+        "height": 1,
+        "image_bytes": "00000000"
+       },
+       "geometry_data": "geo",
+       "geometry_data_min_engine_version": "1.0.0",
+       "animation_data": "anim",
+       "cape_id": "cid",
+       "full_id": "fid",
+       "arm_size_type": "WIDE",
+       "skin_color": 16909060,
+       "persona_pieces": [],
+       "piece_tint_colors": {},
+       "is_premium": true,
+       "is_persona": false,
+       "is_persona_cape_on_classic_skin": false,
+       "is_primary_user": true,
+       "overrides_player_appearance": false,
+       "is_trusted_skin": "TRUE",
+       "profile_hash": "hash"
+      },
+      "is_teacher": false,
+      "is_host": true,
+      "is_sub_client": false,
+      "color": 84281096
+     }
+    },
+    {
+     "RemoveEntry": {
+      "action": "REMOVE",
+      "uuid": "00000000-0000-0000-0000-000000000002"
+     }
+    }
+   ]
+  },
+  "bytes": "020100000000000000000001000000000000000e05537465766504787569640470636964080000000373696404706669640570617463680100000001000000040000000000010000000100000004000000000367656f05312e302e3004616e696d03636964036669640104030201000001000001000474727565046861736800010008070605000100000000000000000200000000000000"
+ },
+ {
+  "value": {
+   "entries": [
+    {
+     "RemoveEntry": {
+      "action": "REMOVE",
+      "uuid": "00000000-0000-0000-0000-000000000000"
+     }
+    }
+   ]
+  },
+  "bytes": "01000100000000000000000000000000000000"
+ }
+]

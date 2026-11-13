@@ -1,0 +1,36 @@
+[
+ {
+  "value": {
+   "id": 7,
+   "property_index": 2,
+   "update": {
+    "ClearOverride": {}
+   }
+  },
+  "bytes": "0e02000e636c6561726f7665727269646573"
+ },
+ {
+  "value": {
+   "id": 7,
+   "property_index": 2,
+   "update": {
+    "IntOverride": {
+     "value": 42
+    }
+   }
+  },
+  "bytes": "0e02020e736574696e746f766572726964652a000000"
+ },
+ {
+  "value": {
+   "id": 7,
+   "property_index": 2,
+   "update": {
+    "FloatOverride": {
+     "value": 0.5
+    }
+   }
+  },
+  "bytes": "0e020310736574666c6f61746f766572726964650000003f"
+ }
+]

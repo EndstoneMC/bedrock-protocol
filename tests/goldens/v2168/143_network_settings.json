@@ -1,0 +1,22 @@
+[
+ {
+  "value": {
+   "compression_threshold": 1024,
+   "compression_algorithm": "SNAPPY",
+   "client_throttle_enabled": true,
+   "client_throttle_threshold": 200,
+   "client_throttle_scalar": 0.5
+  },
+  "bytes": "0004010001c80000003f"
+ },
+ {
+  "value": {
+   "compression_threshold": 0,
+   "compression_algorithm": "NONE",
+   "client_throttle_enabled": false,
+   "client_throttle_threshold": 0,
+   "client_throttle_scalar": 0.0
+  },
+  "bytes": "0000ffff000000000000"
+ }
+]

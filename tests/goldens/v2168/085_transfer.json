@@ -1,0 +1,29 @@
+[
+ {
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true,
+   "gatherings_configuration": null
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a0100"
+ },
+ {
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true,
+   "gatherings_configuration": {
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+    "experience_name": "exp",
+    "experience_world_id": null,
+    "experience_world_name": null,
+    "creator_id": "creator",
+    "target_id": null,
+    "mpsas_scenario_id": null,
+    "server_id": null
+   }
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a090365787000000763726561746f72000000"
+ }
+]

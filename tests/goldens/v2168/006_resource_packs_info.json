@@ -1,0 +1,53 @@
+[
+ {
+  "value": {
+   "resource_pack_required": true,
+   "has_addon_packs": false,
+   "has_scripts": true,
+   "force_disable_vibrant_visuals": false,
+   "world_template_id_and_version": {
+    "id": "00112233-4455-6677-8899-aabbccddeeff",
+    "version": {
+     "version": "1.2.3"
+    }
+   },
+   "resource_packs": [
+    {
+     "pack_id_version": {
+      "id": "0a0b0c0d-0e0f-1011-1213-141516171819",
+      "version": {
+       "version": "2.0.0"
+      }
+     },
+     "pack_size": 4096,
+     "content_key": "key",
+     "subpack_name": "sub",
+     "content_identity": {
+      "identity": "6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b"
+     },
+     "has_scripts": true,
+     "is_addon_pack": false,
+     "is_ray_tracing_capable": true,
+     "cdn_url": "http://cdn"
+    }
+   ]
+  },
+  "bytes": "010001007766554433221100ffeeddccbbaa998805312e322e330111100f0e0d0c0b0a191817161514131205322e302e300010000000000000036b6579037375622436663062356532612d316333642d346538662d396137622d3264346336653866306131620100010a687474703a2f2f63646e"
+ },
+ {
+  "value": {
+   "resource_pack_required": false,
+   "has_addon_packs": false,
+   "has_scripts": false,
+   "force_disable_vibrant_visuals": false,
+   "world_template_id_and_version": {
+    "id": "00112233-4455-6677-8899-aabbccddeeff",
+    "version": {
+     "version": "1.2.3"
+    }
+   },
+   "resource_packs": []
+  },
+  "bytes": "000000007766554433221100ffeeddccbbaa998805312e322e3300"
+ }
+]

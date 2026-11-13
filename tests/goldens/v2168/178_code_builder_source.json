@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "operation": "RESET",
+   "category": "INSTANTIATION",
+   "code_status": "SUCCEEDED"
+  },
+  "bytes": "030205"
+ },
+ {
+  "value": {
+   "operation": "NONE",
+   "category": "NONE",
+   "code_status": "NONE"
+  },
+  "bytes": "000000"
+ },
+ {
+  "value": {
+   "operation": 200,
+   "category": "CODE_STATUS",
+   "code_status": "IN_PROGRESS"
+  },
+  "bytes": "c80102"
+ }
+]

@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "inventory_options": {
+    "left_inventory_tab": "SURVIVAL",
+    "right_inventory_tab": "ARMOR",
+    "filtering": true,
+    "layout_inv": "DEFAULT",
+    "layout_craft": "INVENTORY_ONLY"
+   }
+  },
+  "bytes": "0c06010402"
+ },
+ {
+  "value": {
+   "inventory_options": {
+    "left_inventory_tab": 100,
+    "right_inventory_tab": "NONE",
+    "filtering": false,
+    "layout_inv": -1,
+    "layout_craft": "NONE"
+   }
+  },
+  "bytes": "c80100000100"
+ }
+]

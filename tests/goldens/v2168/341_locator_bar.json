@@ -1,0 +1,80 @@
+[
+ {
+  "value": {
+   "waypoints": [
+    {
+     "handle": {
+      "uuid": "01234567-89ab-cdef-fedc-ba9876543210"
+     },
+     "payload": {
+      "update_flag": 63,
+      "is_visible": true,
+      "world_position": {
+       "pos": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 3.0
+       },
+       "dimension_type": 1
+      },
+      "texture_path": "textures/ui/waypoint",
+      "icon_size": {
+       "x": 16.0,
+       "y": 16.0
+      },
+      "color": 16744767,
+      "client_position_authority": false,
+      "actor_id": 300
+     },
+     "action": "UPDATE"
+    },
+    {
+     "handle": {
+      "uuid": "00000000-0000-0001-0000-000000000002"
+     },
+     "payload": {
+      "update_flag": 0,
+      "is_visible": null,
+      "world_position": null,
+      "texture_path": null,
+      "icon_size": null,
+      "color": null,
+      "client_position_authority": null,
+      "actor_id": null
+     },
+     "action": "REMOVE"
+    }
+   ]
+  },
+  "bytes": "02efcdab89674523011032547698badcfe3f0000000101010000803f000000400000404002011474657874757265732f75692f776179706f696e74010000804100008041013f81ff00010001d8040301000000000000000200000000000000000000000000000000000002"
+ },
+ {
+  "value": {
+   "waypoints": []
+  },
+  "bytes": "00"
+ },
+ {
+  "value": {
+   "waypoints": [
+    {
+     "handle": {
+      "uuid": "00000000-0000-0001-0000-000000000002"
+     },
+     "payload": {
+      "update_flag": 63,
+      "is_visible": null,
+      "world_position": null,
+      "texture_path": null,
+      "icon_size": null,
+      "color": null,
+      "client_position_authority": null,
+      "actor_id": null
+     },
+     "action": "REMOVE"
+    }
+   ]
+  },
+  "bytes": "01010000000000000002000000000000003f0000000000000000000002"
+ }
+]

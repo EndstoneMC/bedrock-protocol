@@ -1,0 +1,36 @@
+[
+ {
+  "value": {
+   "type": "UPDATE",
+   "identity_info": [
+    {
+     "scoreboard_id": {
+      "raw_id": 1
+     },
+     "player_id": 7
+    },
+    {
+     "scoreboard_id": {
+      "raw_id": 2
+     },
+     "player_id": 8
+    }
+   ]
+  },
+  "bytes": "000202010e040110"
+ },
+ {
+  "value": {
+   "type": "REMOVE",
+   "identity_info": [
+    {
+     "scoreboard_id": {
+      "raw_id": 1
+     },
+     "player_id": null
+    }
+   ]
+  },
+  "bytes": "01010200"
+ }
+]

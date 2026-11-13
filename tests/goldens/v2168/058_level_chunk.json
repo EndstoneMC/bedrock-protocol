@@ -1,0 +1,54 @@
+[
+ {
+  "value": {
+   "pos": {
+    "x": 2,
+    "z": 3
+   },
+   "dimension_id": 0,
+   "sub_chunks_count": 5,
+   "client_request_sub_chunk_limit": null,
+   "cache_enabled": false,
+   "cache_metadata": [],
+   "serialized_chunk": "aabb"
+  },
+  "bytes": "0406000500000002aabb"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": 2,
+    "z": 3
+   },
+   "dimension_id": 1,
+   "sub_chunks_count": 0,
+   "client_request_sub_chunk_limit": 7,
+   "cache_enabled": true,
+   "cache_metadata": [
+    {
+     "blob_id": 1
+    },
+    {
+     "blob_id": 2
+    }
+   ],
+   "serialized_chunk": "aa"
+  },
+  "bytes": "04060200010e01020100000000000000020000000000000001aa"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": 2,
+    "z": 3
+   },
+   "dimension_id": 0,
+   "sub_chunks_count": 0,
+   "client_request_sub_chunk_limit": -1,
+   "cache_enabled": false,
+   "cache_metadata": [],
+   "serialized_chunk": "aa"
+  },
+  "bytes": "040600000101000001aa"
+ }
+]

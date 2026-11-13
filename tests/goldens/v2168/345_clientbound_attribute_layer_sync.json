@@ -1,0 +1,31 @@
+[
+ {
+  "value": {
+   "data": {
+    "UpdateEnvironmentAttributesData": {
+     "layer_name": "wet",
+     "layer_dimension_id": 0,
+     "attributes": [
+      {
+       "name": "temp",
+       "from_attribute": null,
+       "attribute": {
+        "BoolAttributeData": {
+         "value": true,
+         "operation": "OVERRIDE"
+        }
+       },
+       "to_attribute": null,
+       "current_transition_ticks": 0,
+       "total_transition_ticks": 0,
+       "easing": "LINEAR",
+       "local_transition_ticks": 0,
+       "noise_transition": false
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "020377657400010474656d70000001086f76657272696465000000000000000000066c696e6561720000000000"
+ }
+]

@@ -1,0 +1,14 @@
+[
+ {
+  "value": {
+   "connection_request": "7375622d636c69656e742d6a7774"
+  },
+  "bytes": "0e7375622d636c69656e742d6a7774"
+ },
+ {
+  "value": {
+   "connection_request": ""
+  },
+  "bytes": "00"
+ }
+]

@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "party_info": {
+    "party_id": "d1e2f3a4-5b6c-7d8e-9f01-234567890abc",
+    "is_leader": true
+   }
+  },
+  "bytes": "012464316532663361342d356236632d376438652d396630312d32333435363738393061626301"
+ },
+ {
+  "value": {
+   "party_info": null
+  },
+  "bytes": "00"
+ },
+ {
+  "value": {
+   "party_info": {
+    "party_id": "",
+    "is_leader": false
+   }
+  },
+  "bytes": "010000"
+ }
+]

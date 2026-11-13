@@ -1,0 +1,19 @@
+[
+ {
+  "value": {
+   "name": "note.harp",
+   "pos": {
+    "x": 8,
+    "y": 16,
+    "z": 24
+   },
+   "volume": 0.5,
+   "pitch": 1.5,
+   "loop_count": 3,
+   "server_sound_handle": {
+    "value": 42
+   }
+  },
+  "bytes": "096e6f74652e686172701020300000003f0000c03f06012a00000000000000"
+ }
+]

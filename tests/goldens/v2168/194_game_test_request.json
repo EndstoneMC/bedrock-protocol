@@ -1,0 +1,34 @@
+[
+ {
+  "value": {
+   "max_tests_per_batch": 100,
+   "repeat_count": 2,
+   "rotation": "ROTATE_90",
+   "stop_on_failure": true,
+   "test_pos": {
+    "x": 1,
+    "y": -2,
+    "z": 3
+   },
+   "tests_per_row": 5,
+   "test_name": "mytest"
+  },
+  "bytes": "c8010401010203060a066d7974657374"
+ },
+ {
+  "value": {
+   "max_tests_per_batch": 300,
+   "repeat_count": -1,
+   "rotation": "ROTATE_270",
+   "stop_on_failure": false,
+   "test_pos": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+   },
+   "tests_per_row": 0,
+   "test_name": ""
+  },
+  "bytes": "d8040103000000000000"
+ }
+]

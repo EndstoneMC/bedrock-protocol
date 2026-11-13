@@ -1,0 +1,18 @@
+[
+ {
+  "value": {
+   "selected_slot": 300,
+   "container_id": "PLAYER_ONLY_UI",
+   "should_select_slot": true
+  },
+  "bytes": "ac027c01"
+ },
+ {
+  "value": {
+   "selected_slot": 0,
+   "container_id": "NONE",
+   "should_select_slot": false
+  },
+  "bytes": "00ff00"
+ }
+]

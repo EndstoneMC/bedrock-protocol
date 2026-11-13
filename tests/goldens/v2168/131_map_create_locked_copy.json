@@ -1,0 +1,23 @@
+[
+ {
+  "value": {
+   "original_map_id": 300,
+   "new_map_id": -5
+  },
+  "bytes": "d80409"
+ },
+ {
+  "value": {
+   "original_map_id": -8589934592,
+   "new_map_id": 300
+  },
+  "bytes": "ffffffff3fd804"
+ },
+ {
+  "value": {
+   "original_map_id": 0,
+   "new_map_id": 0
+  },
+  "bytes": "0000"
+ }
+]

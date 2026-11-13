@@ -1,0 +1,38 @@
+[
+ {
+  "value": {
+   "move_data": {
+    "runtime_id": 2,
+    "new_position_x": 1.0,
+    "new_position_y": null,
+    "new_position_z": 3.0,
+    "rot_x": null,
+    "rot_y": 64,
+    "rot_y_head": null,
+    "is_on_ground": true,
+    "force_move": false,
+    "force_move_local_entity": false,
+    "force_completion": false
+   }
+  },
+  "bytes": "02010000803f0001000040400001400001000000"
+ },
+ {
+  "value": {
+   "move_data": {
+    "runtime_id": 2,
+    "new_position_x": null,
+    "new_position_y": null,
+    "new_position_z": null,
+    "rot_x": null,
+    "rot_y": null,
+    "rot_y_head": null,
+    "is_on_ground": false,
+    "force_move": false,
+    "force_move_local_entity": false,
+    "force_completion": false
+   }
+  },
+  "bytes": "0200000000000000000000"
+ }
+]

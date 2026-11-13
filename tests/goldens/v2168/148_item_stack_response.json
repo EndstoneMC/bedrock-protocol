@@ -1,0 +1,52 @@
+[
+ {
+  "value": {
+   "responses": [
+    {
+     "result": "SUCCESS",
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": "LEVEL_ENTITY_CONTAINER",
+        "dynamic_id": null
+       },
+       "slots": [
+        {
+         "requested_slot": 3,
+         "slot": 3,
+         "amount": 64,
+         "item_stack_net_id": {
+          "raw_id": 9
+         },
+         "custom_name": {
+          "unredacted_string": "",
+          "redacted_string": null
+         },
+         "durability_correction": 0
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "010001010101070001030340010112000000"
+ },
+ {
+  "value": {
+   "responses": [
+    {
+     "result": "ERROR",
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "containers": null
+    }
+   ]
+  },
+  "bytes": "0101010100"
+ }
+]

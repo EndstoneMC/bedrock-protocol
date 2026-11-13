@@ -1,0 +1,57 @@
+[
+ {
+  "value": {
+   "categories": [
+    {
+     "name": "cat",
+     "priorities": {
+      "entities": {
+       "minecraft:cow": 10,
+       "minecraft:pig": 100
+      },
+      "blocks": {
+       "minecraft:stone": 1
+      },
+      "block_tags": {},
+      "entity_type_families": {},
+      "entity_default": 5,
+      "block_default": null
+     }
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "preset",
+     "exclusion_settings": {
+      "block_exclusion_list": [
+       "minecraft:air"
+      ],
+      "actor_exclusion_list": [],
+      "block_tag_exclusion_list": [
+       "wood"
+      ],
+      "entity_type_family_exclusion_list": []
+     },
+     "liquid_targeting_list": [
+      "minecraft:water"
+     ],
+     "item_settings": {
+      "minecraft:bow": "cat"
+     },
+     "default_item_settings": "cat",
+     "hand_settings": null
+    }
+   ],
+   "operation": "ADD_TO_EXISTING"
+  },
+  "bytes": "0103636174020d6d696e6563726166743a636f770a0000000d6d696e6563726166743a70696764000000010f6d696e6563726166743a73746f6e650100000000000105000000000106707265736574010d6d696e6563726166743a616972000104776f6f6400010f6d696e6563726166743a7761746572010d6d696e6563726166743a626f770363617401036361740001"
+ },
+ {
+  "value": {
+   "categories": [],
+   "presets": [],
+   "operation": "SET"
+  },
+  "bytes": "000000"
+ }
+]

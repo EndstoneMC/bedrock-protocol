@@ -1,0 +1,163 @@
+[
+ {
+  "value": {
+   "camera_instruction": {
+    "set": {
+     "preset_index": 3,
+     "ease": {
+      "easing_type": "IN_OUT_QUAD",
+      "easing_time": 1.5
+     },
+     "pos": {
+      "pos": {
+       "x": 1.0,
+       "y": 2.0,
+       "z": 3.0
+      }
+     },
+     "rot": {
+      "rot_x": 4.0,
+      "rot_y": 5.0
+     },
+     "facing": {
+      "facing_pos": {
+       "x": 6.0,
+       "y": 7.0,
+       "z": 8.0
+      }
+     },
+     "view_offset": {
+      "view_offset_x": 9.0,
+      "view_offset_y": 10.0
+     },
+     "entity_offset": {
+      "entity_offset_x": 11.0,
+      "entity_offset_y": 12.0,
+      "entity_offset_z": 13.0
+     },
+     "default_": true,
+     "remove_ignore_starting_values_component": true
+    },
+    "clear": true,
+    "fade": {
+     "time": {
+      "fade_in_time": 0.5,
+      "hold_time": 1.0,
+      "fade_out_time": 1.5
+     },
+     "color": {
+      "red": 1.0,
+      "green": 0.0,
+      "blue": 1.0
+     }
+    },
+    "target": {
+     "target_center_offset": {
+      "x": 0.5,
+      "y": 1.0,
+      "z": 1.5
+     },
+     "target_actor_id": 300
+    },
+    "remove_target": false,
+    "field_of_view": {
+     "fov": 70.0,
+     "fov_ease_time": 2.0,
+     "fov_ease_type": "OUT_BACK",
+     "fov_clear": false
+    },
+    "spline": null,
+    "attach_to_entity": {
+     "attach_to_entity_id": -5
+    },
+    "detach_from_entity": true
+   }
+  },
+  "bytes": "010300000001040000c03f010000803f000000400000404001000080400000a040010000c0400000e0400000004101000010410000204101000030410000404100005041010101010101010000003f0000803f0000c03f010000803f000000000000803f01010000003f0000803f0000c03f2c0100000000000001000100008c4200000040086f75745f6261636b000001fbffffffffffffff0101"
+ },
+ {
+  "value": {
+   "camera_instruction": {
+    "set": null,
+    "clear": null,
+    "fade": null,
+    "target": null,
+    "remove_target": null,
+    "field_of_view": null,
+    "spline": null,
+    "attach_to_entity": null,
+    "detach_from_entity": null
+   }
+  },
+  "bytes": "000000000000000000"
+ },
+ {
+  "value": {
+   "camera_instruction": {
+    "set": null,
+    "clear": null,
+    "fade": null,
+    "target": null,
+    "remove_target": null,
+    "field_of_view": null,
+    "spline": {
+     "total_time": 2.5,
+     "curve_type": "LINEAR",
+     "curve": [
+      {
+       "x": 1.0,
+       "y": 2.0,
+       "z": 3.0
+      },
+      {
+       "x": 4.0,
+       "y": 5.0,
+       "z": 6.0
+      }
+     ],
+     "progress_key_frames": [
+      {
+       "progress_key_frame_value": 0.25,
+       "progress_key_frame_time": 0.5,
+       "progress_key_frames_easing_func": "IN_QUAD"
+      }
+     ],
+     "spline_rotation_option": [
+      {
+       "rotation_key_frame_value": {
+        "x": 7.0,
+        "y": 8.0,
+        "z": 9.0
+       },
+       "rotation_key_frame_time": 1.25,
+       "rotation_key_frames_easing_func": "OUT_BACK"
+      }
+     ],
+     "spline_identifier": "minecraft:orbit",
+     "load_from_json": true
+    },
+    "attach_to_entity": null,
+    "detach_from_entity": null
+   }
+  },
+  "bytes": "000000000000010000204001020000803f0000004000004040000080400000a0400000c040010000803e0000003f07696e5f71756164010000e04000000041000010410000a03f086f75745f6261636b0f6d696e6563726166743a6f72626974010000"
+ },
+ {
+  "value": {
+   "camera_instruction": {
+    "set": null,
+    "clear": null,
+    "fade": null,
+    "target": null,
+    "remove_target": null,
+    "field_of_view": null,
+    "spline": null,
+    "attach_to_entity": {
+     "attach_to_entity_id": -1
+    },
+    "detach_from_entity": null
+   }
+  },
+  "bytes": "0000000000000001ffffffffffffffff00"
+ }
+]

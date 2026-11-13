@@ -1,0 +1,16 @@
+[
+ {
+  "value": {
+   "offer_id": "0575c61f-a5da-4b7f-9961-ffda2908861e",
+   "redirect_type": "THIRD_PARTY_SERVER_PAGE"
+  },
+  "bytes": "7f4bdaa51fc675051e860829daff619902"
+ },
+ {
+  "value": {
+   "offer_id": "ffffffff-ffff-ffff-0000-000000000001",
+   "redirect_type": "MARKETPLACE_OFFER"
+  },
+  "bytes": "ffffffffffffffff010000000000000000"
+ }
+]

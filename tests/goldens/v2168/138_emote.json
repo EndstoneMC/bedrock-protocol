@@ -1,0 +1,24 @@
+[
+ {
+  "value": {
+   "runtime_id": 7,
+   "piece_id": "emote.happy",
+   "emote_ticks": 20,
+   "xuid": "2535413418839840",
+   "platform_id": "",
+   "flags": 1
+  },
+  "bytes": "070b656d6f74652e68617070791410323533353431333431383833393834300001"
+ },
+ {
+  "value": {
+   "runtime_id": 300,
+   "piece_id": "e",
+   "emote_ticks": 200,
+   "xuid": "x",
+   "platform_id": "p",
+   "flags": 255
+  },
+  "bytes": "ac020165c80101780170ff"
+ }
+]

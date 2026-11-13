@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "target_player_id": 7,
+   "player_permissions": "OPERATOR",
+   "custom_permission_flags": 192
+  },
+  "bytes": "070000000000000004c000"
+ },
+ {
+  "value": {
+   "target_player_id": -1,
+   "player_permissions": "CUSTOM",
+   "custom_permission_flags": 255
+  },
+  "bytes": "ffffffffffffffff06ff00"
+ },
+ {
+  "value": {
+   "target_player_id": 0,
+   "player_permissions": "VISITOR",
+   "custom_permission_flags": 256
+  },
+  "bytes": "0000000000000000000001"
+ }
+]

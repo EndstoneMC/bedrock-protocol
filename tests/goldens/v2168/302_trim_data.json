@@ -1,0 +1,27 @@
+[
+ {
+  "value": {
+   "trim_patterns": [
+    {
+     "item_name": "item_a",
+     "pattern_id": "pat_a"
+    }
+   ],
+   "trim_materials": [
+    {
+     "material_id": "mat_a",
+     "color": "c",
+     "item_name": "item_b"
+    }
+   ]
+  },
+  "bytes": "01066974656d5f61057061745f6101056d61745f610163066974656d5f62"
+ },
+ {
+  "value": {
+   "trim_patterns": [],
+   "trim_materials": []
+  },
+  "bytes": "0000"
+ }
+]

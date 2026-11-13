@@ -1,0 +1,114 @@
+[
+ {
+  "value": {
+   "shapes": [
+    {
+     "network_id": 1,
+     "shape_type": null,
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": null
+    },
+    {
+     "network_id": 3,
+     "shape_type": "SPHERE",
+     "location": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "scale": 0.5,
+     "rotation": {
+      "x": 0.0,
+      "y": 0.25,
+      "z": 0.0
+     },
+     "time_left_total_sec": 2.0,
+     "max_render_distance": 64.0,
+     "color": 1146447479,
+     "dimension_id": 1,
+     "attached_to_id": -7,
+     "extra_data_payload": {
+      "SphereDataPayload": {
+       "num_segments": 12
+      }
+     }
+    },
+    {
+     "network_id": 4,
+     "shape_type": "TEXT",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "TextDataPayload": {
+       "text": "hi",
+       "use_rotation": true,
+       "background_color": 1146447479,
+       "depth_test": true,
+       "show_backface": false,
+       "show_text_backface": true
+      }
+     }
+    },
+    {
+     "network_id": 5,
+     "shape_type": "CYLINDER",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "CylinderDataPayload": {
+       "radius_x": {
+        "x": 1.0,
+        "y": 0.0
+       },
+       "radius_z": {
+        "x": 0.0,
+        "y": 1.0
+       },
+       "height": 3.0,
+       "num_segments": 8
+      }
+     }
+    },
+    {
+     "network_id": 6,
+     "shape_type": "PYRAMID",
+     "location": null,
+     "scale": null,
+     "rotation": null,
+     "time_left_total_sec": null,
+     "max_render_distance": null,
+     "color": null,
+     "dimension_id": null,
+     "attached_to_id": null,
+     "extra_data_payload": {
+      "PyramidDataPayload": {
+       "width": 2.0,
+       "depth": 4.0,
+       "height": 6.0
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "050100000000000000000000030102010000803f0000004000004040010000003f01000000000000803e000000000100000040010000804201776655440102010d050c0401040000000000000000020268690101776655440100010501060000000000000000060000803f00000000000000000000803f00004040080601070000000000000000070000004001000080400000c040"
+ }
+]

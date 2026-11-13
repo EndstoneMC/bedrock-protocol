@@ -1,0 +1,21 @@
+[
+ {
+  "value": {
+   "reason": "EDITOR_NOT_ALLOWED",
+   "messages": {
+    "DisconnectPacketMessages": {
+     "message": "bye",
+     "filtered_message": "b**"
+    }
+   }
+  },
+  "bytes": "a602000362796503622a2a"
+ },
+ {
+  "value": {
+   "reason": "EDITOR_NOT_ALLOWED",
+   "messages": null
+  },
+  "bytes": "a60201"
+ }
+]

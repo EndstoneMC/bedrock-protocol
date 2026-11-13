@@ -1,0 +1,40 @@
+[
+ {
+  "value": {
+   "id": 1,
+   "runtime_id": 2,
+   "item": {
+    "id": 5,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id_variant": null,
+    "block_runtime_id": 0,
+    "user_data_buffer": "00000000000000000000"
+   },
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "data": {
+    "data": [
+     {
+      "id": 38,
+      "payload": {
+       "DataItemFloatPayload": {
+        "value": 0.5
+       }
+      }
+     }
+    ]
+   },
+   "is_from_fishing": true
+  },
+  "bytes": "0202050001000000000a000000000000000000000000803f0000004000004040000080400000a0400000c040012603030000003f01"
+ }
+]

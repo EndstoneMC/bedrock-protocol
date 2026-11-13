@@ -1,0 +1,23 @@
+[
+ {
+  "value": {
+   "slot_and_damage_pairs": [
+    {
+     "armor_slot": "TORSO",
+     "damage": 3
+    },
+    {
+     "armor_slot": "BODY",
+     "damage": -300
+    }
+   ]
+  },
+  "bytes": "0202030008d4fe"
+ },
+ {
+  "value": {
+   "slot_and_damage_pairs": []
+  },
+  "bytes": "00"
+ }
+]

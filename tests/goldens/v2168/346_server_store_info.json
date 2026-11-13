@@ -1,0 +1,17 @@
+[
+ {
+  "value": {
+   "client_store_entry_point_configuration": {
+    "store_id": "sid",
+    "store_name": "Store"
+   }
+  },
+  "bytes": "01037369640553746f7265"
+ },
+ {
+  "value": {
+   "client_store_entry_point_configuration": null
+  },
+  "bytes": "00"
+ }
+]

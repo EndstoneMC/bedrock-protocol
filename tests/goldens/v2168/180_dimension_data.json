@@ -1,0 +1,18 @@
+[
+ {
+  "value": {
+   "dimension_definition_group": {
+    "dimension_definitions": {
+     "test:dim": {
+      "height_maximum": 320,
+      "height_minimum": -64,
+      "generator_type": "OVERWORLD",
+      "dimension_type": 1000,
+      "pack_id": "01020304-0506-0708-090a-0b0c0d0e0f10"
+     }
+    }
+   }
+  },
+  "bytes": "0108746573743a64696d80057f02d00f0807060504030201100f0e0d0c0b0a09"
+ }
+]

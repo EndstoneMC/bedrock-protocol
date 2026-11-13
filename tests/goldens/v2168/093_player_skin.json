@@ -1,0 +1,110 @@
+[
+ {
+  "value": {
+   "uuid": "9e688c58-a548-3b8e-af69-c9e1005ad0bf",
+   "skin": {
+    "id": "sid",
+    "play_fab_id": "pfid",
+    "resource_patch": "patch",
+    "skin_image": {
+     "width": 1,
+     "height": 1,
+     "image_bytes": "01020304"
+    },
+    "skin_animated_images": [
+     {
+      "image": {
+       "width": 1,
+       "height": 1,
+       "image_bytes": "090a0b0c"
+      },
+      "type": "FACE",
+      "frames": 1.0,
+      "animation_expression": "LINEAR"
+     }
+    ],
+    "cape_image": {
+     "width": 1,
+     "height": 1,
+     "image_bytes": "05060708"
+    },
+    "geometry_data": "geo",
+    "geometry_data_min_engine_version": "gev",
+    "animation_data": "anim",
+    "cape_id": "cape",
+    "full_id": "full",
+    "arm_size_type": "WIDE",
+    "skin_color": 67305985,
+    "persona_pieces": [
+     {
+      "piece_id": "p1",
+      "piece_type": "SKELETON",
+      "pack_id": "55a54008-ad1b-3589-aa21-0d2629c1df41",
+      "is_default_piece": true,
+      "product_id": "prod"
+     }
+    ],
+    "piece_tint_colors": {
+     "SKELETON": {
+      "colors": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    },
+    "is_premium": true,
+    "is_persona": false,
+    "is_persona_cape_on_classic_skin": false,
+    "is_primary_user": true,
+    "overrides_player_appearance": true,
+    "is_trusted_skin": "FALSE",
+    "profile_hash": "hash"
+   },
+   "localized_new_skin_name": "new",
+   "localized_old_skin_name": "old"
+  },
+  "bytes": "8e3b48a5588c689ebfd05a00e1c969af0373696404706669640570617463680100000001000000040102030401010000000100000004090a0b0c010000803f00010000000100000004050607080367656f0367657604616e696d04636170650466756c6c0101020304010270310100000089351bad0840a55541dfc129260d21aa010470726f640108736b656c65746f6e0100000002000000030000000400000001000001010566616c73650468617368036e6577036f6c64"
+ },
+ {
+  "value": {
+   "uuid": "9e688c58-a548-3b8e-af69-c9e1005ad0bf",
+   "skin": {
+    "id": "sid",
+    "play_fab_id": "pfid",
+    "resource_patch": "patch",
+    "skin_image": {
+     "width": 0,
+     "height": 0,
+     "image_bytes": ""
+    },
+    "skin_animated_images": [],
+    "cape_image": {
+     "width": 0,
+     "height": 0,
+     "image_bytes": ""
+    },
+    "geometry_data": "",
+    "geometry_data_min_engine_version": "",
+    "animation_data": "",
+    "cape_id": "",
+    "full_id": "",
+    "arm_size_type": "SLIM",
+    "skin_color": 0,
+    "persona_pieces": [],
+    "piece_tint_colors": {},
+    "is_premium": false,
+    "is_persona": false,
+    "is_persona_cape_on_classic_skin": false,
+    "is_primary_user": false,
+    "overrides_player_appearance": false,
+    "is_trusted_skin": "FALSE",
+    "profile_hash": "hash"
+   },
+   "localized_new_skin_name": "new",
+   "localized_old_skin_name": "old"
+  },
+  "bytes": "8e3b48a5588c689ebfd05a00e1c969af0373696404706669640570617463680000000000000000000000000000000000000000000000000000000000000000000000000566616c73650468617368036e6577036f6c64"
+ }
+]

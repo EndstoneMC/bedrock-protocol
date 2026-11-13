@@ -1,0 +1,54 @@
+[
+ {
+  "value": {
+   "sub_chunk_block_position": {
+    "x": 4,
+    "y": -5,
+    "z": 6
+   },
+   "blocks_changed": {
+    "standards": [
+     {
+      "pos": {
+       "x": 1,
+       "y": 2,
+       "z": 3
+      },
+      "runtime_id": 300,
+      "update_flags": 200,
+      "entity_unique_id": 9,
+      "message": "DESTROY"
+     }
+    ],
+    "extras": [
+     {
+      "pos": {
+       "x": -1,
+       "y": 0,
+       "z": 1
+      },
+      "runtime_id": 5,
+      "update_flags": 0,
+      "entity_unique_id": 0,
+      "message": "NONE"
+     }
+    ]
+   }
+  },
+  "bytes": "08090c01020406ac02c80109020101000205000000"
+ },
+ {
+  "value": {
+   "sub_chunk_block_position": {
+    "x": 0,
+    "y": 64,
+    "z": 0
+   },
+   "blocks_changed": {
+    "standards": [],
+    "extras": []
+   }
+  },
+  "bytes": "008001000000"
+ }
+]

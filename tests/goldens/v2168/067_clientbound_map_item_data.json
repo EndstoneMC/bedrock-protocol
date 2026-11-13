@@ -1,0 +1,77 @@
+[
+ {
+  "value": {
+   "map_id": 1,
+   "dimension": 0,
+   "locked": true,
+   "map_origin": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "creation_map_ids": [
+    7
+   ],
+   "scale": 4,
+   "unique_ids": [
+    {
+     "type": "ENTITY",
+     "key_entity_id": 9,
+     "key_block_pos": null
+    },
+    {
+     "type": "BLOCK_ENTITY",
+     "key_entity_id": null,
+     "key_block_pos": {
+      "x": 4,
+      "y": 5,
+      "z": 6
+     }
+    }
+   ],
+   "decorations": [
+    {
+     "image": "MARKER_RED",
+     "rotation": 3,
+     "x": 4,
+     "y": 5,
+     "label": "hi",
+     "color": 67305985
+    }
+   ],
+   "width": 2,
+   "height": 2,
+   "start_x": 0,
+   "start_y": 0,
+   "map_pixels": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  "bytes": "02000102040601010e0104010200000000011200010000000001080a0c010102030405026869010203040104010401000100010401000000020000000300000004000000"
+ },
+ {
+  "value": {
+   "map_id": 0,
+   "dimension": 0,
+   "locked": false,
+   "map_origin": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+   },
+   "creation_map_ids": null,
+   "scale": null,
+   "unique_ids": null,
+   "decorations": null,
+   "width": null,
+   "height": null,
+   "start_x": null,
+   "start_y": null,
+   "map_pixels": null
+  },
+  "bytes": "000000000000000000000000000000"
+ }
+]

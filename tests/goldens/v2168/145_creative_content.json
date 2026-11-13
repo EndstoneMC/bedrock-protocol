@@ -1,0 +1,35 @@
+[
+ {
+  "value": {
+   "groups": [
+    {
+     "creative_item_category": "NATURE",
+     "name": "itemGroup.name.planks",
+     "icon": {
+      "id": 7,
+      "stack_size": 4,
+      "aux_value": 0,
+      "block_runtime_id": 9,
+      "user_data_buffer": "00000000000000000000"
+     }
+    }
+   ],
+   "entries": [
+    {
+     "creative_item_net_id": {
+      "raw_id": 1
+     },
+     "item_descriptor": {
+      "id": 7,
+      "stack_size": 4,
+      "aux_value": 0,
+      "block_runtime_id": 9,
+      "user_data_buffer": "00000000000000000000"
+     },
+     "group_index": 0
+    }
+   ]
+  },
+  "bytes": "0102156974656d47726f75702e6e616d652e706c616e6b730e040000120a0000000000000000000001010e040000120a0000000000000000000000"
+ }
+]

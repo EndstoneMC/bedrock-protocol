@@ -1,0 +1,24 @@
+[
+ {
+  "value": {
+   "pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "is_front_side": true
+  },
+  "bytes": "02040601"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": -1,
+    "y": 0,
+    "z": 0
+   },
+   "is_front_side": false
+  },
+  "bytes": "01000000"
+ }
+]

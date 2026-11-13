@@ -1,0 +1,20 @@
+[
+ {
+  "value": {
+   "entity_net_id": {
+    "raw_id": 7
+   },
+   "dimension_type": -1
+  },
+  "bytes": "0701"
+ },
+ {
+  "value": {
+   "entity_net_id": {
+    "raw_id": 300
+   },
+   "dimension_type": 2
+  },
+  "bytes": "ac0204"
+ }
+]

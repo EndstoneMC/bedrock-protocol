@@ -1,0 +1,38 @@
+[
+ {
+  "value": {
+   "action": "SWING",
+   "runtime_id": 300,
+   "data": 1.5,
+   "swing_source": "ATTACK"
+  },
+  "bytes": "01ac020000c03f010661747461636b"
+ },
+ {
+  "value": {
+   "action": "CRITICAL_HIT",
+   "runtime_id": 7,
+   "data": 0.0,
+   "swing_source": null
+  },
+  "bytes": "04070000000000"
+ },
+ {
+  "value": {
+   "action": "NO_ACTION",
+   "runtime_id": 4294967296,
+   "data": 0.0,
+   "swing_source": "NONE"
+  },
+  "bytes": "0080808080100000000001046e6f6e65"
+ },
+ {
+  "value": {
+   "action": "MAGIC_CRITICAL_HIT",
+   "runtime_id": 1,
+   "data": -1.0,
+   "swing_source": "USE_ITEM"
+  },
+  "bytes": "0501000080bf01077573656974656d"
+ }
+]

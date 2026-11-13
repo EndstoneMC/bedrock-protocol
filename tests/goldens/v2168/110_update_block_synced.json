@@ -1,0 +1,32 @@
+[
+ {
+  "value": {
+   "pos": {
+    "x": 1,
+    "y": -2,
+    "z": 3
+   },
+   "runtime_id": 300,
+   "update_flags": 3,
+   "layer": 1,
+   "entity_unique_id": 4294967297,
+   "message": "DESTROY"
+  },
+  "bytes": "020306ac020301818080801002"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+   },
+   "runtime_id": 0,
+   "update_flags": 200,
+   "layer": 0,
+   "entity_unique_id": 64,
+   "message": "NONE"
+  },
+  "bytes": "00000000c801004000"
+ }
+]

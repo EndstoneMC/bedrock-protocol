@@ -1,0 +1,82 @@
+[
+ {
+  "value": {
+   "structure_name": "mystructure",
+   "structure_block_pos": {
+    "x": 1,
+    "y": -2,
+    "z": 3
+   },
+   "structure_settings": {
+    "palette_name": "default",
+    "ignore_entities": true,
+    "ignore_blocks": false,
+    "allow_non_ticking_player_and_ticking_area_chunks": true,
+    "structure_size": {
+     "x": 5,
+     "y": 6,
+     "z": 7
+    },
+    "structure_offset": {
+     "x": -1,
+     "y": 0,
+     "z": 1
+    },
+    "last_touched_by_player": 300,
+    "rotation": "ROTATE_90",
+    "mirror": "Z",
+    "animation_mode": "BLOCKS",
+    "animation_seconds": 0.5,
+    "integrity_value": 1.0,
+    "integrity_seed": 3735928559,
+    "pivot": {
+     "x": 0.5,
+     "y": 1.5,
+     "z": 2.5
+    }
+   },
+   "request_operation": "QUERY_SAVED_STRUCTURE"
+  },
+  "bytes": "0b6d797374727563747572650203060764656661756c740100010a0c0e010002d8040102020000003f0000803fefbeadde0000003f0000c03f0000204003"
+ },
+ {
+  "value": {
+   "structure_name": "",
+   "structure_block_pos": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+   },
+   "structure_settings": {
+    "palette_name": "",
+    "ignore_entities": false,
+    "ignore_blocks": false,
+    "allow_non_ticking_player_and_ticking_area_chunks": false,
+    "structure_size": {
+     "x": 0,
+     "y": 0,
+     "z": 0
+    },
+    "structure_offset": {
+     "x": 0,
+     "y": 0,
+     "z": 0
+    },
+    "last_touched_by_player": 0,
+    "rotation": "NONE",
+    "mirror": "NONE",
+    "animation_mode": "NONE",
+    "animation_seconds": 0.0,
+    "integrity_value": 0.0,
+    "integrity_seed": 0,
+    "pivot": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0
+    }
+   },
+   "request_operation": "NONE"
+  },
+  "bytes": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+ }
+]

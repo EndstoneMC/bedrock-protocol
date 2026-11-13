@@ -1,0 +1,9 @@
+[
+ {
+  "value": {
+   "client_network_version": 1001,
+   "connection_request": "616263"
+  },
+  "bytes": "000003e903616263"
+ }
+]

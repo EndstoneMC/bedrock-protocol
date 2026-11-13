@@ -1,0 +1,14 @@
+[
+ {
+  "value": {
+   "sim_type": "EDITOR"
+  },
+  "bytes": "01"
+ },
+ {
+  "value": {
+   "sim_type": "INVALID"
+  },
+  "bytes": "03"
+ }
+]

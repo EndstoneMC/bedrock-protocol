@@ -1,0 +1,18 @@
+[
+ {
+  "value": {
+   "request_id": "req-1",
+   "action": "TRANSFER_ITEM_TO",
+   "response": "{\"ok\":true}"
+  },
+  "bytes": "057265712d31110000000b7b226f6b223a747275657d"
+ },
+ {
+  "value": {
+   "request_id": "",
+   "action": "ATTACK",
+   "response": ""
+  },
+  "bytes": "000100000000"
+ }
+]

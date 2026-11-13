@@ -1,0 +1,24 @@
+[
+ {
+  "value": {
+   "presence_configuration": {
+    "rich_presence_id": "rp1"
+   }
+  },
+  "bytes": "010103727031"
+ },
+ {
+  "value": {
+   "presence_configuration": {
+    "rich_presence_id": null
+   }
+  },
+  "bytes": "0100"
+ },
+ {
+  "value": {
+   "presence_configuration": null
+  },
+  "bytes": "00"
+ }
+]

@@ -1,0 +1,18 @@
+[
+ {
+  "value": {
+   "camera_preset_id": "preset",
+   "action": "CLEAR",
+   "allow_aim_assist": true
+  },
+  "bytes": "067072657365740101"
+ },
+ {
+  "value": {
+   "camera_preset_id": "",
+   "action": "SET_FROM_CAMERA_PRESET",
+   "allow_aim_assist": false
+  },
+  "bytes": "000000"
+ }
+]

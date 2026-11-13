@@ -1,0 +1,16 @@
+[
+ {
+  "value": {
+   "create_time": 81985529216486895,
+   "from_server": true
+  },
+  "bytes": "efcdab896745230101"
+ },
+ {
+  "value": {
+   "create_time": 255,
+   "from_server": false
+  },
+  "bytes": "ff0000000000000000"
+ }
+]

@@ -1,0 +1,25 @@
+[
+ {
+  "value": {
+   "map_id": -5,
+   "client_pixels": [
+    {
+     "pixel": 16909060,
+     "index": 258
+    },
+    {
+     "pixel": 4294967295,
+     "index": 7
+    }
+   ]
+  },
+  "bytes": "0902000000040302010201ffffffff0700"
+ },
+ {
+  "value": {
+   "map_id": 0,
+   "client_pixels": []
+  },
+  "bytes": "0000000000"
+ }
+]

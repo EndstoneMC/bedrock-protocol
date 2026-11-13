@@ -1,0 +1,41 @@
+[
+ {
+  "value": {
+   "dimension_id": 2,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "respawn": true,
+   "loading_screen_id": 300
+  },
+  "bytes": "040000803f000000400000404001012c010000"
+ },
+ {
+  "value": {
+   "dimension_id": -1,
+   "pos": {
+    "x": -1.0,
+    "y": 0.0,
+    "z": 0.5
+   },
+   "respawn": false,
+   "loading_screen_id": null
+  },
+  "bytes": "01000080bf000000000000003f0000"
+ },
+ {
+  "value": {
+   "dimension_id": 0,
+   "pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   },
+   "respawn": false,
+   "loading_screen_id": 3735928559
+  },
+  "bytes": "000000000000000000000000000001efbeadde"
+ }
+]

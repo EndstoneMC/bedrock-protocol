@@ -1,0 +1,113 @@
+[
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageOnly": {
+     "type": "TEXT_OBJECT_ANNOUNCEMENT",
+     "message": "{}"
+    }
+   },
+   "xuid": "",
+   "platform_id": "",
+   "filtered_message": null
+  },
+  "bytes": "00000b027b7d000000"
+ },
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "AuthorAndMessage": {
+     "type": "CHAT",
+     "author": "Steve",
+     "message": "hello"
+    }
+   },
+   "xuid": "2535400000000000",
+   "platform_id": "switch-1",
+   "filtered_message": "h***o"
+  },
+  "bytes": "0001010553746576650568656c6c6f1032353335343030303030303030303030087377697463682d310105682a2a2a6f"
+ },
+ {
+  "value": {
+   "localize": true,
+   "body": {
+    "MessageAndParams": {
+     "type": "TRANSLATE",
+     "message": "chat.type.text",
+     "params": [
+      "Alex",
+      "hi"
+     ]
+    }
+   },
+   "xuid": "",
+   "platform_id": "",
+   "filtered_message": null
+  },
+  "bytes": "0102020e636861742e747970652e746578740204416c6578026869000000"
+ },
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageAndParams": {
+     "type": "POPUP",
+     "message": "popup",
+     "params": []
+    }
+   },
+   "xuid": "",
+   "platform_id": "",
+   "filtered_message": null
+  },
+  "bytes": "00020305706f70757000000000"
+ },
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageOnly": {
+     "type": "RAW",
+     "message": "x"
+    }
+   },
+   "xuid": "",
+   "platform_id": "",
+   "filtered_message": null
+  },
+  "bytes": "0000000178000000"
+ },
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageOnly": {
+     "type": "RAW",
+     "message": "x"
+    }
+   },
+   "xuid": "",
+   "platform_id": "",
+   "filtered_message": ""
+  },
+  "bytes": "000000017800000100"
+ },
+ {
+  "value": {
+   "localize": false,
+   "body": {
+    "MessageOnly": {
+     "type": "RAW",
+     "message": "hi"
+    }
+   },
+   "xuid": "x",
+   "platform_id": "p",
+   "filtered_message": null
+  },
+  "bytes": "0000000268690178017000"
+ }
+]

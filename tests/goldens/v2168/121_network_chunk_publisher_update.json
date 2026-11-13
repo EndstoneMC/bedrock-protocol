@@ -1,0 +1,35 @@
+[
+ {
+  "value": {
+   "position": {
+    "x": 1,
+    "y": -2,
+    "z": 3
+   },
+   "radius": 160,
+   "server_built_chunks": [
+    {
+     "x": 0,
+     "z": 0
+    },
+    {
+     "x": -1,
+     "z": 5
+    }
+   ]
+  },
+  "bytes": "020306a001020000000000010a"
+ },
+ {
+  "value": {
+   "position": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+   },
+   "radius": 0,
+   "server_built_chunks": []
+  },
+  "bytes": "0000000000000000"
+ }
+]

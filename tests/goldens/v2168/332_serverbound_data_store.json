@@ -1,0 +1,47 @@
+[
+ {
+  "value": {
+   "update": {
+    "data_store_name": "inventory",
+    "property": "hotbar",
+    "path": "slots/0",
+    "data": {
+     "str": "diamond_sword"
+    },
+    "property_update_count": 300,
+    "path_update_count": 4294967294
+   }
+  },
+  "bytes": "09696e76656e746f727906686f7462617207736c6f74732f30020d6469616d6f6e645f73776f72642c010000feffffff"
+ },
+ {
+  "value": {
+   "update": {
+    "data_store_name": "hud",
+    "property": "opacity",
+    "path": "",
+    "data": {
+     "float": 0.5
+    },
+    "property_update_count": 1,
+    "path_update_count": 0
+   }
+  },
+  "bytes": "03687564076f7061636974790000000000000000e03f0100000000000000"
+ },
+ {
+  "value": {
+   "update": {
+    "data_store_name": "hud",
+    "property": "visible",
+    "path": "",
+    "data": {
+     "bool": true
+    },
+    "property_update_count": 1,
+    "path_update_count": 0
+   }
+  },
+  "bytes": "036875640776697369626c650001010100000000000000"
+ }
+]

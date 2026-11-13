@@ -1,0 +1,14 @@
+[
+ {
+  "value": {
+   "commands_enabled": true
+  },
+  "bytes": "01"
+ },
+ {
+  "value": {
+   "commands_enabled": false
+  },
+  "bytes": "00"
+ }
+]

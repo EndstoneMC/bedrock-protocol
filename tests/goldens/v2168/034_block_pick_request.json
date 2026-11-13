@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "pos": {
+    "x": 1,
+    "y": -2,
+    "z": 300
+   },
+   "with_data": true,
+   "max_slots": 200
+  },
+  "bytes": "0203d80401c8"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": 0,
+    "y": -1,
+    "z": 0
+   },
+   "with_data": false,
+   "max_slots": 0
+  },
+  "bytes": "0001000000"
+ }
+]

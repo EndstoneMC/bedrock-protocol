@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "form_id": 300,
+   "json_response": "[true]",
+   "form_cancel_reason": null
+  },
+  "bytes": "ac0201065b747275655d00"
+ },
+ {
+  "value": {
+   "form_id": 1,
+   "json_response": null,
+   "form_cancel_reason": "USER_BUSY"
+  },
+  "bytes": "01000101"
+ },
+ {
+  "value": {
+   "form_id": 7,
+   "json_response": "",
+   "form_cancel_reason": "USER_CLOSED"
+  },
+  "bytes": "0701000100"
+ }
+]

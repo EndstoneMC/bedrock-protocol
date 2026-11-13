@@ -1,0 +1,24 @@
+[
+ {
+  "value": {
+   "npc_id": 258,
+   "npc_dialogue_action_type": "CLOSE",
+   "dialogue": "Hello",
+   "scene_name": "greeting",
+   "npc_name": "Guide",
+   "action_json": "[]"
+  },
+  "bytes": "0201000000000000020548656c6c6f086772656574696e67054775696465025b5d"
+ },
+ {
+  "value": {
+   "npc_id": 4294967296,
+   "npc_dialogue_action_type": "OPEN",
+   "dialogue": "",
+   "scene_name": "",
+   "npc_name": "",
+   "action_json": ""
+  },
+  "bytes": "00000000010000000000000000"
+ }
+]

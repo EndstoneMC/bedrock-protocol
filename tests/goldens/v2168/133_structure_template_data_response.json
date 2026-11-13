@@ -1,0 +1,30 @@
+[
+ {
+  "value": {
+   "structure_name": "mystructure",
+   "structure_tag": {
+    "format_version": {
+     "IntTag": 1
+    }
+   },
+   "response_type": "QUERY"
+  },
+  "bytes": "0b6d79737472756374757265010a00030e666f726d61745f76657273696f6e020002"
+ },
+ {
+  "value": {
+   "structure_name": "mystructure",
+   "structure_tag": null,
+   "response_type": "EXPORT"
+  },
+  "bytes": "0b6d797374727563747572650001"
+ },
+ {
+  "value": {
+   "structure_name": "",
+   "structure_tag": {},
+   "response_type": "NONE"
+  },
+  "bytes": "00010a000000"
+ }
+]

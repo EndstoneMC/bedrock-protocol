@@ -1,0 +1,47 @@
+[
+ {
+  "value": {
+   "runtime_id": 300,
+   "event_id": "ADD",
+   "effect_id": 19,
+   "effect_amplifier": 2,
+   "show_particles": true,
+   "effect_duration_ticks": {
+    "value": 600
+   },
+   "tick": 128,
+   "ambient": false
+  },
+  "bytes": "ac0201260401b009800100"
+ },
+ {
+  "value": {
+   "runtime_id": 1,
+   "event_id": "REMOVE",
+   "effect_id": 1,
+   "effect_amplifier": -1,
+   "show_particles": false,
+   "effect_duration_ticks": {
+    "value": -1
+   },
+   "tick": 0,
+   "ambient": true
+  },
+  "bytes": "0103020100010001"
+ },
+ {
+  "value": {
+   "runtime_id": 300,
+   "event_id": "UPDATE",
+   "effect_id": 0,
+   "effect_amplifier": 0,
+   "show_particles": false,
+   "effect_duration_ticks": {
+    "value": 0
+   },
+   "tick": 300,
+   "ambient": false
+  },
+  "bytes": "ac020200000000ac0200"
+ }
+]

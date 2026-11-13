@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "cookie": "party-cookie",
+   "intent": "OPT_IN",
+   "destination_name": "Nether Hub"
+  },
+  "bytes": "0c70617274792d636f6f6b6965056f7074696e0a4e657468657220487562"
+ },
+ {
+  "value": {
+   "cookie": "",
+   "intent": "NOTIFY",
+   "destination_name": ""
+  },
+  "bytes": "00066e6f7469667900"
+ },
+ {
+  "value": {
+   "cookie": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "intent": "OPT_OUT",
+   "destination_name": "d"
+  },
+  "bytes": "820178787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878066f70746f75740164"
+ }
+]

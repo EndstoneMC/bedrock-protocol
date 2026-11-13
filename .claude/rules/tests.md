@@ -28,5 +28,5 @@ paths:
 ## Files
 
 - Add a case to the test that owns its packet or topic; never open a second file for it.
-- Per-packet tests live in `test_{id:03}_{name}.py` (`test_009_text.py`); topics live in `test_<topic>.py`.
+- Packet cases live in `tests/goldens/` and run through `test_goldens.py` (`.claude/rules/protocol/goldens.md`); topics live in `test_<topic>.py`.
 - Give a type that no modelled packet reaches its own test, named for the type.

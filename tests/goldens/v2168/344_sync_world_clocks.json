@@ -1,0 +1,75 @@
+[
+ {
+  "value": {
+   "data": {
+    "InitializeRegistryData": {
+     "clock_data": [
+      {
+       "id": 300,
+       "name": "overworld",
+       "time": -1,
+       "is_paused": true,
+       "time_markers": [
+        {
+         "id": 1,
+         "name": "sunrise",
+         "time": 23000,
+         "period": -24000
+        },
+        {
+         "id": 2,
+         "name": "noon",
+         "time": 6000,
+         "period": null
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0101ac02096f766572776f726c64010102010773756e72697365b0e7020140a2ffff02046e6f6f6ee05d00"
+ },
+ {
+  "value": {
+   "data": {
+    "AddTimeMarkerData": {
+     "clock_id": 0,
+     "time_markers": [
+      {
+       "id": 0,
+       "name": "",
+       "time": -1,
+       "period": -1
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "02000100000101ffffffff"
+ },
+ {
+  "value": {
+   "data": {
+    "RemoveTimeMarkerData": {
+     "clock_id": 300,
+     "time_marker_ids": [
+      1,
+      200
+     ]
+    }
+   }
+  },
+  "bytes": "03ac020201c801"
+ },
+ {
+  "value": {
+   "data": {
+    "SyncStateData": {
+     "clock_data": []
+    }
+   }
+  },
+  "bytes": "0000"
+ }
+]

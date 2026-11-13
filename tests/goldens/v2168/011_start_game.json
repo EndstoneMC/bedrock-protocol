@@ -1,0 +1,131 @@
+[
+ {
+  "value": {
+   "entity_id": 1,
+   "runtime_id": 2,
+   "entity_game_type": "SURVIVAL",
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "rot": {
+    "x": 4.0,
+    "y": 5.0
+   },
+   "settings": {
+    "seed": 7,
+    "spawn_settings": {
+     "type": "DEFAULT",
+     "user_defined_biome_name": "",
+     "dimension": 0
+    },
+    "generator": "OVERWORLD",
+    "game_type": "SURVIVAL",
+    "is_hardcore": false,
+    "game_difficulty": "NORMAL",
+    "default_spawn": {
+     "x": 0,
+     "y": 64,
+     "z": 0
+    },
+    "achievements_disabled": true,
+    "editor_world_type": "NON_EDITOR",
+    "is_created_in_editor": false,
+    "is_exported_from_editor": false,
+    "time": 0,
+    "education_edition_offer": "NONE",
+    "education_features_enabled": false,
+    "education_product_id": "",
+    "rain_level": 0.0,
+    "lightning_level": 0.0,
+    "confirmed_platform_locked_content": false,
+    "multiplayer_game_intent": true,
+    "lan_broadcast_intent": true,
+    "xbl_broadcast_intent": "FRIENDS_ONLY",
+    "platform_broadcast_intent": "FRIENDS_ONLY",
+    "commands_enabled": true,
+    "texture_packs_required": false,
+    "game_rules": {
+     "rules": [
+      {
+       "name": "dodaylightcycle",
+       "can_be_modified_by_player": false,
+       "value": {
+        "bool": true
+       }
+      },
+      {
+       "name": "maxcommandchainlength",
+       "can_be_modified_by_player": false,
+       "value": {
+        "int": 131070
+       }
+      }
+     ]
+    },
+    "experiments": {
+     "toggles": [],
+     "experiments_ever_toggled": false
+    },
+    "bonus_chest_enabled": false,
+    "start_with_map_enabled": false,
+    "default_permissions": "MEMBER",
+    "server_chunk_tick_range": 4,
+    "has_locked_behavior_pack": false,
+    "has_locked_resource_pack": false,
+    "is_from_locked_template": false,
+    "use_msa_gamertags_only": false,
+    "is_from_world_template": false,
+    "is_world_template_option_locked": false,
+    "spawn_v1_villagers": false,
+    "persona_disabled": false,
+    "custom_skins_disabled": false,
+    "emote_chat_muted": false,
+    "base_game_version": "1.21.0",
+    "limited_world_width": 0,
+    "limited_world_depth": 0,
+    "nether_type": "NORMAL",
+    "edu_shared_uri_resource": {
+     "button_name": "",
+     "link_uri": ""
+    },
+    "override_force_experimental_gameplay_flag": null,
+    "chat_restriction_level": "NONE",
+    "disable_player_interactions": false,
+    "server_editor_connection_policy": "MATCH_WORLD_TYPE",
+    "allow_anonymous_block_drops_in_editor_worlds": false
+   },
+   "level_id": "lvl",
+   "level_name": "world",
+   "template_content_identity": "00000000-0000-0000-0000-000000000000",
+   "is_trial": false,
+   "movement_settings": {
+    "rewind_history_size": 40,
+    "server_auth_block_breaking": false
+   },
+   "level_current_time": 100,
+   "enchantment_seed": 0,
+   "block_properties": [],
+   "multiplayer_correlation_id": "",
+   "enable_item_stack_net_manager": true,
+   "server_version": "1.21.0",
+   "player_property_data": {},
+   "server_block_type_registry_checksum": 0,
+   "world_template_id": "00000000-0000-0000-0000-000000000000",
+   "server_enabled_client_side_generation": false,
+   "block_network_ids_are_hashes": true,
+   "network_permissions": {
+    "server_auth_sound_enabled": false
+   },
+   "server_configuration_join_info": null,
+   "server_telemetry_data": {
+    "server_id": "",
+    "scenario_id": "",
+    "world_id": "",
+    "owner_id": ""
+   }
+  },
+  "bytes": "0202000000803f0000004000004040000080400000a04007000000000000000000000002000004008001000100000000000000000000000000000000010104040100020f646f6461796c696768746379636c65000101156d6178636f6d6d616e64636861696e6c656e6774680002feff01000000000000000001040000000000000000000000000006312e32312e3000000000000000000000000000000000036c766c05776f726c642430303030303030302d303030302d303030302d303030302d30303030303030303030303000500064000000000000000000000106312e32312e300a00000000000000000000000000000000000000000000000000000001000000000000"
+ }
+]

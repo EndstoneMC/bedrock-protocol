@@ -1,0 +1,22 @@
+[
+ {
+  "value": {
+   "id": 7,
+   "type": "EXECUTE_ACTION",
+   "actions": "/say hi",
+   "action_index": 2,
+   "scene_name": "scene"
+  },
+  "bytes": "0701072f73617920686902057363656e65"
+ },
+ {
+  "value": {
+   "id": 300,
+   "type": "EXECUTE_OPENING_COMMANDS",
+   "actions": "",
+   "action_index": 200,
+   "scene_name": ""
+  },
+  "bytes": "ac020600c800"
+ }
+]

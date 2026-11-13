@@ -1,0 +1,123 @@
+[
+ {
+  "value": {
+   "enum_values": [
+    "true",
+    "false"
+   ],
+   "chained_subcommand_values": [
+    "as"
+   ],
+   "postfixes": [
+    "L"
+   ],
+   "enums": [
+    {
+     "name": "Boolean",
+     "values": [
+      0,
+      1
+     ]
+    }
+   ],
+   "chained_subcommands": [
+    {
+     "name": "execute",
+     "values": [
+      {
+       "sub_command_first_value": 0,
+       "sub_command_second_value": 300
+      }
+     ]
+    }
+   ],
+   "commands": [
+    {
+     "name": "test",
+     "description": "a test",
+     "flags": 258,
+     "permission": "ADMIN",
+     "alias_enum": -1,
+     "chained_subcommand_indexes": [
+      0
+     ],
+     "overloads": [
+      {
+       "is_chaining": true,
+       "params": [
+        {
+         "name": "arg",
+         "parse_symbol": 1048577,
+         "optional": true,
+         "param_options": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "soft_enums": [
+    {
+     "name": "soft",
+     "values": [
+      "a"
+     ]
+    }
+   ],
+   "constraints": [
+    {
+     "enum_value_symbol": 1,
+     "enum_symbol": 0,
+     "constraints": [
+      0,
+      2
+     ]
+    }
+   ]
+  },
+  "bytes": "0204747275650566616c73650102617301014c0107426f6f6c65616e0200000000010000000107657865637574650100ac020104746573740661207465737402010561646d696effffffff0100000000010101036172670100100001010104736f6674010161010100000000000000020002"
+ },
+ {
+  "value": {
+   "enum_values": [],
+   "chained_subcommand_values": [],
+   "postfixes": [],
+   "enums": [],
+   "chained_subcommands": [],
+   "commands": [],
+   "soft_enums": [],
+   "constraints": []
+  },
+  "bytes": "0000000000000000"
+ },
+ {
+  "value": {
+   "enum_values": [],
+   "chained_subcommand_values": [],
+   "postfixes": [],
+   "enums": [
+    {
+     "name": "",
+     "values": [
+      300
+     ]
+    }
+   ],
+   "chained_subcommands": [
+    {
+     "name": "",
+     "values": [
+      {
+       "sub_command_first_value": 300,
+       "sub_command_second_value": 300
+      }
+     ]
+    }
+   ],
+   "commands": [],
+   "soft_enums": [],
+   "constraints": []
+  },
+  "bytes": "0000000100012c010000010001ac02ac02000000"
+ }
+]

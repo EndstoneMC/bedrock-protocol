@@ -1,0 +1,1077 @@
+[
+ {
+  "value": {
+   "data": {
+    "target_player": 7,
+    "player_permissions": "OPERATOR",
+    "command_permissions": "OWNER",
+    "layers": [
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 1536,
+      "ability_values": 512,
+      "fly_speed": 0.05,
+      "vertical_fly_speed": 1.0,
+      "walk_speed": 0.1
+     },
+     {
+      "serialized_layer": "COMMANDS",
+      "abilities_set": 64,
+      "ability_values": 64,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     }
+    ]
+   }
+  },
+  "bytes": "070000000000000002040201000006000000020000cdcc4c3d0000803fcdcccc3d03004000000040000000000000000000000000000000"
+ },
+ {
+  "value": {
+   "data": {
+    "target_player": -1,
+    "player_permissions": "VISITOR",
+    "command_permissions": "ANY",
+    "layers": []
+   }
+  },
+  "bytes": "ffffffffffffffff000000"
+ },
+ {
+  "value": {
+   "data": {
+    "target_player": 0,
+    "player_permissions": "VISITOR",
+    "command_permissions": "ANY",
+    "layers": [
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     },
+     {
+      "serialized_layer": "BASE",
+      "abilities_set": 0,
+      "ability_values": 0,
+      "fly_speed": 0.0,
+      "vertical_fly_speed": 0.0,
+      "walk_speed": 0.0
+     }
+    ]
+   }
+  },
+  "bytes": "0000000000000000000080010100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000010000000000000000000000000000000000000000000100000000000000000000000000000000000000000001000000000000000000000000000000000000000000"
+ }
+]

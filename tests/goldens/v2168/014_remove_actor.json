@@ -1,0 +1,20 @@
+[
+ {
+  "value": {
+   "entity_id": -8589934592
+  },
+  "bytes": "ffffffff3f"
+ },
+ {
+  "value": {
+   "entity_id": -1
+  },
+  "bytes": "01"
+ },
+ {
+  "value": {
+   "entity_id": 300
+  },
+  "bytes": "d804"
+ }
+]

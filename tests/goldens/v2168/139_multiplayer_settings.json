@@ -1,0 +1,14 @@
+[
+ {
+  "value": {
+   "packet_type": "REFRESH_JOINCODE"
+  },
+  "bytes": "04"
+ },
+ {
+  "value": {
+   "packet_type": "DISABLE_MULTIPLAYER"
+  },
+  "bytes": "02"
+ }
+]

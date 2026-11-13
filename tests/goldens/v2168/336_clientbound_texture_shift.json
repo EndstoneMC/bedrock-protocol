@@ -1,0 +1,45 @@
+[
+ {
+  "value": {
+   "action": "START",
+   "collection_name": "shift",
+   "from_step": "dawn",
+   "to_step": "dusk",
+   "all_steps": [
+    "dawn",
+    "noon",
+    "dusk"
+   ],
+   "current_length_in_ticks": 200,
+   "total_length_in_ticks": 400,
+   "enabled": true
+  },
+  "bytes": "02057368696674046461776e046475736b03046461776e046e6f6f6e046475736bc801900301"
+ },
+ {
+  "value": {
+   "action": "SET_ENABLED",
+   "collection_name": "",
+   "from_step": "",
+   "to_step": "",
+   "all_steps": [],
+   "current_length_in_ticks": 0,
+   "total_length_in_ticks": 0,
+   "enabled": false
+  },
+  "bytes": "0300000000000000"
+ },
+ {
+  "value": {
+   "action": "SYNC",
+   "collection_name": "",
+   "from_step": "",
+   "to_step": "",
+   "all_steps": [],
+   "current_length_in_ticks": 128,
+   "total_length_in_ticks": 1,
+   "enabled": true
+  },
+  "bytes": "040000000080010101"
+ }
+]

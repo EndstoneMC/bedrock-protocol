@@ -1,0 +1,14 @@
+[
+ {
+  "value": {
+   "achievement_id": 300
+  },
+  "bytes": "2c010000"
+ },
+ {
+  "value": {
+   "achievement_id": -1
+  },
+  "bytes": "ffffffff"
+ }
+]

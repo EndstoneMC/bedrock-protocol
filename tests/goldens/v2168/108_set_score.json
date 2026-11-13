@@ -1,0 +1,79 @@
+[
+ {
+  "value": {
+   "score_info": [
+    {
+     "RemoveScore": {
+      "scoreboard_id": {
+       "raw_id": 1
+      },
+      "objective_name": "rm"
+     }
+    },
+    {
+     "ChangePlayerScore": {
+      "scoreboard_id": {
+       "raw_id": 2
+      },
+      "objective_name": "obj",
+      "score_value": 5,
+      "player_id": {
+       "actor_unique_id": 9
+      }
+     }
+    },
+    {
+     "ChangeEntityScore": {
+      "scoreboard_id": {
+       "raw_id": 3
+      },
+      "objective_name": "obj",
+      "score_value": 6,
+      "entity_id": 11
+     }
+    },
+    {
+     "ChangeFakePlayerScore": {
+      "scoreboard_id": {
+       "raw_id": 4
+      },
+      "objective_name": "obj",
+      "score_value": 7,
+      "fake_player_name": "fake"
+     }
+    }
+   ]
+  },
+  "bytes": "04000672656d6f7665020102726d010c6368616e6765706c6179657204036f626a0500000012020c6368616e6765656e7469747906036f626a060000001603106368616e676566616b65706c6179657208036f626a070000000466616b65"
+ },
+ {
+  "value": {
+   "score_info": [
+    {
+     "RemoveScore": {
+      "scoreboard_id": {
+       "raw_id": 1
+      },
+      "objective_name": "rm"
+     }
+    }
+   ]
+  },
+  "bytes": "01000672656d6f7665020102726d"
+ },
+ {
+  "value": {
+   "score_info": [
+    {
+     "RemoveScore": {
+      "scoreboard_id": {
+       "raw_id": 1
+      },
+      "objective_name": null
+     }
+    }
+   ]
+  },
+  "bytes": "01000672656d6f76650200"
+ }
+]

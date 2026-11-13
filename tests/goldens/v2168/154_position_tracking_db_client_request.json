@@ -1,0 +1,20 @@
+[
+ {
+  "value": {
+   "action": "QUERY",
+   "id": {
+    "raw_id": 7
+   }
+  },
+  "bytes": "000e"
+ },
+ {
+  "value": {
+   "action": "QUERY",
+   "id": {
+    "raw_id": -300
+   }
+  },
+  "bytes": "00d704"
+ }
+]

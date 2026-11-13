@@ -1,0 +1,20 @@
+[
+ {
+  "value": {
+   "edu_shared_uri_resource": {
+    "button_name": "btn",
+    "link_uri": "https://x"
+   }
+  },
+  "bytes": "0362746e0968747470733a2f2f78"
+ },
+ {
+  "value": {
+   "edu_shared_uri_resource": {
+    "button_name": "",
+    "link_uri": ""
+   }
+  },
+  "bytes": "0000"
+ }
+]

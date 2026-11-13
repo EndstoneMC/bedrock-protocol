@@ -1,0 +1,31 @@
+[
+ {
+  "value": {
+   "response": {
+    "Downloading": {
+     "downloading_packs": [
+      "pack_a",
+      "pack_b"
+     ]
+    }
+   }
+  },
+  "bytes": "010b646f776e6c6f6164696e6702067061636b5f61067061636b5f62"
+ },
+ {
+  "value": {
+   "response": {
+    "ResourcePackStackFinished": {}
+   }
+  },
+  "bytes": "03197265736f757263657061636b737461636b66696e6973686564"
+ },
+ {
+  "value": {
+   "response": {
+    "Cancel": {}
+   }
+  },
+  "bytes": "000663616e63656c"
+ }
+]

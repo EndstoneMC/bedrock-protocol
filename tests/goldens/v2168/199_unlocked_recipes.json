@@ -1,0 +1,19 @@
+[
+ {
+  "value": {
+   "packet_type": "NEWLY_UNLOCKED_RECIPES",
+   "unlocked_recipes": [
+    "minecraft:stick",
+    "minecraft:torch"
+   ]
+  },
+  "bytes": "02000000020f6d696e6563726166743a737469636b0f6d696e6563726166743a746f726368"
+ },
+ {
+  "value": {
+   "packet_type": "REMOVE_ALL_UNLOCKED_RECIPES",
+   "unlocked_recipes": []
+  },
+  "bytes": "0400000000"
+ }
+]

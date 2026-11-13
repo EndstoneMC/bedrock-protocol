@@ -1,0 +1,22 @@
+[
+ {
+  "value": {
+   "pos_x": 1,
+   "pos_y": -2,
+   "pos_z": 300,
+   "slot_index": 200,
+   "is_disabled": true
+  },
+  "bytes": "01000000feffffff2c010000c801"
+ },
+ {
+  "value": {
+   "pos_x": 0,
+   "pos_y": 0,
+   "pos_z": 0,
+   "slot_index": 0,
+   "is_disabled": false
+  },
+  "bytes": "0000000000000000000000000000"
+ }
+]

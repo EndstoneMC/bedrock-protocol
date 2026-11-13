@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "input_lock_component_data": 70
+  },
+  "bytes": "46"
+ },
+ {
+  "value": {
+   "input_lock_component_data": 8190
+  },
+  "bytes": "fe3f"
+ },
+ {
+  "value": {
+   "input_lock_component_data": 4294967295
+  },
+  "bytes": "ffffffff0f"
+ },
+ {
+  "value": {
+   "input_lock_component_data": 6
+  },
+  "bytes": "06"
+ }
+]

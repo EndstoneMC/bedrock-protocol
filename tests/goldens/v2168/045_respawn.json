@@ -1,0 +1,26 @@
+[
+ {
+  "value": {
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "state": "READY_TO_SPAWN",
+   "runtime_id": 7
+  },
+  "bytes": "0000803f00000040000040400107"
+ },
+ {
+  "value": {
+   "pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   },
+   "state": "CLIENT_READY_TO_SPAWN",
+   "runtime_id": 300
+  },
+  "bytes": "00000000000000000000000002ac02"
+ }
+]
