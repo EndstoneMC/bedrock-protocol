@@ -1,5 +1,6 @@
 [
  {
+  "id": "no_pvm_and_immutable_world",
   "value": {
    "adventure_settings": {
     "no_pv_m": true,
