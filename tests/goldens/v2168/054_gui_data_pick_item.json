@@ -1,5 +1,6 @@
 [
  {
+  "id": "sharpness_sword_slot",
   "value": {
    "item_name": "minecraft:diamond_sword",
    "item_effect_name": "Sharpness V",
