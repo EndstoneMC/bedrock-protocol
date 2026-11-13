@@ -1,5 +1,6 @@
 [
  {
+  "id": "effect_added_ambient",
   "value": {
    "runtime_id": 300,
    "event_id": "ADD",
