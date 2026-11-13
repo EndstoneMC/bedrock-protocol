@@ -1,5 +1,6 @@
 [
  {
+  "id": "sulfur_cube_hurt_by",
   "value": {
    "last_hurt_by": "SULFUR_CUBE"
   },
