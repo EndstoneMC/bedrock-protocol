@@ -1,5 +1,6 @@
 [
  {
+  "id": "kills_objective",
   "value": {
    "objective_name": "kills"
   },
