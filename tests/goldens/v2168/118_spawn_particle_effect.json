@@ -10,9 +10,9 @@
     "z": 3.0
    },
    "effect_name": "minecraft:heart_particle",
-   "molang_variables": "{\"x\":1}\n"
+   "molang_variables": "[{\"name\":\"variable.x\",\"value\":{\"type\":\"float\",\"value\":1.0}}]\n"
   },
-  "bytes": "02010000803f0000004000004040186d696e6563726166743a68656172745f7061727469636c6501087b2278223a317d0a"
+  "bytes": "02010000803f0000004000004040186d696e6563726166743a68656172745f7061727469636c65013d5b7b226e616d65223a227661726961626c652e78222c2276616c7565223a7b2274797065223a22666c6f6174222c2276616c7565223a312e307d7d5d0a"
  },
  {
   "id": "molang_variables_absent",
