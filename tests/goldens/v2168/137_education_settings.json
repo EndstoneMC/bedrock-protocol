@@ -1,5 +1,6 @@
 [
  {
+  "id": "every_optional_present",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "https://code.builder/",
@@ -23,6 +24,7 @@
   "bytes": "1568747470733a2f2f636f64652e6275696c6465722f0c436f6465204275696c64657201010573657069611674657874757265732f75692f6564755f626f72646572010101011168747470733a2f2f6f766572726964652f00010d68747470733a2f2f6c696e6b2f044c696e6b"
  },
  {
+  "id": "every_optional_absent",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "a",
@@ -41,6 +43,7 @@
   "bytes": "0161016201010163016400000000"
  },
  {
+  "id": "agent_capability_unset",
   "value": {
    "education_level_settings": {
     "code_builder_default_uri": "a",
