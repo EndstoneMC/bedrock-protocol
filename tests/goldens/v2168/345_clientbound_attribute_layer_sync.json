@@ -4,7 +4,7 @@
    "data": {
     "UpdateEnvironmentAttributesData": {
      "layer_name": "wet",
-     "layer_dimension_id": 0,
+     "layer_dimension_id": 1,
      "attributes": [
       {
        "name": "temp",
@@ -12,20 +12,20 @@
        "attribute": {
         "BoolAttributeData": {
          "value": true,
-         "operation": "OVERRIDE"
+         "operation": "ALPHA_BLEND"
         }
        },
        "to_attribute": null,
-       "current_transition_ticks": 0,
-       "total_transition_ticks": 0,
-       "easing": "LINEAR",
-       "local_transition_ticks": 0,
-       "noise_transition": false
+       "current_transition_ticks": 1,
+       "total_transition_ticks": 20,
+       "easing": "IN_QUAD",
+       "local_transition_ticks": 2,
+       "noise_transition": true
       }
      ]
     }
    }
   },
-  "bytes": "020377657400010474656d70000001086f76657272696465000000000000000000066c696e6561720000000000"
+  "bytes": "020377657402010474656d700000010b616c7068615f626c656e6400010000001400000007696e5f717561640200000001"
  }
 ]
