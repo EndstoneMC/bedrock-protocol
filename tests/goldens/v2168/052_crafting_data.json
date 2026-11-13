@@ -357,5 +357,84 @@
    "clear_recipes": false
   },
   "bytes": "000000010c62756e646c655f6479655f300201046e616d65106d696e6563726166743a62756e646c65feff030201046e616d65116d696e6563726166743a696e6b5f736163feff030201b60d010000000a000000000000000000006247a7a2920284b3c07deee7e33214a80e6372616674696e675f7461626c65000100010101046e616d65116d696e6563726166743a696e6b5f736163feff0302891601156d696e6563726166743a6675726e6163655f6c6f670101086974656d5f746167186d696e6563726166743a6c6f67735f746861745f6275726efeff030201e204010000000a0000000000000000000000000000000000000400000000000000076675726e616365b4010100010101086974656d5f746167186d696e6563726166743a6c6f67735f746861745f6275726efeff0302ef0101206d696e6563726166743a73747269707065645f6d616e67726f76655f776f6f6404040401046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff030201e3070300009684f8c7070a00000000000000000000000000000000000005000000000000000a6465707265636174656400010100010101046e616d651f6d696e6563726166743a73747269707065645f6d616e67726f76655f6c6f67feff0302c90c000000000000"
+ },
+ {
+  "id": "shaped_and_shapeless_without_unlocking_requirement",
+  "value": {
+   "shaped_recipes": [
+    {
+     "recipe_id": "r1",
+     "width": 1,
+     "height": 1,
+     "ingredients": [
+      {
+       "descriptor": {
+        "name": "minecraft:stick"
+       },
+       "aux_value": 1,
+       "stack_size": 2
+      }
+     ],
+     "results": [
+      {
+       "id": 58,
+       "stack_size": 4,
+       "aux_value": 0,
+       "block_runtime_id": 1752181952,
+       "user_data_buffer": "00000000000000000000"
+      }
+     ],
+     "uuid": "00000000-0000-0000-0000-000000000001",
+     "tag": "crafting_table",
+     "priority": 3,
+     "assume_symmetry": true,
+     "unlocking_requirement": null,
+     "net_id": {
+      "raw_id": 11
+     }
+    }
+   ],
+   "shapeless_recipes": [
+    {
+     "recipe_id": "r2",
+     "ingredients": [
+      {
+       "descriptor": {
+        "name": "minecraft:stick"
+       },
+       "aux_value": 1,
+       "stack_size": 2
+      }
+     ],
+     "results": [
+      {
+       "id": 58,
+       "stack_size": 4,
+       "aux_value": 0,
+       "block_runtime_id": 1752181952,
+       "user_data_buffer": "00000000000000000000"
+      }
+     ],
+     "uuid": "00000000-0000-0000-0000-000000000002",
+     "tag": "crafting_table",
+     "priority": 1,
+     "unlocking_requirement": null,
+     "net_id": {
+      "raw_id": 12
+     }
+    }
+   ],
+   "multi_recipes": [],
+   "user_data_shapeless_recipes": [],
+   "shapeless_chemistry_recipes": [],
+   "shaped_chemistry_recipes": [],
+   "smithing_transform_recipes": [],
+   "smithing_trim_recipes": [],
+   "potion_mix_entries": [],
+   "container_mix_entries": [],
+   "material_reducer_entries": [],
+   "clear_recipes": true
+  },
+  "bytes": "0102723102020101046e616d650f6d696e6563726166743a737469636b0204017404000080b381870d0a00000000000000000000000000000000000001000000000000000e6372616674696e675f7461626c650601000b010272320101046e616d650f6d696e6563726166743a737469636b0204017404000080b381870d0a00000000000000000000000000000000000002000000000000000e6372616674696e675f7461626c6502000c00000000000000000001"
  }
 ]
