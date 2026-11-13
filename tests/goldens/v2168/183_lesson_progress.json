@@ -10,9 +10,9 @@
  {
   "value": {
    "action": "RESTART",
-   "score": -1,
-   "activity_id": ""
+   "score": 1,
+   "activity_id": "a"
   },
-  "bytes": "040100"
+  "bytes": "04020161"
  }
 ]
