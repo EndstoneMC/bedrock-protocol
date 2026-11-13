@@ -1,5 +1,6 @@
 [
  {
+  "id": "server_initiated_armor_close",
   "value": {
    "container_id": "ARMOR",
    "container_type": "ARMOR",
