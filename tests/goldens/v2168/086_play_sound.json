@@ -1,5 +1,6 @@
 [
  {
+  "id": "server_sound_handle_present",
   "value": {
    "name": "note.harp",
    "pos": {
@@ -17,6 +18,7 @@
   "bytes": "096e6f74652e686172701020300000003f0000c03f06012a00000000000000"
  },
  {
+  "id": "server_sound_handle_absent",
   "value": {
    "name": "note.harp",
    "pos": {
