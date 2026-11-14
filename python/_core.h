@@ -203,7 +203,7 @@ nb::object to_python(const F &value)
     }
     else if constexpr (is_list_v<F> || is_array_v<F>) {
         nb::list out;
-        for (const auto &item : value) {
+        for (const typename F::value_type &item : value) {
             out.append(to_python(item));
         }
         return out;
