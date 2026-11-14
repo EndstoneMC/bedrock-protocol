@@ -408,6 +408,7 @@ class RapidJSONSchemaWriter(SchemaWriter):
 NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
 ESCAPED_UUID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 ESCAPED_BYTES = re.compile(r"(\\x[0-9a-f]{2})*")
+ESCAPED_COLOR = re.compile(r"#[0-9a-f]{8}")
 TAG_KINDS = {
     1: "ByteTag",
     2: "ShortTag",
@@ -457,6 +458,8 @@ class CaseForm:
             )
         if isinstance(case, list) and isinstance(bds, list):
             return len(case) == len(bds) and all(cls.matches(a, b) for a, b in zip(case, bds, strict=True))
+        if isinstance(case, str) and isinstance(bds, list) and ESCAPED_COLOR.fullmatch(case):
+            return [int(case[index : index + 2], 16) for index in range(1, 9, 2)] == bds
         if isinstance(case, str) and isinstance(bds, dict) and len(bds) == 2 and ESCAPED_UUID.fullmatch(case):
             most, least = bds.values()
             return uuid.UUID(case).int == most << 64 | least
@@ -1396,6 +1399,26 @@ class ArrayOfMembersSchema(GenericCompositeSchema):
         writer.close()
 
 
+class HexColorSchema(GenericCompositeSchema):
+    """A Color255RGBA as the string #rrggbbaa."""
+
+    @override
+    def do_load(self, reader, context, traits):
+        owner = self.create()
+        text = reader.as_string()
+        if text is None or not ESCAPED_COLOR.fullmatch(text):
+            context.log(ResultCode.ERROR, "expected #rrggbbaa")
+            return self.finish(owner)
+        for index, member in enumerate(self.members):
+            member.set(owner, int(text[1 + 2 * index : 3 + 2 * index], 16))
+        return self.finish(owner)
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        owner = self.view(value)
+        writer.write("#" + "".join(f"{member.get(owner):02x}" for member in self.members))
+
+
 MARKER_EXCEPTIONS = {"_deprecated"}
 COMPOSITES = {DslShape.MEMBER_ONLY: MemberOnlySchema, DslShape.ARRAY_OF_MEMBERS: ArrayOfMembersSchema}
 
@@ -1421,7 +1444,12 @@ class ReflectionCtx:
             name = qualified_name(family)
             kind, _ = self.shapes.get((name, None), (None, None))
             cls = reduce(getattr, name.split("."), self.module)
-            self.composites[family] = schema = COMPOSITES.get(kind, GenericCompositeSchema)(cls, [])
+            composite = (
+                HexColorSchema
+                if self.mapped and name == "Color255RGBA"
+                else COMPOSITES.get(kind, GenericCompositeSchema)
+            )
+            self.composites[family] = schema = composite(cls, [])
             schema.members = self.members(family)
         return self.composites[family]
 

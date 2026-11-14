@@ -52,12 +52,7 @@
          "constraint_max_value": 2.5
         },
         "to_attribute": {
-         "value": {
-          "r": 10,
-          "g": 20,
-          "b": 30,
-          "a": 255
-         },
+         "value": "#0a141eff",
          "operation": "multiply"
         },
         "current_transition_ticks": 3,
@@ -73,12 +68,7 @@
          "operation": "maximum"
         },
         "attribute": {
-         "value": {
-          "r": 10,
-          "g": 20,
-          "b": 30,
-          "a": 255
-         },
+         "value": "#0a141eff",
          "operation": "multiply"
         },
         "to_attribute": {
@@ -94,12 +84,7 @@
        {
         "name": "c",
         "from_attribute": {
-         "value": {
-          "r": 10,
-          "g": 20,
-          "b": 30,
-          "a": 255
-         },
+         "value": "#0a141eff",
          "operation": "multiply"
         },
         "attribute": {
