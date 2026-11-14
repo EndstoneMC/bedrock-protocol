@@ -462,6 +462,7 @@ class CaseForm:
     @classmethod
     def matches(cls, case, bds):
         """Whether BDS's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
+        # {"value": "0b100000001"} vs {"Actor Flag Bitset Data": 129, 2}
         if isinstance(case, dict) and isinstance(bds, FlatObject):
             index = 0
             for value in case.values():
@@ -476,12 +477,18 @@ class CaseForm:
                         return False
                     index += 1
             return index == len(bds)
+
+        # {"entity_id": 1} vs {"Entity ID": 1}
         if isinstance(case, dict) and isinstance(bds, dict):
             return len(case) == len(bds) and all(
                 cls.matches(a, b) for a, b in zip(case.values(), bds.values(), strict=True)
             )
+
+        # [1, 2] vs [1, 2]
         if isinstance(case, list) and isinstance(bds, list):
             return len(case) == len(bds) and all(cls.matches(a, b) for a, b in zip(case, bds, strict=True))
+
+        # {"minecraft:anvil": 2} vs [{"key": "minecraft:anvil", "value": {"Value": 2}}]
         if (
             isinstance(case, dict)
             and isinstance(bds, list)
@@ -489,19 +496,32 @@ class CaseForm:
         ):
             pairs = {pair["key"]: pair["value"] for pair in bds}
             return case.keys() == pairs.keys() and all(cls.matches(value, pairs[key]) for key, value in case.items())
+
+        # "#0a141eff" vs [10, 20, 30, 255]
         if isinstance(case, str) and isinstance(bds, list) and ESCAPED_COLOR.fullmatch(case):
             return [int(case[index : index + 2], 16) for index in range(1, 9, 2)] == bds
+
+        # "00000000-0000-0001-0000-000000000002" vs {"Most Significant Bits": 1, "Least Significant Bits": 2}
         if isinstance(case, str) and isinstance(bds, dict) and len(bds) == 2 and ESCAPED_UUID.fullmatch(case):
             most, least = bds.values()
             return uuid.UUID(case).int == most << 64 | least
+
+        # "\x2a\xaa" vs "*\udcaa"
         if isinstance(case, str) and isinstance(bds, str) and ESCAPED_BYTES.fullmatch(case):
             return bytes.fromhex(case.replace("\\x", "")) == bds.encode("utf-8", "surrogateescape")
+
+        # 0.1 vs 0.10000000149011612
         if type(case) is float and type(bds) is float:
             return case == bds or cls.widened_float32(case) == bds
+
+        # "0b11111" vs 31
         if isinstance(case, str) and type(bds) is int and ESCAPED_BITS.fullmatch(case):
             return cls.varint_groups(int(case, 2)) == [bds]
+
+        # 7 vs {"Actor Runtime ID": 7}
         if isinstance(bds, dict) and not isinstance(case, dict | list):
             return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
+
         return case == bds
 
     @classmethod
