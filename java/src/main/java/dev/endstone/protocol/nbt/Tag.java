@@ -19,7 +19,7 @@ public sealed interface Tag permits CollectionTag, CompoundTag, EndTag, Primitiv
     byte TAG_COMPOUND = 10;
     byte TAG_INT_ARRAY = 11;
 
-    void serialize(@NotNull ByteBuf buf);
+    void encode(@NotNull ByteBuf buf);
 
     byte getId();
 

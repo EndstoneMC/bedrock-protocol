@@ -19,7 +19,7 @@ public record StringTag(@NotNull String value) implements PrimitiveTag {
     }
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         ByteBufCodec.writeString(buf, value);
     }
 

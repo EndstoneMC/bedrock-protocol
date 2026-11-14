@@ -7,5 +7,5 @@ import org.jetbrains.annotations.NotNull;
 public interface Packet {
     int packetId();
 
-    void serialize(@NotNull ByteBuf buf);
+    void encode(@NotNull ByteBuf buf);
 }

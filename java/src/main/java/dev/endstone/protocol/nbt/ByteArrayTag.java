@@ -30,7 +30,7 @@ public final class ByteArrayTag implements CollectionTag {
     }
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         ByteBufCodec.writeVarInt(buf, data.length);
         buf.writeBytes(data);
     }

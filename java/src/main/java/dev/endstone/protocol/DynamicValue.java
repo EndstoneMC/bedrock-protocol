@@ -46,7 +46,7 @@ public sealed interface DynamicValue {
         }
     }
 
-    default void serialize(@NotNull ByteBuf buf) {
+    default void encode(@NotNull ByteBuf buf) {
         switch (this) {
             case NullValue v -> buf.writeIntLE(0);
             case BoolValue v -> {
@@ -69,7 +69,7 @@ public sealed interface DynamicValue {
                 buf.writeIntLE(5);
                 ByteBufCodec.writeUnsignedVarInt(buf, v.values().size());
                 for (DynamicValue element : v.values()) {
-                    element.serialize(buf);
+                    element.encode(buf);
                 }
             }
             case ObjectValue v -> {
@@ -77,13 +77,13 @@ public sealed interface DynamicValue {
                 ByteBufCodec.writeUnsignedVarInt(buf, v.entries().size());
                 for (Map.Entry<String, DynamicValue> entry : v.entries().entrySet()) {
                     ByteBufCodec.writeString(buf, entry.getKey());
-                    entry.getValue().serialize(buf);
+                    entry.getValue().encode(buf);
                 }
             }
         }
     }
 
-    static @NotNull DynamicValue deserialize(@NotNull ByteBuf buf) {
+    static @NotNull DynamicValue decode(@NotNull ByteBuf buf) {
         return switch (ByteBufCodec.readIntLE(buf)) {
             case 0 -> new NullValue();
             case 1 -> new BoolValue(ByteBufCodec.readBoolean(buf));
@@ -94,7 +94,7 @@ public sealed interface DynamicValue {
                 int count = ByteBufCodec.toCount(buf, ByteBufCodec.readUvarint32Count(buf));
                 List<DynamicValue> values = new ArrayList<>(ByteBufCodec.initialCapacity(count));
                 for (int i = 0; i < count; i++) {
-                    values.add(deserialize(buf));
+                    values.add(decode(buf));
                 }
                 yield new ArrayValue(values);
             }
@@ -103,7 +103,7 @@ public sealed interface DynamicValue {
                 Map<String, DynamicValue> entries = new HashMap<>();
                 for (int i = 0; i < count; i++) {
                     String key = ByteBufCodec.readString(buf);
-                    entries.putIfAbsent(key, deserialize(buf));
+                    entries.putIfAbsent(key, decode(buf));
                 }
                 yield new ObjectValue(entries);
             }

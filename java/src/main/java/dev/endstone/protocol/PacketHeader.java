@@ -19,12 +19,12 @@ public record PacketHeader(int packetId, int recipientSubId, int senderSubId) {
         }
     }
 
-    public static @NotNull PacketHeader deserialize(@NotNull ByteBuf buf) {
+    public static @NotNull PacketHeader decode(@NotNull ByteBuf buf) {
         int bits = ByteBufCodec.readUnsignedVarInt(buf);
         return new PacketHeader(bits & 0x3FF, (bits >>> 10) & 3, (bits >>> 12) & 3);
     }
 
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         ByteBufCodec.writeUnsignedVarInt(buf, packetId | recipientSubId << 10 | senderSubId << 12);
     }
 }

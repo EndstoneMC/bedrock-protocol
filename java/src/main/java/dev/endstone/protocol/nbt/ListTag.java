@@ -24,7 +24,7 @@ public final class ListTag extends AbstractList<Tag> implements CollectionTag {
                 int size = ByteBufCodec.toCount(buf, count);
                 List<Tag> elements = new ArrayList<>(ByteBufCodec.initialCapacity(size));
                 for (int i = 0; i < size; i++) {
-                    elements.add(elementType.deserialize(buf));
+                    elements.add(elementType.decode(buf));
                 }
                 return new ListTag((byte) id, elements);
             };
@@ -48,11 +48,11 @@ public final class ListTag extends AbstractList<Tag> implements CollectionTag {
     }
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         buf.writeByte(elementType);
         ByteBufCodec.writeVarInt(buf, list.size());
         for (Tag element : list) {
-            element.serialize(buf);
+            element.encode(buf);
         }
     }
 

@@ -455,14 +455,14 @@ class ByteBufCodecTest {
 
     @Test
     void decodeReturnsTheValue() {
-        int value = ByteBufCodec.deserialize(hex("2a"), "T", b -> ByteBufCodec.readUnsignedByte(b));
+        int value = ByteBufCodec.decode(hex("2a"), "T", b -> ByteBufCodec.readUnsignedByte(b));
         assertEquals(42, value);
     }
 
     @Test
     void decodeConsumesTheInput() {
         ByteBuf buf = hex("2a");
-        ByteBufCodec.deserialize(buf, "T", b -> ByteBufCodec.readUnsignedByte(b));
+        ByteBufCodec.decode(buf, "T", b -> ByteBufCodec.readUnsignedByte(b));
         assertEquals(0, buf.readableBytes());
     }
 
@@ -473,7 +473,7 @@ class ByteBufCodecTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                ByteBufCodec.deserialize(
+                                ByteBufCodec.decode(
                                         buf,
                                         "PlayStatusPacket",
                                         b -> ByteBufCodec.readUnsignedByte(b)));
@@ -486,7 +486,7 @@ class ByteBufCodecTest {
         buf.readerIndex(1);
         assertThrows(
                 DecodeException.class,
-                () -> ByteBufCodec.deserialize(buf, "T", b -> ByteBufCodec.readLongLE(b)));
+                () -> ByteBufCodec.decode(buf, "T", b -> ByteBufCodec.readLongLE(b)));
         assertEquals(1, buf.readerIndex());
     }
 
@@ -498,7 +498,7 @@ class ByteBufCodecTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                ByteBufCodec.deserialize(
+                                ByteBufCodec.decode(
                                         buf, "PlayStatusPacket", b -> ByteBufCodec.readIntLE(b)));
         assertEquals("PlayStatusPacket: truncated at byte 0 of 2", error.getMessage());
     }

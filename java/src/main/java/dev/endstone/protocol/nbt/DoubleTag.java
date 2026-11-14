@@ -13,7 +13,7 @@ public record DoubleTag(double value) implements NumericTag {
     }
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         buf.writeDoubleLE(value);
     }
 

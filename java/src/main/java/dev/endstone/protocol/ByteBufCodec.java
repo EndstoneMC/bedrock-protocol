@@ -387,12 +387,12 @@ public final class ByteBufCodec {
     }
 
     /** Runs a reader over the whole value; on failure the buffer is left where it was. */
-    public static <T> T deserialize(
-            @NotNull ByteBuf buf, @NotNull String type, @NotNull Deserializer<T> deserializer) {
+    public static <T> T decode(
+            @NotNull ByteBuf buf, @NotNull String type, @NotNull Decoder<T> decoder) {
         int start = buf.readerIndex();
         int length = buf.readableBytes();
         try {
-            T value = deserializer.deserialize(buf);
+            T value = decoder.decode(buf);
             if (buf.isReadable()) {
                 throw new DecodeException(Reason.TRAILING_BYTES, buf.readerIndex());
             }

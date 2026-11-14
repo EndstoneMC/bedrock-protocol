@@ -6,28 +6,25 @@ import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Serializes and deserializes a root compound in the network encoding: type id, empty name,
- * payload.
- */
+/** Encodes and decodes a root compound in the network encoding: type id, empty name, payload. */
 public final class NbtIo {
     private NbtIo() {}
 
-    public static void serialize(@NotNull CompoundTag tag, @NotNull ByteBuf buf) {
+    public static void encode(@NotNull CompoundTag tag, @NotNull ByteBuf buf) {
         buf.writeByte(Tag.TAG_COMPOUND);
         ByteBufCodec.writeString(buf, "");
-        tag.serialize(buf);
+        tag.encode(buf);
     }
 
-    /** Deserializes a root and drops its name. */
-    public static @NotNull CompoundTag deserialize(@NotNull ByteBuf buf) {
+    /** Decodes a root and drops its name. */
+    public static @NotNull CompoundTag decode(@NotNull ByteBuf buf) {
         int id = ByteBufCodec.readUnsignedByte(buf);
         TagType<?> type = TagTypes.getType(id);
         if (type == null || id == Tag.TAG_END) {
             throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
         }
         ByteBufCodec.readString(buf);
-        if (!(type.deserialize(buf) instanceof CompoundTag tag)) {
+        if (!(type.decode(buf) instanceof CompoundTag tag)) {
             throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
         }
         return tag;

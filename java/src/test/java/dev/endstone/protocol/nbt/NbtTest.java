@@ -73,7 +73,7 @@ class NbtTest {
     }
 
     private static CompoundTag decodeRoot(String hex) {
-        return ByteBufCodec.deserialize(hex(hex), "CompoundTag", NbtIo::deserialize);
+        return ByteBufCodec.decode(hex(hex), "CompoundTag", NbtIo::decode);
     }
 
     private static DecodeException failRoot(String hex) {
@@ -84,21 +84,21 @@ class NbtTest {
     @MethodSource("payloads")
     void encodeWritesThePayload(Tag tag, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        tag.serialize(buf);
+        tag.encode(buf);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
     @ParameterizedTest
     @MethodSource("payloads")
     void typeDecodesThePayload(Tag tag, String hex) {
-        Tag read = ByteBufCodec.deserialize(hex(hex), "Tag", tag.getType()::deserialize);
+        Tag read = ByteBufCodec.decode(hex(hex), "Tag", tag.getType()::decode);
         assertEquals(tag, read);
     }
 
     @Test
     void ioEncodeWritesTheTypeAnEmptyNameAndThePayload() {
         ByteBuf buf = Unpooled.buffer();
-        NbtIo.serialize(compound(Map.of("a", IntTag.valueOf(1))), buf);
+        NbtIo.encode(compound(Map.of("a", IntTag.valueOf(1))), buf);
         assertEquals("0a000301610200", ByteBufUtil.hexDump(buf));
     }
 
@@ -111,8 +111,7 @@ class NbtTest {
     void compoundTypeDecodesTheBarePayload() {
         assertEquals(
                 compound(Map.of("a", IntTag.valueOf(1))),
-                ByteBufCodec.deserialize(
-                        hex("0301610200"), "CompoundTag", CompoundTag.TYPE::deserialize));
+                ByteBufCodec.decode(hex("0301610200"), "CompoundTag", CompoundTag.TYPE::decode));
     }
 
     @Test
@@ -124,7 +123,7 @@ class NbtTest {
                                 ByteTag.valueOf((byte) 0),
                                 "\uffff",
                                 ByteTag.valueOf((byte) 0)))
-                .serialize(buf);
+                .encode(buf);
         assertEquals("0103efbfbf000104f09080800000", ByteBufUtil.hexDump(buf));
     }
 
@@ -173,7 +172,7 @@ class NbtTest {
         DecodeException error =
                 assertThrows(
                         DecodeException.class,
-                        () -> ByteBufCodec.deserialize(hex(hex), "Tag", ListTag.TYPE::deserialize));
+                        () -> ByteBufCodec.decode(hex(hex), "Tag", ListTag.TYPE::decode));
         assertEquals("Tag: unknown value at byte " + offset + " of 2", error.getMessage());
     }
 
@@ -212,7 +211,7 @@ class NbtTest {
     @Test
     void anEmptyListKeepsItsElementType() {
         ByteBuf buf = Unpooled.buffer();
-        new ListTag(Tag.TAG_INT, List.of()).serialize(buf);
+        new ListTag(Tag.TAG_INT, List.of()).encode(buf);
         assertEquals("0300", ByteBufUtil.hexDump(buf));
     }
 

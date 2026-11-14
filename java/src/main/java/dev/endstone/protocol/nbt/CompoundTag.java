@@ -30,18 +30,18 @@ public final class CompoundTag implements Tag {
                         throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
                     }
                     String name = ByteBufCodec.readString(buf);
-                    tag.tags.putIfAbsent(name, type.deserialize(buf));
+                    tag.tags.putIfAbsent(name, type.decode(buf));
                 }
             };
 
     private final Map<String, Tag> tags = new TreeMap<>(ByteBufCodec.STR_ORDER);
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         for (Map.Entry<String, Tag> entry : tags.entrySet()) {
             buf.writeByte(entry.getValue().getId());
             ByteBufCodec.writeString(buf, entry.getKey());
-            entry.getValue().serialize(buf);
+            entry.getValue().encode(buf);
         }
         buf.writeByte(TAG_END);
     }

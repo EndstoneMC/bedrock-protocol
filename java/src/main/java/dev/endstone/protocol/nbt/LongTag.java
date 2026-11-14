@@ -13,7 +13,7 @@ public record LongTag(long value) implements NumericTag {
     }
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {
+    public void encode(@NotNull ByteBuf buf) {
         ByteBufCodec.writeVarLong(buf, value);
     }
 

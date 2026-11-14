@@ -10,7 +10,7 @@ public final class EndTag implements Tag {
     private EndTag() {}
 
     @Override
-    public void serialize(@NotNull ByteBuf buf) {}
+    public void encode(@NotNull ByteBuf buf) {}
 
     @Override
     public byte getId() {

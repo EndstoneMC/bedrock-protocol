@@ -48,32 +48,32 @@ class DynamicValueTest {
         return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
     }
 
-    private static DynamicValue deserialize(String hex) {
-        return ByteBufCodec.deserialize(hex(hex), "DynamicValue", DynamicValue::deserialize);
+    private static DynamicValue decode(String hex) {
+        return ByteBufCodec.decode(hex(hex), "DynamicValue", DynamicValue::decode);
     }
 
     private static DecodeException fail(String hex) {
-        return assertThrows(DecodeException.class, () -> deserialize(hex));
+        return assertThrows(DecodeException.class, () -> decode(hex));
     }
 
     @ParameterizedTest
     @MethodSource("values")
     void encodeWritesTheTagThenThePayload(DynamicValue value, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        value.serialize(buf);
+        value.encode(buf);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
     @ParameterizedTest
     @MethodSource("values")
     void readReadsTheTagThenThePayload(DynamicValue value, String hex) {
-        assertEquals(value, deserialize(hex));
+        assertEquals(value, decode(hex));
     }
 
     @Test
     void objectKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())).serialize(buf);
+        new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())).encode(buf);
         assertEquals(
                 "0600000002" + "03efbfbf00000000" + "04f090808000000000", ByteBufUtil.hexDump(buf));
     }
@@ -82,7 +82,7 @@ class DynamicValueTest {
     void aDuplicateKeyKeepsTheFirstValue() {
         assertEquals(
                 new ObjectValue(Map.of("a", new NullValue())),
-                deserialize("0600000002" + "016100000000" + "01610100000001"));
+                decode("0600000002" + "016100000000" + "01610100000001"));
     }
 
     @Test
