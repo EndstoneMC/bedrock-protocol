@@ -13,6 +13,7 @@ paths:
 - Annotate every public and protected reference parameter, return and field `org.jetbrains.annotations.NotNull`, or `Nullable` where null is allowed, and add no `package-info.java` for nullness.
 - Name a `ByteBufCodec` read or write after CloudburstMC Protocol's, Netty's for a fixed width: `readUnsignedVarInt`, `readVarInt`, `readString`, `readShortLE`.
 - Keep `read` and `write` for `ByteBufCodec`'s primitives, and name every other type's encoding `encode` and `decode`, NBT tags included.
+- Emit each message as protobuf's generated Java does: an immutable class with `getDefaultInstance()`, `newBuilder()` and `toBuilder()`, a nested `Builder` with `setX`, `clearX` and `build()`, and `getX` on both; `hasX` for an optional, `getXList`, `getXCount` and `addX` for a list, `getXMap` and `putX` for a map, and `getXCase()` for a union.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
 - Test in JUnit 6 under `.claude/rules/tests.md`: a behaviour-named method, one behaviour each, no loop, `if` or `try`, `assertThrows` with the message, `@ParameterizedTest` with `argumentSet` for cases, no mocks.
