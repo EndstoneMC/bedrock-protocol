@@ -77,10 +77,10 @@ def test_an_int16_varint_decodes_at_its_bounds(durability_correction, golden):
     assert v1001.ItemStackResponseSlotInfo.from_bytes(golden) == slot
 
 
-@pytest.mark.parametrize("wire", ["808004", "818004"])
-def test_decode_rejects_an_int16_varint_beyond_its_bounds(wire):
+@pytest.mark.parametrize("encoded", ["808004", "818004"])
+def test_decode_rejects_an_int16_varint_beyond_its_bounds(encoded):
     with pytest.raises(ValueError, match="at byte"):
-        v1001.ItemStackResponseSlotInfo.from_bytes(SLOT_PREFIX + bytes.fromhex(wire))
+        v1001.ItemStackResponseSlotInfo.from_bytes(SLOT_PREFIX + bytes.fromhex(encoded))
 
 
 def test_a_signed_member_of_an_unsigned_varint_encodes_to_its_golden():

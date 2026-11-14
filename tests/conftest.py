@@ -425,7 +425,7 @@ class BoolSchema(BasicSchema):
 
 
 class IntegerSchema(BasicSchema):
-    """An integer member, printed in the range of its wire type as Bedrock's member holds it."""
+    """An integer member, printed in the range of its encoded type as Bedrock's member holds it."""
 
     bound_type = int
     READS: ClassVar = {
@@ -439,10 +439,10 @@ class IntegerSchema(BasicSchema):
         "uint64": methodcaller("as_uint64"),
     }
 
-    def __init__(self, declared, wire=None):
+    def __init__(self, declared, encoded=None):
         self.declared = self.bounds(declared)
-        self.wire = self.bounds(wire or declared)
-        self.read = self.READS[(wire or declared).replace("varint", "int")]
+        self.encoded = self.bounds(encoded or declared)
+        self.read = self.READS[(encoded or declared).replace("varint", "int")]
 
     @staticmethod
     def bounds(name):
@@ -463,7 +463,7 @@ class IntegerSchema(BasicSchema):
 
     @override
     def do_save(self, value, writer, context, traits):
-        writer.write(self.fit(int(value), self.wire))
+        writer.write(self.fit(int(value), self.encoded))
 
 
 class FloatSchema(BasicSchema):
@@ -555,18 +555,18 @@ class EnumSchema(BasicSchema):
 
     def __init__(self, shape, underlying):
         self.underlying = underlying
-        self.wire_names = {}
+        self.encoded_names = {}
         self.numbers = {}
         for member in shape.members:
             number = shape.numbers[member.name]
-            self.wire_names.setdefault(number, member.wire_name)
-            self.numbers.setdefault(member.wire_name, number)
+            self.encoded_names.setdefault(number, member.encoded_name)
+            self.numbers.setdefault(member.encoded_name, number)
 
     @override
     def do_load(self, reader, context, traits):
         if traits & SerializationTraits.ENUM_AS_VALUE:
             number = self.underlying.load(reader, context)
-            if number not in self.wire_names:
+            if number not in self.encoded_names:
                 context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: invalid enum value")
             return number
         name = reader.as_string()
@@ -579,12 +579,12 @@ class EnumSchema(BasicSchema):
     @override
     def do_save(self, value, writer, context, traits):
         number = int(value)
-        if number not in self.wire_names:
+        if number not in self.encoded_names:
             context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: not bound")
         elif traits & SerializationTraits.ENUM_AS_VALUE:
             self.underlying.save(number, writer, context)
         else:
-            writer.write(self.wire_names[number])
+            writer.write(self.encoded_names[number])
 
 
 class OptionalSchema(BasicSchema):
@@ -1518,25 +1518,25 @@ class ReflectionCtx:
                 return FloatCase(FloatSchema(32), 32)
             case Primitive(name="double"):
                 return FloatCase(FloatSchema(64), 64)
-            case Primitive(name=name, wire=wire):
-                return IntegerSchema(name, wire)
-            case AliasRef(alias=alias, wire=wire):
-                return IntegerSchema(alias.primitive.name, wire)
+            case Primitive(name=name, encoded=encoded):
+                return IntegerSchema(name, encoded)
+            case AliasRef(alias=alias, encoded=encoded):
+                return IntegerSchema(alias.primitive.name, encoded)
             case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
                 return UUIDSchema()
             case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
                 return CompoundTagCase(CompoundTagSchema(builtin.name == "CompoundTag"))
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
                 return DynamicValueSchema()
-            case EnumRef(enum=enum, wire=wire) if enum.name in CaseForm.PLAIN_ENUMS:
-                return self.schema(Primitive(self.shape(enum).underlying.name, wire))
+            case EnumRef(enum=enum, encoded=encoded) if enum.name in CaseForm.PLAIN_ENUMS:
+                return self.schema(Primitive(self.shape(enum).underlying.name, encoded))
             case EnumRef(enum=enum):
                 return EnumSchema(self.shape(enum), self.schema(self.shape(enum).underlying))
             case EnumName(enum=enum):
                 return EnumSchema(self.shape(enum), None)
             case StructRef(struct=family):
                 return self.composite(family)
-            case List(element=Primitive(name="uint8", wire=None)):
+            case List(element=Primitive(name="uint8", encoded=None)):
                 return BlobCase(BlobSchema(True))
             case List(element=element):
                 return VectorSchema(self.schema(element))

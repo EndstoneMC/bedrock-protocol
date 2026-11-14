@@ -49,7 +49,7 @@ class EnumGenerator:
         ]
         tables = [
             ("values_v", self.qualified, values),
-            ("names_v", "std::string_view", [f'"{member.wire_name}"' for member in members]),
+            ("names_v", "std::string_view", [f'"{member.encoded_name}"' for member in members]),
             ("schema_names_v", "std::string_view", [f'"{member.name}"' for member in members]),
         ]
         if any(member.deprecated for member in members):

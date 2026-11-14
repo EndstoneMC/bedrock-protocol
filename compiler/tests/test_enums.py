@@ -94,7 +94,7 @@ def test_a_deprecated_value_may_carry_its_bds_spelling_ungated(build_package):
         {"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, 'B_Deprecated', deprecated=True)\n"}
     )
 
-    assert members(package)[1].wire_name == "b_deprecated"
+    assert members(package)[1].encoded_name == "b_deprecated"
 
 
 def test_value_carries_a_number_and_a_range(build_package):
@@ -114,7 +114,7 @@ def test_value_carries_a_number_and_a_range(build_package):
     )
 
 
-def test_pair_and_value_name_give_the_wire_name(build_package):
+def test_pair_and_value_name_give_the_encoded_name(build_package):
     package = build_package(
         {
             "a": HEADER
@@ -124,19 +124,19 @@ def test_pair_and_value_name_give_the_wire_name(build_package):
         }
     )
 
-    assert [(member.value, member.wire_name) for member in members(package)] == [
+    assert [(member.value, member.encoded_name) for member in members(package)] == [
         (Int(1), "a_name"),
         (Int(2), "b_name"),
         (Int(3), "alpha_blend"),
         (Int(4), "persona_high"),
     ]
-    assert package.modules[0].families[1].declarations[0].members[0].wire_name == "a_name"
+    assert package.modules[0].families[1].declarations[0].members[0].encoded_name == "a_name"
 
 
 def test_names_derive_from_the_member_name(build_package):
     package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    NPC_REQUEST = 3\n"})
 
-    assert (members(package)[0].cpp_name, members(package)[0].wire_name) == ("NpcRequest", "npcrequest")
+    assert (members(package)[0].cpp_name, members(package)[0].encoded_name) == ("NpcRequest", "npcrequest")
 
 
 def test_cpp_name_is_a_case_variant(build_package):
@@ -144,7 +144,7 @@ def test_cpp_name_is_a_case_variant(build_package):
         {"a": HEADER + "class E(IntEnum, uint8):\n    NPC_REQUEST = value(3, cpp_name='NPCRequest')\n"}
     )
 
-    assert (members(package)[0].cpp_name, members(package)[0].wire_name) == ("NPCRequest", "npcrequest")
+    assert (members(package)[0].cpp_name, members(package)[0].encoded_name) == ("NPCRequest", "npcrequest")
 
 
 def test_an_ungated_value_carries_a_name_beside_cpp_name(build_package):
@@ -152,7 +152,7 @@ def test_an_ungated_value_carries_a_name_beside_cpp_name(build_package):
         {"a": HEADER + "class E(IntEnum, uint8):\n    NPC_REQUEST = value(3, 'npc_request', cpp_name='NPCRequest')\n"}
     )
 
-    assert (members(package)[0].cpp_name, members(package)[0].wire_name) == ("NPCRequest", "npc_request")
+    assert (members(package)[0].cpp_name, members(package)[0].encoded_name) == ("NPCRequest", "npc_request")
 
 
 def test_siblings_resolve_to_earlier_members(build_package):
@@ -231,11 +231,11 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 'x'\n", "A: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = True\n", "A: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1.5\n", "A: is not a literal int"),
-        ("class E(IntEnum, int32):\n    A = 1, 'a', 'b'\n", "A: a pair is a value and a wire name"),
+        ("class E(IntEnum, int32):\n    A = 1, 'a', 'b'\n", "A: a pair is a value and an encoded name"),
         ("class E(IntEnum, int32):\n    A = 1, 2\n", "A: is not a literal str"),
         ("class E(IntEnum, int32):\n    A = 1, ''\n", "A: is an empty string"),
         ("class E(IntEnum, int32):\n    A = value(1, name='y')\n", "value: .*'name'"),
-        ("class E(IntEnum, int32):\n    A = 1,\n", "A: a pair is a value and a wire name"),
+        ("class E(IntEnum, int32):\n    A = 1,\n", "A: a pair is a value and an encoded name"),
         ("class E(IntEnum, int32):\n    A = value(1, 2)\n", "A: is not a literal str"),
         ("class E(IntEnum, int32):\n    A = value(1, until='3')\n", "A: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = value(A)\n", "A: is not a literal int"),

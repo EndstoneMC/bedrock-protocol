@@ -8,14 +8,14 @@ class CompilerError(Exception):
 @dataclass(frozen=True)
 class Primitive:
     name: str
-    wire: str | None = None
+    encoded: str | None = None
     endian: str | None = None
 
 
 @dataclass(frozen=True)
 class AliasRef:
     alias: "Alias"
-    wire: str | None = None
+    encoded: str | None = None
 
 
 @dataclass(frozen=True)
@@ -26,13 +26,13 @@ class StructRef:
 @dataclass(frozen=True)
 class BuiltinRef:
     builtin: "Builtin"
-    wire: str | None = None
+    encoded: str | None = None
 
 
 @dataclass(frozen=True)
 class EnumRef:
     enum: "Enum"
-    wire: str | None = None
+    encoded: str | None = None
     endian: str | None = None
 
 
@@ -179,7 +179,7 @@ class Member:
     value: Int | MemberRef | Binary | None
     range: Range
     cpp_name: str
-    wire_name: str
+    encoded_name: str
     sentinel: bool = False
     deprecated: bool = False
 

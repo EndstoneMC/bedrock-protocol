@@ -50,11 +50,11 @@ class Bds:
         return bds_structs.get(self.field["type"]) if isinstance(self.field["type"], str) else None
 
 
-def bds_prints_the_wire_type(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
+def bds_prints_the_encoded_type(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
     match ours.type:
-        case Primitive(wire=str(wire)) | AliasRef(wire=str(wire)) if wire == bds.field["type"]:
-            bits = int("".join(filter(str.isdigit, wire)))
-            return Ours(ours.value % 2**bits, Primitive(wire)), bds
+        case Primitive(encoded=str(encoded)) | AliasRef(encoded=str(encoded)) if encoded == bds.field["type"]:
+            bits = int("".join(filter(str.isdigit, encoded)))
+            return Ours(ours.value % 2**bits, Primitive(encoded)), bds
     return None
 
 
@@ -70,10 +70,10 @@ def bds_prints_an_enum_as_its_number(ours: Ours, bds: Bds) -> tuple[Ours, Bds] |
     return None
 
 
-def bds_prints_an_enum_as_its_wire_name(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
+def bds_prints_an_enum_as_its_encoded_name(ours: Ours, bds: Bds) -> tuple[Ours, Bds] | None:
     if isinstance(ours.type, EnumName):
         members = enum_shapes[ours.type.enum].members
-        return Ours(next(each.wire_name for each in members if each.name == ours.value), ours.type), bds
+        return Ours(next(each.encoded_name for each in members if each.name == ours.value), ours.type), bds
     return None
 
 
@@ -118,16 +118,16 @@ def bds_prints_a_one_member_struct_as_its_member(ours: Ours, bds: Bds) -> tuple[
 type Rule = Callable[[Ours, Bds], tuple[Ours, Bds] | None]
 
 ACCEPTED = {
-    "bds_prints_the_wire_type",
+    "bds_prints_the_encoded_type",
     "bds_prints_an_enum_as_its_number",
     "bds_wraps_a_value_in_a_one_member_type",
 }
 
 RULES: list[Rule] = [
-    bds_prints_the_wire_type,
+    bds_prints_the_encoded_type,
     bds_prints_a_bool_enum_as_a_bool,
     bds_prints_an_enum_as_its_number,
-    bds_prints_an_enum_as_its_wire_name,
+    bds_prints_an_enum_as_its_encoded_name,
     bds_prints_bytes_as_text,
     bds_prints_bytes_as_numbers,
     bds_prints_a_literal_field,

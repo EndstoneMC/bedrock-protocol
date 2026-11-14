@@ -1,4 +1,4 @@
-"""Position and movement over the wire: move, teleport, delta moves, motion,
+"""Position and movement in the encoding: move, teleport, delta moves, motion,
 prediction hints, prediction correction and sync.
 Not actor spawning -- world/actor/, in actor.py.
 Not player spawning -- world/actor/player/, in player.py."""

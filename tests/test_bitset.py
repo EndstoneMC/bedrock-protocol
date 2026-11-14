@@ -110,7 +110,7 @@ def test_a_negative_int_cannot_be_assigned():
         v1001.PlayerAuthInputPacket(input_data=-1)
 
 
-@pytest.mark.parametrize("wire", REJECTS)
-def test_decode_rejects_a_65_bit_bitset_that_is_not_one(wire):
+@pytest.mark.parametrize("encoded", REJECTS)
+def test_decode_rejects_a_65_bit_bitset_that_is_not_one(encoded):
     with pytest.raises(ValueError, match="at byte"):
-        v1001.PlayerAuthInputPacket.from_bytes(wire)
+        v1001.PlayerAuthInputPacket.from_bytes(encoded)

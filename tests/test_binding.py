@@ -241,7 +241,7 @@ def test_a_string_field_rejects_bytes():
         proto.ResourcePackChunkDataPacket(resource_name=b"p")
 
 
-def test_a_string_carries_wire_bytes_that_are_not_utf8():
+def test_a_string_carries_encoded_bytes_that_are_not_utf8():
     text = b"\xff".decode("utf-8", "surrogateescape")
     packet = proto.ResourcePackChunkDataPacket(resource_name=text)
     assert proto.ResourcePackChunkDataPacket.from_bytes(bytes(packet)).resource_name == text
@@ -292,12 +292,12 @@ def test_a_uuid_carried_as_text_reads_every_form_bds_parses(text):
     ids=["empty", "short", "hyphen-out-of-place", "not-hex", "braced"],
 )
 def test_a_uuid_carried_as_text_rejects_text_bds_reads_as_nil(text):
-    wire = bytes([len(text)]) + text
+    encoded = bytes([len(text)]) + text
     with pytest.raises(
         bedrock_protocol.DecodeError,
-        match=rf"^ContentIdentity\.identity: unknown value at byte {len(wire)} of {len(wire)}$",
+        match=rf"^ContentIdentity\.identity: unknown value at byte {len(encoded)} of {len(encoded)}$",
     ):
-        proto.ContentIdentity.from_bytes(wire)
+        proto.ContentIdentity.from_bytes(encoded)
 
 
 def test_a_python_keyword_member_keeps_the_dsl_underscore():

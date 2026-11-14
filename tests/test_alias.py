@@ -6,6 +6,6 @@ def test_a_default_alias_is_zero(protocol):
     assert protocol.RemoveActorPacket().entity_id == 0
 
 
-def test_a_signed_alias_keeps_its_sign_on_the_wire(protocol):
+def test_a_signed_alias_keeps_its_sign_in_the_encoding(protocol):
     packet = protocol.RemoveActorPacket(entity_id=-3)
     assert protocol.RemoveActorPacket.from_bytes(bytes(packet)) == packet

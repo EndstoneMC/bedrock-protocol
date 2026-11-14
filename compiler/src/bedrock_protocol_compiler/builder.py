@@ -153,35 +153,35 @@ def without_docstring(body: list[ast.stmt]) -> list[ast.stmt]:
     return body
 
 
-def rewire(node: Type, wire: str | None, endian: str | None) -> Type | None:
+def reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None:
     match node:
         case Optional(element=element) | List(element=element):
-            rewired = rewire(element, wire, endian)
-            return None if rewired is None else replace(node, element=rewired)
+            reencoded = reencode(element, encoded, endian)
+            return None if reencoded is None else replace(node, element=reencoded)
         case Map(key=key, value=value):
-            rewired_key = rewire(key, wire, endian)
-            rewired_value = rewire(value, wire, endian)
-            if (rewired_key is None) == (rewired_value is None):
+            reencoded_key = reencode(key, encoded, endian)
+            reencoded_value = reencode(value, encoded, endian)
+            if (reencoded_key is None) == (reencoded_value is None):
                 return None
-            return Map(rewired_key or key, rewired_value or value)
+            return Map(reencoded_key or key, reencoded_value or value)
         case EnumRef(enum=enum):
-            if wire == "str":
+            if encoded == "str":
                 return None if endian else EnumName(enum)
-            if wire is None or (endian and wire not in BYTE_ORDERED):
+            if encoded is None or (endian and encoded not in BYTE_ORDERED):
                 return None
-            return EnumRef(enum, wire, endian)
+            return EnumRef(enum, encoded, endian)
         case Primitive(name=name):
-            if name not in INTEGERS or wire == "str" or (endian and (wire or name) not in BYTE_ORDERED):
+            if name not in INTEGERS or encoded == "str" or (endian and (encoded or name) not in BYTE_ORDERED):
                 return None
-            return replace(node, wire=wire, endian=endian)
+            return replace(node, encoded=encoded, endian=endian)
         case AliasRef(alias=alias):
-            if alias.primitive.name not in INTEGERS or wire == "str" or endian:
+            if alias.primitive.name not in INTEGERS or encoded == "str" or endian:
                 return None
-            return replace(node, wire=wire)
+            return replace(node, encoded=encoded)
         case BuiltinRef(builtin=builtin):
-            if builtin is not UUID or wire != "str" or endian:
+            if builtin is not UUID or encoded != "str" or endian:
                 return None
-            return replace(node, wire=wire)
+            return replace(node, encoded=encoded)
     return None
 
 
@@ -268,7 +268,7 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str)
             )
         for label, names in (
             ("C++ name", [member.cpp_name for member in members]),
-            ("wire name", [member.wire_name for member in members]),
+            ("encoded name", [member.encoded_name for member in members]),
         ):
             for name, count in Counter(names).items():
                 if count > 1:
@@ -625,7 +625,7 @@ class Builder:
             function = (
                 self.resolve(source, pending.scope, expression.func) if isinstance(expression, ast.Call) else None
             )
-            wire_name = name.replace("_", "")
+            encoded_name = name.replace("_", "")
             derived = "".join(part[:1].upper() + part[1:].lower() for part in name.split("_"))
             cpp_name = derived
             own = Range(None, None)
@@ -634,13 +634,13 @@ class Builder:
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
-                    raise error(source, expression, name, "a pair is a value and a wire name")
-                wire_name = literal(source, expression.elts[1], str, name)
+                    raise error(source, expression, name, "a pair is a value and an encoded name")
+                encoded_name = literal(source, expression.elts[1], str, name)
                 value = Int(literal(source, expression.elts[0], int, name))
             elif isinstance(expression, ast.Call) and function is dsl.value:
                 arguments = self.bind(source, expression, dsl.value)
                 if "name" in arguments:
-                    wire_name = literal(source, arguments["name"], str, name)
+                    encoded_name = literal(source, arguments["name"], str, name)
                 if "cpp_name" in arguments:
                     cpp_name = literal(source, arguments["cpp_name"], str, name)
                     if cpp_name.lower() != derived.lower():
@@ -684,12 +684,12 @@ class Builder:
                     value = Binary("-", value, Int(offset))
             else:
                 value = Int(literal(source, expression, int, name))
-            wire_name = wire_name.lower()
+            encoded_name = encoded_name.lower()
             member_range = self.narrow(source, statement, name, own, within)
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, wire_name, sentinel, deprecated))
+            members.append(Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated))
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
         self.tile(source, node, pending.enum, pending.range)
@@ -774,24 +774,24 @@ class Builder:
                 if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
                     raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
                 field_type = replace(field_type, prefix=prefix)
-            wire = None
+            encoded = None
             endian = None
             if call is not None and "type" in arguments:
-                wire_type = self.type_of(source, scope, arguments["type"])
-                if not (isinstance(wire_type, Primitive) and wire_type.name in ("str", *INTEGERS)):
+                encoded_type = self.type_of(source, scope, arguments["type"])
+                if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
                     raise error(source, arguments["type"], name, "type is not str or an integer primitive")
-                wire = wire_type.name
+                encoded = encoded_type.name
             if call is not None and "endian" in arguments:
                 if literal(source, arguments["endian"], str, name) != "big":
                     raise error(source, arguments["endian"], name, 'endian is not "big"')
                 endian = "big"
-            if wire or endian:
-                rewired = rewire(field_type, wire, endian)
-                if rewired is None:
+            if encoded or endian:
+                reencoded = reencode(field_type, encoded, endian)
+                if reencoded is None:
                     raise error(
                         source, statement, name, "type and endian do not reach exactly one scalar that takes them"
                     )
-                field_type = rewired
+                field_type = reencoded
             own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
             field_range = self.narrow(source, statement, name, own, within)
             for existing in fields:

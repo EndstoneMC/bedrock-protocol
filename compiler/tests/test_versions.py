@@ -428,7 +428,7 @@ def test_a_reference_across_modules_is_checked(build_package):
     ("members", "message"),
     [
         ("A_B = 1\n    A_b = 2", "a.py: E: has the C\\+\\+ name AB twice at 1"),
-        ("A = 1, 'x'\n    B = 2, 'X'", "a.py: E: has the wire name x twice at 1"),
+        ("A = 1, 'x'\n    B = 2, 'X'", "a.py: E: has the encoded name x twice at 1"),
         ("A_B = 1\n    AB = value(2, since=2, cpp_name='AB')", "a.py: E: has the C\\+\\+ name AB twice at 2"),
         ("A = auto()", "a.py: E.A: has no earlier member to number from at 1"),
         ("A = sentinel()", "a.py: E.A: has no earlier member to number from at 1"),
@@ -500,7 +500,7 @@ def test_a_pair_and_auto_inside_an_enum_block(build_package):
     )
     members = build_package({"a": HEADER + source}).modules[0].families[0].declarations[0].members
 
-    assert [(member.name, member.value, member.wire_name, member.range) for member in members] == [
+    assert [(member.name, member.value, member.encoded_name, member.range) for member in members] == [
         ("A", Int(1), "a", Range(None, None)),
         ("B", Int(2), "bee", Range(3, None)),
         ("C", None, "c", Range(3, None)),

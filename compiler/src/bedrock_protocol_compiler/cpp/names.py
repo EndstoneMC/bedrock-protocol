@@ -68,24 +68,24 @@ def unexpected(error: str) -> str:
     return f"return std::unexpected({error});"
 
 
-def write(wire: str, endian: str | None, value: str) -> str:
-    if wire in ("str", "bytes"):
+def write(encoded: str, endian: str | None, value: str) -> str:
+    if encoded in ("str", "bytes"):
         return f"stream.write({value});"
-    if wire in VARINTS:
-        return f"stream.writeVarInt<{PRIMITIVES[wire]}>({value});"
+    if encoded in VARINTS:
+        return f"stream.writeVarInt<{PRIMITIVES[encoded]}>({value});"
     order = ", std::endian::big" if endian else ""
-    return f"stream.write<{PRIMITIVES[wire]}{order}>({value});"
+    return f"stream.write<{PRIMITIVES[encoded]}{order}>({value});"
 
 
 def account(count: str, container: str) -> str:
     return f"stream.account({count}, sizeof({container}::value_type))"
 
 
-def read(wire: str, endian: str | None) -> str:
-    if wire in VARINTS:
-        return f"stream.readVarInt<{PRIMITIVES[wire]}>()"
+def read(encoded: str, endian: str | None) -> str:
+    if encoded in VARINTS:
+        return f"stream.readVarInt<{PRIMITIVES[encoded]}>()"
     order = ", std::endian::big" if endian else ""
-    return f"stream.read<{PRIMITIVES[wire]}{order}>()"
+    return f"stream.read<{PRIMITIVES[encoded]}{order}>()"
 
 
 def enumerator(schema: Schema, member: MemberRef, version: int) -> str:

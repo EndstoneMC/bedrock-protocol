@@ -216,7 +216,7 @@ def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
     assert "    Latest = 2,\n};" in (out / "a.h").read_text()
 
 
-def test_a_deprecated_member_reflects_its_number_and_wire_name(generate):
+def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
     header = (generate({"a": DEPRECATED}) / "a.h").read_text()
     values = (
         "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::Latest,\n    ::bedrock::protocol::D::A,\n"

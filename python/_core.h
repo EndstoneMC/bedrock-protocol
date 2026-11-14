@@ -389,7 +389,7 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
     });
 
     if constexpr (Serializable<T>) {
-        cls.def("__bytes__", &encode<T>, "The wire form, without a packet header.");
+        cls.def("__bytes__", &encode<T>, "The encoded form, without a packet header.");
         cls.def_static("from_bytes", &decode_all<T>, nb::arg("data"), "Reads one value that must span all of `data`.");
     }
     if constexpr (Packet<T>) {

@@ -33,19 +33,19 @@ def field_types(package, module=0):
     return [field.type for field in struct.declarations[0].fields]
 
 
-def test_type_overrides_the_wire_of_an_integer(build_package):
+def test_type_overrides_the_encoding_of_an_integer(build_package):
     package = build_package({"a": HEADER + "class A:\n    x: int16 = field(type=varint32)\n    y: uint8\n"})
 
-    assert field_types(package) == [Primitive("int16", wire="varint32"), Primitive("uint8")]
+    assert field_types(package) == [Primitive("int16", encoded="varint32"), Primitive("uint8")]
 
 
-def test_type_overrides_the_wire_of_an_alias(build_package):
+def test_type_overrides_the_encoding_of_an_alias(build_package):
     package = build_package({"a": HEADER + "type Id = int64\n\nclass A:\n    x: Id = field(type=uvarint32)\n"})
 
-    assert field_types(package) == [AliasRef(package.modules[0].families[0], wire="uvarint32")]
+    assert field_types(package) == [AliasRef(package.modules[0].families[0], encoded="uvarint32")]
 
 
-def test_type_on_an_enum_picks_its_wire_or_names_it(build_package):
+def test_type_on_an_enum_picks_its_encoding_or_names_it(build_package):
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    A = 1\n\n"
@@ -55,7 +55,7 @@ def test_type_on_an_enum_picks_its_wire_or_names_it(build_package):
 
     enum = package.modules[0].families[0]
 
-    assert field_types(package) == [EnumRef(enum, wire="varint32"), EnumName(enum), EnumRef(enum)]
+    assert field_types(package) == [EnumRef(enum, encoded="varint32"), EnumName(enum), EnumRef(enum)]
 
 
 def test_type_reaches_through_optional_and_list(build_package):
@@ -70,9 +70,9 @@ def test_type_reaches_through_optional_and_list(build_package):
     enum = package.modules[0].families[0]
 
     assert field_types(package) == [
-        Optional(Primitive("int32", wire="varint32")),
+        Optional(Primitive("int32", encoded="varint32")),
         List(EnumName(enum), Primitive("uvarint32")),
-        List(Optional(Primitive("int16", wire="varint32")), Primitive("uvarint32")),
+        List(Optional(Primitive("int16", encoded="varint32")), Primitive("uvarint32")),
     ]
 
 
@@ -88,7 +88,7 @@ def test_type_on_a_dict_reaches_its_one_scalar_half(build_package):
 
     assert field_types(package) == [
         Map(EnumName(enum), StructRef(b)),
-        Map(StructRef(b), Primitive("int16", wire="varint32")),
+        Map(StructRef(b), Primitive("int16", encoded="varint32")),
     ]
 
 
@@ -102,14 +102,14 @@ def test_type_str_carries_a_uuid_as_text(build_package):
     package = build_package({"a": source})
 
     assert field_types(package) == [
-        BuiltinRef(UUID, wire="str"),
-        List(Optional(BuiltinRef(UUID, wire="str")), Primitive("uvarint32")),
-        Map(BuiltinRef(UUID, wire="str"), Primitive("int16")),
+        BuiltinRef(UUID, encoded="str"),
+        List(Optional(BuiltinRef(UUID, encoded="str")), Primitive("uvarint32")),
+        Map(BuiltinRef(UUID, encoded="str"), Primitive("int16")),
         BuiltinRef(UUID),
     ]
 
 
-REWIRE = "type and endian do not reach exactly one scalar that takes them"
+REENCODE = "type and endian do not reach exactly one scalar that takes them"
 
 
 @pytest.mark.parametrize(
@@ -121,26 +121,26 @@ REWIRE = "type and endian do not reach exactly one scalar that takes them"
         pytest.param("x: C = field(type=str)", id="builtin-str"),
     ],
 )
-def test_a_builtin_takes_no_wire_but_str_on_a_uuid(build_package, line):
+def test_a_builtin_takes_no_encoding_but_str_on_a_uuid(build_package, line):
     source = HEADER + "import uuid\nfrom protocol import builtin\n\n@builtin\nclass C:\n    pass\n\n"
     source += "class A:\n    " + line + "\n"
 
-    with pytest.raises(CompilerError, match=REWIRE):
+    with pytest.raises(CompilerError, match=REENCODE):
         build_package({"a": source})
 
 
 @pytest.mark.parametrize(
     ("line", "message"),
     [
-        ("x: B = field(type=varint32)", REWIRE),
-        ("x: str = field(type=str)", REWIRE),
-        ("x: bool = field(type=uint8)", REWIRE),
-        ("x: int16 = field(type=str)", REWIRE),
-        ("x: dict[int16, int16] = field(type=varint32)", REWIRE),
-        ("x: dict[B, B] = field(type=varint32)", REWIRE),
+        ("x: B = field(type=varint32)", REENCODE),
+        ("x: str = field(type=str)", REENCODE),
+        ("x: bool = field(type=uint8)", REENCODE),
+        ("x: int16 = field(type=str)", REENCODE),
+        ("x: dict[int16, int16] = field(type=varint32)", REENCODE),
+        ("x: dict[B, B] = field(type=varint32)", REENCODE),
         ("x: int16 = field(type=B)", "type is not str or an integer primitive"),
         ("x: int16 = field(type=bool)", "type is not str or an integer primitive"),
-        ("x: Id = field(type=str)", REWIRE),
+        ("x: Id = field(type=str)", REENCODE),
     ],
 )
 def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, message):
@@ -151,7 +151,7 @@ def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, m
 
 
 @pytest.mark.parametrize(
-    "wire",
+    "encoded",
     [
         "int8",
         "uint8",
@@ -167,10 +167,10 @@ def test_type_must_reach_exactly_one_scalar_that_takes_it(build_package, line, m
         "uvarint64",
     ],
 )
-def test_type_accepts_every_integer_wire(build_package, wire):
-    package = build_package({"a": HEADER + f"class A:\n    x: int32 = field(type={wire})\n"})
+def test_type_accepts_every_integer_encoding(build_package, encoded):
+    package = build_package({"a": HEADER + f"class A:\n    x: int32 = field(type={encoded})\n"})
 
-    assert field_types(package) == [Primitive("int32", wire=wire)]
+    assert field_types(package) == [Primitive("int32", encoded=encoded)]
 
 
 @pytest.mark.parametrize("name", ["int16", "uint16", "int32", "uint32", "int64", "uint64"])
@@ -189,7 +189,7 @@ def test_endian_marks_a_fixed_width_integer(build_package):
 
     assert field_types(package) == [
         Primitive("int32", endian="big"),
-        EnumRef(enum, wire="int32", endian="big"),
+        EnumRef(enum, encoded="int32", endian="big"),
         List(Primitive("int16", endian="big"), Primitive("uvarint32")),
     ]
 
@@ -198,15 +198,15 @@ def test_endian_marks_a_fixed_width_integer(build_package):
     ("line", "message"),
     [
         ("x: int32 = field(endian='little')", 'endian is not "big"'),
-        ("x: uint8 = field(endian='big')", REWIRE),
-        ("x: varint32 = field(endian='big')", REWIRE),
-        ("x: int32 = field(type=varint32, endian='big')", REWIRE),
-        ("x: str = field(endian='big')", REWIRE),
-        ("x: B = field(endian='big')", REWIRE),
-        ("x: E = field(endian='big')", REWIRE),
-        ("x: E = field(type=str, endian='big')", REWIRE),
-        ("x: E = field(type=varint32, endian='big')", REWIRE),
-        ("x: Id = field(endian='big')", REWIRE),
+        ("x: uint8 = field(endian='big')", REENCODE),
+        ("x: varint32 = field(endian='big')", REENCODE),
+        ("x: int32 = field(type=varint32, endian='big')", REENCODE),
+        ("x: str = field(endian='big')", REENCODE),
+        ("x: B = field(endian='big')", REENCODE),
+        ("x: E = field(endian='big')", REENCODE),
+        ("x: E = field(type=str, endian='big')", REENCODE),
+        ("x: E = field(type=varint32, endian='big')", REENCODE),
+        ("x: Id = field(endian='big')", REENCODE),
     ],
 )
 def test_endian_is_big_and_on_a_fixed_width_integer_only(build_package, line, message):

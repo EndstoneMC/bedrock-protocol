@@ -23,7 +23,7 @@ from bedrock_protocol_compiler.descriptor import (
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema
 
-ENUM_WIRES = {
+ENUM_ENCODINGS = {
     "bool": "bool",
     "int8": "int8",
     "uint8": "uint8",
@@ -53,34 +53,34 @@ class FieldGenerator(Protocol):
 
 
 class ScalarField:
-    def __init__(self, where: str, spelled: str, stored: str, wire: str, endian: str | None) -> None:
+    def __init__(self, where: str, spelled: str, stored: str, encoded: str, endian: str | None) -> None:
         self.where = where
         self.spelled = spelled
         self.stored = stored
-        self.wire = wire
+        self.encoded = encoded
         self.endian = endian
 
     def cpp_type(self) -> str:
         return self.spelled
 
     def write(self, p: Printer, value: str) -> None:
-        p.emit(names.write(self.wire, self.endian, value))
+        p.emit(names.write(self.encoded, self.endian, value))
 
     def read(self, p: Printer, target: str) -> None:
         p.emit("{")
         with p.indent():
-            p.emit("auto v = $call$;", call=names.read(self.wire, self.endian))
+            p.emit("auto v = $call$;", call=names.read(self.encoded, self.endian))
             p.emit("if (!v) $fail$", fail=names.fail("v.error()", self.where))
-            if self.wire in ("str", "bytes"):
+            if self.encoded in ("str", "bytes"):
                 p.emit("$target$ = std::move(*v);", target=target)
-            elif self.spelled == names.PRIMITIVES[self.wire]:
+            elif self.spelled == names.PRIMITIVES[self.encoded]:
                 p.emit("$target$ = *v;", target=target)
             else:
                 p.emit("$target$ = static_cast<$type$>(*v);", target=target, type=self.spelled)
-            if names.PRIMITIVES[self.stored] != names.PRIMITIVES[self.wire]:
+            if names.PRIMITIVES[self.stored] != names.PRIMITIVES[self.encoded]:
                 p.emit(
-                    "if (static_cast<$wire$>($target$) != *v) $fail$",
-                    wire=names.PRIMITIVES[self.wire],
+                    "if (static_cast<$encoded$>($target$) != *v) $fail$",
+                    encoded=names.PRIMITIVES[self.encoded],
                     target=target,
                     fail=names.fail(names.OUT_OF_RANGE, self.where),
                 )
@@ -89,7 +89,7 @@ class ScalarField:
 
 class PrimitiveField(ScalarField):
     def __init__(self, node: Primitive, where: str) -> None:
-        super().__init__(where, names.PRIMITIVES[node.name], node.name, node.wire or node.name, node.endian)
+        super().__init__(where, names.PRIMITIVES[node.name], node.name, node.encoded or node.name, node.endian)
         self.node = node
 
     def includes(self) -> set[str]:
@@ -99,7 +99,7 @@ class PrimitiveField(ScalarField):
 class AliasField(ScalarField):
     def __init__(self, schema: Schema, node: AliasRef, where: str) -> None:
         stored = node.alias.primitive.name
-        super().__init__(where, names.qualified(schema, node.alias), stored, node.wire or stored, None)
+        super().__init__(where, names.qualified(schema, node.alias), stored, node.encoded or stored, None)
         self.node = node
 
     def includes(self) -> set[str]:
@@ -111,7 +111,9 @@ class EnumField(ScalarField):
         shape = schema.shape_at(node.enum, version)
         assert isinstance(shape, EnumShape)
         stored = shape.underlying.name
-        super().__init__(where, names.qualified(schema, shape), stored, node.wire or ENUM_WIRES[stored], node.endian)
+        super().__init__(
+            where, names.qualified(schema, shape), stored, node.encoded or ENUM_ENCODINGS[stored], node.endian
+        )
         self.node = node
 
     def includes(self) -> set[str]:
@@ -213,19 +215,19 @@ class LiteralField:
         self.where = where
         match node.value:
             case bool(flag):
-                self.wire = "bool"
+                self.encoded = "bool"
                 self.constant = "true" if flag else "false"
                 self.expected = self.constant
             case str(text):
-                self.wire = "str"
+                self.encoded = "str"
                 self.constant = json.dumps(text)
                 self.expected = self.constant
             case MemberRef() as member:
                 shape = schema.shape_at(member.enum, version)
                 assert isinstance(shape, EnumShape)
-                self.wire = ENUM_WIRES[shape.underlying.name]
+                self.encoded = ENUM_ENCODINGS[shape.underlying.name]
                 self.constant = names.enumerator(schema, member, version)
-                self.expected = f"static_cast<{names.PRIMITIVES[self.wire]}>({self.constant})"
+                self.expected = f"static_cast<{names.PRIMITIVES[self.encoded]}>({self.constant})"
 
     def cpp_type(self) -> None:
         return None
@@ -236,7 +238,7 @@ class LiteralField:
         return set()
 
     def write(self, p: Printer, value: str) -> None:
-        p.emit(names.write(self.wire, None, self.constant))
+        p.emit(names.write(self.encoded, None, self.constant))
 
     def read(self, p: Printer, target: str) -> None:
         p.emit(
@@ -247,7 +249,7 @@ class LiteralField:
                 if (*v != $expected$) $mismatch$
             }
             """,
-            call=names.read(self.wire, None),
+            call=names.read(self.encoded, None),
             fail=names.fail("v.error()", self.where),
             expected=self.expected,
             mismatch=names.fail(names.UNKNOWN_VALUE, self.where),
@@ -549,7 +551,7 @@ def make_field_generator(schema: Schema, node: Type, version: int, where: str, d
             return EnumField(schema, node, version, where)
         case StructRef() | EnumName():
             return ReferenceField(schema, node, version, where)
-        case BuiltinRef(wire="str"):
+        case BuiltinRef(encoded="str"):
             return BuiltinTextField(schema, node, where)
         case BuiltinRef():
             return BuiltinField(schema, node, where)
