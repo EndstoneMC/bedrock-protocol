@@ -1,0 +1,10 @@
+[
+ {
+  "id": "stop_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "sound_event": "stop"
+  },
+  "bytes": "2a000000000000000473746f70"
+ }
+]

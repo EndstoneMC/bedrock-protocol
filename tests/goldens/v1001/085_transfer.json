@@ -1,0 +1,11 @@
+[
+ {
+  "id": "gatherings_configuration_absent",
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a01"
+ }
+]

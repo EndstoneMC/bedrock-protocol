@@ -1,0 +1,14 @@
+[
+ {
+  "id": "anvil_at_one_two_three",
+  "value": {
+   "damage": 5,
+   "position": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   }
+  },
+  "bytes": "05020406"
+ }
+]
