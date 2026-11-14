@@ -78,6 +78,10 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep a colour channel in 0..255, an effect duration at 0 or above, and a voxel shape's cell storage at one bit per cell.
 - Set an optional BDS derives from an earlier field exactly when BDS writes it: `InventorySource`'s container id for `CONTAINER_INVENTORY` and `NON_IMPLEMENTED_FEATURE_TODO` and its flags for `WORLD_INTERACTION`; the legacy set item slots when `raw_id < -1 and raw_id & 1 == 0`; a response slot's item stack net id when its amount is not 0; `PlayerAuthInputPacket`'s optionals from their `input_data` bits; `ItemStackResponseInfo`'s containers only on `SUCCESS`; `MapItemTrackedActor`'s entity id only for `ENTITY` and block position only for `BLOCK_ENTITY`.
 - Send `NetworkStackLatencyPacket.create_time` as 0; BDS reads it in milliseconds and writes it in nanoseconds.
+- Set an ability layer's `abilities_set` bit 13, 14 or 19 whenever it carries a non-zero fly, walk or vertical fly speed; BDS drops a speed whose bit is clear.
+- Write a pre-cereal skin's colours as `#aarrggbb` with an alpha of 0x10 or above; BDS prints a colour back as unpadded ARGB hex.
+- Set `ClientboundMapItemDataPacket.map_id` to `map_ids[0]` when the creation flag is set; BDS holds both in one vector.
+- Keep `StructureBlockUpdatePacket.is_waterlogged` false; BDS writes it from a settings flag its read clears.
 
 ## Login and handshake
 

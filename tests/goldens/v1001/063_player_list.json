@@ -1,0 +1,83 @@
+[
+ {
+  "id": "remove_one_entry",
+  "value": {
+   "action": 1,
+   "entries": [],
+   "removed_entries": ["00000000-0000-0000-0000-000000000002"],
+   "trusted_skins": []
+  },
+  "bytes": "010100000000000000000200000000000000"
+ },
+ {
+  "id": "add_entry_only",
+  "value": {
+   "action": 0,
+   "entries": [
+    {
+     "uuid": "00000000-0000-0000-0000-000000000001",
+     "id": 7,
+     "name": "Steve",
+     "xuid": "2535410000000001",
+     "platform_online_id": "pcid",
+     "build_platform": 8,
+     "skin": {
+      "id": "sid",
+      "play_fab_id": "pfid",
+      "resource_patch": "{\"geometry\":{\"default\":\"geometry.a\"}}\n",
+      "image_width": 1,
+      "image_height": 1,
+      "image_bytes": "\\x01\\x02\\x03\\x04",
+      "animated_image_data": [
+       {
+        "image_width": 1,
+        "image_height": 1,
+        "image_bytes": "\\x09\\x0a\\x0b\\x0c",
+        "type": 1,
+        "frames": 2.0,
+        "animation_expression": 1
+       }
+      ],
+      "cape_image_width": 1,
+      "cape_image_height": 1,
+      "cape_image_bytes": "\\x05\\x06\\x07\\x08",
+      "geometry_data": "{}\n",
+      "geometry_data_min_engine_version": "1.0.0",
+      "animation_data": "[]\n",
+      "cape_id": "cid",
+      "full_id": "fid",
+      "arm_size": "wide",
+      "skin_color": "#ff010203",
+      "persona_pieces": [
+       {
+        "piece_id": "pid",
+        "piece_type": "persona_hair",
+        "pack_id": "00000000-0000-0000-0000-000000000003",
+        "is_default_piece": true,
+        "product_id": "prod"
+       }
+      ],
+      "piece_tint_colors": [
+       {
+        "piece_type": "persona_hair",
+        "colors": ["#ff010203", "#ff050607", "#ff010204", "#ff050608"]
+       }
+      ],
+      "is_premium": true,
+      "is_persona": true,
+      "is_persona_cape_on_classic_skin": true,
+      "is_primary_user": true,
+      "overrides_player_appearance": true
+     },
+     "is_teacher": true,
+     "is_host": true,
+     "is_sub_client": true,
+     "color": 84281096
+    }
+   ],
+   "removed_entries": [],
+   "trusted_skins": [true]
+  },
+  "bytes": "0001000000000000000001000000000000000e0553746576651032353335343130303030303030303031047063696408000000037369640470666964267b2267656f6d65747279223a7b2264656661756c74223a2267656f6d657472792e61227d7d0a0100000001000000040102030401000000010000000100000004090a0b0c01000000000000400100000001000000010000000405060708037b7d0a05312e302e30035b5d0a036369640366696404776964650923666630313032303301000000037069640c706572736f6e615f686169722430303030303030302d303030302d303030302d303030302d303030303030303030303033010470726f64010000000c706572736f6e615f68616972040000000923666630313032303309236666303530363037092366663031303230340923666630353036303801010101010101010807060501"
+ }
+]
