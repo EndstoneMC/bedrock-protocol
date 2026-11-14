@@ -1,6 +1,7 @@
 """The actor as a subject: id aliases, links, events, synched data, the ActorType
-registry, and the packets that spawn, move, remove and animate one. world/actor/.
-Not the player -- world/actor/player/ is player.py."""
+registry, and the packets that spawn, remove and animate one. world/actor/.
+Not the player -- world/actor/player/ is player.py.
+Not movement -- network/packet/, in movement.py."""
 
 from enum import IntEnum, auto
 from typing import Literal
@@ -673,23 +674,6 @@ class TakeItemActorPacket:
     actor_id: ActorRuntimeID
 
 
-class MoveActorAbsoluteData:
-    class Header:
-        raw: uint8
-
-    runtime_id: ActorRuntimeID
-    header: Header
-    pos: Vec3
-    rot_x: int8 = field(type=uint8)
-    rot_y: int8 = field(type=uint8)
-    rot_y_head: int8 = field(type=uint8)
-
-
-@packet(id=18)
-class MoveActorAbsolutePacket:
-    move_data: MoveActorAbsoluteData
-
-
 @packet(id=22)
 class AddPaintingPacket:
     entity_id: ActorUniqueID
@@ -769,13 +753,6 @@ class ActorEventPacket:
     event_id: ActorEvent
     data: varint32
     fire_at_position: Vec3 | None = field(since=975)
-
-
-@packet(id=40)
-class SetActorMotionPacket:
-    runtime_id: ActorRuntimeID
-    motion: Vec3
-    tick: PlayerInputTick
 
 
 @packet(id=41)
@@ -858,13 +835,6 @@ class SpawnExperienceOrbPacket:
 @packet(id=119)
 class AvailableActorIdentifiersPacket:
     identifier_list: CompoundTag
-
-
-@packet(id=157)
-class MotionPredictionHintsPacket:
-    runtime_id: ActorRuntimeID
-    motion: Vec3
-    on_ground: bool
 
 
 @packet(id=189)

@@ -16,7 +16,8 @@ paths:
   - a wire-only type under `network/packet/types/<path>/` goes to the module mirroring `<path>`;
   - a payload declared in the packet's own header nests in the `@packet`;
   - a subdirectory merges into its parent unless it can stand alone.
-- Where the folder cannot decide (it appears at two depths, or holds over 100 headers or under 3), fall back in order to the module declaring most of the packet's referenced types, then the packet family, then leave the declaration where it is.
+- Where the folder cannot decide (it appears at two depths, or holds over 100 headers or under 3), place a packet in the module whose docstring names its subject, never by the types it references.
+- Keep a packet family, such as every move, motion and movement-prediction packet with its data types, in one module, and let no two module docstrings claim the same subject.
 - Never create a module because of size; a lookup table lives with its subject.
 - Keep the schema's import graph acyclic.
 

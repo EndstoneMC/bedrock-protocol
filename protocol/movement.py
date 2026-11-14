@@ -1,5 +1,5 @@
-"""Position and movement over the wire: move, teleport, delta moves, prediction
-correction and sync.
+"""Position and movement over the wire: move, teleport, delta moves, motion,
+prediction hints, prediction correction and sync.
 Not actor spawning -- world/actor/, in actor.py.
 Not player spawning -- world/actor/player/, in player.py."""
 
@@ -88,6 +88,37 @@ class MovePlayerPacket:
 @packet(id=111)
 class MoveActorDeltaPacket:
     move_data: MoveActorDeltaData
+
+
+class MoveActorAbsoluteData:
+    class Header:
+        raw: uint8
+
+    runtime_id: ActorRuntimeID
+    header: Header
+    pos: Vec3
+    rot_x: int8 = field(type=uint8)
+    rot_y: int8 = field(type=uint8)
+    rot_y_head: int8 = field(type=uint8)
+
+
+@packet(id=18)
+class MoveActorAbsolutePacket:
+    move_data: MoveActorAbsoluteData
+
+
+@packet(id=40)
+class SetActorMotionPacket:
+    runtime_id: ActorRuntimeID
+    motion: Vec3
+    tick: PlayerInputTick
+
+
+@packet(id=157)
+class MotionPredictionHintsPacket:
+    runtime_id: ActorRuntimeID
+    motion: Vec3
+    on_ground: bool
 
 
 @packet(id=16)
