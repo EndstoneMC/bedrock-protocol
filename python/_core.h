@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <concepts>
 #include <cstddef>
@@ -212,10 +213,26 @@ constexpr auto type_descr(const arg_descr<D> &descr)
     return arg_descr{nb::detail::type_descr(descr.name)};
 }
 
+template <typename D>
+struct descr_traits;
+template <std::size_t N, typename... Ts>
+struct descr_traits<nb::detail::descr<N, Ts...>> {
+    static constexpr std::size_t size = N;
+    using types = type_list<Ts...>;
+};
+
 template <typename D, typename... Ds>
 constexpr auto concat(const arg_descr<D> &first, const arg_descr<Ds> &...rest)
 {
-    return (first.name + ... + (nb::detail::const_name(", ") + rest.name));
+    constexpr std::string_view separator = ", ";
+    constexpr std::size_t size = (descr_traits<D>::size + ... + (separator.size() + descr_traits<Ds>::size));
+    std::array<char, size> text{};
+    auto out = std::copy_n(first.name.text, descr_traits<D>::size, text.begin());
+    ((out = std::copy_n(rest.name.text, descr_traits<Ds>::size, std::copy(separator.begin(), separator.end(), out))),
+     ...);
+    return [&]<std::size_t... Is, typename... Ts>(std::index_sequence<Is...>, type_list<Ts...>) {
+        return nb::detail::descr<size, Ts...>(text[Is]...);
+    }(std::make_index_sequence<size>{}, (typename descr_traits<D>::types{} + ... + typename descr_traits<Ds>::types{}));
 }
 
 template <typename F>
