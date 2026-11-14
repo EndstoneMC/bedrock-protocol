@@ -1,7 +1,7 @@
 [project]
 name = "bedrock-protocol-compiler"
 version = "0.5.0.dev0"
-description = "bpc, the compiler that emits the Bedrock protocol schema's C++ codecs."
+description = "bpc, the compiler that emits the Bedrock protocol schema's C++ and Java codecs."
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]

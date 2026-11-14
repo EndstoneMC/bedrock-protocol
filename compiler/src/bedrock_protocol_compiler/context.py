@@ -19,6 +19,7 @@ class GeneratorContext:
             if not target.is_file() or target.read_bytes() != text:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(text)
-        for stale in (self.out / "bedrock").rglob("*"):
-            if stale.is_file() and stale.relative_to(self.out) not in self.printers:
-                stale.unlink()
+        for root in {relative.parts[0] for relative in self.printers}:
+            for stale in (self.out / root).rglob("*"):
+                if stale.is_file() and stale.relative_to(self.out) not in self.printers:
+                    stale.unlink()

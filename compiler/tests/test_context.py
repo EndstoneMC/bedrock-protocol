@@ -32,7 +32,7 @@ def test_commit_rewrites_a_changed_file(tmp_path):
     assert (tmp_path / "bedrock/protocol/boss.h").read_text() == "boss v2\n"
 
 
-def test_commit_deletes_every_other_file_under_bedrock(tmp_path):
+def test_commit_deletes_every_other_file_under_an_opened_top_directory(tmp_path):
     stale = tmp_path / "bedrock/protocol/old.h"
     stale.parent.mkdir(parents=True)
     stale.write_text("old")
@@ -44,7 +44,23 @@ def test_commit_deletes_every_other_file_under_bedrock(tmp_path):
     assert not deeper.exists()
 
 
-def test_commit_leaves_files_outside_bedrock_alone(tmp_path):
+def test_commit_deletes_a_stale_file_under_another_backends_top_directory(tmp_path):
+    stale = tmp_path / "dev/endstone/protocol/Old.java"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("old")
+    write(tmp_path, "dev/endstone/protocol/Boss.java", "boss")
+    assert not stale.exists()
+
+
+def test_commit_leaves_a_top_directory_it_did_not_open_alone(tmp_path):
+    other = tmp_path / "dev/endstone/protocol/Boss.java"
+    other.parent.mkdir(parents=True)
+    other.write_text("keep")
+    write(tmp_path, "bedrock/protocol/boss.h", "boss")
+    assert other.read_text() == "keep"
+
+
+def test_commit_leaves_files_outside_its_top_directories_alone(tmp_path):
     other = tmp_path / "other.txt"
     other.write_text("keep")
     write(tmp_path, "bedrock/protocol/boss.h", "boss")
