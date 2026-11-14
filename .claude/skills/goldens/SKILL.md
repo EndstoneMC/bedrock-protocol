@@ -79,21 +79,21 @@ A clean stop exits 0 and logs `Quit correctly`.
 
 ## Compare
 
-`compare.py` beside this file checks each case against the run. Bytes must be equal. It then walks the case's `value` with the schema's types at `<protocol>` and BDS's JSON with the dump's fields, pairing them field by field. Where BDS prints the same data in another form, a rule named for what BDS does explains it; anything no rule explains is a difference. It prints each case's verdict, the rules it needed and `freezes` when goldens.md accepts all of them, then the totals and each rule's case count:
+`compare.py` beside this file judges every case of a folder against one run, through `CaseForm` and `schema_of` in `tests/conftest.py`. A case `freezes` when BDS read every byte, wrote the case's bytes back unchanged and printed JSON that `CaseForm.matches` accepts for the case's value. Any other case prints each difference: the crash or refusal, the byte where the write-back departs, or the path in the value where BDS's JSON departs, with both values. It ends with the totals and exits 1 unless every case freezes:
 
 ```
-PYTHONPATH=compiler/src python3 .claude/skills/goldens/compare.py tests/goldens/v<protocol> $G
+uv run python .claude/skills/goldens/compare.py tests/goldens/v<protocol> $G
 ```
 
-Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md states; add one there only once goldens.md does.
+Only a `freezes` case can freeze. A difference no rule in goldens.md explains is a finding: fix the schema, the case or `CaseForm`, and never relax the comparison.
 
 ## Symptom -> action
 
 | Symptom | Do |
 | --- | --- |
-| `refused`, `generic:74`, with `consumed` equal to the case length | BDS read every byte and then rejected the content. Find the constraint BDS checks: its strings name it. Fix the value or the schema, and add the line to goldens.md. |
-| `refused`, with `consumed` short of the length | BDS read fewer bytes than the library wrote. A field is extra, mis-sized or out of order in the schema: read the field at byte `consumed`. |
-| `rewritten` | Read the field at byte `at`. If BDS fills in, drops, rounds or canonicalises the value, the value is data BDS does not keep: change it and add the rule with its evidence. If BDS writes a field the schema lacks or orders differently, fix the schema. |
+| `refused`, `generic:74`, with `read` equal to the case length | BDS read every byte and then rejected the content. Find the constraint BDS checks: its strings name it. Fix the value or the schema, and add the line to goldens.md. |
+| `refused`, with `read` short of the length | BDS read fewer bytes than the library wrote. A field is extra, mis-sized or out of order in the schema: read the field at the byte `read` names. |
+| `rewritten` | Read the field at the byte named. If BDS fills in, drops, rounds or canonicalises the value, the value is data BDS does not keep: change it and add the rule with its evidence. If BDS writes a field the schema lacks or orders differently, fix the schema. |
 | `rewritten`, and two fields come back holding the second one's value | BDS binds one member under several names and writes it once per name. Declare it as one field with `field(bind=[...])` from the dump's binding names, and never pick equal values to pass. |
 | `rewritten`, and a variant comes back in another arm | BDS converts the value on read and writes back what the conversion kept. Find the value BDS keeps in the case's arm, and never swap the arm. |
 | A case edited since the last run reads `rewritten`, or BDS's JSON describes other bytes | A results file describes the bytes its run read, which `$G/cases.json` holds. When they differ from the folder's current bytes, rerun golden mode before comparing. |
@@ -102,10 +102,10 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
 | `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
 | `bds_json_error` says toString did not reach the saver | The `saveImpl` signature does not match this build. Cut a new one behind a version gate. |
-| `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
-| `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
-| `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the encoding's; otherwise report it. |
-| `json_differs` on a value | `tests/conftest.py`'s `save` labels or nests a field wrongly: fix the helper's schema for that type, or the DSL when its type is not BDS's type. |
+| `JSON differs at <path>` on a value | The path names the field. Fix the case's value, or the schema when its type is not BDS's type. |
+| `JSON differs at <path>` where BDS prints the same data in another form | `CaseForm.matches` has no rule for the form. Report it; add the rule to `CaseForm` and goldens.md only once goldens.md accepts it. |
+| `JSON differs at <path>` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the encoding's; otherwise report it. |
+| `printed no JSON` | `bds_json_error` says why; a toString that did not reach the saver needs a new `saveImpl` signature behind a version gate. |
 | `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |
 | BDS exits 130 or 143, or logs no `Quit correctly` | It was signalled. Stop it through the console `stop`. |
