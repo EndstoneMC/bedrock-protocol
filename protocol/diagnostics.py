@@ -175,12 +175,6 @@ class ScopeDataSummary:
     total_low_cost_ns: uint64
 
 
-class EntitySystemDiagnosticSummary:
-    entity_timings: list[EntityDiagnosticTimingInfo]
-    system_timings: list[SystemDiagnosticTimingInfo]
-    system_categories: list[SystemCategory] | None = field(since=2168)
-
-
 @packet(id=315)
 class ServerboundDiagnosticsPacket:
     avg_fps: float
@@ -193,7 +187,9 @@ class ServerboundDiagnosticsPacket:
     avg_remainder_time_percent: float
     avg_unaccounted_time_percent: float
     category_counters: list[MemoryCategoryCounter] = field(since=924)
-    entity_system_diagnostics: EntitySystemDiagnosticSummary = field(since=975)
+    entity_timings: list[EntityDiagnosticTimingInfo] = field(since=975)
+    system_timings: list[SystemDiagnosticTimingInfo] = field(since=975)
+    system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_data: list[ScopeDataSummary] = field(since=1001)
 
 

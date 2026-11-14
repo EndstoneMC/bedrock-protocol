@@ -437,8 +437,6 @@ class CaseForm:
     """Where a golden's JSON departs from BDS's: each mapping is deterministic and goes both ways."""
 
     SHAPES: ClassVar = {
-        ("ServerboundDiagnosticsPacket", "telemetry"): (DslShape.FLATTEN, None),
-        ("ServerboundDiagnosticsPacket", "entity_system_diagnostics"): (DslShape.FLATTEN, None),
         ("DeathInfoPacket", "death_cause_attack_name"): (DslShape.GROUP, "death_cause_message"),
         ("DeathInfoPacket", "death_cause_message_list"): (DslShape.GROUP, "death_cause_message"),
         ("CameraAimAssistCategoryPriorities", "entities"): (DslShape.PAIRS, KeyKind.OTHER),
