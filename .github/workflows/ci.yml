@@ -25,6 +25,9 @@ jobs:
   build:
     name: Build (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +69,16 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Test the compiler
-        run: uv run --directory compiler pytest -n auto
+        run: uv run --directory compiler pytest -n auto --junitxml=junit.xml -o junit_family=legacy
+
+      - uses: codecov/codecov-action@v7.1.1
+        if: ${{ !cancelled() }}
+        with:
+          files: compiler/junit.xml
+          report_type: test_results
+          disable_search: true
+          fail_ci_if_error: true
+          use_oidc: true
 
       - name: Configure
         run: cmake --preset release -DCMAKE_INSTALL_PREFIX='${{ github.workspace }}/stage' ${{ matrix.cmakeflags }}
@@ -233,7 +245,16 @@ jobs:
       - name: Run the tests
         env:
           LLVM_PROFILE_FILE: ${{ github.workspace }}/profiles/%p.profraw
-        run: uv run --no-project pytest tests
+        run: uv run --no-project pytest tests --junitxml=junit.xml -o junit_family=legacy
+
+      - uses: codecov/codecov-action@v7.1.1
+        if: ${{ !cancelled() }}
+        with:
+          files: junit.xml
+          report_type: test_results
+          disable_search: true
+          fail_ci_if_error: true
+          use_oidc: true
 
       - name: Export the C++ coverage
         run: |
