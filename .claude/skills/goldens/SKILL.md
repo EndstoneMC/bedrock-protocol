@@ -114,11 +114,11 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 
 ## Coverage
 
-The coverage build lives in `build/Debug`, and its venv holds scikit-build-core, nanobind==2.13.0, pytest and `./compiler`:
+The coverage build lives in `build/Debug`, and its venv holds scikit-build-core, nanobind==2.13.0, pytest, nbtlib and `./compiler`:
 
 ```
 uv venv build/coverage-venv
-uv pip install --python build/coverage-venv/bin/python scikit-build-core nanobind==2.13.0 pytest ./compiler
+uv pip install --python build/coverage-venv/bin/python scikit-build-core nanobind==2.13.0 pytest nbtlib ./compiler
 uv pip install --python build/coverage-venv/bin/python --no-build-isolation --no-deps --reinstall-package bedrock-protocol -C install.strip=false -C cmake.build-type=Debug -C cmake.define.CMAKE_CXX_COMPILER=clang++ -C "cmake.define.CMAKE_CXX_FLAGS=-fprofile-instr-generate -fcoverage-mapping" -C "cmake.define.CMAKE_MODULE_LINKER_FLAGS=-fprofile-instr-generate" .
 SO=$(find build/coverage-venv -name '_core*.so')
 ```
@@ -203,6 +203,7 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | Symptom | Do |
 | --- | --- |
 | `llvm-cov`: `no coverage data found` | The install stripped the coverage mapping. Reinstall with `-C install.strip=false`. |
+| The coverage reinstall ships a wheel with no `_core` | A `CMAKE_CXX_COMPILER` spelled unlike the cached one wipes `build/Debug`'s cache, and the reconfigure loses scikit-build-core's settings. Run the install again. |
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
 | A `default.profraw` appears in the repository root | A pytest ran from the coverage venv without `LLVM_PROFILE_FILE`. Delete the file and rerun with `LLVM_PROFILE_FILE` pointing into the profile directory. |
 | `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |
