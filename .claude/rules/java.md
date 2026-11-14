@@ -6,9 +6,9 @@ paths:
 
 # Java
 
-- Throw `DecodeException` for bad wire bytes and nothing else for them; programming errors stay `NullPointerException`, `IllegalArgumentException`, `IllegalStateException` and Netty's own exceptions.
+- Throw `DecodeException` for bad encoded bytes and nothing else for them; programming errors stay `NullPointerException`, `IllegalArgumentException`, `IllegalStateException` and Netty's own exceptions.
 - Catch only `DecodeException`, where a packet enters or to prepend a path segment; never catch `Throwable`, `Error`, `Exception`, `RuntimeException` or `IndexOutOfBoundsException`, and never write an empty catch.
-- Never put wire text in an exception message.
+- Never put encoded text in an exception message.
 - Declare every class `final`.
 - Name a `ByteBufUtils` read or write after CloudburstMC Protocol's, Netty's for a fixed width: `readUnsignedVarInt`, `readVarInt`, `readString`, `readShortLE`.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.

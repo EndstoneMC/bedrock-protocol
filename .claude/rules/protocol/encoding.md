@@ -5,7 +5,7 @@ paths:
   - "include/**"
 ---
 
-# Wire facts
+# Encoding facts
 
 ## cereal
 
@@ -14,15 +14,15 @@ paths:
 - What cereal writes is flat, in declaration order, unconditional.
 - cereal writes a nested struct inline with no framing, so a composed type adds no bytes of its own. The DSL still keeps BDS's type boundaries (`naming.md`).
 - A variant's selector is a `uvarint32` index over its alternatives, never the tag. The tag member is serialized inside its alternative.
-- A name-coded enum goes on the wire folded to lower case. The string literal at the bind site never reaches the wire.
-- A cereal-bound constant folds like an enum value: the wire carries the value's folded name, never the member's own name.
+- A name-coded enum is encoded folded to lower case. The string literal at the bind site never reaches the encoding.
+- A cereal-bound constant folds like an enum value: the encoding carries the value's folded name, never the member's own name.
 - cereal writes a member bound under several names once per name, in binding order, and reads every copy into it: the last copy wins and any failing copy fails the packet.
-- A one-byte enum is one byte on the wire, whatever cereal Compression trait the member carries.
+- A one-byte enum is one byte in the encoding, whatever cereal Compression trait the member carries.
 - cereal prefixes a dynamic member with an always-true member-present byte (`dsl.md`). It is a BDS bug.
 
 ## Text
 
-- A `mce::UUID` on the wire as text is `mce::UUID::asString`'s lower-case 8-4-4-4-12; BDS reads 36 hyphenated or 32 bare hex digits, either case, and any other text as the nil UUID.
+- A `mce::UUID` encoded as text is `mce::UUID::asString`'s lower-case 8-4-4-4-12; BDS reads 36 hyphenated or 32 bare hex digits, either case, and any other text as the nil UUID.
 
 ## The frame
 
@@ -34,5 +34,5 @@ paths:
 - Before 2168, `PackedItemUseLegacyInventoryTransaction` writes its slots only when `id < -1 and (id & 1) == 0`.
 - Before 2168, the chemistry recipe writers do not write the unlocking requirement; the other four recipe writers do.
 - Never unify `ContainerID`: it is `uvarint32` in packet 49 and, from 975, `uint8` in packet 50; they part at `NONE = -1`.
-- `TextPacket`'s twelve constant strings are on the wire, folded, over `[898, 924)`.
+- `TextPacket`'s twelve constant strings are encoded folded, over `[898, 924)`.
 - Spell packet 124's event data `CompoundTagData`: a compound's entries plus `TAG_End`, no root tag, at every version.

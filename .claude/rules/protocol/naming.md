@@ -10,7 +10,7 @@ paths:
 - Match BDS class names and nesting exactly; never fold an enclosing namespace into a class name (`Bedrock::Profile::Whisker::Diagnostics::ScopeDataSummary` is `ScopeDataSummary`).
 - Keep a BDS `Outer::Inner` nested; never flatten it to `OuterInner`.
 - Map `FooPacketPayload` onto `@packet FooPacket` and move its nested types into the packet; no `...PacketPayload` class exists in the schema.
-- Type actor ids as `ActorUniqueID` or `ActorRuntimeID` even where BDS declares a plain integer, keep the wire with `field(type=)` (`target_player_id: ActorUniqueID = field(type=int64)`), and pick which one from where BDS fills the member.
+- Type actor ids as `ActorUniqueID` or `ActorRuntimeID` even where BDS declares a plain integer, keep the encoding with `field(type=)` (`target_player_id: ActorUniqueID = field(type=int64)`), and pick which one from where BDS fills the member.
 - Enum members are the one exception to mirroring BDS (`enums.md`).
 
 ## Where a name comes from

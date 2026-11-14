@@ -14,7 +14,7 @@ paths:
 - Stop and ask before modelling a number that no build reports.
 - An EndstoneMC/protocol-docs branch is a network version, not a release order, and it can bump within itself; re-read its README after every fetch.
 - Pin the protocol-docs SHA you diffed and the build you dumped.
-- A protocol number does not identify a wire format: Mojang changes the wire within one number, and `since=` cannot express that.
+- A protocol number does not identify an encoding: Mojang changes the encoding within one number, and `since=` cannot express that.
 - Diff the releases of one update line through its protocol-docs branch's history, taking one commit per stable release.
 - Spell a release with three parts (`1.26.60`) and a preview with four (`1.26.70.21`).
 

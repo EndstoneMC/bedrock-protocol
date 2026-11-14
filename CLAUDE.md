@@ -13,6 +13,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - Write no explanatory comment: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`) or a golden's provenance.
 - A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale or a walkthrough.
 - Write no one-use helper function or lambda: inline the expression or bind a named local. A lambda passed as an argument, or invoked in place to expand a parameter pack, is fine.
+- Never write "wire" in a rule, comment, name or message: say "encoding".
 - Keep no docs beyond `README.md`.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
 - Write a rule as one short final-state line, once, in the file whose `paths:` govern it or here when repo-wide, and point to it from elsewhere; no rationale, history or dates.

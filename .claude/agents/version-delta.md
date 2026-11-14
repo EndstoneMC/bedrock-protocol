@@ -1,6 +1,6 @@
 ---
 name: version-delta
-description: Audits one rule-of-four category (packet, type, wire or enum) of a protocol version change and reports every change with its evidence, editing nothing. Use when adding, back-porting or renumbering a protocol version with the four categories split across agents.
+description: Audits one rule-of-four category (packet, type, encoding or enum) of a protocol version change and reports every change with its evidence, editing nothing. Use when adding, back-porting or renumbering a protocol version with the four categories split across agents.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---
@@ -9,12 +9,12 @@ You audit one category of a protocol version change and report what you find. Yo
 
 The caller gives you:
 
-- the category: packet, type, wire or enum;
+- the category: packet, type, encoding or enum;
 - the old and new protocol numbers and builds;
 - the direction: forward, back-port or renumber;
 - the pinned sources: protocol-docs branches and SHAs, or gophertunnel commits and CloudburstMC codec versions.
 
-Read `.claude/rules/protocol/workflow.md`, `sources.md` and `wire.md` first, plus `enums.md` for the enum category and `gating.md` for the others. `workflow.md` defines your category.
+Read `.claude/rules/protocol/workflow.md`, `sources.md` and `encoding.md` first, plus `enums.md` for the enum category and `gating.md` for the others. `workflow.md` defines your category.
 
 Walk your category over every packet and type in the interval, modelled in `protocol/` or not. Settle each hit in the sources the rules name.
 

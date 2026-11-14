@@ -8,11 +8,11 @@ paths:
 ## Spelling
 
 - Spell members PEP 8 UPPER_CASE, converted from BDS's spelling (`JsonUI_ControlTree_PopulateTTS` becomes `JSON_UI_CONTROL_TREE_POPULATE_TTS`).
-- Record BDS's spelling in the DSL, never the wire's.
+- Record BDS's spelling in the DSL, never the encoding's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
 - Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=` or `deprecated=True`.
-- Never mangle a member to match the wire (`DOWNLOADINGFINISHED`).
+- Never mangle a member to match the encoding (`DOWNLOADINGFINISHED`).
 
 ## Values
 
@@ -26,9 +26,9 @@ paths:
 
 - Derive every enum from `IntEnum`, with the underlying type as the second base, taken from bedrock-headers (`class MemoryCategory(IntEnum, uint8)`), and spell it even when the header's is `int` (`int32`).
 - Give every redeclaration of an enum the same underlying type.
-- Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second wire shape.
+- Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second encoding.
 - Grep the enum for a negative enumerator before unifying a narrowed width; with one, the eras are two types.
-- An enum field goes out as its underlying type at one byte and as a varint of the same signedness above it (`int16` and `int32` as `varint32`, `uint16` and `uint32` as `uvarint32`). Spell `field(type=)` only where the wire differs: `str` (name-coded), a fixed width (`field(type=int32)` on an `int32` enum), another varint, the other signedness (`field(type=uint8)` on an `int8` enum), or `endian="big"`.
+- An enum field goes out as its underlying type at one byte and as a varint of the same signedness above it (`int16` and `int32` as `varint32`, `uint16` and `uint32` as `uvarint32`). Spell `field(type=)` only where the encoding differs: `str` (name-coded), a fixed width (`field(type=int32)` on an `int32` enum), another varint, the other signedness (`field(type=uint8)` on an `int8` enum), or `endian="big"`.
 
 ## Placeholders
 
@@ -42,7 +42,7 @@ paths:
 - Gate an appended value with `value(N, since=)` and let the trailing count (`auto()` or `sentinel()`) follow it.
 - Gate a removed value with `value(N, until=)` and make every member after it `auto()`; an insertion and a removal in one span can cancel, so redeclare only when that fails.
 - For a rename at the same value, take the new spelling at every era rather than versioning the enum.
-- Treat any change to a name-coded member's spelling as a wire change.
+- Treat any change to a name-coded member's spelling as an encoding change.
 - Add a value that only gained a name, with no other member moved, ungated once bedrock-headers confirms it existed, and carry the sentinel with it.
 - Never read a wholesale respelling as a rename until the header confirms it; the dumper may have changed what it emits.
 

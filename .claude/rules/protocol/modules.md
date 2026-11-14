@@ -13,7 +13,7 @@ paths:
 - Change a module's docstring in the same commit that adds a declaration it excludes.
 - Place a declaration by its BDS header's domain folder:
   - a reusable type goes to its domain's module;
-  - a wire-only type under `network/packet/types/<path>/` goes to the module mirroring `<path>`;
+  - an encoding-only type under `network/packet/types/<path>/` goes to the module mirroring `<path>`;
   - a payload declared in the packet's own header nests in the `@packet`;
   - a subdirectory merges into its parent unless it can stand alone.
 - Where the folder cannot decide (it appears at two depths, or holds over 100 headers or under 3), place a packet in the module whose docstring names its subject, never by the types it references.

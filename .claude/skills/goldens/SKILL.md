@@ -104,7 +104,7 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `bds_json_error` says toString did not reach the saver | The `saveImpl` signature does not match this build. Cut a new one behind a version gate. |
 | `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
 | `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
-| `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the wire's; otherwise report it. |
+| `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the encoding's; otherwise report it. |
 | `json_differs` on a value | `tests/conftest.py`'s `save` labels or nests a field wrongly: fix the helper's schema for that type, or the DSL when its type is not BDS's type. |
 | `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |

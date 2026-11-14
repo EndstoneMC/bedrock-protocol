@@ -18,11 +18,11 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Report bad wire bytes as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail`; never throw for wire bytes.
+- Report bad encoded bytes as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail`; never throw for encoded bytes.
 - Decode any integer an integer-coded enum carries, named or not; reject a name a name-coded enum lacks, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.
 - Give every overload of a name one meaning; a length-prefixed write and a raw write take different names.
-- Use `std::` fixed-width integers at the width the wire declares, and `std::size_t` for counts and indices.
+- Use `std::` fixed-width integers at the width the encoding declares, and `std::size_t` for counts and indices.
 - Capture explicitly in a lambda that outlives its scope; use `[&]` only in one that runs in place.
 - Constrain templates with concepts, branch with `if constexpr` and expand packs with fold expressions; never use SFINAE, `enable_if` or recursive instantiation.
 - Own an object by value, or through `std::unique_ptr` when it must live on the heap; never use an owning `new`.

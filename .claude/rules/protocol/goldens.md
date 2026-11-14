@@ -20,7 +20,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Write a byte blob, and a `std::string` that is not valid UTF-8, as a string of lowercase `\xNN` escapes, one per byte, and read any case string made only of them back as those bytes.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
 - Land a case on origin only once a BDS run writes its bytes back unchanged.
-- Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
+- Compare a field declared as one type over another encoded type (`rot_x: int8 = field(type=uint8)`) through its encoded type, as BDS prints it.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Match a case's primitive with a BDS object that has exactly one child equal to it, and a UUID string with BDS's most and least significant halves.
 - Match a case's `\xNN` string with BDS's raw-byte string by turning both into bytes.

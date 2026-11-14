@@ -13,15 +13,15 @@ An era is one modelled protocol and the BDS build that reports it.
 | Aspect | Authority |
 | --- | --- |
 | names, nesting, C++ types, member order | EndstoneMC/bedrock-headers at the era's `android/rNN_uN` branch, never head |
-| wire of a packet BDS writes through cereal (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
-| wire of a packet BDS writes by hand, in any era | the era's hand-written writer, decompiled in that build's IDA database |
+| encoding of a packet BDS writes through cereal (type, order, prefix, presence) | the dump: EndstoneMC/protocol-docs at the era's branch |
+| encoding of a packet BDS writes by hand, in any era | the era's hand-written writer, decompiled in that build's IDA database |
 | dating | MemoriesOfTime/Nukkit-MOT and CloudburstMC/Protocol (`versions.md`) |
 | the step inside a cycle | Mojang/bedrock-protocol-docs `legacy_changelogs/` (`versions.md`) |
 
 - Treat every source outside the table as a pointer to where to look, never as what is true; confirm against a second source before acting.
-- Use Mojang/bedrock-protocol-docs for wire facts only as a last resort, and mark anything resting on it `# TODO: confirm against BDS`.
-- Never infer wire shape from a header, and never complete a type by copying members out of one.
-- Never read a bedrock-headers `.cpp` as a wire source; those files hold declarations only.
+- Use Mojang/bedrock-protocol-docs for encoding facts only as a last resort, and mark anything resting on it `# TODO: confirm against BDS`.
+- Never infer the encoded shape from a header, and never complete a type by copying members out of one.
+- Never read a bedrock-headers `.cpp` as an encoding source; those files hold declarations only.
 - Never read one write call as one field; the binary settles the bytes and the header settles how many members produced them.
 - Finish every pre-cereal reading in the binary; each write call carries its own field-name string.
 - Never take a `<Packet>::write` symbol as proof a packet is hand-written; only its body answers.
@@ -35,7 +35,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Never paste EndstoneMC/bedrock-headers source (access-restricted) into the schema, a commit or any file; read it and cite the branch.
 - Clone a missing reference repository rather than working around it.
 - Share one open IDA database between agents by attaching to its session (`idb_open` on the same path); an attached agent stays read-only, and no agent closes a shared session.
-- Never merge or rebase the `prototype` branch, an unrelated history; re-verify any wire detail taken from it.
+- Never merge or rebase the `prototype` branch, an unrelated history; re-verify any encoding detail taken from it.
 
 ## Weighing evidence
 
@@ -49,7 +49,7 @@ An era is one modelled protocol and the BDS build that reports it.
 - Trust a capture over a string literal where they disagree.
 - Decompile the writer in the era's IDA database where the header and the dump disagree, or gophertunnel and CloudburstMC do; the binary is the arbiter.
 - Where symbols are absent, count the functions that reference a cereal field-name string literal to learn how many times a member is bound.
-- Never decide wire presence from a cereal `bind`, which says only what is bound; decompile `write` and count what it emits.
+- Never decide encoded presence from a cereal `bind`, which says only what is bound; decompile `write` and count what it emits.
 - Never decide cerealisation by grepping the binary for cereal display strings.
 
 ## The dump
@@ -58,10 +58,10 @@ An era is one modelled protocol and the BDS build that reports it.
 - Check how BDS writes the packet first: where it writes through cereal at both eras, the dump settles it, within the blind spots below; where it writes by hand at either era, or the dump lacks the packet, a dump hunk is only a pointer and an empty dump diff is no finding.
 - Model the writer BDS uses for the packet; where its two writers disagree, record the disagreement in the commit body as a finding against the dump.
 - A shared type's dump entry covers only the packets the dump also lists; a hand-written call site may encode it differently, and the dump shows no sign of it.
-- An unchanged dump is no proof of an unchanged wire; compile-time TypeSchema specialisations are invisible to it.
+- An unchanged dump is no proof of an unchanged encoding; compile-time TypeSchema specialisations are invisible to it.
 - Suspect a TypeSchema specialisation flip when a packet grows by a multiple of a fixed array's outer extent; confirm statically from the RTTI name, then the vtable, then the read virtual's error strings.
 - Before modelling a dumped `optional: true`, check whether the binding is dynamic; an older dump hides its always-true marker, so confirm against a codec's read or the binary.
-- Read a dumped enum value name as BDS's own spelling, not the wire's (`wire.md`).
+- Read a dumped enum value name as BDS's own spelling, not the encoding's (`encoding.md`).
 - Before diffing two dumps, probe that one dumper generation made both (varint, `_be`, `uint32` repeats, string-typed enum fields); a generation gap is rendering noise, and whatever survives is settled in bedrock-headers at both branches or in the binary, with a control.
 
 ## Is a packet live
