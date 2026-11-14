@@ -2,18 +2,14 @@
  {
   "id": "both_options_present",
   "value": {
-   "update": {
-    "graphics_mode": 3,
-    "filter_profanity": true
-   }
+   "graphics_mode": 3,
+   "filter_profanity": true
   },
   "bytes": "01030101"
  },
  {
   "id": "both_options_absent",
-  "value": {
-   "update": {}
-  },
+  "value": {},
   "bytes": "0000"
  }
 ]

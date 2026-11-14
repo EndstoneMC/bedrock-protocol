@@ -173,14 +173,10 @@ class GraphicsMode(IntEnum, uint8):
     RAY_TRACED = 3
 
 
-class SyncedClientOptionsUpdate:
-    graphics_mode: GraphicsMode | None
-    filter_profanity: bool | None = field(since=975)
-
-
 @packet(id=323, since=786)
 class UpdateClientOptionsPacket:
-    update: SyncedClientOptionsUpdate
+    graphics_mode: GraphicsMode | None
+    filter_profanity: bool | None = field(since=975)
 
 
 class PlayerListPacketType(IntEnum, uint8):
