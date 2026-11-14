@@ -22,8 +22,8 @@ jobs:
   # The source package is the C++ the compiler emits, shipped next to the
   # hand-written runtime. Building from it needs neither uv nor bpc, which is what
   # its last step checks.
-  cpp:
-    name: C++ (${{ matrix.name }})
+  build:
+    name: Build (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -123,7 +123,7 @@ jobs:
           if-no-files-found: error
 
   python:
-    name: Python (cibw)
+    name: Python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -173,23 +173,23 @@ jobs:
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
-          name: python-compiler
-          path: dist-compiler/*
+          path: dist-compiler/*.whl
+          archive: false
           if-no-files-found: error
       - uses: actions/upload-artifact@v7.0.2
         with:
-          name: python-runtime-${{ runner.os }}
           path: wheelhouse/*.whl
+          archive: false
           if-no-files-found: error
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
-          name: python-runtime-source
           path: dist/*.tar.gz
+          archive: false
           if-no-files-found: error
 
   java:
-    name: Java (Gradle)
+    name: Java
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
@@ -204,7 +204,7 @@ jobs:
         run: ./gradlew --no-daemon build
 
   coverage:
-    name: Coverage (llvm-cov)
+    name: Coverage
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1

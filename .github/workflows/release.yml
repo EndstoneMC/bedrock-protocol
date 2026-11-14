@@ -51,8 +51,8 @@ jobs:
           mkdir -p assets
           for dir in "${dirs[@]}"; do
             name=$(basename "$dir")
-            if [[ "$name" == python-* ]]; then
-              cp "$dir"/* assets/
+            if [[ "$name" == *.whl || "$name" == *.tar.gz ]]; then
+              cp "$dir/$name" assets/
               continue
             fi
             asset=${name/-${GITHUB_SHA::7}/}
