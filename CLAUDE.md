@@ -21,6 +21,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 
 ## Layout
 
+- C++ is the privileged language: `include/` and the C++ the compiler emits are the source, and Python and Java are bindings over it.
 - `protocol/`: the schema, one module per BDS domain.
 - `compiler/`: the compiler, run by CMake once at configure time over all of `protocol/`; it has its own `pyproject.toml`, and the root holds the one for the runtime.
 - Never commit generated code.
