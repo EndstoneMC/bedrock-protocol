@@ -1,0 +1,14 @@
+[
+ {
+  "id": "jukebox_record",
+  "value": {
+   "block_pos": {
+    "x": 8,
+    "y": 16,
+    "z": 24
+   },
+   "server_sound_handle": 42
+  },
+  "bytes": "1020302a00000000000000"
+ }
+]

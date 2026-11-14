@@ -1,0 +1,36 @@
+[
+ {
+  "id": "every_optional_absent",
+  "value": {
+   "move_data": {
+    "runtime_id": 2,
+    "is_on_ground": false,
+    "force_move": false,
+    "force_move_local_entity": false,
+    "force_completion": false,
+    "ticks": 3
+   }
+  },
+  "bytes": "020000000000000000000003"
+ },
+ {
+  "id": "every_optional_present",
+  "value": {
+   "move_data": {
+    "runtime_id": 2,
+    "new_position_x": 1.0,
+    "new_position_y": 2.0,
+    "new_position_z": 3.0,
+    "rot_x": -5,
+    "rot_y": 64,
+    "rot_y_head": 33,
+    "is_on_ground": true,
+    "force_move": false,
+    "force_move_local_entity": false,
+    "force_completion": false,
+    "ticks": 3
+   }
+  },
+  "bytes": "02010000803f0100000040010000404001fb014001210100000003"
+ }
+]

@@ -1,0 +1,14 @@
+[
+ {
+  "id": "blast_furnace_options",
+  "value": {
+   "furnace_type": 2,
+   "furnace_options": {
+    "left_furnace_tab": 2,
+    "filtering": true,
+    "layout": 2
+   }
+  },
+  "bytes": "02040104"
+ }
+]
