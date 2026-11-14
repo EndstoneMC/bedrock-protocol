@@ -27,14 +27,14 @@ struct DecodeError {
 };
 
 template <typename T>
-void serialize(BinaryWriter &stream, const T &value)
+void encode(BinaryWriter &stream, const T &value)
 {
     Serializer<T>::serialize(stream, value);
 }
 
 template <typename T, typename V>
     requires(!std::same_as<T, V>)
-void serialize(BinaryWriter &stream, const V &value)
+void encode(BinaryWriter &stream, const V &value)
 {
     Serializer<T>::serialize(stream, value);
 }

@@ -83,7 +83,7 @@ packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .mes
 
 std::string data;
 bp::BinaryWriter writer{data};
-bp::serialize(writer, packet);
+bp::encode(writer, packet);
 
 bp::BinaryReader reader{data};
 std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<bp::TextPacket>(reader);
