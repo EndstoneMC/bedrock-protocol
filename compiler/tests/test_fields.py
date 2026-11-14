@@ -337,3 +337,38 @@ def test_a_pre_cereal_family_declared_before_its_cereal_sibling_is_reached(build
 
     assert (cereal.cereal, pre_cereal.cereal) == (True, False)
     assert field_types(package) == [StructRef(pre_cereal)]
+
+
+def test_bind_lists_the_names_a_field_is_bound_under(build_package):
+    package = build_package(
+        {"a": HEADER + 'class A:\n    x: uint8 = field(bind=["first", "second_name"])\n    y: uint8\n'}
+    )
+
+    struct = next(family for family in package.modules[0].families if family.name == "A")
+
+    assert [field.bind for field in struct.declarations[0].fields] == [("first", "second_name"), ()]
+
+
+@pytest.mark.parametrize(
+    ("bind", "message"),
+    [
+        pytest.param('"first"', "x: bind is not a list of string literals", id="not_a_list"),
+        pytest.param('["first", 2]', "x: bind is not a list of string literals", id="not_strings"),
+        pytest.param('["first", name]', "x: bind is not a list of string literals", id="not_literals"),
+        pytest.param("[]", "x: bind names fewer than two bindings", id="none"),
+        pytest.param('["first"]', "x: bind names fewer than two bindings", id="one"),
+        pytest.param('["first", "first"]', "x: bind repeats a name", id="repeated"),
+        pytest.param('["first", "Second"]', 'x: bind name "Second" is not lower_with_under', id="capitalised"),
+        pytest.param('["first", "second-name"]', 'x: bind name "second-name" is not lower_with_under', id="dashed"),
+    ],
+)
+def test_bind_is_rejected(build_package, bind, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + f"class A:\n    x: uint8 = field(bind={bind})\n"})
+
+
+def test_bind_is_rejected_on_a_with_block(build_package):
+    source = HEADER + 'class A:\n    with field(bind=["first", "second"]):\n        x: uint8\n'
+
+    with pytest.raises(CompilerError, match="a with block takes only"):
+        build_package({"a": source})

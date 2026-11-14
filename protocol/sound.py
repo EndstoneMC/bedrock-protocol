@@ -687,14 +687,9 @@ class Resume:
 @packet(id=348, since=2168)
 class ClientboundUpdateSoundDataPacket:
     server_sound_handle: ServerSoundHandle
-    with field(until=2225):
-        stop: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        set_volume: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        set_pitch: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        fade: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        seek_to: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        pause: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
-        resume: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume
+    event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(
+        bind=["stop", "set_volume", "set_pitch", "fade", "seek_to", "pause", "resume"], until=2225
+    )
     event: Stop | SetVolume | SetPitch | Fade | SeekTo | Pause | Resume = field(since=2225)
 
 

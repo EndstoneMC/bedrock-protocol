@@ -26,6 +26,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Match a case's `\xNN` string with BDS's raw-byte string by turning both into bytes.
 - Match a case's float with BDS's float when they are equal or when the case's value widens to BDS's float32 value.
 - Match a case's map with BDS's list of `key`/`value` objects by key, and an empty map with `[]`.
+- Match a field with `bind` against as many of BDS's printed values as it has names.
 - Write a `Color255RGBA` in a case as `#rrggbbaa`, and compare it by turning it into BDS's `[r, g, b, a]` array.
 - Write a bitset in a case as `0b` followed by its bits, most significant first.
 - Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.
@@ -60,7 +61,6 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Give a data store compound one key and hold several values in a list: BDS writes the keys of a compound in an order of its own, and a list keeps its order.
 - Write a `SemVersion` as `X.Y.Z`; a min engine version, a skin's `geometry_data_min_engine_version` included, as `X.Y.Z` with optional pre-release and build suffixes, never four parts or `*`; a base game version as `X.Y.Z` or `*`, without a pre-release suffix or a fourth part.
 - Write JSON BDS parses as jsoncpp's FastWriter prints it: keys sorted, no spaces, a trailing newline (`{}` comes back as `{}\n` in a skin's `geometry_data` and a command output's `data`), numbers in its form (`1000.0` for `1e3`); `form_json` and `json_input` stay as written.
-- Give every copy of a member that BDS binds under several names the same value: `PlayerVideoCapturePacket`'s start and stop slots, `CylinderDataPayload`'s `radius_x` and `radius_z`, each slot of `ClientboundUpdateSoundDataPacket`.
 - Fill `StartGamePacket`'s game rules with exactly the list BDS writes, in its order.
 - Give `StructureSettings.integrity_seed` a value a float holds exactly.
 - List an item-use transaction's actions in ascending `InventorySource` type order.

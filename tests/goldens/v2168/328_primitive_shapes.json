@@ -49,11 +49,7 @@
      "shape_type": 6,
      "extra_data_payload": {
       "__class__": "CylinderDataPayload",
-      "radius_x": {
-       "x": 3.0,
-       "y": 4.0
-      },
-      "radius_z": {
+      "radii": {
        "x": 3.0,
        "y": 4.0
       },

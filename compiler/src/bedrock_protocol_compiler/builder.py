@@ -60,6 +60,7 @@ LIST_PREFIXES = ("uint32", "uint16", "varint32")
 BYTE_ORDERED = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
 INTEGERS = ("int8", "uint8", *BYTE_ORDERED, "varint32", "varint64", "uvarint32", "uvarint64")
 RELEASE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
+LOWER_WITH_UNDER = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
 RELEASE_NAME = re.compile(rf"(?P<first>{RELEASE})(?:-(?P<last>{RELEASE}))?")
 RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:[1-9]\d*)?x")
 DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
@@ -827,7 +828,23 @@ class Builder:
                 for guard in guards
             ]
             when = reduce(lambda left, right: Binary("and", left, right), predicates) if predicates else None
-            fields.append(Field(name, field_type, field_range, when))
+            bound: list[str] = []
+            if call is not None and "bind" in arguments:
+                listed = arguments["bind"]
+                if not (
+                    isinstance(listed, ast.List)
+                    and all(isinstance(each, ast.Constant) and isinstance(each.value, str) for each in listed.elts)
+                ):
+                    raise error(source, listed, name, "bind is not a list of string literals")
+                bound = [ast.literal_eval(each) for each in listed.elts]
+                if len(bound) < 2:
+                    raise error(source, listed, name, "bind names fewer than two bindings")
+                if len(set(bound)) != len(bound):
+                    raise error(source, listed, name, "bind repeats a name")
+                for each in bound:
+                    if not LOWER_WITH_UNDER.fullmatch(each):
+                        raise error(source, listed, name, f'bind name "{each}" is not lower_with_under')
+            fields.append(Field(name, field_type, field_range, when, tuple(bound)))
         declared: list[str] = []
         previous: list[str] = []
         for block, names in runs:

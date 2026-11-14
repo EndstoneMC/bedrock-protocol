@@ -173,7 +173,7 @@ def children(ours: Ours, bds: Bds) -> list[tuple[str, Ours, Bds]] | None:
         case Optional(element=element) if ours.value is not None:
             return [("", Ours(ours.value, element), bds)]
         case StructRef(struct=declared) if isinstance(bds.value, dict) and bds.fields is not None:
-            fields = struct_shapes[declared].fields
+            fields = [each for each in struct_shapes[declared].fields for _ in range(max(len(each.bind), 1))]
             if len(fields) != len(bds.fields) or bds.value.keys() - {each.get("name") for each in bds.fields}:
                 return None
             return [

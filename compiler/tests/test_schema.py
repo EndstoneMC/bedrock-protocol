@@ -46,6 +46,17 @@ class BossEventPacket:
     health_percent: float
 """
 
+SOUND = """
+from protocol import field, packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@packet(id=348, since=2168)
+class ClientboundUpdateSoundDataPacket:
+    event: uint8 = field(bind=["a", "b", "c", "d", "e", "f", "g"], until=2225)
+    event: uint8 = field(since=2225)
+"""
+
 MODELLED_INIT = """
 from bedrock_protocol_compiler.dsl import field, int64, packet, type, uint8, uint16, value
 
@@ -436,3 +447,17 @@ def test_the_package_is_the_modules_namespace(build_package):
         "dev.endstone.protocol",
         ["a"],
     )
+
+
+def test_a_bound_field_binds_only_over_its_range(build_package):
+    schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
+    (packet,) = schema.order
+
+    assert [len(schema.shape_at(packet, version).fields[0].bind) for version in (2168, 2193, 2225)] == [7, 7, 0]
+
+
+def test_a_change_in_bind_starts_a_new_shape(build_package):
+    schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
+    (packet,) = schema.order
+
+    assert [shape.ranges for shape in schema.shapes(packet)] == [[Range(2168, 2225)], [Range(2225, None)]]

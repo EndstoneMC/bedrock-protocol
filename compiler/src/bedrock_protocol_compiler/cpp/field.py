@@ -505,6 +505,40 @@ class VariantField:
         p.emit("}")
 
 
+class BoundField:
+    def __init__(self, element: FieldGenerator, bindings: int) -> None:
+        self.element = element
+        self.bindings = bindings
+
+    def cpp_type(self) -> str | None:
+        return self.element.cpp_type()
+
+    def includes(self) -> set[str]:
+        return self.element.includes()
+
+    def write(self, p: Printer, value: str) -> None:
+        p.emit(
+            """
+            for (std::size_t binding = 0; binding < $bindings$; ++binding) {
+                $body$
+            }
+            """,
+            bindings=self.bindings,
+            body=lambda: self.element.write(p, value),
+        )
+
+    def read(self, p: Printer, target: str) -> None:
+        p.emit(
+            """
+            for (std::size_t binding = 0; binding < $bindings$; ++binding) {
+                $body$
+            }
+            """,
+            bindings=self.bindings,
+            body=lambda: self.element.read(p, target),
+        )
+
+
 def make_field_generator(schema: Schema, node: Type, version: int, where: str, depth: int) -> FieldGenerator:
     match node:
         case Primitive():

@@ -44,6 +44,7 @@ def field(
     prefix: Any = None,
     count: Any = None,
     cereal: bool = True,
+    bind: list[str] | None = None,
 ) -> Any:
     """Mark a struct field: a wire override, a version gate, or a condition over earlier fields."""
     return None

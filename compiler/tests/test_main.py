@@ -97,6 +97,28 @@ class P:
     x: uint8 = field(when=lambda p: p.d == D.OLD)
 """
 
+CYLINDER = """
+from protocol import field
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Vec2:
+    x: float
+    y: float
+
+class CylinderDataPayload:
+    radii: Vec2 = field(bind=["radius_x", "radius_z"])
+    height: float
+"""
+
+CYLINDER_INIT = """
+from bedrock_protocol_compiler.dsl import field
+
+versions = (1001,)
+
+releases = {1001: "1.26.30"}
+"""
+
 
 @pytest.fixture
 def generate(build_package, tmp_path):
@@ -275,3 +297,30 @@ releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.x"}
     version = (out / "version.hpp").read_text()
     assert 'ProtocolVersion{3, 2, "1.3.0", "1.3.0", "1.3.0"},' in version
     assert 'ProtocolVersion{4, 4, "1.4.x", "1.4.0", "1.4.9"},' in version
+
+
+def test_a_bound_field_writes_once_per_binding(generate):
+    out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
+
+    write = (
+        "    for (std::size_t binding = 0; binding < 2; ++binding) {\n"
+        "        Serializer<::bedrock::protocol::Vec2>::serialize(stream, value.radii);\n"
+        "    }\n"
+        "    stream.write<float>(value.height);\n"
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_a_bound_field_reads_every_binding_into_it(generate):
+    out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
+
+    read = (
+        "    for (std::size_t binding = 0; binding < 2; ++binding) {\n"
+        "        {\n"
+        "            auto v = Serializer<::bedrock::protocol::Vec2>::deserialize(stream);\n"
+        '            if (!v) return stream.fail(v.error(), "radii");\n'
+        "            out.radii = std::move(*v);\n"
+        "        }\n"
+        "    }\n"
+    )
+    assert read in (out / "a.cpp").read_text()
