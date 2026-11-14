@@ -4,7 +4,7 @@
   "value": {
    "cause": 34,
    "dmg": 200,
-   "armor_slots": 31
+   "armor_slots": "0b11111"
   },
   "bytes": "4490031f"
  }

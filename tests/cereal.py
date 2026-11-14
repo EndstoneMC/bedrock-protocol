@@ -406,6 +406,7 @@ NON_FINITE = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
 ESCAPED_UUID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 ESCAPED_BYTES = re.compile(r"(\\x[0-9a-f]{2})*")
 ESCAPED_COLOR = re.compile(r"#[0-9a-f]{8}")
+ESCAPED_BITS = re.compile(r"0b[01]+")
 TAG_KINDS = {
     1: "ByteTag",
     2: "ShortTag",
@@ -452,6 +453,8 @@ class CaseForm:
             return bytes.fromhex(case.replace("\\x", "")) == bds.encode("utf-8", "surrogateescape")
         if type(case) is float and type(bds) is float:
             return case == bds or cls.widened_float32(case) == bds
+        if isinstance(case, str) and type(bds) is int and ESCAPED_BITS.fullmatch(case):
+            return cls.varint_groups(int(case, 2)) == [bds]
         if isinstance(bds, dict) and not isinstance(case, dict | list):
             return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
         return case == bds
@@ -1186,15 +1189,17 @@ class BlobCase(StringCase):
 
 
 class BitsetCase(CaseSchema):
-    """A compressed bitset as a plain integer."""
+    """A compressed bitset as a binary string."""
 
     @override
     def to_case(self, bds):
-        return sum((token & 0x7F) << (7 * index) for index, token in enumerate(CaseForm.tokens(bds)))
+        return bin(sum((token & 0x7F) << (7 * index) for index, token in enumerate(CaseForm.tokens(bds))))
 
     @override
     def to_bds(self, case):
-        return CaseForm.stream(CaseForm.varint_groups(case)) if type(case) is int and case >= 0 else case
+        if isinstance(case, str) and ESCAPED_BITS.fullmatch(case):
+            return CaseForm.stream(CaseForm.varint_groups(int(case, 2)))
+        return case
 
 
 class CompoundTagCase(CaseSchema):
