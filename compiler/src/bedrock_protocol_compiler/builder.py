@@ -292,7 +292,7 @@ class Builder:
         self.sources: dict[str, Source] = {}
         for path in sorted(package_dir.glob("*.py")):
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            self.sources[path.stem] = Source(path.stem, str(path), tree, Scope(None))
+            self.sources[path.stem] = Source(path.stem, path.as_posix(), tree, Scope(None))
         if "__init__" not in self.sources:
             raise CompilerError(f"{package_dir}: __init__.py: missing")
         self.init = self.sources.pop("__init__")
