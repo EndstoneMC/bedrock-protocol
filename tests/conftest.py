@@ -1522,7 +1522,7 @@ class ReflectionCtx:
     def composite(self, family):
         if family not in self.composites:
             name = qualified_name(family)
-            cls = reduce(getattr, name.split("."), self.module)
+            cls = reduce(getattr, name.split("."), self.module if family.cereal else self.module.pre_cereal)
             composite = HexColorSchema if name == "Color255RGBA" else GenericCompositeSchema
             self.composites[family] = schema = composite(cls, [])
             for field in self.shape(family).fields:
