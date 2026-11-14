@@ -7,11 +7,9 @@ import math
 import re
 import struct
 import uuid
-from copy import copy
 from functools import cache, reduce
 from operator import methodcaller, or_
 from pathlib import Path
-from types import SimpleNamespace
 from typing import ClassVar, override
 
 from bedrock_protocol import nbt
@@ -68,7 +66,6 @@ class SerializationTraits(enum.IntFlag):
 
 class KeyKind(enum.Enum):
     STD_STRING = enum.auto()
-    HASHED_STRING = enum.auto()
     OTHER = enum.auto()
 
 
@@ -425,26 +422,9 @@ TAG_KINDS = {
 TAG_IDS = {kind: number for number, kind in TAG_KINDS.items()}
 
 
-class DslShape(enum.Enum):
-    FLATTEN = enum.auto()
-    GROUP = enum.auto()
-    PAIRS = enum.auto()
-    MEMBER_ONLY = enum.auto()
-    ARRAY_OF_MEMBERS = enum.auto()
-
-
 class CaseForm:
     """Where a golden's JSON departs from BDS's: each mapping is deterministic and goes both ways."""
 
-    SHAPES: ClassVar = {
-        ("DeathInfoPacket", "death_cause_attack_name"): (DslShape.GROUP, "death_cause_message"),
-        ("DeathInfoPacket", "death_cause_message_list"): (DslShape.GROUP, "death_cause_message"),
-        ("CameraAimAssistCategoryPriorities", "entities"): (DslShape.PAIRS, KeyKind.OTHER),
-        ("CameraAimAssistCategoryPriorities", "blocks"): (DslShape.PAIRS, KeyKind.OTHER),
-        ("CameraAimAssistPresetDefinition", "item_settings"): (DslShape.PAIRS, KeyKind.OTHER),
-        ("VoxelShapesPacket", "name_map"): (DslShape.PAIRS, KeyKind.HASHED_STRING),
-        ("Color255RGBA", None): (DslShape.ARRAY_OF_MEMBERS, None),
-    }
     PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}
 
     @classmethod
@@ -1239,22 +1219,22 @@ class CompoundTagCase(CaseSchema):
 
 
 class MemberDescriptor:
-    """A struct member, reached from the owner through the bound attributes of its path."""
+    """A struct member, reached through its bound attribute on the owner."""
 
-    def __init__(self, name, schema, path, traits=SerializationTraits.NONE, is_required=True):
+    def __init__(self, name, schema, attribute, traits=SerializationTraits.NONE, is_required=True):
         self.name = name
         self.schema = schema
-        self.path = path
+        self.attribute = attribute
         self.traits = traits
         self.is_required = is_required
         self.is_const_selector = False
         self.constant = None
 
     def get(self, owner):
-        return reduce(getattr, self.path, owner)
+        return getattr(owner, self.attribute)
 
     def set(self, owner, value):
-        setattr(reduce(getattr, self.path[:-1], owner), self.path[-1], value)
+        setattr(owner, self.attribute, value)
 
     def save(self, owner, writer, context):
         writer.push_member(self.name)
@@ -1280,15 +1260,6 @@ class MemberDescriptor:
         return True
 
 
-class GroupMember(MemberDescriptor):
-    """A member that BDS nests and the DSL keeps flat, read from and written into the owner itself."""
-
-    @override
-    def set(self, owner, value):
-        for attribute, each in vars(value).items():
-            setattr(owner, attribute, each)
-
-
 class GenericCompositeSchema(BasicSchema):
     """A struct prints one key per member in registration order and loads schema-driven."""
 
@@ -1297,27 +1268,18 @@ class GenericCompositeSchema(BasicSchema):
         self.members = members
         self.bound_type = cls
 
-    def create(self):
-        return self.cls()
-
-    def view(self, value):
-        return value
-
-    def finish(self, owner):
-        return owner
-
     @override
     def do_load(self, reader, context, traits):
-        owner = self.create()
+        owner = self.cls()
         if not reader.expected_type() & SchemaRWType.OBJECT:
             context.log(ResultCode.ERROR, "expected an object")
-            return self.finish(owner)
+            return owner
         checkpoint = context.get_log_checkpoint()
         found = 0
         for member in self.members:
             found += member.load(reader, context, owner)
             if context.has_error(checkpoint):
-                return self.finish(owner)
+                return owner
         names = {member.name for member in self.members}
         if reader.members() > found:
             for _ in range(reader.members()):
@@ -1325,86 +1287,15 @@ class GenericCompositeSchema(BasicSchema):
                 reader.pop()
                 if key not in names:
                     context.log(ResultCode.UNRECOGNIZED_FIELD, f"{key}: found in the input, but not in the schema")
-        return self.finish(owner)
+        return owner
 
     @override
     def do_save(self, value, writer, context, traits):
-        owner = self.view(value)
         writer.open_object()
         for member in self.members:
             if context.has_error():
                 break
-            member.save(owner, writer, context)
-        writer.close()
-
-
-class UUIDHalvesSchema(GenericCompositeSchema):
-    """mce::UUID as BDS reflects it: the big-endian halves of the 128-bit value."""
-
-    def __init__(self):
-        half = IntegerSchema("uint64")
-        members = [
-            MemberDescriptor("most_significant_bits", half, ("most",)),
-            MemberDescriptor("least_significant_bits", half, ("least",)),
-        ]
-        super().__init__(uuid.UUID, members)
-
-    @override
-    def create(self):
-        return SimpleNamespace(most=0, least=0)
-
-    @override
-    def view(self, value):
-        return SimpleNamespace(most=value.int >> 64, least=value.int & (1 << 64) - 1)
-
-    @override
-    def finish(self, owner):
-        return uuid.UUID(int=owner.most << 64 | owner.least)
-
-
-class MemberOnlySchema(GenericCompositeSchema):
-    """A one-member struct that BDS prints as its member."""
-
-    @override
-    def do_load(self, reader, context, traits):
-        owner = self.create()
-        [member] = self.members
-        checkpoint = context.get_log_checkpoint()
-        value = member.schema.load(reader, context, member.traits)
-        if not context.has_error(checkpoint):
-            member.set(owner, value)
-        return self.finish(owner)
-
-    @override
-    def do_save(self, value, writer, context, traits):
-        [member] = self.members
-        member.schema.save(member.get(self.view(value)), writer, context, member.traits)
-
-
-class ArrayOfMembersSchema(GenericCompositeSchema):
-    """A struct that BDS prints as an array of its members."""
-
-    @override
-    def do_load(self, reader, context, traits):
-        owner = self.create()
-        if not reader.expected_type() & SchemaRWType.ARRAY or reader.length(len(self.members)) != len(self.members):
-            context.log(ResultCode.ERROR, f"expected exactly {len(self.members)} elements")
-            return self.finish(owner)
-        for index, member in enumerate(self.members):
-            checkpoint = context.get_log_checkpoint()
-            reader.push_element(index)
-            value = member.schema.load(reader, context, member.traits)
-            reader.pop()
-            if not context.has_error(checkpoint):
-                member.set(owner, value)
-        return self.finish(owner)
-
-    @override
-    def do_save(self, value, writer, context, traits):
-        owner = self.view(value)
-        writer.open_array(False, len(self.members))
-        for member in self.members:
-            member.schema.save(member.get(owner), writer, context, member.traits)
+            member.save(value, writer, context)
         writer.close()
 
 
@@ -1413,80 +1304,53 @@ class HexColorSchema(GenericCompositeSchema):
 
     @override
     def do_load(self, reader, context, traits):
-        owner = self.create()
+        owner = self.cls()
         text = reader.as_string()
         if text is None or not ESCAPED_COLOR.fullmatch(text):
             context.log(ResultCode.ERROR, "expected #rrggbbaa")
-            return self.finish(owner)
+            return owner
         for index, member in enumerate(self.members):
             member.set(owner, int(text[1 + 2 * index : 3 + 2 * index], 16))
-        return self.finish(owner)
+        return owner
 
     @override
     def do_save(self, value, writer, context, traits):
-        owner = self.view(value)
-        writer.write("#" + "".join(f"{member.get(owner):02x}" for member in self.members))
+        writer.write("#" + "".join(f"{member.get(value):02x}" for member in self.members))
 
 
 MARKER_EXCEPTIONS = {"_deprecated"}
-COMPOSITES = {DslShape.MEMBER_ONLY: MemberOnlySchema, DslShape.ARRAY_OF_MEMBERS: ArrayOfMembersSchema}
 
 
 class ReflectionCtx:
     """The schemas of one protocol, built from the model on first use."""
 
-    def __init__(self, protocol, mapped):
+    def __init__(self, protocol):
         self.protocol = protocol
-        self.mapped = mapped
-        self.shapes = {} if mapped else CaseForm.SHAPES
         self.module = importlib.import_module(f"bedrock_protocol.v{protocol}")
         self.composites = {}
 
     def shape(self, family):
         return MODEL.live[family, self.protocol]
 
-    def case(self, schema, case_class, *arguments):
-        return case_class(schema, *arguments) if self.mapped else schema
-
     def composite(self, family):
         if family not in self.composites:
             name = qualified_name(family)
-            kind, _ = self.shapes.get((name, None), (None, None))
             cls = reduce(getattr, name.split("."), self.module)
-            composite = (
-                HexColorSchema
-                if self.mapped and name == "Color255RGBA"
-                else COMPOSITES.get(kind, GenericCompositeSchema)
-            )
+            composite = HexColorSchema if name == "Color255RGBA" else GenericCompositeSchema
             self.composites[family] = schema = composite(cls, [])
             schema.members = self.members(family)
         return self.composites[family]
 
     def members(self, family):
-        name = qualified_name(family)
-        members, groups = [], {}
+        members = []
         for field in self.shape(family).fields:
             if field.name.startswith("_") and field.name not in MARKER_EXCEPTIONS:
                 continue
-            kind, argument = self.shapes.get((name, field.name), (None, None))
             attribute = f"{field.name}_" if keyword.iskeyword(field.name) else field.name
-            if kind is DslShape.FLATTEN:
-                for each in self.members(field.type.struct):
-                    flattened = copy(each)
-                    flattened.path = (attribute, *each.path)
-                    members.append(flattened)
-                continue
-            member = self.member(field, kind, argument, attribute)
-            if kind is not DslShape.GROUP:
-                members.append(member)
-                continue
-            if argument not in groups:
-                groups[argument] = GroupMember(argument, GenericCompositeSchema(SimpleNamespace, []), ())
-                members.append(groups[argument])
-            groups[argument].schema.members.append(member)
+            members.append(self.member(field, attribute))
         return members
 
-    def member(self, field, kind, argument, attribute):
+    def member(self, field, attribute):
         node = field.type
         optional = isinstance(node, OptionalType)
         node = node.element if optional else node
@@ -1495,9 +1359,9 @@ class ReflectionCtx:
                 constant, node = self.shape(enum).numbers[name], EnumRef(enum)
             case Literal(value=constant):
                 node = Primitive("str" if isinstance(constant, str) else "bool")
-        schema = self.schema(node, argument if kind is DslShape.PAIRS else None)
+        schema = self.schema(node)
         schema = OptionalSchema(schema) if optional else schema
-        member = MemberDescriptor(field.name, schema, (attribute,), self.traits(node), not optional)
+        member = MemberDescriptor(field.name, schema, attribute, self.traits(node), not optional)
         if isinstance(field.type, Literal):
             member.is_const_selector, member.constant = True, constant
         return member
@@ -1518,26 +1382,26 @@ class ReflectionCtx:
                 return reduce(or_, (self.traits(arm) for arm in arms if arm), SerializationTraits.NONE)
         return SerializationTraits.NONE
 
-    def schema(self, node, key_kind=None):
+    def schema(self, node):
         match node:
             case Primitive(name="bool"):
                 return BoolSchema()
             case Primitive(name="str"):
-                return self.case(StringSchema(), StringCase)
+                return StringCase(StringSchema())
             case Primitive(name="bytes"):
-                return self.case(BlobSchema(False), BlobCase)
+                return BlobCase(BlobSchema(False))
             case Primitive(name="float"):
-                return self.case(FloatSchema(32), FloatCase, 32)
+                return FloatCase(FloatSchema(32), 32)
             case Primitive(name="double"):
-                return self.case(FloatSchema(64), FloatCase, 64)
+                return FloatCase(FloatSchema(64), 64)
             case Primitive(name=name, wire=wire):
                 return IntegerSchema(name, wire)
             case AliasRef(alias=alias, wire=wire):
                 return IntegerSchema(alias.primitive.name, wire)
-            case BuiltinRef(builtin=builtin, wire=wire) if builtin.name == "UUID":
-                return UUIDSchema() if wire == "str" or self.mapped else UUIDHalvesSchema()
+            case BuiltinRef(builtin=builtin) if builtin.name == "UUID":
+                return UUIDSchema()
             case BuiltinRef(builtin=builtin) if builtin.name in ("CompoundTag", "CompoundTagData"):
-                return self.case(CompoundTagSchema(builtin.name == "CompoundTag"), CompoundTagCase)
+                return CompoundTagCase(CompoundTagSchema(builtin.name == "CompoundTag"))
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
                 return DynamicValueSchema()
             case EnumRef(enum=enum, wire=wire) if enum.name in CaseForm.PLAIN_ENUMS:
@@ -1549,42 +1413,40 @@ class ReflectionCtx:
             case StructRef(struct=family):
                 return self.composite(family)
             case List(element=Primitive(name="uint8", wire=None)):
-                return self.case(BlobSchema(True), BlobCase)
+                return BlobCase(BlobSchema(True))
             case List(element=element):
                 return VectorSchema(self.schema(element))
             case Array(element=element, size=size):
                 return ArraySchema(self.schema(element), size)
             case Map(key=key, value=value):
-                kind = key_kind or (KeyKind.STD_STRING if key == Primitive("str") else KeyKind.OTHER)
+                kind = KeyKind.STD_STRING if key == Primitive("str") else KeyKind.OTHER
                 return MapSchema(self.schema(key), self.schema(value), kind)
             case Variant(cases=arms):
                 return VariantSchema([NullTypeSchema() if arm is None else self.schema(arm) for arm in arms])
             case Bitset(width=MemberRef(enum=enum, name=name)):
-                return self.case(BitsetSchema(self.shape(enum).numbers[name]), BitsetCase)
+                return BitsetCase(BitsetSchema(self.shape(enum).numbers[name]))
         raise LookupError(f"{node!r}: has no schema")
 
 
-REFLECTIONS = {
-    (protocol, mapped): ReflectionCtx(protocol, mapped) for protocol in MODEL.versions for mapped in (False, True)
-}
+REFLECTIONS = {protocol: ReflectionCtx(protocol) for protocol in MODEL.versions}
 
 
 @cache
-def schema_of(cls, mapped):
-    return REFLECTIONS[int(cls.__module__.rpartition(".v")[2]), mapped].composite(FAMILIES[cls.__qualname__])
+def schema_of(cls):
+    return REFLECTIONS[int(cls.__module__.rpartition(".v")[2])].composite(FAMILIES[cls.__qualname__])
 
 
-def save(value, bds=False):
-    """The case JSON for a bound struct, or BDS's own JSON with `bds`."""
+def save(value):
+    """The case JSON for a bound struct."""
     writer = RapidJSONSchemaWriter()
-    schema_of(type(value), not bds).save(value, writer, SerializerContext())
+    schema_of(type(value)).save(value, writer, SerializerContext())
     return writer.result
 
 
-def load(cls, value, bds=False):
-    """The bound struct for case JSON, or for BDS's own JSON with `bds`, loaded strictly."""
+def load(cls, value):
+    """The bound struct for case JSON, loaded strictly."""
     context = SerializerContext()
-    loaded = schema_of(cls, not bds).load(StrictRapidJSONSchemaReader(value), context)
+    loaded = schema_of(cls).load(StrictRapidJSONSchemaReader(value), context)
     if context.has_error():
         raise LoadError(context.entries)
     return loaded
