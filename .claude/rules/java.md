@@ -8,6 +8,7 @@ paths:
 
 - Throw `DecodeException` for bad encoded bytes and nothing else for them; programming errors stay `NullPointerException`, `IllegalArgumentException`, `IllegalStateException` and Netty's own exceptions.
 - Catch only `DecodeException`, where a packet enters or to prepend a path segment; never catch `Throwable`, `Error`, `Exception`, `RuntimeException` or `IndexOutOfBoundsException`, and never write an empty catch.
+- In a test, catch only the `InvocationTargetException` a reflective call wraps a rejection in, and rethrow every cause it does not handle.
 - Create a `DecodeException` through its factories (`truncated`, `outOfRange`, `unknownValue`, `trailingBytes`), as protobuf's `InvalidProtocolBufferException` does; it carries no reason enum.
 - Carry the partly decoded message on a `DecodeException`, as protobuf's `setUnfinishedMessage` does: a generated decode sets what its builder holds at the catch that prepends the field, so the outermost message wins.
 - Never put encoded text in an exception message.
@@ -27,4 +28,5 @@ paths:
 - Generate `v<N>.Packets` for every modelled version, a bare `Packets` for the latest, and a bare `ProtocolVersion` mirroring the C++ `version.hpp`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
+- Check every golden in `GoldensTest` both ways through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it.
 - Test in JUnit 6 under `.claude/rules/tests.md`: a behaviour-named method, one behaviour each, no loop, `if` or `try`, `assertThrows` with the message, `@ParameterizedTest` with `argumentSet` for cases, no mocks.

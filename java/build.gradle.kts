@@ -21,6 +21,7 @@ dependencies {
     api("io.netty:netty-buffer:4.2.19.Final")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("com.google.code.gson:gson:2.11.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -84,6 +85,9 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    val goldens = file("../tests/goldens")
+    inputs.dir(goldens).withPropertyName("goldens")
+    systemProperty("goldens.dir", goldens.absolutePath)
 }
 
 tasks.jar {
