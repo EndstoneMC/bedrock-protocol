@@ -117,11 +117,11 @@ def test_a_header_and_a_source_per_module_packets_hpp_and_version_hpp(generate):
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
     out = generate({"a": A})
     for path in out.iterdir():
-        os.utime(path, ns=(1, 1))
+        os.utime(path, ns=(1_000_000_000, 1_000_000_000))
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1}
+    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1_000_000_000}
 
 
 def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
@@ -229,7 +229,7 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     out = generate({"a": A, "b": B})
     before = {path.name: path.read_bytes() for path in out.iterdir()}
     for path in out.iterdir():
-        os.utime(path, ns=(1, 1))
+        os.utime(path, ns=(1_000_000_000, 1_000_000_000))
     (tmp_path / "protocol/b.py").write_text(
         'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\nclass B:\n    x: Missing\n'
     )
@@ -238,7 +238,7 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
     assert {path.name: path.read_bytes() for path in out.iterdir()} == before
-    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1}
+    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1_000_000_000}
 
 
 def test_packets_hpp_names_every_packet_of_every_module(generate):

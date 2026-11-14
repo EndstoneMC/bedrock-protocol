@@ -21,9 +21,9 @@ def test_commit_writes_every_opened_file(tmp_path):
 def test_commit_leaves_an_unchanged_file_untouched(tmp_path):
     write(tmp_path, "bedrock/protocol/boss.h", "boss")
     target = tmp_path / "bedrock/protocol/boss.h"
-    os.utime(target, ns=(1, 1))
+    os.utime(target, ns=(1_000_000_000, 1_000_000_000))
     write(tmp_path, "bedrock/protocol/boss.h", "boss")
-    assert target.stat().st_mtime_ns == 1
+    assert target.stat().st_mtime_ns == 1_000_000_000
 
 
 def test_commit_rewrites_a_changed_file(tmp_path):
