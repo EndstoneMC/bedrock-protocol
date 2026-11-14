@@ -28,6 +28,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
+      id-token: write
 
   publish:
     name: Publish

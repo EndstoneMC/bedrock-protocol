@@ -206,6 +206,9 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.2
@@ -232,13 +235,16 @@ jobs:
           LLVM_PROFILE_FILE: ${{ github.workspace }}/profiles/%p.profraw
         run: uv run --no-project pytest tests
 
-      - name: Report the C++ coverage
+      - name: Export the C++ coverage
         run: |
           llvm-profdata-18 merge -sparse -o coverage.profdata profiles/*.profraw
           core=$(uv run --no-project python -c "import bedrock_protocol._core as m; print(m.__file__)")
-          {
-            echo '```'
-            llvm-cov-18 report "$core" -instr-profile=coverage.profdata -show-branch-summary \
-                -ignore-filename-regex='(/nanobind/|^/usr/)'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          llvm-cov-18 export "$core" -format=lcov -instr-profile=coverage.profdata \
+              -ignore-filename-regex='(/nanobind/|^/usr/)' > coverage.lcov
+
+      - uses: codecov/codecov-action@v7.1.1
+        with:
+          files: coverage.lcov
+          disable_search: true
+          fail_ci_if_error: true
+          use_oidc: true
