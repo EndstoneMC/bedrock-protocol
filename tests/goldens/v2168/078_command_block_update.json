@@ -3,6 +3,7 @@
   "id": "block_command_data_arm",
   "value": {
    "target": {
+    "__class__": "BlockCommandData",
     "block_pos": {
      "x": 1,
      "y": -2,
@@ -26,6 +27,7 @@
   "id": "entity_command_target_arm",
   "value": {
    "target": {
+    "__class__": "EntityCommandTarget",
     "entity_id": 300
    },
    "command": "say hi",

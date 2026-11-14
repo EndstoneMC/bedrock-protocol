@@ -6,6 +6,7 @@
     "raw_id": -3
    },
    "variant_transaction": {
+    "__class__": "NormalTransactionData",
     "transaction": {
      "actions": [
       {
@@ -49,6 +50,7 @@
     }
    ],
    "variant_transaction": {
+    "__class__": "InventoryMismatchData",
     "transaction": {
      "actions": [
       {
@@ -85,6 +87,7 @@
     "raw_id": -3
    },
    "variant_transaction": {
+    "__class__": "ItemUseInventoryTransaction",
     "transaction": {
      "actions": [
       {
@@ -152,6 +155,7 @@
     "raw_id": -3
    },
    "variant_transaction": {
+    "__class__": "ItemUseOnActorInventoryTransaction",
     "transaction": {
      "actions": []
     },
@@ -187,6 +191,7 @@
     "raw_id": -3
    },
    "variant_transaction": {
+    "__class__": "ItemReleaseInventoryTransaction",
     "transaction": {
      "actions": []
     },

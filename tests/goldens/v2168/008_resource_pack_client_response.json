@@ -3,6 +3,7 @@
   "id": "downloading_arm",
   "value": {
    "response": {
+    "__class__": "Downloading",
     "response_type": "downloading",
     "downloading_packs": ["5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d_1.2.3"]
    }
@@ -13,6 +14,7 @@
   "id": "stack_finished_arm",
   "value": {
    "response": {
+    "__class__": "ResourcePackStackFinished",
     "response_type": "resourcepackstackfinished"
    }
   },
@@ -22,6 +24,7 @@
   "id": "cancel_arm",
   "value": {
    "response": {
+    "__class__": "Cancel",
     "response_type": "cancel"
    }
   },
@@ -31,6 +34,7 @@
   "id": "downloading_finished_arm",
   "value": {
    "response": {
+    "__class__": "DownloadingFinished",
     "response_type": "downloadingfinished"
    }
   },

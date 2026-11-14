@@ -4,6 +4,7 @@
   "value": {
    "reason": 147,
    "messages": {
+    "__class__": "DisconnectPacketMessages",
     "message": "bye",
     "filtered_message": "b**"
    }

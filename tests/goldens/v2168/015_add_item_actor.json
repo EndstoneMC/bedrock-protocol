@@ -26,6 +26,7 @@
      {
       "id": 38,
       "payload": {
+       "__class__": "DataItemFloatPayload",
        "type": 3,
        "value": 0.5
       }
@@ -64,6 +65,7 @@
      {
       "id": 2,
       "payload": {
+       "__class__": "DataItemIntPayload",
        "type": 2,
        "value": 7
       }
@@ -71,6 +73,7 @@
      {
       "id": 3,
       "payload": {
+       "__class__": "DataItemBytePayload",
        "type": 0,
        "value": 3
       }
@@ -78,6 +81,7 @@
      {
       "id": 4,
       "payload": {
+       "__class__": "DataItemStringPayload",
        "type": 4,
        "value": "Bob"
       }
@@ -85,6 +89,7 @@
      {
       "id": 5,
       "payload": {
+       "__class__": "DataItemInt64Payload",
        "type": 7,
        "value": -4000000000
       }
@@ -92,6 +97,7 @@
      {
       "id": 7,
       "payload": {
+       "__class__": "DataItemShortPayload",
        "type": 1,
        "value": 300
       }
@@ -99,6 +105,7 @@
      {
       "id": 28,
       "payload": {
+       "__class__": "DataItemPosPayload",
        "type": 6,
        "value": {
         "x": 1,
@@ -110,6 +117,7 @@
      {
       "id": 118,
       "payload": {
+       "__class__": "DataItemCompoundTagPayload",
        "type": 5,
        "value": {
         "Hitboxes": {
@@ -135,6 +143,7 @@
      {
       "id": 130,
       "payload": {
+       "__class__": "DataItemVec3Payload",
        "type": 8,
        "value": {
         "x": 0.5,

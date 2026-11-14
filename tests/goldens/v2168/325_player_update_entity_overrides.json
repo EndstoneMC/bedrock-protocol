@@ -5,6 +5,7 @@
    "id": 7,
    "property_index": 2,
    "update": {
+    "__class__": "ClearOverride",
     "update_type": "clearoverrides"
    }
   },
@@ -16,6 +17,7 @@
    "id": 7,
    "property_index": 2,
    "update": {
+    "__class__": "IntOverride",
     "update_type": "setintoverride",
     "value": 42
    }
@@ -28,6 +30,7 @@
    "id": 7,
    "property_index": 2,
    "update": {
+    "__class__": "FloatOverride",
     "update_type": "setfloatoverride",
     "value": 0.5
    }
@@ -40,6 +43,7 @@
    "id": 7,
    "property_index": 2,
    "update": {
+    "__class__": "RemoveOverride",
     "update_type": "removeoverride"
    }
   },

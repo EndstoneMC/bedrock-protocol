@@ -9,6 +9,7 @@
      },
      "actions": [
       {
+       "__class__": "TakeActionData",
        "action_type": 0,
        "amount": 1,
        "source": {
@@ -44,9 +45,11 @@
      },
      "actions": [
       {
+       "__class__": "LabTableCombineActionData",
        "action_type": 9
       },
       {
+       "__class__": "CraftCreativeActionData",
        "action_type": 14,
        "creative_item_net_id": 5,
        "num_crafts": 1
@@ -69,6 +72,7 @@
      },
      "actions": [
       {
+       "__class__": "PlaceActionData",
        "action_type": 1,
        "amount": 2,
        "source": {
@@ -88,6 +92,7 @@
        }
       },
       {
+       "__class__": "SwapActionData",
        "action_type": 2,
        "source": {
         "full_container_name": {
@@ -105,6 +110,7 @@
        }
       },
       {
+       "__class__": "DropActionData",
        "action_type": 3,
        "amount": 3,
        "source": {
@@ -117,6 +123,7 @@
        "randomly": true
       },
       {
+       "__class__": "DestroyActionData",
        "action_type": 4,
        "amount": 4,
        "source": {
@@ -128,6 +135,7 @@
        }
       },
       {
+       "__class__": "ConsumeActionData",
        "action_type": 5,
        "amount": 5,
        "source": {
@@ -139,38 +147,45 @@
        }
       },
       {
+       "__class__": "CreateActionData",
        "action_type": 6,
        "results_index": 2
       },
       {
+       "__class__": "BeaconPaymentActionData",
        "action_type": 10,
        "primary_effect_id": 1,
        "secondary_effect_id": 3
       },
       {
+       "__class__": "MineBlockActionData",
        "action_type": 11,
        "slot": 6,
        "predicted_durability": 7,
        "net_id_variant": 15
       },
       {
+       "__class__": "CraftRecipeActionData",
        "action_type": 12,
        "recipe_net_id": 8,
        "num_crafts": 2
       },
       {
+       "__class__": "CraftRecipeAutoActionData",
        "action_type": 13,
        "recipe_net_id": 9,
        "num_crafts": 3,
        "ingredients": [
         {
          "item_descriptor": {
+          "__class__": "EmptyItemDescriptorData",
           "descriptor_type": 0
          },
          "stack_size": 1
         },
         {
          "item_descriptor": {
+          "__class__": "ItemNameDescriptorData",
           "descriptor_type": 1,
           "full_name": "minecraft:stone",
           "aux_value": 0
@@ -179,6 +194,7 @@
         },
         {
          "item_descriptor": {
+          "__class__": "MolangItemDescriptorData",
           "descriptor_type": 2,
           "tag_expression": "query.is_item_name_any('minecraft:apple')",
           "molang_version": 13
@@ -187,6 +203,7 @@
         },
         {
          "item_descriptor": {
+          "__class__": "ItemTagDescriptorData",
           "descriptor_type": 3,
           "item_tag": "minecraft:boats"
          },
@@ -195,17 +212,20 @@
        ]
       },
       {
+       "__class__": "CraftRecipeOptionalActionData",
        "action_type": 15,
        "recipe_net_id": 10,
        "filtered_string_index": 1
       },
       {
+       "__class__": "CraftRepairAndDisenchantActionData",
        "action_type": 16,
        "recipe_net_id": 11,
        "num_crafts": 1,
        "repair_cost": 12
       },
       {
+       "__class__": "CraftLoomActionData",
        "action_type": 17,
        "pattern_name_id": "creeper",
        "num_crafts": 1

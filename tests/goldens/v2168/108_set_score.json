@@ -4,11 +4,13 @@
   "value": {
    "score_info": [
     {
+     "__class__": "RemoveScore",
      "action": "remove",
      "scoreboard_id": 1,
      "objective_name": "rm"
     },
     {
+     "__class__": "ChangePlayerScore",
      "action": "changeplayer",
      "scoreboard_id": 2,
      "objective_name": "obj",
@@ -18,6 +20,7 @@
      }
     },
     {
+     "__class__": "ChangeEntityScore",
      "action": "changeentity",
      "scoreboard_id": 3,
      "objective_name": "obj",
@@ -25,6 +28,7 @@
      "entity_id": 11
     },
     {
+     "__class__": "ChangeFakePlayerScore",
      "action": "changefakeplayer",
      "scoreboard_id": 4,
      "objective_name": "obj",
@@ -40,6 +44,7 @@
   "value": {
    "score_info": [
     {
+     "__class__": "RemoveScore",
      "action": "remove",
      "scoreboard_id": 1
     }

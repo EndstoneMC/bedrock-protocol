@@ -4,6 +4,7 @@
   "value": {
    "id": 7,
    "location": {
+    "__class__": "CoordinatesLocation",
     "type": 0,
     "pos": {
      "x": 1.0,
@@ -19,6 +20,7 @@
   "value": {
    "id": 7,
    "location": {
+    "__class__": "HiddenLocation",
     "type": 1
    }
   },

@@ -28,6 +28,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Match a case's map with BDS's list of `key`/`value` objects by key, and an empty map with `[]`.
 - Write a `Color255RGBA` in a case as `#rrggbbaa`, and compare it by turning it into BDS's `[r, g, b, a]` array.
 - Write a bitset in a case as `0b` followed by its bits, most significant first.
+- Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.
 - Read BDS's printed text with `CaseForm.parse_bds`, which keeps an object whose tokens leak as its flat values, and match a case's `0b` bitset with its varint groups there.
 - Never change the bytes of a case BDS writes back unchanged; change its value only for a rename or a library type fix.
 

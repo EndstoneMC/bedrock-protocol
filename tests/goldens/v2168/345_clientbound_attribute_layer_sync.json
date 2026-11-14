@@ -3,12 +3,14 @@
   "id": "update_environment_attributes_arm",
   "value": {
    "data": {
+    "__class__": "UpdateEnvironmentAttributesData",
     "layer_name": "wet",
     "layer_dimension_id": 1,
     "attributes": [
      {
       "name": "temp",
       "attribute": {
+       "__class__": "BoolAttributeData",
        "value": true,
        "operation": "alpha_blend"
       },
@@ -27,6 +29,7 @@
   "id": "update_attribute_layers_arm",
   "value": {
    "data": {
+    "__class__": "UpdateAttributeLayersData",
     "attribute_layers": [
      {
       "name": "rain",
@@ -42,16 +45,19 @@
        {
         "name": "a",
         "from_attribute": {
+         "__class__": "BoolAttributeData",
          "value": true,
          "operation": "xor"
         },
         "attribute": {
+         "__class__": "FloatAttributeData",
          "value": 0.75,
          "operation": "add",
          "constraint_min_value": 0.5,
          "constraint_max_value": 2.5
         },
         "to_attribute": {
+         "__class__": "ColorAttributeData",
          "value": "#0a141eff",
          "operation": "multiply"
         },
@@ -64,14 +70,17 @@
        {
         "name": "b",
         "from_attribute": {
+         "__class__": "FloatAttributeData",
          "value": 1.25,
          "operation": "maximum"
         },
         "attribute": {
+         "__class__": "ColorAttributeData",
          "value": "#0a141eff",
          "operation": "multiply"
         },
         "to_attribute": {
+         "__class__": "BoolAttributeData",
          "value": true,
          "operation": "xor"
         },
@@ -84,14 +93,17 @@
        {
         "name": "c",
         "from_attribute": {
+         "__class__": "ColorAttributeData",
          "value": "#0a141eff",
          "operation": "multiply"
         },
         "attribute": {
+         "__class__": "BoolAttributeData",
          "value": true,
          "operation": "xor"
         },
         "to_attribute": {
+         "__class__": "FloatAttributeData",
          "value": 0.75,
          "operation": "add",
          "constraint_min_value": 0.5,
@@ -125,6 +137,7 @@
   "id": "update_attribute_layer_settings_arm",
   "value": {
    "data": {
+    "__class__": "UpdateAttributeLayerSettingsData",
     "layer_name": "rain",
     "layer_dimension_id": 0,
     "attribute_layer_settings": {
@@ -141,6 +154,7 @@
   "id": "remove_environment_attributes_arm",
   "value": {
    "data": {
+    "__class__": "RemoveEnvironmentAttributesData",
     "layer_name": "rain",
     "layer_dimension_id": 1,
     "attributes": ["a"]

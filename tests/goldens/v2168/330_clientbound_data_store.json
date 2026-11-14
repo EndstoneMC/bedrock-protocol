@@ -4,6 +4,7 @@
   "value": {
    "updates": [
     {
+     "__class__": "DataStoreUpdate",
      "data_store_name": "hud",
      "property": "opacity",
      "path": "slots",
@@ -12,12 +13,14 @@
      "path_update_count": 1
     },
     {
+     "__class__": "DataStoreChange",
      "data_store_name": "form",
      "property": "title",
      "update_count": 7,
      "new_data": "Chest"
     },
     {
+     "__class__": "DataStoreRemoval",
      "data_store_name": "form"
     }
    ]
@@ -29,6 +32,7 @@
   "value": {
    "updates": [
     {
+     "__class__": "DataStoreChange",
      "data_store_name": "form",
      "property": "state",
      "update_count": 2,
@@ -54,6 +58,7 @@
   "value": {
    "updates": [
     {
+     "__class__": "DataStoreUpdate",
      "data_store_name": "hud",
      "property": "visible",
      "path": "slots",
@@ -62,6 +67,7 @@
      "path_update_count": 3
     },
     {
+     "__class__": "DataStoreUpdate",
      "data_store_name": "form",
      "property": "title",
      "path": "lines",

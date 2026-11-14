@@ -4,6 +4,7 @@
   "value": {
    "localize": false,
    "body": {
+    "__class__": "MessageOnly",
     "type": 11,
     "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
    },
@@ -17,6 +18,7 @@
   "value": {
    "localize": false,
    "body": {
+    "__class__": "AuthorAndMessage",
     "type": 1,
     "author": "Steve",
     "message": "hello"
@@ -32,6 +34,7 @@
   "value": {
    "localize": true,
    "body": {
+    "__class__": "MessageAndParams",
     "type": 2,
     "message": "commands.kill.successful",
     "params": ["Alex"]

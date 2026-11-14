@@ -6,6 +6,7 @@
    "type": 4,
    "use_player_id": true,
    "event_data": {
+    "__class__": "MobKilled",
     "killer_entity_id": 1,
     "killed_mob_id": 2,
     "damage_child_type": 319,
@@ -23,6 +24,7 @@
    "type": 31,
    "use_player_id": false,
    "event_data": {
+    "__class__": "ItemUsed",
     "item_id": 306,
     "item_aux": 5,
     "use_method": 1,
@@ -38,6 +40,7 @@
    "type": 15,
    "use_player_id": false,
    "event_data": {
+    "__class__": "POICauldronUsed",
     "interaction_type": 9,
     "item_id": 307
    }
@@ -51,6 +54,7 @@
    "type": 5,
    "use_player_id": false,
    "event_data": {
+    "__class__": "CauldronUsed",
     "contents_color": 5,
     "contents_type": -2,
     "fill_level": 300
@@ -65,6 +69,7 @@
    "type": 0,
    "use_player_id": false,
    "event_data": {
+    "__class__": "Achievement",
     "achievement_id": 20
    }
   },
@@ -76,7 +81,9 @@
    "player_unique_id": 7,
    "type": 22,
    "use_player_id": false,
-   "event_data": {}
+   "event_data": {
+    "__class__": "Empty"
+   }
   },
   "bytes": "0e2c0015"
  },
@@ -87,6 +94,7 @@
    "type": 1,
    "use_player_id": false,
    "event_data": {
+    "__class__": "Interaction",
     "interacted_entity_id": 9,
     "interaction_type": 2,
     "interacted_entity_type": 4,
@@ -103,6 +111,7 @@
    "type": 2,
    "use_player_id": false,
    "event_data": {
+    "__class__": "PortalCreated",
     "built_in_dimension": 1
    }
   },
@@ -115,6 +124,7 @@
    "type": 3,
    "use_player_id": false,
    "event_data": {
+    "__class__": "PortalUsed",
     "from_dimension": 0,
     "to_dimension": 1
    }
@@ -128,6 +138,7 @@
    "type": 6,
    "use_player_id": false,
    "event_data": {
+    "__class__": "PlayerDied",
     "killer_id": 5,
     "killer_variant": 2,
     "damage_source": 3,
@@ -143,6 +154,7 @@
    "type": 7,
    "use_player_id": false,
    "event_data": {
+    "__class__": "BossKilled",
     "boss_unique_id": 12,
     "party_size": 3,
     "boss_type": 4
@@ -157,6 +169,7 @@
    "type": 11,
    "use_player_id": false,
    "event_data": {
+    "__class__": "SlashCommand",
     "success_count": 2,
     "error_count": 1,
     "command_name": "give",
@@ -172,6 +185,7 @@
    "type": 13,
    "use_player_id": false,
    "event_data": {
+    "__class__": "MobBorn",
     "baby_type": 5,
     "baby_variant": 2,
     "baby_color": 3
@@ -186,6 +200,7 @@
    "type": 16,
    "use_player_id": false,
    "event_data": {
+    "__class__": "ComposterUsed",
     "interaction_type": 19,
     "item_id": 306
    }
@@ -199,6 +214,7 @@
    "type": 17,
    "use_player_id": false,
    "event_data": {
+    "__class__": "BellUsed",
     "item_id": 307
    }
   },
@@ -211,6 +227,7 @@
    "type": 18,
    "use_player_id": false,
    "event_data": {
+    "__class__": "ActorDefinition",
     "event_name": "event"
    }
   },
@@ -223,6 +240,7 @@
    "type": 19,
    "use_player_id": false,
    "event_data": {
+    "__class__": "RaidUpdate",
     "current_wave": 2,
     "total_waves": 5,
     "success": true
@@ -237,6 +255,7 @@
    "type": 23,
    "use_player_id": false,
    "event_data": {
+    "__class__": "TargetBlockHit",
     "redstone_level": 7
    }
   },
@@ -249,6 +268,7 @@
    "type": 24,
    "use_player_id": false,
    "event_data": {
+    "__class__": "PiglinBarter",
     "item_id": 306,
     "was_targeting_bartering_player": true
    }
@@ -262,6 +282,7 @@
    "type": 25,
    "use_player_id": false,
    "event_data": {
+    "__class__": "PlayerWaxedOrUnwaxedCopper",
     "block_id": 5
    }
   },
@@ -274,6 +295,7 @@
    "type": 26,
    "use_player_id": false,
    "event_data": {
+    "__class__": "CodeBuilderRuntimeAction",
     "runtime_action": "run"
    }
   },
@@ -286,6 +308,7 @@
    "type": 27,
    "use_player_id": false,
    "event_data": {
+    "__class__": "CodeBuilderScoreboard",
     "objective_name": "obj",
     "score": 9
    }

@@ -4,6 +4,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
+    "__class__": "ReplacePage",
     "page_index": 2,
     "page_text": "hello",
     "photo_name": "photo.png"
@@ -16,6 +17,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
+    "__class__": "AddPage",
     "page_index": 2,
     "page_text": "hello",
     "photo_name": "photo.png"
@@ -28,6 +30,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
+    "__class__": "DeletePage",
     "page_index": 1
    }
   },
@@ -38,6 +41,7 @@
   "value": {
    "book_slot": 3,
    "operation": {
+    "__class__": "SwapPages",
     "page_index": 1,
     "swap_with_index": 2
    }
@@ -49,6 +53,7 @@
   "value": {
    "book_slot": 4,
    "operation": {
+    "__class__": "Finalize",
     "title": "Diary",
     "author": "Steve",
     "xuid": "2535465"

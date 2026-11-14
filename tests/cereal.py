@@ -462,6 +462,10 @@ class CaseForm:
     @classmethod
     def matches(cls, case, bds):
         """Whether BDS's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
+        # {"__class__": "Pause"} vs {}
+        if isinstance(case, dict) and "__class__" in case:
+            return cls.matches({key: value for key, value in case.items() if key != "__class__"}, bds)
+
         # {"value": "0b100000001"} vs {"Actor Flag Bitset Data": 129, 2}
         if isinstance(case, dict) and isinstance(bds, FlatObject):
             index = 0
@@ -1293,6 +1297,31 @@ class CompoundTagCase(CaseSchema):
         return CaseForm.stream(tokens)
 
 
+class VariantCase(CaseSchema):
+    """A union whose object arm starts with `__class__`, its DSL class name, and loads as that arm alone."""
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        scratch = RapidJSONSchemaWriter()
+        self.inner.save(value, scratch, context, traits)
+        if scratch.written:
+            bare = scratch.result
+            writer.place({"__class__": type(value).__name__, **bare} if isinstance(bare, dict) else bare)
+
+    @override
+    def do_load(self, reader, context, traits):
+        case = reader.node
+        if not isinstance(case, dict):
+            return self.inner.load(reader, context, traits)
+        name = case.get("__class__")
+        arm = next((arm for arm in self.inner.arms if arm.bound_type.__name__ == name), None)
+        if arm is None:
+            context.log(ResultCode.ERROR, f"__class__: {name!r} names no arm of the union")
+            return None
+        bare = {key: value for key, value in case.items() if key != "__class__"}
+        return arm.load(StrictRapidJSONSchemaReader(bare), context, traits | SerializationTraits.COMPRESSION)
+
+
 class MemberDescriptor:
     """A struct member, reached through its bound attribute on the owner."""
 
@@ -1497,7 +1526,9 @@ class ReflectionCtx:
                 kind = KeyKind.STD_STRING if key == Primitive("str") else KeyKind.OTHER
                 return MapSchema(self.schema(key), self.schema(value), kind)
             case Variant(cases=arms):
-                return VariantSchema([NullTypeSchema() if arm is None else self.schema(arm) for arm in arms])
+                return VariantCase(
+                    VariantSchema([NullTypeSchema() if arm is None else self.schema(arm) for arm in arms])
+                )
             case Bitset(width=MemberRef(enum=enum, name=name)):
                 return BitsetCase(BitsetSchema(self.shape(enum).numbers[name]))
         raise LookupError(f"{node!r}: has no schema")

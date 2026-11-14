@@ -3,6 +3,7 @@
   "id": "initialize_registry_arm",
   "value": {
    "data": {
+    "__class__": "InitializeRegistryData",
     "clock_data": [
      {
       "id": 300,
@@ -32,6 +33,7 @@
   "id": "add_time_marker_arm",
   "value": {
    "data": {
+    "__class__": "AddTimeMarkerData",
     "clock_id": 1,
     "time_markers": [
      {
@@ -49,6 +51,7 @@
   "id": "remove_time_marker_arm",
   "value": {
    "data": {
+    "__class__": "RemoveTimeMarkerData",
     "clock_id": 300,
     "time_marker_ids": [1]
    }
@@ -59,6 +62,7 @@
   "id": "sync_state_arm",
   "value": {
    "data": {
+    "__class__": "SyncStateData",
     "clock_data": [
      {
       "clock_id": 300,
