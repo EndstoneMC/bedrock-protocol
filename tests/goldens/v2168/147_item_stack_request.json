@@ -155,16 +155,12 @@
       },
       {
        "action_type": 12,
-       "recipe_net_id": {
-        "raw_id": 8
-       },
+       "recipe_net_id": 8,
        "num_crafts": 2
       },
       {
        "action_type": 13,
-       "recipe_net_id": {
-        "raw_id": 9
-       },
+       "recipe_net_id": 9,
        "num_crafts": 3,
        "ingredients": [
         {
@@ -200,9 +196,7 @@
       },
       {
        "action_type": 15,
-       "recipe_net_id": {
-        "raw_id": 10
-       },
+       "recipe_net_id": 10,
        "filtered_string_index": 1
       },
       {

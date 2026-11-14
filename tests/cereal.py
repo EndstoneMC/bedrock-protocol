@@ -444,8 +444,6 @@ class CaseForm:
         ("CameraAimAssistCategoryPriorities", "blocks"): (DslShape.PAIRS, KeyKind.OTHER),
         ("CameraAimAssistPresetDefinition", "item_settings"): (DslShape.PAIRS, KeyKind.OTHER),
         ("VoxelShapesPacket", "name_map"): (DslShape.PAIRS, KeyKind.HASHED_STRING),
-        ("EffectDuration", None): (DslShape.MEMBER_ONLY, None),
-        ("MoveActorAbsoluteData.Header", None): (DslShape.MEMBER_ONLY, None),
         ("Color255RGBA", None): (DslShape.ARRAY_OF_MEMBERS, None),
     }
     PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}

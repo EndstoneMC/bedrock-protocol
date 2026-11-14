@@ -17,9 +17,7 @@
    ],
    "entries": [
     {
-     "creative_item_net_id": {
-      "raw_id": 1
-     },
+     "creative_item_net_id": 1,
      "item_descriptor": {
       "id": 5,
       "stack_size": 1,

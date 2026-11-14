@@ -3,9 +3,7 @@
   "id": "query_by_id",
   "value": {
    "action": 0,
-   "id": {
-    "raw_id": 7
-   }
+   "id": 7
   },
   "bytes": "000e"
  }

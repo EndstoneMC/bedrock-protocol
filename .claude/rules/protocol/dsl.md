@@ -21,7 +21,7 @@ paths:
 - Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length written elsewhere, as an expression over earlier fields, never as a constant.
 - Spell an alias that BDS nests in a class inline at its use; never hoist it to a module-scope `type`.
 - Never put a version-dependent width behind a `type X = <primitive>` alias; spell it inline.
-- Declare a type that only wraps one primitive as a `type` alias, never as a one-field class; a packet and a variant arm stay classes.
+- Declare a top-level type that only wraps one primitive, such as an id, a handle or a duration, as a `type` alias under its own name (`type EffectDuration = varint32`), and spell a nested one's primitive at its use (`header: uint8`); never keep either as a one-field class. A data class that holds one member for now, a packet and a variant arm stay classes.
 
 ## Conditions
 

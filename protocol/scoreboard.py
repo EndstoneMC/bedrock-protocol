@@ -10,8 +10,7 @@ package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 
 
-class ScoreboardId:
-    raw_id: varint64
+type ScoreboardId = varint64
 
 
 class PlayerScoreboardId:

@@ -17,8 +17,7 @@ class MovementEffectType(IntEnum, int32):
     COUNT = sentinel()
 
 
-class EffectDuration:
-    value: varint32
+type EffectDuration = varint32
 
 
 @packet(id=28, until=748)

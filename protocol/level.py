@@ -56,8 +56,7 @@ class SyncWorldClocksPacket:
     data: SyncStateData | InitializeRegistryData | AddTimeMarkerData | RemoveTimeMarkerData
 
 
-class PositionTrackingId:
-    raw_id: varint32
+type PositionTrackingId = varint32
 
 
 @packet(id=153)

@@ -3,9 +3,7 @@
   "id": "update_with_data_tag",
   "value": {
    "action": 0,
-   "id": {
-    "raw_id": 7
-   },
+   "id": 7,
    "data": {
     "id": {
      "StringTag": "00000007"

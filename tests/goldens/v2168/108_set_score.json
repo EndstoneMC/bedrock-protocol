@@ -5,16 +5,12 @@
    "score_info": [
     {
      "action": "remove",
-     "scoreboard_id": {
-      "raw_id": 1
-     },
+     "scoreboard_id": 1,
      "objective_name": "rm"
     },
     {
      "action": "changeplayer",
-     "scoreboard_id": {
-      "raw_id": 2
-     },
+     "scoreboard_id": 2,
      "objective_name": "obj",
      "score_value": 5,
      "player_id": {
@@ -23,18 +19,14 @@
     },
     {
      "action": "changeentity",
-     "scoreboard_id": {
-      "raw_id": 3
-     },
+     "scoreboard_id": 3,
      "objective_name": "obj",
      "score_value": 6,
      "entity_id": 11
     },
     {
      "action": "changefakeplayer",
-     "scoreboard_id": {
-      "raw_id": 4
-     },
+     "scoreboard_id": 4,
      "objective_name": "obj",
      "score_value": 7,
      "fake_player_name": "fake"
@@ -49,9 +41,7 @@
    "score_info": [
     {
      "action": "remove",
-     "scoreboard_id": {
-      "raw_id": 1
-     }
+     "scoreboard_id": 1
     }
    ]
   },

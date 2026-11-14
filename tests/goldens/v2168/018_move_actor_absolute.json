@@ -4,9 +4,7 @@
   "value": {
    "move_data": {
     "runtime_id": 300,
-    "header": {
-     "raw": 141
-    },
+    "header": 141,
     "pos": {
      "x": 1.0,
      "y": 2.0,

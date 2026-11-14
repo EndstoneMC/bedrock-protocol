@@ -2,9 +2,7 @@
  {
   "id": "set_volume_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {
     "volume": 0.5
    },
@@ -32,9 +30,7 @@
  {
   "id": "fade_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {
     "duration": 1.5,
     "target_volume": 0.25
@@ -69,9 +65,7 @@
  {
   "id": "resume_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {},
    "set_volume": {},
    "set_pitch": {},
@@ -85,9 +79,7 @@
  {
   "id": "seek_to_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {
     "seconds": 2.5
    },
@@ -115,9 +107,7 @@
  {
   "id": "pause_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {},
    "set_volume": {},
    "set_pitch": {},
@@ -131,9 +121,7 @@
  {
   "id": "stop_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {},
    "set_volume": {},
    "set_pitch": {},
@@ -147,9 +135,7 @@
  {
   "id": "set_pitch_in_every_slot",
   "value": {
-   "server_sound_handle": {
-    "value": 42
-   },
+   "server_sound_handle": 42,
    "stop": {
     "pitch": 1.5
    },

@@ -23,12 +23,8 @@ class CreativeItemCategory(IntEnum, uint8):
     NUM_CATEGORIES = sentinel()
 
 
-class RecipeNetId:
-    raw_id: uvarint32
-
-
-class CreativeItemNetId:
-    raw_id: uvarint32
+type RecipeNetId = uvarint32
+type CreativeItemNetId = uvarint32
 
 
 @type(until=2168)

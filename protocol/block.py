@@ -106,8 +106,7 @@ class UpdateSubChunkBlocksPacket:
     blocks_changed: UpdateSubChunkBlocksChangedInfo
 
 
-class EntityNetId:
-    raw_id: uvarint32
+type EntityNetId = uvarint32
 
 
 @packet(id=167)
@@ -132,8 +131,7 @@ class AddVolumeEntityPacket:
     min_engine_version: str
 
 
-class RegistryHandle:
-    value: uint16
+type RegistryHandle = uint16
 
 
 class SerializableCells:

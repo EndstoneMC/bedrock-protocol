@@ -604,8 +604,7 @@ class LevelSoundEvent(IntEnum, uint32):
     UNDEFINED = auto()
 
 
-class ServerSoundHandle:
-    value: uint64
+type ServerSoundHandle = uint64
 
 
 @packet(id=86, until=944)

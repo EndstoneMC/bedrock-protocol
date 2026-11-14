@@ -24,9 +24,7 @@
       ]
      },
      "enchant_name": "imbue",
-     "enchant_net_id": {
-      "raw_id": 300
-     }
+     "enchant_net_id": 300
     }
    ]
   },

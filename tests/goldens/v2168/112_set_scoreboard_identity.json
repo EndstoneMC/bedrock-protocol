@@ -5,15 +5,11 @@
    "type": 0,
    "identity_info": [
     {
-     "scoreboard_id": {
-      "raw_id": 1
-     },
+     "scoreboard_id": 1,
      "player_id": 7
     },
     {
-     "scoreboard_id": {
-      "raw_id": 2
-     },
+     "scoreboard_id": 2,
      "player_id": 8
     }
    ]
@@ -26,9 +22,7 @@
    "type": 1,
    "identity_info": [
     {
-     "scoreboard_id": {
-      "raw_id": 1
-     }
+     "scoreboard_id": 1
     }
    ]
   },

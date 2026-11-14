@@ -32,9 +32,7 @@
      "unlocking_requirement": {
       "context": 1
      },
-     "net_id": {
-      "raw_id": 11
-     }
+     "net_id": 11
     }
    ],
    "shapeless_recipes": [
@@ -73,17 +71,13 @@
        }
       ]
      },
-     "net_id": {
-      "raw_id": 12
-     }
+     "net_id": 12
     }
    ],
    "multi_recipes": [
     {
      "uuid": "00000000-0000-0000-0000-000000000003",
-     "net_id": {
-      "raw_id": 13
-     }
+     "net_id": 13
     }
    ],
    "user_data_shapeless_recipes": [],
@@ -121,9 +115,7 @@
       "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
      },
      "tag": "smithing_table",
-     "net_id": {
-      "raw_id": 14
-     }
+     "net_id": 14
     }
    ],
    "smithing_trim_recipes": [
@@ -151,9 +143,7 @@
       "stack_size": 2
      },
      "tag": "smithing_table",
-     "net_id": {
-      "raw_id": 15
-     }
+     "net_id": 15
     }
    ],
    "potion_mix_entries": [
@@ -237,9 +227,7 @@
        }
       ]
      },
-     "net_id": {
-      "raw_id": 2825
-     }
+     "net_id": 2825
     }
    ],
    "shapeless_chemistry_recipes": [
@@ -278,9 +266,7 @@
        }
       ]
      },
-     "net_id": {
-      "raw_id": 239
-     }
+     "net_id": 239
     }
    ],
    "shaped_chemistry_recipes": [
@@ -343,9 +329,7 @@
        }
       ]
      },
-     "net_id": {
-      "raw_id": 1609
-     }
+     "net_id": 1609
     }
    ],
    "smithing_transform_recipes": [],
@@ -387,9 +371,7 @@
      "tag": "crafting_table",
      "priority": 3,
      "assume_symmetry": true,
-     "net_id": {
-      "raw_id": 11
-     }
+     "net_id": 11
     }
    ],
    "shapeless_recipes": [
@@ -416,9 +398,7 @@
      "uuid": "00000000-0000-0000-0000-000000000002",
      "tag": "crafting_table",
      "priority": 1,
-     "net_id": {
-      "raw_id": 12
-     }
+     "net_id": 12
     }
    ],
    "multi_recipes": [],

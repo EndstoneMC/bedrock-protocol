@@ -91,11 +91,8 @@ class MoveActorDeltaPacket:
 
 
 class MoveActorAbsoluteData:
-    class Header:
-        raw: uint8
-
     runtime_id: ActorRuntimeID
-    header: Header
+    header: uint8
     pos: Vec3
     rot_x: int8 = field(type=uint8)
     rot_y: int8 = field(type=uint8)
