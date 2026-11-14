@@ -2,12 +2,14 @@
 
 import enum
 import importlib
+import json
 import keyword
 import math
 import re
 import struct
 import uuid
 from functools import cache, reduce
+from json.decoder import WHITESPACE
 from operator import methodcaller, or_
 from pathlib import Path
 from typing import ClassVar, override
@@ -100,6 +102,35 @@ MISSING = object()
 
 class TokenList(list):
     """Values that a writer gathered into one member slot, which is how BDS prints a token stream."""
+
+
+class FlatObject(list):
+    """The values of an object BDS printed with keys that are not strings, in order."""
+
+
+class BdsDecoder(json.JSONDecoder):
+    """BDS's printed JSON, where an object's key slots may hold any value."""
+
+    def __init__(self):
+        super().__init__(strict=False)
+        self.parse_object = self.object
+        self.scan_once = json.scanner.py_make_scanner(self)
+
+    def object(self, text_and_end, _strict, scan_once, *_):
+        text, end = text_and_end
+        values = []
+        end = WHITESPACE.match(text, end).end()
+        while text[end : end + 1] != "}":
+            value, end = scan_once(text, end)
+            values.append(value)
+            end = WHITESPACE.match(text, end).end()
+            end = WHITESPACE.match(text, end + text.startswith((":", ","), end)).end()
+        keys = values[::2]
+        plain = len(values) % 2 == 0 and all(type(key) is str for key in keys) and len(set(keys)) == len(keys)
+        return (dict(zip(keys, values[1::2], strict=True)) if plain else FlatObject(values)), end + 1
+
+
+BDS_DECODER = BdsDecoder()
 
 
 class SchemaReader:
@@ -431,6 +462,20 @@ class CaseForm:
     @classmethod
     def matches(cls, case, bds):
         """Whether BDS's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
+        if isinstance(case, dict) and isinstance(bds, FlatObject):
+            index = 0
+            for value in case.values():
+                index += 1
+                if isinstance(value, str) and ESCAPED_BITS.fullmatch(value):
+                    groups = cls.varint_groups(int(value, 2))
+                    if bds[index : index + len(groups)] != groups:
+                        return False
+                    index += len(groups)
+                else:
+                    if index >= len(bds) or not cls.matches(value, bds[index]):
+                        return False
+                    index += 1
+            return index == len(bds)
         if isinstance(case, dict) and isinstance(bds, dict):
             return len(case) == len(bds) and all(
                 cls.matches(a, b) for a, b in zip(case.values(), bds.values(), strict=True)
@@ -458,6 +503,11 @@ class CaseForm:
         if isinstance(bds, dict) and not isinstance(case, dict | list):
             return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
         return case == bds
+
+    @classmethod
+    def parse_bds(cls, text):
+        """Read BDS's printed text, valid JSON or not, keeping an object whose tokens leak as its flat values."""
+        return BDS_DECODER.decode(text)
 
     @staticmethod
     def escaped_bytes(raw):
