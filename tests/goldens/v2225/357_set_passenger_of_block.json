@@ -1,0 +1,31 @@
+[
+ {
+  "id": "passenger_of_block_data_present",
+  "value": {
+   "passenger": 1234,
+   "passenger_of_block_data": {
+    "block_pos": {
+     "x": 5,
+     "y": 64,
+     "z": -7
+    },
+    "offset": {
+     "x": 0.5,
+     "y": 1.5,
+     "z": -2.5
+    },
+    "rotation": 90.0,
+    "rotation_limit": 45.0,
+    "emote": 1
+   }
+  },
+  "bytes": "a413010a80010d0000003f0000c03f000020c00000b4420000344201"
+ },
+ {
+  "id": "passenger_of_block_data_absent",
+  "value": {
+   "passenger": 1234
+  },
+  "bytes": "a41300"
+ }
+]

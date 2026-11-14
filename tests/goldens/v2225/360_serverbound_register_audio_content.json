@@ -1,0 +1,22 @@
+[
+ {
+  "id": "one_registration",
+  "value": {
+   "registrations": [
+    {
+     "audio_content_id": "song_a",
+     "shared_metadata": {
+      "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoiYXMifQ.c2lnYXM"
+     },
+     "server_content": {
+      "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoiYXYifQ.c2lnYXY"
+     },
+     "playback_content": {
+      "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoiYXAifQ.c2lnYXA"
+     }
+    }
+   ]
+  },
+  "bytes": "0106736f6e675f612b65794a68624763694f694a46557a4d344e434a392e65794a75496a6f6959584d6966512e63326c6e59584d2b65794a68624763694f694a46557a4d344e434a392e65794a75496a6f695958596966512e63326c6e5958592b65794a68624763694f694a46557a4d344e434a392e65794a75496a6f695958416966512e63326c6e595841"
+ }
+]

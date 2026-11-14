@@ -1,0 +1,39 @@
+[
+ {
+  "id": "cache_disabled_no_sub_chunk_limit",
+  "value": {
+   "pos": {
+    "x": 2,
+    "z": 3
+   },
+   "dimension_id": 0,
+   "sub_chunks_count": 5,
+   "cache_enabled": false,
+   "cache_metadata": [],
+   "serialized_chunk": "\\xaa\\xbb",
+   "is_client_biome_update": true
+  },
+  "bytes": "0406000500000002aabb01"
+ },
+ {
+  "id": "cache_enabled_with_sub_chunk_limit",
+  "value": {
+   "pos": {
+    "x": 2,
+    "z": 3
+   },
+   "dimension_id": 1,
+   "sub_chunks_count": 3,
+   "client_request_sub_chunk_limit": 7,
+   "cache_enabled": true,
+   "cache_metadata": [
+    {
+     "blob_id": 1
+    }
+   ],
+   "serialized_chunk": "\\xaa",
+   "is_client_biome_update": true
+  },
+  "bytes": "04060203010e0101010000000000000001aa01"
+ }
+]

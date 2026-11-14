@@ -1,0 +1,84 @@
+[
+ {
+  "id": "set_volume_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "SetVolume",
+    "type": 1,
+    "volume": 0.5
+   }
+  },
+  "bytes": "2a0000000000000001010000003f"
+ },
+ {
+  "id": "fade_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "Fade",
+    "type": 3,
+    "duration": 1.5,
+    "target_volume": 0.25
+   }
+  },
+  "bytes": "2a0000000000000003030000c03f0000803e"
+ },
+ {
+  "id": "resume_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "Resume",
+    "type": 6
+   }
+  },
+  "bytes": "2a000000000000000606"
+ },
+ {
+  "id": "seek_to_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "SeekTo",
+    "type": 4,
+    "seconds": 2.5
+   }
+  },
+  "bytes": "2a00000000000000040400002040"
+ },
+ {
+  "id": "pause_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "Pause",
+    "type": 5
+   }
+  },
+  "bytes": "2a000000000000000505"
+ },
+ {
+  "id": "stop_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "Stop",
+    "type": 0
+   }
+  },
+  "bytes": "2a000000000000000000"
+ },
+ {
+  "id": "set_pitch_arm",
+  "value": {
+   "server_sound_handle": 42,
+   "event": {
+    "__class__": "SetPitch",
+    "type": 2,
+    "pitch": 1.5
+   }
+  },
+  "bytes": "2a0000000000000002020000c03f"
+ }
+]

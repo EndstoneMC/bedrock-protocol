@@ -1,0 +1,31 @@
+[
+ {
+  "id": "options_every_optional_present",
+  "value": {
+   "state": 2,
+   "destination_name": "lobby",
+   "options": {
+    "triggering_player_name": "Steve",
+    "triggered_by_local_player": true
+   }
+  },
+  "bytes": "02056c6f62627901010553746576650101"
+ },
+ {
+  "id": "options_every_optional_absent",
+  "value": {
+   "state": 2,
+   "destination_name": "lobby",
+   "options": {}
+  },
+  "bytes": "02056c6f626279010000"
+ },
+ {
+  "id": "options_absent",
+  "value": {
+   "state": 2,
+   "destination_name": "lobby"
+  },
+  "bytes": "02056c6f62627900"
+ }
+]

@@ -1,0 +1,20 @@
+[
+ {
+  "id": "one_custom_dimension",
+  "value": {
+   "dimension_definitions": {
+    "test:dim": {
+     "min_y": -64,
+     "height_range": 384,
+     "generator_type": 1,
+     "dimension_type": 1000,
+     "pack_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+     "default_biome": "minecraft:plains",
+     "cloud_height": 192,
+     "render_clouds": true
+    }
+   }
+  },
+  "bytes": "0108746573743a64696d7f800602d00f0807060504030201100f0e0d0c0b0a09106d696e6563726166743a706c61696e73800301"
+ }
+]

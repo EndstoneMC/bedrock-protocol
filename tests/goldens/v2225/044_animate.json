@@ -1,0 +1,23 @@
+[
+ {
+  "id": "swing_with_swing_source",
+  "value": {
+   "action": 1,
+   "runtime_id": 300,
+   "data": 1.5,
+   "swing_source": "attack",
+   "hand_slot": 1
+  },
+  "bytes": "01ac020000c03f010661747461636b01"
+ },
+ {
+  "id": "critical_hit_no_swing_source",
+  "value": {
+   "action": 4,
+   "runtime_id": 7,
+   "data": 0.5,
+   "hand_slot": 1
+  },
+  "bytes": "04070000003f0001"
+ }
+]

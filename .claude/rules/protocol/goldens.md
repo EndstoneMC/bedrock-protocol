@@ -15,6 +15,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, and never a file identical to the neighbour's.
 - Check `v2193/` with BDS 1.26.51.1.
+- Check `v2225/` with BDS 1.26.60.6.
 - Seed a folder's cases from the neighbour's and change only the leaves its encoding change needs; a class that differs only in an enum's members gets no file.
 - Keep a seeded case's id unless the encoding change gives it a new branch, such as a new optional's side, and never name a leaf's value in it.
 - Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.

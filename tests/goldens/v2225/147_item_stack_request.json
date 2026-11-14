@@ -1,0 +1,291 @@
+[
+ {
+  "id": "take_action_arm",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "actions": [
+      {
+       "__class__": "TakeActionData",
+       "action_type": 0,
+       "amount": 1,
+       "source": {
+        "full_container_name": {
+         "name": 7
+        },
+        "slot": 3,
+        "net_id_variant": 9
+       },
+       "destination": {
+        "full_container_name": {
+         "name": 59
+        },
+        "slot": 0,
+        "net_id_variant": 0
+       }
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "010101000001070003090000003b0000000000000003000000"
+ },
+ {
+  "id": "lab_table_and_creative_craft_with_filter",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -3
+     },
+     "actions": [
+      {
+       "__class__": "LabTableCombineActionData",
+       "action_type": 9
+      },
+      {
+       "__class__": "CraftCreativeActionData",
+       "action_type": 14,
+       "creative_item_net_id": 5,
+       "num_crafts": 1
+      }
+     ],
+     "strings_to_filter": ["anvil name"],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "01050207090c0e0501010a616e76696c206e616d6503000000"
+ },
+ {
+  "id": "every_remaining_action_arm",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "__class__": "PlaceActionData",
+       "action_type": 1,
+       "amount": 2,
+       "source": {
+        "full_container_name": {
+         "name": 29,
+         "dynamic_id": 5
+        },
+        "slot": 4,
+        "net_id_variant": 9
+       },
+       "destination": {
+        "full_container_name": {
+         "name": 28
+        },
+        "slot": 1,
+        "net_id_variant": 0
+       }
+      },
+      {
+       "__class__": "SwapActionData",
+       "action_type": 2,
+       "source": {
+        "full_container_name": {
+         "name": 28
+        },
+        "slot": 2,
+        "net_id_variant": 10
+       },
+       "destination": {
+        "full_container_name": {
+         "name": 29
+        },
+        "slot": 5,
+        "net_id_variant": 11
+       }
+      },
+      {
+       "__class__": "DropActionData",
+       "action_type": 3,
+       "amount": 3,
+       "source": {
+        "full_container_name": {
+         "name": 28
+        },
+        "slot": 3,
+        "net_id_variant": 12
+       },
+       "randomly": true
+      },
+      {
+       "__class__": "DestroyActionData",
+       "action_type": 4,
+       "amount": 4,
+       "source": {
+        "full_container_name": {
+         "name": 28
+        },
+        "slot": 4,
+        "net_id_variant": 13
+       }
+      },
+      {
+       "__class__": "ConsumeActionData",
+       "action_type": 5,
+       "amount": 5,
+       "source": {
+        "full_container_name": {
+         "name": 28
+        },
+        "slot": 5,
+        "net_id_variant": 14
+       }
+      },
+      {
+       "__class__": "CreateActionData",
+       "action_type": 6,
+       "results_index": 2
+      },
+      {
+       "__class__": "BeaconPaymentActionData",
+       "action_type": 10,
+       "primary_effect_id": 1,
+       "secondary_effect_id": 3
+      },
+      {
+       "__class__": "MineBlockActionData",
+       "action_type": 11,
+       "slot": 6,
+       "predicted_durability": 7,
+       "net_id_variant": 15
+      },
+      {
+       "__class__": "CraftRecipeActionData",
+       "action_type": 12,
+       "recipe_net_id": 8,
+       "num_crafts": 2
+      },
+      {
+       "__class__": "CraftRecipeAutoActionData",
+       "action_type": 13,
+       "recipe_net_id": 9,
+       "num_crafts": 3,
+       "ingredients": [
+        {
+         "item_descriptor": {
+          "__class__": "EmptyItemDescriptorData",
+          "descriptor_type": 0
+         },
+         "stack_size": 1
+        },
+        {
+         "item_descriptor": {
+          "__class__": "ItemNameDescriptorData",
+          "descriptor_type": 1,
+          "full_name": "minecraft:stone",
+          "aux_value": 0
+         },
+         "stack_size": 2
+        },
+        {
+         "item_descriptor": {
+          "__class__": "MolangItemDescriptorData",
+          "descriptor_type": 2,
+          "tag_expression": "query.is_item_name_any('minecraft:apple')",
+          "molang_version": 13
+         },
+         "stack_size": 3
+        },
+        {
+         "item_descriptor": {
+          "__class__": "ItemTagDescriptorData",
+          "descriptor_type": 3,
+          "item_tag": "minecraft:boats"
+         },
+         "stack_size": 4
+        }
+       ]
+      },
+      {
+       "__class__": "CraftRecipeOptionalActionData",
+       "action_type": 15,
+       "recipe_net_id": 10,
+       "filtered_string_index": 1
+      },
+      {
+       "__class__": "CraftRepairAndDisenchantActionData",
+       "action_type": 16,
+       "recipe_net_id": 11,
+       "num_crafts": 1,
+       "repair_cost": 12
+      },
+      {
+       "__class__": "CraftLoomActionData",
+       "action_type": 17,
+       "pattern_name_id": "creeper",
+       "num_crafts": 1
+      },
+      {
+       "__class__": "CraftDiscPressActionData",
+       "action_type": 18,
+       "track_sound_event_id": "pigstep",
+       "num_crafts": 2
+      },
+      {
+       "__class__": "CraftNonImplementedActionData",
+       "action_type": 19
+      },
+      {
+       "__class__": "CraftResultsActionData",
+       "action_type": 20,
+       "craft_results": [
+        {
+         "item_descriptor": {
+          "__class__": "ItemNameDescriptorData",
+          "descriptor_type": 1,
+          "full_name": "minecraft:apple",
+          "aux_value": 0
+         },
+         "stack_size": 3,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        }
+       ],
+       "num_crafts": 2
+      },
+      {
+       "__class__": "CraftNonImplementedActionData",
+       "action_type": 19
+      },
+      {
+       "__class__": "CraftResultsActionData",
+       "action_type": 20,
+       "craft_results": [
+        {
+         "item_descriptor": {
+          "__class__": "ItemNameDescriptorData",
+          "descriptor_type": 1,
+          "full_name": "minecraft:apple",
+          "aux_value": 0
+         },
+         "stack_size": 3,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        }
+       ],
+       "num_crafts": 2
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "0109120101021d010500000004090000001c00010000000002021c00020a0000001d00050b0000000303031c00030c000000010404041c00040d0000000505051c00050e000000060602080a0206090b0c0e0f0000000a0c08020b0d0903040000010001010f6d696e6563726166743a73746f6e6500020002022971756572792e69735f6974656d5f6e616d655f616e7928276d696e6563726166743a6170706c6527290d00030003030f6d696e6563726166743a626f61747304000d0f0a010000000e100b00000001180f110763726565706572011012077069677374657002111312140101010f6d696e6563726166743a6170706c65000300000002111312140101010f6d696e6563726166743a6170706c650003000000020003000000"
+ }
+]

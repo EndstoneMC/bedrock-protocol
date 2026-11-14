@@ -1,0 +1,11 @@
+[
+ {
+  "id": "stonecutter_recipe",
+  "value": {
+   "player_unique_id": 1234,
+   "container_id": 7,
+   "recipe_index": 3
+  },
+  "bytes": "a4130706"
+ }
+]
