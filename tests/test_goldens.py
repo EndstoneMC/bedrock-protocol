@@ -1,8 +1,6 @@
 import json
 import re
 
-from cereal import load, save
-
 LOWER_WITH_UNDER = re.compile(r"[a-z0-9]+(?:_[a-z0-9]+)*")
 FLAT = re.compile(r'\[\n((?: +(?:"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null),?\n)+) *\]')
 
@@ -17,11 +15,11 @@ def layout(cases):
     )
 
 
-def test_a_case_value_encodes_to_its_bytes(cls, round_trip):
+def test_a_case_value_encodes_to_its_bytes(load, cls, round_trip):
     assert bytes(load(cls, round_trip["value"])).hex() == round_trip["bytes"]
 
 
-def test_a_case_bytes_decode_to_its_value(cls, case):
+def test_a_case_bytes_decode_to_its_value(save, cls, case):
     assert json.dumps(save(cls.from_bytes(bytes.fromhex(case["bytes"])))) == json.dumps(case["value"])
 
 

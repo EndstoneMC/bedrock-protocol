@@ -14,8 +14,8 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep a packet's cases in `tests/goldens/v<protocol>/<id:03>_<snake_name>.json`, `<snake_name>` being the class the folder's module binds at `<id>` without its trailing `Packet`, in snake case: a JSON array of `{"id", "value", "bytes"}`.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
-- Write `value` exactly as `save` in `tests/cereal.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
-- Keep a case's `value` in the DSL's shape, with an alias bare and a UUID as its canonical string; map it to BDS's JSON only when comparing, through `CaseForm` in `tests/cereal.py`.
+- Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
+- Keep a case's `value` in the DSL's shape, with an alias bare and a UUID as its canonical string; map it to BDS's JSON only when comparing, through `CaseForm` in `tests/conftest.py`.
 - Never load BDS's printed JSON into a packet; compare it with a case only through `CaseForm.matches`.
 - Write a byte blob, and a `std::string` that is not valid UTF-8, as a string of lowercase `\xNN` escapes, one per byte, and read any case string made only of them back as those bytes.
 - Write a case file as `layout(cases)` from `test_goldens.py`, which puts each flat list on one line, regenerated from the library after every edit.
@@ -31,8 +31,8 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.
 - Write an NBT value in a case as nbtlib's compact SNBT string, and compare it by the compact SNBT of both sides.
 - Write an empty ListTag in a case with element type End.
-- Read BDS's printed text with `CaseForm.parse_bds`, which keeps an object whose tokens leak as its flat values, and match a case's `0b` bitset with its varint groups there.
-- `parse_bds` reads an NBT token run, `10, ""` then the entries or the entries after `__[[CTD]]__`, as one nbtlib tag.
+- Read BDS's printed text with `CaseForm.parse_bedrock`, which keeps an object whose tokens leak as its flat values, and match a case's `0b` bitset with its varint groups there.
+- `parse_bedrock` reads an NBT token run, `10, ""` then the entries or the entries after `__[[CTD]]__`, as one nbtlib tag.
 - Never change the bytes of a case BDS writes back unchanged; change its value only for a rename or a library type fix.
 
 ## Writing cases
