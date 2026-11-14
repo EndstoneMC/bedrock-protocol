@@ -41,7 +41,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Name the assets after the release
+      - name: Collect the assets
         run: |
           shopt -s nullglob
           dirs=(artifacts/*/)
@@ -56,9 +56,7 @@ jobs:
               cp "$dir/$name" assets/
               continue
             fi
-            asset=${name/-${GITHUB_SHA::7}/}
-            mv "artifacts/$name" "artifacts/$asset"
-            (cd artifacts && zip -qr "../assets/${asset}.zip" "$asset")
+            (cd artifacts && zip -qr "../assets/${name}.zip" "$name")
           done
           ls -l assets
 

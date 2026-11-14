@@ -87,7 +87,7 @@ jobs:
         id: package
         run: |
           version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
-          echo "name=bedrock-protocol-${version}-${GITHUB_SHA::7}-${{ matrix.triple }}" >> "$GITHUB_OUTPUT"
+          echo "name=bedrock-protocol-${version}-${{ matrix.triple }}" >> "$GITHUB_OUTPUT"
 
       - name: Build
         if: ${{ !matrix.source }}
