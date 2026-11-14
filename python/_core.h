@@ -23,6 +23,16 @@
 #include "bedrock/protocol/version.hpp"
 #include "casters.hpp"
 
+namespace bedrock::protocol {
+
+template <typename... As, typename... Bs>
+constexpr type_list<As..., Bs...> operator+(type_list<As...>, type_list<Bs...>)
+{
+    return {};
+}
+
+}  // namespace bedrock::protocol
+
 namespace bedrock::protocol::python {
 
 namespace nb = nanobind;
@@ -174,12 +184,6 @@ struct python_type<std::vector<std::byte>> {
 };
 template <typename F>
 using python_type_t = typename python_type<F>::type;
-
-template <typename... As, typename... Bs>
-constexpr type_list<As..., Bs...> operator+(type_list<As...>, type_list<Bs...>)
-{
-    return {};
-}
 
 template <typename F>
 struct arg_type {
