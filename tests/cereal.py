@@ -463,6 +463,10 @@ class CaseForm:
         if isinstance(case, str) and isinstance(bds, dict) and len(bds) == 2 and ESCAPED_UUID.fullmatch(case):
             most, least = bds.values()
             return uuid.UUID(case).int == most << 64 | least
+        if isinstance(case, str) and isinstance(bds, str) and ESCAPED_BYTES.fullmatch(case):
+            return bytes.fromhex(case.replace("\\x", "")) == bds.encode("utf-8", "surrogateescape")
+        if type(case) is float and type(bds) is float:
+            return case == bds or cls.widened_float32(case) == bds
         if isinstance(bds, dict) and not isinstance(case, dict | list):
             return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
         return case == bds
