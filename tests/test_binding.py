@@ -115,8 +115,8 @@ def test_a_setter_raises_the_constructors_message(cls, field, value, shown):
 @pytest.mark.parametrize(
     ("cls", "field", "value", "shown"),
     [
-        pytest.param(proto.DeathInfoPacket, "death_cause_message_list", "abc", "'abc'", id="list-from-str"),
-        pytest.param(proto.DeathInfoPacket, "death_cause_message_list", 5, "5", id="list-from-int"),
+        pytest.param(proto.BiomeStringList, "strings", "abc", "'abc'", id="list-from-str"),
+        pytest.param(proto.BiomeStringList, "strings", 5, "5", id="list-from-int"),
         pytest.param(proto.ActorDataBoundingBoxComponent, "value", [1.0], r"\[1\.0\]", id="array-wrong-length"),
     ],
 )

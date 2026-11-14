@@ -839,8 +839,11 @@ class AvailableActorIdentifiersPacket:
 
 @packet(id=189)
 class DeathInfoPacket:
-    death_cause_attack_name: str
-    death_cause_message_list: list[str]
+    class DeathCauseMessage:
+        attack_name: str
+        message_list: list[str]
+
+    death_cause_message: DeathCauseMessage
 
 
 @packet(id=165)
