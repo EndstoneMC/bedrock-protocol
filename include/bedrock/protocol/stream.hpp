@@ -35,8 +35,6 @@ enum class Errc : std::uint8_t {
     truncated,
     out_of_range,
     unknown_value,
-    too_large,
-    too_deep,
     trailing_bytes,
 };
 
@@ -73,105 +71,18 @@ inline std::expected<std::size_t, Errc> countProduct(std::expected<std::size_t, 
 }
 }  // namespace detail
 
-struct DecodeLimits {
-    std::size_t max_decoded_elements = 1'048'576;
-    std::size_t max_decoded_bytes = 64 * 1024 * 1024;
-    std::size_t max_depth = 128;
-};
-
-class DecodeBudget {
-public:
-    explicit DecodeBudget(DecodeLimits limits = {}) : limits_(limits) {}
-
-    bool charge(std::size_t count, std::size_t width, bool elements = true)
-    {
-        if ((elements && count > limits_.max_decoded_elements - elements_) ||
-            (width && count > (limits_.max_decoded_bytes - bytes_) / width)) {
-            return false;
-        }
-        elements_ += elements ? count : 0;
-        bytes_ += count * width;
-        return true;
-    }
-    [[nodiscard]] std::size_t maxDepth() const { return std::min(limits_.max_depth, std::size_t{128}); }
-
-private:
-    DecodeLimits limits_;
-    std::size_t elements_ = 0;
-    std::size_t bytes_ = 0;
-};
-
 class BinaryReader {
 public:
     template <class T>
     using Result = std::expected<T, Errc>;
 
-    explicit BinaryReader(std::string_view buf, DecodeBudget *budget = nullptr)
-        : view_(buf), budget_(budget ? budget : &local_budget_)
-    {
-    }
+    explicit BinaryReader(std::string_view buf) : view_(buf) {}
 
-    BinaryReader(const BinaryReader &other)
-        : view_(other.view_), read_pos_(other.read_pos_), local_budget_(other.local_budget_),
-          budget_(other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_), depth_(other.depth_),
-          path_(other.path_)
-    {
-    }
-    BinaryReader &operator=(const BinaryReader &other)
-    {
-        if (this != &other) {
-            view_ = other.view_;
-            read_pos_ = other.read_pos_;
-            local_budget_ = other.local_budget_;
-            budget_ = other.budget_ == &other.local_budget_ ? &local_budget_ : other.budget_;
-            depth_ = other.depth_;
-            path_ = other.path_;
-        }
-        return *this;
-    }
+    BinaryReader(const BinaryReader &) = default;
+    BinaryReader &operator=(const BinaryReader &) = default;
     BinaryReader(BinaryReader &&) = delete;
     BinaryReader &operator=(BinaryReader &&) = delete;
     ~BinaryReader() = default;
-
-    template <std::integral N>
-    auto account(N count, std::size_t width, bool elements = true) -> Result<void>
-    {
-        if constexpr (std::is_signed_v<N>) {
-            if (count < 0) {
-                return std::unexpected(Errc::out_of_range);
-            }
-        }
-        if (static_cast<std::uintmax_t>(count) > std::numeric_limits<std::size_t>::max() ||
-            !budget_->charge(static_cast<std::size_t>(count), width, elements)) {
-            return std::unexpected(Errc::too_large);
-        }
-        return {};
-    }
-
-    class ReadScope {
-    public:
-        explicit ReadScope(BinaryReader &reader) : reader_(reader), entered_(reader.depth_ < reader.budget_->maxDepth())
-        {
-            if (entered_) {
-                ++reader_.depth_;
-            }
-        }
-        ~ReadScope()
-        {
-            if (entered_) {
-                --reader_.depth_;
-            }
-        }
-        ReadScope(const ReadScope &) = delete;
-        ReadScope &operator=(const ReadScope &) = delete;
-        ReadScope(ReadScope &&) = delete;
-        ReadScope &operator=(ReadScope &&) = delete;
-        explicit operator bool() const { return entered_; }
-
-    private:
-        BinaryReader &reader_;
-        bool entered_;
-    };
 
     void setReadPointer(std::size_t p) { read_pos_ = p; }
     [[nodiscard]] auto getReadPointer() const { return read_pos_; }
@@ -237,9 +148,6 @@ public:
         if (*len > getUnreadLength()) {
             return std::unexpected(Errc::truncated);
         }
-        if (auto r = account(*len, 1, false); !r) {
-            return std::unexpected(r.error());
-        }
         T out(*len, typename T::value_type{});
         auto r = read(out.data(), *len);
         if (!r) {
@@ -254,9 +162,6 @@ public:
             return std::unexpected(Errc::truncated);
         }
         const auto remaining = getUnreadLength();
-        if (auto r = account(remaining, 1, false); !r) {
-            return std::unexpected(r.error());
-        }
         std::string out(remaining, '\0');
         auto r = read(out.data(), remaining);
         if (!r) {
@@ -310,9 +215,6 @@ private:
 
     std::string_view view_;
     std::size_t read_pos_ = 0;
-    DecodeBudget local_budget_;
-    DecodeBudget *budget_;
-    std::size_t depth_ = 0;
     std::vector<PathSegment> path_;
 };
 

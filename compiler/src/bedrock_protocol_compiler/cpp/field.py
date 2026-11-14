@@ -330,33 +330,40 @@ class ListField:
         )
 
     def read(self, p: Printer, target: str) -> None:
+        signed = False
         if self.node.prefix is not None:
             count = names.read(self.node.prefix.name, self.node.prefix.endian)
+            signed = names.PRIMITIVES[self.node.prefix.name].startswith("std::int")
         else:
             assert self.node.count is not None
             count = render_count(self.schema, self.version, self.node.count, "out")
-        p.emit(
-            """
-            {
-                auto count$depth$ = $count$;
-                if (!count$depth$) $fail$
-                auto budget$depth$ = $account$;
-                if (!budget$depth$) $budget_fail$
+        p.emit("{")
+        with p.indent():
+            p.emit("auto count$depth$ = $count$;", depth=self.depth, count=count)
+            p.emit(
+                "if (!count$depth$) $fail$",
+                depth=self.depth,
+                fail=names.fail(f"count{self.depth}.error()", self.where),
+            )
+            if signed:
+                p.emit(
+                    "if (*count$depth$ < 0) $fail$",
+                    depth=self.depth,
+                    fail=names.fail(names.OUT_OF_RANGE, self.where),
+                )
+            p.emit(
+                """
                 $target$.reserve(static_cast<std::size_t>(*count$depth$));
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
                     $target$.emplace_back();
                     $body$
                 }
-            }
-            """,
-            depth=self.depth,
-            count=count,
-            fail=names.fail(f"count{self.depth}.error()", self.where),
-            account=names.account(f"*count{self.depth}", self.cpp_type()),
-            budget_fail=names.fail(f"budget{self.depth}.error()", self.where),
-            target=target,
-            body=lambda: self.element.read(p, f"{target}.back()"),
-        )
+                """,
+                depth=self.depth,
+                target=target,
+                body=lambda: self.element.read(p, f"{target}.back()"),
+            )
+        p.emit("}")
 
 
 class ArrayField:
@@ -388,8 +395,6 @@ class ArrayField:
         p.emit(
             """
             {
-                auto budget$depth$ = $account$;
-                if (!budget$depth$) $fail$
                 for (std::size_t i$depth$ = 0; i$depth$ < $size$; ++i$depth$) {
                     $body$
                 }
@@ -397,8 +402,6 @@ class ArrayField:
             """,
             depth=self.depth,
             size=self.node.size,
-            account=names.account(str(self.node.size), self.cpp_type()),
-            fail=names.fail(f"budget{self.depth}.error()", self.where),
             body=lambda: self.element.read(p, f"{target}[i{self.depth}]"),
         )
 
@@ -437,8 +440,6 @@ class MapField:
             {
                 auto count$depth$ = $count$;
                 if (!count$depth$) $fail$
-                auto budget$depth$ = $account$;
-                if (!budget$depth$) $budget_fail$
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
                     $container$::key_type key$depth${};
                     $container$::mapped_type element$depth${};
@@ -451,10 +452,8 @@ class MapField:
             depth=self.depth,
             count=names.read("uvarint32", None),
             fail=names.fail(f"count{self.depth}.error()", self.where),
-            account=names.account(f"*count{self.depth}", self.cpp_type()),
             container=self.cpp_type(),
             target=target,
-            budget_fail=names.fail(f"budget{self.depth}.error()", self.where),
             key=lambda: self.key.read(p, f"key{self.depth}"),
             element=lambda: self.value.read(p, f"element{self.depth}"),
         )

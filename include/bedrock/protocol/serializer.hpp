@@ -62,8 +62,11 @@ struct std::formatter<bedrock::protocol::Errc> : std::formatter<std::string_view
     template <typename FormatContext>
     auto format(bedrock::protocol::Errc reason, FormatContext &ctx) const
     {
-        static constexpr std::array<std::string_view, 6> reasons{
-            "truncated", "out of range", "unknown value", "too large", "too deep", "trailing bytes",
+        static constexpr std::array<std::string_view, 4> reasons{
+            "truncated",
+            "out of range",
+            "unknown value",
+            "trailing bytes",
         };
         return std::formatter<std::string_view>::format(reasons[std::to_underlying(reason)], ctx);
     }

@@ -689,10 +689,6 @@ std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type);
 void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag);
 std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream);
 
-namespace detail {
-std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream, bool compound_entry);
-}
-
 inline void writeTag(BinaryWriter &stream, const Tag &tag)
 {
     tag.visit([&](const auto &payload) {
@@ -750,10 +746,6 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
 
 inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
 {
-    BinaryReader::ReadScope scope(stream);
-    if (!scope) {
-        return std::unexpected(Errc::too_deep);
-    }
     switch (type) {
     case Type::End:
         return Tag{};
@@ -811,8 +803,8 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
         if (!count) {
             return std::unexpected(count.error());
         }
-        if (auto r = stream.account(*count, sizeof(std::uint8_t)); !r) {
-            return std::unexpected(r.error());
+        if (*count < 0) {
+            return std::unexpected(Errc::out_of_range);
         }
         if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
             return std::unexpected(Errc::truncated);
@@ -833,8 +825,8 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
         if (!count) {
             return std::unexpected(count.error());
         }
-        if (auto r = stream.account(*count, sizeof(std::int32_t)); !r) {
-            return std::unexpected(r.error());
+        if (*count < 0) {
+            return std::unexpected(Errc::out_of_range);
         }
         if (static_cast<std::size_t>(*count) > stream.getUnreadLength()) {
             return std::unexpected(Errc::truncated);
@@ -862,8 +854,8 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
         if (*element_type > static_cast<std::uint8_t>(Type::IntArray) || (*count > 0 && *element_type == 0)) {
             return std::unexpected(Errc::unknown_value);
         }
-        if (auto r = stream.account(*count, sizeof(Tag)); !r) {
-            return std::unexpected(r.error());
+        if (*count < 0) {
+            return std::unexpected(Errc::out_of_range);
         }
         ListTag out(static_cast<Type>(*element_type));
         out.reserve(static_cast<std::size_t>(*count));
@@ -879,7 +871,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
     case Type::Compound: {
         CompoundTag out;
         for (;;) {
-            auto entry = detail::readNamedTag(stream, true);
+            auto entry = readNamedTag(stream);
             if (!entry) {
                 return std::unexpected(entry.error());
             }
@@ -905,7 +897,7 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag
     writeTag(stream, tag);
 }
 
-inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(BinaryReader &stream, bool compound_entry)
+inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
 {
     auto type = stream.read<std::uint8_t>();
     if (!type) {
@@ -917,11 +909,6 @@ inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(Bin
     if (*type > static_cast<std::uint8_t>(Type::IntArray)) {
         return std::unexpected(Errc::unknown_value);
     }
-    if (compound_entry) {
-        if (auto r = stream.account(1, sizeof(CompoundTag::value_type)); !r) {
-            return std::unexpected(r.error());
-        }
-    }
     auto name = stream.read<std::string>();
     if (!name) {
         return std::unexpected(name.error());
@@ -931,11 +918,6 @@ inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(Bin
         return std::unexpected(payload.error());
     }
     return std::pair<std::string, Tag>{std::move(*name), std::move(*payload)};
-}
-
-inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
-{
-    return detail::readNamedTag(stream, false);
 }
 
 }  // namespace nbt

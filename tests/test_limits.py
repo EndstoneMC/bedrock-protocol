@@ -36,12 +36,6 @@ def test_decode_rejects_a_string_length_beyond_the_body():
         v2225.ServerToClientHandshakePacket.from_bytes(bytes.fromhex("ffffffff0f"))
 
 
-def test_decode_rejects_nbt_nested_past_the_depth_limit():
-    body = bytes(3) + b"\x0a\x00" + b"\x0a\x01a" * 128 + bytes(129)
-    with pytest.raises(ValueError, match="at byte"):
-        v2225.BlockActorDataPacket.from_bytes(body)
-
-
 def test_decode_rejects_a_negative_nbt_byte_array_length():
     with pytest.raises(ValueError, match="at byte"):
         v2225.BlockActorDataPacket.from_bytes(bytes(3) + bytes.fromhex("0a000701610100"))

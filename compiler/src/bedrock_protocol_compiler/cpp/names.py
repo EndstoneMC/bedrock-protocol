@@ -77,10 +77,6 @@ def write(encoded: str, endian: str | None, value: str) -> str:
     return f"stream.write<{PRIMITIVES[encoded]}{order}>({value});"
 
 
-def account(count: str, container: str) -> str:
-    return f"stream.account({count}, sizeof({container}::value_type))"
-
-
 def read(encoded: str, endian: str | None) -> str:
     if encoded in VARINTS:
         return f"stream.readVarInt<{PRIMITIVES[encoded]}>()"

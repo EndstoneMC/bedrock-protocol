@@ -372,18 +372,6 @@ def test_a_rejected_value_reports_the_offset_after_it():
             r"^DataItemBytePayload\.type: unknown value at byte 1 of 2$",
             id="unknown value",
         ),
-        pytest.param(
-            proto.UpdateAttributesPacket,
-            bytes.fromhex("00ffffffff0f"),
-            r"^UpdateAttributesPacket\.attribute_data: too large at byte 6 of 6$",
-            id="too large",
-        ),
-        pytest.param(
-            proto.BlockActorDataPacket,
-            bytes(3) + b"\x0a\x00" + b"\x0a\x01a" * 128 + bytes(129),
-            r"^BlockActorDataPacket\.data: too deep at byte 389 of 518$",
-            id="too deep",
-        ),
     ],
 )
 def test_a_decode_error_message_spells_its_reason(decode, data, message):
