@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 /** Bad bytes from a peer; catch it where a packet enters. */
 public final class DecodeException extends RuntimeException {
@@ -12,8 +13,6 @@ public final class DecodeException extends RuntimeException {
         TRUNCATED("truncated"),
         OUT_OF_RANGE("out of range"),
         UNKNOWN_VALUE("unknown value"),
-        TOO_LARGE("too large"),
-        TOO_DEEP("too deep"),
         TRAILING_BYTES("trailing bytes");
 
         private final String text;
@@ -35,19 +34,19 @@ public final class DecodeException extends RuntimeException {
     private int offset;
     private int length;
 
-    public DecodeException(Reason reason, int offset) {
+    public DecodeException(@NotNull Reason reason, int offset) {
         this.reason = reason;
         this.offset = offset;
     }
 
     /** Puts a field name in front of the path. */
-    public DecodeException prepend(String field) {
+    public @NotNull DecodeException prepend(@NotNull String field) {
         path.addFirst(field);
         return this;
     }
 
     /** Puts a list index in front of the path. */
-    public DecodeException prepend(int index) {
+    public @NotNull DecodeException prepend(int index) {
         path.addFirst(index);
         return this;
     }
@@ -58,16 +57,16 @@ public final class DecodeException extends RuntimeException {
         this.length = length;
     }
 
-    public Reason getReason() {
+    public @NotNull Reason getReason() {
         return reason;
     }
 
-    public String getType() {
+    public @NotNull String getType() {
         return type;
     }
 
     /** The field names (String) and list indices (Integer), outermost first. */
-    public List<Object> getPath() {
+    public @NotNull List<Object> getPath() {
         return Collections.unmodifiableList(path);
     }
 
@@ -82,7 +81,7 @@ public final class DecodeException extends RuntimeException {
     }
 
     @Override
-    public String getMessage() {
+    public @NotNull String getMessage() {
         StringBuilder message = new StringBuilder(type);
         for (Object segment : path) {
             if (segment instanceof Integer index) {

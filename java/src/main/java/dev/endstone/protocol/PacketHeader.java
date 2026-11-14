@@ -1,6 +1,7 @@
 package dev.endstone.protocol;
 
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
 /** The id and sub ids that open a packet. */
 public record PacketHeader(int packetId, int recipientSubId, int senderSubId) {
@@ -18,16 +19,12 @@ public record PacketHeader(int packetId, int recipientSubId, int senderSubId) {
         }
     }
 
-    public static PacketHeader decode(ByteBuf buf) {
-        return ByteBufUtils.decode(buf, DecodeLimits.DEFAULT, "PacketHeader", PacketHeader::read);
-    }
-
-    public static PacketHeader read(ByteBuf buf, DecodeBudget budget) {
-        int bits = ByteBufUtils.readUnsignedVarInt(buf);
+    public static @NotNull PacketHeader deserialize(@NotNull ByteBuf buf) {
+        int bits = ByteBufCodec.readUnsignedVarInt(buf);
         return new PacketHeader(bits & 0x3FF, (bits >>> 10) & 3, (bits >>> 12) & 3);
     }
 
-    public void encode(ByteBuf buf) {
-        ByteBufUtils.writeUnsignedVarInt(buf, packetId | recipientSubId << 10 | senderSubId << 12);
+    public void serialize(@NotNull ByteBuf buf) {
+        ByteBufCodec.writeUnsignedVarInt(buf, packetId | recipientSubId << 10 | senderSubId << 12);
     }
 }

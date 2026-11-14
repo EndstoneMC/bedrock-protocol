@@ -25,17 +25,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class ByteBufUtilsTest {
+class ByteBufCodecTest {
     private static ByteBuf hex(String hex) {
         return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
     }
 
     private static String written(ByteBuf buf) {
         return ByteBufUtil.hexDump(buf);
-    }
-
-    private static DecodeBudget budget() {
-        return new DecodeBudget(DecodeLimits.DEFAULT);
     }
 
     private static DecodeException failure(Runnable read) {
@@ -47,10 +43,10 @@ class ByteBufUtilsTest {
     }
 
     static Stream<Arguments> varint32() {
-        ToIntFunction<ByteBuf> unsignedRead = ByteBufUtils::readUnsignedVarInt;
-        ToIntFunction<ByteBuf> zigzagRead = ByteBufUtils::readVarInt;
-        ObjIntConsumer<ByteBuf> unsignedWrite = ByteBufUtils::writeUnsignedVarInt;
-        ObjIntConsumer<ByteBuf> zigzagWrite = ByteBufUtils::writeVarInt;
+        ToIntFunction<ByteBuf> unsignedRead = ByteBufCodec::readUnsignedVarInt;
+        ToIntFunction<ByteBuf> zigzagRead = ByteBufCodec::readVarInt;
+        ObjIntConsumer<ByteBuf> unsignedWrite = ByteBufCodec::writeUnsignedVarInt;
+        ObjIntConsumer<ByteBuf> zigzagWrite = ByteBufCodec::writeVarInt;
         return Stream.of(
                 argumentSet("unsigned zero", "00", 0, unsignedRead, unsignedWrite),
                 argumentSet("unsigned 300", "ac02", 300, unsignedRead, unsignedWrite),
@@ -69,10 +65,10 @@ class ByteBufUtilsTest {
     }
 
     static Stream<Arguments> varint64() {
-        ToLongFunction<ByteBuf> unsignedRead = ByteBufUtils::readUnsignedVarLong;
-        ToLongFunction<ByteBuf> zigzagRead = ByteBufUtils::readVarLong;
-        ObjLongConsumer<ByteBuf> unsignedWrite = ByteBufUtils::writeUnsignedVarLong;
-        ObjLongConsumer<ByteBuf> zigzagWrite = ByteBufUtils::writeVarLong;
+        ToLongFunction<ByteBuf> unsignedRead = ByteBufCodec::readUnsignedVarLong;
+        ToLongFunction<ByteBuf> zigzagRead = ByteBufCodec::readVarLong;
+        ObjLongConsumer<ByteBuf> unsignedWrite = ByteBufCodec::writeUnsignedVarLong;
+        ObjLongConsumer<ByteBuf> zigzagWrite = ByteBufCodec::writeVarLong;
         return Stream.of(
                 argumentSet("unsigned 300", "ac02", 300L, unsignedRead, unsignedWrite),
                 argumentSet(
@@ -98,16 +94,16 @@ class ByteBufUtilsTest {
 
     static Stream<Arguments> fixedReads() {
         return Stream.of(
-                argumentSet("bool", (Consumer<ByteBuf>) ByteBufUtils::readBoolean, 1),
-                argumentSet("int8", (Consumer<ByteBuf>) ByteBufUtils::readByte, 1),
-                argumentSet("uint8", (Consumer<ByteBuf>) ByteBufUtils::readUnsignedByte, 1),
-                argumentSet("int16", (Consumer<ByteBuf>) ByteBufUtils::readShortLE, 2),
-                argumentSet("uint16", (Consumer<ByteBuf>) ByteBufUtils::readUnsignedShortLE, 2),
-                argumentSet("int32", (Consumer<ByteBuf>) ByteBufUtils::readIntLE, 4),
-                argumentSet("int64", (Consumer<ByteBuf>) ByteBufUtils::readLongLE, 8),
-                argumentSet("float", (Consumer<ByteBuf>) ByteBufUtils::readFloatLE, 4),
-                argumentSet("double", (Consumer<ByteBuf>) ByteBufUtils::readDoubleLE, 8),
-                argumentSet("int32 big endian", (Consumer<ByteBuf>) ByteBufUtils::readInt, 4));
+                argumentSet("bool", (Consumer<ByteBuf>) ByteBufCodec::readBoolean, 1),
+                argumentSet("int8", (Consumer<ByteBuf>) ByteBufCodec::readByte, 1),
+                argumentSet("uint8", (Consumer<ByteBuf>) ByteBufCodec::readUnsignedByte, 1),
+                argumentSet("int16", (Consumer<ByteBuf>) ByteBufCodec::readShortLE, 2),
+                argumentSet("uint16", (Consumer<ByteBuf>) ByteBufCodec::readUnsignedShortLE, 2),
+                argumentSet("int32", (Consumer<ByteBuf>) ByteBufCodec::readIntLE, 4),
+                argumentSet("int64", (Consumer<ByteBuf>) ByteBufCodec::readLongLE, 8),
+                argumentSet("float", (Consumer<ByteBuf>) ByteBufCodec::readFloatLE, 4),
+                argumentSet("double", (Consumer<ByteBuf>) ByteBufCodec::readDoubleLE, 8),
+                argumentSet("int32 big endian", (Consumer<ByteBuf>) ByteBufCodec::readInt, 4));
     }
 
     static Stream<Arguments> strings() {
@@ -160,26 +156,26 @@ class ByteBufUtilsTest {
 
     @Test
     void uvarint32PastItsTypeIsOutOfRangeAfterTheFifthByte() {
-        DecodeException error = failure(() -> ByteBufUtils.readUnsignedVarInt(hex("ffffffff10")));
+        DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("ffffffff10")));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 5), reasonAndOffset(error));
     }
 
     @Test
     void uvarint32WithAContinuationAfterTheFifthByteIsOutOfRange() {
-        DecodeException error = failure(() -> ByteBufUtils.readUnsignedVarInt(hex("ffffffff8f00")));
+        DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("ffffffff8f00")));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 5), reasonAndOffset(error));
     }
 
     @Test
     void uvarint64PastItsTypeIsOutOfRangeAfterTheTenthByte() {
         DecodeException error =
-                failure(() -> ByteBufUtils.readUnsignedVarLong(hex("ffffffffffffffffff02")));
+                failure(() -> ByteBufCodec.readUnsignedVarLong(hex("ffffffffffffffffff02")));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 10), reasonAndOffset(error));
     }
 
     @Test
     void varintThatRunsOutIsTruncatedAtTheEndOfTheInput() {
-        DecodeException error = failure(() -> ByteBufUtils.readUnsignedVarInt(hex("8080")));
+        DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("8080")));
         assertEquals(List.of(Reason.TRUNCATED, 2), reasonAndOffset(error));
     }
 
@@ -187,7 +183,7 @@ class ByteBufUtilsTest {
     void fixedWidthTruncationReportsTheFieldStart() {
         ByteBuf buf = hex("aabb01020304");
         buf.readerIndex(2);
-        DecodeException error = failure(() -> ByteBufUtils.readLongLE(buf));
+        DecodeException error = failure(() -> ByteBufCodec.readLongLE(buf));
         assertEquals(List.of(Reason.TRUNCATED, 2), reasonAndOffset(error));
     }
 
@@ -209,61 +205,54 @@ class ByteBufUtilsTest {
 
     @Test
     void littleEndianAndBigEndianReadsDisagreeOnTheSameBytes() {
-        assertEquals(0x04030201, ByteBufUtils.readIntLE(hex("01020304")));
-        assertEquals(0x01020304, ByteBufUtils.readInt(hex("01020304")));
+        assertEquals(0x04030201, ByteBufCodec.readIntLE(hex("01020304")));
+        assertEquals(0x01020304, ByteBufCodec.readInt(hex("01020304")));
     }
 
     @Test
     void uint8DoesNotSignExtend() {
-        assertEquals(255, ByteBufUtils.readUnsignedByte(hex("ff")));
+        assertEquals(255, ByteBufCodec.readUnsignedByte(hex("ff")));
     }
 
     @Test
     void uint16DoesNotSignExtend() {
-        assertEquals(65535, ByteBufUtils.readUnsignedShortLE(hex("ffff")));
+        assertEquals(65535, ByteBufCodec.readUnsignedShortLE(hex("ffff")));
     }
 
     @Test
     void floatReadsLittleEndian() {
-        assertEquals(1.0f, ByteBufUtils.readFloatLE(hex("0000803f")));
+        assertEquals(1.0f, ByteBufCodec.readFloatLE(hex("0000803f")));
     }
 
     @Test
     void doubleReadsLittleEndian() {
-        assertEquals(1.0, ByteBufUtils.readDoubleLE(hex("000000000000f03f")));
+        assertEquals(1.0, ByteBufCodec.readDoubleLE(hex("000000000000f03f")));
     }
 
     @Test
     void boolReadsAnyNonZeroByteAsTrue() {
-        assertTrue(ByteBufUtils.readBoolean(hex("02")));
+        assertTrue(ByteBufCodec.readBoolean(hex("02")));
     }
 
     @ParameterizedTest
     @MethodSource("strings")
     void strReads(String hex, String expected) {
-        assertEquals(expected, ByteBufUtils.readString(hex(hex), budget()));
+        assertEquals(expected, ByteBufCodec.readString(hex(hex)));
     }
 
     @ParameterizedTest
     @MethodSource("strings")
     void strWritesWhatItRead(String hex, String value) {
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeString(buf, value);
+        ByteBufCodec.writeString(buf, value);
         assertEquals(hex, written(buf));
     }
 
     @Test
     void strLengthPastTheBodyIsTruncatedBeforeAnyAllocation() {
         ByteBuf buf = hex("ffffffff0f");
-        DecodeException error = failure(() -> ByteBufUtils.readString(buf, budget()));
+        DecodeException error = failure(() -> ByteBufCodec.readString(buf));
         assertEquals(List.of(Reason.TRUNCATED, 5), reasonAndOffset(error));
-    }
-
-    @Test
-    void strChargesItsBytesToTheBudget() {
-        DecodeBudget small = new DecodeBudget(new DecodeLimits(10, 1, 4));
-        DecodeException error = failure(() -> ByteBufUtils.readString(hex("026162"), small));
-        assertEquals(List.of(Reason.TOO_LARGE, 1), reasonAndOffset(error));
     }
 
     @Test
@@ -272,7 +261,7 @@ class ByteBufUtilsTest {
         IllegalArgumentException error =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> ByteBufUtils.writeString(buf, "\ud800"));
+                        () -> ByteBufCodec.writeString(buf, "\ud800"));
         assertEquals("string has an unpaired surrogate at index 0", error.getMessage());
     }
 
@@ -280,40 +269,39 @@ class ByteBufUtilsTest {
     void rejectedStringLeavesTheBufferEmpty() {
         ByteBuf buf = Unpooled.buffer();
         assertThrows(
-                IllegalArgumentException.class, () -> ByteBufUtils.writeString(buf, "a\udbff"));
+                IllegalArgumentException.class, () -> ByteBufCodec.writeString(buf, "a\udbff"));
         assertEquals(0, buf.readableBytes());
     }
 
     @Test
     void bytesWriteTheirLengthPrefix() {
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeByteArray(buf, new byte[] {1, 2, 3});
+        ByteBufCodec.writeByteArray(buf, new byte[] {1, 2, 3});
         assertEquals("03010203", written(buf));
     }
 
     @Test
     void bytesReadTheirLengthPrefix() {
-        assertArrayEquals(
-                new byte[] {1, 2, 3}, ByteBufUtils.readByteArray(hex("03010203"), budget()));
+        assertArrayEquals(new byte[] {1, 2, 3}, ByteBufCodec.readByteArray(hex("03010203")));
     }
 
     @Test
     void uuidIsTwoLittleEndianLongsMostSignificantFirst() {
-        UUID uuid = ByteBufUtils.readUuid(hex("0807060504030201100f0e0d0c0b0a09"));
+        UUID uuid = ByteBufCodec.readUuid(hex("0807060504030201100f0e0d0c0b0a09"));
         assertEquals(new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L), uuid);
     }
 
     @Test
     void uuidWithOnlyTheFirstLongAndAPartIsTruncatedAtTheSecondLong() {
         DecodeException error =
-                failure(() -> ByteBufUtils.readUuid(Unpooled.wrappedBuffer(new byte[12])));
+                failure(() -> ByteBufCodec.readUuid(Unpooled.wrappedBuffer(new byte[12])));
         assertEquals(List.of(Reason.TRUNCATED, 8), reasonAndOffset(error));
     }
 
     @Test
     void uuidWritesMostSignificantLongFirst() {
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeUuid(buf, new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L));
+        ByteBufCodec.writeUuid(buf, new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L));
         assertEquals("0807060504030201100f0e0d0c0b0a09", written(buf));
     }
 
@@ -335,13 +323,13 @@ class ByteBufUtilsTest {
     void uuidTextReads(String hex) {
         assertEquals(
                 new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L),
-                ByteBufUtils.readUuidString(hex(hex), budget()));
+                ByteBufCodec.readUuidString(hex(hex)));
     }
 
     @Test
     void uuidTextWritesLowerCaseHyphenated() {
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeUuidString(buf, new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L));
+        ByteBufCodec.writeUuidString(buf, new UUID(0x0102030405060708L, 0x090a0b0c0d0e0f10L));
         assertEquals(
                 "2430313032303330342d303530362d303730382d303930612d306230633064306530663130",
                 written(buf));
@@ -369,7 +357,7 @@ class ByteBufUtilsTest {
     @ParameterizedTest
     @MethodSource("notUuidTexts")
     void uuidTextThatDoesNotParseIsAnUnknownValueAfterTheString(String hex, int offset) {
-        DecodeException error = failure(() -> ByteBufUtils.readUuidString(hex(hex), budget()));
+        DecodeException error = failure(() -> ByteBufCodec.readUuidString(hex(hex)));
         assertEquals(List.of(Reason.UNKNOWN_VALUE, offset), reasonAndOffset(error));
     }
 
@@ -389,7 +377,7 @@ class ByteBufUtilsTest {
     @ParameterizedTest
     @MethodSource("bitsets")
     void bitsetReads(String hex, int width, BitSet expected) {
-        assertEquals(expected, ByteBufUtils.readBitSet(hex(hex), width));
+        assertEquals(expected, ByteBufCodec.readBitSet(hex(hex), width));
     }
 
     @Test
@@ -398,32 +386,32 @@ class ByteBufUtilsTest {
         bits.set(0);
         bits.set(7);
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeBitSet(buf, bits, 30, "flags");
+        ByteBufCodec.writeBitSet(buf, bits, 30, "flags");
         assertEquals("8101", written(buf));
     }
 
     @Test
     void emptyBitsetWritesOneGroup() {
         ByteBuf buf = Unpooled.buffer();
-        ByteBufUtils.writeBitSet(buf, new BitSet(), 30, "flags");
+        ByteBufCodec.writeBitSet(buf, new BitSet(), 30, "flags");
         assertEquals("00", written(buf));
     }
 
     @Test
     void bitsetBitAtTheWidthIsOutOfRange() {
-        DecodeException error = failure(() -> ByteBufUtils.readBitSet(hex("08"), 3));
+        DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("08"), 3));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
     }
 
     @Test
     void bitsetContinuationIntoAGroupAtTheWidthIsOutOfRange() {
-        DecodeException error = failure(() -> ByteBufUtils.readBitSet(hex("8000"), 7));
+        DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("8000"), 7));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
     }
 
     @Test
     void bitsetThatRunsOutIsTruncated() {
-        DecodeException error = failure(() -> ByteBufUtils.readBitSet(hex("80"), 30));
+        DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("80"), 30));
         assertEquals(List.of(Reason.TRUNCATED, 1), reasonAndOffset(error));
     }
 
@@ -434,53 +422,47 @@ class ByteBufUtilsTest {
         IllegalStateException error =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> ByteBufUtils.writeBitSet(Unpooled.buffer(), bits, 5, "Pack.flags"));
+                        () -> ByteBufCodec.writeBitSet(Unpooled.buffer(), bits, 5, "Pack.flags"));
         assertEquals("Pack.flags: bit 5 is past the width 5", error.getMessage());
     }
 
     @Test
     void strOrderPutsASupplementaryCharacterAfterAHighBmpOne() {
-        assertTrue(ByteBufUtils.STR_ORDER.compare("\uffff", "\ud800\udc00") < 0);
+        assertTrue(ByteBufCodec.STR_ORDER.compare("\uffff", "\ud800\udc00") < 0);
         assertTrue("\uffff".compareTo("\ud800\udc00") > 0);
     }
 
     @Test
     void strOrderPutsAnEscapedByteBeforeALetterWithAccent() {
-        assertTrue(ByteBufUtils.STR_ORDER.compare("\udc80", "é") < 0);
+        assertTrue(ByteBufCodec.STR_ORDER.compare("\udc80", "é") < 0);
         assertTrue("\udc80".compareTo("é") > 0);
     }
 
     @Test
     void strOrderTreatsAPrefixAsSmaller() {
-        assertTrue(ByteBufUtils.STR_ORDER.compare("ab", "abc") < 0);
+        assertTrue(ByteBufCodec.STR_ORDER.compare("ab", "abc") < 0);
     }
 
     @Test
     void foldAsciiLowersLettersOnly() {
-        assertEquals("abc_1", ByteBufUtils.foldAscii("AbC_1"));
+        assertEquals("abc_1", ByteBufCodec.foldAscii("AbC_1"));
     }
 
     @Test
     void foldAsciiLeavesTheKelvinSignAlone() {
-        assertEquals("\u212a", ByteBufUtils.foldAscii("\u212a"));
+        assertEquals("\u212a", ByteBufCodec.foldAscii("\u212a"));
     }
 
     @Test
     void decodeReturnsTheValue() {
-        int value =
-                ByteBufUtils.decode(
-                        hex("2a"),
-                        DecodeLimits.DEFAULT,
-                        "T",
-                        (b, budget) -> ByteBufUtils.readUnsignedByte(b));
+        int value = ByteBufCodec.deserialize(hex("2a"), "T", b -> ByteBufCodec.readUnsignedByte(b));
         assertEquals(42, value);
     }
 
     @Test
     void decodeConsumesTheInput() {
         ByteBuf buf = hex("2a");
-        ByteBufUtils.decode(
-                buf, DecodeLimits.DEFAULT, "T", (b, budget) -> ByteBufUtils.readUnsignedByte(b));
+        ByteBufCodec.deserialize(buf, "T", b -> ByteBufCodec.readUnsignedByte(b));
         assertEquals(0, buf.readableBytes());
     }
 
@@ -491,11 +473,10 @@ class ByteBufUtilsTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                ByteBufUtils.decode(
+                                ByteBufCodec.deserialize(
                                         buf,
-                                        DecodeLimits.DEFAULT,
                                         "PlayStatusPacket",
-                                        (b, budget) -> ByteBufUtils.readUnsignedByte(b)));
+                                        b -> ByteBufCodec.readUnsignedByte(b)));
         assertEquals("PlayStatusPacket: trailing bytes at byte 1 of 3", error.getMessage());
     }
 
@@ -505,12 +486,7 @@ class ByteBufUtilsTest {
         buf.readerIndex(1);
         assertThrows(
                 DecodeException.class,
-                () ->
-                        ByteBufUtils.decode(
-                                buf,
-                                DecodeLimits.DEFAULT,
-                                "T",
-                                (b, budget) -> ByteBufUtils.readLongLE(b)));
+                () -> ByteBufCodec.deserialize(buf, "T", b -> ByteBufCodec.readLongLE(b)));
         assertEquals(1, buf.readerIndex());
     }
 
@@ -522,27 +498,16 @@ class ByteBufUtilsTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                ByteBufUtils.decode(
-                                        buf,
-                                        DecodeLimits.DEFAULT,
-                                        "PlayStatusPacket",
-                                        (b, budget) -> ByteBufUtils.readIntLE(b)));
+                                ByteBufCodec.deserialize(
+                                        buf, "PlayStatusPacket", b -> ByteBufCodec.readIntLE(b)));
         assertEquals("PlayStatusPacket: truncated at byte 0 of 2", error.getMessage());
     }
 
-    @Test
-    void decodeGivesEachCallItsOwnBudget() {
-        DecodeLimits limits = new DecodeLimits(10, 1, 4);
-        Decoder<String> reader = (b, budget) -> ByteBufUtils.readString(b, budget);
-        assertEquals("a", ByteBufUtils.decode(hex("0161"), limits, "T", reader));
-        assertEquals("b", ByteBufUtils.decode(hex("0162"), limits, "T", reader));
-    }
-
     static Stream<Arguments> countReads() {
-        ToLongFunction<ByteBuf> uvarint32 = ByteBufUtils::readUvarint32Count;
-        ToLongFunction<ByteBuf> uint32 = ByteBufUtils::readUint32Count;
-        ToLongFunction<ByteBuf> uint16 = ByteBufUtils::readUint16Count;
-        ToLongFunction<ByteBuf> varint32 = ByteBufUtils::readVarint32Count;
+        ToLongFunction<ByteBuf> uvarint32 = ByteBufCodec::readUvarint32Count;
+        ToLongFunction<ByteBuf> uint32 = ByteBufCodec::readUint32Count;
+        ToLongFunction<ByteBuf> uint16 = ByteBufCodec::readUint16Count;
+        ToLongFunction<ByteBuf> varint32 = ByteBufCodec::readVarint32Count;
         return Stream.of(
                 argumentSet("uvarint32", "ffffffff0f", uvarint32, 4_294_967_295L),
                 argumentSet("uint32", "ffffffff", uint32, 4_294_967_295L),
@@ -558,88 +523,81 @@ class ByteBufUtilsTest {
     }
 
     @Test
-    void negativeCountIsOutOfRangeWhenCharged() {
+    void negativeCountIsOutOfRangeWhenNarrowed() {
         ByteBuf buf = hex("01");
-        long count = ByteBufUtils.readVarint32Count(buf);
-        DecodeException error = failure(() -> ByteBufUtils.charge(buf, budget(), count, 4));
+        long count = ByteBufCodec.readVarint32Count(buf);
+        DecodeException error = failure(() -> ByteBufCodec.toCount(buf, count));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
     }
 
     @Test
-    void countPastTheElementLimitIsTooLarge() {
-        DecodeBudget small = new DecodeBudget(new DecodeLimits(2, 100, 4));
-        DecodeException error = failure(() -> ByteBufUtils.charge(hex("00"), small, 3, 0));
-        assertEquals(List.of(Reason.TOO_LARGE, 0), reasonAndOffset(error));
+    void countPastIntMaxIsOutOfRangeWhenNarrowed() {
+        DecodeException error =
+                failure(() -> ByteBufCodec.toCount(hex("00"), Integer.MAX_VALUE + 1L));
+        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
     }
 
     @Test
-    void countTimesWidthPastTheByteLimitIsTooLarge() {
-        DecodeBudget small = new DecodeBudget(new DecodeLimits(10, 8, 4));
-        DecodeException error = failure(() -> ByteBufUtils.charge(hex("00"), small, 3, 4));
-        assertEquals(List.of(Reason.TOO_LARGE, 0), reasonAndOffset(error));
-    }
-
-    @Test
-    void chargeReturnsTheCount() {
-        assertEquals(3, ByteBufUtils.charge(hex("00"), budget(), 3, 4));
+    void toCountReturnsTheCount() {
+        assertEquals(3, ByteBufCodec.toCount(hex("00"), 3));
     }
 
     @Test
     void negativeCountFactorIsOutOfRange() {
-        DecodeException error = failure(() -> ByteBufUtils.countValue(hex("00"), -1));
+        DecodeException error = failure(() -> ByteBufCodec.countValue(hex("00"), -1));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
     }
 
     @Test
     void negativeFactorInAProductIsOutOfRange() {
-        DecodeException error = failure(() -> ByteBufUtils.countProduct(hex("00"), 4, -1));
+        DecodeException error = failure(() -> ByteBufCodec.countProduct(hex("00"), 4, -1));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
     }
 
     @Test
     void productPastSixtyFourBitsIsOutOfRange() {
         DecodeException error =
-                failure(() -> ByteBufUtils.countProduct(hex("00"), 1L << 32, 1L << 32));
+                failure(() -> ByteBufCodec.countProduct(hex("00"), 1L << 32, 1L << 32));
         assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
     }
 
     @Test
-    void productIsChargedAsALong() {
+    void productIsNarrowedAsALong() {
         ByteBuf buf = hex("00");
-        long count = ByteBufUtils.countProduct(buf, 65_536, 65_536);
-        DecodeException error = failure(() -> ByteBufUtils.charge(buf, budget(), count, 0));
-        assertEquals(List.of(Reason.TOO_LARGE, 0), reasonAndOffset(error));
+        long count = ByteBufCodec.countProduct(buf, 65_536, 65_536);
+        DecodeException error = failure(() -> ByteBufCodec.toCount(buf, count));
+        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
     }
 
     @Test
     void primitiveArrayThatRunsShortIsTruncatedAtTheFirstElementThatDoesNotFit() {
         ByteBuf buf = Unpooled.wrappedBuffer(new byte[10]);
-        DecodeException error = failure(() -> ByteBufUtils.needElements(buf, 3, 4));
+        DecodeException error = failure(() -> ByteBufCodec.needElements(buf, 3, 4));
         assertEquals(List.of(Reason.TRUNCATED, 8), reasonAndOffset(error));
     }
 
     @Test
     void primitiveArrayThatRunsShortNamesTheElementIndex() {
         ByteBuf buf = Unpooled.wrappedBuffer(new byte[10]);
-        DecodeException error = failure(() -> ByteBufUtils.needElements(buf, 3, 4));
+        DecodeException error = failure(() -> ByteBufCodec.needElements(buf, 3, 4));
         assertEquals(List.of(2), error.getPath());
     }
 
     @Test
     void primitiveArrayThatFitsIsAccepted() {
         ByteBuf buf = Unpooled.wrappedBuffer(new byte[12]);
-        assertDoesNotThrow(() -> ByteBufUtils.needElements(buf, 3, 4));
+        assertDoesNotThrow(() -> ByteBufCodec.needElements(buf, 3, 4));
     }
 
     @Test
-    void initialCapacityOfAnAdmittedHostileCountIsCapped() {
+    void initialCapacityOfAHostileCountIsCapped() {
         ByteBuf buf = hex("c0843d");
-        int count = ByteBufUtils.charge(buf, budget(), ByteBufUtils.readUvarint32Count(buf), 0);
-        assertEquals(65_536, ByteBufUtils.initialCapacity(count));
+        int count = ByteBufCodec.toCount(buf, ByteBufCodec.readUvarint32Count(buf));
+        assertEquals(65_536, ByteBufCodec.initialCapacity(count));
     }
 
     @Test
     void initialCapacityKeepsASmallCount() {
-        assertEquals(3, ByteBufUtils.initialCapacity(3));
+        assertEquals(3, ByteBufCodec.initialCapacity(3));
     }
 }

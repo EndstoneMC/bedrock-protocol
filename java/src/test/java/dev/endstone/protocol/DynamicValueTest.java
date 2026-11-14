@@ -1,6 +1,5 @@
 package dev.endstone.protocol;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -49,33 +48,32 @@ class DynamicValueTest {
         return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
     }
 
-    private static DynamicValue decode(String hex) {
-        return ByteBufUtils.decode(
-                hex(hex), DecodeLimits.DEFAULT, "DynamicValue", DynamicValue::read);
+    private static DynamicValue deserialize(String hex) {
+        return ByteBufCodec.deserialize(hex(hex), "DynamicValue", DynamicValue::deserialize);
     }
 
     private static DecodeException fail(String hex) {
-        return assertThrows(DecodeException.class, () -> decode(hex));
+        return assertThrows(DecodeException.class, () -> deserialize(hex));
     }
 
     @ParameterizedTest
     @MethodSource("values")
     void encodeWritesTheTagThenThePayload(DynamicValue value, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        value.encode(buf);
+        value.serialize(buf);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
     @ParameterizedTest
     @MethodSource("values")
     void readReadsTheTagThenThePayload(DynamicValue value, String hex) {
-        assertEquals(value, decode(hex));
+        assertEquals(value, deserialize(hex));
     }
 
     @Test
     void objectKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())).encode(buf);
+        new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())).serialize(buf);
         assertEquals(
                 "0600000002" + "03efbfbf00000000" + "04f090808000000000", ByteBufUtil.hexDump(buf));
     }
@@ -84,7 +82,7 @@ class DynamicValueTest {
     void aDuplicateKeyKeepsTheFirstValue() {
         assertEquals(
                 new ObjectValue(Map.of("a", new NullValue())),
-                decode("0600000002" + "016100000000" + "01610100000001"));
+                deserialize("0600000002" + "016100000000" + "01610100000001"));
     }
 
     @Test
@@ -102,31 +100,6 @@ class DynamicValueTest {
     void bytesAfterTheValueAreTrailing() {
         assertEquals(
                 "DynamicValue: trailing bytes at byte 4 of 5", fail("0000000000").getMessage());
-    }
-
-    @Test
-    void aValueNested129DeepIsTooDeep() {
-        DecodeException error = fail("0500000001".repeat(128) + "00000000");
-        assertEquals("DynamicValue: too deep at byte 640 of 644", error.getMessage());
-    }
-
-    @Test
-    void aValueNested128DeepIsAccepted() {
-        assertDoesNotThrow(() -> decode("0500000001".repeat(127) + "00000000"));
-    }
-
-    @Test
-    void anArrayPastTheElementLimitIsTooLarge() {
-        DecodeException error =
-                assertThrows(
-                        DecodeException.class,
-                        () ->
-                                ByteBufUtils.decode(
-                                        hex("0500000002"),
-                                        new DecodeLimits(1, 1_000L, 128),
-                                        "DynamicValue",
-                                        DynamicValue::read));
-        assertEquals("DynamicValue: too large at byte 5 of 5", error.getMessage());
     }
 
     @Test

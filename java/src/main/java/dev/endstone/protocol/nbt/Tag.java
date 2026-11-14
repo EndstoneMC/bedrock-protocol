@@ -1,46 +1,83 @@
 package dev.endstone.protocol.nbt;
 
-import dev.endstone.protocol.ByteBufUtils;
-import dev.endstone.protocol.DecodeBudget;
 import io.netty.buffer.ByteBuf;
+import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 
-/** A network NBT value; its payload is written without a type id or a name. */
-public sealed interface Tag
-        permits ByteTag,
-                ShortTag,
-                IntTag,
-                Int64Tag,
-                FloatTag,
-                DoubleTag,
-                StringTag,
-                ByteArrayTag,
-                IntArrayTag,
-                ListTag,
-                CompoundTag {
-    TagType type();
+/** A network NBT value; its payload is encoded without a type id or a name. */
+public sealed interface Tag permits CollectionTag, CompoundTag, EndTag, PrimitiveTag {
+    byte TAG_END = 0;
+    byte TAG_BYTE = 1;
+    byte TAG_SHORT = 2;
+    byte TAG_INT = 3;
+    byte TAG_LONG = 4;
+    byte TAG_FLOAT = 5;
+    byte TAG_DOUBLE = 6;
+    byte TAG_BYTE_ARRAY = 7;
+    byte TAG_STRING = 8;
+    byte TAG_LIST = 9;
+    byte TAG_COMPOUND = 10;
+    byte TAG_INT_ARRAY = 11;
 
-    void encodeData(ByteBuf buf);
+    void serialize(@NotNull ByteBuf buf);
 
-    /** Reads the payload of a tag of the given type; END has none. */
-    static Tag readData(ByteBuf buf, DecodeBudget budget, TagType type) {
-        budget.enter(buf.readerIndex());
-        try {
-            return switch (type) {
-                case BYTE -> new ByteTag(ByteBufUtils.readUnsignedByte(buf));
-                case SHORT -> new ShortTag(ByteBufUtils.readShortLE(buf));
-                case INT -> new IntTag(ByteBufUtils.readVarInt(buf));
-                case INT64 -> new Int64Tag(ByteBufUtils.readVarLong(buf));
-                case FLOAT -> new FloatTag(ByteBufUtils.readFloatLE(buf));
-                case DOUBLE -> new DoubleTag(ByteBufUtils.readDoubleLE(buf));
-                case STRING -> new StringTag(ByteBufUtils.readString(buf, budget));
-                case BYTE_ARRAY -> ByteArrayTag.readBody(buf, budget);
-                case INT_ARRAY -> IntArrayTag.readBody(buf, budget);
-                case LIST -> ListTag.readBody(buf, budget);
-                case COMPOUND -> CompoundTag.readBody(buf, budget);
-                case END -> throw new IllegalArgumentException("Tag.readData: END has no payload");
-            };
-        } finally {
-            budget.leave();
-        }
+    byte getId();
+
+    @NotNull
+    TagType<?> getType();
+
+    @NotNull
+    Tag copy();
+
+    default @NotNull Optional<String> asString() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Number> asNumber() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Byte> asByte() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Short> asShort() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Integer> asInt() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Long> asLong() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Float> asFloat() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Double> asDouble() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<Boolean> asBoolean() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<byte[]> asByteArray() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<int[]> asIntArray() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<CompoundTag> asCompound() {
+        return Optional.empty();
+    }
+
+    default @NotNull Optional<ListTag> asList() {
+        return Optional.empty();
     }
 }

@@ -24,8 +24,6 @@ class DecodeExceptionTest {
                 argumentSet("truncated", Reason.TRUNCATED, "truncated"),
                 argumentSet("out of range", Reason.OUT_OF_RANGE, "out of range"),
                 argumentSet("unknown value", Reason.UNKNOWN_VALUE, "unknown value"),
-                argumentSet("too large", Reason.TOO_LARGE, "too large"),
-                argumentSet("too deep", Reason.TOO_DEEP, "too deep"),
                 argumentSet("trailing bytes", Reason.TRAILING_BYTES, "trailing bytes"));
     }
 
@@ -41,8 +39,6 @@ class DecodeExceptionTest {
                         Reason.TRUNCATED,
                         Reason.OUT_OF_RANGE,
                         Reason.UNKNOWN_VALUE,
-                        Reason.TOO_LARGE,
-                        Reason.TOO_DEEP,
                         Reason.TRAILING_BYTES),
                 List.of(Reason.values()));
     }

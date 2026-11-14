@@ -1,63 +1,86 @@
 package dev.endstone.protocol.nbt;
 
-import dev.endstone.protocol.ByteBufUtils;
-import dev.endstone.protocol.DecodeBudget;
+import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
 import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-/** A byte array tag of unsigned elements, 0 to 255; two compare equal when their elements do. */
-public record ByteArrayTag(int[] value) implements Tag {
-    public ByteArrayTag {
-        Objects.requireNonNull(value, "ByteArrayTag.value");
-        for (int element : value) {
-            if (element < 0 || element > 0xFF) {
-                throw new IllegalArgumentException(
-                        "ByteArrayTag.value element out of range: " + element);
-            }
-        }
+/** A byte array tag; two compare equal when their bytes do. */
+public final class ByteArrayTag implements CollectionTag {
+    public static final @NotNull TagType<ByteArrayTag> TYPE =
+            buf -> {
+                int count = ByteBufCodec.toCount(buf, ByteBufCodec.readVarint32Count(buf));
+                if (count > buf.readableBytes()) {
+                    throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
+                }
+                byte[] data = new byte[count];
+                buf.readBytes(data);
+                return new ByteArrayTag(data);
+            };
+
+    private final byte @NotNull [] data;
+
+    public ByteArrayTag(byte @NotNull [] data) {
+        this.data = Objects.requireNonNull(data, "ByteArrayTag.data");
     }
 
     @Override
-    public TagType type() {
-        return TagType.BYTE_ARRAY;
+    public void serialize(@NotNull ByteBuf buf) {
+        ByteBufCodec.writeVarInt(buf, data.length);
+        buf.writeBytes(data);
     }
 
     @Override
-    public void encodeData(ByteBuf buf) {
-        ByteBufUtils.writeVarInt(buf, value.length);
-        for (int element : value) {
-            buf.writeByte(element);
-        }
+    public byte getId() {
+        return TAG_BYTE_ARRAY;
     }
 
-    static ByteArrayTag readBody(ByteBuf buf, DecodeBudget budget) {
-        int count = ByteBufUtils.charge(buf, budget, ByteBufUtils.readVarint32Count(buf), 1);
-        if (count > buf.readableBytes()) {
-            throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
-        }
-        int[] value = new int[count];
-        for (int i = 0; i < count; i++) {
-            value[i] = ByteBufUtils.readUnsignedByte(buf);
-        }
-        return new ByteArrayTag(value);
+    @Override
+    public @NotNull TagType<ByteArrayTag> getType() {
+        return TYPE;
+    }
+
+    @Override
+    public @NotNull ByteArrayTag copy() {
+        return new ByteArrayTag(data.clone());
+    }
+
+    public byte @NotNull [] getAsByteArray() {
+        return data;
+    }
+
+    @Override
+    public int size() {
+        return data.length;
+    }
+
+    @Override
+    public @NotNull ByteTag get(int index) {
+        return ByteTag.valueOf(data[index]);
+    }
+
+    @Override
+    public @NotNull Optional<byte[]> asByteArray() {
+        return Optional.of(data);
     }
 
     @Override
     public boolean equals(@Nullable Object other) {
-        return other instanceof ByteArrayTag tag && Arrays.equals(value, tag.value);
+        return other instanceof ByteArrayTag tag && Arrays.equals(data, tag.data);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(value);
+        return Arrays.hashCode(data);
     }
 
     @Override
-    public String toString() {
-        return "ByteArrayTag[value=" + Arrays.toString(value) + "]";
+    public @NotNull String toString() {
+        return "ByteArrayTag" + Arrays.toString(data);
     }
 }

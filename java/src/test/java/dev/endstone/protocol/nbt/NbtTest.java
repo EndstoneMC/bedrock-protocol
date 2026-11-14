@@ -1,15 +1,12 @@
 package dev.endstone.protocol.nbt;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import dev.endstone.protocol.ByteBufUtils;
+import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
-import dev.endstone.protocol.DecodeException.Reason;
-import dev.endstone.protocol.DecodeLimits;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -24,24 +21,26 @@ import org.junit.jupiter.params.provider.MethodSource;
 class NbtTest {
     static Stream<Arguments> payloads() {
         return Stream.of(
-                argumentSet("byte", new ByteTag(5), "05"),
-                argumentSet("byte high bit", new ByteTag(254), "fe"),
-                argumentSet("short", new ShortTag((short) -2), "feff"),
-                argumentSet("int", new IntTag(-1), "01"),
-                argumentSet("int two groups", new IntTag(300), "d804"),
-                argumentSet("int64", new Int64Tag(-2L), "03"),
-                argumentSet("float", new FloatTag(1.0f), "0000803f"),
-                argumentSet("double", new DoubleTag(1.0), "000000000000f03f"),
-                argumentSet("string", new StringTag("hi"), "026869"),
-                argumentSet("byte array", new ByteArrayTag(new int[] {1, 2}), "040102"),
+                argumentSet("byte", ByteTag.valueOf((byte) 5), "05"),
+                argumentSet("byte high bit", ByteTag.valueOf((byte) 254), "fe"),
+                argumentSet("short", ShortTag.valueOf((short) -2), "feff"),
+                argumentSet("int", IntTag.valueOf(-1), "01"),
+                argumentSet("int two groups", IntTag.valueOf(300), "d804"),
+                argumentSet("long", LongTag.valueOf(-2L), "03"),
+                argumentSet("float", FloatTag.valueOf(1.0f), "0000803f"),
+                argumentSet("double", DoubleTag.valueOf(1.0), "000000000000f03f"),
+                argumentSet("string", StringTag.valueOf("hi"), "026869"),
+                argumentSet("byte array", new ByteArrayTag(new byte[] {1, 2}), "040102"),
                 argumentSet(
-                        "byte array high bit", new ByteArrayTag(new int[] {254, 255}), "04feff"),
+                        "byte array high bit",
+                        new ByteArrayTag(new byte[] {(byte) 254, (byte) 255}),
+                        "04feff"),
                 argumentSet("int array", new IntArrayTag(new int[] {1, -1}), "040201"),
-                argumentSet("list", new ListTag(TagType.INT, List.of(new IntTag(1))), "030202"),
-                argumentSet("empty list", new ListTag(TagType.END, List.of()), "0000"),
+                argumentSet("list", new ListTag(List.of(IntTag.valueOf(1))), "030202"),
+                argumentSet("empty list", new ListTag(), "0000"),
                 argumentSet(
                         "compound",
-                        new CompoundTag(Map.of("b", new ByteTag(1), "a", new IntTag(1))),
+                        compound(Map.of("b", ByteTag.valueOf((byte) 1), "a", IntTag.valueOf(1))),
                         "030161020101620100"));
     }
 
@@ -55,12 +54,18 @@ class NbtTest {
         return Stream.of(
                 argumentSet(
                         "byte arrays",
-                        new ByteArrayTag(new int[] {1, 2}),
-                        new ByteArrayTag(new int[] {1, 2})),
+                        new ByteArrayTag(new byte[] {1, 2}),
+                        new ByteArrayTag(new byte[] {1, 2})),
                 argumentSet(
                         "int arrays",
                         new IntArrayTag(new int[] {1, 2}),
                         new IntArrayTag(new int[] {1, 2})));
+    }
+
+    private static CompoundTag compound(Map<String, Tag> entries) {
+        CompoundTag tag = new CompoundTag();
+        entries.forEach(tag::put);
+        return tag;
     }
 
     private static ByteBuf hex(String hex) {
@@ -68,8 +73,7 @@ class NbtTest {
     }
 
     private static CompoundTag decodeRoot(String hex) {
-        return ByteBufUtils.decode(
-                hex(hex), DecodeLimits.DEFAULT, "CompoundTag", CompoundTag::read);
+        return ByteBufCodec.deserialize(hex(hex), "CompoundTag", NbtIo::deserialize);
     }
 
     private static DecodeException failRoot(String hex) {
@@ -78,65 +82,50 @@ class NbtTest {
 
     @ParameterizedTest
     @MethodSource("payloads")
-    void encodeDataWritesThePayload(Tag tag, String hex) {
+    void encodeWritesThePayload(Tag tag, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        tag.encodeData(buf);
+        tag.serialize(buf);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
     @ParameterizedTest
     @MethodSource("payloads")
-    void readDataReadsThePayload(Tag tag, String hex) {
-        Tag read =
-                ByteBufUtils.decode(
-                        hex(hex),
-                        DecodeLimits.DEFAULT,
-                        "Tag",
-                        (buf, budget) -> Tag.readData(buf, budget, tag.type()));
+    void typeDecodesThePayload(Tag tag, String hex) {
+        Tag read = ByteBufCodec.deserialize(hex(hex), "Tag", tag.getType()::deserialize);
         assertEquals(tag, read);
     }
 
     @Test
-    void encodeWritesTheTypeAnEmptyNameAndThePayload() {
+    void ioEncodeWritesTheTypeAnEmptyNameAndThePayload() {
         ByteBuf buf = Unpooled.buffer();
-        new CompoundTag(Map.of("a", new IntTag(1))).encode(buf);
+        NbtIo.serialize(compound(Map.of("a", IntTag.valueOf(1))), buf);
         assertEquals("0a000301610200", ByteBufUtil.hexDump(buf));
     }
 
     @Test
-    void readDropsTheRootName() {
-        assertEquals(
-                new CompoundTag(Map.of("a", new IntTag(1))), decodeRoot("0a036162630301610200"));
+    void ioDecodeDropsTheRootName() {
+        assertEquals(compound(Map.of("a", IntTag.valueOf(1))), decodeRoot("0a036162630301610200"));
     }
 
     @Test
-    void readDataReadsTheBarePayload() {
+    void compoundTypeDecodesTheBarePayload() {
         assertEquals(
-                new CompoundTag(Map.of("a", new IntTag(1))),
-                ByteBufUtils.decode(
-                        hex("0301610200"),
-                        DecodeLimits.DEFAULT,
-                        "CompoundTag",
-                        CompoundTag::readData));
+                compound(Map.of("a", IntTag.valueOf(1))),
+                ByteBufCodec.deserialize(
+                        hex("0301610200"), "CompoundTag", CompoundTag.TYPE::deserialize));
     }
 
     @Test
     void compoundKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new CompoundTag(Map.of("\ud800\udc00", new ByteTag(0), "\uffff", new ByteTag(0)))
-                .encodeData(buf);
+        compound(
+                        Map.of(
+                                "\ud800\udc00",
+                                ByteTag.valueOf((byte) 0),
+                                "\uffff",
+                                ByteTag.valueOf((byte) 0)))
+                .serialize(buf);
         assertEquals("0103efbfbf000104f09080800000", ByteBufUtil.hexDump(buf));
-    }
-
-    @Test
-    void aByteTagRejectsAValueOutsideZeroTo255() {
-        assertThrows(IllegalArgumentException.class, () -> new ByteTag(256));
-        assertThrows(IllegalArgumentException.class, () -> new ByteTag(-1));
-    }
-
-    @Test
-    void aByteArrayTagRejectsAnElementOutsideZeroTo255() {
-        assertThrows(IllegalArgumentException.class, () -> new ByteArrayTag(new int[] {1, 256}));
     }
 
     @Test
@@ -145,18 +134,19 @@ class NbtTest {
                 "StringTag.value",
                 assertThrows(NullPointerException.class, () -> new StringTag(null)).getMessage());
         assertEquals(
-                "ByteArrayTag.value",
+                "ByteArrayTag.data",
                 assertThrows(NullPointerException.class, () -> new ByteArrayTag(null))
                         .getMessage());
         assertEquals(
-                "IntArrayTag.value",
+                "IntArrayTag.data",
                 assertThrows(NullPointerException.class, () -> new IntArrayTag(null)).getMessage());
     }
 
     @Test
     void aDuplicateKeyKeepsTheFirstValue() {
         assertEquals(
-                new CompoundTag(Map.of("a", new ByteTag(1))), decodeRoot("0a00010161010101610200"));
+                compound(Map.of("a", ByteTag.valueOf((byte) 1))),
+                decodeRoot("0a00010161010101610200"));
     }
 
     @Test
@@ -183,12 +173,7 @@ class NbtTest {
         DecodeException error =
                 assertThrows(
                         DecodeException.class,
-                        () ->
-                                ByteBufUtils.decode(
-                                        hex(hex),
-                                        DecodeLimits.DEFAULT,
-                                        "Tag",
-                                        (buf, budget) -> Tag.readData(buf, budget, TagType.LIST)));
+                        () -> ByteBufCodec.deserialize(hex(hex), "Tag", ListTag.TYPE::deserialize));
         assertEquals("Tag: unknown value at byte " + offset + " of 2", error.getMessage());
     }
 
@@ -202,32 +187,6 @@ class NbtTest {
     void aByteArrayLengthPastTheBodyIsTruncated() {
         DecodeException error = failRoot("0a000701610a");
         assertEquals("CompoundTag: truncated at byte 6 of 6", error.getMessage());
-    }
-
-    @Test
-    void aCompoundNested129DeepIsTooDeep() {
-        DecodeException error = failRoot("0a00" + "0a0161".repeat(128) + "00".repeat(129));
-        assertEquals("CompoundTag: too deep at byte 386 of 515", error.getMessage());
-    }
-
-    @Test
-    void aCompoundNested128DeepIsAccepted() {
-        assertDoesNotThrow(() -> decodeRoot("0a00" + "0a0161".repeat(127) + "00".repeat(128)));
-    }
-
-    @Test
-    void entriesPastTheElementLimitAreTooLarge() {
-        DecodeException error =
-                assertThrows(
-                        DecodeException.class,
-                        () ->
-                                ByteBufUtils.decode(
-                                        hex("010161010101620100"),
-                                        new DecodeLimits(1, 1_000L, 128),
-                                        "CompoundTag",
-                                        CompoundTag::readData));
-        assertEquals(Reason.TOO_LARGE, error.getReason());
-        assertEquals("CompoundTag: too large at byte 5 of 9", error.getMessage());
     }
 
     @ParameterizedTest
@@ -246,7 +205,21 @@ class NbtTest {
         IllegalArgumentException error =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> new ListTag(TagType.INT, List.of(new ByteTag(1))));
-        assertEquals("ListTag.elements: BYTE in a list of INT", error.getMessage());
+                        () -> new ListTag(Tag.TAG_INT, List.of(ByteTag.valueOf((byte) 1))));
+        assertEquals("ListTag.element: tag 1 in a list of tag 3", error.getMessage());
+    }
+
+    @Test
+    void anEmptyListKeepsItsElementType() {
+        ByteBuf buf = Unpooled.buffer();
+        new ListTag(Tag.TAG_INT, List.of()).serialize(buf);
+        assertEquals("0300", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
+    void getIntOrConvertsANumericTagAndFallsBackOtherwise() {
+        CompoundTag tag = compound(Map.of("a", ByteTag.valueOf((byte) 7)));
+        assertEquals(7, tag.getIntOr("a", 0));
+        assertEquals(9, tag.getIntOr("b", 9));
     }
 }

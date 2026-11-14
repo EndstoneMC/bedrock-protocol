@@ -39,26 +39,36 @@ class PacketHeaderTest {
     @MethodSource("packed")
     void encodePacksTheFields(PacketHeader header, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        header.encode(buf);
+        header.serialize(buf);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
     @ParameterizedTest
     @MethodSource("packed")
     void decodeUnpacksTheFields(PacketHeader header, String hex) {
-        assertEquals(header, PacketHeader.decode(hex(hex)));
+        assertEquals(
+                header,
+                ByteBufCodec.deserialize(hex(hex), "PacketHeader", PacketHeader::deserialize));
     }
 
     @Test
     void decodeOfNothingIsTruncated() {
         DecodeException error =
-                assertThrows(DecodeException.class, () -> PacketHeader.decode(Unpooled.buffer()));
+                assertThrows(
+                        DecodeException.class,
+                        () ->
+                                ByteBufCodec.deserialize(
+                                        Unpooled.buffer(),
+                                        "PacketHeader",
+                                        PacketHeader::deserialize));
         assertEquals("PacketHeader: truncated at byte 0 of 0", error.getMessage());
     }
 
     @Test
     void decodeDropsTheBitsPastTheSender() {
-        assertEquals(new PacketHeader(0, 0, 0), PacketHeader.decode(hex("808001")));
+        assertEquals(
+                new PacketHeader(0, 0, 0),
+                ByteBufCodec.deserialize(hex("808001"), "PacketHeader", PacketHeader::deserialize));
     }
 
     @ParameterizedTest
