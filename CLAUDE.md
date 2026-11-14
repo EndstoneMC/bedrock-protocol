@@ -5,6 +5,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 ## Principles
 
 - The schema in `protocol/` is the product, written for a human to read. The compiler bends to the DSL, never the DSL to the compiler, and a DSL change must make the schema read better.
+- Hardcode no packet, type, field or version outside `protocol/`: the compiler, the runtime, the binding and the test helpers hold no table, set or branch keyed by one, and derive every behaviour from what the DSL declares.
 - Keep the schema and hand-written code DRY, and take protobuf as the design reference; generated code may repeat itself.
 - Fix a defect's cause, never work around it. Build nothing ahead of need: no speculative option, layer or file.
 - Do exactly what was asked from the code as it stands; report anything else found instead of fixing it.
