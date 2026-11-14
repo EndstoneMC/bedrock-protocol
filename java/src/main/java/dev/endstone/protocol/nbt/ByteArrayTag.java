@@ -2,7 +2,6 @@ package dev.endstone.protocol.nbt;
 
 import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.Objects;
@@ -16,7 +15,7 @@ public final class ByteArrayTag implements CollectionTag {
             buf -> {
                 int count = ByteBufCodec.toCount(buf, ByteBufCodec.readVarint32Count(buf));
                 if (count > buf.readableBytes()) {
-                    throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
+                    throw DecodeException.truncated(buf.readerIndex());
                 }
                 byte[] data = new byte[count];
                 buf.readBytes(data);

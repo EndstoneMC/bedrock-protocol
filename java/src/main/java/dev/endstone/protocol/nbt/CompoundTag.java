@@ -2,7 +2,6 @@ package dev.endstone.protocol.nbt;
 
 import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,7 +26,7 @@ public final class CompoundTag implements Tag {
                     }
                     TagType<?> type = TagTypes.getType(id);
                     if (type == null) {
-                        throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                        throw DecodeException.unknownValue(buf.readerIndex());
                     }
                     String name = ByteBufCodec.readString(buf);
                     tag.tags.putIfAbsent(name, type.decode(buf));

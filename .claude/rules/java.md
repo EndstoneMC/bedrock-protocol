@@ -8,6 +8,8 @@ paths:
 
 - Throw `DecodeException` for bad encoded bytes and nothing else for them; programming errors stay `NullPointerException`, `IllegalArgumentException`, `IllegalStateException` and Netty's own exceptions.
 - Catch only `DecodeException`, where a packet enters or to prepend a path segment; never catch `Throwable`, `Error`, `Exception`, `RuntimeException` or `IndexOutOfBoundsException`, and never write an empty catch.
+- Create a `DecodeException` through its factories (`truncated`, `outOfRange`, `unknownValue`, `trailingBytes`), as protobuf's `InvalidProtocolBufferException` does; it carries no reason enum.
+- Carry the partly decoded message on a `DecodeException`, as protobuf's `setUnfinishedMessage` does: a generated decode sets what its builder holds at the catch that prepends the field, so the outermost message wins.
 - Never put encoded text in an exception message.
 - Declare every class `final`.
 - Annotate every public and protected reference parameter, return and field `org.jetbrains.annotations.NotNull`, or `Nullable` where null is allowed, and add no `package-info.java` for nullness.

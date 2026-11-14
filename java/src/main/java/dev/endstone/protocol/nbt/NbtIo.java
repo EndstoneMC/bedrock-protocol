@@ -2,7 +2,6 @@ package dev.endstone.protocol.nbt;
 
 import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,11 +20,11 @@ public final class NbtIo {
         int id = ByteBufCodec.readUnsignedByte(buf);
         TagType<?> type = TagTypes.getType(id);
         if (type == null || id == Tag.TAG_END) {
-            throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            throw DecodeException.unknownValue(buf.readerIndex());
         }
         ByteBufCodec.readString(buf);
         if (!(type.decode(buf) instanceof CompoundTag tag)) {
-            throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            throw DecodeException.unknownValue(buf.readerIndex());
         }
         return tag;
     }

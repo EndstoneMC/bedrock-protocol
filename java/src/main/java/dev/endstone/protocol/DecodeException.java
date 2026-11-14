@@ -5,38 +5,38 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /** Bad bytes from a peer; catch it where a packet enters. */
 public final class DecodeException extends RuntimeException {
-    /** Why a decode failed, in the order of the C++ error codes. */
-    public enum Reason {
-        TRUNCATED("truncated"),
-        OUT_OF_RANGE("out of range"),
-        UNKNOWN_VALUE("unknown value"),
-        TRAILING_BYTES("trailing bytes");
-
-        private final String text;
-
-        Reason(String text) {
-            this.text = text;
-        }
-
-        String text() {
-            return text;
-        }
-    }
-
     @Serial private static final long serialVersionUID = 1L;
 
-    private final Reason reason;
+    private final String reason;
     private final ArrayList<Object> path = new ArrayList<>();
     private String type = "";
     private int offset;
     private int length;
+    private transient @Nullable Message unfinishedMessage;
 
-    public DecodeException(@NotNull Reason reason, int offset) {
+    private DecodeException(String reason, int offset) {
         this.reason = reason;
         this.offset = offset;
+    }
+
+    public static @NotNull DecodeException truncated(int offset) {
+        return new DecodeException("truncated", offset);
+    }
+
+    public static @NotNull DecodeException outOfRange(int offset) {
+        return new DecodeException("out of range", offset);
+    }
+
+    public static @NotNull DecodeException unknownValue(int offset) {
+        return new DecodeException("unknown value", offset);
+    }
+
+    public static @NotNull DecodeException trailingBytes(int offset) {
+        return new DecodeException("trailing bytes", offset);
     }
 
     /** Puts a field name in front of the path. */
@@ -51,14 +51,21 @@ public final class DecodeException extends RuntimeException {
         return this;
     }
 
+    /** Replaces the message decoded up to the failing field. */
+    public @NotNull DecodeException setUnfinishedMessage(@NotNull Message message) {
+        this.unfinishedMessage = message;
+        return this;
+    }
+
     void stamp(String type, int offset, int length) {
         this.type = type;
         this.offset = offset;
         this.length = length;
     }
 
-    public @NotNull Reason getReason() {
-        return reason;
+    /** The message decoded up to the failing field, or null. */
+    public @Nullable Message getUnfinishedMessage() {
+        return unfinishedMessage;
     }
 
     public @NotNull String getType() {
@@ -91,7 +98,7 @@ public final class DecodeException extends RuntimeException {
             }
         }
         return message.append(": ")
-                .append(reason.text())
+                .append(reason)
                 .append(" at byte ")
                 .append(offset)
                 .append(" of ")

@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -36,10 +35,6 @@ class ByteBufCodecTest {
 
     private static DecodeException failure(Runnable read) {
         return assertThrows(DecodeException.class, read::run);
-    }
-
-    private static List<Object> reasonAndOffset(DecodeException error) {
-        return List.of(error.getReason(), error.getOffset());
     }
 
     static Stream<Arguments> varint32() {
@@ -157,26 +152,26 @@ class ByteBufCodecTest {
     @Test
     void uvarint32PastItsTypeIsOutOfRangeAfterTheFifthByte() {
         DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("ffffffff10")));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 5), reasonAndOffset(error));
+        assertEquals(": out of range at byte 5 of 0", error.getMessage());
     }
 
     @Test
     void uvarint32WithAContinuationAfterTheFifthByteIsOutOfRange() {
         DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("ffffffff8f00")));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 5), reasonAndOffset(error));
+        assertEquals(": out of range at byte 5 of 0", error.getMessage());
     }
 
     @Test
     void uvarint64PastItsTypeIsOutOfRangeAfterTheTenthByte() {
         DecodeException error =
                 failure(() -> ByteBufCodec.readUnsignedVarLong(hex("ffffffffffffffffff02")));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 10), reasonAndOffset(error));
+        assertEquals(": out of range at byte 10 of 0", error.getMessage());
     }
 
     @Test
     void varintThatRunsOutIsTruncatedAtTheEndOfTheInput() {
         DecodeException error = failure(() -> ByteBufCodec.readUnsignedVarInt(hex("8080")));
-        assertEquals(List.of(Reason.TRUNCATED, 2), reasonAndOffset(error));
+        assertEquals(": truncated at byte 2 of 0", error.getMessage());
     }
 
     @Test
@@ -184,7 +179,7 @@ class ByteBufCodecTest {
         ByteBuf buf = hex("aabb01020304");
         buf.readerIndex(2);
         DecodeException error = failure(() -> ByteBufCodec.readLongLE(buf));
-        assertEquals(List.of(Reason.TRUNCATED, 2), reasonAndOffset(error));
+        assertEquals(": truncated at byte 2 of 0", error.getMessage());
     }
 
     @ParameterizedTest
@@ -192,7 +187,7 @@ class ByteBufCodecTest {
     void everyFixedReadOneByteShortIsTruncatedAtTheFieldStart(Consumer<ByteBuf> read, int width) {
         ByteBuf buf = Unpooled.wrappedBuffer(new byte[width - 1]);
         DecodeException error = failure(() -> read.accept(buf));
-        assertEquals(List.of(Reason.TRUNCATED, 0), reasonAndOffset(error));
+        assertEquals(": truncated at byte 0 of 0", error.getMessage());
     }
 
     @ParameterizedTest
@@ -252,7 +247,7 @@ class ByteBufCodecTest {
     void strLengthPastTheBodyIsTruncatedBeforeAnyAllocation() {
         ByteBuf buf = hex("ffffffff0f");
         DecodeException error = failure(() -> ByteBufCodec.readString(buf));
-        assertEquals(List.of(Reason.TRUNCATED, 5), reasonAndOffset(error));
+        assertEquals(": truncated at byte 5 of 0", error.getMessage());
     }
 
     @Test
@@ -295,7 +290,7 @@ class ByteBufCodecTest {
     void uuidWithOnlyTheFirstLongAndAPartIsTruncatedAtTheSecondLong() {
         DecodeException error =
                 failure(() -> ByteBufCodec.readUuid(Unpooled.wrappedBuffer(new byte[12])));
-        assertEquals(List.of(Reason.TRUNCATED, 8), reasonAndOffset(error));
+        assertEquals(": truncated at byte 8 of 0", error.getMessage());
     }
 
     @Test
@@ -358,7 +353,7 @@ class ByteBufCodecTest {
     @MethodSource("notUuidTexts")
     void uuidTextThatDoesNotParseIsAnUnknownValueAfterTheString(String hex, int offset) {
         DecodeException error = failure(() -> ByteBufCodec.readUuidString(hex(hex)));
-        assertEquals(List.of(Reason.UNKNOWN_VALUE, offset), reasonAndOffset(error));
+        assertEquals(": unknown value at byte " + offset + " of 0", error.getMessage());
     }
 
     static Stream<Arguments> bitsets() {
@@ -400,19 +395,19 @@ class ByteBufCodecTest {
     @Test
     void bitsetBitAtTheWidthIsOutOfRange() {
         DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("08"), 3));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
+        assertEquals(": out of range at byte 1 of 0", error.getMessage());
     }
 
     @Test
     void bitsetContinuationIntoAGroupAtTheWidthIsOutOfRange() {
         DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("8000"), 7));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
+        assertEquals(": out of range at byte 1 of 0", error.getMessage());
     }
 
     @Test
     void bitsetThatRunsOutIsTruncated() {
         DecodeException error = failure(() -> ByteBufCodec.readBitSet(hex("80"), 30));
-        assertEquals(List.of(Reason.TRUNCATED, 1), reasonAndOffset(error));
+        assertEquals(": truncated at byte 1 of 0", error.getMessage());
     }
 
     @Test
@@ -527,14 +522,14 @@ class ByteBufCodecTest {
         ByteBuf buf = hex("01");
         long count = ByteBufCodec.readVarint32Count(buf);
         DecodeException error = failure(() -> ByteBufCodec.toCount(buf, count));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 1), reasonAndOffset(error));
+        assertEquals(": out of range at byte 1 of 0", error.getMessage());
     }
 
     @Test
     void countPastIntMaxIsOutOfRangeWhenNarrowed() {
         DecodeException error =
                 failure(() -> ByteBufCodec.toCount(hex("00"), Integer.MAX_VALUE + 1L));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
+        assertEquals(": out of range at byte 0 of 0", error.getMessage());
     }
 
     @Test
@@ -545,20 +540,20 @@ class ByteBufCodecTest {
     @Test
     void negativeCountFactorIsOutOfRange() {
         DecodeException error = failure(() -> ByteBufCodec.countValue(hex("00"), -1));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
+        assertEquals(": out of range at byte 0 of 0", error.getMessage());
     }
 
     @Test
     void negativeFactorInAProductIsOutOfRange() {
         DecodeException error = failure(() -> ByteBufCodec.countProduct(hex("00"), 4, -1));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
+        assertEquals(": out of range at byte 0 of 0", error.getMessage());
     }
 
     @Test
     void productPastSixtyFourBitsIsOutOfRange() {
         DecodeException error =
                 failure(() -> ByteBufCodec.countProduct(hex("00"), 1L << 32, 1L << 32));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
+        assertEquals(": out of range at byte 0 of 0", error.getMessage());
     }
 
     @Test
@@ -566,14 +561,14 @@ class ByteBufCodecTest {
         ByteBuf buf = hex("00");
         long count = ByteBufCodec.countProduct(buf, 65_536, 65_536);
         DecodeException error = failure(() -> ByteBufCodec.toCount(buf, count));
-        assertEquals(List.of(Reason.OUT_OF_RANGE, 0), reasonAndOffset(error));
+        assertEquals(": out of range at byte 0 of 0", error.getMessage());
     }
 
     @Test
     void primitiveArrayThatRunsShortIsTruncatedAtTheFirstElementThatDoesNotFit() {
         ByteBuf buf = Unpooled.wrappedBuffer(new byte[10]);
         DecodeException error = failure(() -> ByteBufCodec.needElements(buf, 3, 4));
-        assertEquals(List.of(Reason.TRUNCATED, 8), reasonAndOffset(error));
+        assertEquals("[2]: truncated at byte 8 of 0", error.getMessage());
     }
 
     @Test

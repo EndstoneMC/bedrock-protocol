@@ -2,7 +2,6 @@ package dev.endstone.protocol.nbt;
 
 import dev.endstone.protocol.ByteBufCodec;
 import dev.endstone.protocol.DecodeException;
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ public final class ListTag extends AbstractList<Tag> implements CollectionTag {
                 long count = ByteBufCodec.readVarint32Count(buf);
                 TagType<?> elementType = TagTypes.getType(id);
                 if (elementType == null || (count > 0 && id == TAG_END)) {
-                    throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                    throw DecodeException.unknownValue(buf.readerIndex());
                 }
                 int size = ByteBufCodec.toCount(buf, count);
                 List<Tag> elements = new ArrayList<>(ByteBufCodec.initialCapacity(size));

@@ -1,6 +1,5 @@
 package dev.endstone.protocol;
 
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -20,10 +19,10 @@ public final class ByteBufCodec {
 
     private ByteBufCodec() {}
 
-    /** Throws TRUNCATED unless n bytes are readable. */
+    /** Throws DecodeException.truncated unless n bytes are readable. */
     public static void need(@NotNull ByteBuf buf, int n) {
         if (buf.readableBytes() < n) {
-            throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
+            throw DecodeException.truncated(buf.readerIndex());
         }
     }
 
@@ -83,14 +82,14 @@ public final class ByteBufCodec {
         for (int n = 0; n < 5; n++) {
             int b = readUnsignedByte(buf);
             if (n == 4 && (b & 0x7F) > 0x0F) {
-                throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+                throw DecodeException.outOfRange(buf.readerIndex());
             }
             value |= (b & 0x7F) << (n * 7);
             if ((b & 0x80) == 0) {
                 return value;
             }
         }
-        throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+        throw DecodeException.outOfRange(buf.readerIndex());
     }
 
     /** Reads an unsigned varint of at most 10 bytes, as raw bits. */
@@ -99,14 +98,14 @@ public final class ByteBufCodec {
         for (int n = 0; n < 10; n++) {
             int b = readUnsignedByte(buf);
             if (n == 9 && (b & 0x7F) > 0x01) {
-                throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+                throw DecodeException.outOfRange(buf.readerIndex());
             }
             value |= (long) (b & 0x7F) << (n * 7);
             if ((b & 0x80) == 0) {
                 return value;
             }
         }
-        throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+        throw DecodeException.outOfRange(buf.readerIndex());
     }
 
     public static int readVarInt(@NotNull ByteBuf buf) {
@@ -163,28 +162,34 @@ public final class ByteBufCodec {
         return readVarInt(buf);
     }
 
-    /** Throws OUT_OF_RANGE for a negative count factor. */
+    /** Throws DecodeException.outOfRange for a negative count factor. */
     public static long countValue(@NotNull ByteBuf buf, long value) {
         if (value < 0) {
-            throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+            throw DecodeException.outOfRange(buf.readerIndex());
         }
         return value;
     }
 
-    /** Multiplies two count factors as unsigned 64-bit values; overflow is OUT_OF_RANGE. */
+    /**
+     * Multiplies two count factors as unsigned 64-bit values; overflow is
+     * DecodeException.outOfRange.
+     */
     public static long countProduct(@NotNull ByteBuf buf, long a, long b) {
         countValue(buf, a);
         countValue(buf, b);
         if (Math.unsignedMultiplyHigh(a, b) != 0) {
-            throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+            throw DecodeException.outOfRange(buf.readerIndex());
         }
         return a * b;
     }
 
-    /** Narrows a count to an int; a negative one or one past Integer.MAX_VALUE is OUT_OF_RANGE. */
+    /**
+     * Narrows a count to an int; a negative one or one past Integer.MAX_VALUE is
+     * DecodeException.outOfRange.
+     */
     public static int toCount(@NotNull ByteBuf buf, long count) {
         if (countValue(buf, count) > Integer.MAX_VALUE) {
-            throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+            throw DecodeException.outOfRange(buf.readerIndex());
         }
         return (int) count;
     }
@@ -194,12 +199,14 @@ public final class ByteBufCodec {
         return Math.min(count, MAX_INITIAL_CAPACITY);
     }
 
-    /** Throws TRUNCATED at the first element that does not fit, with its index in the path. */
+    /**
+     * Throws DecodeException.truncated at the first element that does not fit, with its index in
+     * the path.
+     */
     public static void needElements(@NotNull ByteBuf buf, int count, int width) {
         if ((long) count * width > buf.readableBytes()) {
             int fits = buf.readableBytes() / width;
-            throw new DecodeException(Reason.TRUNCATED, buf.readerIndex() + fits * width)
-                    .prepend(fits);
+            throw DecodeException.truncated(buf.readerIndex() + fits * width).prepend(fits);
         }
     }
 
@@ -207,7 +214,7 @@ public final class ByteBufCodec {
     public static byte @NotNull [] readByteArray(@NotNull ByteBuf buf) {
         int length = readUnsignedVarInt(buf);
         if (Integer.compareUnsigned(length, buf.readableBytes()) > 0) {
-            throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
+            throw DecodeException.truncated(buf.readerIndex());
         }
         byte[] bytes = new byte[length];
         buf.readBytes(bytes);
@@ -295,7 +302,7 @@ public final class ByteBufCodec {
         String text = readString(buf);
         boolean hyphenated = text.length() == 36;
         if (!hyphenated && text.length() != 32) {
-            throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            throw DecodeException.unknownValue(buf.readerIndex());
         }
         long most = 0;
         long least = 0;
@@ -304,7 +311,7 @@ public final class ByteBufCodec {
             char c = text.charAt(i);
             if (hyphenated && (i == 8 || i == 13 || i == 18 || i == 23)) {
                 if (c != '-') {
-                    throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                    throw DecodeException.unknownValue(buf.readerIndex());
                 }
                 continue;
             }
@@ -316,7 +323,7 @@ public final class ByteBufCodec {
             } else if (c >= 'A' && c <= 'F') {
                 nibble = c - 'A' + 10;
             } else {
-                throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+                throw DecodeException.unknownValue(buf.readerIndex());
             }
             if (digits < 16) {
                 most = most << 4 | nibble;
@@ -342,7 +349,7 @@ public final class ByteBufCodec {
                 if ((b & (1 << k)) != 0) {
                     int bit = group * 7 + k;
                     if (bit >= width) {
-                        throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+                        throw DecodeException.outOfRange(buf.readerIndex());
                     }
                     out.set(bit);
                 }
@@ -351,7 +358,7 @@ public final class ByteBufCodec {
                 return out;
             }
             if ((group + 1) * 7 >= width) {
-                throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
+                throw DecodeException.outOfRange(buf.readerIndex());
             }
         }
     }
@@ -394,7 +401,7 @@ public final class ByteBufCodec {
         try {
             T value = decoder.decode(buf);
             if (buf.isReadable()) {
-                throw new DecodeException(Reason.TRAILING_BYTES, buf.readerIndex());
+                throw DecodeException.trailingBytes(buf.readerIndex());
             }
             return value;
         } catch (DecodeException e) {

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import dev.endstone.protocol.DecodeException.Reason;
 import dev.endstone.protocol.DynamicValue.ArrayValue;
 import dev.endstone.protocol.DynamicValue.BoolValue;
 import dev.endstone.protocol.DynamicValue.IntegerValue;
@@ -85,10 +84,14 @@ class DynamicValueTest {
                 decode("0600000002" + "016100000000" + "01610100000001"));
     }
 
-    @Test
-    void anUnknownTagIsAnUnknownValue() {
-        assertEquals("DynamicValue: unknown value at byte 4 of 4", fail("07000000").getMessage());
-        assertEquals(Reason.UNKNOWN_VALUE, fail("ffffffff").getReason());
+    static Stream<Arguments> unknownTags() {
+        return Stream.of(argumentSet("seven", "07000000"), argumentSet("all ones", "ffffffff"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("unknownTags")
+    void anUnknownTagIsAnUnknownValue(String hex) {
+        assertEquals("DynamicValue: unknown value at byte 4 of 4", fail(hex).getMessage());
     }
 
     @Test

@@ -1,6 +1,5 @@
 package dev.endstone.protocol;
 
-import dev.endstone.protocol.DecodeException.Reason;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,7 +106,7 @@ public sealed interface DynamicValue {
                 }
                 yield new ObjectValue(entries);
             }
-            default -> throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
+            default -> throw DecodeException.unknownValue(buf.readerIndex());
         };
     }
 }
