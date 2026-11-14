@@ -2,10 +2,10 @@
 
 import collections
 import json
-import os
 import sys
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
@@ -249,7 +249,10 @@ for result in json.loads((evidence / "results.json").read_text()):
         error = result["error"]
         verdict, detail = "refused", f"at {result['consumed']}, {error['category']}:{error['code']} {error['message']}"
     elif result["bds_bytes"] != case["bytes"]:
-        verdict, detail = "rewritten", f"at {len(os.path.commonprefix([result['bds_bytes'], case['bytes']])) // 2}"
+        offset = next(
+            i for i, (ours, theirs) in enumerate(zip_longest(case["bytes"], result["bds_bytes"])) if ours != theirs
+        )
+        verdict, detail = "rewritten", f"at {offset // 2}"
     elif "bds_json_error" in result:
         verdict, detail = "unprinted", result["bds_json_error"]
     else:
