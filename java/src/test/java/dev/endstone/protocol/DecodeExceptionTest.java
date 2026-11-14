@@ -112,4 +112,12 @@ final class DecodeExceptionTest {
     void aFreshExceptionHasNoUnfinishedMessage() {
         assertNull(DecodeException.truncated(0).getUnfinishedMessage());
     }
+
+    @Test
+    void serialisationDropsTheUnfinishedMessage() throws IOException, ClassNotFoundException {
+        DecodeException error =
+                DecodeException.truncated(0)
+                        .setUnfinishedMessage(ToastRequestPacket.getDefaultInstance());
+        assertNull(roundTrip(error).getUnfinishedMessage());
+    }
 }

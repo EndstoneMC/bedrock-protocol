@@ -4,7 +4,7 @@
 
 <p>
   <b>The Minecraft: Bedrock Edition network protocol as one schema</b><br>
-  One library for C++ and Python that encodes and decodes every supported protocol version
+  One library for C++, Python and Java that encodes and decodes every supported protocol version
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -20,7 +20,7 @@ Every language exposes the same packets, types and enums, and encodes the same b
 | --- | --- |
 | [Python](#python) | Download a wheel from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). It is not on PyPI. |
 | [C++](#c) | Download a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). |
-| Java | Planned. |
+| [Java](#java) | Build it from a checkout with Gradle. |
 | Rust | Planned. |
 | TypeScript | Planned. |
 
@@ -94,6 +94,39 @@ assert(decoded && *decoded == packet);
 
 `<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
 
+## Java
+
+To build it from a checkout, you need JDK 21 or newer and Python 3.12 or newer, which generates the codecs:
+
+```shell
+git clone https://github.com/EndstoneMC/bedrock-protocol
+cd bedrock-protocol/java
+./gradlew build
+```
+
+The jar lands in the checkout's `build/java/libs` and needs `io.netty:netty-buffer` beside it.
+
+```java
+import dev.endstone.protocol.Packets;
+import dev.endstone.protocol.TextPacket;
+import dev.endstone.protocol.TextPacketType;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+TextPacket.Builder packet = TextPacket.newBuilder();
+packet.setMessageOnly(
+        TextPacket.MessageOnly.newBuilder()
+                .setType(TextPacketType.CHAT)
+                .setMessage("hello")
+                .build());
+
+ByteBuf data = Unpooled.buffer();
+packet.build().encode(data);
+assert Packets.decode(TextPacket.ID, data).equals(packet.build());
+```
+
+`ProtocolVersion.VERSIONS` lists the numbers with a `v<N>.Packets`. `ProtocolVersion.RELEASES` lists every number a release reported. `ProtocolVersion.of(2169)` and `ProtocolVersion.of("1.26.63")` look one up, and its `decodePacket` decodes a body with the `v<N>.Packets` its `snapshot` names. `Packets` decodes the latest protocol's packets by id.
+
 ## Pinning a Protocol Version
 
 The `bp` names follow the latest protocol. To stay on protocol 2225, name it for each type that differs between protocols; a type that never changed, such as `TextPacketType`, keeps its `bp` name.
@@ -113,6 +146,8 @@ In C++, pass it as the template argument:
 bp::TextPacket_<2225> packet;
 packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 ```
+
+In Java, the bare classes are the latest protocol's and no stable name pins it; a class a newer protocol replaced moves to the package C++ names its shape by, `v<N>` for the first protocol that used it or `base` for the oldest, under `precereal` for a pre-cereal type.
 
 The rest is unchanged.
 

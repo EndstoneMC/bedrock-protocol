@@ -1,16 +1,26 @@
 package dev.endstone.protocol;
 
+import dev.endstone.protocol.datastore.DynamicValue;
+import dev.endstone.protocol.nbt.CompoundTag;
+import dev.endstone.protocol.nbt.CompoundTagData;
+import dev.endstone.protocol.nbt.Tag;
+import dev.endstone.protocol.nbt.TagType;
+import dev.endstone.protocol.nbt.TagTypes;
 import io.netty.buffer.ByteBuf;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
 /** The encodings ByteBuf lacks, with every read checked before it touches the buffer. */
 public final class ByteBufCodec {
 
-    /** Orders strings by the unsigned bytes writeStr writes. */
+    /** Orders strings by the unsigned bytes writeString writes. */
     public static final @NotNull Comparator<String> STR_ORDER =
             (a, b) -> Arrays.compareUnsigned(utf8(a), utf8(b));
 
@@ -391,6 +401,100 @@ public final class ByteBufCodec {
             }
         }
         return new String(chars);
+    }
+
+    /** Reads a root compound and drops its name. */
+    public static @NotNull CompoundTag readCompoundTag(@NotNull ByteBuf buf) {
+        int id = readUnsignedByte(buf);
+        TagType<?> type = TagTypes.getType(id);
+        if (type == null || id == Tag.TAG_END) {
+            throw DecodeException.unknownValue(buf.readerIndex());
+        }
+        readString(buf);
+        if (!(type.decode(buf) instanceof CompoundTag tag)) {
+            throw DecodeException.unknownValue(buf.readerIndex());
+        }
+        return tag;
+    }
+
+    /** Writes a root compound: type id, empty name, payload. */
+    public static void writeCompoundTag(@NotNull ByteBuf buf, @NotNull CompoundTag tag) {
+        buf.writeByte(Tag.TAG_COMPOUND);
+        writeString(buf, "");
+        tag.encode(buf);
+    }
+
+    public static @NotNull CompoundTagData readCompoundTagData(@NotNull ByteBuf buf) {
+        return new CompoundTagData(CompoundTag.TYPE.decode(buf));
+    }
+
+    public static void writeCompoundTagData(@NotNull ByteBuf buf, @NotNull CompoundTagData value) {
+        value.tag().encode(buf);
+    }
+
+    public static @NotNull DynamicValue readDynamicValue(@NotNull ByteBuf buf) {
+        return switch (readIntLE(buf)) {
+            case 0 -> new DynamicValue.NullValue();
+            case 1 -> new DynamicValue.BoolValue(readBoolean(buf));
+            case 2 -> new DynamicValue.IntegerValue(readLongLE(buf));
+            case 3 -> new DynamicValue.NumberValue(readDoubleLE(buf));
+            case 4 -> new DynamicValue.StringValue(readString(buf));
+            case 5 -> {
+                int count = toCount(buf, readUvarint32Count(buf));
+                List<DynamicValue> values = new ArrayList<>(initialCapacity(count));
+                for (int i = 0; i < count; i++) {
+                    values.add(readDynamicValue(buf));
+                }
+                yield new DynamicValue.ArrayValue(values);
+            }
+            case 6 -> {
+                int count = toCount(buf, readUvarint32Count(buf));
+                Map<String, DynamicValue> entries = new HashMap<>();
+                for (int i = 0; i < count; i++) {
+                    String key = readString(buf);
+                    entries.putIfAbsent(key, readDynamicValue(buf));
+                }
+                yield new DynamicValue.ObjectValue(entries);
+            }
+            default -> throw DecodeException.unknownValue(buf.readerIndex());
+        };
+    }
+
+    public static void writeDynamicValue(@NotNull ByteBuf buf, @NotNull DynamicValue value) {
+        switch (value) {
+            case DynamicValue.NullValue v -> buf.writeIntLE(0);
+            case DynamicValue.BoolValue v -> {
+                buf.writeIntLE(1);
+                buf.writeBoolean(v.value());
+            }
+            case DynamicValue.IntegerValue v -> {
+                buf.writeIntLE(2);
+                buf.writeLongLE(v.value());
+            }
+            case DynamicValue.NumberValue v -> {
+                buf.writeIntLE(3);
+                buf.writeDoubleLE(v.value());
+            }
+            case DynamicValue.StringValue v -> {
+                buf.writeIntLE(4);
+                writeString(buf, v.value());
+            }
+            case DynamicValue.ArrayValue v -> {
+                buf.writeIntLE(5);
+                writeUnsignedVarInt(buf, v.values().size());
+                for (DynamicValue element : v.values()) {
+                    writeDynamicValue(buf, element);
+                }
+            }
+            case DynamicValue.ObjectValue v -> {
+                buf.writeIntLE(6);
+                writeUnsignedVarInt(buf, v.entries().size());
+                for (Map.Entry<String, DynamicValue> entry : v.entries().entrySet()) {
+                    writeString(buf, entry.getKey());
+                    writeDynamicValue(buf, entry.getValue());
+                }
+            }
+        }
     }
 
     /** Runs a reader over the whole value; on failure the buffer is left where it was. */

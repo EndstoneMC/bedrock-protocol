@@ -24,6 +24,50 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+abstract class GenerateBpc @Inject constructor(private val exec: ExecOperations) : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
+
+    @get:Input
+    abstract val python: Property<String>
+
+    @get:Internal
+    abstract val repoRoot: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val out = outputDir.get().asFile
+        val root = repoRoot.get().asFile
+        exec.exec {
+            workingDir = root
+            environment("PYTHONPATH", root.resolve("compiler/src").absolutePath)
+            commandLine(
+                python.get(), "-B", "-m", "bedrock_protocol_compiler",
+                root.resolve("protocol").absolutePath,
+                "--java-out", out.absolutePath,
+            )
+        }
+    }
+}
+
+val generateBpc = tasks.register<GenerateBpc>("generateBpc") {
+    sources.from(
+        fileTree("../protocol") { include("**/*.py"); exclude("**/__pycache__/**") },
+        fileTree("../compiler/src") { include("**/*.py"); exclude("**/__pycache__/**") },
+    )
+    python = providers.gradleProperty("bpc.python").orElse("python3")
+    repoRoot = layout.projectDirectory.dir("..")
+    outputDir = layout.buildDirectory.dir("generated/sources/bpc")
+}
+
+sourceSets.main {
+    java.srcDir(generateBpc)
+}
+
 spotless {
     java {
         target("src/**/*.java")
@@ -33,6 +77,8 @@ spotless {
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = 21
+    options.isFork = true
+    options.forkOptions.memoryMaximumSize = "2g"
     options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror", "-Xdoclint:all,-missing"))
 }
 

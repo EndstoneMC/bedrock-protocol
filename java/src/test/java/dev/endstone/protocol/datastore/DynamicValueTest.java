@@ -1,16 +1,18 @@
-package dev.endstone.protocol;
+package dev.endstone.protocol.datastore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import dev.endstone.protocol.DynamicValue.ArrayValue;
-import dev.endstone.protocol.DynamicValue.BoolValue;
-import dev.endstone.protocol.DynamicValue.IntegerValue;
-import dev.endstone.protocol.DynamicValue.NullValue;
-import dev.endstone.protocol.DynamicValue.NumberValue;
-import dev.endstone.protocol.DynamicValue.ObjectValue;
-import dev.endstone.protocol.DynamicValue.StringValue;
+import dev.endstone.protocol.ByteBufCodec;
+import dev.endstone.protocol.DecodeException;
+import dev.endstone.protocol.datastore.DynamicValue.ArrayValue;
+import dev.endstone.protocol.datastore.DynamicValue.BoolValue;
+import dev.endstone.protocol.datastore.DynamicValue.IntegerValue;
+import dev.endstone.protocol.datastore.DynamicValue.NullValue;
+import dev.endstone.protocol.datastore.DynamicValue.NumberValue;
+import dev.endstone.protocol.datastore.DynamicValue.ObjectValue;
+import dev.endstone.protocol.datastore.DynamicValue.StringValue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -23,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class DynamicValueTest {
+final class DynamicValueTest {
     static Stream<Arguments> values() {
         return Stream.of(
                 argumentSet("null", new NullValue(), "00000000"),
@@ -48,7 +50,7 @@ class DynamicValueTest {
     }
 
     private static DynamicValue decode(String hex) {
-        return ByteBufCodec.decode(hex(hex), "DynamicValue", DynamicValue::decode);
+        return ByteBufCodec.decode(hex(hex), "DynamicValue", ByteBufCodec::readDynamicValue);
     }
 
     private static DecodeException fail(String hex) {
@@ -59,7 +61,7 @@ class DynamicValueTest {
     @MethodSource("values")
     void encodeWritesTheTagThenThePayload(DynamicValue value, String hex) {
         ByteBuf buf = Unpooled.buffer();
-        value.encode(buf);
+        ByteBufCodec.writeDynamicValue(buf, value);
         assertEquals(hex, ByteBufUtil.hexDump(buf));
     }
 
@@ -72,7 +74,8 @@ class DynamicValueTest {
     @Test
     void objectKeysAreWrittenInUnsignedByteOrder() {
         ByteBuf buf = Unpooled.buffer();
-        new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())).encode(buf);
+        ByteBufCodec.writeDynamicValue(
+                buf, new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())));
         assertEquals(
                 "0600000002" + "03efbfbf00000000" + "04f090808000000000", ByteBufUtil.hexDump(buf));
     }

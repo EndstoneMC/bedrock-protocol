@@ -33,6 +33,10 @@ public final class CompoundTag implements Tag {
                 }
             };
 
+    public static @NotNull CompoundTag getDefaultInstance() {
+        return new CompoundTag();
+    }
+
     private final Map<String, Tag> tags = new TreeMap<>(ByteBufCodec.STR_ORDER);
 
     @Override

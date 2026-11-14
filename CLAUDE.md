@@ -22,9 +22,9 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 
 ## Layout
 
-- C++ is the privileged language: `include/` and the C++ the compiler emits are the source, and Python and Java are bindings over it.
+- C++ is the privileged language: `include/` and the C++ the compiler emits are the source, Python is a binding over it, and the Java the compiler emits runs on the pure-Java runtime in `java/` and encodes the same bytes.
 - `protocol/`: the schema, one module per BDS domain.
-- `compiler/`: the compiler, run by CMake once at configure time over all of `protocol/`; it has its own `pyproject.toml`, and the root holds the one for the runtime.
+- `compiler/`: the compiler, run over all of `protocol/` by CMake once at configure time for the C++ and by Gradle for the Java; it has its own `pyproject.toml`, and the root holds the one for the runtime.
 - Never commit generated code.
 - `include/bedrock/`: the hand-written C++ runtime.
 - `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` pins protocol N and the bare package is the latest; its stubs are generated at build time by `python/stubgen.py` with `python/stubgen.pat`.

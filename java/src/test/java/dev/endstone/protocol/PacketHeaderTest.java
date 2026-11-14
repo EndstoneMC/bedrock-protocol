@@ -13,7 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class PacketHeaderTest {
+final class PacketHeaderTest {
     static Stream<Arguments> packed() {
         return Stream.of(
                 argumentSet("id only", new PacketHeader(9, 0, 0), "09"),

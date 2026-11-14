@@ -14,7 +14,7 @@ paths:
 - Declare every class `final`.
 - Annotate every public and protected reference parameter, return and field `org.jetbrains.annotations.NotNull`, or `Nullable` where null is allowed, and add no `package-info.java` for nullness.
 - Name a `ByteBufCodec` read or write after CloudburstMC Protocol's, Netty's for a fixed width: `readUnsignedVarInt`, `readVarInt`, `readString`, `readShortLE`.
-- Keep `read` and `write` for `ByteBufCodec`'s primitives, and name every other type's encoding `encode` and `decode`, NBT tags included.
+- Keep `read` and `write` for `ByteBufCodec`'s primitives and the schema's builtins, and name every other type's encoding `encode` and `decode`, NBT tags included.
 - Map a schema builtin `Name` from module `stem` to the type `<java_package>.<stem without underscores>.<Name>`, read by `ByteBufCodec.read<Name>` and written by `write<Name>` with `Name` in Google camel case (`readUuid`), with `getDefaultInstance()` and `copy()`; the DSL's own `UUID` is `java.util.UUID`.
 - Emit each message as protobuf's generated Java does: an immutable class with `getDefaultInstance()`, `newBuilder()` and `toBuilder()`, a nested `Builder` with `setX`, `clearX` and `build()`, and `getX` on both; `hasX` for an optional, `getXList`, `getXCount` and `addX` for a list, `getXMap` and `putX` for a map, and `getXCase()` for a union.
 - Hold a union field as a oneof on its message, and wrap a union in a message of its own as a list, array or map element, inside an optional, or beside a union whose case names it shares.

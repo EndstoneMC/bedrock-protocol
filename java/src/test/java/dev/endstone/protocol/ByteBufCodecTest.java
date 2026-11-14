@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class ByteBufCodecTest {
+final class ByteBufCodecTest {
     private static ByteBuf hex(String hex) {
         return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
     }

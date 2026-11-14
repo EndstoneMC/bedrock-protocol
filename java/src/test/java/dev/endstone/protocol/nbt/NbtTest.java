@@ -2,6 +2,7 @@ package dev.endstone.protocol.nbt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -18,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class NbtTest {
+final class NbtTest {
     static Stream<Arguments> payloads() {
         return Stream.of(
                 argumentSet("byte", ByteTag.valueOf((byte) 5), "05"),
@@ -73,7 +74,7 @@ class NbtTest {
     }
 
     private static CompoundTag decodeRoot(String hex) {
-        return ByteBufCodec.decode(hex(hex), "CompoundTag", NbtIo::decode);
+        return ByteBufCodec.decode(hex(hex), "CompoundTag", ByteBufCodec::readCompoundTag);
     }
 
     private static DecodeException failRoot(String hex) {
@@ -98,7 +99,7 @@ class NbtTest {
     @Test
     void ioEncodeWritesTheTypeAnEmptyNameAndThePayload() {
         ByteBuf buf = Unpooled.buffer();
-        NbtIo.encode(compound(Map.of("a", IntTag.valueOf(1))), buf);
+        ByteBufCodec.writeCompoundTag(buf, compound(Map.of("a", IntTag.valueOf(1))));
         assertEquals("0a000301610200", ByteBufUtil.hexDump(buf));
     }
 
@@ -220,5 +221,37 @@ class NbtTest {
         CompoundTag tag = compound(Map.of("a", ByteTag.valueOf((byte) 7)));
         assertEquals(7, tag.getIntOr("a", 0));
         assertEquals(9, tag.getIntOr("b", 9));
+    }
+
+    @Test
+    void compoundTagDataWritesThePayloadWithoutARoot() {
+        ByteBuf buf = Unpooled.buffer();
+        ByteBufCodec.writeCompoundTagData(
+                buf, new CompoundTagData(compound(Map.of("a", IntTag.valueOf(1)))));
+        assertEquals("03016102" + "00", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
+    void compoundTagDataReadsThePayloadWithoutARoot() {
+        assertEquals(
+                new CompoundTagData(compound(Map.of("a", IntTag.valueOf(1)))),
+                ByteBufCodec.decode(
+                        hex("0301610200"), "CompoundTagData", ByteBufCodec::readCompoundTagData));
+    }
+
+    @Test
+    void compoundTagDataCopiesTheTag() {
+        CompoundTagData data = new CompoundTagData(compound(Map.of("a", IntTag.valueOf(1))));
+        assertNotSame(data.tag(), data.copy().tag());
+    }
+
+    @Test
+    void compoundTagDefaultInstanceIsNeverShared() {
+        assertNotSame(CompoundTag.getDefaultInstance(), CompoundTag.getDefaultInstance());
+    }
+
+    @Test
+    void compoundTagDataDefaultInstanceHoldsAnEmptyCompound() {
+        assertEquals(new CompoundTagData(new CompoundTag()), CompoundTagData.getDefaultInstance());
     }
 }
