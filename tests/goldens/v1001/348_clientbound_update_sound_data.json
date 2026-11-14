@@ -1,6 +1,6 @@
 [
  {
-  "id": "stop_arm",
+  "id": "sound_event_with_handle",
   "value": {
    "server_sound_handle": 42,
    "sound_event": "stop"

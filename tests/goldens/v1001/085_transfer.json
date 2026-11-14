@@ -1,6 +1,6 @@
 [
  {
-  "id": "gatherings_configuration_absent",
+  "id": "destination_with_port_and_reload",
   "value": {
    "destination": "play.example.com",
    "destination_port": 19132,
