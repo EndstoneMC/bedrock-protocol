@@ -502,11 +502,12 @@ class StringSchema(BasicSchema):
 
 
 class BlobSchema(BasicSchema):
-    """Bedrock's std::vector<uint8_t>, read and written as raw bytes."""
+    """Bedrock's std::vector<uint8_t> or std::vector<int8_t>, read and written as raw bytes."""
 
-    def __init__(self, listed):
+    def __init__(self, listed, signed=False):
         self.bound_type = list if listed else bytes
         self.listed = listed
+        self.signed = signed
 
     @override
     def do_load(self, reader, context, traits):
@@ -514,11 +515,13 @@ class BlobSchema(BasicSchema):
         if value is None:
             context.log(ResultCode.ERROR, "invalid blob: failed to parse input as binary data")
             value = b""
+        if self.signed:
+            return list(struct.unpack(f"{len(value)}b", value))
         return list(value) if self.listed else value
 
     @override
     def do_save(self, value, writer, context, traits):
-        writer.write(bytes(value))
+        writer.write(struct.pack(f"{len(value)}b", *value) if self.signed else bytes(value))
 
 
 class UUIDSchema(BasicSchema):
@@ -1168,6 +1171,10 @@ class CaseForm:
         if isinstance(case, str) and isinstance(bedrock, str) and ESCAPED_BYTES.fullmatch(case):
             return bytes.fromhex(case.replace("\\x", "")) == bedrock.encode("utf-8", "surrogateescape")
 
+        # [7, -3] vs "\u0007\udcfd"
+        if isinstance(case, list) and isinstance(bedrock, str) and isinstance(schema, SignedBlobCase):
+            return schema.to_bedrock(case) == bedrock
+
         # 0.1 vs 0.10000000149011612
         if type(case) is float and type(bedrock) is float:
             return case == bedrock or cls.widened_float32(case) == bedrock
@@ -1395,6 +1402,21 @@ class BlobCase(StringCase):
         return CaseForm.escaped_bytes(bedrock.encode("utf-8", "surrogateescape"))
 
 
+class SignedBlobCase(StringCase):
+    """A byte blob of int8 values as a list of ints."""
+
+    @override
+    def to_case(self, bedrock):
+        raw = bedrock.encode("utf-8", "surrogateescape")
+        return list(struct.unpack(f"{len(raw)}b", raw))
+
+    @override
+    def to_bedrock(self, case):
+        if isinstance(case, list):
+            return struct.pack(f"{len(case)}b", *case).decode("utf-8", "surrogateescape")
+        return case
+
+
 class BitsetCase(CaseSchema):
     """A compressed bitset as a binary string."""
 
@@ -1576,6 +1598,8 @@ class ReflectionCtx:
                 return self.composite(family)
             case List(element=Primitive(name="uint8", encoded=None)):
                 return BlobCase(BlobSchema(True))
+            case List(element=Primitive(name="int8", encoded=None)):
+                return SignedBlobCase(BlobSchema(True, signed=True))
             case List(element=element):
                 return VectorSchema(self.schema(element))
             case Array(element=element, size=size):

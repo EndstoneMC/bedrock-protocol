@@ -26,6 +26,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Match a case's primitive with a BDS object that has exactly one child equal to it, and a UUID string with BDS's most and least significant halves.
 - Match a case's `\xNN` string with BDS's raw-byte string by turning both into bytes.
+- Match a case's list of int8 with BDS's raw-byte string by turning the list into bytes as two's complement.
 - Match a case's float with BDS's float when they are equal or when the case's value widens to BDS's float32 value.
 - Match a case's map with BDS's list of `key`/`value` objects by key, and an empty map with `[]`.
 - Match a field with `bind` against as many of BDS's printed values as it has names.
