@@ -1089,16 +1089,25 @@ class CaseForm:
     PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}
 
     @classmethod
-    def matches(cls, case, bedrock):
+    def matches(cls, case, bedrock, schema):
         """Whether Bedrock's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
+        match schema:
+            case OptionalSchema():
+                return cls.matches(case, bedrock, schema.element)
+            case DynamicValueSchema() if isinstance(case, dict):
+                return cls.matches(case, bedrock, schema.object)
+            case DynamicValueSchema() if isinstance(case, list):
+                return cls.matches(case, bedrock, schema.array)
+
         # {"__class__": "Pause"} vs {}
         if isinstance(case, dict) and "__class__" in case:
-            return cls.matches({key: value for key, value in case.items() if key != "__class__"}, bedrock)
+            arm = next(arm for arm in schema.inner.arms if arm.bound_type.__name__ == case["__class__"])
+            return cls.matches({key: value for key, value in case.items() if key != "__class__"}, bedrock, arm)
 
         # {"value": "0b100000001"} vs {"Actor Flag Bitset Data": 129, 2}
         if isinstance(case, dict) and isinstance(bedrock, FlatObject):
             index = 0
-            for value in case.values():
+            for value, slot in cls.slots(case, schema):
                 index += 1
                 if isinstance(value, str) and ESCAPED_BITS.fullmatch(value):
                     groups = cls.varint_groups(int(value, 2))
@@ -1106,20 +1115,24 @@ class CaseForm:
                         return False
                     index += len(groups)
                 else:
-                    if index >= len(bedrock) or not cls.matches(value, bedrock[index]):
+                    if index >= len(bedrock) or not cls.matches(value, bedrock[index], slot):
                         return False
                     index += 1
             return index == len(bedrock)
 
         # {"entity_id": 1} vs {"Entity ID": 1}
         if isinstance(case, dict) and isinstance(bedrock, dict):
-            return len(case) == len(bedrock) and all(
-                cls.matches(a, b) for a, b in zip(case.values(), bedrock.values(), strict=True)
+            slots = cls.slots(case, schema)
+            return len(slots) == len(bedrock) and all(
+                cls.matches(value, each, slot) for (value, slot), each in zip(slots, bedrock.values(), strict=True)
             )
 
         # [1, 2] vs [1, 2]
         if isinstance(case, list) and isinstance(bedrock, list):
-            return len(case) == len(bedrock) and all(cls.matches(a, b) for a, b in zip(case, bedrock, strict=True))
+            element = schema if isinstance(schema, MapSchema) else schema.element
+            return len(case) == len(bedrock) and all(
+                cls.matches(a, b, element) for a, b in zip(case, bedrock, strict=True)
+            )
 
         # {"minecraft:anvil": 2} vs [{"key": "minecraft:anvil", "value": {"Value": 2}}]
         if (
@@ -1128,7 +1141,9 @@ class CaseForm:
             and all(isinstance(pair, dict) and pair.keys() == {"key", "value"} for pair in bedrock)
         ):
             pairs = {pair["key"]: pair["value"] for pair in bedrock}
-            return case.keys() == pairs.keys() and all(cls.matches(value, pairs[key]) for key, value in case.items())
+            return case.keys() == pairs.keys() and all(
+                cls.matches(value, pairs[key], schema.value) for key, value in case.items()
+            )
 
         # "#0a141eff" vs [10, 20, 30, 255]
         if isinstance(case, str) and isinstance(bedrock, list) and ESCAPED_COLOR.fullmatch(case):
@@ -1158,9 +1173,19 @@ class CaseForm:
 
         # 7 vs {"Actor Runtime ID": 7}
         if isinstance(bedrock, dict) and not isinstance(case, dict | list):
-            return len(bedrock) == 1 and cls.matches(case, next(iter(bedrock.values())))
+            return len(bedrock) == 1 and cls.matches(case, next(iter(bedrock.values())), schema)
 
         return case == bedrock
+
+    @staticmethod
+    def slots(case, schema):
+        """Each value of a case object with its schema, once per slot Bedrock prints it in."""
+        if not isinstance(schema, MapSchema):
+            members = {member.name: member for member in schema.members}
+            return [(value, members[key].schema) for key, value in case.items()]
+        if schema.key.bound_type is str:
+            return [(value, schema.value) for value in case.values()]
+        return [(case["key"], schema.key), (case["value"], schema.value)]
 
     @staticmethod
     def parse_bedrock(text):
