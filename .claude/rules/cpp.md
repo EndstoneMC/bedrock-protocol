@@ -18,6 +18,7 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
+- Say `serialize` and `deserialize` only on `Serializer<T>`; the free entry points around it are `encode` and `decode`.
 - Report bad encoded bytes as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail`; never throw for encoded bytes.
 - Decode any integer an integer-coded enum carries, named or not; reject a name a name-coded enum lacks, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.
