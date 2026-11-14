@@ -456,6 +456,13 @@ class CaseForm:
             )
         if isinstance(case, list) and isinstance(bds, list):
             return len(case) == len(bds) and all(cls.matches(a, b) for a, b in zip(case, bds, strict=True))
+        if (
+            isinstance(case, dict)
+            and isinstance(bds, list)
+            and all(isinstance(pair, dict) and pair.keys() == {"key", "value"} for pair in bds)
+        ):
+            pairs = {pair["key"]: pair["value"] for pair in bds}
+            return case.keys() == pairs.keys() and all(cls.matches(value, pairs[key]) for key, value in case.items())
         if isinstance(case, str) and isinstance(bds, list) and ESCAPED_COLOR.fullmatch(case):
             return [int(case[index : index + 2], 16) for index in range(1, 9, 2)] == bds
         if isinstance(case, str) and isinstance(bds, dict) and len(bds) == 2 and ESCAPED_UUID.fullmatch(case):
