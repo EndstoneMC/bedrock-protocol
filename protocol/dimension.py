@@ -11,7 +11,8 @@ package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 
 
-class DimensionDefinitionGroup:
+@packet(id=180)
+class DimensionDataPacket:
     @type(until=2193)
     class DimensionDefinition:
         height_maximum: varint32
@@ -33,11 +34,6 @@ class DimensionDefinitionGroup:
             render_clouds: bool
 
     dimension_definitions: dict[str, DimensionDefinition]
-
-
-@packet(id=180)
-class DimensionDataPacket:
-    dimension_definition_group: DimensionDefinitionGroup
 
 
 @packet(id=61)

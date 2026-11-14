@@ -2,23 +2,21 @@
  {
   "id": "every_diagnostic_list_populated",
   "value": {
-   "telemetry": {
-    "avg_fps": 60.0,
-    "avg_server_sim_tick_time_ms": 1.0,
-    "avg_client_sim_tick_time_ms": 2.0,
-    "avg_begin_frame_time_ms": 3.0,
-    "avg_input_time_ms": 4.0,
-    "avg_render_time_ms": 5.0,
-    "avg_end_frame_time_ms": 6.0,
-    "avg_remainder_time_percent": 7.0,
-    "avg_unaccounted_time_percent": 8.0,
-    "category_counters": [
-     {
-      "category": 54,
-      "current_bytes": 1024
-     }
-    ]
-   },
+   "avg_fps": 60.0,
+   "avg_server_sim_tick_time_ms": 1.0,
+   "avg_client_sim_tick_time_ms": 2.0,
+   "avg_begin_frame_time_ms": 3.0,
+   "avg_input_time_ms": 4.0,
+   "avg_render_time_ms": 5.0,
+   "avg_end_frame_time_ms": 6.0,
+   "avg_remainder_time_percent": 7.0,
+   "avg_unaccounted_time_percent": 8.0,
+   "category_counters": [
+    {
+     "category": 54,
+     "current_bytes": 1024
+    }
+   ],
    "entity_system_diagnostics": {
     "entity_timings": [
      {
@@ -58,23 +56,21 @@
  {
   "id": "empty_whiskers_and_no_system_categories",
   "value": {
-   "telemetry": {
-    "avg_fps": 60.0,
-    "avg_server_sim_tick_time_ms": 1.0,
-    "avg_client_sim_tick_time_ms": 2.0,
-    "avg_begin_frame_time_ms": 3.0,
-    "avg_input_time_ms": 4.0,
-    "avg_render_time_ms": 5.0,
-    "avg_end_frame_time_ms": 6.0,
-    "avg_remainder_time_percent": 7.0,
-    "avg_unaccounted_time_percent": 8.0,
-    "category_counters": [
-     {
-      "category": 54,
-      "current_bytes": 1024
-     }
-    ]
-   },
+   "avg_fps": 60.0,
+   "avg_server_sim_tick_time_ms": 1.0,
+   "avg_client_sim_tick_time_ms": 2.0,
+   "avg_begin_frame_time_ms": 3.0,
+   "avg_input_time_ms": 4.0,
+   "avg_render_time_ms": 5.0,
+   "avg_end_frame_time_ms": 6.0,
+   "avg_remainder_time_percent": 7.0,
+   "avg_unaccounted_time_percent": 8.0,
+   "category_counters": [
+    {
+     "category": 54,
+     "current_bytes": 1024
+    }
+   ],
    "entity_system_diagnostics": {
     "entity_timings": [
      {
