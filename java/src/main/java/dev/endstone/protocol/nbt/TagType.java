@@ -2,7 +2,7 @@ package dev.endstone.protocol.nbt;
 
 import org.jspecify.annotations.Nullable;
 
-/** The tag ids of the wire. */
+/** The tag ids of the encoding. */
 public enum TagType {
     END(0),
     BYTE(1),

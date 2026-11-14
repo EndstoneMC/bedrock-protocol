@@ -19,15 +19,15 @@ public record PacketHeader(int packetId, int recipientSubId, int senderSubId) {
     }
 
     public static PacketHeader decode(ByteBuf buf) {
-        return Wire.decode(buf, DecodeLimits.DEFAULT, "PacketHeader", PacketHeader::read);
+        return ByteBufUtils.decode(buf, DecodeLimits.DEFAULT, "PacketHeader", PacketHeader::read);
     }
 
     public static PacketHeader read(ByteBuf buf, DecodeBudget budget) {
-        int bits = Wire.readUvarint32(buf);
+        int bits = ByteBufUtils.readUnsignedVarInt(buf);
         return new PacketHeader(bits & 0x3FF, (bits >>> 10) & 3, (bits >>> 12) & 3);
     }
 
     public void encode(ByteBuf buf) {
-        Wire.writeUvarint32(buf, packetId | recipientSubId << 10 | senderSubId << 12);
+        ByteBufUtils.writeUnsignedVarInt(buf, packetId | recipientSubId << 10 | senderSubId << 12);
     }
 }

@@ -1,7 +1,7 @@
 package dev.endstone.protocol.nbt;
 
+import dev.endstone.protocol.ByteBufUtils;
 import dev.endstone.protocol.DecodeBudget;
-import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 
 /** A network NBT value; its payload is written without a type id or a name. */
@@ -26,13 +26,13 @@ public sealed interface Tag
         budget.enter(buf.readerIndex());
         try {
             return switch (type) {
-                case BYTE -> new ByteTag(Wire.readUint8(buf));
-                case SHORT -> new ShortTag(Wire.readInt16(buf));
-                case INT -> new IntTag(Wire.readVarint32(buf));
-                case INT64 -> new Int64Tag(Wire.readVarint64(buf));
-                case FLOAT -> new FloatTag(Wire.readFloat(buf));
-                case DOUBLE -> new DoubleTag(Wire.readDouble(buf));
-                case STRING -> new StringTag(Wire.readStr(buf, budget));
+                case BYTE -> new ByteTag(ByteBufUtils.readUnsignedByte(buf));
+                case SHORT -> new ShortTag(ByteBufUtils.readShortLE(buf));
+                case INT -> new IntTag(ByteBufUtils.readVarInt(buf));
+                case INT64 -> new Int64Tag(ByteBufUtils.readVarLong(buf));
+                case FLOAT -> new FloatTag(ByteBufUtils.readFloatLE(buf));
+                case DOUBLE -> new DoubleTag(ByteBufUtils.readDoubleLE(buf));
+                case STRING -> new StringTag(ByteBufUtils.readString(buf, budget));
                 case BYTE_ARRAY -> ByteArrayTag.readBody(buf, budget);
                 case INT_ARRAY -> IntArrayTag.readBody(buf, budget);
                 case LIST -> ListTag.readBody(buf, budget);

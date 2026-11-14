@@ -35,7 +35,7 @@ public sealed interface DynamicValue {
     /** An object; its entries are kept, and written, in the unsigned byte order of their keys. */
     record ObjectValue(Map<String, DynamicValue> entries) implements DynamicValue {
         public ObjectValue {
-            TreeMap<String, DynamicValue> sorted = new TreeMap<>(Wire.STR_ORDER);
+            TreeMap<String, DynamicValue> sorted = new TreeMap<>(ByteBufUtils.STR_ORDER);
             for (Map.Entry<String, DynamicValue> entry : entries.entrySet()) {
                 sorted.put(
                         Objects.requireNonNull(entry.getKey(), "ObjectValue.entries key"),
@@ -62,20 +62,20 @@ public sealed interface DynamicValue {
             }
             case StringValue v -> {
                 buf.writeIntLE(4);
-                Wire.writeStr(buf, v.value());
+                ByteBufUtils.writeString(buf, v.value());
             }
             case ArrayValue v -> {
                 buf.writeIntLE(5);
-                Wire.writeUvarint32(buf, v.values().size());
+                ByteBufUtils.writeUnsignedVarInt(buf, v.values().size());
                 for (DynamicValue element : v.values()) {
                     element.encode(buf);
                 }
             }
             case ObjectValue v -> {
                 buf.writeIntLE(6);
-                Wire.writeUvarint32(buf, v.entries().size());
+                ByteBufUtils.writeUnsignedVarInt(buf, v.entries().size());
                 for (Map.Entry<String, DynamicValue> entry : v.entries().entrySet()) {
-                    Wire.writeStr(buf, entry.getKey());
+                    ByteBufUtils.writeString(buf, entry.getKey());
                     entry.getValue().encode(buf);
                 }
             }
@@ -85,25 +85,30 @@ public sealed interface DynamicValue {
     static DynamicValue read(ByteBuf buf, DecodeBudget budget) {
         budget.enter(buf.readerIndex());
         try {
-            return switch (Wire.readInt32(buf)) {
+            return switch (ByteBufUtils.readIntLE(buf)) {
                 case 0 -> new NullValue();
-                case 1 -> new BoolValue(Wire.readBool(buf));
-                case 2 -> new IntegerValue(Wire.readInt64(buf));
-                case 3 -> new NumberValue(Wire.readDouble(buf));
-                case 4 -> new StringValue(Wire.readStr(buf, budget));
+                case 1 -> new BoolValue(ByteBufUtils.readBoolean(buf));
+                case 2 -> new IntegerValue(ByteBufUtils.readLongLE(buf));
+                case 3 -> new NumberValue(ByteBufUtils.readDoubleLE(buf));
+                case 4 -> new StringValue(ByteBufUtils.readString(buf, budget));
                 case 5 -> {
-                    int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
-                    List<DynamicValue> values = new ArrayList<>(Wire.initialCapacity(count));
+                    int count =
+                            ByteBufUtils.charge(
+                                    buf, budget, ByteBufUtils.readUvarint32Count(buf), 0);
+                    List<DynamicValue> values =
+                            new ArrayList<>(ByteBufUtils.initialCapacity(count));
                     for (int i = 0; i < count; i++) {
                         values.add(read(buf, budget));
                     }
                     yield new ArrayValue(values);
                 }
                 case 6 -> {
-                    int count = Wire.charge(buf, budget, Wire.readUvarint32Count(buf), 0);
+                    int count =
+                            ByteBufUtils.charge(
+                                    buf, budget, ByteBufUtils.readUvarint32Count(buf), 0);
                     Map<String, DynamicValue> entries = new HashMap<>();
                     for (int i = 0; i < count; i++) {
-                        String key = Wire.readStr(buf, budget);
+                        String key = ByteBufUtils.readString(buf, budget);
                         entries.putIfAbsent(key, read(buf, budget));
                     }
                     yield new ObjectValue(entries);

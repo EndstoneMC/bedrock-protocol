@@ -1,6 +1,6 @@
 package dev.endstone.protocol.nbt;
 
-import dev.endstone.protocol.Wire;
+import dev.endstone.protocol.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 
@@ -16,6 +16,6 @@ public record StringTag(String value) implements Tag {
 
     @Override
     public void encodeData(ByteBuf buf) {
-        Wire.writeStr(buf, value);
+        ByteBufUtils.writeString(buf, value);
     }
 }

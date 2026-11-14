@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import dev.endstone.protocol.ByteBufUtils;
 import dev.endstone.protocol.DecodeException;
 import dev.endstone.protocol.DecodeException.Reason;
 import dev.endstone.protocol.DecodeLimits;
-import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -68,7 +68,8 @@ class NbtTest {
     }
 
     private static CompoundTag decodeRoot(String hex) {
-        return Wire.decode(hex(hex), DecodeLimits.DEFAULT, "CompoundTag", CompoundTag::read);
+        return ByteBufUtils.decode(
+                hex(hex), DecodeLimits.DEFAULT, "CompoundTag", CompoundTag::read);
     }
 
     private static DecodeException failRoot(String hex) {
@@ -87,7 +88,7 @@ class NbtTest {
     @MethodSource("payloads")
     void readDataReadsThePayload(Tag tag, String hex) {
         Tag read =
-                Wire.decode(
+                ByteBufUtils.decode(
                         hex(hex),
                         DecodeLimits.DEFAULT,
                         "Tag",
@@ -112,7 +113,7 @@ class NbtTest {
     void readDataReadsTheBarePayload() {
         assertEquals(
                 new CompoundTag(Map.of("a", new IntTag(1))),
-                Wire.decode(
+                ByteBufUtils.decode(
                         hex("0301610200"),
                         DecodeLimits.DEFAULT,
                         "CompoundTag",
@@ -183,7 +184,7 @@ class NbtTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                Wire.decode(
+                                ByteBufUtils.decode(
                                         hex(hex),
                                         DecodeLimits.DEFAULT,
                                         "Tag",
@@ -220,7 +221,7 @@ class NbtTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                Wire.decode(
+                                ByteBufUtils.decode(
                                         hex("010161010101620100"),
                                         new DecodeLimits(1, 1_000L, 128),
                                         "CompoundTag",

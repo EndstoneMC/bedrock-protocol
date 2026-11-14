@@ -1,6 +1,6 @@
 package dev.endstone.protocol.nbt;
 
-import dev.endstone.protocol.Wire;
+import dev.endstone.protocol.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 
 public record Int64Tag(long value) implements Tag {
@@ -11,6 +11,6 @@ public record Int64Tag(long value) implements Tag {
 
     @Override
     public void encodeData(ByteBuf buf) {
-        Wire.writeVarint64(buf, value);
+        ByteBufUtils.writeVarLong(buf, value);
     }
 }

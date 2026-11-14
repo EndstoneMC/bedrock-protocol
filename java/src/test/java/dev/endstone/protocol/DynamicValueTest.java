@@ -50,7 +50,8 @@ class DynamicValueTest {
     }
 
     private static DynamicValue decode(String hex) {
-        return Wire.decode(hex(hex), DecodeLimits.DEFAULT, "DynamicValue", DynamicValue::read);
+        return ByteBufUtils.decode(
+                hex(hex), DecodeLimits.DEFAULT, "DynamicValue", DynamicValue::read);
     }
 
     private static DecodeException fail(String hex) {
@@ -120,7 +121,7 @@ class DynamicValueTest {
                 assertThrows(
                         DecodeException.class,
                         () ->
-                                Wire.decode(
+                                ByteBufUtils.decode(
                                         hex("0500000002"),
                                         new DecodeLimits(1, 1_000L, 128),
                                         "DynamicValue",

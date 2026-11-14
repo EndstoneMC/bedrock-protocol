@@ -1,9 +1,9 @@
 package dev.endstone.protocol.nbt;
 
+import dev.endstone.protocol.ByteBufUtils;
 import dev.endstone.protocol.DecodeBudget;
 import dev.endstone.protocol.DecodeException;
 import dev.endstone.protocol.DecodeException.Reason;
-import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.Objects;
@@ -28,20 +28,20 @@ public record ByteArrayTag(int[] value) implements Tag {
 
     @Override
     public void encodeData(ByteBuf buf) {
-        Wire.writeVarint32(buf, value.length);
+        ByteBufUtils.writeVarInt(buf, value.length);
         for (int element : value) {
             buf.writeByte(element);
         }
     }
 
     static ByteArrayTag readBody(ByteBuf buf, DecodeBudget budget) {
-        int count = Wire.charge(buf, budget, Wire.readVarint32Count(buf), 1);
+        int count = ByteBufUtils.charge(buf, budget, ByteBufUtils.readVarint32Count(buf), 1);
         if (count > buf.readableBytes()) {
             throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
         }
         int[] value = new int[count];
         for (int i = 0; i < count; i++) {
-            value[i] = Wire.readUint8(buf);
+            value[i] = ByteBufUtils.readUnsignedByte(buf);
         }
         return new ByteArrayTag(value);
     }

@@ -7,8 +7,8 @@ import java.util.BitSet;
 import java.util.Comparator;
 import java.util.UUID;
 
-/** The wire formats ByteBuf lacks, with every read checked before it touches the buffer. */
-public final class Wire {
+/** The encodings ByteBuf lacks, with every read checked before it touches the buffer. */
+public final class ByteBufUtils {
 
     /** Orders strings by the unsigned bytes writeStr writes. */
     public static final Comparator<String> STR_ORDER =
@@ -17,7 +17,7 @@ public final class Wire {
     private static final int MAX_INITIAL_CAPACITY = 65_536;
     private static final int ESCAPE_BASE = 0xDC00;
 
-    private Wire() {}
+    private ByteBufUtils() {}
 
     /** Throws TRUNCATED unless n bytes are readable. */
     public static void need(ByteBuf buf, int n) {
@@ -26,61 +26,61 @@ public final class Wire {
         }
     }
 
-    public static boolean readBool(ByteBuf buf) {
+    public static boolean readBoolean(ByteBuf buf) {
         need(buf, 1);
         return buf.readByte() != 0;
     }
 
-    public static byte readInt8(ByteBuf buf) {
+    public static byte readByte(ByteBuf buf) {
         need(buf, 1);
         return buf.readByte();
     }
 
-    public static int readUint8(ByteBuf buf) {
+    public static int readUnsignedByte(ByteBuf buf) {
         need(buf, 1);
         return buf.readUnsignedByte();
     }
 
-    public static short readInt16(ByteBuf buf) {
+    public static short readShortLE(ByteBuf buf) {
         need(buf, 2);
         return buf.readShortLE();
     }
 
-    public static int readUint16(ByteBuf buf) {
+    public static int readUnsignedShortLE(ByteBuf buf) {
         need(buf, 2);
         return buf.readUnsignedShortLE();
     }
 
-    public static int readInt32(ByteBuf buf) {
+    public static int readIntLE(ByteBuf buf) {
         need(buf, 4);
         return buf.readIntLE();
     }
 
-    public static long readInt64(ByteBuf buf) {
+    public static long readLongLE(ByteBuf buf) {
         need(buf, 8);
         return buf.readLongLE();
     }
 
-    public static float readFloat(ByteBuf buf) {
+    public static float readFloatLE(ByteBuf buf) {
         need(buf, 4);
         return buf.readFloatLE();
     }
 
-    public static double readDouble(ByteBuf buf) {
+    public static double readDoubleLE(ByteBuf buf) {
         need(buf, 8);
         return buf.readDoubleLE();
     }
 
-    public static int readInt32Be(ByteBuf buf) {
+    public static int readInt(ByteBuf buf) {
         need(buf, 4);
         return buf.readInt();
     }
 
     /** Reads an unsigned varint of at most 5 bytes, as raw bits. */
-    public static int readUvarint32(ByteBuf buf) {
+    public static int readUnsignedVarInt(ByteBuf buf) {
         int value = 0;
         for (int n = 0; n < 5; n++) {
-            int b = readUint8(buf);
+            int b = readUnsignedByte(buf);
             if (n == 4 && (b & 0x7F) > 0x0F) {
                 throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
             }
@@ -93,10 +93,10 @@ public final class Wire {
     }
 
     /** Reads an unsigned varint of at most 10 bytes, as raw bits. */
-    public static long readUvarint64(ByteBuf buf) {
+    public static long readUnsignedVarLong(ByteBuf buf) {
         long value = 0;
         for (int n = 0; n < 10; n++) {
-            int b = readUint8(buf);
+            int b = readUnsignedByte(buf);
             if (n == 9 && (b & 0x7F) > 0x01) {
                 throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
             }
@@ -108,17 +108,17 @@ public final class Wire {
         throw new DecodeException(Reason.OUT_OF_RANGE, buf.readerIndex());
     }
 
-    public static int readVarint32(ByteBuf buf) {
-        int bits = readUvarint32(buf);
+    public static int readVarInt(ByteBuf buf) {
+        int bits = readUnsignedVarInt(buf);
         return (bits >>> 1) ^ -(bits & 1);
     }
 
-    public static long readVarint64(ByteBuf buf) {
-        long bits = readUvarint64(buf);
+    public static long readVarLong(ByteBuf buf) {
+        long bits = readUnsignedVarLong(buf);
         return (bits >>> 1) ^ -(bits & 1);
     }
 
-    public static void writeUvarint32(ByteBuf buf, int value) {
+    public static void writeUnsignedVarInt(ByteBuf buf, int value) {
         while ((value & ~0x7F) != 0) {
             buf.writeByte((value & 0x7F) | 0x80);
             value >>>= 7;
@@ -126,7 +126,7 @@ public final class Wire {
         buf.writeByte(value);
     }
 
-    public static void writeUvarint64(ByteBuf buf, long value) {
+    public static void writeUnsignedVarLong(ByteBuf buf, long value) {
         while ((value & ~0x7FL) != 0) {
             buf.writeByte((int) (value & 0x7F) | 0x80);
             value >>>= 7;
@@ -134,32 +134,32 @@ public final class Wire {
         buf.writeByte((int) value);
     }
 
-    public static void writeVarint32(ByteBuf buf, int value) {
-        writeUvarint32(buf, (value << 1) ^ (value >> 31));
+    public static void writeVarInt(ByteBuf buf, int value) {
+        writeUnsignedVarInt(buf, (value << 1) ^ (value >> 31));
     }
 
-    public static void writeVarint64(ByteBuf buf, long value) {
-        writeUvarint64(buf, (value << 1) ^ (value >> 63));
+    public static void writeVarLong(ByteBuf buf, long value) {
+        writeUnsignedVarLong(buf, (value << 1) ^ (value >> 63));
     }
 
     /** Reads a uvarint32 count as an unsigned value. */
     public static long readUvarint32Count(ByteBuf buf) {
-        return Integer.toUnsignedLong(readUvarint32(buf));
+        return Integer.toUnsignedLong(readUnsignedVarInt(buf));
     }
 
     /** Reads a uint32 count as an unsigned value. */
     public static long readUint32Count(ByteBuf buf) {
-        return Integer.toUnsignedLong(readInt32(buf));
+        return Integer.toUnsignedLong(readIntLE(buf));
     }
 
     /** Reads a uint16 count. */
     public static long readUint16Count(ByteBuf buf) {
-        return readUint16(buf);
+        return readUnsignedShortLE(buf);
     }
 
     /** Reads a varint32 count; a negative one is OUT_OF_RANGE once charged. */
     public static long readVarint32Count(ByteBuf buf) {
-        return readVarint32(buf);
+        return readVarInt(buf);
     }
 
     /** Throws OUT_OF_RANGE for a negative count factor. */
@@ -206,8 +206,8 @@ public final class Wire {
     }
 
     /** Reads a length-prefixed byte array. */
-    public static byte[] readBytes(ByteBuf buf, DecodeBudget budget) {
-        int length = readUvarint32(buf);
+    public static byte[] readByteArray(ByteBuf buf, DecodeBudget budget) {
+        int length = readUnsignedVarInt(buf);
         if (Integer.compareUnsigned(length, buf.readableBytes()) > 0) {
             throw new DecodeException(Reason.TRUNCATED, buf.readerIndex());
         }
@@ -217,16 +217,16 @@ public final class Wire {
         return bytes;
     }
 
-    public static void writeBytes(ByteBuf buf, byte[] bytes) {
-        writeUvarint32(buf, bytes.length);
+    public static void writeByteArray(ByteBuf buf, byte[] bytes) {
+        writeUnsignedVarInt(buf, bytes.length);
         buf.writeBytes(bytes);
     }
 
     /**
      * Reads a length-prefixed string; bytes that are not well-formed UTF-8 become U+DC80..U+DCFF.
      */
-    public static String readStr(ByteBuf buf, DecodeBudget budget) {
-        byte[] bytes = readBytes(buf, budget);
+    public static String readString(ByteBuf buf, DecodeBudget budget) {
+        byte[] bytes = readByteArray(buf, budget);
         StringBuilder out = new StringBuilder(bytes.length);
         int i = 0;
         while (i < bytes.length) {
@@ -280,12 +280,12 @@ public final class Wire {
      * Writes a string; throws IllegalArgumentException for an unpaired surrogate outside
      * U+DC80..U+DCFF.
      */
-    public static void writeStr(ByteBuf buf, String value) {
-        writeBytes(buf, utf8(value));
+    public static void writeString(ByteBuf buf, String value) {
+        writeByteArray(buf, utf8(value));
     }
 
     public static UUID readUuid(ByteBuf buf) {
-        return new UUID(readInt64(buf), readInt64(buf));
+        return new UUID(readLongLE(buf), readLongLE(buf));
     }
 
     public static void writeUuid(ByteBuf buf, UUID value) {
@@ -294,8 +294,8 @@ public final class Wire {
     }
 
     /** Reads a string of 36 hex digits and hyphens 8-4-4-4-12, or of 32 hex digits, either case. */
-    public static UUID readUuidText(ByteBuf buf, DecodeBudget budget) {
-        String text = readStr(buf, budget);
+    public static UUID readUuidString(ByteBuf buf, DecodeBudget budget) {
+        String text = readString(buf, budget);
         boolean hyphenated = text.length() == 36;
         if (!hyphenated && text.length() != 32) {
             throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
@@ -332,15 +332,15 @@ public final class Wire {
     }
 
     /** Writes a UUID as a string of lower-case hex digits and hyphens 8-4-4-4-12. */
-    public static void writeUuidText(ByteBuf buf, UUID value) {
-        writeStr(buf, value.toString());
+    public static void writeUuidString(ByteBuf buf, UUID value) {
+        writeString(buf, value.toString());
     }
 
     /** Reads base-128 groups into a bitset of the given width. */
-    public static BitSet readBitset(ByteBuf buf, int width) {
+    public static BitSet readBitSet(ByteBuf buf, int width) {
         BitSet out = new BitSet();
         for (int group = 0; ; group++) {
-            int b = readUint8(buf);
+            int b = readUnsignedByte(buf);
             for (int k = 0; k < 7; k++) {
                 if ((b & (1 << k)) != 0) {
                     int bit = group * 7 + k;
@@ -360,7 +360,7 @@ public final class Wire {
     }
 
     /** Writes base-128 groups up to the highest set bit, at least one. */
-    public static void writeBitset(ByteBuf buf, BitSet value, int width, String field) {
+    public static void writeBitSet(ByteBuf buf, BitSet value, int width, String field) {
         if (value.length() > width) {
             throw new IllegalStateException(
                     field + ": bit " + (value.length() - 1) + " is past the width " + width);

@@ -1,9 +1,9 @@
 package dev.endstone.protocol.nbt;
 
+import dev.endstone.protocol.ByteBufUtils;
 import dev.endstone.protocol.DecodeBudget;
 import dev.endstone.protocol.DecodeException;
 import dev.endstone.protocol.DecodeException.Reason;
-import dev.endstone.protocol.Wire;
 import io.netty.buffer.ByteBuf;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.TreeMap;
 /** A compound tag; its entries are kept, and written, in the unsigned byte order of their keys. */
 public record CompoundTag(Map<String, Tag> entries) implements Tag {
     public CompoundTag {
-        TreeMap<String, Tag> sorted = new TreeMap<>(Wire.STR_ORDER);
+        TreeMap<String, Tag> sorted = new TreeMap<>(ByteBufUtils.STR_ORDER);
         for (Map.Entry<String, Tag> entry : entries.entrySet()) {
             sorted.put(
                     Objects.requireNonNull(entry.getKey(), "CompoundTag.entries key"),
@@ -31,7 +31,7 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
     /** Writes the tag as a root: its type id, an empty name, then the payload. */
     public void encode(ByteBuf buf) {
         buf.writeByte(TagType.COMPOUND.getNumber());
-        Wire.writeStr(buf, "");
+        ByteBufUtils.writeString(buf, "");
         encodeData(buf);
     }
 
@@ -39,7 +39,7 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
     public void encodeData(ByteBuf buf) {
         for (Map.Entry<String, Tag> entry : entries.entrySet()) {
             buf.writeByte(entry.getValue().type().getNumber());
-            Wire.writeStr(buf, entry.getKey());
+            ByteBufUtils.writeString(buf, entry.getKey());
             entry.getValue().encodeData(buf);
         }
         buf.writeByte(TagType.END.getNumber());
@@ -47,11 +47,11 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
 
     /** Reads a root: its type id, its name, which is dropped, then the payload. */
     public static CompoundTag read(ByteBuf buf, DecodeBudget budget) {
-        TagType type = TagType.forNumber(Wire.readUint8(buf));
+        TagType type = TagType.forNumber(ByteBufUtils.readUnsignedByte(buf));
         if (type == null || type == TagType.END) {
             throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
         }
-        Wire.readStr(buf, budget);
+        ByteBufUtils.readString(buf, budget);
         if (!(Tag.readData(buf, budget, type) instanceof CompoundTag tag)) {
             throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
         }
@@ -66,7 +66,7 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
     static CompoundTag readBody(ByteBuf buf, DecodeBudget budget) {
         HashMap<String, Tag> entries = new HashMap<>();
         for (; ; ) {
-            int number = Wire.readUint8(buf);
+            int number = ByteBufUtils.readUnsignedByte(buf);
             if (number == TagType.END.getNumber()) {
                 return new CompoundTag(entries);
             }
@@ -75,7 +75,7 @@ public record CompoundTag(Map<String, Tag> entries) implements Tag {
                 throw new DecodeException(Reason.UNKNOWN_VALUE, buf.readerIndex());
             }
             budget.chargeElements(1, buf.readerIndex());
-            String name = Wire.readStr(buf, budget);
+            String name = ByteBufUtils.readString(buf, budget);
             entries.putIfAbsent(name, Tag.readData(buf, budget, type));
         }
     }
