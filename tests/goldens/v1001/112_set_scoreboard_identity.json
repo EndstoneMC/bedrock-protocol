@@ -1,0 +1,33 @@
+[
+ {
+  "id": "update_two_identities",
+  "value": {
+   "type": 0,
+   "identity_info": [
+    {
+     "scoreboard_id": 1,
+     "player_id": {
+      "actor_unique_id": 7
+     }
+    },
+    {
+     "scoreboard_id": 2,
+     "player_id": {
+      "actor_unique_id": 8
+     }
+    }
+   ],
+   "removed_identity_info": []
+  },
+  "bytes": "0002020e0410"
+ },
+ {
+  "id": "remove_without_player_id",
+  "value": {
+   "type": 1,
+   "identity_info": [],
+   "removed_identity_info": [1]
+  },
+  "bytes": "010102"
+ }
+]

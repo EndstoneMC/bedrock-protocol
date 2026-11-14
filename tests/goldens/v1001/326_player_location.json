@@ -1,0 +1,28 @@
+[
+ {
+  "id": "coordinates_location_arm",
+  "value": {
+   "type": 0,
+   "id": 7,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   }
+  },
+  "bytes": "000000000e0000803f0000004000004040"
+ },
+ {
+  "id": "hidden_location_arm",
+  "value": {
+   "type": 1,
+   "id": 7,
+   "pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   }
+  },
+  "bytes": "010000000e"
+ }
+]

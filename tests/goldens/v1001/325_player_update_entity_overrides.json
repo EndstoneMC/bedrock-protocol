@@ -1,0 +1,24 @@
+[
+ {
+  "id": "int_value_override",
+  "value": {
+   "id": 7,
+   "property_index": 2,
+   "update_type": 2,
+   "int_value": 42,
+   "float_value": 0.0
+  },
+  "bytes": "0e02022a000000"
+ },
+ {
+  "id": "float_value_override",
+  "value": {
+   "id": 7,
+   "property_index": 2,
+   "update_type": 3,
+   "int_value": 0,
+   "float_value": 0.5
+  },
+  "bytes": "0e02030000003f"
+ }
+]

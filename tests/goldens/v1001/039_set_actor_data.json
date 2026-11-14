@@ -1,0 +1,125 @@
+[
+ {
+  "id": "one_actor_data_item",
+  "value": {
+   "id": 2,
+   "packed_items": {
+    "data": [
+     {
+      "id": 38,
+      "payload": {
+       "__class__": "DataItemFloatPayload",
+       "value": 0.5
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "tick": 100
+  },
+  "bytes": "020126030000003f01010301020000003f64"
+ },
+ {
+  "id": "one_of_each_actor_data_arm",
+  "value": {
+   "id": 2,
+   "packed_items": {
+    "data": [
+     {
+      "id": 2,
+      "payload": {
+       "__class__": "DataItemIntPayload",
+       "value": 7
+      }
+     },
+     {
+      "id": 3,
+      "payload": {
+       "__class__": "DataItemBytePayload",
+       "value": 3
+      }
+     },
+     {
+      "id": 4,
+      "payload": {
+       "__class__": "DataItemStringPayload",
+       "value": "Bob"
+      }
+     },
+     {
+      "id": 5,
+      "payload": {
+       "__class__": "DataItemInt64Payload",
+       "value": -4000000000
+      }
+     },
+     {
+      "id": 7,
+      "payload": {
+       "__class__": "DataItemShortPayload",
+       "value": 300
+      }
+     },
+     {
+      "id": 28,
+      "payload": {
+       "__class__": "DataItemPosPayload",
+       "value": {
+        "x": 1,
+        "y": -2,
+        "z": 3
+       }
+      }
+     },
+     {
+      "id": 118,
+      "payload": {
+       "__class__": "DataItemCompoundTagPayload",
+       "value": "{Hitboxes:[{Height:1.5f,Width:0.75f}]}"
+      }
+     },
+     {
+      "id": 130,
+      "payload": {
+       "__class__": "DataItemVec3Payload",
+       "value": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 2.5
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "tick": 100
+  },
+  "bytes": "020802020e030003040403426f620507ff9fd9e61d07012c011c0602030676050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f00008201080000003f0000c03f0000204001010301020000003f64"
+ }
+]

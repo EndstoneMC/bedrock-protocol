@@ -1,0 +1,48 @@
+[
+ {
+  "id": "teleport_with_cause",
+  "value": {
+   "player_id": 2,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "rot": {
+    "x": 4.0,
+    "y": 5.0
+   },
+   "y_head_rot": 6.0,
+   "reset_position": 2,
+   "on_ground": true,
+   "riding_id": 5,
+   "cause": 3,
+   "source_entity_type": 42,
+   "tick": 100
+  },
+  "bytes": "020000803f0000004000004040000080400000a0400000c040020105030000002a00000064"
+ },
+ {
+  "id": "normal_without_teleport_data",
+  "value": {
+   "player_id": 2,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "rot": {
+    "x": 4.0,
+    "y": 5.0
+   },
+   "y_head_rot": 6.0,
+   "reset_position": 0,
+   "on_ground": true,
+   "riding_id": 5,
+   "cause": 0,
+   "source_entity_type": 0,
+   "tick": 100
+  },
+  "bytes": "020000803f0000004000004040000080400000a0400000c04000010564"
+ }
+]

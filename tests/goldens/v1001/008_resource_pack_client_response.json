@@ -1,0 +1,10 @@
+[
+ {
+  "id": "one_downloading_pack",
+  "value": {
+   "response": 2,
+   "downloading_packs": ["5a1c2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d_1.2.3"]
+  },
+  "bytes": "0201002a35613163326233642d346535662d346136622d386337642d3965306631613262336334645f312e322e33"
+ }
+]

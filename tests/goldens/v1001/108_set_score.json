@@ -1,0 +1,60 @@
+[
+ {
+  "id": "change_with_player_entity_and_fake_identities",
+  "value": {
+   "type": 0,
+   "score_info": [
+    {
+     "scoreboard_id": 2,
+     "objective_name": "obj",
+     "score_value": 5,
+     "identity_type": 1,
+     "player_id": {
+      "actor_unique_id": 9
+     },
+     "entity_id": 0,
+     "fake_player_name": ""
+    },
+    {
+     "scoreboard_id": 3,
+     "objective_name": "obj",
+     "score_value": 6,
+     "identity_type": 2,
+     "player_id": {
+      "actor_unique_id": 0
+     },
+     "entity_id": 11,
+     "fake_player_name": ""
+    },
+    {
+     "scoreboard_id": 4,
+     "objective_name": "obj",
+     "score_value": 7,
+     "identity_type": 3,
+     "player_id": {
+      "actor_unique_id": 0
+     },
+     "entity_id": 0,
+     "fake_player_name": "fake"
+    }
+   ],
+   "removed_score_info": []
+  },
+  "bytes": "000304036f626a05000000011206036f626a06000000021608036f626a07000000030466616b65"
+ },
+ {
+  "id": "remove_one_score_entry",
+  "value": {
+   "type": 1,
+   "score_info": [],
+   "removed_score_info": [
+    {
+     "scoreboard_id": 1,
+     "objective_name": "rm",
+     "score_value": 5
+    }
+   ]
+  },
+  "bytes": "01010202726d05000000"
+ }
+]
