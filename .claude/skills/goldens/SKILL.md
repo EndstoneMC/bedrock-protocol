@@ -16,6 +16,13 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 - Hardcode an address. Find a function by RTTI, or by a byte signature behind a version gate.
 - Loosen the comparison until a case passes, or retry values until BDS accepts one.
 
+## A newer protocol's folder
+
+1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls]`.
+2. Copy each one's file from the nearest folder toward `v2168/` that holds it, change only the fields whose encoding changed, and write it as `layout(cases)` with bytes from the library. Give a new packet cases of its own from the dump.
+3. Delete every file left byte-identical to the one it was copied from.
+4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure with `::v<protocol>::`.
+
 ## The runner
 
 ```
@@ -209,4 +216,5 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
 | A `default.profraw` appears in the repository root | A pytest ran from the coverage venv without `LLVM_PROFILE_FILE`. Delete the file and rerun with `LLVM_PROFILE_FILE` pointing into the profile directory. |
 | `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |
+| `$D.missed` lists the false side of a `switch (... .index())` | The implicit default of a generated variant switch, which no value takes. Report it as a generator defect; no case reaches it. |
 | `$D.missed` lists `switch (<variant>.index()) {` false | The serializer's hidden default, which only a valueless variant takes. No input reaches it: report it as a generator defect. |
