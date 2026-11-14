@@ -133,19 +133,20 @@ llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -igno
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
 ```
 
-The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder's packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches:
+The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<namespace>` is empty for `v2168/` and `::v<protocol>::` for any other folder:
 
 ```
 D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
 LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
-python3 -I - $D/export.json <<'EOF' | sort > $D.missed
+python3 -I - $D/export.json '<namespace>' <<'EOF' | sort > $D.missed
 import json, re, sys
 functions = [f for f in json.load(open(sys.argv[1]))['data'][0]['functions'] if re.search(r'/generated/.*\.cpp$', f['filenames'][0])]
 sources = {path: open(path).read().split('\n') for path in {f['filenames'][0] for f in functions}}
 call = re.compile(r'Serializer<(.+?)>::(serialize|deserialize)\(')
 by_signature = {call.search(sources[f['filenames'][0]][f['regions'][0][0] - 2])[0]: f for f in functions}
+signature = {id(f): s for s, f in by_signature.items()}
 reached = [f for f in functions if f['count'] > 0]
 scope = {id(f): f for f in reached}
 while reached:
@@ -156,8 +157,9 @@ while reached:
                 scope[id(callee)] = callee
                 reached.append(callee)
 failure = re.compile(r'if \(!(\w+)\) return (stream\.fail|std::unexpected)\(\1\.error\(\)|Errc::')
+owned = [f for f in scope.values() if sys.argv[2] in signature.get(id(f), '')]
 outcomes = missed = 0
-for f in scope.values():
+for f in owned:
     lines = sources[f['filenames'][0]]
     for b in f['branches']:
         line = lines[b[0] - 1].strip()
@@ -168,7 +170,7 @@ for f in scope.values():
                 if count == 0:
                     missed += 1
                     print(f"{f['filenames'][0]}:{b[0]}:{b[1]} {outcome}  {line}")
-print(f'{len(scope)} functions, {outcomes - missed}/{outcomes} valid-path branch outcomes reached', file=sys.stderr)
+print(f'{len(owned)} functions, {outcomes - missed}/{outcomes} valid-path branch outcomes reached', file=sys.stderr)
 EOF
 ```
 

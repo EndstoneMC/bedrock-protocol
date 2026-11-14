@@ -13,7 +13,9 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 
 - Keep a packet's cases in `tests/goldens/v<protocol>/<id:03>_<snake_name>.json`, `<snake_name>` being the class the folder's module binds at `<id>` without its trailing `Packet`, in snake case: a JSON array of `{"id", "value", "bytes"}`.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
-- Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its class differs from the neighbour's toward 2168.
+- Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, and never a file identical to the neighbour's.
+- Check `v2193/` with BDS 1.26.51.1.
+- Seed a folder's cases from the neighbour's and change only the leaves its encoding change needs; a class that differs only in an enum's members gets no file.
 - Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Keep a case's `value` in the DSL's shape, with an alias bare and a UUID as its canonical string; map it to BDS's JSON only when comparing, through `CaseForm` in `tests/conftest.py`.
 - Never load BDS's printed JSON into a packet; compare it with a case only through `CaseForm.matches`.
@@ -38,7 +40,9 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 
 ## Writing cases
 
-- Reach every branch of the generated codec at 2168 that valid data takes, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
+- A case tests the encoding, never what a value means.
+- Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
+- `v2168/` owns every codec live at 2168, and another folder the codecs its own protocol generates for the packets it holds.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
 - Change a case's leaves without changing its branch identity: each optional stays present or absent, each variant arm and gating bool stays, and an empty list stays empty.
