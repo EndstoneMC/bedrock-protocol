@@ -75,6 +75,66 @@ struct type_caster<std::vector<std::byte>> {
     }
 };
 
+template <typename T, typename... Ts>
+struct type_caster<std::variant<T, Ts...>>
+    : private variant_caster_storage<variant_is_defaultable<T, Ts...>, T, Ts...> {
+    using Value = std::variant<T, Ts...>;
+    template <typename U>
+    using Cast = movable_cast_t<U>;
+
+    static constexpr auto Name = (make_caster<T>::Name + ... + (const_name(" | ") + make_caster<Ts>::Name));
+
+    template <typename U>
+    static constexpr bool can_cast()
+    {
+        return true;
+    }
+
+    explicit operator Value *() { return &this->get(); }
+    explicit operator Value &() { return this->get(); }
+    explicit operator Value &&() { return std::move(this->get()); }
+
+    template <typename U>
+    bool try_variant(handle src, uint8_t flags, cleanup_list *cleanup)
+    {
+        make_caster<U> caster;
+        if (!caster.from_python(src, flags_for_local_caster<U>(flags), cleanup) || !caster.template can_cast<U>()) {
+            return false;
+        }
+        this->store(caster.operator cast_t<U>());
+        return true;
+    }
+
+    bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
+    {
+        const auto exact = static_cast<uint8_t>(flags & ~static_cast<uint8_t>(cast_flags::convert));
+        if (flags != exact && (try_variant<T>(src, exact, cleanup) || ... || try_variant<Ts>(src, exact, cleanup))) {
+            return true;
+        }
+        return (try_variant<T>(src, flags, cleanup) || ... || try_variant<Ts>(src, flags, cleanup));
+    }
+
+    template <typename U>
+    static handle from_cpp(U *value, rv_policy policy, cleanup_list *cleanup)
+    {
+        if (value == nullptr) {
+            return none().release();
+        }
+        return from_cpp(*value, policy, cleanup);
+    }
+
+    template <typename U>
+    static handle from_cpp(U &&value, rv_policy policy, cleanup_list *cleanup) noexcept
+    {
+        return std::visit(
+            [&](auto &&alternative) {
+                return make_caster<decltype(alternative)>::from_cpp(std::forward<decltype(alternative)>(alternative),
+                                                                    policy, cleanup);
+            },
+            std::forward<U>(value));
+    }
+};
+
 template <bedrock::protocol::PrimitiveAlias T>
 struct type_caster<T> {
     using Underlying = bedrock::protocol::primitive_alias_t<T>;
