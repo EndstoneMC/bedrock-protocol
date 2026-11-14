@@ -175,6 +175,53 @@ struct python_type<std::vector<std::byte>> {
 template <typename F>
 using python_type_t = typename python_type<F>::type;
 
+template <typename... As, typename... Bs>
+constexpr type_list<As..., Bs...> operator+(type_list<As...>, type_list<Bs...>)
+{
+    return {};
+}
+
+template <typename F>
+struct arg_type {
+    using type = F;
+};
+template <typename T>
+struct arg_type<std::optional<T>> : arg_type<T> {};
+template <typename... Ts>
+struct arg_type<type_list<Ts...>> {
+    using type = std::variant<Ts...>;
+};
+template <typename... Ts>
+struct arg_type<std::variant<Ts...>>
+    : arg_type<decltype((type_list<>{} + ... +
+                         std::conditional_t<std::is_same_v<Ts, std::monostate>, type_list<>,
+                                            type_list<typename arg_type<Ts>::type>>{}))> {};
+
+template <typename D>
+struct arg_descr {
+    D name;
+};
+
+template <typename D>
+constexpr auto type_descr(const arg_descr<D> &descr)
+{
+    return arg_descr{nb::detail::type_descr(descr.name)};
+}
+
+template <typename D, typename... Ds>
+constexpr auto concat(const arg_descr<D> &first, const arg_descr<Ds> &...rest)
+{
+    return (first.name + ... + (nb::detail::const_name(", ") + rest.name));
+}
+
+template <typename F>
+struct field_arg : nb::handle {
+    static constexpr auto Name = arg_descr{nb::detail::make_caster<python_type_t<typename arg_type<F>::type>>::Name};
+
+    using nb::handle::handle;
+    field_arg(const nb::handle &h) : nb::handle(h) {}
+};
+
 template <typename F>
 constexpr bool holds_enum()
 {
@@ -272,7 +319,7 @@ void bind_field(nb::class_<T> &cls)
 {
     using F = field_t<T, I>;
     const char *name = python_names<T>()[I].c_str();
-    const auto setter = [](T &self, nb::typed<nb::handle, python_type_t<nb::remove_opt_mono_t<F>>> value) {
+    const auto setter = [](T &self, field_arg<F> value) {
         field_get<I>(self) = from_python<F>(value, field_label<T, I>());
     };
     const auto value_arg = nb::for_setter(nb::arg("value").none(nullable_v<F>));
@@ -306,7 +353,7 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
         else {
             cls.def(
                 "__init__",
-                [](T *self, nb::typed<nb::handle, python_type_t<nb::remove_opt_mono_t<field_t<T, I>>>>... values) {
+                [](T *self, field_arg<field_t<T, I>>... values) {
                     T value{};
                     (
                         [&] {
