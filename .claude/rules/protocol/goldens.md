@@ -22,6 +22,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Compare a field declared as one type over another wire type (`rot_x: int8 = field(type=uint8)`) through its wire type, as BDS prints it.
 - Compare an enum member with the int BDS prints for it through the member's number in our schema.
 - Match a case's primitive with a BDS object that has exactly one child equal to it, and a UUID string with BDS's most and least significant halves.
+- Match a case's `\xNN` string with BDS's raw-byte string by turning both into bytes.
 - Never change the bytes of a case BDS writes back unchanged; change its value only for a rename or a library type fix.
 
 ## Writing cases

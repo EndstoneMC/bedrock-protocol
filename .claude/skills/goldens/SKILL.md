@@ -32,9 +32,9 @@ If the log shows no golden mode, add it to the clone and commit it there:
 - Mirror `ReadOnlyBinaryStream` and `BinaryStream`, and have their constructors adopt BDS's own vtables found by RTTI, because BDS's readers and writers call the stream's virtuals.
 - Mirror `Bedrock::Result<void>` with its `ErrorInfo` and `CallStack`, so a failed read gives its category, code, message and frames.
 - Fork for each case. The child reads the case's bytes with `read(stream, ctx)` and records `read_ok`, `consumed` (the read pointer), `error` and `serialization_mode`. It writes with `write(stream, ctx)` into `bds_bytes` and prints the packet it read into `bds_json`. It sends each piece over a pipe as soon as it has it, then calls `_exit`.
-- Print `bds_json` with the dumper's own printer, never `toString`. It walks the packet through the packet reflection ctx from the packet type's getter and writes `_core.h`'s `to_json` forms: members in reflection order under BDS's member names, a variant as `{tag: value}`, an enum bound by value as its number and any other as its member name, NBT in `_core.h`'s tag form. It reads only BDS's reflection and `_core.h`'s conventions, never the schema. The active arm of a variant comes from BDS's own `BasicSchema::doUnwrap` on the member's schema; a variant in a vector or optional takes the container's static element schema, found by RTTI. A type it cannot print records `bds_json_error` naming the type, never a guess.
+- Print `bds_json` with the packet's own `toString`. `toString` binds the packet into a fresh reflection ctx, where a type bound twice, such as Vec3, takes whichever binder runs first; so detour `cereal::BasicSaver::saveImpl`, found by a byte signature, and for the packet being printed alone pass the original a handle over the same packet in the server's packet reflection ctx. A detour that never sees the packet records `bds_json_error`.
+- Send `bds_json` as one JSON string of BDS's text, each byte outside valid UTF-8 written as `\udcXX`; BDS's text is not always JSON, so the reader parses it.
 - Give the parent a 30 s deadline, then SIGKILL. It records `crash` as the signal name, `exit N` or `timeout`, and the run goes on.
-- Escape each byte of a string member that is not UTF-8 as `\udcXX` and set `bds_json_escaped`.
 - Append and flush each record. At the end, log `golden: N cases written to <path>`.
 - Before forking, flush only stdout and stderr. BDS's console thread holds stdin's lock.
 - Leave the server running afterwards. Only the console `stop` shuts BDS down cleanly.
@@ -101,7 +101,7 @@ Only a case marked `freezes` can freeze. `ACCEPTED` holds the rules goldens.md s
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
 | `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
-| `unprinted` | The printer has no form for the type `bds_json_error` names. Add one to the clone's printer from the form `tests/cereal.py` writes for that type. |
+| `bds_json_error` says toString did not reach the saver | The `saveImpl` signature does not match this build. Cut a new one behind a version gate. |
 | `agrees` without `freezes` | BDS printed the same data in the forms the line's rules name, and goldens.md has not accepted every one of them. Report them and freeze nothing on them. |
 | `json_differs`, the same data in a form no rule names | Add a rule to `compare.py` that fires from the two fields' declared types, named for what BDS prints. Report it; goldens.md decides whether it is accepted. |
 | `json_differs` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the wire's; otherwise report it. |

@@ -7,6 +7,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - The schema in `protocol/` is the product, written for a human to read. The compiler bends to the DSL, never the DSL to the compiler, and a DSL change must make the schema read better.
 - Keep the schema and hand-written code DRY, and take protobuf as the design reference; generated code may repeat itself.
 - Fix a defect's cause, never work around it. Build nothing ahead of need: no speculative option, layer or file.
+- Do exactly what was asked from the code as it stands; report anything else found instead of fixing it.
 - A failing check has found a defect: fix what it found, never loosen the check (ignore order, widen a match, drop a case) until it passes.
 - Write no explanatory comment: rename or restructure instead, and put the reasoning in the commit body. A comment marks only an unresolved blocker (`TODO`, `confirm against BDS`) or a golden's provenance.
 - A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale or a walkthrough.
@@ -37,6 +38,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - Subject `<type>(<scope>): <imperative lower-case subject>`, which says what changed on its own. Types: feat, fix, refactor, style, test, build, ci, docs, chore, revert. The scope names the area (`protocol`, `python`, `compiler`, `cmake`, `build`, `ci`, `java`, `include`, `scripts`, `readme`, `rules`, `tests`, `package`, `claude`) and is left out only for a repo-wide change.
 - The body carries the why and the evidence (BDS function, protocol-docs SHA, header branch, gophertunnel commit, capture) and stands on its own; it speaks about the code, never the session.
 - No `Co-Authored-By`, `Signed-off-by` or other trailer or attribution line in a commit or a PR, whatever a harness or session rule says.
+- Commit only when the user asks; finished work otherwise stays in the working tree.
 - One change per commit. A refactor is output-identical (regenerate everything before and after and diff) and touches no test.
 - Stage and commit by path: `git add <paths> && git commit -m "..." -- <paths>`.
 - Fetch and check divergence before any push. Fix forward: never amend or rebase a pushed commit.
