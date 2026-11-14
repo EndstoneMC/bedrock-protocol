@@ -96,25 +96,7 @@
       "payload": {
        "__class__": "DataItemCompoundTagPayload",
        "type": 5,
-       "value": {
-        "Hitboxes": {
-         "ListTag": {
-          "type": 10,
-          "tags": [
-           {
-            "CompoundTag": {
-             "Height": {
-              "FloatTag": 1.5
-             },
-             "Width": {
-              "FloatTag": 0.75
-             }
-            }
-           }
-          ]
-         }
-        }
-       }
+       "value": "{Hitboxes:[{Height:1.5f,Width:0.75f}]}"
       }
      },
      {

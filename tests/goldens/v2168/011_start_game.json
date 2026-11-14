@@ -291,7 +291,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": "{}",
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
@@ -605,17 +605,13 @@
    "block_properties": [
     {
      "name": "custom:block",
-     "tag": {
-      "molangVersion": {
-       "IntTag": 12
-      }
-     }
+     "tag": "{molangVersion:12}"
     }
    ],
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": "{}",
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
@@ -943,7 +939,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": "{}",
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,
@@ -1260,7 +1256,7 @@
    "multiplayer_correlation_id": "corr-1",
    "enable_item_stack_net_manager": true,
    "server_version": "1.26.40",
-   "player_property_data": {},
+   "player_property_data": "{}",
    "server_block_type_registry_checksum": 123456789012,
    "world_template_id": "66666666-7777-8888-9999-000000000000",
    "server_enabled_client_side_generation": true,

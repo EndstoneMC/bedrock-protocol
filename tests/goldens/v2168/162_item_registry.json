@@ -8,18 +8,14 @@
      "id": 323,
      "is_component_based": false,
      "item_version": 0,
-     "component_data": {}
+     "component_data": "{}"
     },
     {
      "name": "minecraft:apple",
      "id": 880,
      "is_component_based": true,
      "item_version": 1,
-     "component_data": {
-      "minecraft:max_stack_size": {
-       "IntTag": 16
-      }
-     }
+     "component_data": "{\"minecraft:max_stack_size\":16}"
     }
    ]
   },

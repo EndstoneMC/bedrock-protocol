@@ -3,11 +3,7 @@
   "id": "fog_volume_bounds",
   "value": {
    "entity_net_id": 7,
-   "components": {
-    "minecraft:fog": {
-     "StringTag": "spooky"
-    }
-   },
+   "components": "{\"minecraft:fog\":\"spooky\"}",
    "json_identifier": "endstone:volume",
    "instance_name": "instance",
    "min_bounds": {

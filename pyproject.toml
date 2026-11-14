@@ -7,7 +7,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 [dependency-groups]
-dev = ["bedrock-protocol-compiler", "nanobind==2.13.0", "pytest", "scikit-build-core>=1.1"]
+dev = ["bedrock-protocol-compiler", "nanobind==2.13.0", "nbtlib", "pytest", "scikit-build-core>=1.1"]
 
 [build-system]
 requires = ["scikit-build-core>=1.1", "nanobind==2.13.0"]
@@ -43,7 +43,7 @@ bedrock-protocol-compiler = { workspace = true }
 build = "cp312-*"
 skip = "*-musllinux_*"
 archs = ["auto64"]
-test-requires = ["pytest", "mypy"]
+test-requires = ["pytest", "mypy", "nbtlib"]
 test-command = [
     "python -I -c \"import importlib.util as u, bedrock_protocol; assert u.find_spec('bedrock_protocol_compiler') is None\"",
     "mypy --strict --config-file {project}/pyproject.toml -p bedrock_protocol",

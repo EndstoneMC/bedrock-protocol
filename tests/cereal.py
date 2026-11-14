@@ -14,6 +14,8 @@ from operator import methodcaller, or_
 from pathlib import Path
 from typing import ClassVar, override
 
+import nbtlib
+
 from bedrock_protocol import nbt
 from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import (
@@ -125,6 +127,23 @@ class BdsDecoder(json.JSONDecoder):
             values.append(value)
             end = WHITESPACE.match(text, end).end()
             end = WHITESPACE.match(text, end + text.startswith((":", ","), end)).end()
+        rebuilt = []
+        index = 0
+        while index < len(values):
+            value = values[index]
+            index += 1
+            header = type(value) is int and value == 10 and values[index : index + 1] == [""]
+            if not header:
+                rebuilt.append(value)
+            index += header
+            if header or (type(value) is str and value == "__[[CTD]]__"):
+                tokens = iter(values[index:])
+                try:
+                    rebuilt.append(CaseForm.nbt_tag(10, tokens))
+                except (StopIteration, KeyError, TypeError, ValueError) as error:
+                    raise json.JSONDecodeError(f"malformed NBT tokens ({error!r})", text, end) from error
+                index = len(values) - len(list(tokens))
+        values = rebuilt
         keys = values[::2]
         plain = len(values) % 2 == 0 and all(type(key) is str for key in keys) and len(set(keys)) == len(keys)
         return (dict(zip(keys, values[1::2], strict=True)) if plain else FlatObject(values)), end + 1
@@ -438,20 +457,6 @@ ESCAPED_UUID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 ESCAPED_BYTES = re.compile(r"(\\x[0-9a-f]{2})*")
 ESCAPED_COLOR = re.compile(r"#[0-9a-f]{8}")
 ESCAPED_BITS = re.compile(r"0b[01]+")
-TAG_KINDS = {
-    1: "ByteTag",
-    2: "ShortTag",
-    3: "IntTag",
-    4: "Int64Tag",
-    5: "FloatTag",
-    6: "DoubleTag",
-    7: "ByteArrayTag",
-    8: "StringTag",
-    9: "ListTag",
-    10: "CompoundTag",
-    11: "IntArrayTag",
-}
-TAG_IDS = {kind: number for number, kind in TAG_KINDS.items()}
 
 
 class CaseForm:
@@ -522,6 +527,10 @@ class CaseForm:
         if isinstance(case, str) and type(bds) is int and ESCAPED_BITS.fullmatch(case):
             return cls.varint_groups(int(case, 2)) == [bds]
 
+        # "{id:\"Chest\"}" vs 10, "", 8, "id", {"data": "Chest"}, 0
+        if isinstance(case, str) and isinstance(bds, nbtlib.Compound):
+            return nbtlib.serialize_tag(nbtlib.parse_nbt(case), compact=True) == nbtlib.serialize_tag(bds, compact=True)
+
         # 7 vs {"Actor Runtime ID": 7}
         if isinstance(bds, dict) and not isinstance(case, dict | list):
             return len(bds) == 1 and cls.matches(case, next(iter(bds.values())))
@@ -573,52 +582,54 @@ class CaseForm:
         return tokens[0] if len(tokens) == 1 else TokenList(tokens)
 
     @classmethod
-    def nbt_payload(cls, number, tokens):
-        kind = TAG_KINDS[number]
-        match kind:
-            case "CompoundTag":
-                return {kind: cls.nbt_entries(tokens)}
-            case "ListTag":
+    def nbt_tag(cls, number, tokens):
+        """The tag of type `number` that BDS's token stream holds next, a compound without its header."""
+        kind = nbtlib.Base.get_tag(number)
+        match number:
+            case 9:
                 element, count = next(tokens), next(tokens)
-                return {kind: {"type": element, "tags": [cls.nbt_payload(element, tokens) for _ in range(count)]}}
-            case "ByteArrayTag" | "IntArrayTag":
-                return {kind: [next(tokens) for _ in range(next(tokens))]}
-            case "FloatTag":
-                return {kind: cls.shortest_float32(next(tokens)["data"])}
-        return {kind: next(tokens)["data"]}
-
-    @classmethod
-    def nbt_entries(cls, tokens):
-        entries = {}
-        while (number := next(tokens)) != 0:
-            name = next(tokens)
-            entries[name] = cls.nbt_payload(number, tokens)
-        return entries
+                return kind[nbtlib.Base.get_tag(element)](cls.nbt_tag(element, tokens) for _ in range(count))
+            case 10:
+                compound = kind()
+                while (entry := next(tokens)) != 0:
+                    name = next(tokens)
+                    compound[name] = cls.nbt_tag(entry, tokens)
+                return compound
+            case 7 | 11:
+                values = [next(tokens) for _ in range(next(tokens))]
+                if not all(issubclass(kind.wrapper, type(value)) for value in values):
+                    raise TypeError(f"{values!r}: not tokens for {kind.__name__}")
+                wrap = kind.wrapper.from_unsigned if number == 7 else kind.wrapper
+                return kind([wrap(value) for value in values])
+        value = next(tokens)["data"]
+        if not issubclass(kind, type(value)):
+            raise TypeError(f"{value!r}: not a token for {kind.__name__}")
+        if number == 5:
+            return kind(cls.shortest_float32(value))
+        return kind.from_unsigned(value) if number == 1 else kind(value)
 
     @classmethod
     def nbt_tokens(cls, tag, tokens):
-        [(kind, payload)] = tag.items()
-        match kind:
-            case "CompoundTag":
-                cls.nbt_entry_tokens(payload, tokens)
-            case "ListTag":
-                tokens += [payload["type"], len(payload["tags"])]
-                for each in payload["tags"]:
+        match tag.tag_id:
+            case 9:
+                tokens += [tag.subtype.tag_id, len(tag)]
+                for each in tag:
                     cls.nbt_tokens(each, tokens)
-            case "ByteArrayTag" | "IntArrayTag":
-                tokens += [len(payload), *payload]
-            case "FloatTag":
-                tokens.append({"data": cls.widened_float32(payload)})
+            case 10:
+                for name, each in tag.items():
+                    tokens += [each.tag_id, name]
+                    cls.nbt_tokens(each, tokens)
+                tokens.append(0)
+            case 7:
+                tokens += [len(tag), *tag.tobytes()]
+            case 11:
+                tokens += [len(tag), *tag.tolist()]
+            case 1:
+                tokens.append({"data": tag.as_unsigned})
+            case 5:
+                tokens.append({"data": cls.widened_float32(tag)})
             case _:
-                tokens.append({"data": payload})
-
-    @classmethod
-    def nbt_entry_tokens(cls, entries, tokens):
-        for name, tag in entries.items():
-            [(kind, _)] = tag.items()
-            tokens += [TAG_IDS[kind], name]
-            cls.nbt_tokens(tag, tokens)
-        tokens.append(0)
+                tokens.append({"data": tag.unpack()})
 
 
 class BasicSchema:
@@ -1099,7 +1110,7 @@ class CompoundTagSchema(BasicSchema):
         self.string = StringSchema()
         self.int32 = IntegerSchema("int32")
         self.primitives = {
-            1: IntegerSchema("int8"),
+            1: self.uint8,
             2: IntegerSchema("int16"),
             3: self.int32,
             4: IntegerSchema("int64"),
@@ -1277,7 +1288,7 @@ class BitsetCase(CaseSchema):
 
 
 class CompoundTagCase(CaseSchema):
-    """A compound as the typed tags of its entries."""
+    """A compound as its compact SNBT string."""
 
     def __init__(self, inner):
         super().__init__(inner)
@@ -1288,12 +1299,14 @@ class CompoundTagCase(CaseSchema):
         tokens = CaseForm.tokens(bds)
         if self.header:
             next(tokens), next(tokens)
-        return CaseForm.nbt_entries(tokens)
+        return nbtlib.serialize_tag(CaseForm.nbt_tag(10, tokens), compact=True)
 
     @override
     def to_bds(self, case):
+        if not isinstance(case, str):
+            return case
         tokens = [10, ""] if self.header else []
-        CaseForm.nbt_entry_tokens(case, tokens)
+        CaseForm.nbt_tokens(nbtlib.parse_nbt(case), tokens)
         return CaseForm.stream(tokens)
 
 
