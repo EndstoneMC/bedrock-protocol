@@ -168,7 +168,7 @@ class LevelSettings:
     limited_world_depth: int32
     nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
-    override_force_experimental_gameplay_flag: bool | None
+    override_force_experimental_gameplay_flag: bool
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     with field(until=924):
@@ -226,7 +226,7 @@ class LevelSettings:
     limited_world_depth: int32
     nether_type: NetherWorldType
     edu_shared_uri_resource: EduSharedUriResource
-    override_force_experimental_gameplay_flag: bool | None
+    override_force_experimental_gameplay_flag: bool
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
     with field(since=1001):
@@ -427,7 +427,7 @@ class GameRule:
 class GameRule:
     name: str
     can_be_modified_by_player: bool
-    value: None | bool | uvarint32 | float
+    value: None | bool | varint32 | float
 
 
 @type(until=776)
