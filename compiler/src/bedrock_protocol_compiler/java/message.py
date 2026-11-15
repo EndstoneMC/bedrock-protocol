@@ -13,7 +13,16 @@ from bedrock_protocol_compiler.java.names import BUILDER, OBJECT
 from bedrock_protocol_compiler.java.union import Union, UnionGenerator, case_name
 from bedrock_protocol_compiler.java.value import Body
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, SerializationMode, StructModel, strip
+from bedrock_protocol_compiler.schema import (
+    Encoding,
+    EnumModel,
+    EnumShape,
+    EnumType,
+    Schema,
+    SerializationMode,
+    StructModel,
+    strip,
+)
 
 type Built = list[tuple[Slot, list[UnionGenerator]]]
 type Served = list[tuple[Range, SerializationMode, str]]
@@ -395,8 +404,8 @@ class MessageGenerator:
 
 
 def type_generator(
-    schema: Schema, each: StructModel | EnumShape, enclosing: tuple[str, ...], registry: Members
+    schema: Schema, each: StructModel | EnumType, enclosing: tuple[str, ...], registry: Members
 ) -> MessageGenerator | EnumGenerator:
-    if isinstance(each, EnumShape):
+    if isinstance(each, EnumModel | EnumShape):
         return EnumGenerator(schema, each)
     return MessageGenerator(schema, each, enclosing, registry)

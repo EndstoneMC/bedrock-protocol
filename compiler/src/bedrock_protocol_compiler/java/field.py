@@ -41,7 +41,7 @@ from bedrock_protocol_compiler.java.value import (
     literal,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, StructModel, strip
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, EnumShape, EnumType, Schema, StructModel, strip
 
 
 class FieldContext:
@@ -66,11 +66,11 @@ class FieldContext:
         self.inline = inline
         self.unions: list[UnionGenerator] = []
 
-    def enum_shape(self, node: EnumRef | EnumName) -> EnumShape:
-        shape = self.schema.target(self.model, node)
-        if not isinstance(shape, EnumShape):
+    def enum_type(self, node: EnumRef | EnumName) -> EnumType:
+        enum_type = self.schema.target(self.model, node)
+        if not isinstance(enum_type, EnumModel | EnumShape):
             raise CompilerError(f"{self.where}: {node.enum.name} is not an enum")
-        return shape
+        return enum_type
 
     def value(self, node: Type, label: str) -> Value:
         match node:
@@ -80,10 +80,10 @@ class FieldContext:
                 stored = alias.primitive.name
                 return Scalar(stored, node.encoded or stored, None, label)
             case EnumRef():
-                shape = self.enum_shape(node)
-                underlying = shape.underlying.name
+                enum_type = self.enum_type(node)
+                underlying = enum_type.underlying.name
                 encoded = node.encoded or ENUM_ENCODINGS[underlying]
-                return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, shape))
+                return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, enum_type))
             case StructRef():
                 model = self.schema.target(self.model, node)
                 if not isinstance(model, StructModel):
@@ -98,13 +98,13 @@ class FieldContext:
                     label,
                 )
             case EnumName():
-                shape = self.enum_shape(node)
-                spelled = names.qualified(self.schema, shape)
-                if not shape.members:
+                enum_type = self.enum_type(node)
+                spelled = names.qualified(self.schema, enum_type)
+                if not enum_type.members:
                     raise CompilerError(f"{self.where}: {spelled} has no member to default to")
-                default = f"{spelled}.{shape.members[0].name}"
+                default = f"{spelled}.{enum_type.members[0].name}"
                 read = f"{spelled}.decode(buf)"
-                return Reference(spelled, default, read, "{}.encode(buf);", label, number=enum_class(shape))
+                return Reference(spelled, default, read, "{}.encode(buf);", label, number=enum_class(enum_type))
             case BuiltinRef(builtin=builtin, encoded=encoded):
                 codec = names.pascal(names.snake(builtin.name)) + ("String" if encoded == "str" else "")
                 read = f"ByteBufCodec.read{codec}(buf)"
@@ -161,18 +161,21 @@ class FieldContext:
             case Literal(value=str(text)):
                 slot = LiteralSlot(self.field, label, "str", json.dumps(text), "@NotNull String", json.dumps(text))
             case Literal(value=MemberRef(name=name) as member):
-                shape = self.schema.enum_type(member.enum, self.encoding.since)
+                enum_type = self.schema.enum_type(member.enum, self.encoding.since)
+                enumerators = self.schema.enumerators(enum_type)
                 written = self.schema.number(self.encoding, member)
-                encoded = ENUM_ENCODINGS[shape.underlying.name]
-                enum = names.qualified(self.schema, shape)
-                number = enum_class(shape)
+                encoded = ENUM_ENCODINGS[enum_type.underlying.name]
+                enum = names.qualified(self.schema, enum_type)
+                number = enum_class(enum_type)
                 spelled = literal(written, number)
                 canonical = next(
-                    (each for each in shape.members if literal(shape.numbers[each.name], number) == spelled), None
+                    (each for each in enum_type.members if literal(enumerators[each.name], number) == spelled), None
                 )
                 if canonical is None:
-                    raise CompilerError(f"{self.where}: {shape.family.name}.{name} has no constant in {enum}")
-                deprecated = canonical.deprecated or any(each.deprecated for each in shape.members if each.name == name)
+                    raise CompilerError(f"{self.where}: {enum_type.family.name}.{name} has no constant in {enum}")
+                deprecated = canonical.deprecated or any(
+                    each.deprecated for each in enum_type.members if each.name == name
+                )
                 constant = literal(written, CLASSES[encoded])
                 slot = LiteralSlot(
                     self.field,

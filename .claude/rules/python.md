@@ -14,3 +14,5 @@ The schema modules under `protocol/` follow `.claude/rules/protocol/` instead of
 - Write an error message as `<offending name>: <lower-case reason>`, naming the bad value, with no trailing period.
 - Name a value for what it is (`packets`), not for its type (`packet_list`).
 - Encode a bound value with `v<N>.encode(x)` and decode it with `v<N>.decode(X, data)`, which rejects trailing bytes and uses the default serialization mode; where a class has no default mode at N, because its name has two encodings there, pass `mode=SerializationMode.CEREAL` or `mode=SerializationMode.MANUAL`, and `v<N>.modes` lists each class's modes; a failure raises `EncodeError` or `DecodeError`, both `ValueError`s.
+- Make an enum one class holding every member any protocol has, in every `v<N>` where it is live, when its members keep their numbers and underlying type at every protocol and, where a field codes it by name, its members and names; give any other enum one class per set of members.
+- Decode a number another protocol names to that member; two names sharing a value are distinct members that compare equal, and lookup by the value gives the newest-live name.

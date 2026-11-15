@@ -134,6 +134,16 @@ SHARED = (
 )
 
 
+GROWING = (
+    "class Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n    C = value(2, since=5)\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode\n"
+)
+GROWING_UNTIL_5 = (
+    "@type(until=5)\nclass Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode = field(until=5)\n"
+)
+
+
 @pytest.mark.parametrize(
     ("source", "path"),
     [
@@ -147,6 +157,8 @@ SHARED = (
         pytest.param(OLDER_HAND_WRITTEN, "S.java", id="cereal-past-an-older-hand-written-form"),
         pytest.param(OVERLAP_ONLY, "v1/CerealizedS.java", id="cereal-inside-the-overlap-only"),
         pytest.param(SHARED, "S.java", id="shared-by-both-forms"),
+        pytest.param(GROWING, "Mode.java", id="enum-gaining-members"),
+        pytest.param(GROWING_UNTIL_5, "v1/Mode.java", id="enum-gaining-members-before-the-latest"),
     ],
 )
 def test_a_model_lands_in_the_package_of_its_scope(java, source, path):
@@ -1090,6 +1102,212 @@ def test_a_name_coded_enum_defaults_to_its_first_member(emitted):
     text = emitted(COLORS + "class P:\n    c: Color = field(type=str)\n")
 
     assert "c_ = dev.endstone.protocol.Color.RED;" in text
+
+
+RENUMBERED = (
+    "class Mode(IntEnum, uint8):\n    A = value(0, until=3)\n    A = value(1, since=3)\n    B = 2\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode\n"
+)
+NAME_CODED = (
+    "class Mode(IntEnum, uint8):\n    A = 0\n    B = 1\n\n@packet(id=7)\nclass P:\n    m: Mode = field(type=str)\n"
+)
+SUCCEEDED = (
+    "class Id(IntEnum, uint8):\n    OLD = value(5, until=3)\n    NEW = value(5, since=3)\n    OTHER = 6\n\n"
+    "@packet(id=7)\nclass P:\n    i: Id\n"
+)
+
+
+LEAVING = (
+    "class Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, until=3)\n    C = value(2, since=5)\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode\n"
+)
+
+
+def test_an_enum_that_gains_members_is_one_class_holding_the_union(java):
+    text = (java(LEAVING) / "Mode.java").read_text()
+
+    assert "    A(0),\n    B(1),\n    C(2),\n    UNRECOGNIZED(-1);\n" in text
+
+
+def test_an_enum_that_never_reaches_the_latest_protocol_holds_the_union(java):
+    text = (java(GROWING_UNTIL_5) / "v1/Mode.java").read_text()
+
+    assert "    A(0),\n    B(1),\n    UNRECOGNIZED(-1);\n" in text
+
+
+def test_for_number_covers_the_union(java):
+    text = (java(LEAVING) / "Mode.java").read_text()
+
+    assert (
+        "            case 0 -> A;\n            case 1 -> B;\n            case 2 -> C;\n            default -> null;\n"
+        in text
+    )
+
+
+def test_an_int_coded_field_of_a_growing_enum_keeps_its_raw_int(emitted):
+    text = emitted(GROWING)
+
+    assert "    private final int m_;\n" in text
+    assert "    public int getMValue() {\n" in text
+
+
+def test_an_int_coded_field_of_a_growing_enum_reads_its_enum_by_for_number(emitted):
+    text = emitted(GROWING + "    y: uint8 = field(since=4)\n", "v1/P.java")
+
+    assert "        dev.endstone.protocol.Mode result = dev.endstone.protocol.Mode.forNumber(m_);\n" in text
+
+
+def test_a_message_that_differed_only_by_a_growing_enum_is_one_class(java):
+    root = java(GROWING)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+
+
+def test_a_message_that_differed_only_by_a_growing_enum_has_one_codec(emitted):
+    text = emitted(GROWING)
+
+    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1"]
+
+
+NESTED_GROWING = (
+    "class P:\n    class Action(IntEnum, uint8):\n        A = 0\n        B = value(1, since=3)\n    a: Action\n"
+)
+NESTED_GROWING_WITH_OLDER_HOLDER = NESTED_GROWING + "    y: uint8 = field(since=4)\n"
+NESTED_LEAVING = (
+    "class P:\n    class Action(IntEnum, uint8):\n        A = 0\n        B = value(1, until=3)\n"
+    "        C = value(2, since=5)\n    a: Action\n    y: uint8 = field(since=4)\n"
+)
+
+
+def test_a_nested_enum_that_gains_members_is_emitted_once_in_its_owner(java):
+    root = java(NESTED_GROWING_WITH_OLDER_HOLDER)
+
+    holders = sorted(
+        path.relative_to(root).as_posix() for path in root.rglob("*.java") if "enum Action {" in path.read_text()
+    )
+    assert holders == ["P.java"]
+
+
+def test_a_nested_enum_that_gains_members_holds_the_union(emitted):
+    text = emitted(NESTED_LEAVING)
+
+    assert "        A(0),\n        B(1),\n        C(2),\n        UNRECOGNIZED(-1);\n" in text
+
+
+def test_an_older_holder_names_a_nested_enum_in_its_newest_holder(emitted):
+    text = emitted(NESTED_GROWING_WITH_OLDER_HOLDER, "v1/P.java")
+
+    assert "    public @NotNull dev.endstone.protocol.P.Action getA() {\n" in text
+
+
+def test_a_message_that_differed_only_by_a_nested_growing_enum_is_one_class(java):
+    root = java(NESTED_GROWING)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+
+
+def test_members_that_share_a_value_without_being_live_together_make_the_newest_the_constant(java):
+    text = (java(SUCCEEDED) / "Id.java").read_text()
+
+    assert "    NEW(5),\n    OTHER(6),\n    UNRECOGNIZED(-1);\n" in text
+
+
+def test_members_that_share_a_value_without_being_live_together_make_the_older_an_alias(java):
+    text = (java(SUCCEEDED) / "Id.java").read_text()
+
+    assert "    public static final @NotNull Id OLD = NEW;\n" in text
+
+
+def test_for_number_gives_the_newest_live_member_of_a_shared_value(java):
+    text = (java(SUCCEEDED) / "Id.java").read_text()
+
+    assert "            case 5 -> NEW;\n            case 6 -> OTHER;\n" in text
+
+
+def test_a_literal_of_a_member_succeeded_by_another_names_the_newest_constant(emitted):
+    source = SUCCEEDED + "class Q:\n    c: Literal[Id.OLD] = field(until=3)\n    x: uint8\n"
+
+    assert (
+        "        public static final @NotNull dev.endstone.protocol.Id C = dev.endstone.protocol.Id.NEW;\n"
+        in emitted(source, "Q.java")
+    )
+
+
+def test_a_renumbered_enum_keeps_a_class_per_shape(java):
+    root = java(RENUMBERED)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == [
+        "Mode.java",
+        "v1/Mode.java",
+    ]
+
+
+def test_a_renumbered_enum_keeps_each_shapes_numbers(java):
+    root = java(RENUMBERED)
+
+    assert "    A(0),\n    B(2),\n" in (root / "v1/Mode.java").read_text()
+    assert "    A(1),\n    B(2),\n" in (root / "Mode.java").read_text()
+
+
+def test_a_message_holding_a_renumbered_enum_keeps_a_class_per_shape(java):
+    root = java(RENUMBERED)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java", "v1/P.java"]
+
+
+def test_a_name_coded_enum_with_one_shape_keeps_one_class(java):
+    root = java(NAME_CODED)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
+
+
+def test_a_name_coded_enum_with_one_shape_keeps_its_name_codec(java):
+    text = (java(NAME_CODED) / "Mode.java").read_text()
+
+    assert '            case A -> "a";\n            case B -> "b";\n' in text
+    assert "    public static @NotNull Mode decode(@NotNull ByteBuf buf) {\n" in text
+
+
+NAME_CODED_GROWING = (
+    "class Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode = field(type=str)\n"
+)
+INTEGER_CODED_B = "class B:\n    class F(IntEnum, uint8):\n        A = 1\n\n    f: F\n\n"
+NAME_CODED_B = (
+    "@type(cereal=False)\nclass B:\n    class F(IntEnum, uint8):\n        A = 1\n\n"
+    "    f: F = field(type=str)\n    y: uint8\n\n"
+)
+PAIR_TAIL = "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n    c: B\n"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(INTEGER_CODED_B + NAME_CODED_B + PAIR_TAIL, id="hand-written-name-coded"),
+        pytest.param(NAME_CODED_B + INTEGER_CODED_B + PAIR_TAIL, id="hand-written-declared-first"),
+    ],
+)
+def test_an_enum_shared_by_two_forms_keeps_the_name_codec_of_either(emitted, source):
+    text = emitted(source, "B.java")
+
+    assert "        public static @NotNull F decode(@NotNull ByteBuf buf) {\n" in text
+
+
+def test_a_name_coded_enum_that_gains_a_member_has_a_class_per_set_of_members(java):
+    root = java(NAME_CODED_GROWING)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == [
+        "Mode.java",
+        "v1/Mode.java",
+    ]
+
+
+def test_a_name_coded_enum_that_gains_a_member_does_not_decode_it_at_the_older_protocols(java):
+    root = java(NAME_CODED_GROWING)
+
+    assert (
+        '            case "a" -> A;\n            default -> throw DecodeException.unknownValue(buf.readerIndex());\n'
+    ) in (root / "v1/Mode.java").read_text()
 
 
 def test_a_union_has_a_case_per_alternative(emitted):

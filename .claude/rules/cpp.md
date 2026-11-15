@@ -14,6 +14,7 @@ paths:
 - Where one protocol sends both encodings of a class name and they hold different members, name the hand-written form's type `<Name>` and the cereal form's `Cerealized<Name>` at those protocols only; `Cerealized<Name>_<V>` resolves nowhere else.
 - Name a serialization mode only where a class name has two at a protocol: `Serializer<T, V, SerializationMode::Cereal>` or `SerializationMode::Manual`; `SerializationMode::Default` exists only where it has one, and a generated body calls a child by its implementation's first protocol and mode.
 - Declare the type live at the latest protocol at the root of `bedrock::protocol` and every other under `v<N>`, N the first protocol that holds it and the first modelled protocol for the oldest; `X_<V>` selects the type of protocol V.
+- Make an enum one `enum class` holding every member any protocol has when its members keep their numbers and underlying type at every protocol and, where a field codes it by name, its members and names; give any other enum one type per set of members.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
 - Keep one namespace block per file with inner namespaces nested inside it; never close a namespace and reopen it.
@@ -24,6 +25,7 @@ paths:
 - Say `serialize` and `deserialize` only on `Serializer<T, V>`; the free entry points around it are `encode<V>` and `decode<V, T>`, which take a `SerializationMode` as `encode<V, M>` and `decode<V, T, M>` only where a class name has two at that protocol; every call names its protocol.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Decode any integer an integer-coded enum carries, named or not; reject a name a name-coded enum lacks, a value it cannot name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
+- Encode any value an integer-coded enum holds, a member another protocol names included.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.
 - Give every overload of a name one meaning; a length-prefixed write and a raw write take different names.
 - Use `std::` fixed-width integers at the width the encoding declares, and `std::size_t` for counts and indices.

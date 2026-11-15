@@ -14,7 +14,7 @@ from bedrock_protocol_compiler.descriptor import (
     Test,
 )
 from bedrock_protocol_compiler.java.value import BOOL, CLASSES, Num, convert, java_of, literal
-from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema
+from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema
 
 INT32 = CLASSES["int32"]
 UINT32 = CLASSES["uint32"]
@@ -39,8 +39,8 @@ class Term:
     value: int = 0
 
 
-def enum_class(shape: EnumShape) -> Num:
-    underlying = CLASSES[shape.underlying.name]
+def enum_class(enum_type: EnumType) -> Num:
+    underlying = CLASSES[enum_type.underlying.name]
     return Num("int", False, 8) if underlying == BOOL else underlying
 
 
@@ -77,8 +77,8 @@ class Renderer:
         return f"ByteBufCodec.countValue(buf, {self.spell(widest, common(widest.cls, INT64))})"
 
     def member(self, member: MemberRef) -> Term:
-        shape = self.schema.enum_type(member.enum, self.encoding.since)
-        return Term(None, enum_class(shape), self.schema.number(self.encoding, member))
+        enum_type = self.schema.enum_type(member.enum, self.encoding.since)
+        return Term(None, enum_class(enum_type), self.schema.number(self.encoding, member))
 
     def term(self, expression: Expression) -> Term:
         match expression:

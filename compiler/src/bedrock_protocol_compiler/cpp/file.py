@@ -4,7 +4,7 @@ from bedrock_protocol_compiler.cpp.enum import EnumGenerator
 from bedrock_protocol_compiler.cpp.struct import StructGenerator
 from bedrock_protocol_compiler.descriptor import Alias, Enum, Module, Range, Struct
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, EnumShape, Schema, StructModel, roots_reached
+from bedrock_protocol_compiler.schema import EnumModel, EnumType, Schema, StructModel, roots_reached
 
 
 class FileGenerator:
@@ -20,7 +20,7 @@ class FileGenerator:
         self.siblings: dict[Struct | Enum, Struct] = {
             schema.pair(family): family for family in self.families if isinstance(family, Struct) and not family.cereal
         }
-        self.held: dict[Struct | Enum, dict[StructModel | EnumShape, list[Range]]] = {}
+        self.held: dict[Struct | Enum, dict[StructModel | EnumType, list[Range]]] = {}
         self.generators: list[StructGenerator | EnumGenerator] = []
         defined_models: set[StructModel] = set()
         for family in self.families:
@@ -30,30 +30,37 @@ class FileGenerator:
                 self.generators += [StructGenerator(schema, model) for model in models if model not in defined_models]
                 defined_models.update(models)
                 continue
-            shapes: dict[EnumShape, list[int]] = {}
+            types: dict[EnumType, list[int]] = {}
             for version in schema.versions:
                 for model in schema.models(family):
                     if isinstance(model, EnumModel) and any(run.contains(version) for run in model.runs[family]):
-                        shapes.setdefault(schema.enum_type(family, version), []).append(version)
-            self.held[family] = {shape: schema.ranges(versions) for shape, versions in shapes.items()}
-            self.generators += [
-                EnumGenerator(schema, shape) for shape in schema.shapes(family) if isinstance(shape, EnumShape)
-            ]
+                        types.setdefault(schema.enum_type(family, version), []).append(version)
+            self.held[family] = {enum_type: schema.ranges(versions) for enum_type, versions in types.items()}
+            self.generators += [EnumGenerator(schema, enum_type) for enum_type in schema.enum_types(family)]
         holders = {
             generator.target: generator for generator in self.generators if isinstance(generator, StructGenerator)
         }
-        self.early: list[dict[StructGenerator, list[StructGenerator | EnumGenerator]]] = []
-        defined: set[StructModel | EnumShape] = set()
+        self.early: list[dict[tuple[StructGenerator, ...], list[StructGenerator | EnumGenerator]]] = []
+        defined: set[StructModel | EnumType] = set()
         for generator in self.generators:
-            early: dict[StructGenerator, list[StructGenerator | EnumGenerator]] = {}
+            early: dict[tuple[StructGenerator, ...], list[StructGenerator | EnumGenerator]] = {}
             if isinstance(generator, StructGenerator):
-                for child in generator.target.nested:
-                    owner = schema.owner(child)
-                    if owner is not generator.target and child not in defined:
-                        assert owner is not None
-                        holder = holders[owner]
-                        early.setdefault(holder, []).append(holder.pending.pop(child))
+                walk = list(generator.target.nested)
+                while walk:
+                    child = walk.pop(0)
+                    owners: list[StructModel] = []
+                    while (parent := schema.owner(owners[0] if owners else child)) is not None:
+                        owners.insert(0, parent)
+                    if not defined.intersection((*owners, child)) and owners[0] is not generator.target:
+                        path = [holders[owners[0]]]
+                        for owner in owners[1:]:
+                            holder = path[-1].pending[owner]
+                            assert isinstance(holder, StructGenerator)
+                            path.append(holder)
+                        early.setdefault(tuple(path), []).append(path[-1].pending.pop(child))
                     defined.add(child)
+                    if isinstance(child, StructModel):
+                        walk[0:0] = child.nested
             self.early.append(early)
 
     def place(self, family: Struct | Enum) -> None:
@@ -129,9 +136,9 @@ class FileGenerator:
     def definitions(self, p: Printer) -> None:
         current: tuple[str, ...] = ()
         for generator, early in zip(self.generators, self.early, strict=True):
-            for holder, children in early.items():
-                current = self.enter(p, current, names.scope(self.schema, holder.target))
-                holder.nested(p, children)
+            for path, children in early.items():
+                current = self.enter(p, current, names.scope(self.schema, path[0].target))
+                path[-1].nested(p, children, path[:-1])
             current = self.enter(p, current, names.scope(self.schema, generator.target))
             generator.definition(p)
             p.emit("")
@@ -150,7 +157,7 @@ class FileGenerator:
             p.emit("namespace $part$ {", part=part)
             p.emit("")
 
-    def at(self, family: Struct | Enum, version: int) -> StructModel | EnumShape | None:
+    def at(self, family: Struct | Enum, version: int) -> StructModel | EnumType | None:
         return next(
             (target for target, ranges in self.held[family].items() if any(run.contains(version) for run in ranges)),
             None,
@@ -164,7 +171,7 @@ class FileGenerator:
             if not family.cereal:
                 continue
             sibling = self.siblings.get(family)
-            labelled: dict[str, dict[StructModel | EnumShape, list[int]]] = {}
+            labelled: dict[str, dict[StructModel | EnumType, list[int]]] = {}
             for version in self.schema.versions:
                 for form in (*([sibling] if sibling is not None else []), family):
                     target = self.at(form, version)
@@ -234,7 +241,7 @@ class FileGenerator:
             type=spelled,
         )
 
-    def listing(self, target: StructModel | EnumShape, path: str) -> list[tuple[str, str, str]]:
+    def listing(self, target: StructModel | EnumType, path: str) -> list[tuple[str, str, str]]:
         listed = [(names.qualified(self.schema, target), path, names.bare(self.schema, target))]
         if isinstance(target, StructModel):
             for child in target.nested:

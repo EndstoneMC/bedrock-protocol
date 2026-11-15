@@ -7,7 +7,7 @@ from bedrock_protocol_compiler.cpp.expression import render
 from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
 from bedrock_protocol_compiler.descriptor import Field
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, StructModel, reached_by
+from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel, reached_by
 
 
 class StructGenerator:
@@ -18,7 +18,7 @@ class StructGenerator:
         self.name = schema.name(model)
         self.aliases = [(child.family.name, names.qualified(schema, child)) for child in model.nested]
         self.owned = [
-            (child, EnumGenerator(schema, child) if isinstance(child, EnumShape) else StructGenerator(schema, child))
+            (child, StructGenerator(schema, child) if isinstance(child, StructModel) else EnumGenerator(schema, child))
             for child in model.nested
             if schema.owner(child) is model
         ]
@@ -51,14 +51,22 @@ class StructGenerator:
             includes |= names.SERIALIZER_INCLUDES
         return includes.union(*(child.includes() for _, child in self.owned))
 
-    def nested(self, p: Printer, children: "list[StructGenerator | EnumGenerator]") -> None:
-        p.emit("namespace $nested$ {", nested=names.nested(self.name))
-        p.emit("")
+    def nested(
+        self,
+        p: Printer,
+        children: "list[StructGenerator | EnumGenerator]",
+        outer: "tuple[StructGenerator, ...]" = (),
+    ) -> None:
+        scopes = [names.nested(each.name) for each in (*outer, self)]
+        for scope in scopes:
+            p.emit("namespace $nested$ {", nested=scope)
+            p.emit("")
         for child in children:
             child.definition(p)
             p.emit("")
-        p.emit("}  // namespace $nested$", nested=names.nested(self.name))
-        p.emit("")
+        for scope in reversed(scopes):
+            p.emit("}  // namespace $nested$", nested=scope)
+            p.emit("")
 
     def definition(self, p: Printer) -> None:
         if self.pending:

@@ -406,6 +406,329 @@ class T:
     e: dict[E, uint8] = field(type=str)
 """
 
+ENUM_RENUMBERED = """
+from enum import IntEnum
+from protocol import uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+class H:
+    e: E
+"""
+
+ENUM_SHARED_VALUE = """
+from enum import IntEnum
+from protocol import int32, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, int32):
+    Old = value(1, until=3)
+    Mid = 2
+    New = value(1, since=3)
+    Alias = 2
+
+class H:
+    e: E
+"""
+
+ENUM_LATE = """
+from enum import IntEnum
+from protocol import packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(since=3)
+class Z(IntEnum, uint8):
+    A = 1
+    B = value(2, since=4)
+
+@packet(id=1, since=3)
+class P:
+    z: Z
+"""
+
+ENUM_ENDED = """
+from enum import IntEnum
+from protocol import packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=4)
+class F(IntEnum, uint8):
+    A = 1
+    B = value(2, since=3)
+
+@packet(id=1, until=4)
+class P:
+    f: F
+"""
+
+SHARED_CHILD_GAIN = """
+from enum import IntEnum
+from protocol import packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class N:
+    class F(IntEnum, uint8):
+        A = 1
+
+    f: F
+
+@type(since=3)
+class N:
+    class F(IntEnum, uint8):
+        A = 1
+        B = value(2, since=4)
+
+    f: F
+    y: uint8
+
+@packet(id=1)
+class P:
+    n: N
+"""
+
+ENUM_RENAMED_NAME = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = value(1, 'old', until=3)
+    A = value(1, 'new', since=3)
+
+@packet(id=1)
+class P:
+    e: E = field(type=str)
+"""
+
+ENUM_NAME_GAINED = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, since=3)
+
+@packet(id=1)
+class P:
+    e: E = field(type=str)
+"""
+
+ENUM_DERIVED_MEMBER = """
+from enum import IntEnum
+from typing import Literal
+from protocol import field, packet, sentinel, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, since=3)
+    COUNT = sentinel()
+    LATEST = COUNT - 1
+
+@packet(id=1)
+class P:
+    e: E
+    tag: Literal[E.LATEST]
+    x: uint8 = field(when=lambda p: p.e == E.LATEST)
+"""
+
+ENUM_DEPRECATED_GAIN = """
+from enum import IntEnum
+from protocol import uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class D(IntEnum, uint8):
+    A = 1
+    OLD = value(2, deprecated=True)
+    B = value(3, since=3)
+
+class H:
+    d: D
+"""
+
+PAIR_NAME_CODED_CHILD = """
+from enum import IntEnum
+from protocol import field, packet, type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class B:
+    class F(IntEnum, uint8):
+        A = 1
+
+    f: F
+
+@type(cereal=False)
+class B:
+    class F(IntEnum, uint8):
+        A = 1
+
+    f: F = field(type=str)
+
+@packet(id=1)
+class P:
+    b: B = field(cereal=False)
+    c: B
+"""
+
+PAIR_SHARED_ENUM = """
+from enum import IntEnum
+from protocol import field, packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class F(IntEnum, uint8):
+    A = 1
+    B = value(2, since=3)
+
+@type(until=5)
+class H:
+    f: F
+
+@type(cereal=False, until=5)
+class H:
+    f: F
+    y: uint8
+
+@packet(id=1, until=5)
+class P:
+    h: H = field(cereal=False)
+"""
+
+DEEP_CHILD_GAIN = """
+from enum import IntEnum
+from protocol import packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class N:
+    class I:
+        class F(IntEnum, uint8):
+            A = 1
+
+        f: F
+
+    i: I
+
+@type(since=3)
+class N:
+    class I:
+        class F(IntEnum, uint8):
+            A = 1
+            B = value(2, since=4)
+
+        f: F
+        y: uint8
+
+    i: I
+
+@packet(id=1)
+class P:
+    n: N
+"""
+
+DEEP_SIBLING_GAIN = """
+from enum import IntEnum
+from protocol import packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class N:
+    class J:
+        x: uint8
+
+    class I:
+        class F(IntEnum, uint8):
+            A = 1
+
+        f: F
+        j: N.J
+
+    i: I
+
+@type(since=3)
+class N:
+    class J:
+        x: uint8
+        y: uint8
+
+    class I:
+        class F(IntEnum, uint8):
+            A = 1
+            B = value(2, since=4)
+
+        f: F
+        j: N.J
+
+    i: I
+
+@packet(id=1)
+class P:
+    n: N
+"""
+
+DEEP_SHARED_CHAIN = """
+from protocol import packet, type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class N:
+    class I:
+        class U:
+            class T:
+                x: uint8
+
+            t: T
+
+        class S:
+            t: N.I.U.T
+
+        u: U
+        s: S
+
+    i: I
+
+@type(since=3)
+class N:
+    class I:
+        class U:
+            class T:
+                x: uint8
+
+            t: T
+            z: uint8
+
+        class S:
+            t: N.I.U.T
+
+        u: U
+        s: S
+
+    i: I
+
+@packet(id=1)
+class P:
+    n: N
+"""
+
 SHARED_CHILD = """
 from enum import IntEnum
 from protocol import packet, type, uint8
@@ -863,11 +1186,290 @@ def test_the_older_encoding_of_a_shared_struct_writes_in_its_own_order(generate)
     assert "    stream.write<std::uint8_t>(value.a);\n    stream.write<std::uint16_t>(value.b);\n" in body
 
 
-def test_a_referenced_enum_shape_change_still_splits_the_struct(generate):
+def test_a_struct_whose_enum_only_gains_a_member_is_one_model(generate):
     header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count("\nstruct H {\n") == 1
+    assert "::bedrock::protocol::v1::H" not in header
+    assert "::bedrock::protocol::v3::H" not in header
+
+
+def test_a_struct_whose_enum_only_gains_a_member_has_one_serializer(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count("struct Serializer<::bedrock::protocol::H, ") == 2
+    assert (
+        "template <>\nstruct Serializer<::bedrock::protocol::H, 1> {\n    static constexpr int since = 1;\n" in header
+    )
+    assert (
+        "    static auto deserialize(BinaryReader &stream) -> std::expected<::bedrock::protocol::H, Errc>;\n"
+        "};\n"
+        "\n"
+        "template <int V>\nstruct Serializer<::bedrock::protocol::H, V> : Serializer<::bedrock::protocol::H, 1> {};\n"
+    ) in header
+
+
+def test_a_struct_whose_enum_is_renumbered_is_still_split_by_its_shape(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
 
     assert "struct Serializer<::bedrock::protocol::v1::H, 1> {\n" in header
     assert "struct Serializer<::bedrock::protocol::H, 3> {\n" in header
+
+
+def test_a_renumbered_enum_keeps_one_type_per_shape(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert "namespace v1 {\n\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
+    assert "}  // namespace v1\n\nenum class E : std::uint8_t {\n    A = 1,\n    B = 3,\n};\n" in header
+
+
+def test_a_renumbered_enum_is_selected_by_a_partial_per_shape(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert "template <int V> requires (V < 3)\nstruct E_<V> { using type = ::bedrock::protocol::v1::E; };\n" in header
+    assert "template <int V> requires (V >= 3)\nstruct E_<V> { using type = ::bedrock::protocol::E; };\n" in header
+
+
+def test_an_enum_gaining_members_is_one_block_holding_every_member(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count("enum class E ") == 1
+    assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
+    assert "namespace v1 {\n\nenum class E" not in header
+
+
+@pytest.mark.parametrize("table", ["values_v", "names_v", "schema_names_v", "type_name_v"])
+def test_an_enum_gaining_members_has_one_reflection_table_of_each_kind(generate, table):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count(f" {table}<::bedrock::protocol::E>{{") == 1
+    assert f" {table}<::bedrock::protocol::v1::E>{{" not in header
+
+
+def test_an_enum_gaining_members_reflects_every_member(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert (
+        "values_v<::bedrock::protocol::E>{{\n    ::bedrock::protocol::E::A,\n    ::bedrock::protocol::E::B,\n}};"
+    ) in header
+    assert 'schema_names_v<::bedrock::protocol::E>{{\n    "A",\n    "B",\n}};' in header
+
+
+def test_an_enum_live_at_every_version_is_selected_by_its_primary_definition_alone(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert "template <int V>\nstruct E_ { using type = ::bedrock::protocol::E; };\n" in header
+    assert "struct E_<V>" not in header
+
+
+def test_an_enum_gaining_members_after_its_first_version_is_selected_by_one_partial(generate):
+    header = (generate({"a": ENUM_LATE}) / "a.h").read_text()
+
+    assert (
+        "template <int V>\nstruct Z_;\n"
+        "\n"
+        "template <int V> requires (V >= 3)\n"
+        "struct Z_<V> { using type = ::bedrock::protocol::Z; };\n"
+    ) in header
+    assert header.count("struct Z_<V>") == 1
+
+
+def test_an_enum_gaining_members_before_it_ends_is_one_block_under_its_first_version(generate):
+    header = (generate({"a": ENUM_ENDED}) / "a.h").read_text()
+
+    assert header.count("enum class F ") == 1
+    assert "namespace v1 {\n\nenum class F : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
+
+
+def test_an_enum_gaining_members_before_it_ends_is_selected_by_one_partial_over_its_run(generate):
+    header = (generate({"a": ENUM_ENDED}) / "a.h").read_text()
+
+    assert "template <int V> requires (V < 4)\nstruct F_<V> { using type = ::bedrock::protocol::v1::F; };\n" in header
+    assert header.count("struct F_<V>") == 1
+
+
+def test_members_sharing_a_value_are_ordered_newest_live_first_within_their_positions(generate):
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+
+    assert "enum class E : std::int32_t {\n    New = 1,\n    Mid = 2,\n    Old = 1,\n    Alias = 2,\n};\n" in header
+
+
+def test_the_newest_live_member_of_a_shared_value_is_the_first_reflected(generate):
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+
+    assert (
+        "values_v<::bedrock::protocol::E>{{\n"
+        "    ::bedrock::protocol::E::New,\n"
+        "    ::bedrock::protocol::E::Mid,\n"
+        "    ::bedrock::protocol::E::Old,\n"
+        "    ::bedrock::protocol::E::Alias,\n"
+        "}};"
+    ) in header
+    assert 'names_v<::bedrock::protocol::E>{{\n    "new",\n    "mid",\n    "old",\n    "alias",\n}};' in header
+
+
+def test_an_integer_coded_enum_field_is_written_as_its_underlying_integer(generate):
+    source = (generate({"a": ENUM_SPLIT}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::serialize(")
+    assert "    stream.write<std::uint8_t>(value.e);\n" in body
+
+
+def test_an_integer_coded_enum_field_is_read_by_a_cast_of_the_integer(generate):
+    source = (generate({"a": ENUM_SPLIT}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::deserialize(")
+    assert (
+        "        auto v = stream.read<std::uint8_t>();\n"
+        '        if (!v) return stream.fail(v.error(), "e");\n'
+        "        out.e = static_cast<::bedrock::protocol::E>(*v);\n"
+    ) in body
+
+
+def test_an_integer_coded_enum_field_has_no_membership_test(generate):
+    source = (generate({"a": ENUM_SPLIT}) / "a.cpp").read_text()
+
+    assert "enum_contains" not in source
+    assert "enum_cast" not in source
+    assert "unknown_value" not in source
+
+
+def test_a_nested_enum_gaining_members_is_one_block_in_its_newest_holders_nested_namespace(generate):
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+
+    assert header.count("enum class F ") == 1
+    assert (
+        "namespace N_nested {\n"
+        "\n"
+        "enum class F : std::uint8_t {\n"
+        "    A = 1,\n"
+        "    B = 2,\n"
+        "};\n"
+        "\n"
+        "}  // namespace N_nested\n"
+    ) in header
+    assert "v1::N_nested" not in header
+
+
+def test_a_nested_enum_gaining_members_is_declared_before_the_first_older_holder(generate):
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+
+    assert header.index("namespace N_nested {\n\nenum class F ") < header.index("namespace v1 {\n")
+
+
+def test_an_enum_two_levels_deep_is_declared_before_the_older_holder_that_uses_it(generate):
+    header = (generate({"a": DEEP_CHILD_GAIN}) / "a.h").read_text()
+
+    assert header.count("enum class F ") == 1
+    assert header.index("namespace I_nested {\n\nenum class F ") < header.index("namespace v1 {\n")
+
+
+def test_a_sibling_of_a_deep_enum_is_declared_before_the_holder_that_uses_it(generate):
+    header = (generate({"a": DEEP_SIBLING_GAIN}) / "a.h").read_text()
+
+    assert header.index("    std::uint8_t y{};\n") < header.index("    ::bedrock::protocol::N_nested::J j{};\n")
+
+
+def test_a_deep_struct_is_declared_before_the_struct_that_uses_it(generate):
+    header = (generate({"a": DEEP_SHARED_CHAIN}) / "a.h").read_text()
+
+    assert header.index("\nstruct T {\n") < header.index("\nstruct S {\n")
+
+
+def test_every_model_of_the_holder_aliases_the_one_nested_enum(generate):
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+
+    assert header.count("    using F = ::bedrock::protocol::N_nested::F;\n") == 2
+    assert header.count("    ::bedrock::protocol::N_nested::F f{};\n") == 2
+
+
+def test_a_renamed_name_coded_member_keeps_its_old_name_at_the_protocol_that_names_it_so(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert 'names_v<::bedrock::protocol::v1::E>{{\n    "old",\n}};' in header
+    assert 'names_v<::bedrock::protocol::E>{{\n    "new",\n}};' in header
+
+
+def test_a_name_coded_member_gained_later_is_absent_from_the_type_of_the_earlier_protocol(generate):
+    header = (generate({"a": ENUM_NAME_GAINED}) / "a.h").read_text()
+
+    assert "namespace v1 {\n\nenum class E : std::uint8_t {\n    A = 1,\n};\n" in header
+    assert 'names_v<::bedrock::protocol::v1::E>{{\n    "a",\n}};' in header
+
+
+def test_a_literal_of_a_derived_member_uses_the_number_of_its_protocol(generate):
+    source = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::v1::P, 1>::serialize(")
+    assert "    stream.write<std::uint8_t>(::bedrock::protocol::v1::E::Latest);\n" in body
+
+
+def test_a_condition_on_a_derived_member_uses_the_number_of_its_protocol(generate):
+    source = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::v1::P, 1>::serialize(")
+    assert "    if ((value.e) == (::bedrock::protocol::v1::E::Latest)) {\n" in body
+
+
+def test_a_unioned_enum_marks_a_deprecated_member_in_its_deprecated_table(generate):
+    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "a.h").read_text()
+
+    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    true,\n    false,\n}};" in header
+
+
+def test_a_unioned_enum_reflects_a_deprecated_member_by_its_number(generate):
+    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "a.h").read_text()
+
+    assert (
+        "values_v<::bedrock::protocol::D>{{\n"
+        "    ::bedrock::protocol::D::A,\n"
+        "    static_cast<::bedrock::protocol::D>(2),\n"
+        "    ::bedrock::protocol::D::B,\n"
+        "}};"
+    ) in header
+
+
+def test_a_name_coded_enum_nested_in_both_forms_of_a_pair_has_a_declared_serializer(generate):
+    header = (generate({"a": PAIR_NAME_CODED_CHILD}) / "a.h").read_text()
+
+    assert "template <>\nstruct Serializer<::bedrock::protocol::B_nested::F, 1> {\n" in header
+
+
+def test_a_name_coded_enum_nested_in_both_forms_of_a_pair_has_a_defined_serializer(generate):
+    source = (generate({"a": PAIR_NAME_CODED_CHILD}) / "a.cpp").read_text()
+
+    assert "\nauto Serializer<::bedrock::protocol::B_nested::F, 1>::serialize(" in source
+    assert "\nauto Serializer<::bedrock::protocol::B_nested::F, 1>::deserialize(" in source
+
+
+def test_an_enum_shared_by_both_forms_of_a_pair_is_declared_once(generate):
+    header = (generate({"a": PAIR_SHARED_ENUM}) / "a.h").read_text()
+
+    assert header.count("enum class F ") == 1
+    assert "\nenum class F : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
+
+
+def test_an_enum_shared_by_both_forms_of_a_pair_is_the_member_type_of_each(generate):
+    header = (generate({"a": PAIR_SHARED_ENUM}) / "a.h").read_text()
+
+    assert header.count("    ::bedrock::protocol::F f{};\n") == 2
+
+
+def test_a_name_coded_enum_with_one_shape_keeps_its_membership_check_on_write(generate):
+    source = (generate({"a": A}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::serialize(")
+    assert "    if (!enum_contains(value)) return std::unexpected(Errc::unknown_value);\n" in body
+
+
+def test_a_name_coded_enum_with_one_shape_rejects_an_unknown_name_on_read(generate):
+    source = (generate({"a": A}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::deserialize(")
+    assert (
+        "    const auto value = enum_cast<::bedrock::protocol::E>(*v);\n"
+        "    if (!value) return std::unexpected(Errc::unknown_value);\n"
+    ) in body
 
 
 def test_a_hand_written_form_with_equal_members_shares_the_cereal_struct(generate):

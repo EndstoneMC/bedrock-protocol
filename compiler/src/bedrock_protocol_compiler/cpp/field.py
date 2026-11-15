@@ -148,10 +148,10 @@ class AliasField(ScalarField):
 
 class EnumField(ScalarField):
     def __init__(self, schema: Schema, node: EnumRef, encoding: Encoding, where: str) -> None:
-        shape = schema.enum_type(node.enum, encoding.since)
-        stored = shape.underlying.name
+        enum_type = schema.enum_type(node.enum, encoding.since)
+        stored = enum_type.underlying.name
         super().__init__(
-            where, names.qualified(schema, shape), stored, node.encoded or ENUM_ENCODINGS[stored], node.endian
+            where, names.qualified(schema, enum_type), stored, node.encoded or ENUM_ENCODINGS[stored], node.endian
         )
         self.node = node
 
@@ -206,9 +206,9 @@ class ReferenceField(SerializerField):
             implementation = names.serializer(spelled, *schema.call(encoding, node))
         else:
             self.family = node.enum
-            shape = schema.enum_type(node.enum, encoding.since)
-            spelled = names.qualified(schema, shape)
-            implementation = names.serializer(spelled, names.since(schema, shape))
+            enum_type = schema.enum_type(node.enum, encoding.since)
+            spelled = names.qualified(schema, enum_type)
+            implementation = names.serializer(spelled, names.since(schema, enum_type))
         super().__init__(where, implementation)
 
     def includes(self) -> set[str]:
@@ -283,8 +283,8 @@ class LiteralField:
                 self.constant = json.dumps(text)
                 self.expected = self.constant
             case MemberRef() as member:
-                shape = schema.enum_type(member.enum, encoding.since)
-                self.encoded = ENUM_ENCODINGS[shape.underlying.name]
+                enum_type = schema.enum_type(member.enum, encoding.since)
+                self.encoded = ENUM_ENCODINGS[enum_type.underlying.name]
                 self.constant = names.enumerator(schema, member, encoding)
                 self.expected = f"static_cast<{names.PRIMITIVES[self.encoded]}>({self.constant})"
 

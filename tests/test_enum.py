@@ -1,6 +1,7 @@
 import pytest
 
-from bedrock_protocol import v748, v786, v827, v844, v975, v1001, v2168, v2225
+import bedrock_protocol
+from bedrock_protocol import v729, v748, v786, v827, v975, v1001, v2168, v2225
 
 
 def test_an_enum_member_keeps_its_schema_name(protocol):
@@ -67,6 +68,11 @@ def test_an_enum_is_named_for_its_schema_class(protocol, name):
             v2225.ItemUseInventoryTransaction.ActionType, "ItemUseInventoryTransaction.ActionType", id="action-type"
         ),
         pytest.param(
+            v827.CerealizedItemUseInventoryTransaction.ActionType,
+            "ItemUseInventoryTransaction.ActionType",
+            id="cerealized-action-type",
+        ),
+        pytest.param(
             v2225.InventorySource.InventorySourceFlags, "InventorySource.InventorySourceFlags", id="source-flags"
         ),
     ],
@@ -75,11 +81,24 @@ def test_a_nested_enum_is_qualified_by_its_owner(enum, name):
     assert enum.__qualname__ == name
 
 
-def test_an_ungated_nested_enum_is_one_type_across_snapshots():
-    assert (
-        v827.CerealizedItemUseInventoryTransaction.TriggerType
-        is v1001.CerealizedItemUseInventoryTransaction.TriggerType
-    )
+@pytest.mark.parametrize(
+    ("first", "last"),
+    [
+        pytest.param(
+            v827.CerealizedItemUseInventoryTransaction.TriggerType,
+            v1001.CerealizedItemUseInventoryTransaction.TriggerType,
+            id="trigger-type",
+        ),
+        pytest.param(
+            v827.CerealizedItemUseInventoryTransaction.ActionType,
+            v2225.ItemUseInventoryTransaction.ActionType,
+            id="action-type",
+        ),
+        pytest.param(v729.AnimatePacket.Action, v2225.AnimatePacket.Action, id="animate-action"),
+    ],
+)
+def test_a_nested_enum_whose_numbers_never_move_is_one_type_across_its_owners(first, last):
+    assert first is last
 
 
 def test_a_nested_enum_holds_its_members(protocol):
@@ -91,29 +110,59 @@ def test_a_nested_enum_finds_a_member_by_name(protocol):
     assert message["CREATE"] is message.CREATE
 
 
-def test_a_nested_enum_that_gates_a_member_is_a_type_per_snapshot():
-    assert (
-        v827.CerealizedItemUseInventoryTransaction.ActionType
-        is not v1001.CerealizedItemUseInventoryTransaction.ActionType
-    )
+def test_a_nested_enum_holds_a_member_an_owner_gated():
+    assert v827.CerealizedItemUseInventoryTransaction.ActionType.USE_AS_ATTACK.value == 3
+
+
+def test_a_nested_enum_holds_a_member_the_latest_owner_dropped():
+    assert v2225.AnimatePacket.Action.ROW_RIGHT.value == 128
 
 
 @pytest.mark.parametrize(
-    ("enum", "count"),
+    ("enum", "member", "value"),
     [
-        pytest.param(v827.CerealizedItemUseInventoryTransaction.ActionType, 3, id="v827-action-type"),
-        pytest.param(v844.CerealizedItemUseInventoryTransaction.ActionType, 4, id="v844-action-type"),
-        pytest.param(v748.MovementEffectType, 2, id="v748-movement-effect"),
-        pytest.param(v786.MovementEffectType, 3, id="v786-movement-effect"),
-        pytest.param(v1001.MovementEffectType, 4, id="v1001-movement-effect"),
+        pytest.param("MovementEffectType", "DOLPHIN_BOOST", 1, id="dolphin-boost"),
+        pytest.param("MovementEffectType", "GEYSER_BOOST", 2, id="geyser-boost"),
+        pytest.param("DisconnectFailReason", "ASYNC_JOIN_TASK_DENIED", 118, id="async-join-task-denied"),
     ],
 )
-def test_a_versioned_enum_holds_the_members_of_its_snapshot(enum, count):
-    assert len(enum) == count
+def test_a_member_added_later_exists_at_every_protocol(protocol, enum, member, value):
+    assert getattr(protocol, enum)[member].value == value
 
 
-def test_a_member_added_later_is_absent_before_it():
-    assert "GEYSER_BOOST" not in v748.MovementEffectType.__members__
+def test_a_member_removed_later_exists_after_it():
+    assert v2225.MinecraftPacketIds.ITEM_COMPONENT_PACKET.value == 162
+
+
+@pytest.mark.parametrize("name", ["DisconnectFailReason", "MinecraftPacketIds", "MovementEffectType"])
+def test_an_enum_whose_numbers_never_move_is_one_type_at_every_protocol(protocol, name):
+    assert getattr(protocol, name) is getattr(v2225, name)
+
+
+def test_an_enum_whose_numbers_never_move_belongs_to_the_newest_protocol():
+    assert v748.MovementEffectType.__module__ == f"bedrock_protocol.v{bedrock_protocol.versions[-1]}"
+
+
+@pytest.mark.parametrize(
+    ("number", "name"),
+    [
+        pytest.param(162, "ITEM_REGISTRY_PACKET", id="162"),
+        pytest.param(328, "PRIMITIVE_SHAPES_PACKET", id="328"),
+        pytest.param(330, "CLIENTBOUND_DATA_STORE", id="330"),
+        pytest.param(334, "CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_SCREEN", id="334"),
+    ],
+)
+def test_a_value_shared_by_members_never_live_together_finds_the_newest_live_member(protocol, number, name):
+    assert protocol.MinecraftPacketIds(number) is protocol.MinecraftPacketIds[name]
+
+
+def test_a_member_sharing_a_value_with_a_newer_one_equals_it():
+    ids = v2225.MinecraftPacketIds
+    assert ids.ITEM_COMPONENT_PACKET == ids.ITEM_REGISTRY_PACKET
+
+
+def test_a_member_sharing_a_value_with_a_newer_one_keeps_its_own_name():
+    assert v2225.MinecraftPacketIds.ITEM_COMPONENT_PACKET.name == "ITEM_COMPONENT_PACKET"
 
 
 @pytest.mark.parametrize(
@@ -125,6 +174,17 @@ def test_a_member_added_later_is_absent_before_it():
 )
 def test_a_trailing_count_follows_the_members_of_its_snapshot(member, value):
     assert member == value
+
+
+@pytest.mark.parametrize(
+    ("first", "last"),
+    [
+        pytest.param(v786.MolangVersion, v827.MolangVersion, id="molang-version"),
+        pytest.param(v1001.LevelSoundEvent, v2168.LevelSoundEvent, id="level-sound-event"),
+    ],
+)
+def test_a_renumbered_enum_is_one_type_per_set_of_members(first, last):
+    assert first is not last
 
 
 @pytest.mark.parametrize(

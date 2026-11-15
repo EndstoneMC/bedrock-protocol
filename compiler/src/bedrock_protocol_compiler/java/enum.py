@@ -5,24 +5,25 @@ from bedrock_protocol_compiler.java import names
 from bedrock_protocol_compiler.java.expression import enum_class
 from bedrock_protocol_compiler.java.value import literal
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema
+from bedrock_protocol_compiler.schema import EnumModel, EnumType, Schema
 
 UNRECOGNIZED = "UNRECOGNIZED"
 NUMBER = "value"
 
 
 class EnumGenerator:
-    def __init__(self, schema: Schema, shape: EnumShape) -> None:
-        self.shape = shape
-        self.name = shape.family.name
-        self.qualified = names.qualified(schema, shape)
-        self.name_coded = shape.family in schema.name_coded
-        number = enum_class(shape)
-        self.numbers = {member.name: literal(shape.numbers[member.name], number) for member in shape.members}
+    def __init__(self, schema: Schema, enum_type: EnumType) -> None:
+        enumerators = schema.enumerators(enum_type)
+        self.name = enum_type.family.name
+        self.qualified = names.qualified(schema, enum_type)
+        forms = enum_type.runs if isinstance(enum_type, EnumModel) else [enum_type.family]
+        self.name_coded = any(form in schema.name_coded for form in forms)
+        number = enum_class(enum_type)
+        self.numbers = {member.name: literal(enumerators[member.name], number) for member in enum_type.members}
         self.constants: list[Member] = []
         self.aliases: list[tuple[Member, str]] = []
         canonical: dict[str, str] = {}
-        for member in shape.members:
+        for member in enum_type.members:
             if member.name == UNRECOGNIZED:
                 raise CompilerError(f"{self.qualified}.{UNRECOGNIZED}: is the open enum's unknown value")
             if member.name == NUMBER:
@@ -32,7 +33,7 @@ class EnumGenerator:
                 self.constants.append(member)
             else:
                 self.aliases.append((member, first))
-        reflected = sorted(shape.members, key=lambda member: not isinstance(member.value, MemberRef | Binary))
+        reflected = sorted(enum_type.members, key=lambda member: not isinstance(member.value, MemberRef | Binary))
         self.encoded: dict[str, str] = {}
         for member in reflected:
             self.encoded.setdefault(canonical[self.numbers[member.name]], member.encoded_name)

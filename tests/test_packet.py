@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol import v786, v844, v859, v898, v975, v1001, v2168, v2225
+from bedrock_protocol import v729, v786, v844, v859, v898, v975, v1001, v2168, v2225
 
 
 def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
@@ -15,6 +15,12 @@ def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
     assert v975.packets[1] is v2225.LoginPacket
 
 
+@pytest.mark.parametrize("version", [v729, v844], ids=lambda module: module.__name__)
+def test_a_packet_whose_forms_differ_only_in_an_enums_members_resolves_to_one_class(version):
+    packet = v2225.PacketViolationWarningPacket
+    assert version.packets[packet.ID] is packet
+
+
 @pytest.mark.parametrize(
     ("version", "end_id"),
     [
@@ -27,4 +33,4 @@ def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
     ],
 )
 def test_the_highest_packet_id_sits_just_below_the_end_marker(version, end_id):
-    assert max(version.MinecraftPacketIds) == end_id - 1
+    assert max(version.packets) == end_id - 1

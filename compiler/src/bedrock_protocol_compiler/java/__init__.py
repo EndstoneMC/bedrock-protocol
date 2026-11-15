@@ -6,19 +6,17 @@ from bedrock_protocol_compiler.java import file, names, version
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.message import type_generator
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema, StructModel
+from bedrock_protocol_compiler.schema import EnumType, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     reserved = names.reserved(schema)
-    declared: dict[str, StructModel | EnumShape] = {}
+    declared: dict[str, StructModel | EnumType] = {}
     for family in schema.order:
         if family.owner is not None:
             continue
-        types = schema.shapes(family) if isinstance(family, Enum) else schema.models(family)
+        types = schema.enum_types(family) if isinstance(family, Enum) else schema.models(family)
         for each in types:
-            if not isinstance(each, StructModel | EnumShape):
-                continue
             package = names.package(schema, each)
             name = names.declared(schema, each)
             spelled = f"{package}.{name}"

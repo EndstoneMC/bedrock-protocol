@@ -104,6 +104,29 @@ final class MessageTest {
     }
 
     @Test
+    void aPacketIdAddedAfterAVersionDecodesToItsConstantAtThatVersion() {
+        PacketViolationWarningPacket packet =
+                assertInstanceOf(
+                        PacketViolationWarningPacket.class,
+                        ProtocolVersion.of(729)
+                                .orElseThrow()
+                                .decodePacket(PacketViolationWarningPacket.ID, hex("0000940500")));
+        assertEquals(MinecraftPacketIds.CLIENTBOUND_DATA_STORE, packet.getViolatingPacketId());
+    }
+
+    @Test
+    void aPacketIdAddedAfterAVersionEncodesAsItselfAtThatVersion() {
+        ProtocolVersion version = ProtocolVersion.of(729).orElseThrow();
+        ByteBuf buf = Unpooled.buffer();
+        version.encodePacket(
+                PacketViolationWarningPacket.newBuilder()
+                        .setViolatingPacketId(MinecraftPacketIds.CLIENTBOUND_DATA_STORE)
+                        .build(),
+                buf);
+        assertEquals("0000940500", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
     void theDefaultInstanceEncodesLikeAnEmptyBuilder() {
         assertEquals(
                 encoded(ToastRequestPacket.newBuilder().build()),

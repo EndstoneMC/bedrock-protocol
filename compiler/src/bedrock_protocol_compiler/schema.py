@@ -80,7 +80,7 @@ class Slot:
 class StructModel:
     family: Struct
     slots: tuple[Slot, ...]
-    nested: tuple["StructModel | EnumShape", ...]
+    nested: tuple["StructModel | EnumType", ...]
     runs: dict[Struct, list[Range]] = field(default_factory=dict)
     versioned: bool = True
 
@@ -94,9 +94,11 @@ class EnumModel:
     runs: dict[Enum, list[Range]] = field(default_factory=dict)
     since: int | None = None
     versioned: bool = True
+    renumbered: bool = False
 
 
 type Model = StructModel | EnumModel
+type EnumType = EnumModel | EnumShape
 
 
 @dataclass(eq=False)
@@ -296,7 +298,7 @@ class Schema:
                 )
         for listed in self.model_encodings.values():
             listed.sort(key=lambda encoding: encoding.since)
-        holders: dict[StructModel | EnumShape, list[StructModel]] = {}
+        holders: dict[StructModel | EnumType, list[StructModel]] = {}
         for model in self.read_at:
             for child in model.nested:
                 holders.setdefault(child, []).append(model)
@@ -334,7 +336,9 @@ class Schema:
             if name == owner.family.name:
                 continue
             runs = (
-                child.ranges if isinstance(child, EnumShape) else [run for each in child.runs.values() for run in each]
+                self.enum_runs(child)
+                if isinstance(child, EnumModel | EnumShape)
+                else [run for each in child.runs.values() for run in each]
             )
             overlap = self.overlap(owner.family)
             outside = [
@@ -382,18 +386,41 @@ class Schema:
     def numbers_at(self, enum: Enum, version: int) -> dict[str, int]:
         return self.numbers[enum, version]
 
-    def enum_type(self, enum: Enum, version: int) -> EnumShape:
+    def enum_type(self, enum: Enum, version: int) -> EnumType:
         shape = self.live[enum, version]
         if not isinstance(shape, EnumShape):
             raise CompilerError(f"{enum.module}.py: {qualified(enum)}: is not an enum at {version}")
-        return shape
+        model = self.enum_models[enum, version]
+        return shape if model.renumbered else model
 
-    def target(self, model: StructModel, node: StructRef | EnumRef | EnumName) -> StructModel | EnumShape:
+    def enum_types(self, family: Enum) -> list[EnumType]:
+        model = self.family_models[family][0]
+        if isinstance(model, EnumModel) and not model.renumbered:
+            return [model]
+        return [shape for shape in self.family_shapes[family] if isinstance(shape, EnumShape)]
+
+    def enumerators(self, enum_type: EnumType) -> dict[str, int]:
+        if isinstance(enum_type, EnumModel):
+            return enum_type.values
+        return enum_type.numbers
+
+    def enum_runs(self, enum_type: EnumType) -> list[Range]:
+        if isinstance(enum_type, EnumShape):
+            return enum_type.ranges
+        return self.ranges(
+            [
+                version
+                for version in self.versions
+                if any(run.contains(version) for runs in enum_type.runs.values() for run in runs)
+            ]
+        )
+
+    def target(self, model: StructModel, node: StructRef | EnumRef | EnumName) -> StructModel | EnumType:
         if isinstance(node, StructRef):
             return self.struct_models[node.struct, self.read_at[model]]
         return self.enum_type(node.enum, self.read_at[model])
 
-    def owner(self, child: StructModel | EnumShape) -> StructModel | None:
+    def owner(self, child: StructModel | EnumType) -> StructModel | None:
         return self.owners.get(child)
 
     def call(self, encoding: Encoding, node: StructRef) -> tuple[int, SerializationMode]:
@@ -405,12 +432,16 @@ class Schema:
             mode = child.mode
         return child.since, mode
 
-    def scope(self, shape: StructModel | EnumShape) -> int | None:
-        if shape.family.owner is not None:
+    def scope(self, target: StructModel | EnumType) -> int | None:
+        if target.family.owner is not None:
             raise CompilerError(
-                f"{shape.family.module}.py: {qualified(shape.family)}: is nested and is named through its owner"
+                f"{target.family.module}.py: {qualified(target.family)}: is nested and is named through its owner"
             )
-        runs = [run for each in shape.runs.values() for run in each] if isinstance(shape, StructModel) else shape.ranges
+        runs = (
+            [run for each in target.runs.values() for run in each]
+            if isinstance(target, StructModel)
+            else self.enum_runs(target)
+        )
         if any(run.until is None for run in runs):
             return None
         return min(self.versions[0] if run.since is None else run.since for run in runs)
@@ -558,12 +589,14 @@ class Schema:
                     if not member.sentinel:
                         order.setdefault(member.name)
         newest: dict[str, Member] = {}
+        lives: dict[str, set[int]] = {}
         for version in reversed(self.versions):
             for form in forms:
                 shape = self.live.get((form, version))
                 if isinstance(shape, EnumShape):
                     for member in shape.members:
                         newest.setdefault(member.name, member)
+                        lives.setdefault(member.name, set()).add(version)
         derived = {name for name, member in newest.items() if isinstance(member.value, MemberRef | Binary)}
         placements: dict[str, dict[tuple[Enum, int], int]] = {}
         for form in forms:
@@ -618,6 +651,11 @@ class Schema:
                     values[name] = values[other]
                 case Binary(left=MemberRef(name=other), right=Int(value=offset)):
                     values[name] = values[other] - offset
+        groups: dict[int, list[str]] = {}
+        for name in order:
+            groups.setdefault(values[name], []).append(name)
+        ranked = {value: iter(sorted(group, key=lambda name: -max(lives[name]))) for value, group in groups.items()}
+        order = dict.fromkeys(next(ranked[values[name]]) for name in order)
         model = EnumModel(
             family,
             underlying,
@@ -675,6 +713,11 @@ class Schema:
         for coding, versions in spans.items():
             coding.runs = self.ranges(versions)
             coding.since = min(versions)
+        model.renumbered = (
+            len(numberings) > 1
+            or len(namings) > 1
+            or any(len(set(placed.values())) > 1 for placed in placements.values())
+        )
         primary = next(iter(model.runs.values()))
         model.since = primary[0].since
         model.versioned = primary != [ALWAYS]

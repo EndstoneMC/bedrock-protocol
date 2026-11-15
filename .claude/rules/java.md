@@ -29,9 +29,11 @@ paths:
 - Default a union to its first case; clearing a required one restores that case, and clearing an optional one gives its `NOT_SET` case.
 - Order a map's keys as the C++ `std::map` does: strings by their unsigned bytes, floats by `<`, so `-0.0` and `0.0` are one key.
 - Keep an int-coded enum open as protobuf's are: `getXValue()`, `forNumber`, and `UNRECOGNIZED` for a number with no member.
-- Emit each literal field as a public constant on the codec of every encoding that writes it, named by its DSL name in upper case without leading underscores (`ACTION_TYPE`), typed by its enum's shape at the encoding's first protocol, and `@Deprecated` when its member or that member's canonical constant is deprecated.
+- Emit each literal field as a public constant on the codec of every encoding that writes it, named by its DSL name in upper case without leading underscores (`ACTION_TYPE`), typed by its enum's type at the encoding's first protocol, and `@Deprecated` when its member or that member's canonical constant is deprecated.
 - Name a packet's id accessor `getPacketId()`, and fail the compile when a generated accessor, selector, codec class or codec constant would equal another generated member.
 - Define a type live at the latest version in the bare `java_package`, and any other in the `v<N>` package of the first protocol that held it, under the name the C++ backend declares; a nested type lives in the model `Schema.owner` names.
+- Make an enum one class holding every member any protocol has when its members keep their numbers and underlying type at every protocol and, where a field codes it by name, its members and names; give any other enum one class per set of members.
+- Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
 - Generate `v<N>.Packets` with `encode(packet, buf)` and `decode(packetId, buf)` for every modelled version and a bare `ProtocolVersion` mirroring the C++ `version.hpp` with `encodePacket` and `decodePacket`, and no bare `Packets`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.

@@ -821,6 +821,14 @@ def test_a_parent_whose_name_coded_enum_renames_is_a_second_model(build_package)
     assert len(schema.models(family)) == 2
 
 
+def test_a_parent_whose_name_coded_enum_gains_a_member_is_a_second_model(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n\n"
+    schema = Schema(build_package({"a": source + "class P:\n    e: E = field(type=str)\n"}))
+    _, family = schema.order
+
+    assert len(schema.models(family)) == 2
+
+
 def test_a_condition_naming_a_name_coded_enum_keeps_its_naming_in_the_encoding(build_package):
     source = RENAMED + "class P:\n    e: E = field(type=str)\n    x: uint8 = field(when=lambda p: p.e == E.A)\n"
     schema = Schema(build_package({"a": source}))
@@ -1017,8 +1025,8 @@ def test_a_pre_cereal_sibling_naming_its_own_sibling_child_shares_the_encoding(b
 
 NESTED = (
     HEADER
-    + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    {fields}\n\n"
-    + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    {fields}\n\n"
+    + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    {fields}\n\n"
+    + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 3\n    {fields}\n\n"
     + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
 )
 
@@ -1633,23 +1641,26 @@ def test_an_enum_slots_target_is_the_shape_at_the_models_version(build_package):
     assert schema.target(model, slot.type) is schema.shapes(enum)[0]
 
 
-def test_a_parent_whose_enum_gains_a_member_with_stable_numbers_is_a_second_model(build_package):
+def test_a_parent_whose_enum_gains_a_member_with_stable_numbers_is_one_model(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n\nclass P:\n    e: E\n"
     schema = Schema(build_package({"a": source}))
     _, family = schema.order
 
-    assert len(schema.models(family)) == 2
+    assert len(schema.models(family)) == 1
 
 
 def test_a_models_nested_holds_the_shape_of_its_nested_enum(build_package):
-    source = HEADER + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n"
+    source = HEADER + (
+        "class A:\n    class F(IntEnum, uint8):\n        X = value(1, until=3)\n        X = value(2, since=3)\n"
+        "        Y = value(1, since=3)\n    f: F\n"
+    )
     schema = Schema(build_package({"a": source}))
     enum, family = schema.order
 
     assert schema.model_at(family, 1).nested == (schema.shapes(enum)[0],)
 
 
-def test_a_nested_enum_shape_is_owned_by_the_newest_model_that_holds_it(build_package):
+def test_a_nested_enum_model_is_owned_by_the_newest_model_that_holds_it(build_package):
     source = (
         HEADER
         + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
@@ -1658,7 +1669,7 @@ def test_a_nested_enum_shape_is_owned_by_the_newest_model_that_holds_it(build_pa
     schema = Schema(build_package({"a": source}))
     enum, family = schema.order
 
-    assert schema.owner(schema.shapes(enum)[0]) is schema.models(family)[1]
+    assert schema.owner(schema.enum_type(enum, 1)) is schema.models(family)[1]
 
 
 def test_a_top_level_model_has_no_owner(build_package):
@@ -1668,7 +1679,7 @@ def test_a_top_level_model_has_no_owner(build_package):
     assert schema.owner(schema.model_at(family, 1)) is None
 
 
-def test_a_literal_whose_enum_shape_changes_but_whose_number_does_not_keeps_one_encoding(build_package):
+def test_a_literal_whose_enum_gains_a_member_but_whose_number_does_not_keeps_one_encoding(build_package):
     source = (
         HEADER + "class E(IntEnum, uint8):\n    X = 1\n    Y = value(2, since=3)\n\nclass P:\n    tag: Literal[E.X]\n"
     )
@@ -1677,6 +1688,231 @@ def test_a_literal_whose_enum_shape_changes_but_whose_number_does_not_keeps_one_
     (model,) = schema.models(family)
 
     assert len(schema.encodings(model)) == 1
+
+
+GROWING = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
+
+RETYPED = (
+    HEADER
+    + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
+    + "@type(since=3)\nclass E(IntEnum, int32):\n    A = 1\n"
+)
+
+NESTED_ENUM_PAIR = (
+    HEADER
+    + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+    + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+    + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+)
+
+SPLIT_NESTED_ENUM_PAIR = (
+    HEADER
+    + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+    + "@type(cereal=False, since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+    + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
+)
+
+
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5])
+def test_enum_type_is_the_family_model_at_every_version_when_no_number_moves(build_package, version):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.enum_type(family, version) is model
+
+
+def test_enum_types_of_an_unrenumbered_family_is_its_model(build_package):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.enum_types(family) == [model]
+
+
+def test_enum_types_of_a_renumbered_family_are_its_shapes_in_version_order(build_package):
+    schema = Schema(build_package({"a": RENUMBERED}))
+    (family,) = schema.order
+
+    assert schema.enum_types(family) == [schema.enum_type(family, 1), schema.enum_type(family, 3)]
+
+
+def test_enum_types_gives_both_forms_of_a_nested_pair_the_same_type(build_package):
+    schema = Schema(build_package({"a": NESTED_ENUM_PAIR}))
+    cereal, _, pre_cereal, _, _ = schema.order
+
+    assert schema.enum_types(pre_cereal) == schema.enum_types(cereal)
+
+
+def test_enumerators_of_a_model_are_its_library_values(build_package):
+    schema = Schema(build_package({"a": DISPLACED}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.enumerators(model) == {"A": 2, "B": 3}
+
+
+def test_enumerators_of_a_shape_are_its_numbers(build_package):
+    schema = Schema(build_package({"a": RENUMBERED}))
+    (family,) = schema.order
+
+    assert schema.enumerators(schema.shapes(family)[0]) == {"A": 1}
+
+
+def test_enum_runs_of_a_model_are_the_union_of_its_runs_over_both_forms(build_package):
+    schema = Schema(build_package({"a": SPLIT_NESTED_ENUM_PAIR}))
+    cereal, _, _, _, _ = schema.order
+    (model,) = schema.models(cereal)
+
+    assert schema.enum_runs(model) == [Range(None, 5)]
+
+
+def test_enum_runs_of_a_shape_are_its_ranges(build_package):
+    schema = Schema(build_package({"a": RENUMBERED}))
+    (family,) = schema.order
+
+    assert schema.enum_runs(schema.shapes(family)[1]) == [Range(3, None)]
+
+
+@pytest.mark.parametrize(
+    ("source", "renumbered"),
+    [
+        pytest.param(GROWING, False, id="members only added"),
+        pytest.param(RENUMBERED, True, id="a number moves at a later version"),
+        pytest.param(RETYPED, True, id="identity numbers change underlying type"),
+        pytest.param(
+            HEADER + "class E(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n    COUNT = sentinel()\n"
+            "    LATEST = COUNT - 1\n",
+            True,
+            id="an alias of a sentinel moves",
+        ),
+        pytest.param(RENAMED + "class P:\n    e: E = field(type=str)\n", True, id="a name-coded member renames"),
+    ],
+)
+def test_an_enum_model_is_renumbered_exactly_when_a_number_a_name_or_the_underlying_type_changes(
+    build_package, source, renumbered
+):
+    schema = Schema(build_package({"a": source}))
+    family = schema.order[0]
+    (model,) = schema.models(family)
+
+    assert model.renumbered is renumbered
+
+
+def test_enum_types_of_a_family_whose_identity_numbers_change_underlying_type_are_its_shapes(build_package):
+    schema = Schema(build_package({"a": RETYPED}))
+    (family,) = schema.order
+
+    assert schema.enum_types(family) == schema.shapes(family)
+
+
+def test_a_parent_whose_enum_changes_underlying_type_stays_two_models(build_package):
+    schema = Schema(build_package({"a": RETYPED + "\nclass P:\n    e: E\n"}))
+    _, family = schema.order
+
+    assert len(schema.models(family)) == 2
+
+
+def test_two_struct_versions_differing_only_in_an_unrenumbered_enum_have_one_encoding(build_package):
+    schema = Schema(build_package({"a": GROWING + "\nclass P:\n    e: E\n"}))
+    _, family = schema.order
+    (model,) = schema.models(family)
+
+    assert len(schema.encodings(model)) == 1
+
+
+def test_each_model_of_a_struct_holding_a_renumbered_enum_has_one_encoding(build_package):
+    schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
+    _, family = schema.order
+
+    assert {len(schema.encodings(model)) for model in schema.models(family)} == {1}
+
+
+@pytest.mark.parametrize(
+    ("members", "order"),
+    [
+        pytest.param("    A = value(5, until=3)\n    B = value(5, since=3)\n", ["B", "A"], id="never live together"),
+        pytest.param("    A = value(5, until=5)\n    B = value(5, since=2)\n", ["B", "A"], id="live together"),
+        pytest.param(
+            "    A = value(5, until=3)\n    B = value(5, since=2, until=4)\n    C = value(5, since=4)\n",
+            ["C", "B", "A"],
+            id="one pair live together",
+        ),
+    ],
+)
+def test_members_sharing_a_value_list_the_one_live_at_the_newest_version_first(build_package, members, order):
+    schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n" + members}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert [member.name for member in model.members] == order
+
+
+def test_members_sharing_a_value_live_at_the_same_newest_version_keep_their_declaration_order(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 5\n    B = value(5, since=2)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert [member.name for member in model.members] == ["A", "B"]
+
+
+def test_members_sharing_a_value_are_reordered_only_within_the_positions_they_hold(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = value(5, until=3)\n    C = 7\n    B = value(5, since=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert [member.name for member in model.members] == ["B", "C", "A"]
+
+
+def test_members_sharing_a_value_are_ordered_by_the_versions_either_form_holds_them(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class F(IntEnum, uint8):\n        X = value(5, until=3)\n        Y = value(5, since=3)\n"
+        + "    f: F\n\n"
+        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 5\n    f: F\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, _, _, _, _ = schema.order
+    (model,) = schema.models(enum)
+
+    assert [member.name for member in model.members] == ["X", "Y"]
+
+
+def test_scope_of_an_enum_model_is_the_first_version_it_is_live(build_package):
+    source = HEADER + "@type(since=2, until=4)\nclass E(IntEnum, uint8):\n    A = 1\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.scope(model) == 2
+
+
+def test_target_of_an_enum_slot_is_the_model_of_an_unrenumbered_family(build_package):
+    schema = Schema(build_package({"a": GROWING + "\nclass P:\n    e: E\n"}))
+    enum, family = schema.order
+    model = schema.model_at(family, 1)
+    (slot,) = model.slots
+
+    assert schema.target(model, slot.type) is schema.models(enum)[0]
+
+
+def test_a_temporary_owner_holding_an_enum_model_live_outside_the_overlap_is_rejected(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n    y: uint8\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass A:\n    z: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: A\.F: is owned by CerealizedA but is live at 1, outside its overlap"
+    ):
+        Schema(package)
 
 
 def test_a_shared_models_family_is_the_cereal_form(build_package):
@@ -1920,7 +2156,7 @@ def test_a_nested_child_living_past_the_overlap_is_owned_by_a_plain_named_model(
     schema = Schema(build_package({"a": source}))
     enum, _, _, _, _ = schema.order
 
-    assert schema.name(schema.owner(schema.shapes(enum)[0])) == "A"
+    assert schema.name(schema.owner(schema.enum_type(enum, 1))) == "A"
 
 
 def test_a_hand_written_form_no_packet_reaches_is_rejected(build_package):
@@ -2000,8 +2236,9 @@ def test_a_reached_pre_cereal_form_holding_an_unreferenced_nested_enum_is_accept
 def test_a_nested_child_living_only_inside_the_overlap_is_owned_by_a_cerealized_model(build_package):
     source = (
         HEADER
-        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
-        + "@type(cereal=False, until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    f: F\n\n"
+        + "@type(cereal=False, until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 3\n"
+        + "    f: F\n\n"
         + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -2040,9 +2277,11 @@ def test_a_nested_child_is_owned_by_the_holder_that_returns_at_the_latest_versio
 def test_a_temporary_owner_holding_a_child_live_outside_the_overlap_is_rejected(build_package):
     source = (
         HEADER
-        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
-        + "@type(since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n    y: uint8\n\n"
-        + "@type(cereal=False, since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    f: F\n\n"
+        + "@type(since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n"
+        + "    f: F\n    y: uint8\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n"
+        + "        Y = 3\n    f: F\n\n"
         + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
     )
     package = build_package({"a": source})
@@ -2088,7 +2327,7 @@ def test_a_family_that_ends_before_the_latest_version_has_no_bare_model(build_pa
     assert schema.scope(schema.model_at(family, 1)) == 1
 
 
-def test_an_enum_shape_live_at_the_latest_version_has_no_scope(build_package):
+def test_an_enum_model_live_at_the_latest_version_has_no_scope(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -2097,7 +2336,10 @@ def test_an_enum_shape_live_at_the_latest_version_has_no_scope(build_package):
 
 
 def test_an_older_enum_shapes_scope_is_its_first_version(build_package):
-    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, until=4)\n"
+    source = HEADER + (
+        "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"
+        "    B = value(1, since=3, until=4)\n"
+    )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
 
@@ -2105,14 +2347,13 @@ def test_an_older_enum_shapes_scope_is_its_first_version(build_package):
 
 
 def test_the_oldest_enum_shapes_scope_is_the_first_modelled_version(build_package):
-    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
-    schema = Schema(build_package({"a": source}))
+    schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
 
     assert schema.scope(schema.enum_type(family, 1)) == 1
 
 
-def test_an_enum_that_ends_before_the_latest_version_has_no_bare_shape(build_package):
+def test_an_enum_that_ends_before_the_latest_version_has_no_bare_model(build_package):
     source = HEADER + "@type(until=4)\nclass E(IntEnum, uint8):\n    A = 1\n"
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -2354,7 +2595,10 @@ def test_a_nested_child_of_a_shared_model_is_owned_by_that_model(build_package):
 
 
 def test_the_scope_of_an_enum_shape_with_two_runs_takes_its_first_version_from_the_first_run(build_package):
-    source = HEADER + "@type(until=6)\nclass E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, until=4)\n"
+    source = HEADER + (
+        "@type(until=6)\nclass E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3, until=4)\n"
+        "    A = value(1, since=4)\n"
+    )
     schema = Schema(build_package({"a": source}, APPENDED_INIT))
     (family,) = schema.order
 
@@ -2366,7 +2610,7 @@ def test_target_accepts_an_enum_read_by_name(build_package):
     schema = Schema(build_package({"a": source}))
     enum, family = schema.order
 
-    assert schema.target(schema.model_at(family, 1), EnumName(enum)) is schema.shapes(enum)[0]
+    assert schema.target(schema.model_at(family, 1), EnumName(enum)) is schema.models(enum)[0]
 
 
 def test_a_call_through_a_cereal_false_field_names_the_manual_mode_of_a_shared_encoding(build_package):

@@ -2,7 +2,7 @@ from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.field import primitive_includes
 from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef, Range
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema, SerializationMode
+from bedrock_protocol_compiler.schema import EnumModel, EnumType, Schema, SerializationMode
 
 
 def partials(p: Printer, qualified: str, implementation: str, served: dict[SerializationMode, list[Range]]) -> None:
@@ -21,13 +21,15 @@ def partials(p: Printer, qualified: str, implementation: str, served: dict[Seria
 
 
 class EnumGenerator:
-    def __init__(self, schema: Schema, shape: EnumShape) -> None:
+    def __init__(self, schema: Schema, enum_type: EnumType) -> None:
         self.schema = schema
-        self.target = shape
-        self.qualified = names.qualified(schema, shape)
-        self.serializer = names.serializer(self.qualified, names.since(schema, shape))
-        self.underlying = names.PRIMITIVES[shape.underlying.name]
-        self.name_coded = shape.family in schema.name_coded
+        self.target = enum_type
+        self.qualified = names.qualified(schema, enum_type)
+        self.serializer = names.serializer(self.qualified, names.since(schema, enum_type))
+        self.underlying = names.PRIMITIVES[enum_type.underlying.name]
+        self.enumerators = schema.enumerators(enum_type)
+        forms = enum_type.runs if isinstance(enum_type, EnumModel) else [enum_type.family]
+        self.name_coded = any(form in schema.name_coded for form in forms)
 
     def includes(self) -> set[str]:
         includes = {names.runtime("enum"), "<array>", "<string_view>"} | primitive_includes(self.target.underlying)
@@ -40,7 +42,7 @@ class EnumGenerator:
         p.emit("enum class $name$ : $underlying$ {", name=self.target.family.name, underlying=self.underlying)
         with p.indent():
             for member in self.target.members:
-                number = self.target.numbers[member.name]
+                number = self.enumerators[member.name]
                 match member.value:
                     case MemberRef(name=name) if name in cpp_names:
                         spelled = cpp_names[name]
@@ -59,7 +61,7 @@ class EnumGenerator:
             return
         members = sorted(self.target.members, key=lambda member: not isinstance(member.value, MemberRef | Binary))
         values = [
-            f"static_cast<{self.qualified}>({self.target.numbers[member.name]})"
+            f"static_cast<{self.qualified}>({self.enumerators[member.name]})"
             if member.deprecated
             else f"{self.qualified}::{member.cpp_name}"
             for member in members
@@ -114,7 +116,7 @@ class EnumGenerator:
             encoded=names.ENCODED,
             decoded=names.decoded(self.qualified),
         )
-        partials(p, self.qualified, self.serializer, {SerializationMode.DEFAULT: self.target.ranges})
+        partials(p, self.qualified, self.serializer, {SerializationMode.DEFAULT: self.schema.enum_runs(self.target)})
 
     def serializer_body(self, p: Printer) -> None:
         if not self.name_coded:

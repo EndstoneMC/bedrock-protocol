@@ -46,10 +46,10 @@ final class CodecTest {
     @Test
     void aTypeAbsentAtAProtocolHasNoCodec() {
         assertEquals(
-                "v2168.DisconnectPacket: is not a type at protocol 2225",
+                "v2168.SetLastHurtByPacket: is not a type at protocol 2225",
                 assertThrows(
                                 IllegalArgumentException.class,
-                                () -> dev.endstone.protocol.v2168.DisconnectPacket.codec(2225))
+                                () -> dev.endstone.protocol.v2168.SetLastHurtByPacket.codec(2225))
                         .getMessage());
     }
 
@@ -90,11 +90,11 @@ final class CodecTest {
     @Test
     void aTypeAbsentAtAProtocolIsRejectedBeforeItsMode() {
         assertEquals(
-                "v2168.DisconnectPacket: is not a type at protocol 2225",
+                "v2168.SetLastHurtByPacket: is not a type at protocol 2225",
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        dev.endstone.protocol.v2168.DisconnectPacket.codec(
+                                        dev.endstone.protocol.v2168.SetLastHurtByPacket.codec(
                                                 2225, SerializationMode.CEREAL))
                         .getMessage());
     }

@@ -36,9 +36,9 @@ final class ProtocolVersionTest {
                 ProtocolVersion.of(2169)
                         .orElseThrow()
                         .decodePacket(
-                                DisconnectPacket.ID,
-                                Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump("a60201")));
-        assertEquals(dev.endstone.protocol.v2168.DisconnectPacket.class, packet.getClass());
+                                SetLastHurtByPacket.ID,
+                                Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump("a602")));
+        assertEquals(dev.endstone.protocol.v2168.SetLastHurtByPacket.class, packet.getClass());
     }
 
     @Test
@@ -46,24 +46,23 @@ final class ProtocolVersionTest {
         ProtocolVersion version = ProtocolVersion.of(2169).orElseThrow();
         ByteBuf buf = Unpooled.buffer();
         version.encodePacket(
-                dev.endstone.protocol.v2168.DisconnectPacket.newBuilder()
-                        .setReasonValue(147)
-                        .clearMessages()
+                dev.endstone.protocol.v2168.SetLastHurtByPacket.newBuilder()
+                        .setLastHurtByValue(147)
                         .build(),
                 buf);
-        assertEquals("a60201", ByteBufUtil.hexDump(buf));
+        assertEquals("a602", ByteBufUtil.hexDump(buf));
     }
 
     @Test
     void encodingAPacketOfAnotherProtocolIsRejected() {
         ProtocolVersion version = ProtocolVersion.of(2225).orElseThrow();
-        Packet packet = dev.endstone.protocol.v2168.DisconnectPacket.getDefaultInstance();
+        Packet packet = dev.endstone.protocol.v2168.SetLastHurtByPacket.getDefaultInstance();
         ByteBuf buf = Unpooled.buffer();
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class, () -> version.encodePacket(packet, buf));
         assertEquals(
-                "packet: dev.endstone.protocol.v2168.DisconnectPacket "
+                "packet: dev.endstone.protocol.v2168.SetLastHurtByPacket "
                         + "is not a packet at protocol 2225",
                 thrown.getMessage());
     }

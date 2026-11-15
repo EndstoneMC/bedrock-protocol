@@ -2,7 +2,7 @@ import re
 
 from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.descriptor import Builtin, CompilerError
-from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, SerializationMode, StructModel
+from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema, SerializationMode, StructModel
 
 LIBRARIES = {
     "ArrayList": "java.util.ArrayList",
@@ -77,16 +77,16 @@ def reserved(schema: Schema) -> frozenset[str]:
     return frozenset(imports(schema)) | frozenset(JAVA_LANG)
 
 
-def package(schema: Schema, each: StructModel | EnumShape) -> str:
+def package(schema: Schema, each: StructModel | EnumType) -> str:
     scope = schema.scope(each)
     return schema.java_package if scope is None else f"{schema.java_package}.v{scope}"
 
 
-def declared(schema: Schema, each: StructModel | EnumShape) -> str:
+def declared(schema: Schema, each: StructModel | EnumType) -> str:
     return schema.name(each) if isinstance(each, StructModel) else each.family.name
 
 
-def qualified(schema: Schema, each: StructModel | EnumShape) -> str:
+def qualified(schema: Schema, each: StructModel | EnumType) -> str:
     owner = schema.owner(each)
     if owner is not None:
         return f"{qualified(schema, owner)}.{each.family.name}"
