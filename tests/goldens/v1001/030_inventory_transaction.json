@@ -231,5 +231,50 @@
    }
   },
   "bytes": "05000104010002040100400000010012a19cc481080a000000000000000000000000803f0000004000004040"
+ },
+ {
+  "id": "request_id_and_legacy_request_id_arms",
+  "value": {
+   "legacy_request_id": {
+    "raw_id": -3
+   },
+   "variant_transaction": {
+    "__class__": "NormalTransactionData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 0,
+        "container_id": 12
+       },
+       "slot": 3,
+       "from_item_descriptor": {
+        "id": 323,
+        "stack_size": 2,
+        "aux_value": 3,
+        "net_id_variant": {
+         "__class__": "ItemStackRequestId",
+         "raw_id": -5
+        },
+        "block_runtime_id": 0,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id_variant": {
+         "__class__": "ItemStackLegacyRequestId",
+         "raw_id": -4
+        },
+        "block_runtime_id": 2150698529,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0500010001010001010c0100034301020003010109000a000000000000000000000100400000010207a19cc481080a00000000000000000000"
  }
 ]
