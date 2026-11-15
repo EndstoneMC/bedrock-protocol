@@ -64,7 +64,7 @@ class InventorySource:
     flags: InventorySourceFlags | None
 
 
-@type(cereal=False)
+@type(cereal=False, until=2168)
 class InventorySource:
     class InventorySourceFlags(IntEnum, uint32):
         NO_FLAG = 0
@@ -91,7 +91,7 @@ class InventoryAction:
         to_item_descriptor: SerializedNetworkItemStackDescriptor
 
 
-@type(cereal=False)
+@type(cereal=False, until=2168)
 class InventoryAction:
     source: InventorySource = field(cereal=False)
     slot: uvarint32
@@ -232,7 +232,7 @@ class ItemUseInventoryTransaction:
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult
 
 
-@type(cereal=False, since=944)
+@type(cereal=False, since=944, until=2168)
 class ItemUseInventoryTransaction:
     actions: list[InventoryAction] = field(cereal=False)
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
