@@ -565,23 +565,41 @@ class Schema:
                     for member in shape.members:
                         newest.setdefault(member.name, member)
         derived = {name for name, member in newest.items() if isinstance(member.value, MemberRef | Binary)}
+        placements: dict[str, dict[tuple[Enum, int], int]] = {}
+        for form in forms:
+            for version in self.versions:
+                shape = self.live.get((form, version))
+                if isinstance(shape, EnumShape):
+                    for member in shape.members:
+                        placements.setdefault(member.name, {})[form, version] = shape.numbers[member.name]
         values: dict[str, int] = {}
-        firsts: dict[str, int] = {}
+        holders: dict[int, list[str]] = {}
+        newest_numbers: dict[str, int] = {}
         seen: set[int] = set()
-        for version in self.versions:
+        for version in reversed(self.versions):
             for form in forms:
                 shape = self.live.get((form, version))
                 if not isinstance(shape, EnumShape):
                     continue
                 seen.update(shape.numbers.values())
                 for member in shape.members:
-                    firsts.setdefault(member.name, shape.numbers[member.name])
+                    newest_numbers.setdefault(member.name, shape.numbers[member.name])
                     if member.name in values or member.name in derived:
                         continue
                     number = shape.numbers[member.name]
-                    if any(
-                        values.get(other.name) == number and shape.numbers[other.name] != number
-                        for other in shape.members
+                    own = placements[member.name]
+                    alike = [
+                        values[other]
+                        for other in values
+                        if own.keys() & placements[other].keys()
+                        and all(own.get(place, there) == there for place, there in placements[other].items())
+                    ]
+                    if alike:
+                        number = alike[0]
+                    elif any(
+                        own.get(place, there) != there
+                        for other in holders.get(number, [])
+                        for place, there in placements[other].items()
                     ):
                         number = max(seen) + 1
                         if number > HIGHEST[underlying.name]:
@@ -590,11 +608,12 @@ class Schema:
                                 f"{number - 1} that fits {underlying.name}"
                             )
                     values[member.name] = number
+                    holders.setdefault(number, []).append(member.name)
                     seen.add(number)
         for name in order:
             match newest[name].value:
                 case MemberRef(name=other) | Binary(left=MemberRef(name=other)) if other not in values:
-                    values[name] = firsts[name]
+                    values[name] = newest_numbers[name]
                 case MemberRef(name=other):
                     values[name] = values[other]
                 case Binary(left=MemberRef(name=other), right=Int(value=offset)):

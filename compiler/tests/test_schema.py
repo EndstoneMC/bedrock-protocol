@@ -499,6 +499,18 @@ RENUMBERED = (
     + "    B = value(1, since=3)\n"
 )
 
+DISPLACED = (
+    HEADER
+    + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n    B = value(2, until=3)\n"
+)
+
+SIBLINGS = (
+    HEADER
+    + "class P:\n    class F(IntEnum, uint8):\n        A = 1\n        B = 2\n    f: F\n\n"
+    + "@type(cereal=False)\nclass P:\n    class F(IntEnum, uint8):\n        B = 1\n        A = 2\n    f: F\n\n"
+    + "@packet(id=1)\nclass Q:\n    p: P = field(cereal=False)\n"
+)
+
 
 def test_a_field_reorder_is_a_second_encoding_of_one_model(build_package):
     schema = Schema(build_package({"a": REORDERED}))
@@ -1129,33 +1141,33 @@ def test_a_renumbered_member_is_a_second_numbering(build_package):
 
 
 def test_a_member_whose_number_another_member_holds_takes_the_next_free_value(build_package):
-    schema = Schema(build_package({"a": RENUMBERED}))
+    schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
     (model,) = schema.models(family)
 
-    assert model.values == {"A": 1, "B": 3}
+    assert model.values == {"A": 2, "B": 3}
 
 
 def test_a_renumbering_pairs_each_number_it_displaces_with_the_value_it_frees(build_package):
-    schema = Schema(build_package({"a": RENUMBERED}))
+    schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 3).moved == {1: 2, 2: 3, 3: 1}
+    assert schema.numbering_at(family, 2).moved == {1: 3, 2: 1, 3: 2}
 
 
 def test_a_numbering_is_the_identity_only_when_it_moves_no_value(build_package):
     schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
 
-    assert (schema.numbering_at(family, 2).identity, schema.numbering_at(family, 3).identity) == (True, False)
+    assert (schema.numbering_at(family, 2).identity, schema.numbering_at(family, 3).identity) == (False, True)
 
 
-def test_a_library_value_does_not_move_when_a_version_is_appended(build_package):
-    schema = Schema(build_package({"a": RENUMBERED + "    C = value(3, since=6)\n"}, APPENDED_INIT))
+def test_a_library_value_is_the_members_number_at_the_newest_version(build_package):
+    schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
     (model,) = schema.models(family)
 
-    assert model.values == {"A": 1, "B": 3, "C": 4}
+    assert model.values == {"A": 2, "B": 1}
 
 
 def test_names_that_never_coexist_share_their_number_as_a_value(build_package):
@@ -1178,8 +1190,8 @@ def test_members_numbered_alike_share_a_value(build_package):
 def test_an_alias_is_its_expression_over_library_values(build_package):
     source = (
         HEADER
-        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 2\n    B = 1\n    LAST = B\n"
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n    LAST = B\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 2\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1188,7 +1200,7 @@ def test_an_alias_is_its_expression_over_library_values(build_package):
     assert model.values["LAST"] == 3
 
 
-def test_an_alias_of_a_sentinel_takes_its_number_where_it_first_appears(build_package):
+def test_an_alias_of_a_sentinel_takes_its_number_where_it_is_newest(build_package):
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
@@ -1198,7 +1210,7 @@ def test_an_alias_of_a_sentinel_takes_its_number_where_it_first_appears(build_pa
     (family,) = schema.order
     (model,) = schema.models(family)
 
-    assert model.values["LATEST"] == 1
+    assert model.values["LATEST"] == 2
 
 
 @pytest.mark.parametrize(
@@ -1208,8 +1220,8 @@ def test_an_alias_of_a_sentinel_takes_its_number_where_it_first_appears(build_pa
 def test_a_member_with_no_free_library_value_in_its_underlying_type_is_rejected(build_package, underlying, highest):
     source = (
         HEADER
-        + f"class E(IntEnum, {underlying}):\n    A = value({highest}, until=3)\n    A = value({highest - 1}, since=3)\n"
-        + f"    B = value({highest}, since=3)\n"
+        + f"class E(IntEnum, {underlying}):\n    A = value({highest - 1}, until=3)\n    A = value({highest}, since=3)\n"
+        + f"    B = value({highest}, until=3)\n"
     )
     package = build_package({"a": source})
 
@@ -1222,8 +1234,8 @@ def test_a_member_with_no_free_library_value_in_its_underlying_type_is_rejected(
 def test_a_library_value_error_names_a_nested_enum_by_its_owner(build_package):
     source = (
         HEADER
-        + "class A:\n    class E(IntEnum, uint8):\n        A = value(255, until=3)\n        A = value(254, since=3)\n"
-        + "        B = value(255, since=3)\n    e: E\n"
+        + "class A:\n    class E(IntEnum, uint8):\n        A = value(254, until=3)\n        A = value(255, since=3)\n"
+        + "        B = value(255, until=3)\n    e: E\n"
     )
     package = build_package({"a": source})
 
@@ -1235,7 +1247,7 @@ def test_library_values_that_do_not_number_one_to_one_are_rejected(build_package
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, until=3)\n    B = value(2, since=3)\n"
     package = build_package({"a": source})
 
-    with pytest.raises(CompilerError, match=r"a\.py: E: does not number its library values one to one at 3"):
+    with pytest.raises(CompilerError, match=r"a\.py: E: does not number its library values one to one at 1"):
         Schema(package)
 
 
@@ -1247,8 +1259,238 @@ def test_a_one_to_one_error_names_a_nested_enum_by_its_owner(build_package):
     )
     package = build_package({"a": source})
 
-    with pytest.raises(CompilerError, match=r"a\.py: A\.E: does not number its library values one to one at 3"):
+    with pytest.raises(CompilerError, match=r"a\.py: A\.E: does not number its library values one to one at 1"):
         Schema(package)
+
+
+def test_a_member_beside_a_holder_at_an_older_version_takes_the_next_free_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    O = value(8, until=2)\n    O = value(7, since=5)\n    M = value(7, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"O": 7, "M": 8}
+
+
+def test_an_older_version_does_not_move_a_value_given_at_a_newer_one(build_package):
+    schema = Schema(build_package({"a": DISPLACED + "    C = value(200, until=2)\n"}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 2, "B": 3, "C": 200}
+
+
+def test_a_free_value_is_above_the_sentinel_numbers_seen(build_package):
+    schema = Schema(build_package({"a": DISPLACED + "    COUNT = sentinel()\n"}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 2, "B": 4}
+
+
+def test_a_member_of_both_forms_takes_the_cereal_forms_number(build_package):
+    schema = Schema(build_package({"a": SIBLINGS}))
+    cereal, _, _, _, _ = schema.order
+
+    assert schema.models(cereal)[0].values == {"A": 1, "B": 2}
+
+
+def test_a_sibling_form_has_its_own_numbering(build_package):
+    schema = Schema(build_package({"a": SIBLINGS}))
+    _, _, pre_cereal, _, _ = schema.order
+
+    assert schema.numbering_at(pre_cereal, 1).moved == {1: 2, 2: 1}
+
+
+def test_members_numbered_alike_share_the_free_value_a_displacement_gives_them(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    H = value(1, until=3)\n    H = value(2, since=3)\n"
+        + "    X = value(2, until=3)\n    Y = value(2, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"H": 2, "X": 3, "Y": 3}
+
+
+def test_members_renumbered_alike_share_a_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(3, until=3)\n    X = value(5, since=3)\n    Y = value(3, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"X": 5, "Y": 5}
+
+
+def test_a_member_numbered_like_a_renumbered_member_takes_its_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, int32):\n    A = 0\n    B = value(1, since=3)\n    TOTAL = value(1, until=3)\n"
+        + "    TOTAL = value(2, since=3)\n    INVALID = value(1, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 0, "B": 1, "TOTAL": 2, "INVALID": 2}
+
+
+def test_a_free_value_may_be_the_highest_its_underlying_type_holds(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = value(253, until=3)\n    A = value(254, since=3)\n"
+        + "    B = value(254, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 254, "B": 255}
+
+
+def test_a_second_free_value_past_the_highest_is_rejected_after_one_at_the_highest(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = value(253, until=3)\n    A = value(254, since=3)\n"
+        + "    B = value(254, until=3)\n"
+        + "    C = value(1, until=2)\n    C = value(2, since=2)\n    D = value(2, until=2)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: E\.D: has no library value above 255 that fits uint8"):
+        Schema(package)
+
+
+def test_two_free_values_differ(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"
+        + "    B = value(2, since=2, until=3)\n    C = value(3, until=2)\n    C = value(4, since=2)\n"
+        + "    D = value(4, until=2)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 2, "B": 5, "C": 4, "D": 6}
+
+
+def test_an_alias_of_a_sentinel_takes_no_free_value(build_package):
+    source = DISPLACED + "    COUNT = sentinel()\n    LAST = COUNT - 1\n    Z = value(9, until=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 2, "B": 10, "LAST": 2, "Z": 9}
+
+
+def test_names_that_never_coexist_keep_their_own_numbers_as_values(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    B = value(2, since=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 1, "B": 2}
+
+
+def test_members_numbered_alike_at_every_place_both_are_live_share_a_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(3, until=2)\n    X = value(5, since=4)\n    Y = value(3, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"X": 5, "Y": 5}
+
+
+def test_a_member_numbered_alike_at_other_versions_takes_no_free_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(5, until=2)\n    X = value(255, since=4)\n"
+        + "    H = value(6, until=4)\n    H = value(5, since=4)\n    Y = value(5, until=4)\n"
+        + "    C = value(1, until=2)\n    C = value(2, since=2)\n    D = value(2, until=2)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: E\.D: has no library value above 255 that fits uint8"):
+        Schema(package)
+
+
+def test_a_member_numbered_alike_to_a_displaced_one_takes_no_free_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    H = value(253, until=3)\n    H = value(254, since=3)\n"
+        + "    X = value(254, until=3)\n    Y = value(254, until=3)\n"
+        + "    C = value(1, until=2)\n    C = value(2, since=2)\n    D = value(2, until=2)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: E\.D: has no library value above 255 that fits uint8"):
+        Schema(package)
+
+
+def test_an_alias_holds_no_value_a_member_can_clash_with(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    Q = value(7, until=3)\n    R = value(7, since=3)\n"
+        + "    Z = 9\n    L = value(9, until=3)\n    with value(since=3):\n        L = R\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"Q": 7, "R": 7, "Z": 9, "L": 7}
+
+
+def test_a_member_beside_the_second_holder_of_a_value_with_no_room_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(255, since=4)\n    Z = value(255, since=3, until=4)\n"
+        + "    Z = value(254, until=2)\n    Y = value(255, until=3)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: E\.Y: has no library value above 255 that fits uint8"):
+        Schema(package)
+
+
+def test_a_free_value_is_above_the_numbers_at_its_own_version(build_package):
+    schema = Schema(build_package({"a": DISPLACED + "    C = value(200, until=3)\n"}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values == {"A": 2, "B": 201, "C": 200}
+
+
+def test_a_member_beside_a_holder_only_at_an_older_version_with_no_room_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    O = value(254, until=2)\n    O = value(255, since=5)\n"
+        + "    M = value(255, until=4)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: E\.M: has no library value above 255 that fits uint8"):
+        Schema(package)
+
+
+def test_an_alias_subtracts_its_offset(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 0\n    COUNT = 1\n    LAST = COUNT - 1\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.values["LAST"] == 0
 
 
 @pytest.mark.parametrize(
