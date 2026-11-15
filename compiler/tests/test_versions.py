@@ -427,9 +427,6 @@ def test_a_reference_across_modules_is_checked(build_package):
 @pytest.mark.parametrize(
     ("members", "message"),
     [
-        ("A_B = 1\n    A_b = 2", "a.py: E: has the C\\+\\+ name AB twice at 1"),
-        ("A = 1, 'x'\n    B = 2, 'X'", "a.py: E: has the encoded name x twice at 1"),
-        ("A_B = 1\n    AB = value(2, since=2, cpp_name='AB')", "a.py: E: has the C\\+\\+ name AB twice at 2"),
         ("A = auto()", "a.py: E.A: has no earlier member to number from at 1"),
         ("A = sentinel()", "a.py: E.A: has no earlier member to number from at 1"),
         ("A = value(1, until=3)\n    B = value(since=2)", "a.py: E.B: has no earlier member to number from at 3"),
@@ -445,15 +442,100 @@ def test_bad_enum_names_and_numbers_are_rejected(build_package, members, message
         build_package({"a": HEADER + f"class E(IntEnum, uint8):\n    {members}\n"})
 
 
-def test_names_that_never_meet_are_accepted(build_package):
-    build_package(
-        {
-            "a": HEADER
-            + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"
-            + "    A_B = value(3, until=3)\n    AB = value(4, since=3, cpp_name='AB')\n"
-            + "    D = auto()\n"
-        }
+@pytest.mark.parametrize(
+    ("members", "message"),
+    [
+        pytest.param(
+            "A_B = 1\n    A_b = 2",
+            "a.py: E: has the C\\+\\+ name AB on A_B and A_b",
+            id="c++ names that fold to one",
+        ),
+        pytest.param(
+            "A = 1, 'x'\n    B = 2, 'X'",
+            "a.py: E: has the encoded name x on A and B",
+            id="encoded names that fold to one",
+        ),
+        pytest.param(
+            "A_B = value(3, until=3)\n    AB = value(4, since=3, cpp_name='AB')",
+            "a.py: E: has the C\\+\\+ name AB on A_B and AB",
+            id="c++ name in versions that never meet",
+        ),
+        pytest.param(
+            "A = value(1, 'x', until=3)\n    B = value(2, 'x', since=3)",
+            "a.py: E: has the encoded name x on A and B",
+            id="encoded name in versions that never meet",
+        ),
+    ],
+)
+def test_a_spelling_two_members_hold_is_rejected(build_package, members, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + f"class E(IntEnum, uint8):\n    {members}\n"})
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        pytest.param(
+            "class E(IntEnum, uint8):\n    A = 1, 'x'\n\n"
+            "@type(cereal=False)\nclass E(IntEnum, uint8):\n    B = 1, 'x'\n",
+            "a.py: E: has the encoded name x on A and B",
+            id="module-scope enum",
+        ),
+        pytest.param(
+            "class A:\n    class E(IntEnum, uint8):\n        A = 1, 'x'\n    e: E\n\n"
+            "@type(cereal=False)\nclass A:\n    class E(IntEnum, uint8):\n        B = 1, 'x'\n    e: E\n",
+            "a.py: A.E: has the encoded name x on A and B",
+            id="nested enum",
+        ),
+    ],
+)
+def test_a_spelling_an_enum_shares_with_its_pre_cereal_sibling_is_rejected(build_package, source, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + source})
+
+
+def test_a_member_redeclared_across_versions_is_accepted(build_package):
+    build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"})
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        pytest.param(
+            "class E(IntEnum, uint8):\n    A = 1\n    B = 2\n    C = value(3, until=3)\n    C = value(4, since=3)\n"
+            "    X = C - 1\n",
+            r"a\.py: E\.X: takes the number 3, which no member that is neither an alias nor a sentinel holds at 3",
+            id="offset alias",
+        ),
+        pytest.param(
+            "class E(IntEnum, uint8):\n    A = 1\n    COUNT = sentinel()\n    LATEST = COUNT\n",
+            r"a\.py: E\.LATEST: takes the number 2, which no member that is neither an alias nor a sentinel holds at 1",
+            id="alias of a sentinel",
+        ),
+        pytest.param(
+            "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    L = 5\n\n"
+            "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    L = A\n",
+            r"a\.py: E\.L: takes the number 5, which no member that is neither an alias nor a sentinel holds at 1",
+            id="alias in its newest declaration",
+        ),
+        pytest.param(
+            "class A:\n    class E(IntEnum, uint8):\n        A = 1\n        X = A - 1\n    e: E\n",
+            r"a\.py: A\.E\.X: takes the number 0, which no member that is neither an alias nor a sentinel holds at 1",
+            id="nested enum",
+        ),
+    ],
+)
+def test_an_alias_whose_number_no_other_member_holds_is_rejected(build_package, source, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + source})
+
+
+def test_an_alias_whose_number_another_member_holds_at_every_version_is_accepted(build_package):
+    source = (
+        "class E(IntEnum, uint8):\n    A = 0\n    B = 1\n    C = value(2, since=3)\n    COUNT = sentinel()\n"
+        "    LATEST = COUNT - 1\n"
     )
+    build_package({"a": HEADER + source})
 
 
 def test_a_block_gives_each_field_its_range(build_package):

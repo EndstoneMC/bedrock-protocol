@@ -41,7 +41,8 @@ paths:
 - Redeclare an enum over adjacent ranges only for a wholesale renumbering.
 - Gate an appended value with `value(N, since=)` and let the trailing count (`auto()` or `sentinel()`) follow it.
 - Gate a removed value with `value(N, until=)` and make every member after it `auto()`; an insertion and a removal in one span can cancel, so redeclare only when that fails.
-- For a rename at the same value, take the new spelling at every era rather than versioning the enum.
+- For a rename, take the new spelling at every era and declare the member once per value; a C++ name and an encoded name each belong to one member across every era, the `cereal=False` sibling included.
+- An alias, a member whose newest declaration names another member, takes at every version it is live the number of a live member that is neither an alias nor a sentinel.
 - Treat any change to a name-coded member's spelling as an encoding change.
 - Add a value that only gained a name, with no other member moved, ungated once bedrock-headers confirms it existed, and carry the sentinel with it.
 - Never read a wholesale respelling as a rename until the header confirms it; the dumper may have changed what it emits.

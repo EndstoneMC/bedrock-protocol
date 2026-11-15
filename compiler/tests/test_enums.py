@@ -157,12 +157,13 @@ def test_an_ungated_value_carries_a_name_beside_cpp_name(build_package):
 
 def test_siblings_resolve_to_earlier_members(build_package):
     package = build_package(
-        {"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    COUNT = A\n    LATEST = COUNT - 1\n"}
+        {"a": HEADER + "class E(IntEnum, uint8):\n    Z = 0\n    A = 1\n    COUNT = A\n    LATEST = COUNT - 1\n"}
     )
 
     enum = package.modules[0].families[0]
 
     assert [member.value for member in members(package)] == [
+        Int(0),
         Int(1),
         MemberRef(enum, "A"),
         Binary("-", MemberRef(enum, "COUNT"), Int(1)),

@@ -5,8 +5,7 @@ import inspect
 import re
 import typing
 import uuid
-from collections import Counter
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from functools import reduce
 from importlib import import_module
@@ -58,7 +57,22 @@ FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
 ENUM_UNDERLYING = ("bool", "int8", "uint8", "int16", "uint16", "int32", "uint32")
 LIST_PREFIXES = ("uint32", "uint16", "varint32")
 BYTE_ORDERED = ("int16", "uint16", "int32", "uint32", "int64", "uint64")
-INTEGERS = ("int8", "uint8", *BYTE_ORDERED, "varint32", "varint64", "uvarint32", "uvarint64")
+WIDTHS = {
+    "bool": (False, 1),
+    "int8": (True, 8),
+    "uint8": (False, 8),
+    "int16": (True, 16),
+    "uint16": (False, 16),
+    "int32": (True, 32),
+    "uint32": (False, 32),
+    "int64": (True, 64),
+    "uint64": (False, 64),
+    "varint32": (True, 32),
+    "varint64": (True, 64),
+    "uvarint32": (False, 32),
+    "uvarint64": (False, 64),
+}
+INTEGERS = tuple(name for name, (_, width) in WIDTHS.items() if width > 1)
 RELEASE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
 RELEASE_NAME = re.compile(rf"(?P<first>{RELEASE})(?:-(?P<last>{RELEASE}))?")
 RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:[1-9]\d*)?x")
@@ -221,12 +235,25 @@ def check(package: Package) -> None:
             )
         for family in module.families:
             if isinstance(family, Struct):
-                check_struct(package.versions, f"{module.stem}.py", family, family.name)
+                check_struct(
+                    package.versions, f"{module.stem}.py", family, family.name, sibling(family, module.families)
+                )
             elif isinstance(family, Enum):
-                check_enum(package.versions, f"{module.stem}.py", family, family.name)
+                check_enum(package.versions, f"{module.stem}.py", family, family.name, sibling(family, module.families))
 
 
-def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str) -> None:
+def sibling[F: (Struct, Enum)](family: F, families: Iterable[object]) -> F | None:
+    return next(
+        (
+            each
+            for each in families
+            if isinstance(each, type(family)) and each is not family and each.name == family.name
+        ),
+        None,
+    )
+
+
+def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str, twin: Struct | None) -> None:
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
             for target in (*reaches(struct_field.type), *reaches(struct_field.when)):
@@ -247,13 +274,23 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
                         where = f"{path}: {qualified}.{struct_field.name}"
                         raise CompilerError(f"{where}: reaches {missing}, which does not exist at {version}")
     for nested in struct.nested:
+        twins = [] if twin is None else twin.nested
         if isinstance(nested, Struct):
-            check_struct(versions, path, nested, f"{qualified}.{nested.name}")
+            check_struct(versions, path, nested, f"{qualified}.{nested.name}", sibling(nested, twins))
         else:
-            check_enum(versions, path, nested, f"{qualified}.{nested.name}")
+            check_enum(versions, path, nested, f"{qualified}.{nested.name}", sibling(nested, twins))
 
 
-def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str) -> None:
+def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str, twin: Enum | None) -> None:
+    forms = sorted((enum,) if twin is None else (enum, twin), key=lambda form: not form.cereal)
+    newest: dict[str, Member] = {}
+    for version in reversed(versions):
+        for form in forms:
+            for declaration in form.declarations:
+                for member in declaration.members:
+                    if member.range.contains(version) and not member.sentinel:
+                        newest.setdefault(member.name, member)
+    aliases = {name for name, member in newest.items() if isinstance(member.value, MemberRef | Binary)}
     for version in versions:
         members = [
             member
@@ -265,21 +302,43 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str)
             raise CompilerError(
                 f"{path}: {qualified}.{members[0].name}: has no earlier member to number from at {version}"
             )
-        for label, names in (
-            ("C++ name", [member.cpp_name for member in members]),
-            ("encoded name", [member.encoded_name for member in members]),
-        ):
-            for name, count in Counter(names).items():
-                if count > 1:
-                    raise CompilerError(f"{path}: {qualified}: has the {label} {name} twice at {version}")
-        earlier: set[str] = set()
+        numbers: dict[str, int] = {}
+        number = -1
         for member in members:
             match member.value:
-                case MemberRef(name=name) | Binary(left=MemberRef(name=name)) if name not in earlier:
+                case MemberRef(name=name) | Binary(left=MemberRef(name=name)) if name not in numbers:
                     raise CompilerError(
                         f"{path}: {qualified}.{member.name}: names {name}, which does not exist at {version}"
                     )
-            earlier.add(member.name)
+                case None:
+                    number += 1
+                case Int(value=literal):
+                    number = literal
+                case MemberRef(name=name):
+                    number = numbers[name]
+                case Binary(left=MemberRef(name=name), right=Int(value=offset)):
+                    number = numbers[name] - offset
+            numbers[member.name] = number
+        held = {numbers[member.name] for member in members if member.name not in aliases and not member.sentinel}
+        for member in members:
+            if member.name in aliases and numbers[member.name] not in held:
+                raise CompilerError(
+                    f"{path}: {qualified}.{member.name}: takes the number {numbers[member.name]}, which no member "
+                    f"that is neither an alias nor a sentinel holds at {version}"
+                )
+    union = [
+        member
+        for declaration in (*enum.declarations, *([] if twin is None else twin.declarations))
+        for member in declaration.members
+    ]
+    for label, spellings in (
+        ("C++ name", [(member.cpp_name, member.name) for member in union]),
+        ("encoded name", [(member.encoded_name, member.name) for member in union]),
+    ):
+        owners: dict[str, str] = {}
+        for spelled, name in spellings:
+            if owners.setdefault(spelled, name) != name:
+                raise CompilerError(f"{path}: {qualified}: has the {label} {spelled} on {owners[spelled]} and {name}")
 
 
 def build(package_dir: Path) -> Package:
