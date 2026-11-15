@@ -9,7 +9,7 @@ import re
 import struct
 import types
 import uuid
-from functools import cache, reduce
+from functools import reduce
 from json.decoder import WHITESPACE
 from operator import methodcaller, or_
 from pathlib import Path
@@ -1615,29 +1615,28 @@ class ReflectionCtx:
         raise LookupError(f"{node!r}: has no schema")
 
 
-REFLECTIONS = {protocol: ReflectionCtx(protocol) for protocol in MODEL.versions}
+REFLECTIONS = {context.module: context for context in map(ReflectionCtx, MODEL.versions)}
 
 
-@cache
-def schema_of(cls):
-    return REFLECTIONS[int(cls.__module__.rpartition(".v")[2])].composite(FAMILIES[cls.__qualname__])
+def schema_of(module, cls):
+    return REFLECTIONS[module].composite(FAMILIES[cls.__qualname__])
 
 
 class LoadError(ValueError):
     """The entries a strict load logged."""
 
 
-def save(value):
+def save(module, value):
     """The case JSON for a bound struct."""
     writer = JSONSchemaWriter()
-    schema_of(type(value)).save(value, writer, SerializerContext())
+    schema_of(module, type(value)).save(value, writer, SerializerContext())
     return writer.result
 
 
-def load(cls, value):
+def load(module, cls, value):
     """The bound struct for case JSON, loaded strictly."""
     context = SerializerContext()
-    loaded = schema_of(cls).load(StrictJSONSchemaReader(value), context)
+    loaded = schema_of(module, cls).load(StrictJSONSchemaReader(value), context)
     if context.has_error():
         raise LoadError(context.entries)
     return loaded
@@ -1672,15 +1671,16 @@ def pytest_generate_tests(metafunc):
     if "cls" in metafunc.fixturenames and ("case" in metafunc.fixturenames or "round_trip" in metafunc.fixturenames):
         rows = [
             (
-                importlib.import_module(f"bedrock_protocol.{path.parent.name}").packets[int(path.stem[:3])],
+                module := importlib.import_module(f"bedrock_protocol.{path.parent.name}"),
+                module.packets[int(path.stem[:3])],
                 case,
                 f"{path.parent.name}/{path.stem}/{case['id']}",
             )
             for path, cases in CASES.items()
             for case in cases
         ]
-        argnames = "cls, round_trip" if "round_trip" in metafunc.fixturenames else "cls, case"
-        metafunc.parametrize(argnames, [pytest.param(cls, case, id=name) for cls, case, name in rows])
+        argnames = "module, cls, round_trip" if "round_trip" in metafunc.fixturenames else "module, cls, case"
+        metafunc.parametrize(argnames, [pytest.param(module, cls, case, id=name) for module, cls, case, name in rows])
 
     if "case_file" in metafunc.fixturenames:
         metafunc.parametrize("case_file", list(CASES), ids=[f"{path.parent.name}/{path.stem}" for path in CASES])

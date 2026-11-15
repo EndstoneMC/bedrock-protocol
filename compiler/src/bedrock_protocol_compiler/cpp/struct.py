@@ -1,7 +1,7 @@
 from itertools import groupby
 
 from bedrock_protocol_compiler.cpp import names
-from bedrock_protocol_compiler.cpp.enum import EnumGenerator
+from bedrock_protocol_compiler.cpp.enum import EnumGenerator, partials
 from bedrock_protocol_compiler.cpp.expression import render
 from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, make_field_generator
 from bedrock_protocol_compiler.descriptor import Field
@@ -18,7 +18,8 @@ class StructGenerator:
         self.defined = [shape_generator(schema, child) for child in shape.nested if child.owner is shape]
         self.members: list[tuple[str, str]] = []
         self.field_includes: set[str] = set()
-        self.version = schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
+        self.version = names.since(schema, shape)
+        self.serializer = names.serializer(self.qualified, self.version)
         self.fields: list[tuple[Field, FieldGenerator]] = []
         for each in shape.fields:
             generator = make_field_generator(schema, each.type, self.version, f'"{each.name}"', 0)
@@ -146,15 +147,20 @@ class StructGenerator:
         p.emit(
             """
             template <>
-            struct Serializer<$qualified$> {
-                static void serialize(BinaryWriter &stream, const $qualified$ &value);
+            struct $serializer$ {
+                static constexpr int since = $since$;
+                static auto serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$;
                 static auto deserialize(BinaryReader &stream) -> $decoded$;
             };
 
             """,
+            serializer=self.serializer,
+            since=self.version,
             qualified=self.qualified,
+            encoded=names.ENCODED,
             decoded=names.decoded(self.qualified),
         )
+        partials(p, self.qualified, self.serializer, self.shape.ranges)
 
     def serializer_body(self, p: Printer) -> None:
         for child in self.defined:
@@ -163,12 +169,13 @@ class StructGenerator:
             return
         p.emit(
             """
-            void Serializer<$qualified$>::serialize(BinaryWriter &stream, const $qualified$ &value)
+            auto $serializer$::serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$
             {
                 $writes$
+                return {};
             }
 
-            auto Serializer<$qualified$>::deserialize(BinaryReader &stream) -> $decoded$
+            auto $serializer$::deserialize(BinaryReader &stream) -> $decoded$
             {
                 $qualified$ out;
                 $reads$
@@ -176,7 +183,9 @@ class StructGenerator:
             }
 
             """,
+            serializer=self.serializer,
             qualified=self.qualified,
+            encoded=names.ENCODED,
             decoded=names.decoded(self.qualified),
             writes=lambda: self.writes(p),
             reads=lambda: self.reads(p),

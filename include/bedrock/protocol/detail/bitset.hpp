@@ -10,9 +10,9 @@
 
 namespace bedrock::protocol {
 
-template <std::size_t N>
-struct Serializer<std::bitset<N>> {
-    static void serialize(BinaryWriter &stream, const std::bitset<N> &value)
+template <std::size_t N, int V>
+struct Serializer<std::bitset<N>, V> {
+    static auto serialize(BinaryWriter &stream, const std::bitset<N> &value) -> std::expected<void, Errc>
     {
         std::size_t top = 0;
         for (std::size_t i = N; i-- > 0;) {
@@ -35,6 +35,7 @@ struct Serializer<std::bitset<N>> {
             }
             stream.write<std::uint8_t>(byte);
         }
+        return {};
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<std::bitset<N>, Errc>

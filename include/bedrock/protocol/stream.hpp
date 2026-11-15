@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -71,7 +72,22 @@ inline std::expected<std::size_t, Errc> countProduct(std::expected<std::size_t, 
 }
 }  // namespace detail
 
-class BinaryReader {
+class FailurePath {
+public:
+    [[nodiscard]] std::vector<PathSegment> takePath() noexcept { return std::exchange(path_, {}); }
+
+    template <typename... Segment>
+    [[gnu::cold, gnu::noinline]] std::unexpected<Errc> fail(Errc error, Segment... segments) noexcept
+    {
+        path_.insert(path_.begin(), {PathSegment{segments}...});
+        return std::unexpected(error);
+    }
+
+private:
+    std::vector<PathSegment> path_;
+};
+
+class BinaryReader : public FailurePath {
 public:
     template <class T>
     using Result = std::expected<T, Errc>;
@@ -90,14 +106,6 @@ public:
     [[nodiscard]] auto getLength() const { return view_.size(); }
     [[nodiscard]] auto getView() const { return view_; }
     [[nodiscard]] auto canRead() const { return read_pos_ < view_.size(); }
-    [[nodiscard]] const std::vector<PathSegment> &getPath() const { return path_; }
-
-    template <typename... Segment>
-    [[gnu::cold, gnu::noinline]] std::unexpected<Errc> fail(Errc error, Segment... segments) noexcept
-    {
-        path_.insert(path_.begin(), {PathSegment{segments}...});
-        return std::unexpected(error);
-    }
 
     template <typename T>
         requires(std::integral<T> || std::floating_point<T>)
@@ -215,10 +223,9 @@ private:
 
     std::string_view view_;
     std::size_t read_pos_ = 0;
-    std::vector<PathSegment> path_;
 };
 
-class BinaryWriter {
+class BinaryWriter : public FailurePath {
 public:
     explicit BinaryWriter(std::string &buffer) : buffer_(buffer) {}
 

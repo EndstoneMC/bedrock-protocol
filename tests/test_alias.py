@@ -8,4 +8,4 @@ def test_a_default_alias_is_zero(protocol):
 
 def test_a_signed_alias_keeps_its_sign_in_the_encoding(protocol):
     packet = protocol.RemoveActorPacket(entity_id=-3)
-    assert protocol.RemoveActorPacket.from_bytes(bytes(packet)) == packet
+    assert protocol.decode(protocol.RemoveActorPacket, protocol.encode(packet)) == packet

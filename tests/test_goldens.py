@@ -15,12 +15,12 @@ def layout(cases):
     )
 
 
-def test_a_case_value_encodes_to_its_bytes(load, cls, round_trip):
-    assert bytes(load(cls, round_trip["value"])).hex() == round_trip["bytes"]
+def test_a_case_value_encodes_to_its_bytes(load, module, cls, round_trip):
+    assert module.encode(load(module, cls, round_trip["value"])).hex() == round_trip["bytes"]
 
 
-def test_a_case_bytes_decode_to_its_value(save, cls, case):
-    assert json.dumps(save(cls.from_bytes(bytes.fromhex(case["bytes"])))) == json.dumps(case["value"])
+def test_a_case_bytes_decode_to_its_value(save, module, cls, case):
+    assert json.dumps(save(module, module.decode(cls, bytes.fromhex(case["bytes"])))) == json.dumps(case["value"])
 
 
 def test_a_case_file_names_each_case_once_in_lower_with_under(case_file):

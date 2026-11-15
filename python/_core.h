@@ -4,12 +4,14 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
+#include <expected>
 #include <format>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -41,31 +43,43 @@ namespace nb = nanobind;
 inline constexpr const char *eq_signature = "def __eq__(self, arg: object, /) -> bool";
 
 struct Codec {
+    std::expected<void, EncodeError> (*encode)(BinaryWriter &stream, nb::handle value);
     nb::object (*decode)(BinaryReader &stream);
 };
 
-struct Version {
+using CodecTable = std::unordered_map<PyObject *, const Codec *>;
+
+struct Scope {
     int number;
+    const char *noun;
     nb::handle module;
-    nb::handle pre_cereal;
+    CodecTable *codecs;
+    nb::dict encodings;
     nb::dict packets;
 };
 
-[[noreturn]] void throw_decode_error(DecodeError error);
+struct Version {
+    Scope cereal;
+    Scope pre_cereal;
+};
+
+[[noreturn]] void throw_decode_error(const DecodeError &error);
+[[noreturn]] void throw_encode_error(const EncodeError &error);
 
 void init_nbt(nb::module_ &parent);
 void init_versions(nb::module_ &parent);
 
 void init_types(std::span<const Version> bound);
 
-template <typename T>
+template <typename T, int V>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
-    Serializer<T>::serialize(writer, value);
-    Serializer<T>::deserialize(reader);
+    { Serializer<T, V>::since } -> std::convertible_to<int>;
+    Serializer<T, V>::serialize(writer, value);
+    Serializer<T, V>::deserialize(reader);
 };
 
-template <typename T>
-concept Packet = Reflected<T> && Serializable<T> && requires {
+template <typename T, int V>
+concept Packet = Reflected<T> && Serializable<T, V> && requires {
     { T::Id } -> std::convertible_to<int>;
 };
 
@@ -103,31 +117,18 @@ inline nb::object owner_of(nb::handle module, std::string_view qualified, std::s
     return scope;
 }
 
-template <typename T>
-nb::bytes encode(const T &value)
-{
-    std::string buffer;
-    BinaryWriter writer{buffer};
-    Serializer<T>::serialize(writer, value);
-    return nb::bytes(buffer.data(), buffer.size());
-}
-
-template <typename T>
-T decode_or_raise(BinaryReader &reader)
-{
-    auto value = protocol::decode<T>(reader);
-    if (!value) {
-        throw_decode_error(value.error());
-    }
-    return std::move(*value);
-}
-
-template <typename T>
-T decode_all(nb::bytes data)
-{
-    BinaryReader reader{std::string_view(data.c_str(), data.size())};
-    return decode_or_raise<T>(reader);
-}
+template <typename T, int N>
+inline constexpr Codec codec{
+    .encode = [](BinaryWriter &stream,
+                 nb::handle value) { return protocol::encode<N>(stream, *nb::inst_ptr<T>(value)); },
+    .decode = [](BinaryReader &stream) -> nb::object {
+        auto value = protocol::decode<N, T>(stream);
+        if (!value) {
+            throw_decode_error(value.error());
+        }
+        return nb::cast(std::move(*value));
+    },
+};
 
 template <typename E>
 void bind_enum(nb::handle scope, const char *name)
@@ -363,10 +364,9 @@ void bind_field(nb::class_<T> &cls)
 }
 
 template <typename T>
-void bind_struct(nb::handle scope, const char *name, const Version *version)
+void bind_struct(nb::handle scope, const char *name)
 {
-    static_assert(!field_contains<T>("from_bytes"), "a member named from_bytes hides T.from_bytes");
-    nb::class_<T> cls(scope, name, nb::supplement<Codec>());
+    nb::class_<T> cls(scope, name, nb::is_final());
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         if constexpr (sizeof...(I) == 0) {
             cls.def(nb::init<>());
@@ -405,23 +405,13 @@ void bind_struct(nb::handle scope, const char *name, const Version *version)
         return std::format("{}({})", nb::cast<std::string>(nb::type<T>().attr("__qualname__")), members);
     });
 
-    if constexpr (Serializable<T>) {
-        cls.def("__bytes__", &encode<T>, "The encoded form, without a packet header.");
-        cls.def_static("from_bytes", &decode_all<T>, nb::arg("data"), "Reads one value that must span all of `data`.");
-    }
-    if constexpr (Packet<T>) {
+    if constexpr (requires { T::Id; }) {
         cls.attr("ID") = T::Id;
-        nb::type_supplement<Codec>(cls).decode = [](BinaryReader &stream) -> nb::object {
-            return nb::cast(decode_or_raise<T>(stream));
-        };
-        if (version != nullptr) {
-            version->packets[nb::int_(T::Id)] = cls;
-        }
     }
 }
 
-template <typename T>
-void bind_type(nb::handle module, const Version *version)
+template <typename T, int V>
+void bind_type(const Scope &scope)
 {
     std::string_view qualified;
     if constexpr (std::is_enum_v<T>) {
@@ -431,23 +421,26 @@ void bind_type(nb::handle module, const Version *version)
         qualified = struct_name<T>();
     }
     std::string_view leaf;
-    nb::object scope = owner_of(module, qualified, leaf);
+    nb::object owner = owner_of(scope.module, qualified, leaf);
     const std::string name(leaf);
 
     if (nb::handle existing = nb::type<T>(); existing.is_valid()) {
-        scope.attr(name.c_str()) = existing;
-        if constexpr (Packet<T>) {
-            if (version != nullptr) {
-                version->packets[nb::int_(T::Id)] = existing;
-            }
-        }
-        return;
+        owner.attr(name.c_str()) = existing;
     }
-    if constexpr (std::is_enum_v<T>) {
-        bind_enum<T>(scope, name.c_str());
+    else if constexpr (std::is_enum_v<T>) {
+        bind_enum<T>(owner, name.c_str());
     }
     else {
-        bind_struct<T>(scope, name.c_str(), version);
+        bind_struct<T>(owner, name.c_str());
+    }
+    if constexpr (Serializable<T, V>) {
+        constexpr int since = Serializer<T, V>::since;
+        nb::handle cls = nb::type<T>();
+        scope.codecs->try_emplace(cls.ptr(), &codec<T, since>);
+        scope.encodings[cls] = nb::int_(since);
+        if constexpr (Packet<T, V>) {
+            scope.packets[nb::int_(T::Id)] = cls;
+        }
     }
 }
 
@@ -457,11 +450,14 @@ void bind_schema_types(std::span<const Version> bound)
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         constexpr std::size_t newest = versions.size() - 1;
         (
-            [&]<typename... C, typename... P>(const Version &version, type_list<C...>, type_list<P...>) {
-                (bind_type<C>(version.module, &version), ...);
-                (bind_type<P>(version.pre_cereal, &version), ...);
-            }(bound[newest - I], typename Types<versions[newest - I]>::cereal{},
-              typename Types<versions[newest - I]>::pre_cereal{}),
+            [&] {
+                constexpr int number = versions[newest - I];
+                const Version &version = bound[newest - I];
+                [&]<typename... C, typename... P>(type_list<C...>, type_list<P...>) {
+                    (bind_type<C, number>(version.cereal), ...);
+                    (bind_type<P, number>(version.pre_cereal), ...);
+                }(typename Types<number>::cereal{}, typename Types<number>::pre_cereal{});
+            }(),
             ...);
     }(std::make_index_sequence<versions.size()>{});
 }

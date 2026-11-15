@@ -13,4 +13,4 @@ The schema modules under `protocol/` follow `.claude/rules/protocol/` instead of
 - Validate input with `raise`, never `assert`.
 - Write an error message as `<offending name>: <lower-case reason>`, naming the bad value, with no trailing period.
 - Name a value for what it is (`packets`), not for its type (`packet_list`).
-- Encode a bound value with `bytes(x)` and decode it with the static `X.from_bytes(data)`, which rejects trailing bytes, as `int.from_bytes` does.
+- Encode a bound value with `v<N>.encode(x)` and decode it with `v<N>.decode(X, data)`, which rejects trailing bytes, using `v<N>.pre_cereal` for a pre-cereal type; a failure raises `EncodeError` or `DecodeError`, both `ValueError`s.

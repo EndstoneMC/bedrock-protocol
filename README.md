@@ -44,11 +44,11 @@ import bedrock_protocol as bp
 
 packet = bp.TextPacket()
 packet.body = bp.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
-data = bytes(packet)
-assert bp.TextPacket.from_bytes(data) == packet
+data = bp.v2225.encode(packet)
+assert bp.v2225.decode(bp.TextPacket, data) == packet
 ```
 
-`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. `packets` maps packet ids to packet classes.
+`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. Each `v<N>` encodes and decodes with `encode` and `decode`, frames packets with `encode_packet` and `decode_packet`, maps packet ids to classes in `packets`, and names the protocol that introduced each class's encoding in `encodings`.
 
 ## C++
 
@@ -83,14 +83,15 @@ packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .mes
 
 std::string data;
 bp::BinaryWriter writer{data};
-bp::encode(writer, packet);
+std::expected<void, bp::EncodeError> encoded = bp::encode<2225>(writer, packet);
+assert(encoded);
 
 bp::BinaryReader reader{data};
-std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<bp::TextPacket>(reader);
+std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<2225, bp::TextPacket>(reader);
 assert(decoded && *decoded == packet);
 ```
 
-`bp::protocol_version(2169)` and `bp::protocol_version("1.26.63")` look up the same table in `<bedrock/protocol/version.hpp>`.
+`bp::protocol_version(2169)` and `bp::protocol_version("1.26.63")` look up the same table in `<bedrock/protocol/version.hpp>`. `bp::latest_version` is the newest modelled protocol.
 
 `<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
 

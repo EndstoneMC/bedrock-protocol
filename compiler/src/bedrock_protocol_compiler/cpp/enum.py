@@ -1,14 +1,29 @@
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.field import primitive_includes
-from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef
+from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef, Range
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumShape, Schema
+
+
+def partials(p: Printer, qualified: str, implementation: str, runs: list[Range]) -> None:
+    for run in runs:
+        p.emit(
+            """
+            template <int V>$requirement$
+            struct Serializer<$qualified$, V> : $implementation$ {};
+
+            """,
+            requirement=names.requirement(run),
+            qualified=qualified,
+            implementation=implementation,
+        )
 
 
 class EnumGenerator:
     def __init__(self, schema: Schema, shape: EnumShape) -> None:
         self.shape = shape
         self.qualified = names.qualified(schema, shape)
+        self.serializer = names.serializer(self.qualified, names.since(schema, shape))
         self.underlying = names.PRIMITIVES[shape.underlying.name]
         self.name_coded = shape.family in schema.name_coded
 
@@ -86,27 +101,32 @@ class EnumGenerator:
         p.emit(
             """
             template <>
-            struct Serializer<$qualified$> {
-                static void serialize(BinaryWriter &stream, $qualified$ value);
+            struct $serializer$ {
+                static auto serialize(BinaryWriter &stream, $qualified$ value) -> $encoded$;
                 static auto deserialize(BinaryReader &stream) -> $decoded$;
             };
 
             """,
+            serializer=self.serializer,
             qualified=self.qualified,
+            encoded=names.ENCODED,
             decoded=names.decoded(self.qualified),
         )
+        partials(p, self.qualified, self.serializer, self.shape.ranges)
 
     def serializer_body(self, p: Printer) -> None:
         if not self.name_coded:
             return
         p.emit(
             """
-            void Serializer<$qualified$>::serialize(BinaryWriter &stream, $qualified$ value)
+            auto $serializer$::serialize(BinaryWriter &stream, $qualified$ value) -> $encoded$
             {
+                if (!enum_contains(value)) $unknown$
                 $write$
+                return {};
             }
 
-            auto Serializer<$qualified$>::deserialize(BinaryReader &stream) -> $decoded$
+            auto $serializer$::deserialize(BinaryReader &stream) -> $decoded$
             {
                 auto v = $read$;
                 if (!v) $read_failure$
@@ -116,9 +136,11 @@ class EnumGenerator:
             }
 
             """,
+            serializer=self.serializer,
             qualified=self.qualified,
             write=names.write("str", None, "enum_name(value)"),
             read=names.read("str", None),
+            encoded=names.ENCODED,
             decoded=names.decoded(self.qualified),
             read_failure=names.unexpected("v.error()"),
             unknown=names.unexpected(names.UNKNOWN_VALUE),

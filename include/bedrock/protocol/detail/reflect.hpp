@@ -39,8 +39,6 @@ using primitive_alias_t = typename detail::primitive_alias<T>::type;
 template <typename... T>
 struct type_list {};
 
-inline constexpr std::size_t field_npos = static_cast<std::size_t>(-1);
-
 template <Reflected T>
 [[nodiscard]] constexpr std::string_view struct_name() noexcept
 {
@@ -78,23 +76,6 @@ template <std::size_t I, typename T>
     else {
         return std::move(member);
     }
-}
-
-template <Reflected T>
-[[nodiscard]] consteval std::size_t field_index(std::string_view name) noexcept
-{
-    for (std::size_t i = 0; i < detail::field_names_v<T>.size(); ++i) {
-        if (detail::field_names_v<T>[i] == name) {
-            return i;
-        }
-    }
-    return field_npos;
-}
-
-template <Reflected T>
-[[nodiscard]] consteval bool field_contains(std::string_view name) noexcept
-{
-    return field_index<T>(name) != field_npos;
 }
 
 template <typename T, typename F>

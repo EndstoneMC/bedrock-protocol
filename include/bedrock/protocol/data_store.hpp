@@ -91,34 +91,39 @@ private:
     Storage storage_;
 };
 
-template <>
-struct Serializer<DynamicValue> {
-    static void serialize(BinaryWriter &stream, const DynamicValue &value)
+template <int V>
+struct Serializer<DynamicValue, V> {
+    static auto serialize(BinaryWriter &stream, const DynamicValue &value) -> std::expected<void, Errc>
     {
         stream.write<std::uint32_t>(static_cast<std::uint32_t>(value.type()));
-        value.visit([&](const auto &payload) {
-            using V = std::decay_t<decltype(payload)>;
-            if constexpr (std::is_same_v<V, std::monostate>) {
+        return value.visit([&](const auto &payload) -> std::expected<void, Errc> {
+            using Payload = std::decay_t<decltype(payload)>;
+            if constexpr (std::is_same_v<Payload, std::monostate>) {
             }
-            else if constexpr (std::is_same_v<V, DynamicValue::Array>) {
+            else if constexpr (std::is_same_v<Payload, DynamicValue::Array>) {
                 stream.writeVarInt<std::uint32_t>(payload.size());
                 for (const auto &element : payload) {
-                    serialize(stream, element);
+                    if (auto written = serialize(stream, element); !written) {
+                        return written;
+                    }
                 }
             }
-            else if constexpr (std::is_same_v<V, DynamicValue::Object>) {
+            else if constexpr (std::is_same_v<Payload, DynamicValue::Object>) {
                 stream.writeVarInt<std::uint32_t>(payload.size());
                 for (const auto &[key, child] : payload) {
                     stream.write(key);
-                    serialize(stream, child);
+                    if (auto written = serialize(stream, child); !written) {
+                        return written;
+                    }
                 }
             }
-            else if constexpr (std::is_same_v<V, DynamicValue::String>) {
+            else if constexpr (std::is_same_v<Payload, DynamicValue::String>) {
                 stream.write(payload);
             }
             else {
-                stream.write<V>(payload);
+                stream.write<Payload>(payload);
             }
+            return {};
         });
     }
 

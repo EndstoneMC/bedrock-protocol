@@ -17,25 +17,39 @@
 
 namespace bedrock::protocol::python {
 
-void throw_decode_error(DecodeError error)
+namespace {
+
+template <typename Error, typename... Extra>
+[[noreturn]] void throw_error(const char *name, Error error, Extra... extra)
 {
     std::vector<std::string> names;
     names.reserve(error.path.size());
     nb::list path;
     for (auto &segment : error.path) {
-        if (const auto *name = std::get_if<std::string_view>(&segment)) {
-            segment = std::string_view(names.emplace_back(python_name(*name)));
+        if (const auto *field = std::get_if<std::string_view>(&segment)) {
+            segment = std::string_view(names.emplace_back(python_name(*field)));
             path.append(nb::str(names.back().c_str()));
         }
         else {
             path.append(std::get<std::size_t>(segment));
         }
     }
-    nb::object type = nb::module_::import_("bedrock_protocol").attr("DecodeError");
-    nb::object exception =
-        type(std::format("{}", error), std::format("{}", error.reason), nb::tuple(path), error.offset);
+    nb::object type = nb::module_::import_("bedrock_protocol").attr(name);
+    nb::object exception = type(std::format("{}", error), std::format("{}", error.reason), nb::tuple(path), extra...);
     PyErr_SetObject(type.ptr(), exception.ptr());
     throw nb::python_error();
+}
+
+}  // namespace
+
+void throw_decode_error(const DecodeError &error)
+{
+    throw_error("DecodeError", error, error.offset);
+}
+
+void throw_encode_error(const EncodeError &error)
+{
+    throw_error("EncodeError", error);
 }
 
 }  // namespace bedrock::protocol::python

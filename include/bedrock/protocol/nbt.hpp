@@ -922,11 +922,12 @@ inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReade
 
 }  // namespace nbt
 
-template <>
-struct Serializer<CompoundTag> {
-    static void serialize(BinaryWriter &stream, const CompoundTag &value)
+template <int V>
+struct Serializer<CompoundTag, V> {
+    static auto serialize(BinaryWriter &stream, const CompoundTag &value) -> std::expected<void, Errc>
     {
         nbt::writeNamedTag(stream, std::string_view{}, Tag{value});
+        return {};
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTag, Errc>
@@ -950,11 +951,12 @@ public:
     CompoundTagData(CompoundTag tag) : CompoundTag(std::move(tag)) {}
 };
 
-template <>
-struct Serializer<CompoundTagData> {
-    static void serialize(BinaryWriter &stream, const CompoundTagData &value)
+template <int V>
+struct Serializer<CompoundTagData, V> {
+    static auto serialize(BinaryWriter &stream, const CompoundTagData &value) -> std::expected<void, Errc>
     {
         nbt::writeTag(stream, Tag{static_cast<const CompoundTag &>(value)});
+        return {};
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<CompoundTagData, Errc>

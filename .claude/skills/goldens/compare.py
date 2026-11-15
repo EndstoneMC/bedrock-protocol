@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parents[3] / "tests"))
 from conftest import CaseForm, schema_of
 
 folder, run = Path(sys.argv[1]), Path(sys.argv[2])
-packets = importlib.import_module(f"bedrock_protocol.{folder.name}").packets
+module = importlib.import_module(f"bedrock_protocol.{folder.name}")
 results = {(each["stem"], each["index"]): each for each in json.loads((run / "results.json").read_text())}
 total = frozen = 0
 for path in sorted(folder.glob("*.json")):
@@ -44,7 +44,9 @@ for path in sorted(folder.glob("*.json")):
                 except ValueError as error:
                     problems.append(f"printed unreadable JSON: {error}")
                 else:
-                    if found := CaseForm.locate(case["value"], bedrock, schema_of(packets[int(path.stem[:3])])):
+                    if found := CaseForm.locate(
+                        case["value"], bedrock, schema_of(module, module.packets[int(path.stem[:3])])
+                    ):
                         where, ours, theirs = found
                         problems.append(
                             f"JSON differs at {where or '<packet>'}: case {json.dumps(ours)[:100]},"

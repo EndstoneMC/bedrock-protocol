@@ -1,4 +1,5 @@
 import json
+from collections.abc import Callable
 from typing import Protocol
 
 from bedrock_protocol_compiler.cpp import names
@@ -42,10 +43,23 @@ def primitive_includes(node: Primitive) -> set[str]:
     return {"<cstdint>"} if names.PRIMITIVES[node.name].startswith("std::") else set()
 
 
+def write_loop(p: Printer, depth: int, indexed: bool, range_: str, *bodies: Callable[[], None]) -> None:
+    index = f"std::size_t i{depth} = 0; " if indexed else ""
+    p.emit("for ($index$$range$) {", index=index, range=range_)
+    with p.indent():
+        for body in bodies:
+            body()
+        if indexed:
+            p.emit("++i$depth$;", depth=depth)
+    p.emit("}")
+
+
 class FieldGenerator(Protocol):
     def cpp_type(self) -> str | None: ...
 
     def includes(self) -> set[str]: ...
+
+    def fallible(self) -> bool: ...
 
     def write(self, p: Printer, value: str) -> None: ...
 
@@ -62,6 +76,9 @@ class ScalarField:
 
     def cpp_type(self) -> str:
         return self.spelled
+
+    def fallible(self) -> bool:
+        return False
 
     def write(self, p: Printer, value: str) -> None:
         p.emit(names.write(self.encoded, self.endian, value))
@@ -121,26 +138,40 @@ class EnumField(ScalarField):
 
 
 class SerializerField:
-    def __init__(self, where: str, spelled: str) -> None:
+    def __init__(self, where: str, spelled: str, implementation: str) -> None:
         self.where = where
         self.spelled = spelled
+        self.implementation = implementation
 
     def cpp_type(self) -> str:
         return self.spelled
 
+    def fallible(self) -> bool:
+        return True
+
     def write(self, p: Printer, value: str) -> None:
-        p.emit("Serializer<$type$>::serialize(stream, $value$);", type=self.spelled, value=value)
+        p.emit(
+            """
+            {
+                auto r = $implementation$::serialize(stream, $value$);
+                if (!r) $fail$
+            }
+            """,
+            implementation=self.implementation,
+            value=value,
+            fail=names.fail("r.error()", self.where),
+        )
 
     def read(self, p: Printer, target: str) -> None:
         p.emit(
             """
             {
-                auto v = Serializer<$type$>::deserialize(stream);
+                auto v = $implementation$::deserialize(stream);
                 if (!v) $fail$
                 $target$ = std::move(*v);
             }
             """,
-            type=self.spelled,
+            implementation=self.implementation,
             fail=names.fail("v.error()", self.where),
             target=target,
         )
@@ -149,15 +180,18 @@ class SerializerField:
 class ReferenceField(SerializerField):
     def __init__(self, schema: Schema, node: StructRef | EnumName, version: int, where: str) -> None:
         self.family = node.struct if isinstance(node, StructRef) else node.enum
-        super().__init__(where, names.qualified(schema, schema.shape_at(self.family, version)))
+        shape = schema.shape_at(self.family, version)
+        spelled = names.qualified(schema, shape)
+        super().__init__(where, spelled, names.serializer(spelled, names.since(schema, shape)))
 
     def includes(self) -> set[str]:
         return {names.header(self.family)}
 
 
 class BuiltinField(SerializerField):
-    def __init__(self, schema: Schema, node: BuiltinRef, where: str) -> None:
-        super().__init__(where, names.qualified(schema, node.builtin))
+    def __init__(self, schema: Schema, node: BuiltinRef, version: int, where: str) -> None:
+        spelled = names.qualified(schema, node.builtin)
+        super().__init__(where, spelled, names.serializer(spelled, version))
         self.node = node
 
     def includes(self) -> set[str]:
@@ -172,6 +206,9 @@ class BuiltinTextField:
 
     def cpp_type(self) -> str:
         return self.spelled
+
+    def fallible(self) -> bool:
+        return False
 
     def includes(self) -> set[str]:
         return {"<string>", names.header(self.node.builtin)}
@@ -202,7 +239,8 @@ class BitsetField(SerializerField):
     def __init__(self, schema: Schema, node: Bitset, version: int, where: str) -> None:
         shape = schema.shape_at(node.width.enum, version)
         assert isinstance(shape, EnumShape)
-        super().__init__(where, f"std::bitset<{shape.numbers[node.width.name]}>")
+        spelled = f"std::bitset<{shape.numbers[node.width.name]}>"
+        super().__init__(where, spelled, names.serializer(spelled, version))
         self.node = node
 
     def includes(self) -> set[str]:
@@ -231,6 +269,9 @@ class LiteralField:
 
     def cpp_type(self) -> None:
         return None
+
+    def fallible(self) -> bool:
+        return False
 
     def includes(self) -> set[str]:
         if isinstance(self.node.value, MemberRef):
@@ -264,6 +305,9 @@ class OptionalField:
 
     def cpp_type(self) -> str:
         return f"std::optional<{self.element.cpp_type()}>"
+
+    def fallible(self) -> bool:
+        return self.element.fallible()
 
     def includes(self) -> set[str]:
         return {"<optional>"} | self.element.includes()
@@ -312,21 +356,21 @@ class ListField:
     def cpp_type(self) -> str:
         return f"std::vector<{self.element.cpp_type()}>"
 
+    def fallible(self) -> bool:
+        return self.element.fallible()
+
     def includes(self) -> set[str]:
         return {"<vector>"} | self.element.includes()
 
     def write(self, p: Printer, value: str) -> None:
         if self.node.prefix is not None:
             p.emit(names.write(self.node.prefix.name, self.node.prefix.endian, f"{value}.size()"))
-        p.emit(
-            """
-            for (const auto &e$depth$ : $value$) {
-                $body$
-            }
-            """,
-            depth=self.depth,
-            value=value,
-            body=lambda: self.element.write(p, f"e{self.depth}"),
+        write_loop(
+            p,
+            self.depth,
+            self.element.fallible(),
+            f"const auto &e{self.depth} : {value}",
+            lambda: self.element.write(p, f"e{self.depth}"),
         )
 
     def read(self, p: Printer, target: str) -> None:
@@ -376,19 +420,19 @@ class ArrayField:
     def cpp_type(self) -> str:
         return f"std::array<{self.element.cpp_type()}, {self.node.size}>"
 
+    def fallible(self) -> bool:
+        return self.element.fallible()
+
     def includes(self) -> set[str]:
         return {"<array>"} | self.element.includes()
 
     def write(self, p: Printer, value: str) -> None:
-        p.emit(
-            """
-            for (const auto &e$depth$ : $value$) {
-                $body$
-            }
-            """,
-            depth=self.depth,
-            value=value,
-            body=lambda: self.element.write(p, f"e{self.depth}"),
+        write_loop(
+            p,
+            self.depth,
+            self.element.fallible(),
+            f"const auto &e{self.depth} : {value}",
+            lambda: self.element.write(p, f"e{self.depth}"),
         )
 
     def read(self, p: Printer, target: str) -> None:
@@ -416,22 +460,21 @@ class MapField:
     def cpp_type(self) -> str:
         return f"std::map<{self.key.cpp_type()}, {self.value.cpp_type()}>"
 
+    def fallible(self) -> bool:
+        return self.key.fallible() or self.value.fallible()
+
     def includes(self) -> set[str]:
         return {"<map>"} | self.key.includes() | self.value.includes()
 
     def write(self, p: Printer, value: str) -> None:
         p.emit(names.write("uvarint32", None, f"{value}.size()"))
-        p.emit(
-            """
-            for (const auto &[k$depth$, v$depth$] : $value$) {
-                $key$
-                $element$
-            }
-            """,
-            depth=self.depth,
-            value=value,
-            key=lambda: self.key.write(p, f"k{self.depth}"),
-            element=lambda: self.value.write(p, f"v{self.depth}"),
+        write_loop(
+            p,
+            self.depth,
+            self.fallible(),
+            f"const auto &[k{self.depth}, v{self.depth}] : {value}",
+            lambda: self.key.write(p, f"k{self.depth}"),
+            lambda: self.value.write(p, f"v{self.depth}"),
         )
 
     def read(self, p: Printer, target: str) -> None:
@@ -471,6 +514,9 @@ class VariantField:
     def cpp_type(self) -> str:
         cases = ("std::monostate" if case is None else f"{case.cpp_type()}" for case in self.cases)
         return f"std::variant<{', '.join(cases)}>"
+
+    def fallible(self) -> bool:
+        return any(case is not None and case.fallible() for case in self.cases)
 
     def includes(self) -> set[str]:
         return {"<variant>"}.union(*(case.includes() for case in self.cases if case is not None))
@@ -514,6 +560,9 @@ class DuplicatedField:
     def cpp_type(self) -> str | None:
         return self.element.cpp_type()
 
+    def fallible(self) -> bool:
+        return self.element.fallible()
+
     def includes(self) -> set[str]:
         return self.element.includes()
 
@@ -553,7 +602,7 @@ def make_field_generator(schema: Schema, node: Type, version: int, where: str, d
         case BuiltinRef(encoded="str"):
             return BuiltinTextField(schema, node, where)
         case BuiltinRef():
-            return BuiltinField(schema, node, where)
+            return BuiltinField(schema, node, version, where)
         case Literal():
             return LiteralField(schema, node, version, where)
         case Bitset():

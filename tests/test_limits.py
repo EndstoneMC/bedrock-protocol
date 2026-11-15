@@ -28,17 +28,17 @@ SLOT_MAXIMUM = bytes.fromhex("030340120000feff03")
 )
 def test_decode_rejects_a_varint_that_overflows_its_type(body, packet):
     with pytest.raises(ValueError, match="at byte"):
-        packet.from_bytes(body)
+        v2225.decode(packet, body)
 
 
 def test_decode_rejects_a_string_length_beyond_the_body():
     with pytest.raises(ValueError, match="at byte"):
-        v2225.ServerToClientHandshakePacket.from_bytes(bytes.fromhex("ffffffff0f"))
+        v2225.decode(v2225.ServerToClientHandshakePacket, bytes.fromhex("ffffffff0f"))
 
 
 def test_decode_rejects_a_negative_nbt_byte_array_length():
     with pytest.raises(ValueError, match="at byte"):
-        v2225.BlockActorDataPacket.from_bytes(bytes(3) + bytes.fromhex("0a000701610100"))
+        v2225.decode(v2225.BlockActorDataPacket, bytes(3) + bytes.fromhex("0a000701610100"))
 
 
 SLOTS = [
@@ -56,7 +56,7 @@ def test_an_int16_varint_encodes_at_its_bounds(durability_correction, golden):
         item_stack_net_id=v1001.ItemStackNetId(raw_id=9),
         durability_correction=durability_correction,
     )
-    assert bytes(slot) == golden
+    assert v1001.encode(slot) == golden
 
 
 @pytest.mark.parametrize(("durability_correction", "golden"), SLOTS)
@@ -68,18 +68,18 @@ def test_an_int16_varint_decodes_at_its_bounds(durability_correction, golden):
         item_stack_net_id=v1001.ItemStackNetId(raw_id=9),
         durability_correction=durability_correction,
     )
-    assert v1001.ItemStackResponseSlotInfo.from_bytes(golden) == slot
+    assert v1001.decode(v1001.ItemStackResponseSlotInfo, golden) == slot
 
 
 @pytest.mark.parametrize("encoded", ["808004", "818004"])
 def test_decode_rejects_an_int16_varint_beyond_its_bounds(encoded):
     with pytest.raises(ValueError, match="at byte"):
-        v1001.ItemStackResponseSlotInfo.from_bytes(SLOT_PREFIX + bytes.fromhex(encoded))
+        v1001.decode(v1001.ItemStackResponseSlotInfo, SLOT_PREFIX + bytes.fromhex(encoded))
 
 
 def test_a_signed_member_of_an_unsigned_varint_encodes_to_its_golden():
-    assert bytes(v729.NetworkBlockPosition(x=0, y=-1, z=0)) == NETWORK_BLOCK_POSITION
+    assert v729.encode(v729.NetworkBlockPosition(x=0, y=-1, z=0)) == NETWORK_BLOCK_POSITION
 
 
 def test_a_signed_member_of_an_unsigned_varint_decodes_from_its_golden():
-    assert v729.NetworkBlockPosition.from_bytes(NETWORK_BLOCK_POSITION) == v729.NetworkBlockPosition(x=0, y=-1, z=0)
+    assert v729.decode(v729.NetworkBlockPosition, NETWORK_BLOCK_POSITION) == v729.NetworkBlockPosition(x=0, y=-1, z=0)

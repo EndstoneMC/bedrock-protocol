@@ -111,6 +111,83 @@ class CylinderDataPayload:
     height: float
 """
 
+NESTED = """
+from protocol import type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Inner:
+    x: uint8
+
+@type(since=2)
+class Outer:
+    inner: Inner
+"""
+
+RETURNING = """
+from protocol import type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class A:
+    x: uint8
+
+@type(since=3, until=4)
+class A:
+    y: uint8
+
+@type(since=4)
+class A:
+    x: uint8
+"""
+
+LISTS = """
+from protocol import uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Item:
+    x: uint8
+
+class Bag:
+    items: list[Item]
+    ids: list[uint8]
+"""
+
+BUILTINS = """
+from enum import IntEnum
+from protocol import bitset, builtin, type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@builtin
+class DynamicValue:
+    pass
+
+class E(IntEnum, uint8):
+    A = 1
+    B = 2
+    COUNT = B
+
+@type(since=2)
+class P:
+    v: DynamicValue
+    flags: bitset[E.COUNT]
+"""
+
+MAPS = """
+from protocol import uint8, uint16
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Item:
+    x: uint8
+
+class Registry:
+    items: dict[uint16, Item]
+"""
+
 CYLINDER_INIT = """
 from bedrock_protocol_compiler.dsl import field
 
@@ -304,7 +381,10 @@ def test_a_duplicated_field_writes_once_per_copy(generate):
 
     write = (
         "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
-        "        Serializer<::bedrock::protocol::Vec2>::serialize(stream, value.radii);\n"
+        "        {\n"
+        "            auto r = Serializer<::bedrock::protocol::Vec2, 1001>::serialize(stream, value.radii);\n"
+        '            if (!r) return stream.fail(r.error(), "radii");\n'
+        "        }\n"
         "    }\n"
         "    stream.write<float>(value.height);\n"
     )
@@ -317,10 +397,159 @@ def test_a_duplicated_field_reads_every_copy_into_it(generate):
     read = (
         "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
         "        {\n"
-        "            auto v = Serializer<::bedrock::protocol::Vec2>::deserialize(stream);\n"
+        "            auto v = Serializer<::bedrock::protocol::Vec2, 1001>::deserialize(stream);\n"
         '            if (!v) return stream.fail(v.error(), "radii");\n'
         "            out.radii = std::move(*v);\n"
         "        }\n"
         "    }\n"
     )
     assert read in (out / "a.cpp").read_text()
+
+
+def test_an_implementation_is_named_for_its_shapes_first_protocol(generate):
+    out = generate({"a": NESTED})
+
+    assert "struct Serializer<::bedrock::protocol::v2::Outer, 2> {\n" in (out / "a.h").read_text()
+    assert "auto Serializer<::bedrock::protocol::v2::Outer, 2>::serialize(" in (out / "a.cpp").read_text()
+
+
+def test_an_implementation_carries_its_first_protocol_as_since(generate):
+    out = generate({"a": NESTED})
+
+    assert "    static constexpr int since = 2;\n" in (out / "a.h").read_text()
+
+
+def test_a_run_gets_a_partial_bounded_by_it(generate):
+    out = generate({"a": NESTED})
+
+    partial = (
+        "template <int V> requires (V >= 2)\n"
+        "struct Serializer<::bedrock::protocol::v2::Outer, V> : Serializer<::bedrock::protocol::v2::Outer, 2> {};\n"
+    )
+    assert partial in (out / "a.h").read_text()
+
+
+def test_a_shape_live_at_every_version_gets_an_unconstrained_partial(generate):
+    out = generate({"a": NESTED})
+
+    partial = (
+        "template <int V>\n"
+        "struct Serializer<::bedrock::protocol::Inner, V> : Serializer<::bedrock::protocol::Inner, 1> {};\n"
+    )
+    assert partial in (out / "a.h").read_text()
+
+
+def test_a_shape_live_in_two_runs_gets_a_partial_per_run(generate):
+    out = generate({"a": RETURNING})
+
+    header = (out / "a.h").read_text()
+    assert (
+        "template <int V> requires (V < 3)\n"
+        "struct Serializer<::bedrock::protocol::base::A, V> : Serializer<::bedrock::protocol::base::A, 1> {};\n"
+    ) in header
+    assert (
+        "template <int V> requires (V >= 4)\n"
+        "struct Serializer<::bedrock::protocol::base::A, V> : Serializer<::bedrock::protocol::base::A, 1> {};\n"
+    ) in header
+
+
+def test_a_child_call_names_the_childs_own_protocol(generate):
+    out = generate({"a": NESTED})
+
+    assert (
+        "auto r = Serializer<::bedrock::protocol::Inner, 1>::serialize(stream, value.inner);"
+        in (out / "a.cpp").read_text()
+    )
+
+
+def test_a_failed_nested_write_names_its_field(generate):
+    out = generate({"a": NESTED})
+
+    assert 'if (!r) return stream.fail(r.error(), "inner");' in (out / "a.cpp").read_text()
+
+
+def test_a_failing_list_element_carries_its_index(generate):
+    out = generate({"a": LISTS})
+
+    write = (
+        "    for (std::size_t i0 = 0; const auto &e0 : value.items) {\n"
+        "        {\n"
+        "            auto r = Serializer<::bedrock::protocol::Item, 1>::serialize(stream, e0);\n"
+        '            if (!r) return stream.fail(r.error(), "items", i0);\n'
+        "        }\n"
+        "        ++i0;\n"
+        "    }\n"
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_a_list_of_primitives_keeps_its_unindexed_loop(generate):
+    out = generate({"a": LISTS})
+
+    write = (
+        "    stream.writeVarInt<std::uint32_t>(value.ids.size());\n"
+        "    for (const auto &e0 : value.ids) {\n"
+        "        stream.write<std::uint8_t>(e0);\n"
+        "    }\n"
+        "    return {};\n"
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_a_name_coded_write_rejects_a_value_with_no_name(generate):
+    out = generate({"a": A})
+
+    write = (
+        "auto Serializer<::bedrock::protocol::E, 1>::serialize(BinaryWriter &stream, ::bedrock::protocol::E value)"
+        " -> std::expected<void, Errc>\n"
+        "{\n"
+        "    if (!enum_contains(value)) return std::unexpected(Errc::unknown_value);\n"
+        "    stream.write(enum_name(value));\n"
+        "    return {};\n"
+        "}\n"
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_an_explicit_specialization_comes_before_its_partials(generate):
+    out = generate({"a": NESTED})
+
+    order = (
+        "    static auto deserialize(BinaryReader &stream) -> std::expected<::bedrock::protocol::v2::Outer, Errc>;\n"
+        "};\n"
+        "\n"
+        "template <int V> requires (V >= 2)\n"
+        "struct Serializer<::bedrock::protocol::v2::Outer, V>"
+    )
+    assert order in (out / "a.h").read_text()
+
+
+def test_a_builtin_is_called_with_the_callers_protocol(generate):
+    out = generate({"a": BUILTINS})
+
+    assert (
+        "auto r = Serializer<::bedrock::protocol::DynamicValue, 2>::serialize(stream, value.v);"
+        in (out / "a.cpp").read_text()
+    )
+
+
+def test_a_bitset_is_called_with_the_callers_protocol(generate):
+    out = generate({"a": BUILTINS})
+
+    assert "auto r = Serializer<std::bitset<2>, 2>::serialize(stream, value.flags);" in (out / "a.cpp").read_text()
+
+
+def test_a_map_whose_value_can_fail_carries_an_index(generate):
+    out = generate({"a": MAPS})
+
+    write = (
+        "    for (std::size_t i0 = 0; const auto &[k0, v0] : value.items) {\n"
+        "        stream.write<std::uint16_t>(k0);\n"
+        "        {\n"
+        "            auto r = Serializer<::bedrock::protocol::Item, 1>::serialize(stream, v0);\n"
+        '            if (!r) return stream.fail(r.error(), "items", i0);\n'
+        "        }\n"
+        "        ++i0;\n"
+        "    }\n"
+    )
+    assert write in (out / "a.cpp").read_text()

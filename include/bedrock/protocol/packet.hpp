@@ -19,12 +19,13 @@ struct PacketHeader {
     friend bool operator==(const PacketHeader &, const PacketHeader &) = default;
 };
 
-template <>
-struct Serializer<PacketHeader> {
-    static void serialize(BinaryWriter &stream, const PacketHeader &value)
+template <int V>
+struct Serializer<PacketHeader, V> {
+    static auto serialize(BinaryWriter &stream, const PacketHeader &value) -> std::expected<void, Errc>
     {
         stream.writeVarInt<std::uint32_t>((value.packet_id & 0x3FFU) | ((value.recipient_sub_id & 3U) << 10) |
                                           ((value.sender_sub_id & 3U) << 12));
+        return {};
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<PacketHeader, Errc>

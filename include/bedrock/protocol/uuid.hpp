@@ -63,12 +63,13 @@ struct UUID {
     std::uint64_t least_significant_bits;
 };
 
-template <>
-struct Serializer<UUID> {
-    static void serialize(BinaryWriter &stream, const UUID &value)
+template <int V>
+struct Serializer<UUID, V> {
+    static auto serialize(BinaryWriter &stream, const UUID &value) -> std::expected<void, Errc>
     {
         stream.write<std::uint64_t>(value.most_significant_bits);
         stream.write<std::uint64_t>(value.least_significant_bits);
+        return {};
     }
 
     static auto deserialize(BinaryReader &stream) -> std::expected<UUID, Errc>

@@ -26,6 +26,7 @@ PRIMITIVES = {
 VARINTS = ("varint32", "varint64", "uvarint32", "uvarint64")
 OUT_OF_RANGE = "Errc::out_of_range"
 UNKNOWN_VALUE = "Errc::unknown_value"
+ENCODED = "std::expected<void, Errc>"
 
 
 def namespace(schema: Schema) -> str:
@@ -54,6 +55,14 @@ def nested(spelled: str) -> str:
 
 def selector(family: Struct | Enum) -> str:
     return f"{family.name}_"
+
+
+def since(schema: Schema, shape: Shape) -> int:
+    return schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
+
+
+def serializer(spelled: str, version: int) -> str:
+    return f"Serializer<{spelled}, {version}>"
 
 
 def decoded(spelled: str) -> str:
@@ -104,6 +113,11 @@ def clause(run: Range) -> str:
     if run.until is not None:
         bounds.append(f"V < {run.until}")
     return " && ".join(bounds)
+
+
+def requirement(run: Range) -> str:
+    bounds = clause(run)
+    return f" requires ({bounds})" if bounds else ""
 
 
 def runtime(stem: str) -> str:

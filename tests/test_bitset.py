@@ -77,27 +77,27 @@ REJECTS = [
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_a_130_bit_bitset_encodes_to_its_golden(version):
-    assert bytes(version.ActorDataFlagComponent(value=WIDE_VALUE)) == WIDE
+    assert version.encode(version.ActorDataFlagComponent(value=WIDE_VALUE)) == WIDE
 
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_a_130_bit_bitset_decodes_from_its_golden(version):
-    assert version.ActorDataFlagComponent.from_bytes(WIDE) == version.ActorDataFlagComponent(value=WIDE_VALUE)
+    assert version.decode(version.ActorDataFlagComponent, WIDE) == version.ActorDataFlagComponent(value=WIDE_VALUE)
 
 
 @pytest.mark.parametrize("version", [v975, v1001])
 def test_a_130_bit_bitset_reads_back_as_its_int(version):
-    assert version.ActorDataFlagComponent.from_bytes(WIDE).value == WIDE_VALUE
+    assert version.decode(version.ActorDataFlagComponent, WIDE).value == WIDE_VALUE
 
 
 @pytest.mark.parametrize(("value", "golden"), WHOLE)
 def test_a_65_bit_bitset_packet_encodes_to_its_golden(value, golden):
-    assert bytes(v1001.PlayerAuthInputPacket(input_data=value)) == golden
+    assert v1001.encode(v1001.PlayerAuthInputPacket(input_data=value)) == golden
 
 
 @pytest.mark.parametrize(("value", "golden"), WHOLE)
 def test_a_65_bit_bitset_packet_decodes_from_its_golden(value, golden):
-    assert v1001.PlayerAuthInputPacket.from_bytes(golden) == v1001.PlayerAuthInputPacket(input_data=value)
+    assert v1001.decode(v1001.PlayerAuthInputPacket, golden) == v1001.PlayerAuthInputPacket(input_data=value)
 
 
 def test_a_bit_past_the_declared_width_cannot_be_assigned():
@@ -113,4 +113,4 @@ def test_a_negative_int_cannot_be_assigned():
 @pytest.mark.parametrize("encoded", REJECTS)
 def test_decode_rejects_a_65_bit_bitset_that_is_not_one(encoded):
     with pytest.raises(ValueError, match="at byte"):
-        v1001.PlayerAuthInputPacket.from_bytes(encoded)
+        v1001.decode(v1001.PlayerAuthInputPacket, encoded)

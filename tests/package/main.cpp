@@ -9,5 +9,5 @@ int main()
     bp::SubChunkRequestPacket_<975> packet;
     std::string buffer;
     bp::BinaryWriter writer{buffer};
-    bp::encode(writer, packet);
+    return bp::encode<975>(writer, packet) ? 0 : 1;
 }

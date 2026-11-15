@@ -173,7 +173,7 @@ class FileGenerator:
 
     def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
         runs = self.runs(family)
-        constraint = names.clause(Range(runs[0][0].since, runs[-1][0].until))
+        constraint = names.requirement(Range(runs[0][0].since, runs[-1][0].until))
         spelled = (
             f"::{names.namespace(self.schema)}::{names.selector(family)}<V>"
             if runs[0][1].versioned
@@ -185,7 +185,7 @@ class FileGenerator:
             struct packet_of<V, $id$> { using type = $type$; };
 
             """,
-            constraint=f" requires ({constraint})" if constraint else "",
+            constraint=constraint,
             id=packet_id,
             type=spelled,
         )
