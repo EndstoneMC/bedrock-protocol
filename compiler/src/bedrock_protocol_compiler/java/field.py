@@ -1,5 +1,5 @@
 import json
-from typing import override
+from typing import cast, override
 
 from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.cpp.field import ENUM_ENCODINGS
@@ -41,15 +41,23 @@ from bedrock_protocol_compiler.java.value import (
     literal,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, StructModel, strip
 
 
 class FieldContext:
     def __init__(
-        self, schema: Schema, version: int, owner: str, where: str, field: Field, registry: Members, inline: bool
+        self,
+        schema: Schema,
+        encoding: Encoding,
+        owner: str,
+        where: str,
+        field: Field,
+        registry: Members,
+        inline: bool,
     ) -> None:
         self.schema = schema
-        self.version = version
+        self.encoding = encoding
+        self.model = encoding.model
         self.owner = owner
         self.field = field
         self.where = f"{where}.{field.name}"
@@ -58,8 +66,8 @@ class FieldContext:
         self.inline = inline
         self.unions: list[UnionGenerator] = []
 
-    def enum_shape(self, node: EnumRef | EnumName | MemberRef) -> EnumShape:
-        shape = self.schema.shape_at(node.enum, self.version)
+    def enum_shape(self, node: EnumRef | EnumName) -> EnumShape:
+        shape = self.schema.target(self.model, node)
         if not isinstance(shape, EnumShape):
             raise CompilerError(f"{self.where}: {node.enum.name} is not an enum")
         return shape
@@ -76,10 +84,18 @@ class FieldContext:
                 underlying = shape.underlying.name
                 encoded = node.encoded or ENUM_ENCODINGS[underlying]
                 return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, shape))
-            case StructRef(struct=struct):
-                spelled = names.qualified(self.schema, self.schema.shape_at(struct, self.version))
+            case StructRef():
+                model = self.schema.target(self.model, node)
+                if not isinstance(model, StructModel):
+                    raise CompilerError(f"{self.where}: {node.struct.name} is not a struct")
+                spelled = names.qualified(self.schema, model)
+                codec = f"{spelled}.{names.codec(cast(Encoding, self.encoding.reached[node]))}.INSTANCE"
                 return Reference(
-                    spelled, f"{spelled}.getDefaultInstance()", f"{spelled}.decode(buf)", "{}.encode(buf);", label
+                    spelled,
+                    f"{spelled}.getDefaultInstance()",
+                    f"{codec}.decode(buf)",
+                    f"{codec}.encode({{}}, buf);",
+                    label,
                 )
             case EnumName():
                 shape = self.enum_shape(node)
@@ -97,18 +113,22 @@ class FieldContext:
                     return Reference(builtin.name, "new UUID(0L, 0L)", read, write, label)
                 default = f"{builtin.name}.getDefaultInstance()"
                 return Reference(builtin.name, default, read, write, label, "{}.copy()")
-            case Bitset(width=width):
-                return BitsetValue(self.enum_shape(width).numbers[width.name], label)
+            case Bitset():
+                return BitsetValue(self.schema.width(self.model, node), label)
             case List(element=element, prefix=prefix):
                 return ListValue(self.value(element, label), prefix, None, label)
             case Array(element=element, size=size):
                 return ListValue(self.value(element, label), None, size, label)
             case Variant(cases=cases):
                 wrapper = names.pascal(self.field.name)
-                message = names.runtime(self.schema, "Message")
-                self.unions.append(UnionGenerator(self.union(cases, wrapper, False), self.where, message))
+                self.unions.append(UnionGenerator(self.union(cases, wrapper, False), self.where))
+                codec = f"{wrapper}.{names.codec(self.encoding)}.INSTANCE"
                 return Reference(
-                    wrapper, f"{wrapper}.getDefaultInstance()", f"{wrapper}.decode(buf)", "{}.encode(buf);", self.label
+                    wrapper,
+                    f"{wrapper}.getDefaultInstance()",
+                    f"{codec}.decode(buf)",
+                    f"{codec}.encode({{}}, buf);",
+                    self.label,
                 )
         kind = type(node).__name__.lower()
         article = "an" if kind[0] in "aeiou" else "a"
@@ -116,11 +136,15 @@ class FieldContext:
 
     def union(self, cases: tuple[Type | None, ...], stem: str, inline: bool) -> Union:
         built: list[tuple[str, Value] | None] = []
+        spelled: dict[str, str] = {}
         for case in cases:
             if case is None:
                 built.append(None)
                 continue
-            name = case_name(case, self.where)
+            name = case_name(strip(case), self.where)
+            own = case_name(case, self.where)
+            if spelled.setdefault(name, own) != own:
+                raise CompilerError(f"{self.where}: union cases {spelled[name]} and {own} are both {name}")
             built.append((name, self.value(case, f"{stem}.{names.camel(name)}")))
         return Union(self.field.name, built, self.where, inline, self.members)
 
@@ -137,18 +161,19 @@ class FieldContext:
             case Literal(value=str(text)):
                 slot = LiteralSlot(self.field, label, "str", json.dumps(text), "@NotNull String", json.dumps(text))
             case Literal(value=MemberRef(name=name) as member):
-                shape = self.enum_shape(member)
+                shape = self.schema.enum_type(member.enum, self.encoding.since)
+                written = self.schema.number(self.encoding, member)
                 encoded = ENUM_ENCODINGS[shape.underlying.name]
                 enum = names.qualified(self.schema, shape)
                 number = enum_class(shape)
-                spelled = literal(shape.numbers[name], number)
+                spelled = literal(written, number)
                 canonical = next(
                     (each for each in shape.members if literal(shape.numbers[each.name], number) == spelled), None
                 )
                 if canonical is None:
                     raise CompilerError(f"{self.where}: {shape.family.name}.{name} has no constant in {enum}")
                 deprecated = canonical.deprecated or any(each.deprecated for each in shape.members if each.name == name)
-                constant = literal(shape.numbers[name], CLASSES[encoded])
+                constant = literal(written, CLASSES[encoded])
                 slot = LiteralSlot(
                     self.field,
                     label,
@@ -224,7 +249,7 @@ class Slot:
     def definitions(self, p: Printer) -> None:
         pass
 
-    def write(self, body: Body) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         raise NotImplementedError
 
     def read(self, body: Body, renderer: Renderer) -> None:
@@ -373,8 +398,8 @@ class ScalarSlot(StoredSlot):
         return self.value.hash(self.member)
 
     @override
-    def write(self, body: Body) -> None:
-        self.value.write(body, self.member)
+    def write(self, body: Body, receiver: str) -> None:
+        self.value.write(body, f"{receiver}{self.member}")
 
     @override
     def read(self, body: Body, renderer: Renderer) -> None:
@@ -491,16 +516,17 @@ class OptionalSlot(StoredSlot):
         return self.element.nullable_hash(self.member)
 
     @override
-    def write(self, body: Body) -> None:
-        body.line(f"buf.writeBoolean({self.member} != null);")
+    def write(self, body: Body, receiver: str) -> None:
+        member = f"{receiver}{self.member}"
+        body.line(f"buf.writeBoolean({member} != null);")
         body.p.emit(
             """
             if ($member$ != null) {
                 $body$
             }
             """,
-            member=self.member,
-            body=lambda: self.element.write(body, self.element.unboxed(self.member)),
+            member=member,
+            body=lambda: self.element.write(body, self.element.unboxed(member)),
         )
 
     @override
@@ -676,8 +702,8 @@ class ListSlot(StoredSlot):
         return self.value.hash(self.member)
 
     @override
-    def write(self, body: Body) -> None:
-        self.value.write(body, self.member)
+    def write(self, body: Body, receiver: str) -> None:
+        self.value.write(body, f"{receiver}{self.member}")
 
     @override
     def read(self, body: Body, renderer: Renderer) -> None:
@@ -821,9 +847,9 @@ class MapSlot(StoredSlot):
         return f"{self.member}.hashCode()"
 
     @override
-    def write(self, body: Body) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         entry = body.fresh("entry")
-        body.line(f"ByteBufCodec.writeUnsignedVarInt(buf, {self.member}.size());")
+        body.line(f"ByteBufCodec.writeUnsignedVarInt(buf, {receiver}{self.member}.size());")
         body.p.emit(
             """
             for (Map.Entry<$types$> $entry$ : $member$.entrySet()) {
@@ -833,7 +859,7 @@ class MapSlot(StoredSlot):
             """,
             types=self.entry,
             entry=entry,
-            member=self.member,
+            member=f"{receiver}{self.member}",
             key=lambda: self.key.write(body, self.key.unboxed(f"{entry}.getKey()")),
             value=lambda: self.value.write(body, self.value.unboxed(f"{entry}.getValue()")),
         )
@@ -888,7 +914,7 @@ class LiteralSlot(Slot):
         )
 
     @override
-    def write(self, body: Body) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         body.line(WRITES[self.encoded].format(self.constant))
 
     @override
@@ -951,8 +977,8 @@ class UnionSlot(Slot):
         self.union.kind_enum(p)
 
     @override
-    def write(self, body: Body) -> None:
-        self.union.write(body)
+    def write(self, body: Body, receiver: str) -> None:
+        self.union.write(body, receiver)
 
     @override
     def read(self, body: Body, renderer: Renderer) -> None:

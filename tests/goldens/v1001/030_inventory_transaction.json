@@ -93,7 +93,7 @@
     "raw_id": -3
    },
    "variant_transaction": {
-    "__class__": "ItemUseInventoryTransaction",
+    "__class__": "CerealizedItemUseInventoryTransaction",
     "transaction": {
      "actions": [
       {

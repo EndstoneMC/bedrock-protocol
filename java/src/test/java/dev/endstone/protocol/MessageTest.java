@@ -12,18 +12,21 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 final class MessageTest {
+    private static final ProtocolVersion LATEST =
+            ProtocolVersion.of(ProtocolVersion.LATEST_VERSION).orElseThrow();
+
     private static ByteBuf hex(String hex) {
         return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
     }
 
-    private static String encoded(Message message) {
+    private static String encoded(Packet packet) {
         ByteBuf buf = Unpooled.buffer();
-        message.encode(buf);
+        LATEST.encodePacket(packet, buf);
         return ByteBufUtil.hexDump(buf);
     }
 
     private static DecodeException failure(int packetId, String hex) {
-        return assertThrows(DecodeException.class, () -> Packets.decode(packetId, hex(hex)));
+        return assertThrows(DecodeException.class, () -> LATEST.decodePacket(packetId, hex(hex)));
     }
 
     @Test
@@ -81,7 +84,7 @@ final class MessageTest {
         PlayStatusPacket packet =
                 assertInstanceOf(
                         PlayStatusPacket.class,
-                        Packets.decode(PlayStatusPacket.ID, hex("000003e7")));
+                        LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7")));
         assertEquals(PlayStatus.UNRECOGNIZED, packet.getStatus());
     }
 
@@ -90,13 +93,14 @@ final class MessageTest {
         PlayStatusPacket packet =
                 assertInstanceOf(
                         PlayStatusPacket.class,
-                        Packets.decode(PlayStatusPacket.ID, hex("000003e7")));
+                        LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7")));
         assertEquals(999, packet.getStatusValue());
     }
 
     @Test
     void anUnknownEnumNumberReEncodesAsItself() {
-        assertEquals("000003e7", encoded(Packets.decode(PlayStatusPacket.ID, hex("000003e7"))));
+        assertEquals(
+                "000003e7", encoded(LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7"))));
     }
 
     @Test
@@ -111,7 +115,7 @@ final class MessageTest {
         AvailableActorIdentifiersPacket packet =
                 assertInstanceOf(
                         AvailableActorIdentifiersPacket.class,
-                        Packets.decode(AvailableActorIdentifiersPacket.ID, hex("0a0000")));
+                        LATEST.decodePacket(AvailableActorIdentifiersPacket.ID, hex("0a0000")));
         CompoundTag copy = packet.getIdentifierList();
         copy.putInt("x", 1);
         assertFalse(packet.getIdentifierList().contains("x"));

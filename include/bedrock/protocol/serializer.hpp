@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <format>
 #include <string_view>
@@ -14,7 +15,13 @@
 
 namespace bedrock::protocol {
 
-template <typename T, int V>
+enum class SerializationMode : std::uint8_t {
+    Default = 0,
+    Cereal = 1,
+    Manual = 2,
+};
+
+template <typename T, int V, SerializationMode M = SerializationMode::Default>
 struct Serializer;
 
 struct DecodeError {
@@ -31,10 +38,10 @@ struct EncodeError {
     std::vector<PathSegment> path;
 };
 
-template <int V, Reflected T>
+template <int V, SerializationMode M = SerializationMode::Default, Reflected T>
 [[nodiscard]] auto encode(BinaryWriter &stream, const T &value) -> std::expected<void, EncodeError>
 {
-    auto written = Serializer<T, V>::serialize(stream, value);
+    auto written = Serializer<T, V, M>::serialize(stream, value);
     if (written) {
         return {};
     }
@@ -45,10 +52,10 @@ template <int V, Reflected T>
     });
 }
 
-template <int V, Reflected T>
+template <int V, Reflected T, SerializationMode M = SerializationMode::Default>
 [[nodiscard]] auto decode(BinaryReader &stream) -> std::expected<T, DecodeError>
 {
-    auto value = Serializer<T, V>::deserialize(stream);
+    auto value = Serializer<T, V, M>::deserialize(stream);
     if (value && stream.getUnreadLength() == 0) {
         return std::move(*value);
     }

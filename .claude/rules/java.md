@@ -2,6 +2,7 @@
 paths:
   - "java/**"
   - "compiler/src/bedrock_protocol_compiler/java/**"
+  - "compiler/tests/test_java.py"
 ---
 
 # Java
@@ -18,15 +19,23 @@ paths:
 - Keep `read` and `write` for `ByteBufCodec`'s primitives and the schema's builtins, and name every other type's encoding `encode` and `decode`, NBT tags included.
 - Map a schema builtin `Name` from module `stem` to the type `<java_package>.<stem without underscores>.<Name>`, read by `ByteBufCodec.read<Name>` and written by `write<Name>` with `Name` in Google camel case (`readUuid`), with `getDefaultInstance()` and `copy()`; the DSL's own `UUID` is `java.util.UUID`.
 - Emit each message as protobuf's generated Java does: an immutable class with `getDefaultInstance()`, `newBuilder()` and `toBuilder()`, a nested `Builder` with `setX`, `clearX` and `build()`, and `getX` on both; `hasX` for an optional, `getXList`, `getXCount` and `addX` for a list, `getXMap` and `putX` for a map, and `getXCase()` for a union.
+- Encode a message only through its codecs: nest one per C++ implementation `Serializer<T, N, M>` in its model's class, named `Codec` and its N, as `Codec729`, with `Cereal` or `Manual` appended for a non-`Default` key, each implementing `Codec<T>` with a `public static final INSTANCE`.
+- Give a union wrapper the codec names of its owner's encodings and no selector, and give a model with no implementation neither codecs nor a selector, except a packet, which keeps its codecs and selector where C++ has none.
+- Select a codec with the static `codec(int version, SerializationMode mode)`, one `if` per mode and run the implementation serves as the C++ partials have them, and `codec(int version)` selecting `SerializationMode.DEFAULT`; throw `IllegalArgumentException` saying the type is no type at that protocol whatever the mode, and otherwise naming the modes it has there.
+- In a codec, call a child's codec by name, `Child.Codec729Cereal.INSTANCE`, the implementation its own encoding reaches, never through a selector.
+- Build a message's fields and builder from the encoding that holds its model at the newest protocol it covers, and fail the compile when another encoding of the model gives a field another Java type, setter check or enum form.
 - Hold a union field as a oneof on its message, and wrap a union in a message of its own as a list, array or map element, inside an optional, or beside a union whose case names it shares.
+- Name a union case after its value domain, so every encoding of a model keeps one API.
 - Default a union to its first case; clearing a required one restores that case, and clearing an optional one gives its `NOT_SET` case.
 - Order a map's keys as the C++ `std::map` does: strings by their unsigned bytes, floats by `<`, so `-0.0` and `0.0` are one key.
 - Keep an int-coded enum open as protobuf's are: `getXValue()`, `forNumber`, and `UNRECOGNIZED` for a number with no member.
-- Emit each literal field as a public constant on its message, named by its DSL name in upper case without leading underscores (`ACTION_TYPE`), and `@Deprecated` when its member or that member's canonical constant is deprecated.
-- Name a packet's id accessor `getPacketId()`, and fail the compile when a field's generated accessor would equal another generated member.
-- Define a shape live at the latest version in the bare `java_package`, and any other in the `v<since>` or `base` package the C++ backend names it by, under `precereal` for a pre-cereal family; a nested shape lives in the newest owner shape that holds it.
-- Generate `v<N>.Packets` for every modelled version, a bare `Packets` for the latest, and a bare `ProtocolVersion` mirroring the C++ `version.hpp`.
+- Emit each literal field as a public constant on the codec of every encoding that writes it, named by its DSL name in upper case without leading underscores (`ACTION_TYPE`), typed by its enum's shape at the encoding's first protocol, and `@Deprecated` when its member or that member's canonical constant is deprecated.
+- Name a packet's id accessor `getPacketId()`, and fail the compile when a generated accessor, selector, codec class or codec constant would equal another generated member.
+- Define a type live at the latest version in the bare `java_package`, and any other in the `v<N>` package of the first protocol that held it, under the name the C++ backend declares; a nested type lives in the model `Schema.owner` names.
+- Generate `v<N>.Packets` with `encode(packet, buf)` and `decode(packetId, buf)` for every modelled version and a bare `ProtocolVersion` mirroring the C++ `version.hpp` with `encodePacket` and `decodePacket`, and no bare `Packets`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
+- Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
-- Check every golden in `GoldensTest` both ways through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it.
+- Check every golden in `GoldensTest` both ways through `ProtocolVersion.encodePacket` and `decodePacket` at the case's protocol and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
+- Anchor an emitted-text assertion in `test_java.py` on its full indentation.
 - Test in JUnit 6 under `.claude/rules/tests.md`: a behaviour-named method, one behaviour each, no loop, `if` or `try`, `assertThrows` with the message, `@ParameterizedTest` with `argumentSet` for cases, no mocks.

@@ -36,7 +36,7 @@ paths:
 - Add a version in three steps:
   - list the packets added, removed, moved and dirty from the dump, read as below;
   - update the DSL from the new dump alone;
-  - compare the library's dirty set, the classes of `v<new>.packets` that `v<old>.packets` lacks, with the dump's, where `<old>` is the modelled neighbour toward 2168; any other difference is a DSL defect.
+  - compare the library's dirty set, the packets whose class in `v<new>.packets` differs from `v<old>.packets` or whose `encodings` entry differs from `v<old>`'s, with the dump's, where `<old>` is the modelled neighbour toward 2168; any other difference is a DSL defect.
 - Diff both ways from the base, 2168: a version above it diffs against the version below, and a version below it against the version above.
 - When a version's bedrock-headers land after its DSL was written, study the version against them and fix the DSL.
 - Take a new version's encoding from its protocol-docs dump, primary evidence with known blind spots (`sources.md`); names follow `naming.md`.

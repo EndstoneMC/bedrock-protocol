@@ -12,7 +12,7 @@ from bedrock_protocol_compiler.descriptor import (
     Range,
     StructRef,
 )
-from bedrock_protocol_compiler.schema import Schema, Slot, roots_reached
+from bedrock_protocol_compiler.schema import Schema, SerializationMode, Slot, roots_reached
 
 HEADER = """
 from enum import IntEnum, auto
@@ -250,7 +250,7 @@ def test_a_struct_that_reaches_a_pre_cereal_family_does_not_change_with_the_cere
         HEADER
         + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
         + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
-        + "class A:\n    b: B = field(cereal=False)\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
     cereal, pre_cereal, a = schema.order
@@ -647,23 +647,19 @@ def test_a_model_held_at_some_versions_is_versioned(build_package):
 PRE_CEREAL_SINCE = (
     HEADER
     + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
-    + "@type(cereal=False)\nclass B:\n    x: uint16\n"
+    + "@type(cereal=False)\nclass B:\n    x: uint16\n\n"
+    + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
 )
 
 
-def test_a_model_starts_at_its_first_cereal_version(build_package):
+def test_each_form_lists_the_models_it_holds(build_package):
     schema = Schema(build_package({"a": PRE_CEREAL_SINCE}))
-    cereal, _ = schema.order
+    cereal, pre_cereal, _ = schema.order
 
-    assert schema.model_at(cereal, 3).since == 3
-
-
-def test_either_form_lists_every_model_of_its_pair(build_package):
-    schema = Schema(build_package({"a": PRE_CEREAL_SINCE}))
-    cereal, pre_cereal = schema.order
-    expected = [schema.model_at(cereal, 1), schema.model_at(cereal, 3)]
-
-    assert (schema.models(cereal), schema.models(pre_cereal)) == (expected, expected)
+    assert (schema.models(cereal), schema.models(pre_cereal)) == (
+        [schema.model_at(cereal, 1), schema.model_at(cereal, 3)],
+        [schema.model_at(cereal, 3)],
+    )
 
 
 def test_an_enum_model_starts_at_the_version_its_family_appears(build_package):
@@ -713,12 +709,11 @@ def test_a_child_whose_encoding_changes_is_a_second_encoding_of_one_parent_model
     assert len(schema.encodings(model)) == 2
 
 
-def test_a_parent_whose_enum_renumbers_is_a_second_encoding(build_package):
+def test_a_parent_whose_enum_renumbers_is_a_second_model(build_package):
     schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
     _, family = schema.order
-    (model,) = schema.models(family)
 
-    assert len(schema.encodings(model)) == 2
+    assert len(schema.models(family)) == 2
 
 
 @pytest.mark.parametrize(
@@ -752,12 +747,11 @@ def test_a_parent_reading_its_enum_another_way_is_a_second_encoding(build_packag
         pytest.param("uint8 | E", id="variant"),
     ],
 )
-def test_a_container_whose_enum_renumbers_is_a_second_encoding(build_package, annotation):
+def test_a_container_whose_enum_renumbers_is_a_second_model(build_package, annotation):
     schema = Schema(build_package({"a": RENUMBERED + f"\nclass P:\n    x: {annotation}\n"}))
     _, family = schema.order
-    (model,) = schema.models(family)
 
-    assert len(schema.encodings(model)) == 2
+    assert len(schema.models(family)) == 2
 
 
 def test_an_encoding_reaches_each_codec_by_the_reference_its_field_holds(build_package):
@@ -808,12 +802,11 @@ def test_a_condition_testing_another_field_is_a_second_encoding(build_package):
 RENAMED = HEADER + "class E(IntEnum, uint8):\n    A = value(1, 'old', until=3)\n    A = value(1, 'new', since=3)\n\n"
 
 
-def test_a_parent_whose_name_coded_enum_renames_is_a_second_encoding(build_package):
+def test_a_parent_whose_name_coded_enum_renames_is_a_second_model(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     _, family = schema.order
-    (model,) = schema.models(family)
 
-    assert len(schema.encodings(model)) == 2
+    assert len(schema.models(family)) == 2
 
 
 def test_a_condition_naming_a_name_coded_enum_keeps_its_naming_in_the_encoding(build_package):
@@ -837,7 +830,7 @@ def test_a_struct_reaching_both_forms_of_a_family_keeps_the_encoding_of_each(bui
         + "class B:\n    x: uint16\n\n"
         + "@type(cereal=False, until=3)\nclass B:\n    x: uint16\n\n"
         + "@type(cereal=False, since=3)\nclass B:\n    x: uint16 = field(endian='big')\n\n"
-        + "class A:\n    c: B = field(cereal=False)\n    b: B\n"
+        + "@packet(id=1)\nclass A:\n    c: B = field(cereal=False)\n    b: B\n"
     )
     schema = Schema(build_package({"a": source}))
     _, _, family = schema.order
@@ -848,8 +841,8 @@ def test_a_struct_reaching_both_forms_of_a_family_keeps_the_encoding_of_each(bui
 def test_a_field_switching_to_a_sibling_with_another_encoding_is_a_second_encoding(build_package):
     source = (
         HEADER
-        + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16 = field(endian='big')\n\n"
-        + "class A:\n    b: B = field(until=3)\n    b: B = field(since=3, cereal=False)\n"
+        + "class B:\n    x: uint16\n\n@type(cereal=False, since=3)\nclass B:\n    x: uint16 = field(endian='big')\n\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(until=3)\n    b: B = field(since=3, cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
     _, _, family = schema.order
@@ -955,10 +948,11 @@ def test_a_pre_cereal_sibling_whose_literal_enum_has_another_underlying_type_has
     source = (
         HEADER
         + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    tag: Literal[F.X]\n\n"
-        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint16):\n        X = 1\n    tag: Literal[F.X]\n"
+        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint16):\n        X = 1\n    tag: Literal[F.X]\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
-    _, cereal, _, pre_cereal = schema.order
+    _, cereal, _, pre_cereal, _ = schema.order
 
     assert schema.encoding_at(pre_cereal, 1) is not schema.encoding_at(cereal, 1)
 
@@ -972,19 +966,11 @@ def test_a_field_whose_copies_change_is_a_second_encoding(build_package):
     assert len(schema.encodings(model)) == 2
 
 
-def test_only_an_encoding_a_cereal_run_uses_is_cereal(build_package):
-    source = HEADER + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16 = field(endian='big')\n"
-    schema = Schema(build_package({"a": source}))
-    cereal, pre_cereal = schema.order
-
-    assert (schema.encoding_at(cereal, 1).cereal, schema.encoding_at(pre_cereal, 1).cereal) == (True, False)
-
-
 def test_a_pre_cereal_sibling_with_equal_members_shares_the_cereal_model(build_package):
     source = (
         HEADER
         + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16 = field(endian='big')\n\n"
-        + "class A:\n    b: B = field(cereal=False)\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
     cereal, pre_cereal, _ = schema.order
@@ -996,7 +982,7 @@ def test_a_pre_cereal_sibling_with_an_equal_encoding_shares_it(build_package):
     source = (
         HEADER
         + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
-        + "class A:\n    b: B = field(cereal=False)\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
     cereal, pre_cereal, _ = schema.order
@@ -1008,10 +994,11 @@ def test_a_pre_cereal_sibling_naming_its_own_sibling_child_shares_the_encoding(b
     source = (
         HEADER
         + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
-        + "class A:\n    b: B\n\n@type(cereal=False)\nclass A:\n    b: B = field(cereal=False)\n"
+        + "class A:\n    b: B\n\n@type(cereal=False)\nclass A:\n    b: B = field(cereal=False)\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
-    _, _, cereal, pre_cereal = schema.order
+    _, _, cereal, pre_cereal, _ = schema.order
 
     assert schema.encoding_at(pre_cereal, 1) is schema.encoding_at(cereal, 1)
 
@@ -1019,7 +1006,8 @@ def test_a_pre_cereal_sibling_naming_its_own_sibling_child_shares_the_encoding(b
 NESTED = (
     HEADER
     + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    {fields}\n\n"
-    + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    {fields}\n"
+    + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    {fields}\n\n"
+    + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
 )
 
 
@@ -1039,18 +1027,18 @@ NESTED = (
         pytest.param("bits: bitset[F.X]\n    y: uint8 = field(when=lambda p: p.bits.test(F.X))", id="test"),
     ],
 )
-def test_a_pre_cereal_sibling_naming_its_own_nested_enum_shares_the_encoding(build_package, fields):
+def test_a_pre_cereal_sibling_owning_its_own_nested_enum_is_its_own_model(build_package, fields):
     schema = Schema(build_package({"a": NESTED.format(fields=fields)}))
-    _, cereal, _, pre_cereal = schema.order
+    _, cereal, _, pre_cereal, _ = schema.order
 
-    assert schema.encoding_at(pre_cereal, 1) is schema.encoding_at(cereal, 1)
+    assert schema.model_at(pre_cereal, 1) is not schema.model_at(cereal, 1)
 
 
 def test_a_slot_reference_resolves_to_the_model_of_the_form_it_names(build_package):
     source = (
         HEADER
         + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
-        + "class A:\n    b: B = field(cereal=False)\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
     )
     schema = Schema(build_package({"a": source}))
     _, pre_cereal, family = schema.order
@@ -1060,7 +1048,7 @@ def test_a_slot_reference_resolves_to_the_model_of_the_form_it_names(build_packa
     assert schema.target(model, slot.type) is schema.model_at(pre_cereal, 1)
 
 
-def test_a_nested_model_is_owned_by_the_first_owner_model_that_holds_it(build_package):
+def test_a_nested_model_is_owned_by_the_newest_owner_model_that_holds_it(build_package):
     source = (
         HEADER
         + "@type(until=3)\nclass A:\n    class B:\n        x: uint8\n    b: B\n\n"
@@ -1070,7 +1058,7 @@ def test_a_nested_model_is_owned_by_the_first_owner_model_that_holds_it(build_pa
     nested, owner = schema.order
     (inner,) = schema.models(nested)
 
-    assert inner.owner is schema.models(owner)[0]
+    assert schema.owner(inner) is schema.models(owner)[1]
 
 
 def test_a_model_held_at_every_version_is_unversioned(build_package):
@@ -1078,7 +1066,7 @@ def test_a_model_held_at_every_version_is_unversioned(build_package):
     (family,) = schema.order
     (model,) = schema.models(family)
 
-    assert (model.since, model.versioned) == (None, False)
+    assert model.versioned is False
 
 
 def test_the_registry_holds_the_packet_live_at_each_version(build_package):
@@ -1385,3 +1373,919 @@ def test_a_value_is_written_with_the_first_name_its_number_takes_at_the_version(
     enum, _ = schema.order
 
     assert schema.naming_at(enum, 2).written == {1: "x", 2: "b"}
+
+
+def test_enum_type_is_the_shape_live_at_the_version(build_package):
+    schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
+    enum, _ = schema.order
+
+    assert (schema.enum_type(enum, 2), schema.enum_type(enum, 3)) == tuple(schema.shapes(enum))
+
+
+def test_an_enum_slots_target_is_the_shape_at_the_models_version(build_package):
+    schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
+    enum, family = schema.order
+    model = schema.model_at(family, 1)
+    (slot,) = model.slots
+
+    assert schema.target(model, slot.type) is schema.shapes(enum)[0]
+
+
+def test_a_parent_whose_enum_gains_a_member_with_stable_numbers_is_a_second_model(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n\nclass P:\n    e: E\n"
+    schema = Schema(build_package({"a": source}))
+    _, family = schema.order
+
+    assert len(schema.models(family)) == 2
+
+
+def test_a_models_nested_holds_the_shape_of_its_nested_enum(build_package):
+    source = HEADER + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n"
+    schema = Schema(build_package({"a": source}))
+    enum, family = schema.order
+
+    assert schema.model_at(family, 1).nested == (schema.shapes(enum)[0],)
+
+
+def test_a_nested_enum_shape_is_owned_by_the_newest_model_that_holds_it(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(since=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n    y: uint8\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, family = schema.order
+
+    assert schema.owner(schema.shapes(enum)[0]) is schema.models(family)[1]
+
+
+def test_a_top_level_model_has_no_owner(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.owner(schema.model_at(family, 1)) is None
+
+
+def test_a_literal_whose_enum_shape_changes_but_whose_number_does_not_keeps_one_encoding(build_package):
+    source = (
+        HEADER + "class E(IntEnum, uint8):\n    X = 1\n    Y = value(2, since=3)\n\nclass P:\n    tag: Literal[E.X]\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, family = schema.order
+    (model,) = schema.models(family)
+
+    assert len(schema.encodings(model)) == 1
+
+
+def test_a_shared_models_family_is_the_cereal_form(build_package):
+    source = (
+        HEADER
+        + "@type(cereal=False)\nclass B:\n    x: uint16\n\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    pre_cereal, cereal, _ = schema.order
+
+    assert [model.family for model in schema.models(pre_cereal)] == [cereal]
+
+
+def test_a_shared_models_runs_hold_both_forms(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint16\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, pre_cereal, _ = schema.order
+
+    assert list(schema.model_at(cereal, 1).runs) == [cereal, pre_cereal]
+
+
+def test_a_pre_cereal_model_no_cereal_model_equals_belongs_to_the_pre_cereal_form(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass A:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, pre_cereal, _ = schema.order
+
+    assert [model.family for model in schema.models(pre_cereal)] == [pre_cereal]
+
+
+ALL = Range(None, None)
+
+OVERLAPPED = (
+    HEADER
+    + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+    + "@type(cereal=False, until=4)\nclass B:\n    x: int32\n\n"
+    + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=4)\n"
+)
+
+
+def test_mixed_is_the_versions_where_both_forms_are_live(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    cereal, _, _ = schema.order
+
+    assert schema.mixed(cereal) == [Range(None, 4)]
+
+
+def test_the_overlap_is_the_mixed_versions_where_the_forms_hold_different_models(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert (schema.mixed(cereal), schema.overlap(cereal)) == ([ALL], [Range(3, None)])
+
+
+def test_the_overlap_of_forms_that_differ_at_every_mixed_version_is_the_mixed_versions(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    cereal, _, _ = schema.order
+
+    assert schema.overlap(cereal) == [Range(None, 4)]
+
+
+def test_a_pair_sharing_one_model_at_every_mixed_version_has_no_overlap(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False, until=4)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert (schema.mixed(cereal), schema.overlap(cereal)) == ([Range(None, 4)], [])
+
+
+def test_mixed_is_bounded_by_both_forms(build_package):
+    source = (
+        HEADER
+        + "@type(until=4)\nclass B:\n    x: uint8\n\n@type(cereal=False, since=2)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, since=2)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.mixed(cereal) == [Range(2, 4)]
+
+
+def test_a_family_with_one_form_is_never_mixed(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.mixed(family) == []
+
+
+def test_a_family_with_one_form_has_no_overlap(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.overlap(family) == []
+
+
+@pytest.mark.parametrize(
+    ("version", "label"),
+    [
+        pytest.param(1, "CerealizedB", id="first version"),
+        pytest.param(3, "CerealizedB", id="last version of the overlap"),
+        pytest.param(4, "B", id="first version past the overlap"),
+        pytest.param(5, "B", id="last version"),
+    ],
+)
+def test_the_label_of_a_cereal_family_is_prefixed_only_inside_the_overlap(build_package, version, label):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    cereal, _, _ = schema.order
+
+    assert schema.label(cereal, version) == label
+
+
+def test_the_label_of_a_hand_written_family_is_never_prefixed(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    _, pre_cereal, _ = schema.order
+
+    assert schema.label(pre_cereal, 1) == "B"
+
+
+def test_the_label_of_a_family_with_one_form_is_never_prefixed(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.label(family, 1) == "A"
+
+
+def test_a_cereal_model_that_lives_only_inside_the_overlap_is_prefixed(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    cereal, _, _ = schema.order
+
+    assert schema.name(schema.model_at(cereal, 1)) == "CerealizedB"
+
+
+def test_a_cereal_model_that_lives_past_the_overlap_is_named_plain(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    cereal, _, _ = schema.order
+
+    assert schema.name(schema.model_at(cereal, 3)) == "B"
+
+
+def test_a_hand_written_model_living_only_inside_the_overlap_is_never_named_cerealized(build_package):
+    schema = Schema(build_package({"a": OVERLAPPED}))
+    _, pre_cereal, _ = schema.order
+
+    assert schema.name(schema.model_at(pre_cereal, 1)) == "B"
+
+
+def test_a_pair_sharing_one_model_at_every_mixed_version_is_never_labelled_cerealized(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False, until=4)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.label(cereal, 1) == "B"
+
+
+DIVERGING = (
+    HEADER
+    + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+    + "@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+    + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+)
+
+
+@pytest.mark.parametrize(
+    ("version", "label"),
+    [
+        pytest.param(1, "B", id="first version"),
+        pytest.param(2, "B", id="last version holding one model"),
+        pytest.param(3, "CerealizedB", id="first version holding two models"),
+        pytest.param(5, "CerealizedB", id="last version"),
+    ],
+)
+def test_the_label_of_a_pair_differing_at_some_versions_is_prefixed_exactly_there(build_package, version, label):
+    schema = Schema(build_package({"a": DIVERGING}))
+    cereal, _, _ = schema.order
+
+    assert schema.label(cereal, version) == label
+
+
+def test_a_cereal_model_held_by_the_hand_written_form_is_named_plain(build_package):
+    schema = Schema(build_package({"a": DIVERGING}))
+    cereal, _, _ = schema.order
+
+    assert schema.name(schema.model_at(cereal, 1)) == "B"
+
+
+def test_a_nested_model_keeps_its_own_name(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class Inner:\n        x: uint8\n    i: Inner\n\n"
+        + "@type(cereal=False)\nclass A:\n    class Inner:\n        x: uint16\n    i: Inner\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, _, _, _, _ = schema.order
+
+    assert schema.name(schema.model_at(inner, 1)) == "Inner"
+
+
+def test_a_bare_cereal_model_may_share_a_name_with_a_hand_written_model_under_a_version(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False, until=3)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, pre_cereal, _ = schema.order
+
+    assert (schema.name(schema.model_at(cereal, 1)), schema.name(schema.model_at(pre_cereal, 1))) == ("B", "B")
+
+
+def test_a_nested_child_living_past_the_overlap_is_owned_by_a_plain_named_model(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(since=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n    y: uint8\n\n"
+        + "@type(cereal=False, until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, _, _, _, _ = schema.order
+
+    assert schema.name(schema.owner(schema.shapes(enum)[0])) == "A"
+
+
+def test_a_hand_written_form_no_packet_reaches_is_rejected(build_package):
+    source = HEADER + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n"
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: B: the hand-written form is live at 1 but no packet reaches it"):
+        Schema(package)
+
+
+def test_a_hand_written_form_reached_only_by_a_struct_that_is_not_a_packet_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "class A:\n    b: B = field(cereal=False)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: B: the hand-written form is live at 1 but no packet reaches it"):
+        Schema(package)
+
+
+def test_a_hand_written_form_names_the_first_version_no_packet_reaches_it_at(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=3)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"a\.py: B: the hand-written form is live at 3 but no packet reaches it"):
+        Schema(package)
+
+
+def test_two_models_of_a_pair_with_one_name_and_scope_are_rejected(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, until=2)\nclass B:\n    x: int32\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=2)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: B: the hand-written and the cereal form both hold a type named B from 1"
+    ):
+        Schema(package)
+
+
+def test_two_bare_models_of_a_pair_with_one_name_are_rejected(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False, since=3)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, since=3)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: B: the hand-written and the cereal form both hold a type named B at 5$"
+    ):
+        Schema(package)
+
+
+def test_a_reached_pre_cereal_form_holding_an_unreferenced_nested_enum_is_accepted(build_package):
+    source = (
+        HEADER
+        + "class B:\n    class F(IntEnum, uint8):\n        X = 1\n    x: uint8\n\n"
+        + "@type(cereal=False)\nclass B:\n    class F(IntEnum, uint8):\n        X = 1\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, _, _, pre_cereal, _ = schema.order
+
+    assert len(schema.model_at(pre_cereal, 1).nested) == 1
+
+
+def test_a_nested_child_living_only_inside_the_overlap_is_owned_by_a_cerealized_model(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(cereal=False, until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, _, _, _, _ = schema.order
+
+    assert schema.name(schema.owner(schema.shapes(enum)[0])) == "CerealizedA"
+
+
+def test_a_bare_cereal_model_may_share_a_name_and_since_with_a_hand_written_model_under_a_version(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass B:\n    x: int32\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, since=3, until=5)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, pre_cereal, _ = schema.order
+
+    assert (schema.name(schema.model_at(cereal, 3)), schema.name(schema.model_at(pre_cereal, 3))) == ("B", "B")
+
+
+def test_a_nested_child_is_owned_by_the_holder_that_returns_at_the_latest_version(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class B:\n        x: uint8\n    b: B\n\n"
+        + "@type(since=3, until=4)\nclass A:\n    class B:\n        x: uint8\n    b: B\n    y: uint8\n\n"
+        + "@type(since=4)\nclass A:\n    class B:\n        x: uint8\n    b: B\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    nested, owner = schema.order
+    (inner,) = schema.models(nested)
+
+    assert schema.owner(inner) is schema.model_at(owner, 5)
+
+
+def test_a_temporary_owner_holding_a_child_live_outside_the_overlap_is_rejected(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n    y: uint8\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: A\.F: is owned by CerealizedA but is live at 1, outside its overlap"
+    ):
+        Schema(package)
+
+
+def test_a_model_live_at_the_latest_version_has_no_scope(build_package):
+    source = HEADER + "@type(until=3)\nclass A:\n    x: uint8\n\n@type(since=3)\nclass A:\n    x: uint16\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.model_at(family, 5)) is None
+
+
+def test_an_older_models_scope_is_its_first_version(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    x: uint8\n\n@type(since=3, until=4)\nclass A:\n    x: uint16\n\n"
+        + "@type(since=4)\nclass A:\n    x: int8\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.model_at(family, 3)) == 3
+
+
+def test_the_oldest_models_scope_is_the_first_modelled_version(build_package):
+    source = HEADER + "@type(until=3)\nclass A:\n    x: uint8\n\n@type(since=3)\nclass A:\n    x: uint16\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.model_at(family, 1)) == 1
+
+
+def test_a_family_that_ends_before_the_latest_version_has_no_bare_model(build_package):
+    schema = Schema(build_package({"a": HEADER + "@type(until=4)\nclass A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.model_at(family, 1)) == 1
+
+
+def test_an_enum_shape_live_at_the_latest_version_has_no_scope(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 5)) is None
+
+
+def test_an_older_enum_shapes_scope_is_its_first_version(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, until=4)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 3)) == 3
+
+
+def test_the_oldest_enum_shapes_scope_is_the_first_modelled_version(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 1)) == 1
+
+
+def test_an_enum_that_ends_before_the_latest_version_has_no_bare_shape(build_package):
+    source = HEADER + "@type(until=4)\nclass E(IntEnum, uint8):\n    A = 1\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 1)) == 1
+
+
+def test_a_cereal_model_starting_before_the_overlap_is_named_plain(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(since=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, since=2)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, since=2)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.name(schema.model_at(cereal, 1)) == "B"
+
+
+def test_a_nested_child_of_both_forms_may_share_a_name_and_scope(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass A:\n    class Inner:\n        x: uint8\n    i: Inner\n\n"
+        + "@type(cereal=False, until=3)\nclass A:\n    class Inner:\n        x: uint16\n    i: Inner\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, pre_cereal, _, _ = schema.order
+
+    assert (schema.name(schema.model_at(cereal, 1)), schema.name(schema.model_at(pre_cereal, 1))) == ("Inner", "Inner")
+
+
+def test_a_hand_written_enum_declared_at_module_scope_is_rejected(build_package):
+    source = (
+        HEADER + "class E(IntEnum, uint8):\n    A = 1\n\n@type(cereal=False)\nclass E(IntEnum, uint8):\n    A = 1\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError,
+        match=r"a\.py: E: a cereal=False enum is declared at module scope",
+    ):
+        Schema(package)
+
+
+def test_the_label_of_a_nested_cereal_family_is_never_prefixed(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class Inner:\n        x: uint8\n    i: Inner\n\n"
+        + "@type(cereal=False)\nclass A:\n    class Inner:\n        x: uint16\n    i: Inner\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, _, _, _, _ = schema.order
+
+    assert schema.label(inner, 1) == "Inner"
+
+
+def test_the_scope_of_a_nested_model_is_rejected(build_package):
+    source = HEADER + "class A:\n    class Inner:\n        x: uint8\n    i: Inner\n"
+    schema = Schema(build_package({"a": source}))
+    inner, _ = schema.order
+
+    with pytest.raises(CompilerError, match=r"a\.py: A\.Inner: is nested and is named through its owner"):
+        schema.scope(schema.model_at(inner, 1))
+
+
+def test_an_enum_shape_that_returns_at_the_latest_version_has_no_scope(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, until=4)\n"
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 1)) is None
+
+
+TIED = (
+    HEADER
+    + "class B:\n    x: uint8\n\n@type(cereal=False, until=4)\nclass B:\n    x: uint8\n\n"
+    + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=4)\n"
+)
+
+SPLIT = (
+    HEADER
+    + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
+    + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+)
+
+
+def test_an_encoding_of_a_class_with_one_mode_is_keyed_default(build_package):
+    schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
+    (family,) = schema.order
+
+    assert schema.encoding_at(family, 1).mode is SerializationMode.DEFAULT
+
+
+def test_an_encoding_only_the_cereal_form_uses_while_the_pair_is_mixed_is_keyed_cereal(build_package):
+    schema = Schema(build_package({"a": SPLIT}))
+    cereal, _, _ = schema.order
+
+    assert schema.encoding_at(cereal, 1).mode is SerializationMode.CEREAL
+
+
+def test_an_encoding_only_the_hand_written_form_uses_while_the_pair_is_mixed_is_keyed_manual(build_package):
+    schema = Schema(build_package({"a": SPLIT}))
+    _, pre_cereal, _ = schema.order
+
+    assert schema.encoding_at(pre_cereal, 1).mode is SerializationMode.MANUAL
+
+
+def test_an_encoding_both_forms_use_at_its_first_version_is_keyed_cereal(build_package):
+    schema = Schema(build_package({"a": TIED}))
+    cereal, pre_cereal, _ = schema.order
+
+    assert (
+        schema.encoding_at(pre_cereal, 1) is schema.encoding_at(cereal, 1),
+        schema.encoding_at(cereal, 1).mode,
+    ) == (
+        True,
+        SerializationMode.CEREAL,
+    )
+
+
+def test_served_lists_the_runs_of_an_encoding_per_mode(build_package):
+    schema = Schema(build_package({"a": TIED}))
+    cereal, _, _ = schema.order
+
+    assert schema.encoding_at(cereal, 1).served == {
+        SerializationMode.CEREAL: [Range(None, 4)],
+        SerializationMode.MANUAL: [Range(None, 4)],
+        SerializationMode.DEFAULT: [Range(4, None)],
+    }
+
+
+CALLS = (
+    HEADER
+    + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"
+    + "@packet(id=1)\nclass Hand:\n    b: B = field(cereal=False)\n\n"
+    + "@packet(id=2)\nclass Plain:\n    b: B\n\n"
+    + "class C:\n    x: uint8\n\n@packet(id=3)\nclass Single:\n    c: C\n"
+)
+
+
+def test_a_call_through_a_cereal_false_field_names_the_manual_mode(build_package):
+    schema = Schema(build_package({"a": CALLS}))
+    _, pre_cereal, hand, _, _, _ = schema.order
+
+    assert schema.call(schema.encoding_at(hand, 1), StructRef(pre_cereal)) == (1, SerializationMode.MANUAL)
+
+
+def test_a_call_through_a_plain_field_of_a_cereal_parent_names_the_cereal_mode(build_package):
+    schema = Schema(build_package({"a": CALLS}))
+    cereal, _, _, plain, _, _ = schema.order
+
+    assert schema.call(schema.encoding_at(plain, 1), StructRef(cereal)) == (1, SerializationMode.CEREAL)
+
+
+def test_a_call_to_a_class_with_one_mode_names_the_default_mode(build_package):
+    schema = Schema(build_package({"a": CALLS}))
+    _, _, _, _, child, single = schema.order
+
+    assert schema.call(schema.encoding_at(single, 1), StructRef(child)) == (1, SerializationMode.DEFAULT)
+
+
+def test_a_child_born_mixed_is_called_by_its_key_mode_from_a_later_version(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n"
+        + "@type(cereal=False, until=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, since=3)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, pre_cereal, family = schema.order
+
+    assert schema.call(schema.encoding_at(family, 4), StructRef(pre_cereal)) == (1, SerializationMode.CEREAL)
+
+
+def test_the_scope_of_a_shared_model_is_bare_when_the_hand_written_form_holds_it_at_the_latest_version(build_package):
+    source = (
+        HEADER
+        + "@type(until=4)\nclass B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.scope(schema.model_at(cereal, 1)) is None
+
+
+def test_the_scope_of_a_shared_model_is_bare_when_the_cereal_form_holds_it_at_the_latest_version(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False, until=4)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, pre_cereal, _ = schema.order
+
+    assert schema.scope(schema.model_at(pre_cereal, 1)) is None
+
+
+def test_the_scope_of_a_shared_model_no_form_holds_at_the_latest_version_is_its_first_version(build_package):
+    source = (
+        HEADER
+        + "@type(since=3, until=5)\nclass B:\n    x: uint8\n\n"
+        + "@type(cereal=False, since=2, until=4)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, since=2, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.scope(schema.model_at(cereal, 3)) == 2
+
+
+def test_the_read_version_of_a_shared_model_is_its_newest_version_over_both_forms(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.read_at[schema.model_at(cereal, 1)] == 5
+
+
+def test_a_nested_child_of_a_shared_model_is_owned_by_that_model(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class Inner:\n        x: uint8\n    i: Inner\n\n"
+        + "@type(cereal=False)\nclass A:\n    class Inner:\n        x: uint8\n    i: Inner\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, family, _, _, _ = schema.order
+
+    assert schema.owner(schema.model_at(inner, 1)) is schema.model_at(family, 1)
+
+
+def test_the_scope_of_an_enum_shape_with_two_runs_takes_its_first_version_from_the_first_run(build_package):
+    source = HEADER + "@type(until=6)\nclass E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, until=4)\n"
+    schema = Schema(build_package({"a": source}, APPENDED_INIT))
+    (family,) = schema.order
+
+    assert schema.scope(schema.enum_type(family, 1)) == 1
+
+
+def test_target_accepts_an_enum_read_by_name(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    X = 1\n\nclass P:\n    e: E = field(type=str)\n"
+    schema = Schema(build_package({"a": source}))
+    enum, family = schema.order
+
+    assert schema.target(schema.model_at(family, 1), EnumName(enum)) is schema.shapes(enum)[0]
+
+
+def test_a_call_through_a_cereal_false_field_names_the_manual_mode_of_a_shared_encoding(build_package):
+    schema = Schema(build_package({"a": TIED}))
+    _, pre_cereal, family = schema.order
+
+    assert schema.call(schema.encoding_at(family, 1), StructRef(pre_cereal)) == (1, SerializationMode.MANUAL)
+
+
+SHARED_UNDER_HAND = (
+    HEADER
+    + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: {manual}\n\n"
+    + "class A:\n    y: uint8\n    b: B\n\n@type(cereal=False)\nclass A:\n    b: B\n\n"
+    + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n\n"
+    + "@packet(id=2)\nclass Q:\n    b: B = field(cereal=False)\n"
+)
+
+
+def test_a_call_from_a_hand_written_parent_through_a_plain_field_names_the_manual_mode(build_package):
+    schema = Schema(build_package({"a": SHARED_UNDER_HAND.format(manual="uint8")}))
+    cereal, _, _, hand, _, _ = schema.order
+
+    assert schema.call(schema.encoding_at(hand, 1), StructRef(cereal)) == (1, SerializationMode.MANUAL)
+
+
+def test_a_call_from_a_hand_written_parent_falls_back_to_the_key_mode_of_a_child_without_a_manual_mode(build_package):
+    schema = Schema(build_package({"a": SHARED_UNDER_HAND.format(manual="uint16")}))
+    cereal, _, _, hand, _, _ = schema.order
+
+    assert schema.call(schema.encoding_at(hand, 1), StructRef(cereal)) == (1, SerializationMode.CEREAL)
+
+
+def test_mixed_of_a_nested_struct_is_the_mixed_versions_of_its_outermost_pair(build_package):
+    source = (
+        HEADER
+        + "class A:\n    @type(since=2)\n    class Inner:\n        x: uint8\n\n"
+        + "    i: Inner = field(since=2)\n    y: uint8\n\n"
+        + "@type(cereal=False, until=4)\nclass A:\n    class Inner:\n        x: uint8\n    i: Inner\n    y: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, _, _, _, _ = schema.order
+
+    assert schema.mixed(inner) == [Range(None, 4)]
+
+
+def test_a_shared_model_whose_cereal_life_lies_inside_the_overlap_is_never_named_cerealized(build_package):
+    source = (
+        HEADER
+        + "@type(until=2)\nclass B:\n    x: uint16\n\n"
+        + "@type(since=2, until=3)\nclass B:\n    x: uint8\n\n"
+        + "@type(since=3, until=5)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, until=3)\nclass B:\n    x: uint16\n\n"
+        + "@type(cereal=False, since=3, until=4)\nclass B:\n    x: uint8\n\n"
+        + "@type(cereal=False, since=4, until=5)\nclass B:\n    x: uint16\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False, until=5)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.name(schema.model_at(cereal, 2)) == "B"
+
+
+def test_a_nested_child_held_at_the_same_newest_version_by_a_temporary_and_a_plain_owner_is_owned_by_the_plain_one(
+    build_package,
+):
+    source = (
+        HEADER
+        + "@type(since=3, until=5)\nclass A:\n    class N:\n        x: uint8\n    n: N\n    y: uint8\n\n"
+        + "@type(cereal=False, until=5)\nclass A:\n    class N:\n        x: uint8\n    n: N\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=5)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, _, _, pre_cereal, _ = schema.order
+
+    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(pre_cereal, 4)
+
+
+def test_a_model_both_forms_hold_at_every_version_is_not_versioned_although_its_cereal_form_starts_later(
+    build_package,
+):
+    source = (
+        HEADER
+        + "@type(since=3)\nclass B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert schema.model_at(cereal, 3).versioned is False
+
+
+def test_a_call_from_a_parent_both_forms_share_names_the_cereal_mode(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint8\n\n"
+        + "class A:\n    b: B\n\n@type(cereal=False)\nclass A:\n    b: B\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n\n"
+        + "@packet(id=2)\nclass Q:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, parent, _, _, _ = schema.order
+
+    assert schema.call(schema.encoding_at(parent, 1), StructRef(cereal)) == (1, SerializationMode.CEREAL)
+
+
+def test_a_temporary_owner_holding_a_child_live_inside_mixed_but_outside_the_overlap_is_rejected(build_package):
+    source = (
+        HEADER
+        + "@type(until=2)\nclass A:\n    class N:\n        x: uint8\n    n: N\n\n"
+        + "@type(since=2, until=4)\nclass A:\n    class N:\n        x: uint8\n    n: N\n    y: uint8\n\n"
+        + "@type(cereal=False, until=2)\nclass A:\n    class N:\n        x: uint8\n    n: N\n\n"
+        + "@type(cereal=False, since=2, until=4)\nclass A:\n    z: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=4)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: A\.N: is owned by CerealizedA but is live at 1, outside its overlap"
+    ):
+        Schema(package)
+
+
+def test_the_slots_of_a_shared_model_come_from_the_cereal_form_when_both_hold_it_at_its_newest_version(build_package):
+    source = (
+        HEADER
+        + "class B:\n    x: uint8\n    y: uint16\n\n@type(cereal=False)\nclass B:\n    y: uint16\n    x: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, _ = schema.order
+
+    assert [slot.name for slot in schema.model_at(cereal, 1).slots] == ["x", "y"]
+
+
+def test_a_nested_child_held_at_the_same_newest_version_by_two_plain_owners_is_owned_by_the_cereal_one(build_package):
+    source = (
+        HEADER
+        + "@type(until=5)\nclass A:\n    class N:\n        x: uint8\n    n: N\n    y: uint8\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass A:\n    class N:\n        x: uint8\n    n: N\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    inner, cereal, _, _, _ = schema.order
+
+    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(cereal, 4)
+
+
+def test_a_temporary_owner_holding_a_child_only_the_hand_written_form_holds_outside_the_overlap_is_rejected(
+    build_package,
+):
+    source = (
+        HEADER
+        + "@type(since=2, until=4)\nclass A:\n    class N:\n        x: uint8\n    n: N\n    y: uint8\n\n"
+        + "@type(cereal=False, until=2)\nclass A:\n    class N:\n        x: uint8\n    n: N\n\n"
+        + "@type(cereal=False, since=2, until=4)\nclass A:\n    z: uint8\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=4)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"a\.py: A\.N: is owned by CerealizedA but is live at 1, outside its overlap"
+    ):
+        Schema(package)

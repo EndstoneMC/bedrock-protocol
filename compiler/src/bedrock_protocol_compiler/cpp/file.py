@@ -1,17 +1,10 @@
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.alias import AliasGenerator
-from bedrock_protocol_compiler.cpp.struct import shape_generator
+from bedrock_protocol_compiler.cpp.enum import EnumGenerator
+from bedrock_protocol_compiler.cpp.struct import StructGenerator
 from bedrock_protocol_compiler.descriptor import Alias, Enum, Module, Range, Struct
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Schema, Shape, StructShape, roots_reached
-
-
-def listed(schema: Schema, shape: Shape) -> list[str]:
-    spelled = [names.qualified(schema, shape)]
-    if isinstance(shape, StructShape):
-        for child in shape.nested:
-            spelled += listed(schema, child)
-    return spelled
+from bedrock_protocol_compiler.schema import EnumModel, EnumShape, Schema, StructModel, roots_reached
 
 
 class FileGenerator:
@@ -24,9 +17,44 @@ class FileGenerator:
         self.families: list[Struct | Enum] = []
         for family in self.own:
             self.place(family)
-        self.generators = [
-            shape_generator(schema, shape) for family in self.families for shape in schema.shapes(family)
-        ]
+        self.siblings: dict[Struct | Enum, Struct] = {
+            schema.pair(family): family for family in self.families if isinstance(family, Struct) and not family.cereal
+        }
+        self.held: dict[Struct | Enum, dict[StructModel | EnumShape, list[Range]]] = {}
+        self.generators: list[StructGenerator | EnumGenerator] = []
+        defined_models: set[StructModel] = set()
+        for family in self.families:
+            if isinstance(family, Struct):
+                models = [model for model in schema.models(family) if isinstance(model, StructModel)]
+                self.held[family] = {model: model.runs[family] for model in models}
+                self.generators += [StructGenerator(schema, model) for model in models if model not in defined_models]
+                defined_models.update(models)
+                continue
+            shapes: dict[EnumShape, list[int]] = {}
+            for version in schema.versions:
+                for model in schema.models(family):
+                    if isinstance(model, EnumModel) and any(run.contains(version) for run in model.runs[family]):
+                        shapes.setdefault(schema.enum_type(family, version), []).append(version)
+            self.held[family] = {shape: schema.ranges(versions) for shape, versions in shapes.items()}
+            self.generators += [
+                EnumGenerator(schema, shape) for shape in schema.shapes(family) if isinstance(shape, EnumShape)
+            ]
+        holders = {
+            generator.target: generator for generator in self.generators if isinstance(generator, StructGenerator)
+        }
+        self.early: list[dict[StructGenerator, list[StructGenerator | EnumGenerator]]] = []
+        defined: set[StructModel | EnumShape] = set()
+        for generator in self.generators:
+            early: dict[StructGenerator, list[StructGenerator | EnumGenerator]] = {}
+            if isinstance(generator, StructGenerator):
+                for child in generator.target.nested:
+                    owner = schema.owner(child)
+                    if owner is not generator.target and child not in defined:
+                        assert owner is not None
+                        holder = holders[owner]
+                        early.setdefault(holder, []).append(holder.pending.pop(child))
+                    defined.add(child)
+            self.early.append(early)
 
     def place(self, family: Struct | Enum) -> None:
         if family in self.families:
@@ -36,7 +64,7 @@ class FileGenerator:
         self.families.append(family)
 
     def includes(self) -> set[str]:
-        includes = {names.runtime("detail/reflect")}
+        includes = {names.runtime("detail/reflect"), "<array>", "<string_view>"}
         for generator in (*self.aliases, *self.generators):
             includes |= generator.includes()
         return includes - {names.generated(self.module.stem)}
@@ -100,14 +128,19 @@ class FileGenerator:
 
     def definitions(self, p: Printer) -> None:
         current: tuple[str, ...] = ()
-        for generator in self.generators:
-            scope = names.scope(generator.shape)
-            if scope != current:
-                self.switch(p, current, scope)
-                current = scope
+        for generator, early in zip(self.generators, self.early, strict=True):
+            for holder, children in early.items():
+                current = self.enter(p, current, names.scope(self.schema, holder.target))
+                holder.nested(p, children)
+            current = self.enter(p, current, names.scope(self.schema, generator.target))
             generator.definition(p)
             p.emit("")
         self.switch(p, current, ())
+
+    def enter(self, p: Printer, current: tuple[str, ...], scope: tuple[str, ...]) -> tuple[str, ...]:
+        if scope != current:
+            self.switch(p, current, scope)
+        return scope
 
     def switch(self, p: Printer, closing: tuple[str, ...], opening: tuple[str, ...]) -> None:
         for part in reversed(closing):
@@ -117,67 +150,78 @@ class FileGenerator:
             p.emit("namespace $part$ {", part=part)
             p.emit("")
 
-    def runs(self, family: Struct | Enum) -> list[tuple[Range, Shape]]:
-        runs = [(run, shape) for shape in self.schema.shapes(family) for run in shape.ranges]
-        return sorted(runs, key=lambda each: each[0].since or 0)
+    def at(self, family: Struct | Enum, version: int) -> StructModel | EnumShape | None:
+        return next(
+            (target for target, ranges in self.held[family].items() if any(run.contains(version) for run in ranges)),
+            None,
+        )
 
     def selectors(self, p: Printer) -> None:
-        versioned = [family for family in self.families if self.schema.shapes(family)[0].versioned]
-        for cereal in (True, False):
-            families = [family for family in versioned if family.cereal == cereal]
-            if not families:
+        selectors: list[str] = []
+        p.emit("namespace detail {")
+        p.emit("")
+        for family in self.families:
+            if not family.cereal:
                 continue
-            if not cereal:
-                self.switch(p, (), (names.PRE_CEREAL,))
-            p.emit("namespace detail {")
-            p.emit("")
-            for family in families:
+            sibling = self.siblings.get(family)
+            labelled: dict[str, dict[StructModel | EnumShape, list[int]]] = {}
+            for version in self.schema.versions:
+                for form in (*([sibling] if sibling is not None else []), family):
+                    target = self.at(form, version)
+                    if target is not None:
+                        labelled.setdefault(self.schema.label(form, version), {}).setdefault(target, []).append(version)
+            for label, targets in labelled.items():
+                selector = names.selector(label)
+                selectors.append(selector)
+                runs = sorted(
+                    ((run, target) for target, versions in targets.items() for run in self.schema.ranges(versions)),
+                    key=lambda each: each[0].since or 0,
+                )
+                if len(runs) == 1 and runs[0][0] == Range(None, None):
+                    p.emit(
+                        """
+                        template <int V>
+                        struct $selector$ { using type = $type$; };
+
+                        """,
+                        selector=selector,
+                        type=names.qualified(self.schema, runs[0][1]),
+                    )
+                    continue
                 p.emit(
                     """
                     template <int V>
                     struct $selector$;
 
                     """,
-                    selector=names.selector(family),
+                    selector=selector,
                 )
-                for run, shape in self.runs(family):
+                for run, target in runs:
                     p.emit(
                         """
-                        template <int V> requires ($clause$)
+                        template <int V>$requirement$
                         struct $selector$<V> { using type = $type$; };
 
                         """,
-                        clause=names.clause(run),
-                        selector=names.selector(family),
-                        type=names.qualified(self.schema, shape),
+                        requirement=names.requirement(run),
+                        selector=selector,
+                        type=names.qualified(self.schema, target),
                     )
-            p.emit("}  // namespace detail")
-            p.emit("")
-            for family in families:
-                p.emit(
-                    "template <int V> using $selector$ = typename detail::$selector$<V>::type;",
-                    selector=names.selector(family),
-                )
-            p.emit("")
-            for family in families:
-                if (family, self.schema.latest) in self.schema.live:
-                    p.emit(
-                        "using $name$ = $selector$<$latest$>;",
-                        name=family.name,
-                        selector=names.selector(family),
-                        latest=self.schema.latest,
-                    )
-            p.emit("")
-            if not cereal:
-                self.switch(p, (names.PRE_CEREAL,), ())
+        p.emit("}  // namespace detail")
+        p.emit("")
+        for selector in selectors:
+            p.emit("template <int V> using $selector$ = typename detail::$selector$<V>::type;", selector=selector)
+        p.emit("")
 
     def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
-        runs = self.runs(family)
-        constraint = names.requirement(Range(runs[0][0].since, runs[-1][0].until))
+        held = self.held[family]
+        runs = sorted((run for ranges in held.values() for run in ranges), key=lambda run: run.since or 0)
+        constraint = names.requirement(Range(runs[0].since, runs[-1].until))
+        (only, *rest) = held
         spelled = (
-            f"::{names.namespace(self.schema)}::{names.selector(family)}<V>"
-            if runs[0][1].versioned
-            else names.qualified(self.schema, runs[0][1])
+            names.qualified(self.schema, only)
+            if not rest and not only.versioned
+            else f"::{names.namespace(self.schema)}::{names.selector(family.name)}<V>"
         )
         p.emit(
             """
@@ -190,18 +234,28 @@ class FileGenerator:
             type=spelled,
         )
 
+    def listing(self, target: StructModel | EnumShape, path: str) -> list[tuple[str, str, str]]:
+        listed = [(names.qualified(self.schema, target), path, names.bare(self.schema, target))]
+        if isinstance(target, StructModel):
+            for child in target.nested:
+                listed += self.listing(child, f"{path}::{child.family.name}")
+        return listed
+
     def types(self, p: Printer) -> None:
         name = f"{self.module.stem}_types"
-        plans: list[tuple[int | None, list[str], list[str]]] = []
+        plans: list[tuple[int | None, list[str], list[tuple[str, str]]]] = []
         for version in self.schema.versions:
-            cereal: list[str] = []
-            pre_cereal: list[str] = []
+            listed: dict[str, tuple[str, str]] = {}
             for family in self.families:
-                shape = self.schema.live.get((family, version))
-                if shape is not None:
-                    (cereal if family.cereal else pre_cereal).extend(listed(self.schema, shape))
-            if not plans or plans[-1][1:] != (cereal, pre_cereal):
-                plans.append((version if plans else None, cereal, pre_cereal))
+                target = self.at(family, version)
+                if target is None:
+                    continue
+                for qualified, path, bare in self.listing(target, self.schema.label(family, version)):
+                    listed.setdefault(qualified, (path, bare))
+            types = list(listed)
+            labelled = [(qualified, path) for qualified, (path, bare) in listed.items() if path != bare]
+            if not plans or plans[-1][1:] != (types, labelled):
+                plans.append((version if plans else None, types, labelled))
         if len(plans) > 1:
             p.emit(
                 """
@@ -211,16 +265,16 @@ class FileGenerator:
                 """,
                 name=name,
             )
-        for index, (since, cereal, pre_cereal) in enumerate(plans):
+        for index, (since, types, labelled) in enumerate(plans):
             until = plans[index + 1][0] if index + 1 < len(plans) else None
             if len(plans) == 1:
                 p.emit("template <int V>")
                 p.emit("struct $name$ {", name=name)
             else:
-                p.emit("template <int V> requires ($clause$)", clause=names.clause(Range(since, until)))
+                p.emit("template <int V>$requirement$", requirement=names.requirement(Range(since, until)))
                 p.emit("struct $name$<V> {", name=name)
             with p.indent():
-                for member, entries in (("cereal", cereal), ("pre_cereal", pre_cereal)):
+                for member, entries in (("types", types), ("labelled", [qualified for qualified, _ in labelled])):
                     if not entries:
                         p.emit("using $member$ = type_list<>;", member=member)
                         continue
@@ -229,5 +283,13 @@ class FileGenerator:
                         for entry in entries[:-1]:
                             p.emit("$entry$,", entry=entry)
                         p.emit("$entry$>;", entry=entries[-1])
+                if not labelled:
+                    p.emit("static constexpr std::array<std::string_view, 0> labels{};")
+                else:
+                    p.emit("static constexpr std::array<std::string_view, $count$> labels{{", count=len(labelled))
+                    with p.indent():
+                        for _, path in labelled:
+                            p.emit('"$path$",', path=path)
+                    p.emit("}};")
             p.emit("};")
             p.emit("")

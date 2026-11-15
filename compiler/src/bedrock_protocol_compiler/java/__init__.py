@@ -1,64 +1,72 @@
+import json
+
 from bedrock_protocol_compiler.context import GeneratorContext
-from bedrock_protocol_compiler.descriptor import CompilerError, Enum, Struct
+from bedrock_protocol_compiler.descriptor import CompilerError, Enum
 from bedrock_protocol_compiler.java import file, names, version
 from bedrock_protocol_compiler.java.members import Members
-from bedrock_protocol_compiler.java.message import shape_generator
+from bedrock_protocol_compiler.java.message import type_generator
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Schema
+from bedrock_protocol_compiler.schema import EnumShape, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     reserved = names.reserved(schema)
-    declared: dict[str, Struct | Enum] = {}
+    declared: dict[str, StructModel | EnumShape] = {}
     for family in schema.order:
         if family.owner is not None:
             continue
-        for shape in schema.shapes(family):
-            package = names.package(schema, shape)
-            spelled = f"{package}.{family.name}"
-            if family.name in reserved:
-                raise CompilerError(f"{spelled}: shadows the imported {family.name}")
-            if declared.setdefault(spelled, family) is not family:
+        types = schema.shapes(family) if isinstance(family, Enum) else schema.models(family)
+        for each in types:
+            if not isinstance(each, StructModel | EnumShape):
+                continue
+            package = names.package(schema, each)
+            name = names.declared(schema, each)
+            spelled = f"{package}.{name}"
+            if declared.get(spelled) is each:
+                continue
+            if name in reserved:
+                raise CompilerError(f"{spelled}: shadows the imported {name}")
+            if name == names.REGISTRY:
+                raise CompilerError(f"{spelled}: has the name of the packet registries")
+            if declared.setdefault(spelled, each) is not each:
                 raise CompilerError(f"{spelled}: is declared twice")
             body = Printer()
             registry = Members(body)
-            shape_generator(schema, shape, (), registry).definition(body)
+            type_generator(schema, each, (), registry).definition(body)
             registry.check()
-            file.write(schema, context.open(names.path(package, family.name)), package, body)
-    packages = [(names.registry(schema, each), each) for each in schema.versions]
-    for package, each in [*packages, (schema.java_package, schema.latest)]:
-        if f"{package}.{names.REGISTRY}" in declared:
-            raise CompilerError(f"{package}.{names.REGISTRY}: is the packet registry of {each}")
-        body = Printer()
-        packets(schema, each, body)
-        file.write(schema, context.open(names.path(package, names.REGISTRY)), package, body)
+            file.write(schema, context.open(names.path(package, name)), package, body)
     if f"{schema.java_package}.{names.VERSION}" in declared:
         raise CompilerError(f"{schema.java_package}.{names.VERSION}: is the protocol version table")
+    for number in schema.versions:
+        package = names.registry(schema, number)
+        body = Printer()
+        packets(schema, number, body)
+        file.write(schema, context.open(names.path(package, names.REGISTRY)), package, body)
     body = Printer()
     version.table(schema, body)
     file.write(schema, context.open(names.path(schema.java_package, names.VERSION)), schema.java_package, body)
 
 
 def packets(schema: Schema, number: int, p: Printer) -> None:
-    found: dict[int, str] = {}
-    cases: list[tuple[int, str, str]] = []
-    for family in schema.order:
-        if not isinstance(family, Struct) or family.packet_id is None or (family, number) not in schema.live:
-            continue
-        first = found.setdefault(family.packet_id, family.name)
-        if first != family.name:
-            raise CompilerError(
-                f"{names.registry(schema, number)}: {first} and {family.name} share id {family.packet_id}"
-            )
-        cases.append((family.packet_id, family.name, names.qualified(schema, schema.shape_at(family, number))))
+    cases = sorted(
+        (packet_id, encoding.model.family.name, names.qualified(schema, encoding.model), names.codec(encoding))
+        for packet_id, encoding in schema.packets(number).items()
+    )
     p.emit(
         """
         public final class $registry$ {
             private $registry$() {}
 
+            public static void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {
+                switch (packet) {
+                    $encodes$
+                    default -> throw new IllegalArgumentException($unknown$);
+                }
+            }
+
             public static @NotNull Packet decode(int packetId, @NotNull ByteBuf buf) {
                 return switch (packetId) {
-                    $cases$
+                    $decodes$
                     default -> ByteBufCodec.decode(buf, "PacketHeader", body -> {
                         throw DecodeException.unknownValue(body.readerIndex()).prepend("packet_id");
                     });
@@ -67,15 +75,23 @@ def packets(schema: Schema, number: int, p: Printer) -> None:
         }
         """,
         registry=names.REGISTRY,
-        cases=lambda: switch(p, sorted(cases)),
+        encodes=lambda: encodes(p, cases),
+        unknown=f'"packet: " + packet.getClass().getName() + {json.dumps(f" is not a packet at protocol {number}")}',
+        decodes=lambda: decodes(p, cases),
     )
 
 
-def switch(p: Printer, cases: list[tuple[int, str, str]]) -> None:
-    for packet_id, name, spelled in cases:
+def encodes(p: Printer, cases: list[tuple[int, str, str, str]]) -> None:
+    for _, _, spelled, codec in cases:
+        p.emit("case $spelled$ value -> $spelled$.$codec$.INSTANCE.encode(value, buf);", spelled=spelled, codec=codec)
+
+
+def decodes(p: Printer, cases: list[tuple[int, str, str, str]]) -> None:
+    for packet_id, name, spelled, codec in cases:
         p.emit(
-            'case $id$ -> ByteBufCodec.decode(buf, "$name$", $spelled$::decode);',
+            'case $id$ -> ByteBufCodec.decode(buf, "$name$", $spelled$.$codec$.INSTANCE);',
             id=packet_id,
             name=name,
             spelled=spelled,
+            codec=codec,
         )

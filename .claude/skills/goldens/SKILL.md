@@ -18,14 +18,14 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 
 ## A newer protocol's folder
 
-1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls]`.
+1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls or v<previous>.encodings[cls] != v<protocol>.encodings[cls]]`.
 2. Copy each one's file from the nearest folder toward `v2168/` that holds it, change only the fields whose encoding changed, and write it as `layout(cases)` with bytes from the library. Give a new packet cases of its own from the dump.
 3. Delete every file left byte-identical to the one it was copied from.
-4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure with `::v<protocol>::`.
+4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure with `, <protocol>>`.
 
 ## An older protocol's folder
 
-1. List the packets whose class differs from the next modelled protocol toward 2168: `[i for i, cls in v<protocol>.packets.items() if v<next>.packets.get(i) is not cls]`.
+1. List the packets whose class differs from the next modelled protocol toward 2168: `[i for i, cls in v<protocol>.packets.items() if v<next>.packets.get(i) is not cls or v<next>.encodings[cls] != v<protocol>.encodings[cls]]`.
 2. Seed each one's file and delete the byte-identical ones as a newer folder does, from the nearest folder toward `v2168/` that holds it.
 3. Model each packet in the encoding its build sends by default (dsl.md): a seed from `v2168/` holds cereal shapes, and each record's `serialization_mode` says which encoding BDS sent.
 4. Where BDS prints no JSON for a packet, judge the case by its `bds_trace`. Where a script cannot walk the trace against the value, have an agent compare them leaf by leaf and give a verdict per case. A confirmed case freezes, and nothing reruns it.
@@ -156,14 +156,14 @@ llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -igno
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
 ```
 
-The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<namespace>` is empty for `v2168/` and `::v<protocol>::` for any other folder:
+The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<owned>` is empty for `v2168/` and `, <protocol>>` for any other folder, the N of the implementations it introduces:
 
 ```
 D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
 LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
-python3 -I - $D/export.json '<namespace>' <<'EOF' | sort > $D.missed
+python3 -I - $D/export.json '<owned>' <<'EOF' | sort > $D.missed
 import json, re, sys
 functions = [f for f in json.load(open(sys.argv[1]))['data'][0]['functions'] if re.search(r'/generated/.*\.cpp$', f['filenames'][0])]
 sources = {path: open(path).read().split('\n') for path in {f['filenames'][0] for f in functions}}

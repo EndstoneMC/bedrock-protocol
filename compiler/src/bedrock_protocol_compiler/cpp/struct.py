@@ -1,36 +1,43 @@
+from functools import partial
 from itertools import groupby
 
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator, partials
 from bedrock_protocol_compiler.cpp.expression import render
-from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, make_field_generator
+from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
 from bedrock_protocol_compiler.descriptor import Field
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape, reached_by
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, StructModel, reached_by
 
 
 class StructGenerator:
-    def __init__(self, schema: Schema, shape: StructShape) -> None:
+    def __init__(self, schema: Schema, model: StructModel) -> None:
         self.schema = schema
-        self.shape = shape
-        self.qualified = names.qualified(schema, shape)
-        self.aliases = [(child.family.name, names.qualified(schema, child)) for child in shape.nested]
-        self.defined = [shape_generator(schema, child) for child in shape.nested if child.owner is shape]
-        self.members: list[tuple[str, str]] = []
+        self.target = model
+        self.qualified = names.qualified(schema, model)
+        self.name = schema.name(model)
+        self.aliases = [(child.family.name, names.qualified(schema, child)) for child in model.nested]
+        self.owned = [
+            (child, EnumGenerator(schema, child) if isinstance(child, EnumShape) else StructGenerator(schema, child))
+            for child in model.nested
+            if schema.owner(child) is model
+        ]
+        self.pending = dict(self.owned)
+        self.members = [(cpp_type(schema, model, slot.type), slot.name) for slot in model.slots]
         self.field_includes: set[str] = set()
-        self.version = names.since(schema, shape)
-        self.serializer = names.serializer(self.qualified, self.version)
-        self.fields: list[tuple[Field, FieldGenerator]] = []
-        for each in shape.fields:
-            generator = make_field_generator(schema, each.type, self.version, f'"{each.name}"', 0)
-            if each.duplicate > 1:
-                generator = DuplicatedField(generator, each.duplicate)
-            self.fields.append((each, generator))
-            spelled = generator.cpp_type()
-            if spelled is not None:
-                self.members.append((spelled, each.name))
-            self.field_includes |= generator.includes()
-            self.field_includes |= {names.header(target) for target in reached_by(each)}
+        self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
+        for encoding in schema.encodings(model):
+            if not encoding.fields and model.nested:
+                continue
+            fields: list[tuple[Field, FieldGenerator]] = []
+            for each in encoding.fields:
+                generator = make_field_generator(schema, each.type, encoding, f'"{each.name}"', 0)
+                if each.duplicate > 1:
+                    generator = DuplicatedField(generator, each.duplicate)
+                fields.append((each, generator))
+                self.field_includes |= generator.includes()
+                self.field_includes |= {names.header(target) for target in reached_by(each)}
+            self.implemented.append((encoding, fields))
 
     def includes(self) -> set[str]:
         includes = {
@@ -40,51 +47,48 @@ class StructGenerator:
             "<cstddef>",
             "<string_view>",
         }
-        if self.has_serializer:
+        if self.implemented:
             includes |= names.SERIALIZER_INCLUDES
-        return includes.union(*(child.includes() for child in self.defined))
+        return includes.union(*(child.includes() for _, child in self.owned))
 
-    @property
-    def has_serializer(self) -> bool:
-        return bool(self.shape.fields) or not self.shape.nested
+    def nested(self, p: Printer, children: "list[StructGenerator | EnumGenerator]") -> None:
+        p.emit("namespace $nested$ {", nested=names.nested(self.name))
+        p.emit("")
+        for child in children:
+            child.definition(p)
+            p.emit("")
+        p.emit("}  // namespace $nested$", nested=names.nested(self.name))
+        p.emit("")
 
     def definition(self, p: Printer) -> None:
-        name = self.shape.family.name
-        if self.defined:
-            p.emit("namespace $nested$ {", nested=names.nested(name))
-            p.emit("")
-            for child in self.defined:
-                child.definition(p)
-                p.emit("")
-            p.emit("}  // namespace $nested$", nested=names.nested(name))
-            p.emit("")
+        if self.pending:
+            self.nested(p, list(self.pending.values()))
+        packet_id = self.target.family.packet_id
         p.emit(
             """
             struct $name$ {
                 $body$
             };
             """,
-            name=name,
-            body=lambda: self.body(p),
+            name=self.name,
+            body=lambda: self.body(p, packet_id),
         )
 
-    def body(self, p: Printer) -> None:
-        name = self.shape.family.name
-        packet_id = self.shape.family.packet_id
+    def body(self, p: Printer, packet_id: int | None) -> None:
         for alias, spelled in self.aliases:
             p.emit("using $alias$ = $spelled$;", alias=alias, spelled=spelled)
-        if self.shape.nested and (packet_id is not None or self.members):
+        if self.target.nested and (packet_id is not None or self.members):
             p.emit("")
         if packet_id is not None:
             p.emit("static constexpr int Id = $id$;", id=packet_id)
         for spelled, member in self.members:
             p.emit("$type$ $name${};", type=spelled, name=member)
-        if self.shape.nested or packet_id is not None or self.members:
+        if self.target.nested or packet_id is not None or self.members:
             p.emit("")
-        p.emit("friend bool operator==(const $name$ &, const $name$ &) = default;", name=name)
+        p.emit("friend bool operator==(const $name$ &, const $name$ &) = default;", name=self.name)
 
     def reflection(self, p: Printer) -> None:
-        for child in self.defined:
+        for _, child in self.owned:
             child.reflection(p)
         members = [member for _, member in self.members]
         p.emit(
@@ -99,7 +103,7 @@ class StructGenerator:
             inline constexpr std::array<std::string_view, $count$> field_names_v<$qualified$>{{
             """,
             qualified=self.qualified,
-            name=names.bare(self.shape.family),
+            name=names.bare(self.schema, self.target),
             count=len(members),
         )
         with p.indent():
@@ -140,83 +144,76 @@ class StructGenerator:
             p.emit("}")
 
     def serializer_declaration(self, p: Printer) -> None:
-        for child in self.defined:
+        for _, child in self.owned:
             child.serializer_declaration(p)
-        if not self.has_serializer:
-            return
-        p.emit(
-            """
-            template <>
-            struct $serializer$ {
-                static constexpr int since = $since$;
-                static auto serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$;
-                static auto deserialize(BinaryReader &stream) -> $decoded$;
-            };
+        for encoding, _ in self.implemented:
+            serializer = names.serializer(self.qualified, encoding.since, encoding.mode)
+            p.emit(
+                """
+                template <>
+                struct $serializer$ {
+                    static constexpr int since = $since$;
+                    static auto serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$;
+                    static auto deserialize(BinaryReader &stream) -> $decoded$;
+                };
 
-            """,
-            serializer=self.serializer,
-            since=self.version,
-            qualified=self.qualified,
-            encoded=names.ENCODED,
-            decoded=names.decoded(self.qualified),
-        )
-        partials(p, self.qualified, self.serializer, self.shape.ranges)
+                """,
+                serializer=serializer,
+                since=encoding.since,
+                qualified=self.qualified,
+                encoded=names.ENCODED,
+                decoded=names.decoded(self.qualified),
+            )
+            partials(p, self.qualified, serializer, encoding.served)
 
     def serializer_body(self, p: Printer) -> None:
-        for child in self.defined:
+        for _, child in self.owned:
             child.serializer_body(p)
-        if not self.has_serializer:
-            return
-        p.emit(
-            """
-            auto $serializer$::serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$
-            {
-                $writes$
-                return {};
-            }
+        for encoding, fields in self.implemented:
+            p.emit(
+                """
+                auto $serializer$::serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$
+                {
+                    $writes$
+                    return {};
+                }
 
-            auto $serializer$::deserialize(BinaryReader &stream) -> $decoded$
-            {
-                $qualified$ out;
-                $reads$
-                return out;
-            }
+                auto $serializer$::deserialize(BinaryReader &stream) -> $decoded$
+                {
+                    $qualified$ out;
+                    $reads$
+                    return out;
+                }
 
-            """,
-            serializer=self.serializer,
-            qualified=self.qualified,
-            encoded=names.ENCODED,
-            decoded=names.decoded(self.qualified),
-            writes=lambda: self.writes(p),
-            reads=lambda: self.reads(p),
-        )
+                """,
+                serializer=names.serializer(self.qualified, encoding.since, encoding.mode),
+                qualified=self.qualified,
+                encoded=names.ENCODED,
+                decoded=names.decoded(self.qualified),
+                writes=partial(self.writes, p, encoding, fields),
+                reads=partial(self.reads, p, encoding, fields),
+            )
 
-    def writes(self, p: Printer) -> None:
-        for when, group in groupby(self.fields, key=lambda each: each[0].when):
+    def writes(self, p: Printer, encoding: Encoding, fields: list[tuple[Field, FieldGenerator]]) -> None:
+        for when, group in groupby(fields, key=lambda each: each[0].when):
             if when is None:
                 for each, generator in group:
                     generator.write(p, f"value.{each.name}")
                 continue
-            p.emit("if ($condition$) {", condition=render(self.schema, self.version, when, "value"))
+            p.emit("if ($condition$) {", condition=render(self.schema, encoding, when, "value"))
             with p.indent():
                 for each, generator in group:
                     generator.write(p, f"value.{each.name}")
             p.emit("}")
 
-    def reads(self, p: Printer) -> None:
-        for when, group in groupby(self.fields, key=lambda each: each[0].when):
+    def reads(self, p: Printer, encoding: Encoding, fields: list[tuple[Field, FieldGenerator]]) -> None:
+        for when, group in groupby(fields, key=lambda each: each[0].when):
             if when is None:
                 for each, generator in group:
                     generator.read(p, f"out.{each.name}")
                 continue
-            p.emit("if ($condition$) {", condition=render(self.schema, self.version, when, "out"))
+            p.emit("if ($condition$) {", condition=render(self.schema, encoding, when, "out"))
             with p.indent():
                 for each, generator in group:
                     generator.read(p, f"out.{each.name}")
             p.emit("}")
-
-
-def shape_generator(schema: Schema, shape: Shape) -> StructGenerator | EnumGenerator:
-    if isinstance(shape, EnumShape):
-        return EnumGenerator(schema, shape)
-    return StructGenerator(schema, shape)

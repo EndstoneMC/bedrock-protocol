@@ -57,9 +57,9 @@ final class CaseLoader {
 
     private CaseLoader() {}
 
-    static <T extends Message> T load(Class<T> type, JsonElement value)
+    static <T extends Message> T load(int version, Class<T> type, JsonElement value)
             throws ReflectiveOperationException {
-        return type.cast(message(type, value, type.getSimpleName()));
+        return type.cast(message(version, type, value, type.getSimpleName()));
     }
 
     private static IllegalArgumentException fail(String path, String message) {
@@ -79,7 +79,7 @@ final class CaseLoader {
         return found;
     }
 
-    private static Object message(Class<?> type, JsonElement json, String path)
+    private static Object message(int version, Class<?> type, JsonElement json, String path)
             throws ReflectiveOperationException {
         Object builder = type.getMethod("newBuilder").invoke(null);
         List<Method> methods = List.of(builder.getClass().getMethods());
@@ -127,13 +127,14 @@ final class CaseLoader {
             }
         }
         if (wrapper && !(json.isJsonObject() && !json.getAsJsonObject().has(CLASS_KEY))) {
-            arm(builder, armSetters, json, path);
+            arm(version, builder, armSetters, json, path);
         } else if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
             String text = json.getAsString();
             if (!HEX_PAIRS.matcher(text).matches()) {
                 throw fail(path, "a message as a string is # and hex pairs");
             }
             Map<Integer, Method> ordered = new TreeMap<>();
+            Object codec = type.getMethod("codec", int.class).invoke(null, version);
             for (Method setter : methods) {
                 if (!setter.getName().startsWith("set")) {
                     continue;
@@ -144,7 +145,9 @@ final class CaseLoader {
                 Object probe = type.getMethod("newBuilder").invoke(null);
                 setter.invoke(probe, 1);
                 ByteBuf encoded = Unpooled.buffer();
-                ((Message) probe.getClass().getMethod("build").invoke(probe)).encode(encoded);
+                Codec.class
+                        .getMethod("encode", Message.class, ByteBuf.class)
+                        .invoke(codec, probe.getClass().getMethod("build").invoke(probe), encoded);
                 int first = 0;
                 while (first < encoded.writerIndex() && encoded.getByte(first) == 0) {
                     first++;
@@ -186,7 +189,16 @@ final class CaseLoader {
                 if (!seen.add(name)) {
                     throw fail(path, key + " repeats a field");
                 }
-                set(type, builder, methods, unions, key, name, entry.getValue(), path + "." + key);
+                set(
+                        version,
+                        type,
+                        builder,
+                        methods,
+                        unions,
+                        key,
+                        name,
+                        entry.getValue(),
+                        path + "." + key);
             }
             for (Method clear : methods) {
                 String field = clear.getName().substring(Math.min(5, clear.getName().length()));
@@ -203,6 +215,7 @@ final class CaseLoader {
     }
 
     private static void set(
+            int version,
             Class<?> type,
             Object builder,
             List<Method> methods,
@@ -217,7 +230,7 @@ final class CaseLoader {
             if (value.isJsonNull() && clear != null) {
                 clear.invoke(builder);
             } else {
-                arm(builder, unions.get(name), value, path);
+                arm(version, builder, unions.get(name), value, path);
             }
             return;
         }
@@ -247,8 +260,8 @@ final class CaseLoader {
                     JsonObject pair = array.get(i).getAsJsonObject();
                     put.invoke(
                             builder,
-                            convert(pair.get("key"), types[0], at + ".key"),
-                            convert(pair.get("value"), types[1], at + ".value"));
+                            convert(version, pair.get("key"), types[0], at + ".key"),
+                            convert(version, pair.get("value"), types[1], at + ".value"));
                 }
             } else if (add != null) {
                 for (int i = 0; i < array.size(); i++) {
@@ -256,6 +269,7 @@ final class CaseLoader {
                             add,
                             builder,
                             convert(
+                                    version,
                                     array.get(i),
                                     add.getGenericParameterTypes()[0],
                                     path + "[" + i + "]"));
@@ -267,12 +281,15 @@ final class CaseLoader {
                             builder,
                             i,
                             convert(
+                                    version,
                                     array.get(i),
                                     indexed.getGenericParameterTypes()[1],
                                     path + "[" + i + "]"));
                 }
             } else if (plain != null) {
-                plain.invoke(builder, convert(value, plain.getGenericParameterTypes()[0], path));
+                plain.invoke(
+                        builder,
+                        convert(version, value, plain.getGenericParameterTypes()[0], path));
             } else {
                 throw fail(path, "no setter for an array");
             }
@@ -295,20 +312,26 @@ final class CaseLoader {
                 if (types[0] == String.class) {
                     mapKey = entry.getKey();
                 } else if (types[0] instanceof Class<?> keyType && keyType.isEnum()) {
-                    mapKey = convert(new JsonPrimitive(entry.getKey()), types[0], at);
+                    mapKey = convert(version, new JsonPrimitive(entry.getKey()), types[0], at);
                 } else {
-                    mapKey = convert(JsonParser.parseString(entry.getKey()), types[0], at);
+                    mapKey = convert(version, JsonParser.parseString(entry.getKey()), types[0], at);
                 }
-                put.invoke(builder, mapKey, convert(entry.getValue(), types[1], at));
+                put.invoke(builder, mapKey, convert(version, entry.getValue(), types[1], at));
             }
             return;
         }
         if (plain == null && coded == null) {
             String constant = key.replaceFirst("^_+", "").toUpperCase(Locale.ROOT);
             Field literal = null;
-            for (Field field : type.getFields()) {
-                if (field.getName().equals(constant) && Modifier.isStatic(field.getModifiers())) {
-                    literal = field;
+            for (Method method : type.getMethods()) {
+                if (!method.getName().equals("codec") || method.getParameterCount() != 1) {
+                    continue;
+                }
+                for (Field field : method.invoke(null, version).getClass().getFields()) {
+                    if (field.getName().equals(constant)
+                            && Modifier.isStatic(field.getModifiers())) {
+                        literal = field;
+                    }
                 }
             }
             if (literal == null) {
@@ -348,13 +371,13 @@ final class CaseLoader {
                         && value.getAsJsonPrimitive().isNumber()
                         && INTEGER.matcher(value.getAsString()).matches();
         if (coded != null && number && (plain == null || plain.getParameterTypes()[0].isEnum())) {
-            call(coded, builder, convert(value, int.class, path));
+            call(coded, builder, convert(version, value, int.class, path));
             return;
         }
         if (plain == null) {
             throw fail(path, "only an integer is accepted");
         }
-        call(plain, builder, convert(value, plain.getGenericParameterTypes()[0], path));
+        call(plain, builder, convert(version, value, plain.getGenericParameterTypes()[0], path));
     }
 
     private static void call(Method setter, Object builder, Object... args)
@@ -376,7 +399,8 @@ final class CaseLoader {
         }
     }
 
-    private static void arm(Object builder, List<Method> arms, JsonElement json, String path)
+    private static void arm(
+            int version, Object builder, List<Method> arms, JsonElement json, String path)
             throws ReflectiveOperationException {
         if (json.isJsonObject()) {
             JsonObject object = json.getAsJsonObject();
@@ -404,7 +428,8 @@ final class CaseLoader {
                     rest.add(entry.getKey(), entry.getValue());
                 }
             }
-            chosen.invoke(builder, convert(rest, chosen.getGenericParameterTypes()[0], path));
+            chosen.invoke(
+                    builder, convert(version, rest, chosen.getGenericParameterTypes()[0], path));
             return;
         }
         for (Method arm : arms) {
@@ -437,7 +462,8 @@ final class CaseLoader {
                 }
             }
             if (accepted) {
-                arm.invoke(builder, convert(json, arm.getGenericParameterTypes()[0], path));
+                arm.invoke(
+                        builder, convert(version, json, arm.getGenericParameterTypes()[0], path));
                 return;
             }
         }
@@ -465,7 +491,7 @@ final class CaseLoader {
                 && value.compareTo(BigInteger.ONE.shiftLeft(bits)) < 0;
     }
 
-    private static Object convert(JsonElement json, Type type, String path)
+    private static Object convert(int version, JsonElement json, Type type, String path)
             throws ReflectiveOperationException {
         if (type instanceof ParameterizedType generic && generic.getRawType() == List.class) {
             if (!json.isJsonArray()) {
@@ -476,6 +502,7 @@ final class CaseLoader {
             for (int i = 0; i < array.size(); i++) {
                 list.add(
                         convert(
+                                version,
                                 array.get(i),
                                 generic.getActualTypeArguments()[0],
                                 path + "[" + i + "]"));
@@ -601,7 +628,7 @@ final class CaseLoader {
             return found;
         }
         if (Message.class.isAssignableFrom(cls)) {
-            return message(cls, json, path);
+            return message(version, cls, json, path);
         }
         throw fail(path, "unsupported type " + cls.getName());
     }

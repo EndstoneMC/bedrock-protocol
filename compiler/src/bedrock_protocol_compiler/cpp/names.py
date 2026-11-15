@@ -1,9 +1,8 @@
 from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef, Range, Struct
-from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, SerializationMode, StructModel
 
 INCLUDE_DIR = "bedrock/protocol"
 REGISTRY_HEADER = f"{INCLUDE_DIR}/packets.hpp"
-PRE_CEREAL = "pre_cereal"
 PRIMITIVES = {
     "str": "std::string",
     "bytes": "std::vector<std::byte>",
@@ -33,36 +32,39 @@ def namespace(schema: Schema) -> str:
     return schema.package.replace(".", "::")
 
 
-def scope(shape: Shape) -> tuple[str, ...]:
-    parts = [] if shape.family.cereal else [PRE_CEREAL]
-    if shape.versioned:
-        since = shape.ranges[0].since
-        parts.append("base" if since is None else f"v{since}")
-    return tuple(parts)
+def scope(schema: Schema, target: StructModel | EnumShape) -> tuple[str, ...]:
+    since = schema.scope(target)
+    return () if since is None else (f"v{since}",)
 
 
-def qualified(schema: Schema, target: Shape | Alias | Builtin) -> str:
+def declared(schema: Schema, target: StructModel | EnumShape) -> str:
+    return schema.name(target) if isinstance(target, StructModel) else target.family.name
+
+
+def qualified(schema: Schema, target: StructModel | EnumShape | Alias | Builtin) -> str:
     if isinstance(target, Alias | Builtin):
         return f"::{namespace(schema)}::{target.name}"
-    if target.owner is not None:
-        return f"{nested(qualified(schema, target.owner))}::{target.family.name}"
-    return "::".join(("", namespace(schema), *scope(target), target.family.name))
+    owner = schema.owner(target)
+    if owner is not None:
+        return f"{nested(qualified(schema, owner))}::{declared(schema, target)}"
+    return "::".join(("", namespace(schema), *scope(schema, target), declared(schema, target)))
 
 
 def nested(spelled: str) -> str:
     return f"{spelled}_nested"
 
 
-def selector(family: Struct | Enum) -> str:
-    return f"{family.name}_"
+def selector(label: str) -> str:
+    return f"{label}_"
 
 
-def since(schema: Schema, shape: Shape) -> int:
+def since(schema: Schema, shape: EnumShape) -> int:
     return schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
 
 
-def serializer(spelled: str, version: int) -> str:
-    return f"Serializer<{spelled}, {version}>"
+def serializer(spelled: str, version: int | str, mode: SerializationMode = SerializationMode.DEFAULT) -> str:
+    suffix = "" if mode is SerializationMode.DEFAULT else f", SerializationMode::{mode.name.capitalize()}"
+    return f"Serializer<{spelled}, {version}{suffix}>"
 
 
 def decoded(spelled: str) -> str:
@@ -93,31 +95,27 @@ def read(encoded: str, endian: str | None) -> str:
     return f"stream.read<{PRIMITIVES[encoded]}{order}>()"
 
 
-def enumerator(schema: Schema, member: MemberRef, version: int) -> str:
-    shape = schema.shape_at(member.enum, version)
-    assert isinstance(shape, EnumShape)
+def enumerator(schema: Schema, member: MemberRef, encoding: Encoding) -> str:
+    shape = schema.enum_type(member.enum, encoding.since)
     cpp_name = next((each.cpp_name for each in shape.members if each.name == member.name and not each.deprecated), None)
     if cpp_name is None:
-        return f"static_cast<{qualified(schema, shape)}>({shape.numbers[member.name]})"
+        return f"static_cast<{qualified(schema, shape)}>({schema.number(encoding, member)})"
     return f"{qualified(schema, shape)}::{cpp_name}"
 
 
-def bare(family: Struct | Enum) -> str:
-    return family.name if family.owner is None else f"{bare(family.owner)}::{family.name}"
+def bare(schema: Schema, target: StructModel | EnumShape) -> str:
+    owner = schema.owner(target)
+    name = declared(schema, target)
+    return name if owner is None else f"{bare(schema, owner)}::{name}"
 
 
-def clause(run: Range) -> str:
+def requirement(run: Range) -> str:
     bounds = []
     if run.since is not None:
         bounds.append(f"V >= {run.since}")
     if run.until is not None:
         bounds.append(f"V < {run.until}")
-    return " && ".join(bounds)
-
-
-def requirement(run: Range) -> str:
-    bounds = clause(run)
-    return f" requires ({bounds})" if bounds else ""
+    return f" requires ({' && '.join(bounds)})" if bounds else ""
 
 
 def runtime(stem: str) -> str:

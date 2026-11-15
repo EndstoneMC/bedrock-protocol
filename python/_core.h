@@ -47,20 +47,17 @@ struct Codec {
     nb::object (*decode)(BinaryReader &stream);
 };
 
-using CodecTable = std::unordered_map<PyObject *, const Codec *>;
+inline constexpr std::size_t mode_count = 3;
+
+using CodecTable = std::unordered_map<PyObject *, std::array<const Codec *, mode_count>>;
 
 struct Scope {
     int number;
-    const char *noun;
     nb::handle module;
     CodecTable *codecs;
     nb::dict encodings;
+    nb::dict modes;
     nb::dict packets;
-};
-
-struct Version {
-    Scope cereal;
-    Scope pre_cereal;
 };
 
 [[noreturn]] void throw_decode_error(const DecodeError &error);
@@ -69,17 +66,39 @@ struct Version {
 void init_nbt(nb::module_ &parent);
 void init_versions(nb::module_ &parent);
 
-void init_types(std::span<const Version> bound);
+void init_types(std::span<const Scope> bound);
 
-template <typename T, int V>
+std::pair<nb::object, std::string_view> claim_owner(const Scope &scope, std::string_view declared,
+                                                    std::string_view label, bool create);
+void register_mode(const Scope &scope, nb::handle cls, SerializationMode mode, int since, const Codec *codec);
+void register_packet(const Scope &scope, int id, nb::handle cls);
+void bind_name(nb::handle owner, std::string_view leaf, nb::handle cls);
+
+template <typename T, int V, SerializationMode M>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
-    { Serializer<T, V>::since } -> std::convertible_to<int>;
-    Serializer<T, V>::serialize(writer, value);
-    Serializer<T, V>::deserialize(reader);
+    { Serializer<T, V, M>::since } -> std::convertible_to<int>;
+    Serializer<T, V, M>::serialize(writer, value);
+    Serializer<T, V, M>::deserialize(reader);
 };
 
+template <typename S, typename T, int N, SerializationMode K>
+concept Derives = std::derived_from<S, Serializer<T, N, K>> && !std::same_as<S, Serializer<T, N, K>>;
+
+template <typename T, int V, SerializationMode M>
+inline constexpr SerializationMode implementation = [] {
+    using Self = Serializer<T, V, M>;
+    constexpr int since = Self::since;
+    constexpr std::array found{Derives<Self, T, since, SerializationMode::Default>,
+                               Derives<Self, T, since, SerializationMode::Cereal>,
+                               Derives<Self, T, since, SerializationMode::Manual>};
+    constexpr auto count = std::ranges::count(found, true);
+    static_assert(count <= 1, "a serializer derives from more than one implementation");
+    static_assert(count == 1 || since == V, "a serializer derives from no implementation");
+    return count == 0 ? M : static_cast<SerializationMode>(std::ranges::find(found, true) - found.begin());
+}();
+
 template <typename T, int V>
-concept Packet = Reflected<T> && Serializable<T, V> && requires {
+concept Packet = Reflected<T> && Serializable<T, V, SerializationMode::Default> && requires {
     { T::Id } -> std::convertible_to<int>;
 };
 
@@ -106,23 +125,12 @@ const auto &python_names()
     return names;
 }
 
-inline nb::object owner_of(nb::handle module, std::string_view qualified, std::string_view &leaf)
-{
-    nb::object scope = nb::borrow(module);
-    for (auto pos = qualified.find("::"); pos != std::string_view::npos; pos = qualified.find("::")) {
-        scope = scope.attr(nb::str(qualified.data(), pos));
-        qualified.remove_prefix(pos + 2);
-    }
-    leaf = qualified;
-    return scope;
-}
-
-template <typename T, int N>
+template <typename T, int N, SerializationMode M>
 inline constexpr Codec codec{
     .encode = [](BinaryWriter &stream,
-                 nb::handle value) { return protocol::encode<N>(stream, *nb::inst_ptr<T>(value)); },
+                 nb::handle value) { return protocol::encode<N, M>(stream, *nb::inst_ptr<T>(value)); },
     .decode = [](BinaryReader &stream) -> nb::object {
-        auto value = protocol::decode<N, T>(stream);
+        auto value = protocol::decode<N, T, M>(stream);
         if (!value) {
             throw_decode_error(value.error());
         }
@@ -411,52 +419,79 @@ void bind_struct(nb::handle scope, const char *name)
 }
 
 template <typename T, int V>
-void bind_type(const Scope &scope)
+void bind_type(const Scope &scope, std::string_view label)
 {
-    std::string_view qualified;
+    std::string_view declared;
     if constexpr (std::is_enum_v<T>) {
-        qualified = enum_type_name<T>();
+        declared = enum_type_name<T>();
     }
     else {
-        qualified = struct_name<T>();
+        declared = struct_name<T>();
     }
-    std::string_view leaf;
-    nb::object owner = owner_of(scope.module, qualified, leaf);
-    const std::string name(leaf);
-
-    if (nb::handle existing = nb::type<T>(); existing.is_valid()) {
-        owner.attr(name.c_str()) = existing;
-    }
-    else if constexpr (std::is_enum_v<T>) {
-        bind_enum<T>(owner, name.c_str());
-    }
-    else {
-        bind_struct<T>(owner, name.c_str());
-    }
-    if constexpr (Serializable<T, V>) {
-        constexpr int since = Serializer<T, V>::since;
-        nb::handle cls = nb::type<T>();
-        scope.codecs->try_emplace(cls.ptr(), &codec<T, since>);
-        scope.encodings[cls] = nb::int_(since);
-        if constexpr (Packet<T, V>) {
-            scope.packets[nb::int_(T::Id)] = cls;
+    nb::handle cls = nb::type<T>();
+    const auto [owner, leaf] = claim_owner(scope, declared, label, !cls.is_valid());
+    if (!cls.is_valid()) {
+        const std::string name(declared.substr(declared.find_last_of(':') + 1));
+        if constexpr (std::is_enum_v<T>) {
+            bind_enum<T>(owner, name.c_str());
         }
+        else {
+            bind_struct<T>(owner, name.c_str());
+        }
+        cls = nb::type<T>();
+    }
+    bind_name(owner, leaf, cls);
+    const auto bind_modes = [&]<std::size_t... I>(std::index_sequence<I...>) {
+        (
+            [&] {
+                constexpr auto mode = static_cast<SerializationMode>(I);
+                if constexpr (Serializable<T, V, mode>) {
+                    constexpr int since = Serializer<T, V, mode>::since;
+                    register_mode(scope, cls, mode, since, &codec<T, since, implementation<T, V, mode>>);
+                }
+            }(),
+            ...);
+    };
+    if constexpr (!std::is_enum_v<T>) {
+        if constexpr (Serializable<T, V, SerializationMode::Default>) {
+            bind_modes(std::index_sequence<std::to_underlying(SerializationMode::Default)>{});
+        }
+        else {
+            bind_modes(std::index_sequence<std::to_underlying(SerializationMode::Cereal),
+                                           std::to_underlying(SerializationMode::Manual)>{});
+        }
+    }
+    if constexpr (Packet<T, V>) {
+        register_packet(scope, T::Id, cls);
     }
 }
 
+template <typename T, typename List>
+struct label_position;
+
+template <typename T, typename... L>
+struct label_position<T, type_list<L...>> {
+    static constexpr std::array<bool, sizeof...(L)> found{std::is_same_v<T, L>...};
+    static constexpr std::size_t value = std::ranges::find(found, true) - found.begin();
+};
+
 template <template <int> class Types>
-void bind_schema_types(std::span<const Version> bound)
+void bind_schema_types(std::span<const Scope> bound)
 {
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         constexpr std::size_t newest = versions.size() - 1;
         (
             [&] {
                 constexpr int number = versions[newest - I];
-                const Version &version = bound[newest - I];
-                [&]<typename... C, typename... P>(type_list<C...>, type_list<P...>) {
-                    (bind_type<C, number>(version.cereal), ...);
-                    (bind_type<P, number>(version.pre_cereal), ...);
-                }(typename Types<number>::cereal{}, typename Types<number>::pre_cereal{});
+                const Scope &scope = bound[newest - I];
+                [&]<typename... T>(type_list<T...>) {
+                    (bind_type<T, number>(
+                         scope,
+                         label_position<T, typename Types<number>::labelled>::value < Types<number>::labels.size()
+                             ? Types<number>::labels[label_position<T, typename Types<number>::labelled>::value]
+                             : std::string_view{}),
+                     ...);
+                }(typename Types<number>::types{});
             }(),
             ...);
     }(std::make_index_sequence<versions.size()>{});

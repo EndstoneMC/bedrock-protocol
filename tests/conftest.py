@@ -38,7 +38,7 @@ from bedrock_protocol_compiler.descriptor import (
     Variant,
 )
 from bedrock_protocol_compiler.descriptor import Optional as OptionalType
-from bedrock_protocol_compiler.schema import Schema
+from bedrock_protocol_compiler.schema import Schema, outermost
 
 
 class SchemaRWType(enum.IntFlag):
@@ -1515,14 +1515,33 @@ class ReflectionCtx:
         self.protocol = protocol
         self.module = importlib.import_module(f"bedrock_protocol.v{protocol}")
         self.composites = {}
+        self.live_structs = {key for key in MODEL.live if isinstance(key[0], Struct)}
 
     def shape(self, family):
         return MODEL.live[family, self.protocol]
 
+    def bound(self, family):
+        top = outermost(family)
+        return reduce(
+            getattr, qualified_name(family).split(".")[1:], getattr(self.module, MODEL.label(top, self.protocol))
+        )
+
+    def served(self):
+        result = {}
+        for family in MODEL.order:
+            if isinstance(family, Struct) and (family, self.protocol) in self.live_structs:
+                result[self.bound(family)] = {
+                    bedrock_protocol.SerializationMode[mode.name]: encoding.since
+                    for encoding in MODEL.encodings(MODEL.model_at(family, self.protocol))
+                    for mode, runs in encoding.served.items()
+                    if any(run.contains(self.protocol) for run in runs)
+                }
+        return result
+
     def composite(self, family):
         if family not in self.composites:
             name = qualified_name(family)
-            cls = reduce(getattr, name.split("."), self.module if family.cereal else self.module.pre_cereal)
+            cls = self.bound(family)
             composite = HexColorSchema if name == "Color255RGBA" else GenericCompositeSchema
             self.composites[family] = schema = composite(cls, [])
             for field in self.shape(family).fields:
@@ -1654,6 +1673,11 @@ def fixture_save():
 @pytest.fixture(name="load")
 def fixture_load():
     return load
+
+
+@pytest.fixture(name="served")
+def fixture_served():
+    return lambda module: REFLECTIONS[module].served()
 
 
 def pytest_make_parametrize_id(val):

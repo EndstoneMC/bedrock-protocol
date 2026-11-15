@@ -38,6 +38,7 @@ __all__ = [
     "EncodeError",
     "PacketHeader",
     "ProtocolVersion",
+    "SerializationMode",
     "nbt",
     "protocol_version",
     "releases",

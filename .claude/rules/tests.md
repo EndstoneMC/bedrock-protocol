@@ -24,6 +24,7 @@ paths:
 - Share through fixtures, never `from conftest import`; a fixture never hides a value an assertion depends on.
 - Use no mocks, monkeypatching or other doubles; drive the real extension with real values.
 - Before trusting a new test, break the schema or the golden once and watch the test fail.
+- Count a mutation as killed by a test only when that test's own assertion fails; an error the mutated code raises can fail the test before its assertion runs.
 
 ## Running
 

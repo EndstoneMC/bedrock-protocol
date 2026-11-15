@@ -9,6 +9,7 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Bitset,
     BuiltinRef,
+    Enum,
     EnumName,
     EnumRef,
     List,
@@ -17,12 +18,13 @@ from bedrock_protocol_compiler.descriptor import (
     MemberRef,
     Optional,
     Primitive,
+    Struct,
     StructRef,
     Type,
     Variant,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema
+from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel
 
 ENUM_ENCODINGS = {
     "bool": "bool",
@@ -54,9 +56,33 @@ def write_loop(p: Printer, depth: int, indexed: bool, range_: str, *bodies: Call
     p.emit("}")
 
 
-class FieldGenerator(Protocol):
-    def cpp_type(self) -> str | None: ...
+def cpp_type(schema: Schema, model: StructModel, node: Type) -> str:
+    match node:
+        case Primitive(name=name):
+            return names.PRIMITIVES[name]
+        case AliasRef(alias=alias):
+            return names.qualified(schema, alias)
+        case BuiltinRef(builtin=builtin):
+            return names.qualified(schema, builtin)
+        case EnumRef() | StructRef() | EnumName():
+            return names.qualified(schema, schema.target(model, node))
+        case Bitset():
+            return f"std::bitset<{schema.width(model, node)}>"
+        case Optional(element=element):
+            return f"std::optional<{cpp_type(schema, model, element)}>"
+        case List(element=element):
+            return f"std::vector<{cpp_type(schema, model, element)}>"
+        case Array(element=element, size=size):
+            return f"std::array<{cpp_type(schema, model, element)}, {size}>"
+        case Map(key=key, value=value):
+            return f"std::map<{cpp_type(schema, model, key)}, {cpp_type(schema, model, value)}>"
+        case Variant(cases=cases):
+            spelled = ("std::monostate" if case is None else cpp_type(schema, model, case) for case in cases)
+            return f"std::variant<{', '.join(spelled)}>"
+    raise AssertionError(node)
 
+
+class FieldGenerator(Protocol):
     def includes(self) -> set[str]: ...
 
     def fallible(self) -> bool: ...
@@ -73,9 +99,6 @@ class ScalarField:
         self.stored = stored
         self.encoded = encoded
         self.endian = endian
-
-    def cpp_type(self) -> str:
-        return self.spelled
 
     def fallible(self) -> bool:
         return False
@@ -124,9 +147,8 @@ class AliasField(ScalarField):
 
 
 class EnumField(ScalarField):
-    def __init__(self, schema: Schema, node: EnumRef, version: int, where: str) -> None:
-        shape = schema.shape_at(node.enum, version)
-        assert isinstance(shape, EnumShape)
+    def __init__(self, schema: Schema, node: EnumRef, encoding: Encoding, where: str) -> None:
+        shape = schema.enum_type(node.enum, encoding.since)
         stored = shape.underlying.name
         super().__init__(
             where, names.qualified(schema, shape), stored, node.encoded or ENUM_ENCODINGS[stored], node.endian
@@ -138,13 +160,9 @@ class EnumField(ScalarField):
 
 
 class SerializerField:
-    def __init__(self, where: str, spelled: str, implementation: str) -> None:
+    def __init__(self, where: str, implementation: str) -> None:
         self.where = where
-        self.spelled = spelled
         self.implementation = implementation
-
-    def cpp_type(self) -> str:
-        return self.spelled
 
     def fallible(self) -> bool:
         return True
@@ -178,20 +196,29 @@ class SerializerField:
 
 
 class ReferenceField(SerializerField):
-    def __init__(self, schema: Schema, node: StructRef | EnumName, version: int, where: str) -> None:
-        self.family = node.struct if isinstance(node, StructRef) else node.enum
-        shape = schema.shape_at(self.family, version)
-        spelled = names.qualified(schema, shape)
-        super().__init__(where, spelled, names.serializer(spelled, names.since(schema, shape)))
+    def __init__(self, schema: Schema, node: StructRef | EnumName, encoding: Encoding, where: str) -> None:
+        self.family: Struct | Enum
+        if isinstance(node, StructRef):
+            self.family = node.struct
+            child = encoding.reached[node]
+            assert isinstance(child, Encoding)
+            spelled = names.qualified(schema, child.model)
+            implementation = names.serializer(spelled, *schema.call(encoding, node))
+        else:
+            self.family = node.enum
+            shape = schema.enum_type(node.enum, encoding.since)
+            spelled = names.qualified(schema, shape)
+            implementation = names.serializer(spelled, names.since(schema, shape))
+        super().__init__(where, implementation)
 
     def includes(self) -> set[str]:
         return {names.header(self.family)}
 
 
 class BuiltinField(SerializerField):
-    def __init__(self, schema: Schema, node: BuiltinRef, version: int, where: str) -> None:
+    def __init__(self, schema: Schema, node: BuiltinRef, encoding: Encoding, where: str) -> None:
         spelled = names.qualified(schema, node.builtin)
-        super().__init__(where, spelled, names.serializer(spelled, version))
+        super().__init__(where, names.serializer(spelled, encoding.since))
         self.node = node
 
     def includes(self) -> set[str]:
@@ -203,9 +230,6 @@ class BuiltinTextField:
         self.node = node
         self.where = where
         self.spelled = names.qualified(schema, node.builtin)
-
-    def cpp_type(self) -> str:
-        return self.spelled
 
     def fallible(self) -> bool:
         return False
@@ -236,11 +260,9 @@ class BuiltinTextField:
 
 
 class BitsetField(SerializerField):
-    def __init__(self, schema: Schema, node: Bitset, version: int, where: str) -> None:
-        shape = schema.shape_at(node.width.enum, version)
-        assert isinstance(shape, EnumShape)
-        spelled = f"std::bitset<{shape.numbers[node.width.name]}>"
-        super().__init__(where, spelled, names.serializer(spelled, version))
+    def __init__(self, schema: Schema, node: Bitset, encoding: Encoding, where: str) -> None:
+        spelled = f"std::bitset<{schema.width(encoding.model, node)}>"
+        super().__init__(where, names.serializer(spelled, encoding.since))
         self.node = node
 
     def includes(self) -> set[str]:
@@ -248,7 +270,7 @@ class BitsetField(SerializerField):
 
 
 class LiteralField:
-    def __init__(self, schema: Schema, node: Literal, version: int, where: str) -> None:
+    def __init__(self, schema: Schema, node: Literal, encoding: Encoding, where: str) -> None:
         self.node = node
         self.where = where
         match node.value:
@@ -261,14 +283,10 @@ class LiteralField:
                 self.constant = json.dumps(text)
                 self.expected = self.constant
             case MemberRef() as member:
-                shape = schema.shape_at(member.enum, version)
-                assert isinstance(shape, EnumShape)
+                shape = schema.enum_type(member.enum, encoding.since)
                 self.encoded = ENUM_ENCODINGS[shape.underlying.name]
-                self.constant = names.enumerator(schema, member, version)
+                self.constant = names.enumerator(schema, member, encoding)
                 self.expected = f"static_cast<{names.PRIMITIVES[self.encoded]}>({self.constant})"
-
-    def cpp_type(self) -> None:
-        return None
 
     def fallible(self) -> bool:
         return False
@@ -298,13 +316,10 @@ class LiteralField:
 
 
 class OptionalField:
-    def __init__(self, schema: Schema, node: Optional, version: int, where: str, depth: int) -> None:
-        self.element = make_field_generator(schema, node.element, version, where, depth)
+    def __init__(self, schema: Schema, node: Optional, encoding: Encoding, where: str, depth: int) -> None:
+        self.element = make_field_generator(schema, node.element, encoding, where, depth)
         self.where = where
         self.depth = depth
-
-    def cpp_type(self) -> str:
-        return f"std::optional<{self.element.cpp_type()}>"
 
     def fallible(self) -> bool:
         return self.element.fallible()
@@ -345,16 +360,13 @@ class OptionalField:
 
 
 class ListField:
-    def __init__(self, schema: Schema, node: List, version: int, where: str, depth: int) -> None:
+    def __init__(self, schema: Schema, node: List, encoding: Encoding, where: str, depth: int) -> None:
         self.schema = schema
         self.node = node
-        self.version = version
+        self.encoding = encoding
         self.where = where
         self.depth = depth
-        self.element = make_field_generator(schema, node.element, version, f"{where}, i{depth}", depth + 1)
-
-    def cpp_type(self) -> str:
-        return f"std::vector<{self.element.cpp_type()}>"
+        self.element = make_field_generator(schema, node.element, encoding, f"{where}, i{depth}", depth + 1)
 
     def fallible(self) -> bool:
         return self.element.fallible()
@@ -380,7 +392,7 @@ class ListField:
             signed = names.PRIMITIVES[self.node.prefix.name].startswith("std::int")
         else:
             assert self.node.count is not None
-            count = render_count(self.schema, self.version, self.node.count, "out")
+            count = render_count(self.schema, self.encoding, self.node.count, "out")
         p.emit("{")
         with p.indent():
             p.emit("auto count$depth$ = $count$;", depth=self.depth, count=count)
@@ -411,14 +423,11 @@ class ListField:
 
 
 class ArrayField:
-    def __init__(self, schema: Schema, node: Array, version: int, where: str, depth: int) -> None:
+    def __init__(self, schema: Schema, node: Array, encoding: Encoding, where: str, depth: int) -> None:
         self.node = node
         self.where = where
         self.depth = depth
-        self.element = make_field_generator(schema, node.element, version, f"{where}, i{depth}", depth + 1)
-
-    def cpp_type(self) -> str:
-        return f"std::array<{self.element.cpp_type()}, {self.node.size}>"
+        self.element = make_field_generator(schema, node.element, encoding, f"{where}, i{depth}", depth + 1)
 
     def fallible(self) -> bool:
         return self.element.fallible()
@@ -451,14 +460,12 @@ class ArrayField:
 
 
 class MapField:
-    def __init__(self, schema: Schema, node: Map, version: int, where: str, depth: int) -> None:
+    def __init__(self, schema: Schema, node: Map, encoding: Encoding, where: str, depth: int) -> None:
         self.where = where
         self.depth = depth
-        self.key = make_field_generator(schema, node.key, version, f"{where}, i{depth}", depth + 1)
-        self.value = make_field_generator(schema, node.value, version, f"{where}, i{depth}", depth + 1)
-
-    def cpp_type(self) -> str:
-        return f"std::map<{self.key.cpp_type()}, {self.value.cpp_type()}>"
+        self.container = cpp_type(schema, encoding.model, node)
+        self.key = make_field_generator(schema, node.key, encoding, f"{where}, i{depth}", depth + 1)
+        self.value = make_field_generator(schema, node.value, encoding, f"{where}, i{depth}", depth + 1)
 
     def fallible(self) -> bool:
         return self.key.fallible() or self.value.fallible()
@@ -495,7 +502,7 @@ class MapField:
             depth=self.depth,
             count=names.read("uvarint32", None),
             fail=names.fail(f"count{self.depth}.error()", self.where),
-            container=self.cpp_type(),
+            container=self.container,
             target=target,
             key=lambda: self.key.read(p, f"key{self.depth}"),
             element=lambda: self.value.read(p, f"element{self.depth}"),
@@ -503,17 +510,13 @@ class MapField:
 
 
 class VariantField:
-    def __init__(self, schema: Schema, node: Variant, version: int, where: str, depth: int) -> None:
+    def __init__(self, schema: Schema, node: Variant, encoding: Encoding, where: str, depth: int) -> None:
         self.where = where
         self.depth = depth
         self.cases = [
-            None if case is None else make_field_generator(schema, case, version, where, depth + 1)
+            None if case is None else make_field_generator(schema, case, encoding, where, depth + 1)
             for case in node.cases
         ]
-
-    def cpp_type(self) -> str:
-        cases = ("std::monostate" if case is None else f"{case.cpp_type()}" for case in self.cases)
-        return f"std::variant<{', '.join(cases)}>"
 
     def fallible(self) -> bool:
         return any(case is not None and case.fallible() for case in self.cases)
@@ -557,9 +560,6 @@ class DuplicatedField:
         self.element = element
         self.copies = copies
 
-    def cpp_type(self) -> str | None:
-        return self.element.cpp_type()
-
     def fallible(self) -> bool:
         return self.element.fallible()
 
@@ -589,31 +589,31 @@ class DuplicatedField:
         )
 
 
-def make_field_generator(schema: Schema, node: Type, version: int, where: str, depth: int) -> FieldGenerator:
+def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: str, depth: int) -> FieldGenerator:
     match node:
         case Primitive():
             return PrimitiveField(node, where)
         case AliasRef():
             return AliasField(schema, node, where)
         case EnumRef():
-            return EnumField(schema, node, version, where)
+            return EnumField(schema, node, encoding, where)
         case StructRef() | EnumName():
-            return ReferenceField(schema, node, version, where)
+            return ReferenceField(schema, node, encoding, where)
         case BuiltinRef(encoded="str"):
             return BuiltinTextField(schema, node, where)
         case BuiltinRef():
-            return BuiltinField(schema, node, version, where)
+            return BuiltinField(schema, node, encoding, where)
         case Literal():
-            return LiteralField(schema, node, version, where)
+            return LiteralField(schema, node, encoding, where)
         case Bitset():
-            return BitsetField(schema, node, version, where)
+            return BitsetField(schema, node, encoding, where)
         case Optional():
-            return OptionalField(schema, node, version, where, depth)
+            return OptionalField(schema, node, encoding, where, depth)
         case List():
-            return ListField(schema, node, version, where, depth)
+            return ListField(schema, node, encoding, where, depth)
         case Array():
-            return ArrayField(schema, node, version, where, depth)
+            return ArrayField(schema, node, encoding, where, depth)
         case Map():
-            return MapField(schema, node, version, where, depth)
+            return MapField(schema, node, encoding, where, depth)
         case Variant():
-            return VariantField(schema, node, version, where, depth)
+            return VariantField(schema, node, encoding, where, depth)

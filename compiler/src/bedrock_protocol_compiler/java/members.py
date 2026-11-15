@@ -1,5 +1,5 @@
 import re
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -171,6 +171,47 @@ def enum_setter(p: Printer, enum: str, name: str) -> None:
         name=name,
         enum=enum,
     )
+
+
+def codec(
+    p: Printer,
+    registry: Members,
+    where: str,
+    name: str,
+    message: str,
+    constants: Callable[[], None],
+    writes: Callable[[], None],
+    reads: Callable[[], None],
+) -> None:
+    p.emit("public static final class $name$ implements Codec<$message$> {", name=name, message=message)
+    with p.indent(), registry.scope(f"{where}.{name}", name):
+        p.emit("public static final @NotNull $name$ INSTANCE = new $name$();", name=name)
+        p.emit("")
+        constants()
+        p.emit("")
+        p.emit(
+            """
+            private $name$() {}
+
+            @Override
+            public void encode(@NotNull $message$ value, @NotNull ByteBuf buf) {
+                $writes$
+            }
+
+            @Override
+            public @NotNull $message$ decode(@NotNull ByteBuf buf) {
+                Builder out = new Builder();
+                $reads$
+                return out.build();
+            }
+            """,
+            name=name,
+            message=message,
+            writes=writes,
+            reads=reads,
+        )
+    p.emit("}")
+    p.emit("")
 
 
 def statics(p: Printer, name: str) -> None:

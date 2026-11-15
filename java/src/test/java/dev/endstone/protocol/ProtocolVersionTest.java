@@ -1,8 +1,10 @@
 package dev.endstone.protocol;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
@@ -37,5 +39,32 @@ final class ProtocolVersionTest {
                                 DisconnectPacket.ID,
                                 Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump("a60201")));
         assertEquals(dev.endstone.protocol.v2168.DisconnectPacket.class, packet.getClass());
+    }
+
+    @Test
+    void aSnapshotNumberEncodesWithItsSnapshotsClasses() {
+        ProtocolVersion version = ProtocolVersion.of(2169).orElseThrow();
+        ByteBuf buf = Unpooled.buffer();
+        version.encodePacket(
+                dev.endstone.protocol.v2168.DisconnectPacket.newBuilder()
+                        .setReasonValue(147)
+                        .clearMessages()
+                        .build(),
+                buf);
+        assertEquals("a60201", ByteBufUtil.hexDump(buf));
+    }
+
+    @Test
+    void encodingAPacketOfAnotherProtocolIsRejected() {
+        ProtocolVersion version = ProtocolVersion.of(2225).orElseThrow();
+        Packet packet = dev.endstone.protocol.v2168.DisconnectPacket.getDefaultInstance();
+        ByteBuf buf = Unpooled.buffer();
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class, () -> version.encodePacket(packet, buf));
+        assertEquals(
+                "packet: dev.endstone.protocol.v2168.DisconnectPacket "
+                        + "is not a packet at protocol 2225",
+                thrown.getMessage());
     }
 }

@@ -2,7 +2,7 @@ import re
 
 from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.descriptor import Builtin, CompilerError
-from bedrock_protocol_compiler.schema import Schema, Shape, StructShape
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, SerializationMode, StructModel
 
 LIBRARIES = {
     "ArrayList": "java.util.ArrayList",
@@ -11,6 +11,7 @@ LIBRARIES = {
     "Collections": "java.util.Collections",
     "Comparator": "java.util.Comparator",
     "List": "java.util.List",
+    "Locale": "java.util.Locale",
     "Map": "java.util.Map",
     "Objects": "java.util.Objects",
     "Optional": "java.util.Optional",
@@ -20,7 +21,8 @@ LIBRARIES = {
     "NotNull": "org.jetbrains.annotations.NotNull",
     "Nullable": "org.jetbrains.annotations.Nullable",
 }
-RUNTIME = ("ByteBufCodec", "DecodeException", "Decoder", "Message", "Packet", "PacketHeader")
+MODE = "SerializationMode"
+RUNTIME = ("ByteBufCodec", "Codec", "DecodeException", "Decoder", "Message", "Packet", "PacketHeader", MODE)
 JAVA_LANG = (
     "Boolean",
     "Deprecated",
@@ -52,8 +54,7 @@ OBJECT = "java.lang.Object"
 BUILDER = "Builder"
 REGISTRY = "Packets"
 VERSION = "ProtocolVersion"
-PRE_CEREAL = "precereal"
-BASE = "base"
+CODEC = "Codec"
 ATOM = re.compile(r"[\w.]+(?:\([^()]*\))?")
 
 
@@ -76,32 +77,25 @@ def reserved(schema: Schema) -> frozenset[str]:
     return frozenset(imports(schema)) | frozenset(JAVA_LANG)
 
 
-def host(schema: Schema, shape: Shape) -> StructShape | None:
-    owner = shape.family.owner
-    if owner is None:
-        return None
-    listing = [each for each in schema.shapes(owner) if isinstance(each, StructShape) and shape in each.nested]
-    if not listing:
-        raise CompilerError(f"{shape.family.name}: no shape of {owner.name} nests it")
-    return max(
-        listing,
-        key=lambda each: max(version for version in schema.versions if schema.live.get((owner, version)) is each),
-    )
+def package(schema: Schema, each: StructModel | EnumShape) -> str:
+    scope = schema.scope(each)
+    return schema.java_package if scope is None else f"{schema.java_package}.v{scope}"
 
 
-def package(schema: Schema, shape: Shape) -> str:
-    parts = [] if shape.family.cereal else [PRE_CEREAL]
-    if schema.live.get((shape.family, schema.latest)) is not shape:
-        since = shape.ranges[0].since
-        parts.append(BASE if since is None else f"v{since}")
-    return ".".join((schema.java_package, *parts))
+def declared(schema: Schema, each: StructModel | EnumShape) -> str:
+    return schema.name(each) if isinstance(each, StructModel) else each.family.name
 
 
-def qualified(schema: Schema, shape: Shape) -> str:
-    owner = host(schema, shape)
+def qualified(schema: Schema, each: StructModel | EnumShape) -> str:
+    owner = schema.owner(each)
     if owner is not None:
-        return f"{qualified(schema, owner)}.{shape.family.name}"
-    return f"{package(schema, shape)}.{shape.family.name}"
+        return f"{qualified(schema, owner)}.{each.family.name}"
+    return f"{package(schema, each)}.{declared(schema, each)}"
+
+
+def codec(encoding: Encoding) -> str:
+    suffix = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
+    return f"{CODEC}{encoding.since}{suffix}"
 
 
 def registry(schema: Schema, version: int) -> str:

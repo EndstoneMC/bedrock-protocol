@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from bedrock_protocol_compiler.__main__ import main
@@ -55,13 +57,10 @@ def emitted(java):
     return read
 
 
-def test_java_out_writes_a_file_per_top_level_shape(java):
+def test_java_out_writes_a_file_per_top_level_model(java):
     root = java(SCALAR + "class S:\n    class N:\n        x: uint8\n    n: N\n")
 
-    assert {path.name for path in root.glob("*.java")} - {"Packets.java", "ProtocolVersion.java"} == {
-        "P.java",
-        "S.java",
-    }
+    assert {path.name for path in root.glob("*.java")} - {"ProtocolVersion.java"} == {"P.java", "S.java"}
 
 
 def test_java_out_writes_a_registry_per_version(java):
@@ -74,10 +73,6 @@ def test_java_out_writes_a_registry_per_version(java):
         "v4/Packets.java",
         "v5/Packets.java",
     ]
-
-
-def test_java_out_writes_a_bare_registry(java):
-    assert (java(SCALAR) / "Packets.java").is_file()
 
 
 def test_java_out_writes_the_version_table(java):
@@ -119,62 +114,256 @@ def test_a_java_error_writes_neither_output(build_package, tmp_path):
     assert sorted(path.name for path in tmp_path.iterdir()) == ["protocol"]
 
 
+HAND_WRITTEN = (
+    "class S:\n    x: uint8\n\n@type(cereal=False)\nclass S:\n    x: uint16\n\n"
+    "@packet(id=1)\nclass P:\n    s: S = field(cereal=False)\n"
+)
+OLDER_HAND_WRITTEN = (
+    "class S:\n    x: uint8\n\n@type(cereal=False, since=2, until=4)\nclass S:\n    x: uint16\n\n"
+    "@packet(id=1)\nclass P:\n    s: S = field(cereal=False, since=2, until=4)\n"
+)
+OVERLAP_ONLY = (
+    "@type(until=3)\nclass S:\n    x: uint8\n\n@type(since=3)\nclass S:\n    x: uint32\n\n"
+    "@type(cereal=False, until=3)\nclass S:\n    x: uint16\n\n"
+    "@packet(id=1)\nclass P:\n    s: S = field(cereal=False, until=3)\n"
+)
+SHARED = (
+    "class S:\n    x: uint32 = field(until=3)\n    x: uvarint32 = field(since=3)\n\n"
+    "@type(cereal=False, until=4)\nclass S:\n    x: uint32\n\n"
+    "@packet(id=1)\nclass P:\n    s: S = field(cereal=False, until=4)\n    t: S\n"
+)
+
+
 @pytest.mark.parametrize(
     ("source", "path"),
     [
         pytest.param("class S:\n    x: uint8\n", "S.java", id="unversioned"),
         pytest.param("@type(since=3)\nclass S:\n    x: uint8\n", "S.java", id="live-at-latest"),
         pytest.param("@type(since=2, until=4)\nclass S:\n    x: uint8\n", "v2/S.java", id="older-since"),
-        pytest.param("@type(until=3)\nclass S:\n    x: uint8\n", "base/S.java", id="first-range-has-no-since"),
-        pytest.param(
-            "class S:\n    x: uint8\n\n@type(cereal=False)\nclass S:\n    x: uint16\n",
-            "precereal/S.java",
-            id="pre-cereal",
-        ),
-        pytest.param(
-            "class S:\n    x: uint8\n\n@type(cereal=False, since=2, until=4)\nclass S:\n    x: uint16\n",
-            "precereal/v2/S.java",
-            id="older-pre-cereal",
-        ),
+        pytest.param("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java", id="first-range-has-no-since"),
+        pytest.param(HAND_WRITTEN, "S.java", id="hand-written"),
+        pytest.param(HAND_WRITTEN, "CerealizedS.java", id="cereal-beside-a-hand-written-form"),
+        pytest.param(OLDER_HAND_WRITTEN, "v2/S.java", id="older-hand-written"),
+        pytest.param(OLDER_HAND_WRITTEN, "S.java", id="cereal-past-an-older-hand-written-form"),
+        pytest.param(OVERLAP_ONLY, "v1/CerealizedS.java", id="cereal-inside-the-overlap-only"),
+        pytest.param(SHARED, "S.java", id="shared-by-both-forms"),
     ],
 )
-def test_a_shape_lands_in_the_package_of_its_scope(java, source, path):
+def test_a_model_lands_in_the_package_of_its_scope(java, source, path):
     assert (java(source) / path).is_file()
 
 
-TWO_SHAPES = "@type(since=2, until=4)\nclass S:\n    x: uint8\n\n@type(since=4)\nclass S:\n    x: uint16\n"
+def test_the_output_holds_no_precereal(java):
+    root = java(OLDER_HAND_WRITTEN)
+
+    assert not any(
+        "precereal" in path.relative_to(root).as_posix() or "precereal" in path.read_text()
+        for path in root.rglob("*.java")
+    )
 
 
-def test_the_latest_of_two_shapes_is_bare(java):
-    assert "    private final int x_;\n" in (java(TWO_SHAPES) / "S.java").read_text()
+def test_a_model_spelled_like_a_temporary_model_is_a_compiler_error(build_package, tmp_path):
+    source = OVERLAP_ONLY + (
+        "\n@type(until=3)\nclass CerealizedS:\n    z: uint8\n\n"
+        "@packet(id=2)\nclass Q:\n    c: CerealizedS = field(until=3)\n"
+    )
+    build_package({"a": HEADER + source})
+
+    with pytest.raises(SystemExit, match=r"bpc: dev\.endstone\.protocol\.v1\.CerealizedS: is declared twice$"):
+        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_the_older_of_two_shapes_keeps_its_since(java):
-    assert "package dev.endstone.protocol.v2;\n" in (java(TWO_SHAPES) / "v2/S.java").read_text()
+def test_a_model_both_forms_hold_is_one_class(java):
+    root = java(SHARED)
+    found = [*root.rglob("S.java"), *root.rglob("CerealizedS.java")]
+
+    assert [path.relative_to(root).as_posix() for path in found] == ["S.java"]
+
+
+def test_a_model_both_forms_hold_has_one_codec_per_implementation(emitted):
+    codecs = re.findall(r"public static final class (\w+) implements Codec<S> \{", emitted(SHARED, "S.java"))
+
+    assert codecs == ["Codec1Cereal", "Codec3Cereal"]
+
+
+@pytest.mark.parametrize(
+    ("name", "codec"),
+    [
+        pytest.param("S", "Codec1Manual", id="manual"),
+        pytest.param("CerealizedS", "Codec1Cereal", id="cereal"),
+    ],
+)
+def test_a_codec_of_a_mixed_key_names_its_mode(emitted, name, codec):
+    declared = f"    public static final class {codec} implements Codec<{name}> {{\n"
+
+    assert declared in emitted(HAND_WRITTEN, f"{name}.java")
+
+
+def test_a_codec_both_forms_share_is_keyed_cereal_and_serves_manual_too(emitted):
+    text = emitted(SHARED, "S.java")
+
+    selections = (
+        "        if (mode == SerializationMode.CEREAL && version < 3) {\n"
+        "            return Codec1Cereal.INSTANCE;\n"
+        "        }\n"
+        "        if (mode == SerializationMode.MANUAL && version < 4) {\n"
+        "            return Codec1Cereal.INSTANCE;\n"
+        "        }\n"
+    )
+    assert selections in text
+
+
+def test_a_mixed_span_rejects_the_mode_it_lacks_by_the_modes_it_has(emitted):
+    text = emitted(SHARED, "S.java")
+
+    rejection = (
+        "        if (version < 4) {\n"
+        '            throw new IllegalArgumentException("S: no " + mode.name().toLowerCase(Locale.ROOT) + '
+        '" mode at protocol " + version + "; it has CEREAL and MANUAL");\n'
+        "        }\n"
+    )
+    assert rejection in text
+
+
+def test_a_single_mode_span_rejects_the_mode_it_lacks_by_its_one_mode(emitted):
+    text = emitted(SHARED, "S.java")
+
+    rejection = (
+        '        throw new IllegalArgumentException("S: no " + mode.name().toLowerCase(Locale.ROOT) + '
+        '" mode at protocol " + version + "; it has DEFAULT");\n'
+        "    }\n"
+    )
+    assert rejection in text
+
+
+@pytest.mark.parametrize(
+    ("source", "call"),
+    [
+        pytest.param(
+            SHARED, "            dev.endstone.protocol.S.Codec1Cereal.INSTANCE.encode(value.s_, buf);\n", id="shared"
+        ),
+        pytest.param(
+            OVERLAP_ONLY,
+            "            dev.endstone.protocol.v1.S.Codec1Manual.INSTANCE.encode(value.s_, buf);\n",
+            id="own",
+        ),
+    ],
+)
+def test_a_hand_written_field_calls_the_codec_that_serves_the_manual_mode(emitted, source, call):
+    assert call in emitted(source, "v1/P.java")
+
+
+def test_a_child_first_coded_while_mixed_is_called_by_its_key_mode_later(emitted):
+    text = emitted(SHARED)
+
+    assert "            dev.endstone.protocol.S.Codec3Cereal.INSTANCE.encode(value.t_, buf);\n" in text
+
+
+SHARED_CASES = (
+    "class S:\n    x: None | bool | uvarint32\n\n"
+    "@type(cereal=False, until=4)\nclass S:\n    x: None | bool | uint32\n\n"
+    "@packet(id=1)\nclass P:\n    s: S = field(cereal=False, until=4)\n    t: S\n"
+)
+
+
+def test_a_union_case_is_named_after_its_value_domain(emitted):
+    text = emitted(SHARED_CASES, "S.java")
+
+    assert "    public boolean hasUint32() {\n" in text
+    assert "Uvarint32" not in text
+
+
+def test_a_codec_writes_a_shared_case_with_its_own_encoding(emitted):
+    written = "                case UINT32 -> {\n                    buf.writeIntLE(value.xUint32_);\n"
+
+    assert written in emitted(SHARED_CASES, "S.java")
+
+
+def test_unions_whose_cases_share_a_value_domain_get_their_own_classes(emitted):
+    source = "@packet(id=1)\nclass P:\n    x: None | uvarint32\n    y: None | uint32\n"
+
+    assert "            X.Codec1.INSTANCE.encode(value.x_, buf);\n" in emitted(source)
+
+
+def test_two_union_cases_of_one_value_domain_are_a_compiler_error(java):
+    with pytest.raises(SystemExit, match=r"P\.v: union cases uint32 and uvarint32 are both uint32$"):
+        java("@packet(id=1)\nclass P:\n    v: None | uint32 | uvarint32\n")
+
+
+def test_a_model_the_hand_written_form_holds_last_takes_its_member_order_from_that_form(emitted):
+    source = (
+        "@type(until=3)\nclass B:\n    x: uint8\n    y: uint16\n\n"
+        "@type(cereal=False)\nclass B:\n    y: uint16\n    x: uint8\n\n"
+        "@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n"
+    )
+
+    assert "\n    private final int y_;\n    private final int x_;\n" in emitted(source, "B.java")
+
+
+def test_a_packet_without_fields_that_nests_an_enum_has_a_codec(emitted):
+    text = emitted("@packet(id=7)\nclass P:\n    class E(IntEnum, uint8):\n        A = 0\n")
+
+    assert "\npublic final class P implements Packet {\n" in text
+    assert "\n    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n" in text
+    assert "\n    public static final class Codec1 implements Codec<P> {\n" in text
+
+
+TWO_MODELS = "@type(since=2, until=4)\nclass S:\n    x: uint8\n\n@type(since=4)\nclass S:\n    x: uint16\n"
+
+
+def test_the_latest_of_two_models_is_bare(java):
+    assert "    private final int x_;\n" in (java(TWO_MODELS) / "S.java").read_text()
+
+
+def test_the_older_of_two_models_keeps_its_since(java):
+    assert "package dev.endstone.protocol.v2;\n" in (java(TWO_MODELS) / "v2/S.java").read_text()
 
 
 NESTED = "class P:\n    class N:\n        x: uint8\n    n: N\n    y: uint8 = field(since=3)\n"
 
 
-def test_a_nested_shape_is_defined_in_its_newest_owner(java):
+def test_a_nested_model_is_defined_in_its_newest_holder(java):
     assert "    public static final class N implements Message {\n" in (java(NESTED) / "P.java").read_text()
 
 
-def test_a_nested_shape_is_not_defined_in_an_older_owner(java):
-    assert "class N" not in (java(NESTED) / "base/P.java").read_text()
+def test_a_nested_model_is_not_defined_in_an_older_holder(java):
+    assert "class N" not in (java(NESTED) / "v1/P.java").read_text()
 
 
-def test_an_older_owner_names_a_nested_shape_in_its_newest_owner(java):
-    assert "    private final dev.endstone.protocol.P.N n_;\n" in (java(NESTED) / "base/P.java").read_text()
+TIED_HOLDERS = (
+    "@type(until=3)\nclass A:\n    class Inner:\n        y: uint8\n    x: uint8\n    i: Inner\n\n"
+    "@type(cereal=False, until=3)\nclass A:\n    class Inner:\n        y: uint8\n    x: uint16\n    i: Inner\n\n"
+    "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n    c: A = field(until=3)\n"
+)
 
 
-def test_a_nested_shape_is_a_static_nested_class_of_its_owner(emitted):
+def test_a_nested_model_two_holders_tie_on_is_defined_in_the_plainly_named_holder(emitted):
+    assert "\n    public static final class Inner implements Message {\n" in emitted(TIED_HOLDERS, "v1/A.java")
+
+
+def test_a_nested_model_two_holders_tie_on_is_named_through_the_plainly_named_holder(emitted):
+    declared = "\n    private final dev.endstone.protocol.v1.A.Inner i_;\n"
+
+    assert declared in emitted(TIED_HOLDERS, "v1/CerealizedA.java")
+
+
+def test_an_older_holder_names_a_nested_model_in_its_newest_holder(java):
+    assert "    private final dev.endstone.protocol.P.N n_;\n" in (java(NESTED) / "v1/P.java").read_text()
+
+
+def test_a_nested_model_only_an_older_holder_holds_is_defined_there(java):
+    root = java("class P:\n    class N:\n        x: uint8 = field(until=3)\n        y: uint8\n    n: N\n")
+
+    assert "    public static final class N implements Message {\n" in (root / "v1/P.java").read_text()
+
+
+def test_a_nested_model_is_a_static_nested_class_of_its_owner(emitted):
     text = emitted("class P:\n    class N:\n        x: uint8\n    n: N\n")
 
     assert "    public static final class N implements Message {\n" in text
 
 
-def test_a_shape_reaches_another_by_its_qualified_name(emitted):
+def test_a_model_reaches_another_by_its_qualified_name(emitted):
     text = emitted(
         "@type(since=2, until=4)\nclass S:\n    x: uint8\n\nclass P:\n    s: S = field(since=2, until=4)\n", "v2/P.java"
     )
@@ -182,7 +371,7 @@ def test_a_shape_reaches_another_by_its_qualified_name(emitted):
     assert "private final dev.endstone.protocol.v2.S s_;" in text
 
 
-def test_an_owner_of_only_nested_shapes_is_a_holder_class(emitted):
+def test_an_owner_of_only_nested_types_is_a_holder_class(emitted):
     text = emitted("class P:\n    class N:\n        x: uint8\n")
 
     assert "public final class P {\n    private P() {}\n\n    public static final class N implements Message {" in text
@@ -200,14 +389,197 @@ def test_a_packet_returns_its_id_from_get_packet_id(emitted):
     assert "    @Override\n    public int getPacketId() {\n        return ID;\n    }\n" in text
 
 
+TWO_ENCODINGS = "class P:\n    x: uint32 = field(until=3)\n    x: uvarint32 = field(since=3)\n"
+RETURNING_ENCODING = (
+    "class P:\n    x: uint32 = field(until=2)\n    x: uvarint32 = field(since=2, until=4)\n"
+    "    x: uint32 = field(since=4)\n"
+)
+
+
+def test_an_encoding_only_difference_shares_one_class(java):
+    root = java(TWO_ENCODINGS)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+
+
+def test_two_encodings_give_two_codecs_on_one_class(emitted):
+    text = emitted(TWO_ENCODINGS)
+
+    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
+
+
+def test_a_codec_writes_its_own_encoding(emitted):
+    text = emitted(TWO_ENCODINGS)
+
+    assert "            buf.writeIntLE(value.x_);\n" in text.split("class Codec3 ")[0]
+
+
+def test_a_message_leaves_encoding_to_its_codecs(emitted):
+    text = emitted(SCALAR)
+
+    assert "encode(@NotNull ByteBuf buf)" not in text
+
+
+def test_the_selector_returns_the_codec_of_each_run_in_order(emitted):
+    text = emitted(RETURNING_ENCODING)
+
+    selector = (
+        "    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
+        "        if (mode == SerializationMode.DEFAULT && version < 2) {\n"
+        "            return Codec1.INSTANCE;\n"
+        "        }\n"
+        "        if (mode == SerializationMode.DEFAULT && version >= 2 && version < 4) {\n"
+        "            return Codec2.INSTANCE;\n"
+        "        }\n"
+        "        if (mode == SerializationMode.DEFAULT && version >= 4) {\n"
+        "            return Codec1.INSTANCE;\n"
+        "        }\n"
+    )
+    assert selector in text
+
+
+def test_the_selector_of_an_unversioned_model_returns_its_codec_for_the_default_mode(emitted):
+    text = emitted(SCALAR)
+
+    selector = (
+        "    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
+        "        if (mode == SerializationMode.DEFAULT) {\n"
+        "            return Codec1.INSTANCE;\n"
+        "        }\n"
+    )
+    assert selector in text
+
+
+def test_the_selector_without_a_mode_asks_for_the_default_mode(emitted):
+    text = emitted(SCALAR)
+
+    selector = (
+        "    public static @NotNull Codec<P> codec(int version) {\n"
+        "        return codec(version, SerializationMode.DEFAULT);\n"
+        "    }\n"
+    )
+    assert selector in text
+
+
+def test_the_selector_rejects_a_protocol_the_model_is_absent_from_whatever_the_mode(emitted):
+    text = emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java")
+
+    rejections = (
+        "        if (version < 3) {\n"
+        '            throw new IllegalArgumentException("v1.S: no " + mode.name().toLowerCase(Locale.ROOT) + '
+        '" mode at protocol " + version + "; it has DEFAULT");\n'
+        "        }\n"
+        '        throw new IllegalArgumentException("v1.S: is not a type at protocol " + version);\n'
+        "    }\n"
+    )
+    assert rejections in text
+
+
+def test_a_codec_is_a_singleton(emitted):
+    text = emitted(SCALAR)
+
+    singleton = (
+        "    public static final class Codec1 implements Codec<P> {\n"
+        "        public static final @NotNull Codec1 INSTANCE = new Codec1();\n\n"
+        "        private Codec1() {}\n"
+    )
+    assert singleton in text
+
+
+@pytest.mark.parametrize(
+    "spelled",
+    [
+        pytest.param("dev.endstone.protocol.Codec", id="codec"),
+        pytest.param("dev.endstone.protocol.SerializationMode", id="serialization-mode"),
+    ],
+)
+def test_a_versioned_file_imports_the_runtime_its_selector_names(emitted, spelled):
+    assert f"import {spelled};\n" in emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java")
+
+
+def test_the_serialization_mode_is_a_reserved_runtime_name(build_package, tmp_path):
+    build_package({"a": HEADER + "class SerializationMode:\n    x: uint8\n"})
+
+    with pytest.raises(
+        SystemExit, match=r"dev\.endstone\.protocol\.SerializationMode: shadows the imported SerializationMode"
+    ):
+        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+
+CHILD_ENCODINGS = (
+    "class S:\n    x: uint32 = field(until=3)\n    x: uvarint32 = field(since=3)\n\n"
+    "class P:\n    s: S\n    y: uint8 = field(since=2)\n"
+)
+
+
+def test_a_parent_calls_the_child_codec_of_its_own_encoding(emitted):
+    text = emitted(CHILD_ENCODINGS)
+
+    write = "            dev.endstone.protocol.S.Codec1.INSTANCE.encode(value.s_, buf);\n"
+
+    assert write in text.split("class Codec3 ")[0]
+
+
+def test_a_parent_decodes_with_the_child_codec_of_its_own_encoding(emitted):
+    text = emitted(CHILD_ENCODINGS)
+
+    read = "                out.s_ = dev.endstone.protocol.S.Codec1.INSTANCE.decode(buf);\n"
+
+    assert read in text.split("class Codec3 ")[0]
+
+
+def test_a_union_wrapper_has_the_codec_of_its_holders_encoding(emitted):
+    text = emitted("class P:\n    v: list[uint8 | str]\n")
+
+    assert "        public static final class Codec1 implements Codec<V> {\n" in text
+
+
+def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package, tmp_path):
+    source = COLORS + "class P:\n    c: Color = field(type=str, until=3)\n    c: Color = field(since=3)\n"
+    build_package({"a": HEADER + source})
+
+    with pytest.raises(
+        SystemExit, match=r"P\.c: takes another Java type, setter check or enum form from 1 than from 3$"
+    ):
+        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+
 def test_the_registry_decodes_each_live_packet_by_id(java):
     text = (java(SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n") / "v2/Packets.java").read_text()
 
     cases = (
-        '            case 3 -> ByteBufCodec.decode(buf, "Q", dev.endstone.protocol.Q::decode);\n'
-        '            case 7 -> ByteBufCodec.decode(buf, "P", dev.endstone.protocol.P::decode);\n'
+        '            case 3 -> ByteBufCodec.decode(buf, "Q", dev.endstone.protocol.Q.Codec2.INSTANCE);\n'
+        '            case 7 -> ByteBufCodec.decode(buf, "P", dev.endstone.protocol.P.Codec1.INSTANCE);\n'
     )
     assert cases in text
+
+
+def test_the_registry_encodes_each_live_packet_with_its_codec(java):
+    text = (java(SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n") / "v2/Packets.java").read_text()
+
+    cases = (
+        "            case dev.endstone.protocol.Q value -> "
+        "dev.endstone.protocol.Q.Codec2.INSTANCE.encode(value, buf);\n"
+        "            case dev.endstone.protocol.P value -> "
+        "dev.endstone.protocol.P.Codec1.INSTANCE.encode(value, buf);\n"
+    )
+    assert cases in text
+
+
+def test_the_registry_rejects_a_packet_its_protocol_lacks(java):
+    text = (java(SCALAR) / "v2/Packets.java").read_text()
+
+    default = (
+        '            default -> throw new IllegalArgumentException("packet: " + packet.getClass().getName() + '
+        '" is not a packet at protocol 2");\n'
+    )
+    assert default in text
+
+
+def test_the_registry_leaves_out_a_packet_its_protocol_lacks(java):
+    text = (java(SCALAR + "@packet(id=3, until=4)\nclass Q:\n    x: uint8\n") / "v5/Packets.java").read_text()
+
+    assert "Q" not in text
 
 
 def test_the_registry_stamps_an_unknown_packet_id_as_the_packet_header(java):
@@ -219,22 +591,6 @@ def test_the_registry_stamps_an_unknown_packet_id_as_the_packet_header(java):
         "            });\n"
     )
     assert default in text
-
-
-def test_the_bare_registry_decodes_as_the_latest_does(java):
-    root = java(SCALAR + "@packet(id=3, until=4)\nclass Q:\n    x: uint8\n")
-
-    assert (root / "Packets.java").read_text() == (root / "v5/Packets.java").read_text().replace(
-        "package dev.endstone.protocol.v5;\n\nimport dev.endstone.protocol.ByteBufCodec;\n"
-        "import dev.endstone.protocol.DecodeException;\nimport dev.endstone.protocol.Packet;\n",
-        "package dev.endstone.protocol;\n\n",
-    )
-
-
-def test_the_bare_registry_leaves_out_a_packet_the_latest_lacks(java):
-    text = (java(SCALAR + "@packet(id=3, until=4)\nclass Q:\n    x: uint8\n") / "Packets.java").read_text()
-
-    assert '"Q"' not in text
 
 
 def test_the_version_table_lists_the_versions(java):
@@ -281,6 +637,21 @@ def test_a_version_decodes_a_packet_with_the_registry_of_its_snapshot(java):
     assert cases in text
 
 
+def test_a_version_encodes_a_packet_with_the_registry_of_its_snapshot(java):
+    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+    cases = (
+        "        switch (snapshot) {\n"
+        "            case 1 -> dev.endstone.protocol.v1.Packets.encode(packet, buf);\n"
+        "            case 2 -> dev.endstone.protocol.v2.Packets.encode(packet, buf);\n"
+        "            case 3 -> dev.endstone.protocol.v3.Packets.encode(packet, buf);\n"
+        "            case 4 -> dev.endstone.protocol.v4.Packets.encode(packet, buf);\n"
+        "            case 5 -> dev.endstone.protocol.v5.Packets.encode(packet, buf);\n"
+        "            default -> throw new IllegalStateException("
+    )
+    assert cases in text
+
+
 def test_a_release_name_is_matched_between_first_and_last(java):
     text = (java(SCALAR) / "ProtocolVersion.java").read_text()
 
@@ -305,17 +676,17 @@ def test_a_release_name_parses_as_from_chars_does(java, check):
     assert check in (java(SCALAR) / "ProtocolVersion.java").read_text()
 
 
-def test_a_shape_named_like_the_version_table_is_a_compiler_error(build_package, tmp_path):
+def test_a_model_named_like_the_version_table_is_a_compiler_error(build_package, tmp_path):
     build_package({"a": HEADER + "class ProtocolVersion:\n    x: uint8\n"})
 
     with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.ProtocolVersion: is the protocol version table"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_shape_named_like_the_bare_registry_is_a_compiler_error(build_package, tmp_path):
+def test_a_model_named_like_the_registry_is_a_compiler_error(build_package, tmp_path):
     build_package({"a": HEADER + "class Packets:\n    x: uint8\n"})
 
-    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Packets: is the packet registry of 5"):
+    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Packets: has the name of the packet registries"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
@@ -325,6 +696,7 @@ def test_a_file_imports_only_what_it_names_outside_its_package(emitted):
     assert text.startswith(
         "package dev.endstone.protocol;\n\n"
         "import io.netty.buffer.ByteBuf;\n"
+        "import java.util.Locale;\n"
         "import org.jetbrains.annotations.NotNull;\n"
         "import org.jetbrains.annotations.Nullable;\n\n"
     )
@@ -378,14 +750,14 @@ def test_an_accessor_upper_cases_the_letter_after_a_digit(emitted):
             id="union-selector",
         ),
         pytest.param(
-            "@packet(id=7)\nclass P:\n    id: Literal[True]\n",
-            r"P\.ID: is generated for both P and id",
-            id="literal-id",
+            "class P:\n    instance: Literal[True]\n",
+            r"P\.Codec1\.INSTANCE: is generated for both Codec1 and instance",
+            id="literal-instance",
         ),
         pytest.param(
-            "class P:\n    default_instance: Literal[True]\n",
-            r"P\.DEFAULT_INSTANCE: is generated for both P and default_instance",
-            id="literal-default-instance",
+            "class P:\n    class Codec1(IntEnum, uint8):\n        A = 1\n    c: Codec1\n",
+            r"P\.Codec1: is generated for both dev\.endstone\.protocol\.P\.Codec1 and dev\.endstone\.protocol\.Codec",
+            id="codec-class",
         ),
     ],
 )
@@ -477,10 +849,10 @@ def test_a_narrowing_read_fails_out_of_range(emitted):
     text = emitted("class P:\n    x: uint8 = field(type=uvarint64)\n")
 
     read = (
-        "            long v0 = ByteBufCodec.readUnsignedVarLong(buf);\n"
-        "            int s0 = (int) (v0 & 0xFF);\n"
-        "            if ((long) s0 != v0) {\n"
-        "                throw DecodeException.outOfRange(buf.readerIndex());\n"
+        "                long v0 = ByteBufCodec.readUnsignedVarLong(buf);\n"
+        "                int s0 = (int) (v0 & 0xFF);\n"
+        "                if ((long) s0 != v0) {\n"
+        "                    throw DecodeException.outOfRange(buf.readerIndex());\n"
     )
     assert read in text
 
@@ -506,20 +878,30 @@ def test_a_counted_list_takes_its_count_from_an_earlier_field(emitted):
 def test_a_counted_list_writes_no_prefix(emitted):
     text = emitted("class P:\n    n: uint32\n    x: list[uint8] = field(count=lambda p: p.n)\n")
 
-    assert "    public void encode(@NotNull ByteBuf buf) {\n        buf.writeIntLE(n_);\n        for (" in text
+    write = (
+        "        public void encode(@NotNull P value, @NotNull ByteBuf buf) {\n"
+        "            buf.writeIntLE(value.n_);\n"
+        "            for ("
+    )
+    assert write in text
 
 
 def test_an_optional_writes_its_presence_first(emitted):
     text = emitted("class P:\n    x: uint32 | None\n")
 
-    assert "buf.writeBoolean(x_ != null);\n        if (x_ != null) {\n            buf.writeIntLE((int) x_);\n" in text
+    write = (
+        "            buf.writeBoolean(value.x_ != null);\n"
+        "            if (value.x_ != null) {\n"
+        "                buf.writeIntLE((int) value.x_);\n"
+    )
+    assert write in text
 
 
 BITSET = "class W(IntEnum, uint8):\n    A = 0\n    COUNT = 9\n\nclass P:\n    x: bitset[W.COUNT]\n"
 
 
 def test_a_bitset_writes_its_width(emitted):
-    assert 'ByteBufCodec.writeBitSet(buf, x_, 9, "P.x");' in emitted(BITSET)
+    assert '            ByteBufCodec.writeBitSet(buf, value.x_, 9, "P.x");\n' in emitted(BITSET)
 
 
 def test_a_bitset_setter_rejects_a_bit_past_its_width(emitted):
@@ -534,9 +916,9 @@ def test_a_duplicated_field_reads_once_per_copy(emitted):
     text = emitted("class P:\n    x: uint8 = field(duplicate=2)\n")
 
     read = (
-        "            for (int copy = 0; copy < 2; copy++) {\n"
-        "                out.x_ = ByteBufCodec.readUnsignedByte(buf);\n"
-        "            }\n"
+        "                for (int copy = 0; copy < 2; copy++) {\n"
+        "                    out.x_ = ByteBufCodec.readUnsignedByte(buf);\n"
+        "                }\n"
     )
     assert read in text
 
@@ -546,19 +928,25 @@ def test_a_condition_groups_its_fields_in_one_block(emitted):
         "class P:\n    f: bool\n    a: uint8 = field(when=lambda p: p.f)\n    b: uint8 = field(when=lambda p: p.f)\n"
     )
 
-    assert "        if (f_) {\n            buf.writeByte(a_);\n            buf.writeByte(b_);\n        }\n" in text
+    write = (
+        "            if (value.f_) {\n"
+        "                buf.writeByte(value.a_);\n"
+        "                buf.writeByte(value.b_);\n"
+        "            }\n"
+    )
+    assert write in text
 
 
 def test_an_unsigned_comparison_compares_unsigned(emitted):
     text = emitted("class P:\n    n: uint32\n    x: uint8 = field(when=lambda p: p.n < 5)\n")
 
-    assert "if (Integer.compareUnsigned(n_, 5) < 0) {" in text
+    assert "            if (Integer.compareUnsigned(value.n_, 5) < 0) {\n" in text
 
 
 def test_an_unsigned_literal_past_int_is_spelled_as_bits(emitted):
     text = emitted("class P:\n    n: uint32\n    x: uint8 = field(when=lambda p: p.n == 4294967294)\n")
 
-    assert "if ((n_) == (0xFFFFFFFE)) {" in text
+    assert "            if ((value.n_) == (0xFFFFFFFE)) {\n" in text
 
 
 def test_a_name_coded_enum_is_compared_by_its_number(emitted):
@@ -566,13 +954,14 @@ def test_a_name_coded_enum_is_compared_by_its_number(emitted):
         COLORS + "class P:\n    c: Color = field(type=str)\n    x: uint8 = field(when=lambda p: p.c == Color.RED)\n"
     )
 
-    assert "if ((c_.getNumber()) == (1)) {" in text
+    assert "            if ((value.c_.getNumber()) == (1)) {\n" in text
 
 
 def test_a_literal_rejects_any_other_value(emitted):
     text = emitted(COLORS + "class P:\n    c: Literal[Color.BLUE]\n")
 
-    assert "if (ByteBufCodec.readUnsignedByte(buf) != 2) {\n                throw DecodeException.unknownValue(" in text
+    read = "if (ByteBufCodec.readUnsignedByte(buf) != 2) {\n                    throw DecodeException.unknownValue("
+    assert read in text
 
 
 def test_a_literal_is_no_field(emitted):
@@ -584,16 +973,16 @@ def test_a_literal_is_no_field(emitted):
 @pytest.mark.parametrize(
     ("source", "constant"),
     [
-        pytest.param("flag: Literal[True]", "    public static final boolean FLAG = true;\n", id="bool"),
-        pytest.param('tag: Literal["hi"]', '    public static final @NotNull String TAG = "hi";\n', id="str"),
+        pytest.param("flag: Literal[True]", "        public static final boolean FLAG = true;\n", id="bool"),
+        pytest.param('tag: Literal["hi"]', '        public static final @NotNull String TAG = "hi";\n', id="str"),
         pytest.param(
             "c: Literal[Color.RED]",
-            "    public static final @NotNull dev.endstone.protocol.Color C = dev.endstone.protocol.Color.RED;\n",
+            "        public static final @NotNull dev.endstone.protocol.Color C = dev.endstone.protocol.Color.RED;\n",
             id="enum",
         ),
     ],
 )
-def test_a_literal_is_a_public_constant_of_its_message(emitted, source, constant):
+def test_a_literal_is_a_public_constant_of_its_codec(emitted, source, constant):
     assert constant in emitted(COLORS + f"class P:\n    {source}\n")
 
 
@@ -610,7 +999,11 @@ def test_an_enum_literal_of_a_live_constant_is_not_deprecated(emitted):
 def test_an_enum_literal_of_a_deprecated_constant_is_deprecated(emitted):
     text = emitted(COLORS + "class P:\n    c: Literal[Color.BLUE]\n")
 
-    assert "    @Deprecated\n    public static final @NotNull dev.endstone.protocol.Color C = " in text
+    constant = (
+        "        @Deprecated\n"
+        "        public static final @NotNull dev.endstone.protocol.Color C = dev.endstone.protocol.Color.BLUE;\n"
+    )
+    assert constant in text
 
 
 def test_an_enum_literal_of_a_deprecated_alias_is_deprecated(emitted):
@@ -618,7 +1011,11 @@ def test_an_enum_literal_of_a_deprecated_alias_is_deprecated(emitted):
         "class Hue(IntEnum, uint8):\n    A = 1\n    B = value(1, deprecated=True)\n\nclass P:\n    c: Literal[Hue.B]\n"
     )
 
-    assert "    @Deprecated\n    public static final @NotNull dev.endstone.protocol.Hue C = " in text
+    constant = (
+        "        @Deprecated\n"
+        "        public static final @NotNull dev.endstone.protocol.Hue C = dev.endstone.protocol.Hue.A;\n"
+    )
+    assert constant in text
 
 
 def test_an_enum_literal_of_an_alias_of_a_deprecated_constant_is_deprecated(emitted):
@@ -626,11 +1023,17 @@ def test_an_enum_literal_of_an_alias_of_a_deprecated_constant_is_deprecated(emit
         "class Hue(IntEnum, uint8):\n    A = value(1, deprecated=True)\n    B = A\n\nclass P:\n    c: Literal[Hue.B]\n"
     )
 
-    assert "    @Deprecated\n    public static final @NotNull dev.endstone.protocol.Hue C = " in text
+    constant = (
+        "        @Deprecated\n"
+        "        public static final @NotNull dev.endstone.protocol.Hue C = dev.endstone.protocol.Hue.A;\n"
+    )
+    assert constant in text
 
 
 def test_an_underscored_marker_drops_its_underscores_from_its_constant_name(emitted):
-    assert '    public static final @NotNull String RAW = "raw";\n' in emitted('class P:\n    _raw: Literal["raw"]\n')
+    text = emitted('class P:\n    _raw: Literal["raw"]\n')
+
+    assert '        public static final @NotNull String RAW = "raw";\n' in text
 
 
 def test_an_enum_literal_with_no_constant_is_a_compiler_error(build_package, tmp_path):
@@ -812,11 +1215,11 @@ def test_a_union_reads_into_the_case_it_selects(emitted):
     text = emitted("class P:\n    v: uint8 | str\n")
 
     read = (
-        "            switch (ByteBufCodec.readUnsignedVarInt(buf)) {\n"
-        "                case 0 -> {\n"
-        "                    out.vUint8_ = ByteBufCodec.readUnsignedByte(buf);\n"
-        "                    out.vCase_ = VCase.UINT8;\n"
-        "                }\n"
+        "                switch (ByteBufCodec.readUnsignedVarInt(buf)) {\n"
+        "                    case 0 -> {\n"
+        "                        out.vUint8_ = ByteBufCodec.readUnsignedByte(buf);\n"
+        "                        out.vCase_ = VCase.UINT8;\n"
+        "                    }\n"
     )
     assert read in text
 
@@ -859,8 +1262,8 @@ def test_a_duplicated_union_reads_once_per_copy(emitted):
     text = emitted("class P:\n    v: uint8 | str = field(duplicate=2)\n")
 
     read = (
-        "            for (int copy = 0; copy < 2; copy++) {\n"
-        "                switch (ByteBufCodec.readUnsignedVarInt(buf)) {\n"
+        "                for (int copy = 0; copy < 2; copy++) {\n"
+        "                    switch (ByteBufCodec.readUnsignedVarInt(buf)) {\n"
     )
     assert read in text
 
@@ -868,7 +1271,7 @@ def test_a_duplicated_union_reads_once_per_copy(emitted):
 def test_a_union_writes_its_index_first(emitted):
     text = emitted("class P:\n    v: uint8 | str\n")
 
-    assert "ByteBufCodec.writeUnsignedVarInt(buf, vCase_.ordinal());" in text
+    assert "            ByteBufCodec.writeUnsignedVarInt(buf, value.vCase_.ordinal());\n" in text
 
 
 def test_a_union_with_two_cases_of_one_name_is_a_compiler_error(build_package, tmp_path):
@@ -881,8 +1284,10 @@ def test_a_union_with_two_cases_of_one_name_is_a_compiler_error(build_package, t
 @pytest.mark.parametrize(
     ("annotation", "read"),
     [
-        pytest.param("uuid.UUID", "out.id_ = ByteBufCodec.readUuid(buf);", id="raw"),
-        pytest.param("uuid.UUID = field(type=str)", "out.id_ = ByteBufCodec.readUuidString(buf);", id="str"),
+        pytest.param("uuid.UUID", "                out.id_ = ByteBufCodec.readUuid(buf);\n", id="raw"),
+        pytest.param(
+            "uuid.UUID = field(type=str)", "                out.id_ = ByteBufCodec.readUuidString(buf);\n", id="str"
+        ),
     ],
 )
 def test_a_uuid_reads_by_its_encoding(emitted, annotation, read):
@@ -892,8 +1297,10 @@ def test_a_uuid_reads_by_its_encoding(emitted, annotation, read):
 @pytest.mark.parametrize(
     ("annotation", "write"),
     [
-        pytest.param("uuid.UUID", "ByteBufCodec.writeUuid(buf, id_);", id="raw"),
-        pytest.param("uuid.UUID = field(type=str)", "ByteBufCodec.writeUuidString(buf, id_);", id="str"),
+        pytest.param("uuid.UUID", "            ByteBufCodec.writeUuid(buf, value.id_);\n", id="raw"),
+        pytest.param(
+            "uuid.UUID = field(type=str)", "            ByteBufCodec.writeUuidString(buf, value.id_);\n", id="str"
+        ),
     ],
 )
 def test_a_uuid_writes_by_its_encoding(emitted, annotation, write):
@@ -929,11 +1336,11 @@ def test_a_builtin_lives_in_its_module_package_without_underscores(build_package
 
 
 def test_a_builtin_reads_by_its_snake_cased_name(emitted):
-    assert "out.t_ = ByteBufCodec.readNbtThing(buf);" in emitted(BUILTIN)
+    assert "                out.t_ = ByteBufCodec.readNbtThing(buf);\n" in emitted(BUILTIN)
 
 
 def test_a_builtin_writes_by_its_snake_cased_name(emitted):
-    assert "ByteBufCodec.writeNbtThing(buf, t_);" in emitted(BUILTIN)
+    assert "            ByteBufCodec.writeNbtThing(buf, value.t_);\n" in emitted(BUILTIN)
 
 
 def test_a_builtin_defaults_to_its_default_instance(emitted):

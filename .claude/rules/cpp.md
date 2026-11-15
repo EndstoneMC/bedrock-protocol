@@ -10,7 +10,10 @@ paths:
 - Include the repo's own headers with quotes and the full path from the include root (`"bedrock/protocol/stream.hpp"`); use `<>` only for the standard library and third-party headers; never use `./` or `../`.
 - Name a header with its own `.cpp` `.h` and a header-only one `.hpp`; this holds for the generated headers too.
 - Emit each schema module as a `.h` and a `.cpp` in the static library; never make generated code header-only.
-- Give every version that shares a shape one C++ type, written out whole, encoded by one `Serializer<T, N>` named for the first protocol N that has it, which every other version's `Serializer<T, V>` inherits empty; never derive one version's type from another's.
+- Give every version whose members match one C++ type, written out whole; give each distinct encoding of it one `Serializer<T, N>`, named for the first protocol N that uses it, which every other version's `Serializer<T, V>` inherits empty; never derive one version's type from another's.
+- Where one protocol sends both encodings of a class name and they hold different members, name the hand-written form's type `<Name>` and the cereal form's `Cerealized<Name>` at those protocols only; `Cerealized<Name>_<V>` resolves nowhere else.
+- Name a serialization mode only where a class name has two at a protocol: `Serializer<T, V, SerializationMode::Cereal>` or `SerializationMode::Manual`; `SerializationMode::Default` exists only where it has one, and a generated body calls a child by its implementation's first protocol and mode.
+- Declare the type live at the latest protocol at the root of `bedrock::protocol` and every other under `v<N>`, N the first protocol that holds it and the first modelled protocol for the oldest; `X_<V>` selects the type of protocol V.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
 - Keep one namespace block per file with inner namespaces nested inside it; never close a namespace and reopen it.
@@ -18,7 +21,7 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the free entry points around it are `encode<V>` and `decode<V, T>`, and every call names its protocol.
+- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the free entry points around it are `encode<V>` and `decode<V, T>`, which take a `SerializationMode` as `encode<V, M>` and `decode<V, T, M>` only where a class name has two at that protocol; every call names its protocol.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Decode any integer an integer-coded enum carries, named or not; reject a name a name-coded enum lacks, a value it cannot name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.

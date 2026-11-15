@@ -1,59 +1,114 @@
 import json
 from collections.abc import Callable
+from functools import partial
 from itertools import groupby
 
-from bedrock_protocol_compiler.descriptor import CompilerError, Variant
+from bedrock_protocol_compiler.descriptor import CompilerError, Literal, Range, Variant
 from bedrock_protocol_compiler.java import members, names
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.expression import Renderer
 from bedrock_protocol_compiler.java.field import FieldContext, Slot
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.names import BUILDER, OBJECT
-from bedrock_protocol_compiler.java.union import UnionGenerator, case_name
+from bedrock_protocol_compiler.java.union import Union, UnionGenerator, case_name
 from bedrock_protocol_compiler.java.value import Body
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumShape, Schema, Shape, StructShape
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema, SerializationMode, StructModel, strip
+
+type Built = list[tuple[Slot, list[UnionGenerator]]]
+type Served = list[tuple[Range, SerializationMode, str]]
+type Span = tuple[int | None, int | None, list[SerializationMode]]
+
+MODES = list(SerializationMode)
+
+
+def bounds(since: int | None, until: int | None) -> list[str]:
+    found = []
+    if since is not None:
+        found.append(f"version >= {since}")
+    if until is not None:
+        found.append(f"version < {until}")
+    return found
+
+
+def spans(served: Served) -> list[Span]:
+    points = sorted({bound for run, _, _ in served for bound in (run.since, run.until) if bound is not None})
+    found: list[Span] = []
+    for since, until in zip([None, *points], [*points, None], strict=True):
+        span = Range(since, until)
+        modes = [mode for mode in MODES if any(each is mode and run.overlaps(span) for run, each, _ in served)]
+        if found and found[-1][2] == modes:
+            found[-1] = (found[-1][0], until, modes)
+        else:
+            found.append((since, until, modes))
+    return found
+
+
+def held(slot: Slot, unions: list[UnionGenerator]) -> str:
+    p = Printer()
+    slot.declare(p, True)
+    slot.declare(p, False)
+    slot.construct(p)
+    slot.initialize(p)
+    slot.adopt(p)
+    slot.getters(p, False)
+    slot.getters(p, True)
+    slot.setters(p)
+    slot.definitions(p)
+    for each in (*slot.comparisons(), *slot.hashes()):
+        p.emit("$each$", each=each)
+    for union in unions:
+        union.definition(p, [])
+    return p.text
 
 
 class MessageGenerator:
-    def __init__(self, schema: Schema, shape: StructShape, enclosing: tuple[str, ...], registry: Members) -> None:
+    def __init__(self, schema: Schema, model: StructModel, enclosing: tuple[str, ...], registry: Members) -> None:
         self.schema = schema
-        self.shape = shape
-        self.name = shape.family.name
-        self.qualified = names.qualified(schema, shape)
+        self.model = model
+        self.name = names.declared(schema, model)
+        self.qualified = names.qualified(schema, model)
         self.members = registry
         self.top = not enclosing
-        self.version = schema.versions[0] if shape.ranges[0].since is None else shape.ranges[0].since
-        self.packet_id = shape.family.packet_id
-        self.serializer = bool(shape.fields) or not shape.nested or self.packet_id is not None
+        self.packet_id = model.family.packet_id
+        read = schema.read_at[model]
+        form = next(form for form, runs in model.runs.items() if any(run.contains(read) for run in runs))
+        self.holder = schema.encoding_at(form, read)
         scope = (*enclosing, self.name)
         self.nested = [
-            shape_generator(schema, child, scope, registry)
-            for child in shape.nested
-            if names.host(schema, child) is shape
+            type_generator(schema, child, scope, registry) for child in model.nested if schema.owner(child) is model
         ]
-        cased = {
-            each.name: {
-                case_name(case, f"{self.qualified}.{each.name}") for case in each.type.cases if case is not None
-            }
-            for each in shape.fields
-            if isinstance(each.type, Variant)
+        built = self.build(self.holder, registry)
+        self.slots = [slot for slot, _ in built if not isinstance(slot.field.type, Literal)]
+        self.unions = [union for _, unions in built for union in unions]
+        if [slot.name for slot in self.slots] != [slot.name for slot in model.slots]:
+            raise CompilerError(f"{self.qualified}: holds its members out of its model's order")
+        scratch = Members(Printer())
+        kept = {
+            slot.name: held(slot, unions)
+            for slot, unions in self.build(self.holder, scratch)
+            if not isinstance(slot.field.type, Literal)
         }
-        shared = {
-            name for name, found in cased.items() if any(found & cased[other] for other in cased if other != name)
-        }
-        self.slots: list[Slot] = []
-        self.unions: list[UnionGenerator] = []
-        for each in shape.fields:
-            inline = each.name not in shared
-            context = FieldContext(schema, self.version, self.name, self.qualified, each, registry, inline)
-            self.slots.append(context.slot())
-            self.unions += context.unions
+        self.codecs: list[tuple[Encoding, list[Slot], dict[str, Union]]] = []
+        for encoding in sorted(schema.encodings(model), key=lambda each: (each.since, MODES.index(each.mode))):
+            if not encoding.fields and model.nested and self.packet_id is None:
+                continue
+            coded = self.build(encoding, scratch)
+            for slot, unions in coded:
+                if not isinstance(slot.field.type, Literal) and held(slot, unions) != kept[slot.name]:
+                    raise CompilerError(
+                        f"{self.qualified}.{slot.name}: takes another Java type, setter check or enum form from "
+                        f"{encoding.since} than from {self.holder.since}"
+                    )
+            wrappers = {union.name: union.union for _, unions in coded for union in unions}
+            self.codecs.append((encoding, [slot for slot, _ in coded], wrappers))
         types = [(child.name, child.qualified) for child in self.nested]
         types += [(union.name, union.where) for union in self.unions]
         types += [kind for slot in self.slots for kind in slot.types()]
-        if self.serializer:
+        if self.codecs:
             types.append((BUILDER, f"{self.qualified}.{BUILDER}"))
+        codecs = [names.codec(encoding) for encoding, _, _ in self.codecs]
+        types += [(codec, names.runtime(schema, names.CODEC)) for codec in codecs]
         members.check_names(self.qualified, types)
         reserved = names.reserved(schema)
         for name, _ in types:
@@ -62,13 +117,31 @@ class MessageGenerator:
             if name in reserved and name != BUILDER:
                 raise CompilerError(f"{self.qualified}.{name}: shadows the imported {name}")
         for union in self.unions:
-            for name in (BUILDER, union.kind):
+            for name in (BUILDER, union.kind, *codecs):
                 if name in (*scope, union.name):
                     raise CompilerError(f"{union.where}.{name}: has the name of a class that encloses it")
 
+    def build(self, encoding: Encoding, registry: Members) -> Built:
+        cased = {
+            each.name: {
+                case_name(strip(case), f"{self.qualified}.{each.name}") for case in each.type.cases if case is not None
+            }
+            for each in encoding.fields
+            if isinstance(each.type, Variant)
+        }
+        shared = {
+            name for name, found in cased.items() if any(found & cased[other] for other in cased if other != name)
+        }
+        built: Built = []
+        for each in encoding.fields:
+            inline = each.name not in shared
+            context = FieldContext(self.schema, encoding, self.name, self.qualified, each, registry, inline)
+            built.append((context.slot(), context.unions))
+        return built
+
     def definition(self, p: Printer) -> None:
         modifiers = "public final class" if self.top else "public static final class"
-        if not self.serializer:
+        if not self.codecs:
             p.emit(
                 """
                 $modifiers$ $name$ {
@@ -98,7 +171,7 @@ class MessageGenerator:
         for slot in self.slots:
             slot.definitions(p)
         for union in self.unions:
-            union.definition(p)
+            union.definition(p, [(names.codec(each), wrappers[union.name]) for each, _, wrappers in self.codecs])
         for child in self.nested:
             child.definition(p)
             p.emit("")
@@ -109,10 +182,6 @@ class MessageGenerator:
                 p.emit("public static final int ID = $id$;", id=self.packet_id)
                 p.emit("")
             p.emit("private static final $name$ DEFAULT_INSTANCE = new $name$(new Builder());", name=self.name)
-            p.emit("")
-            for slot in self.slots:
-                with self.members.origin(slot.name):
-                    slot.constants(p)
             p.emit("")
             for slot in self.slots:
                 with self.members.origin(slot.name):
@@ -139,8 +208,7 @@ class MessageGenerator:
             for slot in self.slots:
                 with self.members.origin(slot.name):
                     slot.getters(p, False)
-            self.encode(p)
-            self.decode(p)
+            self.selector(p)
             with self.members.origin(OBJECT):
                 members.equals(p, self.name, [each for slot in self.slots for each in slot.comparisons()])
                 members.hash_code(p, [each for slot in self.slots for each in slot.hashes()])
@@ -149,25 +217,96 @@ class MessageGenerator:
                 self.builder(p)
             p.emit("}")
             p.emit("")
+            for encoding, slots, _ in self.codecs:
+                members.codec(
+                    p,
+                    self.members,
+                    self.qualified,
+                    names.codec(encoding),
+                    self.name,
+                    partial(self.constants, p, slots),
+                    partial(self.writes, p, encoding, slots),
+                    partial(self.reads, p, encoding, slots),
+                )
             self.definitions(p)
 
-    def encode(self, p: Printer) -> None:
-        with self.members.origin(names.runtime(self.schema, "Message")):
+    def selector(self, p: Printer) -> None:
+        served = sorted(
+            (
+                (run, mode, names.codec(encoding))
+                for encoding, _, _ in self.codecs
+                for mode, runs in encoding.served.items()
+                for run in runs
+            ),
+            key=lambda each: (each[0].since or 0, MODES.index(each[1])),
+        )
+        with self.members.origin(names.runtime(self.schema, names.CODEC)):
             p.emit(
                 """
-                @Override
-                public void encode(@NotNull ByteBuf buf) {
-                    $body$
+                public static @NotNull Codec<$name$> codec(int version) {
+                    return codec(version, $mode$.DEFAULT);
+                }
+
+                public static @NotNull Codec<$name$> codec(int version, @NotNull $mode$ mode) {
+                    $selections$
                 }
 
                 """,
-                body=lambda: self.writes(p),
+                name=self.name,
+                mode=names.MODE,
+                selections=lambda: self.selections(p, served),
             )
 
-    def writes(self, p: Printer) -> None:
+    def selections(self, p: Printer, served: Served) -> None:
+        for run, mode, codec in served:
+            p.emit(
+                """
+                if ($clause$) {
+                    return $codec$.INSTANCE;
+                }
+                """,
+                clause=" && ".join((f"mode == {names.MODE}.{mode.name}", *bounds(run.since, run.until))),
+                codec=codec,
+            )
+        relative = self.qualified.removeprefix(f"{self.schema.java_package}.")
+        found = spans(served)
+        covered = all(modes for _, _, modes in found)
+        for index, (since, until, modes) in enumerate(found):
+            if not modes:
+                continue
+            absent = (
+                f"{json.dumps(f'{relative}: no ')} + mode.name().toLowerCase(Locale.ROOT) + "
+                f"{json.dumps(' mode at protocol ')} + version + "
+                f"{json.dumps('; it has ' + ' and '.join(each.name for each in modes))}"
+            )
+            clause = bounds(since, until)
+            if not clause or (covered and index == len(found) - 1):
+                p.emit("throw new IllegalArgumentException($absent$);", absent=absent)
+                continue
+            p.emit(
+                """
+                if ($clause$) {
+                    throw new IllegalArgumentException($absent$);
+                }
+                """,
+                clause=" && ".join(clause),
+                absent=absent,
+            )
+        if not covered:
+            p.emit(
+                "throw new IllegalArgumentException($message$ + version);",
+                message=json.dumps(f"{relative}: is not a type at protocol "),
+            )
+
+    def constants(self, p: Printer, slots: list[Slot]) -> None:
+        for slot in slots:
+            with self.members.origin(slot.name):
+                slot.constants(p)
+
+    def writes(self, p: Printer, encoding: Encoding, slots: list[Slot]) -> None:
         body = Body(p)
-        renderer = Renderer(self.schema, self.version, {slot.name: slot for slot in self.slots}, "")
-        for when, group in groupby(self.slots, key=lambda slot: slot.field.when):
+        renderer = Renderer(self.schema, encoding, {slot.name: slot for slot in slots}, "value.")
+        for when, group in groupby(slots, key=lambda slot: slot.field.when):
             if when is None:
                 for slot in group:
                     self.write(body, slot)
@@ -179,7 +318,7 @@ class MessageGenerator:
             p.emit("}")
 
     def write(self, body: Body, slot: Slot) -> None:
-        self.duplicated(body.p, slot, lambda: slot.write(body))
+        self.duplicated(body.p, slot, lambda: slot.write(body, "value."))
 
     def duplicated(self, p: Printer, slot: Slot, each: Callable[[], None]) -> None:
         if slot.copies == 1:
@@ -195,24 +334,10 @@ class MessageGenerator:
             body=each,
         )
 
-    def decode(self, p: Printer) -> None:
-        p.emit(
-            """
-            public static @NotNull $name$ decode(@NotNull ByteBuf buf) {
-                Builder out = new Builder();
-                $body$
-                return out.build();
-            }
-
-            """,
-            name=self.name,
-            body=lambda: self.reads(p),
-        )
-
-    def reads(self, p: Printer) -> None:
+    def reads(self, p: Printer, encoding: Encoding, slots: list[Slot]) -> None:
         body = Body(p)
-        renderer = Renderer(self.schema, self.version, {slot.name: slot for slot in self.slots}, "out.")
-        for when, group in groupby(self.slots, key=lambda slot: slot.field.when):
+        renderer = Renderer(self.schema, encoding, {slot.name: slot for slot in slots}, "out.")
+        for when, group in groupby(slots, key=lambda slot: slot.field.when):
             if when is None:
                 for slot in group:
                     self.read(body, renderer, slot)
@@ -269,9 +394,9 @@ class MessageGenerator:
                     slot.setters(p)
 
 
-def shape_generator(
-    schema: Schema, shape: Shape, enclosing: tuple[str, ...], registry: Members
+def type_generator(
+    schema: Schema, each: StructModel | EnumShape, enclosing: tuple[str, ...], registry: Members
 ) -> MessageGenerator | EnumGenerator:
-    if isinstance(shape, EnumShape):
-        return EnumGenerator(schema, shape)
-    return MessageGenerator(schema, shape, enclosing, registry)
+    if isinstance(each, EnumShape):
+        return EnumGenerator(schema, each)
+    return MessageGenerator(schema, each, enclosing, registry)

@@ -1,3 +1,5 @@
+from functools import partial
+
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     BuiltinRef,
@@ -192,7 +194,7 @@ class Union:
             p.emit("}")
             p.emit("")
 
-    def write(self, body: Body) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         body.p.emit(
             """
             ByteBufCodec.writeUnsignedVarInt(buf, $selector$.ordinal());
@@ -200,16 +202,16 @@ class Union:
                 $cases$
             }
             """,
-            selector=self.selector,
-            cases=lambda: self.write_cases(body),
+            selector=f"{receiver}{self.selector}",
+            cases=lambda: self.write_cases(body, receiver),
         )
 
-    def write_cases(self, body: Body) -> None:
+    def write_cases(self, body: Body, receiver: str) -> None:
         for constant, case in zip(self.constants, self.cases, strict=True):
             body.p.emit("case $constant$ -> {", constant=constant)
             with body.p.indent():
                 if case is not None:
-                    case.value.write(body, case.member)
+                    case.value.write(body, f"{receiver}{case.member}")
             body.p.emit("}")
 
     def read(self, body: Body) -> None:
@@ -260,14 +262,13 @@ class Union:
 class UnionGenerator:
     """A union wrapped in a message of its own, where its holder cannot hold it as a oneof."""
 
-    def __init__(self, union: Union, where: str, message: str) -> None:
+    def __init__(self, union: Union, where: str) -> None:
         self.union = union
         self.name = union.name
         self.kind = union.kind
         self.where = where
-        self.message = message
 
-    def definition(self, p: Printer) -> None:
+    def definition(self, p: Printer, codecs: list[tuple[str, Union]]) -> None:
         p.emit(
             """
             public static final class $name$ implements Message {
@@ -276,10 +277,10 @@ class UnionGenerator:
 
             """,
             name=self.name,
-            body=lambda: self.body(p),
+            body=lambda: self.body(p, codecs),
         )
 
-    def body(self, p: Printer) -> None:
+    def body(self, p: Printer, codecs: list[tuple[str, Union]]) -> None:
         union = self.union
         with union.members.scope(self.where, self.name):
             p.emit("private static final $name$ DEFAULT_INSTANCE = new $name$(new Builder());", name=self.name)
@@ -293,30 +294,6 @@ class UnionGenerator:
             p.emit("")
             members.statics(p, self.name)
             union.getters(p)
-            body = Body(p)
-            with union.members.origin(self.message):
-                p.emit(
-                    """
-                    @Override
-                    public void encode(@NotNull ByteBuf buf) {
-                        $body$
-                    }
-
-                    """,
-                    body=lambda: union.write(body),
-                )
-            p.emit(
-                """
-                public static @NotNull $name$ decode(@NotNull ByteBuf buf) {
-                    Builder out = new Builder();
-                    $read$
-                    return out.build();
-                }
-
-                """,
-                name=self.name,
-                read=lambda: union.read(body),
-            )
             with union.members.origin(OBJECT):
                 members.equals(p, self.name, union.comparisons())
                 members.hash_code(p, union.hashes())
@@ -325,6 +302,19 @@ class UnionGenerator:
             with p.indent():
                 self.builder(p)
             p.emit("}")
+            p.emit("")
+            for name, coded in codecs:
+                body = Body(p)
+                members.codec(
+                    p,
+                    union.members,
+                    self.where,
+                    name,
+                    self.name,
+                    lambda: None,
+                    partial(coded.write, body, "value."),
+                    partial(coded.read, body),
+                )
 
     def builder(self, p: Printer) -> None:
         union = self.union

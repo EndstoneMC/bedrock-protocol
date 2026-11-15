@@ -48,7 +48,18 @@ data = bp.v2225.encode(packet)
 assert bp.v2225.decode(bp.TextPacket, data) == packet
 ```
 
-`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. Each `v<N>` encodes and decodes with `encode` and `decode`, frames packets with `encode_packet` and `decode_packet`, maps packet ids to classes in `packets`, and names the protocol that introduced each class's encoding in `encodings`.
+`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. Each `v<N>` encodes and decodes with `encode` and `decode`, frames packets with `encode_packet` and `decode_packet`, maps packet ids to classes in `packets`, and names the protocol that introduced each class's encoding in `encodings`. A class with no default serialization mode at a protocol has no entry there; `v<N>.modes` lists every mode each class has.
+
+The `bp` names follow the latest protocol. To stay on protocol 2225, take the types from its module:
+
+```python
+from bedrock_protocol import v2225
+
+packet = v2225.TextPacket()
+packet.body = v2225.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
+```
+
+`TextPacketType` is the same in every protocol, so it keeps its `bp` name.
 
 ## C++
 
@@ -95,6 +106,15 @@ assert(decoded && *decoded == packet);
 
 `<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
 
+The `bp` names follow the latest protocol. To stay on protocol 2225, select each type by it:
+
+```cpp
+bp::TextPacket_<2225> packet;
+packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
+```
+
+`TextPacketType` is the same in every protocol, so it keeps its `bp` name.
+
 ## Java
 
 To build it from a checkout, you need JDK 21 or newer and Python 3.12 or newer, which generates the codecs:
@@ -108,9 +128,9 @@ cd bedrock-protocol/java
 The jar lands in the checkout's `build/java/libs` and needs `io.netty:netty-buffer` beside it.
 
 ```java
-import dev.endstone.protocol.Packets;
 import dev.endstone.protocol.TextPacket;
 import dev.endstone.protocol.TextPacketType;
+import dev.endstone.protocol.v2225.Packets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -122,35 +142,23 @@ packet.setMessageOnly(
                 .build());
 
 ByteBuf data = Unpooled.buffer();
-packet.build().encode(data);
+Packets.encode(packet.build(), data);
 assert Packets.decode(TextPacket.ID, data).equals(packet.build());
 ```
 
-`ProtocolVersion.VERSIONS` lists the numbers with a `v<N>.Packets`. `ProtocolVersion.RELEASES` lists every number a release reported. `ProtocolVersion.of(2169)` and `ProtocolVersion.of("1.26.63")` look one up, and its `decodePacket` decodes a body with the `v<N>.Packets` its `snapshot` names. `Packets` decodes the latest protocol's packets by id.
+`ProtocolVersion.VERSIONS` lists the numbers with a `v<N>.Packets`, which encodes a packet with `encode` and decodes a body by id with `decode`. `ProtocolVersion.RELEASES` lists every number a release reported. `ProtocolVersion.of(2169)` and `ProtocolVersion.of("1.26.63")` look one up, and its `encodePacket` and `decodePacket` use the `v<N>.Packets` its `snapshot` names. A class's static `codec(int)` returns the codec that encodes and decodes it at a protocol; where a protocol sends the class both ways, pass `SerializationMode.CEREAL` or `SerializationMode.MANUAL` to `codec(int, SerializationMode)`.
 
-## Pinning a Protocol Version
+The bare classes follow the latest protocol. `v2225.Packets` keeps the example on protocol 2225, and so does that protocol's `ProtocolVersion`:
 
-The `bp` names follow the latest protocol. To stay on protocol 2225, name it for each type that differs between protocols; a type that never changed, such as `TextPacketType`, keeps its `bp` name.
+```java
+import dev.endstone.protocol.ProtocolVersion;
 
-In Python, import its module:
-
-```python
-from bedrock_protocol import v2225
-
-packet = v2225.TextPacket()
-packet.body = v2225.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
+ProtocolVersion version = ProtocolVersion.of(2225).orElseThrow();
+version.encodePacket(packet.build(), data);
+assert version.decodePacket(TextPacket.ID, data).equals(packet.build());
 ```
 
-In C++, pass it as the template argument:
-
-```cpp
-bp::TextPacket_<2225> packet;
-packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
-```
-
-In Java, the bare classes are the latest protocol's and no stable name pins it; a class a newer protocol replaced moves to the package C++ names its shape by, `v<N>` for the first protocol that used it or `base` for the oldest, under `precereal` for a pre-cereal type.
-
-The rest is unchanged.
+Once a newer protocol changes a class, it moves to the package `v<N>`, N the first protocol that used it, and code staying on 2225 imports it from there.
 
 ## Supported Protocols
 

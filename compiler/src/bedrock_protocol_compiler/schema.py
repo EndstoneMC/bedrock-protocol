@@ -1,5 +1,7 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import dataclass, field, replace
+from enum import IntEnum
+from typing import cast
 
 from bedrock_protocol_compiler.builder import WIDTHS, reaches
 from bedrock_protocol_compiler.descriptor import (
@@ -33,8 +35,15 @@ from bedrock_protocol_compiler.descriptor import (
 )
 
 ALWAYS = Range(None, None)
+CEREALIZED = "Cerealized"
 DOMAINS = {name: f"{'' if signed else 'u'}int{width}" for name, (signed, width) in WIDTHS.items() if width > 1}
 HIGHEST = {name: (1 << (width - signed)) - 1 for name, (signed, width) in WIDTHS.items()}
+
+
+class SerializationMode(IntEnum):
+    DEFAULT = 0
+    CEREAL = 1
+    MANUAL = 2
 
 
 @dataclass(eq=False)
@@ -71,10 +80,8 @@ class Slot:
 class StructModel:
     family: Struct
     slots: tuple[Slot, ...]
-    nested: tuple["Model", ...]
+    nested: tuple["StructModel | EnumShape", ...]
     runs: dict[Struct, list[Range]] = field(default_factory=dict)
-    owner: "StructModel | None" = None
-    since: int | None = None
     versioned: bool = True
 
 
@@ -85,7 +92,6 @@ class EnumModel:
     members: tuple[Member, ...]
     values: dict[str, int]
     runs: dict[Enum, list[Range]] = field(default_factory=dict)
-    owner: StructModel | None = None
     since: int | None = None
     versioned: bool = True
 
@@ -101,7 +107,8 @@ class Encoding:
     numbers: dict[MemberRef, int]
     runs: dict[Struct, list[Range]] = field(default_factory=dict)
     since: int = field(init=False)
-    cereal: bool = False
+    mode: SerializationMode = field(init=False)
+    served: dict[SerializationMode, list[Range]] = field(default_factory=dict)
 
 
 @dataclass(eq=False)
@@ -240,6 +247,8 @@ class Schema:
                 struct_forms.setdefault(self.pair(family), []).append(family)
             else:
                 enum_forms.setdefault(self.pair(family), []).append(family)
+        pairs: list[Sequence[Struct | Enum]] = [*struct_forms.values(), *enum_forms.values()]
+        self.forms = {form: tuple(forms) for forms in pairs for form in forms}
         for enums in enum_forms.values():
             self.project_enum(enums)
         models: dict[tuple[object, ...], StructModel] = {}
@@ -248,9 +257,11 @@ class Schema:
             if isinstance(family, Struct):
                 self.project_struct(family, models, encodings)
         spans: dict[StructModel | Encoding, dict[Struct, list[int]]] = {}
+        served: dict[Encoding, dict[SerializationMode, list[int]]] = {}
         for forms in struct_forms.values():
-            held: list[StructModel] = []
             for form in forms:
+                held: list[StructModel] = []
+                mixed = self.mixed(form)
                 for version in self.versions:
                     if (form, version) not in self.struct_models:
                         continue
@@ -260,33 +271,93 @@ class Schema:
                         held.append(model)
                     if encoding not in self.model_encodings.setdefault(model, []):
                         self.model_encodings[model].append(encoding)
-                    if self.read_at.setdefault(model, version) < version:
-                        self.read_at[model] = version
                     for each in (model, encoding):
                         spans.setdefault(each, {}).setdefault(form, []).append(version)
-            for form in forms:
+                    mode = SerializationMode.DEFAULT
+                    if any(run.contains(version) for run in mixed):
+                        mode = SerializationMode.CEREAL if form.cereal else SerializationMode.MANUAL
+                    served.setdefault(encoding, {}).setdefault(mode, []).append(version)
                 self.family_models[form] = [*held]
-            for model in held:
-                for child in model.nested:
-                    if child.owner is None:
-                        child.owner = model
-                read = self.read_at[model]
-                holder = next(self.live[form, read] for form in forms if self.struct_models.get((form, read)) is model)
-                if isinstance(holder, StructShape):
-                    model.slots = tuple(
-                        Slot(each.name, strip(each.type))
-                        for each in holder.fields
-                        if not isinstance(each.type, Literal)
-                    )
         for each, found in spans.items():
             each.runs = {family: self.ranges(versions) for family, versions in found.items()}
             if isinstance(each, Encoding):
                 each.since = min(min(versions) for versions in found.values())
-                each.cereal = any(family.cereal for family in found)
-            else:
-                primary = next(iter(each.runs.values()))
-                each.since = primary[0].since
-                each.versioned = primary != [ALWAYS]
+                each.served = {mode: self.ranges(versions) for mode, versions in served[each].items()}
+                each.mode = min(mode for mode, versions in served[each].items() if each.since in versions)
+                continue
+            read = max(max(versions) for versions in found.values())
+            holder = self.live[next(form for form, versions in found.items() if read in versions), read]
+            self.read_at[each] = read
+            each.family = next(iter(found))
+            each.versioned = self.ranges([version for versions in found.values() for version in versions]) != [ALWAYS]
+            if isinstance(holder, StructShape):
+                each.slots = tuple(
+                    Slot(each.name, strip(each.type)) for each in holder.fields if not isinstance(each.type, Literal)
+                )
+        for listed in self.model_encodings.values():
+            listed.sort(key=lambda encoding: encoding.since)
+        holders: dict[StructModel | EnumShape, list[StructModel]] = {}
+        for model in self.read_at:
+            for child in model.nested:
+                holders.setdefault(child, []).append(model)
+        self.owners = {
+            child: max(held, key=lambda model: (self.read_at[model], self.name(model) == model.family.name))
+            for child, held in holders.items()
+        }
+        for family in self.order:
+            if isinstance(family, Enum) and not family.cereal and family.owner is None:
+                raise CompilerError(
+                    f"{family.module}.py: {qualified(family)}: a cereal=False enum is declared at module scope"
+                )
+        reached: set[tuple[Struct | Enum, int]] = set()
+        pending: list[tuple[Struct | Enum, int]] = [
+            (family, version)
+            for family, version in self.live
+            if isinstance(family, Struct) and family.packet_id is not None
+        ]
+        while pending:
+            key = pending.pop()
+            if key in reached:
+                continue
+            reached.add(key)
+            shape = self.live[key]
+            if isinstance(shape, StructShape):
+                pending.extend((target, key[1]) for each in shape.fields for target in reached_by(each))
+        for family, version in self.live:
+            if not family.cereal and family.owner is None and (family, version) not in reached:
+                raise CompilerError(
+                    f"{family.module}.py: {qualified(family)}: the hand-written form is live at {version} but no "
+                    "packet reaches it"
+                )
+        for child, owner in self.owners.items():
+            name = self.name(owner)
+            if name == owner.family.name:
+                continue
+            runs = (
+                child.ranges if isinstance(child, EnumShape) else [run for each in child.runs.values() for run in each]
+            )
+            overlap = self.overlap(owner.family)
+            outside = [
+                version
+                for version in self.versions
+                if any(run.contains(version) for run in runs) and not any(run.contains(version) for run in overlap)
+            ]
+            if outside:
+                raise CompilerError(
+                    f"{child.family.module}.py: {qualified(child.family)}: is owned by {name} but is live at "
+                    f"{outside[0]}, outside its overlap"
+                )
+        named: dict[tuple[Struct, int | None, str], StructModel] = {}
+        for model in self.read_at:
+            if model.family.owner is not None:
+                continue
+            first = self.scope(model)
+            name = self.name(model)
+            if named.setdefault((self.pair(model.family), first, name), model) is not model:
+                raise CompilerError(
+                    f"{model.family.module}.py: {qualified(model.family)}: the hand-written and the cereal form both "
+                    f"hold a type named {name} " + (f"at {self.latest}" if first is None else f"from {first}")
+                )
 
     def models(self, family: Struct | Enum) -> list[Model]:
         return self.family_models[family]
@@ -311,8 +382,73 @@ class Schema:
     def numbers_at(self, enum: Enum, version: int) -> dict[str, int]:
         return self.numbers[enum, version]
 
-    def target(self, model: StructModel, node: StructRef | EnumRef) -> Model:
-        return self.model_at(node.struct if isinstance(node, StructRef) else node.enum, self.read_at[model])
+    def enum_type(self, enum: Enum, version: int) -> EnumShape:
+        shape = self.live[enum, version]
+        if not isinstance(shape, EnumShape):
+            raise CompilerError(f"{enum.module}.py: {qualified(enum)}: is not an enum at {version}")
+        return shape
+
+    def target(self, model: StructModel, node: StructRef | EnumRef | EnumName) -> StructModel | EnumShape:
+        if isinstance(node, StructRef):
+            return self.struct_models[node.struct, self.read_at[model]]
+        return self.enum_type(node.enum, self.read_at[model])
+
+    def owner(self, child: StructModel | EnumShape) -> StructModel | None:
+        return self.owners.get(child)
+
+    def call(self, encoding: Encoding, node: StructRef) -> tuple[int, SerializationMode]:
+        child = cast(Encoding, encoding.reached[node])
+        mode = SerializationMode.MANUAL
+        if node.struct.cereal and any(form.cereal for form in encoding.runs):
+            mode = SerializationMode.CEREAL
+        if not any(run.contains(child.since) for run in child.served.get(mode, [])):
+            mode = child.mode
+        return child.since, mode
+
+    def scope(self, shape: StructModel | EnumShape) -> int | None:
+        if shape.family.owner is not None:
+            raise CompilerError(
+                f"{shape.family.module}.py: {qualified(shape.family)}: is nested and is named through its owner"
+            )
+        runs = [run for each in shape.runs.values() for run in each] if isinstance(shape, StructModel) else shape.ranges
+        if any(run.until is None for run in runs):
+            return None
+        return min(self.versions[0] if run.since is None else run.since for run in runs)
+
+    def mixed(self, family: Struct | Enum) -> list[Range]:
+        forms = self.forms[outermost(family)]
+        if len(forms) == 1:
+            return []
+        return self.ranges(
+            [version for version in self.versions if all((form, version) in self.live for form in forms)]
+        )
+
+    def overlap(self, family: Struct | Enum) -> list[Range]:
+        forms = self.forms[outermost(family)]
+        mixed = self.mixed(family)
+        return self.ranges(
+            [
+                version
+                for version in self.versions
+                if any(run.contains(version) for run in mixed)
+                and len({self.model_at(form, version) for form in forms}) > 1
+            ]
+        )
+
+    def label(self, family: Struct | Enum, version: int) -> str:
+        if family.owner is None and family.cereal and any(run.contains(version) for run in self.overlap(family)):
+            return CEREALIZED + family.name
+        return family.name
+
+    def name(self, model: StructModel) -> str:
+        if all(
+            self.label(form, version) != form.name
+            for form, runs in model.runs.items()
+            for version in self.versions
+            if any(run.contains(version) for run in runs)
+        ):
+            return CEREALIZED + model.family.name
+        return model.family.name
 
     def width(self, model: StructModel, node: Bitset) -> int:
         return self.numbers[node.width.enum, self.read_at[model]][node.width.name]
@@ -361,10 +497,7 @@ class Schema:
             case MemberRef(enum=family, name=name):
                 return self.model_at(family, version), name, self.numbers[family, version][name]
             case Literal(value=MemberRef(enum=family) as member):
-                shape = self.live[family, version]
-                if not isinstance(shape, EnumShape):
-                    raise CompilerError(f"{family.module}.py: {qualified(family)}: is not an enum at {version}")
-                return Literal, shape.underlying, self.coded(member, version, reached)
+                return Literal, self.enum_type(family, version).underlying, self.coded(member, version, reached)
             case Bitset(width=member):
                 return Bitset, self.coded(member, version, reached)
             case Test(field=tested, member=member):
@@ -399,8 +532,10 @@ class Schema:
 
     def resolved(self, node: Type | None, version: int) -> object:
         match node:
-            case StructRef(struct=family) | EnumRef(enum=family):
+            case StructRef(struct=family):
                 return self.model_at(family, version)
+            case EnumRef(enum=family):
+                return self.enum_type(family, version)
             case Bitset(width=width):
                 return self.numbers[width.enum, version][width.name]
             case Optional(element=element) | List(element=element):
@@ -531,21 +666,24 @@ class Schema:
         models: dict[tuple[object, ...], StructModel],
         encodings: dict[tuple[object, ...], Encoding],
     ) -> None:
-        pair = self.pair(family)
         for version in self.versions:
             shape = self.live.get((family, version))
             if not isinstance(shape, StructShape):
                 continue
-            nested = tuple(self.model_at(child, version) for child in family.nested if (child, version) in self.live)
+            nested = tuple(
+                self.struct_models[child, version] if isinstance(child, Struct) else self.enum_type(child, version)
+                for child in family.nested
+                if (child, version) in self.live
+            )
             slots = frozenset(
                 (each.name, self.resolved(strip(each.type), version))
                 for each in shape.fields
                 if not isinstance(each.type, Literal)
             )
-            model = models.setdefault((pair, slots, nested), StructModel(pair, (), nested))
+            model = models.setdefault((self.pair(family), slots, nested), StructModel(family, (), nested))
             self.struct_models[family, version] = model
             reached: dict[StructRef | EnumRef | EnumName, Encoding | Numbering | Naming] = {}
-            coding = tuple(
+            key = tuple(
                 (
                     each.name,
                     self.coded(each.type, version, reached),
@@ -560,7 +698,7 @@ class Schema:
                 for member in (*numbered_by(each.type), *numbered_by(each.when))
             }
             self.encoded[family, version] = encodings.setdefault(
-                (model, coding), Encoding(model, shape.fields, reached, numbers)
+                (model, key), Encoding(model, shape.fields, reached, numbers)
             )
 
     def shapes(self, family: Struct | Enum) -> list[Shape]:

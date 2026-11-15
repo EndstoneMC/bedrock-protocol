@@ -60,16 +60,16 @@ final class GoldensTest {
                 .decodePacket(packetId, Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(bytes)));
     }
 
-    private static String encoded(Packet packet) {
+    private static String encoded(int version, Packet packet) {
         ByteBuf buf = Unpooled.buffer();
-        packet.encode(buf);
+        ProtocolVersion.of(version).orElseThrow().encodePacket(packet, buf);
         return ByteBufUtil.hexDump(buf);
     }
 
     @ParameterizedTest
     @MethodSource("cases")
     void reEncodingADecodedGoldenGivesItsBytes(int version, int packetId, String bytes) {
-        assertEquals(bytes, encoded(decode(version, packetId, bytes)));
+        assertEquals(bytes, encoded(version, decode(version, packetId, bytes)));
     }
 
     @ParameterizedTest
@@ -82,7 +82,7 @@ final class GoldensTest {
     @MethodSource("cases")
     void decodingTheReEncodedBytesGivesAnEqualPacket(int version, int packetId, String bytes) {
         Packet packet = decode(version, packetId, bytes);
-        assertEquals(packet, decode(version, packetId, encoded(packet)));
+        assertEquals(packet, decode(version, packetId, encoded(version, packet)));
     }
 
     @ParameterizedTest
@@ -90,8 +90,8 @@ final class GoldensTest {
     void encodingTheLoadedPacketGivesTheBytes(int version, int packetId, String bytes, String value)
             throws ReflectiveOperationException {
         Packet decoded = decode(version, packetId, bytes);
-        Packet loaded = CaseLoader.load(decoded.getClass(), JsonParser.parseString(value));
-        assertEquals(bytes, encoded(loaded));
+        Packet loaded = CaseLoader.load(version, decoded.getClass(), JsonParser.parseString(value));
+        assertEquals(bytes, encoded(version, loaded));
     }
 
     @ParameterizedTest
@@ -99,7 +99,7 @@ final class GoldensTest {
     void decodingTheBytesGivesTheLoadedPacket(int version, int packetId, String bytes, String value)
             throws ReflectiveOperationException {
         Packet decoded = decode(version, packetId, bytes);
-        Packet loaded = CaseLoader.load(decoded.getClass(), JsonParser.parseString(value));
+        Packet loaded = CaseLoader.load(version, decoded.getClass(), JsonParser.parseString(value));
         assertEquals(loaded, decoded);
     }
 }

@@ -76,27 +76,33 @@ def test_a_nested_enum_is_qualified_by_its_owner(enum, name):
 
 
 def test_an_ungated_nested_enum_is_one_type_across_snapshots():
-    assert v827.ItemUseInventoryTransaction.TriggerType is v1001.ItemUseInventoryTransaction.TriggerType
+    assert (
+        v827.CerealizedItemUseInventoryTransaction.TriggerType
+        is v1001.CerealizedItemUseInventoryTransaction.TriggerType
+    )
 
 
 def test_a_nested_enum_holds_its_members(protocol):
-    assert len(protocol.ItemUseInventoryTransaction.TriggerType) == 3
+    assert len(protocol.NpcRequestPacket.RequestType) == 7
 
 
 def test_a_nested_enum_finds_a_member_by_name(protocol):
-    result = protocol.ItemUseInventoryTransaction.PredictedResult
-    assert result["SUCCESS"] is result.SUCCESS
+    message = protocol.ActorBlockSyncMessage.MessageId
+    assert message["CREATE"] is message.CREATE
 
 
 def test_a_nested_enum_that_gates_a_member_is_a_type_per_snapshot():
-    assert v827.ItemUseInventoryTransaction.ActionType is not v1001.ItemUseInventoryTransaction.ActionType
+    assert (
+        v827.CerealizedItemUseInventoryTransaction.ActionType
+        is not v1001.CerealizedItemUseInventoryTransaction.ActionType
+    )
 
 
 @pytest.mark.parametrize(
     ("enum", "count"),
     [
-        pytest.param(v827.ItemUseInventoryTransaction.ActionType, 3, id="v827-action-type"),
-        pytest.param(v844.ItemUseInventoryTransaction.ActionType, 4, id="v844-action-type"),
+        pytest.param(v827.CerealizedItemUseInventoryTransaction.ActionType, 3, id="v827-action-type"),
+        pytest.param(v844.CerealizedItemUseInventoryTransaction.ActionType, 4, id="v844-action-type"),
         pytest.param(v748.MovementEffectType, 2, id="v748-movement-effect"),
         pytest.param(v786.MovementEffectType, 3, id="v786-movement-effect"),
         pytest.param(v1001.MovementEffectType, 4, id="v1001-movement-effect"),

@@ -46,9 +46,16 @@ def table(schema: Schema, p: Printer) -> None:
                 return Optional.empty();
             }
 
+            public void encodePacket(@NotNull Packet packet, @NotNull ByteBuf buf) {
+                switch (snapshot) {
+                    $encodes$
+                    default -> throw new IllegalStateException($unknown$ + snapshot);
+                }
+            }
+
             public @NotNull Packet decodePacket(int packetId, @NotNull ByteBuf buf) {
                 return switch (snapshot) {
-                    $cases$
+                    $decodes$
                     default -> throw new IllegalStateException($unknown$ + snapshot);
                 };
             }
@@ -91,7 +98,8 @@ def table(schema: Schema, p: Printer) -> None:
         versions=", ".join(map(str, schema.versions)),
         latest=schema.latest,
         releases=lambda: releases(schema, p),
-        cases=lambda: cases(schema, p),
+        encodes=lambda: cases(schema, p, "encode(packet, buf)"),
+        decodes=lambda: cases(schema, p, "decode(packetId, buf)"),
         unknown=json.dumps(f"{names.VERSION}: no packet registry for snapshot "),
     )
 
@@ -110,11 +118,12 @@ def releases(schema: Schema, p: Printer) -> None:
         )
 
 
-def cases(schema: Schema, p: Printer) -> None:
+def cases(schema: Schema, p: Printer, call: str) -> None:
     for version in schema.versions:
         p.emit(
-            "case $version$ -> $registry$.$name$.decode(packetId, buf);",
+            "case $version$ -> $registry$.$name$.$call$;",
             version=version,
             registry=names.registry(schema, version),
             name=names.REGISTRY,
+            call=call,
         )

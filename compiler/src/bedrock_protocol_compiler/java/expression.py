@@ -14,7 +14,7 @@ from bedrock_protocol_compiler.descriptor import (
     Test,
 )
 from bedrock_protocol_compiler.java.value import BOOL, CLASSES, Num, convert, java_of, literal
-from bedrock_protocol_compiler.schema import EnumShape, Schema
+from bedrock_protocol_compiler.schema import Encoding, EnumShape, Schema
 
 INT32 = CLASSES["int32"]
 UINT32 = CLASSES["uint32"]
@@ -52,9 +52,9 @@ def common(a: Num, b: Num) -> Num:
 
 
 class Renderer:
-    def __init__(self, schema: Schema, version: int, operands: Mapping[str, Operand], receiver: str) -> None:
+    def __init__(self, schema: Schema, encoding: Encoding, operands: Mapping[str, Operand], receiver: str) -> None:
         self.schema = schema
-        self.version = version
+        self.encoding = encoding
         self.operands = operands
         self.receiver = receiver
 
@@ -77,10 +77,8 @@ class Renderer:
         return f"ByteBufCodec.countValue(buf, {self.spell(widest, common(widest.cls, INT64))})"
 
     def member(self, member: MemberRef) -> Term:
-        shape = self.schema.shape_at(member.enum, self.version)
-        if not isinstance(shape, EnumShape):
-            raise CompilerError(f"{member.enum.name}.{member.name}: is not an enum member")
-        return Term(None, enum_class(shape), shape.numbers[member.name])
+        shape = self.schema.enum_type(member.enum, self.encoding.since)
+        return Term(None, enum_class(shape), self.schema.number(self.encoding, member))
 
     def term(self, expression: Expression) -> Term:
         match expression:
