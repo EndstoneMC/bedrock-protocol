@@ -132,7 +132,7 @@ type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLega
 class NetworkItemStackDescriptor:
     id: varint32
 
-    with field(when=lambda d: d.id != 0):
+    with field(when=lambda d: d.id != 0 and d.id != -1):
         stack_size: uint16
         aux_value: uvarint32
         net_id: ItemStackNetId | None

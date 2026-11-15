@@ -539,9 +539,9 @@ class ItemStackRequestActionCraftRecipe:
 @type(until=2168)
 class ItemStackRequestActionCraftRecipeAuto:
     recipe_net_id: RecipeNetId
-    num_crafts: uint8
+    num_crafts: uint8 = field(duplicate=2)
     num_ingredients: uint8
-    ingredients: list[SerializedRecipeIngredient]
+    ingredients: list[SerializedRecipeIngredient] = field(count=lambda a: a.num_ingredients)
 
 
 @type(until=2168)
@@ -558,7 +558,7 @@ class ItemStackRequestActionCraftRecipeOptional:
 
 @type(until=2168)
 class ItemStackRequestActionCraftGrindstone:
-    recipe_net_id: uvarint32
+    recipe_net_id: varint32
     num_crafts: uint8
     repair_cost: varint32
 

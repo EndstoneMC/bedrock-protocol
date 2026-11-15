@@ -18,7 +18,7 @@ paths:
 - Write a cerealised form as bare `name: Type` lines. Annotation clutter on one means the pre-cereal shape is being modelled.
 - Write a split between declared and encoded type as `name: DeclaredType = field(type=<encoded>)`. Never drop to the raw primitive.
 - Use `field(type=<primitive>)` on an alias only for the members BDS holds as that plain primitive; its cereal JSON is a bare value there and a one-member wrapper object everywhere else.
-- Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length written elsewhere, as an expression over earlier fields, never as a constant.
+- Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length BDS holds as its own member or writes apart from the list, as an expression over earlier fields, never as a constant.
 - Declare a member that BDS writes several times in a row as one field with `field(duplicate=N)`, N the copies BDS writes: one per name the dump binds it under, or one per write in a hand-written encoding.
 - Spell an alias that BDS nests in a class inline at its use; never hoist it to a module-scope `type`.
 - Never put a version-dependent width behind a `type X = <primitive>` alias; spell it inline.
@@ -52,6 +52,7 @@ paths:
 
 - Gate a shared type with one `@type(until=N)`/`@type(since=N)` pair only where every call site changes encoding at N; otherwise model its encoding per call site.
 - Use `cereal=False` only where one protocol version sends both encodings of a class name; everywhere else gate the two declarations by version. Where BDS names the cerealised form separately, declare that name instead.
+- Mark each field of a `cereal=False` class whose type has a `cereal=False` declaration with `field(cereal=False)` too; a bare field takes the cereal declaration.
 
 ## Growing the DSL
 

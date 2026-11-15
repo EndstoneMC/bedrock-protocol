@@ -64,6 +64,22 @@ class InventorySource:
     flags: InventorySourceFlags | None
 
 
+@type(cereal=False)
+class InventorySource:
+    class InventorySourceFlags(IntEnum, uint32):
+        NO_FLAG = 0
+        WORLD_INTERACTION_RANDOM = 1, "WorldInteraction_Random"
+
+    type: InventorySourceType
+    container_id: ContainerID = field(
+        type=varint32,
+        when=lambda s: (
+            s.type in {InventorySourceType.CONTAINER_INVENTORY, InventorySourceType.NON_IMPLEMENTED_FEATURE_TODO}
+        ),
+    )
+    flags: InventorySourceFlags = field(when=lambda s: s.type == InventorySourceType.WORLD_INTERACTION)
+
+
 class InventoryAction:
     source: InventorySource
     slot: uvarint32
@@ -73,6 +89,14 @@ class InventoryAction:
     with field(since=1001):
         from_item_descriptor: SerializedNetworkItemStackDescriptor
         to_item_descriptor: SerializedNetworkItemStackDescriptor
+
+
+@type(cereal=False)
+class InventoryAction:
+    source: InventorySource = field(cereal=False)
+    slot: uvarint32
+    from_item_descriptor: NetworkItemStackDescriptor
+    to_item_descriptor: NetworkItemStackDescriptor
 
 
 class InventoryTransaction:
@@ -111,7 +135,7 @@ class ItemUseInventoryTransaction:
 
     transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
-    trigger_type: TriggerType
+    trigger_type: TriggerType = field(type=uvarint32)
     pos: NetworkBlockPosition
     face: varint32
     slot: varint32
@@ -119,7 +143,7 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: PredictedResult = field(type=uvarint32)
+    client_predicted_result: PredictedResult
 
 
 @type(since=944, until=1001)
@@ -145,7 +169,7 @@ class ItemUseInventoryTransaction:
 
     transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
-    trigger_type: TriggerType
+    trigger_type: TriggerType = field(type=uvarint32)
     pos: BlockPos
     face: varint32
     slot: varint32
@@ -153,7 +177,7 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: PredictedResult = field(type=uvarint32)
+    client_predicted_result: PredictedResult
     client_cooldown_state: ClientCooldownState
 
 
@@ -195,9 +219,9 @@ class ItemUseInventoryTransaction:
 
 @type(cereal=False, until=944)
 class ItemUseInventoryTransaction:
-    actions: list[InventoryAction]
+    actions: list[InventoryAction] = field(cereal=False)
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType
+    trigger_type: ItemUseInventoryTransaction.TriggerType = field(type=uvarint32)
     pos: NetworkBlockPosition
     face: varint32
     slot: varint32
@@ -205,24 +229,22 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32)
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
 
 
 @type(cereal=False, since=944)
 class ItemUseInventoryTransaction:
-    actions: list[InventoryAction]
+    actions: list[InventoryAction] = field(cereal=False)
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType
+    trigger_type: ItemUseInventoryTransaction.TriggerType = field(type=uvarint32)
     pos: BlockPos
     face: varint32
     slot: varint32
-    item: NetworkItemStackDescriptor = field(until=1001)
-    item: SerializedNetworkItemStackDescriptor = field(since=1001)
+    item: NetworkItemStackDescriptor
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32, until=1001)
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(since=1001)
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
     client_cooldown_state: ItemUseInventoryTransaction.ClientCooldownState
 
 
