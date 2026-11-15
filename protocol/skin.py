@@ -19,6 +19,40 @@ class ArmSizeType(IntEnum, uint8):
     UNKNOWN = 3
 
 
+@type(until=2168)
+class PieceType(IntEnum, uint32):
+    """persona::stringFromPieceType."""
+
+    SKELETON = 1, "persona_skeleton"
+    BODY = 2, "persona_body"
+    SKIN = 3, "persona_skin"
+    BOTTOM = 4, "persona_bottom"
+    FEET = 5, "persona_feet"
+    DRESS = 6, "persona_dress"
+    TOP = 7, "persona_top"
+    HIGH_PANTS = 8, "persona_high_pants"
+    HANDS = 9, "persona_hand"
+    OUTERWEAR = 10, "persona_outerwear"
+    FACIAL_HAIR = 11, "persona_facial_hair"
+    MOUTH = 12, "persona_mouth"
+    EYES = 13, "persona_eyes"
+    HAIR = 14, "persona_hair"
+    HOOD = 15, "persona_hood"
+    BACK = 16, "persona_back"
+    FACE_ACCESSORY = 17, "persona_face_accessory"
+    HEAD = 18, "persona_head"
+    LEGS = 19, "persona_legs"
+    LEFT_LEG = 20, "persona_left_leg"
+    RIGHT_LEG = 21, "persona_right_leg"
+    ARMS = 22, "persona_arms"
+    LEFT_ARM = 23, "persona_left_arm"
+    RIGHT_ARM = 24, "persona_right_arm"
+    CAPES = 25, "persona_capes"
+    CLASSIC_SKIN = 26, "persona_classic_skin"
+    EMOTE = 27, "persona_emote"
+
+
+@type(since=2168)
 class PieceType(IntEnum, uint32):
     UNKNOWN = 0
     SKELETON = 1
@@ -53,39 +87,6 @@ class PieceType(IntEnum, uint32):
     COUNT = sentinel()
 
 
-@type(cereal=False)
-class PieceType(IntEnum, uint32):
-    """persona::stringFromPieceType."""
-
-    SKELETON = 1, "persona_skeleton"
-    BODY = 2, "persona_body"
-    SKIN = 3, "persona_skin"
-    BOTTOM = 4, "persona_bottom"
-    FEET = 5, "persona_feet"
-    DRESS = 6, "persona_dress"
-    TOP = 7, "persona_top"
-    HIGH_PANTS = 8, "persona_high_pants"
-    HANDS = 9, "persona_hand"
-    OUTERWEAR = 10, "persona_outerwear"
-    FACIAL_HAIR = 11, "persona_facial_hair"
-    MOUTH = 12, "persona_mouth"
-    EYES = 13, "persona_eyes"
-    HAIR = 14, "persona_hair"
-    HOOD = 15, "persona_hood"
-    BACK = 16, "persona_back"
-    FACE_ACCESSORY = 17, "persona_face_accessory"
-    HEAD = 18, "persona_head"
-    LEGS = 19, "persona_legs"
-    LEFT_LEG = 20, "persona_left_leg"
-    RIGHT_LEG = 21, "persona_right_leg"
-    ARMS = 22, "persona_arms"
-    LEFT_ARM = 23, "persona_left_arm"
-    RIGHT_ARM = 24, "persona_right_arm"
-    CAPES = 25, "persona_capes"
-    CLASSIC_SKIN = 26, "persona_classic_skin"
-    EMOTE = 27, "persona_emote"
-
-
 class AnimatedTextureType(IntEnum, uint32):
     NONE = 0
     FACE = 1
@@ -110,14 +111,7 @@ class SkinImage:
     image_bytes: bytes
 
 
-class AnimatedImageData:
-    image: SkinImage
-    type: AnimatedTextureType
-    frames: float
-    animation_expression: AnimationExpression
-
-
-@type(cereal=False)
+@type(until=2168)
 class AnimatedImageData:
     image_width: uint32
     image_height: uint32
@@ -127,6 +121,24 @@ class AnimatedImageData:
     animation_expression: AnimationExpression = field(type=uint32)
 
 
+@type(since=2168)
+class AnimatedImageData:
+    image: SkinImage
+    type: AnimatedTextureType
+    frames: float
+    animation_expression: AnimationExpression
+
+
+@type(until=2168)
+class SerializedPersonaPieceHandle:
+    piece_id: str
+    piece_type: PieceType = field(type=str)
+    pack_id: uuid.UUID = field(type=str)
+    is_default_piece: bool
+    product_id: str
+
+
+@type(since=2168)
 class SerializedPersonaPieceHandle:
     piece_id: str
     piece_type: PieceType = field(type=uint32)
@@ -135,26 +147,18 @@ class SerializedPersonaPieceHandle:
     product_id: str
 
 
-@type(cereal=False)
-class SerializedPersonaPieceHandle:
-    piece_id: str
-    piece_type: PieceType = field(type=str, cereal=False)
-    pack_id: uuid.UUID = field(type=str)
-    is_default_piece: bool
-    product_id: str
+@type(until=2168)
+class TintMapColor:
+    piece_type: PieceType = field(type=str)
+    colors: list[str] = field(prefix=uint32)
 
 
+@type(since=2168)
 class TintMapColor:
     colors: array[Color, 4]
 
 
-@type(cereal=False)
-class TintMapColor:
-    piece_type: PieceType = field(type=str, cereal=False)
-    colors: list[str] = field(prefix=uint32)
-
-
-@type(cereal=False)
+@type(until=2168)
 class SerializedSkinRef:
     """SerializedSkinImpl::write."""
 
@@ -164,7 +168,7 @@ class SerializedSkinRef:
     image_width: uint32
     image_height: uint32
     image_bytes: bytes
-    animated_image_data: list[AnimatedImageData] = field(cereal=False, prefix=uint32)
+    animated_image_data: list[AnimatedImageData] = field(prefix=uint32)
     cape_image_width: uint32
     cape_image_height: uint32
     cape_image_bytes: bytes
@@ -175,8 +179,8 @@ class SerializedSkinRef:
     full_id: str
     arm_size: ArmSizeType = field(type=str)
     skin_color: str
-    persona_pieces: list[SerializedPersonaPieceHandle] = field(cereal=False, prefix=uint32)
-    piece_tint_colors: list[TintMapColor] = field(cereal=False, prefix=uint32)
+    persona_pieces: list[SerializedPersonaPieceHandle] = field(prefix=uint32)
+    piece_tint_colors: list[TintMapColor] = field(prefix=uint32)
     is_premium: bool
     is_persona: bool
     is_persona_cape_on_classic_skin: bool
@@ -184,6 +188,7 @@ class SerializedSkinRef:
     overrides_player_appearance: bool
 
 
+@type(since=2168)
 class SerializedSkinRef:
     id: str
     play_fab_id: str = field(until=2225)
@@ -206,19 +211,19 @@ class SerializedSkinRef:
     is_primary_user: bool
     overrides_player_appearance: bool
     is_trusted_skin: TrustedSkinFlag = field(type=str)
-    profile_hash: str = field(since=2168)
+    profile_hash: str
 
 
-@packet(id=93, until=944)
+@packet(id=93, until=2168)
 class PlayerSkinPacket:
     uuid: uuid.UUID
-    skin: SerializedSkinRef = field(cereal=False)
+    skin: SerializedSkinRef
     localized_new_skin_name: str
     localized_old_skin_name: str
     trusted_skin: bool
 
 
-@packet(id=93, since=944)
+@packet(id=93, since=2168)
 class PlayerSkinPacket:
     uuid: uuid.UUID
     skin: SerializedSkinRef

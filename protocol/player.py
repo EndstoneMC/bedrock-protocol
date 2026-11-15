@@ -351,7 +351,7 @@ class PlayerListEntry:
     xuid: str
     platform_online_id: str
     build_platform: BuildPlatform = field(type=int32)
-    skin: SerializedSkinRef = field(cereal=False)
+    skin: SerializedSkinRef
     is_teacher: bool
     is_host: bool
     is_sub_client: bool

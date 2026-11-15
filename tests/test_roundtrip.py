@@ -32,7 +32,7 @@ SERIALIZABLE = list(
 
 BINDING_GAP = {
     f"bedrock_protocol.v{version}.CommandRequestPacket" for version in (776, 800, 859, 944, 975, 1001, 2168, 2193, 2225)
-} | {"bedrock_protocol.v2225.pre_cereal.SerializedPersonaPieceHandle", "bedrock_protocol.v2225.pre_cereal.TintMapColor"}
+} | {"bedrock_protocol.v1001.SerializedPersonaPieceHandle", "bedrock_protocol.v1001.TintMapColor"}
 GAP = pytest.mark.xfail(
     raises=bedrock_protocol.DecodeError,
     strict=True,

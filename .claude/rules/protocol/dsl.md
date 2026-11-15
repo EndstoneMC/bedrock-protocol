@@ -50,8 +50,8 @@ paths:
 
 ## Shared types
 
-- Model a shared type's encoding per call site, never with one `@type(until=)`/`@type(since=)` pair over the shared type.
-- Use `cereal=False` only where BDS reuses one class name for two encodings. Where BDS names the cerealised form separately, declare that name instead.
+- Gate a shared type with one `@type(until=N)`/`@type(since=N)` pair only where every call site changes encoding at N; otherwise model its encoding per call site.
+- Use `cereal=False` only where one protocol version sends both encodings of a class name; everywhere else gate the two declarations by version. Where BDS names the cerealised form separately, declare that name instead.
 
 ## Growing the DSL
 
