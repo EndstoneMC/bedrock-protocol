@@ -76,7 +76,7 @@ class SphereDataPayload:
 
 @type(since=1001)
 class CylinderDataPayload:
-    radii: Vec2 = field(bind=["radius_x", "radius_z"])
+    radii: Vec2 = field(duplicate=2)
     height: float
     num_segments: uint8
 

@@ -107,7 +107,7 @@ class Vec2:
     y: float
 
 class CylinderDataPayload:
-    radii: Vec2 = field(bind=["radius_x", "radius_z"])
+    radii: Vec2 = field(duplicate=2)
     height: float
 """
 
@@ -299,11 +299,11 @@ releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.x"}
     assert 'ProtocolVersion{4, 4, "1.4.x", "1.4.0", "1.4.9"},' in version
 
 
-def test_a_bound_field_writes_once_per_binding(generate):
+def test_a_duplicated_field_writes_once_per_copy(generate):
     out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
 
     write = (
-        "    for (std::size_t binding = 0; binding < 2; ++binding) {\n"
+        "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
         "        Serializer<::bedrock::protocol::Vec2>::serialize(stream, value.radii);\n"
         "    }\n"
         "    stream.write<float>(value.height);\n"
@@ -311,11 +311,11 @@ def test_a_bound_field_writes_once_per_binding(generate):
     assert write in (out / "a.cpp").read_text()
 
 
-def test_a_bound_field_reads_every_binding_into_it(generate):
+def test_a_duplicated_field_reads_every_copy_into_it(generate):
     out = generate({"a": CYLINDER}, init=CYLINDER_INIT)
 
     read = (
-        "    for (std::size_t binding = 0; binding < 2; ++binding) {\n"
+        "    for (std::size_t copy = 0; copy < 2; ++copy) {\n"
         "        {\n"
         "            auto v = Serializer<::bedrock::protocol::Vec2>::deserialize(stream);\n"
         '            if (!v) return stream.fail(v.error(), "radii");\n'

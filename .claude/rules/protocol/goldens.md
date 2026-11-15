@@ -32,7 +32,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Match a case's list of int8 with BDS's raw-byte string by turning the list into bytes as two's complement.
 - Match a case's float with BDS's float when they are equal or when the case's value widens to BDS's float32 value.
 - Match a case's map with BDS's list of `key`/`value` objects by key, and an empty map with `[]`.
-- Match a field with `bind` against as many of BDS's printed values as it has names.
+- Match a field with `duplicate` against as many of BDS's printed values as it has copies.
 - Write a `Color255RGBA` in a case as `#rrggbbaa`, and compare it by turning it into BDS's `[r, g, b, a]` array.
 - Write a bitset in a case as `0b` followed by its bits, most significant first.
 - Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.

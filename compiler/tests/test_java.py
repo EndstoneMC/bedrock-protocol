@@ -530,11 +530,11 @@ def test_a_bitset_setter_rejects_a_bit_past_its_width(emitted):
     assert reject in emitted(BITSET)
 
 
-def test_a_bound_field_reads_once_per_binding(emitted):
-    text = emitted("class P:\n    x: uint8 = field(bind=['a', 'b'])\n")
+def test_a_duplicated_field_reads_once_per_copy(emitted):
+    text = emitted("class P:\n    x: uint8 = field(duplicate=2)\n")
 
     read = (
-        "            for (int binding = 0; binding < 2; binding++) {\n"
+        "            for (int copy = 0; copy < 2; copy++) {\n"
         "                out.x_ = ByteBufCodec.readUnsignedByte(buf);\n"
         "            }\n"
     )
@@ -849,17 +849,17 @@ def test_a_union_hashes_its_case_then_its_values(emitted):
     assert hashes in text
 
 
-def test_a_bound_union_is_held_by_the_message(emitted):
-    text = emitted("class P:\n    v: uint8 | str = field(bind=['a', 'b'])\n")
+def test_a_duplicated_union_is_held_by_the_message(emitted):
+    text = emitted("class P:\n    v: uint8 | str = field(duplicate=2)\n")
 
     assert "    private final VCase vCase_;\n" in text
 
 
-def test_a_bound_union_reads_once_per_binding(emitted):
-    text = emitted("class P:\n    v: uint8 | str = field(bind=['a', 'b'])\n")
+def test_a_duplicated_union_reads_once_per_copy(emitted):
+    text = emitted("class P:\n    v: uint8 | str = field(duplicate=2)\n")
 
     read = (
-        "            for (int binding = 0; binding < 2; binding++) {\n"
+        "            for (int copy = 0; copy < 2; copy++) {\n"
         "                switch (ByteBufCodec.readUnsignedVarInt(buf)) {\n"
     )
     assert read in text

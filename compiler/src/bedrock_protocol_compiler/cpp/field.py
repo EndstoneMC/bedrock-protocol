@@ -506,10 +506,10 @@ class VariantField:
         p.emit("}")
 
 
-class BoundField:
-    def __init__(self, element: FieldGenerator, bindings: int) -> None:
+class DuplicatedField:
+    def __init__(self, element: FieldGenerator, copies: int) -> None:
         self.element = element
-        self.bindings = bindings
+        self.copies = copies
 
     def cpp_type(self) -> str | None:
         return self.element.cpp_type()
@@ -520,22 +520,22 @@ class BoundField:
     def write(self, p: Printer, value: str) -> None:
         p.emit(
             """
-            for (std::size_t binding = 0; binding < $bindings$; ++binding) {
+            for (std::size_t copy = 0; copy < $copies$; ++copy) {
                 $body$
             }
             """,
-            bindings=self.bindings,
+            copies=self.copies,
             body=lambda: self.element.write(p, value),
         )
 
     def read(self, p: Printer, target: str) -> None:
         p.emit(
             """
-            for (std::size_t binding = 0; binding < $bindings$; ++binding) {
+            for (std::size_t copy = 0; copy < $copies$; ++copy) {
                 $body$
             }
             """,
-            bindings=self.bindings,
+            copies=self.copies,
             body=lambda: self.element.read(p, target),
         )
 

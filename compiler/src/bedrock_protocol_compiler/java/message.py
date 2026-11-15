@@ -179,19 +179,19 @@ class MessageGenerator:
             p.emit("}")
 
     def write(self, body: Body, slot: Slot) -> None:
-        self.bound(body.p, slot, lambda: slot.write(body))
+        self.duplicated(body.p, slot, lambda: slot.write(body))
 
-    def bound(self, p: Printer, slot: Slot, each: Callable[[], None]) -> None:
-        if slot.bindings == 1:
+    def duplicated(self, p: Printer, slot: Slot, each: Callable[[], None]) -> None:
+        if slot.copies == 1:
             each()
             return
         p.emit(
             """
-            for (int binding = 0; binding < $bindings$; binding++) {
+            for (int copy = 0; copy < $copies$; copy++) {
                 $body$
             }
             """,
-            bindings=slot.bindings,
+            copies=slot.copies,
             body=each,
         )
 
@@ -232,7 +232,7 @@ class MessageGenerator:
                 throw e.prepend($name$).setUnfinishedMessage(out.build());
             }
             """,
-            body=lambda: self.bound(body.p, slot, lambda: slot.read(body, renderer)),
+            body=lambda: self.duplicated(body.p, slot, lambda: slot.read(body, renderer)),
             name=json.dumps(slot.name),
         )
 

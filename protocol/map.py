@@ -227,4 +227,4 @@ class PlayerVideoCapturePacket:
     class StopVideoCapture:
         pass
 
-    params: StartVideoCapture | StopVideoCapture = field(bind=["start_video_capture", "stop_video_capture"])
+    params: StartVideoCapture | StopVideoCapture = field(duplicate=2)

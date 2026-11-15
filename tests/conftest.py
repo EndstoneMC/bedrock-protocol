@@ -955,15 +955,15 @@ class CompoundTagSchema(BasicSchema):
 
 
 class MemberDescriptor:
-    """A struct member, reached through its bound attribute on the owner and written once per binding."""
+    """A struct member, reached through its bound attribute on the owner and written once per copy."""
 
-    def __init__(self, name, schema, attribute, traits, is_required, bindings):
+    def __init__(self, name, schema, attribute, traits, is_required, copies):
         self.name = name
         self.schema = schema
         self.attribute = attribute
         self.traits = traits
         self.is_required = is_required
-        self.bindings = bindings
+        self.copies = copies
         self.is_const_selector = False
         self.constant = None
 
@@ -975,13 +975,13 @@ class MemberDescriptor:
 
     def save(self, owner, writer, context):
         value = self.constant if self.is_const_selector else self.get(owner)
-        for _ in range(self.bindings):
+        for _ in range(self.copies):
             writer.push_member(self.name)
             self.schema.save(value, writer, context, self.traits)
             writer.pop_member()
 
     def load(self, reader, context, owner):
-        for _ in range(self.bindings):
+        for _ in range(self.copies):
             if not reader.push_member(self.name):
                 if self.is_required:
                     context.log(ResultCode.MISSING_REQUIRED_FIELD, f"{self.name}: missing required field")
@@ -1229,7 +1229,7 @@ class CaseForm:
         if not isinstance(schema, MapSchema):
             members = {member.name: member for member in schema.members}
             return [
-                (key, value, members[key].schema) for key, value in case.items() for _ in range(members[key].bindings)
+                (key, value, members[key].schema) for key, value in case.items() for _ in range(members[key].copies)
             ]
         if schema.key.bound_type is str:
             return [(key, value, schema.value) for key, value in case.items()]
@@ -1543,7 +1543,7 @@ class ReflectionCtx:
                     attribute,
                     self.traits(node),
                     not optional,
-                    max(len(field.bind), 1),
+                    field.duplicate,
                 )
                 if isinstance(field.type, Literal):
                     member.is_const_selector, member.constant = True, constant

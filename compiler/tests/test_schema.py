@@ -53,7 +53,7 @@ java_package = "dev.endstone.protocol"
 
 @packet(id=348, since=2168)
 class ClientboundUpdateSoundDataPacket:
-    event: uint8 = field(bind=["a", "b", "c", "d", "e", "f", "g"], until=2225)
+    event: uint8 = field(duplicate=7, until=2225)
     event: uint8 = field(since=2225)
 """
 
@@ -449,14 +449,14 @@ def test_the_package_is_the_modules_namespace(build_package):
     )
 
 
-def test_a_bound_field_binds_only_over_its_range(build_package):
+def test_a_duplicated_field_duplicates_only_over_its_range(build_package):
     schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
     (packet,) = schema.order
 
-    assert [len(schema.shape_at(packet, version).fields[0].bind) for version in (2168, 2193, 2225)] == [7, 7, 0]
+    assert [schema.shape_at(packet, version).fields[0].duplicate for version in (2168, 2193, 2225)] == [7, 7, 1]
 
 
-def test_a_change_in_bind_starts_a_new_shape(build_package):
+def test_a_change_in_duplicate_starts_a_new_shape(build_package):
     schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
     (packet,) = schema.order
 

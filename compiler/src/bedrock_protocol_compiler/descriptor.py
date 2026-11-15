@@ -122,7 +122,7 @@ class Field:
     type: Type
     range: Range
     when: "Expression | None" = None
-    bind: tuple[str, ...] = ()
+    duplicate: int = 1
 
 
 @dataclass(frozen=True)

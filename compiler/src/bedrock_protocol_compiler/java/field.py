@@ -189,7 +189,7 @@ class Slot:
         self.pascal = names.pascal(field.name)
         self.member = f"{names.camel(field.name)}_"
         self.label = label
-        self.bindings = max(1, len(field.bind))
+        self.copies = field.duplicate
 
     def declare(self, p: Printer, final: bool) -> None:
         pass
