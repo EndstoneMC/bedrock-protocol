@@ -23,6 +23,16 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 3. Delete every file left byte-identical to the one it was copied from.
 4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure with `::v<protocol>::`.
 
+## An older protocol's folder
+
+1. List the packets whose class differs from the next modelled protocol toward 2168: `[i for i, cls in v<protocol>.packets.items() if v<next>.packets.get(i) is not cls]`.
+2. Seed each one's file and delete the byte-identical ones as a newer folder does, from the nearest folder toward `v2168/` that holds it.
+3. Model each packet in the encoding its build sends by default (dsl.md): a seed from `v2168/` holds cereal shapes, and each record's `serialization_mode` says which encoding BDS sent.
+4. Where BDS prints no JSON for a packet, judge the case by its `bds_trace`. Where a script cannot walk the trace against the value, have an agent compare them leaf by leaf and give a verdict per case. A confirmed case freezes, and nothing reruns it.
+5. Where the build's write for a packet is a stub, leave the packet out (goldens.md) and have `bds-reverse-engineer` read its read function against the DSL.
+6. Have `bds-reverse-engineer` date each schema fix across every build on disk from the folder's protocol back to 776, one address per build, and gate the fix only where a build changes.
+7. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
+
 ## The runner
 
 ```
@@ -41,6 +51,7 @@ If the log shows no golden mode, add it to the clone and commit it there:
 - Fork for each case. The child reads the case's bytes with `read(stream, ctx)` and records `read_ok`, `consumed` (the read pointer), `error` and `serialization_mode`. It writes with `write(stream, ctx)` into `bds_bytes` and prints the packet it read into `bds_json`. It sends each piece over a pipe as soon as it has it, then calls `_exit`.
 - Print `bds_json` with the packet's own `toString`. `toString` binds the packet into a fresh reflection ctx, where a type bound twice, such as Vec3, takes whichever binder runs first; so detour `cereal::BasicSaver::saveImpl`, found by a byte signature, and for the packet being printed alone pass the original a handle over the same packet in the server's packet reflection ctx. A detour that never sees the packet records `bds_json_error`.
 - Send `bds_json` as one JSON string of BDS's text, each byte outside valid UTF-8 written as `\udcXX`; BDS's text is not always JSON, so the reader parses it.
+- On a build before 1.26.40, gate a writer trace on the build's version: a `BinaryStream` subclass that overrides every writer and documented-write helper, records each call's method, value, label, notes, offset, size and depth, and opens a scope for each array, conditional and branching write. When the packet has no reflected type or its `toString` prints nothing, write the packet into it and send `bds_trace` with `bds_trace_bytes_equal`.
 - Give the parent a 30 s deadline, then SIGKILL. It records `crash` as the signal name, `exit N` or `timeout`, and the run goes on.
 - Append and flush each record. At the end, log `golden: N cases written to <path>`.
 - Before forking, flush only stdout and stderr. BDS's console thread holds stdin's lock.
@@ -92,7 +103,9 @@ A clean stop exits 0 and logs `Quit correctly`.
 uv run python .claude/skills/goldens/compare.py tests/goldens/v<protocol> $G
 ```
 
-Only a `freezes` case can freeze. A difference no rule in goldens.md explains is a finding: fix the schema, the case or `CaseForm`, and never relax the comparison.
+`compare.py` has no trace walk. A case with a `bds_trace` freezes when BDS wrote its bytes back unchanged, `bds_trace_bytes_equal` holds and every leaf of the trace matches the case's value in order.
+
+Only a `freezes` case can freeze, or a traced one as above. A difference no rule in goldens.md explains is a finding: fix the schema, the case or `CaseForm`, and never relax the comparison.
 
 ## Symptom -> action
 
@@ -104,6 +117,9 @@ Only a `freezes` case can freeze. A difference no rule in goldens.md explains is
 | `rewritten`, and two fields come back holding the second one's value | BDS writes one member several times, once per name it binds the member under, or once per write in a hand-written encoding. Declare it as one field with `field(duplicate=N)`, and never pick equal values to pass. |
 | `rewritten`, and a variant comes back in another arm | BDS converts the value on read and writes back what the conversion kept. Find the value BDS keeps in the case's arm, and never swap the arm. |
 | A case edited since the last run reads `rewritten`, or BDS's JSON describes other bytes | A results file describes the bytes its run read, which `$G/cases.json` holds. When they differ from the folder's current bytes, rerun golden mode before comparing. |
+| A case before 2168 is `refused` or `rewritten` in a field the case holds in cereal's shape | `serialization_mode` below CerealOnly means BDS sent the hand-written encoding. Model the pre-cereal shape (dsl.md). |
+| `JSON differs at <packet>` before 2168, with `serialization_mode` below CerealOnly | BDS printed the cereal shape of a packet it sent by hand. Have an agent match the case's values against BDS's JSON (an older protocol's folder, step 4). |
+| `no reflected type for packet id N` or `toString printed nothing`, on a build before 1.26.40 | Judge the case by its `bds_trace` (an older protocol's folder, step 4). |
 | `crashed` on every case | A `Packet` slot or stream mirror is wrong. Re-check the slots against a vtable. |
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
