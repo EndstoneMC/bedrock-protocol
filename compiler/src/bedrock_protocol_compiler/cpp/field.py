@@ -457,7 +457,7 @@ class ListField:
                 )
             p.emit(
                 """
-                $target$.reserve(static_cast<std::size_t>(*count$depth$));
+                $target$.reserve(detail::initialCapacity(static_cast<std::size_t>(*count$depth$)));
                 for (std::size_t i$depth$ = 0; i$depth$ < static_cast<std::size_t>(*count$depth$); ++i$depth$) {
                     $target$.emplace_back();
                     $body$

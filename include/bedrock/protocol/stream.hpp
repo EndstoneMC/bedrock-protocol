@@ -42,6 +42,8 @@ enum class Errc : std::uint8_t {
 using PathSegment = std::variant<std::string_view, std::size_t>;
 
 namespace detail {
+inline constexpr std::size_t max_initial_capacity = 65'536;
+
 template <std::integral T>
 std::expected<std::size_t, Errc> countValue(T value)
 {
@@ -69,6 +71,11 @@ inline std::expected<std::size_t, Errc> countProduct(std::expected<std::size_t, 
         return std::unexpected(Errc::out_of_range);
     }
     return *a * *b;
+}
+
+constexpr std::size_t initialCapacity(std::size_t count) noexcept
+{
+    return std::min(count, max_initial_capacity);
 }
 }  // namespace detail
 

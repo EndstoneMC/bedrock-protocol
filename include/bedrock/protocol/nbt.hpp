@@ -858,7 +858,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
             return std::unexpected(Errc::out_of_range);
         }
         ListTag out(static_cast<Type>(*element_type));
-        out.reserve(static_cast<std::size_t>(*count));
+        out.reserve(detail::initialCapacity(static_cast<std::size_t>(*count)));
         for (std::int32_t i = 0; i < *count; ++i) {
             auto element = readTag(stream, static_cast<Type>(*element_type));
             if (!element) {

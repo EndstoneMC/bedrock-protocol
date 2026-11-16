@@ -1219,6 +1219,13 @@ def test_a_list_of_primitives_keeps_its_unindexed_loop(generate):
     assert write in (out / "a.cpp").read_text()
 
 
+def test_a_list_read_caps_what_it_reserves_up_front(generate):
+    out = generate({"a": LISTS})
+
+    reserve = "        out.ids.reserve(detail::initialCapacity(static_cast<std::size_t>(*count0)));\n"
+    assert reserve in (out / "a.cpp").read_text()
+
+
 def test_a_name_coded_write_rejects_a_value_with_no_name(generate):
     out = generate({"a": A})
 
