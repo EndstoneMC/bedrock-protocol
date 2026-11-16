@@ -38,6 +38,7 @@ paths:
 - Encode and decode a name-coded enum whose names change between protocols with the protocol; encoding a value with no name there throws `IllegalArgumentException`.
 - Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
 - Generate `v<N>.Packets` with `encode(packet, buf)` and `decode(packetId, buf)` for every modelled version and a bare `ProtocolVersion` mirroring the C++ `version.hpp` with `encodePacket` and `decodePacket`, and no bare `Packets`.
+- Bump README's `io.netty:netty-buffer` version with `java/build.gradle.kts`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.

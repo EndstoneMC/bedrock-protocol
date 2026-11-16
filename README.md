@@ -3,8 +3,7 @@
 <h3>bedrock-protocol</h3>
 
 <p>
-  <b>The Minecraft: Bedrock Edition network protocol as one schema</b><br>
-  One library for C++, Python and Java that encodes and decodes every supported protocol version
+  <b>The Minecraft: Bedrock Edition network protocol for C++, Python and Java</b>
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -12,32 +11,25 @@
 
 </div>
 
-## Languages
-
-Every language exposes the same packets, types and enums, and encodes the same bytes. An enum value is the library's own value, its number at the newest protocol that has it. Each protocol's codec maps it to that protocol's number or name, and encoding a value the protocol cannot number or name fails, as does decoding a number it cannot place.
-
-| Language | Get it |
-| --- | --- |
-| [Python](#python) | Download a wheel from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). It is not on PyPI. |
-| [C++](#c) | Download a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases). |
-| [Java](#java) | Build it from a checkout with Gradle. |
-| Rust | Planned. |
-| TypeScript | Planned. |
-
 ## Python
 
-Each release carries a wheel for Linux and Windows on x86_64, for Python 3.12 or newer:
+### Install
+
+Download the Linux or Windows wheel for Python 3.12 or newer from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases):
 
 ```shell
-uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-linux_x86_64.whl
+uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-win_amd64.whl
 ```
 
-To build it from a checkout instead, you need CMake and a C++23 compiler:
+Or build it from a checkout with CMake and a C++23 compiler:
 
 ```shell
 git clone https://github.com/EndstoneMC/bedrock-protocol
 uv pip install ./bedrock-protocol
 ```
+
+### Encode and decode
 
 ```python
 import bedrock_protocol as bp
@@ -45,42 +37,34 @@ import bedrock_protocol as bp
 packet = bp.TextPacket()
 packet.body = bp.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
 data = bp.v2225.encode(packet)
-assert bp.v2225.decode(bp.TextPacket, data) == packet
+decoded = bp.v2225.decode(bp.TextPacket, data)
+assert decoded == packet
 ```
 
-`versions` lists the numbers with a `v<N>` module. `releases` lists every number a release reported. `protocol_version(2169)` and `protocol_version("1.26.63")` look one up, and its `snapshot` names the `v<N>` that decodes it. Each `v<N>` encodes and decodes with `encode` and `decode`, frames packets with `encode_packet` and `decode_packet`, maps packet ids to classes in `packets`, and names the protocol that introduced each class's encoding in `encodings`. A class with no default serialization mode at a protocol has no entry there; `v<N>.modes` lists every mode each class has.
-
-The `bp` names follow the latest protocol. To stay on protocol 2225, take the types from its module:
+### Pick a protocol
 
 ```python
-from bedrock_protocol import v2225
+by_number = bp.protocol_version(2225)
+by_release = bp.protocol_version("1.26.63")
+assert by_number.snapshot == by_release.snapshot == 2225
 
-packet = v2225.TextPacket()
-packet.body = v2225.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
+codec = getattr(bp, f"v{by_release.snapshot}")
+decoded = codec.decode(bp.TextPacket, codec.encode(packet))
+assert decoded == packet
 ```
-
-Every enum is one type in every protocol, so `TextPacketType` keeps its `bp` name.
 
 ## C++
 
-Each release carries these packages:
+### Install
 
-| Asset | Contents |
-| --- | --- |
-| `bedrock-protocol-X.Y.Z-linux-x86_64-gcc13.zip` | Linux, GCC 13, libstdc++ |
-| `bedrock-protocol-X.Y.Z-linux-x86_64-clang18-libcxx.zip` | Linux, Clang 18, libc++ |
-| `bedrock-protocol-X.Y.Z-windows-x86_64-msvc2022.zip` | Windows, MSVC 2022 |
-| `bedrock-protocol-X.Y.Z-src.zip` | Sources, for `add_subdirectory` |
-
-Unpack a package and point `CMAKE_PREFIX_PATH` at the folder:
+Unpack a package from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases) and point `CMAKE_PREFIX_PATH` at its folder:
 
 ```cmake
 find_package(bedrock-protocol CONFIG REQUIRED)
 target_link_libraries(my_target PRIVATE bedrock::protocol)
 ```
 
-With the source package, replace `find_package` with `add_subdirectory(bedrock-protocol-X.Y.Z-src)`. Neither needs
-Python. The library needs C++23.
+### Encode and decode
 
 ```cpp
 #include <cassert>
@@ -102,22 +86,19 @@ std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<2225, bp::Te
 assert(decoded && *decoded == packet);
 ```
 
-`bp::protocol_version(2169)` and `bp::protocol_version("1.26.63")` look up the same table in `<bedrock/protocol/version.hpp>`. `bp::latest_version` is the newest modelled protocol.
-
-`<bedrock/protocol.hpp>` includes everything. `<bedrock/protocol/chunk.h>` and the headers beside it each include one domain.
-
-The `bp` names follow the latest protocol. To stay on protocol 2225, select each type by it:
+### Pick a protocol
 
 ```cpp
-bp::TextPacket_<2225> packet;
-packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
+std::optional<bp::ProtocolVersion> by_number = bp::protocol_version(2225);
+std::optional<bp::ProtocolVersion> by_release = bp::protocol_version("1.26.63");
+assert(by_number && by_release && by_number->snapshot == 2225 && by_release->snapshot == 2225);
 ```
-
-Every enum is one type in every protocol, so `TextPacketType` keeps its `bp` name.
 
 ## Java
 
-To build it from a checkout, you need JDK 21 or newer and Python 3.12 or newer, which generates the codecs:
+### Install
+
+Build the jar into `build/java/libs` with JDK 21 or newer and Python 3.12 or newer:
 
 ```shell
 git clone https://github.com/EndstoneMC/bedrock-protocol
@@ -125,9 +106,17 @@ cd bedrock-protocol/java
 ./gradlew build
 ```
 
-The jar lands in the checkout's `build/java/libs` and needs `io.netty:netty-buffer` beside it.
+```kotlin
+dependencies {
+    implementation(files("bedrock-protocol/build/java/libs/bedrock-protocol-X.Y.Z.jar"))
+    implementation("io.netty:netty-buffer:4.2.19.Final")
+}
+```
+
+### Encode and decode
 
 ```java
+import dev.endstone.protocol.Packet;
 import dev.endstone.protocol.TextPacket;
 import dev.endstone.protocol.TextPacketType;
 import dev.endstone.protocol.v2225.Packets;
@@ -143,22 +132,23 @@ packet.setMessageOnly(
 
 ByteBuf data = Unpooled.buffer();
 Packets.encode(packet.build(), data);
-assert Packets.decode(TextPacket.ID, data).equals(packet.build());
+Packet decoded = Packets.decode(TextPacket.ID, data);
+assert decoded.equals(packet.build());
 ```
 
-`ProtocolVersion.VERSIONS` lists the numbers with a `v<N>.Packets`, which encodes a packet with `encode` and decodes a body by id with `decode`. `ProtocolVersion.RELEASES` lists every number a release reported. `ProtocolVersion.of(2169)` and `ProtocolVersion.of("1.26.63")` look one up, and its `encodePacket` and `decodePacket` use the `v<N>.Packets` its `snapshot` names. A class's static `codec(int)` returns the codec that encodes and decodes it at a protocol; where a protocol sends the class both ways, pass `SerializationMode.CEREAL` or `SerializationMode.MANUAL` to `codec(int, SerializationMode)`.
-
-The bare classes follow the latest protocol. `v2225.Packets` keeps the example on protocol 2225, and so does that protocol's `ProtocolVersion`:
+### Pick a protocol
 
 ```java
 import dev.endstone.protocol.ProtocolVersion;
 
-ProtocolVersion version = ProtocolVersion.of(2225).orElseThrow();
-version.encodePacket(packet.build(), data);
-assert version.decodePacket(TextPacket.ID, data).equals(packet.build());
-```
+ProtocolVersion byNumber = ProtocolVersion.of(2225).orElseThrow();
+ProtocolVersion byRelease = ProtocolVersion.of("1.26.63").orElseThrow();
+assert byNumber.snapshot() == 2225 && byRelease.snapshot() == 2225;
 
-Once a newer protocol changes a message class, it moves to the package `v<N>`, N the first protocol that used it, and code staying on 2225 imports it from there. An enum class never moves. The `internal` package is not API.
+byRelease.encodePacket(packet.build(), data);
+Packet decodedByRelease = byRelease.decodePacket(TextPacket.ID, data);
+assert decodedByRelease.equals(packet.build());
+```
 
 ## Supported Protocols
 
@@ -186,21 +176,16 @@ Once a newer protocol changes a message class, it moves to the package `v<N>`, N
 | 2193 | 1.26.50 to 1.26.52 |
 | 2225 | 1.26.6x |
 
-A number with no `v<N>` module decodes with the newest one below it: 2169 with `v2168`.
-
 ## Building from Source
 
-You need CMake, Ninja, Python 3.12 or newer and a C++23 compiler:
+With CMake, Ninja, Python 3.12 or newer and a C++23 compiler, from a Visual Studio developer prompt on Windows:
 
 ```shell
 cmake --preset release
 cmake --build --preset release
 cmake --install build/Release --prefix stage
+uv sync
 ```
-
-On Windows, run these and `uv sync` from a Visual Studio developer prompt.
-
-`stage` holds the same tree as a C++ release package.
 
 ## License
 
