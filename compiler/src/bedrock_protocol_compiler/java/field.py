@@ -34,6 +34,7 @@ from bedrock_protocol_compiler.java.value import (
     BitsetValue,
     Body,
     ListValue,
+    NamedScalar,
     Num,
     Reference,
     Scalar,
@@ -41,7 +42,7 @@ from bedrock_protocol_compiler.java.value import (
     literal,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, EnumShape, EnumType, Schema, StructModel, strip
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, StructModel, strip
 
 
 class FieldContext:
@@ -65,10 +66,17 @@ class FieldContext:
         self.members = registry
         self.inline = inline
         self.unions: list[UnionGenerator] = []
+        self.numbered = isinstance(field.type, EnumName) and any(
+            isinstance(each.type, EnumRef)
+            and schema.target(self.model, each.type) is schema.target(self.model, field.type)
+            for other in schema.encodings(self.model)
+            for each in other.fields
+            if each.name == field.name
+        )
 
-    def enum_type(self, node: EnumRef | EnumName) -> EnumType:
+    def enum_type(self, node: EnumRef | EnumName) -> EnumModel:
         enum_type = self.schema.target(self.model, node)
-        if not isinstance(enum_type, EnumModel | EnumShape):
+        if not isinstance(enum_type, EnumModel):
             raise CompilerError(f"{self.where}: {node.enum.name} is not an enum")
         return enum_type
 
@@ -83,7 +91,14 @@ class FieldContext:
                 enum_type = self.enum_type(node)
                 underlying = enum_type.underlying.name
                 encoded = node.encoded or ENUM_ENCODINGS[underlying]
-                return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, enum_type))
+                numbering = cast(Numbering, self.encoding.reached[node])
+                helper = None
+                if not numbering.identity:
+                    helper = (
+                        f"{names.internal(self.schema)}.{names.numbering(self.schema, enum_type)}",
+                        numbering.since,
+                    )
+                return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, enum_type), helper)
             case StructRef():
                 model = self.schema.target(self.model, node)
                 if not isinstance(model, StructModel):
@@ -102,9 +117,14 @@ class FieldContext:
                 spelled = names.qualified(self.schema, enum_type)
                 if not enum_type.members:
                     raise CompilerError(f"{self.where}: {spelled} has no member to default to")
+                naming = cast(Naming, self.encoding.reached[node])
+                since = f"{naming.since}, " if len(self.schema.namings(enum_type)) > 1 else ""
+                if self.numbered:
+                    return NamedScalar(enum_type.underlying.name, label, spelled, since)
                 default = f"{spelled}.{enum_type.members[0].name}"
-                read = f"{spelled}.decode(buf)"
-                return Reference(spelled, default, read, "{}.encode(buf);", label, number=enum_class(enum_type))
+                read = f"{spelled}.decode({since}buf)"
+                write = f"{{}}.encode({since}buf);"
+                return Reference(spelled, default, read, write, label, number=enum_class(enum_type))
             case BuiltinRef(builtin=builtin, encoded=encoded):
                 codec = names.pascal(names.snake(builtin.name)) + ("String" if encoded == "str" else "")
                 read = f"ByteBufCodec.read{codec}(buf)"
@@ -166,10 +186,13 @@ class FieldContext:
                 written = self.schema.number(self.encoding, member)
                 encoded = ENUM_ENCODINGS[enum_type.underlying.name]
                 enum = names.qualified(self.schema, enum_type)
-                number = enum_class(enum_type)
-                spelled = literal(written, number)
                 canonical = next(
-                    (each for each in enum_type.members if literal(enumerators[each.name], number) == spelled), None
+                    (
+                        each
+                        for each in enum_type.members
+                        if name in enumerators and enumerators[each.name] == enumerators[name]
+                    ),
+                    None,
                 )
                 if canonical is None:
                     raise CompilerError(f"{self.where}: {enum_type.family.name}.{name} has no constant in {enum}")
@@ -195,6 +218,8 @@ class FieldContext:
             case Map(key=key, value=value):
                 slot = MapSlot(self.field, label, self.value(key, label), self.value(value, label))
             case EnumRef():
+                slot = EnumSlot(self.field, label, self.value(node, label))
+            case EnumName() if self.numbered:
                 slot = EnumSlot(self.field, label, self.value(node, label))
             case Variant(cases=cases) if self.inline:
                 slot = UnionSlot(self.field, label, self.union(cases, label, True), self.where)

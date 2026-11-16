@@ -25,9 +25,7 @@ paths:
 ## Underlying type
 
 - Derive every enum from `IntEnum`, with the underlying type as the second base, taken from bedrock-headers (`class MemoryCategory(IntEnum, uint8)`), and spell it even when the header's is `int` (`int32`).
-- Give every redeclaration of an enum the same underlying type.
-- Model a width that narrows between eras on the narrow type at both eras; it is BDS shortening the underlying type, not a second encoding.
-- Grep the enum for a negative enumerator before unifying a narrowed width; with one, the eras are two types.
+- Give every redeclaration of an enum one underlying type: the narrow one where BDS narrows it, and a signed one where a member is negative.
 - An enum field goes out as its underlying type at one byte and as a varint of the same signedness above it (`int16` and `int32` as `varint32`, `uint16` and `uint32` as `uvarint32`). Spell `field(type=)` only where the encoding differs: `str` (name-coded), a fixed width (`field(type=int32)` on an `int32` enum), another varint, the other signedness (`field(type=uint8)` on an `int8` enum), or `endian="big"`.
 
 ## Placeholders

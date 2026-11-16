@@ -1,7 +1,7 @@
 import pytest
 
 import bedrock_protocol
-from bedrock_protocol import v729, v748, v786, v827, v975, v1001, v2168, v2225
+from bedrock_protocol import v729, v748, v827, v1001, v2225
 
 
 def test_an_enum_member_keeps_its_schema_name(protocol):
@@ -95,9 +95,11 @@ def test_a_nested_enum_is_qualified_by_its_owner(enum, name):
             id="action-type",
         ),
         pytest.param(v729.AnimatePacket.Action, v2225.AnimatePacket.Action, id="animate-action"),
+        pytest.param(v729.Enchant.Type, v2225.Enchant.Type, id="enchant-type"),
+        pytest.param(v729.MapDecoration.Type, v2225.MapDecoration.Type, id="map-decoration-type"),
     ],
 )
-def test_a_nested_enum_whose_numbers_never_move_is_one_type_across_its_owners(first, last):
+def test_a_nested_enum_is_one_type_across_its_owners(first, last):
     assert first is last
 
 
@@ -124,6 +126,7 @@ def test_a_nested_enum_holds_a_member_the_latest_owner_dropped():
         pytest.param("MovementEffectType", "DOLPHIN_BOOST", 1, id="dolphin-boost"),
         pytest.param("MovementEffectType", "GEYSER_BOOST", 2, id="geyser-boost"),
         pytest.param("DisconnectFailReason", "ASYNC_JOIN_TASK_DENIED", 118, id="async-join-task-denied"),
+        pytest.param("LevelSoundEvent", "MOUNT", 611, id="mount"),
     ],
 )
 def test_a_member_added_later_exists_at_every_protocol(protocol, enum, member, value):
@@ -134,12 +137,31 @@ def test_a_member_removed_later_exists_after_it():
     assert v2225.MinecraftPacketIds.ITEM_COMPONENT_PACKET.value == 162
 
 
-@pytest.mark.parametrize("name", ["DisconnectFailReason", "MinecraftPacketIds", "MovementEffectType"])
-def test_an_enum_whose_numbers_never_move_is_one_type_at_every_protocol(protocol, name):
+@pytest.mark.parametrize(
+    "name",
+    [
+        "AbilitiesIndex",
+        "ActorDamageCause",
+        "ActorDataIDs",
+        "ActorFlags",
+        "ActorType",
+        "CurrentCmdVersion",
+        "DisconnectFailReason",
+        "ItemStackRequestActionType",
+        "LevelSoundEvent",
+        "MemoryCategory",
+        "MinecraftPacketIds",
+        "MolangVersion",
+        "MovementEffectType",
+        "PieceType",
+        "PlayerActionType",
+    ],
+)
+def test_an_enum_is_one_type_at_every_protocol(protocol, name):
     assert getattr(protocol, name) is getattr(v2225, name)
 
 
-def test_an_enum_whose_numbers_never_move_belongs_to_the_newest_protocol():
+def test_an_enum_belongs_to_the_newest_protocol():
     assert v748.MovementEffectType.__module__ == f"bedrock_protocol.v{bedrock_protocol.versions[-1]}"
 
 
@@ -165,71 +187,24 @@ def test_a_member_sharing_a_value_with_a_newer_one_keeps_its_own_name():
     assert v2225.MinecraftPacketIds.ITEM_COMPONENT_PACKET.name == "ITEM_COMPONENT_PACKET"
 
 
-@pytest.mark.parametrize(
-    ("member", "value"),
-    [
-        pytest.param(v786.MolangVersion.NUM_VALID_VERSIONS, 13, id="v786"),
-        pytest.param(v827.MolangVersion.NUM_VALID_VERSIONS, 14, id="v827"),
-    ],
-)
-def test_a_trailing_count_follows_the_members_of_its_snapshot(member, value):
-    assert member == value
+def test_a_trailing_count_is_its_library_value_at_every_protocol(protocol):
+    assert protocol.MolangVersion.NUM_VALID_VERSIONS.value == 14
 
 
-@pytest.mark.parametrize(
-    ("first", "last"),
-    [
-        pytest.param(v786.MolangVersion, v827.MolangVersion, id="molang-version"),
-        pytest.param(v1001.LevelSoundEvent, v2168.LevelSoundEvent, id="level-sound-event"),
-    ],
-)
-def test_a_renumbered_enum_is_one_type_per_set_of_members(first, last):
-    assert first is not last
+def test_a_trailing_sentinel_is_its_library_value_at_every_protocol(protocol):
+    assert protocol.LevelSoundEvent.UNDEFINED.value == 615
 
 
 @pytest.mark.parametrize(
     ("enum", "name"),
     [
-        pytest.param(v975.LevelSoundEvent, "MOUNT", id="v975-mount"),
-        pytest.param(v1001.LevelSoundEvent, "MOUNT", id="v1001-mount"),
-        pytest.param(v1001.LevelSoundEvent, "DISMOUNT", id="v1001-dismount"),
-        pytest.param(v1001.LevelSoundEvent, "STRAW_BED_BREAK_LEAVE", id="v1001-straw-bed-break-leave"),
+        pytest.param("InventoryLayout", "COUNT", id="inventory-layout"),
+        pytest.param("MemoryCategory", "MEMORY_CATEGORY_COUNT", id="memory-category"),
+        pytest.param("PieceType", "COUNT", id="piece-type"),
     ],
 )
-def test_the_level_sound_events_added_at_2168_are_absent_before_it(enum, name):
-    assert name not in enum.__members__
-
-
-@pytest.mark.parametrize(
-    ("member", "value"),
-    [
-        pytest.param(v2168.LevelSoundEvent.MOUNT, 611, id="mount"),
-        pytest.param(v2168.LevelSoundEvent.DISMOUNT, 612, id="dismount"),
-        pytest.param(v2168.LevelSoundEvent.STRAW_BED_BREAK_LEAVE, 613, id="straw-bed-break-leave"),
-    ],
-)
-def test_the_level_sound_events_added_at_2168_take_the_sentinel_slots(member, value):
-    assert member == value
-
-
-@pytest.mark.parametrize(
-    ("member", "value"),
-    [
-        pytest.param(v975.LevelSoundEvent.UNDEFINED, 601, id="v975"),
-        pytest.param(v1001.LevelSoundEvent.UNDEFINED, 611, id="v1001"),
-        pytest.param(v2168.LevelSoundEvent.UNDEFINED, 614, id="v2168"),
-    ],
-)
-def test_the_trailing_undefined_sentinel_follows_the_members_of_its_snapshot(member, value):
-    assert member == value
-
-
-def test_2168_adds_three_level_sound_events():
-    assert len(v2168.LevelSoundEvent) == len(v1001.LevelSoundEvent) + 3
-
-
-def test_a_sentinel_is_no_member():
-    assert "COUNT" not in v2225.InventoryLayout.__members__
+def test_a_sentinel_is_no_member(enum, name):
+    assert name not in getattr(v2225, enum).__members__
 
 
 def test_the_number_of_a_sentinel_is_no_member():

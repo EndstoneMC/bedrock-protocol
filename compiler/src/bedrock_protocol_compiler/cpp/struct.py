@@ -7,18 +7,23 @@ from bedrock_protocol_compiler.cpp.expression import render
 from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
 from bedrock_protocol_compiler.descriptor import Field
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel, reached_by
+from bedrock_protocol_compiler.schema import Encoding, Numbering, Schema, StructModel, reached_by
 
 
 class StructGenerator:
-    def __init__(self, schema: Schema, model: StructModel) -> None:
+    def __init__(self, schema: Schema, model: StructModel, reached: set[Numbering]) -> None:
         self.schema = schema
         self.target = model
         self.qualified = names.qualified(schema, model)
         self.name = schema.name(model)
         self.aliases = [(child.family.name, names.qualified(schema, child)) for child in model.nested]
         self.owned = [
-            (child, StructGenerator(schema, child) if isinstance(child, StructModel) else EnumGenerator(schema, child))
+            (
+                child,
+                StructGenerator(schema, child, reached)
+                if isinstance(child, StructModel)
+                else EnumGenerator(schema, child, reached),
+            )
             for child in model.nested
             if schema.owner(child) is model
         ]

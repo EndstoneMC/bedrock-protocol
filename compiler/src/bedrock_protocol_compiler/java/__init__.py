@@ -5,13 +5,14 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Enum
 from bedrock_protocol_compiler.java import file, names, version
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.message import type_generator
+from bedrock_protocol_compiler.java.numbering import NumberingGenerator, reached
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumType, Schema, StructModel
+from bedrock_protocol_compiler.schema import EnumModel, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     reserved = names.reserved(schema)
-    declared: dict[str, StructModel | EnumType] = {}
+    declared: dict[str, StructModel | EnumModel] = {}
     for family in schema.order:
         if family.owner is not None:
             continue
@@ -33,6 +34,12 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             type_generator(schema, each, (), registry).definition(body)
             registry.check()
             file.write(schema, context.open(names.path(package, name)), package, body)
+    internal = names.internal(schema)
+    for model in reached(schema):
+        body = Printer()
+        generator = NumberingGenerator(schema, model)
+        generator.definition(body)
+        file.write(schema, context.open(names.path(internal, generator.name)), internal, body)
     if f"{schema.java_package}.{names.VERSION}" in declared:
         raise CompilerError(f"{schema.java_package}.{names.VERSION}: is the protocol version table")
     for number in schema.versions:

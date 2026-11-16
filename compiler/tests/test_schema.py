@@ -362,16 +362,29 @@ def test_an_enum_member_renamed_at_the_same_value_is_a_new_shape(build_package):
     assert [shape.ranges for shape in shapes] == [[Range(None, 3)], [Range(3, None)]]
 
 
-def test_an_enum_whose_underlying_type_changes_is_a_new_shape(build_package):
+def test_an_enum_whose_declarations_name_two_underlying_types_is_rejected(build_package):
     source = (
         HEADER
         + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
         + "@type(since=3)\nclass E(IntEnum, uint16):\n    A = 1\n"
     )
-    schema = Schema(build_package({"a": source}))
-    (family,) = schema.order
+    package = build_package({"a": source})
 
-    assert [shape.ranges for shape in schema.shapes(family)] == [[Range(None, 3)], [Range(3, None)]]
+    with pytest.raises(CompilerError, match=r"^a\.py: E: declares underlying types uint8 and uint16$"):
+        Schema(package)
+
+
+def test_an_enum_whose_forms_name_two_underlying_types_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
+        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint16):\n        X = 1\n    f: F\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"^a\.py: A\.F: declares underlying types uint8 and uint16$"):
+        Schema(package)
 
 
 def test_an_enum_whose_members_return_in_a_later_declaration_is_one_shape(build_package):
@@ -404,11 +417,12 @@ def test_a_field_whose_predicate_changes_is_a_new_shape(build_package):
 def test_a_struct_changes_shape_with_the_enum_its_predicate_names(build_package):
     source = (
         HEADER
-        + "class A:\n    a: uint8\n    b: uint8 = field(when=lambda p: p.a == E.X)\n\n"
+        + "class W(IntEnum, uint8):\n    WIDTH = 8\n\n"
+        + "class A:\n    a: bitset[W.WIDTH]\n    b: uint8 = field(when=lambda p: p.a.test(E.X))\n\n"
         + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n"
     )
     schema = Schema(build_package({"a": source}))
-    _, a = schema.order
+    _, _, a = schema.order
 
     assert [shape.ranges for shape in schema.shapes(a)] == [[Range(None, 3)], [Range(3, None)]]
 
@@ -721,11 +735,12 @@ def test_a_child_whose_encoding_changes_is_a_second_encoding_of_one_parent_model
     assert len(schema.encodings(model)) == 2
 
 
-def test_a_parent_whose_enum_renumbers_is_a_second_model(build_package):
+def test_a_parent_whose_enum_renumbers_is_one_model_with_a_second_encoding(build_package):
     schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
     _, family = schema.order
+    (model,) = schema.models(family)
 
-    assert len(schema.models(family)) == 2
+    assert len(schema.encodings(model)) == 2
 
 
 @pytest.mark.parametrize(
@@ -759,11 +774,12 @@ def test_a_parent_reading_its_enum_another_way_is_a_second_encoding(build_packag
         pytest.param("uint8 | E", id="variant"),
     ],
 )
-def test_a_container_whose_enum_renumbers_is_a_second_model(build_package, annotation):
+def test_a_container_whose_enum_renumbers_is_one_model_with_a_second_encoding(build_package, annotation):
     schema = Schema(build_package({"a": RENUMBERED + f"\nclass P:\n    x: {annotation}\n"}))
     _, family = schema.order
+    (model,) = schema.models(family)
 
-    assert len(schema.models(family)) == 2
+    assert len(schema.encodings(model)) == 2
 
 
 def test_an_encoding_reaches_each_codec_by_the_reference_its_field_holds(build_package):
@@ -814,19 +830,21 @@ def test_a_condition_testing_another_field_is_a_second_encoding(build_package):
 RENAMED = HEADER + "class E(IntEnum, uint8):\n    A = value(1, 'old', until=3)\n    A = value(1, 'new', since=3)\n\n"
 
 
-def test_a_parent_whose_name_coded_enum_renames_is_a_second_model(build_package):
+def test_a_parent_whose_name_coded_enum_renames_is_one_model_with_a_second_encoding(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     _, family = schema.order
+    (model,) = schema.models(family)
 
-    assert len(schema.models(family)) == 2
+    assert len(schema.encodings(model)) == 2
 
 
-def test_a_parent_whose_name_coded_enum_gains_a_member_is_a_second_model(build_package):
+def test_a_parent_whose_name_coded_enum_gains_a_member_is_one_model_with_a_second_encoding(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n\n"
     schema = Schema(build_package({"a": source + "class P:\n    e: E = field(type=str)\n"}))
     _, family = schema.order
+    (model,) = schema.models(family)
 
-    assert len(schema.models(family)) == 2
+    assert len(schema.encodings(model)) == 2
 
 
 def test_a_condition_naming_a_name_coded_enum_keeps_its_naming_in_the_encoding(build_package):
@@ -950,33 +968,6 @@ def test_a_uuid_read_as_text_keeps_the_model(build_package):
     assert len(schema.models(family)) == 1
 
 
-def test_a_literal_whose_enum_changes_its_underlying_type_is_a_second_encoding(build_package):
-    source = (
-        HEADER
-        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 200\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint16):\n    A = 200\n\n"
-        + "class P:\n    tag: Literal[E.A]\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    _, family = schema.order
-    (model,) = schema.models(family)
-
-    assert len(schema.encodings(model)) == 2
-
-
-def test_a_pre_cereal_sibling_whose_literal_enum_has_another_underlying_type_has_its_own_encoding(build_package):
-    source = (
-        HEADER
-        + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    tag: Literal[F.X]\n\n"
-        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint16):\n        X = 1\n    tag: Literal[F.X]\n\n"
-        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    _, cereal, _, pre_cereal, _ = schema.order
-
-    assert schema.encoding_at(pre_cereal, 1) is not schema.encoding_at(cereal, 1)
-
-
 def test_a_field_whose_copies_change_is_a_second_encoding(build_package):
     source = HEADER + "class A:\n    x: uint8 = field(until=3)\n    x: uint8 = field(since=3, duplicate=2)\n"
     schema = Schema(build_package({"a": source}))
@@ -1031,27 +1022,46 @@ NESTED = (
 )
 
 
+def test_a_pre_cereal_sibling_whose_nested_enum_numbers_differently_shares_the_cereal_model(build_package):
+    schema = Schema(build_package({"a": NESTED.format(fields="f: F")}))
+    _, cereal, _, pre_cereal, _ = schema.order
+
+    assert schema.model_at(pre_cereal, 1) is schema.model_at(cereal, 1)
+
+
 @pytest.mark.parametrize(
     "fields",
     [
         pytest.param("f: F", id="enum field"),
-        pytest.param("f: F = field(type=str)", id="name-coded field"),
         pytest.param("fs: list[F]", id="list of enums"),
-        pytest.param("tag: Literal[F.X]", id="literal"),
-        pytest.param("bits: bitset[F.X]", id="bitset"),
         pytest.param("f: F\n    y: uint8 = field(when=lambda p: p.f == F.X)", id="condition"),
         pytest.param("f: F\n    y: uint8 = field(when=lambda p: not p.f == F.X)", id="negated condition"),
         pytest.param(
             "f: F\n    k: uint8\n    y: uint8 = field(when=lambda p: p.f == F.X and p.k == 1)", id="conjunction"
         ),
-        pytest.param("bits: bitset[F.X]\n    y: uint8 = field(when=lambda p: p.bits.test(F.X))", id="test"),
     ],
 )
-def test_a_pre_cereal_sibling_owning_its_own_nested_enum_is_its_own_model(build_package, fields):
+def test_a_pre_cereal_sibling_reading_its_nested_enum_by_its_own_numbers_has_its_own_encoding(build_package, fields):
     schema = Schema(build_package({"a": NESTED.format(fields=fields)}))
     _, cereal, _, pre_cereal, _ = schema.order
 
-    assert schema.model_at(pre_cereal, 1) is not schema.model_at(cereal, 1)
+    assert schema.encoding_at(pre_cereal, 1) is not schema.encoding_at(cereal, 1)
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        pytest.param("f: F = field(type=str)", id="name-coded field"),
+        pytest.param("tag: Literal[F.X]", id="literal"),
+        pytest.param("bits: bitset[F.X]", id="bitset"),
+        pytest.param("bits: bitset[F.X]\n    y: uint8 = field(when=lambda p: p.bits.test(F.X))", id="test"),
+    ],
+)
+def test_a_pre_cereal_sibling_coding_its_nested_enum_alike_reuses_the_cereal_encoding(build_package, fields):
+    schema = Schema(build_package({"a": NESTED.format(fields=fields)}))
+    _, cereal, _, pre_cereal, _ = schema.order
+
+    assert schema.encoding_at(pre_cereal, 1) is schema.encoding_at(cereal, 1)
 
 
 def test_a_slot_reference_resolves_to_the_model_of_the_form_it_names(build_package):
@@ -1108,11 +1118,18 @@ def test_an_enum_whose_members_change_is_one_model(build_package):
     assert len(schema.models(family)) == 1
 
 
-def test_a_member_added_with_stable_numbers_keeps_the_numbering(build_package):
+def test_a_member_added_with_stable_numbers_is_a_second_numbering(build_package):
     schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2) is schema.numbering_at(family, 3)
+    assert schema.numbering_at(family, 2) is not schema.numbering_at(family, 3)
+
+
+def test_versions_with_equal_numbers_and_members_share_a_numbering(build_package):
+    schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 3) is schema.numbering_at(family, 4)
 
 
 def test_an_enum_model_lists_the_newest_declarations_members_first(build_package):
@@ -1160,7 +1177,7 @@ def test_a_renumbering_pairs_each_number_it_displaces_with_the_value_it_frees(bu
     schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).moved == {1: 3, 2: 1, 3: 2}
+    assert schema.numbering_at(family, 2).encoded == {1: 3, 2: 1, 3: 2}
 
 
 def test_a_numbering_is_the_identity_only_when_it_moves_no_value(build_package):
@@ -1168,6 +1185,143 @@ def test_a_numbering_is_the_identity_only_when_it_moves_no_value(build_package):
     (family,) = schema.order
 
     assert (schema.numbering_at(family, 2).identity, schema.numbering_at(family, 3).identity) == (False, True)
+
+
+DERIVED = (
+    HEADER
+    + "class E(IntEnum, uint8):\n    A = 0\n    with value(since=3):\n        B = auto()\n    COUNT = auto()\n"
+    + "    LATEST = COUNT - 1\n"
+)
+
+
+def test_a_numbering_lacking_a_member_is_not_the_identity(build_package):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).identity is False
+
+
+def test_a_member_value_no_member_holds_at_a_version_is_absent_there(build_package):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).absent == {2}
+
+
+def test_a_member_value_no_member_numbers_at_a_version_is_lossy_there(build_package):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).lossy == {2}
+
+
+def test_a_member_encodes_to_its_number_where_it_differs_from_its_value(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).encoded.get(2) == 1
+
+
+def test_a_number_decodes_to_the_value_of_the_member_holding_it(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).decoded == {1: 2}
+
+
+def test_a_derived_value_no_member_holds_encodes_to_the_derived_members_number(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).encoded.get(1) == 0
+
+
+def test_a_derived_value_no_member_holds_is_not_absent(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).absent == frozenset()
+
+
+def test_a_number_no_member_value_holds_pairs_with_the_first_unused_value_both_ways(build_package):
+    schema = Schema(build_package({"a": DISPLACED}))
+    (family,) = schema.order
+    numbering = schema.numbering_at(family, 2)
+
+    assert (numbering.encoded[1], numbering.decoded[3]) == (3, 1)
+
+
+def test_an_unused_value_left_with_no_free_number_is_lossy(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).lossy == {2}
+
+
+def test_free_numbers_pair_with_unused_values_in_ascending_order(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(3, since=3)\n"
+        + "    B = value(2, until=3)\n    B = value(4, since=3)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+    numbering = schema.numbering_at(family, 2)
+
+    assert (numbering.encoded.get(1), numbering.encoded.get(2)) == (3, 4)
+
+
+def test_a_derived_value_numbered_as_itself_has_no_encoded_entry(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    M = 1\n    D = M\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    T = 1\n    M = 5\n    D = T\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).encoded == {5: 1}
+
+
+def test_a_paired_value_is_not_lossy(build_package):
+    schema = Schema(build_package({"a": DISPLACED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).lossy == frozenset()
+
+
+def test_numberings_lists_a_models_numberings_in_version_order(build_package):
+    schema = Schema(build_package({"a": RENUMBERED}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.numberings(model) == [schema.numbering_at(family, 1), schema.numbering_at(family, 3)]
+
+
+def test_numberings_lists_the_numberings_of_both_forms_in_version_order(build_package):
+    source = (
+        HEADER
+        + "@type(since=3)\nclass P:\n    class F(IntEnum, uint8):\n        A = 1\n        B = 2\n    f: F\n\n"
+        + "@type(cereal=False)\nclass P:\n    class F(IntEnum, uint8):\n        B = 1\n        A = 2\n    f: F\n\n"
+        + "@packet(id=1)\nclass Q:\n    p: P = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, pre_cereal, _, _ = schema.order
+    (model,) = schema.models(cereal)
+
+    assert schema.numberings(model) == [schema.numbering_at(pre_cereal, 1), schema.numbering_at(cereal, 3)]
+
+
+def test_a_derived_member_whose_value_another_member_holds_with_another_number_is_rejected(build_package):
+    source = (
+        HEADER
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n    X = A\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n    X = B\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"^a\.py: E\.X: is numbered 1 at 1, where B holds its value with 2$"):
+        Schema(package)
 
 
 def test_a_library_value_is_the_members_number_at_the_newest_version(build_package):
@@ -1310,7 +1464,7 @@ def test_a_sibling_form_has_its_own_numbering(build_package):
     schema = Schema(build_package({"a": SIBLINGS}))
     _, _, pre_cereal, _, _ = schema.order
 
-    assert schema.numbering_at(pre_cereal, 1).moved == {1: 2, 2: 1}
+    assert schema.numbering_at(pre_cereal, 1).encoded == {1: 2, 2: 1}
 
 
 def test_members_numbered_alike_share_the_free_value_a_displacement_gives_them(build_package):
@@ -1392,7 +1546,10 @@ def test_two_free_values_differ(build_package):
 
 
 def test_an_alias_of_a_sentinel_takes_no_free_value(build_package):
-    source = DISPLACED + "    COUNT = sentinel()\n    LAST = COUNT - 1\n    Z = value(9, until=3)\n"
+    source = (
+        DISPLACED
+        + "    COUNT = sentinel()\n    with value(since=3):\n        LAST = COUNT - 1\n    Z = value(9, until=3)\n"
+    )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
     (model,) = schema.models(family)
@@ -1450,14 +1607,14 @@ def test_a_member_numbered_alike_to_a_displaced_one_takes_no_free_value(build_pa
 def test_an_alias_holds_no_value_a_member_can_clash_with(build_package):
     source = (
         HEADER
-        + "class E(IntEnum, uint8):\n    Q = value(7, until=3)\n    R = value(7, since=3)\n"
+        + "class E(IntEnum, uint8):\n    R = value(7, since=3)\n"
         + "    Z = 9\n    L = value(9, until=3)\n    with value(since=3):\n        L = R\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
     (model,) = schema.models(family)
 
-    assert model.values == {"Q": 7, "R": 7, "Z": 9, "L": 7}
+    assert model.values == {"R": 7, "Z": 9, "L": 7}
 
 
 def test_a_member_beside_the_second_holder_of_a_value_with_no_room_is_rejected(build_package):
@@ -1492,6 +1649,14 @@ def test_a_member_beside_a_holder_only_at_an_older_version_with_no_room_is_rejec
         Schema(package)
 
 
+def test_a_model_marks_the_members_its_newest_declaration_derives(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert model.derived == {"LATEST"}
+
+
 def test_an_alias_subtracts_its_offset(build_package):
     source = HEADER + "class E(IntEnum, uint8):\n    A = 0\n    COUNT = 1\n    LAST = COUNT - 1\n"
     schema = Schema(build_package({"a": source}))
@@ -1506,7 +1671,7 @@ def test_an_alias_subtracts_its_offset(build_package):
     [
         pytest.param("tag: Literal[E.X]", id="literal"),
         pytest.param("bits: bitset[E.X]\n    y: uint8 = field(when=lambda p: p.bits.test(E.X))", id="test"),
-        pytest.param("k: E\n    y: uint8 = field(when=lambda p: p.k == E.X)", id="condition"),
+        pytest.param("bits: bitset[E.X]", id="width"),
     ],
 )
 def test_an_encoding_numbers_a_member_its_fields_name_at_its_version(build_package, fields):
@@ -1514,7 +1679,109 @@ def test_an_encoding_numbers_a_member_its_fields_name_at_its_version(build_packa
     schema = Schema(build_package({"a": source + f"class P:\n    {fields}\n"}))
     enum, family = schema.order
 
-    assert schema.number(schema.encoding_at(family, 3), MemberRef(enum, "X")) == 2
+    assert schema.encoding_at(family, 3).numbers.get(MemberRef(enum, "X")) == 2
+
+
+def test_an_encoding_does_not_number_a_member_a_condition_compares(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n\n"
+        + "class P:\n    k: E\n    y: uint8 = field(when=lambda p: p.k == E.X)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, family = schema.order
+
+    assert MemberRef(enum, "X") not in schema.encoding_at(family, 3).numbers
+
+
+def test_a_condition_compares_a_sentinel_as_the_value_its_number_decodes_to(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    B = value(1, until=3)\n    B = value(2, since=3)\n    A = 0\n"
+        + "    COUNT = sentinel()\n\n"
+        + "class P:\n    k: E\n    y: uint8 = field(when=lambda p: p.k == E.COUNT)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, family = schema.order
+
+    assert schema.encoding_at(family, 2).numbers.get(MemberRef(enum, "COUNT")) == 2
+
+
+def test_a_condition_on_a_sentinel_whose_number_decodes_to_no_value_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 0\n    X = value(1, since=3)\n    B = value(1, until=3)\n"
+        + "    B = value(2, since=3)\n    COUNT = sentinel()\n\n"
+        + "class P:\n    k: E\n    y: uint8 = field(when=lambda p: p.k == E.COUNT)\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"^a\.py: P\.y: compares E\.COUNT, numbered 2 at 1, which decodes to no value$"
+    ):
+        Schema(package)
+
+
+def test_a_condition_on_a_name_coded_member_keys_on_its_value(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n    Y = 3\n\n"
+        + "class P:\n    e: E = field(type=str)\n    y: uint8 = field(when=lambda p: p.e == E.X)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, family = schema.order
+    (model,) = schema.models(family)
+
+    assert len(schema.encodings(model)) == 1
+
+
+def test_a_condition_on_a_sentinel_whose_number_alone_moves_is_a_second_encoding(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 1\n    with value(until=3):\n        B = sentinel()\n"
+        + "    COUNT = sentinel()\n\n"
+        + "class P:\n    k: E\n    y: uint8 = field(when=lambda p: p.k == E.COUNT)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, family = schema.order
+    (model,) = schema.models(family)
+
+    assert len(schema.encodings(model)) == 2
+
+
+def test_a_literal_whose_member_is_renumbered_is_a_second_encoding(build_package):
+    source = HEADER + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n\n"
+    schema = Schema(build_package({"a": source + "class P:\n    tag: Literal[E.X]\n"}))
+    _, family = schema.order
+    (model,) = schema.models(family)
+
+    assert len(schema.encodings(model)) == 2
+
+
+def test_a_derived_member_resolves_to_the_member_numbered_like_it_at_the_version(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.resolve(MemberRef(family, "LATEST"), 2) == MemberRef(family, "A")
+
+
+def test_a_member_that_is_not_derived_resolves_to_itself(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.resolve(MemberRef(family, "COUNT"), 2) == MemberRef(family, "COUNT")
+
+
+def test_a_numbering_that_leaves_and_returns_is_one_numbering_with_two_runs(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 0\n    B = value(1, until=3)\n    B = value(2, since=3, until=4)\n"
+        + "    B = value(1, since=4)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 1).runs == [Range(None, 3), Range(4, None)]
 
 
 SENTINEL = HEADER + "class E(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n    COUNT = sentinel()\n\n"
@@ -1616,7 +1883,7 @@ def test_a_value_is_written_with_the_first_name_its_number_takes_at_the_version(
     source = (
         HEADER
         + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n    X = A\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n    X = B\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 2\n\n"
         + "class P:\n    e: E = field(type=str)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -1625,20 +1892,198 @@ def test_a_value_is_written_with_the_first_name_its_number_takes_at_the_version(
     assert schema.naming_at(enum, 2).written == {1: "x", 2: "b"}
 
 
-def test_enum_type_is_the_shape_live_at_the_version(build_package):
-    schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
+def test_a_naming_reads_each_live_name_as_its_members_value(build_package):
+    schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert (schema.enum_type(enum, 2), schema.enum_type(enum, 3)) == tuple(schema.shapes(enum))
+    assert schema.naming_at(enum, 2).read == {"old": 1}
 
 
-def test_an_enum_slots_target_is_the_shape_at_the_models_version(build_package):
+def test_a_derived_value_no_member_holds_is_written_with_the_derived_name(build_package):
+    schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    e: E = field(type=str)\n"}))
+    enum, _ = schema.order
+
+    assert schema.naming_at(enum, 2).written.get(1) == "latest"
+
+
+def test_a_derived_name_reads_as_the_value_of_the_member_numbered_like_it(build_package):
+    schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    e: E = field(type=str)\n"}))
+    enum, _ = schema.order
+
+    assert schema.naming_at(enum, 2).read.get("latest") == 0
+
+
+def test_namings_lists_a_models_namings_in_version_order(build_package):
+    schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
+    enum, _ = schema.order
+    (model,) = schema.models(enum)
+
+    assert schema.namings(model) == [schema.naming_at(enum, 1), schema.naming_at(enum, 3)]
+
+
+def test_namings_lists_the_namings_of_both_forms_in_version_order(build_package):
+    source = (
+        HEADER
+        + "@type(since=3)\nclass P:\n    class F(IntEnum, uint8):\n        A = 1\n    f: F = field(type=str)\n\n"
+        + "@type(cereal=False)\nclass P:\n    class F(IntEnum, uint8):\n        A = 1\n        B = 2\n"
+        + "    f: F = field(type=str)\n\n"
+        + "@packet(id=1)\nclass Q:\n    p: P = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    cereal, _, pre_cereal, _, _ = schema.order
+    (model,) = schema.models(cereal)
+
+    assert schema.namings(model) == [schema.naming_at(pre_cereal, 1), schema.naming_at(cereal, 3)]
+
+
+def test_an_enum_no_field_codes_by_name_has_no_naming(build_package):
+    schema = Schema(build_package({"a": GROWING}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.namings(model) == []
+
+
+@pytest.mark.parametrize(
+    ("members", "message"),
+    [
+        pytest.param(
+            "    A = value(0, since=3)\n    B = 1\n    COUNT = 2\n",
+            r"^a\.py: E: lacks A at 1, below a bitset width$",
+            id="a member absent",
+        ),
+        pytest.param(
+            "    A = 0\n    B = value(1, until=3)\n    B = value(2, since=3)\n    C = value(1, since=3)\n"
+            "    COUNT = 3\n",
+            r"^a\.py: E: numbers B 1 at 1, not its value 2, below a bitset width$",
+            id="a member numbered off its value",
+        ),
+        pytest.param(
+            "    A = 0\n    X = value(1, until=3)\n    X = value(5, since=3)\n    COUNT = value(2, until=3)\n"
+            "    COUNT = value(6, since=3)\n",
+            r"^a\.py: E: numbers X 1 at 1, not its value 5, below a bitset width$",
+            id="a member numbered below the width from a value above it",
+        ),
+    ],
+)
+def test_a_bitset_width_enum_not_numbering_a_member_below_the_width_as_its_value_is_rejected(
+    build_package, members, message
+):
+    source = HEADER + "class E(IntEnum, uint8):\n" + members + "\nclass P:\n    flags: bitset[E.COUNT]\n"
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=message):
+        Schema(package)
+
+
+@pytest.mark.parametrize(
+    ("annotation", "predicate"),
+    [
+        pytest.param("uint8", "p.a == E.X", id="an integer"),
+        pytest.param("F", "p.a == E.X", id="another enum"),
+        pytest.param("E", "E.X", id="nothing"),
+        pytest.param("uint8", "not p.a == E.X", id="a negation"),
+        pytest.param("uint8", "p.a == 1 and p.a == E.X", id="a conjunction"),
+    ],
+)
+def test_a_condition_comparing_a_member_with_a_field_of_another_type_is_rejected(build_package, annotation, predicate):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = 1\n\nclass F(IntEnum, uint8):\n    X = 1\n\n"
+        + f"class P:\n    a: {annotation}\n    b: uint8 = field(when=lambda p: {predicate})\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(CompilerError, match=r"^a\.py: P\.b: compares E\.X with a value of another type$"):
+        Schema(package)
+
+
+def test_a_condition_comparing_a_field_with_a_member_of_its_sibling_form_is_accepted(build_package):
+    source = (
+        HEADER
+        + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    f: F\n\n"
+        + "@type(cereal=False)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 3\n    f: F\n"
+        + "    y: uint8 = field(when=lambda p: p.f == A.F.X)\n\n"
+        + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    _, _, _, pre_cereal, _ = schema.order
+
+    assert len(schema.models(pre_cereal)) == 1
+
+
+@pytest.mark.parametrize(
+    "predicate",
+    [
+        pytest.param("p.k == 1", id="an integer"),
+        pytest.param("p.k & 1", id="a mask"),
+        pytest.param("p.k < E.Y", id="an order"),
+        pytest.param("not p.k", id="its truth"),
+    ],
+)
+def test_a_condition_reading_an_enum_as_a_number_where_a_value_moves_is_rejected(build_package, predicate):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    X = value(1, until=3)\n    X = value(2, since=3)\n    Y = 3\n\n"
+        + f"class P:\n    k: E\n    b: uint8 = field(when=lambda p: {predicate})\n"
+    )
+    package = build_package({"a": source})
+
+    with pytest.raises(
+        CompilerError, match=r"^a\.py: P\.b: reads k as a number at 1, where E numbers a value apart from it$"
+    ):
+        Schema(package)
+
+
+def test_a_condition_reading_an_enum_as_a_number_is_accepted_where_only_members_are_missing(build_package):
+    source = GROWING + "\nclass P:\n    k: E\n    b: uint8 = field(when=lambda p: p.k == 1)\n"
+    schema = Schema(build_package({"a": source}))
+    enum, _ = schema.order
+
+    assert schema.numbering_at(enum, 2).absent == {2}
+
+
+def test_a_derived_member_below_a_bitset_width_may_be_numbered_apart_from_its_value(build_package):
+    schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    flags: bitset[E.COUNT]\n"}))
+    _, family = schema.order
+    model = schema.model_at(family, 1)
+    (slot,) = model.slots
+
+    assert schema.width(model, slot.type) == 1
+
+
+def test_a_condition_on_an_enum_encoding_a_derived_value_to_another_members_number_is_rejected(build_package):
+    package = build_package({"a": DERIVED + "\nclass P:\n    e: E\n    x: uint8 = field(when=lambda p: p.e == E.A)\n"})
+
+    with pytest.raises(
+        CompilerError, match=r"^a\.py: P\.x: compares a value of E at 1, where LATEST encodes to A's number$"
+    ):
+        Schema(package)
+
+
+def test_a_dict_keyed_by_an_enum_encoding_a_derived_value_to_another_members_number_is_rejected(build_package):
+    package = build_package({"a": DERIVED + "\nclass P:\n    m: dict[E, uint8]\n"})
+
+    with pytest.raises(CompilerError, match=r"^a\.py: E: keys a dict at 1, where LATEST encodes to A's number$"):
+        Schema(package)
+
+
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5])
+def test_enum_type_is_the_family_model_at_every_version_when_a_number_moves(build_package, version):
+    schema = Schema(build_package({"a": RENUMBERED}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert schema.enum_type(family, version) is model
+
+
+def test_an_enum_slots_target_is_the_model_of_a_renumbered_family(build_package):
     schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
     enum, family = schema.order
     model = schema.model_at(family, 1)
     (slot,) = model.slots
 
-    assert schema.target(model, slot.type) is schema.shapes(enum)[0]
+    assert schema.target(model, slot.type) is schema.models(enum)[0]
 
 
 def test_a_parent_whose_enum_gains_a_member_with_stable_numbers_is_one_model(build_package):
@@ -1649,7 +2094,7 @@ def test_a_parent_whose_enum_gains_a_member_with_stable_numbers_is_one_model(bui
     assert len(schema.models(family)) == 1
 
 
-def test_a_models_nested_holds_the_shape_of_its_nested_enum(build_package):
+def test_a_models_nested_holds_the_model_of_its_nested_enum(build_package):
     source = HEADER + (
         "class A:\n    class F(IntEnum, uint8):\n        X = value(1, until=3)\n        X = value(2, since=3)\n"
         "        Y = value(1, since=3)\n    f: F\n"
@@ -1657,7 +2102,7 @@ def test_a_models_nested_holds_the_shape_of_its_nested_enum(build_package):
     schema = Schema(build_package({"a": source}))
     enum, family = schema.order
 
-    assert schema.model_at(family, 1).nested == (schema.shapes(enum)[0],)
+    assert schema.model_at(family, 1).nested == (schema.models(enum)[0],)
 
 
 def test_a_nested_enum_model_is_owned_by_the_newest_model_that_holds_it(build_package):
@@ -1692,12 +2137,6 @@ def test_a_literal_whose_enum_gains_a_member_but_whose_number_does_not_keeps_one
 
 GROWING = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
 
-RETYPED = (
-    HEADER
-    + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n\n"
-    + "@type(since=3)\nclass E(IntEnum, int32):\n    A = 1\n"
-)
-
 NESTED_ENUM_PAIR = (
     HEADER
     + "class A:\n    class F(IntEnum, uint8):\n        X = 1\n    f: F\n\n"
@@ -1730,11 +2169,12 @@ def test_enum_types_of_an_unrenumbered_family_is_its_model(build_package):
     assert schema.enum_types(family) == [model]
 
 
-def test_enum_types_of_a_renumbered_family_are_its_shapes_in_version_order(build_package):
+def test_enum_types_of_a_renumbered_family_is_its_model(build_package):
     schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
+    (model,) = schema.models(family)
 
-    assert schema.enum_types(family) == [schema.enum_type(family, 1), schema.enum_type(family, 3)]
+    assert schema.enum_types(family) == [model]
 
 
 def test_enum_types_gives_both_forms_of_a_nested_pair_the_same_type(build_package):
@@ -1752,13 +2192,6 @@ def test_enumerators_of_a_model_are_its_library_values(build_package):
     assert schema.enumerators(model) == {"A": 2, "B": 3}
 
 
-def test_enumerators_of_a_shape_are_its_numbers(build_package):
-    schema = Schema(build_package({"a": RENUMBERED}))
-    (family,) = schema.order
-
-    assert schema.enumerators(schema.shapes(family)[0]) == {"A": 1}
-
-
 def test_enum_runs_of_a_model_are_the_union_of_its_runs_over_both_forms(build_package):
     schema = Schema(build_package({"a": SPLIT_NESTED_ENUM_PAIR}))
     cereal, _, _, _, _ = schema.order
@@ -1767,65 +2200,12 @@ def test_enum_runs_of_a_model_are_the_union_of_its_runs_over_both_forms(build_pa
     assert schema.enum_runs(model) == [Range(None, 5)]
 
 
-def test_enum_runs_of_a_shape_are_its_ranges(build_package):
-    schema = Schema(build_package({"a": RENUMBERED}))
-    (family,) = schema.order
-
-    assert schema.enum_runs(schema.shapes(family)[1]) == [Range(3, None)]
-
-
-@pytest.mark.parametrize(
-    ("source", "renumbered"),
-    [
-        pytest.param(GROWING, False, id="members only added"),
-        pytest.param(RENUMBERED, True, id="a number moves at a later version"),
-        pytest.param(RETYPED, True, id="identity numbers change underlying type"),
-        pytest.param(
-            HEADER + "class E(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n    COUNT = sentinel()\n"
-            "    LATEST = COUNT - 1\n",
-            True,
-            id="an alias of a sentinel moves",
-        ),
-        pytest.param(RENAMED + "class P:\n    e: E = field(type=str)\n", True, id="a name-coded member renames"),
-    ],
-)
-def test_an_enum_model_is_renumbered_exactly_when_a_number_a_name_or_the_underlying_type_changes(
-    build_package, source, renumbered
-):
-    schema = Schema(build_package({"a": source}))
-    family = schema.order[0]
-    (model,) = schema.models(family)
-
-    assert model.renumbered is renumbered
-
-
-def test_enum_types_of_a_family_whose_identity_numbers_change_underlying_type_are_its_shapes(build_package):
-    schema = Schema(build_package({"a": RETYPED}))
-    (family,) = schema.order
-
-    assert schema.enum_types(family) == schema.shapes(family)
-
-
-def test_a_parent_whose_enum_changes_underlying_type_stays_two_models(build_package):
-    schema = Schema(build_package({"a": RETYPED + "\nclass P:\n    e: E\n"}))
-    _, family = schema.order
-
-    assert len(schema.models(family)) == 2
-
-
-def test_two_struct_versions_differing_only_in_an_unrenumbered_enum_have_one_encoding(build_package):
+def test_two_struct_versions_differing_only_in_an_enum_that_gains_a_member_have_two_encodings(build_package):
     schema = Schema(build_package({"a": GROWING + "\nclass P:\n    e: E\n"}))
     _, family = schema.order
     (model,) = schema.models(family)
 
-    assert len(schema.encodings(model)) == 1
-
-
-def test_each_model_of_a_struct_holding_a_renumbered_enum_has_one_encoding(build_package):
-    schema = Schema(build_package({"a": RENUMBERED + "\nclass P:\n    e: E\n"}))
-    _, family = schema.order
-
-    assert {len(schema.encodings(model)) for model in schema.models(family)} == {1}
+    assert len(schema.encodings(model)) == 2
 
 
 @pytest.mark.parametrize(
@@ -2237,14 +2617,13 @@ def test_a_nested_child_living_only_inside_the_overlap_is_owned_by_a_cerealized_
     source = (
         HEADER
         + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    f: F\n\n"
-        + "@type(cereal=False, until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 3\n"
-        + "    f: F\n\n"
+        + "@type(cereal=False, until=3)\nclass A:\n    x: uint16\n\n"
         + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, until=3)\n"
     )
     schema = Schema(build_package({"a": source}))
-    enum, _, _, _, _ = schema.order
+    enum, _, _, _ = schema.order
 
-    assert schema.name(schema.owner(schema.shapes(enum)[0])) == "CerealizedA"
+    assert schema.name(schema.owner(schema.models(enum)[0])) == "CerealizedA"
 
 
 def test_a_bare_cereal_model_may_share_a_name_and_since_with_a_hand_written_model_under_a_version(build_package):
@@ -2280,8 +2659,7 @@ def test_a_temporary_owner_holding_a_child_live_outside_the_overlap_is_rejected(
         + "@type(until=3)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n    f: F\n\n"
         + "@type(since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n        Y = 2\n"
         + "    f: F\n    y: uint8\n\n"
-        + "@type(cereal=False, since=3, until=5)\nclass A:\n    class F(IntEnum, uint8):\n        X = 1\n"
-        + "        Y = 3\n    f: F\n\n"
+        + "@type(cereal=False, since=3, until=5)\nclass A:\n    x: uint16\n\n"
         + "@packet(id=1)\nclass P:\n    a: A = field(cereal=False, since=3, until=5)\n"
     )
     package = build_package({"a": source})
@@ -2333,24 +2711,6 @@ def test_an_enum_model_live_at_the_latest_version_has_no_scope(build_package):
     (family,) = schema.order
 
     assert schema.scope(schema.enum_type(family, 5)) is None
-
-
-def test_an_older_enum_shapes_scope_is_its_first_version(build_package):
-    source = HEADER + (
-        "class E(IntEnum, uint8):\n    A = value(1, until=3)\n    A = value(2, since=3)\n"
-        "    B = value(1, since=3, until=4)\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    (family,) = schema.order
-
-    assert schema.scope(schema.enum_type(family, 3)) == 3
-
-
-def test_the_oldest_enum_shapes_scope_is_the_first_modelled_version(build_package):
-    schema = Schema(build_package({"a": RENUMBERED}))
-    (family,) = schema.order
-
-    assert schema.scope(schema.enum_type(family, 1)) == 1
 
 
 def test_an_enum_that_ends_before_the_latest_version_has_no_bare_model(build_package):

@@ -1,34 +1,36 @@
 import json
+from functools import partial
 
 from bedrock_protocol_compiler.descriptor import Binary, CompilerError, Member, MemberRef
-from bedrock_protocol_compiler.java import names
+from bedrock_protocol_compiler.java import members, names
 from bedrock_protocol_compiler.java.expression import enum_class
 from bedrock_protocol_compiler.java.value import literal
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, EnumType, Schema
+from bedrock_protocol_compiler.schema import EnumModel, Naming, Schema
 
 UNRECOGNIZED = "UNRECOGNIZED"
 NUMBER = "value"
 
 
 class EnumGenerator:
-    def __init__(self, schema: Schema, enum_type: EnumType) -> None:
+    def __init__(self, schema: Schema, enum_type: EnumModel) -> None:
         enumerators = schema.enumerators(enum_type)
         self.name = enum_type.family.name
         self.qualified = names.qualified(schema, enum_type)
-        forms = enum_type.runs if isinstance(enum_type, EnumModel) else [enum_type.family]
-        self.name_coded = any(form in schema.name_coded for form in forms)
-        number = enum_class(enum_type)
+        self.name_coded = any(form in schema.name_coded for form in enum_type.runs)
+        self.namings = schema.namings(enum_type) if self.name_coded else []
+        self.values = enumerators
+        number = self.number = enum_class(enum_type)
         self.numbers = {member.name: literal(enumerators[member.name], number) for member in enum_type.members}
         self.constants: list[Member] = []
         self.aliases: list[tuple[Member, str]] = []
-        canonical: dict[str, str] = {}
+        self.canonical: dict[str, str] = {}
         for member in enum_type.members:
             if member.name == UNRECOGNIZED:
                 raise CompilerError(f"{self.qualified}.{UNRECOGNIZED}: is the open enum's unknown value")
             if member.name == NUMBER:
                 raise CompilerError(f"{self.qualified}.{NUMBER}: is the field that holds a constant's number")
-            first = canonical.setdefault(self.numbers[member.name], member.name)
+            first = self.canonical.setdefault(self.numbers[member.name], member.name)
             if first == member.name:
                 self.constants.append(member)
             else:
@@ -36,8 +38,8 @@ class EnumGenerator:
         reflected = sorted(enum_type.members, key=lambda member: not isinstance(member.value, MemberRef | Binary))
         self.encoded: dict[str, str] = {}
         for member in reflected:
-            self.encoded.setdefault(canonical[self.numbers[member.name]], member.encoded_name)
-        self.decoded = [(member.encoded_name, canonical[self.numbers[member.name]]) for member in reflected]
+            self.encoded.setdefault(self.canonical[self.numbers[member.name]], member.encoded_name)
+        self.decoded = [(member.encoded_name, self.canonical[self.numbers[member.name]]) for member in reflected]
 
     def definition(self, p: Printer) -> None:
         p.emit("public enum $name$ {", name=self.name)
@@ -88,7 +90,9 @@ class EnumGenerator:
             name=self.name,
             cases=lambda: self.number_cases(p),
         )
-        if self.name_coded:
+        if len(self.namings) > 1:
+            self.protocol_codec(p)
+        elif self.name_coded:
             self.codec(p)
 
     def number_cases(self, p: Printer) -> None:
@@ -118,6 +122,66 @@ class EnumGenerator:
             name=self.name,
             constants=lambda: self.constant_cases(p),
         )
+
+    def protocol_codec(self, p: Printer) -> None:
+        unknown = json.dumps(f"{self.name}: is not a type at protocol ")
+        p.emit(
+            """
+
+            public void encode(int protocol, @NotNull ByteBuf buf) {
+                $encodes$
+            }
+
+            public static @NotNull $name$ decode(int protocol, @NotNull ByteBuf buf) {
+                $decodes$
+            }
+            """,
+            name=self.name,
+            encodes=lambda: members.ladder(
+                p, [(each.runs, partial(self.encode_naming, p, each)) for each in self.namings], unknown
+            ),
+            decodes=lambda: members.ladder(
+                p, [(each.runs, partial(self.decode_naming, p, each)) for each in self.namings], unknown
+            ),
+        )
+
+    def encode_naming(self, p: Printer, naming: Naming) -> None:
+        p.emit(
+            """
+            ByteBufCodec.writeString(buf, switch (this) {
+                $names$
+                default -> throw new IllegalArgumentException($unknown$);
+            });
+            return;
+            """,
+            names=lambda: self.written_cases(p, naming),
+            unknown=json.dumps(f"{self.name}: has no encoded name at protocol ") + " + protocol",
+        )
+
+    def written_cases(self, p: Printer, naming: Naming) -> None:
+        for member in self.constants:
+            if self.values[member.name] in naming.written:
+                encoded = json.dumps(naming.written[self.values[member.name]])
+                p.emit("case $name$ -> $encoded$;", name=member.name, encoded=encoded)
+
+    def decode_naming(self, p: Printer, naming: Naming) -> None:
+        p.emit(
+            """
+            return switch (ByteBufCodec.foldAscii(ByteBufCodec.readString(buf))) {
+                $constants$
+                default -> throw DecodeException.unknownValue(buf.readerIndex());
+            };
+            """,
+            constants=lambda: self.read_cases(p, naming),
+        )
+
+    def read_cases(self, p: Printer, naming: Naming) -> None:
+        for encoded, value in naming.read.items():
+            p.emit(
+                "case $encoded$ -> $name$;",
+                encoded=json.dumps(encoded),
+                name=self.canonical[literal(value, self.number)],
+            )
 
     def name_cases(self, p: Printer) -> None:
         for member in self.constants:

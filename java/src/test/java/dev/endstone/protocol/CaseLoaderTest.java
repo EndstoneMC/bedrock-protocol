@@ -19,6 +19,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class CaseLoaderTest {
+    private static final String COMMAND_REQUEST =
+            "{\"command\":\"\",\"origin\":{\"type\":\"player\","
+                    + "\"uuid\":\"00000000-0000-0000-0000-000000000000\","
+                    + "\"request_id\":\"\",\"player_id\":0},"
+                    + "\"internal_source\":false,\"version\":\"%s\"}";
+
     static Stream<Arguments> nonFiniteFloats() {
         return Stream.of(
                 argumentSet("not a number", "NaN", Float.NaN),
@@ -145,5 +151,60 @@ final class CaseLoaderTest {
                                 "{\"container_id\":255,\"container_type\":0,"
                                         + "\"server_initiated_close\":false}"));
         assertEquals(ContainerID.NONE, packet.getContainerId());
+    }
+
+    @Test
+    void anIntegerEnumNumberLoadsAsTheValueItHasAtTheCasesProtocol()
+            throws ReflectiveOperationException {
+        AnimateEntityPacket packet =
+                CaseLoader.load(
+                        729,
+                        AnimateEntityPacket.class,
+                        JsonParser.parseString(
+                                "{\"animation\":\"\",\"next_state\":\"\",\"stop_expression\":\"\","
+                                        + "\"stop_expression_version\":13,\"controller\":\"\","
+                                        + "\"blend_out_time\":0,\"runtime_ids\":[]}"));
+        assertEquals(14, packet.getStopExpressionVersionValue());
+    }
+
+    @Test
+    void anEncodedNameTheCasesProtocolLacksIsRejected() {
+        assertEquals(
+                "CommandRequestPacket.version: playsoundoutputfix names no member of "
+                        + "class dev.endstone.protocol.CurrentCmdVersion",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () ->
+                                        CaseLoader.load(
+                                                729,
+                                                CommandRequestPacket.class,
+                                                JsonParser.parseString(
+                                                        COMMAND_REQUEST.formatted(
+                                                                "playsoundoutputfix"))))
+                        .getMessage());
+    }
+
+    @Test
+    void anEncodedNameTwoMembersWriteLoadsAsTheMemberTheCasesProtocolReadsIt()
+            throws ReflectiveOperationException {
+        assertEquals(
+                CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT,
+                CaseLoader.load(
+                                729,
+                                CommandRequestPacket.class,
+                                JsonParser.parseString(COMMAND_REQUEST.formatted("latest")))
+                        .getVersion());
+    }
+
+    @Test
+    void aNumberOfAnEnumNestedInAMessageLoadsThroughItsHelper()
+            throws ReflectiveOperationException {
+        MapDecoration decoration =
+                CaseLoader.load(
+                        729,
+                        MapDecoration.class,
+                        JsonParser.parseString(
+                                "{\"image\":25,\"rotation\":0,\"x\":0,\"y\":0,\"label\":\"\",\"color\":0}"));
+        assertEquals(30, decoration.getImageValue());
     }
 }

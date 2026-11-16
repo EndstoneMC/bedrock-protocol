@@ -168,6 +168,8 @@ def test_a_list_field_is_a_copy():
 
 UNNAMED_STATUS = bytes([0, 0, 0, 0xFF])
 UNNAMED_VIOLATING_PACKET_ID = bytes.fromhex("00009e9c0100")
+UNNAMED_ACTOR_TYPE = bytes.fromhex("0a")
+PAIRED_ACTOR_TYPE = bytes.fromhex("b402")
 
 UNNAMED_VALUES = [
     pytest.param(proto, proto.PlayStatusPacket, UNNAMED_STATUS, "status", 255, id="play-status"),
@@ -179,11 +181,15 @@ UNNAMED_VALUES = [
         9999,
         id="violating-packet-id",
     ),
+    pytest.param(v729, v729.SetLastHurtByPacket, UNNAMED_ACTOR_TYPE, "last_hurt_by", 5, id="actor-type-729"),
+    pytest.param(v729, v729.SetLastHurtByPacket, PAIRED_ACTOR_TYPE, "last_hurt_by", 68504, id="actor-type-729-paired"),
 ]
 
 UNNAMED_ENCODINGS = [
     pytest.param(proto, proto.PlayStatusPacket, UNNAMED_STATUS, id="play-status"),
     pytest.param(v729, v729.PacketViolationWarningPacket, UNNAMED_VIOLATING_PACKET_ID, id="violating-packet-id"),
+    pytest.param(v729, v729.SetLastHurtByPacket, UNNAMED_ACTOR_TYPE, id="actor-type-729"),
+    pytest.param(v729, v729.SetLastHurtByPacket, PAIRED_ACTOR_TYPE, id="actor-type-729-paired"),
 ]
 
 
@@ -242,6 +248,17 @@ def test_a_value_that_does_not_fit_the_enum_is_rejected():
         proto.ContainerClosePacket(container_id=1000)
 
 
+SET_LAST_HURT_BY_SKELETON_HORSE_729 = bytes.fromhex("b4ec8a02")
+SET_LAST_HURT_BY_SKELETON_HORSE_2225 = bytes.fromhex("b4cc8a02")
+TINT_MAP_COLOR_SKELETON_729 = bytes.fromhex("10706572736f6e615f736b656c65746f6e00000000")
+TINT_MAP_COLOR_CO_CO_729 = bytes.fromhex("05636f5f636f00000000")
+TINT_MAP_COLOR_BARE_SKELETON_729 = bytes.fromhex("08736b656c65746f6e00000000")
+PERSONA_PIECE_HANDLE_SKELETON_2168 = bytes.fromhex("0001000000000000000000000000000000000000000000")
+ANIMATE_ENTITY_MOLANG_729 = bytes.fromhex("0000000c000000000000000000")
+ANIMATE_ENTITY_MOLANG_2225 = bytes.fromhex("0000000d000000000000000000")
+COMMAND_REQUEST_LATEST = bytes.fromhex(
+    "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"
+)
 MOVEMENT_EFFECT = bytes.fromhex("01040604")
 DISCONNECT_ASYNC_JOIN_DENIED = bytes.fromhex("ec01000000")
 VIOLATION_OF_CLIENTBOUND_DATA_STORE = bytes.fromhex("0000940500")
@@ -249,78 +266,123 @@ VIOLATION_OF_PASSENGER_JUMP = bytes.fromhex("00002800")
 
 
 @pytest.mark.parametrize(
-    ("version", "cls", "data", "field", "member"),
+    ("version", "cls", "data", "message"),
     [
         pytest.param(
             v748,
             v748.MovementEffectPacket,
             MOVEMENT_EFFECT,
-            "effect_type",
-            v748.MovementEffectType.GEYSER_BOOST,
+            r"^MovementEffectPacket\.effect_type: unknown value at byte 2 of 4$",
             id="movement-effect-748",
         ),
         pytest.param(
             v729,
             v729.DisconnectPacket,
             DISCONNECT_ASYNC_JOIN_DENIED,
-            "reason",
-            v729.DisconnectFailReason.ASYNC_JOIN_TASK_DENIED,
+            r"^DisconnectPacket\.reason: unknown value at byte 2 of 5$",
             id="disconnect-729",
         ),
         pytest.param(
             v729,
             v729.PacketViolationWarningPacket,
             VIOLATION_OF_CLIENTBOUND_DATA_STORE,
-            "violating_packet_id",
-            v729.MinecraftPacketIds.CLIENTBOUND_DATA_STORE,
+            r"^PacketViolationWarningPacket\.violating_packet_id: unknown value at byte 4 of 5$",
             id="violation-warning-729",
         ),
         pytest.param(
             v2225,
             v2225.PacketViolationWarningPacket,
             VIOLATION_OF_PASSENGER_JUMP,
-            "violating_packet_id",
-            v2225.MinecraftPacketIds.PASSENGER_JUMP,
+            r"^PacketViolationWarningPacket\.violating_packet_id: unknown value at byte 3 of 4$",
             id="violation-warning-2225-earlier-protocol",
+        ),
+        pytest.param(
+            v729,
+            v729.TintMapColor,
+            TINT_MAP_COLOR_CO_CO_729,
+            r"^TintMapColor\.piece_type: unknown value at byte 6 of 10$",
+            id="piece-type-co-co-729",
+        ),
+        pytest.param(
+            v729,
+            v729.TintMapColor,
+            TINT_MAP_COLOR_BARE_SKELETON_729,
+            r"^TintMapColor\.piece_type: unknown value at byte 9 of 13$",
+            id="piece-type-bare-name-729",
         ),
     ],
 )
-def test_a_number_another_protocol_names_decodes_to_its_member(version, cls, data, field, member):
-    assert getattr(version.decode(cls, data), field) is member
+def test_a_number_or_name_another_protocol_gives_is_an_unknown_value(version, cls, data, message):
+    with pytest.raises(bedrock_protocol.DecodeError, match=message):
+        version.decode(cls, data)
 
 
 @pytest.mark.parametrize(
-    ("version", "packet", "data"),
+    ("version", "packet", "message"),
     [
         pytest.param(
             v748,
             v748.MovementEffectPacket(
                 runtime_id=1, effect_type=v748.MovementEffectType.GEYSER_BOOST, effect_duration=3, tick=4
             ),
-            MOVEMENT_EFFECT,
+            r"^MovementEffectPacket\.effect_type: unknown value$",
             id="movement-effect-748",
         ),
         pytest.param(
             v729,
             v729.DisconnectPacket(reason=v729.DisconnectFailReason.ASYNC_JOIN_TASK_DENIED),
-            DISCONNECT_ASYNC_JOIN_DENIED,
+            r"^DisconnectPacket\.reason: unknown value$",
             id="disconnect-729",
         ),
         pytest.param(
             v729,
             v729.PacketViolationWarningPacket(violating_packet_id=v729.MinecraftPacketIds.CLIENTBOUND_DATA_STORE),
-            VIOLATION_OF_CLIENTBOUND_DATA_STORE,
+            r"^PacketViolationWarningPacket\.violating_packet_id: unknown value$",
             id="violation-warning-729",
         ),
         pytest.param(
             v2225,
             v2225.PacketViolationWarningPacket(violating_packet_id=v2225.MinecraftPacketIds.PASSENGER_JUMP),
-            VIOLATION_OF_PASSENGER_JUMP,
+            r"^PacketViolationWarningPacket\.violating_packet_id: unknown value$",
             id="violation-warning-2225-earlier-protocol",
+        ),
+        pytest.param(
+            v729,
+            v729.SetLastHurtByPacket(last_hurt_by=v729.ActorType.UNDEAD),
+            r"^SetLastHurtByPacket\.last_hurt_by: unknown value$",
+            id="actor-type-729",
+        ),
+        pytest.param(
+            v729,
+            v729.SerializedPersonaPieceHandle(piece_type=v729.PieceType.CO_CO),
+            r"^SerializedPersonaPieceHandle\.piece_type: unknown value$",
+            id="piece-type-co-co-729",
         ),
     ],
 )
-def test_a_member_another_protocol_names_encodes_to_its_number(version, packet, data):
+def test_a_member_a_protocol_lacks_fails_to_encode(version, packet, message):
+    with pytest.raises(bedrock_protocol.EncodeError, match=message):
+        version.encode(packet)
+
+
+@pytest.mark.parametrize(
+    ("version", "packet", "data"),
+    [
+        pytest.param(
+            v729,
+            v729.TintMapColor(piece_type=v729.PieceType.SKELETON),
+            TINT_MAP_COLOR_SKELETON_729,
+            id="name-at-729",
+        ),
+        pytest.param(
+            v2168,
+            v2168.SerializedPersonaPieceHandle(piece_type=v2168.PieceType.SKELETON),
+            PERSONA_PIECE_HANDLE_SKELETON_2168,
+            id="number-at-2168",
+        ),
+    ],
+)
+def test_a_piece_type_is_written_as_the_protocol_codes_it(version, packet, data):
     assert version.encode(packet) == data
 
 
@@ -332,9 +394,14 @@ def test_a_member_another_protocol_names_encodes_to_its_number(version, packet, 
         pytest.param(v748.MovementEffectPacket, v2225.MovementEffectPacket, id="movement-effect-748"),
         pytest.param(v776.MovementEffectPacket, v2225.MovementEffectPacket, id="movement-effect-776"),
         pytest.param(v729.AnimatePacket, v844.AnimatePacket, id="animate"),
+        pytest.param(v729.SetLastHurtByPacket, v2225.SetLastHurtByPacket, id="set-last-hurt-by"),
+        pytest.param(v729.CommandRequestPacket, v2225.CommandRequestPacket, id="command-request"),
+        pytest.param(v729.HurtArmorPacket, v2225.HurtArmorPacket, id="hurt-armor"),
+        pytest.param(v729.Enchant, v898.Enchant, id="enchant"),
+        pytest.param(v729.EnchantmentInstance, v2225.EnchantmentInstance, id="enchantment-instance"),
     ],
 )
-def test_a_struct_whose_forms_differ_only_in_an_enums_members_is_one_class(first, last):
+def test_a_struct_whose_enums_members_or_numbers_differ_is_one_class(first, last):
     assert first is last
 
 
@@ -835,3 +902,66 @@ def test_encode_packet_raises_an_encode_error_for_a_body_it_cannot_write():
     ) as caught:
         proto.encode_packet(packet)
     assert (caught.value.reason, caught.value.path) == ("unknown value", ("output", "type"))
+
+
+def test_a_number_a_protocol_gives_a_member_decodes_to_it():
+    value = v729.decode(v729.SetLastHurtByPacket, SET_LAST_HURT_BY_SKELETON_HORSE_729).last_hurt_by
+    assert value is v729.ActorType.SKELETON_HORSE
+
+
+def test_a_member_reads_the_library_value_whatever_the_protocol_numbers_it():
+    value = v729.decode(v729.SetLastHurtByPacket, SET_LAST_HURT_BY_SKELETON_HORSE_729).last_hurt_by
+    assert value.value == 0x21531A
+
+
+def test_a_member_encodes_to_the_number_of_each_protocol():
+    packet = v2225.SetLastHurtByPacket(last_hurt_by=v2225.ActorType.SKELETON_HORSE)
+    assert (v729.encode(packet), v2225.encode(packet)) == (
+        SET_LAST_HURT_BY_SKELETON_HORSE_729,
+        SET_LAST_HURT_BY_SKELETON_HORSE_2225,
+    )
+
+
+def test_a_member_decoded_at_one_protocol_encodes_at_another_with_that_protocols_number():
+    packet = v729.decode(v729.SetLastHurtByPacket, SET_LAST_HURT_BY_SKELETON_HORSE_729)
+    assert v2225.encode(packet) == SET_LAST_HURT_BY_SKELETON_HORSE_2225
+
+
+def test_a_derived_member_is_its_targets_value():
+    assert v2225.MolangVersion.LATEST == v2225.MolangVersion.CARRYING_BLOCK_QUERY_ALL_ACTORS
+
+
+def test_a_derived_member_keeps_its_own_name():
+    assert v2225.MolangVersion.LATEST.name == "LATEST"
+
+
+@pytest.mark.parametrize(
+    ("version", "data"),
+    [
+        pytest.param(v729, ANIMATE_ENTITY_MOLANG_729, id="729"),
+        pytest.param(v2225, ANIMATE_ENTITY_MOLANG_2225, id="2225"),
+    ],
+)
+def test_a_derived_member_encodes_to_its_own_number_at_each_protocol(version, data):
+    packet = version.AnimateEntityPacket(stop_expression_version=version.MolangVersion.LATEST)
+    assert version.encode(packet) == data
+
+
+def test_a_member_sharing_a_derived_members_value_encodes_to_its_number_at_729():
+    packet = v729.AnimateEntityPacket(stop_expression_version=v729.MolangVersion.CARRYING_BLOCK_QUERY_ALL_ACTORS)
+    assert v729.encode(packet) == ANIMATE_ENTITY_MOLANG_729
+
+
+def test_a_name_a_protocol_gives_a_derived_member_decodes_to_the_member_numbered_like_it():
+    packet = v729.decode(v729.CommandRequestPacket, COMMAND_REQUEST_LATEST)
+    assert packet.version is v729.CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT
+
+
+def test_the_member_a_derived_name_decodes_to_encodes_to_that_name_again():
+    packet = v729.decode(v729.CommandRequestPacket, COMMAND_REQUEST_LATEST)
+    assert v729.encode(packet) == COMMAND_REQUEST_LATEST
+
+
+def test_a_member_sharing_a_derived_names_value_encodes_to_that_name():
+    packet = v729.CommandRequestPacket(version=v729.CurrentCmdVersion.TIME_COMMAND_CLOCKS_RELEASE)
+    assert v729.encode(packet) == COMMAND_REQUEST_LATEST

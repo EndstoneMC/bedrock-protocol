@@ -79,6 +79,31 @@ final class CaseLoader {
         return found;
     }
 
+    private static int renumber(String method, int version, Class<?> cls, int value, String path)
+            throws ReflectiveOperationException {
+        String name = cls.getName();
+        String helper =
+                CaseLoader.class.getPackageName()
+                        + ".internal."
+                        + name.substring(name.lastIndexOf('.') + 1).replace("$", "")
+                        + "Numbering";
+        if (CaseLoader.class.getClassLoader().getResource(helper.replace('.', '/') + ".class")
+                == null) {
+            return value;
+        }
+        try {
+            return (Integer)
+                    Class.forName(helper)
+                            .getMethod(method, int.class, int.class)
+                            .invoke(null, version, value);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof IllegalArgumentException) {
+                throw fail(path, e.getCause().getMessage());
+            }
+            throw e;
+        }
+    }
+
     private static Object message(int version, Class<?> type, JsonElement json, String path)
             throws ReflectiveOperationException {
         Object builder = type.getMethod("newBuilder").invoke(null);
@@ -347,17 +372,23 @@ final class CaseLoader {
                 equal = given.isBoolean() && given.getAsBoolean() == flag;
             } else if (expected instanceof String text) {
                 equal = given.isString() && given.getAsString().equals(text);
-            } else if (expected instanceof Enum<?>) {
+            } else if (expected instanceof Enum<?> member) {
+                Class<?> enumType = member.getDeclaringClass();
                 equal =
                         given.isNumber()
                                 && INTEGER.matcher(given.getAsString()).matches()
                                 && new BigInteger(given.getAsString())
                                         .equals(
                                                 BigInteger.valueOf(
-                                                        (Integer)
-                                                                expected.getClass()
-                                                                        .getMethod("getNumber")
-                                                                        .invoke(expected)));
+                                                        renumber(
+                                                                "toNumber",
+                                                                version,
+                                                                enumType,
+                                                                (Integer)
+                                                                        enumType.getMethod(
+                                                                                        "getNumber")
+                                                                                .invoke(member),
+                                                                path)));
             } else {
                 throw fail(path, "unsupported constant type " + literal.getType());
             }
@@ -371,7 +402,16 @@ final class CaseLoader {
                         && value.getAsJsonPrimitive().isNumber()
                         && INTEGER.matcher(value.getAsString()).matches();
         if (coded != null && number && (plain == null || plain.getParameterTypes()[0].isEnum())) {
-            call(coded, builder, convert(version, value, int.class, path));
+            int given = (Integer) convert(version, value, int.class, path);
+            Method getter = single(methods, "get" + name, 0);
+            Class<?> enumType =
+                    plain != null
+                            ? plain.getParameterTypes()[0]
+                            : getter != null ? getter.getReturnType() : null;
+            if (enumType != null && enumType.isEnum()) {
+                given = renumber("fromNumber", version, enumType, given, path);
+            }
+            call(coded, builder, given);
             return;
         }
         if (plain == null) {
@@ -588,44 +628,44 @@ final class CaseLoader {
                         cls.getMethod("forNumber", int.class)
                                 .invoke(
                                         null,
-                                        primitive.isBoolean()
-                                                ? (primitive.getAsBoolean() ? 1 : 0)
-                                                : (Integer) integer(json, int.class, path));
+                                        renumber(
+                                                "fromNumber",
+                                                version,
+                                                cls,
+                                                primitive.isBoolean()
+                                                        ? (primitive.getAsBoolean() ? 1 : 0)
+                                                        : (Integer) integer(json, int.class, path),
+                                                path));
                 if (member == null) {
                     throw fail(path, primitive.getAsString() + " names no member of " + cls);
                 }
                 return member;
             }
-            String wanted = text(json, path).toLowerCase(Locale.ROOT);
-            Method encoder = null;
+            String wanted = text(json, path);
+            Method decoder = null;
             for (Method method : cls.getMethods()) {
-                if (method.getName().equals("encode")
-                        && method.getParameterCount() == 1
-                        && method.getParameterTypes()[0] == ByteBuf.class) {
-                    encoder = method;
+                if (method.getName().equals("decode")
+                        && Modifier.isStatic(method.getModifiers())
+                        && method.getParameterTypes()[method.getParameterCount() - 1]
+                                == ByteBuf.class) {
+                    decoder = method;
                 }
             }
-            if (encoder == null) {
+            if (decoder == null) {
                 throw fail(path, cls + " has no encoded names");
             }
-            Object found = null;
-            for (Object constant : cls.getEnumConstants()) {
-                if (((Enum<?>) constant).name().equals("UNRECOGNIZED")) {
-                    continue;
+            ByteBuf buf = Unpooled.buffer();
+            ByteBufCodec.writeString(buf, wanted);
+            try {
+                return decoder.getParameterCount() == 2
+                        ? decoder.invoke(null, version, buf)
+                        : decoder.invoke(null, buf);
+            } catch (InvocationTargetException e) {
+                if (e.getCause() instanceof DecodeException) {
+                    throw fail(path, wanted + " names no member of " + cls);
                 }
-                ByteBuf buf = Unpooled.buffer();
-                encoder.invoke(constant, buf);
-                if (ByteBufCodec.readString(buf).toLowerCase(Locale.ROOT).equals(wanted)) {
-                    if (found != null) {
-                        throw fail(path, wanted + " names two members of " + cls);
-                    }
-                    found = constant;
-                }
+                throw e;
             }
-            if (found == null) {
-                throw fail(path, wanted + " names no member of " + cls);
-            }
-            return found;
         }
         if (Message.class.isAssignableFrom(cls)) {
             return message(version, cls, json, path);

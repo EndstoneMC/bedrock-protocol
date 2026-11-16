@@ -547,7 +547,7 @@ def test_a_union_wrapper_has_the_codec_of_its_holders_encoding(emitted):
 
 
 def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package, tmp_path):
-    source = COLORS + "class P:\n    c: Color = field(type=str, until=3)\n    c: Color = field(since=3)\n"
+    source = COLORS + "class P:\n    c: Color | None = field(type=str, until=3)\n    c: Color | None = field(since=3)\n"
     build_package({"a": HEADER + source})
 
     with pytest.raises(
@@ -1117,6 +1117,19 @@ SUCCEEDED = (
 )
 
 
+LEAVING_AND_RETURNING = (
+    "class Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, until=3)\n    B = value(1, since=5)\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode\n"
+)
+RENUMBERED_LITERAL = (
+    "class Mode(IntEnum, uint8):\n    A = value(0, until=3)\n    A = value(1, since=3)\n    B = 2\n\n"
+    "@packet(id=7)\nclass P:\n    c: Literal[Mode.A]\n    x: uint8\n"
+)
+RENUMBERED_WHEN = (
+    "class Mode(IntEnum, uint8):\n    A = value(0, until=3)\n    A = value(1, since=3)\n    B = 2\n\n"
+    "@packet(id=7)\nclass P:\n    m: Mode = field(type=str)\n    x: uint8 = field(when=lambda p: p.m == Mode.A)\n"
+)
+NAME_AND_NUMBER = COLORS + "class P:\n    c: Color = field(type=str, until=3)\n    c: Color = field(since=3)\n"
 LEAVING = (
     "class Mode(IntEnum, uint8):\n    A = 0\n    B = value(1, until=3)\n    C = value(2, since=5)\n\n"
     "@packet(id=7)\nclass P:\n    m: Mode\n"
@@ -1163,10 +1176,14 @@ def test_a_message_that_differed_only_by_a_growing_enum_is_one_class(java):
     assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
 
 
-def test_a_message_that_differed_only_by_a_growing_enum_has_one_codec(emitted):
+def test_a_message_holding_a_growing_enum_has_a_codec_per_numbering(emitted):
     text = emitted(GROWING)
 
-    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1"]
+    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == [
+        "Codec1",
+        "Codec3",
+        "Codec5",
+    ]
 
 
 NESTED_GROWING = (
@@ -1233,26 +1250,229 @@ def test_a_literal_of_a_member_succeeded_by_another_names_the_newest_constant(em
     )
 
 
-def test_a_renumbered_enum_keeps_a_class_per_shape(java):
+def test_a_renumbered_enum_is_one_class(java):
     root = java(RENUMBERED)
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == [
-        "Mode.java",
-        "v1/Mode.java",
-    ]
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
 
 
-def test_a_renumbered_enum_keeps_each_shapes_numbers(java):
+def test_a_renumbered_enum_holds_its_library_values(java):
+    text = (java(RENUMBERED) / "Mode.java").read_text()
+
+    assert "    A(1),\n    B(2),\n" in text
+
+
+def test_a_message_holding_a_renumbered_enum_is_one_class(java):
     root = java(RENUMBERED)
 
-    assert "    A(0),\n    B(2),\n" in (root / "v1/Mode.java").read_text()
-    assert "    A(1),\n    B(2),\n" in (root / "Mode.java").read_text()
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
 
 
-def test_a_message_holding_a_renumbered_enum_keeps_a_class_per_shape(java):
-    root = java(RENUMBERED)
+def test_a_message_holding_a_renumbered_enum_has_a_codec_per_numbering(emitted):
+    text = emitted(RENUMBERED)
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java", "v1/P.java"]
+    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
+
+
+def test_a_renumbered_enum_has_a_numbering_class_in_the_internal_package(java):
+    assert (java(RENUMBERED) / "internal/ModeNumbering.java").is_file()
+
+
+def test_an_enum_without_a_numbering_to_apply_has_no_numbering_class(java):
+    root = java(COLORS + "class P:\n    c: Color\n")
+
+    assert not (root / "internal").exists()
+
+
+def test_to_number_maps_a_value_to_its_number_below_the_protocol_that_renumbers(java):
+    text = (java(RENUMBERED) / "internal/ModeNumbering.java").read_text()
+
+    cases = (
+        "        if (protocol < 3) {\n"
+        "            return switch (value) {\n"
+        "                case 0 -> 1;\n"
+        "                case 1 -> 0;\n"
+        "                default -> value;\n"
+        "            };\n"
+        "        }\n"
+    )
+    assert cases in text
+
+
+def test_to_number_is_the_identity_from_the_protocol_that_renumbers(java):
+    text = (java(RENUMBERED) / "internal/ModeNumbering.java").read_text()
+
+    assert "        if (protocol >= 3) {\n            return value;\n        }\n" in text
+
+
+def test_from_number_maps_a_number_back_to_its_value(java):
+    text = (java(RENUMBERED) / "internal/ModeNumbering.java").read_text()
+
+    cases = (
+        "        if (protocol < 3) {\n"
+        "            return switch (number) {\n"
+        "                case 0 -> 1;\n"
+        "                case 1 -> 0;\n"
+        "                default -> number;\n"
+        "            };\n"
+        "        }\n"
+    )
+    assert cases in text
+
+
+def test_to_number_rejects_a_member_the_protocol_lacks(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    refusal = (
+        "        if (protocol < 3) {\n"
+        "            return switch (value) {\n"
+        '                case 2 -> throw new IllegalArgumentException("Mode: " + value + " has no number at protocol " '
+        "+ protocol);\n"
+    )
+    assert refusal in text
+
+
+def test_decodes_rejects_a_number_the_protocol_cannot_place(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    cases = (
+        "        if (protocol < 3) {\n"
+        "            return switch (number) {\n"
+        "                case 2 -> false;\n"
+        "                default -> true;\n"
+        "            };\n"
+    )
+    assert cases in text
+
+
+def test_from_number_rejects_a_number_the_protocol_cannot_place(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    refusal = (
+        "        if (protocol < 3) {\n"
+        "            return switch (number) {\n"
+        '                case 2 -> throw new IllegalArgumentException("Mode: " + number + " has no value at protocol " '
+        "+ protocol);\n"
+    )
+    assert refusal in text
+
+
+def test_a_numbering_run_between_two_protocols_is_bounded_on_both_sides(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    assert "        if (protocol >= 3 && protocol < 5) {\n" in text
+
+
+def test_a_numbering_that_leaves_and_returns_covers_both_runs(java):
+    text = (java(LEAVING_AND_RETURNING) / "internal/ModeNumbering.java").read_text()
+
+    assert "        if ((protocol < 3) || (protocol >= 5)) {\n            return value;\n        }\n" in text
+
+
+def test_a_numbering_class_rejects_a_protocol_the_enum_is_not_live_at(java):
+    text = (java(GROWING_UNTIL_5) / "internal/ModeNumbering.java").read_text()
+
+    assert '        throw new IllegalArgumentException("Mode: is not a type at protocol " + protocol);\n' in text
+
+
+def test_a_renumbered_enum_field_writes_its_number_at_the_protocol(emitted):
+    text = emitted(RENUMBERED)
+
+    write = "            buf.writeByte(dev.endstone.protocol.internal.ModeNumbering.toNumber(1, value.m_));\n"
+    assert write in text
+
+
+def test_a_renumbered_enum_field_reads_its_value_from_its_number_at_the_protocol(emitted):
+    text = emitted(RENUMBERED)
+
+    read = (
+        "                int n0 = ByteBufCodec.readUnsignedByte(buf);\n"
+        "                if (!dev.endstone.protocol.internal.ModeNumbering.decodes(1, n0)) {\n"
+        "                    throw DecodeException.unknownValue(buf.readerIndex());\n"
+        "                }\n"
+        "                out.m_ = dev.endstone.protocol.internal.ModeNumbering.fromNumber(1, n0);\n"
+    )
+    assert read in text
+
+
+def test_a_renumbered_enum_field_at_the_identity_numbering_is_written_as_it_is(emitted):
+    text = emitted(RENUMBERED)
+
+    assert "            buf.writeByte(value.m_);\n" in text
+
+
+def test_a_renumbered_enum_field_keeps_its_raw_int(emitted):
+    text = emitted(RENUMBERED)
+
+    assert "    private final int m_;\n" in text
+    assert "    public int getMValue() {\n" in text
+
+
+def test_a_literal_of_a_renumbered_member_writes_its_number_at_the_protocol(emitted):
+    text = emitted(RENUMBERED_LITERAL)
+
+    assert "            buf.writeByte(0);\n" in text
+    assert "            buf.writeByte(1);\n" in text
+
+
+def test_a_literal_of_a_renumbered_member_alone_gets_a_numbering_class(java):
+    assert (java(RENUMBERED_LITERAL) / "internal/ModeNumbering.java").is_file()
+
+
+def test_a_nested_enum_is_named_through_its_owner_in_its_refusals(java):
+    text = (java(NESTED_LEAVING) / "internal/PActionNumbering.java").read_text()
+
+    assert '"P.Action: " + value + " has no number at protocol "' in text
+
+
+def test_a_literal_of_a_renumbered_member_is_the_one_constant_of_the_member(emitted):
+    text = emitted(RENUMBERED_LITERAL)
+
+    constant = "        public static final @NotNull dev.endstone.protocol.Mode C = dev.endstone.protocol.Mode.A;\n"
+    assert text.count(constant) == 2
+
+
+def test_a_when_on_a_renumbered_member_compares_its_library_value(emitted):
+    text = emitted(RENUMBERED_WHEN)
+
+    assert "            if ((value.m_.getNumber()) == (1)) {\n" in text
+
+
+def test_a_when_on_a_sentinel_compares_its_number_at_the_protocol(emitted):
+    text = emitted(
+        "class W(IntEnum, uint8):\n    A = 0\n    B = 1\n    COUNT = sentinel()\n\n"
+        "class P:\n    w: W\n    x: uint8 = field(when=lambda p: p.w == W.COUNT)\n"
+    )
+
+    assert "            if ((value.w_) == (2)) {\n" in text
+
+
+def test_a_when_on_a_renumbered_member_does_not_split_a_message(emitted):
+    text = emitted(RENUMBERED_WHEN)
+
+    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1"]
+
+
+def test_a_field_coded_by_name_and_by_number_holds_the_open_form(emitted):
+    text = emitted(NAME_AND_NUMBER)
+
+    assert "    public int getCValue() {\n" in text
+
+
+def test_a_field_coded_by_name_and_by_number_writes_the_name_of_its_number(emitted):
+    text = emitted(NAME_AND_NUMBER)
+
+    write = (
+        "            Objects.requireNonNullElse(dev.endstone.protocol.Color.forNumber(value.c_), "
+        "dev.endstone.protocol.Color.UNRECOGNIZED).encode(buf);\n"
+    )
+    assert write in text
+
+
+def test_a_field_coded_by_name_and_by_number_reads_the_number_of_its_name(emitted):
+    text = emitted(NAME_AND_NUMBER)
+
+    assert "                out.c_ = dev.endstone.protocol.Color.decode(buf).getNumber();\n" in text
 
 
 def test_a_name_coded_enum_with_one_shape_keeps_one_class(java):
@@ -1293,21 +1513,58 @@ def test_an_enum_shared_by_two_forms_keeps_the_name_codec_of_either(emitted, sou
     assert "        public static @NotNull F decode(@NotNull ByteBuf buf) {\n" in text
 
 
-def test_a_name_coded_enum_that_gains_a_member_has_a_class_per_set_of_members(java):
+def test_a_name_coded_enum_that_gains_a_member_is_one_class(java):
     root = java(NAME_CODED_GROWING)
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == [
-        "Mode.java",
-        "v1/Mode.java",
-    ]
+    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
 
 
 def test_a_name_coded_enum_that_gains_a_member_does_not_decode_it_at_the_older_protocols(java):
-    root = java(NAME_CODED_GROWING)
+    text = (java(NAME_CODED_GROWING) / "Mode.java").read_text()
 
-    assert (
-        '            case "a" -> A;\n            default -> throw DecodeException.unknownValue(buf.readerIndex());\n'
-    ) in (root / "v1/Mode.java").read_text()
+    decode = (
+        "        if (protocol < 3) {\n"
+        "            return switch (ByteBufCodec.foldAscii(ByteBufCodec.readString(buf))) {\n"
+        '                case "a" -> A;\n'
+        "                default -> throw DecodeException.unknownValue(buf.readerIndex());\n"
+        "            };\n"
+        "        }\n"
+    )
+    assert decode in text
+
+
+def test_a_name_coded_enum_that_gains_a_member_writes_it_from_the_protocol_that_has_it(java):
+    text = (java(NAME_CODED_GROWING) / "Mode.java").read_text()
+
+    encode = (
+        "        if (protocol >= 3) {\n"
+        "            ByteBufCodec.writeString(buf, switch (this) {\n"
+        '                case A -> "a";\n'
+        '                case B -> "b";\n'
+    )
+    assert encode in text
+
+
+def test_a_name_coded_enum_refuses_to_write_a_member_the_protocol_has_no_name_for(java):
+    text = (java(NAME_CODED_GROWING) / "Mode.java").read_text()
+
+    refusal = (
+        '                default -> throw new IllegalArgumentException("Mode: has no encoded name at protocol " '
+        "+ protocol);\n"
+    )
+    assert refusal in text
+
+
+def test_a_name_coded_enum_with_two_namings_is_encoded_with_the_protocol_of_its_naming(emitted):
+    text = emitted(NAME_CODED_GROWING)
+
+    assert "            value.m_.encode(1, buf);\n" in text
+
+
+def test_a_name_coded_enum_with_two_namings_is_decoded_with_the_protocol_of_its_naming(emitted):
+    text = emitted(NAME_CODED_GROWING)
+
+    assert "                out.m_ = dev.endstone.protocol.Mode.decode(1, buf);\n" in text
 
 
 def test_a_union_has_a_case_per_alternative(emitted):

@@ -14,7 +14,7 @@
 
 ## Languages
 
-Every language exposes the same packets, types and enums, and encodes the same bytes.
+Every language exposes the same packets, types and enums, and encodes the same bytes. An enum value is the library's own value, its number at the newest protocol that has it. Each protocol's codec maps it to that protocol's number or name, and encoding a value the protocol cannot number or name fails, as does decoding a number it cannot place.
 
 | Language | Get it |
 | --- | --- |
@@ -59,7 +59,7 @@ packet = v2225.TextPacket()
 packet.body = v2225.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
 ```
 
-`TextPacketType` is the same in every protocol, so it keeps its `bp` name.
+Every enum is one type in every protocol, so `TextPacketType` keeps its `bp` name.
 
 ## C++
 
@@ -113,7 +113,7 @@ bp::TextPacket_<2225> packet;
 packet.body = bp::TextPacket_<2225>::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 ```
 
-`TextPacketType` is the same in every protocol, so it keeps its `bp` name.
+Every enum is one type in every protocol, so `TextPacketType` keeps its `bp` name.
 
 ## Java
 
@@ -158,7 +158,7 @@ version.encodePacket(packet.build(), data);
 assert version.decodePacket(TextPacket.ID, data).equals(packet.build());
 ```
 
-Once a newer protocol changes a class, it moves to the package `v<N>`, N the first protocol that used it, and code staying on 2225 imports it from there.
+Once a newer protocol changes a message class, it moves to the package `v<N>`, N the first protocol that used it, and code staying on 2225 imports it from there. An enum class never moves. The `internal` package is not API.
 
 ## Supported Protocols
 

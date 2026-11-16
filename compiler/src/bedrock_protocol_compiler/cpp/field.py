@@ -24,7 +24,7 @@ from bedrock_protocol_compiler.descriptor import (
     Variant,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel
+from bedrock_protocol_compiler.schema import Encoding, Naming, Numbering, Schema, StructModel
 
 ENUM_ENCODINGS = {
     "bool": "bool",
@@ -150,13 +150,61 @@ class EnumField(ScalarField):
     def __init__(self, schema: Schema, node: EnumRef, encoding: Encoding, where: str) -> None:
         enum_type = schema.enum_type(node.enum, encoding.since)
         stored = enum_type.underlying.name
-        super().__init__(
-            where, names.qualified(schema, enum_type), stored, node.encoded or ENUM_ENCODINGS[stored], node.endian
-        )
+        spelled = names.qualified(schema, enum_type)
+        super().__init__(where, spelled, stored, node.encoded or ENUM_ENCODINGS[stored], node.endian)
         self.node = node
+        numbering = encoding.reached[node]
+        assert isinstance(numbering, Numbering)
+        self.mapped = None if numbering.identity else f"<{spelled}, {numbering.since}>"
 
     def includes(self) -> set[str]:
         return {names.header(self.node.enum)}
+
+    def fallible(self) -> bool:
+        return self.mapped is not None
+
+    def write(self, p: Printer, value: str) -> None:
+        if self.mapped is None:
+            super().write(p, value)
+            return
+        p.emit(
+            """
+            {
+                const auto n = detail::to_number$mapped$($value$);
+                if (!n) $fail$
+                $write$
+            }
+            """,
+            mapped=self.mapped,
+            value=value,
+            fail=names.fail("n.error()", self.where),
+            write=names.write(self.encoded, self.endian, "*n"),
+        )
+
+    def read(self, p: Printer, target: str) -> None:
+        if self.mapped is None:
+            super().read(p, target)
+            return
+        narrowed = names.PRIMITIVES[self.stored] != names.PRIMITIVES[self.encoded]
+        p.emit("{")
+        with p.indent():
+            p.emit("auto v = $call$;", call=names.read(self.encoded, self.endian))
+            p.emit("if (!v) $fail$", fail=names.fail("v.error()", self.where))
+            if narrowed:
+                p.emit("const auto n = static_cast<$stored$>(*v);", stored=names.PRIMITIVES[self.stored])
+                p.emit(
+                    "if (static_cast<$encoded$>(n) != *v) $fail$",
+                    encoded=names.PRIMITIVES[self.encoded],
+                    fail=names.fail(names.OUT_OF_RANGE, self.where),
+                )
+            p.emit(
+                "const auto e = detail::to_value$mapped$($number$);",
+                mapped=self.mapped,
+                number="n" if narrowed else "*v",
+            )
+            p.emit("if (!e) $fail$", fail=names.fail("e.error()", self.where))
+            p.emit("$target$ = *e;", target=target)
+        p.emit("}")
 
 
 class SerializerField:
@@ -206,9 +254,9 @@ class ReferenceField(SerializerField):
             implementation = names.serializer(spelled, *schema.call(encoding, node))
         else:
             self.family = node.enum
-            enum_type = schema.enum_type(node.enum, encoding.since)
-            spelled = names.qualified(schema, enum_type)
-            implementation = names.serializer(spelled, names.since(schema, enum_type))
+            naming = encoding.reached[node]
+            assert isinstance(naming, Naming)
+            implementation = names.serializer(names.qualified(schema, naming.model), naming.since)
         super().__init__(where, implementation)
 
     def includes(self) -> set[str]:
@@ -285,7 +333,7 @@ class LiteralField:
             case MemberRef() as member:
                 enum_type = schema.enum_type(member.enum, encoding.since)
                 self.encoded = ENUM_ENCODINGS[enum_type.underlying.name]
-                self.constant = names.enumerator(schema, member, encoding)
+                self.constant = names.numbered(schema, member, encoding)
                 self.expected = f"static_cast<{names.PRIMITIVES[self.encoded]}>({self.constant})"
 
     def fallible(self) -> bool:

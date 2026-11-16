@@ -14,7 +14,7 @@ from bedrock_protocol_compiler.descriptor import (
     Test,
 )
 from bedrock_protocol_compiler.java.value import BOOL, CLASSES, Num, convert, java_of, literal
-from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema
 
 INT32 = CLASSES["int32"]
 UINT32 = CLASSES["uint32"]
@@ -39,7 +39,7 @@ class Term:
     value: int = 0
 
 
-def enum_class(enum_type: EnumType) -> Num:
+def enum_class(enum_type: EnumModel) -> Num:
     underlying = CLASSES[enum_type.underlying.name]
     return Num("int", False, 8) if underlying == BOOL else underlying
 
@@ -78,7 +78,11 @@ class Renderer:
 
     def member(self, member: MemberRef) -> Term:
         enum_type = self.schema.enum_type(member.enum, self.encoding.since)
-        return Term(None, enum_class(enum_type), self.schema.number(self.encoding, member))
+        resolved = self.schema.resolve(member, self.encoding.since)
+        value = self.schema.enumerators(enum_type).get(resolved.name)
+        if value is None:
+            value = self.schema.number(self.encoding, member)
+        return Term(None, enum_class(enum_type), value)
 
     def term(self, expression: Expression) -> Term:
         match expression:
@@ -97,7 +101,7 @@ class Renderer:
                 operand = self.operands[name]
                 if not operand.bitset:
                     raise CompilerError(f"{operand.label}: is not a bitset")
-                return Term(f"{self.receiver}{operand.member}.get({self.member(member).value})", BOOL)
+                return Term(f"{self.receiver}{operand.member}.get({self.schema.number(self.encoding, member)})", BOOL)
             case Not(operand=operand):
                 return Term(f"!({self.predicate(operand)})", BOOL)
             case Binary(operator="and" | "or" as operator, left=left, right=right):

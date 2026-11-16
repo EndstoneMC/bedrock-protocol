@@ -556,38 +556,39 @@ class NullTypeSchema(BasicSchema):
 class EnumSchema(BasicSchema):
     """An enum printed by its registered name, or by its number when the member asks for it."""
 
-    def __init__(self, shape, underlying):
+    def __init__(self, shape, underlying, numbering=None, naming=None):
         self.underlying = underlying
-        self.encoded_names = {}
-        self.numbers = {}
-        for member in shape.members:
-            number = shape.numbers[member.name]
-            self.encoded_names.setdefault(number, member.encoded_name)
-            self.numbers.setdefault(member.encoded_name, number)
+        self.numbering = numbering
+        self.naming = naming
+        self.live_numbers = {shape.numbers[member.name] for member in shape.members}
 
     @override
     def do_load(self, reader, context, traits):
         if traits & SerializationTraits.ENUM_AS_VALUE:
             number = self.underlying.load(reader, context)
-            if number not in self.encoded_names:
+            if number not in self.live_numbers or number in self.numbering.lossy:
                 context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: invalid enum value")
-            return number
+            return self.numbering.decoded.get(number, number)
         name = reader.as_string()
         if name is None:
             context.log(ResultCode.ERROR, "invalid string")
-        elif name.lower() not in self.numbers:
+        elif name.lower() not in self.naming.read:
             context.log(ResultCode.INVALID_ENUM_VALUE, f"{name!r}: invalid enum value")
-        return self.numbers.get((name or "").lower(), 0)
+        return self.naming.read.get((name or "").lower(), 0)
 
     @override
     def do_save(self, value, writer, context, traits):
-        number = int(value)
-        if number not in self.encoded_names:
-            context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: not bound")
-        elif traits & SerializationTraits.ENUM_AS_VALUE:
-            self.underlying.save(number, writer, context)
+        library = int(value)
+        if traits & SerializationTraits.ENUM_AS_VALUE:
+            number = self.numbering.encoded.get(library, library)
+            if library in self.numbering.absent or number not in self.live_numbers:
+                context.log(ResultCode.INVALID_ENUM_VALUE, f"{library}: not bound")
+            else:
+                self.underlying.save(number, writer, context)
+        elif library not in self.naming.written:
+            context.log(ResultCode.INVALID_ENUM_VALUE, f"{library}: not bound")
         else:
-            writer.write(self.encoded_names[number])
+            writer.write(self.naming.written[library])
 
 
 class OptionalSchema(BasicSchema):
@@ -1552,7 +1553,11 @@ class ReflectionCtx:
                 node = field.type.element if optional else field.type
                 match node:
                     case Literal(value=MemberRef(enum=enum, name=selector)):
-                        constant, node = self.shape(enum).numbers[selector], EnumRef(enum)
+                        number = self.shape(enum).numbers[selector]
+                        constant, node = (
+                            MODEL.numbering_at(enum, self.protocol).decoded.get(number, number),
+                            EnumRef(enum),
+                        )
                     case Literal(value=constant):
                         node = Primitive("str" if isinstance(constant, str) else "bool")
                 element = self.schema(node)
@@ -1608,11 +1613,18 @@ class ReflectionCtx:
             case BuiltinRef(builtin=builtin) if builtin.name == "DynamicValue":
                 return DynamicValueSchema()
             case EnumRef(enum=enum, encoded=encoded) if enum.name in CaseForm.PLAIN_ENUMS:
+                numbering = MODEL.numbering_at(enum, self.protocol)
+                if numbering.encoded or numbering.decoded:
+                    raise LoadError(f"{enum.name}: numbers a value apart from it at {self.protocol}")
                 return self.schema(Primitive(self.shape(enum).underlying.name, encoded))
             case EnumRef(enum=enum):
-                return EnumSchema(self.shape(enum), self.schema(self.shape(enum).underlying))
+                return EnumSchema(
+                    self.shape(enum),
+                    self.schema(self.shape(enum).underlying),
+                    numbering=MODEL.numbering_at(enum, self.protocol),
+                )
             case EnumName(enum=enum):
-                return EnumSchema(self.shape(enum), None)
+                return EnumSchema(self.shape(enum), None, naming=MODEL.naming_at(enum, self.protocol))
             case StructRef(struct=family):
                 return self.composite(family)
             case List(element=Primitive(name="uint8", encoded=None)):
@@ -1648,7 +1660,10 @@ class LoadError(ValueError):
 def save(module, value):
     """The case JSON for a bound struct."""
     writer = JSONSchemaWriter()
-    schema_of(module, type(value)).save(value, writer, SerializerContext())
+    context = SerializerContext()
+    schema_of(module, type(value)).save(value, writer, context)
+    if context.has_error():
+        raise LoadError(context.entries)
     return writer.result
 
 

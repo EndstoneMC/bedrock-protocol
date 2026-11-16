@@ -10,13 +10,13 @@ def render(schema: Schema, encoding: Encoding, expression: Expression, receiver:
         case FieldRef(name=name):
             return f"{receiver}.{name}"
         case MemberRef():
-            return names.enumerator(schema, expression, encoding)
+            return names.spelled_member(schema, schema.resolve(expression, encoding.since), encoding)
         case Int(value=value):
             return str(value)
         case Len(field=name):
             return f"{receiver}.{name}.size()"
         case Test(field=name, member=member):
-            return f"{receiver}.{name}.test(static_cast<std::size_t>({names.enumerator(schema, member, encoding)}))"
+            return f"{receiver}.{name}.test(static_cast<std::size_t>({names.numbered(schema, member, encoding)}))"
         case Not(operand=operand):
             return f"!({render(schema, encoding, operand, receiver)})"
         case Binary(operator=operator, left=left, right=right):

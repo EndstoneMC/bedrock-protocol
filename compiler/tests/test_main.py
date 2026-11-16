@@ -543,7 +543,6 @@ class E(IntEnum, uint8):
 class P:
     e: E
     tag: Literal[E.LATEST]
-    x: uint8 = field(when=lambda p: p.e == E.LATEST)
 """
 
 ENUM_DEPRECATED_GAIN = """
@@ -559,6 +558,162 @@ class D(IntEnum, uint8):
 
 class H:
     d: D
+"""
+
+ENUM_ASYMMETRIC = """
+from enum import IntEnum
+from protocol import uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, since=3)
+    C = value(2, until=3)
+    C = value(3, since=3)
+
+class H:
+    e: E
+"""
+
+ENUM_FIELD_AFTER_NUMBERING = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    e: E
+    x: uint8 = field(since=2)
+"""
+
+ENUM_NARROW = """
+from enum import IntEnum
+from protocol import int16, packet, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, int16):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    e: E
+"""
+
+ENUM_CONTAINERS = """
+from enum import IntEnum
+from protocol import packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    many: list[E]
+    keyed: dict[E, uint8]
+    maybe: E | None
+"""
+
+ENUM_LITERAL_NUMBER = """
+from enum import IntEnum
+from typing import Literal
+from protocol import packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    tag: Literal[E.B]
+"""
+
+ENUM_WHEN_RENUMBERED = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    e: E
+    x: uint8 = field(when=lambda p: p.e == E.B)
+"""
+
+ENUM_TEST_RENUMBERED = """
+from enum import IntEnum
+from protocol import bitset, field, packet, sentinel, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = value(1, until=3)
+    A = value(2, since=3)
+    B = 4
+
+class W(IntEnum, uint8):
+    X = 1
+    COUNT = sentinel()
+
+@packet(id=1)
+class P:
+    bits: bitset[W.COUNT]
+    x: uint8 = field(when=lambda p: p.bits.test(E.A))
+"""
+
+ENUM_WIDTH_ONLY = """
+from enum import IntEnum
+from protocol import bitset, packet, sentinel, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    X = 1
+    COUNT = sentinel()
+    Y = value(3, until=3)
+    Y = value(4, since=3)
+
+@packet(id=1)
+class P:
+    bits: bitset[E.COUNT]
+"""
+
+ENUM_NAMED_ALIAS = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = value(1, "old", until=3)
+    A = value(1, "new", since=3)
+    B = 2
+    LATEST = B
+
+@packet(id=1)
+class P:
+    e: E = field(type=str)
 """
 
 PAIR_NAME_CODED_CHILD = """
@@ -863,11 +1018,12 @@ def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
 def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
     header = (generate({"a": DEPRECATED}) / "a.h").read_text()
     values = (
-        "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::Latest,\n    ::bedrock::protocol::D::A,\n"
-        "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n}};"
+        "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::A,\n"
+        "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n"
+        "    ::bedrock::protocol::D::Latest,\n}};"
     )
 
-    names = 'names_v<::bedrock::protocol::D>{{\n    "latest",\n    "a",\n    "old_deprecated",\n    "next",\n}};'
+    names = 'names_v<::bedrock::protocol::D>{{\n    "a",\n    "old_deprecated",\n    "next",\n    "latest",\n}};'
 
     assert values in header
     assert names in header
@@ -876,7 +1032,7 @@ def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
 def test_an_enum_with_a_deprecated_member_flags_each_reflected_member(generate):
     header = (generate({"a": DEPRECATED}) / "a.h").read_text()
 
-    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    false,\n    true,\n    true,\n}};" in header
+    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    true,\n    true,\n    false,\n}};" in header
 
 
 def test_an_enum_without_a_deprecated_member_has_no_deprecated_flags(generate):
@@ -1194,40 +1350,102 @@ def test_a_struct_whose_enum_only_gains_a_member_is_one_model(generate):
     assert "::bedrock::protocol::v3::H" not in header
 
 
-def test_a_struct_whose_enum_only_gains_a_member_has_one_serializer(generate):
+def test_a_struct_whose_enum_only_gains_a_member_has_a_serializer_per_membership(generate):
     header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
 
-    assert header.count("struct Serializer<::bedrock::protocol::H, ") == 2
+    assert header.count("struct Serializer<::bedrock::protocol::H, ") == 4
     assert (
         "template <>\nstruct Serializer<::bedrock::protocol::H, 1> {\n    static constexpr int since = 1;\n" in header
     )
     assert (
-        "    static auto deserialize(BinaryReader &stream) -> std::expected<::bedrock::protocol::H, Errc>;\n"
-        "};\n"
-        "\n"
-        "template <int V>\nstruct Serializer<::bedrock::protocol::H, V> : Serializer<::bedrock::protocol::H, 1> {};\n"
-    ) in header
+        "template <>\nstruct Serializer<::bedrock::protocol::H, 3> {\n    static constexpr int since = 3;\n" in header
+    )
 
 
-def test_a_struct_whose_enum_is_renumbered_is_still_split_by_its_shape(generate):
+def test_a_struct_whose_enum_only_gains_a_member_stays_one_struct(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count("\nstruct H {\n") == 1
+
+
+def test_a_struct_whose_enum_is_renumbered_has_a_serializer_per_numbering(generate):
     header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
 
-    assert "struct Serializer<::bedrock::protocol::v1::H, 1> {\n" in header
-    assert "struct Serializer<::bedrock::protocol::H, 3> {\n" in header
+    assert "template <>\nstruct Serializer<::bedrock::protocol::H, 1> {\n" in header
+    assert "template <>\nstruct Serializer<::bedrock::protocol::H, 3> {\n" in header
+    assert "::bedrock::protocol::v1::H" not in header
 
 
-def test_a_renumbered_enum_keeps_one_type_per_shape(generate):
+def test_a_renumbered_enum_is_one_enum_class_of_library_values(generate):
     header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
 
-    assert "namespace v1 {\n\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
-    assert "}  // namespace v1\n\nenum class E : std::uint8_t {\n    A = 1,\n    B = 3,\n};\n" in header
+    assert header.count("enum class E ") == 1
+    assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 3,\n};\n" in header
+    assert "namespace v1" not in header
 
 
-def test_a_renumbered_enum_is_selected_by_a_partial_per_shape(generate):
+def test_a_renumbered_enum_is_selected_by_its_primary_definition_alone(generate):
     header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
 
-    assert "template <int V> requires (V < 3)\nstruct E_<V> { using type = ::bedrock::protocol::v1::E; };\n" in header
-    assert "template <int V> requires (V >= 3)\nstruct E_<V> { using type = ::bedrock::protocol::E; };\n" in header
+    assert "template <int V>\nstruct E_ { using type = ::bedrock::protocol::E; };\n" in header
+    assert "struct E_<V>" not in header
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "std::array<NumberPair<::bedrock::protocol::E>, 1> encoded{{{3, 2}}}",
+        "std::array<NumberPair<::bedrock::protocol::E>, 1> decoded{{{2, 3}}}",
+        "std::array<std::uint8_t, 1> absent{{2}}",
+        "std::array<std::uint8_t, 1> lossy{{3}}",
+    ],
+)
+def test_a_numbering_holds_each_of_its_four_tables(generate, line):
+    header = (generate({"a": ENUM_ASYMMETRIC}) / "a.h").read_text()
+
+    assert "template <>\nstruct Numbering<::bedrock::protocol::E, 1> {\n" in header
+    assert f"    static constexpr {line};\n" in header
+
+
+def test_a_numbering_spells_an_empty_table_as_an_empty_array(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert "    static constexpr std::array<NumberPair<::bedrock::protocol::E>, 0> encoded{};\n" in header
+
+
+def test_an_identity_numbering_emits_no_specialization(generate):
+    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+
+    assert header.count("struct Numbering<") == 1
+    assert "struct Numbering<::bedrock::protocol::E, 3>" not in header
+
+
+def test_a_numbering_follows_the_reflection_of_its_enum_inside_detail(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    reflection = header.index("type_name_v<::bedrock::protocol::E>")
+    specialization = header.index("struct Numbering<")
+    assert reflection < specialization
+    assert "}  // namespace detail" not in header[reflection:specialization]
+
+
+def test_a_numbering_no_field_reaches_emits_no_specialization(generate):
+    header = (generate({"a": ENUM_WIDTH_ONLY}) / "a.h").read_text()
+
+    assert "struct Numbering<" not in header
+    assert "detail/numbering.hpp" not in header
+
+
+def test_an_enum_with_a_numbering_includes_the_numbering_runtime(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/numbering.hpp>\n" in header
+
+
+def test_an_enum_without_a_numbering_does_not_include_the_numbering_runtime(generate):
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+
+    assert "detail/numbering.hpp" not in header
 
 
 def test_an_enum_gaining_members_is_one_block_holding_every_member(generate):
@@ -1308,22 +1526,140 @@ def test_the_newest_live_member_of_a_shared_value_is_the_first_reflected(generat
     assert 'names_v<::bedrock::protocol::E>{{\n    "new",\n    "mid",\n    "old",\n    "alias",\n}};' in header
 
 
-def test_an_integer_coded_enum_field_is_written_as_its_underlying_integer(generate):
+def test_an_integer_coded_enum_field_at_an_identity_numbering_is_written_as_its_underlying_integer(generate):
     source = (generate({"a": ENUM_SPLIT}) / "a.cpp").read_text()
 
-    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::serialize(")
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 3>::serialize(")
     assert "    stream.write<std::uint8_t>(value.e);\n" in body
 
 
-def test_an_integer_coded_enum_field_is_read_by_a_cast_of_the_integer(generate):
+def test_an_integer_coded_enum_field_at_an_identity_numbering_is_read_by_a_cast_of_the_integer(generate):
     source = (generate({"a": ENUM_SPLIT}) / "a.cpp").read_text()
 
-    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::deserialize(")
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 3>::deserialize(")
     assert (
         "        auto v = stream.read<std::uint8_t>();\n"
         '        if (!v) return stream.fail(v.error(), "e");\n'
         "        out.e = static_cast<::bedrock::protocol::E>(*v);\n"
     ) in body
+
+
+def test_an_integer_coded_enum_field_at_a_numbering_is_written_through_its_number(generate):
+    source = (generate({"a": ENUM_RENUMBERED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::serialize(")
+    assert (
+        "    {\n"
+        "        const auto n = detail::to_number<::bedrock::protocol::E, 1>(value.e);\n"
+        '        if (!n) return stream.fail(n.error(), "e");\n'
+        "        stream.write<std::uint8_t>(*n);\n"
+        "    }\n"
+    ) in body
+
+
+def test_a_mapped_enum_field_names_the_since_of_its_numbering_not_of_its_struct(generate):
+    source = (generate({"a": ENUM_FIELD_AFTER_NUMBERING}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 2>::serialize(")
+    assert "        const auto n = detail::to_number<::bedrock::protocol::E, 1>(value.e);\n" in body
+
+
+def test_an_integer_coded_enum_field_at_a_numbering_is_read_through_its_value(generate):
+    source = (generate({"a": ENUM_RENUMBERED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::H, 1>::deserialize(")
+    assert (
+        "        auto v = stream.read<std::uint8_t>();\n"
+        '        if (!v) return stream.fail(v.error(), "e");\n'
+        "        const auto e = detail::to_value<::bedrock::protocol::E, 1>(*v);\n"
+        '        if (!e) return stream.fail(e.error(), "e");\n'
+        "        out.e = *e;\n"
+    ) in body
+
+
+def test_a_narrowed_enum_number_is_checked_before_it_is_mapped(generate):
+    source = (generate({"a": ENUM_NARROW}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::deserialize(")
+    assert (
+        "        auto v = stream.readVarInt<std::int32_t>();\n"
+        '        if (!v) return stream.fail(v.error(), "e");\n'
+        "        const auto n = static_cast<std::int16_t>(*v);\n"
+        '        if (static_cast<std::int32_t>(n) != *v) return stream.fail(Errc::out_of_range, "e");\n'
+        "        const auto e = detail::to_value<::bedrock::protocol::E, 1>(n);\n"
+    ) in body
+
+
+def test_an_enum_inside_a_list_is_mapped(generate):
+    source = (generate({"a": ENUM_CONTAINERS}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "            const auto n = detail::to_number<::bedrock::protocol::E, 1>(e0);\n" in body
+
+
+def test_an_enum_as_a_map_key_is_mapped(generate):
+    source = (generate({"a": ENUM_CONTAINERS}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "            const auto n = detail::to_number<::bedrock::protocol::E, 1>(k0);\n" in body
+
+
+def test_an_enum_inside_an_optional_is_mapped(generate):
+    source = (generate({"a": ENUM_CONTAINERS}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "            const auto n = detail::to_number<::bedrock::protocol::E, 1>((*value.maybe));\n" in body
+
+
+def test_an_enum_inside_a_list_reports_the_element_in_its_path(generate):
+    source = (generate({"a": ENUM_CONTAINERS}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "    for (std::size_t i0 = 0; const auto &e0 : value.many) {\n" in body
+    assert '            if (!n) return stream.fail(n.error(), "many", i0);\n' in body
+
+
+def test_a_literal_whose_number_differs_from_its_value_is_the_number(generate):
+    source = (generate({"a": ENUM_LITERAL_NUMBER}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "    stream.write<std::uint8_t>(2);\n" in body
+
+
+def test_a_literal_whose_number_differs_from_its_value_is_compared_by_the_number(generate):
+    source = (generate({"a": ENUM_LITERAL_NUMBER}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::deserialize(")
+    assert "        if (*v != static_cast<std::uint8_t>(2)) return stream.fail(Errc::unknown_value" in body
+
+
+def test_a_literal_whose_number_is_its_value_stays_the_member(generate):
+    source = (generate({"a": ENUM_LITERAL_NUMBER}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 3>::serialize(")
+    assert "    stream.write<std::uint8_t>(::bedrock::protocol::E::B);\n" in body
+
+
+@pytest.mark.parametrize("since", [1, 3])
+def test_a_condition_on_a_renumbered_member_compares_its_library_value(generate, since):
+    source = (generate({"a": ENUM_WHEN_RENUMBERED}) / "a.cpp").read_text()
+
+    body = body_of(source, f"auto Serializer<::bedrock::protocol::P, {since}>::serialize(")
+    assert "    if ((value.e) == (::bedrock::protocol::E::B)) {\n" in body
+
+
+def test_a_tested_member_is_the_number_of_its_protocol_when_it_differs_from_its_value(generate):
+    source = (generate({"a": ENUM_TEST_RENUMBERED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "    if (value.bits.test(static_cast<std::size_t>(1))) {\n" in body
+
+
+def test_a_tested_member_is_the_member_when_its_number_is_its_value(generate):
+    source = (generate({"a": ENUM_TEST_RENUMBERED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 3>::serialize(")
+    assert "    if (value.bits.test(static_cast<std::size_t>(::bedrock::protocol::E::A))) {\n" in body
 
 
 def test_an_integer_coded_enum_field_has_no_membership_test(generate):
@@ -1383,32 +1719,137 @@ def test_every_model_of_the_holder_aliases_the_one_nested_enum(generate):
     assert header.count("    ::bedrock::protocol::N_nested::F f{};\n") == 2
 
 
-def test_a_renamed_name_coded_member_keeps_its_old_name_at_the_protocol_that_names_it_so(generate):
+def test_a_renamed_name_coded_member_is_written_by_its_old_name_at_the_protocol_that_names_it_so(generate):
+    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+
+    assert 'naming_1_E_written{{\n    {::bedrock::protocol::E::A, "old"},\n}};' in source
+    assert 'naming_3_E_written{{\n    {::bedrock::protocol::E::A, "new"},\n}};' in source
+
+
+def test_a_renamed_name_coded_member_is_read_by_its_old_name_at_the_protocol_that_names_it_so(generate):
+    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+
+    assert 'naming_1_E_read{{\n    {::bedrock::protocol::E::A, "old"},\n}};' in source
+    assert 'naming_3_E_read{{\n    {::bedrock::protocol::E::A, "new"},\n}};' in source
+
+
+def test_a_renamed_name_coded_enum_is_one_enum_class(generate):
     header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
 
-    assert 'names_v<::bedrock::protocol::v1::E>{{\n    "old",\n}};' in header
-    assert 'names_v<::bedrock::protocol::E>{{\n    "new",\n}};' in header
+    assert header.count("enum class E ") == 1
+    assert "namespace v1" not in header
 
 
-def test_a_name_coded_member_gained_later_is_absent_from_the_type_of_the_earlier_protocol(generate):
+def test_a_name_coded_enum_with_several_namings_has_a_serializer_per_naming(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert "template <>\nstruct Serializer<::bedrock::protocol::E, 1> {\n" in header
+    assert "template <>\nstruct Serializer<::bedrock::protocol::E, 3> {\n" in header
+    assert "template <int V> requires (V < 3)\nstruct Serializer<::bedrock::protocol::E, V> :" in header
+    assert "template <int V> requires (V >= 3)\nstruct Serializer<::bedrock::protocol::E, V> :" in header
+
+
+def test_a_name_coded_enum_with_several_namings_includes_the_naming_runtime(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/naming.hpp>\n" in header
+
+
+def test_a_name_coded_enum_with_one_naming_does_not_include_the_naming_runtime(generate):
+    header = (generate({"a": A}) / "a.h").read_text()
+
+    assert "detail/naming.hpp" not in header
+
+
+def test_a_naming_table_is_written_in_the_source_detail_namespace(generate):
+    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+
+    assert source.index("namespace detail {") < source.index("naming_1_E_written")
+    assert source.index("naming_3_E_read") < source.index("}  // namespace detail")
+    assert source.index("}  // namespace detail") < source.index(
+        "auto Serializer<::bedrock::protocol::E, 1>::serialize("
+    )
+
+
+def test_a_name_coded_member_gained_later_is_one_enum_class_holding_every_member(generate):
     header = (generate({"a": ENUM_NAME_GAINED}) / "a.h").read_text()
 
-    assert "namespace v1 {\n\nenum class E : std::uint8_t {\n    A = 1,\n};\n" in header
-    assert 'names_v<::bedrock::protocol::v1::E>{{\n    "a",\n}};' in header
+    assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
+    assert "namespace v1" not in header
 
 
-def test_a_literal_of_a_derived_member_uses_the_number_of_its_protocol(generate):
+def test_a_name_coded_member_gained_later_has_no_row_in_the_naming_of_the_earlier_protocol(generate):
+    source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
+
+    assert 'naming_1_E_written{{\n    {::bedrock::protocol::E::A, "a"},\n}};' in source
+    assert 'naming_1_E_read{{\n    {::bedrock::protocol::E::A, "a"},\n}};' in source
+
+
+def test_a_value_without_a_row_fails_to_encode_by_name(generate):
+    source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::serialize(")
+    assert "    const auto name = detail::name_of(detail::naming_1_E_written, value);\n" in body
+    assert "    if (!name) return std::unexpected(Errc::unknown_value);\n" in body
+
+
+def test_a_name_without_a_row_fails_to_decode_by_name(generate):
+    source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::deserialize(")
+    assert "    const auto value = detail::value_of(detail::naming_1_E_read, *v);\n" in body
+    assert "    if (!value) return std::unexpected(Errc::unknown_value);\n" in body
+
+
+def test_an_alias_of_a_name_coded_member_decodes_to_its_target(generate):
+    source = (generate({"a": ENUM_NAMED_ALIAS}) / "a.cpp").read_text()
+
+    read = source.partition("naming_3_E_read{{")[2].partition("}};")[0]
+    assert '    {::bedrock::protocol::E::B, "b"},\n' in read
+    assert '    {::bedrock::protocol::E::B, "latest"},\n' in read
+
+
+def test_an_alias_of_a_name_coded_member_is_written_by_its_alias_name_in_one_row(generate):
+    source = (generate({"a": ENUM_NAMED_ALIAS}) / "a.cpp").read_text()
+
+    written = source.partition("naming_3_E_written{{")[2].partition("}};")[0]
+    assert written.count("::bedrock::protocol::E::B,") == 1
+    assert '    {::bedrock::protocol::E::B, "latest"},\n' in written
+
+
+def test_a_child_call_of_a_name_coded_enum_names_the_since_of_its_naming(generate):
+    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+
+    older = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    newer = body_of(source, "auto Serializer<::bedrock::protocol::P, 3>::serialize(")
+    assert "        auto r = Serializer<::bedrock::protocol::E, 1>::serialize(stream, value.e);\n" in older
+    assert "        auto r = Serializer<::bedrock::protocol::E, 3>::serialize(stream, value.e);\n" in newer
+
+
+def test_a_literal_of_a_derived_member_writes_the_number_of_its_protocol_when_the_value_differs(generate):
     source = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.cpp").read_text()
 
-    body = body_of(source, "auto Serializer<::bedrock::protocol::v1::P, 1>::serialize(")
-    assert "    stream.write<std::uint8_t>(::bedrock::protocol::v1::E::Latest);\n" in body
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "    stream.write<std::uint8_t>(1);\n" in body
 
 
-def test_a_condition_on_a_derived_member_uses_the_number_of_its_protocol(generate):
+def test_a_literal_of_a_derived_member_is_the_member_when_the_value_is_the_number(generate):
     source = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.cpp").read_text()
 
-    body = body_of(source, "auto Serializer<::bedrock::protocol::v1::P, 1>::serialize(")
-    assert "    if ((value.e) == (::bedrock::protocol::v1::E::Latest)) {\n" in body
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 3>::serialize(")
+    assert "    stream.write<std::uint8_t>(::bedrock::protocol::E::Latest);\n" in body
+
+
+def test_an_alias_follows_its_target_in_the_reflection_tables(generate):
+    header = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.h").read_text()
+
+    assert (
+        "values_v<::bedrock::protocol::E>{{\n"
+        "    ::bedrock::protocol::E::A,\n"
+        "    ::bedrock::protocol::E::B,\n"
+        "    ::bedrock::protocol::E::Latest,\n"
+        "}};"
+    ) in header
 
 
 def test_a_unioned_enum_marks_a_deprecated_member_in_its_deprecated_table(generate):

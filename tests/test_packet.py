@@ -21,6 +21,12 @@ def test_a_packet_whose_forms_differ_only_in_an_enums_members_resolves_to_one_cl
     assert version.packets[packet.ID] is packet
 
 
+@pytest.mark.parametrize("version", [v729, v1001], ids=lambda module: module.__name__)
+def test_a_packet_whose_enum_changes_its_numbers_resolves_to_one_class(version):
+    packet = v2225.SetLastHurtByPacket
+    assert version.packets[packet.ID] is packet
+
+
 @pytest.mark.parametrize(
     ("version", "end_id"),
     [

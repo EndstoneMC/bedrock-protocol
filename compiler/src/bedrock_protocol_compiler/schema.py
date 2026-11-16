@@ -16,6 +16,7 @@ from bedrock_protocol_compiler.descriptor import (
     EnumRef,
     Expression,
     Field,
+    FieldRef,
     Int,
     List,
     Literal,
@@ -91,14 +92,14 @@ class EnumModel:
     underlying: Primitive
     members: tuple[Member, ...]
     values: dict[str, int]
+    derived: frozenset[str] = frozenset()
     runs: dict[Enum, list[Range]] = field(default_factory=dict)
     since: int | None = None
     versioned: bool = True
-    renumbered: bool = False
 
 
 type Model = StructModel | EnumModel
-type EnumType = EnumModel | EnumShape
+type EnumType = EnumModel
 
 
 @dataclass(eq=False)
@@ -116,7 +117,10 @@ class Encoding:
 @dataclass(eq=False)
 class Numbering:
     model: EnumModel
-    moved: dict[int, int]
+    encoded: dict[int, int]
+    decoded: dict[int, int]
+    absent: frozenset[int]
+    lossy: frozenset[int]
     identity: bool
     runs: list[Range] = field(default_factory=list)
     since: int = field(init=False)
@@ -127,6 +131,7 @@ class Naming:
     model: EnumModel
     names: dict[str, str]
     written: dict[int, str]
+    read: dict[str, int]
     runs: list[Range] = field(default_factory=list)
     since: int = field(init=False)
 
@@ -191,9 +196,7 @@ def qualified(family: Struct | Enum) -> str:
 
 def numbered_by(node: Type | Expression | None) -> Iterator[MemberRef]:
     match node:
-        case MemberRef():
-            yield node
-        case Literal(value=MemberRef() as member) | Test(member=member):
+        case Literal(value=MemberRef() as member) | Test(member=member) | Bitset(width=member):
             yield member
         case Optional(element=element) | List(element=element) | Array(element=element):
             yield from numbered_by(element)
@@ -205,6 +208,20 @@ def numbered_by(node: Type | Expression | None) -> Iterator[MemberRef]:
         case Variant(cases=cases):
             for case in cases:
                 yield from numbered_by(case)
+
+
+def operands(node: Expression | None) -> Iterator[tuple[str | None, MemberRef | FieldRef, Expression | None]]:
+    match node:
+        case MemberRef() | FieldRef():
+            yield None, node, None
+        case Not(operand=operand):
+            yield from operands(operand)
+        case Binary(operator=operator, left=left, right=right):
+            for operand, other in ((left, right), (right, left)):
+                if isinstance(operand, MemberRef | FieldRef):
+                    yield operator, operand, other
+                else:
+                    yield from operands(operand)
 
 
 class Schema:
@@ -238,7 +255,10 @@ class Schema:
         self.encoded: dict[tuple[Struct, int], Encoding] = {}
         self.numbered: dict[tuple[Enum, int], Numbering] = {}
         self.named: dict[tuple[Enum, int], Naming] = {}
+        self.model_numberings: dict[EnumModel, list[Numbering]] = {}
+        self.model_namings: dict[EnumModel, list[Naming]] = {}
         self.numbers: dict[tuple[Enum, int], dict[str, int]] = {}
+        self.merged: dict[tuple[Enum, int], tuple[str, str]] = {}
         self.family_models: dict[Struct | Enum, list[Model]] = {}
         self.model_encodings: dict[StructModel, list[Encoding]] = {}
         self.read_at: dict[StructModel, int] = {}
@@ -337,7 +357,7 @@ class Schema:
                 continue
             runs = (
                 self.enum_runs(child)
-                if isinstance(child, EnumModel | EnumShape)
+                if isinstance(child, EnumModel)
                 else [run for each in child.runs.values() for run in each]
             )
             overlap = self.overlap(owner.family)
@@ -383,6 +403,12 @@ class Schema:
     def naming_at(self, enum: Enum, version: int) -> Naming:
         return self.named[enum, version]
 
+    def numberings(self, model: EnumModel) -> list[Numbering]:
+        return self.model_numberings[model]
+
+    def namings(self, model: EnumModel) -> list[Naming]:
+        return self.model_namings[model]
+
     def numbers_at(self, enum: Enum, version: int) -> dict[str, int]:
         return self.numbers[enum, version]
 
@@ -390,23 +416,27 @@ class Schema:
         shape = self.live[enum, version]
         if not isinstance(shape, EnumShape):
             raise CompilerError(f"{enum.module}.py: {qualified(enum)}: is not an enum at {version}")
-        model = self.enum_models[enum, version]
-        return shape if model.renumbered else model
+        return self.enum_models[enum, version]
 
     def enum_types(self, family: Enum) -> list[EnumType]:
-        model = self.family_models[family][0]
-        if isinstance(model, EnumModel) and not model.renumbered:
-            return [model]
-        return [shape for shape in self.family_shapes[family] if isinstance(shape, EnumShape)]
+        return [cast(EnumModel, self.family_models[family][0])]
+
+    def resolve(self, member: MemberRef, version: int) -> MemberRef:
+        model = self.enum_models[member.enum, version]
+        if member.name not in model.derived:
+            return member
+        numbers = self.numbers[member.enum, version]
+        shape = cast(EnumShape, self.live[member.enum, version])
+        return next(
+            MemberRef(member.enum, each.name)
+            for each in shape.members
+            if each.name not in model.derived and numbers[each.name] == numbers[member.name]
+        )
 
     def enumerators(self, enum_type: EnumType) -> dict[str, int]:
-        if isinstance(enum_type, EnumModel):
-            return enum_type.values
-        return enum_type.numbers
+        return enum_type.values
 
     def enum_runs(self, enum_type: EnumType) -> list[Range]:
-        if isinstance(enum_type, EnumShape):
-            return enum_type.ranges
         return self.ranges(
             [
                 version
@@ -525,14 +555,13 @@ class Schema:
                 return reached.setdefault(node, self.numbered[family, version]), encoded, endian
             case EnumName(enum=family):
                 return reached.setdefault(node, self.named[family, version])
-            case MemberRef(enum=family, name=name):
-                return self.model_at(family, version), name, self.numbers[family, version][name]
-            case Literal(value=MemberRef(enum=family) as member):
-                return Literal, self.enum_type(family, version).underlying, self.coded(member, version, reached)
-            case Bitset(width=member):
-                return Bitset, self.coded(member, version, reached)
-            case Test(field=tested, member=member):
-                return Test, tested, self.coded(member, version, reached)
+            case MemberRef(enum=family):
+                name = self.resolve(node, version).name
+                return self.enum_models[family, version], name, self.enum_models[family, version].values.get(name)
+            case Literal(value=MemberRef(enum=family, name=name)) | Bitset(width=MemberRef(enum=family, name=name)):
+                return type(node), self.enum_models[family, version], name, self.numbers[family, version][name]
+            case Test(field=tested, member=MemberRef(enum=family, name=name)):
+                return Test, tested, self.enum_models[family, version], name, self.numbers[family, version][name]
             case Optional(element=element):
                 return Optional, self.coded(element, version, reached)
             case List(element=element, prefix=prefix, count=count):
@@ -540,6 +569,12 @@ class Schema:
             case Array(element=element, size=size):
                 return Array, size, self.coded(element, version, reached)
             case Map(key=key, value=value):
+                if isinstance(key, EnumRef | EnumName) and (key.enum, version) in self.merged:
+                    derived, target = self.merged[key.enum, version]
+                    raise CompilerError(
+                        f"{key.enum.module}.py: {qualified(key.enum)}: keys a dict at {version}, where {derived} "
+                        f"encodes to {target}'s number"
+                    )
                 return Map, self.coded(key, version, reached), self.coded(value, version, reached)
             case Variant(cases=cases):
                 return Variant, tuple(self.coded(case, version, reached) for case in cases)
@@ -568,7 +603,24 @@ class Schema:
             case EnumRef(enum=family):
                 return self.enum_type(family, version)
             case Bitset(width=width):
-                return self.numbers[width.enum, version][width.name]
+                numbers = self.numbers[width.enum, version]
+                model = self.enum_models[width.enum, version]
+                for member in model.members:
+                    value = model.values[member.name]
+                    if member.name in model.derived:
+                        continue
+                    if member.name not in numbers:
+                        if value < numbers[width.name]:
+                            raise CompilerError(
+                                f"{width.enum.module}.py: {qualified(width.enum)}: lacks {member.name} at {version}, "
+                                f"below a bitset width"
+                            )
+                    elif min(value, numbers[member.name]) < numbers[width.name] and numbers[member.name] != value:
+                        raise CompilerError(
+                            f"{width.enum.module}.py: {qualified(width.enum)}: numbers {member.name} "
+                            f"{numbers[member.name]} at {version}, not its value {value}, below a bitset width"
+                        )
+                return numbers[width.name]
             case Optional(element=element) | List(element=element):
                 return type(node), self.resolved(element, version)
             case Array(element=element, size=size):
@@ -582,6 +634,12 @@ class Schema:
     def project_enum(self, forms: list[Enum]) -> None:
         family = forms[0]
         underlying = family.declarations[-1].underlying
+        declared = dict.fromkeys(declaration.underlying.name for form in forms for declaration in form.declarations)
+        if len(declared) > 1:
+            first, second, *_ = declared
+            raise CompilerError(
+                f"{family.module}.py: {qualified(family)}: declares underlying types {first} and {second}"
+            )
         order: dict[str, None] = {}
         for form in forms:
             for declaration in reversed(form.declarations):
@@ -663,9 +721,11 @@ class Schema:
                 newest[name] if name in derived else replace(newest[name], value=Int(values[name])) for name in order
             ),
             {name: values[name] for name in order},
+            frozenset(derived),
         )
+        library = {values[name] for name in order if name not in derived}
         numberings: dict[tuple[object, ...], Numbering] = {}
-        namings: dict[tuple[frozenset[tuple[str, str]], frozenset[tuple[int, str]]], Naming] = {}
+        namings: dict[tuple[object, ...], Naming] = {}
         spans: dict[Numbering | Naming, set[int]] = {}
         for form in forms:
             self.family_models[form] = [model]
@@ -686,13 +746,55 @@ class Schema:
                         f"{form.module}.py: {qualified(form)}: does not number its library values one to one at "
                         f"{version}"
                     )
-                displaced = sorted(set(mapped.values()) - mapped.keys())
-                freed = sorted(mapped.keys() - set(mapped.values()))
-                moved = {value: number for value, number in mapped.items() if value != number} | dict(
-                    zip(displaced, freed, strict=True)
+                aliases = [member for member in shape.members if member.name in derived]
+                for member in aliases:
+                    value, number = values[member.name], shape.numbers[member.name]
+                    if mapped.get(value, number) != number:
+                        holder = next(
+                            each.name
+                            for each in shape.members
+                            if each.name not in derived and values[each.name] == value
+                        )
+                        raise CompilerError(
+                            f"{form.module}.py: {qualified(form)}.{member.name}: is numbered {number} at {version}, "
+                            f"where {holder} holds its value with {mapped[value]}"
+                        )
+                    target = next(
+                        (
+                            each.name
+                            for each in shape.members
+                            if each.name not in derived and shape.numbers[each.name] == number
+                        ),
+                        None,
+                    )
+                    if value not in mapped and target is not None:
+                        self.merged.setdefault((form, version), (member.name, target))
+                free = sorted(set(mapped.values()) - library)
+                unused = sorted(library - set(mapped.values()))
+                paired = dict(zip(free, unused[: len(free)], strict=True))
+                encoded = (
+                    {value: number for value, number in mapped.items() if value != number}
+                    | paired
+                    | {
+                        values[member.name]: shape.numbers[member.name]
+                        for member in aliases
+                        if values[member.name] not in mapped and values[member.name] != shape.numbers[member.name]
+                    }
                 )
+                decoded = {number: value for value, number in mapped.items() if value != number} | {
+                    number: value for value, number in paired.items()
+                }
+                absent = frozenset(library - mapped.keys() - {values[member.name] for member in aliases})
+                lossy = frozenset(unused[len(free) :])
                 numbering = numberings.setdefault(
-                    (shape.underlying, tuple(sorted(moved.items()))), Numbering(model, moved, not moved)
+                    (
+                        shape.underlying,
+                        tuple(sorted(encoded.items())),
+                        tuple(sorted(decoded.items())),
+                        absent,
+                        lossy,
+                    ),
+                    Numbering(model, encoded, decoded, absent, lossy, not (encoded or decoded or absent or lossy)),
                 )
                 self.numbered[form, version] = numbering
                 spans.setdefault(numbering, set()).add(version)
@@ -703,9 +805,16 @@ class Schema:
                     ):
                         canonical.setdefault(shape.numbers[member.name], member.encoded_name)
                     names = {member.name: member.encoded_name for member in shape.members}
-                    written = {value: canonical[number] for value, number in mapped.items()}
+                    written = {value: canonical[number] for value, number in mapped.items()} | {
+                        values[member.name]: canonical[shape.numbers[member.name]]
+                        for member in aliases
+                        if values[member.name] not in mapped
+                    }
+                    inverse = {number: value for value, number in mapped.items()}
+                    read = {member.encoded_name: inverse[shape.numbers[member.name]] for member in shape.members}
                     naming = namings.setdefault(
-                        (frozenset(names.items()), frozenset(written.items())), Naming(model, names, written)
+                        (frozenset(names.items()), frozenset(written.items()), frozenset(read.items())),
+                        Naming(model, names, written, read),
                     )
                     self.named[form, version] = naming
                     spans.setdefault(naming, set()).add(version)
@@ -713,11 +822,8 @@ class Schema:
         for coding, versions in spans.items():
             coding.runs = self.ranges(versions)
             coding.since = min(versions)
-        model.renumbered = (
-            len(numberings) > 1
-            or len(namings) > 1
-            or any(len(set(placed.values())) > 1 for placed in placements.values())
-        )
+        self.model_numberings[model] = sorted(numberings.values(), key=lambda numbering: numbering.since)
+        self.model_namings[model] = sorted(namings.values(), key=lambda naming: naming.since)
         primary = next(iter(model.runs.values()))
         model.since = primary[0].since
         model.versioned = primary != [ALWAYS]
@@ -732,6 +838,52 @@ class Schema:
             shape = self.live.get((family, version))
             if not isinstance(shape, StructShape):
                 continue
+            sentinels: dict[MemberRef, int] = {}
+            for each in shape.fields:
+                for operator, operand, other in operands(each.when):
+                    read = other if isinstance(operand, MemberRef) else operand
+                    held = next(
+                        (
+                            earlier.type
+                            for earlier in shape.fields
+                            if isinstance(read, FieldRef) and earlier.name == read.name
+                        ),
+                        None,
+                    )
+                    if isinstance(held, EnumRef | EnumName) and (held.enum, version) in self.merged:
+                        derived, target = self.merged[held.enum, version]
+                        raise CompilerError(
+                            f"{family.module}.py: {qualified(family)}.{each.name}: compares a value of "
+                            f"{qualified(held.enum)} at {version}, where {derived} encodes to {target}'s number"
+                        )
+                    if isinstance(operand, MemberRef):
+                        if not (
+                            isinstance(held, EnumRef | EnumName)
+                            and self.family_models[held.enum][0] is self.family_models[operand.enum][0]
+                        ):
+                            raise CompilerError(
+                                f"{family.module}.py: {qualified(family)}.{each.name}: compares "
+                                f"{qualified(operand.enum)}.{operand.name} with a value of another type"
+                            )
+                        if operand.name not in self.enum_models[operand.enum, version].values:
+                            number = self.numbers[operand.enum, version][operand.name]
+                            numbering = self.numbered[held.enum, version]
+                            if number in numbering.lossy:
+                                raise CompilerError(
+                                    f"{family.module}.py: {qualified(family)}.{each.name}: compares "
+                                    f"{qualified(operand.enum)}.{operand.name}, numbered {number} at {version}, which "
+                                    "decodes to no value"
+                                )
+                            sentinels[operand] = numbering.decoded.get(number, number)
+                    elif (
+                        isinstance(held, EnumRef | EnumName)
+                        and not (operator in ("==", "!=") and isinstance(other, MemberRef))
+                        and (self.numbered[held.enum, version].encoded or self.numbered[held.enum, version].decoded)
+                    ):
+                        raise CompilerError(
+                            f"{family.module}.py: {qualified(family)}.{each.name}: reads {operand.name} as a number "
+                            f"at {version}, where {qualified(held.enum)} numbers a value apart from it"
+                        )
             nested = tuple(
                 self.struct_models[child, version] if isinstance(child, Struct) else self.enum_type(child, version)
                 for child in family.nested
@@ -760,7 +912,7 @@ class Schema:
                 for member in (*numbered_by(each.type), *numbered_by(each.when))
             }
             self.encoded[family, version] = encodings.setdefault(
-                (model, key), Encoding(model, shape.fields, reached, numbers)
+                (model, key, frozenset(sentinels.items())), Encoding(model, shape.fields, reached, numbers | sentinels)
             )
 
     def shapes(self, family: Struct | Enum) -> list[Shape]:

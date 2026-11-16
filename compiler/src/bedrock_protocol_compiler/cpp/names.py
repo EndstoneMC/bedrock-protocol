@@ -58,11 +58,6 @@ def selector(label: str) -> str:
     return f"{label}_"
 
 
-def since(schema: Schema, enum_type: EnumType) -> int:
-    first = schema.enum_runs(enum_type)[0].since
-    return schema.versions[0] if first is None else first
-
-
 def serializer(spelled: str, version: int | str, mode: SerializationMode = SerializationMode.DEFAULT) -> str:
     suffix = "" if mode is SerializationMode.DEFAULT else f", SerializationMode::{mode.name.capitalize()}"
     return f"Serializer<{spelled}, {version}{suffix}>"
@@ -96,14 +91,22 @@ def read(encoded: str, endian: str | None) -> str:
     return f"stream.read<{PRIMITIVES[encoded]}{order}>()"
 
 
-def enumerator(schema: Schema, member: MemberRef, encoding: Encoding) -> str:
+def spelled_member(schema: Schema, member: MemberRef, encoding: Encoding) -> str:
     enum_type = schema.enum_type(member.enum, encoding.since)
-    cpp_name = next(
-        (each.cpp_name for each in enum_type.members if each.name == member.name and not each.deprecated), None
-    )
-    if cpp_name is None:
-        return f"static_cast<{qualified(schema, enum_type)}>({schema.number(encoding, member)})"
-    return f"{qualified(schema, enum_type)}::{cpp_name}"
+    spelled = qualified(schema, enum_type)
+    found = next((each for each in enum_type.members if each.name == member.name), None)
+    if found is None:
+        return f"static_cast<{spelled}>({schema.number(encoding, member)})"
+    if found.deprecated:
+        return f"static_cast<{spelled}>({enum_type.values[found.name]})"
+    return f"{spelled}::{found.cpp_name}"
+
+
+def numbered(schema: Schema, member: MemberRef, encoding: Encoding) -> str:
+    number = schema.number(encoding, member)
+    if schema.enum_type(member.enum, encoding.since).values.get(member.name) == number:
+        return spelled_member(schema, member, encoding)
+    return str(number)
 
 
 def bare(schema: Schema, target: StructModel | EnumType) -> str:

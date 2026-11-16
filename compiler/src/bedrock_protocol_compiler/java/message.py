@@ -16,8 +16,6 @@ from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import (
     Encoding,
     EnumModel,
-    EnumShape,
-    EnumType,
     Schema,
     SerializationMode,
     StructModel,
@@ -29,15 +27,6 @@ type Served = list[tuple[Range, SerializationMode, str]]
 type Span = tuple[int | None, int | None, list[SerializationMode]]
 
 MODES = list(SerializationMode)
-
-
-def bounds(since: int | None, until: int | None) -> list[str]:
-    found = []
-    if since is not None:
-        found.append(f"version >= {since}")
-    if until is not None:
-        found.append(f"version < {until}")
-    return found
 
 
 def spans(served: Served) -> list[Span]:
@@ -274,7 +263,7 @@ class MessageGenerator:
                     return $codec$.INSTANCE;
                 }
                 """,
-                clause=" && ".join((f"mode == {names.MODE}.{mode.name}", *bounds(run.since, run.until))),
+                clause=" && ".join((f"mode == {names.MODE}.{mode.name}", *names.bounds(run.since, run.until))),
                 codec=codec,
             )
         relative = self.qualified.removeprefix(f"{self.schema.java_package}.")
@@ -288,7 +277,7 @@ class MessageGenerator:
                 f"{json.dumps(' mode at protocol ')} + version + "
                 f"{json.dumps('; it has ' + ' and '.join(each.name for each in modes))}"
             )
-            clause = bounds(since, until)
+            clause = names.bounds(since, until)
             if not clause or (covered and index == len(found) - 1):
                 p.emit("throw new IllegalArgumentException($absent$);", absent=absent)
                 continue
@@ -404,8 +393,8 @@ class MessageGenerator:
 
 
 def type_generator(
-    schema: Schema, each: StructModel | EnumType, enclosing: tuple[str, ...], registry: Members
+    schema: Schema, each: StructModel | EnumModel, enclosing: tuple[str, ...], registry: Members
 ) -> MessageGenerator | EnumGenerator:
-    if isinstance(each, EnumModel | EnumShape):
+    if isinstance(each, EnumModel):
         return EnumGenerator(schema, each)
     return MessageGenerator(schema, each, enclosing, registry)

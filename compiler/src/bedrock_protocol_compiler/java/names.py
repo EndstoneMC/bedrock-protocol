@@ -2,7 +2,7 @@ import re
 
 from bedrock_protocol_compiler.builder import UUID
 from bedrock_protocol_compiler.descriptor import Builtin, CompilerError
-from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema, SerializationMode, StructModel
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema, SerializationMode, StructModel
 
 LIBRARIES = {
     "ArrayList": "java.util.ArrayList",
@@ -54,6 +54,7 @@ OBJECT = "java.lang.Object"
 BUILDER = "Builder"
 REGISTRY = "Packets"
 VERSION = "ProtocolVersion"
+INTERNAL = "internal"
 CODEC = "Codec"
 ATOM = re.compile(r"[\w.]+(?:\([^()]*\))?")
 
@@ -77,20 +78,42 @@ def reserved(schema: Schema) -> frozenset[str]:
     return frozenset(imports(schema)) | frozenset(JAVA_LANG)
 
 
-def package(schema: Schema, each: StructModel | EnumType) -> str:
+def package(schema: Schema, each: StructModel | EnumModel) -> str:
     scope = schema.scope(each)
     return schema.java_package if scope is None else f"{schema.java_package}.v{scope}"
 
 
-def declared(schema: Schema, each: StructModel | EnumType) -> str:
+def declared(schema: Schema, each: StructModel | EnumModel) -> str:
     return schema.name(each) if isinstance(each, StructModel) else each.family.name
 
 
-def qualified(schema: Schema, each: StructModel | EnumType) -> str:
+def qualified(schema: Schema, each: StructModel | EnumModel) -> str:
     owner = schema.owner(each)
     if owner is not None:
         return f"{qualified(schema, owner)}.{each.family.name}"
     return f"{package(schema, each)}.{declared(schema, each)}"
+
+
+def internal(schema: Schema) -> str:
+    return f"{schema.java_package}.{INTERNAL}"
+
+
+def nested(schema: Schema, each: StructModel | EnumModel) -> str:
+    owner = schema.owner(each)
+    return declared(schema, each) if owner is None else f"{nested(schema, owner)}.{each.family.name}"
+
+
+def numbering(schema: Schema, each: EnumModel) -> str:
+    return f"{nested(schema, each).replace('.', '')}Numbering"
+
+
+def bounds(since: int | None, until: int | None, variable: str = "version") -> list[str]:
+    found = []
+    if since is not None:
+        found.append(f"{variable} >= {since}")
+    if until is not None:
+        found.append(f"{variable} < {until}")
+    return found
 
 
 def codec(encoding: Encoding) -> str:

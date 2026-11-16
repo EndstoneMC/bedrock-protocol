@@ -3,8 +3,8 @@ from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 
-from bedrock_protocol_compiler.descriptor import CompilerError
-from bedrock_protocol_compiler.java.names import OBJECT, OBJECT_METHODS
+from bedrock_protocol_compiler.descriptor import CompilerError, Range
+from bedrock_protocol_compiler.java.names import OBJECT, OBJECT_METHODS, bounds
 from bedrock_protocol_compiler.printer import Printer
 
 METHOD = re.compile(r"[^=]*?\b(?P<name>[a-z]\w*)\((?P<parameters>[^()]*)\) \{")
@@ -142,6 +142,25 @@ def combine(p: Printer, hashes: list[str]) -> None:
     for each in hashes:
         p.emit("hash = 31 * hash + $each$;", each=each)
     p.emit("return hash;")
+
+
+def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], absent: str) -> None:
+    for runs, body in entries:
+        clauses = [" && ".join(bounds(run.since, run.until, "protocol")) for run in runs]
+        if "" in clauses:
+            body()
+            return
+        clause = clauses[0] if len(clauses) == 1 else " || ".join(f"({each})" for each in clauses)
+        p.emit(
+            """
+            if ($clause$) {
+                $body$
+            }
+            """,
+            clause=clause,
+            body=body,
+        )
+    p.emit("throw new IllegalArgumentException($absent$ + protocol);", absent=absent)
 
 
 def enum_getter(p: Printer, enum: str, name: str, number: str, index: str = "") -> None:

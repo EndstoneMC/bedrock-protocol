@@ -262,8 +262,17 @@ class Value:
 
 
 class Scalar(Value):
-    def __init__(self, stored: str, encoded: str, endian: str | None, label: str, enum: str | None = None) -> None:
+    def __init__(
+        self,
+        stored: str,
+        encoded: str,
+        endian: str | None,
+        label: str,
+        enum: str | None = None,
+        numbering: tuple[str, int] | None = None,
+    ) -> None:
         self.stored = CLASSES[stored]
+        self.numbering = numbering
         self.encoded_name = encoded
         self.encoded = CLASSES[encoded]
         self.label = label
@@ -295,17 +304,26 @@ class Scalar(Value):
     def read(self, body: Body) -> str:
         widens = self.stored.kind == self.encoded.kind == "int" and self.stored.bits >= self.encoded.bits
         if self.stored == self.encoded or widens:
-            return convert(self.raw, self.raw_java, self.encoded, self.stored, self.java)
-        local = "int" if self.raw_java in ("byte", "short") else self.raw_java
-        read = body.fresh("v")
-        stored = body.fresh("s")
-        body.line(f"{local} {read} = {self.raw};")
-        body.line(f"{self.java} {stored} = {convert(read, local, self.encoded, self.stored, self.java)};")
-        body.fail(f"{convert(stored, self.java, self.stored, self.encoded, local)} != {read}", "outOfRange")
-        return stored
+            stored = convert(self.raw, self.raw_java, self.encoded, self.stored, self.java)
+        else:
+            local = "int" if self.raw_java in ("byte", "short") else self.raw_java
+            read = body.fresh("v")
+            stored = body.fresh("s")
+            body.line(f"{local} {read} = {self.raw};")
+            body.line(f"{self.java} {stored} = {convert(read, local, self.encoded, self.stored, self.java)};")
+            body.fail(f"{convert(stored, self.java, self.stored, self.encoded, local)} != {read}", "outOfRange")
+        if self.numbering is None:
+            return stored
+        helper, since = self.numbering
+        number = body.fresh("n")
+        body.line(f"int {number} = {stored};")
+        body.fail(f"!{helper}.decodes({since}, {number})", "unknownValue")
+        return f"{helper}.fromNumber({since}, {number})"
 
     @override
     def write(self, body: Body, value: str) -> None:
+        if self.numbering is not None:
+            value = f"{self.numbering[0]}.toNumber({self.numbering[1]}, {value})"
         body.line(self.call.format(bits(value, self.java, self.stored, self.encoded)))
 
     @override
@@ -362,6 +380,21 @@ class Scalar(Value):
         if self.mutable:
             return super().comparator()
         return None
+
+
+class NamedScalar(Scalar):
+    def __init__(self, stored: str, label: str, enum: str, since: str) -> None:
+        super().__init__(stored, stored, None, label, enum)
+        self.since = since
+
+    @override
+    def read(self, body: Body) -> str:
+        return f"{self.enum}.decode({self.since}buf).getNumber()"
+
+    @override
+    def write(self, body: Body, value: str) -> None:
+        constant = f"Objects.requireNonNullElse({self.enum}.forNumber({value}), {self.enum}.UNRECOGNIZED)"
+        body.line(f"{constant}.encode({self.since}buf);")
 
 
 class Reference(Value):
