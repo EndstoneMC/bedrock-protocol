@@ -98,4 +98,28 @@ final class CodecTest {
                                                 2225, SerializationMode.CEREAL))
                         .getMessage());
     }
+
+    @Test
+    void aCostItsOneByteEncodingCannotHoldFailsToEncode() {
+        assertEquals(
+                "ItemEnchantOption.cost: 300 is out of range",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () ->
+                                        ItemEnchantOption.codec(2225)
+                                                .encode(
+                                                        ItemEnchantOption.newBuilder()
+                                                                .setCost(300)
+                                                                .build(),
+                                                        Unpooled.buffer()))
+                        .getMessage());
+    }
+
+    @Test
+    void aCostAtTheEdgeOfItsOneByteEncodingEncodesToItsByte() {
+        ByteBuf buf = Unpooled.buffer();
+        ItemEnchantOption.codec(2225)
+                .encode(ItemEnchantOption.newBuilder().setCost(255).build(), buf);
+        assertEquals("ff000000000000000000", ByteBufUtil.hexDump(buf));
+    }
 }

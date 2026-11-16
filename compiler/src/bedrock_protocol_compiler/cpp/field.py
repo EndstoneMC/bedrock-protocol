@@ -2,6 +2,7 @@ import json
 from collections.abc import Callable
 from typing import Protocol
 
+from bedrock_protocol_compiler.builder import WIDTHS
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.expression import render_count
 from bedrock_protocol_compiler.descriptor import (
@@ -99,12 +100,29 @@ class ScalarField:
         self.stored = stored
         self.encoded = encoded
         self.endian = endian
+        self.narrowed = encoded != stored and WIDTHS[encoded][1] < WIDTHS[stored][1]
 
     def fallible(self) -> bool:
-        return False
+        return self.narrowed
 
     def write(self, p: Printer, value: str) -> None:
-        p.emit(names.write(self.encoded, self.endian, value))
+        if not self.narrowed:
+            p.emit(names.write(self.encoded, self.endian, value))
+            return
+        p.emit(
+            """
+            {
+                const auto w = static_cast<$encoded$>($value$);
+                if (static_cast<$spelled$>(w) != $value$) $fail$
+                $write$
+            }
+            """,
+            encoded=names.PRIMITIVES[self.encoded],
+            value=value,
+            spelled=self.spelled,
+            fail=names.fail(names.OUT_OF_RANGE, self.where),
+            write=names.write(self.encoded, self.endian, "w"),
+        )
 
     def read(self, p: Printer, target: str) -> None:
         p.emit("{")
@@ -161,25 +179,25 @@ class EnumField(ScalarField):
         return {names.header(self.node.enum)}
 
     def fallible(self) -> bool:
-        return self.mapped is not None
+        return self.narrowed or self.mapped is not None
 
     def write(self, p: Printer, value: str) -> None:
         if self.mapped is None:
             super().write(p, value)
             return
-        p.emit(
-            """
-            {
-                const auto n = detail::to_number$mapped$($value$);
-                if (!n) $fail$
-                $write$
-            }
-            """,
-            mapped=self.mapped,
-            value=value,
-            fail=names.fail("n.error()", self.where),
-            write=names.write(self.encoded, self.endian, "*n"),
-        )
+        p.emit("{")
+        with p.indent():
+            p.emit("const auto n = detail::to_number$mapped$($value$);", mapped=self.mapped, value=value)
+            p.emit("if (!n) $fail$", fail=names.fail("n.error()", self.where))
+            if self.narrowed:
+                p.emit("const auto w = static_cast<$encoded$>(*n);", encoded=names.PRIMITIVES[self.encoded])
+                p.emit(
+                    "if (static_cast<$stored$>(w) != *n) $fail$",
+                    stored=names.PRIMITIVES[self.stored],
+                    fail=names.fail(names.OUT_OF_RANGE, self.where),
+                )
+            p.emit(names.write(self.encoded, self.endian, "w" if self.narrowed else "*n"))
+        p.emit("}")
 
     def read(self, p: Printer, target: str) -> None:
         if self.mapped is None:

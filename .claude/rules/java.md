@@ -35,6 +35,7 @@ paths:
 - Define a type live at the latest version in the bare `java_package`, and any other in the `v<N>` package of the first protocol that held it, under the name the C++ backend declares; a nested type lives in the model `Schema.owner` names.
 - Make every enum one class holding every member any protocol has, each member valued by its library value, its number at the newest protocol that has it.
 - Give an enum whose members or numbers change at some protocol, when a field or a literal reaches that numbering, a public `<java_package>.internal.<Enum>Numbering` class that maps a library value to the protocol's number, never in the API; the codec throws `IllegalArgumentException` encoding a value the protocol lacks and `DecodeException.unknownValue` decoding a number it cannot place.
+- Check a value on encode only where its encoding is narrower than its field, throwing `IllegalArgumentException` naming the field and the value for one whose cast back differs.
 - Encode and decode a name-coded enum whose names change between protocols with the protocol; encoding a value with no name there throws `IllegalArgumentException`.
 - Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
 - Generate `v<N>.Packets` with `encode(packet, buf)` and `decode(packetId, buf)` for every modelled version and a bare `ProtocolVersion` mirroring the C++ `version.hpp` with `encodePacket` and `decodePacket`, and no bare `Packets`.

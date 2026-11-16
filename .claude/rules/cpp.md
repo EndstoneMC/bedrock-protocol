@@ -24,6 +24,7 @@ paths:
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
 - Say `serialize` and `deserialize` only on `Serializer<T, V>`; the free entry points around it are `encode<V>` and `decode<V, T>`, which take a `SerializationMode` as `encode<V, M>` and `decode<V, T, M>` only where a class name has two at that protocol; every call names its protocol.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
+- Check a value on encode only where its encoding is narrower than its member, failing one whose cast back differs with `Errc::out_of_range`.
 - Decode a number a protocol gives a member to that member and any other number to a non-member value; reject a number the protocol cannot place, a name it lacks, a value it cannot number or name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
 - Keep the per-protocol number and name tables in `detail`; the library exposes no per-protocol enum API.
 - Spell the return type of every function in a public header; deduce one only where it cannot be named.

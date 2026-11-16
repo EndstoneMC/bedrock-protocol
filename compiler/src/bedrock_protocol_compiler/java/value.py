@@ -324,7 +324,21 @@ class Scalar(Value):
     def write(self, body: Body, value: str) -> None:
         if self.numbering is not None:
             value = f"{self.numbering[0]}.toNumber({self.numbering[1]}, {value})"
-        body.line(self.call.format(bits(value, self.java, self.stored, self.encoded)))
+        if self.encoded.bits >= self.stored.bits:
+            body.line(self.call.format(bits(value, self.java, self.stored, self.encoded)))
+            return
+        if self.numbering is not None:
+            number = body.fresh("n")
+            body.line(f"{self.java} {number} = {value};")
+            value = number
+        rep = java_of(self.encoded)
+        written = body.fresh("w")
+        body.line(f"{rep} {written} = {convert(value, self.java, self.stored, self.encoded, rep)};")
+        body.reject(
+            f"{convert(written, rep, self.encoded, self.stored, self.java)} != {value}",
+            f'"{self.label}: " + {value} + " is out of range"',
+        )
+        body.line(self.call.format(bits(written, rep, self.encoded, self.encoded)))
 
     @override
     def adopt(self, body: Body, value: str) -> str:

@@ -609,6 +609,25 @@ class P:
     e: E
 """
 
+ENCODE_NARROW = """
+from enum import IntEnum
+from protocol import field, int32, packet, uint8, uvarint32, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, int32):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+@packet(id=1)
+class P:
+    x: int32 = field(type=uint8)
+    y: int32 = field(type=uvarint32)
+    e: E = field(type=uint8)
+    many: list[int32] = field(type=uint8)
+"""
+
 ENUM_CONTAINERS = """
 from enum import IntEnum
 from protocol import packet, uint8, value
@@ -1594,6 +1613,54 @@ def test_a_narrowed_enum_number_is_checked_before_it_is_mapped(generate):
         "        const auto n = static_cast<std::int16_t>(*v);\n"
         '        if (static_cast<std::int32_t>(n) != *v) return stream.fail(Errc::out_of_range, "e");\n'
         "        const auto e = detail::to_value<::bedrock::protocol::E, 1>(n);\n"
+    ) in body
+
+
+def test_a_value_its_encoding_narrows_fails_out_of_range_on_encode(generate):
+    source = (generate({"a": ENCODE_NARROW}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert (
+        "    {\n"
+        "        const auto w = static_cast<std::uint8_t>(value.x);\n"
+        '        if (static_cast<std::int32_t>(w) != value.x) return stream.fail(Errc::out_of_range, "x");\n'
+        "        stream.write<std::uint8_t>(w);\n"
+        "    }\n"
+    ) in body
+
+
+def test_a_value_its_encoding_reinterprets_at_its_width_is_written_unchecked(generate):
+    source = (generate({"a": ENCODE_NARROW}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert "\n    stream.writeVarInt<std::uint32_t>(value.y);\n" in body
+
+
+def test_a_narrowed_enum_number_is_checked_after_it_is_numbered(generate):
+    source = (generate({"a": ENCODE_NARROW}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert (
+        "        const auto n = detail::to_number<::bedrock::protocol::E, 1>(value.e);\n"
+        '        if (!n) return stream.fail(n.error(), "e");\n'
+        "        const auto w = static_cast<std::uint8_t>(*n);\n"
+        '        if (static_cast<std::int32_t>(w) != *n) return stream.fail(Errc::out_of_range, "e");\n'
+        "        stream.write<std::uint8_t>(w);\n"
+    ) in body
+
+
+def test_a_narrowed_list_element_reports_its_index(generate):
+    source = (generate({"a": ENCODE_NARROW}) / "a.cpp").read_text()
+
+    body = body_of(source, "auto Serializer<::bedrock::protocol::P, 1>::serialize(")
+    assert (
+        "    for (std::size_t i0 = 0; const auto &e0 : value.many) {\n"
+        "        {\n"
+        "            const auto w = static_cast<std::uint8_t>(e0);\n"
+        '            if (static_cast<std::int32_t>(w) != e0) return stream.fail(Errc::out_of_range, "many", i0);\n'
+        "            stream.write<std::uint8_t>(w);\n"
+        "        }\n"
+        "        ++i0;\n"
     ) in body
 
 

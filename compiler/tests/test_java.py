@@ -869,6 +869,52 @@ def test_a_narrowing_read_fails_out_of_range(emitted):
     assert read in text
 
 
+ENCODE_NARROW = """
+class E(IntEnum, uint16):
+    A = 1
+    B = value(2, until=3)
+    B = value(3, since=3)
+
+class P:
+    x: uint32 = field(type=uint8)
+    y: int16 = field(type=uint16)
+    e: E = field(type=uint8)
+"""
+
+
+def test_a_narrowing_write_rejects_a_value_its_encoding_cannot_hold(emitted):
+    text = emitted(ENCODE_NARROW)
+
+    write = (
+        "            int w0 = value.x_ & 0xFF;\n"
+        "            if (w0 != value.x_) {\n"
+        '                throw new IllegalArgumentException("P.x: " + value.x_ + " is out of range");\n'
+        "            }\n"
+        "            buf.writeByte(w0);\n"
+    )
+    assert write in text
+
+
+def test_a_write_its_encoding_reinterprets_at_its_width_is_unchecked(emitted):
+    text = emitted(ENCODE_NARROW)
+
+    assert "\n            buf.writeShortLE(value.y_);\n" in text
+
+
+def test_a_narrowing_write_checks_an_enum_after_it_is_numbered(emitted):
+    text = emitted(ENCODE_NARROW)
+
+    write = (
+        "            int n0 = dev.endstone.protocol.internal.ENumbering.toNumber(1, value.e_);\n"
+        "            int w1 = n0 & 0xFF;\n"
+        "            if (w1 != n0) {\n"
+        '                throw new IllegalArgumentException("P.e: " + n0 + " is out of range");\n'
+        "            }\n"
+        "            buf.writeByte(w1);\n"
+    )
+    assert write in text
+
+
 def test_a_field_read_prepends_its_name_to_a_failure(emitted):
     text = emitted("class P:\n    some_x: uint8\n")
 
