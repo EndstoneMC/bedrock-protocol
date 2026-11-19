@@ -3,7 +3,7 @@ network/packet/types/world/actor/ai/util/BossEventData.h."""
 
 from enum import IntEnum
 
-from protocol import field, packet, uint8
+from protocol import field, packet, uint8, uint16
 from protocol.actor import ActorUniqueID
 
 package = "bedrock.protocol"
@@ -60,9 +60,9 @@ class BossEventPacket:
     health_percent: float = field(
         when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PERCENT}
     )
-    with field(when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PROPERTIES}):
-        darken_screen: uint8
-        create_world_fog: uint8
+    darken_screen: uint8 = field(
+        type=uint16, when=lambda p: p.event_type in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PROPERTIES}
+    )
 
     with field(
         when=lambda p: (

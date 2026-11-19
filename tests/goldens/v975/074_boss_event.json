@@ -1,0 +1,32 @@
+[
+ {
+  "id": "add_boss_bar",
+  "value": {
+   "boss_id": -3,
+   "event_type": 0,
+   "player_id": 0,
+   "name": "boss",
+   "filtered_name": "bo**",
+   "health_percent": 0.5,
+   "darken_screen": 1,
+   "color": 3,
+   "overlay": 1
+  },
+  "bytes": "050004626f737304626f2a2a0000003f01000301"
+ },
+ {
+  "id": "player_added_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 1,
+   "player_id": 7,
+   "name": "",
+   "filtered_name": "",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "05010e"
+ }
+]
