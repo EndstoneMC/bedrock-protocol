@@ -28,6 +28,12 @@ class BindingStubGen(StubGen):
             self.write_ln(f"@{name}.setter")
             self.put(prop.fset, name=name)
 
+    def import_object(self, module: str, name: str | None, as_name: str | None = None) -> str:
+        owner, _, member = module.rpartition(".")
+        if name is None and isinstance(getattr(sys.modules.get(owner), member, None), type):
+            return self.import_object(owner, name, as_name)
+        return super().import_object(module, name, as_name)
+
     def type_str(self, tp: Any) -> str:
         if isinstance(tp, UnionType):
             return " | ".join(self.type_str(arg) for arg in get_args(tp))
