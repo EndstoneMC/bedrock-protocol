@@ -3,7 +3,7 @@
 <h3>bedrock-protocol</h3>
 
 <p>
-  <b>The Minecraft: Bedrock Edition network protocol for C++ and Python</b>
+  <b>The Minecraft: Bedrock Edition network protocol for C++, Python and Java</b>
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -90,6 +90,63 @@ std::expected<std::string, bp::EncodeError> pinned = bp::v2193::encode(packet);
 assert(pinned);
 std::expected<bp::TextPacket, bp::DecodeError> picked = bp::v2193::decode<bp::TextPacket>(*pinned);
 assert(picked && *picked == packet);
+```
+
+## Java
+
+### Install
+
+Build the jar from a checkout with JDK 21 and Python 3.12 or newer:
+
+```shell
+git clone https://github.com/EndstoneMC/bedrock-protocol
+cd bedrock-protocol/java
+./gradlew jar
+```
+
+Put the checkout's `build/java/libs/bedrock-protocol-X.Y.Z.jar` on the classpath beside netty-buffer:
+
+```kotlin
+dependencies {
+    implementation(files("libs/bedrock-protocol-X.Y.Z.jar"))
+    implementation("io.netty:netty-buffer:4.2.19.Final")
+}
+```
+
+### Encode and decode
+
+```java
+import dev.endstone.protocol.Protocol;
+import dev.endstone.protocol.TextPacket;
+import dev.endstone.protocol.TextPacketType;
+
+TextPacket packet =
+        TextPacket.newBuilder()
+                .setMessageOnly(
+                        TextPacket.MessageOnly.newBuilder()
+                                .setType(TextPacketType.CHAT)
+                                .setMessage("hello")
+                                .build())
+                .build();
+
+byte[] data = Protocol.encode(packet);
+TextPacket decoded = Protocol.decode(TextPacket.class, data);
+assert decoded.equals(packet);
+```
+
+### Pick a protocol
+
+```java
+import dev.endstone.protocol.ProtocolVersion;
+
+import java.util.Optional;
+
+Optional<ProtocolVersion> version = ProtocolVersion.get(2193);
+assert version.isPresent() && version.get().getName().equals("1.26.50");
+
+byte[] pinned = Protocol.v2193.encode(packet);
+TextPacket picked = Protocol.v2193.decode(TextPacket.class, pinned);
+assert picked.equals(packet);
 ```
 
 ## Supported Protocols
