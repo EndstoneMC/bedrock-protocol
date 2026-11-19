@@ -52,11 +52,9 @@ VALUES = [
     [pytest.param(m, cls, marks=gap(f"{m.__name__}.{cls.__qualname__}")) for m, cls in packets],
     ids=packet_id,
 )
-def test_a_default_packet_round_trips_through_its_framed_header(module, cls):
+def test_a_default_packet_round_trips_at_every_protocol_that_has_it(module, cls):
     packet = cls()
-    header, framed = module.decode_packet(module.encode_packet(packet))
-    assert (header.packet_id, header.recipient_sub_id, header.sender_sub_id) == (cls.ID, 0, 0)
-    assert framed == packet
+    assert module.decode(cls, module.encode(packet)) == packet
 
 
 @pytest.mark.parametrize(("module", "cls", "mode"), VALUES)

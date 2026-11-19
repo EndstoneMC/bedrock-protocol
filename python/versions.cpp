@@ -1,6 +1,5 @@
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>
@@ -12,7 +11,6 @@
 #include <nanobind/typing.h>
 
 #include "_core.h"
-#include "bedrock/protocol/packet.hpp"
 #include "bedrock/protocol/serializer.hpp"
 #include "bedrock/protocol/stream.hpp"
 #include "bedrock/protocol/version.hpp"
@@ -98,7 +96,6 @@ void init_versions(nb::module_ &parent)
         .value("DEFAULT", SerializationMode::Default)
         .value("CEREAL", SerializationMode::Cereal)
         .value("MANUAL", SerializationMode::Manual);
-    bind_struct<PacketHeader>(parent, "PacketHeader");
     static std::array<CodecTable, versions.size()> tables;
     const nb::object names = nb::module_::import_("types").attr("SimpleNamespace");
     std::vector<Scope> bound;
@@ -107,76 +104,6 @@ void init_versions(nb::module_ &parent)
         bound.push_back({.number = versions[i], .module = module, .codecs = &tables[i], .names = names()});
     }
     init_types(parent, bound);
-    [&]<std::size_t... I>(std::index_sequence<I...>) {
-        (
-            [&] {
-                constexpr int number = versions[I];
-                const Scope &scope = bound[I];
-                auto m = nb::borrow<nb::module_>(scope.module);
-                m.def(
-                    "decode_packet",
-                    [packets = scope.packets,
-                     codecs = scope.codecs](const nb::bytes &data) -> nb::typed<nb::tuple, PacketHeader, nb::object> {
-                        BinaryReader reader{std::string_view(data.c_str(), data.size())};
-                        auto header = Serializer<PacketHeader, number>::deserialize(reader);
-                        if (!header) {
-                            throw_decode_error({.reason = header.error(),
-                                                .type = "PacketHeader",
-                                                .path = {},
-                                                .offset = reader.getReadPointer(),
-                                                .length = reader.getLength()});
-                        }
-                        nb::object cls = packets.get(nb::int_(header->packet_id), nb::none());
-                        if (cls.is_none()) {
-                            throw_decode_error({.reason = Errc::unknown_value,
-                                                .type = "PacketHeader",
-                                                .path = {"packet_id"},
-                                                .offset = reader.getReadPointer(),
-                                                .length = reader.getLength()});
-                        }
-                        nb::object packet =
-                            codecs->at(cls.ptr())[std::to_underlying(SerializationMode::Default)]->decode(reader);
-                        return nb::make_tuple(*header, packet);
-                    },
-                    nb::arg("data"), "Reads a header and the body it names: `(PacketHeader, packet)`.");
-                m.def(
-                    "encode_packet",
-                    [packets = scope.packets, codecs = scope.codecs, protocol_number = number](
-                        nb::handle packet, std::uint8_t recipient_sub_id, std::uint8_t sender_sub_id) {
-                        nb::object id = nb::getattr(packet.type(), "ID", nb::none());
-                        if (!packets.get(id, nb::none()).is(packet.type())) {
-                            throw nb::type_error(std::format("packet: {} is not a packet at protocol {}",
-                                                             nb::repr(packet.type()).c_str(), protocol_number)
-                                                     .c_str());
-                        }
-                        if (!nb::inst_ready(packet)) {
-                            throw nb::type_error(
-                                std::format("packet: {} instance is not initialized", nb::repr(packet.type()).c_str())
-                                    .c_str());
-                        }
-                        std::string buffer;
-                        BinaryWriter writer{buffer};
-                        const PacketHeader header{
-                            .packet_id = nb::cast<std::uint16_t>(id),
-                            .recipient_sub_id = recipient_sub_id,
-                            .sender_sub_id = sender_sub_id,
-                        };
-                        if (auto written = Serializer<PacketHeader, number>::serialize(writer, header); !written) {
-                            throw_encode_error({.reason = written.error(), .type = "PacketHeader", .path = {}});
-                        }
-                        if (auto written =
-                                codecs->at(packet.type().ptr())[std::to_underlying(SerializationMode::Default)]->encode(
-                                    writer, packet);
-                            !written) {
-                            throw_encode_error(written.error());
-                        }
-                        return nb::bytes(buffer.data(), buffer.size());
-                    },
-                    nb::arg("packet"), nb::kw_only(), nb::arg("recipient_sub_id") = 0, nb::arg("sender_sub_id") = 0,
-                    "Header and body, the bytes a batch length-prefixes.");
-            }(),
-            ...);
-    }(std::make_index_sequence<versions.size()>{});
     const nb::object read_only = nb::module_::import_("types").attr("MappingProxyType");
     for (const Scope &scope : bound) {
         auto m = nb::borrow<nb::module_>(scope.module);
@@ -205,7 +132,7 @@ void init_versions(nb::module_ &parent)
             },
             nb::arg("value"), nb::kw_only(), nb::arg("mode") = SerializationMode::Default,
             nb::sig("def encode(value: object, *, mode: bedrock_protocol.SerializationMode = ...) -> bytes"),
-            "The encoded form at this protocol, without a packet header.");
+            "The encoded form at this protocol.");
         m.def(
             "decode",
             [codecs = scope.codecs, number = scope.number](nb::handle cls, const nb::bytes &data,

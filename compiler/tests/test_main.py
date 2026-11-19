@@ -1127,30 +1127,16 @@ def test_a_protocols_codec_forwards_to_the_root_entry_points(generate):
     assert "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;" in registry
 
 
-def test_a_protocols_packet_variant_holds_its_packets_by_id(generate):
+def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
     registry = (generate({"a": A, "c": C}) / "packets.hpp").read_text()
+    one = registry.split("namespace v1 {")[1].split("}  // namespace v1")[0]
 
-    assert "using Packet = std::variant<\n    ::bedrock::protocol::P,\n    ::bedrock::protocol::Q>;" in registry
-
-
-def test_a_protocols_packet_variant_leaves_out_a_packet_it_does_not_have(generate):
-    registry = (generate({"a": A, "g": GATED}) / "packets.hpp").read_text()
-    two = registry.split("namespace v2 {")[1].split("}  // namespace v2")[0]
-
-    assert "using Packet = std::variant<\n    ::bedrock::protocol::P>;" in two
-
-
-def test_a_protocol_without_a_packet_has_an_empty_packet_variant(generate):
-    registry = (generate({"b": B}) / "packets.hpp").read_text()
-
-    assert "using Packet = std::variant<>;" in registry
-
-
-def test_a_protocols_packet_variant_takes_a_packet_from_its_first_protocol(generate):
-    registry = (generate({"a": A, "g": GATED}) / "packets.hpp").read_text()
-    three = registry.split("namespace v3 {")[1].split("}  // namespace v3")[0]
-
-    assert "using Packet = std::variant<\n    ::bedrock::protocol::P,\n    ::bedrock::protocol::G>;" in three
+    assert one == (
+        "\n\ninline constexpr int version = 1;\n\n"
+        "inline constexpr const auto &encode = ::bedrock::protocol::encode<version>;\n\n"
+        "template <::bedrock::protocol::Reflected T>\n"
+        "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;\n\n"
+    )
 
 
 def test_version_hpp_gives_a_release_the_newest_snapshot_at_or_below_it(generate):

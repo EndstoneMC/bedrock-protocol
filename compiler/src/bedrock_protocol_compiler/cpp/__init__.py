@@ -22,10 +22,8 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         #pragma once
 
         #include <type_traits>
-        #include <variant>
 
         #include "$include_dir$/detail/reflect.hpp"
-        #include "$include_dir$/packet.hpp"
         #include "$include_dir$/serializer.hpp"
 
         """,
@@ -62,39 +60,16 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
     for packet_id, file, family in packets:
         file.packet(registry, packet_id, family)
     for number in schema.versions:
-        held = [
-            names.qualified(schema, target)
-            for _, file, family in packets
-            if (target := file.at(family, number)) is not None
-        ]
         registry.emit(
             """
             namespace v$number$ {
 
             inline constexpr int version = $number$;
 
-            """,
-            number=number,
-        )
-        if not held:
-            registry.emit("using Packet = std::variant<>;")
-        else:
-            registry.emit("using Packet = std::variant<")
-            with registry.indent():
-                for spelled in held[:-1]:
-                    registry.emit("$spelled$,", spelled=spelled)
-                registry.emit("$spelled$>;", spelled=held[-1])
-        registry.emit(
-            """
-
             inline constexpr const auto &encode = ::$namespace$::encode<version>;
 
             template <::$namespace$::Reflected T>
             inline constexpr const auto &decode = ::$namespace$::decode<version, T>;
-
-            inline constexpr ::$namespace$::detail::encode_packet_fn<version, Packet> encode_packet{};
-
-            inline constexpr ::$namespace$::detail::decode_packet_fn<version, Packet> decode_packet{};
 
             }  // namespace v$number$
 

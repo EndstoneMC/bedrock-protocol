@@ -23,7 +23,7 @@ paths:
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
 - Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function objects `encode<V>(value[, writer])` and `decode<V, T>(data | reader)`; every call names its protocol.
-- Give each protocol N a `v<N>` namespace holding `version`, its `Packet` variant, `encode` and `decode<T>` bound to `encode<N>` and `decode<N, T>`, and the function objects `encode_packet` and `decode_packet`.
+- Give each protocol N a `v<N>` namespace holding only `version`, and `encode` and `decode<T>` bound to `encode<N>` and `decode<N, T>`.
 - Pass a serialization mode as a trailing `cereal` or `manual` tag, only where a class name has two at that protocol.
 - `Protocol` holds a modelled number from `protocol(number)` or `protocol(release)`, which resolve through `releases`, and reports a type its protocol lacks as `Errc::unknown_type`.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
