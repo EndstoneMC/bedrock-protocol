@@ -1,9 +1,13 @@
+import com.vanniktech.maven.publish.JavaLibrary
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     `java-library`
     id("com.diffplug.spotless") version "8.10.4"
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 val release = Regex("""project\(bedrock-protocol VERSION (\S+)""").find(file("../CMakeLists.txt").readText())
@@ -107,5 +111,47 @@ tasks.test {
 tasks.jar {
     manifest {
         attributes("Automatic-Module-Name" to "dev.endstone.protocol")
+    }
+}
+
+mavenPublishing {
+    configure(JavaLibrary(javadocJar = JavadocJar.Javadoc(), sourcesJar = SourcesJar.Sources()))
+    publishToMavenCentral()
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
+    pom {
+        name = "bedrock-protocol"
+        description = "Minecraft: Bedrock Edition network protocol"
+        url = "https://github.com/EndstoneMC/bedrock-protocol"
+        licenses {
+            license {
+                name = "MIT License"
+                url = "https://opensource.org/license/mit"
+            }
+        }
+        developers {
+            developer {
+                name = "GlacieTeam"
+            }
+            developer {
+                name = "EndstoneMC"
+                email = "hello@endstone.dev"
+            }
+            developer {
+                name = "Vincent Wu"
+                email = "magicdroidx@gmail.com"
+                roles = listOf("maintainer")
+            }
+        }
+        scm {
+            url = "https://github.com/EndstoneMC/bedrock-protocol"
+            connection = "scm:git:https://github.com/EndstoneMC/bedrock-protocol.git"
+            developerConnection = "scm:git:ssh://git@github.com/EndstoneMC/bedrock-protocol.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/EndstoneMC/bedrock-protocol/issues"
+        }
     }
 }

@@ -50,13 +50,23 @@ jobs:
           mkdir -p assets
           for dir in "${dirs[@]}"; do
             name=$(basename "$dir")
-            if [[ "$name" == *.whl || "$name" == *.tar.gz ]]; then
+            if [[ "$name" == *.whl || "$name" == *.tar.gz || "$name" == *.jar ]]; then
               cp "$dir/$name" assets/
               continue
             fi
             (cd artifacts && zip -qr "../assets/${name}.zip" "$name")
           done
           ls -l assets
+
+      - name: Check the assets carry the tag's version
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          for asset in "bedrock_protocol-${version}.tar.gz" "bedrock-protocol-${version}.jar"; do
+            if [ ! -f "assets/$asset" ]; then
+              echo "::error::the build produced no assets/$asset"
+              exit 1
+            fi
+          done
 
       - name: Draft the release
         env:
@@ -74,7 +84,7 @@ jobs:
 
   pypi:
     name: PyPI
-    needs: publish
+    needs: maven-central
     runs-on: ubuntu-24.04
     environment:
       name: pypi
@@ -89,3 +99,38 @@ jobs:
           merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@v1.14.3
+
+  maven-central:
+    name: Maven Central
+    needs: publish
+    runs-on: ubuntu-24.04
+    environment:
+      name: maven-central
+      url: https://central.sonatype.com/artifact/dev.endstone/bedrock-protocol
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/wrapper-validation@v6.4.1
+
+      - name: Check the Gradle version against the tag
+        working-directory: java
+        run: |
+          version=$(./gradlew -q properties | sed -n 's/^version: //p')
+          if [ "$version" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} builds Gradle version ${version}"
+            exit 1
+          fi
+
+      - name: Publish and release to Maven Central
+        working-directory: java
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew publishAndReleaseToMavenCentral

@@ -96,21 +96,20 @@ assert(picked && *picked == packet);
 
 ### Install
 
-Build the jar from a checkout with JDK 21 and Python 3.12 or newer:
+Add the package from Maven Central to a Gradle build:
+
+```kotlin
+dependencies {
+    implementation("dev.endstone:bedrock-protocol:X.Y.Z")
+}
+```
+
+Or build it from a checkout with JDK 21 and Python 3.12 or newer into the local Maven repository:
 
 ```shell
 git clone https://github.com/EndstoneMC/bedrock-protocol
 cd bedrock-protocol/java
-./gradlew jar
-```
-
-Put the checkout's `build/java/libs/bedrock-protocol-X.Y.Z.jar` on the classpath beside netty-buffer:
-
-```kotlin
-dependencies {
-    implementation(files("libs/bedrock-protocol-X.Y.Z.jar"))
-    implementation("io.netty:netty-buffer:4.2.19.Final")
-}
+./gradlew publishToMavenLocal
 ```
 
 ### Encode and decode

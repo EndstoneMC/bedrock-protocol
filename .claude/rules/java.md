@@ -47,6 +47,7 @@ paths:
 - Reach a packet in `Protocol` through its `codec(version)` from one registry of every packet class, and reject a class the registry lacks as a selector does, `<class>: is not a type at protocol <N>`.
 - Hold `Protocol`'s class registry in a private holder class, so the first `encode` or `decode` builds it.
 - Release the `Unpooled` buffer a `byte[]` overload encodes into in a `finally`.
+- Publish the library as `dev.endstone:bedrock-protocol` through the `com.vanniktech.maven.publish` plugin, with a sources jar, a javadoc jar and a POM whose license and developers match `pyproject.toml`, signed whenever `signingInMemoryKey` is set.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
 - Wrap an emitted Java line that would take its template past ruff's 120 columns after its `(`, with google-java-format's AOSP 8-space continuation.
