@@ -53,6 +53,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - A case tests the encoding, never what a value means.
 - Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure; the arms of a deprecated member BDS reads as no action stay unreached, reported as the folder's misses; any other valid-path branch no golden reaches is a generator defect.
 - A folder owns every codec its packets reach at its protocol, the `Serializer<T, N>` that `_core.encodings[<protocol>]` names for each, whatever its N.
+- Report as a folder's misses, too, a branch only data BDS rewrites reaches, such as an empty item written as id -1, and a `GameRule` arm a folder reaches only through `StartGamePacket`, whose rule list BDS writes itself.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
 - Change a case's leaves without changing its branch identity: each optional stays present or absent, each variant arm and gating bool stays, and an empty list stays empty.
@@ -73,6 +74,8 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
 - Write an empty item as id 0; BDS reads an id of -1 as empty too, and writes it back as 0.
 - Give a recipe ingredient's descriptor only `name`, `tags` or `item_tag`, and an `item_tag` only a registered item carries.
+- Give a recipe ingredient before 2168 no `DEFERRED` descriptor and no `DEFAULT` descriptor with id 0; BDS resolves a deferred name to a default or an invalid descriptor, and writes a default id 0 as invalid.
+- Give a craft results action before 2168 only non-empty results; BDS reads one with an empty result as no action and writes nothing for it.
 - Use only `query.any_tag` and `query.all_tags` in the `tag_expression` of a Molang descriptor inside `PlayerAuthInputPacket.item_stack_request`.
 - Fill `AvailableActorIdentifiersPacket`'s tag with an `idlist` ListTag of actor entries, each `bid` as `minecraft:` when it has no other id.
 - Sort a `CompoundTag`'s keys, as BDS's `std::map` holds them.
