@@ -26,6 +26,13 @@ final class ProtocolTest {
                     .setPitch(1f)
                     .build();
 
+    private record Unregistered() implements Packet {
+        @Override
+        public int getPacketId() {
+            return 1;
+        }
+    }
+
     private static byte[] bytes(String hex) {
         return ByteBufUtil.decodeHexDump(hex);
     }
@@ -85,72 +92,10 @@ final class ProtocolTest {
     }
 
     @Test
-    void decodeRejectsAUnionWrapper() {
-        assertEquals(
-                "dev.endstone.protocol.ClientboundDataStorePacket$Updates: "
-                        + "is not a type at protocol 2225",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () ->
-                                        Protocol.v2225.decode(
-                                                ClientboundDataStorePacket.Updates.class,
-                                                new byte[0]))
-                        .getMessage());
-    }
-
-    @Test
-    void encodeRejectsAUnionWrapper() {
-        assertEquals(
-                "dev.endstone.protocol.ClientboundDataStorePacket$Updates: "
-                        + "is not a type at protocol 2225",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () ->
-                                        Protocol.v2225.encode(
-                                                ClientboundDataStorePacket.Updates
-                                                        .getDefaultInstance()))
-                        .getMessage());
-    }
-
-    @Test
     void encodeRejectsAValueOfAnotherProtocol() {
         assertEquals(
                 "v2168.PlaySoundPacket: is not a type at protocol 2225",
                 assertThrows(IllegalArgumentException.class, () -> Protocol.v2225.encode(SOUND))
-                        .getMessage());
-    }
-
-    @Test
-    void aModeArgumentPicksTheEncoding() {
-        assertEquals(
-                "0203d804",
-                hex(
-                        Protocol.v1001.encode(
-                                SubChunkPos.newBuilder().setX(1).setY(-2).setZ(300).build(),
-                                SerializationMode.MANUAL)));
-    }
-
-    @Test
-    void aModeArgumentPicksTheDecoding() {
-        assertEquals(
-                SubChunkPos.newBuilder().setX(1).setY(-2).setZ(300).build(),
-                Protocol.v1001.decode(
-                        SubChunkPos.class, bytes("0203d804"), SerializationMode.MANUAL));
-    }
-
-    @Test
-    void aMissingModeIsRejectedWhereNoModeIsTheDefault() {
-        assertEquals(
-                "SubChunkPos: no default mode at protocol 1001; it has CEREAL and MANUAL",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () ->
-                                        Protocol.v1001.encode(
-                                                SubChunkPos.newBuilder()
-                                                        .setX(1)
-                                                        .setY(-2)
-                                                        .setZ(300)
-                                                        .build()))
                         .getMessage());
     }
 
@@ -170,5 +115,25 @@ final class ProtocolTest {
                         .decode(
                                 dev.endstone.protocol.v2168.PlaySoundPacket.class,
                                 bytes("01610204060000803f0000803f0000")));
+    }
+
+    @Test
+    void encodeRejectsAPacketItDoesNotKnow() {
+        assertEquals(
+                "dev.endstone.protocol.ProtocolTest$Unregistered: is not a type at protocol 2225",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> Protocol.v2225.encode(new Unregistered()))
+                        .getMessage());
+    }
+
+    @Test
+    void decodeRejectsAPacketItDoesNotKnow() {
+        assertEquals(
+                "dev.endstone.protocol.ProtocolTest$Unregistered: is not a type at protocol 2225",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> Protocol.v2225.decode(Unregistered.class, new byte[0]))
+                        .getMessage());
     }
 }

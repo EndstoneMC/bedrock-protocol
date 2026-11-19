@@ -3,6 +3,7 @@ package dev.endstone.protocol;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.endstone.protocol.internal.SerializationMode;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -70,6 +71,14 @@ final class CodecTest {
     }
 
     @Test
+    void aManualCodecReadsTheSubChunkPosFromVarInts() {
+        assertEquals(
+                SubChunkPos.newBuilder().setX(1).setY(-2).setZ(300).build(),
+                SubChunkPos.codec(1001, SerializationMode.MANUAL)
+                        .decode(Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump("0203d804"))));
+    }
+
+    @Test
     void aCerealCodecWritesTheSubChunkPosAsFixedWidthInts() {
         ByteBuf buf = Unpooled.buffer();
         SubChunkPos.codec(1001, SerializationMode.CEREAL)
@@ -88,14 +97,14 @@ final class CodecTest {
     }
 
     @Test
-    void aTypeAbsentAtAProtocolIsRejectedBeforeItsMode() {
+    void aTypeAbsentAtAProtocolIsRejectedWhateverTheMode() {
         assertEquals(
-                "v2168.PlaySoundPacket: is not a type at protocol 2225",
+                "ClientboundDataStorePacket: is not a type at protocol 729",
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        dev.endstone.protocol.v2168.PlaySoundPacket.codec(
-                                                2225, SerializationMode.CEREAL))
+                                        ClientboundDataStorePacket.codec(
+                                                729, SerializationMode.CEREAL))
                         .getMessage());
     }
 

@@ -6,11 +6,18 @@ from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.message import MessageGenerator, type_generator
 from bedrock_protocol_compiler.java.numbering import NumberingGenerator, reached
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, Schema, StructModel
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     reserved = names.reserved(schema)
+    exported: set[Encoding] = set()
+    for encodings in schema.model_encodings.values():
+        for encoding in encodings:
+            home = names.home(schema, encoding.model)
+            for child in encoding.reached.values():
+                if isinstance(child, Encoding) and names.home(schema, child.model) != home:
+                    exported.add(child)
     declared: dict[str, StructModel | EnumModel] = {}
     generators: list[MessageGenerator | EnumGenerator] = []
     for family in schema.order:
@@ -29,7 +36,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
                 raise CompilerError(f"{spelled}: is declared twice")
             body = Printer()
             registry = Members(body)
-            generator = type_generator(schema, each, (), registry)
+            generator = type_generator(schema, each, (), registry, exported)
             generator.definition(body)
             registry.check()
             generators.append(generator)

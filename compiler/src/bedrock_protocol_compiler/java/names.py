@@ -25,7 +25,7 @@ LIBRARIES = {
     "Nullable": "org.jetbrains.annotations.Nullable",
 }
 MODE = "SerializationMode"
-RUNTIME = ("ByteBufCodec", "Codec", "DecodeException", "Decoder", "Message", "Packet", MODE)
+RUNTIME = ("ByteBufCodec", "Codec", "DecodeException", "Decoder", "Message", "Packet")
 JAVA_LANG = (
     "Boolean",
     "Class",
@@ -67,7 +67,7 @@ def runtime(schema: Schema, name: str) -> str:
 
 
 def imports(schema: Schema) -> dict[str, str]:
-    found = {**LIBRARIES, **{name: runtime(schema, name) for name in RUNTIME}}
+    found = {**LIBRARIES, **{name: runtime(schema, name) for name in RUNTIME}, MODE: f"{internal(schema)}.{MODE}"}
     builtins = [UUID] + [each for module in schema.modules for each in module.families if isinstance(each, Builtin)]
     for builtin in builtins:
         stem = builtin.stem.replace("_", "")
@@ -84,6 +84,11 @@ def reserved(schema: Schema) -> frozenset[str]:
 def package(schema: Schema, each: StructModel | EnumModel) -> str:
     scope = schema.scope(each)
     return schema.java_package if scope is None else f"{schema.java_package}.v{scope}"
+
+
+def home(schema: Schema, each: StructModel | EnumModel) -> str:
+    owner = schema.owner(each)
+    return package(schema, each) if owner is None else home(schema, owner)
 
 
 def declared(schema: Schema, each: StructModel | EnumModel) -> str:

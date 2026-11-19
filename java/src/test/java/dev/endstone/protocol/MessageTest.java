@@ -21,7 +21,7 @@ final class MessageTest {
         return "000000" + version + "00" + "00000000" + "00";
     }
 
-    private static String encodedAt(Protocol protocol, Message value) {
+    private static String encodedAt(Protocol protocol, Packet value) {
         return ByteBufUtil.hexDump(protocol.encode(value));
     }
 
@@ -29,11 +29,11 @@ final class MessageTest {
         return ByteBufUtil.decodeHexDump(hex);
     }
 
-    private static String encoded(Message value) {
+    private static String encoded(Packet value) {
         return encodedAt(LATEST, value);
     }
 
-    private static <T extends Message> DecodeException failure(Class<T> type, String hex) {
+    private static <T extends Packet> DecodeException failure(Class<T> type, String hex) {
         return assertThrows(DecodeException.class, () -> LATEST.decode(type, hex(hex)));
     }
 

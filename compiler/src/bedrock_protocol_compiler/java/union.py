@@ -311,6 +311,7 @@ class UnionGenerator:
                     self.where,
                     name,
                     self.name,
+                    False,
                     lambda: None,
                     partial(coded.write, body, "value."),
                     partial(coded.read, body),

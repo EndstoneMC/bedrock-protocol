@@ -61,9 +61,17 @@ def held(slot: Slot, unions: list[UnionGenerator]) -> str:
 
 
 class MessageGenerator:
-    def __init__(self, schema: Schema, model: StructModel, enclosing: tuple[str, ...], registry: Members) -> None:
+    def __init__(
+        self,
+        schema: Schema,
+        model: StructModel,
+        enclosing: tuple[str, ...],
+        registry: Members,
+        exported: set[Encoding],
+    ) -> None:
         self.schema = schema
         self.model = model
+        self.exported = exported
         self.name = names.declared(schema, model)
         self.qualified = names.qualified(schema, model)
         self.members = registry
@@ -74,7 +82,9 @@ class MessageGenerator:
         self.holder = schema.encoding_at(form, read)
         scope = (*enclosing, self.name)
         self.nested = [
-            type_generator(schema, child, scope, registry) for child in model.nested if schema.owner(child) is model
+            type_generator(schema, child, scope, registry, exported)
+            for child in model.nested
+            if schema.owner(child) is model
         ]
         built = self.build(self.holder, registry)
         self.slots = [slot for slot, _ in built if not isinstance(slot.field.type, Literal)]
@@ -222,6 +232,7 @@ class MessageGenerator:
                     self.qualified,
                     names.codec(encoding),
                     self.name,
+                    encoding in self.exported,
                     partial(self.constants, p, slots),
                     partial(self.writes, p, encoding, slots),
                     partial(self.reads, p, encoding, slots),
@@ -241,15 +252,16 @@ class MessageGenerator:
         with self.members.origin(names.runtime(self.schema, names.CODEC)):
             p.emit(
                 """
-                public static @NotNull Codec<$name$> codec(int version) {
+                $modifiers$ @NotNull Codec<$name$> codec(int version) {
                     return codec(version, $mode$.DEFAULT);
                 }
 
-                public static @NotNull Codec<$name$> codec(int version, @NotNull $mode$ mode) {
+                static @NotNull Codec<$name$> codec(int version, @NotNull $mode$ mode) {
                     $selections$
                 }
 
                 """,
+                modifiers="static" if self.packet_id is None else "public static",
                 name=self.name,
                 mode=names.MODE,
                 selections=lambda: self.selections(p, served),
@@ -393,8 +405,12 @@ class MessageGenerator:
 
 
 def type_generator(
-    schema: Schema, each: StructModel | EnumModel, enclosing: tuple[str, ...], registry: Members
+    schema: Schema,
+    each: StructModel | EnumModel,
+    enclosing: tuple[str, ...],
+    registry: Members,
+    exported: set[Encoding],
 ) -> MessageGenerator | EnumGenerator:
     if isinstance(each, EnumModel):
         return EnumGenerator(schema, each)
-    return MessageGenerator(schema, each, enclosing, registry)
+    return MessageGenerator(schema, each, enclosing, registry, exported)

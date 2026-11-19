@@ -159,7 +159,9 @@ final class CaseLoader {
                 throw fail(path, "a message as a string is # and hex pairs");
             }
             Map<Integer, Method> ordered = new TreeMap<>();
-            Object codec = type.getMethod("codec", int.class).invoke(null, version);
+            Method selector = type.getDeclaredMethod("codec", int.class);
+            selector.setAccessible(true);
+            Object codec = selector.invoke(null, version);
             for (Method setter : methods) {
                 if (!setter.getName().startsWith("set")) {
                     continue;
@@ -348,10 +350,11 @@ final class CaseLoader {
         if (plain == null && coded == null) {
             String constant = key.replaceFirst("^_+", "").toUpperCase(Locale.ROOT);
             Field literal = null;
-            for (Method method : type.getMethods()) {
+            for (Method method : type.getDeclaredMethods()) {
                 if (!method.getName().equals("codec") || method.getParameterCount() != 1) {
                     continue;
                 }
+                method.setAccessible(true);
                 for (Field field : method.invoke(null, version).getClass().getFields()) {
                     if (field.getName().equals(constant)
                             && Modifier.isStatic(field.getModifiers())) {
@@ -366,6 +369,7 @@ final class CaseLoader {
                 throw fail(path, "a constant is a scalar");
             }
             JsonPrimitive given = value.getAsJsonPrimitive();
+            literal.setAccessible(true);
             Object expected = literal.get(null);
             boolean equal;
             if (expected instanceof Boolean flag) {

@@ -201,7 +201,7 @@ def test_a_model_both_forms_hold_has_one_codec_per_implementation(emitted):
     ],
 )
 def test_a_codec_of_a_mixed_key_names_its_mode(emitted, name, codec):
-    declared = f"    public static final class {codec} implements Codec<{name}> {{\n"
+    declared = f"    static final class {codec} implements Codec<{name}> {{\n"
 
     assert declared in emitted(HAND_WRITTEN, f"{name}.java")
 
@@ -311,8 +311,8 @@ def test_a_packet_without_fields_that_nests_an_enum_has_a_codec(emitted):
     text = emitted("@packet(id=7)\nclass P:\n    class E(IntEnum, uint8):\n        A = 0\n")
 
     assert "\npublic final class P implements Packet {\n" in text
-    assert "\n    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n" in text
-    assert "\n    public static final class Codec1 implements Codec<P> {\n" in text
+    assert "\n    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n" in text
+    assert "\n    static final class Codec1 implements Codec<P> {\n" in text
 
 
 TWO_MODELS = "@type(since=2, until=4)\nclass S:\n    x: uint8\n\n@type(since=4)\nclass S:\n    x: uint16\n"
@@ -412,7 +412,7 @@ def test_an_encoding_only_difference_shares_one_class(java):
 def test_two_encodings_give_two_codecs_on_one_class(emitted):
     text = emitted(TWO_ENCODINGS)
 
-    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
+    assert re.findall(r"\n    static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
 
 
 def test_a_codec_writes_its_own_encoding(emitted):
@@ -431,7 +431,7 @@ def test_the_selector_returns_the_codec_of_each_run_in_order(emitted):
     text = emitted(RETURNING_ENCODING)
 
     selector = (
-        "    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
+        "    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
         "        if (mode == SerializationMode.DEFAULT && version < 2) {\n"
         "            return Codec1.INSTANCE;\n"
         "        }\n"
@@ -449,7 +449,7 @@ def test_the_selector_of_an_unversioned_model_returns_its_codec_for_the_default_
     text = emitted(SCALAR)
 
     selector = (
-        "    public static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
+        "    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
         "        if (mode == SerializationMode.DEFAULT) {\n"
         "            return Codec1.INSTANCE;\n"
         "        }\n"
@@ -482,12 +482,53 @@ def test_the_selector_rejects_a_protocol_the_model_is_absent_from_whatever_the_m
     assert rejections in text
 
 
+def test_a_packets_selector_is_public(emitted):
+    assert "    public static @NotNull Codec<P> codec(int version) {\n" in emitted(SCALAR)
+
+
+def test_a_non_packets_selector_is_package_private(emitted):
+    assert "    static @NotNull Codec<P> codec(int version) {\n" in emitted("class P:\n    x: uint8\n")
+
+
+def test_the_mode_selector_is_package_private(emitted):
+    selector = "    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
+
+    assert selector in emitted(SCALAR)
+
+
+def test_a_codec_another_package_names_is_public(emitted):
+    codec = (
+        "    public static final class Codec1 implements Codec<S> {\n"
+        "        public static final @NotNull Codec1 INSTANCE = new Codec1();\n"
+    )
+
+    assert codec in emitted("class S:\n    x: uint8\n\n@type(until=3)\nclass P:\n    s: S\n", "S.java")
+
+
+def test_a_codec_only_its_own_package_names_is_package_private(emitted):
+    codec = (
+        "    static final class Codec1 implements Codec<S> {\n"
+        "        static final @NotNull Codec1 INSTANCE = new Codec1();\n"
+    )
+
+    assert codec in emitted("class S:\n    x: uint8\n\nclass P:\n    s: S\n", "S.java")
+
+
+def test_a_packets_codec_nothing_else_names_is_package_private(emitted):
+    codec = (
+        "    static final class Codec1 implements Codec<P> {\n"
+        "        static final @NotNull Codec1 INSTANCE = new Codec1();\n"
+    )
+
+    assert codec in emitted(SCALAR)
+
+
 def test_a_codec_is_a_singleton(emitted):
     text = emitted(SCALAR)
 
     singleton = (
-        "    public static final class Codec1 implements Codec<P> {\n"
-        "        public static final @NotNull Codec1 INSTANCE = new Codec1();\n\n"
+        "    static final class Codec1 implements Codec<P> {\n"
+        "        static final @NotNull Codec1 INSTANCE = new Codec1();\n\n"
         "        private Codec1() {}\n"
     )
     assert singleton in text
@@ -497,11 +538,15 @@ def test_a_codec_is_a_singleton(emitted):
     "spelled",
     [
         pytest.param("dev.endstone.protocol.Codec", id="codec"),
-        pytest.param("dev.endstone.protocol.SerializationMode", id="serialization-mode"),
+        pytest.param("dev.endstone.protocol.internal.SerializationMode", id="serialization-mode"),
     ],
 )
 def test_a_versioned_file_imports_the_runtime_its_selector_names(emitted, spelled):
     assert f"import {spelled};\n" in emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java")
+
+
+def test_a_bare_file_imports_the_serialization_mode_from_the_internal_package(emitted):
+    assert "import dev.endstone.protocol.internal.SerializationMode;\n" in emitted(SCALAR)
 
 
 def test_the_serialization_mode_is_a_reserved_runtime_name(build_package, tmp_path):
@@ -538,7 +583,7 @@ def test_a_parent_decodes_with_the_child_codec_of_its_own_encoding(emitted):
 def test_a_union_wrapper_has_the_codec_of_its_holders_encoding(emitted):
     text = emitted("class P:\n    v: list[uint8 | str]\n")
 
-    assert "        public static final class Codec1 implements Codec<V> {\n" in text
+    assert "        static final class Codec1 implements Codec<V> {\n" in text
 
 
 def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package, tmp_path):
@@ -566,7 +611,7 @@ def test_latest_returns_the_newest_protocol(emitted):
 def test_the_registrations_sit_in_a_holder_class(emitted):
     holder = (
         "    private static final class Registry {\n"
-        "        private static final @NotNull Map<Class<? extends Message>, Registration<?>> TYPES"
+        "        private static final @NotNull Map<Class<? extends Packet>, Registration<?>> TYPES"
         " = new HashMap<>();\n"
         "\n"
         "        static {\n"
@@ -577,10 +622,22 @@ def test_the_registrations_sit_in_a_holder_class(emitted):
     assert holder in emitted(SCALAR, "Protocol.java")
 
 
-def test_the_registry_holds_a_nested_type_under_its_nested_name(emitted):
+def test_the_registry_holds_a_nested_packet_under_its_nested_name(emitted):
     registration = '            register(dev.endstone.protocol.S.N.class, "S.N", dev.endstone.protocol.S.N::codec);\n'
 
-    assert registration in emitted("class S:\n    class N:\n        x: uint8\n    n: N\n", "Protocol.java")
+    assert registration in emitted(
+        "class S:\n    @packet(id=1)\n    class N:\n        x: uint8\n    n: N\n", "Protocol.java"
+    )
+
+
+def test_the_registry_leaves_out_a_non_packet_type(emitted):
+    registrations = (
+        "        static {\n"
+        '            register(dev.endstone.protocol.P.class, "P", dev.endstone.protocol.P::codec);\n'
+        "        }\n"
+    )
+
+    assert registrations in emitted(SCALAR + "class S:\n    x: uint8\n", "Protocol.java")
 
 
 def test_the_registry_leaves_out_a_union_wrapper(emitted):
@@ -590,17 +647,11 @@ def test_the_registry_leaves_out_a_union_wrapper(emitted):
         "        }\n"
     )
 
-    assert registrations in emitted("class P:\n    v: list[uint8 | str]\n", "Protocol.java")
+    assert registrations in emitted("@packet(id=1)\nclass P:\n    v: list[uint8 | str]\n", "Protocol.java")
 
 
-def test_the_registry_leaves_out_a_model_with_no_codecs(emitted):
-    registrations = (
-        "        static {\n"
-        '            register(dev.endstone.protocol.P.N.class, "P.N", dev.endstone.protocol.P.N::codec);\n'
-        "        }\n"
-    )
-
-    assert registrations in emitted("class P:\n    class N:\n        x: uint8\n", "Protocol.java")
+def test_protocol_names_no_serialization_mode(emitted):
+    assert "SerializationMode" not in emitted(SCALAR, "Protocol.java")
 
 
 def test_the_version_table_lists_the_versions(java):
@@ -675,6 +726,7 @@ def test_a_file_imports_only_what_it_names_outside_its_package(emitted):
 
     assert text.startswith(
         "package dev.endstone.protocol;\n\n"
+        "import dev.endstone.protocol.internal.SerializationMode;\n"
         "import io.netty.buffer.ByteBuf;\n"
         "import java.util.Locale;\n"
         "import org.jetbrains.annotations.NotNull;\n"
@@ -1193,7 +1245,7 @@ def test_a_message_that_differed_only_by_a_growing_enum_is_one_class(java):
 def test_a_message_holding_a_growing_enum_has_a_codec_per_numbering(emitted):
     text = emitted(GROWING)
 
-    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == [
+    assert re.findall(r"\n    static final class (\w+) implements Codec<P> \{", text) == [
         "Codec1",
         "Codec3",
         "Codec5",
@@ -1285,7 +1337,7 @@ def test_a_message_holding_a_renumbered_enum_is_one_class(java):
 def test_a_message_holding_a_renumbered_enum_has_a_codec_per_numbering(emitted):
     text = emitted(RENUMBERED)
 
-    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
+    assert re.findall(r"\n    static final class (\w+) implements Codec<P> \{", text) == ["Codec1", "Codec3"]
 
 
 def test_a_renumbered_enum_has_a_numbering_class_in_the_internal_package(java):
@@ -1464,7 +1516,7 @@ def test_a_when_on_a_sentinel_compares_its_number_at_the_protocol(emitted):
 def test_a_when_on_a_renumbered_member_does_not_split_a_message(emitted):
     text = emitted(RENUMBERED_WHEN)
 
-    assert re.findall(r"public static final class (\w+) implements Codec<P> \{", text) == ["Codec1"]
+    assert re.findall(r"\n    static final class (\w+) implements Codec<P> \{", text) == ["Codec1"]
 
 
 def test_a_field_coded_by_name_and_by_number_holds_the_open_form(emitted):

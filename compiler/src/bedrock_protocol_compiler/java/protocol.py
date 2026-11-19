@@ -35,64 +35,40 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 return $table$.of(release).map(version -> valueOf("v" + version.snapshot()));
             }
 
-            public byte @NotNull [] encode(@NotNull Message value) {
+            public byte @NotNull [] encode(@NotNull Packet packet) {
                 ByteBuf buf = Unpooled.buffer();
                 try {
-                    encode(value, buf, $mode$.DEFAULT);
+                    encode(packet, buf);
                     return ByteBufUtil.getBytes(buf);
                 } finally {
                     buf.release();
                 }
             }
 
-            public byte @NotNull [] encode(@NotNull Message value, @NotNull $mode$ mode) {
-                ByteBuf buf = Unpooled.buffer();
-                try {
-                    encode(value, buf, mode);
-                    return ByteBufUtil.getBytes(buf);
-                } finally {
-                    buf.release();
-                }
-            }
-
-            public void encode(@NotNull Message value, @NotNull ByteBuf buf) {
-                encode(value, buf, $mode$.DEFAULT);
-            }
-
-            public void encode(@NotNull Message value, @NotNull ByteBuf buf, @NotNull $mode$ mode) {
-                Registration<?> registration = Registry.TYPES.get(value.getClass());
+            public void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {
+                Registration<?> registration = Registry.TYPES.get(packet.getClass());
                 if (registration == null) {
                     throw new IllegalArgumentException(
-                            value.getClass().getName() + ": is not a type at protocol " + version);
+                            packet.getClass().getName() + ": is not a type at protocol " + version);
                 }
-                registration.encode(value, buf, version, mode);
+                registration.encode(packet, buf, version);
             }
 
-            public <T extends Message> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {
-                return decode(type, Unpooled.wrappedBuffer(data), $mode$.DEFAULT);
+            public <T extends Packet> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {
+                return decode(type, Unpooled.wrappedBuffer(data));
             }
 
-            public <T extends Message> @NotNull T decode(
-                    @NotNull Class<T> type, byte @NotNull [] data, @NotNull $mode$ mode) {
-                return decode(type, Unpooled.wrappedBuffer(data), mode);
-            }
-
-            public <T extends Message> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
-                return decode(type, buf, $mode$.DEFAULT);
-            }
-
-            public <T extends Message> @NotNull T decode(
-                    @NotNull Class<T> type, @NotNull ByteBuf buf, @NotNull $mode$ mode) {
+            public <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
                 Registration<?> registration = Registry.TYPES.get(type);
                 if (registration == null) {
                     throw new IllegalArgumentException(
                             type.getName() + ": is not a type at protocol " + version);
                 }
-                return type.cast(registration.decode(buf, version, mode));
+                return type.cast(registration.decode(buf, version));
             }
 
             private static final class Registry {
-                private static final @NotNull Map<Class<? extends Message>, Registration<?>> TYPES = new HashMap<>();
+                private static final @NotNull Map<Class<? extends Packet>, Registration<?>> TYPES = new HashMap<>();
 
                 static {
                     $registrations$
@@ -100,31 +76,30 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
 
                 private Registry() {}
 
-                private static <T extends Message> void register(
+                private static <T extends Packet> void register(
                         @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
                     TYPES.put(type, new Registration<>(type, name, selector));
                 }
             }
 
-            private interface Selector<T extends Message> {
-                @NotNull Codec<T> codec(int version, @NotNull $mode$ mode);
+            private interface Selector<T extends Packet> {
+                @NotNull Codec<T> codec(int version);
             }
 
-            private record Registration<T extends Message>(
+            private record Registration<T extends Packet>(
                     @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
-                void encode(@NotNull Message value, @NotNull ByteBuf buf, int version, @NotNull $mode$ mode) {
-                    selector.codec(version, mode).encode(type.cast(value), buf);
+                void encode(@NotNull Packet packet, @NotNull ByteBuf buf, int version) {
+                    selector.codec(version).encode(type.cast(packet), buf);
                 }
 
-                @NotNull T decode(@NotNull ByteBuf buf, int version, @NotNull $mode$ mode) {
-                    return ByteBufCodec.decode(buf, name, selector.codec(version, mode));
+                @NotNull T decode(@NotNull ByteBuf buf, int version) {
+                    return ByteBufCodec.decode(buf, name, selector.codec(version));
                 }
             }
         }
         """,
         name=names.PROTOCOL,
         table=names.VERSION,
-        mode=names.MODE,
         latest=schema.latest,
         constants=partial(constants, schema, p),
         registrations=partial(registrations, schema, p, generators),
@@ -144,7 +119,7 @@ def registrations(schema: Schema, p: Printer, generators: list[MessageGenerator 
     for generator in generators:
         if not isinstance(generator, MessageGenerator):
             continue
-        if generator.codecs:
+        if generator.packet_id is not None and generator.codecs:
             p.emit(
                 'register($spelled$.class, "$name$", $spelled$::codec);',
                 spelled=generator.qualified,

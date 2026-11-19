@@ -198,13 +198,15 @@ def codec(
     where: str,
     name: str,
     message: str,
+    exported: bool,
     constants: Callable[[], None],
     writes: Callable[[], None],
     reads: Callable[[], None],
 ) -> None:
-    p.emit("public static final class $name$ implements Codec<$message$> {", name=name, message=message)
+    modifiers = "public static final" if exported else "static final"
+    p.emit("$modifiers$ class $name$ implements Codec<$message$> {", modifiers=modifiers, name=name, message=message)
     with p.indent(), registry.scope(f"{where}.{name}", name):
-        p.emit("public static final @NotNull $name$ INSTANCE = new $name$();", name=name)
+        p.emit("$modifiers$ @NotNull $name$ INSTANCE = new $name$();", modifiers=modifiers, name=name)
         p.emit("")
         constants()
         p.emit("")
