@@ -1,0 +1,104 @@
+[
+ {
+  "id": "sphere_text_payloads",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 1,
+     "dimension_id": 2,
+     "extra_data_payload": null
+    },
+    {
+     "network_id": 3,
+     "shape_type": 2,
+     "location": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "scale": 0.5,
+     "rotation": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "time_left_total_sec": 2.0,
+     "color": 1146447479,
+     "dimension_id": 1,
+     "extra_data_payload": {
+      "__class__": "SphereDataPayload",
+      "num_segments": 12
+     }
+    },
+    {
+     "network_id": 4,
+     "shape_type": 4,
+     "dimension_id": 2,
+     "extra_data_payload": {
+      "__class__": "TextDataPayload",
+      "text": "hi"
+     }
+    }
+   ]
+  },
+  "bytes": "03010000000000000400030102010000803f0000004000004040010000003f010000003f0000803e0000403f0100000040017766554402050c04010400000000000402026869"
+ },
+ {
+  "id": "arrow_box_line_payloads_with_absent_fields",
+  "value": {
+   "shapes": [
+    {
+     "network_id": 10,
+     "shape_type": 5,
+     "dimension_id": 1,
+     "extra_data_payload": {
+      "__class__": "ArrowDataPayload",
+      "end_location": {
+       "x": 1.0,
+       "y": 2.0,
+       "z": 3.0
+      },
+      "arrow_head_length": 0.5,
+      "arrow_head_radius": 0.25,
+      "num_segments": 6
+     }
+    },
+    {
+     "network_id": 17,
+     "shape_type": 5,
+     "dimension_id": 2,
+     "extra_data_payload": {
+      "__class__": "ArrowDataPayload"
+     }
+    },
+    {
+     "network_id": 11,
+     "shape_type": 1,
+     "dimension_id": 1,
+     "extra_data_payload": {
+      "__class__": "BoxDataPayload",
+      "box_bound": {
+       "x": 1.0,
+       "y": 2.0,
+       "z": 3.0
+      }
+     }
+    },
+    {
+     "network_id": 12,
+     "shape_type": 0,
+     "dimension_id": 2,
+     "extra_data_payload": {
+      "__class__": "LineDataPayload",
+      "end_location": {
+       "x": 4.0,
+       "y": 5.0,
+       "z": 6.0
+      }
+     }
+    }
+   ]
+  },
+  "bytes": "040a010500000000000201010000803f0000004000004040010000003f010000803e010611010500000000000401000000000b0101000000000002030000803f00000040000040400c010000000000000404000080400000a0400000c040"
+ }
+]

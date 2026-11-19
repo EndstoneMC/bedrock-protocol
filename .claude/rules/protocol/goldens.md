@@ -15,6 +15,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, whatever its codec's number, and never a file identical to the neighbour's.
 - Leave a packet out of a folder before 2168 when that build's read or write for it is a stub, and have the other side checked against the DSL statically instead.
+- Check `v859/` with BDS 1.21.123.2.
 - Check `v898/` with BDS 1.21.132.3.
 - Check `v924/` with BDS 1.26.3.1.
 - Check `v944/` with BDS 1.26.14.1.
