@@ -16,14 +16,18 @@ package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 """
 
-INIT_135 = """
+INIT_IMPORTS = """
 from bedrock_protocol_compiler.dsl import (
     array, bitset, builtin, double, field, int16, packet, sentinel, type, uint8, uint16, uint32, uvarint32, uvarint64,
     value,
 )
-versions = (1, 3, 5)
-releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.x"}
 """
+
+INIT_135 = INIT_IMPORTS + (
+    'versions = (1, 3, 5)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.x"}\n'
+)
+
+INIT_RANGE = INIT_IMPORTS + 'versions = (1, 2)\nreleases = {1: "1.1.0-1.1.3", 2: "1.2.x"}\n'
 
 SCALAR = """
 @packet(id=7)
@@ -654,57 +658,106 @@ def test_protocol_names_no_serialization_mode(emitted):
     assert "SerializationMode" not in emitted(SCALAR, "Protocol.java")
 
 
-def test_the_version_table_lists_the_versions(java):
-    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
-
-    assert "    public static final @NotNull List<Integer> VERSIONS = List.of(1, 2, 3, 4, 5);\n" in text
+def test_the_version_table_is_a_final_class(java):
+    assert "public final class ProtocolVersion {\n" in (java(SCALAR) / "ProtocolVersion.java").read_text()
 
 
-def test_the_version_table_names_the_latest_version(java):
-    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
+def test_the_version_table_lists_a_version_per_release(java):
+    supported = (
+        "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
+        '            new ProtocolVersion(1, "1.1.0"),\n'
+        '            new ProtocolVersion(2, "1.2.0"),\n'
+        '            new ProtocolVersion(3, "1.3.0"),\n'
+        '            new ProtocolVersion(4, "1.4.0"),\n'
+        '            new ProtocolVersion(5, "1.5.0"));\n'
+    )
 
-    assert "    public static final int LATEST_VERSION = 5;\n" in text
+    assert supported in (java(SCALAR) / "ProtocolVersion.java").read_text()
 
 
-def test_a_release_takes_the_newest_version_at_or_below_its_number_as_its_snapshot(build_package, tmp_path):
+def test_a_release_with_no_snapshot_of_its_own_is_a_supported_version(build_package, tmp_path):
     build_package({"a": HEADER + SCALAR}, INIT_135)
 
     main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
     text = (tmp_path / "java/dev/endstone/protocol/ProtocolVersion.java").read_text()
-    releases = (
-        "    public static final @NotNull List<ProtocolVersion> RELEASES = List.of(\n"
-        '            new ProtocolVersion(1, 1, "1.1.0", "1.1.0", "1.1.0"),\n'
-        '            new ProtocolVersion(2, 1, "1.2.0", "1.2.0", "1.2.0"),\n'
-        '            new ProtocolVersion(3, 3, "1.3.0", "1.3.0", "1.3.0"),\n'
-        '            new ProtocolVersion(4, 3, "1.4.0", "1.4.0", "1.4.0"),\n'
-        '            new ProtocolVersion(5, 5, "1.5.x", "1.5.0", "1.5.9"));\n'
+    supported = (
+        "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
+        '            new ProtocolVersion(1, "1.1.0"),\n'
+        '            new ProtocolVersion(2, "1.2.0"),\n'
+        '            new ProtocolVersion(3, "1.3.0"),\n'
+        '            new ProtocolVersion(4, "1.4.0"),\n'
+        '            new ProtocolVersion(5, "1.5.0"));\n'
     )
-    assert releases in text
+    assert supported in text
 
 
-def test_a_release_name_is_matched_between_first_and_last(java):
-    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
+def test_a_version_is_named_after_the_first_release_of_its_range(build_package, tmp_path):
+    build_package({"a": HEADER + SCALAR}, INIT_RANGE)
 
-    match = (
-        "            if (Arrays.compare(parse(version.first), wanted) <= 0\n"
-        "                    && Arrays.compare(wanted, parse(version.last)) <= 0) {\n"
+    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+    text = (tmp_path / "java/dev/endstone/protocol/ProtocolVersion.java").read_text()
+    supported = (
+        "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
+        '            new ProtocolVersion(1, "1.1.0"),\n'
+        '            new ProtocolVersion(2, "1.2.0"));\n'
     )
-    assert match in text
+    assert supported in text
 
 
-@pytest.mark.parametrize(
-    "check",
-    [
-        pytest.param("if (i > 0 && (cursor == end || text.charAt(cursor++) != '.')) {", id="separator"),
-        pytest.param("boolean negative = cursor < end && text.charAt(cursor) == '-';", id="sign"),
-        pytest.param("long limit = negative ? -(long) Integer.MIN_VALUE : Integer.MAX_VALUE;", id="range"),
-        pytest.param("if (cursor == digits) {", id="digits"),
-        pytest.param("if (cursor != end) {", id="whole"),
-    ],
-)
-def test_a_release_name_parses_as_from_chars_does(java, check):
-    assert check in (java(SCALAR) / "ProtocolVersion.java").read_text()
+def test_the_minimum_version_is_the_first_supported_version(java):
+    minimum = "    public static final @NotNull ProtocolVersion MINIMUM_VERSION = SUPPORTED_VERSIONS.getFirst();\n"
+
+    assert minimum in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_the_maximum_version_is_the_last_supported_version(java):
+    maximum = "    public static final @NotNull ProtocolVersion MAXIMUM_VERSION = SUPPORTED_VERSIONS.getLast();\n"
+
+    assert maximum in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_get_finds_a_supported_version_by_its_protocol_number(java):
+    get = (
+        "    public static @NotNull Optional<ProtocolVersion> get(int protocol) {\n"
+        "        for (ProtocolVersion version : SUPPORTED_VERSIONS) {\n"
+        "            if (version.protocol == protocol) {\n"
+        "                return Optional.of(version);\n"
+        "            }\n"
+        "        }\n"
+        "        return Optional.empty();\n"
+        "    }\n"
+    )
+
+    assert get in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_only_the_version_table_constructs_a_version(java):
+    constructor = (
+        "    private ProtocolVersion(int protocol, @NotNull String name) {\n"
+        "        this.protocol = protocol;\n"
+        "        this.name = name;\n"
+        "    }\n"
+    )
+
+    assert constructor in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_a_version_returns_its_protocol_number(java):
+    getter = "    public int getProtocol() {\n        return protocol;\n    }\n"
+
+    assert getter in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_a_version_returns_its_name(java):
+    getter = "    public @NotNull String getName() {\n        return name;\n    }\n"
+
+    assert getter in (java(SCALAR) / "ProtocolVersion.java").read_text()
+
+
+def test_the_protocol_enum_looks_up_no_version(emitted):
+    assert "    public static @NotNull Optional<Protocol> of(" not in emitted(SCALAR, "Protocol.java")
 
 
 def test_a_model_named_like_the_version_table_is_a_compiler_error(build_package, tmp_path):

@@ -12,8 +12,7 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 final class MessageTest {
-    private static final Protocol LATEST =
-            Protocol.of(ProtocolVersion.LATEST_VERSION).orElseThrow();
+    private static final Protocol LATEST = Protocol.latest();
 
     private static final Protocol EARLY = Protocol.v729;
 

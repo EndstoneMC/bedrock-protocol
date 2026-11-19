@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 final class ProtocolTest {
     private static final TextPacket HELLO =
@@ -41,26 +44,22 @@ final class ProtocolTest {
         return ByteBufUtil.hexDump(bytes);
     }
 
-    @Test
-    void aNumberAfterASnapshotIsItsSnapshot() {
-        assertEquals(Protocol.v2168, Protocol.of(2169).orElseThrow());
+    @ParameterizedTest
+    @EnumSource(Protocol.class)
+    void aConstantIsNamedAfterItsVersion(Protocol protocol) {
+        assertEquals("v" + protocol.version(), protocol.name());
+    }
+
+    @ParameterizedTest
+    @EnumSource(Protocol.class)
+    void aConstantsVersionIsSupported(Protocol protocol) {
+        assertTrue(ProtocolVersion.get(protocol.version()).isPresent());
     }
 
     @Test
-    void aReleaseInsideARangeIsItsProtocol() {
-        assertEquals(Protocol.v2225, Protocol.of("1.26.63").orElseThrow());
-    }
-
-    @Test
-    void anUnknownNumberHasNoProtocol() {
-        assertTrue(Protocol.of(1).isEmpty());
-    }
-
-    @Test
-    void theConstantsAreTheModelledVersionsInOrder() {
-        assertEquals(
-                ProtocolVersion.VERSIONS,
-                Arrays.stream(Protocol.values()).map(Protocol::version).toList());
+    void theConstantsAscend() {
+        List<Integer> versions = Arrays.stream(Protocol.values()).map(Protocol::version).toList();
+        assertEquals(versions.stream().sorted().toList(), versions);
     }
 
     @Test
@@ -100,21 +99,17 @@ final class ProtocolTest {
     }
 
     @Test
-    void aSnapshotNumberEncodesWithItsSnapshotsClasses() {
-        assertEquals(
-                "01610204060000803f0000803f0000",
-                hex(Protocol.of(2169).orElseThrow().encode(SOUND)));
+    void aRedeclaredPacketEncodesWithItsOwnClass() {
+        assertEquals("01610204060000803f0000803f0000", hex(Protocol.v2168.encode(SOUND)));
     }
 
     @Test
-    void aSnapshotNumberDecodesWithItsSnapshotsClasses() {
+    void aRedeclaredPacketDecodesWithItsOwnClass() {
         assertEquals(
                 SOUND,
-                Protocol.of(2169)
-                        .orElseThrow()
-                        .decode(
-                                dev.endstone.protocol.v2168.PlaySoundPacket.class,
-                                bytes("01610204060000803f0000803f0000")));
+                Protocol.v2168.decode(
+                        dev.endstone.protocol.v2168.PlaySoundPacket.class,
+                        bytes("01610204060000803f0000803f0000")));
     }
 
     @Test

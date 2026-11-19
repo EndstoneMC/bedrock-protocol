@@ -75,7 +75,7 @@ final class GoldensTest {
             String folder = file.getParent().getFileName().toString();
             String name = file.getFileName().toString();
             String stem = name.substring(0, name.length() - ".json".length());
-            Protocol protocol = Protocol.of(Integer.parseInt(folder.substring(1))).orElseThrow();
+            Protocol protocol = Protocol.valueOf(folder);
             int packetId = Integer.parseInt(stem.substring(0, stem.indexOf('_')));
             List<Class<? extends Packet>> accepted = new ArrayList<>();
             for (Class<? extends Packet> candidate :

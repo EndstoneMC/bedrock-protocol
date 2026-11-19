@@ -27,14 +27,6 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 return v$latest$;
             }
 
-            public static @NotNull Optional<$name$> of(int number) {
-                return $table$.of(number).map(version -> valueOf("v" + version.snapshot()));
-            }
-
-            public static @NotNull Optional<$name$> of(@NotNull String release) {
-                return $table$.of(release).map(version -> valueOf("v" + version.snapshot()));
-            }
-
             public byte @NotNull [] encode(@NotNull Packet packet) {
                 ByteBuf buf = Unpooled.buffer();
                 try {
@@ -99,7 +91,6 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
         }
         """,
         name=names.PROTOCOL,
-        table=names.VERSION,
         latest=schema.latest,
         constants=partial(constants, schema, p),
         registrations=partial(registrations, schema, p, generators),

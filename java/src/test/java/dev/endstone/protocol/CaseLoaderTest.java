@@ -84,7 +84,7 @@ final class CaseLoaderTest {
             throws ReflectiveOperationException {
         ChangeMobPropertyPacket packet =
                 CaseLoader.load(
-                        ProtocolVersion.LATEST_VERSION,
+                        Protocol.latest().version(),
                         ChangeMobPropertyPacket.class,
                         JsonParser.parseString(
                                 "{\"actor_id\":0,\"prop_name\":\"\",\"bool_component_val\":false,"
@@ -101,7 +101,7 @@ final class CaseLoaderTest {
             throws ReflectiveOperationException {
         DataStoreUpdate update =
                 CaseLoader.load(
-                        ProtocolVersion.LATEST_VERSION,
+                        Protocol.latest().version(),
                         DataStoreUpdate.class,
                         JsonParser.parseString(
                                 "{\"data_store_name\":\"\",\"property\":\"\",\"path\":\"\","
@@ -116,7 +116,7 @@ final class CaseLoaderTest {
     void notANumberLoadsAsTheFloatArmOfAFloatOrStringUnion() throws ReflectiveOperationException {
         ServerboundPackSettingChangePacket packet =
                 CaseLoader.load(
-                        ProtocolVersion.LATEST_VERSION,
+                        Protocol.latest().version(),
                         ServerboundPackSettingChangePacket.class,
                         JsonParser.parseString(
                                 "{\"pack_id\":\"00000000-0000-0000-0000-000000000000\","
@@ -131,7 +131,7 @@ final class CaseLoaderTest {
             throws ReflectiveOperationException {
         ServerboundPackSettingChangePacket packet =
                 CaseLoader.load(
-                        ProtocolVersion.LATEST_VERSION,
+                        Protocol.latest().version(),
                         ServerboundPackSettingChangePacket.class,
                         JsonParser.parseString(
                                 "{\"pack_id\":\"00000000-0000-0000-0000-000000000000\","
@@ -145,7 +145,7 @@ final class CaseLoaderTest {
     void aPlainEnumInItsEncodedRangeLoadsAsItsDeclaredMember() throws ReflectiveOperationException {
         ContainerClosePacket packet =
                 CaseLoader.load(
-                        ProtocolVersion.LATEST_VERSION,
+                        Protocol.latest().version(),
                         ContainerClosePacket.class,
                         JsonParser.parseString(
                                 "{\"container_id\":255,\"container_type\":0,"

@@ -8,81 +8,42 @@ from bedrock_protocol_compiler.schema import Schema
 def table(schema: Schema, p: Printer) -> None:
     p.emit(
         """
-        public record $name$(
-                int number, int snapshot, @NotNull String name, @NotNull String first, @NotNull String last) {
-            public static final @NotNull List<Integer> VERSIONS = List.of($versions$);
-
-            public static final int LATEST_VERSION = $latest$;
-
-            public static final @NotNull List<$name$> RELEASES = List.of(
+        public final class $name$ {
+            public static final @NotNull List<$name$> SUPPORTED_VERSIONS = List.of(
                     $releases$
 
-            public $name$ {
-                Objects.requireNonNull(name);
-                Objects.requireNonNull(first);
-                Objects.requireNonNull(last);
+            public static final @NotNull $name$ MINIMUM_VERSION = SUPPORTED_VERSIONS.getFirst();
+
+            public static final @NotNull $name$ MAXIMUM_VERSION = SUPPORTED_VERSIONS.getLast();
+
+            private final int protocol;
+
+            private final @NotNull String name;
+
+            private $name$(int protocol, @NotNull String name) {
+                this.protocol = protocol;
+                this.name = name;
             }
 
-            public static @NotNull Optional<$name$> of(int number) {
-                for ($name$ version : RELEASES) {
-                    if (version.number == number) {
+            public int getProtocol() {
+                return protocol;
+            }
+
+            public @NotNull String getName() {
+                return name;
+            }
+
+            public static @NotNull Optional<$name$> get(int protocol) {
+                for ($name$ version : SUPPORTED_VERSIONS) {
+                    if (version.protocol == protocol) {
                         return Optional.of(version);
                     }
                 }
                 return Optional.empty();
-            }
-
-            public static @NotNull Optional<$name$> of(@NotNull String release) {
-                int[] wanted = parse(release);
-                if (wanted == null) {
-                    return Optional.empty();
-                }
-                for ($name$ version : RELEASES) {
-                    if (Arrays.compare(parse(version.first), wanted) <= 0
-                            && Arrays.compare(wanted, parse(version.last)) <= 0) {
-                        return Optional.of(version);
-                    }
-                }
-                return Optional.empty();
-            }
-
-            private static int @Nullable [] parse(@NotNull String text) {
-                int[] parts = new int[3];
-                int cursor = 0;
-                int end = text.length();
-                for (int i = 0; i < parts.length; i++) {
-                    if (i > 0 && (cursor == end || text.charAt(cursor++) != '.')) {
-                        return null;
-                    }
-                    boolean negative = cursor < end && text.charAt(cursor) == '-';
-                    if (negative) {
-                        cursor++;
-                    }
-                    long limit = negative ? -(long) Integer.MIN_VALUE : Integer.MAX_VALUE;
-                    int digits = cursor;
-                    long value = 0;
-                    while (cursor < end && text.charAt(cursor) >= '0' && text.charAt(cursor) <= '9') {
-                        value = value * 10 + (text.charAt(cursor) - '0');
-                        if (value > limit) {
-                            return null;
-                        }
-                        cursor++;
-                    }
-                    if (cursor == digits) {
-                        return null;
-                    }
-                    parts[i] = (int) (negative ? -value : value);
-                }
-                if (cursor != end) {
-                    return null;
-                }
-                return parts;
             }
         }
         """,
         name=names.VERSION,
-        versions=", ".join(map(str, schema.versions)),
-        latest=schema.latest,
         releases=lambda: releases(schema, p),
     )
 
@@ -90,12 +51,9 @@ def table(schema: Schema, p: Printer) -> None:
 def releases(schema: Schema, p: Printer) -> None:
     for index, release in enumerate(schema.releases, 1):
         p.emit(
-            "new $name$($number$, $snapshot$, $release$, $first$, $last$)$end$",
+            "new $name$($number$, $first$)$end$",
             name=names.VERSION,
             number=release.number,
-            snapshot=max(each for each in schema.versions if each <= release.number),
-            release=json.dumps(release.name),
             first=json.dumps(release.first),
-            last=json.dumps(release.last),
             end="," if index < len(schema.releases) else ");",
         )
