@@ -557,6 +557,12 @@ def test_the_protocol_enum_has_a_constant_per_version_in_ascending_order(emitted
     assert constants in emitted(SCALAR, "Protocol.java")
 
 
+def test_latest_returns_the_newest_protocol(emitted):
+    latest = "    public static @NotNull Protocol latest() {\n        return v5;\n    }\n"
+
+    assert latest in emitted(SCALAR, "Protocol.java")
+
+
 def test_the_registrations_sit_in_a_holder_class(emitted):
     holder = (
         "    private static final class Registry {\n"

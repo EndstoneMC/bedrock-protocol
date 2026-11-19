@@ -23,6 +23,10 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 return version;
             }
 
+            public static @NotNull $name$ latest() {
+                return v$latest$;
+            }
+
             public static @NotNull Optional<$name$> of(int number) {
                 return $table$.of(number).map(version -> valueOf("v" + version.snapshot()));
             }
@@ -121,6 +125,7 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
         name=names.PROTOCOL,
         table=names.VERSION,
         mode=names.MODE,
+        latest=schema.latest,
         constants=partial(constants, schema, p),
         registrations=partial(registrations, schema, p, generators),
     )

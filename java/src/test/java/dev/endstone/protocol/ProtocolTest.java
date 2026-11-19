@@ -57,6 +57,11 @@ final class ProtocolTest {
     }
 
     @Test
+    void latestIsTheLastConstant() {
+        assertEquals(Protocol.values()[Protocol.values().length - 1], Protocol.latest());
+    }
+
+    @Test
     void aValueEncodesToItsBytes() {
         assertEquals("0000010568656c6c6f000000", hex(Protocol.v2225.encode(HELLO)));
     }

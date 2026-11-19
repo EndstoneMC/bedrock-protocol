@@ -39,6 +39,7 @@ paths:
 - Encode and decode a name-coded enum whose names change between protocols with the protocol; encoding a value with no name there throws `IllegalArgumentException`.
 - Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
 - Generate a bare `ProtocolVersion` mirroring the C++ `version.hpp`, and a bare enum `Protocol` with a lower-case constant `v<N>` per modelled protocol in ascending order, `version()` and `of` through the release table, mirroring the Python module `bedrock_protocol.v<N>` in `encode` and `decode`, each over a `byte[]` and a `ByteBuf` with the mode as an optional trailing argument, and framing no packet.
+- Generate a static `Protocol.latest()` returning the newest constant.
 - Reach a type in `Protocol` through its `codec(version, mode)` from one registry of every class with a selector, and reject a class the registry lacks as a selector does, `<class>: is not a type at protocol <N>`.
 - Hold `Protocol`'s class registry in a private holder class, so the first `encode` or `decode` builds it, never `of` or `version()`.
 - Release the `Unpooled` buffer a `byte[]` overload encodes into in a `finally`.
