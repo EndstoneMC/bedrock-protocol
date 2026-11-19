@@ -3,8 +3,8 @@ name = "bedrock-protocol"
 dynamic = ["version"]
 description = "Minecraft: Bedrock Edition network protocol"
 readme = "README.md"
-authors = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
-maintainers = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
+authors = [{ name = "GlacieTeam" }, { name = "EndstoneMC", email = "hello@endstone.dev" }]
+maintainers = [{ name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
