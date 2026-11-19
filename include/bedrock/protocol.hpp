@@ -1,52 +1,52 @@
 #pragma once
 
-#include "bedrock/protocol/ability.h"
-#include "bedrock/protocol/actor.h"
-#include "bedrock/protocol/attribute.h"
-#include "bedrock/protocol/biome.h"
-#include "bedrock/protocol/block.h"
-#include "bedrock/protocol/boss.h"
-#include "bedrock/protocol/camera.h"
-#include "bedrock/protocol/chunk.h"
-#include "bedrock/protocol/command.h"
-#include "bedrock/protocol/common.h"
-#include "bedrock/protocol/crafting.h"
-#include "bedrock/protocol/data_store.h"
-#include "bedrock/protocol/diagnostics.h"
-#include "bedrock/protocol/dimension.h"
-#include "bedrock/protocol/eas.h"
-#include "bedrock/protocol/edu.h"
-#include "bedrock/protocol/effect.h"
-#include "bedrock/protocol/enchanting.h"
-#include "bedrock/protocol/enum.hpp"
-#include "bedrock/protocol/game.h"
-#include "bedrock/protocol/graphics.h"
-#include "bedrock/protocol/input.h"
-#include "bedrock/protocol/inventory.h"
-#include "bedrock/protocol/item.h"
-#include "bedrock/protocol/item_stack.h"
-#include "bedrock/protocol/level.h"
-#include "bedrock/protocol/map.h"
-#include "bedrock/protocol/molang.h"
-#include "bedrock/protocol/movement.h"
-#include "bedrock/protocol/nbt.h"
-#include "bedrock/protocol/nbt.hpp"
-#include "bedrock/protocol/network.h"
-#include "bedrock/protocol/pack.h"
-#include "bedrock/protocol/packets.hpp"
-#include "bedrock/protocol/player.h"
-#include "bedrock/protocol/presence.h"
-#include "bedrock/protocol/scoreboard.h"
-#include "bedrock/protocol/script.h"
-#include "bedrock/protocol/serializer.hpp"
-#include "bedrock/protocol/skin.h"
-#include "bedrock/protocol/sound.h"
-#include "bedrock/protocol/store.h"
-#include "bedrock/protocol/stream.hpp"
-#include "bedrock/protocol/structure.h"
-#include "bedrock/protocol/telemetry.h"
-#include "bedrock/protocol/text.h"
-#include "bedrock/protocol/transaction.h"
-#include "bedrock/protocol/ui.h"
-#include "bedrock/protocol/uuid.hpp"
-#include "bedrock/protocol/version.hpp"
+#include "bedrock/protocol/ability.h"       // IWYU pragma: export
+#include "bedrock/protocol/actor.h"         // IWYU pragma: export
+#include "bedrock/protocol/attribute.h"     // IWYU pragma: export
+#include "bedrock/protocol/biome.h"         // IWYU pragma: export
+#include "bedrock/protocol/block.h"         // IWYU pragma: export
+#include "bedrock/protocol/boss.h"          // IWYU pragma: export
+#include "bedrock/protocol/camera.h"        // IWYU pragma: export
+#include "bedrock/protocol/chunk.h"         // IWYU pragma: export
+#include "bedrock/protocol/command.h"       // IWYU pragma: export
+#include "bedrock/protocol/common.h"        // IWYU pragma: export
+#include "bedrock/protocol/crafting.h"      // IWYU pragma: export
+#include "bedrock/protocol/data_store.h"    // IWYU pragma: export
+#include "bedrock/protocol/diagnostics.h"   // IWYU pragma: export
+#include "bedrock/protocol/dimension.h"     // IWYU pragma: export
+#include "bedrock/protocol/eas.h"           // IWYU pragma: export
+#include "bedrock/protocol/edu.h"           // IWYU pragma: export
+#include "bedrock/protocol/effect.h"        // IWYU pragma: export
+#include "bedrock/protocol/enchanting.h"    // IWYU pragma: export
+#include "bedrock/protocol/enum.hpp"        // IWYU pragma: export
+#include "bedrock/protocol/game.h"          // IWYU pragma: export
+#include "bedrock/protocol/graphics.h"      // IWYU pragma: export
+#include "bedrock/protocol/input.h"         // IWYU pragma: export
+#include "bedrock/protocol/inventory.h"     // IWYU pragma: export
+#include "bedrock/protocol/item.h"          // IWYU pragma: export
+#include "bedrock/protocol/item_stack.h"    // IWYU pragma: export
+#include "bedrock/protocol/level.h"         // IWYU pragma: export
+#include "bedrock/protocol/map.h"           // IWYU pragma: export
+#include "bedrock/protocol/molang.h"        // IWYU pragma: export
+#include "bedrock/protocol/movement.h"      // IWYU pragma: export
+#include "bedrock/protocol/nbt.h"           // IWYU pragma: export
+#include "bedrock/protocol/nbt.hpp"         // IWYU pragma: export
+#include "bedrock/protocol/network.h"       // IWYU pragma: export
+#include "bedrock/protocol/pack.h"          // IWYU pragma: export
+#include "bedrock/protocol/packets.hpp"     // IWYU pragma: export
+#include "bedrock/protocol/player.h"        // IWYU pragma: export
+#include "bedrock/protocol/presence.h"      // IWYU pragma: export
+#include "bedrock/protocol/scoreboard.h"    // IWYU pragma: export
+#include "bedrock/protocol/script.h"        // IWYU pragma: export
+#include "bedrock/protocol/serializer.hpp"  // IWYU pragma: export
+#include "bedrock/protocol/skin.h"          // IWYU pragma: export
+#include "bedrock/protocol/sound.h"         // IWYU pragma: export
+#include "bedrock/protocol/store.h"         // IWYU pragma: export
+#include "bedrock/protocol/stream.hpp"      // IWYU pragma: export
+#include "bedrock/protocol/structure.h"     // IWYU pragma: export
+#include "bedrock/protocol/telemetry.h"     // IWYU pragma: export
+#include "bedrock/protocol/text.h"          // IWYU pragma: export
+#include "bedrock/protocol/transaction.h"   // IWYU pragma: export
+#include "bedrock/protocol/ui.h"            // IWYU pragma: export
+#include "bedrock/protocol/uuid.hpp"        // IWYU pragma: export
+#include "bedrock/protocol/version.hpp"     // IWYU pragma: export
