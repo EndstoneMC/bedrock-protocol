@@ -22,10 +22,9 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function objects `encode<V>(value[, writer])` and `decode<V, T>(data | reader)`; every call names its protocol.
+- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function objects `encode<V>(value[, writer][, cereal | manual])` and `decode<V, T>(data | reader[, cereal | manual])`; every call names its protocol.
 - Give each protocol N a `v<N>` namespace holding only `version`, and `encode` and `decode<T>` bound to `encode<N>` and `decode<N, T>`.
-- Pass a serialization mode as a trailing `cereal` or `manual` tag, only where a class name has two at that protocol.
-- `Protocol` holds a modelled number from `protocol(number)` or `protocol(release)`, which resolve through `releases`, and reports a type its protocol lacks as `Errc::unknown_type`.
+- `Protocol` holds a modelled number from `protocol(number)` or `protocol(release)`, which resolve through `releases`, takes the same trailing mode tag as `encode<V>` and `decode<V, T>`, and reports a type its protocol lacks as `Errc::unknown_type`.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Check a value on encode only where its encoding is narrower than its member, failing one whose cast back differs with `Errc::out_of_range`.
 - Decode a number a protocol gives a member to that member and any other number to a non-member value; reject a number the protocol cannot place, a name it lacks, a value it cannot number or name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.

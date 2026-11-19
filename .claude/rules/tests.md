@@ -11,7 +11,7 @@ paths:
 - Never assert a reorder by size; pin the order with a body whose bytes move.
 - When a change materializes a snapshot (`versions.md`), re-check every test that builds one era's types against another era's golden.
 - Check every golden both ways: encoding the packet yields the bytes, and decoding the bytes yields the packet.
-- Write expected bytes only as literals; never compute them by re-implementing varints, zigzag, header packing or the codec.
+- Write expected bytes only as literals; never compute them by re-implementing varints, zigzag or the codec.
 
 ## Writing a test
 

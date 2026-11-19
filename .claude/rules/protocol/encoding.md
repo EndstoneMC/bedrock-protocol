@@ -24,10 +24,6 @@ paths:
 
 - A `mce::UUID` encoded as text is `mce::UUID::asString`'s lower-case 8-4-4-4-12; BDS reads 36 hyphenated or 32 bare hex digits, either case, and any other text as the nil UUID.
 
-## The frame
-
-- The packet header is one `uvarint32`, `id | recipient << 10 | sender << 12`, with sub-client ids 0..3. gophertunnel swaps the two.
-
 ## Packets
 
 - Model `PlayerAuthInputPacket.input_data` as a length-prefixed list of `InputData` from 2168 and a bitset before it; the header's `std::bitset` is the in-memory member.
