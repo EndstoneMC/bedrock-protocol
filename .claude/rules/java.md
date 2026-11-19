@@ -40,15 +40,17 @@ paths:
 - Encode and decode a name-coded enum whose names change between protocols with the protocol; encoding a value with no name there throws `IllegalArgumentException`.
 - Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
 - Generate a bare final class `ProtocolVersion` with a private constructor and one instance per release, `getProtocol()` and `getName()` naming the first release that shipped it, and the statics `SUPPORTED_VERSIONS` in ascending order, `MINIMUM_VERSION`, `MAXIMUM_VERSION` and `get(int)` by protocol number.
-- Generate a bare enum `Protocol` with a lower-case constant `v<N>` per modelled protocol in ascending order and `version()`, with no lookup by number or release, mirroring the Python module `bedrock_protocol.v<N>` in `encode` and `decode` of a packet, each over a `byte[]` and a `ByteBuf`, with no mode and framing no packet.
-- Generate a static `Protocol.latest()` returning the newest constant.
+- Generate a bare final class `Protocol` with a private constructor and the static `encode` and `decode` of a packet at the latest protocol, each over a `byte[]` and a `ByteBuf`, with no mode and framing no packet.
+- Nest in `Protocol` a `public static final class v<N>` per modelled protocol in ascending order, as the C++ namespace and the Python module `v<N>` are, with a private constructor, `public static final int VERSION` and the same four methods pinned to N, and generate no enum, instance or lookup by number or release.
+- Spell every packet in `Protocol`'s registry fully qualified.
 - Reach a packet in `Protocol` through its `codec(version)` from one registry of every packet class, and reject a class the registry lacks as a selector does, `<class>: is not a type at protocol <N>`.
-- Hold `Protocol`'s class registry in a private holder class, so the first `encode` or `decode` builds it, never `version()` or `latest()`.
+- Hold `Protocol`'s class registry in a private holder class, so the first `encode` or `decode` builds it.
 - Release the `Unpooled` buffer a `byte[]` overload encodes into in a `finally`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
+- Wrap an emitted Java line that would take its template past ruff's 120 columns after its `(`, with google-java-format's AOSP 8-space continuation.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
-- Check every golden in `GoldensTest` both ways through `Protocol` at the case's protocol, finding its class among the generated packets by its file's snake-cased name and the one whose `codec(version)` takes the case's protocol, and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
+- Check every golden in `GoldensTest` both ways through the case's `Protocol.v<N>`, finding its class among the generated packets by its file's snake-cased name and the one whose `codec(version)` takes the case's protocol, and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
 - Reach a package-private selector or codec in a test from its type's package, or through `setAccessible` in `CaseLoader`.
 - Anchor an emitted-text assertion in `test_java.py` on its full indentation.
 - Log each test's result and a failure's full exception from Gradle's `test` task.

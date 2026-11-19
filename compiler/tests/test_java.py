@@ -70,7 +70,7 @@ def test_java_out_writes_a_file_per_top_level_model(java):
     }
 
 
-def test_java_out_writes_the_protocol_enum(java):
+def test_java_out_writes_the_protocol_class(java):
     assert (java(SCALAR) / "Protocol.java").is_file()
 
 
@@ -600,16 +600,156 @@ def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_the_protocol_enum_has_a_constant_per_version_in_ascending_order(emitted):
-    constants = "public enum Protocol {\n    v1(1),\n    v2(2),\n    v3(3),\n    v4(4),\n    v5(5);\n"
-
-    assert constants in emitted(SCALAR, "Protocol.java")
+def test_the_protocol_class_is_final(emitted):
+    assert "public final class Protocol {\n" in emitted(SCALAR, "Protocol.java")
 
 
-def test_latest_returns_the_newest_protocol(emitted):
-    latest = "    public static @NotNull Protocol latest() {\n        return v5;\n    }\n"
+def test_the_protocol_class_has_a_private_constructor(emitted):
+    assert "public final class Protocol {\n    private Protocol() {}\n" in emitted(SCALAR, "Protocol.java")
 
-    assert latest in emitted(SCALAR, "Protocol.java")
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param(
+            "    public static byte @NotNull [] encode(@NotNull Packet packet) {\n"
+            "        return v5.encode(packet);\n"
+            "    }\n",
+            id="encode-to-bytes",
+        ),
+        pytest.param(
+            "    public static void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {\n"
+            "        v5.encode(packet, buf);\n"
+            "    }\n",
+            id="encode-to-buffer",
+        ),
+        pytest.param(
+            "    public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {\n"
+            "        return v5.decode(type, data);\n"
+            "    }\n",
+            id="decode-from-bytes",
+        ),
+        pytest.param(
+            "    public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {\n"
+            "        return v5.decode(type, buf);\n"
+            "    }\n",
+            id="decode-from-buffer",
+        ),
+    ],
+)
+def test_a_bare_method_runs_at_the_newest_protocol(emitted, method):
+    assert method in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_protocol_class_nests_a_class_per_version_in_ascending_order(emitted):
+    nested = re.findall(r"\n    public static final class (v\d+) \{\n", emitted(SCALAR, "Protocol.java"))
+
+    assert nested == ["v1", "v2", "v3", "v4", "v5"]
+
+
+def test_a_version_class_holds_its_protocol_number(emitted):
+    holds = "    public static final class v3 {\n        public static final int VERSION = 3;\n"
+
+    assert holds in emitted(SCALAR, "Protocol.java")
+
+
+def test_a_version_class_has_a_private_constructor(emitted):
+    constructor = "        public static final int VERSION = 3;\n\n        private v3() {}\n"
+
+    assert constructor in emitted(SCALAR, "Protocol.java")
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param(
+            "        public static byte @NotNull [] encode(@NotNull Packet packet) {\n"
+            "            return Protocol.encode(VERSION, packet);\n"
+            "        }\n",
+            id="encode-to-bytes",
+        ),
+        pytest.param(
+            "        public static void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {\n"
+            "            Protocol.encode(VERSION, packet, buf);\n"
+            "        }\n",
+            id="encode-to-buffer",
+        ),
+        pytest.param(
+            "        public static <T extends Packet> @NotNull T decode("
+            "@NotNull Class<T> type, byte @NotNull [] data) {\n"
+            "            return Protocol.decode(VERSION, type, data);\n"
+            "        }\n",
+            id="decode-from-bytes",
+        ),
+        pytest.param(
+            "        public static <T extends Packet> @NotNull T decode("
+            "@NotNull Class<T> type, @NotNull ByteBuf buf) {\n"
+            "            return Protocol.decode(VERSION, type, buf);\n"
+            "        }\n",
+            id="decode-from-buffer",
+        ),
+    ],
+)
+def test_a_version_class_method_calls_the_qualified_helper_at_its_version(emitted, method):
+    assert method in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_helper_encoding_to_bytes_releases_its_buffer(emitted):
+    helper = (
+        "    private static byte @NotNull [] encode(int version, @NotNull Packet packet) {\n"
+        "        ByteBuf buf = Unpooled.buffer();\n"
+        "        try {\n"
+        "            encode(version, packet, buf);\n"
+        "            return ByteBufUtil.getBytes(buf);\n"
+        "        } finally {\n"
+        "            buf.release();\n"
+        "        }\n"
+        "    }\n"
+    )
+
+    assert helper in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_helper_encoding_to_a_buffer_rejects_a_class_the_registry_lacks(emitted):
+    helper = (
+        "    private static void encode(int version, @NotNull Packet packet, @NotNull ByteBuf buf) {\n"
+        "        Registration<?> registration = Registry.TYPES.get(packet.getClass());\n"
+        "        if (registration == null) {\n"
+        "            throw new IllegalArgumentException(\n"
+        '                    packet.getClass().getName() + ": is not a type at protocol " + version);\n'
+        "        }\n"
+        "        registration.encode(packet, buf, version);\n"
+        "    }\n"
+    )
+
+    assert helper in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_helper_decoding_bytes_wraps_them_in_a_buffer(emitted):
+    helper = (
+        "    private static <T extends Packet> @NotNull T decode(\n"
+        "            int version, @NotNull Class<T> type, byte @NotNull [] data) {\n"
+        "        return decode(version, type, Unpooled.wrappedBuffer(data));\n"
+        "    }\n"
+    )
+
+    assert helper in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_helper_decoding_a_buffer_rejects_a_class_the_registry_lacks(emitted):
+    helper = (
+        "    private static <T extends Packet> @NotNull T decode(\n"
+        "            int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {\n"
+        "        Registration<?> registration = Registry.TYPES.get(type);\n"
+        "        if (registration == null) {\n"
+        "            throw new IllegalArgumentException(\n"
+        '                    type.getName() + ": is not a type at protocol " + version);\n'
+        "        }\n"
+        "        return type.cast(registration.decode(buf, version));\n"
+        "    }\n"
+    )
+
+    assert helper in emitted(SCALAR, "Protocol.java")
 
 
 def test_the_registrations_sit_in_a_holder_class(emitted):
@@ -632,6 +772,12 @@ def test_the_registry_holds_a_nested_packet_under_its_nested_name(emitted):
     assert registration in emitted(
         "class S:\n    @packet(id=1)\n    class N:\n        x: uint8\n    n: N\n", "Protocol.java"
     )
+
+
+def test_the_registry_spells_a_packet_of_a_version_package_fully_qualified(emitted):
+    registration = '            register(dev.endstone.protocol.v1.P.class, "P", dev.endstone.protocol.v1.P::codec);\n'
+
+    assert registration in emitted("@packet(id=7, until=3)\nclass P:\n    x: uint8\n", "Protocol.java")
 
 
 def test_the_registry_leaves_out_a_non_packet_type(emitted):
@@ -756,8 +902,16 @@ def test_a_version_returns_its_name(java):
     assert getter in (java(SCALAR) / "ProtocolVersion.java").read_text()
 
 
-def test_the_protocol_enum_looks_up_no_version(emitted):
-    assert "    public static @NotNull Optional<Protocol> of(" not in emitted(SCALAR, "Protocol.java")
+@pytest.mark.parametrize(
+    "member",
+    [
+        pytest.param("    public static @NotNull Protocol latest() {", id="latest"),
+        pytest.param("    public int version() {", id="version"),
+        pytest.param("    public static @NotNull Optional<Protocol> of(", id="lookup"),
+    ],
+)
+def test_the_protocol_class_declares_no_instance_or_lookup_member(emitted, member):
+    assert member not in emitted(SCALAR, "Protocol.java")
 
 
 def test_a_model_named_like_the_version_table_is_a_compiler_error(build_package, tmp_path):
@@ -767,10 +921,10 @@ def test_a_model_named_like_the_version_table_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_model_named_like_the_protocol_enum_is_a_compiler_error(build_package, tmp_path):
+def test_a_model_named_like_the_protocol_class_is_a_compiler_error(build_package, tmp_path):
     build_package({"a": HEADER + "class Protocol:\n    x: uint8\n"})
 
-    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Protocol: is the protocol enum$"):
+    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Protocol: is the protocol class$"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 

@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBufUtil;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -26,6 +27,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class GoldensTest {
+    private record Pinned(int version, Method encoder, Method decoder) {
+        byte[] encode(Packet packet) throws ReflectiveOperationException {
+            return (byte[]) encoder.invoke(null, packet);
+        }
+
+        Packet decode(Class<? extends Packet> type, byte[] bytes)
+                throws ReflectiveOperationException {
+            return (Packet) decoder.invoke(null, type, bytes);
+        }
+    }
+
     private static final Pattern WORD_BREAK =
             Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
 
@@ -75,7 +87,12 @@ final class GoldensTest {
             String folder = file.getParent().getFileName().toString();
             String name = file.getFileName().toString();
             String stem = name.substring(0, name.length() - ".json".length());
-            Protocol protocol = Protocol.valueOf(folder);
+            Class<?> pinnedClass = Class.forName(Protocol.class.getName() + "$" + folder);
+            Pinned protocol =
+                    new Pinned(
+                            pinnedClass.getField("VERSION").getInt(null),
+                            pinnedClass.getMethod("encode", Packet.class),
+                            pinnedClass.getMethod("decode", Class.class, byte[].class));
             int packetId = Integer.parseInt(stem.substring(0, stem.indexOf('_')));
             List<Class<? extends Packet>> accepted = new ArrayList<>();
             for (Class<? extends Packet> candidate :
@@ -91,7 +108,7 @@ final class GoldensTest {
             }
             if (accepted.size() != 1) {
                 throw new IllegalStateException(
-                        file + ": " + accepted.size() + " packets accept protocol " + protocol);
+                        file + ": " + accepted.size() + " packets accept protocol " + folder);
             }
             try (Reader reader = Files.newBufferedReader(file)) {
                 for (JsonElement entry : JsonParser.parseReader(reader).getAsJsonArray()) {
@@ -119,7 +136,8 @@ final class GoldensTest {
     @ParameterizedTest
     @MethodSource("cases")
     void reEncodingADecodedGoldenGivesItsBytes(
-            Protocol protocol, Class<? extends Packet> type, String bytes) {
+            Pinned protocol, Class<? extends Packet> type, String bytes)
+            throws ReflectiveOperationException {
         Packet decoded = protocol.decode(type, hex(bytes));
         assertEquals(bytes, ByteBufUtil.hexDump(protocol.encode(decoded)));
     }
@@ -127,18 +145,16 @@ final class GoldensTest {
     @ParameterizedTest
     @MethodSource("cases")
     void aDecodedGoldenHasItsFilesPacketId(
-            Protocol protocol,
-            Class<? extends Packet> type,
-            String bytes,
-            String value,
-            int packetId) {
+            Pinned protocol, Class<? extends Packet> type, String bytes, String value, int packetId)
+            throws ReflectiveOperationException {
         assertEquals(packetId, protocol.decode(type, hex(bytes)).getPacketId());
     }
 
     @ParameterizedTest
     @MethodSource("cases")
     void decodingTheReEncodedBytesGivesAnEqualPacket(
-            Protocol protocol, Class<? extends Packet> type, String bytes) {
+            Pinned protocol, Class<? extends Packet> type, String bytes)
+            throws ReflectiveOperationException {
         Packet packet = protocol.decode(type, hex(bytes));
         assertEquals(packet, protocol.decode(type, protocol.encode(packet)));
     }
@@ -146,7 +162,7 @@ final class GoldensTest {
     @ParameterizedTest
     @MethodSource("cases")
     void encodingTheLoadedPacketGivesTheBytes(
-            Protocol protocol, Class<? extends Packet> type, String bytes, String value)
+            Pinned protocol, Class<? extends Packet> type, String bytes, String value)
             throws ReflectiveOperationException {
         Packet loaded = CaseLoader.load(protocol.version(), type, JsonParser.parseString(value));
         assertEquals(bytes, ByteBufUtil.hexDump(protocol.encode(loaded)));
@@ -155,7 +171,7 @@ final class GoldensTest {
     @ParameterizedTest
     @MethodSource("cases")
     void decodingTheBytesGivesTheLoadedPacket(
-            Protocol protocol, Class<? extends Packet> type, String bytes, String value)
+            Pinned protocol, Class<? extends Packet> type, String bytes, String value)
             throws ReflectiveOperationException {
         Packet loaded = CaseLoader.load(protocol.version(), type, JsonParser.parseString(value));
         assertEquals(loaded, protocol.decode(type, hex(bytes)));

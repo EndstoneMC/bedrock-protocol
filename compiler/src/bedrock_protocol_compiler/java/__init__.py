@@ -47,7 +47,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         numbering = NumberingGenerator(schema, model)
         numbering.definition(body)
         file.write(schema, context.open(names.path(internal, numbering.name)), internal, body)
-    for name, role in ((names.VERSION, "the protocol version table"), (names.PROTOCOL, "the protocol enum")):
+    for name, role in ((names.VERSION, "the protocol version table"), (names.PROTOCOL, "the protocol class")):
         if f"{schema.java_package}.{name}" in declared:
             raise CompilerError(f"{schema.java_package}.{name}: is {role}")
     body = Printer()

@@ -3,15 +3,23 @@ package dev.endstone.protocol;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
-import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 final class ProtocolTest {
+    private static final int LATEST_PROTOCOL =
+            Arrays.stream(Protocol.class.getClasses())
+                    .mapToInt(pinned -> Integer.parseInt(pinned.getSimpleName().substring(1)))
+                    .max()
+                    .orElseThrow();
+
     private static final TextPacket HELLO =
             TextPacket.newBuilder()
                     .setMessageOnly(
@@ -44,27 +52,21 @@ final class ProtocolTest {
         return ByteBufUtil.hexDump(bytes);
     }
 
-    @ParameterizedTest
-    @EnumSource(Protocol.class)
-    void aConstantIsNamedAfterItsVersion(Protocol protocol) {
-        assertEquals("v" + protocol.version(), protocol.name());
+    static Stream<Arguments> pinnedClasses() {
+        return Arrays.stream(Protocol.class.getClasses())
+                .map(pinned -> argumentSet(pinned.getSimpleName(), pinned));
     }
 
     @ParameterizedTest
-    @EnumSource(Protocol.class)
-    void aConstantsVersionIsSupported(Protocol protocol) {
-        assertTrue(ProtocolVersion.get(protocol.version()).isPresent());
+    @MethodSource("pinnedClasses")
+    void aPinnedClassIsNamedAfterItsVersion(Class<?> pinned) throws ReflectiveOperationException {
+        assertEquals("v" + pinned.getField("VERSION").getInt(null), pinned.getSimpleName());
     }
 
-    @Test
-    void theConstantsAscend() {
-        List<Integer> versions = Arrays.stream(Protocol.values()).map(Protocol::version).toList();
-        assertEquals(versions.stream().sorted().toList(), versions);
-    }
-
-    @Test
-    void latestIsTheLastConstant() {
-        assertEquals(Protocol.values()[Protocol.values().length - 1], Protocol.latest());
+    @ParameterizedTest
+    @MethodSource("pinnedClasses")
+    void aPinnedClassesVersionIsSupported(Class<?> pinned) throws ReflectiveOperationException {
+        assertTrue(ProtocolVersion.get(pinned.getField("VERSION").getInt(null)).isPresent());
     }
 
     @Test
@@ -95,6 +97,27 @@ final class ProtocolTest {
         assertEquals(
                 "v2168.PlaySoundPacket: is not a type at protocol 2225",
                 assertThrows(IllegalArgumentException.class, () -> Protocol.v2225.encode(SOUND))
+                        .getMessage());
+    }
+
+    @Test
+    void theBareEncodeIsAtTheLatestProtocol() {
+        assertEquals(
+                "v2168.PlaySoundPacket: is not a type at protocol " + LATEST_PROTOCOL,
+                assertThrows(IllegalArgumentException.class, () -> Protocol.encode(SOUND))
+                        .getMessage());
+    }
+
+    @Test
+    void theBareDecodeIsAtTheLatestProtocol() {
+        assertEquals(
+                "v2168.PlaySoundPacket: is not a type at protocol " + LATEST_PROTOCOL,
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () ->
+                                        Protocol.decode(
+                                                dev.endstone.protocol.v2168.PlaySoundPacket.class,
+                                                bytes("01610204060000803f0000803f0000")))
                         .getMessage());
     }
 

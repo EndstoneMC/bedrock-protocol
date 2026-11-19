@@ -10,34 +10,37 @@ from bedrock_protocol_compiler.schema import Schema
 def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator], p: Printer) -> None:
     p.emit(
         """
-        public enum $name$ {
-            $constants$
+        public final class $name$ {
+            private $name$() {}
 
-            private final int version;
-
-            $name$(int version) {
-                this.version = version;
+            public static byte @NotNull [] encode(@NotNull Packet packet) {
+                return v$latest$.encode(packet);
             }
 
-            public int version() {
-                return version;
+            public static void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {
+                v$latest$.encode(packet, buf);
             }
 
-            public static @NotNull $name$ latest() {
-                return v$latest$;
+            public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {
+                return v$latest$.decode(type, data);
             }
 
-            public byte @NotNull [] encode(@NotNull Packet packet) {
+            public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
+                return v$latest$.decode(type, buf);
+            }
+
+            $versions$
+            private static byte @NotNull [] encode(int version, @NotNull Packet packet) {
                 ByteBuf buf = Unpooled.buffer();
                 try {
-                    encode(packet, buf);
+                    encode(version, packet, buf);
                     return ByteBufUtil.getBytes(buf);
                 } finally {
                     buf.release();
                 }
             }
 
-            public void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {
+            private static void encode(int version, @NotNull Packet packet, @NotNull ByteBuf buf) {
                 Registration<?> registration = Registry.TYPES.get(packet.getClass());
                 if (registration == null) {
                     throw new IllegalArgumentException(
@@ -46,11 +49,13 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 registration.encode(packet, buf, version);
             }
 
-            public <T extends Packet> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {
-                return decode(type, Unpooled.wrappedBuffer(data));
+            private static <T extends Packet> @NotNull T decode(
+                    int version, @NotNull Class<T> type, byte @NotNull [] data) {
+                return decode(version, type, Unpooled.wrappedBuffer(data));
             }
 
-            public <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
+            private static <T extends Packet> @NotNull T decode(
+                    int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {
                 Registration<?> registration = Registry.TYPES.get(type);
                 if (registration == null) {
                     throw new IllegalArgumentException(
@@ -92,17 +97,40 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
         """,
         name=names.PROTOCOL,
         latest=schema.latest,
-        constants=partial(constants, schema, p),
+        versions=partial(versions, schema, p),
         registrations=partial(registrations, schema, p, generators),
     )
 
 
-def constants(schema: Schema, p: Printer) -> None:
-    for index, number in enumerate(schema.versions, 1):
+def versions(schema: Schema, p: Printer) -> None:
+    for number in schema.versions:
         p.emit(
-            "v$number$($number$)$end$",
+            """
+            public static final class v$number$ {
+                public static final int VERSION = $number$;
+
+                private v$number$() {}
+
+                public static byte @NotNull [] encode(@NotNull Packet packet) {
+                    return $name$.encode(VERSION, packet);
+                }
+
+                public static void encode(@NotNull Packet packet, @NotNull ByteBuf buf) {
+                    $name$.encode(VERSION, packet, buf);
+                }
+
+                public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, byte @NotNull [] data) {
+                    return $name$.decode(VERSION, type, data);
+                }
+
+                public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
+                    return $name$.decode(VERSION, type, buf);
+                }
+            }
+
+            """,
+            name=names.PROTOCOL,
             number=number,
-            end="," if index < len(schema.versions) else ";",
         )
 
 

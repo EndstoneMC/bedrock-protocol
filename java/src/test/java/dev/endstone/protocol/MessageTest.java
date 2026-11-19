@@ -12,16 +12,8 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 final class MessageTest {
-    private static final Protocol LATEST = Protocol.latest();
-
-    private static final Protocol EARLY = Protocol.v729;
-
     private static String animate(String version) {
         return "000000" + version + "00" + "00000000" + "00";
-    }
-
-    private static String encodedAt(Protocol protocol, Packet value) {
-        return ByteBufUtil.hexDump(protocol.encode(value));
     }
 
     private static byte[] hex(String hex) {
@@ -29,11 +21,11 @@ final class MessageTest {
     }
 
     private static String encoded(Packet value) {
-        return encodedAt(LATEST, value);
+        return ByteBufUtil.hexDump(Protocol.encode(value));
     }
 
     private static <T extends Packet> DecodeException failure(Class<T> type, String hex) {
-        return assertThrows(DecodeException.class, () -> LATEST.decode(type, hex(hex)));
+        return assertThrows(DecodeException.class, () -> Protocol.decode(type, hex(hex)));
     }
 
     @Test
@@ -88,19 +80,19 @@ final class MessageTest {
 
     @Test
     void anUnknownEnumNumberDecodesToUnrecognized() {
-        PlayStatusPacket packet = LATEST.decode(PlayStatusPacket.class, hex("000003e7"));
+        PlayStatusPacket packet = Protocol.decode(PlayStatusPacket.class, hex("000003e7"));
         assertEquals(PlayStatus.UNRECOGNIZED, packet.getStatus());
     }
 
     @Test
     void anUnknownEnumNumberKeepsItsNumber() {
-        PlayStatusPacket packet = LATEST.decode(PlayStatusPacket.class, hex("000003e7"));
+        PlayStatusPacket packet = Protocol.decode(PlayStatusPacket.class, hex("000003e7"));
         assertEquals(999, packet.getStatusValue());
     }
 
     @Test
     void anUnknownEnumNumberReEncodesAsItself() {
-        assertEquals("000003e7", encoded(LATEST.decode(PlayStatusPacket.class, hex("000003e7"))));
+        assertEquals("000003e7", encoded(Protocol.decode(PlayStatusPacket.class, hex("000003e7"))));
     }
 
     @Test
@@ -110,7 +102,7 @@ final class MessageTest {
                 assertThrows(
                                 DecodeException.class,
                                 () ->
-                                        EARLY.decode(
+                                        Protocol.v729.decode(
                                                 PacketViolationWarningPacket.class,
                                                 hex("0000940500")))
                         .getMessage());
@@ -123,7 +115,7 @@ final class MessageTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        EARLY.encode(
+                                        Protocol.v729.encode(
                                                 PacketViolationWarningPacket.newBuilder()
                                                         .setViolatingPacketId(
                                                                 MinecraftPacketIds
@@ -136,19 +128,18 @@ final class MessageTest {
     void theLatestMolangVersionEncodesAsTheNumberItHasAtAnEarlyVersion() {
         assertEquals(
                 animate("0c000000"),
-                encodedAt(
-                        EARLY,
-                        AnimateEntityPacket.newBuilder()
-                                .setStopExpressionVersion(MolangVersion.LATEST)
-                                .build()));
+                ByteBufUtil.hexDump(
+                        Protocol.v729.encode(
+                                AnimateEntityPacket.newBuilder()
+                                        .setStopExpressionVersion(MolangVersion.LATEST)
+                                        .build())));
     }
 
     @Test
     void theLatestMolangVersionEncodesAsItselfAtTheLatestVersion() {
         assertEquals(
                 animate("0d000000"),
-                encodedAt(
-                        LATEST,
+                encoded(
                         AnimateEntityPacket.newBuilder()
                                 .setStopExpressionVersion(MolangVersion.LATEST)
                                 .build()));
@@ -157,7 +148,7 @@ final class MessageTest {
     @Test
     void aNumberThatAnEarlyVersionGivesAMemberDecodesToThatMembersValue() {
         AnimateEntityPacket packet =
-                EARLY.decode(AnimateEntityPacket.class, hex(animate("0d000000")));
+                Protocol.v729.decode(AnimateEntityPacket.class, hex(animate("0d000000")));
         assertEquals(14, packet.getStopExpressionVersionValue());
     }
 
@@ -168,7 +159,7 @@ final class MessageTest {
                 assertThrows(
                                 DecodeException.class,
                                 () ->
-                                        EARLY.decode(
+                                        Protocol.v729.decode(
                                                 AnimateEntityPacket.class,
                                                 hex(animate("0e000000"))))
                         .getMessage());
@@ -177,7 +168,7 @@ final class MessageTest {
     @Test
     void aNumberNoMemberHasAsItsValueDecodesToItselfAtAnEarlyVersion() {
         AnimateEntityPacket packet =
-                EARLY.decode(AnimateEntityPacket.class, hex(animate("88130000")));
+                Protocol.v729.decode(AnimateEntityPacket.class, hex(animate("88130000")));
         assertEquals(5000, packet.getStopExpressionVersionValue());
     }
 
@@ -185,28 +176,28 @@ final class MessageTest {
     void aNumberNoMemberHasAsItsValueEncodesAsItselfAtAnEarlyVersion() {
         assertEquals(
                 animate("88130000"),
-                encodedAt(
-                        EARLY,
-                        AnimateEntityPacket.newBuilder()
-                                .setStopExpressionVersionValue(5000)
-                                .build()));
+                ByteBufUtil.hexDump(
+                        Protocol.v729.encode(
+                                AnimateEntityPacket.newBuilder()
+                                        .setStopExpressionVersionValue(5000)
+                                        .build())));
     }
 
     @Test
     void theLatestCommandVersionEncodesAsItsNameAtAnEarlyVersion() {
         assertEquals(
                 "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
-                encodedAt(
-                        EARLY,
-                        CommandRequestPacket.newBuilder()
-                                .setVersion(CurrentCmdVersion.LATEST)
-                                .build()));
+                ByteBufUtil.hexDump(
+                        Protocol.v729.encode(
+                                CommandRequestPacket.newBuilder()
+                                        .setVersion(CurrentCmdVersion.LATEST)
+                                        .build())));
     }
 
     @Test
     void theNameLatestDecodesToTheMemberNumberedLikeItAtAnEarlyVersion() {
         CommandRequestPacket packet =
-                EARLY.decode(
+                Protocol.v729.decode(
                         CommandRequestPacket.class,
                         hex(
                                 "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"));
@@ -217,12 +208,12 @@ final class MessageTest {
     void theNameLatestEncodesAgainAfterItIsDecodedAtAnEarlyVersion() {
         assertEquals(
                 "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
-                encodedAt(
-                        EARLY,
-                        EARLY.decode(
-                                CommandRequestPacket.class,
-                                hex(
-                                        "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"))));
+                ByteBufUtil.hexDump(
+                        Protocol.v729.encode(
+                                Protocol.v729.decode(
+                                        CommandRequestPacket.class,
+                                        hex(
+                                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374")))));
     }
 
     @Test
@@ -232,7 +223,7 @@ final class MessageTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        EARLY.encode(
+                                        Protocol.v729.encode(
                                                 CommandRequestPacket.newBuilder()
                                                         .setVersion(
                                                                 CurrentCmdVersion
@@ -274,7 +265,7 @@ final class MessageTest {
     @Test
     void aGetterOnACompoundTagReturnsACopy() {
         AvailableActorIdentifiersPacket packet =
-                LATEST.decode(AvailableActorIdentifiersPacket.class, hex("0a0000"));
+                Protocol.decode(AvailableActorIdentifiersPacket.class, hex("0a0000"));
         CompoundTag copy = packet.getIdentifierList();
         copy.putInt("x", 1);
         assertFalse(packet.getIdentifierList().contains("x"));
