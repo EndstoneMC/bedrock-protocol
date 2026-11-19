@@ -261,5 +261,39 @@
    }
   },
   "bytes": "01000001000000003f0000803e0000003f0000003e0000803f77665544010001000000000001000100000000000000000206706c61696e7303746167"
+ },
+ {
+  "id": "capped_surface_with_every_optional_absent",
+  "value": {
+   "biome_data": [
+    {
+     "key": 0,
+     "value": {
+      "id": 1,
+      "temperature": 0.5,
+      "downfall": 0.25,
+      "foliage_snow": 0.5,
+      "depth": 0.125,
+      "scale": 1.0,
+      "map_water_color_argb": 1146447479,
+      "rain": true,
+      "chunk_gen_data": {
+       "has_default_overworld_surface": true,
+       "has_swamp_surface": false,
+       "has_frozen_ocean_surface": true,
+       "has_the_end_surface": false,
+       "capped_surface": {
+        "floor_blocks": [4220034033],
+        "ceiling_blocks": [3849244326]
+       }
+      }
+     }
+    }
+   ],
+   "string_list": {
+    "strings": ["plains", "tag"]
+   }
+  },
+  "bytes": "01000001000000003f0000803e0000003f0000003e0000803f77665544010001000000000001000100000101f19b88fb01a6ce6ee500000000000000000206706c61696e7303746167"
  }
 ]
