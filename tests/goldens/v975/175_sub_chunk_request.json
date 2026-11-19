@@ -1,0 +1,21 @@
+[
+ {
+  "id": "one_sub_chunk_offset",
+  "value": {
+   "dimension_type": 0,
+   "center_pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "sub_chunk_pos_offsets": [
+    {
+     "x": -1,
+     "y": 0,
+     "z": 1
+    }
+   ]
+  },
+  "bytes": "0002040601000000ff0001"
+ }
+]

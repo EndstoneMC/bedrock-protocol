@@ -1,0 +1,46 @@
+[
+ {
+  "id": "float_value_set",
+  "value": {
+   "keyframes": [
+    {
+     "key": 0.5,
+     "value": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
+    }
+   ],
+   "float_value": 0.25,
+   "biome_id": "plains",
+   "parameter_id": 13,
+   "reset_parameter": true
+  },
+  "bytes": "010000003f0000803f0000004000004040010000803e0006706c61696e730d01"
+ },
+ {
+  "id": "vec3_value_set",
+  "value": {
+   "keyframes": [
+    {
+     "key": 0.5,
+     "value": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
+    }
+   ],
+   "vec3_value": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "biome_id": "plains",
+   "parameter_id": 13,
+   "reset_parameter": true
+  },
+  "bytes": "010000003f0000803f00000040000040400001000080400000a0400000c04006706c61696e730d01"
+ }
+]

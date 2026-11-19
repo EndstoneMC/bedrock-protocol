@@ -1,0 +1,59 @@
+[
+ {
+  "id": "cursor_with_dynamic_id",
+  "value": {
+   "inventory_id": 12,
+   "slot": 3,
+   "full_container_name": {
+    "name": 59,
+    "dynamic_id": 3
+   },
+   "storage_item": {
+    "id": 0,
+    "stack_size": 0,
+    "aux_value": 0,
+    "block_runtime_id": 0,
+    "user_data_buffer": ""
+   },
+   "item": {
+    "id": 5,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id": {
+     "raw_id": 9
+    },
+    "block_runtime_id": 1921718966,
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+   }
+  },
+  "bytes": "0c033b0103000000000a0100000112ecead8a80e0a00000000000000000000"
+ },
+ {
+  "id": "cursor_without_dynamic_id",
+  "value": {
+   "inventory_id": 12,
+   "slot": 3,
+   "full_container_name": {
+    "name": 59
+   },
+   "storage_item": {
+    "id": 0,
+    "stack_size": 0,
+    "aux_value": 0,
+    "block_runtime_id": 0,
+    "user_data_buffer": ""
+   },
+   "item": {
+    "id": 5,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id": {
+     "raw_id": 9
+    },
+    "block_runtime_id": 1921718966,
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+   }
+  },
+  "bytes": "0c033b00000a0100000112ecead8a80e0a00000000000000000000"
+ }
+]

@@ -1,0 +1,14 @@
+[
+ {
+  "id": "graphics_mode_present",
+  "value": {
+   "graphics_mode": 3
+  },
+  "bytes": "0103"
+ },
+ {
+  "id": "graphics_mode_absent",
+  "value": {},
+  "bytes": "00"
+ }
+]

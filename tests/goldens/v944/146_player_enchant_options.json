@@ -1,0 +1,33 @@
+[
+ {
+  "id": "one_option_with_empty_enchant_slot",
+  "value": {
+   "options": [
+    {
+     "cost": 200,
+     "enchants": {
+      "slot": 2,
+      "item_enchants": [
+       [
+        {
+         "enchant_type": 9,
+         "level": 5
+        }
+       ],
+       [],
+       [
+        {
+         "enchant_type": 17,
+         "level": 3
+        }
+       ]
+      ]
+     },
+     "enchant_name": "imbue",
+     "enchant_net_id": 300
+    }
+   ]
+  },
+  "bytes": "01c801020000000109050001110305696d627565ac02"
+ }
+]

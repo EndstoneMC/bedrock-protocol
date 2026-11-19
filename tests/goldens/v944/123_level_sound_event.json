@@ -1,0 +1,19 @@
+[
+ {
+  "id": "level_sound_event",
+  "value": {
+   "event_id": 258,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "data": -1,
+   "actor_identifier": "minecraft:pig",
+   "is_baby": true,
+   "is_global": false,
+   "actor": 7
+  },
+  "bytes": "82020000803f0000004000004040010d6d696e6563726166743a70696701000700000000000000"
+ }
+]

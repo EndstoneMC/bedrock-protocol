@@ -1,0 +1,41 @@
+[
+ {
+  "id": "fire_at_position_present",
+  "value": {
+   "event_id": 258,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "data": -1,
+   "actor_identifier": "minecraft:pig",
+   "is_baby": true,
+   "is_global": false,
+   "actor": 7,
+   "fire_at_position": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   }
+  },
+  "bytes": "82020000803f0000004000004040010d6d696e6563726166743a7069670100070000000000000001000080400000a0400000c040"
+ },
+ {
+  "id": "fire_at_position_absent",
+  "value": {
+   "event_id": 258,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "data": -1,
+   "actor_identifier": "minecraft:pig",
+   "is_baby": true,
+   "is_global": false,
+   "actor": 7
+  },
+  "bytes": "82020000803f0000004000004040010d6d696e6563726166743a7069670100070000000000000000"
+ }
+]

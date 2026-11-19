@@ -1,0 +1,156 @@
+[
+ {
+  "id": "update_environment_attributes_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateEnvironmentAttributesData",
+    "layer_name": "wet",
+    "layer_dimension_id": 1,
+    "attributes": [
+     {
+      "name": "temp",
+      "attribute": {
+       "__class__": "BoolAttributeData",
+       "value": true,
+       "operation": "alpha_blend"
+      },
+      "current_transition_ticks": 1,
+      "total_transition_ticks": 20,
+      "easing": "in_quad"
+     }
+    ]
+   }
+  },
+  "bytes": "020377657402010474656d700000010b616c7068615f626c656e6400010000001400000007696e5f71756164"
+ },
+ {
+  "id": "update_attribute_layers_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateAttributeLayersData",
+    "attribute_layers": [
+     {
+      "name": "rain",
+      "dimension_id": 0,
+      "settings": {
+       "priority": 5,
+       "weight": 0.5,
+       "enabled": true,
+       "transitions_paused": false
+      },
+      "attributes": [
+       {
+        "name": "a",
+        "from_attribute": {
+         "__class__": "BoolAttributeData",
+         "value": true,
+         "operation": "xor"
+        },
+        "attribute": {
+         "__class__": "FloatAttributeData",
+         "value": 0.75,
+         "operation": "add",
+         "constraint_min_value": 0.5,
+         "constraint_max_value": 2.5
+        },
+        "to_attribute": {
+         "__class__": "ColorAttributeData",
+         "value": "#0a141eff",
+         "operation": "multiply"
+        },
+        "current_transition_ticks": 3,
+        "total_transition_ticks": 40,
+        "easing": "out_quad"
+       },
+       {
+        "name": "b",
+        "from_attribute": {
+         "__class__": "FloatAttributeData",
+         "value": 1.25,
+         "operation": "subtract"
+        },
+        "attribute": {
+         "__class__": "ColorAttributeData",
+         "value": "#0a141eff",
+         "operation": "multiply"
+        },
+        "to_attribute": {
+         "__class__": "BoolAttributeData",
+         "value": true,
+         "operation": "xor"
+        },
+        "current_transition_ticks": 3,
+        "total_transition_ticks": 40,
+        "easing": "out_quad"
+       },
+       {
+        "name": "c",
+        "from_attribute": {
+         "__class__": "ColorAttributeData",
+         "value": "#0a141eff",
+         "operation": "multiply"
+        },
+        "attribute": {
+         "__class__": "BoolAttributeData",
+         "value": true,
+         "operation": "xor"
+        },
+        "to_attribute": {
+         "__class__": "FloatAttributeData",
+         "value": 0.75,
+         "operation": "add",
+         "constraint_min_value": 0.5,
+         "constraint_max_value": 2.5
+        },
+        "current_transition_ticks": 3,
+        "total_transition_ticks": 40,
+        "easing": "out_quad"
+       }
+      ]
+     },
+     {
+      "name": "fog",
+      "dimension_id": 2,
+      "settings": {
+       "priority": -3,
+       "weight": "ab",
+       "enabled": false,
+       "transitions_paused": true
+      },
+      "attributes": []
+     }
+    ]
+   }
+  },
+  "bytes": "0002047261696e0005000000000000003f010003016101000103786f72010000403f03616464010000003f010000204001020a000000140000001e000000ff000000086d756c7469706c790300000028000000086f75745f71756164016201010000a03f0873756274726163740000020a000000140000001e000000ff000000086d756c7469706c7901000103786f720300000028000000086f75745f71756164016301020a000000140000001e000000ff000000086d756c7469706c79000103786f7201010000403f03616464010000003f01000020400300000028000000086f75745f7175616403666f6704fdffffff01026162000100"
+ },
+ {
+  "id": "update_attribute_layer_settings_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateAttributeLayerSettingsData",
+    "layer_name": "rain",
+    "layer_dimension_id": 0,
+    "attribute_layer_settings": {
+     "priority": 5,
+     "weight": 0.5,
+     "enabled": true,
+     "transitions_paused": false
+    }
+   }
+  },
+  "bytes": "01047261696e0005000000000000003f0100"
+ },
+ {
+  "id": "remove_environment_attributes_arm",
+  "value": {
+   "data": {
+    "__class__": "RemoveEnvironmentAttributesData",
+    "layer_name": "rain",
+    "layer_dimension_id": 1,
+    "attributes": ["a"]
+   }
+  },
+  "bytes": "03047261696e02010161"
+ }
+]

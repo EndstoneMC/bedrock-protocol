@@ -1,0 +1,16 @@
+[
+ {
+  "id": "play_sound",
+  "value": {
+   "name": "note.harp",
+   "pos": {
+    "x": 8,
+    "y": 16,
+    "z": 24
+   },
+   "volume": 0.5,
+   "pitch": 1.5
+  },
+  "bytes": "096e6f74652e686172701020300000003f0000c03f"
+ }
+]

@@ -1,0 +1,17 @@
+[
+ {
+  "id": "presence_configuration_present",
+  "value": {
+   "presence_configuration": {
+    "experience_name": "exp",
+    "world_name": "world"
+   }
+  },
+  "bytes": "010365787005776f726c64"
+ },
+ {
+  "id": "presence_configuration_absent",
+  "value": {},
+  "bytes": "00"
+ }
+]
