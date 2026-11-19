@@ -266,12 +266,14 @@ class TargetInstruction:
 class FovInstruction:
     fov: float
     fov_ease_time: float
-    fov_ease_type: EasingType = field(type=str)
+    fov_ease_type: EasingType = field(type=uint8, until=944)
+    fov_ease_type: EasingType = field(type=str, since=944)
     fov_clear: bool
 
 
 class AttachToEntityInstruction:
     attach_to_entity_id: ActorUniqueID = field(type=int64)
+    actor_locator: int32 = field(since=924, until=944)
 
 
 @type(until=924)
@@ -292,21 +294,22 @@ class SplineInstruction:
     class SplineProgressOption:
         progress_key_frame_value: float
         progress_key_frame_time: float
-        progress_key_frames_easing_func: EasingType = field(type=str)
+        progress_key_frames_easing_func: EasingType = field(type=uint8, until=944)
+        progress_key_frames_easing_func: EasingType = field(type=str, since=944)
 
     class SplineRotationOption:
         rotation_key_frame_value: Vec3
         rotation_key_frame_time: float
-        rotation_key_frames_easing_func: EasingType = field(type=str)
+        rotation_key_frames_easing_func: EasingType = field(type=uint8, until=944)
+        rotation_key_frames_easing_func: EasingType = field(type=str, since=944)
 
     total_time: float
     curve_type: SplineType
     curve: list[Vec3]
     progress_key_frames: list[SplineProgressOption]
     spline_rotation_option: list[SplineRotationOption]
-    with field(since=944):
-        spline_identifier: str
-        load_from_json: bool
+    spline_identifier: str
+    load_from_json: bool
 
 
 class CameraInstruction:
