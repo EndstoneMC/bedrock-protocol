@@ -1,0 +1,21 @@
+[
+ {
+  "id": "graphics_override_parameter",
+  "value": {
+   "keyframes": [
+    {
+     "key": 0.5,
+     "value": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     }
+    }
+   ],
+   "biome_id": "plains",
+   "parameter_id": 9,
+   "reset_parameter": true
+  },
+  "bytes": "010000003f0000803f000000400000404006706c61696e730901"
+ }
+]

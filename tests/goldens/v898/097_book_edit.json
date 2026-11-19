@@ -1,0 +1,62 @@
+[
+ {
+  "id": "replace_page",
+  "value": {
+   "action": 0,
+   "book_slot": 3,
+   "page_index": 2,
+   "swap_with_index": 0,
+   "page_text": "hello",
+   "photo_name": "photo.png",
+   "title": "",
+   "author": "",
+   "xuid": ""
+  },
+  "bytes": "0003020568656c6c6f0970686f746f2e706e67"
+ },
+ {
+  "id": "add_page",
+  "value": {
+   "action": 1,
+   "book_slot": 3,
+   "page_index": 2,
+   "swap_with_index": 0,
+   "page_text": "hello",
+   "photo_name": "photo.png",
+   "title": "",
+   "author": "",
+   "xuid": ""
+  },
+  "bytes": "0103020568656c6c6f0970686f746f2e706e67"
+ },
+ {
+  "id": "swap_pages",
+  "value": {
+   "action": 3,
+   "book_slot": 3,
+   "page_index": 1,
+   "swap_with_index": 2,
+   "page_text": "",
+   "photo_name": "",
+   "title": "",
+   "author": "",
+   "xuid": ""
+  },
+  "bytes": "03030102"
+ },
+ {
+  "id": "finalize",
+  "value": {
+   "action": 4,
+   "book_slot": 4,
+   "page_index": 0,
+   "swap_with_index": 0,
+   "page_text": "",
+   "photo_name": "",
+   "title": "Diary",
+   "author": "Steve",
+   "xuid": "2535465"
+  },
+  "bytes": "04040544696172790553746576650732353335343635"
+ }
+]

@@ -1,0 +1,53 @@
+[
+ {
+  "id": "update_change_and_removal_arms",
+  "value": {
+   "updates": [
+    {
+     "__class__": "DataStoreUpdate",
+     "data_store_name": "hud",
+     "property": "opacity",
+     "path": "slots",
+     "data": 0.5,
+     "update_count": 1
+    },
+    {
+     "__class__": "DataStoreChange",
+     "data_store_name": "form",
+     "property": "title",
+     "update_count": 7,
+     "new_data": "Chest"
+    },
+    {
+     "__class__": "DataStoreRemoval",
+     "data_store_name": "form"
+    }
+   ]
+  },
+  "bytes": "030003687564076f70616369747905736c6f747300000000000000e03f010000000104666f726d057469746c6507000000040000000543686573740204666f726d"
+ },
+ {
+  "id": "two_updates_with_bool_and_string_data",
+  "value": {
+   "updates": [
+    {
+     "__class__": "DataStoreUpdate",
+     "data_store_name": "hud",
+     "property": "visible",
+     "path": "slots",
+     "data": true,
+     "update_count": 2
+    },
+    {
+     "__class__": "DataStoreUpdate",
+     "data_store_name": "form",
+     "property": "title",
+     "path": "lines",
+     "data": "Chest",
+     "update_count": 4
+    }
+   ]
+  },
+  "bytes": "0200036875640776697369626c6505736c6f74730101020000000004666f726d057469746c65056c696e65730205436865737404000000"
+ }
+]
