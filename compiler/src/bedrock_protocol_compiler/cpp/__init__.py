@@ -24,14 +24,12 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         #include <type_traits>
         #include <variant>
 
-        #include $reflect$
-        #include $packet$
-        #include $serializer$
+        #include "$include_dir$/detail/reflect.hpp"
+        #include "$include_dir$/packet.hpp"
+        #include "$include_dir$/serializer.hpp"
 
         """,
-        reflect=names.runtime("detail/reflect"),
-        packet=names.runtime("packet"),
-        serializer=names.runtime("serializer"),
+        include_dir=names.INCLUDE_DIR,
     )
     for file in files:
         registry.emit("#include $header$", header=names.generated(file.module.stem))

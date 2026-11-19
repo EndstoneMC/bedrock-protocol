@@ -28,11 +28,8 @@ struct serialization_mode_t {
     explicit serialization_mode_t() = default;
 };
 
-using cereal_t = serialization_mode_t<SerializationMode::Cereal>;
-using manual_t = serialization_mode_t<SerializationMode::Manual>;
-
-inline constexpr cereal_t cereal{};
-inline constexpr manual_t manual{};
+inline constexpr serialization_mode_t<SerializationMode::Cereal> cereal{};
+inline constexpr serialization_mode_t<SerializationMode::Manual> manual{};
 
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 struct Serializer;

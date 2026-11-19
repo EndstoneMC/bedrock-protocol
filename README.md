@@ -87,7 +87,9 @@ assert(decoded && *decoded == packet);
 ```cpp
 std::optional<bp::Protocol> protocol = bp::protocol("1.26.63");
 assert(protocol && protocol == bp::protocol(2225));
-std::expected<bp::TextPacket, bp::DecodeError> picked = protocol->decode<bp::TextPacket>(*protocol->encode(packet));
+std::expected<std::string, bp::EncodeError> encoded = protocol->encode(packet);
+assert(encoded);
+std::expected<bp::TextPacket, bp::DecodeError> picked = protocol->decode<bp::TextPacket>(*encoded);
 assert(picked && *picked == packet);
 ```
 
