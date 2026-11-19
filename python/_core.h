@@ -66,7 +66,7 @@ struct Scope {
 [[noreturn]] void throw_encode_error(const EncodeError &error);
 
 void init_nbt(nb::module_ &parent);
-void init_versions(nb::module_ &parent);
+void init_versions(nb::module_ &core, nb::module_ &package);
 
 void init_types(nb::handle package, std::span<const Scope> bound);
 
@@ -92,11 +92,6 @@ inline constexpr SerializationMode implementation = [] {
     static_assert(count == 1 || since == V, "a serializer derives from no implementation");
     return count == 0 ? M : static_cast<SerializationMode>(std::ranges::find(found, true) - found.begin());
 }();
-
-template <typename T, int V>
-concept Packet = Reflected<T> && Serializable<T, V, SerializationMode::Default> && requires {
-    { T::Id } -> std::convertible_to<int>;
-};
 
 template <typename T, std::size_t I>
 using field_t = std::remove_cvref_t<decltype(field_get<I>(std::declval<T &>()))>;
@@ -125,10 +120,10 @@ template <typename T, int N, SerializationMode M>
 inline constexpr Codec codec{
     .encode =
         [](BinaryWriter &stream, nb::handle value) {
-            return protocol::encode<N>(*nb::inst_ptr<T>(value), stream, serialization_mode_t<M>());
+            return detail::encode_fn<N>{}(*nb::inst_ptr<T>(value), stream, detail::serialization_mode_t<M>());
         },
     .decode = [](BinaryReader &stream) -> nb::object {
-        auto value = protocol::decode<N, T>(stream, serialization_mode_t<M>());
+        auto value = detail::decode_fn<N, T>{}(stream, detail::serialization_mode_t<M>());
         if (!value) {
             throw_decode_error(value.error());
         }

@@ -23,19 +23,18 @@ class Protocol {
 public:
     [[nodiscard]] constexpr int version() const noexcept { return version_; }
 
-    template <Reflected T, SerializationMode M = SerializationMode::Default>
-    [[nodiscard]] auto encode(const T &value, serialization_mode_t<M> mode = serialization_mode_t<M>()) const
-        -> std::expected<std::string, EncodeError>
+    template <Reflected T>
+        requires requires { T::Id; }
+    [[nodiscard]] auto encode(const T &value) const -> std::expected<std::string, EncodeError>
     {
         std::string data;
         BinaryWriter writer{data};
-        return encode(value, writer, mode).transform([&] { return std::move(data); });
+        return encode(value, writer).transform([&] { return std::move(data); });
     }
 
-    template <Reflected T, SerializationMode M = SerializationMode::Default>
-    [[nodiscard]] auto encode(const T &value, BinaryWriter &stream,
-                              serialization_mode_t<M> mode = serialization_mode_t<M>()) const
-        -> std::expected<void, EncodeError>
+    template <Reflected T>
+        requires requires { T::Id; }
+    [[nodiscard]] auto encode(const T &value, BinaryWriter &stream) const -> std::expected<void, EncodeError>
     {
         std::expected<void, EncodeError> encoded = std::unexpected(EncodeError{
             .reason = Errc::unknown_type,
@@ -45,9 +44,9 @@ public:
         [&]<std::size_t... I>(std::index_sequence<I...>) {
             (
                 [&] {
-                    if constexpr (Serializable<T, versions[I], M>) {
+                    if constexpr (Packet<T, versions[I]>) {
                         if (version_ == versions[I]) {
-                            encoded = ::bedrock::protocol::encode<versions[I]>(value, stream, mode);
+                            encoded = ::bedrock::protocol::encode<versions[I]>(value, stream);
                         }
                     }
                 }(),
@@ -56,17 +55,17 @@ public:
         return encoded;
     }
 
-    template <Reflected T, SerializationMode M = SerializationMode::Default>
-    [[nodiscard]] auto decode(std::string_view data, serialization_mode_t<M> mode = serialization_mode_t<M>()) const
-        -> std::expected<T, DecodeError>
+    template <Reflected T>
+        requires requires { T::Id; }
+    [[nodiscard]] auto decode(std::string_view data) const -> std::expected<T, DecodeError>
     {
         BinaryReader reader{data};
-        return decode<T>(reader, mode);
+        return decode<T>(reader);
     }
 
-    template <Reflected T, SerializationMode M = SerializationMode::Default>
-    [[nodiscard]] auto decode(BinaryReader &stream, serialization_mode_t<M> mode = serialization_mode_t<M>()) const
-        -> std::expected<T, DecodeError>
+    template <Reflected T>
+        requires requires { T::Id; }
+    [[nodiscard]] auto decode(BinaryReader &stream) const -> std::expected<T, DecodeError>
     {
         std::expected<T, DecodeError> decoded = std::unexpected(DecodeError{
             .reason = Errc::unknown_type,
@@ -78,9 +77,9 @@ public:
         [&]<std::size_t... I>(std::index_sequence<I...>) {
             (
                 [&] {
-                    if constexpr (Serializable<T, versions[I], M>) {
+                    if constexpr (Packet<T, versions[I]>) {
                         if (version_ == versions[I]) {
-                            decoded = ::bedrock::protocol::decode<versions[I], T>(stream, mode);
+                            decoded = ::bedrock::protocol::decode<versions[I], T>(stream);
                         }
                     }
                 }(),

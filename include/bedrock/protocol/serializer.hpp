@@ -23,14 +23,6 @@ enum class SerializationMode : std::uint8_t {
     Manual = 2,
 };
 
-template <SerializationMode M>
-struct serialization_mode_t {
-    explicit serialization_mode_t() = default;
-};
-
-inline constexpr serialization_mode_t<SerializationMode::Cereal> cereal{};
-inline constexpr serialization_mode_t<SerializationMode::Manual> manual{};
-
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 struct Serializer;
 
@@ -38,6 +30,11 @@ template <typename T, int V, SerializationMode M = SerializationMode::Default>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
     { Serializer<T, V, M>::serialize(writer, value) } -> std::same_as<std::expected<void, Errc>>;
     { Serializer<T, V, M>::deserialize(reader) } -> std::same_as<std::expected<T, Errc>>;
+};
+
+template <typename T, int V>
+concept Packet = Reflected<T> && Serializable<T, V> && requires {
+    { T::Id } -> std::convertible_to<int>;
 };
 
 struct DecodeError {
@@ -55,6 +52,11 @@ struct EncodeError {
 };
 
 namespace detail {
+
+template <SerializationMode M>
+struct serialization_mode_t {
+    explicit serialization_mode_t() = default;
+};
 
 template <typename Out>
 auto formatPath(Out out, std::string_view type, const std::vector<PathSegment> &path) -> Out
@@ -131,13 +133,41 @@ struct decode_fn {
     }
 };
 
+template <int V>
+struct packet_encode_fn {
+    template <Packet<V> T>
+    [[nodiscard]] auto operator()(const T &packet, BinaryWriter &stream) const -> std::expected<void, EncodeError>
+    {
+        return encode_fn<V>{}(packet, stream);
+    }
+
+    template <Packet<V> T>
+    [[nodiscard]] auto operator()(const T &packet) const -> std::expected<std::string, EncodeError>
+    {
+        return encode_fn<V>{}(packet);
+    }
+};
+
+template <int V, Packet<V> T>
+struct packet_decode_fn {
+    [[nodiscard]] auto operator()(BinaryReader &stream) const -> std::expected<T, DecodeError>
+    {
+        return decode_fn<V, T>{}(stream);
+    }
+
+    [[nodiscard]] auto operator()(std::string_view data) const -> std::expected<T, DecodeError>
+    {
+        return decode_fn<V, T>{}(data);
+    }
+};
+
 }  // namespace detail
 
 template <int V>
-inline constexpr detail::encode_fn<V> encode{};
+inline constexpr detail::packet_encode_fn<V> encode{};
 
-template <int V, Reflected T>
-inline constexpr detail::decode_fn<V, T> decode{};
+template <int V, Packet<V> T>
+inline constexpr detail::packet_decode_fn<V, T> decode{};
 
 }  // namespace bedrock::protocol
 

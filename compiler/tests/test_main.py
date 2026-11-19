@@ -1134,7 +1134,7 @@ def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
     assert one == (
         "\n\ninline constexpr int version = 1;\n\n"
         "inline constexpr const auto &encode = ::bedrock::protocol::encode<version>;\n\n"
-        "template <::bedrock::protocol::Reflected T>\n"
+        "template <::bedrock::protocol::Packet<version> T>\n"
         "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;\n\n"
     )
 

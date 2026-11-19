@@ -68,7 +68,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
 
             inline constexpr const auto &encode = ::$namespace$::encode<version>;
 
-            template <::$namespace$::Reflected T>
+            template <::$namespace$::Packet<version> T>
             inline constexpr const auto &decode = ::$namespace$::decode<version, T>;
 
             }  // namespace v$number$

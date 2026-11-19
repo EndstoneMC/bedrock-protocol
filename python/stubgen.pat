@@ -8,14 +8,13 @@
     \import types
     packets: types.MappingProxyType[int, type]
 
-^bedrock_protocol\.v\d+\.encodings$:
+^bedrock_protocol\._core\.encodings$:
     \import types
-    encodings: types.MappingProxyType[type, int]
+    encodings: types.MappingProxyType[int, types.MappingProxyType[type, int]]
 
-^bedrock_protocol\.v\d+\.modes$:
+^bedrock_protocol\._core\.modes$:
     \import types
-    \import bedrock_protocol
-    modes: types.MappingProxyType[type, types.MappingProxyType[bedrock_protocol.SerializationMode, int]]
+    modes: types.MappingProxyType[int, types.MappingProxyType[type, types.MappingProxyType[SerializationMode, int]]]
 
 ^bedrock_protocol\.DecodeError\.__suffix__$:
     reason: str

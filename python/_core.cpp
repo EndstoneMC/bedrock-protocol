@@ -77,5 +77,5 @@ NB_MODULE(_core, m)
           nb::arg("release"), "The release entry whose range holds a three-part release.");
     auto package = nb::module_::import_("bedrock_protocol");
     bpy::init_nbt(package);
-    bpy::init_versions(package);
+    bpy::init_versions(m, package);
 }

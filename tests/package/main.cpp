@@ -1,3 +1,4 @@
+#include <concepts>
 #include <expected>
 #include <optional>
 #include <string>
@@ -5,6 +6,8 @@
 #include <bedrock/protocol.hpp>
 
 namespace bp = bedrock::protocol;
+
+static_assert(!std::invocable<decltype(bp::v2225::encode), const bp::Vec3 &>);
 
 int main()
 {
@@ -29,19 +32,5 @@ int main()
         return 1;
     }
     std::expected<bp::TextPacket, bp::DecodeError> picked = protocol->decode<bp::TextPacket>(*encoded);
-    if (!picked || *picked != packet) {
-        return 1;
-    }
-
-    const bp::GameRule rule{.name = "pvp", .can_be_modified_by_player = true, .value = true};
-    std::optional<bp::Protocol> oldest = bp::protocol(729);
-    if (!oldest) {
-        return 1;
-    }
-    std::expected<std::string, bp::EncodeError> manual = oldest->encode(rule, bp::manual);
-    if (!manual) {
-        return 1;
-    }
-    std::expected<bp::GameRule, bp::DecodeError> read = oldest->decode<bp::GameRule>(*manual, bp::manual);
-    return read && *read == rule ? 0 : 1;
+    return picked && *picked == packet ? 0 : 1;
 }

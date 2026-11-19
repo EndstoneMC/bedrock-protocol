@@ -51,3 +51,7 @@ def test_the_readme_lists_every_release():
     section = readme.split("## Supported Protocols")[1].split("\n## ")[0]
     rows = {int(number): text for number, text in re.findall(r"^\| (\d+) \| (.+) \|$", section, re.M)}
     assert rows == {entry.number: entry.name.replace("-", " to ") for entry in bedrock_protocol.releases}
+
+
+def test_a_protocol_holds_its_number(protocol):
+    assert protocol.__name__ == f"bedrock_protocol.v{protocol.VERSION}"

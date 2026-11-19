@@ -1532,7 +1532,7 @@ class ReflectionCtx:
         for family in MODEL.order:
             if isinstance(family, Struct) and (family, self.protocol) in self.live_structs:
                 result[self.bound(family)] = {
-                    bedrock_protocol.SerializationMode[mode.name]: encoding.since
+                    bedrock_protocol._core.SerializationMode[mode.name]: encoding.since
                     for encoding in MODEL.encodings(MODEL.model_at(family, self.protocol))
                     for mode, runs in encoding.served.items()
                     if any(run.contains(self.protocol) for run in runs)

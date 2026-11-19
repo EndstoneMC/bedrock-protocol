@@ -3,6 +3,8 @@ import importlib
 import pytest
 
 import bedrock_protocol
+from bedrock_protocol import _core
+from bedrock_protocol._core import SerializationMode
 
 versions = [importlib.import_module(f"bedrock_protocol.v{version}") for version in bedrock_protocol.versions]
 
@@ -11,7 +13,7 @@ packets = [(m, cls) for m in versions for cls in m.packets.values()]
 
 SERIALIZABLE = {}
 for module in versions:
-    for cls, modes in module.modes.items():
+    for cls, modes in _core.modes[module.VERSION].items():
         for mode, since in modes.items():
             SERIALIZABLE.setdefault((cls, mode, since), (module, cls, mode, f"{module.__name__}.{cls.__qualname__}"))
 
@@ -41,7 +43,7 @@ VALUES = [
         cls,
         mode,
         marks=gap(path),
-        id=path if mode == bedrock_protocol.SerializationMode.DEFAULT else f"{path}-{mode.name.lower()}",
+        id=path if mode == SerializationMode.DEFAULT else f"{path}-{mode.name.lower()}",
     )
     for module, cls, mode, path in SERIALIZABLE.values()
 ]
@@ -60,10 +62,11 @@ def test_a_default_packet_round_trips_at_every_protocol_that_has_it(module, cls)
 @pytest.mark.parametrize(("module", "cls", "mode"), VALUES)
 def test_a_default_value_decodes_to_itself(module, cls, mode):
     value = cls()
-    assert module.decode(cls, module.encode(value, mode=mode), mode=mode) == value
+    data = _core.encode(module.VERSION, value, mode=mode)
+    assert _core.decode(module.VERSION, cls, data, mode=mode) == value
 
 
 @pytest.mark.parametrize(("module", "cls", "mode"), VALUES)
 def test_a_default_value_encodes_again_to_the_same_bytes(module, cls, mode):
-    data = module.encode(cls(), mode=mode)
-    assert module.encode(module.decode(cls, data, mode=mode), mode=mode) == data
+    data = _core.encode(module.VERSION, cls(), mode=mode)
+    assert _core.encode(module.VERSION, _core.decode(module.VERSION, cls, data, mode=mode), mode=mode) == data
