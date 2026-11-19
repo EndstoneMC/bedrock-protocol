@@ -12,6 +12,7 @@ paths:
 - In a test, catch only the `InvocationTargetException` a reflective call wraps a rejection in, and rethrow every cause it does not handle.
 - Create a `DecodeException` through its factories (`truncated`, `outOfRange`, `unknownValue`, `trailingBytes`), as protobuf's `InvalidProtocolBufferException` does; it carries no reason enum.
 - Carry the partly decoded message on a `DecodeException`, as protobuf's `setUnfinishedMessage` does: a generated decode sets what its builder holds at the catch that prepends the field, so the outermost message wins.
+- Stamp a `DecodeException` at every `ByteBufCodec.decode` it leaves: the innermost names its type, and the outermost sets its length and the start its offset counts from.
 - Never put encoded text in an exception message.
 - Declare every class `final`.
 - Annotate every public and protected reference parameter, return and field `org.jetbrains.annotations.NotNull`, or `Nullable` where null is allowed, and add no `package-info.java` for nullness.
@@ -38,10 +39,13 @@ paths:
 - Check a value on encode only where its encoding is narrower than its field, throwing `IllegalArgumentException` naming the field and the value for one whose cast back differs.
 - Encode and decode a name-coded enum whose names change between protocols with the protocol; encoding a value with no name there throws `IllegalArgumentException`.
 - Emit a name ranked after another on a shared value as a `public static final` alias of the newest-live constant, which `forNumber` returns.
-- Generate `v<N>.Packets` with `encode(packet, buf)` and `decode(packetId, buf)` for every modelled version and a bare `ProtocolVersion` mirroring the C++ `version.hpp` with `encodePacket` and `decodePacket`, and no bare `Packets`.
+- Generate a bare `ProtocolVersion` mirroring the C++ `version.hpp`, and a bare enum `Protocol` with a lower-case constant `v<N>` per modelled protocol in ascending order, `version()` and `of` through the release table, mirroring the Python module `bedrock_protocol.v<N>` in `encode`, `decode`, `encodePacket` and `decodePacket`, each over a `byte[]` and a `ByteBuf`, with the mode and the sub ids as optional trailing arguments.
+- Reach a type in `Protocol` through its `codec(version, mode)` from one registry of every class with a selector, and a packet id through its protocol's packet table; reject a class the registry lacks as a selector does, `<class>: is not a type at protocol <N>`, and a packet its table lacks as `packet: <class> is not a packet at protocol <N>`.
+- Hold `Protocol`'s class registry in a private holder class, so the first `encode` or `decode` builds it, never `of` or `version()`.
+- Release the `Unpooled` buffer a `byte[]` overload encodes into in a `finally`.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
-- Check every golden in `GoldensTest` both ways through `ProtocolVersion.encodePacket` and `decodePacket` at the case's protocol and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
+- Check every golden in `GoldensTest` both ways through `Protocol` at the case's protocol, finding its class by `decodePacket` of its bytes behind a header of its file's packet id, and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
 - Anchor an emitted-text assertion in `test_java.py` on its full indentation.
 - Test in JUnit 6 under `.claude/rules/tests.md`: a behaviour-named method, one behaviour each, no loop, `if` or `try`, `assertThrows` with the message, `@ParameterizedTest` with `argumentSet` for cases, no mocks.

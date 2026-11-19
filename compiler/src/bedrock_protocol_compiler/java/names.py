@@ -10,6 +10,7 @@ LIBRARIES = {
     "BitSet": "java.util.BitSet",
     "Collections": "java.util.Collections",
     "Comparator": "java.util.Comparator",
+    "HashMap": "java.util.HashMap",
     "List": "java.util.List",
     "Locale": "java.util.Locale",
     "Map": "java.util.Map",
@@ -17,19 +18,32 @@ LIBRARIES = {
     "Optional": "java.util.Optional",
     "SortedMap": "java.util.SortedMap",
     "TreeMap": "java.util.TreeMap",
+    "IntFunction": "java.util.function.IntFunction",
     "ByteBuf": "io.netty.buffer.ByteBuf",
+    "ByteBufUtil": "io.netty.buffer.ByteBufUtil",
+    "Unpooled": "io.netty.buffer.Unpooled",
     "NotNull": "org.jetbrains.annotations.NotNull",
     "Nullable": "org.jetbrains.annotations.Nullable",
 }
 MODE = "SerializationMode"
-RUNTIME = ("ByteBufCodec", "Codec", "DecodeException", "Decoder", "Message", "Packet", "PacketHeader", MODE)
+RUNTIME = (
+    "ByteBufCodec",
+    "Codec",
+    "DecodeException",
+    "DecodedPacket",
+    "Decoder",
+    "Message",
+    "Packet",
+    "PacketHeader",
+    MODE,
+)
 JAVA_LANG = (
     "Boolean",
+    "Class",
     "Deprecated",
     "Double",
     "Float",
     "IllegalArgumentException",
-    "IllegalStateException",
     "Integer",
     "Iterable",
     "Long",
@@ -52,8 +66,8 @@ OBJECT_METHODS = (
 )
 OBJECT = "java.lang.Object"
 BUILDER = "Builder"
-REGISTRY = "Packets"
 VERSION = "ProtocolVersion"
+PROTOCOL = "Protocol"
 INTERNAL = "internal"
 CODEC = "Codec"
 ATOM = re.compile(r"[\w.]+(?:\([^()]*\))?")
@@ -119,10 +133,6 @@ def bounds(since: int | None, until: int | None, variable: str = "version") -> l
 def codec(encoding: Encoding) -> str:
     suffix = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
     return f"{CODEC}{encoding.since}{suffix}"
-
-
-def registry(schema: Schema, version: int) -> str:
-    return f"{schema.java_package}.v{version}"
 
 
 def path(package_name: str, name: str) -> str:

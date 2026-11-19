@@ -46,20 +46,6 @@ def table(schema: Schema, p: Printer) -> None:
                 return Optional.empty();
             }
 
-            public void encodePacket(@NotNull Packet packet, @NotNull ByteBuf buf) {
-                switch (snapshot) {
-                    $encodes$
-                    default -> throw new IllegalStateException($unknown$ + snapshot);
-                }
-            }
-
-            public @NotNull Packet decodePacket(int packetId, @NotNull ByteBuf buf) {
-                return switch (snapshot) {
-                    $decodes$
-                    default -> throw new IllegalStateException($unknown$ + snapshot);
-                };
-            }
-
             private static int @Nullable [] parse(@NotNull String text) {
                 int[] parts = new int[3];
                 int cursor = 0;
@@ -98,9 +84,6 @@ def table(schema: Schema, p: Printer) -> None:
         versions=", ".join(map(str, schema.versions)),
         latest=schema.latest,
         releases=lambda: releases(schema, p),
-        encodes=lambda: cases(schema, p, "encode(packet, buf)"),
-        decodes=lambda: cases(schema, p, "decode(packetId, buf)"),
-        unknown=json.dumps(f"{names.VERSION}: no packet registry for snapshot "),
     )
 
 
@@ -115,15 +98,4 @@ def releases(schema: Schema, p: Printer) -> None:
             first=json.dumps(release.first),
             last=json.dumps(release.last),
             end="," if index < len(schema.releases) else ");",
-        )
-
-
-def cases(schema: Schema, p: Printer, call: str) -> None:
-    for version in schema.versions:
-        p.emit(
-            "case $version$ -> $registry$.$name$.$call$;",
-            version=version,
-            registry=names.registry(schema, version),
-            name=names.REGISTRY,
-            call=call,
         )

@@ -12,40 +12,36 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
 final class MessageTest {
-    private static final ProtocolVersion LATEST =
-            ProtocolVersion.of(ProtocolVersion.LATEST_VERSION).orElseThrow();
+    private static final Protocol LATEST =
+            Protocol.of(ProtocolVersion.LATEST_VERSION).orElseThrow();
 
-    private static final ProtocolVersion EARLY = ProtocolVersion.of(729).orElseThrow();
+    private static final Protocol EARLY = Protocol.v729;
 
     private static String animate(String version) {
         return "000000" + version + "00" + "00000000" + "00";
     }
 
-    private static String encodedAt(ProtocolVersion version, Packet packet) {
-        ByteBuf buf = Unpooled.buffer();
-        version.encodePacket(packet, buf);
-        return ByteBufUtil.hexDump(buf);
+    private static String encodedAt(Protocol protocol, Message value) {
+        return ByteBufUtil.hexDump(protocol.encode(value));
     }
 
-    private static ByteBuf hex(String hex) {
-        return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
+    private static byte[] hex(String hex) {
+        return ByteBufUtil.decodeHexDump(hex);
     }
 
-    private static String encoded(Packet packet) {
-        ByteBuf buf = Unpooled.buffer();
-        LATEST.encodePacket(packet, buf);
-        return ByteBufUtil.hexDump(buf);
+    private static String encoded(Message value) {
+        return encodedAt(LATEST, value);
     }
 
-    private static DecodeException failure(int packetId, String hex) {
-        return assertThrows(DecodeException.class, () -> LATEST.decodePacket(packetId, hex(hex)));
+    private static <T extends Message> DecodeException failure(Class<T> type, String hex) {
+        return assertThrows(DecodeException.class, () -> LATEST.decode(type, hex(hex)));
     }
 
     @Test
     void truncatedInputNamesTheFieldThatFailed() {
         assertEquals(
                 "ToastRequestPacket.content: truncated at byte 3 of 3",
-                failure(ToastRequestPacket.ID, "026162").getMessage());
+                failure(ToastRequestPacket.class, "026162").getMessage());
     }
 
     @Test
@@ -53,7 +49,7 @@ final class MessageTest {
         ToastRequestPacket unfinished =
                 assertInstanceOf(
                         ToastRequestPacket.class,
-                        failure(ToastRequestPacket.ID, "026162").getUnfinishedMessage());
+                        failure(ToastRequestPacket.class, "026162").getUnfinishedMessage());
         assertEquals("ab", unfinished.getTitle());
     }
 
@@ -62,7 +58,7 @@ final class MessageTest {
         ToastRequestPacket unfinished =
                 assertInstanceOf(
                         ToastRequestPacket.class,
-                        failure(ToastRequestPacket.ID, "026162").getUnfinishedMessage());
+                        failure(ToastRequestPacket.class, "026162").getUnfinishedMessage());
         assertEquals("", unfinished.getContent());
     }
 
@@ -79,7 +75,7 @@ final class MessageTest {
     void anUnknownUnionIndexIsAnUnknownValue() {
         assertEquals(
                 "TextPacket.body: unknown value at byte 2 of 2",
-                failure(TextPacket.ID, "0009").getMessage());
+                failure(TextPacket.class, "0009").getMessage());
     }
 
     @Test
@@ -93,26 +89,19 @@ final class MessageTest {
 
     @Test
     void anUnknownEnumNumberDecodesToUnrecognized() {
-        PlayStatusPacket packet =
-                assertInstanceOf(
-                        PlayStatusPacket.class,
-                        LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7")));
+        PlayStatusPacket packet = LATEST.decode(PlayStatusPacket.class, hex("000003e7"));
         assertEquals(PlayStatus.UNRECOGNIZED, packet.getStatus());
     }
 
     @Test
     void anUnknownEnumNumberKeepsItsNumber() {
-        PlayStatusPacket packet =
-                assertInstanceOf(
-                        PlayStatusPacket.class,
-                        LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7")));
+        PlayStatusPacket packet = LATEST.decode(PlayStatusPacket.class, hex("000003e7"));
         assertEquals(999, packet.getStatusValue());
     }
 
     @Test
     void anUnknownEnumNumberReEncodesAsItself() {
-        assertEquals(
-                "000003e7", encoded(LATEST.decodePacket(PlayStatusPacket.ID, hex("000003e7"))));
+        assertEquals("000003e7", encoded(LATEST.decode(PlayStatusPacket.class, hex("000003e7"))));
     }
 
     @Test
@@ -122,8 +111,9 @@ final class MessageTest {
                 assertThrows(
                                 DecodeException.class,
                                 () ->
-                                        EARLY.decodePacket(
-                                                PacketViolationWarningPacket.ID, hex("0000940500")))
+                                        EARLY.decode(
+                                                PacketViolationWarningPacket.class,
+                                                hex("0000940500")))
                         .getMessage());
     }
 
@@ -134,13 +124,12 @@ final class MessageTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        EARLY.encodePacket(
+                                        EARLY.encode(
                                                 PacketViolationWarningPacket.newBuilder()
                                                         .setViolatingPacketId(
                                                                 MinecraftPacketIds
                                                                         .CLIENTBOUND_DATA_STORE)
-                                                        .build(),
-                                                Unpooled.buffer()))
+                                                        .build()))
                         .getMessage());
     }
 
@@ -169,9 +158,7 @@ final class MessageTest {
     @Test
     void aNumberThatAnEarlyVersionGivesAMemberDecodesToThatMembersValue() {
         AnimateEntityPacket packet =
-                assertInstanceOf(
-                        AnimateEntityPacket.class,
-                        EARLY.decodePacket(AnimateEntityPacket.ID, hex(animate("0d000000"))));
+                EARLY.decode(AnimateEntityPacket.class, hex(animate("0d000000")));
         assertEquals(14, packet.getStopExpressionVersionValue());
     }
 
@@ -182,17 +169,16 @@ final class MessageTest {
                 assertThrows(
                                 DecodeException.class,
                                 () ->
-                                        EARLY.decodePacket(
-                                                AnimateEntityPacket.ID, hex(animate("0e000000"))))
+                                        EARLY.decode(
+                                                AnimateEntityPacket.class,
+                                                hex(animate("0e000000"))))
                         .getMessage());
     }
 
     @Test
     void aNumberNoMemberHasAsItsValueDecodesToItselfAtAnEarlyVersion() {
         AnimateEntityPacket packet =
-                assertInstanceOf(
-                        AnimateEntityPacket.class,
-                        EARLY.decodePacket(AnimateEntityPacket.ID, hex(animate("88130000"))));
+                EARLY.decode(AnimateEntityPacket.class, hex(animate("88130000")));
         assertEquals(5000, packet.getStopExpressionVersionValue());
     }
 
@@ -221,12 +207,10 @@ final class MessageTest {
     @Test
     void theNameLatestDecodesToTheMemberNumberedLikeItAtAnEarlyVersion() {
         CommandRequestPacket packet =
-                assertInstanceOf(
+                EARLY.decode(
                         CommandRequestPacket.class,
-                        EARLY.decodePacket(
-                                CommandRequestPacket.ID,
-                                hex(
-                                        "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374")));
+                        hex(
+                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"));
         assertEquals(CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT, packet.getVersion());
     }
 
@@ -236,8 +220,8 @@ final class MessageTest {
                 "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
                 encodedAt(
                         EARLY,
-                        EARLY.decodePacket(
-                                CommandRequestPacket.ID,
+                        EARLY.decode(
+                                CommandRequestPacket.class,
                                 hex(
                                         "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"))));
     }
@@ -249,13 +233,12 @@ final class MessageTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        EARLY.encodePacket(
+                                        EARLY.encode(
                                                 CommandRequestPacket.newBuilder()
                                                         .setVersion(
                                                                 CurrentCmdVersion
                                                                         .PLAY_SOUND_OUTPUT_FIX)
-                                                        .build(),
-                                                Unpooled.buffer()))
+                                                        .build()))
                         .getMessage());
     }
 
@@ -292,18 +275,9 @@ final class MessageTest {
     @Test
     void aGetterOnACompoundTagReturnsACopy() {
         AvailableActorIdentifiersPacket packet =
-                assertInstanceOf(
-                        AvailableActorIdentifiersPacket.class,
-                        LATEST.decodePacket(AvailableActorIdentifiersPacket.ID, hex("0a0000")));
+                LATEST.decode(AvailableActorIdentifiersPacket.class, hex("0a0000"));
         CompoundTag copy = packet.getIdentifierList();
         copy.putInt("x", 1);
         assertFalse(packet.getIdentifierList().contains("x"));
-    }
-
-    @Test
-    void anUnknownPacketIdIsAnUnknownValue() {
-        assertEquals(
-                "PacketHeader.packet_id: unknown value at byte 0 of 2",
-                failure(1023, "0000").getMessage());
     }
 }

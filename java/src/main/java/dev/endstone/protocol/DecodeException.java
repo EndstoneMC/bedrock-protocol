@@ -15,6 +15,7 @@ public final class DecodeException extends RuntimeException {
     private final ArrayList<Object> path = new ArrayList<>();
     private String type = "";
     private int offset;
+    private int start;
     private int length;
     private transient @Nullable Message unfinishedMessage;
 
@@ -57,9 +58,11 @@ public final class DecodeException extends RuntimeException {
         return this;
     }
 
-    void stamp(String type, int offset, int length) {
-        this.type = type;
-        this.offset = offset;
+    void stamp(String type, int start, int length) {
+        if (this.type.isEmpty()) {
+            this.type = type;
+        }
+        this.start = start;
         this.length = length;
     }
 
@@ -77,12 +80,12 @@ public final class DecodeException extends RuntimeException {
         return Collections.unmodifiableList(path);
     }
 
-    /** Bytes from the first byte decode was handed. */
+    /** Bytes from the first byte the outermost decode was handed. */
     public int getOffset() {
-        return offset;
+        return offset - start;
     }
 
-    /** Bytes decode was handed. */
+    /** Bytes the outermost decode was handed. */
     public int getLength() {
         return length;
     }
@@ -100,7 +103,7 @@ public final class DecodeException extends RuntimeException {
         return message.append(": ")
                 .append(reason)
                 .append(" at byte ")
-                .append(offset)
+                .append(getOffset())
                 .append(" of ")
                 .append(length)
                 .toString();

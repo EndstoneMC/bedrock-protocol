@@ -60,19 +60,14 @@ def emitted(java):
 def test_java_out_writes_a_file_per_top_level_model(java):
     root = java(SCALAR + "class S:\n    class N:\n        x: uint8\n    n: N\n")
 
-    assert {path.name for path in root.glob("*.java")} - {"ProtocolVersion.java"} == {"P.java", "S.java"}
+    assert {path.name for path in root.glob("*.java")} - {"Protocol.java", "ProtocolVersion.java"} == {
+        "P.java",
+        "S.java",
+    }
 
 
-def test_java_out_writes_a_registry_per_version(java):
-    root = java(SCALAR)
-
-    assert sorted(path.relative_to(root).as_posix() for path in root.glob("v*/Packets.java")) == [
-        "v1/Packets.java",
-        "v2/Packets.java",
-        "v3/Packets.java",
-        "v4/Packets.java",
-        "v5/Packets.java",
-    ]
+def test_java_out_writes_the_protocol_enum(java):
+    assert (java(SCALAR) / "Protocol.java").is_file()
 
 
 def test_java_out_writes_the_version_table(java):
@@ -556,53 +551,83 @@ def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_the_registry_decodes_each_live_packet_by_id(java):
-    text = (java(SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n") / "v2/Packets.java").read_text()
-
-    cases = (
-        '            case 3 -> ByteBufCodec.decode(buf, "Q", dev.endstone.protocol.Q.Codec2.INSTANCE);\n'
-        '            case 7 -> ByteBufCodec.decode(buf, "P", dev.endstone.protocol.P.Codec1.INSTANCE);\n'
+def test_the_protocol_enum_has_a_constant_per_version_in_ascending_order(emitted):
+    constants = (
+        "public enum Protocol {\n"
+        "    v1(1, Protocol::packets1),\n"
+        "    v2(2, Protocol::packets2),\n"
+        "    v3(3, Protocol::packets3),\n"
+        "    v4(4, Protocol::packets4),\n"
+        "    v5(5, Protocol::packets5);\n"
     )
-    assert cases in text
+
+    assert constants in emitted(SCALAR, "Protocol.java")
 
 
-def test_the_registry_encodes_each_live_packet_with_its_codec(java):
-    text = (java(SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n") / "v2/Packets.java").read_text()
+LATER_PACKET = SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n"
 
-    cases = (
-        "            case dev.endstone.protocol.Q value -> "
-        "dev.endstone.protocol.Q.Codec2.INSTANCE.encode(value, buf);\n"
-        "            case dev.endstone.protocol.P value -> "
-        "dev.endstone.protocol.P.Codec1.INSTANCE.encode(value, buf);\n"
+
+def test_a_protocols_packet_table_maps_each_live_packet_id_to_its_class(emitted):
+    table = (
+        "    private static @Nullable Class<? extends Packet> packets2(int packetId) {\n"
+        "        return switch (packetId) {\n"
+        "            case 3 -> dev.endstone.protocol.Q.class;\n"
+        "            case 7 -> dev.endstone.protocol.P.class;\n"
+        "            default -> null;\n"
     )
-    assert cases in text
+
+    assert table in emitted(LATER_PACKET, "Protocol.java")
 
 
-def test_the_registry_rejects_a_packet_its_protocol_lacks(java):
-    text = (java(SCALAR) / "v2/Packets.java").read_text()
-
-    default = (
-        '            default -> throw new IllegalArgumentException("packet: " + packet.getClass().getName() + '
-        '" is not a packet at protocol 2");\n'
+def test_a_protocols_packet_table_leaves_out_a_packet_its_protocol_lacks(emitted):
+    table = (
+        "    private static @Nullable Class<? extends Packet> packets1(int packetId) {\n"
+        "        return switch (packetId) {\n"
+        "            case 7 -> dev.endstone.protocol.P.class;\n"
+        "            default -> null;\n"
     )
-    assert default in text
+
+    assert table in emitted(LATER_PACKET, "Protocol.java")
 
 
-def test_the_registry_leaves_out_a_packet_its_protocol_lacks(java):
-    text = (java(SCALAR + "@packet(id=3, until=4)\nclass Q:\n    x: uint8\n") / "v5/Packets.java").read_text()
-
-    assert "Q" not in text
-
-
-def test_the_registry_stamps_an_unknown_packet_id_as_the_packet_header(java):
-    text = (java(SCALAR) / "v2/Packets.java").read_text()
-
-    default = (
-        '            default -> ByteBufCodec.decode(buf, "PacketHeader", body -> {\n'
-        '                throw DecodeException.unknownValue(body.readerIndex()).prepend("packet_id");\n'
-        "            });\n"
+def test_the_registrations_sit_in_a_holder_class(emitted):
+    holder = (
+        "    private static final class Registry {\n"
+        "        private static final @NotNull Map<Class<? extends Message>, Registration<?>> TYPES"
+        " = new HashMap<>();\n"
+        "\n"
+        "        static {\n"
+        '            register(dev.endstone.protocol.P.class, "P", dev.endstone.protocol.P::codec);\n'
+        "        }\n"
     )
-    assert default in text
+
+    assert holder in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_registry_holds_a_nested_type_under_its_nested_name(emitted):
+    registration = '            register(dev.endstone.protocol.S.N.class, "S.N", dev.endstone.protocol.S.N::codec);\n'
+
+    assert registration in emitted("class S:\n    class N:\n        x: uint8\n    n: N\n", "Protocol.java")
+
+
+def test_the_registry_leaves_out_a_union_wrapper(emitted):
+    registrations = (
+        "        static {\n"
+        '            register(dev.endstone.protocol.P.class, "P", dev.endstone.protocol.P::codec);\n'
+        "        }\n"
+    )
+
+    assert registrations in emitted("class P:\n    v: list[uint8 | str]\n", "Protocol.java")
+
+
+def test_the_registry_leaves_out_a_model_with_no_codecs(emitted):
+    registrations = (
+        "        static {\n"
+        '            register(dev.endstone.protocol.P.N.class, "P.N", dev.endstone.protocol.P.N::codec);\n'
+        "        }\n"
+    )
+
+    assert registrations in emitted("class P:\n    class N:\n        x: uint8\n", "Protocol.java")
 
 
 def test_the_version_table_lists_the_versions(java):
@@ -632,36 +657,6 @@ def test_a_release_takes_the_newest_version_at_or_below_its_number_as_its_snapsh
         '            new ProtocolVersion(5, 5, "1.5.x", "1.5.0", "1.5.9"));\n'
     )
     assert releases in text
-
-
-def test_a_version_decodes_a_packet_with_the_registry_of_its_snapshot(java):
-    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
-
-    cases = (
-        "        return switch (snapshot) {\n"
-        "            case 1 -> dev.endstone.protocol.v1.Packets.decode(packetId, buf);\n"
-        "            case 2 -> dev.endstone.protocol.v2.Packets.decode(packetId, buf);\n"
-        "            case 3 -> dev.endstone.protocol.v3.Packets.decode(packetId, buf);\n"
-        "            case 4 -> dev.endstone.protocol.v4.Packets.decode(packetId, buf);\n"
-        "            case 5 -> dev.endstone.protocol.v5.Packets.decode(packetId, buf);\n"
-        "            default -> throw new IllegalStateException("
-    )
-    assert cases in text
-
-
-def test_a_version_encodes_a_packet_with_the_registry_of_its_snapshot(java):
-    text = (java(SCALAR) / "ProtocolVersion.java").read_text()
-
-    cases = (
-        "        switch (snapshot) {\n"
-        "            case 1 -> dev.endstone.protocol.v1.Packets.encode(packet, buf);\n"
-        "            case 2 -> dev.endstone.protocol.v2.Packets.encode(packet, buf);\n"
-        "            case 3 -> dev.endstone.protocol.v3.Packets.encode(packet, buf);\n"
-        "            case 4 -> dev.endstone.protocol.v4.Packets.encode(packet, buf);\n"
-        "            case 5 -> dev.endstone.protocol.v5.Packets.encode(packet, buf);\n"
-        "            default -> throw new IllegalStateException("
-    )
-    assert cases in text
 
 
 def test_a_release_name_is_matched_between_first_and_last(java):
@@ -695,10 +690,10 @@ def test_a_model_named_like_the_version_table_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_model_named_like_the_registry_is_a_compiler_error(build_package, tmp_path):
-    build_package({"a": HEADER + "class Packets:\n    x: uint8\n"})
+def test_a_model_named_like_the_protocol_enum_is_a_compiler_error(build_package, tmp_path):
+    build_package({"a": HEADER + "class Protocol:\n    x: uint8\n"})
 
-    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Packets: has the name of the packet registries"):
+    with pytest.raises(SystemExit, match=r"dev\.endstone\.protocol\.Protocol: is the protocol enum$"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 

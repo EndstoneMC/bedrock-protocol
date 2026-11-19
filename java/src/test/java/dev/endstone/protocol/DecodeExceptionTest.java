@@ -49,7 +49,7 @@ final class DecodeExceptionTest {
     @MethodSource("factories")
     void eachFactorySpellsItsReasonInTheMessage(IntFunction<DecodeException> factory, String text) {
         DecodeException error = factory.apply(2);
-        error.stamp("T", 2, 5);
+        error.stamp("T", 0, 5);
         assertEquals("T: " + text + " at byte 2 of 5", error.getMessage());
     }
 
@@ -63,14 +63,14 @@ final class DecodeExceptionTest {
     @Test
     void prependsLeaveThePathOuterFirst() {
         DecodeException error = DecodeException.outOfRange(7).prepend("b").prepend(3).prepend("a");
-        error.stamp("Type", 7, 9);
+        error.stamp("Type", 0, 9);
         assertEquals(List.of("a", 3, "b"), error.getPath());
     }
 
     @Test
     void messageRendersThePathWithBracketedIndexes() {
         DecodeException error = DecodeException.outOfRange(7).prepend("b").prepend(3).prepend("a");
-        error.stamp("Type", 7, 9);
+        error.stamp("Type", 0, 9);
         assertEquals("Type.a[3].b: out of range at byte 7 of 9", error.getMessage());
     }
 
@@ -82,12 +82,48 @@ final class DecodeExceptionTest {
     }
 
     @Test
-    void stampReplacesTheOffsetAndRecordsTheLength() {
+    void stampRecordsTheType() {
         DecodeException error = DecodeException.truncated(10);
         error.stamp("Type", 4, 12);
-        assertEquals(
-                List.of("Type", 4, 12),
-                List.of(error.getType(), error.getOffset(), error.getLength()));
+        assertEquals("Type", error.getType());
+    }
+
+    @Test
+    void stampRecordsTheLength() {
+        DecodeException error = DecodeException.truncated(10);
+        error.stamp("Type", 4, 12);
+        assertEquals(12, error.getLength());
+    }
+
+    @Test
+    void stampCountsTheOffsetFromItsStart() {
+        DecodeException error = DecodeException.truncated(10);
+        error.stamp("Type", 4, 12);
+        assertEquals(6, error.getOffset());
+    }
+
+    @Test
+    void anOuterStampKeepsTheInnerType() {
+        DecodeException error = DecodeException.truncated(10);
+        error.stamp("Inner", 4, 6);
+        error.stamp("Outer", 2, 12);
+        assertEquals("Inner", error.getType());
+    }
+
+    @Test
+    void anOuterStampCountsTheOffsetFromItsOwnStart() {
+        DecodeException error = DecodeException.truncated(10);
+        error.stamp("Inner", 4, 6);
+        error.stamp("Outer", 2, 12);
+        assertEquals(8, error.getOffset());
+    }
+
+    @Test
+    void anOuterStampRecordsItsOwnLength() {
+        DecodeException error = DecodeException.truncated(10);
+        error.stamp("Inner", 4, 6);
+        error.stamp("Outer", 2, 12);
+        assertEquals(12, error.getLength());
     }
 
     private static DecodeException roundTrip(DecodeException error)
@@ -103,8 +139,8 @@ final class DecodeExceptionTest {
 
     @Test
     void serialisationKeepsEveryField() throws IOException, ClassNotFoundException {
-        DecodeException error = DecodeException.unknownValue(6).prepend(2).prepend("list");
-        error.stamp("Type", 6, 8);
+        DecodeException error = DecodeException.unknownValue(8).prepend(2).prepend("list");
+        error.stamp("Type", 2, 8);
         assertEquals("Type.list[2]: unknown value at byte 6 of 8", roundTrip(error).getMessage());
     }
 
