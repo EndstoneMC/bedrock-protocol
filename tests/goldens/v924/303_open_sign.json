@@ -1,0 +1,14 @@
+[
+ {
+  "id": "front_side_sign",
+  "value": {
+   "pos": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "is_front_side": true
+  },
+  "bytes": "02020601"
+ }
+]

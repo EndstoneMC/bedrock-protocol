@@ -1,0 +1,41 @@
+[
+ {
+  "id": "standards_and_extras",
+  "value": {
+   "sub_chunk_block_position": {
+    "x": 4,
+    "y": 4294967291,
+    "z": 6
+   },
+   "blocks_changed": {
+    "standards": [
+     {
+      "pos": {
+       "x": 1,
+       "y": 2,
+       "z": 3
+      },
+      "runtime_id": 1921718966,
+      "update_flags": 3,
+      "entity_unique_id": 9,
+      "message": 2
+     }
+    ],
+    "extras": [
+     {
+      "pos": {
+       "x": -1,
+       "y": 0,
+       "z": 1
+      },
+      "runtime_id": 1741778478,
+      "update_flags": 2,
+      "entity_unique_id": 5,
+      "message": 1
+     }
+    ]
+   }
+  },
+  "bytes": "08fbffffff0f0c01020206b6b5ac940703090201010002aedcc5be06020501"
+ }
+]

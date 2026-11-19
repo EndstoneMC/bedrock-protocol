@@ -1,0 +1,14 @@
+[
+ {
+  "id": "input_lock_mask",
+  "value": {
+   "input_lock_component_data": 70,
+   "server_pos": {
+    "x": 1.5,
+    "y": 2.5,
+    "z": 3.5
+   }
+  },
+  "bytes": "460000c03f0000204000006040"
+ }
+]

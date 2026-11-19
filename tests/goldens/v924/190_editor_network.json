@@ -1,0 +1,10 @@
+[
+ {
+  "id": "route_to_manager_variant",
+  "value": {
+   "route_to_manager": true,
+   "payload": "{payload:\"abc\"}"
+  },
+  "bytes": "010a0008077061796c6f61640361626300"
+ }
+]

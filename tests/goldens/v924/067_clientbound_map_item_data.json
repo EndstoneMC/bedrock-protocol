@@ -1,0 +1,78 @@
+[
+ {
+  "id": "every_optional_present",
+  "value": {
+   "map_id": 7,
+   "type": 14,
+   "dimension": 1,
+   "locked": true,
+   "map_origin": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "map_ids": [7],
+   "scale": 4,
+   "unique_ids": [
+    {
+     "type": 0,
+     "key_entity_id": 9,
+     "key_block_pos": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     }
+    },
+    {
+     "type": 1,
+     "key_entity_id": 0,
+     "key_block_pos": {
+      "x": 4,
+      "y": 0,
+      "z": 6
+     }
+    }
+   ],
+   "decorations": [
+    {
+     "image": 2,
+     "rotation": 3,
+     "x": 4,
+     "y": 5,
+     "label": "hi",
+     "color": 67305985
+    }
+   ],
+   "width": 2,
+   "height": 2,
+   "start_x": 1,
+   "start_y": 2,
+   "map_pixels": [1, 2, 3, 4]
+  },
+  "bytes": "0e0e0101020406010e040200000000120100000008000c010203040502686981848c20040402040401020304"
+ },
+ {
+  "id": "every_optional_absent",
+  "value": {
+   "map_id": 5,
+   "type": 0,
+   "dimension": 1,
+   "locked": false,
+   "map_origin": {
+    "x": 1,
+    "y": 2,
+    "z": 3
+   },
+   "map_ids": [],
+   "scale": 0,
+   "unique_ids": [],
+   "decorations": [],
+   "width": 0,
+   "height": 0,
+   "start_x": 0,
+   "start_y": 0,
+   "map_pixels": []
+  },
+  "bytes": "0a000100020406"
+ }
+]
