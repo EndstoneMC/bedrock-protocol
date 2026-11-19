@@ -46,7 +46,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 ## Writing cases
 
 - A case tests the encoding, never what a value means.
-- Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
+- Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
 - `v2168/` owns every codec live at 2168, and another folder each codec its own protocol introduces, the `Serializer<T, N>` whose N is that protocol, for the packets it holds.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.

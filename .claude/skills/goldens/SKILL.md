@@ -156,7 +156,7 @@ llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -igno
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
 ```
 
-The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<owned>` is empty for `v2168/` and `, <protocol>>` for any other folder, the N of the implementations it introduces:
+The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check and the no-match side of each variant switch. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<owned>` is empty for `v2168/` and `, <protocol>>` for any other folder, the N of the implementations it introduces:
 
 ```
 D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
@@ -180,6 +180,7 @@ while reached:
                 scope[id(callee)] = callee
                 reached.append(callee)
 failure = re.compile(r'if \(!(\w+)\) return (stream\.fail|std::unexpected)\(\1\.error\(\)|Errc::')
+no_match = re.compile(r'switch \(.+\.index\(\)\) \{')
 owned = [f for f in scope.values() if sys.argv[2] in signature.get(id(f), '')]
 outcomes = missed = 0
 for f in owned:
@@ -187,8 +188,9 @@ for f in owned:
     for b in f['branches']:
         line = lines[b[0] - 1].strip()
         is_failure = failure.search(line) or (line == 'default:' and 'Errc::' in lines[b[0]])
+        excluded = 'true' if is_failure else 'false' if no_match.fullmatch(line) else None
         for outcome, count in (('true', b[4]), ('false', b[5])):
-            if outcome == 'false' or not is_failure:
+            if outcome != excluded:
                 outcomes += 1
                 if count == 0:
                     missed += 1
@@ -232,5 +234,3 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
 | A `default.profraw` appears in the repository root | A pytest ran from the coverage venv without `LLVM_PROFILE_FILE`. Delete the file and rerun with `LLVM_PROFILE_FILE` pointing into the profile directory. |
 | `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |
-| `$D.missed` lists the false side of a `switch (... .index())` | The implicit default of a generated variant switch, which no value takes. Report it as a generator defect; no case reaches it. |
-| `$D.missed` lists `switch (<variant>.index()) {` false | The serializer's hidden default, which only a valueless variant takes. No input reaches it: report it as a generator defect. |
