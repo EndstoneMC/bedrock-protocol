@@ -1120,11 +1120,11 @@ def test_packets_hpp_gives_each_protocol_a_namespace_holding_its_number(generate
     assert numbered == ["1", "2", "3", "4", "5"]
 
 
-def test_a_protocols_codec_forwards_to_the_root_entry_points(generate):
+def test_a_protocols_codec_is_the_packet_codec_at_its_number(generate):
     registry = (generate({"a": A}) / "packets.hpp").read_text()
 
-    assert "inline constexpr const auto &encode = ::bedrock::protocol::encode<version>;" in registry
-    assert "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;" in registry
+    assert "inline constexpr ::bedrock::protocol::detail::packet_encode_fn<version> encode{};" in registry
+    assert "inline constexpr ::bedrock::protocol::detail::packet_decode_fn<version, T> decode{};" in registry
 
 
 def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
@@ -1133,9 +1133,9 @@ def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
 
     assert one == (
         "\n\ninline constexpr int version = 1;\n\n"
-        "inline constexpr const auto &encode = ::bedrock::protocol::encode<version>;\n\n"
+        "inline constexpr ::bedrock::protocol::detail::packet_encode_fn<version> encode{};\n\n"
         "template <::bedrock::protocol::Packet<version> T>\n"
-        "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;\n\n"
+        "inline constexpr ::bedrock::protocol::detail::packet_decode_fn<version, T> decode{};\n\n"
     )
 
 

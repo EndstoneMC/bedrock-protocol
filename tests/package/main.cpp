@@ -14,13 +14,30 @@ int main()
     bp::TextPacket packet;
     packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 
-    std::expected<std::string, bp::EncodeError> data = bp::v2225::encode(packet);
+    std::expected<std::string, bp::EncodeError> data = bp::encode(packet);
     if (!data) {
         return 1;
     }
-    std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::v2225::decode<bp::TextPacket>(*data);
+    std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<bp::TextPacket>(*data);
     if (!decoded || *decoded != packet) {
         return 1;
+    }
+
+    std::expected<std::string, bp::EncodeError> pinned = bp::encode<bp::v2225::version>(packet);
+    if (!pinned || *pinned != *data) {
+        return 1;
+    }
+    std::expected<bp::TextPacket, bp::DecodeError> read = bp::decode<bp::v2225::version, bp::TextPacket>(*pinned);
+    if (!read || *read != packet) {
+        return 1;
+    }
+
+    {
+        using bp::v2225::encode;
+        std::expected<std::string, bp::EncodeError> found = encode(packet);
+        if (!found || *found != *data) {
+            return 1;
+        }
     }
 
     std::optional<bp::Protocol> protocol = bp::protocol("1.26.63");

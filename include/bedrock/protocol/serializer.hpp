@@ -15,6 +15,8 @@
 #include <bedrock/protocol/detail/reflect.hpp>
 #include <bedrock/protocol/stream.hpp>
 
+#include "bedrock/protocol/version.hpp"
+
 namespace bedrock::protocol {
 
 enum class SerializationMode : std::uint8_t {
@@ -163,11 +165,41 @@ struct packet_decode_fn {
 
 }  // namespace detail
 
-template <int V>
-inline constexpr detail::packet_encode_fn<V> encode{};
+template <int V = latest_version, Packet<V> T>
+[[nodiscard]] auto encode(const T &packet) -> std::expected<std::string, EncodeError>
+{
+    return detail::packet_encode_fn<V>{}(packet);
+}
+
+template <int V = latest_version, Packet<V> T>
+[[nodiscard]] auto encode(const T &packet, BinaryWriter &stream) -> std::expected<void, EncodeError>
+{
+    return detail::packet_encode_fn<V>{}(packet, stream);
+}
 
 template <int V, Packet<V> T>
-inline constexpr detail::packet_decode_fn<V, T> decode{};
+[[nodiscard]] auto decode(std::string_view data) -> std::expected<T, DecodeError>
+{
+    return detail::packet_decode_fn<V, T>{}(data);
+}
+
+template <int V, Packet<V> T>
+[[nodiscard]] auto decode(BinaryReader &stream) -> std::expected<T, DecodeError>
+{
+    return detail::packet_decode_fn<V, T>{}(stream);
+}
+
+template <Packet<latest_version> T>
+[[nodiscard]] auto decode(std::string_view data) -> std::expected<T, DecodeError>
+{
+    return detail::packet_decode_fn<latest_version, T>{}(data);
+}
+
+template <Packet<latest_version> T>
+[[nodiscard]] auto decode(BinaryReader &stream) -> std::expected<T, DecodeError>
+{
+    return detail::packet_decode_fn<latest_version, T>{}(stream);
+}
 
 }  // namespace bedrock::protocol
 

@@ -176,6 +176,8 @@ void init_versions(nb::module_ &core, nb::module_ &package)
         }
         m.attr("__all__") = all;
     }
+    package.attr("encode") = bound.back().module.attr("encode");
+    package.attr("decode") = bound.back().module.attr("decode");
     core.attr("encodings") = read_only(encodings);
     core.attr("modes") = read_only(modes);
     core.attr("_T") = nb::type_var("_T");

@@ -66,10 +66,10 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
 
             inline constexpr int version = $number$;
 
-            inline constexpr const auto &encode = ::$namespace$::encode<version>;
+            inline constexpr ::$namespace$::detail::packet_encode_fn<version> encode{};
 
             template <::$namespace$::Packet<version> T>
-            inline constexpr const auto &decode = ::$namespace$::decode<version, T>;
+            inline constexpr ::$namespace$::detail::packet_decode_fn<version, T> decode{};
 
             }  // namespace v$number$
 

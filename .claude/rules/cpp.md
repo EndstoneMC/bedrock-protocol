@@ -22,8 +22,8 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function objects `encode<V>(packet[, writer])` and `decode<V, T>(data | reader)`, which take only a `Packet<T, V>` and no mode, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`; every call names its protocol.
-- Give each protocol N a `v<N>` namespace holding only `version`, and `encode` and `decode<T>` bound to `encode<N>` and `decode<N, T>`.
+- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function templates `encode[<V>](packet[, writer])` and `decode<[V, ]T>(data | reader)`, which take only a `Packet<T, V>` and no mode and read a left-out `V` as `latest_version`, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`.
+- Give each protocol N a `v<N>` namespace holding only `version`, and the function objects `encode` and `decode<T>` that call `encode<N>` and `decode<N, T>`, so a using-declaration finds no root overload by ADL.
 - `Protocol` holds a modelled number from `protocol(number)` or `protocol(release)`, which resolve through `releases`, takes only a packet and no mode, and reports a packet its protocol lacks as `Errc::unknown_type`.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Check a value on encode only where its encoding is narrower than its member, failing one whose cast back differs with `Errc::out_of_range`.

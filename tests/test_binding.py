@@ -25,7 +25,8 @@ TRUNCATED_ATTRIBUTES = proto.encode(bp.UpdateAttributesPacket(attribute_data=[HE
 
 def test_the_package_exports_its_functions_and_every_class_it_declares():
     declared = {name for name, value in vars(bp).items() if isinstance(value, type) and value.__module__ == bp.__name__}
-    assert set(bp.__all__) == {"versions", "releases", "protocol_version", "ProtocolVersion", "nbt", *declared}
+    functions = {"versions", "releases", "protocol_version", "ProtocolVersion", "nbt", "encode", "decode"}
+    assert set(bp.__all__) == {*functions, *declared}
 
 
 def test_every_type_the_latest_protocol_has_belongs_to_the_package():
@@ -62,9 +63,17 @@ def test_the_package_has_no_pre_cereal():
     assert not hasattr(bp, "pre_cereal")
 
 
-@pytest.mark.parametrize("name", ["encode", "decode", "packets", "encodings", "modes"])
-def test_the_package_holds_no_codec(name):
+@pytest.mark.parametrize("name", ["packets", "encodings", "modes"])
+def test_the_package_holds_no_protocol_tables(name):
     assert not hasattr(bp, name)
+
+
+def test_the_package_encodes_at_the_latest_protocol():
+    assert bp.encode is PROTOCOLS[-1].encode
+
+
+def test_the_package_decodes_at_the_latest_protocol():
+    assert bp.decode is PROTOCOLS[-1].decode
 
 
 def test_a_packet_encodes_to_the_bytes_gophertunnel_writes():

@@ -30,6 +30,8 @@ class EncodeError(ValueError):
 
 __all__ = [
     "ProtocolVersion",
+    "decode",
+    "encode",
     "nbt",
     "protocol_version",
     "releases",
