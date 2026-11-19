@@ -66,7 +66,11 @@ final class GoldensTest {
                     && !Modifier.isAbstract(type.getModifiers())) {
                 String stem =
                         WORD_BREAK
-                                .matcher(type.getSimpleName().replaceFirst("Packet$", ""))
+                                .matcher(
+                                        CaseLoader.VERSION_SUFFIX
+                                                .matcher(type.getSimpleName())
+                                                .replaceFirst("")
+                                                .replaceFirst("Packet$", ""))
                                 .replaceAll("_")
                                 .toLowerCase(Locale.ROOT);
                 packets.computeIfAbsent(stem, key -> new ArrayList<>())

@@ -92,7 +92,11 @@ def home(schema: Schema, each: StructModel | EnumModel) -> str:
 
 
 def declared(schema: Schema, each: StructModel | EnumModel) -> str:
-    return schema.name(each) if isinstance(each, StructModel) else each.family.name
+    name = schema.name(each) if isinstance(each, StructModel) else each.family.name
+    if schema.owner(each) is not None:
+        return name
+    scope = schema.scope(each)
+    return name if scope is None else f"{name}_v{scope}"
 
 
 def qualified(schema: Schema, each: StructModel | EnumModel) -> str:

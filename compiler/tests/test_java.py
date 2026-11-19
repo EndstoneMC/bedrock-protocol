@@ -148,20 +148,56 @@ GROWING_UNTIL_5 = (
     [
         pytest.param("class S:\n    x: uint8\n", "S.java", id="unversioned"),
         pytest.param("@type(since=3)\nclass S:\n    x: uint8\n", "S.java", id="live-at-latest"),
-        pytest.param("@type(since=2, until=4)\nclass S:\n    x: uint8\n", "v2/S.java", id="older-since"),
-        pytest.param("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java", id="first-range-has-no-since"),
+        pytest.param("@type(since=2, until=4)\nclass S:\n    x: uint8\n", "v2/S_v2.java", id="older-since"),
+        pytest.param("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S_v1.java", id="first-range-has-no-since"),
         pytest.param(HAND_WRITTEN, "S.java", id="hand-written"),
         pytest.param(HAND_WRITTEN, "CerealizedS.java", id="cereal-beside-a-hand-written-form"),
-        pytest.param(OLDER_HAND_WRITTEN, "v2/S.java", id="older-hand-written"),
+        pytest.param(OLDER_HAND_WRITTEN, "v2/S_v2.java", id="older-hand-written"),
         pytest.param(OLDER_HAND_WRITTEN, "S.java", id="cereal-past-an-older-hand-written-form"),
-        pytest.param(OVERLAP_ONLY, "v1/CerealizedS.java", id="cereal-inside-the-overlap-only"),
+        pytest.param(OVERLAP_ONLY, "v1/CerealizedS_v1.java", id="cereal-inside-the-overlap-only"),
         pytest.param(SHARED, "S.java", id="shared-by-both-forms"),
         pytest.param(GROWING, "Mode.java", id="enum-gaining-members"),
-        pytest.param(GROWING_UNTIL_5, "v1/Mode.java", id="enum-gaining-members-before-the-latest"),
+        pytest.param(GROWING_UNTIL_5, "v1/Mode_v1.java", id="enum-gaining-members-before-the-latest"),
     ],
 )
 def test_a_model_lands_in_the_package_of_its_scope(java, source, path):
     assert (java(source) / path).is_file()
+
+
+OLDER = "@type(since=2, until=4)\nclass S:\n    x: uint8\n"
+LATEST = "@type(since=3)\nclass S:\n    x: uint8\n"
+
+
+def test_a_top_level_model_of_a_version_package_is_written_to_a_file_named_with_its_version(java):
+    root = java(OLDER)
+
+    assert sorted(path.relative_to(root).as_posix() for path in root.glob("v2/*.java")) == ["v2/S_v2.java"]
+
+
+def test_a_top_level_model_of_a_version_package_declares_its_name_with_its_version(emitted):
+    assert "public final class S_v2 implements Message {\n" in emitted(OLDER, "v2/S_v2.java")
+
+
+def test_a_top_level_enum_of_a_version_package_declares_its_name_with_its_version(emitted):
+    assert "public enum Mode_v1 {\n" in emitted(GROWING_UNTIL_5, "v1/Mode_v1.java")
+
+
+def test_a_nested_model_of_a_version_package_keeps_its_name(emitted):
+    text = emitted(
+        "class P:\n    class N:\n        x: uint8 = field(until=3)\n        y: uint8\n    n: N\n", "v1/P_v1.java"
+    )
+
+    assert "    private final dev.endstone.protocol.v1.P_v1.N n_;\n" in text
+
+
+def test_a_bare_model_is_written_to_a_file_named_without_a_version(java):
+    root = java(LATEST)
+
+    assert {path.name for path in root.glob("*.java")} - {"Protocol.java", "ProtocolVersion.java"} == {"S.java"}
+
+
+def test_a_bare_model_declares_its_name_without_a_version(emitted):
+    assert "public final class S implements Message {\n" in emitted(LATEST, "S.java")
 
 
 def test_the_output_holds_no_precereal(java):
@@ -180,13 +216,18 @@ def test_a_model_spelled_like_a_temporary_model_is_a_compiler_error(build_packag
     )
     build_package({"a": HEADER + source})
 
-    with pytest.raises(SystemExit, match=r"bpc: dev\.endstone\.protocol\.v1\.CerealizedS: is declared twice$"):
+    with pytest.raises(SystemExit, match=r"bpc: dev\.endstone\.protocol\.v1\.CerealizedS_v1: is declared twice$"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
 def test_a_model_both_forms_hold_is_one_class(java):
     root = java(SHARED)
-    found = [*root.rglob("S.java"), *root.rglob("CerealizedS.java")]
+    found = [
+        *root.rglob("S.java"),
+        *root.rglob("S_v*.java"),
+        *root.rglob("CerealizedS.java"),
+        *root.rglob("CerealizedS_v*.java"),
+    ]
 
     assert [path.relative_to(root).as_posix() for path in found] == ["S.java"]
 
@@ -255,13 +296,13 @@ def test_a_single_mode_span_rejects_the_mode_it_lacks_by_its_one_mode(emitted):
         ),
         pytest.param(
             OVERLAP_ONLY,
-            "            dev.endstone.protocol.v1.S.Codec1Manual.INSTANCE.encode(value.s_, buf);\n",
+            "            dev.endstone.protocol.v1.S_v1.Codec1Manual.INSTANCE.encode(value.s_, buf);\n",
             id="own",
         ),
     ],
 )
 def test_a_hand_written_field_calls_the_codec_that_serves_the_manual_mode(emitted, source, call):
-    assert call in emitted(source, "v1/P.java")
+    assert call in emitted(source, "v1/P_v1.java")
 
 
 def test_a_child_first_coded_while_mixed_is_called_by_its_key_mode_later(emitted):
@@ -327,7 +368,7 @@ def test_the_latest_of_two_models_is_bare(java):
 
 
 def test_the_older_of_two_models_keeps_its_since(java):
-    assert "package dev.endstone.protocol.v2;\n" in (java(TWO_MODELS) / "v2/S.java").read_text()
+    assert "package dev.endstone.protocol.v2;\n" in (java(TWO_MODELS) / "v2/S_v2.java").read_text()
 
 
 NESTED = "class P:\n    class N:\n        x: uint8\n    n: N\n    y: uint8 = field(since=3)\n"
@@ -338,7 +379,7 @@ def test_a_nested_model_is_defined_in_its_newest_holder(java):
 
 
 def test_a_nested_model_is_not_defined_in_an_older_holder(java):
-    assert "class N" not in (java(NESTED) / "v1/P.java").read_text()
+    assert "class N" not in (java(NESTED) / "v1/P_v1.java").read_text()
 
 
 TIED_HOLDERS = (
@@ -349,23 +390,23 @@ TIED_HOLDERS = (
 
 
 def test_a_nested_model_two_holders_tie_on_is_defined_in_the_plainly_named_holder(emitted):
-    assert "\n    public static final class Inner implements Message {\n" in emitted(TIED_HOLDERS, "v1/A.java")
+    assert "\n    public static final class Inner implements Message {\n" in emitted(TIED_HOLDERS, "v1/A_v1.java")
 
 
 def test_a_nested_model_two_holders_tie_on_is_named_through_the_plainly_named_holder(emitted):
-    declared = "\n    private final dev.endstone.protocol.v1.A.Inner i_;\n"
+    declared = "\n    private final dev.endstone.protocol.v1.A_v1.Inner i_;\n"
 
-    assert declared in emitted(TIED_HOLDERS, "v1/CerealizedA.java")
+    assert declared in emitted(TIED_HOLDERS, "v1/CerealizedA_v1.java")
 
 
 def test_an_older_holder_names_a_nested_model_in_its_newest_holder(java):
-    assert "    private final dev.endstone.protocol.P.N n_;\n" in (java(NESTED) / "v1/P.java").read_text()
+    assert "    private final dev.endstone.protocol.P.N n_;\n" in (java(NESTED) / "v1/P_v1.java").read_text()
 
 
 def test_a_nested_model_only_an_older_holder_holds_is_defined_there(java):
     root = java("class P:\n    class N:\n        x: uint8 = field(until=3)\n        y: uint8\n    n: N\n")
 
-    assert "    public static final class N implements Message {\n" in (root / "v1/P.java").read_text()
+    assert "    public static final class N implements Message {\n" in (root / "v1/P_v1.java").read_text()
 
 
 def test_a_nested_model_is_a_static_nested_class_of_its_owner(emitted):
@@ -376,10 +417,11 @@ def test_a_nested_model_is_a_static_nested_class_of_its_owner(emitted):
 
 def test_a_model_reaches_another_by_its_qualified_name(emitted):
     text = emitted(
-        "@type(since=2, until=4)\nclass S:\n    x: uint8\n\nclass P:\n    s: S = field(since=2, until=4)\n", "v2/P.java"
+        "@type(since=2, until=4)\nclass S:\n    x: uint8\n\nclass P:\n    s: S = field(since=2, until=4)\n",
+        "v2/P_v2.java",
     )
 
-    assert "private final dev.endstone.protocol.v2.S s_;" in text
+    assert "private final dev.endstone.protocol.v2.S_v2 s_;" in text
 
 
 def test_an_owner_of_only_nested_types_is_a_holder_class(emitted):
@@ -409,8 +451,9 @@ RETURNING_ENCODING = (
 
 def test_an_encoding_only_difference_shares_one_class(java):
     root = java(TWO_ENCODINGS)
+    found = [*root.rglob("P.java"), *root.rglob("P_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["P.java"]
 
 
 def test_two_encodings_give_two_codecs_on_one_class(emitted):
@@ -473,14 +516,14 @@ def test_the_selector_without_a_mode_asks_for_the_default_mode(emitted):
 
 
 def test_the_selector_rejects_a_protocol_the_model_is_absent_from_whatever_the_mode(emitted):
-    text = emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java")
+    text = emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S_v1.java")
 
     rejections = (
         "        if (version < 3) {\n"
-        '            throw new IllegalArgumentException("v1.S: no " + mode.name().toLowerCase(Locale.ROOT) + '
+        '            throw new IllegalArgumentException("v1.S_v1: no " + mode.name().toLowerCase(Locale.ROOT) + '
         '" mode at protocol " + version + "; it has DEFAULT");\n'
         "        }\n"
-        '        throw new IllegalArgumentException("v1.S: is not a type at protocol " + version);\n'
+        '        throw new IllegalArgumentException("v1.S_v1: is not a type at protocol " + version);\n'
         "    }\n"
     )
     assert rejections in text
@@ -546,7 +589,7 @@ def test_a_codec_is_a_singleton(emitted):
     ],
 )
 def test_a_versioned_file_imports_the_runtime_its_selector_names(emitted, spelled):
-    assert f"import {spelled};\n" in emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S.java")
+    assert f"import {spelled};\n" in emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S_v1.java")
 
 
 def test_a_bare_file_imports_the_serialization_mode_from_the_internal_package(emitted):
@@ -775,7 +818,9 @@ def test_the_registry_holds_a_nested_packet_under_its_nested_name(emitted):
 
 
 def test_the_registry_spells_a_packet_of_a_version_package_fully_qualified(emitted):
-    registration = '            register(dev.endstone.protocol.v1.P.class, "P", dev.endstone.protocol.v1.P::codec);\n'
+    registration = (
+        '            register(dev.endstone.protocol.v1.P_v1.class, "P_v1", dev.endstone.protocol.v1.P_v1::codec);\n'
+    )
 
     assert registration in emitted("@packet(id=7, until=3)\nclass P:\n    x: uint8\n", "Protocol.java")
 
@@ -1416,7 +1461,7 @@ def test_an_enum_that_gains_members_is_one_class_holding_the_union(java):
 
 
 def test_an_enum_that_never_reaches_the_latest_protocol_holds_the_union(java):
-    text = (java(GROWING_UNTIL_5) / "v1/Mode.java").read_text()
+    text = (java(GROWING_UNTIL_5) / "v1/Mode_v1.java").read_text()
 
     assert "    A(0),\n    B(1),\n    UNRECOGNIZED(-1);\n" in text
 
@@ -1438,15 +1483,16 @@ def test_an_int_coded_field_of_a_growing_enum_keeps_its_raw_int(emitted):
 
 
 def test_an_int_coded_field_of_a_growing_enum_reads_its_enum_by_for_number(emitted):
-    text = emitted(GROWING + "    y: uint8 = field(since=4)\n", "v1/P.java")
+    text = emitted(GROWING + "    y: uint8 = field(since=4)\n", "v1/P_v1.java")
 
     assert "        dev.endstone.protocol.Mode result = dev.endstone.protocol.Mode.forNumber(m_);\n" in text
 
 
 def test_a_message_that_differed_only_by_a_growing_enum_is_one_class(java):
     root = java(GROWING)
+    found = [*root.rglob("P.java"), *root.rglob("P_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["P.java"]
 
 
 def test_a_message_holding_a_growing_enum_has_a_codec_per_numbering(emitted):
@@ -1485,15 +1531,16 @@ def test_a_nested_enum_that_gains_members_holds_the_union(emitted):
 
 
 def test_an_older_holder_names_a_nested_enum_in_its_newest_holder(emitted):
-    text = emitted(NESTED_GROWING_WITH_OLDER_HOLDER, "v1/P.java")
+    text = emitted(NESTED_GROWING_WITH_OLDER_HOLDER, "v1/P_v1.java")
 
     assert "    public @NotNull dev.endstone.protocol.P.Action getA() {\n" in text
 
 
 def test_a_message_that_differed_only_by_a_nested_growing_enum_is_one_class(java):
     root = java(NESTED_GROWING)
+    found = [*root.rglob("P.java"), *root.rglob("P_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["P.java"]
 
 
 def test_members_that_share_a_value_without_being_live_together_make_the_newest_the_constant(java):
@@ -1525,8 +1572,9 @@ def test_a_literal_of_a_member_succeeded_by_another_names_the_newest_constant(em
 
 def test_a_renumbered_enum_is_one_class(java):
     root = java(RENUMBERED)
+    found = [*root.rglob("Mode.java"), *root.rglob("Mode_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["Mode.java"]
 
 
 def test_a_renumbered_enum_holds_its_library_values(java):
@@ -1537,8 +1585,9 @@ def test_a_renumbered_enum_holds_its_library_values(java):
 
 def test_a_message_holding_a_renumbered_enum_is_one_class(java):
     root = java(RENUMBERED)
+    found = [*root.rglob("P.java"), *root.rglob("P_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("P.java")) == ["P.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["P.java"]
 
 
 def test_a_message_holding_a_renumbered_enum_has_a_codec_per_numbering(emitted):
@@ -1643,9 +1692,22 @@ def test_a_numbering_that_leaves_and_returns_covers_both_runs(java):
 
 
 def test_a_numbering_class_rejects_a_protocol_the_enum_is_not_live_at(java):
-    text = (java(GROWING_UNTIL_5) / "internal/ModeNumbering.java").read_text()
+    text = (java(GROWING_UNTIL_5) / "internal/Mode_v1Numbering.java").read_text()
 
-    assert '        throw new IllegalArgumentException("Mode: is not a type at protocol " + protocol);\n' in text
+    assert '        throw new IllegalArgumentException("Mode_v1: is not a type at protocol " + protocol);\n' in text
+
+
+def test_two_enums_numbered_under_one_name_are_a_compiler_error(build_package, tmp_path):
+    source = GROWING_UNTIL_5 + (
+        "\nclass Mode_v1(IntEnum, uint8):\n    A = 0\n    B = value(1, since=3)\n    C = value(2, since=5)\n\n"
+        "@packet(id=8)\nclass Q:\n    m: Mode_v1\n"
+    )
+    build_package({"a": HEADER + source})
+
+    with pytest.raises(
+        SystemExit, match=r"bpc: dev\.endstone\.protocol\.internal\.Mode_v1Numbering: is declared twice$"
+    ):
+        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
 def test_a_renumbered_enum_field_writes_its_number_at_the_protocol(emitted):
@@ -1750,8 +1812,9 @@ def test_a_field_coded_by_name_and_by_number_reads_the_number_of_its_name(emitte
 
 def test_a_name_coded_enum_with_one_shape_keeps_one_class(java):
     root = java(NAME_CODED)
+    found = [*root.rglob("Mode.java"), *root.rglob("Mode_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["Mode.java"]
 
 
 def test_a_name_coded_enum_with_one_shape_keeps_its_name_codec(java):
@@ -1788,8 +1851,9 @@ def test_an_enum_shared_by_two_forms_keeps_the_name_codec_of_either(emitted, sou
 
 def test_a_name_coded_enum_that_gains_a_member_is_one_class(java):
     root = java(NAME_CODED_GROWING)
+    found = [*root.rglob("Mode.java"), *root.rglob("Mode_v*.java")]
 
-    assert sorted(path.relative_to(root).as_posix() for path in root.rglob("Mode.java")) == ["Mode.java"]
+    assert sorted(path.relative_to(root).as_posix() for path in found) == ["Mode.java"]
 
 
 def test_a_name_coded_enum_that_gains_a_member_does_not_decode_it_at_the_older_protocols(java):

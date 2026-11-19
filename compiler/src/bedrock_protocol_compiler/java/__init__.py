@@ -42,9 +42,12 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             generators.append(generator)
             file.write(schema, context.open(names.path(package, name)), package, body)
     internal = names.internal(schema)
+    numbered: dict[str, EnumModel] = {}
     for model in reached(schema):
         body = Printer()
         numbering = NumberingGenerator(schema, model)
+        if numbered.setdefault(numbering.name, model) is not model:
+            raise CompilerError(f"{internal}.{numbering.name}: is declared twice")
         numbering.definition(body)
         file.write(schema, context.open(names.path(internal, numbering.name)), internal, body)
     for name, role in ((names.VERSION, "the protocol version table"), (names.PROTOCOL, "the protocol class")):

@@ -15,7 +15,7 @@ NUMBER = "value"
 class EnumGenerator:
     def __init__(self, schema: Schema, enum_type: EnumModel) -> None:
         enumerators = schema.enumerators(enum_type)
-        self.name = enum_type.family.name
+        self.name = names.declared(schema, enum_type)
         self.qualified = names.qualified(schema, enum_type)
         self.name_coded = any(form in schema.name_coded for form in enum_type.runs)
         self.namings = schema.namings(enum_type) if self.name_coded else []

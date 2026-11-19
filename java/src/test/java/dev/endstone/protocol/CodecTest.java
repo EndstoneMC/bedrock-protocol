@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.endstone.protocol.internal.SerializationMode;
+import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -47,10 +48,10 @@ final class CodecTest {
     @Test
     void aTypeAbsentAtAProtocolHasNoCodec() {
         assertEquals(
-                "v2168.PlaySoundPacket: is not a type at protocol 2225",
+                "v2168.PlaySoundPacket_v2168: is not a type at protocol 2225",
                 assertThrows(
                                 IllegalArgumentException.class,
-                                () -> dev.endstone.protocol.v2168.PlaySoundPacket.codec(2225))
+                                () -> PlaySoundPacket_v2168.codec(2225))
                         .getMessage());
     }
 

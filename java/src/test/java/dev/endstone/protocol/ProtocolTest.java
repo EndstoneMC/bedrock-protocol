@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -29,8 +30,8 @@ final class ProtocolTest {
                                     .build())
                     .build();
 
-    private static final dev.endstone.protocol.v2168.PlaySoundPacket SOUND =
-            dev.endstone.protocol.v2168.PlaySoundPacket.newBuilder()
+    private static final PlaySoundPacket_v2168 SOUND =
+            PlaySoundPacket_v2168.newBuilder()
                     .setName("a")
                     .setPos(BlockPos.newBuilder().setX(1).setY(2).setZ(3).build())
                     .setVolume(1f)
@@ -95,7 +96,7 @@ final class ProtocolTest {
     @Test
     void encodeRejectsAValueOfAnotherProtocol() {
         assertEquals(
-                "v2168.PlaySoundPacket: is not a type at protocol 2225",
+                "v2168.PlaySoundPacket_v2168: is not a type at protocol 2225",
                 assertThrows(IllegalArgumentException.class, () -> Protocol.v2225.encode(SOUND))
                         .getMessage());
     }
@@ -103,7 +104,7 @@ final class ProtocolTest {
     @Test
     void theBareEncodeIsAtTheLatestProtocol() {
         assertEquals(
-                "v2168.PlaySoundPacket: is not a type at protocol " + LATEST_PROTOCOL,
+                "v2168.PlaySoundPacket_v2168: is not a type at protocol " + LATEST_PROTOCOL,
                 assertThrows(IllegalArgumentException.class, () -> Protocol.encode(SOUND))
                         .getMessage());
     }
@@ -111,12 +112,12 @@ final class ProtocolTest {
     @Test
     void theBareDecodeIsAtTheLatestProtocol() {
         assertEquals(
-                "v2168.PlaySoundPacket: is not a type at protocol " + LATEST_PROTOCOL,
+                "v2168.PlaySoundPacket_v2168: is not a type at protocol " + LATEST_PROTOCOL,
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
                                         Protocol.decode(
-                                                dev.endstone.protocol.v2168.PlaySoundPacket.class,
+                                                PlaySoundPacket_v2168.class,
                                                 bytes("01610204060000803f0000803f0000")))
                         .getMessage());
     }
@@ -131,8 +132,7 @@ final class ProtocolTest {
         assertEquals(
                 SOUND,
                 Protocol.v2168.decode(
-                        dev.endstone.protocol.v2168.PlaySoundPacket.class,
-                        bytes("01610204060000803f0000803f0000")));
+                        PlaySoundPacket_v2168.class, bytes("01610204060000803f0000803f0000")));
     }
 
     @Test
