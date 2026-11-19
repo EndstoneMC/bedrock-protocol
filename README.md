@@ -15,11 +15,10 @@
 
 ### Install
 
-Download the Linux or Windows wheel for Python 3.12 or newer from the [releases](https://github.com/EndstoneMC/bedrock-protocol/releases):
+Install the Linux or Windows wheel for Python 3.12 or newer from PyPI:
 
 ```shell
-uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
-uv pip install bedrock_protocol-X.Y.Z-cp312-abi3-win_amd64.whl
+uv pip install bedrock-protocol
 ```
 
 Or build it from a checkout with CMake and a C++23 compiler:
@@ -36,21 +35,20 @@ import bedrock_protocol as bp
 
 packet = bp.TextPacket()
 packet.body = bp.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
-data = bp.v2225.encode(packet)
-decoded = bp.v2225.decode(bp.TextPacket, data)
+data = bp.encode(packet)
+decoded = bp.decode(bp.TextPacket, data)
 assert decoded == packet
 ```
 
 ### Pick a protocol
 
 ```python
-by_number = bp.protocol_version(2225)
-by_release = bp.protocol_version("1.26.63")
-assert by_number.snapshot == by_release.snapshot == 2225
+version = bp.ProtocolVersion.get(2193)
+assert version is not None and version.name == "1.26.50"
 
-codec = getattr(bp, f"v{by_release.snapshot}")
-decoded = codec.decode(bp.TextPacket, codec.encode(packet))
-assert decoded == packet
+pinned = bp.v2193.encode(packet)
+picked = bp.v2193.decode(bp.TextPacket, pinned)
+assert picked == packet
 ```
 
 ## C++
@@ -76,20 +74,21 @@ namespace bp = bedrock::protocol;
 bp::TextPacket packet;
 packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 
-std::expected<std::string, bp::EncodeError> data = bp::v2225::encode(packet);
+std::expected<std::string, bp::EncodeError> data = bp::encode(packet);
 assert(data);
-std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::v2225::decode<bp::TextPacket>(*data);
+std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<bp::TextPacket>(*data);
 assert(decoded && *decoded == packet);
 ```
 
 ### Pick a protocol
 
 ```cpp
-std::optional<bp::Protocol> protocol = bp::protocol("1.26.63");
-assert(protocol && protocol == bp::protocol(2225));
-std::expected<std::string, bp::EncodeError> encoded = protocol->encode(packet);
-assert(encoded);
-std::expected<bp::TextPacket, bp::DecodeError> picked = protocol->decode<bp::TextPacket>(*encoded);
+std::optional<bp::ProtocolVersion> version = bp::ProtocolVersion::get(2193);
+assert(version && version->getName() == "1.26.50");
+
+std::expected<std::string, bp::EncodeError> pinned = bp::v2193::encode(packet);
+assert(pinned);
+std::expected<bp::TextPacket, bp::DecodeError> picked = bp::v2193::decode<bp::TextPacket>(*pinned);
 assert(picked && *picked == packet);
 ```
 
