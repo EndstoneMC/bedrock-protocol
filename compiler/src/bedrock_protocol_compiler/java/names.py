@@ -18,7 +18,6 @@ LIBRARIES = {
     "Optional": "java.util.Optional",
     "SortedMap": "java.util.SortedMap",
     "TreeMap": "java.util.TreeMap",
-    "IntFunction": "java.util.function.IntFunction",
     "ByteBuf": "io.netty.buffer.ByteBuf",
     "ByteBufUtil": "io.netty.buffer.ByteBufUtil",
     "Unpooled": "io.netty.buffer.Unpooled",
@@ -26,17 +25,7 @@ LIBRARIES = {
     "Nullable": "org.jetbrains.annotations.Nullable",
 }
 MODE = "SerializationMode"
-RUNTIME = (
-    "ByteBufCodec",
-    "Codec",
-    "DecodeException",
-    "DecodedPacket",
-    "Decoder",
-    "Message",
-    "Packet",
-    "PacketHeader",
-    MODE,
-)
+RUNTIME = ("ByteBufCodec", "Codec", "DecodeException", "Decoder", "Message", "Packet", MODE)
 JAVA_LANG = (
     "Boolean",
     "Class",

@@ -552,42 +552,9 @@ def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package,
 
 
 def test_the_protocol_enum_has_a_constant_per_version_in_ascending_order(emitted):
-    constants = (
-        "public enum Protocol {\n"
-        "    v1(1, Protocol::packets1),\n"
-        "    v2(2, Protocol::packets2),\n"
-        "    v3(3, Protocol::packets3),\n"
-        "    v4(4, Protocol::packets4),\n"
-        "    v5(5, Protocol::packets5);\n"
-    )
+    constants = "public enum Protocol {\n    v1(1),\n    v2(2),\n    v3(3),\n    v4(4),\n    v5(5);\n"
 
     assert constants in emitted(SCALAR, "Protocol.java")
-
-
-LATER_PACKET = SCALAR + "@packet(id=3, since=2)\nclass Q:\n    x: uint8\n"
-
-
-def test_a_protocols_packet_table_maps_each_live_packet_id_to_its_class(emitted):
-    table = (
-        "    private static @Nullable Class<? extends Packet> packets2(int packetId) {\n"
-        "        return switch (packetId) {\n"
-        "            case 3 -> dev.endstone.protocol.Q.class;\n"
-        "            case 7 -> dev.endstone.protocol.P.class;\n"
-        "            default -> null;\n"
-    )
-
-    assert table in emitted(LATER_PACKET, "Protocol.java")
-
-
-def test_a_protocols_packet_table_leaves_out_a_packet_its_protocol_lacks(emitted):
-    table = (
-        "    private static @Nullable Class<? extends Packet> packets1(int packetId) {\n"
-        "        return switch (packetId) {\n"
-        "            case 7 -> dev.endstone.protocol.P.class;\n"
-        "            default -> null;\n"
-    )
-
-    assert table in emitted(LATER_PACKET, "Protocol.java")
 
 
 def test_the_registrations_sit_in_a_holder_class(emitted):

@@ -5,22 +5,63 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class GoldensTest {
-    static Stream<Arguments> cases() throws IOException {
+    private static final Pattern WORD_BREAK =
+            Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
+
+    static Stream<Arguments> cases()
+            throws IOException, URISyntaxException, ReflectiveOperationException {
+        Path classes =
+                Path.of(Packet.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        List<Path> classFiles;
+        try (Stream<Path> walk = Files.walk(classes)) {
+            classFiles =
+                    walk.filter(
+                                    path ->
+                                            path.getFileName().toString().endsWith(".class")
+                                                    && !path.getFileName().toString().contains("$"))
+                            .toList();
+        }
+        Map<String, List<Class<? extends Packet>>> packets = new HashMap<>();
+        for (Path classFile : classFiles) {
+            String name = classes.relativize(classFile).toString();
+            name =
+                    name.substring(0, name.length() - ".class".length())
+                            .replace(classFile.getFileSystem().getSeparator(), ".");
+            Class<?> type = Class.forName(name, false, Packet.class.getClassLoader());
+            if (Packet.class.isAssignableFrom(type)
+                    && !type.isInterface()
+                    && !Modifier.isAbstract(type.getModifiers())) {
+                String stem =
+                        WORD_BREAK
+                                .matcher(type.getSimpleName().replaceFirst("Packet$", ""))
+                                .replaceAll("_")
+                                .toLowerCase(Locale.ROOT);
+                packets.computeIfAbsent(stem, key -> new ArrayList<>())
+                        .add(type.asSubclass(Packet.class));
+            }
+        }
+
         Path root = Paths.get(System.getProperty("goldens.dir"));
         List<Path> files;
         try (Stream<Path> walk = Files.walk(root)) {
@@ -36,6 +77,22 @@ final class GoldensTest {
             String stem = name.substring(0, name.length() - ".json".length());
             Protocol protocol = Protocol.of(Integer.parseInt(folder.substring(1))).orElseThrow();
             int packetId = Integer.parseInt(stem.substring(0, stem.indexOf('_')));
+            List<Class<? extends Packet>> accepted = new ArrayList<>();
+            for (Class<? extends Packet> candidate :
+                    packets.getOrDefault(stem.substring(stem.indexOf('_') + 1), List.of())) {
+                try {
+                    candidate.getMethod("codec", int.class).invoke(null, protocol.version());
+                    accepted.add(candidate);
+                } catch (InvocationTargetException e) {
+                    if (!(e.getCause() instanceof IllegalArgumentException)) {
+                        throw e;
+                    }
+                }
+            }
+            if (accepted.size() != 1) {
+                throw new IllegalStateException(
+                        file + ": " + accepted.size() + " packets accept protocol " + protocol);
+            }
             try (Reader reader = Files.newBufferedReader(file)) {
                 for (JsonElement entry : JsonParser.parseReader(reader).getAsJsonArray()) {
                     String id = entry.getAsJsonObject().get("id").getAsString();
@@ -45,9 +102,10 @@ final class GoldensTest {
                             argumentSet(
                                     folder + "/" + stem + "/" + id,
                                     protocol,
-                                    packetId,
+                                    accepted.getFirst(),
                                     bytes,
-                                    value));
+                                    value,
+                                    packetId));
                 }
             }
         }
@@ -58,46 +116,29 @@ final class GoldensTest {
         return ByteBufUtil.decodeHexDump(hex);
     }
 
-    private static byte[] framed(int packetId, String bytes) {
-        ByteBuf buf = Unpooled.buffer();
-        new PacketHeader(packetId, 0, 0).encode(buf);
-        buf.writeBytes(hex(bytes));
-        return ByteBufUtil.getBytes(buf);
-    }
-
-    private static Class<? extends Packet> type(Protocol protocol, int packetId, String bytes) {
-        return protocol.decodePacket(framed(packetId, bytes)).packet().getClass();
-    }
-
     @ParameterizedTest
     @MethodSource("cases")
-    void reEncodingADecodedGoldenGivesItsBytes(Protocol protocol, int packetId, String bytes) {
-        Class<? extends Packet> type = type(protocol, packetId, bytes);
+    void reEncodingADecodedGoldenGivesItsBytes(
+            Protocol protocol, Class<? extends Packet> type, String bytes) {
         Packet decoded = protocol.decode(type, hex(bytes));
         assertEquals(bytes, ByteBufUtil.hexDump(protocol.encode(decoded)));
     }
 
     @ParameterizedTest
     @MethodSource("cases")
-    void aFramedGoldenDecodesToItsFilesPacketId(Protocol protocol, int packetId, String bytes) {
-        assertEquals(
-                packetId, protocol.decodePacket(framed(packetId, bytes)).packet().getPacketId());
-    }
-
-    @ParameterizedTest
-    @MethodSource("cases")
-    void aFramedGoldenDecodesToTheDecodedBody(Protocol protocol, int packetId, String bytes) {
-        Class<? extends Packet> type = type(protocol, packetId, bytes);
-        assertEquals(
-                protocol.decode(type, hex(bytes)),
-                protocol.decodePacket(framed(packetId, bytes)).packet());
+    void aDecodedGoldenHasItsFilesPacketId(
+            Protocol protocol,
+            Class<? extends Packet> type,
+            String bytes,
+            String value,
+            int packetId) {
+        assertEquals(packetId, protocol.decode(type, hex(bytes)).getPacketId());
     }
 
     @ParameterizedTest
     @MethodSource("cases")
     void decodingTheReEncodedBytesGivesAnEqualPacket(
-            Protocol protocol, int packetId, String bytes) {
-        Class<? extends Packet> type = type(protocol, packetId, bytes);
+            Protocol protocol, Class<? extends Packet> type, String bytes) {
         Packet packet = protocol.decode(type, hex(bytes));
         assertEquals(packet, protocol.decode(type, protocol.encode(packet)));
     }
@@ -105,22 +146,17 @@ final class GoldensTest {
     @ParameterizedTest
     @MethodSource("cases")
     void encodingTheLoadedPacketGivesTheBytes(
-            Protocol protocol, int packetId, String bytes, String value)
+            Protocol protocol, Class<? extends Packet> type, String bytes, String value)
             throws ReflectiveOperationException {
-        Packet loaded =
-                CaseLoader.load(
-                        protocol.version(),
-                        type(protocol, packetId, bytes),
-                        JsonParser.parseString(value));
+        Packet loaded = CaseLoader.load(protocol.version(), type, JsonParser.parseString(value));
         assertEquals(bytes, ByteBufUtil.hexDump(protocol.encode(loaded)));
     }
 
     @ParameterizedTest
     @MethodSource("cases")
     void decodingTheBytesGivesTheLoadedPacket(
-            Protocol protocol, int packetId, String bytes, String value)
+            Protocol protocol, Class<? extends Packet> type, String bytes, String value)
             throws ReflectiveOperationException {
-        Class<? extends Packet> type = type(protocol, packetId, bytes);
         Packet loaded = CaseLoader.load(protocol.version(), type, JsonParser.parseString(value));
         assertEquals(loaded, protocol.decode(type, hex(bytes)));
     }

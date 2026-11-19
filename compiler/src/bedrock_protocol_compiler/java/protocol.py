@@ -14,11 +14,9 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
             $constants$
 
             private final int version;
-            private final @NotNull IntFunction<@Nullable Class<? extends Packet>> packets;
 
-            $name$(int version, @NotNull IntFunction<@Nullable Class<? extends Packet>> packets) {
+            $name$(int version) {
                 this.version = version;
-                this.packets = packets;
             }
 
             public int version() {
@@ -89,57 +87,6 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 return type.cast(registration.decode(buf, version, mode));
             }
 
-            public byte @NotNull [] encodePacket(@NotNull Packet packet) {
-                ByteBuf buf = Unpooled.buffer();
-                try {
-                    encodePacket(packet, buf, 0, 0);
-                    return ByteBufUtil.getBytes(buf);
-                } finally {
-                    buf.release();
-                }
-            }
-
-            public byte @NotNull [] encodePacket(@NotNull Packet packet, int recipientSubId, int senderSubId) {
-                ByteBuf buf = Unpooled.buffer();
-                try {
-                    encodePacket(packet, buf, recipientSubId, senderSubId);
-                    return ByteBufUtil.getBytes(buf);
-                } finally {
-                    buf.release();
-                }
-            }
-
-            public void encodePacket(@NotNull Packet packet, @NotNull ByteBuf buf) {
-                encodePacket(packet, buf, 0, 0);
-            }
-
-            public void encodePacket(
-                    @NotNull Packet packet, @NotNull ByteBuf buf, int recipientSubId, int senderSubId) {
-                if (packets.apply(packet.getPacketId()) != packet.getClass()) {
-                    throw new IllegalArgumentException(
-                            "packet: " + packet.getClass().getName() + " is not a packet at protocol " + version);
-                }
-                new PacketHeader(packet.getPacketId(), recipientSubId, senderSubId).encode(buf);
-                encode(packet, buf);
-            }
-
-            public @NotNull DecodedPacket decodePacket(byte @NotNull [] data) {
-                return decodePacket(Unpooled.wrappedBuffer(data));
-            }
-
-            public @NotNull DecodedPacket decodePacket(@NotNull ByteBuf buf) {
-                return ByteBufCodec.decode(buf, "PacketHeader", frame -> {
-                    PacketHeader header = PacketHeader.decode(frame);
-                    Class<? extends Packet> type = packets.apply(header.packetId());
-                    if (type == null) {
-                        throw DecodeException.unknownValue(frame.readerIndex()).prepend("packet_id");
-                    }
-                    return new DecodedPacket(header, decode(type, frame));
-                });
-            }
-
-            $tables$
-
             private static final class Registry {
                 private static final @NotNull Map<Class<? extends Message>, Registration<?>> TYPES = new HashMap<>();
 
@@ -176,16 +123,14 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
         mode=names.MODE,
         constants=partial(constants, schema, p),
         registrations=partial(registrations, schema, p, generators),
-        tables=partial(tables, schema, p),
     )
 
 
 def constants(schema: Schema, p: Printer) -> None:
     for index, number in enumerate(schema.versions, 1):
         p.emit(
-            "v$number$($number$, $name$::packets$number$)$end$",
+            "v$number$($number$)$end$",
             number=number,
-            name=names.PROTOCOL,
             end="," if index < len(schema.versions) else ";",
         )
 
@@ -201,25 +146,3 @@ def registrations(schema: Schema, p: Printer, generators: list[MessageGenerator 
                 name=names.nested(schema, generator.model),
             )
         registrations(schema, p, generator.nested)
-
-
-def tables(schema: Schema, p: Printer) -> None:
-    for number in schema.versions:
-        p.emit(
-            """
-            private static @Nullable Class<? extends Packet> packets$number$(int packetId) {
-                return switch (packetId) {
-                    $cases$
-                    default -> null;
-                };
-            }
-
-            """,
-            number=number,
-            cases=partial(cases, schema, p, number),
-        )
-
-
-def cases(schema: Schema, p: Printer, number: int) -> None:
-    for packet_id, encoding in sorted(schema.packets(number).items()):
-        p.emit("case $id$ -> $spelled$.class;", id=packet_id, spelled=names.qualified(schema, encoding.model))

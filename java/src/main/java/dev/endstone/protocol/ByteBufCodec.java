@@ -509,7 +509,7 @@ public final class ByteBufCodec {
             }
             return value;
         } catch (DecodeException e) {
-            e.stamp(type, start, length);
+            e.stamp(type, e.getOffset() - start, length);
             buf.readerIndex(start);
             throw e;
         }

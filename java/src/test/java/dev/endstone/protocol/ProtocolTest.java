@@ -4,9 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +17,6 @@ final class ProtocolTest {
                                     .setMessage("hello")
                                     .build())
                     .build();
-
-    private static final PlayStatusPacket PLAYER_SPAWN =
-            PlayStatusPacket.newBuilder().setStatus(PlayStatus.PLAYER_SPAWN).build();
 
     private static final dev.endstone.protocol.v2168.PlaySoundPacket SOUND =
             dev.endstone.protocol.v2168.PlaySoundPacket.newBuilder()
@@ -155,72 +150,6 @@ final class ProtocolTest {
     }
 
     @Test
-    void encodePacketFramesTheBodyWithTheSubIds() {
-        assertEquals("824800000003", hex(Protocol.v2225.encodePacket(PLAYER_SPAWN, 1, 2)));
-    }
-
-    @Test
-    void decodePacketGivesTheHeaderOfTheFrame() {
-        assertEquals(
-                new PacketHeader(2, 1, 2),
-                Protocol.v2225.decodePacket(bytes("824800000003")).header());
-    }
-
-    @Test
-    void decodePacketGivesThePacketOfTheFrame() {
-        assertEquals(PLAYER_SPAWN, Protocol.v2225.decodePacket(bytes("824800000003")).packet());
-    }
-
-    @Test
-    void decodePacketRejectsAnUnknownPacketId() {
-        assertEquals(
-                "PacketHeader.packet_id: unknown value at byte 2 of 2",
-                assertThrows(
-                                DecodeException.class,
-                                () -> Protocol.v2225.decodePacket(bytes("ff07")))
-                        .getMessage());
-    }
-
-    @Test
-    void decodePacketRejectsAnEmptyFrame() {
-        assertEquals(
-                "PacketHeader: truncated at byte 0 of 0",
-                assertThrows(DecodeException.class, () -> Protocol.v2225.decodePacket(new byte[0]))
-                        .getMessage());
-    }
-
-    @Test
-    void aTruncatedFramedBodyCountsFromTheHeader() {
-        assertEquals(
-                "ToastRequestPacket.content: truncated at byte 5 of 5",
-                assertThrows(
-                                DecodeException.class,
-                                () -> Protocol.v2225.decodePacket(bytes("ba01026162")))
-                        .getMessage());
-    }
-
-    @Test
-    void theOffsetCountsFromTheFirstByteDecodePacketIsHanded() {
-        ByteBuf buf = Unpooled.wrappedBuffer(bytes("00ba01026162"));
-        buf.skipBytes(1);
-        assertEquals(
-                "ToastRequestPacket.content: truncated at byte 5 of 5",
-                assertThrows(DecodeException.class, () -> Protocol.v2225.decodePacket(buf))
-                        .getMessage());
-    }
-
-    @Test
-    void encodePacketRejectsAPacketOfAnotherProtocol() {
-        assertEquals(
-                "packet: dev.endstone.protocol.v2168.PlaySoundPacket "
-                        + "is not a packet at protocol 2225",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> Protocol.v2225.encodePacket(SOUND))
-                        .getMessage());
-    }
-
-    @Test
     void aSnapshotNumberEncodesWithItsSnapshotsClasses() {
         assertEquals(
                 "01610204060000803f0000803f0000",
@@ -230,11 +159,11 @@ final class ProtocolTest {
     @Test
     void aSnapshotNumberDecodesWithItsSnapshotsClasses() {
         assertEquals(
-                dev.endstone.protocol.v2168.PlaySoundPacket.class,
+                SOUND,
                 Protocol.of(2169)
                         .orElseThrow()
-                        .decodePacket(bytes("5601610204060000803f0000803f0000"))
-                        .packet()
-                        .getClass());
+                        .decode(
+                                dev.endstone.protocol.v2168.PlaySoundPacket.class,
+                                bytes("01610204060000803f0000803f0000")));
     }
 }
