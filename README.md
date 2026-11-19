@@ -3,7 +3,7 @@
 <h3>bedrock-protocol</h3>
 
 <p>
-  <b>The Minecraft: Bedrock Edition network protocol for C++, Python and Java</b>
+  <b>The Minecraft: Bedrock Edition network protocol for C++ and Python</b>
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -92,62 +92,6 @@ assert(decoded && *decoded == packet);
 std::optional<bp::ProtocolVersion> by_number = bp::protocol_version(2225);
 std::optional<bp::ProtocolVersion> by_release = bp::protocol_version("1.26.63");
 assert(by_number && by_release && by_number->snapshot == 2225 && by_release->snapshot == 2225);
-```
-
-## Java
-
-### Install
-
-Build the jar into `build/java/libs` with JDK 21 or newer and Python 3.12 or newer:
-
-```shell
-git clone https://github.com/EndstoneMC/bedrock-protocol
-cd bedrock-protocol/java
-./gradlew build
-```
-
-```kotlin
-dependencies {
-    implementation(files("bedrock-protocol/build/java/libs/bedrock-protocol-X.Y.Z.jar"))
-    implementation("io.netty:netty-buffer:4.2.19.Final")
-}
-```
-
-### Encode and decode
-
-```java
-import dev.endstone.protocol.Packet;
-import dev.endstone.protocol.TextPacket;
-import dev.endstone.protocol.TextPacketType;
-import dev.endstone.protocol.v2225.Packets;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-TextPacket.Builder packet = TextPacket.newBuilder();
-packet.setMessageOnly(
-        TextPacket.MessageOnly.newBuilder()
-                .setType(TextPacketType.CHAT)
-                .setMessage("hello")
-                .build());
-
-ByteBuf data = Unpooled.buffer();
-Packets.encode(packet.build(), data);
-Packet decoded = Packets.decode(TextPacket.ID, data);
-assert decoded.equals(packet.build());
-```
-
-### Pick a protocol
-
-```java
-import dev.endstone.protocol.ProtocolVersion;
-
-ProtocolVersion byNumber = ProtocolVersion.of(2225).orElseThrow();
-ProtocolVersion byRelease = ProtocolVersion.of("1.26.63").orElseThrow();
-assert byNumber.snapshot() == 2225 && byRelease.snapshot() == 2225;
-
-byRelease.encodePacket(packet.build(), data);
-Packet decodedByRelease = byRelease.decodePacket(TextPacket.ID, data);
-assert decodedByRelease.equals(packet.build());
 ```
 
 ## Supported Protocols
