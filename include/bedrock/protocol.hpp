@@ -37,6 +37,7 @@
 #include "bedrock/protocol/packets.hpp"
 #include "bedrock/protocol/player.h"
 #include "bedrock/protocol/presence.h"
+#include "bedrock/protocol/protocol.hpp"
 #include "bedrock/protocol/scoreboard.h"
 #include "bedrock/protocol/script.h"
 #include "bedrock/protocol/serializer.hpp"

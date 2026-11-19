@@ -37,6 +37,7 @@ enum class Errc : std::uint8_t {
     out_of_range,
     unknown_value,
     trailing_bytes,
+    unknown_type,
 };
 
 using PathSegment = std::variant<std::string_view, std::size_t>;

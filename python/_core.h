@@ -74,13 +74,6 @@ void register_mode(const Scope &scope, nb::handle cls, SerializationMode mode, i
 void register_packet(const Scope &scope, int id, nb::handle cls);
 void bind_name(nb::handle owner, std::string_view leaf, nb::handle cls);
 
-template <typename T, int V, SerializationMode M>
-concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
-    { Serializer<T, V, M>::since } -> std::convertible_to<int>;
-    Serializer<T, V, M>::serialize(writer, value);
-    Serializer<T, V, M>::deserialize(reader);
-};
-
 template <typename S, typename T, int N, SerializationMode K>
 concept Derives = std::derived_from<S, Serializer<T, N, K>> && !std::same_as<S, Serializer<T, N, K>>;
 
@@ -127,10 +120,12 @@ const auto &python_names()
 
 template <typename T, int N, SerializationMode M>
 inline constexpr Codec codec{
-    .encode = [](BinaryWriter &stream,
-                 nb::handle value) { return protocol::encode<N, M>(stream, *nb::inst_ptr<T>(value)); },
+    .encode =
+        [](BinaryWriter &stream, nb::handle value) {
+            return protocol::encode<N>(*nb::inst_ptr<T>(value), stream, serialization_mode_t<M>());
+        },
     .decode = [](BinaryReader &stream) -> nb::object {
-        auto value = protocol::decode<N, T, M>(stream);
+        auto value = protocol::decode<N, T>(stream, serialization_mode_t<M>());
         if (!value) {
             throw_decode_error(value.error());
         }

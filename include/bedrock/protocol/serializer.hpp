@@ -1,10 +1,12 @@
 #pragma once
 
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <format>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <variant>
@@ -21,8 +23,25 @@ enum class SerializationMode : std::uint8_t {
     Manual = 2,
 };
 
+template <SerializationMode M>
+struct serialization_mode_t {
+    explicit serialization_mode_t() = default;
+};
+
+using cereal_t = serialization_mode_t<SerializationMode::Cereal>;
+using manual_t = serialization_mode_t<SerializationMode::Manual>;
+
+inline constexpr cereal_t cereal{};
+inline constexpr manual_t manual{};
+
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 struct Serializer;
+
+template <typename T, int V, SerializationMode M = SerializationMode::Default>
+concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
+    { Serializer<T, V, M>::serialize(writer, value) } -> std::same_as<std::expected<void, Errc>>;
+    { Serializer<T, V, M>::deserialize(reader) } -> std::same_as<std::expected<T, Errc>>;
+};
 
 struct DecodeError {
     Errc reason;
@@ -38,37 +57,8 @@ struct EncodeError {
     std::vector<PathSegment> path;
 };
 
-template <int V, SerializationMode M = SerializationMode::Default, Reflected T>
-[[nodiscard]] auto encode(BinaryWriter &stream, const T &value) -> std::expected<void, EncodeError>
-{
-    auto written = Serializer<T, V, M>::serialize(stream, value);
-    if (written) {
-        return {};
-    }
-    return std::unexpected(EncodeError{
-        .reason = written.error(),
-        .type = struct_name<T>(),
-        .path = stream.takePath(),
-    });
-}
-
-template <int V, Reflected T, SerializationMode M = SerializationMode::Default>
-[[nodiscard]] auto decode(BinaryReader &stream) -> std::expected<T, DecodeError>
-{
-    auto value = Serializer<T, V, M>::deserialize(stream);
-    if (value && stream.getUnreadLength() == 0) {
-        return std::move(*value);
-    }
-    return std::unexpected(DecodeError{
-        .reason = value ? Errc::trailing_bytes : value.error(),
-        .type = struct_name<T>(),
-        .path = stream.takePath(),
-        .offset = stream.getReadPointer(),
-        .length = stream.getLength(),
-    });
-}
-
 namespace detail {
+
 template <typename Out>
 auto formatPath(Out out, std::string_view type, const std::vector<PathSegment> &path) -> Out
 {
@@ -83,7 +73,74 @@ auto formatPath(Out out, std::string_view type, const std::vector<PathSegment> &
     }
     return out;
 }
+
+template <int V>
+struct encode_fn {
+    template <Reflected T, SerializationMode M = SerializationMode::Default>
+        requires Serializable<T, V, M>
+    [[nodiscard]] auto operator()(const T &value, BinaryWriter &stream,
+                                  serialization_mode_t<M> = serialization_mode_t<M>()) const
+        -> std::expected<void, EncodeError>
+    {
+        auto written = Serializer<T, V, M>::serialize(stream, value);
+        if (written) {
+            return {};
+        }
+        return std::unexpected(EncodeError{
+            .reason = written.error(),
+            .type = struct_name<T>(),
+            .path = stream.takePath(),
+        });
+    }
+
+    template <Reflected T, SerializationMode M = SerializationMode::Default>
+        requires Serializable<T, V, M>
+    [[nodiscard]] auto operator()(const T &value, serialization_mode_t<M> mode = serialization_mode_t<M>()) const
+        -> std::expected<std::string, EncodeError>
+    {
+        std::string data;
+        BinaryWriter writer{data};
+        return (*this)(value, writer, mode).transform([&] { return std::move(data); });
+    }
+};
+
+template <int V, Reflected T>
+struct decode_fn {
+    template <SerializationMode M = SerializationMode::Default>
+        requires Serializable<T, V, M>
+    [[nodiscard]] auto operator()(BinaryReader &stream, serialization_mode_t<M> = serialization_mode_t<M>()) const
+        -> std::expected<T, DecodeError>
+    {
+        auto value = Serializer<T, V, M>::deserialize(stream);
+        if (value && stream.getUnreadLength() == 0) {
+            return std::move(*value);
+        }
+        return std::unexpected(DecodeError{
+            .reason = value ? Errc::trailing_bytes : value.error(),
+            .type = struct_name<T>(),
+            .path = stream.takePath(),
+            .offset = stream.getReadPointer(),
+            .length = stream.getLength(),
+        });
+    }
+
+    template <SerializationMode M = SerializationMode::Default>
+        requires Serializable<T, V, M>
+    [[nodiscard]] auto operator()(std::string_view data, serialization_mode_t<M> mode = serialization_mode_t<M>()) const
+        -> std::expected<T, DecodeError>
+    {
+        BinaryReader reader{data};
+        return (*this)(reader, mode);
+    }
+};
+
 }  // namespace detail
+
+template <int V>
+inline constexpr detail::encode_fn<V> encode{};
+
+template <int V, Reflected T>
+inline constexpr detail::decode_fn<V, T> decode{};
 
 }  // namespace bedrock::protocol
 
@@ -92,11 +149,8 @@ struct std::formatter<bedrock::protocol::Errc> : std::formatter<std::string_view
     template <typename FormatContext>
     auto format(bedrock::protocol::Errc reason, FormatContext &ctx) const
     {
-        static constexpr std::array<std::string_view, 4> reasons{
-            "truncated",
-            "out of range",
-            "unknown value",
-            "trailing bytes",
+        static constexpr std::array<std::string_view, 5> reasons{
+            "truncated", "out of range", "unknown value", "trailing bytes", "unknown type",
         };
         return std::formatter<std::string_view>::format(reasons[std::to_underlying(reason)], ctx);
     }

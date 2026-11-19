@@ -40,6 +40,17 @@ class Q:
 """
 
 
+GATED = """
+from protocol import packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@packet(id=2, since=3)
+class G:
+    x: uint8
+"""
+
+
 BITSET = """
 from enum import IntEnum
 from protocol import bitset, type, uint8
@@ -1100,6 +1111,46 @@ def test_packets_hpp_includes_every_module_header(generate):
     out = generate({"a": A, "b": B})
 
     assert "#include <bedrock/protocol/b.h>" in (out / "packets.hpp").read_text()
+
+
+def test_packets_hpp_gives_each_protocol_a_namespace_holding_its_number(generate):
+    registry = (generate({"a": A}) / "packets.hpp").read_text()
+    numbered = re.findall(r"namespace v(\d+) \{\n\ninline constexpr int version = \1;", registry)
+
+    assert numbered == ["1", "2", "3", "4", "5"]
+
+
+def test_a_protocols_codec_forwards_to_the_root_entry_points(generate):
+    registry = (generate({"a": A}) / "packets.hpp").read_text()
+
+    assert "inline constexpr const auto &encode = ::bedrock::protocol::encode<version>;" in registry
+    assert "inline constexpr const auto &decode = ::bedrock::protocol::decode<version, T>;" in registry
+
+
+def test_a_protocols_packet_variant_holds_its_packets_by_id(generate):
+    registry = (generate({"a": A, "c": C}) / "packets.hpp").read_text()
+
+    assert "using Packet = std::variant<\n    ::bedrock::protocol::P,\n    ::bedrock::protocol::Q>;" in registry
+
+
+def test_a_protocols_packet_variant_leaves_out_a_packet_it_does_not_have(generate):
+    registry = (generate({"a": A, "g": GATED}) / "packets.hpp").read_text()
+    two = registry.split("namespace v2 {")[1].split("}  // namespace v2")[0]
+
+    assert "using Packet = std::variant<\n    ::bedrock::protocol::P>;" in two
+
+
+def test_a_protocol_without_a_packet_has_an_empty_packet_variant(generate):
+    registry = (generate({"b": B}) / "packets.hpp").read_text()
+
+    assert "using Packet = std::variant<>;" in registry
+
+
+def test_a_protocols_packet_variant_takes_a_packet_from_its_first_protocol(generate):
+    registry = (generate({"a": A, "g": GATED}) / "packets.hpp").read_text()
+    three = registry.split("namespace v3 {")[1].split("}  // namespace v3")[0]
+
+    assert "using Packet = std::variant<\n    ::bedrock::protocol::P,\n    ::bedrock::protocol::G>;" in three
 
 
 def test_version_hpp_gives_a_release_the_newest_snapshot_at_or_below_it(generate):

@@ -76,22 +76,19 @@ namespace bp = bedrock::protocol;
 bp::TextPacket packet;
 packet.body = bp::TextPacket::MessageOnly{.type = bp::TextPacketType::Chat, .message = "hello"};
 
-std::string data;
-bp::BinaryWriter writer{data};
-std::expected<void, bp::EncodeError> encoded = bp::encode<2225>(writer, packet);
-assert(encoded);
-
-bp::BinaryReader reader{data};
-std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::decode<2225, bp::TextPacket>(reader);
+std::expected<std::string, bp::EncodeError> data = bp::v2225::encode(packet);
+assert(data);
+std::expected<bp::TextPacket, bp::DecodeError> decoded = bp::v2225::decode<bp::TextPacket>(*data);
 assert(decoded && *decoded == packet);
 ```
 
 ### Pick a protocol
 
 ```cpp
-std::optional<bp::ProtocolVersion> by_number = bp::protocol_version(2225);
-std::optional<bp::ProtocolVersion> by_release = bp::protocol_version("1.26.63");
-assert(by_number && by_release && by_number->snapshot == 2225 && by_release->snapshot == 2225);
+std::optional<bp::Protocol> protocol = bp::protocol("1.26.63");
+assert(protocol && protocol == bp::protocol(2225));
+std::expected<bp::TextPacket, bp::DecodeError> picked = protocol->decode<bp::TextPacket>(*protocol->encode(packet));
+assert(picked && *picked == packet);
 ```
 
 ## Supported Protocols

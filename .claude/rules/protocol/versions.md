@@ -26,7 +26,7 @@ paths:
 - With every version, add its number to `versions` in `protocol/__init__.py` in ascending order (a renumber replaces the superseded one) and bump every protocol number and release string README's examples name to the new one.
 - README gives Python, C++ and Java the same three sections, Install, Encode and decode, and Pick a protocol, as headings, install commands and code blocks with at most one short line before a block and no other prose.
 - README's Encode and decode shows one example: the same packet and steps in every language, the library imported as `bp` and Java's classes imported by name, every encode and decode call, Java's included, naming the latest protocol, the packet built empty and each field set in its own statement with its value built whole in place; every block is laid out by ruff format, clang-format or google-java-format AOSP.
-- README's Pick a protocol looks up the example's protocol by number and by release, and Python and Java encode and decode the example's packet with what the lookup returns.
+- README's Pick a protocol looks up the example's protocol by number and by release, and every language encodes and decodes the example's packet with what the lookup returns.
 
 ## Releases
 

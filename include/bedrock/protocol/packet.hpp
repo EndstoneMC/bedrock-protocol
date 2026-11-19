@@ -1,9 +1,14 @@
 #pragma once
 
 #include <array>
+#include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <variant>
 
 #include <bedrock/protocol/detail/reflect.hpp>
 #include <bedrock/protocol/serializer.hpp>
@@ -71,6 +76,68 @@ struct field_accessor<PacketHeader> {
         else {
             return value.sender_sub_id;
         }
+    }
+};
+
+template <int V, typename Packet>
+struct encode_packet_fn;
+
+template <int V, typename... P>
+struct encode_packet_fn<V, std::variant<P...>> {
+    template <typename T>
+        requires(std::same_as<T, P> || ...)
+    [[nodiscard]] auto operator()(const T &packet, std::uint8_t recipient_sub_id = 0,
+                                  std::uint8_t sender_sub_id = 0) const -> std::expected<std::string, EncodeError>
+    {
+        std::string data;
+        BinaryWriter writer{data};
+        const PacketHeader header{
+            .packet_id = T::Id,
+            .recipient_sub_id = recipient_sub_id,
+            .sender_sub_id = sender_sub_id,
+        };
+        return encode<V>(header, writer).and_then([&] { return encode<V>(packet, writer); }).transform([&] {
+            return std::move(data);
+        });
+    }
+};
+
+template <int V, typename Packet>
+struct decode_packet_fn;
+
+template <int V, typename... P>
+struct decode_packet_fn<V, std::variant<P...>> {
+    [[nodiscard]] auto operator()(std::string_view data) const
+        -> std::expected<std::pair<PacketHeader, std::variant<P...>>, DecodeError>
+    {
+        BinaryReader reader{data};
+        auto header = Serializer<PacketHeader, V>::deserialize(reader);
+        if (!header) {
+            return std::unexpected(DecodeError{
+                .reason = header.error(),
+                .type = struct_name<PacketHeader>(),
+                .path = {},
+                .offset = reader.getReadPointer(),
+                .length = reader.getLength(),
+            });
+        }
+        std::expected<std::pair<PacketHeader, std::variant<P...>>, DecodeError> decoded = std::unexpected(DecodeError{
+            .reason = Errc::unknown_value,
+            .type = struct_name<PacketHeader>(),
+            .path = {"packet_id"},
+            .offset = reader.getReadPointer(),
+            .length = reader.getLength(),
+        });
+        (
+            [&] {
+                if (header->packet_id == P::Id) {
+                    decoded = decode<V, P>(reader).transform([&](P &&packet) {
+                        return std::pair{*header, std::variant<P...>{std::in_place_type<P>, std::move(packet)}};
+                    });
+                }
+            }(),
+            ...);
+        return decoded;
     }
 };
 

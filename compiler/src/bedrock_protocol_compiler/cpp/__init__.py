@@ -17,10 +17,22 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
         file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))
     registry = context.open(names.REGISTRY_HEADER)
-    registry.emit("#pragma once")
-    registry.emit("")
-    registry.emit("#include <type_traits>")
-    registry.emit("")
+    registry.emit(
+        """
+        #pragma once
+
+        #include <type_traits>
+        #include <variant>
+
+        #include $reflect$
+        #include $packet$
+        #include $serializer$
+
+        """,
+        reflect=names.runtime("detail/reflect"),
+        packet=names.runtime("packet"),
+        serializer=names.runtime("serializer"),
+    )
     for file in files:
         registry.emit("#include $header$", header=names.generated(file.module.stem))
     registry.emit(
@@ -48,8 +60,50 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         for family in file.families
         if isinstance(family, Struct) and family.packet_id is not None
     ]
-    for packet_id, file, family in sorted(packets, key=lambda each: each[0]):
+    packets.sort(key=lambda each: each[0])
+    for packet_id, file, family in packets:
         file.packet(registry, packet_id, family)
+    for number in schema.versions:
+        held = [
+            names.qualified(schema, target)
+            for _, file, family in packets
+            if (target := file.at(family, number)) is not None
+        ]
+        registry.emit(
+            """
+            namespace v$number$ {
+
+            inline constexpr int version = $number$;
+
+            """,
+            number=number,
+        )
+        if not held:
+            registry.emit("using Packet = std::variant<>;")
+        else:
+            registry.emit("using Packet = std::variant<")
+            with registry.indent():
+                for spelled in held[:-1]:
+                    registry.emit("$spelled$,", spelled=spelled)
+                registry.emit("$spelled$>;", spelled=held[-1])
+        registry.emit(
+            """
+
+            inline constexpr const auto &encode = ::$namespace$::encode<version>;
+
+            template <::$namespace$::Reflected T>
+            inline constexpr const auto &decode = ::$namespace$::decode<version, T>;
+
+            inline constexpr ::$namespace$::detail::encode_packet_fn<version, Packet> encode_packet{};
+
+            inline constexpr ::$namespace$::detail::decode_packet_fn<version, Packet> decode_packet{};
+
+            }  // namespace v$number$
+
+            """,
+            number=number,
+            namespace=names.namespace(schema),
+        )
     registry.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
     version = context.open(f"{names.INCLUDE_DIR}/version.hpp")
     version.emit(
