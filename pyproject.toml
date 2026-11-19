@@ -1,7 +1,7 @@
 [project]
 name = "bedrock-protocol"
 dynamic = ["version"]
-description = "Bedrock packets and codecs for Python, bound from the generated C++."
+description = "Minecraft: Bedrock Edition network protocol"
 readme = "README.md"
 authors = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
 maintainers = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
