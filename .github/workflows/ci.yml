@@ -203,6 +203,9 @@ jobs:
   java:
     name: Java
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-java@v6.1.0
@@ -214,6 +217,14 @@ jobs:
       - name: Build
         working-directory: java
         run: ./gradlew --no-daemon build
+
+      - uses: codecov/codecov-action@v7.1.1
+        if: ${{ !cancelled() }}
+        with:
+          directory: build/java/test-results/test
+          report_type: test_results
+          fail_ci_if_error: true
+          use_oidc: true
 
   coverage:
     name: Coverage

@@ -50,4 +50,5 @@ paths:
 - Check every golden in `GoldensTest` both ways through `Protocol` at the case's protocol, finding its class among the generated packets by its file's snake-cased name and the one whose `codec(version)` takes the case's protocol, and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
 - Reach a package-private selector or codec in a test from its type's package, or through `setAccessible` in `CaseLoader`.
 - Anchor an emitted-text assertion in `test_java.py` on its full indentation.
+- Log each test's result and a failure's full exception from Gradle's `test` task.
 - Test in JUnit 6 under `.claude/rules/tests.md`: a behaviour-named method, one behaviour each, no loop, `if` or `try`, `assertThrows` with the message, `@ParameterizedTest` with `argumentSet` for cases, no mocks.

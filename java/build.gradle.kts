@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     `java-library`
     id("com.diffplug.spotless") version "8.10.4"
@@ -88,6 +91,10 @@ tasks.test {
     val goldens = file("../tests/goldens")
     inputs.dir(goldens).withPropertyName("goldens")
     systemProperty("goldens.dir", goldens.absolutePath)
+    testLogging {
+        events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
 
 tasks.jar {
