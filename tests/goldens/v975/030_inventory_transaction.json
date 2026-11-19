@@ -220,5 +220,42 @@
    }
   },
   "bytes": "000001001803860502000300000a000000000000000000000240000000bdc7f7fc0f0a00000000000000000000"
+ },
+ {
+  "id": "non_implemented_feature_source",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "NormalTransactionData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 99999,
+        "container_id": 7,
+        "flags": 0
+       },
+       "slot": 3,
+       "from_item_descriptor": {
+        "id": 323,
+        "stack_size": 2,
+        "aux_value": 3,
+        "block_runtime_id": 0,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0000019f8d060e03860502000300000a000000000000000000000240000000bdc7f7fc0f0a00000000000000000000"
  }
 ]
