@@ -9,20 +9,11 @@ versions = [importlib.import_module(f"bedrock_protocol.v{version}") for version 
 packets = [(m, cls) for m in versions for cls in m.packets.values()]
 
 
-def label_paths(scope, prefix, known):
-    for name in dir(scope):
-        member = getattr(scope, name)
-        if not name.startswith("_") and isinstance(member, type):
-            if member in known:
-                yield member, f"{prefix}.{name}"
-            yield from label_paths(member, f"{prefix}.{name}", known)
-
-
 SERIALIZABLE = {}
 for module in versions:
-    for cls, path in label_paths(module, module.__name__, module.modes):
-        for mode, since in module.modes[cls].items():
-            SERIALIZABLE.setdefault((cls, mode, since), (module, cls, mode, path))
+    for cls, modes in module.modes.items():
+        for mode, since in modes.items():
+            SERIALIZABLE.setdefault((cls, mode, since), (module, cls, mode, f"{module.__name__}.{cls.__qualname__}"))
 
 
 BINDING_GAP = {f"{version.__name__}.CommandRequestPacket" for version in versions} | {

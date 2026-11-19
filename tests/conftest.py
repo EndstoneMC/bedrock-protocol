@@ -1522,10 +1522,10 @@ class ReflectionCtx:
         return MODEL.live[family, self.protocol]
 
     def bound(self, family):
-        top = outermost(family)
-        return reduce(
-            getattr, qualified_name(family).split(".")[1:], getattr(self.module, MODEL.label(top, self.protocol))
-        )
+        model = MODEL.model_at(outermost(family), self.protocol)
+        scope = MODEL.scope(model)
+        home = bedrock_protocol if scope is None else importlib.import_module(f"bedrock_protocol.v{scope}")
+        return reduce(getattr, qualified_name(family).split(".")[1:], getattr(home, MODEL.name(model)))
 
     def served(self):
         result = {}

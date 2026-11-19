@@ -1,11 +1,14 @@
-def test_an_alias_crosses_as_its_primitive(protocol):
-    assert type(protocol.RemoveActorPacket().entity_id) is int
+import bedrock_protocol as bp
 
 
-def test_a_default_alias_is_zero(protocol):
-    assert protocol.RemoveActorPacket().entity_id == 0
+def test_an_alias_crosses_as_its_primitive():
+    assert type(bp.RemoveActorPacket().entity_id) is int
+
+
+def test_a_default_alias_is_zero():
+    assert bp.RemoveActorPacket().entity_id == 0
 
 
 def test_a_signed_alias_keeps_its_sign_in_the_encoding(protocol):
-    packet = protocol.RemoveActorPacket(entity_id=-3)
-    assert protocol.decode(protocol.RemoveActorPacket, protocol.encode(packet)) == packet
+    packet = bp.RemoveActorPacket(entity_id=-3)
+    assert protocol.decode(bp.RemoveActorPacket, protocol.encode(packet)) == packet

@@ -1,9 +1,9 @@
 import pytest
 
-import bedrock_protocol
+import bedrock_protocol as bp
 from bedrock_protocol import v2168
 
-VIDEO_CAPTURE = v2168.PlayerVideoCapturePacket
+VIDEO_CAPTURE = bp.PlayerVideoCapturePacket
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,5 @@ def test_copies_that_differ_decode_to_the_last_copy(encoded, last):
 
 
 def test_a_bad_later_copy_fails_the_decode():
-    with pytest.raises(
-        bedrock_protocol.DecodeError, match=r"^PlayerVideoCapturePacket\.params: unknown value at byte 11 of 11$"
-    ):
+    with pytest.raises(bp.DecodeError, match=r"^PlayerVideoCapturePacket\.params: unknown value at byte 11 of 11$"):
         v2168.decode(VIDEO_CAPTURE, bytes.fromhex("003c00000004636c697002"))

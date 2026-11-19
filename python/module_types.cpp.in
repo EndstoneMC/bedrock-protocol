@@ -3,9 +3,9 @@
 
 namespace bedrock::protocol::python {
 
-void init_@_module@_types(std::span<const Scope> bound)
+void init_@_module@_types(nb::handle package, std::span<const Scope> bound)
 {
-    bind_schema_types<@_module@_types>(bound);
+    bind_schema_types<@_module@_types>(package, bound);
 }
 
 }  // namespace bedrock::protocol::python

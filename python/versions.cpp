@@ -4,6 +4,7 @@
 #include <format>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -50,24 +51,26 @@ const Codec &resolve(const CodecTable &codecs, int number, nb::handle type, Seri
 
 }  // namespace
 
-std::pair<nb::object, std::string_view> claim_owner(const Scope &scope, std::string_view declared,
-                                                    std::string_view label, bool create)
+std::tuple<nb::object, nb::object, std::string_view> claim_owner(const Scope &scope, nb::handle home,
+                                                                 std::string_view declared, std::string_view label,
+                                                                 bool create)
 {
     std::string_view path = label.empty() ? declared : label;
-    nb::object owner = nb::borrow(scope.module);
+    nb::object owner = scope.names;
     for (auto pos = path.find("::"); pos != std::string_view::npos; pos = path.find("::")) {
         owner = owner.attr(std::string(path.substr(0, pos)).c_str());
         path.remove_prefix(pos + 2);
     }
+    nb::object parent = owner.is(scope.names) ? nb::borrow(home) : owner;
     const std::string name(declared.substr(declared.rfind(':') + 1));
-    if (create && nb::hasattr(owner, name.c_str())) {
+    if (create && nb::hasattr(parent, name.c_str())) {
         std::string dotted(declared);
         for (auto pos = dotted.find("::"); pos != std::string::npos; pos = dotted.find("::", pos + 1)) {
             dotted.replace(pos, 2, ".");
         }
         throw nb::value_error(std::format("{}: is already bound at protocol {}", dotted, scope.number).c_str());
     }
-    return {owner, path};
+    return {owner, parent, path};
 }
 
 void register_mode(const Scope &scope, nb::handle cls, SerializationMode mode, int since, const Codec *codec)
@@ -97,12 +100,13 @@ void init_versions(nb::module_ &parent)
         .value("MANUAL", SerializationMode::Manual);
     bind_struct<PacketHeader>(parent, "PacketHeader");
     static std::array<CodecTable, versions.size()> tables;
+    const nb::object names = nb::module_::import_("types").attr("SimpleNamespace");
     std::vector<Scope> bound;
     for (std::size_t i = 0; i < versions.size(); ++i) {
         auto module = parent.def_submodule(std::format("v{}", versions[i]).c_str());
-        bound.push_back({.number = versions[i], .module = module, .codecs = &tables[i]});
+        bound.push_back({.number = versions[i], .module = module, .codecs = &tables[i], .names = names()});
     }
-    init_types(bound);
+    init_types(parent, bound);
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         (
             [&] {

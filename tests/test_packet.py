@@ -1,10 +1,11 @@
 import pytest
 
-from bedrock_protocol import v729, v786, v844, v859, v898, v975, v1001, v2168, v2225
+import bedrock_protocol as bp
+from bedrock_protocol import v729, v776, v844, v859, v898, v975, v1001, v2168, v2225
 
 
 def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
-    assert v975.packets[74] is v786.BossEventPacket
+    assert v975.packets[74] is v776.BossEventPacket
 
 
 def test_a_packet_unchanged_since_1001_resolves_to_that_type_at_2168():
@@ -12,18 +13,18 @@ def test_a_packet_unchanged_since_1001_resolves_to_that_type_at_2168():
 
 
 def test_a_packet_never_redeclared_resolves_to_one_type_across_versions():
-    assert v975.packets[1] is v2225.LoginPacket
+    assert v975.packets[1] is bp.LoginPacket
 
 
 @pytest.mark.parametrize("version", [v729, v844], ids=lambda module: module.__name__)
 def test_a_packet_whose_forms_differ_only_in_an_enums_members_resolves_to_one_class(version):
-    packet = v2225.PacketViolationWarningPacket
+    packet = bp.PacketViolationWarningPacket
     assert version.packets[packet.ID] is packet
 
 
 @pytest.mark.parametrize("version", [v729, v1001], ids=lambda module: module.__name__)
 def test_a_packet_whose_enum_changes_its_numbers_resolves_to_one_class(version):
-    packet = v2225.SetLastHurtByPacket
+    packet = bp.SetLastHurtByPacket
     assert version.packets[packet.ID] is packet
 
 

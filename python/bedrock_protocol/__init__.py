@@ -1,6 +1,4 @@
-"""Bedrock packet types: the bare names are the latest protocol, `v<N>` pins one and holds its codec."""
-
-from importlib import import_module
+"""Bedrock packet types: the bare names are the latest protocol's, `v<N>` holds protocol N's codec and older types."""
 
 from ._core import ProtocolVersion, protocol_version, releases, versions
 
@@ -30,19 +28,11 @@ class EncodeError(ValueError):
         return type(self), (str(self), self.reason, self.path)
 
 
-_latest = import_module(f".v{versions[-1]}", __name__)
-_types = {name: getattr(_latest, name) for name in _latest.__all__ if isinstance(getattr(_latest, name), type)}
-globals().update(_types)
 __all__ = [
-    "DecodeError",
-    "EncodeError",
-    "PacketHeader",
     "ProtocolVersion",
-    "SerializationMode",
     "nbt",
     "protocol_version",
     "releases",
     "versions",
-    *_types,
+    *(name for name, value in globals().items() if isinstance(value, type) and value.__module__ == __name__),
 ]
-del import_module, _latest, _types

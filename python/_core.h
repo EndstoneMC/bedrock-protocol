@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -55,6 +56,7 @@ struct Scope {
     int number;
     nb::handle module;
     CodecTable *codecs;
+    nb::object names;
     nb::dict encodings;
     nb::dict modes;
     nb::dict packets;
@@ -66,10 +68,11 @@ struct Scope {
 void init_nbt(nb::module_ &parent);
 void init_versions(nb::module_ &parent);
 
-void init_types(std::span<const Scope> bound);
+void init_types(nb::handle package, std::span<const Scope> bound);
 
-std::pair<nb::object, std::string_view> claim_owner(const Scope &scope, std::string_view declared,
-                                                    std::string_view label, bool create);
+std::tuple<nb::object, nb::object, std::string_view> claim_owner(const Scope &scope, nb::handle home,
+                                                                 std::string_view declared, std::string_view label,
+                                                                 bool create);
 void register_mode(const Scope &scope, nb::handle cls, SerializationMode mode, int since, const Codec *codec);
 void register_packet(const Scope &scope, int id, nb::handle cls);
 void bind_name(nb::handle owner, std::string_view leaf, nb::handle cls);
@@ -414,7 +417,7 @@ void bind_struct(nb::handle scope, const char *name)
 }
 
 template <typename T, int V>
-void bind_type(const Scope &scope, std::string_view label)
+void bind_type(nb::handle home, const Scope &scope, std::string_view label)
 {
     std::string_view declared;
     if constexpr (std::is_enum_v<T>) {
@@ -424,14 +427,14 @@ void bind_type(const Scope &scope, std::string_view label)
         declared = struct_name<T>();
     }
     nb::handle cls = nb::type<T>();
-    const auto [owner, leaf] = claim_owner(scope, declared, label, !cls.is_valid());
+    const auto [owner, parent, leaf] = claim_owner(scope, home, declared, label, !cls.is_valid());
     if (!cls.is_valid()) {
         const std::string name(declared.substr(declared.find_last_of(':') + 1));
         if constexpr (std::is_enum_v<T>) {
-            bind_enum<T>(owner, name.c_str());
+            bind_enum<T>(parent, name.c_str());
         }
         else {
-            bind_struct<T>(owner, name.c_str());
+            bind_struct<T>(parent, name.c_str());
         }
         cls = nb::type<T>();
     }
@@ -462,6 +465,12 @@ void bind_type(const Scope &scope, std::string_view label)
 }
 
 template <typename T, typename List>
+inline constexpr bool listed_v = false;
+
+template <typename T, typename... L>
+inline constexpr bool listed_v<T, type_list<L...>> = (std::is_same_v<T, L> || ...);
+
+template <typename T, typename List>
 struct label_position;
 
 template <typename T, typename... L>
@@ -470,8 +479,17 @@ struct label_position<T, type_list<L...>> {
     static constexpr std::size_t value = std::ranges::find(found, true) - found.begin();
 };
 
+template <typename T, template <int> class Types, typename Protocols = std::make_index_sequence<versions.size()>>
+struct holders;
+
+template <typename T, template <int> class Types, std::size_t... J>
+struct holders<T, Types, std::index_sequence<J...>> {
+    static constexpr std::array<bool, sizeof...(J)> held{listed_v<T, typename Types<versions[J]>::types>...};
+    static constexpr std::size_t first = std::ranges::find(held, true) - held.begin();
+};
+
 template <template <int> class Types>
-void bind_schema_types(std::span<const Scope> bound)
+void bind_schema_types(nb::handle package, std::span<const Scope> bound)
 {
     [&]<std::size_t... I>(std::index_sequence<I...>) {
         constexpr std::size_t newest = versions.size() - 1;
@@ -481,7 +499,7 @@ void bind_schema_types(std::span<const Scope> bound)
                 const Scope &scope = bound[newest - I];
                 [&]<typename... T>(type_list<T...>) {
                     (bind_type<T, number>(
-                         scope,
+                         holders<T, Types>::held.back() ? package : bound[holders<T, Types>::first].module, scope,
                          label_position<T, typename Types<number>::labelled>::value < Types<number>::labels.size()
                              ? Types<number>::labels[label_position<T, typename Types<number>::labelled>::value]
                              : std::string_view{}),
