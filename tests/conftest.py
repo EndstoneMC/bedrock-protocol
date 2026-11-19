@@ -561,6 +561,7 @@ class EnumSchema(BasicSchema):
         self.numbering = numbering
         self.naming = naming
         self.live_numbers = {shape.numbers[member.name] for member in shape.members}
+        self.names = {member.encoded_name: shape.numbers[member.name] for member in shape.members}
 
     @override
     def do_load(self, reader, context, traits):
@@ -1006,6 +1007,7 @@ class GenericCompositeSchema(BasicSchema):
     def __init__(self, cls, members):
         self.cls = cls
         self.members = members
+        self.declared = []
         self.bound_type = cls
 
     @override
@@ -1096,22 +1098,26 @@ class CaseForm:
     PLAIN_ENUMS: ClassVar = {"ContainerID", "ContainerType", "NetherWorldType"}
 
     @classmethod
-    def matches(cls, case, bedrock, schema):
+    def matches(cls, case, bedrock, schema, declared, node):
         """Whether Bedrock's JSON holds a case's value, keys aside, a primitive standing for a one-child object."""
         match schema:
             case OptionalSchema():
-                return cls.matches(case, bedrock, schema.element)
+                return cls.matches(case, bedrock, schema.element, declared, node)
             case DynamicValueSchema() if isinstance(case, dict):
-                return cls.matches(case, bedrock, schema.object)
+                return cls.matches(case, bedrock, schema.object, declared, node)
             case DynamicValueSchema() if isinstance(case, list):
-                return cls.matches(case, bedrock, schema.array)
+                return cls.matches(case, bedrock, schema.array, declared, node)
             case VariantCase() if not (isinstance(case, dict) and "__class__" in case):
-                return any(cls.matches(case, bedrock, arm) for arm in schema.inner.arms)
+                return any(
+                    cls.matches(case, bedrock, arm, declared, each)
+                    for arm, each in zip(schema.inner.arms, cls.arms(schema, node), strict=True)
+                )
 
         # {"__class__": "Pause"} vs {}
         if isinstance(case, dict) and "__class__" in case:
-            arm = next(arm for arm in schema.inner.arms if arm.bound_type.__name__ == case["__class__"])
-            return cls.matches({key: value for key, value in case.items() if key != "__class__"}, bedrock, arm)
+            index = next(i for i, arm in enumerate(schema.inner.arms) if arm.bound_type.__name__ == case["__class__"])
+            bare = {key: value for key, value in case.items() if key != "__class__"}
+            return cls.matches(bare, bedrock, schema.inner.arms[index], declared, cls.arms(schema, node)[index])
 
         # {"value": "0b100000001"} vs {"Actor Flag Bitset Data": 129, 2}
         if isinstance(case, dict) and isinstance(bedrock, FlatObject) and isinstance(schema, GenericCompositeSchema):
@@ -1124,7 +1130,7 @@ class CaseForm:
                         return False
                     index += len(groups)
                 else:
-                    if index >= len(bedrock) or not cls.matches(value, bedrock[index], slot):
+                    if index >= len(bedrock) or not cls.matches(value, bedrock[index], slot, declared, None):
                         return False
                     index += 1
             return index == len(bedrock)
@@ -1136,15 +1142,45 @@ class CaseForm:
             and isinstance(schema, GenericCompositeSchema | MapSchema)
         ):
             slots = cls.slots(case, schema)
-            return len(slots) == len(bedrock) and all(
-                cls.matches(value, each, slot) for (_, value, slot), each in zip(slots, bedrock.values(), strict=True)
-            )
+            fields = cls.fields(declared, node)
+            named = {field.get("name"): field["type"] for field in fields}
+            value_node = node.get("value") if isinstance(node, dict) else None
+            if len(slots) == len(bedrock) and all(
+                cls.matches(value, each, slot, declared, named.get(key, value_node))
+                for (_, value, slot), (key, each) in zip(slots, bedrock.items(), strict=True)
+            ):
+                return True
+            if not isinstance(schema, GenericCompositeSchema) or not fields:
+                return False
+
+            # {"attach_to_entity_id": -5, "actor_locator": 2} vs {"Entity Actor ID": -5}
+            reached = {0}
+            for member in schema.declared:
+                value = case.get(member.name, MISSING if member in schema.members else member.constant)
+                for _ in range(member.copies):
+                    aligned = set()
+                    for index in reached - {len(fields)}:
+                        field = fields[index]
+                        name = field.get("name")
+                        if name in bedrock:
+                            fits = value is not MISSING and cls.matches(
+                                value, bedrock[name], member.schema, declared, field["type"]
+                            )
+                        elif name is not None:
+                            fits = value is MISSING and field.get("optional", False)
+                        else:
+                            fits = member not in schema.members and field.get("value", MISSING) == member.constant
+                        if fits:
+                            aligned.add(index + 1)
+                    reached |= aligned
+            return len(fields) in reached and bedrock.keys() <= named.keys()
 
         # [1, 2] vs [1, 2]
         if isinstance(case, list) and isinstance(bedrock, list) and isinstance(schema, VectorSchema | MapSchema):
             element = schema if isinstance(schema, MapSchema) else schema.element
+            element_node = node["type"] if isinstance(node, dict) and "repeat" in node else node
             return len(case) == len(bedrock) and all(
-                cls.matches(a, b, element) for a, b in zip(case, bedrock, strict=True)
+                cls.matches(a, b, element, declared, element_node) for a, b in zip(case, bedrock, strict=True)
             )
 
         # {"minecraft:anvil": 2} vs [{"key": "minecraft:anvil", "value": {"Value": 2}}]
@@ -1155,8 +1191,9 @@ class CaseForm:
             and all(isinstance(pair, dict) and pair.keys() == {"key", "value"} for pair in bedrock)
         ):
             pairs = {pair["key"]: pair["value"] for pair in bedrock}
+            value_node = node.get("value") if isinstance(node, dict) else None
             return case.keys() == pairs.keys() and all(
-                cls.matches(value, pairs[key], schema.value) for key, value in case.items()
+                cls.matches(value, pairs[key], schema.value, declared, value_node) for key, value in case.items()
             )
 
         # "#0a141eff" vs [10, 20, 30, 255]
@@ -1191,38 +1228,56 @@ class CaseForm:
 
         # 7 vs {"Actor Runtime ID": 7}
         if isinstance(bedrock, dict) and not isinstance(case, dict | list):
-            return len(bedrock) == 1 and cls.matches(case, next(iter(bedrock.values())), schema)
+            return len(bedrock) == 1 and cls.matches(case, next(iter(bedrock.values())), schema, declared, None)
+
+        # 27 vs "out_back"
+        if type(case) is int and isinstance(bedrock, str) and isinstance(schema, EnumSchema):
+            return schema.names.get(bedrock.lower()) == case
 
         return case == bedrock
 
     @classmethod
-    def locate(cls, case, bedrock, schema, path=""):
+    def locate(cls, case, bedrock, schema, declared, node, path=""):
         """The deepest path where `matches` fails with the case's and Bedrock's values there, or None when it holds."""
-        if cls.matches(case, bedrock, schema):
+        if cls.matches(case, bedrock, schema, declared, node):
             return None
         match schema:
             case OptionalSchema():
-                return cls.locate(case, bedrock, schema.element, path)
+                return cls.locate(case, bedrock, schema.element, declared, node, path)
             case DynamicValueSchema() if isinstance(case, dict | list):
-                return cls.locate(case, bedrock, schema.object if isinstance(case, dict) else schema.array, path)
+                inner = schema.object if isinstance(case, dict) else schema.array
+                return cls.locate(case, bedrock, inner, declared, node, path)
             case VariantCase() if not (isinstance(case, dict) and "__class__" in case):
                 return path, case, bedrock
         if isinstance(case, dict) and "__class__" in case:
-            arm = next(arm for arm in schema.inner.arms if arm.bound_type.__name__ == case["__class__"])
+            index = next(i for i, arm in enumerate(schema.inner.arms) if arm.bound_type.__name__ == case["__class__"])
             bare = {key: value for key, value in case.items() if key != "__class__"}
-            return cls.locate(bare, bedrock, arm, path)
+            return cls.locate(bare, bedrock, schema.inner.arms[index], declared, cls.arms(schema, node)[index], path)
         if isinstance(case, dict) and isinstance(bedrock, dict):
             slots = cls.slots(case, schema)
             if len(slots) == len(bedrock):
-                for (name, value, slot), each in zip(slots, bedrock.values(), strict=True):
-                    if found := cls.locate(value, each, slot, f"{path}.{name}" if path else name):
+                named = {field.get("name"): field["type"] for field in cls.fields(declared, node)}
+                value_node = node.get("value") if isinstance(node, dict) else None
+                for (name, value, slot), (key, each) in zip(slots, bedrock.items(), strict=True):
+                    child = named.get(key, value_node)
+                    if found := cls.locate(value, each, slot, declared, child, f"{path}.{name}" if path else name):
                         return found
         if isinstance(case, list) and isinstance(bedrock, list) and len(case) == len(bedrock):
             element = schema if isinstance(schema, MapSchema) else schema.element
+            element_node = node["type"] if isinstance(node, dict) and "repeat" in node else node
             for index, (a, b) in enumerate(zip(case, bedrock, strict=True)):
-                if found := cls.locate(a, b, element, f"{path}[{index}]"):
+                if found := cls.locate(a, b, element, declared, element_node, f"{path}[{index}]"):
                     return found
         return path, case, bedrock
+
+    @staticmethod
+    def fields(declared, node):
+        return declared[node]["fields"] if isinstance(node, str) and node in declared else []
+
+    @staticmethod
+    def arms(schema, node):
+        cases = node.get("cases", []) if isinstance(node, dict) else []
+        return cases if len(cases) == len(schema.inner.arms) else [None] * len(schema.inner.arms)
 
     @staticmethod
     def slots(case, schema):
@@ -1546,8 +1601,6 @@ class ReflectionCtx:
             composite = HexColorSchema if name == "Color255RGBA" else GenericCompositeSchema
             self.composites[family] = schema = composite(cls, [])
             for field in self.shape(family).fields:
-                if field.name.startswith("_") and field.name not in MARKER_EXCEPTIONS:
-                    continue
                 attribute = f"{field.name}_" if keyword.iskeyword(field.name) else field.name
                 optional = isinstance(field.type, OptionalType)
                 node = field.type.element if optional else field.type
@@ -1571,7 +1624,9 @@ class ReflectionCtx:
                 )
                 if isinstance(field.type, Literal):
                     member.is_const_selector, member.constant = True, constant
-                schema.members.append(member)
+                schema.declared.append(member)
+                if not field.name.startswith("_") or field.name in MARKER_EXCEPTIONS:
+                    schema.members.append(member)
         return self.composites[family]
 
     def traits(self, node):

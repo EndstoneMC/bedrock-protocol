@@ -12,6 +12,11 @@ from conftest import CaseForm, schema_of
 folder, run = Path(sys.argv[1]), Path(sys.argv[2])
 module = importlib.import_module(f"bedrock_protocol.{folder.name}")
 results = {(each["stem"], each["index"]): each for each in json.loads((run / "results.json").read_text())}
+declared = {
+    declaration["name"]: declaration
+    for declaration in (json.loads(each.read_text()) for each in (run / "dump" / "protocol").glob("[pt]*/*.json"))
+}
+packets = {declaration["id"]: name for name, declaration in declared.items() if "id" in declaration}
 total = frozen = 0
 for path in sorted(folder.glob("*.json")):
     for index, case in enumerate(json.loads(path.read_text())):
@@ -45,7 +50,11 @@ for path in sorted(folder.glob("*.json")):
                     problems.append(f"printed unreadable JSON: {error}")
                 else:
                     if found := CaseForm.locate(
-                        case["value"], bedrock, schema_of(module, module.packets[int(path.stem[:3])])
+                        case["value"],
+                        bedrock,
+                        schema_of(module, module.packets[int(path.stem[:3])]),
+                        declared,
+                        packets.get(int(path.stem[:3])),
                     ):
                         where, ours, theirs = found
                         problems.append(

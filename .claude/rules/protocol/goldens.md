@@ -36,6 +36,9 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Match a case's float with BDS's float when they are equal or when the case's value widens to BDS's float32 value.
 - Match a case's map with BDS's list of `key`/`value` objects by key, and an empty map with `[]`.
 - Match a field with `duplicate` against as many of BDS's printed values as it has copies.
+- Match a case's enum int with the name BDS prints for it through the member's encoded name in our schema, in lower case.
+- Match a `Literal` member the case leaves out, such as a TextPacket category string, with the BDS member the dump declares in its place by the Literal's constant; a dump field with no name prints nothing.
+- Match a case's member that BDS leaves out of its JSON only when the checking build's dump declares no field for it, such as the 924 camera's `actor_locator`, `spline_identifier` and `load_from_json`; only the bytes check those.
 - Write a `Color255RGBA` in a case as `#rrggbbaa`, and compare it by turning it into BDS's `[r, g, b, a]` array.
 - Write a bitset in a case as `0b` followed by its bits, most significant first.
 - Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.
