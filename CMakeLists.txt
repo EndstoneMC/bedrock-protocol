@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(bedrock-protocol VERSION 0.5.0 DESCRIPTION "Minecraft: Bedrock Edition network protocol" LANGUAGES CXX)
+project(bedrock-protocol VERSION 0.5.1 DESCRIPTION "Minecraft: Bedrock Edition network protocol" LANGUAGES CXX)
 
 if (MSVC)
     add_compile_options(/MP)
