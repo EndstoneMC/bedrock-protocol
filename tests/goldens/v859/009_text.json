@@ -1,0 +1,44 @@
+[
+ {
+  "id": "message_only_arm",
+  "value": {
+   "type": 11,
+   "localize": false,
+   "author": "",
+   "message": "{\"rawtext\":[{\"text\":\"hi\"}]}",
+   "params": [],
+   "xuid": "2535400000000001",
+   "platform_id": "pc",
+   "filtered_message": "{\"rawtext\":[{\"text\":\"h*\"}]}"
+  },
+  "bytes": "0b001b7b2272617774657874223a5b7b2274657874223a226869227d5d7d10323533353430303030303030303030310270631b7b2272617774657874223a5b7b2274657874223a22682a227d5d7d"
+ },
+ {
+  "id": "author_and_message_arm",
+  "value": {
+   "type": 1,
+   "localize": false,
+   "author": "Steve",
+   "message": "hello",
+   "params": [],
+   "xuid": "2535400000000000",
+   "platform_id": "switch-1",
+   "filtered_message": "h***o"
+  },
+  "bytes": "01000553746576650568656c6c6f1032353335343030303030303030303030087377697463682d3105682a2a2a6f"
+ },
+ {
+  "id": "message_and_params_arm",
+  "value": {
+   "type": 2,
+   "localize": true,
+   "author": "",
+   "message": "commands.kill.successful",
+   "params": ["Alex"],
+   "xuid": "2535400000000002",
+   "platform_id": "xbox",
+   "filtered_message": "commands.kill.filtered"
+  },
+  "bytes": "020118636f6d6d616e64732e6b696c6c2e7375636365737366756c0104416c657810323533353430303030303030303030320478626f7816636f6d6d616e64732e6b696c6c2e66696c7465726564"
+ }
+]

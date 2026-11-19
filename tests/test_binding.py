@@ -883,7 +883,7 @@ def test_every_packet_class_of_a_version_has_an_encoding(protocol):
 
 
 @pytest.mark.parametrize(
-    ("version", "since"), [pytest.param(v2225, 729, id="v2225"), pytest.param(v898, 898, id="v898")]
+    ("version", "since"), [pytest.param(v2225, 924, id="v2225"), pytest.param(v898, 898, id="v898")]
 )
 def test_an_encoding_is_named_for_the_protocol_that_introduced_it(version, since):
     assert _core.encodings[version.VERSION][bp.TextPacket] == since

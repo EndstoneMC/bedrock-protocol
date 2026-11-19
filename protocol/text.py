@@ -24,10 +24,26 @@ class TextPacketType(IntEnum, uint8):
     TEXT_OBJECT_ANNOUNCEMENT = 11
 
 
-@packet(id=9)
+@packet(id=9, until=898)
+class TextPacket:
+    type: TextPacketType
+    localize: bool
+    author: str = field(
+        when=lambda p: p.type in {TextPacketType.CHAT, TextPacketType.WHISPER, TextPacketType.ANNOUNCEMENT}
+    )
+    message: str
+    params: list[str] = field(
+        when=lambda p: p.type in {TextPacketType.TRANSLATE, TextPacketType.POPUP, TextPacketType.JUKEBOX_POPUP}
+    )
+    xuid: str
+    platform_id: str
+    filtered_message: str
+
+
+@packet(id=9, since=898)
 class TextPacket:
     class MessageOnly:
-        with field(since=898, until=924):
+        with field(until=924):
             _raw: Literal["raw"]
             _tip: Literal["tip"]
             _system_message: Literal["systemmessage"]
@@ -39,7 +55,7 @@ class TextPacket:
         message: str
 
     class AuthorAndMessage:
-        with field(since=898, until=924):
+        with field(until=924):
             _chat: Literal["chat"]
             _whisper: Literal["whisper"]
             _announcement: Literal["announcement"]
@@ -49,7 +65,7 @@ class TextPacket:
         message: str
 
     class MessageAndParams:
-        with field(since=898, until=924):
+        with field(until=924):
             _translate: Literal["translate"]
             _popup: Literal["popup"]
             _jukebox_popup: Literal["jukeboxpopup"]
