@@ -53,7 +53,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - A case tests the encoding, never what a value means.
 - Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure; the arms of a deprecated member BDS reads as no action stay unreached, reported as the folder's misses; any other valid-path branch no golden reaches is a generator defect.
 - A folder owns every codec its packets reach at its protocol, the `Serializer<T, N>` that `_core.encodings[<protocol>]` names for each, whatever its N.
-- Report as a folder's misses, too, a branch only data BDS rewrites reaches, such as an empty item written as id -1, and a `GameRule` arm a folder reaches only through `StartGamePacket`, whose rule list BDS writes itself.
+- Report as a folder's misses, too, a branch only data BDS rewrites reaches, such as an empty item written as id -1, and a `GameRule` arm of a type no rule of the build has: BDS writes the rules it registers, by name, drops a rule of type none and aborts on a float given to an int rule.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
 - Change a case's leaves without changing its branch identity: each optional stays present or absent, each variant arm and gating bool stays, and an empty list stays empty.
