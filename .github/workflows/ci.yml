@@ -214,9 +214,17 @@ jobs:
           java-version: "21"
           cache: gradle
       - uses: gradle/actions/wrapper-validation@v6.4.1
-      - name: Build
+      - name: Build the codecs and classes
         working-directory: java
-        run: ./gradlew --no-daemon build
+        run: ./gradlew assemble testClasses
+
+      - name: Check the formatting
+        working-directory: java
+        run: ./gradlew spotlessCheck
+
+      - name: Run the tests
+        working-directory: java
+        run: ./gradlew check
 
       - uses: codecov/codecov-action@v7.1.1
         if: ${{ !cancelled() }}
