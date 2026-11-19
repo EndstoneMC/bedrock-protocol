@@ -18,18 +18,18 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 
 ## A newer protocol's folder
 
-1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls or v<previous>.encodings[cls] != v<protocol>.encodings[cls]]`.
+1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls or _core.encodings[<previous>].get(cls) != _core.encodings[<protocol>][cls]]`.
 2. Copy each one's file from the nearest folder toward `v2168/` that holds it, change only the fields whose encoding changed, and write it as `layout(cases)` with bytes from the library. Give a new packet cases of its own from the dump.
 3. Delete every file left byte-identical to the one it was copied from.
-4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure with `, <protocol>>`.
+4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
 
 ## An older protocol's folder
 
-1. List the packets whose class differs from the next modelled protocol toward 2168: `[i for i, cls in v<protocol>.packets.items() if v<next>.packets.get(i) is not cls or v<next>.encodings[cls] != v<protocol>.encodings[cls]]`.
+1. List the packets whose class differs from the next modelled protocol toward 2168: `[i for i, cls in v<protocol>.packets.items() if v<next>.packets.get(i) is not cls or _core.encodings[<next>].get(cls) != _core.encodings[<protocol>][cls]]`.
 2. Seed each one's file and delete the byte-identical ones as a newer folder does, from the nearest folder toward `v2168/` that holds it.
 3. Model each packet in the encoding its build sends by default (dsl.md): a seed from `v2168/` holds cereal shapes, and each record's `serialization_mode` says which encoding BDS sent.
 4. Where BDS prints no JSON for a packet, judge the case by its `bds_trace`. Where a script cannot walk the trace against the value, have an agent compare them leaf by leaf and give a verdict per case. A confirmed case freezes, and nothing reruns it.
-5. Where the build's write for a packet is a stub, leave the packet out (goldens.md) and have `bds-reverse-engineer` read its read function against the DSL.
+5. Where the build's read or write for a packet is a stub, such as a read that skips to the end of the buffer or a write that ignores what was read, leave the packet out (goldens.md) and have `bds-reverse-engineer` read the other side against the DSL.
 6. Have `bds-reverse-engineer` date each schema fix across every build on disk from the folder's protocol back to 776, one address per build, and gate the fix only where a build changes.
 7. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
 
@@ -60,15 +60,15 @@ If the log shows no golden mode, add it to the clone and commit it there:
 ## Build
 
 ```
-(cd build/bedrock-dumper && cmake --preset clang-relwithdebinfo -DBEDROCK_SERVER_VERSION=<version> -DBEDROCK_SERVER_CHANNEL=stable && cmake --build --preset clang-relwithdebinfo)
+(cd build/bedrock-dumper && cmake --preset clang-relwithdebinfo -B build/stable-<version> -DBEDROCK_SERVER_VERSION=<version> -DBEDROCK_SERVER_CHANNEL=stable && cmake --build build/stable-<version>)
 ```
 
-The build fetches BDS into `build/bedrock-dumper/build/relwithdebinfo/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port` and `server-portv6` to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
+Each build has its own tree, which fetches BDS into `build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port` and `server-portv6` to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
 
 ## Run
 
 ```
-S=build/bedrock-dumper/build/relwithdebinfo/bedrock-server-<version>
+S=build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>
 G=$PWD/build/goldens/<version>
 mkdir -p $G
 ```
@@ -120,6 +120,7 @@ Only a `freezes` case can freeze, or a traced one as above. A difference no rule
 | A case before 2168 is `refused` or `rewritten` in a field the case holds in cereal's shape | `serialization_mode` below CerealOnly means BDS sent the hand-written encoding. Model the pre-cereal shape (dsl.md). |
 | `JSON differs at <packet>` before 2168, with `serialization_mode` below CerealOnly | BDS printed the cereal shape of a packet it sent by hand. Have an agent match the case's values against BDS's JSON (an older protocol's folder, step 4). |
 | `no reflected type for packet id N` or `toString printed nothing`, on a build before 1.26.40 | Judge the case by its `bds_trace` (an older protocol's folder, step 4). |
+| Before 1.21.130, a crash in `entt::any_cast<int>` on `[cereal:packet]`, or BDS's JSON wrapped in one `mPayload` member | That era reflects a packet as a class holding one `mPayload`, with no int id property. Take the id from the packet's `getId` and print `mPayload` alone. |
 | `crashed` on every case | A `Packet` slot or stream mirror is wrong. Re-check the slots against a vtable. |
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
@@ -129,7 +130,7 @@ Only a `freezes` case can freeze, or a traced one as above. A difference no rule
 | `JSON differs at <path>` where BDS prints the same data in another form | `CaseForm.matches` has no rule for the form. Report it; add the rule to `CaseForm` and goldens.md only once goldens.md accepts it. |
 | `JSON differs at <path>` where the schema and the dump shape a field differently, such as a struct against an array or nested fields against flat ones | Read both definitions. Fix the schema when the dump's shape is the encoding's; otherwise report it. |
 | `printed no JSON` | `bds_json_error` says why; a toString that did not reach the saver needs a new `saveImpl` signature behind a version gate. |
-| `dump failed: ... has no signature for this build` | Cut that function's signature for `<version>` behind a new gate. |
+| `dump failed: ... has no signature for this build`, or `hooking failed: ... has no signature for this build` at load | Cut that function's signature for `<version>` behind a new gate. |
 | Server hangs after the first `golden <stem>[0]` line | A flush of every stream blocked on stdin. Flush only stdout and stderr before forking. |
 | BDS exits 130 or 143, or logs no `Quit correctly` | It was signalled. Stop it through the console `stop`. |
 | `stop` went out before BDS started | The wait matched the last run's log. Remove the log before launching, as the run blocks do, and send `stop` again. |
@@ -156,20 +157,19 @@ llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -igno
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
 ```
 
-The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder owns that its packets reach, the functions the cases run and every serializer those call, and leaves out the failing side of each read and validation check and the no-match side of each variant switch. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches. `<owned>` is empty for `v2168/` and `, <protocol>>` for any other folder, the N of the implementations it introduces:
+The protocol's figure, the one goldens.md measures, runs the folder's cases alone. It counts the branch outcomes of every generated function the folder's packets reach at its protocol, the functions the cases run and every serializer those call, whatever their N, and leaves out the failing side of each read and validation check and the no-match side of each variant switch. It prints the figure, and each line of `$D.missed` is a valid-path outcome no case reaches.:
 
 ```
 D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
 LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
-python3 -I - $D/export.json '<owned>' <<'EOF' | sort > $D.missed
+python3 -I - $D/export.json <<'EOF' | sort > $D.missed
 import json, re, sys
 functions = [f for f in json.load(open(sys.argv[1]))['data'][0]['functions'] if re.search(r'/generated/.*\.cpp$', f['filenames'][0])]
 sources = {path: open(path).read().split('\n') for path in {f['filenames'][0] for f in functions}}
 call = re.compile(r'Serializer<(.+?)>::(serialize|deserialize)\(')
 by_signature = {call.search(sources[f['filenames'][0]][f['regions'][0][0] - 2])[0]: f for f in functions}
-signature = {id(f): s for s, f in by_signature.items()}
 reached = [f for f in functions if f['count'] > 0]
 scope = {id(f): f for f in reached}
 while reached:
@@ -181,7 +181,7 @@ while reached:
                 reached.append(callee)
 failure = re.compile(r'if \(!(\w+)\) return (stream\.fail|std::unexpected)\(\1\.error\(\)|Errc::')
 no_match = re.compile(r'switch \(.+\.index\(\)\) \{')
-owned = [f for f in scope.values() if sys.argv[2] in signature.get(id(f), '')]
+owned = list(scope.values())
 outcomes = missed = 0
 for f in owned:
     lines = sources[f['filenames'][0]]
@@ -231,6 +231,7 @@ comm -23 $D.fp <(cat /dev/null $(ls build/Debug/profiles/*.fp | grep -vx $D.fp) 
 | --- | --- |
 | `llvm-cov`: `no coverage data found` | The install stripped the coverage mapping. Reinstall with `-C install.strip=false`. |
 | The coverage reinstall ships a wheel with no `_core` | A `CMAKE_CXX_COMPILER` spelled unlike the cached one wipes `build/Debug`'s cache, and the reconfigure loses scikit-build-core's settings. Run the install again. |
+| `llvm-profdata` or `llvm-cov`: command not found | Put the LLVM tools of `clang++`'s major version first on `PATH`. |
 | `llvm-profdata` rejects the profile's format version | Use the `llvm-profdata` and `llvm-cov` that match `clang++`'s major version. |
 | A `default.profraw` appears in the repository root | A pytest ran from the coverage venv without `LLVM_PROFILE_FILE`. Delete the file and rerun with `LLVM_PROFILE_FILE` pointing into the profile directory. |
 | `$D.missed` lists an arm, an optional's side, a loop or a check's passing side | Valid data takes it. Add a case that reaches it, with values from the dump. |

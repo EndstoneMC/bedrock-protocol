@@ -13,13 +13,13 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 
 - Keep a packet's cases in `tests/goldens/v<protocol>/<id:03>_<snake_name>.json`, `<snake_name>` being the class the folder's module binds at `<id>` without its trailing `Packet`, in snake case: a JSON array of `{"id", "value", "bytes"}`.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
-- Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, and never a file identical to the neighbour's.
-- Leave a packet out of a folder before 2168 when that build's write for it is a stub, and have its read checked against the DSL statically instead.
+- Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, whatever its codec's number, and never a file identical to the neighbour's.
+- Leave a packet out of a folder before 2168 when that build's read or write for it is a stub, and have the other side checked against the DSL statically instead.
 - Check `v1001/` with BDS 1.26.36.1.
 - Check `v2193/` with BDS 1.26.51.1.
 - Check `v2225/` with BDS 1.26.60.6.
 - Seed a folder's cases from the neighbour's and change only the leaves its encoding change needs; a class that differs only in an enum's members gets no file.
-- Keep a seeded case's id unless the encoding change gives it a new branch, such as a new optional's side, and never name a leaf's value in it.
+- Keep a seeded case's id unless the encoding change adds or removes the branch it names, such as an optional's side; then rename it to the state it reaches, and never name a leaf's value in it.
 - Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Keep a case's `value` in the DSL's shape, with an alias bare and a UUID as its canonical string; map it to BDS's JSON only when comparing, through `CaseForm` in `tests/conftest.py`.
 - Never load BDS's printed JSON into a packet; compare it with a case only through `CaseForm.matches`.
@@ -46,8 +46,8 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 ## Writing cases
 
 - A case tests the encoding, never what a value means.
-- Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure, and a valid-path branch no golden reaches is a generator defect.
-- `v2168/` owns every codec live at 2168, and another folder each codec its own protocol introduces, the `Serializer<T, N>` whose N is that protocol, for the packets it holds.
+- Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure; the arms of a deprecated member BDS reads as no action stay unreached, reported as the folder's misses; any other valid-path branch no golden reaches is a generator defect.
+- A folder owns every codec its packets reach at its protocol, the `Serializer<T, N>` that `_core.encodings[<protocol>]` names for each, whatever its N.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
 - Change a case's leaves without changing its branch identity: each optional stays present or absent, each variant arm and gating bool stays, and an empty list stays empty.
@@ -61,7 +61,9 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 ## Valid data
 
 - Read enum bindings, limits, items and blocks from the dump of the build that checks the folder, never from another build's protocol-docs.
+- Read a wire constant, such as a TextPacket category string, from the case bytes, never from the dump's `value`, which can differ in case from the wire.
 - Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`; a field whose dump binds no enum takes any integer of its dump type, whatever enum the DSL types it as.
+- Pick an enum member whose value the dump binds to no earlier member; BDS writes back the first member bound to a shared value.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
 - Write an empty item as id 0; BDS reads an id of -1 as empty too, and writes it back as 0.
@@ -83,6 +85,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Send `NetworkStackLatencyPacket.create_time` as 0; BDS reads it in milliseconds and writes it in nanoseconds.
 - Set an ability layer's `abilities_set` bit 13, 14 or 19 whenever it carries a non-zero fly, walk or vertical fly speed; BDS drops a speed whose bit is clear.
 - Write a pre-cereal skin's colours as `#aarrggbb` with an alpha of 0x10 or above; BDS prints a colour back as unpadded ARGB hex.
+- Keep a `MapItemTrackedActor` block position's y at 0 before 944; BDS reads it as a varint and writes it as an unsigned varint.
 - Set `ClientboundMapItemDataPacket.map_id` to `map_ids[0]` when the creation flag is set; BDS holds both in one vector.
 - Keep `StructureBlockUpdatePacket.is_waterlogged` false; BDS writes it from a settings flag its read clears.
 - Keep `StartGamePacket`'s `override_force_experimental_gameplay_flag` false before 2168; BDS writes back only whether a server holds one, and a server never does.
