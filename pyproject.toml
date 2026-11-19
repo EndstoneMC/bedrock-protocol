@@ -2,9 +2,21 @@
 name = "bedrock-protocol"
 version = "0.5.0.dev0"
 description = "Bedrock packets and codecs for Python, bound from the generated C++."
+readme = "README.md"
+authors = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
+maintainers = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+Homepage = "https://github.com/EndstoneMC/bedrock-protocol"
+Issues = "https://github.com/EndstoneMC/bedrock-protocol/issues"
 
 [dependency-groups]
 dev = ["bedrock-protocol-compiler", "nanobind==2.13.0", "nbtlib", "pytest", "scikit-build-core>=1.1"]
