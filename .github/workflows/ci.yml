@@ -86,7 +86,7 @@ jobs:
       - name: Name the package
         id: package
         run: |
-          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          version=$(sed -n 's/^project(bedrock-protocol VERSION \([^ ]*\) .*/\1/p' CMakeLists.txt)
           echo "name=bedrock-protocol-${version}-${{ matrix.triple }}" >> "$GITHUB_OUTPUT"
 
       - name: Build
@@ -102,7 +102,7 @@ jobs:
         run: |
           name=${{ steps.package.outputs.name }}
           mkdir -p "stage/$name/cmake"
-          cp CMakeLists.txt pyproject.toml LICENSE README.md "stage/$name/"
+          cp CMakeLists.txt LICENSE README.md "stage/$name/"
           cp cmake/bedrock-protocol-config.cmake.in "stage/$name/cmake/"
           cp -r include "stage/$name/include"
           cp -r build/Release/generated "stage/$name/generated"

@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-file(STRINGS pyproject.toml _version_line REGEX "^version = ")
-string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _version "${_version_line}")
-project(bedrock-protocol VERSION ${_version} LANGUAGES CXX)
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS pyproject.toml)
+project(bedrock-protocol VERSION 0.5.0 LANGUAGES CXX)
 
 if (MSVC)
     add_compile_options(/MP)

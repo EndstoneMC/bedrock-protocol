@@ -1,6 +1,6 @@
 [project]
 name = "bedrock-protocol"
-version = "0.5.0.dev0"
+dynamic = ["version"]
 description = "Bedrock packets and codecs for Python, bound from the generated C++."
 readme = "README.md"
 authors = [{ name = "GlacieTeam" }, { name = "Vincent Wu", email = "magicdroidx@gmail.com" }]
@@ -34,11 +34,15 @@ sdist.inclusion-mode = "explicit"
 sdist.include = ["/pyproject.toml", "/CMakeLists.txt", "/LICENSE", "/README.md", "/cmake/", "/include/", "/protocol/*.py", "/compiler/pyproject.toml", "/compiler/LICENSE", "/compiler/src/", "/python/", "/tests/*.py", "/tests/goldens/"]
 sdist.exclude = ["__pycache__/"]
 
+[[tool.dynamic-metadata]]
+provider = { path = "python", module = "version" }
+
 [tool.uv]
 no-build-isolation-package = ["bedrock-protocol"]
 cache-keys = [
     { file = "pyproject.toml" },
     { file = "CMakeLists.txt" },
+    { git = { tags = true } },
     { file = "include/**" },
     { file = "python/*" },
     { file = "protocol/*.py" },

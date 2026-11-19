@@ -31,6 +31,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - `tests/`: pytest only; tests reach the C++ through the binding, there are no C++ tests, and `tests/package/` is only CI's `find_package` consumer.
 - `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
+- `CMakeLists.txt`'s `project()` VERSION is the only version: a build at its `v<version>` tag is `<version>` everywhere, and any other is `<version>.dev0` in Python through `python/version.py` and `<version>-SNAPSHOT` in Java. It names the next release: push its tag to release, then bump it.
 - Build with README's Building from Source section. `uv sync && uv run pytest` runs `tests/`; `uv run --directory compiler pytest` runs the compiler's.
 - `uv run --directory compiler mypy` type-checks the compiler as CI does, re-syncing the compiler's dev group that another sync of the shared `.venv` can drop.
 - `build/Release` is shared by `uv sync` and the `release` preset, and `build/Debug` by the `debug` preset and the coverage build; nothing else gets a tree except `build/java`, `build/bedrock-dumper` and the like.

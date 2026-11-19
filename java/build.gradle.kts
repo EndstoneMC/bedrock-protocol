@@ -6,12 +6,19 @@ plugins {
     id("com.diffplug.spotless") version "8.10.4"
 }
 
-val versionLine = file("../pyproject.toml").readLines().first { it.startsWith("version = ") }
-val versionMatch = Regex("[0-9]+\\.[0-9]+\\.[0-9]+").find(versionLine)
-    ?: throw GradleException("no X.Y.Z in pyproject.toml: $versionLine")
+val release = Regex("""project\(bedrock-protocol VERSION (\S+)""").find(file("../CMakeLists.txt").readText())
+    ?.groupValues?.get(1) ?: throw GradleException("no project VERSION in CMakeLists.txt")
+val tags = try {
+    providers.exec {
+        commandLine("git", "tag", "--points-at", "HEAD")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().lines()
+} catch (missing: GradleException) {
+    emptyList()
+}
 
 group = "dev.endstone"
-version = versionMatch.value
+version = if ("v$release" in tags) release else "$release-SNAPSHOT"
 
 layout.buildDirectory = file("../build/java")
 
