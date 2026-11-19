@@ -1703,7 +1703,7 @@ def pytest_make_parametrize_id(val):
 
 def pytest_generate_tests(metafunc):
     if "protocol" in metafunc.fixturenames:
-        names = [f"v{version}" for version in bedrock_protocol.versions]
+        names = [f"v{version}" for version in bedrock_protocol._core.modes]
         versions = [importlib.import_module(f"bedrock_protocol.{name}") for name in names]
         metafunc.parametrize("protocol", versions, ids=names)
 

@@ -6,7 +6,7 @@ import bedrock_protocol
 from bedrock_protocol import _core
 from bedrock_protocol._core import SerializationMode
 
-versions = [importlib.import_module(f"bedrock_protocol.v{version}") for version in bedrock_protocol.versions]
+versions = [importlib.import_module(f"bedrock_protocol.v{version}") for version in _core.modes]
 
 packets = [(m, cls) for m in versions for cls in m.packets.values()]
 

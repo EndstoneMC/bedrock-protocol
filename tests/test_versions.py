@@ -3,54 +3,63 @@ import re
 
 import pytest
 
-import bedrock_protocol
+from bedrock_protocol import ProtocolVersion, _core
+
+README = pathlib.Path(__file__).parent.parent.joinpath("README.md").read_text()
+SUPPORTED_PROTOCOLS = README.split("## Supported Protocols")[1].split("\n## ")[0]
+ROWS = {int(number): text for number, text in re.findall(r"^\| (\d+) \| (.+) \|$", SUPPORTED_PROTOCOLS, re.M)}
 
 
-@pytest.mark.parametrize(("number", "snapshot"), [(2169, 2168), (860, 859)], ids=["2169", "860"])
-def test_a_number_that_changes_no_shape_decodes_with_the_snapshot_below_it(number, snapshot):
-    assert bedrock_protocol.protocol_version(number).snapshot == snapshot
+def test_a_number_finds_the_supported_version_itself():
+    assert ProtocolVersion.get(2225) is ProtocolVersion.MAXIMUM_VERSION
+
+
+def test_a_version_is_named_for_its_first_release():
+    assert ProtocolVersion.get(2193).name == "1.26.50"
+
+
+def test_a_number_that_changes_no_shape_is_a_supported_version_of_its_own():
+    assert ProtocolVersion.get(2169).name == "1.26.45"
+
+
+def test_a_number_no_release_reported_has_no_version():
+    assert ProtocolVersion.get(2170) is None
+
+
+def test_the_supported_versions_run_from_the_minimum_to_the_maximum():
+    assert ProtocolVersion.SUPPORTED_VERSIONS[0] is ProtocolVersion.MINIMUM_VERSION
+    assert ProtocolVersion.SUPPORTED_VERSIONS[-1] is ProtocolVersion.MAXIMUM_VERSION
+
+
+def test_the_minimum_version_is_the_oldest_modelled_protocol():
+    assert ProtocolVersion.MINIMUM_VERSION.protocol == min(_core.modes)
+
+
+def test_the_supported_versions_ascend():
+    numbers = [version.protocol for version in ProtocolVersion.SUPPORTED_VERSIONS]
+    assert numbers == sorted(set(numbers))
+
+
+def test_a_version_shows_its_protocol_and_name():
+    assert repr(ProtocolVersion.get(2169)) == "ProtocolVersion(protocol=2169, name='1.26.45')"
+
+
+def test_python_cannot_build_a_version():
+    with pytest.raises(TypeError, match="constructor"):
+        ProtocolVersion()
+
+
+def test_the_readme_lists_every_supported_version():
+    assert ROWS.keys() == {version.protocol for version in ProtocolVersion.SUPPORTED_VERSIONS}
 
 
 @pytest.mark.parametrize(
-    ("release", "number"),
-    [("1.26.42", 2168), ("1.21.124", 860), ("1.26.0", 924)],
-    ids=["1.26.42", "1.21.124", "1.26.0"],
+    "version",
+    ProtocolVersion.SUPPORTED_VERSIONS,
+    ids=[str(version.protocol) for version in ProtocolVersion.SUPPORTED_VERSIONS],
 )
-def test_a_release_finds_the_number_that_reports_it(release, number):
-    assert bedrock_protocol.protocol_version(release).number == number
-
-
-def test_the_newest_entry_reaches_its_last_release():
-    newest = bedrock_protocol.releases[-1]
-    assert bedrock_protocol.protocol_version(newest.last).number == newest.number
-
-
-def test_a_number_no_release_reported_has_no_entry():
-    assert bedrock_protocol.protocol_version(2170) is None
-
-
-def test_a_preview_build_has_no_entry():
-    assert bedrock_protocol.protocol_version("1.26.60.30") is None
-
-
-def test_the_table_starts_at_the_oldest_snapshot():
-    assert bedrock_protocol.releases[0].number == bedrock_protocol.versions[0]
-
-
-def test_the_bound_versions_ascend():
-    assert list(bedrock_protocol.versions) == sorted(bedrock_protocol.versions)
-
-
-def test_python_cannot_build_an_entry():
-    with pytest.raises(TypeError, match="constructor"):
-        bedrock_protocol.ProtocolVersion()
-
-
-def test_the_readme_lists_every_release():
-    readme = pathlib.Path(__file__).parent.parent.joinpath("README.md").read_text()
-    section = readme.split("## Supported Protocols")[1].split("\n## ")[0]
-    rows = {int(number): text for number, text in re.findall(r"^\| (\d+) \| (.+) \|$", section, re.M)}
-    assert rows == {entry.number: entry.name.replace("-", " to ") for entry in bedrock_protocol.releases}
+def test_the_readme_row_of_a_version_starts_at_its_name(version):
+    assert ROWS[version.protocol].split(" to ")[0].replace("x", "0") == version.name
 
 
 def test_a_protocol_holds_its_number(protocol):

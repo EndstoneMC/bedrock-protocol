@@ -474,12 +474,13 @@ struct label_position<T, type_list<L...>> {
     static constexpr std::size_t value = std::ranges::find(found, true) - found.begin();
 };
 
-template <typename T, template <int> class Types, typename Protocols = std::make_index_sequence<versions.size()>>
+template <typename T, template <int> class Types,
+          typename Protocols = std::make_index_sequence<detail::versions.size()>>
 struct holders;
 
 template <typename T, template <int> class Types, std::size_t... J>
 struct holders<T, Types, std::index_sequence<J...>> {
-    static constexpr std::array<bool, sizeof...(J)> held{listed_v<T, typename Types<versions[J]>::types>...};
+    static constexpr std::array<bool, sizeof...(J)> held{listed_v<T, typename Types<detail::versions[J]>::types>...};
     static constexpr std::size_t first = std::ranges::find(held, true) - held.begin();
 };
 
@@ -487,10 +488,10 @@ template <template <int> class Types>
 void bind_schema_types(nb::handle package, std::span<const Scope> bound)
 {
     [&]<std::size_t... I>(std::index_sequence<I...>) {
-        constexpr std::size_t newest = versions.size() - 1;
+        constexpr std::size_t newest = detail::versions.size() - 1;
         (
             [&] {
-                constexpr int number = versions[newest - I];
+                constexpr int number = detail::versions[newest - I];
                 const Scope &scope = bound[newest - I];
                 [&]<typename... T>(type_list<T...>) {
                     (bind_type<T, number>(
@@ -502,7 +503,7 @@ void bind_schema_types(nb::handle package, std::span<const Scope> bound)
                 }(typename Types<number>::types{});
             }(),
             ...);
-    }(std::make_index_sequence<versions.size()>{});
+    }(std::make_index_sequence<detail::versions.size()>{});
 }
 
 }  // namespace bedrock::protocol::python

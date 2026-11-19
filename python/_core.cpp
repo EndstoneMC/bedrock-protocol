@@ -8,8 +8,6 @@
 #include <vector>
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/array.h>
-#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string_view.h>
 
 #include "bedrock/protocol/serializer.hpp"
@@ -59,23 +57,42 @@ NB_MODULE(_core, m)
     namespace nb = nanobind;
     namespace bpy = bedrock::protocol::python;
     using bedrock::protocol::ProtocolVersion;
-    m.attr("versions") = nb::tuple(nb::cast(bedrock::protocol::versions));
-    nb::class_<ProtocolVersion>(m, "ProtocolVersion", nb::is_final(),
-                                "A protocol number a release reported, and the releases that report it.")
-        .def_ro("number", &ProtocolVersion::number)
-        .def_ro("snapshot", &ProtocolVersion::snapshot)
-        .def_ro("name", &ProtocolVersion::name)
-        .def_ro("first", &ProtocolVersion::first)
-        .def_ro("last", &ProtocolVersion::last)
-        .def("__repr__", [](const ProtocolVersion &version) {
-            return std::format("ProtocolVersion(number={}, snapshot={}, name='{}', first='{}', last='{}')",
-                               version.number, version.snapshot, version.name, version.first, version.last);
-        });
-    m.attr("releases") = nb::tuple(nb::cast(bedrock::protocol::releases));
-    m.def("protocol_version", nb::overload_cast<int>(&bedrock::protocol::protocol_version), nb::arg("number"));
-    m.def("protocol_version", nb::overload_cast<std::string_view>(&bedrock::protocol::protocol_version),
-          nb::arg("release"), "The release entry whose range holds a three-part release.");
     auto package = nb::module_::import_("bedrock_protocol");
+    nb::class_<ProtocolVersion> version(
+        package, "ProtocolVersion", nb::is_final(),
+        "A protocol number a release reports, named for the first release that reports it.");
+    version.def_prop_ro("protocol", &ProtocolVersion::getProtocol)
+        .def_prop_ro("name", &ProtocolVersion::getName)
+        .def("__repr__",
+             [](const ProtocolVersion &each) {
+                 return std::format("ProtocolVersion(protocol={}, name='{}')", each.getProtocol(), each.getName());
+             })
+        .def_prop_ro_static("SUPPORTED_VERSIONS",
+                            [](nb::handle) {
+                                nb::list supported;
+                                for (const ProtocolVersion &each : ProtocolVersion::SUPPORTED_VERSIONS) {
+                                    supported.append(nb::cast(&each, nb::rv_policy::reference));
+                                }
+                                return nb::tuple(supported);
+                            })
+        .def_prop_ro_static(
+            "MINIMUM_VERSION", [](nb::handle) { return &ProtocolVersion::SUPPORTED_VERSIONS.front(); },
+            nb::rv_policy::reference)
+        .def_prop_ro_static(
+            "MAXIMUM_VERSION", [](nb::handle) { return &ProtocolVersion::SUPPORTED_VERSIONS.back(); },
+            nb::rv_policy::reference)
+        .def_static(
+            "get",
+            [](int protocol) -> nb::object {
+                for (const ProtocolVersion &each : ProtocolVersion::SUPPORTED_VERSIONS) {
+                    if (each.getProtocol() == protocol) {
+                        return nb::cast(&each, nb::rv_policy::reference);
+                    }
+                }
+                return nb::none();
+            },
+            nb::arg("protocol"), nb::sig("def get(protocol: int) -> ProtocolVersion | None"),
+            "The supported version a protocol number names.");
     bpy::init_nbt(package);
     bpy::init_versions(m, package);
 }

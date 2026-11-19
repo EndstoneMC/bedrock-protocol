@@ -1139,20 +1139,20 @@ def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
     )
 
 
-def test_version_hpp_gives_a_release_the_newest_snapshot_at_or_below_it(generate):
+def test_version_hpp_names_each_release_for_its_first_version(generate):
     init = """
 from bedrock_protocol_compiler.dsl import field, packet, type, uint8
 
-versions = (1, 2, 4)
+versions = (1, 2)
 
-releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.x"}
+releases = {1: "1.1.0-1.1.2", 2: "1.2.x"}
 """
 
     out = generate({"a": A}, init=init)
 
     version = (out / "version.hpp").read_text()
-    assert 'ProtocolVersion{3, 2, "1.3.0", "1.3.0", "1.3.0"},' in version
-    assert 'ProtocolVersion{4, 4, "1.4.x", "1.4.0", "1.4.9"},' in version
+    supported = 'ProtocolVersion::SUPPORTED_VERSIONS{{\n    {1, "1.1.0"},\n    {2, "1.2.0"},\n}};'
+    assert supported in version
 
 
 def test_a_duplicated_field_writes_once_per_copy(generate):

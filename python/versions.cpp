@@ -57,10 +57,10 @@ const Codec &resolve_packet(const Scope &scope, nb::handle type, const char *arg
     return resolve(*scope.codecs, scope.number, type, SerializationMode::Default, argument);
 }
 
-const CodecTable &codecs_at(const std::array<CodecTable, versions.size()> &tables, int protocol)
+const CodecTable &codecs_at(const std::array<CodecTable, detail::versions.size()> &tables, int protocol)
 {
-    for (std::size_t i = 0; i < versions.size(); ++i) {
-        if (versions[i] == protocol) {
+    for (std::size_t i = 0; i < detail::versions.size(); ++i) {
+        if (detail::versions[i] == protocol) {
             return tables[i];
         }
     }
@@ -130,12 +130,12 @@ void init_versions(nb::module_ &core, nb::module_ &package)
         .value("DEFAULT", SerializationMode::Default)
         .value("CEREAL", SerializationMode::Cereal)
         .value("MANUAL", SerializationMode::Manual);
-    static std::array<CodecTable, versions.size()> tables;
+    static std::array<CodecTable, detail::versions.size()> tables;
     const nb::object names = nb::module_::import_("types").attr("SimpleNamespace");
     std::vector<Scope> bound;
-    for (std::size_t i = 0; i < versions.size(); ++i) {
-        auto module = package.def_submodule(std::format("v{}", versions[i]).c_str());
-        bound.push_back({.number = versions[i], .module = module, .codecs = &tables[i], .names = names()});
+    for (std::size_t i = 0; i < detail::versions.size(); ++i) {
+        auto module = package.def_submodule(std::format("v{}", detail::versions[i]).c_str());
+        bound.push_back({.number = detail::versions[i], .module = module, .codecs = &tables[i], .names = names()});
     }
     init_types(package, bound);
     const nb::object read_only = nb::module_::import_("types").attr("MappingProxyType");

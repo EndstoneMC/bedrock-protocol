@@ -84,90 +84,61 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         #pragma once
 
         #include <array>
-        #include <charconv>
-        #include <cstddef>
         #include <optional>
         #include <string_view>
-        #include <system_error>
 
         namespace $namespace$ {
 
-        struct ProtocolVersion {
-            int number;
-            int snapshot;
-            std::string_view name;
-            std::string_view first;
-            std::string_view last;
+        class ProtocolVersion {
+        public:
+            static const std::array<ProtocolVersion, $count$> SUPPORTED_VERSIONS;
+            static const ProtocolVersion MINIMUM_VERSION;
+            static const ProtocolVersion MAXIMUM_VERSION;
+
+            constexpr ProtocolVersion(int protocol, std::string_view name) : protocol_(protocol), name_(name) {}
+
+            [[nodiscard]] static constexpr std::optional<ProtocolVersion> get(int protocol)
+            {
+                for (const ProtocolVersion &version : SUPPORTED_VERSIONS) {
+                    if (version.protocol_ == protocol) {
+                        return version;
+                    }
+                }
+                return std::nullopt;
+            }
+
+            [[nodiscard]] constexpr int getProtocol() const { return protocol_; }
+
+            [[nodiscard]] constexpr std::string_view getName() const { return name_; }
+
+        private:
+            int protocol_;
+            std::string_view name_;
         };
 
-        inline constexpr std::array versions{$versions$};
-
-        inline constexpr int latest_version = $latest$;
-
-        inline constexpr std::array releases{
+        inline constexpr std::array<ProtocolVersion, $count$> ProtocolVersion::SUPPORTED_VERSIONS{{
         """,
         namespace=names.namespace(schema),
-        versions=", ".join(map(str, schema.versions)),
-        latest=schema.latest,
+        count=len(schema.releases),
     )
     with version.indent():
         for release in schema.releases:
-            version.emit(
-                'ProtocolVersion{$number$, $snapshot$, "$name$", "$first$", "$last$"},',
-                number=release.number,
-                snapshot=max(each for each in schema.versions if each <= release.number),
-                name=release.name,
-                first=release.first,
-                last=release.last,
-            )
+            version.emit('{$number$, "$first$"},', number=release.number, first=release.first)
     version.emit(
         """
-        };
+        }};
 
-        [[nodiscard]] constexpr std::optional<ProtocolVersion> protocol_version(int number)
-        {
-            for (const ProtocolVersion &version : releases) {
-                if (version.number == number) {
-                    return version;
-                }
-            }
-            return std::nullopt;
-        }
+        inline constexpr ProtocolVersion ProtocolVersion::MINIMUM_VERSION = SUPPORTED_VERSIONS.front();
+        inline constexpr ProtocolVersion ProtocolVersion::MAXIMUM_VERSION = SUPPORTED_VERSIONS.back();
 
-        [[nodiscard]] constexpr std::optional<ProtocolVersion> protocol_version(std::string_view release)
-        {
-            constexpr auto parse = [](std::string_view text) -> std::optional<std::array<int, 3>> {
-                std::array<int, 3> parts{};
-                const char *cursor = text.data();
-                const char *const end = cursor + text.size();
-                for (std::size_t i = 0; i < parts.size(); ++i) {
-                    if (i > 0 && (cursor == end || *cursor++ != '.')) {
-                        return std::nullopt;
-                    }
-                    const auto [next, error] = std::from_chars(cursor, end, parts[i]);
-                    if (error != std::errc{}) {
-                        return std::nullopt;
-                    }
-                    cursor = next;
-                }
-                if (cursor != end) {
-                    return std::nullopt;
-                }
-                return parts;
-            };
-            const auto wanted = parse(release);
-            if (!wanted) {
-                return std::nullopt;
-            }
-            for (const ProtocolVersion &version : releases) {
-                if (*parse(version.first) <= *wanted && *wanted <= *parse(version.last)) {
-                    return version;
-                }
-            }
-            return std::nullopt;
-        }
+        namespace detail {
+
+        inline constexpr std::array versions{$versions$};
+
+        }  // namespace detail
 
         }  // namespace $namespace$
         """,
+        versions=", ".join(map(str, schema.versions)),
         namespace=names.namespace(schema),
     )

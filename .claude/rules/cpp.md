@@ -22,9 +22,8 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function templates `encode[<V>](packet[, writer])` and `decode<[V, ]T>(data | reader)`, which take only a `Packet<T, V>` and no mode and read a left-out `V` as `latest_version`, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`.
+- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function templates `encode[<V>](packet[, writer])` and `decode<[V, ]T>(data | reader)`, which take only a `Packet<T, V>` and no mode and read a left-out `V` as `ProtocolVersion::MAXIMUM_VERSION.getProtocol()`, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`.
 - Give each protocol N a `v<N>` namespace holding only `version`, and the function objects `encode` and `decode<T>` that call `encode<N>` and `decode<N, T>`, so a using-declaration finds no root overload by ADL.
-- `Protocol` holds a modelled number from `protocol(number)` or `protocol(release)`, which resolve through `releases`, takes only a packet and no mode, and reports a packet its protocol lacks as `Errc::unknown_type`.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Check a value on encode only where its encoding is narrower than its member, failing one whose cast back differs with `Errc::out_of_range`.
 - Decode a number a protocol gives a member to that member and any other number to a non-member value; reject a number the protocol cannot place, a name it lacks, a value it cannot number or name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.
@@ -36,7 +35,7 @@ paths:
 - Constrain templates with concepts, branch with `if constexpr` and expand packs with fold expressions; never use SFINAE, `enable_if` or recursive instantiation.
 - Own an object by value, or through `std::unique_ptr` when it must live on the heap; never use an owning `new`.
 - Build strings with `std::format`, never with `+` chains of `std::string` and `std::to_string`.
-- Name a std-shaped facility the std way (`packet_of_t`, `has_packet_v`, `enum_cast`); a hand-written type that mirrors a BDS type keeps BDS's names.
-- Name a bound Python attribute in caps when it holds one value (`ID`) and in lower case when it holds a collection (`versions`, `packets`).
+- Name a std-shaped facility the std way (`packet_of_t`, `has_packet_v`, `enum_cast`); a hand-written type that mirrors a BDS type keeps BDS's names, and `ProtocolVersion` keeps Velocity's.
+- Name a bound Python attribute in caps when it holds one value (`ID`) and in lower case when it holds a collection (`packets`), except `ProtocolVersion.SUPPORTED_VERSIONS`, which keeps Velocity's name.
 - Give a caster's name and a bound signature the type its stub must read: the module path (`bedrock_protocol.nbt.CompoundTag`), a generic's arguments, `object` for `__eq__`.
 - Never run clang-format or clang-tidy on generated code.

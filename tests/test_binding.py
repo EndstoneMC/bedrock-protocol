@@ -1,6 +1,8 @@
 import importlib
 import pickle
 import re
+import subprocess
+import sys
 import uuid
 
 import pytest
@@ -16,7 +18,7 @@ ENCODED_PLAY_STATUS = bytes.fromhex("00000003")
 
 PLAY_STATUS = bp.PlayStatusPacket(status=bp.PlayStatus.PLAYER_SPAWN)
 
-PROTOCOLS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in bp.versions]
+PROTOCOLS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in _core.modes]
 FIRST_PROTOCOLS = {cls: module.__name__ for module in reversed(PROTOCOLS) for cls in _core.modes[module.VERSION]}
 
 HEALTH = bp.AttributeData(name="health")
@@ -25,7 +27,7 @@ TRUNCATED_ATTRIBUTES = proto.encode(bp.UpdateAttributesPacket(attribute_data=[HE
 
 def test_the_package_exports_its_functions_and_every_class_it_declares():
     declared = {name for name, value in vars(bp).items() if isinstance(value, type) and value.__module__ == bp.__name__}
-    functions = {"versions", "releases", "protocol_version", "ProtocolVersion", "nbt", "encode", "decode"}
+    functions = {"nbt", "encode", "decode"}
     assert set(bp.__all__) == {*functions, *declared}
 
 
@@ -55,8 +57,8 @@ def test_a_protocol_holds_no_type_the_package_declares(version, name):
     assert not hasattr(version, name)
 
 
-def test_the_internal_modes_hold_every_protocol():
-    assert _core.modes.keys() == {module.VERSION for module in PROTOCOLS}
+def test_the_internal_modes_hold_every_protocol(protocol):
+    assert protocol.VERSION in _core.modes
 
 
 def test_the_package_has_no_pre_cereal():
@@ -66,6 +68,11 @@ def test_the_package_has_no_pre_cereal():
 @pytest.mark.parametrize("name", ["packets", "encodings", "modes"])
 def test_the_package_holds_no_protocol_tables(name):
     assert not hasattr(bp, name)
+
+
+def test_the_package_leaks_nothing_at_exit():
+    script = "import bedrock_protocol as bp; bp.ProtocolVersion.get(2225); bp.ProtocolVersion.SUPPORTED_VERSIONS"
+    assert subprocess.run([sys.executable, "-c", script], capture_output=True, check=True, text=True).stderr == ""
 
 
 def test_the_package_encodes_at_the_latest_protocol():
@@ -750,7 +757,7 @@ def test_a_cerealized_inventory_source_exists_where_the_forms_hold_different_mem
     assert {v729.InventorySource, bp.InventorySource} <= _core.modes[v1001.VERSION].keys()
 
 
-LATE_VERSIONS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in bp.versions if number >= 2168]
+LATE_VERSIONS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in _core.modes if number >= 2168]
 
 
 def reachable_names(scope, seen):

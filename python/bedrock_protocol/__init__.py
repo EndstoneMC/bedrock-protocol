@@ -1,6 +1,6 @@
 """Bedrock packet types: the bare names are the latest protocol's, `v<N>` holds protocol N's codec and older types."""
 
-from ._core import ProtocolVersion, protocol_version, releases, versions
+from . import _core as _core
 
 
 class DecodeError(ValueError):
@@ -29,12 +29,8 @@ class EncodeError(ValueError):
 
 
 __all__ = [
-    "ProtocolVersion",
     "decode",
     "encode",
     "nbt",
-    "protocol_version",
-    "releases",
-    "versions",
     *(name for name, value in globals().items() if isinstance(value, type) and value.__module__ == __name__),
 ]
