@@ -1,0 +1,14 @@
+[
+ {
+  "id": "jumping_without_sneaking",
+  "value": {
+   "mov": {
+    "x": 0.5,
+    "y": -0.25
+   },
+   "is_jumping": true,
+   "is_sneaking": false
+  },
+  "bytes": "0000003f000080be0100"
+ }
+]

@@ -1,0 +1,9 @@
+[
+ {
+  "id": "biome_data_compound",
+  "value": {
+   "biome_data": "{plains:{downfall:0.4f,temperature:0.8f}}"
+  },
+  "bytes": "0a000a06706c61696e730508646f776e66616c6ccdcccc3e050b74656d7065726174757265cdcc4c3f0000"
+ }
+]
