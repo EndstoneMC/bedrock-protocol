@@ -1,0 +1,22 @@
+[
+ {
+  "id": "operator_with_base_layer",
+  "value": {
+   "data": {
+    "target_player": 7,
+    "player_permissions": 2,
+    "command_permissions": 4,
+    "layers": [
+     {
+      "serialized_layer": 1,
+      "abilities_set": 26112,
+      "ability_values": 512,
+      "fly_speed": 0.05,
+      "walk_speed": 0.1
+     }
+    ]
+   }
+  },
+  "bytes": "070000000000000002040101000066000000020000cdcc4c3dcdcccc3d"
+ }
+]

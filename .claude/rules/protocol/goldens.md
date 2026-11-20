@@ -17,6 +17,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Leave a packet out of a folder before 2168 when that build cannot run both its read and its write: a stub, a write of a member its read never fills, a cereal schema the build binds into no packet context, or an id its factory builds nothing for; have the sides it has checked against the DSL statically instead.
 - Check `v729/` with BDS 1.21.31.04.
 - Check `v748/` with BDS 1.21.44.01.
+- Check `v766/` with BDS 1.21.51.02.
 - Check `v776/` with BDS 1.21.62.01.
 - Check `v786/` with BDS 1.21.73.01.
 - Check `v800/` with BDS 1.21.84.1.

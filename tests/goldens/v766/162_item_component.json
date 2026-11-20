@@ -1,0 +1,18 @@
+[
+ {
+  "id": "two_items",
+  "value": {
+   "items": [
+    {
+     "name": "minecraft:stick",
+     "component_data": "{}"
+    },
+    {
+     "name": "minecraft:apple",
+     "component_data": "{\"minecraft:max_stack_size\":16}"
+    }
+   ]
+  },
+  "bytes": "020f6d696e6563726166743a737469636b0a00000f6d696e6563726166743a6170706c650a0003186d696e6563726166743a6d61785f737461636b5f73697a652000"
+ }
+]

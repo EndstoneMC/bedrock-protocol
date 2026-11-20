@@ -1,0 +1,70 @@
+[
+ {
+  "id": "entity_default_and_populated_lists",
+  "value": {
+   "categories": [
+    {
+     "identifier": "wrapper_a",
+     "categories": [
+      {
+       "name": "cat",
+       "priorities": {
+        "entities": {
+         "minecraft:cow": 10
+        },
+        "blocks": {
+         "minecraft:stone": 1
+        },
+        "entity_default": 5
+       }
+      }
+     ]
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "preset",
+     "categories": "cat",
+     "exclusion_list": ["minecraft:air"],
+     "liquid_targeting_list": ["minecraft:water"],
+     "item_settings": {
+      "minecraft:bow": "cat"
+     },
+     "default_item_settings": "cat"
+    }
+   ]
+  },
+  "bytes": "0109777261707065725f610103636174010d6d696e6563726166743a636f770a000000010f6d696e6563726166743a73746f6e6501000000010500000000010670726573657403636174010d6d696e6563726166743a616972010f6d696e6563726166743a7761746572010d6d696e6563726166743a626f7703636174010363617400"
+ },
+ {
+  "id": "block_default_and_empty_lists",
+  "value": {
+   "categories": [
+    {
+     "identifier": "wrapper_b",
+     "categories": [
+      {
+       "name": "cat",
+       "priorities": {
+        "entities": {},
+        "blocks": {},
+        "block_default": 7
+       }
+      }
+     ]
+    }
+   ],
+   "presets": [
+    {
+     "identifier": "preset2",
+     "categories": "cat",
+     "exclusion_list": [],
+     "liquid_targeting_list": [],
+     "item_settings": {},
+     "hand_settings": "cat"
+    }
+   ]
+  },
+  "bytes": "0109777261707065725f620103636174000000010700000001077072657365743203636174000000000103636174"
+ }
+]

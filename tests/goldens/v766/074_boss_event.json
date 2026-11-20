@@ -1,0 +1,114 @@
+[
+ {
+  "id": "add_boss_bar",
+  "value": {
+   "boss_id": -3,
+   "event_type": 0,
+   "player_id": 0,
+   "name": "boss",
+   "health_percent": 0.5,
+   "darken_screen": 1,
+   "color": 3,
+   "overlay": 1
+  },
+  "bytes": "050004626f73730000003f01000301"
+ },
+ {
+  "id": "player_added_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 1,
+   "player_id": 7,
+   "name": "",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "05010e"
+ },
+ {
+  "id": "player_removed_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 3,
+   "player_id": 9,
+   "name": "",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "050312"
+ },
+ {
+  "id": "query_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 8,
+   "player_id": 11,
+   "name": "",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "050816"
+ },
+ {
+  "id": "update_percent_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 4,
+   "player_id": 0,
+   "name": "",
+   "health_percent": 0.75,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "05040000403f"
+ },
+ {
+  "id": "update_name_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 5,
+   "player_id": 0,
+   "name": "chief",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 0,
+   "overlay": 0
+  },
+  "bytes": "0505056368696566"
+ },
+ {
+  "id": "update_properties_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 6,
+   "player_id": 0,
+   "name": "",
+   "health_percent": 0.0,
+   "darken_screen": 1,
+   "color": 2,
+   "overlay": 3
+  },
+  "bytes": "050601000203"
+ },
+ {
+  "id": "update_style_event",
+  "value": {
+   "boss_id": -3,
+   "event_type": 7,
+   "player_id": 0,
+   "name": "",
+   "health_percent": 0.0,
+   "darken_screen": 0,
+   "color": 5,
+   "overlay": 2
+  },
+  "bytes": "05070502"
+ }
+]
