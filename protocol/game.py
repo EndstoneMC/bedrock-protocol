@@ -89,6 +89,12 @@ class SpawnSettings:
     dimension: DimensionType
 
 
+@type(until=844)
+class GameRulesChangedPacketData:
+    rules: list[GameRule] = field(cereal=False)
+
+
+@type(since=844)
 class GameRulesChangedPacketData:
     rules: list[GameRule]
 
