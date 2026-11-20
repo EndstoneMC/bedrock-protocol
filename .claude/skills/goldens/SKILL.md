@@ -29,7 +29,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 2. Seed each one's file and delete the byte-identical ones as a newer folder does, from the nearest folder toward `v2168/` that holds it.
 3. Model each packet in the encoding its build sends by default (dsl.md): a seed from `v2168/` holds cereal shapes, and each record's `serialization_mode` says which encoding BDS sent.
 4. Where BDS prints no JSON for a packet, judge the case by its `bds_trace`. Where a script cannot walk the trace against the value, have an agent compare them leaf by leaf and give a verdict per case. A confirmed case freezes, and nothing reruns it.
-5. Where the build's read or write for a packet is a stub, such as a read that skips to the end of the buffer or a write that ignores what was read, leave the packet out (goldens.md) and have `bds-reverse-engineer` read the other side against the DSL.
+5. Where the build cannot run a packet's read or write, such as a read that skips to the end of the buffer, a write that ignores what was read, a read that fails `undefined schema` because the build binds the packet's cereal schema into no packet context, or `crashed no factory builds this packet id` for an id the build declares, leave the packet out (goldens.md) and have `bds-reverse-engineer` read the sides the build has against the DSL.
 6. Have `bds-reverse-engineer` date each schema fix across every build on disk from the folder's protocol back to 776, one address per build, and gate the fix only where a build changes.
 7. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
 
