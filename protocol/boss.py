@@ -3,7 +3,7 @@ network/packet/types/world/actor/ai/util/BossEventData.h."""
 
 from enum import IntEnum
 
-from protocol import field, packet, uint8, uint16
+from protocol import field, packet, uint8, uint16, uvarint32
 from protocol.actor import ActorUniqueID
 
 package = "bedrock.protocol"
@@ -44,7 +44,7 @@ class BossBarOverlay(IntEnum, uint8):
 @packet(id=74, until=1001)
 class BossEventPacket:
     boss_id: ActorUniqueID
-    event_type: BossEventUpdateType
+    event_type: BossEventUpdateType = field(type=uvarint32)
 
     player_id: ActorUniqueID = field(
         when=lambda p: (
@@ -70,8 +70,8 @@ class BossEventPacket:
             in {BossEventUpdateType.ADD, BossEventUpdateType.UPDATE_PROPERTIES, BossEventUpdateType.UPDATE_STYLE}
         )
     ):
-        color: BossBarColor
-        overlay: BossBarOverlay
+        color: BossBarColor = field(type=uvarint32)
+        overlay: BossBarOverlay = field(type=uvarint32)
 
 
 @packet(id=74, since=1001)
