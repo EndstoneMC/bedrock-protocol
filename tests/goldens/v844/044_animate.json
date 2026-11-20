@@ -1,0 +1,20 @@
+[
+ {
+  "id": "data_absent",
+  "value": {
+   "action": 1,
+   "runtime_id": 300,
+   "data": 0.0
+  },
+  "bytes": "02ac02"
+ },
+ {
+  "id": "data_present",
+  "value": {
+   "action": 132,
+   "runtime_id": 7,
+   "data": 0.5
+  },
+  "bytes": "8802070000003f"
+ }
+]
