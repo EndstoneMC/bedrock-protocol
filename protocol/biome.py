@@ -258,7 +258,7 @@ class BiomeDefinitionChunkGenData:
     overworld_gen_rules: BiomeOverworldGenRulesData | None
     multinoise_gen_rules: BiomeMultinoiseGenRulesData | None
     legacy_world_gen_rules: BiomeLegacyWorldGenRulesData | None
-    replace_biomes: BiomeReplacementsData | None = field(since=800)
+    replace_biomes: BiomeReplacementsData | None = field(since=859)
     village_type: VillageType | None = field(since=924)
     with field(since=975):
         surface_builder_data: BiomeSurfaceBuilderData | None
