@@ -1,0 +1,18 @@
+[
+ {
+  "id": "baby_mob_with_entity_identifier",
+  "value": {
+   "event_id": 13,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "data": -1,
+   "entity_identifier": "minecraft:pig",
+   "is_baby_mob": true,
+   "is_global": false
+  },
+  "bytes": "0d0000803f0000004000004040010d6d696e6563726166743a7069670100"
+ }
+]

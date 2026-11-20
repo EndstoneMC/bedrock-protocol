@@ -1,0 +1,10 @@
+[
+ {
+  "id": "reset_three_hud_elements",
+  "value": {
+   "hud_element": [0, 5, 12],
+   "hud_visible": 1
+  },
+  "bytes": "0300050c01"
+ }
+]

@@ -1,0 +1,18 @@
+[
+ {
+  "id": "baby_mob_with_entity_type",
+  "value": {
+   "event_id": 13,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "data": -1,
+   "entity_type": 4876,
+   "is_baby_mob": true,
+   "is_global": false
+  },
+  "bytes": "0d0000803f000000400000404001984c0100"
+ }
+]
