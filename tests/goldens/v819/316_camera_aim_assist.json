@@ -1,0 +1,16 @@
+[
+ {
+  "id": "distance_target_set_action",
+  "value": {
+   "preset_id": "aim_assist_preset",
+   "view_angle": {
+    "x": 30.0,
+    "y": 20.0
+   },
+   "distance": 8.0,
+   "target_mode": 1,
+   "action": 0
+  },
+  "bytes": "1161696d5f6173736973745f7072657365740000f0410000a041000000410100"
+ }
+]
