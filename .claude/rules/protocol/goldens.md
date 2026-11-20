@@ -16,6 +16,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, whatever its codec's number, and never a file identical to the neighbour's.
 - Leave a packet out of a folder before 2168 when that build cannot run both its read and its write: a stub, a cereal schema the build binds into no packet context, or an id its factory builds nothing for; have the sides it has checked against the DSL statically instead.
 - Check `v819/` with BDS 1.21.95.1.
+- Check `v827/` with BDS 1.21.102.1.
 - Check `v844/` with BDS 1.21.114.1.
 - Check `v859/` with BDS 1.21.123.2.
 - Check `v898/` with BDS 1.21.132.3.
