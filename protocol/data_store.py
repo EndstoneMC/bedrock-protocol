@@ -30,6 +30,15 @@ class DataStoreUpdate:
     path_update_count: uint32
 
 
+@type(until=898)
+class DataStoreChange:
+    data_store_name: str
+    new_data: DynamicValue
+    update_count: uint32
+    property: str
+
+
+@type(since=898)
 class DataStoreChange:
     data_store_name: str
     property: str
