@@ -1,0 +1,56 @@
+[
+ {
+  "id": "cursor_with_dynamic_id",
+  "value": {
+   "inventory_id": 119,
+   "slots": [
+    {
+     "id": 345,
+     "stack_size": 3,
+     "aux_value": 5,
+     "net_id": {
+      "raw_id": 9
+     },
+     "block_runtime_id": 0,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    },
+    {
+     "id": 0,
+     "stack_size": 0,
+     "aux_value": 0,
+     "block_runtime_id": 0,
+     "user_data_buffer": ""
+    }
+   ],
+   "full_container_name": {
+    "name": 59,
+    "dynamic_id": 3
+   },
+   "dynamic_container_size": 300
+  },
+  "bytes": "7702b2050300050112000a00000000000000000000003b0103000000ac02"
+ },
+ {
+  "id": "cursor_without_dynamic_id",
+  "value": {
+   "inventory_id": 119,
+   "slots": [
+    {
+     "id": 278,
+     "stack_size": 7,
+     "aux_value": 2,
+     "net_id": {
+      "raw_id": 11
+     },
+     "block_runtime_id": 0,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    }
+   ],
+   "full_container_name": {
+    "name": 59
+   },
+   "dynamic_container_size": 300
+  },
+  "bytes": "7701ac040700020116000a000000000000000000003b00ac02"
+ }
+]

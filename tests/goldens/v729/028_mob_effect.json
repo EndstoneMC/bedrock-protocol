@@ -1,0 +1,15 @@
+[
+ {
+  "id": "effect_added",
+  "value": {
+   "runtime_id": 300,
+   "event_id": 1,
+   "effect_id": 19,
+   "effect_amplifier": 2,
+   "show_particles": true,
+   "effect_duration_ticks": 600,
+   "tick": 4660
+  },
+  "bytes": "ac0201260401b0093412000000000000"
+ }
+]

@@ -1,0 +1,25 @@
+[
+ {
+  "id": "cursor_with_dynamic_id",
+  "value": {
+   "inventory_id": 119,
+   "slot": 3,
+   "full_container_name": {
+    "name": 59,
+    "dynamic_id": 3
+   },
+   "dynamic_container_size": 300,
+   "item": {
+    "id": 345,
+    "stack_size": 3,
+    "aux_value": 5,
+    "net_id": {
+     "raw_id": 9
+    },
+    "block_runtime_id": 0,
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+   }
+  },
+  "bytes": "77033b0103000000ac02b2050300050112000a00000000000000000000"
+ }
+]

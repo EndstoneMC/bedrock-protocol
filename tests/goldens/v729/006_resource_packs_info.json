@@ -1,0 +1,36 @@
+[
+ {
+  "id": "one_pack_with_url",
+  "value": {
+   "resource_pack_required": true,
+   "has_addon_packs": false,
+   "has_scripts": true,
+   "resource_packs": [
+    {
+     "pack_id_version": {
+      "id": "0a0b0c0d-0e0f-1011-1213-141516171819",
+      "version": {
+       "version": "2.0.0"
+      }
+     },
+     "pack_size": 4096,
+     "content_key": "key",
+     "subpack_name": "sub",
+     "content_identity": {
+      "identity": "6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b"
+     },
+     "has_scripts": true,
+     "is_addon_pack": false,
+     "is_ray_tracing_capable": true
+    }
+   ],
+   "pack_urls": [
+    {
+     "pack_id_and_version": "0a0b0c0d-0e0f-1011-1213-141516171819_2.0.0",
+     "url": "http://cdn"
+    }
+   ]
+  },
+  "bytes": "01000101002430613062306330642d306530662d313031312d313231332d31343135313631373138313905322e302e300010000000000000036b6579037375622436663062356532612d316333642d346538662d396137622d326434633665386630613162010001012a30613062306330642d306530662d313031312d313231332d3134313531363137313831395f322e302e300a687474703a2f2f63646e"
+ }
+]
