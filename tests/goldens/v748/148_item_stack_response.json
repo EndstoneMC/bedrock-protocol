@@ -1,0 +1,84 @@
+[
+ {
+  "id": "slot_without_dynamic_container_id",
+  "value": {
+   "responses": [
+    {
+     "result": 0,
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": 7
+       },
+       "slots": [
+        {
+         "requested_slot": 3,
+         "slot": 3,
+         "amount": 64,
+         "item_stack_net_id": {
+          "raw_id": 9
+         },
+         "custom_name": "n",
+         "durability_correction": 5
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "0100010107000103034012016e0a"
+ },
+ {
+  "id": "error_without_containers",
+  "value": {
+   "responses": [
+    {
+     "result": 1,
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "containers": []
+    }
+   ]
+  },
+  "bytes": "010101"
+ },
+ {
+  "id": "slot_with_dynamic_container_id",
+  "value": {
+   "responses": [
+    {
+     "result": 0,
+     "client_request_id": {
+      "raw_id": -3
+     },
+     "containers": [
+      {
+       "full_container_name": {
+        "name": 7,
+        "dynamic_id": 7
+       },
+       "slots": [
+        {
+         "requested_slot": 2,
+         "slot": 4,
+         "amount": 0,
+         "item_stack_net_id": {
+          "raw_id": 0
+         },
+         "custom_name": "nm",
+         "durability_correction": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "bytes": "010005010701070000000102040000026e6d06"
+ }
+]
