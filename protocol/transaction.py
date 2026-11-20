@@ -229,7 +229,8 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32, until=776)
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(since=776)
 
 
 @type(cereal=False, since=944, until=2168)
