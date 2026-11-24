@@ -1,5 +1,8 @@
+from pathlib import Path
+
 import pytest
 
+from bedrock_protocol_compiler.builder import build
 from bedrock_protocol_compiler.descriptor import (
     Binary,
     CompilerError,
@@ -12,7 +15,9 @@ from bedrock_protocol_compiler.descriptor import (
     Range,
     StructRef,
 )
-from bedrock_protocol_compiler.schema import Schema, SerializationMode, Slot, roots_reached
+from bedrock_protocol_compiler.schema import Numbering, Schema, SerializationMode, Slot, roots_reached
+
+ROOT = Path(__file__).parents[2]
 
 HEADER = """
 from enum import IntEnum, auto
@@ -3135,3 +3140,34 @@ def test_a_temporary_owner_holding_a_child_only_the_hand_written_form_holds_outs
         CompilerError, match=r"a\.py: A\.N: is owned by CerealizedA but is live at 1, outside its overlap"
     ):
         Schema(package)
+
+
+def test_every_serializer_numbers_an_enum_as_numbering_of_selects_at_each_protocol_it_serves():
+    schema = Schema(build(ROOT / "protocol"))
+    selected = {
+        (numbering.model, version): numbering
+        for numberings in schema.model_numberings.values()
+        for numbering in numberings
+        if not numbering.identity
+        for run in numbering.runs
+        for version in schema.versions
+        if run.contains(version)
+    }
+    served = [
+        (encoding, numbering, version)
+        for encodings in schema.model_encodings.values()
+        for encoding in encodings
+        for numbering in encoding.reached.values()
+        if isinstance(numbering, Numbering)
+        for runs in encoding.served.values()
+        for run in runs
+        for version in schema.versions
+        if run.contains(version)
+    ]
+
+    assert served
+    assert [
+        (encoding.model.family.name, numbering.model.family.name, version)
+        for encoding, numbering, version in served
+        if selected.get((numbering.model, version)) is not (None if numbering.identity else numbering)
+    ] == []
