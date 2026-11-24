@@ -76,6 +76,15 @@ const EnumNumbering &resolve_enum(const Scope &scope, nb::handle type, const cha
     return *entry->second;
 }
 
+const EnumNaming &resolve_naming(const Scope &scope, nb::handle type, const char *argument)
+{
+    const auto entry = scope.namings->find(type.ptr());
+    if (entry == scope.namings->end()) {
+        throw nb::type_error(std::format("{}: {} is not a name-coded enum", argument, nb::repr(type).c_str()).c_str());
+    }
+    return *entry->second;
+}
+
 nb::bytes encode_with(const Codec &codec, nb::handle value, const char *argument)
 {
     if (!nb::inst_ready(value)) {
@@ -141,6 +150,7 @@ void init_versions(nb::module_ &core, nb::module_ &package)
         .value("MANUAL", SerializationMode::Manual);
     static std::array<CodecTable, detail::versions.size()> tables;
     static std::array<EnumTable, detail::versions.size()> enums;
+    static std::array<NamingTable, detail::versions.size()> namings;
     const nb::object names = nb::module_::import_("types").attr("SimpleNamespace");
     std::vector<Scope> bound;
     for (std::size_t i = 0; i < detail::versions.size(); ++i) {
@@ -149,6 +159,7 @@ void init_versions(nb::module_ &core, nb::module_ &package)
                          .module = module,
                          .codecs = &tables[i],
                          .enums = &enums[i],
+                         .namings = &namings[i],
                          .names = names()});
     }
     init_types(package, bound);
@@ -187,6 +198,15 @@ void init_versions(nb::module_ &core, nb::module_ &package)
             nb::arg("value"), nb::sig("def enum_integer(value: enum.Enum) -> int | None"),
             "The number this protocol writes for an enum value, or None where it cannot encode it.");
         m.def(
+            "enum_name", [scope](nb::handle value) { return resolve_naming(scope, value.type(), "value").name(value); },
+            nb::arg("value"), nb::sig("def enum_name(value: enum.Enum) -> str | None"),
+            "The name this protocol writes for an enum value, or None where it cannot name it.");
+        m.def(
+            "enum_cast",
+            [scope](nb::handle cls, const std::string &name) { return resolve_naming(scope, cls, "cls").cast(name); },
+            nb::arg("cls"), nb::arg("name"), nb::sig("def enum_cast(cls: type[_T], name: str) -> _T | None"),
+            "The value this protocol reads for `name` of enum `cls`, folding case.");
+        m.def(
             "enum_cast",
             [scope](nb::handle cls, nb::handle number) { return resolve_enum(scope, cls, "cls").cast(number); },
             nb::arg("cls"), nb::arg("number"), nb::sig("def enum_cast(cls: type[_T], number: int) -> _T | int | None"),
@@ -196,6 +216,13 @@ void init_versions(nb::module_ &core, nb::module_ &package)
             [scope](nb::handle value) { return !resolve_enum(scope, value.type(), "value").integer(value).is_none(); },
             nb::arg("value"), nb::sig("def enum_contains(value: enum.Enum) -> bool"),
             "Whether this protocol can encode an enum value.");
+        m.def(
+            "enum_contains",
+            [scope](nb::handle cls, const std::string &name) {
+                return !resolve_naming(scope, cls, "cls").cast(name).is_none();
+            },
+            nb::arg("cls"), nb::arg("name"), nb::sig("def enum_contains(cls: type, name: str) -> bool"),
+            "Whether this protocol can decode `name` of enum `cls`.");
         m.def(
             "enum_contains",
             [scope](nb::handle cls, nb::handle number) {
@@ -211,6 +238,14 @@ void init_versions(nb::module_ &core, nb::module_ &package)
             "enum_count", [scope](nb::handle cls) { return nb::len(resolve_enum(scope, cls, "cls").values()); },
             nb::arg("cls"), nb::sig("def enum_count(cls: type) -> int"),
             "How many values of enum `cls` this protocol can encode.");
+        m.def(
+            "enum_names", [scope](nb::handle cls) { return resolve_naming(scope, cls, "cls").names(); }, nb::arg("cls"),
+            nb::sig("def enum_names(cls: type) -> tuple[str, ...]"),
+            "The names this protocol writes for enum `cls`, in declaration order.");
+        m.def(
+            "enum_entries", [scope](nb::handle cls) { return resolve_naming(scope, cls, "cls").entries(); },
+            nb::arg("cls"), nb::sig("def enum_entries(cls: type[_T]) -> tuple[tuple[_T, str], ...]"),
+            "Each value of enum `cls` this protocol writes by name, with that name, in declaration order.");
         nb::list all;
         for (nb::handle name : m.attr("__dict__")) {
             const std::string_view text = nb::borrow<nb::str>(name).c_str();

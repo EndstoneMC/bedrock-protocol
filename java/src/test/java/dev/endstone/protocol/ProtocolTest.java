@@ -11,6 +11,7 @@ import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
@@ -213,6 +214,71 @@ final class ProtocolTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> Protocol.v2225.enumValues(SerializationMode.class))
+                        .getMessage());
+    }
+
+    @Test
+    void aProtocolNamesAValueItWritesByName() {
+        assertEquals(Optional.of("coco"), Protocol.v2225.enumName(PieceType.CO_CO));
+    }
+
+    @Test
+    void aProtocolGivesNoNameToAValueItCannotWrite() {
+        assertEquals(Optional.empty(), Protocol.v2193.enumName(PieceType.CO_CO));
+    }
+
+    @Test
+    void aNameReadsAsTheValueTheProtocolGivesItFoldingCase() {
+        assertEquals(
+                Optional.of(PieceType.CO_CO), Protocol.v2225.enumCast(PieceType.class, "CoCo"));
+    }
+
+    @Test
+    void aProtocolCannotDecodeANameItLacks() {
+        assertFalse(Protocol.v2193.enumContains(PieceType.class, "coco"));
+    }
+
+    @Test
+    void aDerivedMemberIsNamedAsTheCodecWritesIt() {
+        assertEquals(Optional.of("latest"), Protocol.v2193.enumName(CurrentCmdVersion.LATEST));
+    }
+
+    @Test
+    void theNameOfADerivedMemberReadsBackAsTheMemberTheProtocolGivesIt() {
+        assertEquals(
+                Optional.of(CurrentCmdVersion.TIME_OF_COMMAND_OVERLOADS),
+                Protocol.v2193.enumCast(CurrentCmdVersion.class, "latest"));
+    }
+
+    @Test
+    void aProtocolListsEachValueItWritesByNameWithItsName() {
+        assertTrue(
+                Protocol.v2225
+                        .enumEntries(PieceType.class)
+                        .contains(Map.entry(PieceType.CO_CO, "coco")));
+    }
+
+    @Test
+    void aProtocolListsTheNamesOfItsEntriesInOrder() {
+        assertEquals(
+                Protocol.v2225.enumEntries(PieceType.class).stream()
+                        .map(Map.Entry::getValue)
+                        .toList(),
+                Protocol.v2225.enumNames(PieceType.class));
+    }
+
+    @Test
+    void aProtocolHasNoNameForAnEnumItDoesNotCodeByName() {
+        assertEquals(List.of(), Protocol.v2193.enumEntries(AudioContentPlaybackType.class));
+    }
+
+    @Test
+    void enumNameRejectsAnEnumNoFieldCodesByName() {
+        assertEquals(
+                "dev.endstone.protocol.ContainerType: is not a name-coded enum",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> Protocol.v2225.enumName(ContainerType.DISC_PRESS))
                         .getMessage());
     }
 }

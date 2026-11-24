@@ -4,6 +4,7 @@ from bedrock_protocol_compiler.java import file, names, protocol, version
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.message import MessageGenerator, type_generator
+from bedrock_protocol_compiler.java.naming import NamingGenerator
 from bedrock_protocol_compiler.java.numbering import NumberingGenerator, enums
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema, StructModel
@@ -50,6 +51,15 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             raise CompilerError(f"{internal}.{numbering.name}: is declared twice")
         numbering.definition(body)
         file.write(schema, context.open(names.path(internal, numbering.name)), internal, body)
+    for model in enums(schema):
+        if not schema.namings(model):
+            continue
+        body = Printer()
+        naming = NamingGenerator(schema, model)
+        if numbered.setdefault(naming.name, model) is not model:
+            raise CompilerError(f"{internal}.{naming.name}: is declared twice")
+        naming.definition(body)
+        file.write(schema, context.open(names.path(internal, naming.name)), internal, body)
     for name, role in ((names.VERSION, "the protocol version table"), (names.PROTOCOL, "the protocol class")):
         if f"{schema.java_package}.{name}" in declared:
             raise CompilerError(f"{schema.java_package}.{name}: is {role}")

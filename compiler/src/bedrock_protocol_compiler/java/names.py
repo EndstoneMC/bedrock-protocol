@@ -122,6 +122,10 @@ def numbering(schema: Schema, each: EnumModel) -> str:
     return f"{nested(schema, each).replace('.', '')}Numbering"
 
 
+def naming(schema: Schema, each: EnumModel) -> str:
+    return f"{nested(schema, each).replace('.', '')}Naming"
+
+
 def bounds(since: int | None, until: int | None, variable: str = "version") -> list[str]:
     found = []
     if since is not None:

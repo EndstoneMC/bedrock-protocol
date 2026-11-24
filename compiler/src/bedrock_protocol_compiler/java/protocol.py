@@ -79,6 +79,22 @@ def definition(
                 return Enums.of(type).values().apply(version).stream().map(type::cast).toList();
             }
 
+            private static <E extends Enum<E>> @NotNull Optional<String> enumName(int version, @NotNull E value) {
+                return Enums.named(value.getDeclaringClass()).enumName(version, value);
+            }
+
+            private static <E extends Enum<E>> @NotNull Optional<E> enumCast(
+                    int version, @NotNull Class<E> type, @NotNull String name) {
+                return Enums.named(type).cast().apply(version, name).map(type::cast);
+            }
+
+            private static <E extends Enum<E>> @NotNull List<Map.Entry<E, String>> enumEntries(
+                    int version, @NotNull Class<E> type) {
+                return Enums.named(type).entries().apply(version).stream()
+                        .map(entry -> Map.entry(type.cast(entry.getKey()), entry.getValue()))
+                        .toList();
+            }
+
             private static final class Registry {
                 private static final @NotNull Map<Class<? extends Packet>, Registration<?>> TYPES = new HashMap<>();
 
@@ -96,6 +112,7 @@ def definition(
 
             private static final class Enums {
                 private static final @NotNull Map<Class<?>, Numbered<?>> TYPES = new HashMap<>();
+                private static final @NotNull Map<Class<?>, Named<?>> NAMED = new HashMap<>();
 
                 static {
                     $enums$
@@ -111,12 +128,28 @@ def definition(
                     TYPES.put(type, new Numbered<>(type, integer, cast, values));
                 }
 
+                private static <E extends Enum<E>> void registerNames(
+                        @NotNull Class<E> type,
+                        @NotNull BiFunction<Integer, E, Optional<String>> name,
+                        @NotNull BiFunction<Integer, String, Optional<E>> cast,
+                        @NotNull IntFunction<List<Map.Entry<E, String>>> entries) {
+                    NAMED.put(type, new Named<>(type, name, cast, entries));
+                }
+
                 private static @NotNull Numbered<?> of(@NotNull Class<?> type) {
                     Numbered<?> numbered = TYPES.get(type);
                     if (numbered == null) {
                         throw new IllegalArgumentException(type.getName() + ": is not an enum");
                     }
                     return numbered;
+                }
+
+                private static @NotNull Named<?> named(@NotNull Class<?> type) {
+                    Named<?> named = NAMED.get(type);
+                    if (named == null) {
+                        throw new IllegalArgumentException(type.getName() + ": is not a name-coded enum");
+                    }
+                    return named;
                 }
             }
 
@@ -127,6 +160,16 @@ def definition(
                     @NotNull IntFunction<List<E>> values) {
                 @NotNull OptionalInt enumInteger(int version, @NotNull Object value) {
                     return integer.apply(version, type.cast(value));
+                }
+            }
+
+            private record Named<E extends Enum<E>>(
+                    @NotNull Class<E> type,
+                    @NotNull BiFunction<Integer, E, Optional<String>> name,
+                    @NotNull BiFunction<Integer, String, Optional<E>> cast,
+                    @NotNull IntFunction<List<Map.Entry<E, String>>> entries) {
+                @NotNull Optional<String> enumName(int version, @NotNull Object value) {
+                    return name.apply(version, type.cast(value));
                 }
             }
 
@@ -202,6 +245,28 @@ def versions(schema: Schema, p: Printer) -> None:
                 public static <E extends Enum<E>> int enumCount(@NotNull Class<E> type) {
                     return $name$.enumValues(VERSION, type).size();
                 }
+
+                public static <E extends Enum<E>> @NotNull Optional<String> enumName(@NotNull E value) {
+                    return $name$.enumName(VERSION, value);
+                }
+
+                public static <E extends Enum<E>> @NotNull Optional<E> enumCast(
+                        @NotNull Class<E> type, @NotNull String name) {
+                    return $name$.enumCast(VERSION, type, name);
+                }
+
+                public static <E extends Enum<E>> boolean enumContains(@NotNull Class<E> type, @NotNull String name) {
+                    return $name$.enumCast(VERSION, type, name).isPresent();
+                }
+
+                public static <E extends Enum<E>> @NotNull List<String> enumNames(@NotNull Class<E> type) {
+                    return $name$.enumEntries(VERSION, type).stream().map(Map.Entry::getValue).toList();
+                }
+
+                public static <E extends Enum<E>> @NotNull List<Map.Entry<E, String>> enumEntries(
+                        @NotNull Class<E> type) {
+                    return $name$.enumEntries(VERSION, type);
+                }
             }
 
             """,
@@ -231,3 +296,10 @@ def enum_registrations(schema: Schema, p: Printer, enums: list[EnumModel]) -> No
             spelled=names.qualified(schema, model),
             numbering=numbering,
         )
+        if schema.namings(model):
+            naming = f"{names.internal(schema)}.{names.naming(schema, model)}"
+            p.emit(
+                "registerNames($spelled$.class, $naming$::enumName, $naming$::enumCast, $naming$::enumEntries);",
+                spelled=names.qualified(schema, model),
+                naming=naming,
+            )

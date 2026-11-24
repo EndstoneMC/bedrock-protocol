@@ -60,11 +60,21 @@ struct EnumNumbering {
 
 using EnumTable = std::unordered_map<PyObject *, const EnumNumbering *>;
 
+struct EnumNaming {
+    nb::object (*name)(nb::handle value);
+    nb::object (*cast)(std::string_view name);
+    nb::object (*names)();
+    nb::object (*entries)();
+};
+
+using NamingTable = std::unordered_map<PyObject *, const EnumNaming *>;
+
 struct Scope {
     int number;
     nb::handle module;
     CodecTable *codecs;
     EnumTable *enums;
+    NamingTable *namings;
     nb::object names;
     nb::dict encodings;
     nb::dict modes;
@@ -358,6 +368,32 @@ inline constexpr EnumNumbering enum_numbering{
     },
 };
 
+template <typename E, int V>
+inline constexpr EnumNaming enum_naming{
+    .name = [](nb::handle value) -> nb::object {
+        const auto name = enum_name_<V>(nb::cast<E>(value));
+        return name ? nb::cast(std::string(*name)) : nb::none();
+    },
+    .cast = [](std::string_view name) -> nb::object {
+        const auto value = enum_cast_<V, E>(name);
+        return value ? nb::cast(*value) : nb::none();
+    },
+    .names = []() -> nb::object {
+        nb::list out;
+        for (const std::string_view name : enum_names_<V, E>()) {
+            out.append(std::string(name));
+        }
+        return nb::tuple(out);
+    },
+    .entries = []() -> nb::object {
+        nb::list out;
+        for (const auto &[value, name] : enum_entries_<V, E>()) {
+            out.append(nb::make_tuple(value, std::string(name)));
+        }
+        return nb::tuple(out);
+    },
+};
+
 template <typename T, std::size_t I>
 const std::string &field_label()
 {
@@ -457,6 +493,9 @@ void bind_type(nb::handle home, const Scope &scope, std::span<const Scope> bound
             bind_enum<T>(parent, name.c_str());
             [&]<std::size_t... J>(std::index_sequence<J...>) {
                 (((*bound[J].enums)[nb::type<T>().ptr()] = &enum_numbering<T, detail::versions[J]>), ...);
+                if constexpr (detail::is_name_coded_v<T>) {
+                    (((*bound[J].namings)[nb::type<T>().ptr()] = &enum_naming<T, detail::versions[J]>), ...);
+                }
             }(std::make_index_sequence<detail::versions.size()>{});
         }
         else {

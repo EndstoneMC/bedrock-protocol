@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "bedrock/protocol/detail/naming.hpp"
 #include "bedrock/protocol/detail/numbering.hpp"
 #include "bedrock/protocol/version.hpp"
 
@@ -55,11 +56,6 @@ inline constexpr auto entries_v = entries<E>();
 template <typename E>
 inline constexpr bool is_reflected_v = std::is_enum_v<E> && count_v<E> != 0;
 
-constexpr char to_lower(char c) noexcept
-{
-    return c >= 'A' && c <= 'Z' ? static_cast<char>(c - 'A' + 'a') : c;
-}
-
 template <typename E>
 const std::unordered_map<std::string_view, E> &name_index()
 {
@@ -101,19 +97,6 @@ constexpr bool is_lowered(std::string_view value) noexcept
 {
     for (const char c : value) {
         if (c >= 'A' && c <= 'Z') {
-            return false;
-        }
-    }
-    return true;
-}
-
-constexpr bool equal_folded(std::string_view lhs, std::string_view rhs) noexcept
-{
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-    for (std::size_t i = 0; i < lhs.size(); ++i) {
-        if (to_lower(lhs[i]) != rhs[i]) {
             return false;
         }
     }
@@ -375,6 +358,41 @@ template <int V, typename E>
 [[nodiscard]] constexpr std::size_t enum_count_() noexcept
 {
     return detail::numbered_v<V, E>.count;
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_name_coded_v<E>)
+[[nodiscard]] constexpr std::optional<std::string_view> enum_name_(E value) noexcept
+{
+    return detail::name_of(detail::Naming<E, V>::written, value);
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_name_coded_v<E>)
+[[nodiscard]] constexpr std::optional<E> enum_cast_(std::string_view name) noexcept
+{
+    return detail::value_of(detail::Naming<E, V>::read, name);
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_name_coded_v<E>)
+[[nodiscard]] constexpr bool enum_contains_(std::string_view name) noexcept
+{
+    return detail::value_of(detail::Naming<E, V>::read, name).has_value();
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_name_coded_v<E>)
+[[nodiscard]] constexpr std::span<const std::string_view> enum_names_() noexcept
+{
+    return detail::Naming<E, V>::names;
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_name_coded_v<E>)
+[[nodiscard]] constexpr std::span<const std::pair<E, std::string_view>> enum_entries_() noexcept
+{
+    return detail::Naming<E, V>::written;
 }
 
 }  // namespace bedrock::protocol

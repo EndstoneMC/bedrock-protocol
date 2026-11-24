@@ -308,3 +308,85 @@ def test_enum_cast_rejects_a_class_that_is_no_enum():
 def test_enum_cast_rejects_a_number_its_enum_cannot_hold():
     with pytest.raises(TypeError, match=r"^number: cannot hold 300$"):
         v2225.enum_cast(bp.ContainerType, 300)
+
+
+def test_a_protocol_names_a_value_it_writes_by_name():
+    assert v2225.enum_name(bp.PieceType.CO_CO) == "coco"
+
+
+def test_a_protocol_gives_no_name_to_a_value_it_cannot_write():
+    assert v2193.enum_name(bp.PieceType.CO_CO) is None
+
+
+def test_a_name_reads_as_the_value_the_protocol_gives_it_folding_case():
+    assert v2225.enum_cast(bp.PieceType, "CoCo") is bp.PieceType.CO_CO
+
+
+def test_a_name_the_protocol_lacks_reads_as_none():
+    assert v2193.enum_cast(bp.PieceType, "coco") is None
+
+
+def test_a_protocol_cannot_decode_a_name_it_lacks():
+    assert not v2193.enum_contains(bp.PieceType, "coco")
+
+
+def test_a_protocol_decodes_an_alias_name():
+    assert (
+        v2193.enum_cast(bp.CurrentCmdVersion, "agentsweepingblocktest")
+        == bp.CurrentCmdVersion.AGENT_SWEEPING_BLOCK_TEST
+    )
+
+
+def test_a_value_two_names_share_is_named_as_the_codec_writes_it():
+    assert (
+        v2193.enum_name(bp.CurrentCmdVersion.AGENT_SWEEPING_BLOCK_TEST)
+        == "commandselectorhasitemfilternolongercallssameitemfunction"
+    )
+
+
+def test_a_derived_member_is_named_as_the_codec_writes_it():
+    assert v2193.enum_name(bp.CurrentCmdVersion.LATEST) == "latest"
+
+
+def test_the_name_of_a_derived_member_reads_back_as_the_member_the_protocol_gives_it():
+    assert v2193.enum_cast(bp.CurrentCmdVersion, "latest") is bp.CurrentCmdVersion.TIME_OF_COMMAND_OVERLOADS
+
+
+def test_a_protocol_lists_a_value_two_names_share_once():
+    values = [value for value, _ in v2193.enum_entries(bp.CurrentCmdVersion)]
+    assert values.count(bp.CurrentCmdVersion.AGENT_SWEEPING_BLOCK_TEST) == 1
+
+
+def test_a_protocol_lists_each_value_it_writes_by_name_with_its_name():
+    assert (bp.PieceType.CO_CO, "coco") in v2225.enum_entries(bp.PieceType)
+
+
+def test_a_protocol_lists_the_names_of_its_entries_in_order():
+    assert v2225.enum_names(bp.PieceType) == tuple(name for _, name in v2225.enum_entries(bp.PieceType))
+
+
+def test_one_piece_the_newer_protocol_names_has_no_name_at_the_older():
+    entries = v2225.enum_entries(bp.PieceType)
+    assert [value for value, _ in entries if v2193.enum_name(value) is None] == [bp.PieceType.CO_CO]
+
+
+def test_a_protocol_has_no_name_for_an_enum_it_does_not_code_by_name():
+    assert v2193.enum_name(bp.AudioContentPlaybackType.MUSIC) is None
+    assert v2193.enum_cast(bp.AudioContentPlaybackType, "music") is None
+    assert v2193.enum_names(bp.AudioContentPlaybackType) == ()
+    assert v2193.enum_entries(bp.AudioContentPlaybackType) == ()
+
+
+def test_enum_name_rejects_an_enum_no_field_codes_by_name():
+    with pytest.raises(TypeError, match=r"^value: <enum 'ContainerType'> is not a name-coded enum$"):
+        v2225.enum_name(bp.ContainerType.DISC_PRESS)
+
+
+def test_enum_cast_rejects_a_name_of_an_enum_no_field_codes_by_name():
+    with pytest.raises(TypeError, match=r"^cls: <enum 'ContainerType'> is not a name-coded enum$"):
+        v2225.enum_cast(bp.ContainerType, "disc_press")
+
+
+def test_enum_entries_rejects_a_class_that_is_no_enum():
+    with pytest.raises(TypeError, match=r"^cls: <class 'bedrock_protocol.TextPacket'> is not a name-coded enum$"):
+        v2225.enum_entries(bp.TextPacket)

@@ -1342,8 +1342,9 @@ def test_a_name_coded_write_rejects_a_value_with_no_name(generate):
         "auto Serializer<::bedrock::protocol::E, 1>::serialize(BinaryWriter &stream, ::bedrock::protocol::E value)"
         " -> std::expected<void, Errc>\n"
         "{\n"
-        "    if (!enum_contains(value)) return std::unexpected(Errc::unknown_value);\n"
-        "    stream.write(enum_name(value));\n"
+        "    const auto name = detail::name_of(detail::Naming<::bedrock::protocol::E, 1>::written, value);\n"
+        "    if (!name) return std::unexpected(Errc::unknown_value);\n"
+        "    stream.write(*name);\n"
         "    return {};\n"
         "}\n"
     )
@@ -1937,18 +1938,55 @@ def test_every_model_of_the_holder_aliases_the_one_nested_enum(generate):
     assert header.count("    ::bedrock::protocol::N_nested::F f{};\n") == 2
 
 
-def test_a_renamed_name_coded_member_is_written_by_its_old_name_at_the_protocol_that_names_it_so(generate):
-    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+def naming_table(header, since, table):
+    naming = header.partition(f"struct Naming<::bedrock::protocol::E, {since}> {{\n")[2].partition("\n};")[0]
+    return naming.partition(f" {table}{{{{\n")[2].partition("    }};")[0]
 
-    assert 'naming_1_E_written{{\n    {::bedrock::protocol::E::A, "old"},\n}};' in source
-    assert 'naming_3_E_written{{\n    {::bedrock::protocol::E::A, "new"},\n}};' in source
+
+def test_a_renamed_name_coded_member_is_written_by_its_old_name_at_the_protocol_that_names_it_so(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::A, "old"},\n'
+    assert naming_table(header, 3, "written") == '        {::bedrock::protocol::E::A, "new"},\n'
 
 
 def test_a_renamed_name_coded_member_is_read_by_its_old_name_at_the_protocol_that_names_it_so(generate):
-    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
 
-    assert 'naming_1_E_read{{\n    {::bedrock::protocol::E::A, "old"},\n}};' in source
-    assert 'naming_3_E_read{{\n    {::bedrock::protocol::E::A, "new"},\n}};' in source
+    assert naming_table(header, 1, "read") == '        {::bedrock::protocol::E::A, "old"},\n'
+    assert naming_table(header, 3, "read") == '        {::bedrock::protocol::E::A, "new"},\n'
+
+
+def test_a_naming_lists_the_names_it_writes(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert naming_table(header, 3, "names") == '        "new",\n'
+
+
+def test_a_naming_covers_the_protocols_of_its_serializer(generate):
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+
+    assert (
+        "template <int V> requires (V >= 1 && V < 3)\n"
+        "struct Naming<::bedrock::protocol::E, V> : Naming<::bedrock::protocol::E, 1> {};\n"
+    ) in header
+    assert (
+        "template <int V> requires (V >= 3 && V <= 5)\n"
+        "struct Naming<::bedrock::protocol::E, V> : Naming<::bedrock::protocol::E, 3> {};\n"
+    ) in header
+
+
+def test_a_name_coded_enum_says_so(generate):
+    header = (generate({"a": A}) / "a.h").read_text()
+
+    assert "template <>\ninline constexpr bool is_name_coded_v<::bedrock::protocol::E> = true;\n" in header
+
+
+def test_an_enum_no_field_codes_by_name_has_no_naming(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert "is_name_coded_v" not in header
+    assert "Naming<" not in header
 
 
 def test_a_renamed_name_coded_enum_is_one_enum_class(generate):
@@ -1973,20 +2011,21 @@ def test_a_name_coded_enum_with_several_namings_includes_the_naming_runtime(gene
     assert "#include <bedrock/protocol/detail/naming.hpp>\n" in header
 
 
-def test_a_name_coded_enum_with_one_naming_does_not_include_the_naming_runtime(generate):
+def test_a_name_coded_enum_with_one_naming_has_a_naming(generate):
     header = (generate({"a": A}) / "a.h").read_text()
 
-    assert "detail/naming.hpp" not in header
+    assert "#include <bedrock/protocol/detail/naming.hpp>\n" in header
+    assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::X, "x"},\n'
 
 
-def test_a_naming_table_is_written_in_the_source_detail_namespace(generate):
-    source = (generate({"a": ENUM_RENAMED_NAME}) / "a.cpp").read_text()
+def test_a_naming_table_is_written_in_the_header_detail_namespace(generate):
+    out = generate({"a": ENUM_RENAMED_NAME})
+    header = (out / "a.h").read_text()
 
-    assert source.index("namespace detail {") < source.index("naming_1_E_written")
-    assert source.index("naming_3_E_read") < source.index("}  // namespace detail")
-    assert source.index("}  // namespace detail") < source.index(
-        "auto Serializer<::bedrock::protocol::E, 1>::serialize("
-    )
+    start = header.index("struct Naming<::bedrock::protocol::E, 1> {")
+    end = header.index("struct Naming<::bedrock::protocol::E, 3> {")
+    assert "}  // namespace detail" not in header[header.rindex("namespace detail {", 0, start) : end]
+    assert "written{{" not in (out / "a.cpp").read_text()
 
 
 def test_a_name_coded_member_gained_later_is_one_enum_class_holding_every_member(generate):
@@ -1997,17 +2036,17 @@ def test_a_name_coded_member_gained_later_is_one_enum_class_holding_every_member
 
 
 def test_a_name_coded_member_gained_later_has_no_row_in_the_naming_of_the_earlier_protocol(generate):
-    source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
+    header = (generate({"a": ENUM_NAME_GAINED}) / "a.h").read_text()
 
-    assert 'naming_1_E_written{{\n    {::bedrock::protocol::E::A, "a"},\n}};' in source
-    assert 'naming_1_E_read{{\n    {::bedrock::protocol::E::A, "a"},\n}};' in source
+    assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::A, "a"},\n'
+    assert naming_table(header, 1, "read") == '        {::bedrock::protocol::E::A, "a"},\n'
 
 
 def test_a_value_without_a_row_fails_to_encode_by_name(generate):
     source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
 
     body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::serialize(")
-    assert "    const auto name = detail::name_of(detail::naming_1_E_written, value);\n" in body
+    assert "    const auto name = detail::name_of(detail::Naming<::bedrock::protocol::E, 1>::written, value);\n" in body
     assert "    if (!name) return std::unexpected(Errc::unknown_value);\n" in body
 
 
@@ -2015,24 +2054,22 @@ def test_a_name_without_a_row_fails_to_decode_by_name(generate):
     source = (generate({"a": ENUM_NAME_GAINED}) / "a.cpp").read_text()
 
     body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::deserialize(")
-    assert "    const auto value = detail::value_of(detail::naming_1_E_read, *v);\n" in body
+    assert "    const auto value = detail::value_of(detail::Naming<::bedrock::protocol::E, 1>::read, *v);\n" in body
     assert "    if (!value) return std::unexpected(Errc::unknown_value);\n" in body
 
 
 def test_an_alias_of_a_name_coded_member_decodes_to_its_target(generate):
-    source = (generate({"a": ENUM_NAMED_ALIAS}) / "a.cpp").read_text()
+    read = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "read")
 
-    read = source.partition("naming_3_E_read{{")[2].partition("}};")[0]
-    assert '    {::bedrock::protocol::E::B, "b"},\n' in read
-    assert '    {::bedrock::protocol::E::B, "latest"},\n' in read
+    assert '        {::bedrock::protocol::E::B, "b"},\n' in read
+    assert '        {::bedrock::protocol::E::B, "latest"},\n' in read
 
 
 def test_an_alias_of_a_name_coded_member_is_written_by_its_alias_name_in_one_row(generate):
-    source = (generate({"a": ENUM_NAMED_ALIAS}) / "a.cpp").read_text()
+    written = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "written")
 
-    written = source.partition("naming_3_E_written{{")[2].partition("}};")[0]
     assert written.count("::bedrock::protocol::E::B,") == 1
-    assert '    {::bedrock::protocol::E::B, "latest"},\n' in written
+    assert '        {::bedrock::protocol::E::B, "latest"},\n' in written
 
 
 def test_a_child_call_of_a_name_coded_enum_names_the_since_of_its_naming(generate):
@@ -2118,7 +2155,10 @@ def test_a_name_coded_enum_with_one_shape_keeps_its_membership_check_on_write(ge
     source = (generate({"a": A}) / "a.cpp").read_text()
 
     body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::serialize(")
-    assert "    if (!enum_contains(value)) return std::unexpected(Errc::unknown_value);\n" in body
+    assert (
+        "    const auto name = detail::name_of(detail::Naming<::bedrock::protocol::E, 1>::written, value);\n"
+        "    if (!name) return std::unexpected(Errc::unknown_value);\n"
+    ) in body
 
 
 def test_a_name_coded_enum_with_one_shape_rejects_an_unknown_name_on_read(generate):
@@ -2126,7 +2166,7 @@ def test_a_name_coded_enum_with_one_shape_rejects_an_unknown_name_on_read(genera
 
     body = body_of(source, "auto Serializer<::bedrock::protocol::E, 1>::deserialize(")
     assert (
-        "    const auto value = enum_cast<::bedrock::protocol::E>(*v);\n"
+        "    const auto value = detail::value_of(detail::Naming<::bedrock::protocol::E, 1>::read, *v);\n"
         "    if (!value) return std::unexpected(Errc::unknown_value);\n"
     ) in body
 

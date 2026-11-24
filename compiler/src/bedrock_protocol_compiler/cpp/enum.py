@@ -31,7 +31,6 @@ class EnumGenerator:
         self.underlying = names.PRIMITIVES[enum_type.underlying.name]
         self.enumerators = schema.enumerators(enum_type)
         self.namings = schema.namings(enum_type)
-        self.stem = names.bare(schema, enum_type).replace("::", "_")
         self.numberings = [numbering for numbering in schema.numberings(enum_type) if not numbering.identity]
         live = schema.enum_runs(enum_type)
         self.formless = schema.ranges(
@@ -41,9 +40,7 @@ class EnumGenerator:
     def includes(self) -> set[str]:
         includes = {names.runtime("enum"), "<array>", "<string_view>"} | primitive_includes(self.target.underlying)
         if self.namings:
-            includes |= names.SERIALIZER_INCLUDES
-        if len(self.namings) > 1:
-            includes.add(names.runtime("detail/naming"))
+            includes |= names.SERIALIZER_INCLUDES | {names.runtime("detail/naming")}
         if self.numberings or self.formless:
             includes.add(names.runtime("detail/numbering"))
         return includes
@@ -161,6 +158,64 @@ class EnumGenerator:
                 qualified=self.qualified,
                 table=table,
             )
+        if self.namings:
+            p.emit(
+                """
+                template <>
+                inline constexpr bool is_name_coded_v<$qualified$> = true;
+
+                """,
+                qualified=self.qualified,
+            )
+            spelled = {
+                self.enumerators[member.name]: f"static_cast<{self.qualified}>({self.enumerators[member.name]})"
+                if member.deprecated
+                else f"{self.qualified}::{member.cpp_name}"
+                for member in reversed(self.target.members)
+            }
+            declared = dict.fromkeys(self.enumerators[member.name] for member in self.target.members)
+            row = f"std::pair<{self.qualified}, std::string_view>"
+            for naming in self.namings:
+                written = [(value, naming.written[value]) for value in declared if value in naming.written]
+                read = sorted((value, name) for name, value in naming.read.items())
+                tables = [
+                    ("written", row, [f'{{{spelled[value]}, "{name}"}}' for value, name in written]),
+                    ("read", row, [f'{{{spelled[value]}, "{name}"}}' for value, name in read]),
+                    ("names", "std::string_view", [f'"{name}"' for _, name in written]),
+                ]
+                p.emit(
+                    """
+                    template <>
+                    struct Naming<$qualified$, $since$> {
+                    """,
+                    qualified=self.qualified,
+                    since=naming.since,
+                )
+                with p.indent():
+                    for table, element, rows in tables:
+                        p.emit(
+                            "static constexpr std::array<$element$, $count$> $table${{",
+                            element=element,
+                            count=len(rows),
+                            table=table,
+                        )
+                        with p.indent():
+                            for each in rows:
+                                p.emit("$row$,", row=each)
+                        p.emit("}};")
+                p.emit("};")
+                p.emit("")
+                for run in naming.runs:
+                    p.emit(
+                        """
+                        template <int V>$requirement$
+                        struct Naming<$qualified$, V> : Naming<$qualified$, $since$> {};
+
+                        """,
+                        requirement=names.requirement(self.schema, run),
+                        qualified=self.qualified,
+                        since=naming.since,
+                    )
 
     def held(self, number: int) -> int:
         signed, width = WIDTHS[self.target.underlying.name]
@@ -189,41 +244,10 @@ class EnumGenerator:
             partials(p, self.schema, self.qualified, serializer, {SerializationMode.DEFAULT: naming.runs})
 
     def serializer_body(self, p: Printer) -> None:
-        if len(self.namings) > 1:
-            spelled = {
-                self.enumerators[member.name]: f"{self.qualified}::{member.cpp_name}"
-                for member in reversed(self.target.members)
-                if not member.deprecated
-            }
-            p.emit("namespace detail {")
-            p.emit("")
-            for naming in self.namings:
-                tables = [
-                    ("written", sorted(naming.written.items())),
-                    ("read", sorted((value, name) for name, value in naming.read.items())),
-                ]
-                for table, rows in tables:
-                    p.emit(
-                        """
-                        constexpr std::array<NameEntry<$qualified$>, $count$> naming_$since$_$stem$_$table${{
-                        """,
-                        qualified=self.qualified,
-                        count=len(rows),
-                        since=naming.since,
-                        stem=self.stem,
-                        table=table,
-                    )
-                    with p.indent():
-                        for value, name in rows:
-                            p.emit('{$value$, "$name$"},', value=spelled[value], name=name)
-                    p.emit("}};")
-                    p.emit("")
-            p.emit("}  // namespace detail")
-            p.emit("")
         unknown = names.unexpected(names.UNKNOWN_VALUE)
         for naming in self.namings:
             serializer = names.serializer(self.qualified, naming.since)
-            table = f"detail::naming_{naming.since}_{self.stem}"
+            table = f"detail::Naming<{self.qualified}, {naming.since}>"
             p.emit(
                 "auto $serializer$::serialize(BinaryWriter &stream, $qualified$ value) -> $encoded$",
                 serializer=serializer,
@@ -232,13 +256,9 @@ class EnumGenerator:
             )
             p.emit("{")
             with p.indent():
-                if len(self.namings) == 1:
-                    p.emit("if (!enum_contains(value)) $unknown$", unknown=unknown)
-                    p.emit(names.write("str", None, "enum_name(value)"))
-                else:
-                    p.emit("const auto name = detail::name_of($table$_written, value);", table=table)
-                    p.emit("if (!name) $unknown$", unknown=unknown)
-                    p.emit(names.write("str", None, "*name"))
+                p.emit("const auto name = detail::name_of($table$::written, value);", table=table)
+                p.emit("if (!name) $unknown$", unknown=unknown)
+                p.emit(names.write("str", None, "*name"))
                 p.emit("return {};")
             p.emit("}")
             p.emit("")
@@ -251,10 +271,7 @@ class EnumGenerator:
             with p.indent():
                 p.emit("auto v = $read$;", read=names.read("str", None))
                 p.emit("if (!v) $failure$", failure=names.unexpected("v.error()"))
-                if len(self.namings) == 1:
-                    p.emit("const auto value = enum_cast<$qualified$>(*v);", qualified=self.qualified)
-                else:
-                    p.emit("const auto value = detail::value_of($table$_read, *v);", table=table)
+                p.emit("const auto value = detail::value_of($table$::read, *v);", table=table)
                 p.emit("if (!value) $unknown$", unknown=unknown)
                 p.emit("return *value;")
             p.emit("}")
