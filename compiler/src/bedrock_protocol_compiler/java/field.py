@@ -42,7 +42,7 @@ from bedrock_protocol_compiler.java.value import (
     literal,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, StructModel, strip
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, strip
 
 
 class FieldContext:
@@ -67,18 +67,14 @@ class FieldContext:
         self.inline = inline
         self.unions: list[UnionGenerator] = []
         self.numbered = isinstance(field.type, EnumName) and any(
-            isinstance(each.type, EnumRef)
-            and schema.target(self.model, each.type) is schema.target(self.model, field.type)
+            isinstance(each.type, EnumRef) and other.reached[each.type].model is encoding.reached[field.type].model
             for other in schema.encodings(self.model)
             for each in other.fields
             if each.name == field.name
         )
 
     def enum_type(self, node: EnumRef | EnumName) -> EnumModel:
-        enum_type = self.schema.target(self.model, node)
-        if not isinstance(enum_type, EnumModel):
-            raise CompilerError(f"{self.where}: {node.enum.name} is not an enum")
-        return enum_type
+        return cast(Numbering | Naming, self.encoding.reached[node]).model
 
     def value(self, node: Type, label: str) -> Value:
         match node:
@@ -100,11 +96,9 @@ class FieldContext:
                     )
                 return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, enum_type), helper)
             case StructRef():
-                model = self.schema.target(self.model, node)
-                if not isinstance(model, StructModel):
-                    raise CompilerError(f"{self.where}: {node.struct.name} is not a struct")
-                spelled = names.qualified(self.schema, model)
-                codec = f"{spelled}.{names.codec(cast(Encoding, self.encoding.reached[node]))}.INSTANCE"
+                child = cast(Encoding, self.encoding.reached[node])
+                spelled = names.qualified(self.schema, child.model)
+                codec = f"{spelled}.{names.codec(child)}.INSTANCE"
                 return Reference(
                     spelled,
                     f"{spelled}.getDefaultInstance()",

@@ -308,6 +308,40 @@ def test_a_child_first_coded_while_mixed_is_called_by_its_key_mode_later(emitted
     assert "            dev.endstone.protocol.S.Codec3Cereal.INSTANCE.encode(value.t_, buf);\n" in text
 
 
+def test_an_older_encoding_calls_a_hand_written_form_its_model_outlives(emitted):
+    source = (
+        "class S:\n    x: uint32\n\n@type(cereal=False, until=3)\nclass S:\n    x: uvarint32\n\n"
+        "@type(until=3)\nclass H:\n    s: list[S] = field(cereal=False)\n\n"
+        "@type(since=3)\nclass H:\n    s: list[S]\n\n"
+        "@packet(id=1)\nclass P:\n    h: H\n"
+    )
+    call = "                dev.endstone.protocol.S.Codec1Manual.INSTANCE.encode(element0, buf);\n"
+
+    assert call in emitted(source, "H.java")
+
+
+ENUM_TWINS = (
+    "class H:\n    class E(IntEnum, uint8):\n        A = 1\n        B = 2\n\n    e: E\n\n"
+    "@type(cereal=False, until=3)\nclass H:\n    class E(IntEnum, uint8):\n        A = 1\n        B = 3\n\n"
+)
+TWINS_PACKET = "\n@packet(id=1)\nclass P:\n    h: H = field(cereal=False, until=3)\n    g: H\n"
+
+
+def test_an_older_encoding_numbers_the_enum_of_a_hand_written_form_its_model_outlives(emitted):
+    numbered = "            buf.writeByte(dev.endstone.protocol.internal.HENumbering.toNumber(1, value.e_));\n"
+
+    assert numbered in emitted(ENUM_TWINS + "    e: E\n" + TWINS_PACKET, "H.java")
+
+
+def test_an_older_encoding_names_the_open_form_enum_of_a_hand_written_form_its_model_outlives(emitted):
+    named = (
+        "            Objects.requireNonNullElse(dev.endstone.protocol.H.E.forNumber(value.e_), "
+        "dev.endstone.protocol.H.E.UNRECOGNIZED).encode(buf);\n"
+    )
+
+    assert named in emitted(ENUM_TWINS + "    e: E = field(type=str)\n" + TWINS_PACKET, "H.java")
+
+
 SHARED_CASES = (
     "class S:\n    x: None | bool | uvarint32\n\n"
     "@type(cereal=False, until=4)\nclass S:\n    x: None | bool | uint32\n\n"
