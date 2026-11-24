@@ -5,7 +5,21 @@ Not the legacy transaction family -- world/inventory/transaction/, in transactio
 
 from enum import IntEnum
 
-from protocol import field, int8, int16, int32, packet, sentinel, type, uint8, uint32, uvarint32, value, varint32
+from protocol import (
+    field,
+    int8,
+    int16,
+    int32,
+    packet,
+    sentinel,
+    type,
+    uint8,
+    uint32,
+    uvarint32,
+    uvarint64,
+    value,
+    varint32,
+)
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -103,6 +117,7 @@ class ContainerEnumName(IntEnum, uint8):
         DISC_PRESS_DYE_CONTAINER = 68
         DISC_PRESS_DISC_CONTAINER = 69
         DISC_PRESS_RESULT_PREVIEW_CONTAINER = 70
+    VIRTUAL_CONTAINER = value(71, since=2259)
 
 
 class FullContainerName:
@@ -188,6 +203,7 @@ class ContainerType(IntEnum, int8):
     CRAFTER = 36
     DATA_DRIVEN_CONTAINER = value(37, "DATA_DRIVEN_CONTAINER", since=2193)
     DISC_PRESS = value(38, "DISC_PRESS", since=2225)
+    VIRTUAL_CONTAINER = value(39, "VIRTUAL_CONTAINER", since=2259)
 
 
 @packet(id=47)
@@ -195,6 +211,40 @@ class ContainerClosePacket:
     container_id: ContainerID = field(type=uint8)
     container_type: ContainerType
     server_initiated_close: bool
+
+
+@packet(id=366, since=2259)
+class VirtualContainerOpenPacket:
+    container_id: ContainerID = field(type=uint8)
+    session_id: uvarint64
+    title: str
+    slots: list[SerializedNetworkItemStackDescriptor]
+
+
+@type(since=2259)
+class VirtualContainerCloseKind(IntEnum, uint8):
+    REQUEST = 0
+    CLOSED = 1
+    CONFIRMED = 2
+
+
+@type(since=2259)
+class VirtualContainerCloseCause(IntEnum, uint8):
+    UNKNOWN = 0
+    USER_CLOSED = 1
+    SERVER_REQUESTED = 2
+    USER_BUSY = 3
+    CLIENT_NOT_READY = 4
+    INVALID_CONTENTS = 5
+    UI_CREATION_FAILED = 6
+    UI_CANCELLED = 7
+
+
+@packet(id=367, since=2259)
+class VirtualContainerClosePacket:
+    session_id: uvarint64
+    kind: VirtualContainerCloseKind
+    cause: VirtualContainerCloseCause
 
 
 @packet(id=48)

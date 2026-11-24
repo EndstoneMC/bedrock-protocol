@@ -68,11 +68,17 @@ class ClientStoreEntryPointConfiguration:
     store_name: str
 
 
+@type(since=2259)
+class ManagedChatJoinInfo:
+    enabled: bool
+
+
 class ServerConfigurationJoinInfo:
     gatherings_configuration: GatheringsConfigurationJoinInfo | None
     with field(since=944):
         client_store_entry_point_configuration: ClientStoreEntryPointConfiguration | None
         presence_configuration: PresenceConfiguration | None
+    managed_chat: ManagedChatJoinInfo | None = field(since=2259)
 
 
 class ServerTelemetryData:
@@ -87,12 +93,24 @@ class ServerPresenceInfoPacket:
     presence_configuration: PresenceConfiguration | None
 
 
+@type(since=2259)
+class TransferPlayerUIOptions:
+    title_text: str | None
+    body_text: str | None
+    title_visible: bool | None
+    body_visible: bool | None
+    cancel_button_text: str | None
+    cancel_button_visible: bool | None
+    cancel_button_delay_seconds: float | None
+
+
 @packet(id=85)
 class TransferPacket:
     destination: str
     destination_port: uint16
     reload_world: bool
     gatherings_configuration: GatheringsConfigurationJoinInfo | None = field(since=2168)
+    server_transfer_settings: TransferPlayerUIOptions | None = field(since=2259)
 
 
 @packet(id=350, since=1001)

@@ -3,6 +3,7 @@ registry, and the packets that spawn, remove and animate one. world/actor/.
 Not the player -- world/actor/player/ is player.py.
 Not movement -- network/packet/, in movement.py."""
 
+import uuid
 from enum import IntEnum, auto
 from typing import Literal
 
@@ -169,7 +170,8 @@ class ActorFlags(IntEnum, int32):
         USES_UNIFORM_AIR_DRAG = 128
         NAMEPLATE_DEPTH_TESTED = 129
     NOT_PICKABLE_FROM_INSIDE = value(130, since=2168)
-    COUNT = auto()
+    COUNT = value(until=2259)
+    COUNT = value(133, since=2259)  # TODO: 131 and 132 unnamed until a header branch above r26_u6
 
 
 class ActorDataIDs(IntEnum, uint8):
@@ -446,6 +448,8 @@ class PassengerOfBlockArguments:
     rotation: float
     rotation_limit: float
     emote: EmoteType
+    block_type: uint64 = field(since=2259)
+    pack_uuid: uuid.UUID = field(since=2259)
 
 
 @packet(id=13)

@@ -147,6 +147,7 @@ class CommandBlockUpdatePacket:
     track_output: bool
     tick_delay: int32
     execute_on_first_tick: bool
+    last_output_is_raw_message: bool = field(since=2259)
 
 
 class CommandOriginType(IntEnum, uint8):
@@ -237,6 +238,9 @@ class CurrentCmdVersion(IntEnum, int32):
         REDSTONE_CIRCUIT_STATE_CHANGE_FIX = 53
         TIME_COMMAND_PREVENT_NEGATIVE_TIME = 54
         TIME_COMMAND_CLOCKS_RELEASE = 55
+    with value(since=2259):
+        GAME_TEST_RUN_SET_MULTI_TAG = 56
+        SAME_ACTOR_BLOCK_REPLACEMENT_RETAINS_ITEMS_FIX = 57
     COUNT = auto()
     LATEST = COUNT - 1
 
@@ -261,6 +265,7 @@ class CommandOutputMessage:
     message_id: str
     successful: bool
     params: list[str]
+    raw_message: str | None = field(since=2259)
 
 
 class CommandOutput:

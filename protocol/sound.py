@@ -5,7 +5,7 @@ from enum import IntEnum, auto
 from typing import Literal
 
 from protocol import field, int32, int64, packet, type, uint8, uint32, uint64, value, varint32
-from protocol.actor import ActorType, ActorUniqueID
+from protocol.actor import ActorRuntimeID, ActorType, ActorUniqueID
 from protocol.common import BlockPos, Vec3
 from protocol.network import NetworkBlockPosition
 
@@ -600,11 +600,23 @@ class LevelSoundEvent(IntEnum, uint32):
         MOUNT = 611
         DISMOUNT = 612
         STRAW_BED_BREAK_LEAVE = 613
-    ICE_BALL_BREAK = value(614, since=2225)
+    ICE_BALL_BREAK = value(614, since=2225, until=2259)
+    with value(since=2259):
+        CONVERT_TO_FROSTBITE = 614
+        CONVERT_TO_ZOMBIE = 615
+        CRACK = 616
+        ICE_BALL_THROW = 617
+        RECORD_FLURRY = 618
+        IMITATE_FROSTBITE = 619
     UNDEFINED = auto()
 
 
 type ServerSoundHandle = uint64
+
+
+@type(since=2259)
+class SoundAttachOptions:
+    entity_to_attach_to_id: ActorRuntimeID
 
 
 @packet(id=86, until=944)
@@ -625,6 +637,8 @@ class PlaySoundPacket:
     bypass_listener_range_check: bool = field(since=2193)
     server_sound_handle: ServerSoundHandle | None = field(since=975)
     playback_position_seconds: float | None = field(since=2193)
+    start_delay_seconds: float | None = field(since=2259)
+    attach_options: SoundAttachOptions | None = field(since=2259)
 
 
 @packet(id=348, since=1001, until=2168)
@@ -737,6 +751,7 @@ class SignedAudioContent:
 class AudioContentPlaybackType(IntEnum, uint8):
     MUSIC = 0
     SOUND = 1
+    CONCURRENT_MUSIC = value(2, since=2259)
 
 
 @packet(id=359, since=2225)
@@ -758,6 +773,39 @@ class AudioContentRegistrationEntry:
 @packet(id=360, since=2225)
 class ServerboundRegisterAudioContentPacket:
     registrations: list[AudioContentRegistrationEntry]
+
+
+@packet(id=362, since=2259)
+class ServerboundRequestOnlineMusicPlaybackPacket:
+    request_id: uint32
+    sound_event_name: str
+
+
+@type(since=2259)
+class MusicPlaybackState(IntEnum, uint8):
+    LOCAL = 0
+    ONLINE = 1
+    NOT_FOUND = 2
+    PENDING = 3
+
+
+@packet(id=363, since=2259)
+class ClientboundOnlineMusicPlaybackResponsePacket:
+    request_id: uint32
+    state: MusicPlaybackState = field(type=str)
+    shared_metadata: SignedAudioContent
+    playback_content: SignedAudioContent
+
+
+@type(since=2259)
+class MusicPlaybackFailureEntry:
+    state: MusicPlaybackState = field(type=str)
+    description: str
+
+
+@packet(id=365, since=2259)
+class ClientboundMusicPlaybackFailurePacket:
+    failures: list[MusicPlaybackFailureEntry]
 
 
 @type(until=2168)

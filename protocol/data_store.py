@@ -20,7 +20,7 @@ class DataStoreUpdate:
     update_count: uint32
 
 
-@type(since=924)
+@type(since=924, until=2259)
 class DataStoreUpdate:
     data_store_name: str
     property: str
@@ -28,6 +28,13 @@ class DataStoreUpdate:
     data: double | bool | str
     property_update_count: uint32
     path_update_count: uint32
+
+
+@type(since=2259)
+class DataStoreUpdate:
+    variable_name: str
+    data: double | bool | str
+    update_count: uint32
 
 
 @type(until=898)
@@ -38,7 +45,7 @@ class DataStoreChange:
     property: str
 
 
-@type(since=898)
+@type(since=898, until=2259)
 class DataStoreChange:
     data_store_name: str
     property: str
@@ -46,8 +53,21 @@ class DataStoreChange:
     new_data: DynamicValue
 
 
+@type(since=2259)
+class DataStoreChange:
+    variable_name: str
+    update_count: uint32
+    new_data: double | bool | str
+
+
+@type(until=2259)
 class DataStoreRemoval:
     data_store_name: str
+
+
+@type(since=2259)
+class DataStoreRemoval:
+    variable_name: str
 
 
 @packet(id=330, since=898)

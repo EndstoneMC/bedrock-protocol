@@ -91,7 +91,7 @@ static_assert(bp::enum_name_<2168>(bp::CurrentCmdVersion::Latest) == "latest");
 static_assert(bp::enum_name_<2225>(bp::CurrentCmdVersion::Latest) == "latest");
 static_assert(bp::enum_cast_<2168, bp::CurrentCmdVersion>("clonepartialbedblockfix") ==
               bp::CurrentCmdVersion::ClonePartialBedBlockFix);
-static_assert(bp::enum_name(bp::CurrentCmdVersion::TimeCommandClocksRelease) == "latest");
+static_assert(bp::enum_name(bp::CurrentCmdVersion::SameActorBlockReplacementRetainsItemsFix) == "latest");
 static_assert(bp::enum_cast_<2193, bp::CurrentCmdVersion>("agentsweepingblocktest") == bp::CurrentCmdVersion{34});
 static_assert(bp::enum_contains_<2193, bp::CurrentCmdVersion>("AgentSweepingBlockTest"));
 static_assert(bp::enum_name_<2193>(bp::CurrentCmdVersion{34}) ==

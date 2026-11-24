@@ -5,7 +5,7 @@ import uuid
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int8, int32, packet, sentinel, type, uint16, uint32, uint64
+from protocol import field, int8, int32, packet, sentinel, type, uint8, uint16, uint32, uint64
 from protocol.game import Experiments
 
 package = "bedrock.protocol"
@@ -104,6 +104,13 @@ class PackInstanceId:
     subpack_name: str
 
 
+@type(since=2259)
+class EditorPackType(IntEnum, uint8):
+    NONE = 0
+    CORE = 1
+    ANNOTATION = 2
+
+
 @packet(id=7)
 class ResourcePackStackPacket:
     texture_pack_required: bool
@@ -111,7 +118,8 @@ class ResourcePackStackPacket:
     texture_pack_ids_and_versions: list[PackInstanceId]
     base_game_version: str
     experiments: Experiments
-    include_editor_packs: bool
+    include_editor_packs: bool = field(until=2259)
+    editor_pack_types: EditorPackType = field(since=2259)
 
 
 class PackType(IntEnum, int8):

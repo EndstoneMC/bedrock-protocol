@@ -194,7 +194,7 @@ def test_a_trailing_count_is_its_library_value():
 
 
 def test_a_trailing_sentinel_is_its_library_value():
-    assert bp.LevelSoundEvent.UNDEFINED.value == 615
+    assert bp.LevelSoundEvent.UNDEFINED.value == 620
 
 
 @pytest.mark.parametrize(

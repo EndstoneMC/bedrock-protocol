@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
+import dev.endstone.protocol.v898.TextPacket_v898;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -21,8 +22,8 @@ final class ProtocolTest {
                     .max()
                     .orElseThrow();
 
-    private static final TextPacket HELLO =
-            TextPacket.newBuilder()
+    private static final TextPacket_v898 HELLO =
+            TextPacket_v898.newBuilder()
                     .setMessageOnly(
                             TextPacket.MessageOnly.newBuilder()
                                     .setType(TextPacketType.CHAT)
@@ -77,18 +78,19 @@ final class ProtocolTest {
 
     @Test
     void aValueDecodesBackEqualAfterEncoding() {
-        assertEquals(HELLO, Protocol.v2225.decode(TextPacket.class, Protocol.v2225.encode(HELLO)));
+        assertEquals(
+                HELLO, Protocol.v2225.decode(TextPacket_v898.class, Protocol.v2225.encode(HELLO)));
     }
 
     @Test
     void decodeRejectsTrailingBytes() {
         assertEquals(
-                "TextPacket: trailing bytes at byte 12 of 13",
+                "TextPacket_v898: trailing bytes at byte 12 of 13",
                 assertThrows(
                                 DecodeException.class,
                                 () ->
                                         Protocol.v2225.decode(
-                                                TextPacket.class,
+                                                TextPacket_v898.class,
                                                 bytes("0000010568656c6c6f000000ff")))
                         .getMessage());
     }

@@ -21,6 +21,7 @@ class InputMode(IntEnum, uint32):
     TOUCH = 2
     GAME_PAD = 3
     MOTION_CONTROLLER_DEPRECATED = value(4, "MotionController_Deprecated", deprecated=True)
+    GAME_PAD_AND_MOUSE = value(5, since=2259)
     COUNT = auto()
 
 
@@ -84,7 +85,7 @@ class PlayerActionType(IntEnum, int32):
     STOP_FLYING = 35
     DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", deprecated=True)
     START_USING_ITEM = value(37, since=748)
-    INTERNAL_UPDATE = value(38, since=2168)
+    SWAP_OFFHAND = value(38, since=2168)
     COUNT = auto()
 
 
@@ -309,7 +310,7 @@ class PlayerAuthInputPacket:
         SNEAK_RELEASED_RAW = 62
         SNEAK_PRESSED_RAW = 63
         SNEAK_CURRENT_RAW = 64
-        INTERNAL_UPDATE = 65
+        SWAP_OFFHAND = 65
         INPUT_NUM = sentinel()
 
     rot: Vec2

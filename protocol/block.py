@@ -106,31 +106,6 @@ class UpdateSubChunkBlocksPacket:
     blocks_changed: UpdateSubChunkBlocksChangedInfo
 
 
-type EntityNetId = uvarint32
-
-
-@packet(id=167)
-class RemoveVolumeEntityPacket:
-    entity_net_id: EntityNetId
-    dimension_type: DimensionType
-
-
-@packet(id=166)
-class AddVolumeEntityPacket:
-    entity_net_id: EntityNetId
-    components: CompoundTag
-    json_identifier: str
-    instance_name: str
-    with field(until=944):
-        min_bounds: NetworkBlockPosition
-        max_bounds: NetworkBlockPosition
-    with field(since=944):
-        min_bounds: BlockPos
-        max_bounds: BlockPos
-    dimension_type: DimensionType
-    min_engine_version: str
-
-
 type RegistryHandle = uint16
 
 
@@ -175,3 +150,28 @@ class SpawnParticleEffectPacket:
     pos: Vec3
     effect_name: str
     molang_variables: str | None
+
+
+type EntityNetId = uvarint32
+
+
+@packet(id=167, until=2259)
+class RemoveVolumeEntityPacket:
+    entity_net_id: EntityNetId
+    dimension_type: DimensionType
+
+
+@packet(id=166, until=2259)
+class AddVolumeEntityPacket:
+    entity_net_id: EntityNetId
+    components: CompoundTag
+    json_identifier: str
+    instance_name: str
+    with field(until=944):
+        min_bounds: NetworkBlockPosition
+        max_bounds: NetworkBlockPosition
+    with field(since=944):
+        min_bounds: BlockPos
+        max_bounds: BlockPos
+    dimension_type: DimensionType
+    min_engine_version: str

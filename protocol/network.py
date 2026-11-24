@@ -274,6 +274,14 @@ class MinecraftPacketIds(IntEnum, int32):
         SERVERBOUND_CURSOR_ITEM_DRAG = 358
         CLIENTBOUND_PLAY_AUDIO_CONTENT = 359
         SERVERBOUND_REGISTER_AUDIO_CONTENT = 360
+    with value(since=2259):
+        CHAT = 361
+        SERVERBOUND_REQUEST_ONLINE_MUSIC_PLAYBACK = 362
+        CLIENTBOUND_ONLINE_MUSIC_PLAYBACK_RESPONSE = 363
+        PLAYER_TOGGLE_ARMOR_VISIBILITY_REQUEST_PACKET = 364
+        CLIENTBOUND_MUSIC_PLAYBACK_FAILURE = 365
+        VIRTUAL_CONTAINER_OPEN = 366
+        VIRTUAL_CONTAINER_CLOSE = 367
     END_ID = sentinel()
 
 
@@ -436,6 +444,16 @@ class DisconnectFailReason(IntEnum, int32):
         MISSING_STRUCTURE_DATA = 148
         UNSUPPORTED_TRANSPORT = 149
     SUB_CLIENT_LOGIN_NOT_BOUND = value(150, since=2225)
+    with value(since=2259):
+        SESSION_RUNTIME_ERROR = 151
+        SESSION_INVALID_RESPONSE = 152
+        SESSION_NETWORK_ERROR = 153
+        SESSION_SERVICE_ERROR = 154
+        SESSION_SERVICE_UNAVAILABLE = 155
+        SESSION_THROTTLED = 156
+        SESSION_REQUEST_REJECTED = 157
+        SESSION_UNKNOWN_ERROR = 158
+        BROKEN_DATA = 159
     MAX_DISCONNECT_FAIL_REASON = sentinel()
 
 
@@ -551,6 +569,13 @@ class PacketCompressionAlgorithm(IntEnum, uint16):
     NONE = 65535
 
 
+@type(since=2259)
+class SctpRecoveryProfile(IntEnum, uint8):
+    DEFAULT = 0
+    FAST = 1
+    BALANCED = 2
+
+
 @packet(id=143)
 class NetworkSettingsPacket:
     compression_threshold: uint16
@@ -558,6 +583,7 @@ class NetworkSettingsPacket:
     client_throttle_enabled: bool
     client_throttle_threshold: uint8
     client_throttle_scalar: float
+    sctp_recovery_profile: SctpRecoveryProfile = field(since=2259)
 
 
 @packet(id=94)

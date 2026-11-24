@@ -33,7 +33,7 @@ final class ProtocolVersionTest {
 
     static Stream<Arguments> unsupported() {
         return Stream.of(
-                argumentSet("below the oldest", 728), argumentSet("above the newest", 2226));
+                argumentSet("below the oldest", 728), argumentSet("above the newest", 2260));
     }
 
     @Test
@@ -68,7 +68,7 @@ final class ProtocolVersionTest {
 
     @Test
     void aListedNumberFindsTheSupportedVersionItself() {
-        assertSame(ProtocolVersion.MAXIMUM_VERSION, ProtocolVersion.get(2225).orElseThrow());
+        assertSame(ProtocolVersion.MAXIMUM_VERSION, ProtocolVersion.get(2259).orElseThrow());
     }
 
     @ParameterizedTest

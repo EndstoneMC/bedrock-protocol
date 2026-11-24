@@ -161,6 +161,11 @@ class PlayerArmorDamagePacket:
     slot_and_damage_pairs: list[ArmorSlotAndDamagePair]
 
 
+@packet(id=364, since=2259)
+class PlayerToggleArmorVisibilityRequestPacket:
+    hide_armor: bool
+
+
 @packet(id=160)
 class PlayerFogPacket:
     fog_stack: list[str]

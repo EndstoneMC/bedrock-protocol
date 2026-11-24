@@ -43,11 +43,11 @@ assert decoded == packet
 ### Pick a protocol
 
 ```python
-version = bp.ProtocolVersion.get(2193)
-assert version is not None and version.name == "1.26.50"
+version = bp.ProtocolVersion.get(2259)
+assert version is not None and version.name == "1.26.70"
 
-pinned = bp.v2193.encode(packet)
-picked = bp.v2193.decode(bp.TextPacket, pinned)
+pinned = bp.v2259.encode(packet)
+picked = bp.v2259.decode(bp.TextPacket, pinned)
 assert picked == packet
 ```
 
@@ -83,12 +83,12 @@ assert(decoded && *decoded == packet);
 ### Pick a protocol
 
 ```cpp
-std::optional<bp::ProtocolVersion> version = bp::ProtocolVersion::get(2193);
-assert(version && version->getName() == "1.26.50");
+std::optional<bp::ProtocolVersion> version = bp::ProtocolVersion::get(2259);
+assert(version && version->getName() == "1.26.70");
 
-std::expected<std::string, bp::EncodeError> pinned = bp::v2193::encode(packet);
+std::expected<std::string, bp::EncodeError> pinned = bp::v2259::encode(packet);
 assert(pinned);
-std::expected<bp::TextPacket, bp::DecodeError> picked = bp::v2193::decode<bp::TextPacket>(*pinned);
+std::expected<bp::TextPacket, bp::DecodeError> picked = bp::v2259::decode<bp::TextPacket>(*pinned);
 assert(picked && *picked == packet);
 ```
 
@@ -140,11 +140,11 @@ import dev.endstone.protocol.ProtocolVersion;
 
 import java.util.Optional;
 
-Optional<ProtocolVersion> version = ProtocolVersion.get(2193);
-assert version.isPresent() && version.get().getName().equals("1.26.50");
+Optional<ProtocolVersion> version = ProtocolVersion.get(2259);
+assert version.isPresent() && version.get().getName().equals("1.26.70");
 
-byte[] pinned = Protocol.v2193.encode(packet);
-TextPacket picked = Protocol.v2193.decode(TextPacket.class, pinned);
+byte[] pinned = Protocol.v2259.encode(packet);
+TextPacket picked = Protocol.v2259.decode(TextPacket.class, pinned);
 assert picked.equals(packet);
 ```
 
@@ -172,7 +172,8 @@ assert picked.equals(packet);
 | 2168 | 1.26.40 to 1.26.44 |
 | 2169 | 1.26.45 |
 | 2193 | 1.26.50 to 1.26.52 |
-| 2225 | 1.26.6x |
+| 2225 | 1.26.60 to 1.26.66 |
+| 2259 | 1.26.7x |
 
 ## Building from Source
 

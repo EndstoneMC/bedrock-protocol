@@ -107,6 +107,7 @@ class StructureBlockUpdatePacket:
     data: StructureEditorData
     trigger: bool
     is_waterlogged: bool
+    keep_structure_void: bool = field(since=2259)
 
 
 @packet(id=179)

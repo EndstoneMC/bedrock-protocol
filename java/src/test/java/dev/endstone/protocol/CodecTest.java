@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 final class CodecTest {
     static Stream<Arguments> unsupported() {
         return Stream.of(
-                argumentSet("below the oldest", 728), argumentSet("above the newest", 2226));
+                argumentSet("below the oldest", 728), argumentSet("above the newest", 2260));
     }
 
     @Test

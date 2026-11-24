@@ -112,7 +112,7 @@ def test_a_keyword_the_schema_does_not_name_is_rejected():
             id="optional-enum",
         ),
         pytest.param(bp.GameRule, "value", True, id="variant-with-monostate"),
-        pytest.param(bp.DataStoreChange, "new_data", 3, id="dynamic-value"),
+        pytest.param(v729.DataStoreChange, "new_data", 3, id="dynamic-value"),
     ],
 )
 def test_a_nullable_field_takes_none(cls, field, value):
@@ -163,12 +163,12 @@ def test_an_enum_argument_also_takes_an_int():
     ("function", "shown"),
     [
         pytest.param(
-            bp.DataStoreChange.__init__,
+            v729.DataStoreChange.__init__,
             "new_data: bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None = ...",
             id="argument",
         ),
         pytest.param(
-            bp.DataStoreChange.new_data.fget,
+            v729.DataStoreChange.new_data.fget,
             "-> bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None",
             id="return",
         ),
@@ -250,11 +250,11 @@ def test_an_enum_value_its_cpp_type_cannot_hold_is_rejected():
 
 def test_a_name_the_schema_does_not_hold_is_rejected():
     with pytest.raises(bp.DecodeError, match=r"^CommandOutput\.type: unknown value at byte 5 of 5$"):
-        _core.decode(proto.VERSION, bp.CommandOutput, b"\x04nope")
+        _core.decode(proto.VERSION, v729.CommandOutput, b"\x04nope")
 
 
 def test_a_name_in_any_case_decodes_as_bds_folds_it():
-    assert _core.decode(proto.VERSION, bp.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
+    assert _core.decode(proto.VERSION, v729.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
 
 
 def test_a_container_id_the_schema_does_not_name_round_trips():
@@ -845,7 +845,7 @@ def test_encode_rejects_a_cerealized_class_of_another_version():
 
 def test_encode_rejects_a_name_the_schema_does_not_hold():
     with pytest.raises(bp.EncodeError, match=r"^CommandOutput\.type: unknown value$"):
-        _core.encode(proto.VERSION, bp.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
 
 
 UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPacket.CommandData(permission=99)])
@@ -853,12 +853,12 @@ UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPa
 
 def test_an_encode_error_is_a_value_error():
     with pytest.raises(ValueError, match="unknown value"):
-        _core.encode(proto.VERSION, bp.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
 
 
 def test_an_encode_error_carries_its_reason():
     with pytest.raises(bp.EncodeError, match="unknown value") as caught:
-        _core.encode(proto.VERSION, bp.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
     assert caught.value.reason == "unknown value"
 
 
@@ -894,7 +894,7 @@ def test_every_packet_class_of_a_version_has_an_encoding(protocol):
     ("version", "since"), [pytest.param(v2225, 924, id="v2225"), pytest.param(v898, 898, id="v898")]
 )
 def test_an_encoding_is_named_for_the_protocol_that_introduced_it(version, since):
-    assert _core.encodings[version.VERSION][bp.TextPacket] == since
+    assert _core.encodings[version.VERSION][v898.TextPacket] == since
 
 
 def test_the_mode_check_comes_before_the_uninitialized_check():
@@ -914,8 +914,8 @@ def test_a_packet_writes_its_member_in_the_cereal_mode_its_body_names():
 
 
 def test_encode_rejects_an_uninitialized_instance():
-    with pytest.raises(TypeError, match=rf"^packet: {re.escape(repr(bp.TextPacket))} instance is not initialized$"):
-        v2225.encode(bp.TextPacket.__new__(bp.TextPacket))
+    with pytest.raises(TypeError, match=rf"^packet: {re.escape(repr(v898.TextPacket))} instance is not initialized$"):
+        v2225.encode(v898.TextPacket.__new__(v898.TextPacket))
 
 
 def test_a_manual_encode_rejects_an_uninitialized_instance():
@@ -925,7 +925,7 @@ def test_a_manual_encode_rejects_an_uninitialized_instance():
 
 
 def test_encode_raises_an_encode_error_for_a_value_it_cannot_write():
-    packet = bp.CommandOutputPacket(output=bp.CommandOutput(type=99))
+    packet = v729.CommandOutputPacket(output=v729.CommandOutput(type=99))
     with pytest.raises(bp.EncodeError, match=r"^CommandOutputPacket\.output\.type: unknown value$") as caught:
         proto.encode(packet)
     assert (caught.value.reason, caught.value.path) == ("unknown value", ("output", "type"))
@@ -1021,5 +1021,5 @@ def test_the_member_a_derived_name_decodes_to_encodes_to_that_name_again():
 
 
 def test_a_member_sharing_a_derived_names_value_encodes_to_that_name():
-    packet = bp.CommandRequestPacket(version=bp.CurrentCmdVersion.TIME_COMMAND_CLOCKS_RELEASE)
+    packet = bp.CommandRequestPacket(version=bp.CurrentCmdVersion.SAME_ACTOR_BLOCK_REPLACEMENT_RETAINS_ITEMS_FIX)
     assert v729.encode(packet) == COMMAND_REQUEST_LATEST

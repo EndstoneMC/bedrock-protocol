@@ -11,6 +11,7 @@ import dev.endstone.protocol.nbt.FloatTag;
 import dev.endstone.protocol.nbt.IntTag;
 import dev.endstone.protocol.nbt.ListTag;
 import dev.endstone.protocol.nbt.StringTag;
+import dev.endstone.protocol.v924.DataStoreUpdate_v924;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -99,10 +100,10 @@ final class CaseLoaderTest {
     @MethodSource("nonFiniteDoubles")
     void aNonFiniteNameLoadsIntoADoubleArm(String name, double expected)
             throws ReflectiveOperationException {
-        DataStoreUpdate update =
+        DataStoreUpdate_v924 update =
                 CaseLoader.load(
                         ProtocolVersion.MAXIMUM_VERSION.getProtocol(),
-                        DataStoreUpdate.class,
+                        DataStoreUpdate_v924.class,
                         JsonParser.parseString(
                                 "{\"data_store_name\":\"\",\"property\":\"\",\"path\":\"\","
                                         + "\"data\":\""

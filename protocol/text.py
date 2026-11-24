@@ -73,12 +73,35 @@ class TextPacket:
         type: TextPacketType
         message: str
         params: list[str]
+        queue: bool = field(since=2259)
 
     localize: bool
     body: MessageOnly | AuthorAndMessage | MessageAndParams
     xuid: str
     platform_id: str
     filtered_message: str | None
+
+
+@packet(id=361, since=2259)
+class ChatPacket:
+    class SignedChat:
+        key_id: str
+        sender_id: str
+        message_id: str
+        scan_text: str
+        redacted_text: str
+        author_name: str
+        signature: str
+
+    class ChatFormatting:
+        name_prefix: str | None
+        name_postfix: str | None
+        message_prefix: str | None
+        message_postfix: str | None
+
+    signed_chat: SignedChat
+    room_id: str | None
+    formatting: ChatFormatting | None
 
 
 @packet(id=186)

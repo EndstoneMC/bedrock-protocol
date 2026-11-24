@@ -1,5 +1,5 @@
 """The Environment Attribute System: world/eas/ and world/eas/attributes/ --
-bool/float/colour environment attributes, their operations and easing, and attribute layers."""
+bool/float/colour/string environment attributes, their operations and easing, and attribute layers."""
 
 from enum import IntEnum
 
@@ -44,6 +44,11 @@ class ColorAttributeOperation(IntEnum, int32):
     ADD = 2
     SUBTRACT = 3
     MULTIPLY = 4
+
+
+@type(since=2259)
+class StringAttributeOperation(IntEnum, int32):
+    OVERRIDE = 0
 
 
 class EasingType(IntEnum, uint32):
@@ -109,12 +114,19 @@ class ColorAttributeData:
     operation: ColorAttributeOperation = field(type=str)
 
 
+@type(since=2259)
+class StringAttributeData:
+    value: str
+    operation: StringAttributeOperation = field(type=str)
+
+
 type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
 
 
 @type(since=2225)
 class ConstantAttributeData:
-    attribute: AttributeDataVariant
+    attribute: AttributeDataVariant = field(until=2259)
+    attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData = field(since=2259)
 
 
 @type(since=2225)
@@ -127,8 +139,12 @@ class TransitionSettingsData:
 
 @type(since=2225)
 class TransitionAttributeData:
-    from_attribute: AttributeDataVariant
-    to_attribute: AttributeDataVariant
+    with field(until=2259):
+        from_attribute: AttributeDataVariant
+        to_attribute: AttributeDataVariant
+    with field(since=2259):
+        from_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
+        to_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
     settings: TransitionSettingsData
 
 
@@ -145,8 +161,12 @@ class NoiseTransitionSettingsData:
 
 @type(since=2225)
 class NoiseTransitionAttributeData:
-    from_attribute: AttributeDataVariant
-    to_attribute: AttributeDataVariant
+    with field(until=2259):
+        from_attribute: AttributeDataVariant
+        to_attribute: AttributeDataVariant
+    with field(since=2259):
+        from_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
+        to_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
     settings: NoiseTransitionSettingsData
 
 
