@@ -69,9 +69,17 @@ def test_decode_rejects_a_list_count_beyond_the_body(packet, body, message):
             id="nbt list",
         ),
         pytest.param(
+            bp.LevelEventGenericPacket, bytes(1) + bytes.fromhex("0a00") * 512 + bytes(513), id="nbt compound tag data"
+        ),
+        pytest.param(
             bp.ClientboundDataStorePacket,
             bytes.fromhex("0101000000000000") + bytes.fromhex("0500000001") * 512 + bytes(4),
-            id="dynamic value",
+            id="dynamic value array",
+        ),
+        pytest.param(
+            bp.ClientboundDataStorePacket,
+            bytes.fromhex("0101000000000000") + bytes.fromhex("060000000100") * 512 + bytes(4),
+            id="dynamic value object",
         ),
     ],
 )
@@ -95,10 +103,34 @@ def test_decode_accepts_a_tree_nested_512_levels_deep(packet, body):
             id="nbt list",
         ),
         pytest.param(
+            bp.LevelEventGenericPacket,
+            bytes(1) + bytes.fromhex("0a00") * 513 + bytes(514),
+            r"^LevelEventGenericPacket\.data: out of range at byte 1027 of 1541$",
+            id="nbt compound tag data",
+        ),
+        pytest.param(
+            bp.BlockActorDataPacket,
+            bytes(3) + bytes.fromhex("0a00") * 20000,
+            r"^BlockActorDataPacket\.data: out of range at byte 1031 of 40003$",
+            id="unclosed nbt compound",
+        ),
+        pytest.param(
             bp.ClientboundDataStorePacket,
             bytes.fromhex("0101000000000000") + bytes.fromhex("0500000001") * 513 + bytes(4),
             r"^ClientboundDataStorePacket\.updates\[0\]\.new_data: out of range at byte 2573 of 2577$",
-            id="dynamic value",
+            id="dynamic value array",
+        ),
+        pytest.param(
+            bp.ClientboundDataStorePacket,
+            bytes.fromhex("0101000000000000") + bytes.fromhex("060000000100") * 513 + bytes(4),
+            r"^ClientboundDataStorePacket\.updates\[0\]\.new_data: out of range at byte 3086 of 3090$",
+            id="dynamic value object",
+        ),
+        pytest.param(
+            bp.ClientboundDataStorePacket,
+            bytes.fromhex("0101000000000000") + bytes.fromhex("0500000001") * 40000,
+            r"^ClientboundDataStorePacket\.updates\[0\]\.new_data: out of range at byte 2573 of 200008$",
+            id="unclosed dynamic value",
         ),
     ],
 )
