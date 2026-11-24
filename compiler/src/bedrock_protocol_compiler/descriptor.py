@@ -182,6 +182,7 @@ class Member:
     encoded_name: str
     sentinel: bool = False
     deprecated: bool = False
+    synonym: bool = False
 
 
 @dataclass(frozen=True)

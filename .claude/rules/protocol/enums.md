@@ -11,7 +11,7 @@ paths:
 - Record BDS's spelling in the DSL, never the encoding's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
-- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=` or `deprecated=True`.
+- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=`, `deprecated=True` or `synonym=True`.
 - Never mangle a member to match the encoding (`DOWNLOADINGFINISHED`).
 
 ## Values
@@ -19,6 +19,8 @@ paths:
 - Give a real member an explicit int literal.
 - Use `auto()` (previous + 1) only for a count every era's dump holding its enum binds, or a run that shifts behind a gate, and check that the line above holds the right value.
 - Write `sentinel()`, one ungated line, for a count or end marker the header declares that any era's dump holding its enum does not bind (by name if name-coded, else by value).
+- Write a pointer, a member that stands for another (a count's last value, the current version), as an expression over that member (`LATEST = COUNT - 1`, `CURRENT = EDITOR_ACHIEVEMENTS`), never as a literal.
+- Mark the member bedrock-headers declares second of two that share a number at one version, where neither is a pointer, with `value(N, synonym=True)` (`HUMANOID_COUNT = value(4, synonym=True)`).
 - Mark a member bedrock-headers names deprecated with `deprecated=True`: `value(N, deprecated=True)`, or `auto(deprecated=True)` imported from `protocol` in auto position; bpc keeps it, marked deprecated.
 - Leave any other member the dump does not bind as declared, and report it.
 
@@ -40,7 +42,7 @@ paths:
 - Gate an appended value with `value(N, since=)` and let the trailing count (`auto()` or `sentinel()`) follow it.
 - Gate a removed value with `value(N, until=)` and make every member after it `auto()`; an insertion and a removal in one span can cancel, so redeclare only when that fails.
 - For a rename, take the new spelling at every era and declare the member once per value; a C++ name and an encoded name each belong to one member across every era, the `cereal=False` sibling included.
-- An alias, a member whose newest declaration names another member, takes at every version it is live the number of a live member that is neither an alias nor a sentinel.
+- A pointer, a member whose newest declaration names another member, takes at every version it is live the number of a live member that is neither a pointer nor a sentinel; two pointers live at one version share a number there only if they share a value.
 - Treat any change to a name-coded member's spelling as an encoding change.
 - Add a value that only gained a name, with no other member moved, ungated once bedrock-headers confirms it existed, and carry the sentinel with it.
 - Never read a wholesale respelling as a rename until the header confirms it; the dumper may have changed what it emits.

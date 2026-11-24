@@ -75,7 +75,7 @@ class EnumGenerator:
         cpp_names = {member.name: member.cpp_name for member in self.target.members if not member.deprecated}
         p.emit("enum class $name$ : $underlying$ {", name=self.target.family.name, underlying=self.underlying)
         with p.indent():
-            for member in self.target.members:
+            for member in sorted(self.target.members, key=lambda member: member.name in self.target.derived):
                 number = self.enumerators[member.name]
                 match member.value:
                     case MemberRef(name=name) if name in cpp_names:

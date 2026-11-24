@@ -176,6 +176,10 @@ def test_a_value_shared_by_members_never_live_together_finds_the_newest_live_mem
     assert bp.MinecraftPacketIds(number) is bp.MinecraftPacketIds[name]
 
 
+def test_a_value_a_pointer_shares_finds_the_pointer():
+    assert bp.EditorLevelMigrationVersion(1) is bp.EditorLevelMigrationVersion.CURRENT
+
+
 def test_a_member_sharing_a_value_with_a_newer_one_equals_it():
     ids = bp.MinecraftPacketIds
     assert ids.ITEM_COMPONENT_PACKET == ids.ITEM_REGISTRY_PACKET

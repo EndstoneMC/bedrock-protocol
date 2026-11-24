@@ -17,4 +17,4 @@ The schema modules under `protocol/` follow `.claude/rules/protocol/` instead of
 - Bind each class once, where C++ declares it (`cpp.md`): in the package for the root of `bedrock::protocol`, in `v<N>` for `bedrock::protocol::v<N>` and under its owner when nested, so `__module__` names that module and `v<N>` holds no class it did not introduce.
 - Make every enum one class holding every member any protocol has; `.value` is the library value, its number at the newest protocol that has it.
 - Raise `EncodeError` for a value the protocol cannot number or name, or its encoding cannot hold; decode a number the protocol gives no member to an `int`, and raise `DecodeError` for a number the protocol cannot place.
-- Keep two names sharing a value as distinct members that compare equal, and lookup by the value gives the newest-live name.
+- Keep two names sharing a value as distinct members that compare equal, and lookup by the value gives a pointer's name where one shares it, else the newest-live name.

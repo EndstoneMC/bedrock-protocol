@@ -319,6 +319,16 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str,
                 case Binary(left=MemberRef(name=name), right=Int(value=offset)):
                     number = numbers[name] - offset
             numbers[member.name] = number
+        real: dict[int, str] = {}
+        for member in members:
+            if isinstance(member.value, MemberRef | Binary) or member.sentinel or member.synonym:
+                continue
+            first = real.setdefault(numbers[member.name], member.name)
+            if first != member.name:
+                raise CompilerError(
+                    f"{path}: {qualified}.{member.name}: shares the number {numbers[member.name]} with {first} at "
+                    f"{version} and is neither derived nor a synonym"
+                )
         held = {numbers[member.name] for member in members if member.name not in aliases and not member.sentinel}
         for member in members:
             if member.name in aliases and numbers[member.name] not in held:
@@ -689,6 +699,7 @@ class Builder:
             own = Range(None, None)
             sentinel = False
             deprecated = False
+            synonym = False
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -708,9 +719,11 @@ class Builder:
                 own = self.read_range(source, expression, name, arguments)
                 if "deprecated" in arguments:
                     deprecated = literal(source, arguments["deprecated"], bool, name)
+                if "synonym" in arguments:
+                    synonym = literal(source, arguments["synonym"], bool, name)
                 if (
                     "name" in arguments
-                    and not {"cpp_name", "deprecated"} & arguments.keys()
+                    and not {"cpp_name", "deprecated", "synonym"} & arguments.keys()
                     and own == Range(None, None)
                 ):
                     raise error(source, expression, name, "a member without its own gate takes a pair, not value()")
@@ -747,7 +760,7 @@ class Builder:
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated))
+            members.append(Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated, synonym))
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
         self.tile(source, node, pending.enum, pending.range)

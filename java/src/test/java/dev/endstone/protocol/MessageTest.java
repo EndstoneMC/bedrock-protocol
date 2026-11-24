@@ -195,13 +195,25 @@ final class MessageTest {
     }
 
     @Test
-    void theNameLatestDecodesToTheMemberNumberedLikeItAtAnEarlyVersion() {
+    void theNameLatestDecodesToLatestAtAnEarlyVersion() {
         CommandRequestPacket packet =
                 Protocol.v729.decode(
                         CommandRequestPacket.class,
                         hex(
                                 "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"));
-        assertEquals(CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT, packet.getVersion());
+        assertEquals(CurrentCmdVersion.LATEST, packet.getVersion());
+    }
+
+    @Test
+    void theNameLatestDecodedAtOneProtocolEncodesAsLatestAtAnOlderOne() {
+        String latest =
+                "072f736179206869106175746f6d6174696f6e706c61796572efcdab8967452301"
+                        + "1032547698badcfe057265712d31feffffffffffffff01066c6174657374";
+        assertEquals(
+                latest,
+                ByteBufUtil.hexDump(
+                        Protocol.v2168.encode(
+                                Protocol.v2193.decode(CommandRequestPacket.class, hex(latest)))));
     }
 
     @Test

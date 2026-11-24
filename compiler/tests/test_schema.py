@@ -281,7 +281,7 @@ def test_the_latest_version_is_the_last_one(build_package):
 def test_enum_values_are_evaluated_over_the_members_present(build_package):
     source = (
         HEADER
-        + "class E(IntEnum, uint8):\n    A = 4\n    B = value(5, since=3)\n    C = auto()\n    D = A\n    F = C - 1\n"
+        + "class E(IntEnum, uint8):\n    A = 4\n    B = value(5, since=3)\n    C = auto()\n    D = C\n    F = C - 1\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -291,10 +291,10 @@ def test_enum_values_are_evaluated_over_the_members_present(build_package):
     assert [(member.name, member.value) for member in early.members] == [
         ("A", Int(4)),
         ("C", Int(5)),
-        ("D", MemberRef(family, "A")),
+        ("D", MemberRef(family, "C")),
         ("F", Binary("-", MemberRef(family, "C"), Int(1))),
     ]
-    assert late.numbers == {"A": 4, "B": 5, "C": 6, "D": 4, "F": 5}
+    assert late.numbers == {"A": 4, "B": 5, "C": 6, "D": 6, "F": 5}
 
 
 def test_auto_inside_an_enum_block_counts_the_members_present(build_package):
@@ -1231,7 +1231,44 @@ def test_a_number_decodes_to_the_value_of_the_member_holding_it(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).decoded == {1: 2}
+    assert schema.numbering_at(family, 2).decoded.get(1) == 2
+
+
+def test_a_number_a_pointer_shares_decodes_to_the_pointers_value(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+
+    assert schema.numbering_at(family, 2).decoded.get(0) == 1
+
+
+def test_a_pointer_ranks_first_among_the_members_sharing_its_value(build_package):
+    schema = Schema(build_package({"a": DERIVED}))
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert [member.name for member in model.members] == ["A", "LATEST", "B", "COUNT"]
+
+
+def test_a_synonym_ranks_after_the_member_it_repeats(build_package):
+    schema = Schema(
+        build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = value(1, synonym=True)\n    B = 1\n"})
+    )
+    (family,) = schema.order
+    (model,) = schema.models(family)
+
+    assert [member.name for member in model.members] == ["B", "A"]
+
+
+def test_pointers_numbered_alike_at_one_version_only_are_rejected(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"
+        + "    COUNT = auto()\n    X = A\n    Y = COUNT - 1\n"
+    )
+    message = r"^a\.py: E\.Y: is numbered 1 at 1 and X 1, but they hold two library values$"
+
+    with pytest.raises(CompilerError, match=message):
+        Schema(build_package({"a": source}))
 
 
 def test_a_derived_value_no_member_holds_encodes_to_the_derived_members_number(build_package):
@@ -1347,7 +1384,9 @@ def test_names_that_never_coexist_share_their_number_as_a_value(build_package):
 
 
 def test_members_numbered_alike_share_a_value(build_package):
-    schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = 1\n"}))
+    schema = Schema(
+        build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, synonym=True)\n"})
+    )
     (family,) = schema.order
     (model,) = schema.models(family)
 
@@ -1411,7 +1450,10 @@ def test_a_library_value_error_names_a_nested_enum_by_its_owner(build_package):
 
 
 def test_library_values_that_do_not_number_one_to_one_are_rejected(build_package):
-    source = HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, until=3)\n    B = value(2, since=3)\n"
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, until=3, synonym=True)\n    B = value(2, since=3)\n"
+    )
     package = build_package({"a": source})
 
     with pytest.raises(CompilerError, match=r"a\.py: E: does not number its library values one to one at 1"):
@@ -1421,7 +1463,7 @@ def test_library_values_that_do_not_number_one_to_one_are_rejected(build_package
 def test_a_one_to_one_error_names_a_nested_enum_by_its_owner(build_package):
     source = (
         HEADER
-        + "class A:\n    class E(IntEnum, uint8):\n        A = 1\n        B = value(1, until=3)\n"
+        + "class A:\n    class E(IntEnum, uint8):\n        A = 1\n        B = value(1, until=3, synonym=True)\n"
         + "        B = value(2, since=3)\n    e: E\n"
     )
     package = build_package({"a": source})
@@ -1476,7 +1518,7 @@ def test_members_numbered_alike_share_the_free_value_a_displacement_gives_them(b
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    H = value(1, until=3)\n    H = value(2, since=3)\n"
-        + "    X = value(2, until=3)\n    Y = value(2, until=3)\n"
+        + "    X = value(2, until=3)\n    Y = value(2, until=3, synonym=True)\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1488,7 +1530,8 @@ def test_members_numbered_alike_share_the_free_value_a_displacement_gives_them(b
 def test_members_renumbered_alike_share_a_value(build_package):
     source = (
         HEADER
-        + "class E(IntEnum, uint8):\n    X = value(3, until=3)\n    X = value(5, since=3)\n    Y = value(3, until=3)\n"
+        + "class E(IntEnum, uint8):\n    X = value(3, until=3)\n"
+        + "    X = value(5, since=3)\n    Y = value(3, until=3, synonym=True)\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1501,7 +1544,7 @@ def test_a_member_numbered_like_a_renumbered_member_takes_its_value(build_packag
     source = (
         HEADER
         + "class E(IntEnum, int32):\n    A = 0\n    B = value(1, since=3)\n    TOTAL = value(1, until=3)\n"
-        + "    TOTAL = value(2, since=3)\n    INVALID = value(1, until=3)\n"
+        + "    TOTAL = value(2, since=3)\n    INVALID = value(1, until=3, synonym=True)\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1574,7 +1617,8 @@ def test_names_that_never_coexist_keep_their_own_numbers_as_values(build_package
 def test_members_numbered_alike_at_every_place_both_are_live_share_a_value(build_package):
     source = (
         HEADER
-        + "class E(IntEnum, uint8):\n    X = value(3, until=2)\n    X = value(5, since=4)\n    Y = value(3, until=4)\n"
+        + "class E(IntEnum, uint8):\n    X = value(3, until=2)\n"
+        + "    X = value(5, since=4)\n    Y = value(3, until=4, synonym=True)\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1587,7 +1631,7 @@ def test_a_member_numbered_alike_at_other_versions_takes_no_free_value(build_pac
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    X = value(5, until=2)\n    X = value(255, since=4)\n"
-        + "    H = value(6, until=4)\n    H = value(5, since=4)\n    Y = value(5, until=4)\n"
+        + "    H = value(6, until=4)\n    H = value(5, since=4)\n    Y = value(5, until=4, synonym=True)\n"
         + "    C = value(1, until=2)\n    C = value(2, since=2)\n    D = value(2, until=2)\n"
     )
     package = build_package({"a": source})
@@ -1600,7 +1644,7 @@ def test_a_member_numbered_alike_to_a_displaced_one_takes_no_free_value(build_pa
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    H = value(253, until=3)\n    H = value(254, since=3)\n"
-        + "    X = value(254, until=3)\n    Y = value(254, until=3)\n"
+        + "    X = value(254, until=3)\n    Y = value(254, until=3, synonym=True)\n"
         + "    C = value(1, until=2)\n    C = value(2, since=2)\n    D = value(2, until=2)\n"
     )
     package = build_package({"a": source})
@@ -1613,7 +1657,7 @@ def test_an_alias_holds_no_value_a_member_can_clash_with(build_package):
     source = (
         HEADER
         + "class E(IntEnum, uint8):\n    R = value(7, since=3)\n"
-        + "    Z = 9\n    L = value(9, until=3)\n    with value(since=3):\n        L = R\n"
+        + "    Z = 9\n    L = value(9, until=3, synonym=True)\n    with value(since=3):\n        L = R\n"
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
@@ -1836,8 +1880,8 @@ def test_a_name_coded_enum_whose_members_only_reorder_keeps_its_naming(build_pac
 def test_a_name_coded_enum_whose_members_sharing_a_value_reorder_is_a_second_naming(build_package):
     source = (
         HEADER
-        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 1\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint8):\n    B = 1\n    A = 1\n\n"
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = value(1, synonym=True)\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    B = 1\n    A = value(1, synonym=True)\n\n"
         + "class P:\n    e: E = field(type=str)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -1849,8 +1893,10 @@ def test_a_name_coded_enum_whose_members_sharing_a_value_reorder_is_a_second_nam
 def test_a_name_coded_enum_keeps_its_naming_while_each_value_writes_its_first_name(build_package):
     source = (
         HEADER
-        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 1\n    C = 1\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    C = 1\n    B = 1\n\n"
+        + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n"
+        + "    B = value(1, synonym=True)\n    C = value(1, synonym=True)\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n"
+        + "    C = value(1, synonym=True)\n    B = value(1, synonym=True)\n\n"
         + "class P:\n    e: E = field(type=str)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -1862,7 +1908,8 @@ def test_a_name_coded_enum_keeps_its_naming_while_each_value_writes_its_first_na
 def test_a_name_coded_enum_whose_unwritten_name_changes_is_a_second_naming(build_package):
     source = (
         HEADER
-        + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, 'old', until=3)\n    B = value(1, 'new', since=3)\n\n"
+        + "class E(IntEnum, uint8):\n    A = 1\n    B = value(1, 'old', until=3, synonym=True)\n"
+        + "    B = value(1, 'new', since=3, synonym=True)\n\n"
         + "class P:\n    e: E = field(type=str)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -1875,7 +1922,7 @@ def test_a_name_coded_enum_whose_alias_becomes_a_member_is_a_second_naming(build
     source = (
         HEADER
         + "@type(until=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = A\n\n"
-        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = 1\n\n"
+        + "@type(since=3)\nclass E(IntEnum, uint8):\n    A = 1\n    B = value(1, synonym=True)\n\n"
         + "class P:\n    e: E = field(type=str)\n"
     )
     schema = Schema(build_package({"a": source}))
@@ -1911,11 +1958,33 @@ def test_a_derived_value_no_member_holds_is_written_with_the_derived_name(build_
     assert schema.naming_at(enum, 2).written.get(1) == "latest"
 
 
-def test_a_derived_name_reads_as_the_value_of_the_member_numbered_like_it(build_package):
+def test_a_pointers_name_reads_as_the_pointers_value(build_package):
     schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2).read.get("latest") == 0
+    assert schema.naming_at(enum, 2).read.get("latest") == 1
+
+
+def test_a_value_is_written_with_the_name_of_the_member_a_synonym_repeats(build_package):
+    source = (
+        HEADER
+        + "class E(IntEnum, uint8):\n    A = value(1, synonym=True)\n"
+        + "    B = 1\n\nclass P:\n    e: E = field(type=str)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, _ = schema.order
+
+    assert schema.naming_at(enum, 1).written == {1: "b"}
+
+
+def test_the_first_of_two_pointers_numbered_alike_is_written(build_package):
+    source = (
+        HEADER + "class E(IntEnum, uint8):\n    A = 1\n    X = A\n    Y = A\n\nclass P:\n    e: E = field(type=str)\n"
+    )
+    schema = Schema(build_package({"a": source}))
+    enum, _ = schema.order
+
+    assert schema.naming_at(enum, 1).written == {1: "x"}
 
 
 def test_namings_lists_a_models_namings_in_version_order(build_package):
@@ -2217,9 +2286,11 @@ def test_two_struct_versions_differing_only_in_an_enum_that_gains_a_member_have_
     ("members", "order"),
     [
         pytest.param("    A = value(5, until=3)\n    B = value(5, since=3)\n", ["B", "A"], id="never live together"),
-        pytest.param("    A = value(5, until=5)\n    B = value(5, since=2)\n", ["B", "A"], id="live together"),
         pytest.param(
-            "    A = value(5, until=3)\n    B = value(5, since=2, until=4)\n    C = value(5, since=4)\n",
+            "    A = value(5, until=5)\n    B = value(5, since=2, synonym=True)\n", ["B", "A"], id="live together"
+        ),
+        pytest.param(
+            "    A = value(5, until=3)\n    B = value(5, since=2, until=4, synonym=True)\n    C = value(5, since=4)\n",
             ["C", "B", "A"],
             id="one pair live together",
         ),
@@ -2234,7 +2305,7 @@ def test_members_sharing_a_value_list_the_one_live_at_the_newest_version_first(b
 
 
 def test_members_sharing_a_value_live_at_the_same_newest_version_keep_their_declaration_order(build_package):
-    source = HEADER + "class E(IntEnum, uint8):\n    A = 5\n    B = value(5, since=2)\n"
+    source = HEADER + "class E(IntEnum, uint8):\n    A = 5\n    B = value(5, since=2, synonym=True)\n"
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
     (model,) = schema.models(family)

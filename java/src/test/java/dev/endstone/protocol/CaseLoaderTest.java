@@ -188,7 +188,7 @@ final class CaseLoaderTest {
     void anEncodedNameTwoMembersWriteLoadsAsTheMemberTheCasesProtocolReadsIt()
             throws ReflectiveOperationException {
         assertEquals(
-                CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT,
+                CurrentCmdVersion.LATEST,
                 CaseLoader.load(
                                 729,
                                 CommandRequestPacket.class,

@@ -442,7 +442,7 @@ class E(IntEnum, int32):
     Old = value(1, until=3)
     Mid = 2
     New = value(1, since=3)
-    Alias = 2
+    Alias = value(2, synonym=True)
 
 class H:
     e: E
@@ -1100,6 +1100,20 @@ def test_a_deprecated_member_is_a_deprecated_enumerator(generate):
     assert "    Old [[deprecated]] = 2,\n    Next [[deprecated]] = 3,\n" in (out / "a.h").read_text()
 
 
+def test_a_pointer_is_defined_after_the_members_it_ranks_before(generate):
+    source = (
+        'from enum import IntEnum, auto\nfrom protocol import uint8\npackage = "bedrock.protocol"\n'
+        'java_package = "dev.endstone.protocol"\n\n'
+        "class E(IntEnum, uint8):\n    A = 1\n    B = 2\n"
+        "    COUNT = auto()\n    LATEST = COUNT - 1\n\nclass H:\n    e: E\n"
+    )
+    header = (generate({"a": source}) / "a.h").read_text()
+
+    assert (
+        "enum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n    Count = 3,\n    Latest = Count - 1,\n};" in header
+    )
+
+
 def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
     out = generate({"a": DEPRECATED})
 
@@ -1109,12 +1123,11 @@ def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
 def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
     header = (generate({"a": DEPRECATED}) / "a.h").read_text()
     values = (
-        "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::A,\n"
-        "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n"
-        "    ::bedrock::protocol::D::Latest,\n}};"
+        "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::A,\n    ::bedrock::protocol::D::Latest,\n"
+        "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n}};"
     )
 
-    names = 'names_v<::bedrock::protocol::D>{{\n    "a",\n    "old_deprecated",\n    "next",\n    "latest",\n}};'
+    names = 'names_v<::bedrock::protocol::D>{{\n    "a",\n    "latest",\n    "old_deprecated",\n    "next",\n}};'
 
     assert values in header
     assert names in header
@@ -1123,7 +1136,7 @@ def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
 def test_an_enum_with_a_deprecated_member_flags_each_reflected_member(generate):
     header = (generate({"a": DEPRECATED}) / "a.h").read_text()
 
-    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    true,\n    true,\n    false,\n}};" in header
+    assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    false,\n    true,\n    true,\n}};" in header
 
 
 def test_an_enum_without_a_deprecated_member_has_no_deprecated_flags(generate):
@@ -2128,18 +2141,18 @@ def test_a_name_without_a_row_fails_to_decode_by_name(generate):
     assert "    if (!value) return std::unexpected(Errc::unknown_value);\n" in body
 
 
-def test_an_alias_of_a_name_coded_member_decodes_to_its_target(generate):
+def test_a_name_coded_pointer_and_its_target_read_as_the_pointer(generate):
     read = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "read")
 
-    assert '        {::bedrock::protocol::E::B, "b"},\n' in read
-    assert '        {::bedrock::protocol::E::B, "latest"},\n' in read
+    assert '        {::bedrock::protocol::E::Latest, "b"},\n' in read
+    assert '        {::bedrock::protocol::E::Latest, "latest"},\n' in read
 
 
-def test_an_alias_of_a_name_coded_member_is_written_by_its_alias_name_in_one_row(generate):
+def test_a_name_coded_pointer_is_written_by_its_name_in_one_row(generate):
     written = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "written")
 
-    assert written.count("::bedrock::protocol::E::B,") == 1
-    assert '        {::bedrock::protocol::E::B, "latest"},\n' in written
+    assert written.count("::bedrock::protocol::E::Latest,") == 1
+    assert '        {::bedrock::protocol::E::Latest, "latest"},\n' in written
 
 
 def test_a_child_call_of_a_name_coded_enum_names_the_since_of_its_naming(generate):
@@ -2165,14 +2178,14 @@ def test_a_literal_of_a_derived_member_is_the_member_when_the_value_is_the_numbe
     assert "    stream.write<std::uint8_t>(::bedrock::protocol::E::Latest);\n" in body
 
 
-def test_an_alias_follows_its_target_in_the_reflection_tables(generate):
+def test_a_pointer_precedes_its_target_in_the_reflection_tables(generate):
     header = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.h").read_text()
 
     assert (
         "values_v<::bedrock::protocol::E>{{\n"
         "    ::bedrock::protocol::E::A,\n"
-        "    ::bedrock::protocol::E::B,\n"
         "    ::bedrock::protocol::E::Latest,\n"
+        "    ::bedrock::protocol::E::B,\n"
         "}};"
     ) in header
 

@@ -1326,7 +1326,8 @@ def test_a_literal_is_no_field(emitted):
         pytest.param('tag: Literal["hi"]', '        public static final @NotNull String TAG = "hi";\n', id="str"),
         pytest.param(
             "c: Literal[Color.RED]",
-            "        public static final @NotNull dev.endstone.protocol.Color C = dev.endstone.protocol.Color.RED;\n",
+            "        public static final @NotNull dev.endstone.protocol.Color "
+            "C = dev.endstone.protocol.Color.CRIMSON;\n",
             id="enum",
         ),
     ],
@@ -1336,9 +1337,9 @@ def test_a_literal_is_a_public_constant_of_its_codec(emitted, source, constant):
 
 
 def test_an_enum_literal_names_the_canonical_constant_of_an_alias(emitted):
-    text = emitted(COLORS + "class P:\n    c: Literal[Color.CRIMSON]\n")
+    text = emitted(COLORS + "class P:\n    c: Literal[Color.RED]\n")
 
-    assert " C = dev.endstone.protocol.Color.RED;\n" in text
+    assert " C = dev.endstone.protocol.Color.CRIMSON;\n" in text
 
 
 def test_an_enum_literal_of_a_live_constant_is_not_deprecated(emitted):
@@ -1357,7 +1358,8 @@ def test_an_enum_literal_of_a_deprecated_constant_is_deprecated(emitted):
 
 def test_an_enum_literal_of_a_deprecated_alias_is_deprecated(emitted):
     text = emitted(
-        "class Hue(IntEnum, uint8):\n    A = 1\n    B = value(1, deprecated=True)\n\nclass P:\n    c: Literal[Hue.B]\n"
+        "class Hue(IntEnum, uint8):\n    A = 1\n"
+        "    B = value(1, deprecated=True, synonym=True)\n\nclass P:\n    c: Literal[Hue.B]\n"
     )
 
     constant = (
@@ -1369,7 +1371,8 @@ def test_an_enum_literal_of_a_deprecated_alias_is_deprecated(emitted):
 
 def test_an_enum_literal_of_an_alias_of_a_deprecated_constant_is_deprecated(emitted):
     text = emitted(
-        "class Hue(IntEnum, uint8):\n    A = value(1, deprecated=True)\n    B = A\n\nclass P:\n    c: Literal[Hue.B]\n"
+        "class Hue(IntEnum, uint8):\n    A = value(1, deprecated=True)\n"
+        "    B = value(1, synonym=True)\n\nclass P:\n    c: Literal[Hue.B]\n"
     )
 
     constant = (
@@ -1403,7 +1406,7 @@ def test_a_literal_named_only_by_underscores_is_a_compiler_error(build_package, 
 def test_an_enum_has_a_constant_per_number(java):
     text = (java(COLORS) / "Color.java").read_text()
 
-    assert "    RED(1),\n" in text
+    assert "    CRIMSON(1),\n" in text
     assert "    BLUE(2),\n" in text
 
 
@@ -1418,27 +1421,28 @@ def test_an_enum_ends_with_unrecognized(java):
 def test_an_enum_alias_is_a_static_of_its_canonical_constant(java):
     text = (java(COLORS) / "Color.java").read_text()
 
-    assert "public static final @NotNull Color CRIMSON = RED;" in text
+    assert "public static final @NotNull Color RED = CRIMSON;" in text
 
 
 def test_a_name_coded_enum_writes_the_name_reflected_first(java):
     text = (java(COLORS + "class P:\n    c: Color = field(type=str)\n") / "Color.java").read_text()
 
-    assert '            case RED -> "crimson";\n            case BLUE -> "blue";\n' in text
+    assert '            case CRIMSON -> "crimson";\n            case BLUE -> "blue";\n' in text
 
 
 def test_a_name_coded_enum_decodes_every_encoded_name(java):
     text = (java(COLORS + "class P:\n    c: Color = field(type=str)\n") / "Color.java").read_text()
 
     assert (
-        '            case "crimson" -> RED;\n            case "red" -> RED;\n            case "blue" -> BLUE;\n' in text
+        '            case "crimson" -> CRIMSON;\n            case "red" -> CRIMSON;\n            case "blue" -> BLUE;\n'
+        in text
     )
 
 
 def test_a_name_coded_enum_defaults_to_its_first_member(emitted):
     text = emitted(COLORS + "class P:\n    c: Color = field(type=str)\n")
 
-    assert "c_ = dev.endstone.protocol.Color.RED;" in text
+    assert "c_ = dev.endstone.protocol.Color.CRIMSON;" in text
 
 
 RENUMBERED = (

@@ -538,6 +538,24 @@ def test_an_alias_whose_number_another_member_holds_at_every_version_is_accepted
     build_package({"a": HEADER + source})
 
 
+def test_two_members_sharing_a_number_at_a_version_are_rejected(build_package):
+    message = r"^a\.py: E\.B: shares the number 1 with A at 1 and is neither derived nor a synonym$"
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = 1\n"})
+
+
+@pytest.mark.parametrize(
+    "members",
+    [
+        pytest.param("    A = 1\n    B = value(1, synonym=True)\n", id="synonym"),
+        pytest.param("    A = 1\n    B = A\n", id="derived"),
+        pytest.param("    A = value(1, until=3)\n    B = value(1, since=3)\n", id="never live together"),
+    ],
+)
+def test_a_member_sharing_a_number_is_accepted_as_a_synonym_a_pointer_or_a_renumbering(build_package, members):
+    build_package({"a": HEADER + "class E(IntEnum, uint8):\n" + members})
+
+
 def test_a_block_gives_each_field_its_range(build_package):
     source = (
         "class A:\n    a: uint8\n    with field(since=2, until=5):\n        x: uint8\n"

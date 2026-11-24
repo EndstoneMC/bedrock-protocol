@@ -137,7 +137,7 @@ class ArmorSlot(IntEnum, int32):
     LEGS = 2
     FEET = 3
     BODY = 4
-    HUMANOID_COUNT = 4
+    HUMANOID_COUNT = value(4, synonym=True)
     COUNT = sentinel()
 
 

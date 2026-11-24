@@ -17,8 +17,9 @@ def value(
     since: int | None = None,
     until: int | None = None,
     deprecated: bool = False,
+    synonym: bool = False,
 ) -> Any:
-    """Spell a member a pair cannot (gated, `cpp_name`, deprecated); no `v` numbers it as `auto()` does."""
+    """Spell a member a pair cannot (gated, `cpp_name`, deprecated, synonym); no `v` numbers it as `auto()` does."""
     return 0 if v is None else v
 
 

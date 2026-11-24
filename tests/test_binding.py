@@ -284,6 +284,14 @@ ANIMATE_ENTITY_MOLANG_2225 = bytes.fromhex("0000000d000000000000000000")
 COMMAND_REQUEST_LATEST = bytes.fromhex(
     "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"
 )
+COMMAND_REQUEST_LATEST_2168 = bytes.fromhex(
+    "072f736179206869106175746f6d6174696f6e706c61796572efcdab89674523011032547698badcfe057265712d31feffffffffffffff01"
+    "066c6174657374"
+)
+COMMAND_REQUEST_PINNED_2168 = bytes.fromhex(
+    "072f736179206869106175746f6d6174696f6e706c61796572efcdab89674523011032547698badcfe057265712d31feffffffffffffff01"
+    "17636c6f6e657061727469616c626564626c6f636b666978"
+)
 MOVEMENT_EFFECT = bytes.fromhex("01040604")
 DISCONNECT_ASYNC_JOIN_DENIED = bytes.fromhex("ec01000000")
 VIOLATION_OF_CLIENTBOUND_DATA_STORE = bytes.fromhex("0000940500")
@@ -971,9 +979,40 @@ def test_a_member_sharing_a_derived_members_value_encodes_to_its_number_at_729()
     assert v729.encode(packet) == ANIMATE_ENTITY_MOLANG_729
 
 
-def test_a_name_a_protocol_gives_a_derived_member_decodes_to_the_member_numbered_like_it():
-    packet = v729.decode(bp.CommandRequestPacket, COMMAND_REQUEST_LATEST)
-    assert packet.version is bp.CurrentCmdVersion.LOCATE_STRUCTURE_OUTPUT
+def test_a_number_a_pointer_shares_decodes_to_the_pointer():
+    packet = v729.decode(bp.AnimateEntityPacket, ANIMATE_ENTITY_MOLANG_729)
+    assert packet.stop_expression_version is bp.MolangVersion.LATEST
+
+
+@pytest.mark.parametrize(
+    ("version", "data"),
+    [
+        pytest.param(v729, COMMAND_REQUEST_LATEST, id="729"),
+        pytest.param(v2168, COMMAND_REQUEST_LATEST_2168, id="2168"),
+        pytest.param(proto, COMMAND_REQUEST_LATEST_2168, id="2193"),
+        pytest.param(v2225, COMMAND_REQUEST_LATEST_2168, id="2225"),
+    ],
+)
+def test_a_pointers_name_decodes_to_the_pointer(version, data):
+    assert version.decode(bp.CommandRequestPacket, data).version is bp.CurrentCmdVersion.LATEST
+
+
+@pytest.mark.parametrize(
+    ("source", "target"),
+    [
+        pytest.param(proto, v2168, id="2193 to 2168"),
+        pytest.param(v2168, proto, id="2168 to 2193"),
+        pytest.param(proto, v2225, id="2193 to 2225"),
+    ],
+)
+def test_a_pointer_decoded_at_one_protocol_encodes_by_its_name_at_another(source, target):
+    packet = source.decode(bp.CommandRequestPacket, COMMAND_REQUEST_LATEST_2168)
+    assert target.encode(packet) == COMMAND_REQUEST_LATEST_2168
+
+
+def test_a_name_whose_number_a_pointer_shares_decodes_to_its_own_member():
+    packet = v2168.decode(bp.CommandRequestPacket, COMMAND_REQUEST_PINNED_2168)
+    assert packet.version is bp.CurrentCmdVersion.CLONE_PARTIAL_BED_BLOCK_FIX
 
 
 def test_the_member_a_derived_name_decodes_to_encodes_to_that_name_again():

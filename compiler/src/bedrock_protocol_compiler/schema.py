@@ -713,8 +713,21 @@ class Schema:
         groups: dict[int, list[str]] = {}
         for name in order:
             groups.setdefault(values[name], []).append(name)
-        ranked = {value: iter(sorted(group, key=lambda name: -max(lives[name]))) for value, group in groups.items()}
-        order = dict.fromkeys(next(ranked[values[name]]) for name in order)
+        ranked = {
+            value: iter(
+                sorted(
+                    (name for name in group if name not in derived),
+                    key=lambda name: (-max(lives[name]), newest[name].synonym),
+                )
+            )
+            for value, group in groups.items()
+        }
+        placed: dict[str, None] = {}
+        for name in order:
+            placed.update(dict.fromkeys(each for each in groups[values[name]] if each in derived))
+            if name not in derived:
+                placed[next(ranked[values[name]])] = None
+        order = placed
         model = EnumModel(
             family,
             underlying,
@@ -770,6 +783,16 @@ class Schema:
                     )
                     if value not in mapped and target is not None:
                         self.merged.setdefault((form, version), (member.name, target))
+                for index, pointer in enumerate(aliases):
+                    for earlier in aliases[:index]:
+                        shared = values[pointer.name] == values[earlier.name]
+                        if shared != (shape.numbers[pointer.name] == shape.numbers[earlier.name]):
+                            raise CompilerError(
+                                f"{form.module}.py: {qualified(form)}.{pointer.name}: is numbered "
+                                f"{shape.numbers[pointer.name]} at {version} and {earlier.name} "
+                                f"{shape.numbers[earlier.name]}, but they hold "
+                                + ("one library value" if shared else "two library values")
+                            )
                 free = sorted(set(mapped.values()) - library)
                 unused = sorted(library - set(mapped.values()))
                 paired = dict(zip(free, unused[: len(free)], strict=True))
@@ -782,8 +805,15 @@ class Schema:
                         if values[member.name] not in mapped and values[member.name] != shape.numbers[member.name]
                     }
                 )
-                decoded = {number: value for value, number in mapped.items() if value != number} | {
-                    number: value for value, number in paired.items()
+                pointed = {shape.numbers[pointer.name]: values[pointer.name] for pointer in aliases}
+                decoded = {
+                    number: value
+                    for number, value in (
+                        {number: value for value, number in mapped.items()}
+                        | {number: value for value, number in paired.items()}
+                        | pointed
+                    ).items()
+                    if number != value
                 }
                 absent = frozenset(library - mapped.keys() - {values[member.name] for member in aliases})
                 lossy = frozenset(unused[len(free) :])
@@ -802,7 +832,8 @@ class Schema:
                 if form in self.name_coded:
                     canonical: dict[int, str] = {}
                     for member in sorted(
-                        shape.members, key=lambda member: not isinstance(member.value, MemberRef | Binary)
+                        shape.members,
+                        key=lambda member: (not isinstance(member.value, MemberRef | Binary), member.synonym),
                     ):
                         canonical.setdefault(shape.numbers[member.name], member.encoded_name)
                     names = {member.name: member.encoded_name for member in shape.members}
@@ -812,7 +843,12 @@ class Schema:
                         if values[member.name] not in mapped
                     }
                     inverse = {number: value for value, number in mapped.items()}
-                    read = {member.encoded_name: inverse[shape.numbers[member.name]] for member in shape.members}
+                    read = {
+                        member.encoded_name: values[member.name]
+                        if member.name in derived
+                        else inverse[shape.numbers[member.name]]
+                        for member in shape.members
+                    }
                     naming = namings.setdefault(
                         (frozenset(names.items()), frozenset(written.items()), frozenset(read.items())),
                         Naming(model, names, written, read),

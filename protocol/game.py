@@ -26,7 +26,7 @@ class GameType(IntEnum, int32):
     ADVENTURE = 2
     DEFAULT = 5
     SPECTATOR = 6
-    WORLD_DEFAULT = 0
+    WORLD_DEFAULT = value(0, synonym=True)
 
 
 class Difficulty(IntEnum, int32):
@@ -68,7 +68,7 @@ class WorldType(IntEnum, int32):
 class EditorLevelMigrationVersion(IntEnum, int8):
     LEGACY = 0
     EDITOR_ACHIEVEMENTS = 1
-    CURRENT = 1
+    CURRENT = EDITOR_ACHIEVEMENTS
 
 
 class EducationEditionOffer(IntEnum, uint32):

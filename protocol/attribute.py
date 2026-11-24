@@ -4,7 +4,7 @@ Not the environment attribute system -- world/eas/, in eas.py."""
 import uuid
 from enum import IntEnum
 
-from protocol import field, int32, packet
+from protocol import field, int32, packet, value
 from protocol.actor import ActorRuntimeID, PlayerInputTick
 
 package = "bedrock.protocol"
@@ -17,7 +17,7 @@ class AttributeModifierOperation(IntEnum, int32):
     OPERATION_MULTIPLY_TOTAL = 2
     OPERATION_CAP = 3
     TOTAL_OPERATIONS = 4
-    OPERATION_INVALID = 4
+    OPERATION_INVALID = value(4, synonym=True)
 
 
 class AttributeOperands(IntEnum, int32):
@@ -25,7 +25,7 @@ class AttributeOperands(IntEnum, int32):
     OPERAND_MAX = 1
     OPERAND_CURRENT = 2
     TOTAL_OPERANDS = 3
-    OPERAND_INVALID = 3
+    OPERAND_INVALID = value(3, synonym=True)
 
 
 class AttributeModifier:

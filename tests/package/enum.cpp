@@ -52,7 +52,10 @@ static_assert(bp::enum_integer_<2170>(bp::LevelSoundEvent::Undefined) == 614);
 static_assert(*bp::enum_integer_<898>(bp::ActorDamageCause::Dehydration) == 35);
 static_assert(!bp::enum_integer_<729>(bp::ActorDamageCause::Dehydration));
 static_assert(*bp::enum_integer_<729>(bp::MolangVersion::Latest) == 12);
-static_assert(bp::enum_cast_<729, bp::MolangVersion>(12) == bp::MolangVersion::LeafSupportingInFirstSolidBlockBelow);
+static_assert(bp::enum_cast_<729, bp::MolangVersion>(12) == bp::MolangVersion::Latest);
+static_assert(bp::enum_cast_<2193, bp::CurrentCmdVersion>(52) == bp::CurrentCmdVersion::Latest);
+static_assert(bp::enum_name(bp::MolangVersion::CarryingBlockQueryAllActors) == "latest");
+static_assert(bp::enum_name(bp::EditorLevelMigrationVersion::EditorAchievements) == "current");
 static_assert(std::ranges::count(bp::enum_values_<2225, bp::MolangVersion>(), bp::MolangVersion::Latest) == 1);
 static_assert(*bp::enum_integer_<2168>(bp::PieceType::Unsupported) == 28);
 static_assert(!bp::enum_integer_<2168>(bp::PieceType::CoCo));
@@ -82,7 +85,13 @@ static_assert(bp::enum_name_<2169>(bp::PieceType::Emote) == bp::enum_name_<2168>
 static_assert(!bp::enum_name_<2169>(bp::PieceType::CoCo));
 static_assert(bp::enum_contains_<2225, bp::PieceType>(std::underlying_type_t<bp::PieceType>{28}));
 static_assert(bp::enum_name_<2193>(bp::CurrentCmdVersion::Latest) == "latest");
-static_assert(bp::enum_cast_<2193, bp::CurrentCmdVersion>("latest") == bp::CurrentCmdVersion{52});
+static_assert(bp::enum_cast_<2193, bp::CurrentCmdVersion>("latest") == bp::CurrentCmdVersion::Latest);
+static_assert(bp::enum_cast_<2225, bp::CurrentCmdVersion>("latest") == bp::CurrentCmdVersion::Latest);
+static_assert(bp::enum_name_<2168>(bp::CurrentCmdVersion::Latest) == "latest");
+static_assert(bp::enum_name_<2225>(bp::CurrentCmdVersion::Latest) == "latest");
+static_assert(bp::enum_cast_<2168, bp::CurrentCmdVersion>("clonepartialbedblockfix") ==
+              bp::CurrentCmdVersion::ClonePartialBedBlockFix);
+static_assert(bp::enum_name(bp::CurrentCmdVersion::TimeCommandClocksRelease) == "latest");
 static_assert(bp::enum_cast_<2193, bp::CurrentCmdVersion>("agentsweepingblocktest") == bp::CurrentCmdVersion{34});
 static_assert(bp::enum_contains_<2193, bp::CurrentCmdVersion>("AgentSweepingBlockTest"));
 static_assert(bp::enum_name_<2193>(bp::CurrentCmdVersion{34}) ==
