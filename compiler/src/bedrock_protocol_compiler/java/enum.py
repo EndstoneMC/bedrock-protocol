@@ -124,8 +124,7 @@ class EnumGenerator:
         )
 
     def protocol_codec(self, p: Printer) -> None:
-        message = json.dumps(f"{self.name}: is not a type at protocol ")
-        unknown = f"throw new IllegalArgumentException({message} + protocol);"
+        unknown = json.dumps(f"{self.name}: is not a type at protocol ")
         p.emit(
             """
 

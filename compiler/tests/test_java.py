@@ -697,122 +697,6 @@ def test_a_version_class_holds_its_protocol_number(emitted):
     assert holds in emitted(SCALAR, "Protocol.java")
 
 
-@pytest.mark.parametrize(
-    "method",
-    [
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull OptionalInt enumInteger(@NotNull E value) {\n"
-            "            return Protocol.enumInteger(VERSION, value);\n"
-            "        }\n",
-            id="enum-integer",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull Optional<E> enumCast("
-            "@NotNull Class<E> type, int number) {\n"
-            "            return Protocol.enumCast(VERSION, type, number);\n"
-            "        }\n",
-            id="enum-cast",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> boolean enumContains(@NotNull E value) {\n"
-            "            return Protocol.enumInteger(VERSION, value).isPresent();\n"
-            "        }\n",
-            id="enum-contains-value",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> boolean enumContains(@NotNull Class<E> type, int number) {\n"
-            "            return Protocol.enumCast(VERSION, type, number).isPresent();\n"
-            "        }\n",
-            id="enum-contains-number",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull List<E> enumValues(@NotNull Class<E> type) {\n"
-            "            return Protocol.enumValues(VERSION, type);\n"
-            "        }\n",
-            id="enum-values",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> int enumCount(@NotNull Class<E> type) {\n"
-            "            return Protocol.enumValues(VERSION, type).size();\n"
-            "        }\n",
-            id="enum-count",
-        ),
-    ],
-)
-def test_a_version_class_answers_for_enums_at_its_protocol(emitted, method):
-    assert method in emitted(SCALAR, "Protocol.java")
-
-
-def test_the_protocol_class_registers_every_enum_with_its_numbering(java):
-    text = (java(COLORS + "class P:\n    c: Color\n") / "Protocol.java").read_text()
-
-    numbering = "dev.endstone.protocol.internal.ColorNumbering"
-    registration = (
-        f"            register(dev.endstone.protocol.Color.class, {numbering}::enumInteger, {numbering}::enumCast, "
-        f"{numbering}::enumValues);\n"
-    )
-    assert registration in text
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull Optional<String> enumName(@NotNull E value) {\n"
-            "            return Protocol.enumName(VERSION, value);\n"
-            "        }\n",
-            id="enum-name",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull Optional<E> enumCast(\n"
-            "                @NotNull Class<E> type, @NotNull String name) {\n"
-            "            return Protocol.enumCast(VERSION, type, name);\n"
-            "        }\n",
-            id="enum-cast-name",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> boolean enumContains("
-            "@NotNull Class<E> type, @NotNull String name) {\n"
-            "            return Protocol.enumCast(VERSION, type, name).isPresent();\n"
-            "        }\n",
-            id="enum-contains-name",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull List<String> enumNames(@NotNull Class<E> type) {\n"
-            "            return Protocol.enumEntries(VERSION, type).stream().map(Map.Entry::getValue).toList();\n"
-            "        }\n",
-            id="enum-names",
-        ),
-        pytest.param(
-            "        public static <E extends Enum<E>> @NotNull List<Map.Entry<E, String>> enumEntries(\n"
-            "                @NotNull Class<E> type) {\n"
-            "            return Protocol.enumEntries(VERSION, type);\n"
-            "        }\n",
-            id="enum-entries",
-        ),
-    ],
-)
-def test_a_version_class_answers_for_enum_names_at_its_protocol(emitted, method):
-    assert method in emitted(SCALAR, "Protocol.java")
-
-
-def test_the_protocol_class_registers_a_name_coded_enum_with_its_naming(java):
-    text = (java(NAME_CODED) / "Protocol.java").read_text()
-
-    naming = "dev.endstone.protocol.internal.ModeNaming"
-    registration = (
-        f"            registerNames(dev.endstone.protocol.Mode.class, {naming}::enumName, {naming}::enumCast, "
-        f"{naming}::enumEntries);\n"
-    )
-    assert registration in text
-
-
-def test_the_protocol_class_registers_no_naming_for_an_enum_no_field_codes_by_name(java):
-    text = (java(COLORS + "class P:\n    c: Color\n") / "Protocol.java").read_text()
-
-    assert "registerNames(dev." not in text
-
-
 def test_a_version_class_has_a_private_constructor(emitted):
     constructor = "        public static final int VERSION = 3;\n\n        private v3() {}\n"
 
@@ -1735,47 +1619,10 @@ def test_a_renumbered_enum_has_a_numbering_class_in_the_internal_package(java):
     assert (java(RENUMBERED) / "internal/ModeNumbering.java").is_file()
 
 
-def test_an_enum_without_a_numbering_to_apply_has_a_numbering_class(java):
+def test_an_enum_without_a_numbering_to_apply_has_no_numbering_class(java):
     root = java(COLORS + "class P:\n    c: Color\n")
 
-    assert (root / "internal/ColorNumbering.java").is_file()
-
-
-def test_a_name_coded_enum_has_a_naming_class_in_the_internal_package(java):
-    assert (java(NAME_CODED) / "internal/ModeNaming.java").is_file()
-
-
-def test_an_enum_no_field_codes_by_name_has_no_naming_class(java):
-    root = java(COLORS + "class P:\n    c: Color\n")
-
-    assert not (root / "internal/ColorNaming.java").exists()
-
-
-def test_encodes_rejects_a_value_the_protocol_cannot_number(java):
-    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
-
-    cases = (
-        "    public static boolean encodes(int protocol, int value) {\n"
-        "        if (protocol < 3) {\n"
-        "            return switch (value) {\n"
-        "                case 2 -> false;\n"
-        "                default -> true;\n"
-        "            };\n"
-    )
-    assert cases in text
-
-
-def test_decodes_answers_false_at_a_protocol_the_enum_is_not_live_at(java):
-    text = (java(GROWING_UNTIL_5) / "internal/Mode_v1Numbering.java").read_text()
-
-    tail = "            return true;\n        }\n        return false;\n    }\n\n    public static int fromNumber("
-    assert tail in text
-
-
-def test_enum_cast_reads_an_unnamed_value_as_unrecognized(java):
-    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
-
-    assert "        return Optional.of(value == null ? dev.endstone.protocol.Mode.UNRECOGNIZED : value);\n" in text
+    assert not (root / "internal").exists()
 
 
 def test_to_number_maps_a_value_to_its_number_below_the_protocol_that_renumbers(java):
@@ -2074,50 +1921,6 @@ def test_a_name_coded_enum_with_two_namings_is_decoded_with_the_protocol_of_its_
     text = emitted(NAME_CODED_GROWING)
 
     assert "                out.m_ = dev.endstone.protocol.Mode.decode(1, buf);\n" in text
-
-
-def test_a_naming_class_names_only_the_values_the_protocol_writes(java):
-    text = (java(NAME_CODED_GROWING) / "internal/ModeNaming.java").read_text()
-
-    names = (
-        "        if (protocol < 3) {\n"
-        "            return Optional.ofNullable(switch (value) {\n"
-        '                case A -> "a";\n'
-        "                default -> null;\n"
-        "            });\n"
-        "        }\n"
-    )
-    assert names in text
-
-
-def test_a_naming_class_reads_a_name_folding_its_case(java):
-    text = (java(NAME_CODED_GROWING) / "internal/ModeNaming.java").read_text()
-
-    casts = (
-        "            return Optional.ofNullable(switch (ByteBufCodec.foldAscii(name)) {\n"
-        '                case "a" -> dev.endstone.protocol.Mode.A;\n'
-        '                case "b" -> dev.endstone.protocol.Mode.B;\n'
-        "                default -> null;\n"
-        "            });\n"
-    )
-    assert casts in text
-
-
-def test_a_naming_class_lists_the_entries_the_protocol_writes_in_declaration_order(java):
-    text = (java(NAME_CODED_GROWING) / "internal/ModeNaming.java").read_text()
-
-    entries = (
-        '            return List.of(Map.entry(dev.endstone.protocol.Mode.A, "a"), '
-        'Map.entry(dev.endstone.protocol.Mode.B, "b"));\n'
-    )
-    assert entries in text
-
-
-def test_a_naming_class_answers_empty_where_the_enum_has_no_naming(java):
-    text = (java(NAME_CODED_GROWING) / "internal/ModeNaming.java").read_text()
-
-    assert text.count("        return Optional.empty();\n") == 2
-    assert "        return List.of();\n" in text
 
 
 def test_a_union_has_a_case_per_alternative(emitted):

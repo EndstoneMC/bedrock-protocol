@@ -2,31 +2,40 @@ import json
 from collections.abc import Callable
 from functools import partial
 
-from bedrock_protocol_compiler.descriptor import Enum, Range
+from bedrock_protocol_compiler.descriptor import Literal, MemberRef, Range, Struct
 from bedrock_protocol_compiler.java import members, names
 from bedrock_protocol_compiler.java.expression import enum_class
 from bedrock_protocol_compiler.java.value import literal
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, Numbering, Schema
+from bedrock_protocol_compiler.schema import EnumModel, Numbering, Schema, StructModel
 
 
-def enums(schema: Schema) -> list[EnumModel]:
-    return list(
-        dict.fromkeys(
-            model for family in schema.order if isinstance(family, Enum) for model in schema.enum_types(family)
-        )
-    )
+def reached(schema: Schema) -> list[EnumModel]:
+    found: dict[EnumModel, None] = {}
+    for family in schema.order:
+        if not isinstance(family, Struct):
+            continue
+        for model in schema.models(family):
+            if isinstance(model, StructModel):
+                for encoding in schema.encodings(model):
+                    for each in encoding.reached.values():
+                        if isinstance(each, Numbering) and not each.identity:
+                            found[each.model] = None
+                    for field in encoding.fields:
+                        if isinstance(field.type, Literal) and isinstance(field.type.value, MemberRef):
+                            numbering = schema.numbering_at(field.type.value.enum, encoding.since)
+                            if not numbering.identity:
+                                found[numbering.model] = None
+    return list(found)
 
 
 class NumberingGenerator:
     def __init__(self, schema: Schema, model: EnumModel) -> None:
         self.name = names.numbering(schema, model)
         self.family = names.nested(schema, model)
-        self.qualified = names.qualified(schema, model)
         self.number = enum_class(model)
         self.numberings = schema.numberings(model)
-        message = json.dumps(f"{self.family}: is not a type at protocol ")
-        self.unknown = f"throw new IllegalArgumentException({message} + protocol);"
+        self.unknown = json.dumps(f"{self.family}: is not a type at protocol ")
 
     def definition(self, p: Printer) -> None:
         p.emit(
@@ -38,10 +47,6 @@ class NumberingGenerator:
                     $to_number$
                 }
 
-                public static boolean encodes(int protocol, int value) {
-                    $encodes$
-                }
-
                 public static boolean decodes(int protocol, int number) {
                     $decodes$
                 }
@@ -49,33 +54,11 @@ class NumberingGenerator:
                 public static int fromNumber(int protocol, int number) {
                     $from_number$
                 }
-
-                public static @NotNull OptionalInt enumInteger(int protocol, @NotNull $enum$ value) {
-                    return encodes(protocol, value.getNumber())
-                            ? OptionalInt.of(toNumber(protocol, value.getNumber()))
-                            : OptionalInt.empty();
-                }
-
-                public static @NotNull Optional<$enum$> enumCast(int protocol, int number) {
-                    if (!decodes(protocol, number)) {
-                        return Optional.empty();
-                    }
-                    $enum$ value = $enum$.forNumber(fromNumber(protocol, number));
-                    return Optional.of(value == null ? $enum$.UNRECOGNIZED : value);
-                }
-
-                public static @NotNull List<$enum$> enumValues(int protocol) {
-                    return Arrays.stream($enum$.values())
-                            .filter(value -> value != $enum$.UNRECOGNIZED && encodes(protocol, value.getNumber()))
-                            .toList();
-                }
             }
             """,
             name=self.name,
-            enum=self.qualified,
             to_number=lambda: members.ladder(p, self.entries(p, self.to_number), self.unknown),
-            encodes=lambda: members.ladder(p, self.entries(p, self.encodes), "return false;"),
-            decodes=lambda: members.ladder(p, self.entries(p, self.decodes), "return false;"),
+            decodes=lambda: members.ladder(p, self.entries(p, self.decodes), self.unknown),
             from_number=lambda: members.ladder(p, self.entries(p, self.from_number), self.unknown),
         )
 
@@ -88,9 +71,6 @@ class NumberingGenerator:
         rows = [(sorted(numbering.absent), self.refuse("value", "has no number"))]
         rows += [([value], self.spell(number)) for value, number in sorted(numbering.encoded.items())]
         self.table(p, "value", rows, "value")
-
-    def encodes(self, p: Printer, numbering: Numbering) -> None:
-        self.table(p, "value", [(sorted(numbering.absent), "false")], "true")
 
     def decodes(self, p: Printer, numbering: Numbering) -> None:
         self.table(p, "number", [(sorted(numbering.lossy), "false")], "true")

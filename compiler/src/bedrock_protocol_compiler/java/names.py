@@ -7,18 +7,15 @@ from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema, Serial
 LIBRARIES = {
     "ArrayList": "java.util.ArrayList",
     "Arrays": "java.util.Arrays",
-    "BiFunction": "java.util.function.BiFunction",
     "BitSet": "java.util.BitSet",
     "Collections": "java.util.Collections",
     "Comparator": "java.util.Comparator",
     "HashMap": "java.util.HashMap",
-    "IntFunction": "java.util.function.IntFunction",
     "List": "java.util.List",
     "Locale": "java.util.Locale",
     "Map": "java.util.Map",
     "Objects": "java.util.Objects",
     "Optional": "java.util.Optional",
-    "OptionalInt": "java.util.OptionalInt",
     "SortedMap": "java.util.SortedMap",
     "TreeMap": "java.util.TreeMap",
     "ByteBuf": "io.netty.buffer.ByteBuf",
@@ -120,10 +117,6 @@ def nested(schema: Schema, each: StructModel | EnumModel) -> str:
 
 def numbering(schema: Schema, each: EnumModel) -> str:
     return f"{nested(schema, each).replace('.', '')}Numbering"
-
-
-def naming(schema: Schema, each: EnumModel) -> str:
-    return f"{nested(schema, each).replace('.', '')}Naming"
 
 
 def bounds(since: int | None, until: int | None, variable: str = "version") -> list[str]:

@@ -52,29 +52,10 @@ inline constexpr std::size_t mode_count = 3;
 
 using CodecTable = std::unordered_map<PyObject *, std::array<const Codec *, mode_count>>;
 
-struct EnumNumbering {
-    nb::object (*integer)(nb::handle value);
-    nb::object (*cast)(nb::handle number);
-    nb::object (*values)();
-};
-
-using EnumTable = std::unordered_map<PyObject *, const EnumNumbering *>;
-
-struct EnumNaming {
-    nb::object (*name)(nb::handle value);
-    nb::object (*cast)(std::string_view name);
-    nb::object (*names)();
-    nb::object (*entries)();
-};
-
-using NamingTable = std::unordered_map<PyObject *, const EnumNaming *>;
-
 struct Scope {
     int number;
     nb::handle module;
     CodecTable *codecs;
-    EnumTable *enums;
-    NamingTable *namings;
     nb::object names;
     nb::dict encodings;
     nb::dict modes;
@@ -349,51 +330,6 @@ F from_python(nb::handle src, const std::string &label)
     throw nb::type_error(std::format("{}: cannot hold {}", label, nb::repr(src).c_str()).c_str());
 }
 
-template <typename E, int V>
-inline constexpr EnumNumbering enum_numbering{
-    .integer = [](nb::handle value) -> nb::object {
-        const auto number = enum_integer_<V>(nb::cast<E>(value));
-        return number ? nb::cast(*number) : nb::none();
-    },
-    .cast = [](nb::handle number) -> nb::object {
-        const auto value = enum_cast_<V, E>(from_python<std::underlying_type_t<E>>(number, "number"));
-        return value ? to_python(*value) : nb::none();
-    },
-    .values = []() -> nb::object {
-        nb::list out;
-        for (const E value : enum_values_<V, E>()) {
-            out.append(nb::cast(value));
-        }
-        return nb::tuple(out);
-    },
-};
-
-template <typename E, int V>
-inline constexpr EnumNaming enum_naming{
-    .name = [](nb::handle value) -> nb::object {
-        const auto name = enum_name_<V>(nb::cast<E>(value));
-        return name ? nb::cast(std::string(*name)) : nb::none();
-    },
-    .cast = [](std::string_view name) -> nb::object {
-        const auto value = enum_cast_<V, E>(name);
-        return value ? nb::cast(*value) : nb::none();
-    },
-    .names = []() -> nb::object {
-        nb::list out;
-        for (const std::string_view name : enum_names_<V, E>()) {
-            out.append(std::string(name));
-        }
-        return nb::tuple(out);
-    },
-    .entries = []() -> nb::object {
-        nb::list out;
-        for (const auto &[value, name] : enum_entries_<V, E>()) {
-            out.append(nb::make_tuple(value, std::string(name)));
-        }
-        return nb::tuple(out);
-    },
-};
-
 template <typename T, std::size_t I>
 const std::string &field_label()
 {
@@ -476,7 +412,7 @@ void bind_struct(nb::handle scope, const char *name)
 }
 
 template <typename T, int V>
-void bind_type(nb::handle home, const Scope &scope, std::span<const Scope> bound, std::string_view label)
+void bind_type(nb::handle home, const Scope &scope, std::string_view label)
 {
     std::string_view declared;
     if constexpr (std::is_enum_v<T>) {
@@ -491,12 +427,6 @@ void bind_type(nb::handle home, const Scope &scope, std::span<const Scope> bound
         const std::string name(declared.substr(declared.find_last_of(':') + 1));
         if constexpr (std::is_enum_v<T>) {
             bind_enum<T>(parent, name.c_str());
-            [&]<std::size_t... J>(std::index_sequence<J...>) {
-                (((*bound[J].enums)[nb::type<T>().ptr()] = &enum_numbering<T, detail::versions[J]>), ...);
-                if constexpr (detail::is_name_coded_v<T>) {
-                    (((*bound[J].namings)[nb::type<T>().ptr()] = &enum_naming<T, detail::versions[J]>), ...);
-                }
-            }(std::make_index_sequence<detail::versions.size()>{});
         }
         else {
             bind_struct<T>(parent, name.c_str());
@@ -566,7 +496,6 @@ void bind_schema_types(nb::handle package, std::span<const Scope> bound)
                 [&]<typename... T>(type_list<T...>) {
                     (bind_type<T, number>(
                          holders<T, Types>::held.back() ? package : bound[holders<T, Types>::first].module, scope,
-                         bound,
                          label_position<T, typename Types<number>::labelled>::value < Types<number>::labels.size()
                              ? Types<number>::labels[label_position<T, typename Types<number>::labelled>::value]
                              : std::string_view{}),

@@ -144,7 +144,7 @@ def combine(p: Printer, hashes: list[str]) -> None:
     p.emit("return hash;")
 
 
-def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], otherwise: str) -> None:
+def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], absent: str) -> None:
     for runs, body in entries:
         clauses = [" && ".join(bounds(run.since, run.until, "protocol")) for run in runs]
         if "" in clauses:
@@ -160,7 +160,7 @@ def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], ot
             clause=clause,
             body=body,
         )
-    p.emit(otherwise)
+    p.emit("throw new IllegalArgumentException($absent$ + protocol);", absent=absent)
 
 
 def enum_getter(p: Printer, enum: str, name: str, number: str, index: str = "") -> None:
