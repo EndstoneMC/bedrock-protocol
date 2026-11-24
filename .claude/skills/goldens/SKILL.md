@@ -44,11 +44,12 @@ If the log shows no golden mode, add it to the clone and commit it there:
 
 - `DUMPER_GOLDEN` names a JSON array of `{id, stem, index, bytes}`. When it is set, the first-tick work runs golden mode instead of the dump and writes `results.json` beside that file.
 - Get the packet reflection ctx from the level's packet sender: take `LoopbackPacketSender`'s network, then its server network system, then call `getPacketReflectionCtx`. Make golden mode a friend of both mirrors. The level's own cereal ctx holds no packets.
-- Build each packet with `MinecraftPackets::createPacket`, found by a byte signature over its id switch behind a version gate. When it returns null, default-construct the entt meta type whose `[cereal:packet]` property holds the id, and mark the record `"factory":"meta"`.
-- Mirror `Packet`'s virtuals in declaration order from that build's headers. Check the slots of `read(stream, ctx)`, `write(stream, ctx)` and `getSerializationMode` against a concrete packet's vtable.
-- Mirror `ReadOnlyBinaryStream` and `BinaryStream`, and have their constructors adopt BDS's own vtables found by RTTI, because BDS's readers and writers call the stream's virtuals.
+- Build each packet with `MinecraftPackets::createPacket`, found by a byte signature over its id switch behind a version gate. When it returns null, default-construct the entt meta type whose `[cereal:packet]` property holds the id, and mark the record `"factory":"meta"`. Check the built packet's `getId` against the case's id, and record `crash` as `the factory built packet id N` when they differ.
+- Mirror `Packet`'s virtuals in declaration order from that build's headers. Check the slots of `getId`, `read(stream, ctx)`, `write(stream, ctx)` and `getSerializationMode` against a concrete packet's vtable.
+- Mirror `ReadOnlyBinaryStream` and `BinaryStream`, and have their constructors adopt BDS's own vtables, because BDS's readers and writers call the stream's virtuals.
+- Find each vtable by RTTI. On a build without RTTI, take each stream's vtable from the vptr `lea` in one of its constructors, found by a byte signature behind a version gate, and check `BinaryStream`'s against the vptr of `NetworkSystem::mSendStream`; check `Packet`'s slots on the vtable of a packet `createPacket` built.
 - Mirror `Bedrock::Result<void>` with its `ErrorInfo` and `CallStack`, so a failed read gives its category, code, message and frames.
-- Fork for each case. The child reads the case's bytes with `read(stream, ctx)` and records `read_ok`, `consumed` (the read pointer), `error` and `serialization_mode`. It writes with `write(stream, ctx)` into `bds_bytes` and prints the packet it read into `bds_json`. It sends each piece over a pipe as soon as it has it, then calls `_exit`.
+- Fork for each case. The child reads the case's bytes with `read(stream, ctx)` and records `read_ok`, `consumed` (the read pointer), `error` and `serialization_mode`. After a successful read, it writes with `write(stream, ctx)` into `bds_bytes` and prints the packet it read into `bds_json`. It sends each piece over a pipe as soon as it has it, then calls `_exit`.
 - Print `bds_json` with the packet's own `toString`. `toString` binds the packet into a fresh reflection ctx, where a type bound twice, such as Vec3, takes whichever binder runs first; so detour `cereal::BasicSaver::saveImpl`, found by a byte signature, and for the packet being printed alone pass the original a handle over the same packet in the server's packet reflection ctx. A detour that never sees the packet records `bds_json_error`.
 - Send `bds_json` as one JSON string of BDS's text, each byte outside valid UTF-8 written as `\udcXX`; BDS's text is not always JSON, so the reader parses it.
 - On a build before 1.26.40, gate a writer trace on the build's version: a `BinaryStream` subclass that overrides every writer and documented-write helper, records each call's method, value, label, notes, offset, size and depth, and opens a scope for each array, conditional and branching write. When the packet has no reflected type or its `toString` prints nothing, write the packet into it and send `bds_trace` with `bds_trace_bytes_equal`.
@@ -63,7 +64,7 @@ If the log shows no golden mode, add it to the clone and commit it there:
 (cd build/bedrock-dumper && cmake --preset clang-relwithdebinfo -B build/stable-<version> -DBEDROCK_SERVER_VERSION=<version> -DBEDROCK_SERVER_CHANNEL=stable && cmake --build build/stable-<version>)
 ```
 
-Each build has its own tree, which fetches BDS into `build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port` and `server-portv6` to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
+Each build has its own tree, which fetches BDS into `build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port`, and `server-portv6` where the build has one, to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
 
 ## Run
 
@@ -127,6 +128,9 @@ Only a `freezes` case can freeze, or a traced one as above. A difference no rule
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
 | `crashed timeout` | Usually a length or count BDS loops over. Check the case's length prefixes. |
 | `crashed no factory builds this packet id` | That build neither builds nor reflects the id. Check the dump's `protocol/` for the packet. |
+| `crashed the factory built packet id N` | `createPacket`'s signature matched another function, or `getId` left its slot. Re-cut the signature behind a new gate, or re-check `Packet`'s slots against a vtable. |
+| `dump failed: BinaryStream's vtable is not NetworkSystem::mSendStream's` | The stream constructor's signature matched another constructor. Re-cut it behind a new gate; if the vptrs still differ, the `NetworkSystem` mirror moved, so follow bedrock-dumper's `update` skill. |
+| `serialization_mode` 0 to 2 on a case that freezes | BDS read and wrote the packet by hand (encoding.md). Nothing to fix. |
 | `bds_json_error` says toString did not reach the saver | The `saveImpl` signature does not match this build. Cut a new one behind a version gate. |
 | `JSON differs at <path>` on a value | The path names the field. Fix the case's value, or the schema when its type is not BDS's type. |
 | `JSON differs at <path>` where BDS prints the same data in another form | `CaseForm.matches` has no rule for the form. Report it; add the rule to `CaseForm` and goldens.md only once goldens.md accepts it. |
