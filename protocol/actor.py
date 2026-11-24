@@ -810,8 +810,7 @@ class AnimatePacket:
 
     action: varint32
     runtime_id: ActorRuntimeID
-    data: float
-    rowing_time: float = field(when=lambda p: p.action & 0x80 != 0)
+    data: float = field(duplicate=lambda p: 2 if p.action & 0x80 != 0 else 1)
 
 
 @packet(id=44, since=898)

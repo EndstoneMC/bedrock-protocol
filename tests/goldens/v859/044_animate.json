@@ -1,0 +1,20 @@
+[
+ {
+  "id": "rowing_time_absent",
+  "value": {
+   "action": 1,
+   "runtime_id": 300,
+   "data": 1.5
+  },
+  "bytes": "02ac020000c03f"
+ },
+ {
+  "id": "rowing_time_present",
+  "value": {
+   "action": 132,
+   "runtime_id": 7,
+   "data": 2.5
+  },
+  "bytes": "8802070000204000002040"
+ }
+]
