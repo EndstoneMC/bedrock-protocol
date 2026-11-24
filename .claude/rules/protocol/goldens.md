@@ -81,6 +81,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Read enum bindings, limits, items and blocks from the dump of the build that checks the folder, never from another build's protocol-docs.
 - Read a wire constant, such as a TextPacket category string, from the case bytes, never from the dump's `value`, which can differ in case from the wire.
 - Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`; a field whose dump binds no enum takes any integer of its dump type, whatever enum the DSL types it as.
+- Leave a branch the case does not send, a `when=` arm its selector skips, at the defaults decode leaves there, 0, "" and false; the enum and limit rules above bind only what a case sends.
 - Pick an enum member whose value the dump binds to no earlier member; BDS writes back the first member bound to a shared value.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.

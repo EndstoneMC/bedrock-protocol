@@ -567,7 +567,7 @@ class EnumSchema(BasicSchema):
     def do_load(self, reader, context, traits):
         if traits & SerializationTraits.ENUM_AS_VALUE:
             number = self.underlying.load(reader, context)
-            if number not in self.live_numbers or number in self.numbering.lossy:
+            if number in self.numbering.lossy:
                 context.log(ResultCode.INVALID_ENUM_VALUE, f"{number}: invalid enum value")
             return self.numbering.decoded.get(number, number)
         name = reader.as_string()
@@ -582,7 +582,7 @@ class EnumSchema(BasicSchema):
         library = int(value)
         if traits & SerializationTraits.ENUM_AS_VALUE:
             number = self.numbering.encoded.get(library, library)
-            if library in self.numbering.absent or number not in self.live_numbers:
+            if library in self.numbering.absent or (number not in self.live_numbers and isinstance(value, enum.Enum)):
                 context.log(ResultCode.INVALID_ENUM_VALUE, f"{library}: not bound")
             else:
                 self.underlying.save(number, writer, context)
