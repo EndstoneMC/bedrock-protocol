@@ -682,12 +682,12 @@ inline bool operator!=(const CompoundTag &a, const CompoundTag &b) noexcept
     return !(a == b);
 }
 
-namespace nbt {
-
 namespace detail {
-std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type, int depth);
+std::expected<Tag, Errc> readTag(BinaryReader &stream, nbt::Type type, int depth);
 std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream, int depth);
 }  // namespace detail
+
+namespace nbt {
 
 void writeTag(BinaryWriter &stream, const Tag &tag);
 std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type);
@@ -754,64 +754,82 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
     return detail::readTag(stream, type, 0);
 }
 
-inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type, int depth)
+inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag)
 {
-    if (depth > protocol::detail::max_nesting_depth) {
+    const auto type = tag.type();
+    stream.write<std::uint8_t>(static_cast<std::uint8_t>(type));
+    if (type == Type::End) {
+        return;
+    }
+    stream.write(name);
+    writeTag(stream, tag);
+}
+
+inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
+{
+    return detail::readNamedTag(stream, 0);
+}
+
+}  // namespace nbt
+
+inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, nbt::Type type, int depth)
+{
+    if (depth > detail::max_nesting_depth) {
         return std::unexpected(Errc::out_of_range);
     }
     switch (type) {
-    case Type::End:
+    case nbt::Type::End:
         return Tag{};
-    case Type::Byte: {
+    case nbt::Type::Byte: {
         auto v = stream.read<std::uint8_t>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{ByteTag{*v}};
     }
-    case Type::Short: {
+    case nbt::Type::Short: {
         auto v = stream.read<std::int16_t>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{ShortTag{*v}};
     }
-    case Type::Int: {
+    case nbt::Type::Int: {
         auto v = stream.readVarInt<std::int32_t>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{IntTag{*v}};
     }
-    case Type::Int64: {
+    case nbt::Type::Int64: {
         auto v = stream.readVarInt<std::int64_t>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{Int64Tag{*v}};
     }
-    case Type::Float: {
+    case nbt::Type::Float: {
         auto v = stream.read<float>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{FloatTag{*v}};
     }
-    case Type::Double: {
+    case nbt::Type::Double: {
         auto v = stream.read<double>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{DoubleTag{*v}};
     }
-    case Type::String: {
+    case nbt::Type::String: {
         auto v = stream.read<std::string>();
         if (!v) {
             return std::unexpected(v.error());
         }
         return Tag{StringTag{std::move(*v)}};
     }
-    case Type::ByteArray: {
+    case nbt::Type::ByteArray: {
         auto count = stream.readVarInt<std::int32_t>();
         if (!count) {
             return std::unexpected(count.error());
@@ -833,7 +851,7 @@ inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type,
         }
         return Tag{std::move(out)};
     }
-    case Type::IntArray: {
+    case nbt::Type::IntArray: {
         auto count = stream.readVarInt<std::int32_t>();
         if (!count) {
             return std::unexpected(count.error());
@@ -855,7 +873,7 @@ inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type,
         }
         return Tag{std::move(out)};
     }
-    case Type::List: {
+    case nbt::Type::List: {
         auto element_type = stream.read<std::uint8_t>();
         if (!element_type) {
             return std::unexpected(element_type.error());
@@ -864,16 +882,16 @@ inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type,
         if (!count) {
             return std::unexpected(count.error());
         }
-        if (*element_type > static_cast<std::uint8_t>(Type::IntArray) || (*count > 0 && *element_type == 0)) {
+        if (*element_type > static_cast<std::uint8_t>(nbt::Type::IntArray) || (*count > 0 && *element_type == 0)) {
             return std::unexpected(Errc::unknown_value);
         }
         if (*count < 0) {
             return std::unexpected(Errc::out_of_range);
         }
-        ListTag out(static_cast<Type>(*element_type));
-        out.reserve(protocol::detail::initialCapacity(static_cast<std::size_t>(*count)));
+        ListTag out(static_cast<nbt::Type>(*element_type));
+        out.reserve(detail::initialCapacity(static_cast<std::size_t>(*count)));
         for (std::int32_t i = 0; i < *count; ++i) {
-            auto element = readTag(stream, static_cast<Type>(*element_type), depth + 1);
+            auto element = readTag(stream, static_cast<nbt::Type>(*element_type), depth + 1);
             if (!element) {
                 return std::unexpected(element.error());
             }
@@ -881,14 +899,14 @@ inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type,
         }
         return Tag{std::move(out)};
     }
-    case Type::Compound: {
+    case nbt::Type::Compound: {
         CompoundTag out;
         for (;;) {
             auto entry = readNamedTag(stream, depth + 1);
             if (!entry) {
                 return std::unexpected(entry.error());
             }
-            if (entry->second.type() == Type::End) {
+            if (entry->second.type() == nbt::Type::End) {
                 break;
             }
             out.emplace(std::move(entry->first), std::move(entry->second));
@@ -897,22 +915,6 @@ inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type,
     }
     }
     return std::unexpected(Errc::unknown_value);
-}
-
-inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag)
-{
-    const auto type = tag.type();
-    stream.write<std::uint8_t>(static_cast<std::uint8_t>(type));
-    if (type == Type::End) {
-        return;
-    }
-    stream.write(name);
-    writeTag(stream, tag);
-}
-
-inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
-{
-    return detail::readNamedTag(stream, 0);
 }
 
 inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(BinaryReader &stream, int depth)
@@ -924,21 +926,19 @@ inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(Bin
     if (*type == 0) {
         return std::pair<std::string, Tag>{};
     }
-    if (*type > static_cast<std::uint8_t>(Type::IntArray)) {
+    if (*type > static_cast<std::uint8_t>(nbt::Type::IntArray)) {
         return std::unexpected(Errc::unknown_value);
     }
     auto name = stream.read<std::string>();
     if (!name) {
         return std::unexpected(name.error());
     }
-    auto payload = readTag(stream, static_cast<Type>(*type), depth);
+    auto payload = readTag(stream, static_cast<nbt::Type>(*type), depth);
     if (!payload) {
         return std::unexpected(payload.error());
     }
     return std::pair<std::string, Tag>{std::move(*name), std::move(*payload)};
 }
-
-}  // namespace nbt
 
 template <int V>
 struct Serializer<CompoundTag, V> {
