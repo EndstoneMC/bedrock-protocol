@@ -32,9 +32,7 @@ from bedrock_protocol_compiler.dsl import (
     array, bitset, field, int8, int32, packet, sentinel, type, uint8, uint16, value, varint32
 )
 
-versions = (1, 2, 3, 4, 5, 6)
-
-releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.0", 6: "1.6.x"}
+versions = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.0", 6: "1.6.x"}
 """
 
 BOSS = """
@@ -89,9 +87,7 @@ class ClientboundUpdateSoundDataPacket:
 MODELLED_INIT = """
 from bedrock_protocol_compiler.dsl import field, int64, packet, type, uint8, uint16, value
 
-versions = (729, 748, 766, 776, 786, 800, 818, 819, 827, 844, 859, 898, 924, 944, 975, 1001, 2168, 2193, 2225)
-
-releases = {
+versions = {
     729: "1.21.30-1.21.31",
     748: "1.21.40-1.21.44",
     766: "1.21.50-1.21.51",
@@ -275,7 +271,7 @@ def test_a_family_comes_after_the_families_it_reaches(build_package):
 def test_the_latest_version_is_the_last_one(build_package):
     schema = Schema(build_package({"a": HEADER + "class A:\n    x: uint8\n"}))
 
-    assert (schema.versions, schema.latest) == ((1, 2, 3, 4, 5), 5)
+    assert (schema.versions, schema.latest) == ((1, 5), 5)
 
 
 def test_enum_values_are_evaluated_over_the_members_present(build_package):
@@ -496,7 +492,7 @@ def test_a_duplicated_field_duplicates_only_over_its_range(build_package):
     schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
     (packet,) = schema.order
 
-    assert [schema.shape_at(packet, version).fields[0].duplicate for version in (2168, 2193, 2225)] == [7, 7, 1]
+    assert [schema.shape_at(packet, version).fields[0].duplicate for version in (2168, 2225)] == [7, 1]
 
 
 def test_a_change_in_duplicate_starts_a_new_shape(build_package):
@@ -857,14 +853,14 @@ def test_a_condition_naming_a_name_coded_enum_keeps_its_naming_in_the_encoding(b
     schema = Schema(build_package({"a": source}))
     _, family = schema.order
 
-    assert schema.encoding_at(family, 2) is not schema.encoding_at(family, 3)
+    assert schema.encoding_at(family, 1) is not schema.encoding_at(family, 3)
 
 
 def test_an_enum_read_by_name_beside_an_integer_read_keeps_its_naming_in_the_encoding(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n    f: E\n"}))
     _, family = schema.order
 
-    assert schema.encoding_at(family, 2) is not schema.encoding_at(family, 3)
+    assert schema.encoding_at(family, 1) is not schema.encoding_at(family, 3)
 
 
 def test_a_struct_reaching_both_forms_of_a_family_keeps_the_encoding_of_each(build_package):
@@ -878,7 +874,7 @@ def test_a_struct_reaching_both_forms_of_a_family_keeps_the_encoding_of_each(bui
     schema = Schema(build_package({"a": source}))
     _, _, family = schema.order
 
-    assert schema.encoding_at(family, 2) is not schema.encoding_at(family, 3)
+    assert schema.encoding_at(family, 1) is not schema.encoding_at(family, 3)
 
 
 def test_a_field_switching_to_a_sibling_with_another_encoding_is_a_second_encoding(build_package):
@@ -1113,7 +1109,7 @@ def test_the_registry_holds_the_packet_live_at_each_version(build_package):
     schema = Schema(build_package({"a": source}))
     p, q = schema.order
 
-    assert (schema.packets(2)[7].model.family, schema.packets(3)[7].model.family) == (p, q)
+    assert (schema.packets(1)[7].model.family, schema.packets(3)[7].model.family) == (p, q)
 
 
 def test_an_enum_whose_members_change_is_one_model(build_package):
@@ -1127,14 +1123,14 @@ def test_a_member_added_with_stable_numbers_is_a_second_numbering(build_package)
     schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2) is not schema.numbering_at(family, 3)
+    assert schema.numbering_at(family, 1) is not schema.numbering_at(family, 3)
 
 
 def test_versions_with_equal_numbers_and_members_share_a_numbering(build_package):
     schema = Schema(build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3)\n"}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 3) is schema.numbering_at(family, 4)
+    assert schema.numbering_at(family, 3) is schema.numbering_at(family, 5)
 
 
 def test_an_enum_model_lists_the_newest_declarations_members_first(build_package):
@@ -1167,7 +1163,7 @@ def test_a_renumbered_member_is_a_second_numbering(build_package):
     schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2) is not schema.numbering_at(family, 3)
+    assert schema.numbering_at(family, 1) is not schema.numbering_at(family, 3)
 
 
 def test_a_member_whose_number_another_member_holds_takes_the_next_free_value(build_package):
@@ -1182,14 +1178,14 @@ def test_a_renumbering_pairs_each_number_it_displaces_with_the_value_it_frees(bu
     schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).encoded == {1: 3, 2: 1, 3: 2}
+    assert schema.numbering_at(family, 1).encoded == {1: 3, 2: 1, 3: 2}
 
 
 def test_a_numbering_is_the_identity_only_when_it_moves_no_value(build_package):
     schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
 
-    assert (schema.numbering_at(family, 2).identity, schema.numbering_at(family, 3).identity) == (False, True)
+    assert (schema.numbering_at(family, 1).identity, schema.numbering_at(family, 3).identity) == (False, True)
 
 
 DERIVED = (
@@ -1203,42 +1199,42 @@ def test_a_numbering_lacking_a_member_is_not_the_identity(build_package):
     schema = Schema(build_package({"a": GROWING}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).identity is False
+    assert schema.numbering_at(family, 1).identity is False
 
 
 def test_a_member_value_no_member_holds_at_a_version_is_absent_there(build_package):
     schema = Schema(build_package({"a": GROWING}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).absent == {2}
+    assert schema.numbering_at(family, 1).absent == {2}
 
 
 def test_a_member_value_no_member_numbers_at_a_version_is_lossy_there(build_package):
     schema = Schema(build_package({"a": GROWING}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).lossy == {2}
+    assert schema.numbering_at(family, 1).lossy == {2}
 
 
 def test_a_member_encodes_to_its_number_where_it_differs_from_its_value(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).encoded.get(2) == 1
+    assert schema.numbering_at(family, 1).encoded.get(2) == 1
 
 
 def test_a_number_decodes_to_the_value_of_the_member_holding_it(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).decoded.get(1) == 2
+    assert schema.numbering_at(family, 1).decoded.get(1) == 2
 
 
 def test_a_number_a_pointer_shares_decodes_to_the_pointers_value(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).decoded.get(0) == 1
+    assert schema.numbering_at(family, 1).decoded.get(0) == 1
 
 
 def test_a_pointer_ranks_first_among_the_members_sharing_its_value(build_package):
@@ -1275,20 +1271,20 @@ def test_a_derived_value_no_member_holds_encodes_to_the_derived_members_number(b
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).encoded.get(1) == 0
+    assert schema.numbering_at(family, 1).encoded.get(1) == 0
 
 
 def test_a_derived_value_no_member_holds_is_not_absent(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).absent == frozenset()
+    assert schema.numbering_at(family, 1).absent == frozenset()
 
 
 def test_a_number_no_member_value_holds_pairs_with_the_first_unused_value_both_ways(build_package):
     schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
-    numbering = schema.numbering_at(family, 2)
+    numbering = schema.numbering_at(family, 1)
 
     assert (numbering.encoded[1], numbering.decoded[3]) == (3, 1)
 
@@ -1297,7 +1293,7 @@ def test_an_unused_value_left_with_no_free_number_is_lossy(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).lossy == {2}
+    assert schema.numbering_at(family, 1).lossy == {2}
 
 
 def test_free_numbers_pair_with_unused_values_in_ascending_order(build_package):
@@ -1308,7 +1304,7 @@ def test_free_numbers_pair_with_unused_values_in_ascending_order(build_package):
     )
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
-    numbering = schema.numbering_at(family, 2)
+    numbering = schema.numbering_at(family, 1)
 
     assert (numbering.encoded.get(1), numbering.encoded.get(2)) == (3, 4)
 
@@ -1322,14 +1318,14 @@ def test_a_derived_value_numbered_as_itself_has_no_encoded_entry(build_package):
     schema = Schema(build_package({"a": source}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).encoded == {5: 1}
+    assert schema.numbering_at(family, 1).encoded == {5: 1}
 
 
 def test_a_paired_value_is_not_lossy(build_package):
     schema = Schema(build_package({"a": DISPLACED}))
     (family,) = schema.order
 
-    assert schema.numbering_at(family, 2).lossy == frozenset()
+    assert schema.numbering_at(family, 1).lossy == frozenset()
 
 
 def test_numberings_lists_a_models_numberings_in_version_order(build_package):
@@ -1753,7 +1749,7 @@ def test_a_condition_compares_a_sentinel_as_the_value_its_number_decodes_to(buil
     schema = Schema(build_package({"a": source}))
     enum, family = schema.order
 
-    assert schema.encoding_at(family, 2).numbers.get(MemberRef(enum, "COUNT")) == 2
+    assert schema.encoding_at(family, 1).numbers.get(MemberRef(enum, "COUNT")) == 2
 
 
 def test_a_condition_on_a_sentinel_whose_number_decodes_to_no_value_is_rejected(build_package):
@@ -1811,14 +1807,14 @@ def test_a_derived_member_resolves_to_the_member_numbered_like_it_at_the_version
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.resolve(MemberRef(family, "LATEST"), 2) == MemberRef(family, "A")
+    assert schema.resolve(MemberRef(family, "LATEST"), 1) == MemberRef(family, "A")
 
 
 def test_a_member_that_is_not_derived_resolves_to_itself(build_package):
     schema = Schema(build_package({"a": DERIVED}))
     (family,) = schema.order
 
-    assert schema.resolve(MemberRef(family, "COUNT"), 2) == MemberRef(family, "COUNT")
+    assert schema.resolve(MemberRef(family, "COUNT"), 1) == MemberRef(family, "COUNT")
 
 
 def test_a_numbering_that_leaves_and_returns_is_one_numbering_with_two_runs(build_package):
@@ -1861,7 +1857,7 @@ def test_a_name_coded_enum_whose_names_change_is_a_second_naming(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is not schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is not schema.naming_at(enum, 3)
 
 
 def test_a_name_coded_enum_whose_members_only_reorder_keeps_its_naming(build_package):
@@ -1874,7 +1870,7 @@ def test_a_name_coded_enum_whose_members_only_reorder_keeps_its_naming(build_pac
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is schema.naming_at(enum, 3)
 
 
 def test_a_name_coded_enum_whose_members_sharing_a_value_reorder_is_a_second_naming(build_package):
@@ -1887,7 +1883,7 @@ def test_a_name_coded_enum_whose_members_sharing_a_value_reorder_is_a_second_nam
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is not schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is not schema.naming_at(enum, 3)
 
 
 def test_a_name_coded_enum_keeps_its_naming_while_each_value_writes_its_first_name(build_package):
@@ -1902,7 +1898,7 @@ def test_a_name_coded_enum_keeps_its_naming_while_each_value_writes_its_first_na
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is schema.naming_at(enum, 3)
 
 
 def test_a_name_coded_enum_whose_unwritten_name_changes_is_a_second_naming(build_package):
@@ -1915,7 +1911,7 @@ def test_a_name_coded_enum_whose_unwritten_name_changes_is_a_second_naming(build
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is not schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is not schema.naming_at(enum, 3)
 
 
 def test_a_name_coded_enum_whose_alias_becomes_a_member_is_a_second_naming(build_package):
@@ -1928,7 +1924,7 @@ def test_a_name_coded_enum_whose_alias_becomes_a_member_is_a_second_naming(build
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2) is not schema.naming_at(enum, 3)
+    assert schema.naming_at(enum, 1) is not schema.naming_at(enum, 3)
 
 
 def test_a_value_is_written_with_the_first_name_its_number_takes_at_the_version(build_package):
@@ -1941,28 +1937,28 @@ def test_a_value_is_written_with_the_first_name_its_number_takes_at_the_version(
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2).written == {1: "x", 2: "b"}
+    assert schema.naming_at(enum, 1).written == {1: "x", 2: "b"}
 
 
 def test_a_naming_reads_each_live_name_as_its_members_value(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2).read == {"old": 1}
+    assert schema.naming_at(enum, 1).read == {"old": 1}
 
 
 def test_a_derived_value_no_member_holds_is_written_with_the_derived_name(build_package):
     schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2).written.get(1) == "latest"
+    assert schema.naming_at(enum, 1).written.get(1) == "latest"
 
 
 def test_a_pointers_name_reads_as_the_pointers_value(build_package):
     schema = Schema(build_package({"a": DERIVED + "\nclass P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order
 
-    assert schema.naming_at(enum, 2).read.get("latest") == 1
+    assert schema.naming_at(enum, 1).read.get("latest") == 1
 
 
 def test_a_value_is_written_with_the_name_of_the_member_a_synonym_repeats(build_package):
@@ -2114,7 +2110,7 @@ def test_a_condition_reading_an_enum_as_a_number_is_accepted_where_only_members_
     schema = Schema(build_package({"a": source}))
     enum, _ = schema.order
 
-    assert schema.numbering_at(enum, 2).absent == {2}
+    assert schema.numbering_at(enum, 1).absent == {2}
 
 
 def test_a_derived_member_below_a_bitset_width_may_be_numbered_apart_from_its_value(build_package):
@@ -2142,7 +2138,7 @@ def test_a_dict_keyed_by_an_enum_encoding_a_derived_value_to_another_members_num
         Schema(package)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize("version", [1, 3, 5])
 def test_enum_type_is_the_family_model_at_every_version_when_a_number_moves(build_package, version):
     schema = Schema(build_package({"a": RENUMBERED}))
     (family,) = schema.order
@@ -2226,7 +2222,7 @@ SPLIT_NESTED_ENUM_PAIR = (
 )
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize("version", [1, 3, 5])
 def test_enum_type_is_the_family_model_at_every_version_when_no_number_moves(build_package, version):
     schema = Schema(build_package({"a": GROWING}))
     (family,) = schema.order
@@ -2965,7 +2961,7 @@ def test_a_child_born_mixed_is_called_by_its_key_mode_from_a_later_version(build
     schema = Schema(build_package({"a": source}))
     _, pre_cereal, family = schema.order
 
-    assert schema.call(schema.encoding_at(family, 4), StructRef(pre_cereal)) == (1, SerializationMode.CEREAL)
+    assert schema.call(schema.encoding_at(family, 3), StructRef(pre_cereal)) == (1, SerializationMode.CEREAL)
 
 
 def test_the_scope_of_a_shared_model_is_bare_when_the_hand_written_form_holds_it_at_the_latest_version(build_package):
@@ -3122,7 +3118,7 @@ def test_a_nested_child_held_at_the_same_newest_version_by_a_temporary_and_a_pla
     schema = Schema(build_package({"a": source}))
     inner, _, _, pre_cereal, _ = schema.order
 
-    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(pre_cereal, 4)
+    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(pre_cereal, 3)
 
 
 def test_a_model_both_forms_hold_at_every_version_is_not_versioned_although_its_cereal_form_starts_later(
@@ -3192,7 +3188,7 @@ def test_a_nested_child_held_at_the_same_newest_version_by_two_plain_owners_is_o
     schema = Schema(build_package({"a": source}))
     inner, cereal, _, _, _ = schema.order
 
-    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(cereal, 4)
+    assert schema.owner(schema.model_at(inner, 3)) is schema.model_at(cereal, 3)
 
 
 def test_a_temporary_owner_holding_a_child_only_the_hand_written_form_holds_outside_the_overlap_is_rejected(

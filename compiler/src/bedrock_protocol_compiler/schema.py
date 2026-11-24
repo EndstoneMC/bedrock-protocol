@@ -232,7 +232,6 @@ class Schema:
         self.versions = package.versions
         self.releases = package.releases
         self.latest = package.versions[-1]
-        self.maximum = max(self.latest, package.releases[-1].number)
         self.order: list[Struct | Enum] = []
         self.family_shapes: dict[Struct | Enum, list[Shape]] = {}
         self.live: dict[tuple[Struct | Enum, int], Shape] = {}

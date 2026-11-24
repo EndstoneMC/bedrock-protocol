@@ -23,11 +23,7 @@ from bedrock_protocol_compiler.dsl import (
 )
 """
 
-INIT_135 = INIT_IMPORTS + (
-    'versions = (1, 3, 5)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0", 4: "1.4.0", 5: "1.5.x"}\n'
-)
-
-INIT_RANGE = INIT_IMPORTS + 'versions = (1, 2)\nreleases = {1: "1.1.0-1.1.3", 2: "1.2.x"}\n'
+INIT_RANGE = INIT_IMPORTS + 'versions = {1: "1.1.0-1.1.3", 2: "1.2.x"}\n'
 
 SCALAR = """
 @packet(id=7)
@@ -686,21 +682,21 @@ def test_a_bare_method_runs_at_the_newest_protocol(emitted, method):
 
 
 def test_the_protocol_class_nests_a_class_per_version_in_ascending_order(emitted):
-    nested = re.findall(r"\n    public static final class (v\d+) \{\n", emitted(SCALAR, "Protocol.java"))
+    nested = re.findall(r"\n    public static final class (v\d+) \{\n", emitted(SCALAR + LATEST, "Protocol.java"))
 
-    assert nested == ["v1", "v2", "v3", "v4", "v5"]
+    assert nested == ["v1", "v3", "v5"]
 
 
 def test_a_version_class_holds_its_protocol_number(emitted):
     holds = "    public static final class v3 {\n        public static final int VERSION = 3;\n"
 
-    assert holds in emitted(SCALAR, "Protocol.java")
+    assert holds in emitted(SCALAR + LATEST, "Protocol.java")
 
 
 def test_a_version_class_has_a_private_constructor(emitted):
     constructor = "        public static final int VERSION = 3;\n\n        private v3() {}\n"
 
-    assert constructor in emitted(SCALAR, "Protocol.java")
+    assert constructor in emitted(SCALAR + LATEST, "Protocol.java")
 
 
 @pytest.mark.parametrize(
@@ -865,34 +861,6 @@ def test_the_version_table_lists_a_version_per_release(java):
     )
 
     assert supported in (java(SCALAR) / "ProtocolVersion.java").read_text()
-
-
-def test_a_release_with_no_snapshot_of_its_own_is_a_supported_version(build_package, tmp_path):
-    build_package({"a": HEADER + SCALAR}, INIT_135)
-
-    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
-
-    text = (tmp_path / "java/dev/endstone/protocol/ProtocolVersion.java").read_text()
-    supported = (
-        "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
-        '            new ProtocolVersion(1, "1.1.0"),\n'
-        '            new ProtocolVersion(2, "1.2.0"),\n'
-        '            new ProtocolVersion(3, "1.3.0"),\n'
-        '            new ProtocolVersion(4, "1.4.0"),\n'
-        '            new ProtocolVersion(5, "1.5.0"));\n'
-    )
-    assert supported in text
-
-
-def test_the_selector_ends_at_a_release_above_the_newest_snapshot(build_package, tmp_path):
-    build_package(
-        {"a": HEADER + SCALAR}, INIT_IMPORTS + 'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
-    )
-
-    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
-
-    text = (tmp_path / "java/dev/endstone/protocol/P.java").read_text()
-    assert "        if (mode == SerializationMode.DEFAULT && version >= 1 && version <= 3) {\n" in text
 
 
 def test_a_version_is_named_after_the_first_release_of_its_range(build_package, tmp_path):

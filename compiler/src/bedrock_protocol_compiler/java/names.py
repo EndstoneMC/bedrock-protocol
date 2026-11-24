@@ -130,9 +130,9 @@ def bounds(since: int | None, until: int | None, variable: str = "version") -> l
 
 def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
     lowest = schema.versions[0] if since is None else since
-    if until is None and lowest == schema.maximum:
+    if until is None and lowest == schema.latest:
         return [f"version == {lowest}"]
-    return [f"version >= {lowest}", f"version <= {schema.maximum}" if until is None else f"version < {until}"]
+    return [f"version >= {lowest}", f"version <= {schema.latest}" if until is None else f"version < {until}"]
 
 
 def codec(encoding: Encoding) -> str:

@@ -160,7 +160,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         namespace=names.namespace(schema),
         count=len(schema.releases),
         minimum=schema.versions[0],
-        maximum=schema.maximum,
+        maximum=schema.latest,
     )
     with version.indent():
         for release in schema.releases:

@@ -394,7 +394,18 @@ class Builder:
         self.expanding: list[UnionAlias] = []
 
     def build(self) -> Package:
-        self.versions, self.releases = self.declare_init(self.init)
+        self.releases = self.declare_init(self.init)
+        bounds = {
+            node.value.value
+            for source in self.sources.values()
+            for node in ast.walk(source.tree)
+            if isinstance(node, ast.keyword) and node.arg in ("since", "until") and isinstance(node.value, ast.Constant)
+        }
+        self.versions = tuple(
+            release.number
+            for release in self.releases
+            if release.number in bounds or release in (self.releases[0], self.releases[-1])
+        )
         for source in self.sources.values():
             self.declare_module(source)
         for source in self.sources.values():
@@ -421,8 +432,7 @@ class Builder:
         check(package)
         return package
 
-    def declare_init(self, source: Source) -> tuple[tuple[int, ...], tuple[Release, ...]]:
-        versions: tuple[int, ...] | None = None
+    def declare_init(self, source: Source) -> tuple[Release, ...]:
         table: ast.Assign | None = None
         for statement in without_docstring(source.tree.body):
             match statement:
@@ -430,31 +440,14 @@ class Builder:
                     raise error(source, statement, module, "is not importable from __init__")
                 case ast.Import() | ast.ImportFrom():
                     self.bind_import(source, statement)
-                case ast.Assign(targets=[ast.Name(id="versions")], value=value):
-                    if versions is not None:
-                        raise error(source, statement, "versions", "is declared twice")
-                    try:
-                        parsed = ast.literal_eval(value)
-                    except (ValueError, TypeError):
-                        parsed = None
-                    if not (
-                        isinstance(parsed, tuple)
-                        and parsed
-                        and all(type(version) is int for version in parsed)
-                        and list(parsed) == sorted(set(parsed))
-                    ):
-                        raise error(source, statement, "versions", "is not a tuple of ascending integers")
-                    versions = parsed
-                case ast.Assign(targets=[ast.Name(id="releases")]):
+                case ast.Assign(targets=[ast.Name(id="versions")]):
                     if table is not None:
-                        raise error(source, statement, "releases", "is declared twice")
+                        raise error(source, statement, "versions", "is declared twice")
                     table = statement
                 case _:
-                    raise error(source, statement, "module", "holds only imports, a docstring, versions and releases")
-        if versions is None:
-            raise CompilerError(f"{source.path}: versions: missing")
+                    raise error(source, statement, "module", "holds only imports, a docstring and versions")
         if table is None:
-            raise CompilerError(f"{source.path}: releases: missing")
+            raise CompilerError(f"{source.path}: versions: missing")
         shape = "is not a dict of ascending protocol numbers to release names"
         entries = table.value
         if not (
@@ -463,10 +456,10 @@ class Builder:
             and all(isinstance(key, ast.Constant) and type(key.value) is int for key in entries.keys)
             and all(isinstance(entry, ast.Constant) and type(entry.value) is str for entry in entries.values)
         ):
-            raise error(source, table, "releases", shape)
+            raise error(source, table, "versions", shape)
         numbers = [ast.literal_eval(key) for key in entries.keys if key is not None]
         if numbers != sorted(set(numbers)):
-            raise error(source, table, "releases", shape)
+            raise error(source, table, "versions", shape)
         releases: list[Release] = []
         starts: list[tuple[int, ...]] = []
         ends: list[tuple[int, ...]] = []
@@ -479,28 +472,21 @@ class Builder:
                 last = matched.group("last") or first
             else:
                 reason = f"{name!r} is not a release, a range of releases or a wildcard"
-                raise error(source, node, f"releases[{number}]", reason)
+                raise error(source, node, f"versions[{number}]", reason)
             starts.append(tuple(map(int, first.split("."))))
             ends.append(tuple(map(int, last.split("."))))
             if "-" in name and starts[-1] >= ends[-1]:
-                raise error(source, node, f"releases[{number}]", f"{name!r} does not ascend")
+                raise error(source, node, f"versions[{number}]", f"{name!r} does not ascend")
             releases.append(Release(number, name, first, last))
-        if releases[0].number != versions[0]:
-            raise error(
-                source, table, "releases", f"starts at {releases[0].number}, not at the oldest version {versions[0]}"
-            )
         for index, node in enumerate(entries.values[1:], 1):
             if starts[index] <= ends[index - 1]:
                 after, before = releases[index], releases[index - 1]
-                reason = f"{after.first} is not after releases[{before.number}]'s {before.name}"
-                raise error(source, node, f"releases[{after.number}]", reason)
+                reason = f"{after.first} is not after versions[{before.number}]'s {before.name}"
+                raise error(source, node, f"versions[{after.number}]", reason)
         for release, node in zip(releases[:-1], entries.values, strict=False):
             if release.name.endswith("x"):
-                raise error(source, node, f"releases[{release.number}]", "is open, but only the newest release may be")
-        for version in versions:
-            if version <= releases[-1].number and version not in numbers:
-                raise error(source, table, "versions", f"{version} has no release")
-        return versions, tuple(releases)
+                raise error(source, node, f"versions[{release.number}]", "is open, but only the newest release may be")
+        return tuple(releases)
 
     def declare_module(self, source: Source) -> None:
         for statement in without_docstring(source.tree.body):

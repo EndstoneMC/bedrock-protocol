@@ -118,9 +118,9 @@ def bare(schema: Schema, target: StructModel | EnumType) -> str:
 
 def requirement(schema: Schema, run: Range) -> str:
     since = schema.versions[0] if run.since is None else run.since
-    if run.until is None and since == schema.maximum:
+    if run.until is None and since == schema.latest:
         return f" requires (V == {since})"
-    until = f"V <= {schema.maximum}" if run.until is None else f"V < {run.until}"
+    until = f"V <= {schema.latest}" if run.until is None else f"V < {run.until}"
     return f" requires (V >= {since} && {until})"
 
 

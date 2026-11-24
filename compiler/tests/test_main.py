@@ -1019,9 +1019,7 @@ class P:
 CYLINDER_INIT = """
 from bedrock_protocol_compiler.dsl import field
 
-versions = (1001,)
-
-releases = {1001: "1.26.30"}
+versions = {1001: "1.26.30"}
 """
 
 
@@ -1243,10 +1241,10 @@ def test_a_versioned_packets_registry_names_each_run_its_selector_names(generate
 
 
 def test_packets_hpp_gives_each_protocol_a_namespace_holding_its_number(generate):
-    registry = (generate({"a": A}) / "packets.hpp").read_text()
+    registry = (generate({"a": RETURNING}) / "packets.hpp").read_text()
     numbered = re.findall(r"namespace v(\d+) \{\n\ninline constexpr int version = \1;", registry)
 
-    assert numbered == ["1", "2", "3", "4", "5"]
+    assert numbered == ["1", "3", "4", "5"]
 
 
 def test_a_protocols_codec_is_the_packet_codec_at_its_number(generate):
@@ -1269,19 +1267,17 @@ def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
 
 
 def test_packets_hpp_inlines_only_the_newest_protocols_namespace(generate):
-    registry = (generate({"a": A}) / "packets.hpp").read_text()
+    registry = (generate({"a": RETURNING}) / "packets.hpp").read_text()
     opened = re.findall(r"^(inline )?namespace v(\d+) \{$", registry, re.MULTILINE)
 
-    assert opened == [("", "1"), ("", "2"), ("", "3"), ("", "4"), ("inline ", "5")]
+    assert opened == [("", "1"), ("", "3"), ("", "4"), ("inline ", "5")]
 
 
 def test_version_hpp_names_each_release_for_its_first_version(generate):
     init = """
 from bedrock_protocol_compiler.dsl import field, packet, type, uint8
 
-versions = (1, 2)
-
-releases = {1: "1.1.0-1.1.2", 2: "1.2.x"}
+versions = {1: "1.1.0-1.1.2", 2: "1.2.x"}
 """
 
     out = generate({"a": A}, init=init)
@@ -1344,29 +1340,10 @@ def test_a_run_gets_a_partial_bounded_by_it(generate):
     assert partial in (out / "a.h").read_text()
 
 
-RELEASED_ABOVE_INIT = """
-from bedrock_protocol_compiler.dsl import field, packet, type, uint8
+def test_get_refuses_a_protocol_outside_versions(generate):
+    version = (generate({"a": A}) / "version.hpp").read_text()
 
-versions = (1, 2)
-
-releases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}
-"""
-
-
-def test_a_run_open_at_the_top_ends_at_a_release_above_the_newest_snapshot(generate):
-    out = generate({"a": NESTED}, init=RELEASED_ABOVE_INIT)
-
-    partial = (
-        "template <int V> requires (V >= 2 && V <= 3)\n"
-        "struct Serializer<::bedrock::protocol::Outer, V> : Serializer<::bedrock::protocol::Outer, 2> {};\n"
-    )
-    assert partial in (out / "a.h").read_text()
-
-
-def test_get_refuses_a_protocol_below_the_oldest_snapshot_or_above_the_newest_release(generate):
-    version = (generate({"a": A}, init=RELEASED_ABOVE_INIT) / "version.hpp").read_text()
-
-    assert "        if (protocol < 1 || protocol > 3) {\n            return std::nullopt;\n        }\n" in version
+    assert "        if (protocol < 1 || protocol > 5) {\n            return std::nullopt;\n        }\n" in version
 
 
 def test_a_types_list_that_never_changes_covers_every_supported_protocol(generate):

@@ -9,7 +9,8 @@ from bedrock_protocol_compiler.descriptor import (
     StructRef,
 )
 
-INIT_123 = 'versions = (1, 2, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
+INIT_123 = 'versions = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
+NOT_A_TABLE = "versions: is not a dict of ascending protocol numbers to release names"
 HEADER = """
 from protocol import builtin, field, packet, type, uint8, uint32, double
 package = "bedrock.protocol"
@@ -17,7 +18,7 @@ java_package = "dev.endstone.protocol"
 """
 
 
-def test_package_lists_versions_and_modules(build_package):
+def test_package_lists_modules(build_package):
     package = build_package(
         {
             "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
@@ -26,7 +27,6 @@ def test_package_lists_versions_and_modules(build_package):
         INIT_123,
     )
 
-    assert package.versions == (1, 2, 3)
     assert [(module.stem, module.package, module.java_package) for module in package.modules] == [
         ("a", "a.b", "dev.endstone.protocol"),
         ("b", "a.b", "dev.endstone.protocol"),
@@ -36,7 +36,7 @@ def test_package_lists_versions_and_modules(build_package):
 def test_package_lists_releases(build_package):
     package = build_package(
         {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
-        'versions = (1, 2, 3)\nreleases = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n',
+        'versions = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n',
     )
 
     assert [(release.number, release.first, release.last) for release in package.releases] == [
@@ -46,28 +46,25 @@ def test_package_lists_releases(build_package):
     ]
 
 
-def test_a_number_that_is_not_a_snapshot_is_accepted(build_package):
+def test_a_gate_bound_is_a_snapshot(build_package):
+    package = build_package({"a": HEADER + "@packet(id=1, since=2)\nclass A:\n    pass\n"})
+
+    assert package.versions == (1, 2, 5)
+
+
+def test_a_number_nothing_gates_on_is_only_a_release(build_package):
     package = build_package(
         {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
-        'versions = (1, 3)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n',
+        INIT_123,
     )
 
-    assert [release.number for release in package.releases] == [1, 2, 3]
-
-
-def test_a_snapshot_above_the_newest_release_needs_no_entry(build_package):
-    package = build_package(
-        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
-        'versions = (1, 4)\nreleases = {1: "1.1.0", 2: "1.2.0"}\n',
-    )
-
-    assert [release.number for release in package.releases] == [1, 2]
+    assert (package.versions, [release.number for release in package.releases]) == ((1, 3), [1, 2, 3])
 
 
 def test_a_closed_newest_entry_is_accepted(build_package):
     package = build_package(
         {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
-        'versions = (2225,)\nreleases = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n',
+        'versions = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n',
     )
 
     assert package.releases[-1].last == "1.26.64"
@@ -320,90 +317,50 @@ def test_error_names_the_file_and_position(build_package):
     ("init", "message"),
     [
         ("", "versions: missing"),
-        ("versions = (2, 1)\n", "versions: is not a tuple of ascending integers"),
-        ("versions = (1, 1)\n", "versions: is not a tuple of ascending integers"),
-        ("versions = ()\n", "versions: is not a tuple of ascending integers"),
-        ("versions = [1, 2, 3]\n", "versions: is not a tuple of ascending integers"),
-        ("versions = x\n", "versions: is not a tuple of ascending integers"),
-        ("versions = {[]}\n", "versions: is not a tuple of ascending integers"),
-        ("versions = (1, 'a')\n", "versions: is not a tuple of ascending integers"),
-        ("versions = (True, 2)\n", "versions: is not a tuple of ascending integers"),
-        ("versions = (1, 2, 3)\nversions = (1, 2, 3)\n", "versions: is declared twice"),
-        (INIT_123 + "__version__ = 3\n", "module: holds only imports, a docstring, versions and releases"),
-        (INIT_123 + "class A:\n    pass\n", "module: holds only imports, a docstring, versions and releases"),
+        (INIT_123 + INIT_123, "versions: is declared twice"),
+        (INIT_123 + "__version__ = 3\n", "module: holds only imports, a docstring and versions"),
+        (INIT_123 + "class A:\n    pass\n", "module: holds only imports, a docstring and versions"),
         ("from protocol.a import A\n" + INIT_123, "protocol.a: is not importable from __init__"),
-        ("versions = (1, 2, 3)\n", "releases: missing"),
-        (INIT_123 + 'releases = {1: "1.1.0"}\n', "releases: is declared twice"),
+        ("versions = (1, 2)\n", NOT_A_TABLE),
+        ("versions = [1, 2]\n", NOT_A_TABLE),
+        ("versions = x\n", NOT_A_TABLE),
+        ("versions = {}\n", NOT_A_TABLE),
+        ('versions = {2: "1.2.0", 1: "1.1.0"}\n', NOT_A_TABLE),
+        ('versions = {1: "1.1.0", 1: "1.1.1"}\n', NOT_A_TABLE),
+        ('versions = {1: "1.1.0", "2": "1.2.0"}\n', NOT_A_TABLE),
+        ('versions = {True: "1.1.0", 2: "1.2.0"}\n', NOT_A_TABLE),
+        ('versions = {1: "1.1.0", 2: 120}\n', NOT_A_TABLE),
+        ('versions = {1: "1.1.0", **x}\n', NOT_A_TABLE),
         (
-            "versions = (1, 2)\nreleases = [1, 2]\n",
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.0", 2: "1.2.0.30"}\n',
+            r"versions\[2\]: '1.2.0.30' is not a release, a range of releases or a wildcard",
         ),
         (
-            "versions = (1, 2)\nreleases = {}\n",
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.0", 2: "1.02.0"}\n',
+            r"versions\[2\]: '1.02.0' is not a release, a range of releases or a wildcard",
         ),
         (
-            'versions = (1, 2)\nreleases = {2: "1.2.0", 1: "1.1.0"}\n',
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.0", 2: "1.26.64-1.26.6x"}\n',
+            r"versions\[2\]: '1.26.64-1.26.6x' is not a release, a range of releases or a wildcard",
         ),
         (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 1: "1.1.1"}\n',
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.0", 2: "1.2.0x"}\n',
+            r"versions\[2\]: '1.2.0x' is not a release, a range of releases or a wildcard",
+        ),
+        ('versions = {1: "1.1.0", 2: "1.2.4-1.2.0"}\n', r"versions\[2\]: '1.2.4-1.2.0' does not ascend"),
+        ('versions = {1: "1.1.0", 2: "1.2.4-1.2.4"}\n', r"versions\[2\]: '1.2.4-1.2.4' does not ascend"),
+        (
+            'versions = {1: "1.1.0-1.1.5", 2: "1.1.5"}\n',
+            r"versions\[2\]: 1.1.5 is not after versions\[1\]'s 1.1.0-1.1.5",
         ),
         (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", "2": "1.2.0"}\n',
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.x", 2: "1.1.5"}\n',
+            r"versions\[2\]: 1.1.5 is not after versions\[1\]'s 1.1.x",
         ),
         (
-            'versions = (1, 2)\nreleases = {True: "1.1.0", 2: "1.2.0"}\n',
-            "releases: is not a dict of ascending protocol numbers to release names",
+            'versions = {1: "1.1.0", 2: "1.2.x", 3: "1.3.0"}\n',
+            r"versions\[2\]: is open, but only the newest release may be",
         ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: 120}\n',
-            "releases: is not a dict of ascending protocol numbers to release names",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0.30"}\n',
-            r"releases\[2\]: '1.2.0.30' is not a release, a range of releases or a wildcard",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.02.0"}\n',
-            r"releases\[2\]: '1.02.0' is not a release, a range of releases or a wildcard",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.26.64-1.26.6x"}\n',
-            r"releases\[2\]: '1.26.64-1.26.6x' is not a release, a range of releases or a wildcard",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0x"}\n',
-            r"releases\[2\]: '1.2.0x' is not a release, a range of releases or a wildcard",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.4-1.2.0"}\n',
-            r"releases\[2\]: '1.2.4-1.2.0' does not ascend",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.4-1.2.4"}\n',
-            r"releases\[2\]: '1.2.4-1.2.4' does not ascend",
-        ),
-        ('versions = (1, 2)\nreleases = {2: "1.2.0"}\n', "releases: starts at 2, not at the oldest version 1"),
-        (
-            'versions = (2, 3)\nreleases = {1: "1.1.0", 3: "1.3.0"}\n',
-            "releases: starts at 1, not at the oldest version 2",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.0-1.1.5", 2: "1.1.5"}\n',
-            r"releases\[2\]: 1.1.5 is not after releases\[1\]'s 1.1.0-1.1.5",
-        ),
-        (
-            'versions = (1, 2)\nreleases = {1: "1.1.x", 2: "1.1.5"}\n',
-            r"releases\[2\]: 1.1.5 is not after releases\[1\]'s 1.1.x",
-        ),
-        (
-            'versions = (1, 2, 3)\nreleases = {1: "1.1.0", 2: "1.2.x", 3: "1.3.0"}\n',
-            r"releases\[2\]: is open, but only the newest release may be",
-        ),
-        ('versions = (1, 2, 3)\nreleases = {1: "1.1.0", 3: "1.3.0"}\n', "versions: 2 has no release"),
     ],
 )
 def test_init_is_rejected(build_package, init, message):
@@ -417,7 +374,7 @@ def test_package_without_init_is_rejected(tmp_path):
 
 
 def test_package_without_a_schema_module_is_rejected(tmp_path):
-    (tmp_path / "__init__.py").write_text("versions = (1,)\n")
+    (tmp_path / "__init__.py").write_text(INIT_123)
 
     with pytest.raises(CompilerError, match=r"has no schema module"):
         build(tmp_path)

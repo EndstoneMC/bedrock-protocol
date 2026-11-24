@@ -52,7 +52,7 @@ def table(schema: Schema, p: Printer) -> None:
         """,
         name=names.VERSION,
         minimum=schema.versions[0],
-        maximum=schema.maximum,
+        maximum=schema.latest,
         releases=lambda: releases(schema, p),
     )
 
