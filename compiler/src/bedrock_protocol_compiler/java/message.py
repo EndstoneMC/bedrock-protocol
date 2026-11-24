@@ -275,13 +275,13 @@ class MessageGenerator:
                     return $codec$.INSTANCE;
                 }
                 """,
-                clause=" && ".join((f"mode == {names.MODE}.{mode.name}", *names.bounds(run.since, run.until))),
+                clause=" && ".join(
+                    (f"mode == {names.MODE}.{mode.name}", *names.bounded(self.schema, run.since, run.until))
+                ),
                 codec=codec,
             )
         relative = self.qualified.removeprefix(f"{self.schema.java_package}.")
-        found = spans(served)
-        covered = all(modes for _, _, modes in found)
-        for index, (since, until, modes) in enumerate(found):
+        for since, until, modes in spans(served):
             if not modes:
                 continue
             absent = (
@@ -289,24 +289,19 @@ class MessageGenerator:
                 f"{json.dumps(' mode at protocol ')} + version + "
                 f"{json.dumps('; it has ' + ' and '.join(each.name for each in modes))}"
             )
-            clause = names.bounds(since, until)
-            if not clause or (covered and index == len(found) - 1):
-                p.emit("throw new IllegalArgumentException($absent$);", absent=absent)
-                continue
             p.emit(
                 """
                 if ($clause$) {
                     throw new IllegalArgumentException($absent$);
                 }
                 """,
-                clause=" && ".join(clause),
+                clause=" && ".join(names.bounded(self.schema, since, until)),
                 absent=absent,
             )
-        if not covered:
-            p.emit(
-                "throw new IllegalArgumentException($message$ + version);",
-                message=json.dumps(f"{relative}: is not a type at protocol "),
-            )
+        p.emit(
+            "throw new IllegalArgumentException($message$ + version);",
+            message=json.dumps(f"{relative}: is not a type at protocol "),
+        )
 
     def constants(self, p: Printer, slots: list[Slot]) -> None:
         for slot in slots:

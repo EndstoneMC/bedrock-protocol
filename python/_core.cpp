@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <format>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -60,7 +61,7 @@ NB_MODULE(_core, m)
     auto package = nb::module_::import_("bedrock_protocol");
     nb::class_<ProtocolVersion> version(
         package, "ProtocolVersion", nb::is_final(),
-        "A protocol number a release reports, named for the first release that reports it.");
+        "A supported protocol number, named for the first release of the newest number at or below it.");
     version.def_prop_ro("protocol", &ProtocolVersion::getProtocol)
         .def_prop_ro("name", &ProtocolVersion::getName)
         .def("__repr__",
@@ -89,7 +90,8 @@ NB_MODULE(_core, m)
                         return nb::cast(&each, nb::rv_policy::reference);
                     }
                 }
-                return nb::none();
+                std::optional<ProtocolVersion> found = ProtocolVersion::get(protocol);
+                return found ? nb::cast(*found) : nb::none();
             },
             nb::arg("protocol"), nb::sig("def get(protocol: int) -> ProtocolVersion | None"),
             "The supported version a protocol number names.");

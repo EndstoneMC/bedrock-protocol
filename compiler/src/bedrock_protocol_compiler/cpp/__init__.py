@@ -100,12 +100,16 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
 
             [[nodiscard]] static constexpr std::optional<ProtocolVersion> get(int protocol)
             {
+                if (protocol < $minimum$ || protocol > $maximum$) {
+                    return std::nullopt;
+                }
+                std::string_view name;
                 for (const ProtocolVersion &version : SUPPORTED_VERSIONS) {
-                    if (version.protocol_ == protocol) {
-                        return version;
+                    if (version.protocol_ <= protocol) {
+                        name = version.name_;
                     }
                 }
-                return std::nullopt;
+                return ProtocolVersion(protocol, name);
             }
 
             [[nodiscard]] constexpr int getProtocol() const { return protocol_; }
@@ -121,6 +125,8 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         """,
         namespace=names.namespace(schema),
         count=len(schema.releases),
+        minimum=schema.versions[0],
+        maximum=schema.maximum,
     )
     with version.indent():
         for release in schema.releases:

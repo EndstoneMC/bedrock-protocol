@@ -115,13 +115,12 @@ def bare(schema: Schema, target: StructModel | EnumType) -> str:
     return name if owner is None else f"{bare(schema, owner)}::{name}"
 
 
-def requirement(run: Range) -> str:
-    bounds = []
-    if run.since is not None:
-        bounds.append(f"V >= {run.since}")
-    if run.until is not None:
-        bounds.append(f"V < {run.until}")
-    return f" requires ({' && '.join(bounds)})" if bounds else ""
+def requirement(schema: Schema, run: Range) -> str:
+    since = schema.versions[0] if run.since is None else run.since
+    if run.until is None and since == schema.maximum:
+        return f" requires (V == {since})"
+    until = f"V <= {schema.maximum}" if run.until is None else f"V < {run.until}"
+    return f" requires (V >= {since} && {until})"
 
 
 def runtime(stem: str) -> str:

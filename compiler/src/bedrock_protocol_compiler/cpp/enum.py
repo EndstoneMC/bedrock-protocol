@@ -5,7 +5,9 @@ from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumModel, Numbering, Schema, SerializationMode
 
 
-def partials(p: Printer, qualified: str, implementation: str, served: dict[SerializationMode, list[Range]]) -> None:
+def partials(
+    p: Printer, schema: Schema, qualified: str, implementation: str, served: dict[SerializationMode, list[Range]]
+) -> None:
     for mode, runs in served.items():
         for run in runs:
             p.emit(
@@ -14,7 +16,7 @@ def partials(p: Printer, qualified: str, implementation: str, served: dict[Seria
                 struct $head$ : $implementation$ {};
 
                 """,
-                requirement=names.requirement(run),
+                requirement=names.requirement(schema, run),
                 head=names.serializer(qualified, "V", mode),
                 implementation=implementation,
             )
@@ -153,7 +155,7 @@ class EnumGenerator:
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),
             )
-            partials(p, self.qualified, serializer, {SerializationMode.DEFAULT: naming.runs})
+            partials(p, self.schema, self.qualified, serializer, {SerializationMode.DEFAULT: naming.runs})
 
     def serializer_body(self, p: Printer) -> None:
         if len(self.namings) > 1:

@@ -189,10 +189,11 @@ class FileGenerator:
                 if len(runs) == 1 and runs[0][0] == Range(None, None):
                     p.emit(
                         """
-                        template <int V>
+                        template <int V>$requirement$
                         struct $selector$ { using type = $type$; };
 
                         """,
+                        requirement=names.requirement(self.schema, runs[0][0]),
                         selector=selector,
                         type=names.qualified(self.schema, runs[0][1]),
                     )
@@ -212,7 +213,7 @@ class FileGenerator:
                         struct $selector$<V> { using type = $type$; };
 
                         """,
-                        requirement=names.requirement(run),
+                        requirement=names.requirement(self.schema, run),
                         selector=selector,
                         type=names.qualified(self.schema, target),
                     )
@@ -225,7 +226,7 @@ class FileGenerator:
     def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
         held = self.held[family]
         runs = sorted((run for ranges in held.values() for run in ranges), key=lambda run: run.since or 0)
-        constraint = names.requirement(Range(runs[0].since, runs[-1].until))
+        constraint = names.requirement(self.schema, Range(runs[0].since, runs[-1].until))
         (only, *rest) = held
         spelled = (
             names.qualified(self.schema, only)
@@ -276,11 +277,10 @@ class FileGenerator:
             )
         for index, (since, types, labelled) in enumerate(plans):
             until = plans[index + 1][0] if index + 1 < len(plans) else None
+            p.emit("template <int V>$requirement$", requirement=names.requirement(self.schema, Range(since, until)))
             if len(plans) == 1:
-                p.emit("template <int V>")
                 p.emit("struct $name$ {", name=name)
             else:
-                p.emit("template <int V>$requirement$", requirement=names.requirement(Range(since, until)))
                 p.emit("struct $name$<V> {", name=name)
             with p.indent():
                 for member, entries in (("types", types), ("labelled", [qualified for qualified, _ in labelled])):

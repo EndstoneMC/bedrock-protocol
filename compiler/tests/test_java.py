@@ -255,10 +255,10 @@ def test_a_codec_both_forms_share_is_keyed_cereal_and_serves_manual_too(emitted)
     text = emitted(SHARED, "S.java")
 
     selections = (
-        "        if (mode == SerializationMode.CEREAL && version < 3) {\n"
+        "        if (mode == SerializationMode.CEREAL && version >= 1 && version < 3) {\n"
         "            return Codec1Cereal.INSTANCE;\n"
         "        }\n"
-        "        if (mode == SerializationMode.MANUAL && version < 4) {\n"
+        "        if (mode == SerializationMode.MANUAL && version >= 1 && version < 4) {\n"
         "            return Codec1Cereal.INSTANCE;\n"
         "        }\n"
     )
@@ -269,7 +269,7 @@ def test_a_mixed_span_rejects_the_mode_it_lacks_by_the_modes_it_has(emitted):
     text = emitted(SHARED, "S.java")
 
     rejection = (
-        "        if (version < 4) {\n"
+        "        if (version >= 1 && version < 4) {\n"
         '            throw new IllegalArgumentException("S: no " + mode.name().toLowerCase(Locale.ROOT) + '
         '" mode at protocol " + version + "; it has CEREAL and MANUAL");\n'
         "        }\n"
@@ -281,9 +281,10 @@ def test_a_single_mode_span_rejects_the_mode_it_lacks_by_its_one_mode(emitted):
     text = emitted(SHARED, "S.java")
 
     rejection = (
-        '        throw new IllegalArgumentException("S: no " + mode.name().toLowerCase(Locale.ROOT) + '
+        "        if (version >= 4 && version <= 5) {\n"
+        '            throw new IllegalArgumentException("S: no " + mode.name().toLowerCase(Locale.ROOT) + '
         '" mode at protocol " + version + "; it has DEFAULT");\n'
-        "    }\n"
+        "        }\n"
     )
     assert rejection in text
 
@@ -479,13 +480,13 @@ def test_the_selector_returns_the_codec_of_each_run_in_order(emitted):
 
     selector = (
         "    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
-        "        if (mode == SerializationMode.DEFAULT && version < 2) {\n"
+        "        if (mode == SerializationMode.DEFAULT && version >= 1 && version < 2) {\n"
         "            return Codec1.INSTANCE;\n"
         "        }\n"
         "        if (mode == SerializationMode.DEFAULT && version >= 2 && version < 4) {\n"
         "            return Codec2.INSTANCE;\n"
         "        }\n"
-        "        if (mode == SerializationMode.DEFAULT && version >= 4) {\n"
+        "        if (mode == SerializationMode.DEFAULT && version >= 4 && version <= 5) {\n"
         "            return Codec1.INSTANCE;\n"
         "        }\n"
     )
@@ -497,7 +498,7 @@ def test_the_selector_of_an_unversioned_model_returns_its_codec_for_the_default_
 
     selector = (
         "    static @NotNull Codec<P> codec(int version, @NotNull SerializationMode mode) {\n"
-        "        if (mode == SerializationMode.DEFAULT) {\n"
+        "        if (mode == SerializationMode.DEFAULT && version >= 1 && version <= 5) {\n"
         "            return Codec1.INSTANCE;\n"
         "        }\n"
     )
@@ -519,7 +520,7 @@ def test_the_selector_rejects_a_protocol_the_model_is_absent_from_whatever_the_m
     text = emitted("@type(until=3)\nclass S:\n    x: uint8\n", "v1/S_v1.java")
 
     rejections = (
-        "        if (version < 3) {\n"
+        "        if (version >= 1 && version < 3) {\n"
         '            throw new IllegalArgumentException("v1.S_v1: no " + mode.name().toLowerCase(Locale.ROOT) + '
         '" mode at protocol " + version + "; it has DEFAULT");\n'
         "        }\n"
@@ -883,6 +884,17 @@ def test_a_release_with_no_snapshot_of_its_own_is_a_supported_version(build_pack
     assert supported in text
 
 
+def test_the_selector_ends_at_a_release_above_the_newest_snapshot(build_package, tmp_path):
+    build_package(
+        {"a": HEADER + SCALAR}, INIT_IMPORTS + 'versions = (1, 2)\nreleases = {1: "1.1.0", 2: "1.2.0", 3: "1.3.0"}\n'
+    )
+
+    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+    text = (tmp_path / "java/dev/endstone/protocol/P.java").read_text()
+    assert "        if (mode == SerializationMode.DEFAULT && version >= 1 && version <= 3) {\n" in text
+
+
 def test_a_version_is_named_after_the_first_release_of_its_range(build_package, tmp_path):
     build_package({"a": HEADER + SCALAR}, INIT_RANGE)
 
@@ -909,15 +921,22 @@ def test_the_maximum_version_is_the_last_supported_version(java):
     assert maximum in (java(SCALAR) / "ProtocolVersion.java").read_text()
 
 
-def test_get_finds_a_supported_version_by_its_protocol_number(java):
+def test_get_returns_a_listed_version_or_one_named_for_the_release_below(java):
     get = (
         "    public static @NotNull Optional<ProtocolVersion> get(int protocol) {\n"
+        "        if (protocol < 1 || protocol > 5) {\n"
+        "            return Optional.empty();\n"
+        "        }\n"
+        "        ProtocolVersion below = MINIMUM_VERSION;\n"
         "        for (ProtocolVersion version : SUPPORTED_VERSIONS) {\n"
         "            if (version.protocol == protocol) {\n"
         "                return Optional.of(version);\n"
         "            }\n"
+        "            if (version.protocol < protocol) {\n"
+        "                below = version;\n"
+        "            }\n"
         "        }\n"
-        "        return Optional.empty();\n"
+        "        return Optional.of(new ProtocolVersion(protocol, below.name));\n"
         "    }\n"
     )
 

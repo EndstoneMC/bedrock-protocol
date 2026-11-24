@@ -21,6 +21,21 @@ final class ProtocolVersionTest {
                 argumentSet("first release of 2225", 2225, "1.26.60"));
     }
 
+    static Stream<Arguments> unlisted() {
+        return Stream.of(
+                argumentSet("2170 after 2169's release", 2170, "1.26.45"),
+                argumentSet("2200 after 2193's release", 2200, "1.26.50"));
+    }
+
+    static Stream<Arguments> unlistedProtocols() {
+        return Stream.of(argumentSet("2170", 2170), argumentSet("2200", 2200));
+    }
+
+    static Stream<Arguments> unsupported() {
+        return Stream.of(
+                argumentSet("below the oldest", 728), argumentSet("above the newest", 2226));
+    }
+
     @Test
     void supportedVersionsAscendByProtocol() {
         List<Integer> protocols =
@@ -52,7 +67,25 @@ final class ProtocolVersionTest {
     }
 
     @Test
-    void anUnknownProtocolHasNoVersion() {
-        assertTrue(ProtocolVersion.get(1).isEmpty());
+    void aListedNumberFindsTheSupportedVersionItself() {
+        assertSame(ProtocolVersion.MAXIMUM_VERSION, ProtocolVersion.get(2225).orElseThrow());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unlisted")
+    void aNumberNoReleaseReportsIsNamedForTheReleaseBelowIt(int protocol, String name) {
+        assertEquals(name, ProtocolVersion.get(protocol).orElseThrow().getName());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unlistedProtocols")
+    void aNumberNoReleaseReportsKeepsItsOwnProtocol(int protocol) {
+        assertEquals(protocol, ProtocolVersion.get(protocol).orElseThrow().getProtocol());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unsupported")
+    void aNumberOutsideTheSupportedRangeHasNoVersion(int protocol) {
+        assertTrue(ProtocolVersion.get(protocol).isEmpty());
     }
 }

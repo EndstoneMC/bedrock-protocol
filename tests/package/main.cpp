@@ -23,6 +23,9 @@ concept encodable_at = requires(const bp::TextPacket &packet) { bp::encode_<V...
 
 static_assert(encodable_at<bp::v2225::version>);
 static_assert(!encodable_at<>);
+static_assert(encodable_at<2200>);
+static_assert(!encodable_at<728>);
+static_assert(!encodable_at<2226>);
 static_assert(bp::version == bp::ProtocolVersion::MAXIMUM_VERSION.getProtocol());
 static_assert(
     std::same_as<decltype(bp::encode), decltype(bp::encode_<bp::ProtocolVersion::MAXIMUM_VERSION.getProtocol()>)>);
@@ -30,7 +33,12 @@ static_assert(std::same_as<decltype(encode(std::declval<const bp::TextPacket &>(
 static_assert(!std::invocable<decltype(bp::v2225::encode), const bp::Vec3 &>);
 static_assert(bp::ProtocolVersion::get(2193)->getName() == "1.26.50");
 static_assert(bp::ProtocolVersion::get(2169)->getName() == "1.26.45");
-static_assert(!bp::ProtocolVersion::get(2170));
+static_assert(bp::ProtocolVersion::get(2169)->getProtocol() == 2169);
+static_assert(bp::ProtocolVersion::get(2170)->getProtocol() == 2170);
+static_assert(bp::ProtocolVersion::get(2170)->getName() == "1.26.45");
+static_assert(bp::ProtocolVersion::get(2200)->getName() == "1.26.50");
+static_assert(!bp::ProtocolVersion::get(728));
+static_assert(!bp::ProtocolVersion::get(2226));
 static_assert(bp::ProtocolVersion::MINIMUM_VERSION.getProtocol() == bp::v729::version);
 static_assert(bp::ProtocolVersion::MAXIMUM_VERSION.getProtocol() == bp::v2225::version);
 

@@ -34,16 +34,25 @@ def table(schema: Schema, p: Printer) -> None:
             }
 
             public static @NotNull Optional<$name$> get(int protocol) {
+                if (protocol < $minimum$ || protocol > $maximum$) {
+                    return Optional.empty();
+                }
+                $name$ below = MINIMUM_VERSION;
                 for ($name$ version : SUPPORTED_VERSIONS) {
                     if (version.protocol == protocol) {
                         return Optional.of(version);
                     }
+                    if (version.protocol < protocol) {
+                        below = version;
+                    }
                 }
-                return Optional.empty();
+                return Optional.of(new $name$(protocol, below.name));
             }
         }
         """,
         name=names.VERSION,
+        minimum=schema.versions[0],
+        maximum=schema.maximum,
         releases=lambda: releases(schema, p),
     )
 

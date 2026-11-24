@@ -177,7 +177,7 @@ class StructGenerator:
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),
             )
-            partials(p, self.qualified, serializer, encoding.served)
+            partials(p, self.schema, self.qualified, serializer, encoding.served)
 
     def serializer_body(self, p: Printer) -> None:
         for _, child in self.owned:

@@ -22,8 +22,19 @@ def test_a_number_that_changes_no_shape_is_a_supported_version_of_its_own():
     assert ProtocolVersion.get(2169).name == "1.26.45"
 
 
-def test_a_number_no_release_reported_has_no_version():
-    assert ProtocolVersion.get(2170) is None
+@pytest.mark.parametrize("number", [2169, 2170, 2200], ids=["2169", "2170", "2200"])
+def test_a_supported_number_keeps_its_own_protocol(number):
+    assert ProtocolVersion.get(number).protocol == number
+
+
+@pytest.mark.parametrize(("number", "name"), [(2170, "1.26.45"), (2200, "1.26.50")], ids=["2170", "2200"])
+def test_a_number_no_release_reports_is_named_for_the_release_below_it(number, name):
+    assert ProtocolVersion.get(number).name == name
+
+
+@pytest.mark.parametrize("number", [728, 2226], ids=["below-the-oldest", "above-the-newest"])
+def test_a_number_outside_the_supported_range_has_no_version(number):
+    assert ProtocolVersion.get(number) is None
 
 
 def test_the_supported_versions_run_from_the_minimum_to_the_maximum():

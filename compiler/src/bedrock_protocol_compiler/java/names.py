@@ -128,6 +128,13 @@ def bounds(since: int | None, until: int | None, variable: str = "version") -> l
     return found
 
 
+def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
+    lowest = schema.versions[0] if since is None else since
+    if until is None and lowest == schema.maximum:
+        return [f"version == {lowest}"]
+    return [f"version >= {lowest}", f"version <= {schema.maximum}" if until is None else f"version < {until}"]
+
+
 def codec(encoding: Encoding) -> str:
     suffix = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
     return f"{CODEC}{encoding.since}{suffix}"

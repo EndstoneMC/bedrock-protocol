@@ -1,16 +1,27 @@
 package dev.endstone.protocol;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import dev.endstone.protocol.internal.SerializationMode;
 import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 final class CodecTest {
+    static Stream<Arguments> unsupported() {
+        return Stream.of(
+                argumentSet("below the oldest", 728), argumentSet("above the newest", 2226));
+    }
+
     @Test
     void anEarlyCodecEncodesTheHudValuesAsOneByteEach() {
         ByteBuf buf = Unpooled.buffer();
@@ -52,6 +63,20 @@ final class CodecTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> PlaySoundPacket_v2168.codec(2225))
+                        .getMessage());
+    }
+
+    @Test
+    void aNumberNoReleaseReportsUsesTheCodecOfTheSnapshotBelowIt() {
+        assertSame(ContainerClosePacket.codec(2193), ContainerClosePacket.codec(2200));
+    }
+
+    @ParameterizedTest
+    @MethodSource("unsupported")
+    void aNumberOutsideTheSupportedRangeHasNoCodec(int protocol) {
+        assertEquals(
+                "SetHudPacket: is not a type at protocol " + protocol,
+                assertThrows(IllegalArgumentException.class, () -> SetHudPacket.codec(protocol))
                         .getMessage());
     }
 
