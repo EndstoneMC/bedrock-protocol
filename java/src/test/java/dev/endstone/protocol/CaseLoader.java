@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 /** Builds the message a golden case's value describes, through the generated builders. */
 final class CaseLoader {
-    static final Pattern VERSION_SUFFIX = Pattern.compile("_v\\d+$");
+    private static final Pattern VERSION_SUFFIX = Pattern.compile("_v\\d+$");
     private static final Pattern ESCAPED_BYTES = Pattern.compile("(\\\\x[0-9a-f]{2})*");
     private static final Pattern ESCAPED_BITS = Pattern.compile("0b[01]+");
     private static final Pattern ESCAPED_UUID =

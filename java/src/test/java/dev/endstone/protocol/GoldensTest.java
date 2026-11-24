@@ -18,9 +18,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -38,9 +36,6 @@ final class GoldensTest {
         }
     }
 
-    private static final Pattern WORD_BREAK =
-            Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
-
     static Stream<Arguments> cases()
             throws IOException, URISyntaxException, ReflectiveOperationException {
         Path classes =
@@ -54,7 +49,7 @@ final class GoldensTest {
                                                     && !path.getFileName().toString().contains("$"))
                             .toList();
         }
-        Map<String, List<Class<? extends Packet>>> packets = new HashMap<>();
+        Map<Integer, List<Class<? extends Packet>>> packets = new HashMap<>();
         for (Path classFile : classFiles) {
             String name = classes.relativize(classFile).toString();
             name =
@@ -64,16 +59,8 @@ final class GoldensTest {
             if (Packet.class.isAssignableFrom(type)
                     && !type.isInterface()
                     && !Modifier.isAbstract(type.getModifiers())) {
-                String stem =
-                        WORD_BREAK
-                                .matcher(
-                                        CaseLoader.VERSION_SUFFIX
-                                                .matcher(type.getSimpleName())
-                                                .replaceFirst("")
-                                                .replaceFirst("Packet$", ""))
-                                .replaceAll("_")
-                                .toLowerCase(Locale.ROOT);
-                packets.computeIfAbsent(stem, key -> new ArrayList<>())
+                Packet packet = (Packet) type.getMethod("getDefaultInstance").invoke(null);
+                packets.computeIfAbsent(packet.getPacketId(), key -> new ArrayList<>())
                         .add(type.asSubclass(Packet.class));
             }
         }
@@ -99,8 +86,7 @@ final class GoldensTest {
                             pinnedClass.getMethod("decode", Class.class, byte[].class));
             int packetId = Integer.parseInt(stem.substring(0, stem.indexOf('_')));
             List<Class<? extends Packet>> accepted = new ArrayList<>();
-            for (Class<? extends Packet> candidate :
-                    packets.getOrDefault(stem.substring(stem.indexOf('_') + 1), List.of())) {
+            for (Class<? extends Packet> candidate : packets.getOrDefault(packetId, List.of())) {
                 try {
                     candidate.getMethod("codec", int.class).invoke(null, protocol.version());
                     accepted.add(candidate);
@@ -112,7 +98,13 @@ final class GoldensTest {
             }
             if (accepted.size() != 1) {
                 throw new IllegalStateException(
-                        file + ": " + accepted.size() + " packets accept protocol " + folder);
+                        file
+                                + ": "
+                                + accepted.size()
+                                + " packets with id "
+                                + packetId
+                                + " accept protocol "
+                                + folder);
             }
             try (Reader reader = Files.newBufferedReader(file)) {
                 for (JsonElement entry : JsonParser.parseReader(reader).getAsJsonArray()) {
@@ -125,8 +117,7 @@ final class GoldensTest {
                                     protocol,
                                     accepted.getFirst(),
                                     bytes,
-                                    value,
-                                    packetId));
+                                    value));
                 }
             }
         }
@@ -144,14 +135,6 @@ final class GoldensTest {
             throws ReflectiveOperationException {
         Packet decoded = protocol.decode(type, hex(bytes));
         assertEquals(bytes, ByteBufUtil.hexDump(protocol.encode(decoded)));
-    }
-
-    @ParameterizedTest
-    @MethodSource("cases")
-    void aDecodedGoldenHasItsFilesPacketId(
-            Pinned protocol, Class<? extends Packet> type, String bytes, String value, int packetId)
-            throws ReflectiveOperationException {
-        assertEquals(packetId, protocol.decode(type, hex(bytes)).getPacketId());
     }
 
     @ParameterizedTest
