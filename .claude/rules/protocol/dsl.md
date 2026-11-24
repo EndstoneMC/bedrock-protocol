@@ -20,7 +20,7 @@ paths:
 - Write a split between declared and encoded type as `name: DeclaredType = field(type=<encoded>)`. Never drop to the raw primitive.
 - Use `field(type=<primitive>)` on an alias only for the members BDS holds as that plain primitive; its cereal JSON is a bare value there and a one-member wrapper object everywhere else.
 - Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length BDS holds as its own member or writes apart from the list, as an expression over earlier fields, never as a constant.
-- Declare a member that BDS writes several times in a row as one field with `field(duplicate=N)`, N the copies BDS writes: one per name the dump binds it under, or one per write in a hand-written encoding.
+- Declare a member that BDS writes several times in a row as one field with `field(duplicate=N)`, N the copies BDS writes: one per name the dump binds it under, or one per write in a hand-written encoding. Write a count that depends on an earlier member as a lambda like `when=`, `field(duplicate=lambda p: 2 if p.action & 0x80 != 0 else 1)`.
 - Spell an alias that BDS nests in a class inline at its use; never hoist it to a module-scope `type`.
 - Never put a version-dependent width behind a `type X = <primitive>` alias; spell it inline.
 - Declare a top-level type that only wraps one primitive, such as an id, a handle or a duration, as a `type` alias under its own name (`type EffectDuration = varint32`), and spell a nested one's primitive at its use (`header: uint8`); never keep either as a one-field class. A data class that holds one member for now, a packet and a variant arm stay classes.

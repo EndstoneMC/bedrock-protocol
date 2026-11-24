@@ -10,6 +10,7 @@ from bedrock_protocol_compiler.descriptor import (
     Binary,
     Bitset,
     BuiltinRef,
+    Choice,
     CompilerError,
     Enum,
     EnumName,
@@ -186,7 +187,7 @@ def roots_reached(family: Struct | Enum) -> set[Struct | Enum]:
 
 
 def reached_by(each: Field) -> Iterator[Struct | Enum]:
-    for target in (*reaches(each.type), *reaches(each.when)):
+    for target in (*reaches(each.type), *reaches(each.when), *reaches(each.duplicate)):
         yield target.enum if isinstance(target, MemberRef) else target
 
 
@@ -202,6 +203,10 @@ def numbered_by(node: Type | Expression | None) -> Iterator[MemberRef]:
             yield from numbered_by(element)
         case Not(operand=operand):
             yield from numbered_by(operand)
+        case Choice(test=test, when_true=when_true, when_false=when_false):
+            yield from numbered_by(test)
+            yield from numbered_by(when_true)
+            yield from numbered_by(when_false)
         case Binary(left=left, right=right) | Map(key=left, value=right):
             yield from numbered_by(left)
             yield from numbered_by(right)
@@ -580,6 +585,13 @@ class Schema:
                 return Variant, tuple(self.coded(case, version, reached) for case in cases)
             case Not(operand=operand):
                 return Not, self.coded(operand, version, reached)
+            case Choice(test=test, when_true=when_true, when_false=when_false):
+                return (
+                    Choice,
+                    self.coded(test, version, reached),
+                    self.coded(when_true, version, reached),
+                    self.coded(when_false, version, reached),
+                )
             case Binary(operator=operator, left=left, right=right):
                 return Binary, operator, self.coded(left, version, reached), self.coded(right, version, reached)
         return node
@@ -938,14 +950,14 @@ class Schema:
                     each.name,
                     self.coded(each.type, version, reached),
                     self.coded(each.when, version, reached),
-                    each.duplicate,
+                    self.coded(each.duplicate, version, reached),
                 )
                 for each in shape.fields
             )
             numbers = {
                 member: self.numbers[member.enum, version][member.name]
                 for each in shape.fields
-                for member in (*numbered_by(each.type), *numbered_by(each.when))
+                for member in (*numbered_by(each.type), *numbered_by(each.when), *numbered_by(each.duplicate))
             }
             self.encoded[family, version] = encodings.setdefault(
                 (model, key, frozenset(sentinels.items())), Encoding(model, shape.fields, reached, numbers | sentinels)

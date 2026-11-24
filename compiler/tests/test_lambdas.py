@@ -1,6 +1,17 @@
 import pytest
 
-from bedrock_protocol_compiler.descriptor import Binary, CompilerError, FieldRef, Int, Len, MemberRef, Not, Range, Test
+from bedrock_protocol_compiler.descriptor import (
+    Binary,
+    Choice,
+    CompilerError,
+    FieldRef,
+    Int,
+    Len,
+    MemberRef,
+    Not,
+    Range,
+    Test,
+)
 
 HEADER = """
 from enum import IntEnum
@@ -141,6 +152,43 @@ def test_count_is_a_field_a_length_or_a_product(build_package):
 
     assert counts == [FieldRef("n"), Len("xs"), Binary("*", FieldRef("n"), FieldRef("n"))]
     assert [field.type.prefix for field in family_of(package).declarations[0].fields[1:]] == [None, None, None]
+
+
+def test_duplicate_is_a_choice_between_counts(build_package):
+    source = HEADER + (
+        "class S:\n    k: uint8\n    x: uint8 = field(duplicate=lambda p: 2 if p.k & 0x80 != 0 else 1)\n"
+    )
+    package = build_package({"a": source})
+    duplicate = family_of(package).declarations[0].fields[1].duplicate
+
+    assert duplicate == Choice(
+        Binary("!=", Binary("&", FieldRef("k"), Int(128)), Int(0)),
+        Int(2),
+        Int(1),
+    )
+
+
+def test_duplicate_is_a_field(build_package):
+    source = HEADER + "class S:\n    k: uint8\n    x: uint8 = field(duplicate=lambda p: p.k)\n"
+
+    assert family_of(build_package({"a": source})).declarations[0].fields[1].duplicate == FieldRef("k")
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("x: uint8 = field(duplicate=lambda p: p.k)\n    k: uint8", "x: p.k is not an earlier field"),
+        ("k: uint8\n    x: uint8 = field(duplicate=lambda p: p.q)", "x: p.q is not an earlier field"),
+        ("k: uint8\n    x: uint8 = field(duplicate=lambda p: 2 if p.q else 1)", "x: p.q is not an earlier field"),
+        ("k: uint8 = field(since=2)\n    x: uint8 = field(duplicate=lambda p: p.k)", "x: p.k is absent at 1"),
+        ("k: uint8\n    x: uint8 = field(duplicate=lambda p, q: 2)", "x: is not a lambda of one argument"),
+        ("k: uint8\n    x: uint8 = field(duplicate=lambda p: p.k + 1)", "x: is not a field, len"),
+        ("k: uint8\n    x: uint8 = field(duplicate=lambda p: 2.5)", "x: is not a literal int"),
+    ],
+)
+def test_bad_duplicate_lambda_is_rejected(build_package, body, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + f"class S:\n    {body}\n"})
 
 
 @pytest.mark.parametrize(

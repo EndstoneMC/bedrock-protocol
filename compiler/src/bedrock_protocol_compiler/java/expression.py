@@ -4,6 +4,7 @@ from typing import Protocol
 
 from bedrock_protocol_compiler.descriptor import (
     Binary,
+    Choice,
     CompilerError,
     Expression,
     FieldRef,
@@ -76,6 +77,9 @@ class Renderer:
         widest = self.promoted(self.term(expression))
         return f"ByteBufCodec.countValue(buf, {self.spell(widest, common(widest.cls, INT64))})"
 
+    def copies(self, expression: Expression) -> str:
+        return self.spell(self.promoted(self.term(expression)), INT32)
+
     def member(self, member: MemberRef) -> Term:
         enum_type = self.schema.enum_type(member.enum, self.encoding.since)
         resolved = self.schema.resolve(member, self.encoding.since)
@@ -104,6 +108,11 @@ class Renderer:
                 return Term(f"{self.receiver}{operand.member}.get({self.schema.number(self.encoding, member)})", BOOL)
             case Not(operand=operand):
                 return Term(f"!({self.predicate(operand)})", BOOL)
+            case Choice(test=test, when_true=when_true, when_false=when_false):
+                first = self.promoted(self.term(when_true))
+                second = self.promoted(self.term(when_false))
+                cls = common(first.cls, second.cls)
+                return Term(f"({self.predicate(test)} ? {self.spell(first, cls)} : {self.spell(second, cls)})", cls)
             case Binary(operator="and" | "or" as operator, left=left, right=right):
                 spelled = f"({self.predicate(left)}) {OPERATORS[operator]} ({self.predicate(right)})"
                 return Term(spelled, BOOL)

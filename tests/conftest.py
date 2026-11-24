@@ -28,6 +28,7 @@ from bedrock_protocol_compiler.descriptor import (
     BuiltinRef,
     EnumName,
     EnumRef,
+    Int,
     List,
     Literal,
     Map,
@@ -1620,7 +1621,7 @@ class ReflectionCtx:
                     attribute,
                     self.traits(node),
                     not optional,
-                    field.duplicate,
+                    field.duplicate.value if isinstance(field.duplicate, Int) else 1,
                 )
                 if isinstance(field.type, Literal):
                     member.is_const_selector, member.constant = True, constant

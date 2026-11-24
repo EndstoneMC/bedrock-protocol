@@ -1240,6 +1240,13 @@ def test_a_duplicated_field_reads_once_per_copy(emitted):
     assert read in text
 
 
+def test_a_duplicated_field_counts_its_copies_from_an_earlier_field(emitted):
+    text = emitted("class P:\n    a: uint8\n    x: uint8 = field(duplicate=lambda p: 2 if p.a & 0x80 != 0 else 1)\n")
+
+    assert "            for (int copy = 0; copy < (((value.a_) & (128)) != (0) ? 2 : 1); copy++) {\n" in text
+    assert "                for (int copy = 0; copy < (((out.a_) & (128)) != (0) ? 2 : 1); copy++) {\n" in text
+
+
 def test_a_condition_groups_its_fields_in_one_block(emitted):
     text = emitted(
         "class P:\n    f: bool\n    a: uint8 = field(when=lambda p: p.f)\n    b: uint8 = field(when=lambda p: p.f)\n"

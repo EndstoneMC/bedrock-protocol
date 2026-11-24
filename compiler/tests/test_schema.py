@@ -492,7 +492,7 @@ def test_a_duplicated_field_duplicates_only_over_its_range(build_package):
     schema = Schema(build_package({"a": SOUND}, MODELLED_INIT))
     (packet,) = schema.order
 
-    assert [schema.shape_at(packet, version).fields[0].duplicate for version in (2168, 2225)] == [7, 1]
+    assert [schema.shape_at(packet, version).fields[0].duplicate for version in (2168, 2225)] == [Int(7), None]
 
 
 def test_a_change_in_duplicate_starts_a_new_shape(build_package):

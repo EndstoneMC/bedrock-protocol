@@ -122,7 +122,7 @@ class Field:
     type: Type
     range: Range
     when: "Expression | None" = None
-    duplicate: int = 1
+    duplicate: "Expression | None" = None
 
 
 @dataclass(frozen=True)
@@ -170,7 +170,14 @@ class Binary:
     right: "Expression"
 
 
-type Expression = FieldRef | MemberRef | Int | Len | Test | Not | Binary
+@dataclass(frozen=True)
+class Choice:
+    test: "Expression"
+    when_true: "Expression"
+    when_false: "Expression"
+
+
+type Expression = FieldRef | MemberRef | Int | Len | Test | Not | Binary | Choice
 
 
 @dataclass(frozen=True)

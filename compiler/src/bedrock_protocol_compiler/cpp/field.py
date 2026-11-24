@@ -622,9 +622,10 @@ class VariantField:
 
 
 class DuplicatedField:
-    def __init__(self, element: FieldGenerator, copies: int) -> None:
+    def __init__(self, element: FieldGenerator, written: str, read: str) -> None:
         self.element = element
-        self.copies = copies
+        self.write_copies = written
+        self.read_copies = read
 
     def fallible(self) -> bool:
         return self.element.fallible()
@@ -639,7 +640,7 @@ class DuplicatedField:
                 $body$
             }
             """,
-            copies=self.copies,
+            copies=self.write_copies,
             body=lambda: self.element.write(p, value),
         )
 
@@ -650,7 +651,7 @@ class DuplicatedField:
                 $body$
             }
             """,
-            copies=self.copies,
+            copies=self.read_copies,
             body=lambda: self.element.read(p, target),
         )
 

@@ -314,19 +314,19 @@ class MessageGenerator:
         for when, group in groupby(slots, key=lambda slot: slot.field.when):
             if when is None:
                 for slot in group:
-                    self.write(body, slot)
+                    self.write(body, renderer, slot)
                 continue
             p.emit("if ($condition$) {", condition=renderer.predicate(when))
             with p.indent():
                 for slot in group:
-                    self.write(body, slot)
+                    self.write(body, renderer, slot)
             p.emit("}")
 
-    def write(self, body: Body, slot: Slot) -> None:
-        self.duplicated(body.p, slot, lambda: slot.write(body, "value."))
+    def write(self, body: Body, renderer: Renderer, slot: Slot) -> None:
+        self.duplicated(body.p, renderer, slot, lambda: slot.write(body, "value."))
 
-    def duplicated(self, p: Printer, slot: Slot, each: Callable[[], None]) -> None:
-        if slot.copies == 1:
+    def duplicated(self, p: Printer, renderer: Renderer, slot: Slot, each: Callable[[], None]) -> None:
+        if slot.copies is None:
             each()
             return
         p.emit(
@@ -335,7 +335,7 @@ class MessageGenerator:
                 $body$
             }
             """,
-            copies=slot.copies,
+            copies=renderer.copies(slot.copies),
             body=each,
         )
 
@@ -362,7 +362,7 @@ class MessageGenerator:
                 throw e.prepend($name$).setUnfinishedMessage(out.build());
             }
             """,
-            body=lambda: self.duplicated(body.p, slot, lambda: slot.read(body, renderer)),
+            body=lambda: self.duplicated(body.p, renderer, slot, lambda: slot.read(body, renderer)),
             name=json.dumps(slot.name),
         )
 

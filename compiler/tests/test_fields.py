@@ -8,6 +8,7 @@ from bedrock_protocol_compiler.descriptor import (
     CompilerError,
     EnumName,
     EnumRef,
+    Int,
     List,
     Map,
     Optional,
@@ -344,7 +345,7 @@ def test_duplicate_counts_the_copies_of_a_field(build_package):
 
     struct = next(family for family in package.modules[0].families if family.name == "A")
 
-    assert [field.duplicate for field in struct.declarations[0].fields] == [2, 1]
+    assert [field.duplicate for field in struct.declarations[0].fields] == [Int(2), None]
 
 
 @pytest.mark.parametrize(

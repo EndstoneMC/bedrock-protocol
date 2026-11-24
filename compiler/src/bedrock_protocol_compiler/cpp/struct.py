@@ -5,7 +5,7 @@ from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator, partials
 from bedrock_protocol_compiler.cpp.expression import render
 from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
-from bedrock_protocol_compiler.descriptor import Field
+from bedrock_protocol_compiler.descriptor import Expression, Field, Int
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel, reached_by
 
@@ -35,12 +35,21 @@ class StructGenerator:
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
                 generator = make_field_generator(schema, each.type, encoding, f'"{each.name}"', 0)
-                if each.duplicate > 1:
-                    generator = DuplicatedField(generator, each.duplicate)
+                if each.duplicate is not None:
+                    generator = DuplicatedField(
+                        generator,
+                        self.copies(encoding, each.duplicate, "value"),
+                        self.copies(encoding, each.duplicate, "out"),
+                    )
                 fields.append((each, generator))
                 self.field_includes |= generator.includes()
                 self.field_includes |= {names.header(target) for target in reached_by(each)}
             self.implemented.append((encoding, fields))
+
+    def copies(self, encoding: Encoding, copies: Expression, receiver: str) -> str:
+        if isinstance(copies, Int):
+            return str(copies.value)
+        return f"static_cast<std::size_t>({render(self.schema, encoding, copies, receiver)})"
 
     def includes(self) -> set[str]:
         includes = {

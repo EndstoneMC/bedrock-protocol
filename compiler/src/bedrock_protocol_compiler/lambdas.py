@@ -7,6 +7,7 @@ from functools import reduce
 from bedrock_protocol_compiler.descriptor import (
     Binary,
     Bitset,
+    Choice,
     CompilerError,
     Expression,
     Field,
@@ -78,6 +79,19 @@ def earlier_fields(context: Lambda, node: ast.expr) -> list[Field]:
 
 def parse_count(context: Lambda) -> Expression:
     return count_of(context, context.body)
+
+
+def parse_copies(context: Lambda) -> Expression:
+    return copies_of(context, context.body)
+
+
+def copies_of(context: Lambda, node: ast.expr) -> Expression:
+    match node:
+        case ast.IfExp(test=test, body=when_true, orelse=when_false):
+            return Choice(predicate_of(context, test), copies_of(context, when_true), copies_of(context, when_false))
+        case ast.Constant():
+            return predicate_of(context, node)
+    return count_of(context, node)
 
 
 def count_of(context: Lambda, node: ast.expr) -> Expression:

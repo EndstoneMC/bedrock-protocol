@@ -1317,6 +1317,39 @@ def test_a_duplicated_field_reads_every_copy_into_it(generate):
     assert read in (out / "a.cpp").read_text()
 
 
+CONDITIONAL_COPIES = """
+from protocol import field, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Swing:
+    action: uint8
+    data: float = field(duplicate=lambda p: 2 if p.action & 0x80 != 0 else 1)
+"""
+
+CONDITIONAL_COPIES_INIT = CYLINDER_INIT.replace("import field", "import field, uint8")
+
+
+def test_a_duplicated_field_counts_its_copies_from_an_earlier_field_when_written(generate):
+    out = generate({"a": CONDITIONAL_COPIES}, init=CONDITIONAL_COPIES_INIT)
+
+    count = (
+        "for (std::size_t copy = 0; copy < static_cast<std::size_t>("
+        "(((value.action) & (128)) != (0)) ? (2) : (1)); ++copy) {"
+    )
+    assert count in (out / "a.cpp").read_text()
+
+
+def test_a_duplicated_field_counts_its_copies_from_an_earlier_field_when_read(generate):
+    out = generate({"a": CONDITIONAL_COPIES}, init=CONDITIONAL_COPIES_INIT)
+
+    count = (
+        "for (std::size_t copy = 0; copy < static_cast<std::size_t>("
+        "(((out.action) & (128)) != (0)) ? (2) : (1)); ++copy) {"
+    )
+    assert count in (out / "a.cpp").read_text()
+
+
 def test_an_implementation_is_named_for_its_shapes_first_protocol(generate):
     out = generate({"a": NESTED})
 

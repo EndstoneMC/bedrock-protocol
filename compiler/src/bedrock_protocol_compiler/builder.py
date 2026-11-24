@@ -22,6 +22,7 @@ from bedrock_protocol_compiler.descriptor import (
     Bitset,
     Builtin,
     BuiltinRef,
+    Choice,
     CompilerError,
     Enum,
     EnumDeclaration,
@@ -50,7 +51,7 @@ from bedrock_protocol_compiler.descriptor import (
     Type,
     Variant,
 )
-from bedrock_protocol_compiler.lambdas import field_name, parse_count, parse_predicate, read_lambda
+from bedrock_protocol_compiler.lambdas import field_name, parse_copies, parse_count, parse_predicate, read_lambda
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
@@ -210,6 +211,10 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
             yield from reaches(element)
         case Not(operand=operand):
             yield from reaches(operand)
+        case Choice(test=test, when_true=when_true, when_false=when_false):
+            yield from reaches(test)
+            yield from reaches(when_true)
+            yield from reaches(when_false)
         case Binary(left=left, right=right):
             yield from reaches(left)
             yield from reaches(right)
@@ -256,7 +261,11 @@ def sibling[F: (Struct, Enum)](family: F, families: Iterable[object]) -> F | Non
 def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str, twin: Struct | None) -> None:
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
-            for target in (*reaches(struct_field.type), *reaches(struct_field.when)):
+            for target in (
+                *reaches(struct_field.type),
+                *reaches(struct_field.when),
+                *reaches(struct_field.duplicate),
+            ):
                 for version in versions:
                     if not struct_field.range.contains(version):
                         continue
@@ -899,11 +908,24 @@ class Builder:
                 for guard in guards
             ]
             when = reduce(lambda left, right: Binary("and", left, right), predicates) if predicates else None
-            copies = 1
+            copies: Expression | None = None
             if call is not None and "duplicate" in arguments:
-                copies = literal(source, arguments["duplicate"], int, name)
-                if copies < 2:
-                    raise error(source, arguments["duplicate"], name, "duplicate is fewer than two copies")
+                if isinstance(arguments["duplicate"], ast.Lambda):
+                    copies = parse_copies(
+                        read_lambda(
+                            arguments["duplicate"],
+                            fields,
+                            field_range,
+                            self.versions,
+                            lambda node: self.member_of(source, scope, node),
+                            lambda node, reason: error(source, node, name, reason),
+                        )
+                    )
+                else:
+                    written = literal(source, arguments["duplicate"], int, name)
+                    if written < 2:
+                        raise error(source, arguments["duplicate"], name, "duplicate is fewer than two copies")
+                    copies = Int(written)
             fields.append(Field(name, field_type, field_range, when, copies))
         declared: list[str] = []
         previous: list[str] = []
