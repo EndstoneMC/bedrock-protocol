@@ -129,6 +129,15 @@ struct Serializer<DynamicValue, V> {
 
     static auto deserialize(BinaryReader &stream) -> std::expected<DynamicValue, Errc>
     {
+        return deserialize(stream, 0);
+    }
+
+private:
+    static auto deserialize(BinaryReader &stream, int depth) -> std::expected<DynamicValue, Errc>
+    {
+        if (depth > detail::max_nesting_depth) {
+            return std::unexpected(Errc::out_of_range);
+        }
         auto tag = stream.read<std::uint32_t>();
         if (!tag) {
             return std::unexpected(tag.error());
@@ -171,7 +180,7 @@ struct Serializer<DynamicValue, V> {
             }
             DynamicValue::Array out;
             for (std::uint32_t i = 0; i < *count; ++i) {
-                auto element = deserialize(stream);
+                auto element = deserialize(stream, depth + 1);
                 if (!element) {
                     return std::unexpected(element.error());
                 }
@@ -190,7 +199,7 @@ struct Serializer<DynamicValue, V> {
                 if (!key) {
                     return std::unexpected(key.error());
                 }
-                auto child = deserialize(stream);
+                auto child = deserialize(stream, depth + 1);
                 if (!child) {
                     return std::unexpected(child.error());
                 }

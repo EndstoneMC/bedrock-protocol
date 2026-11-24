@@ -59,6 +59,54 @@ def test_decode_rejects_a_list_count_beyond_the_body(packet, body, message):
         v2225.decode(packet, body)
 
 
+@pytest.mark.parametrize(
+    ("packet", "body"),
+    [
+        pytest.param(bp.BlockActorDataPacket, bytes(3) + bytes.fromhex("0a00") * 513 + bytes(513), id="nbt compound"),
+        pytest.param(
+            bp.BlockActorDataPacket,
+            bytes(3) + bytes.fromhex("0a000900") + bytes.fromhex("0902") * 511 + bytes.fromhex("090000"),
+            id="nbt list",
+        ),
+        pytest.param(
+            bp.ClientboundDataStorePacket,
+            bytes.fromhex("0101000000000000") + bytes.fromhex("0500000001") * 512 + bytes(4),
+            id="dynamic value",
+        ),
+    ],
+)
+def test_decode_accepts_a_tree_nested_512_levels_deep(packet, body):
+    assert v2225.encode(v2225.decode(packet, body)) == body
+
+
+@pytest.mark.parametrize(
+    ("packet", "body", "message"),
+    [
+        pytest.param(
+            bp.BlockActorDataPacket,
+            bytes(3) + bytes.fromhex("0a00") * 514 + bytes(514),
+            r"^BlockActorDataPacket\.data: out of range at byte 1031 of 1545$",
+            id="nbt compound",
+        ),
+        pytest.param(
+            bp.BlockActorDataPacket,
+            bytes(3) + bytes.fromhex("0a000900") + bytes.fromhex("0902") * 512 + bytes.fromhex("090000"),
+            r"^BlockActorDataPacket\.data: out of range at byte 1031 of 1034$",
+            id="nbt list",
+        ),
+        pytest.param(
+            bp.ClientboundDataStorePacket,
+            bytes.fromhex("0101000000000000") + bytes.fromhex("0500000001") * 513 + bytes(4),
+            r"^ClientboundDataStorePacket\.updates\[0\]\.new_data: out of range at byte 2573 of 2577$",
+            id="dynamic value",
+        ),
+    ],
+)
+def test_decode_rejects_a_tree_nested_deeper_than_512_levels(packet, body, message):
+    with pytest.raises(DecodeError, match=message):
+        v2225.decode(packet, body)
+
+
 def test_decode_rejects_a_negative_nbt_byte_array_length():
     with pytest.raises(ValueError, match="at byte"):
         v2225.decode(bp.BlockActorDataPacket, bytes(3) + bytes.fromhex("0a000701610100"))

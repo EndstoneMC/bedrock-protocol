@@ -44,6 +44,7 @@ using PathSegment = std::variant<std::string_view, std::size_t>;
 
 namespace detail {
 inline constexpr std::size_t max_initial_capacity = 65'536;
+inline constexpr int max_nesting_depth = 512;
 
 template <std::integral T>
 std::expected<std::size_t, Errc> countValue(T value)

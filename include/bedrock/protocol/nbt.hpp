@@ -684,6 +684,11 @@ inline bool operator!=(const CompoundTag &a, const CompoundTag &b) noexcept
 
 namespace nbt {
 
+namespace detail {
+std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type, int depth);
+std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream, int depth);
+}  // namespace detail
+
 void writeTag(BinaryWriter &stream, const Tag &tag);
 std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type);
 void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag &tag);
@@ -746,6 +751,14 @@ inline void writeTag(BinaryWriter &stream, const Tag &tag)
 
 inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
 {
+    return detail::readTag(stream, type, 0);
+}
+
+inline std::expected<Tag, Errc> detail::readTag(BinaryReader &stream, Type type, int depth)
+{
+    if (depth > protocol::detail::max_nesting_depth) {
+        return std::unexpected(Errc::out_of_range);
+    }
     switch (type) {
     case Type::End:
         return Tag{};
@@ -858,9 +871,9 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
             return std::unexpected(Errc::out_of_range);
         }
         ListTag out(static_cast<Type>(*element_type));
-        out.reserve(detail::initialCapacity(static_cast<std::size_t>(*count)));
+        out.reserve(protocol::detail::initialCapacity(static_cast<std::size_t>(*count)));
         for (std::int32_t i = 0; i < *count; ++i) {
-            auto element = readTag(stream, static_cast<Type>(*element_type));
+            auto element = readTag(stream, static_cast<Type>(*element_type), depth + 1);
             if (!element) {
                 return std::unexpected(element.error());
             }
@@ -871,7 +884,7 @@ inline std::expected<Tag, Errc> readTag(BinaryReader &stream, Type type)
     case Type::Compound: {
         CompoundTag out;
         for (;;) {
-            auto entry = readNamedTag(stream);
+            auto entry = readNamedTag(stream, depth + 1);
             if (!entry) {
                 return std::unexpected(entry.error());
             }
@@ -899,6 +912,11 @@ inline void writeNamedTag(BinaryWriter &stream, std::string_view name, const Tag
 
 inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReader &stream)
 {
+    return detail::readNamedTag(stream, 0);
+}
+
+inline std::expected<std::pair<std::string, Tag>, Errc> detail::readNamedTag(BinaryReader &stream, int depth)
+{
     auto type = stream.read<std::uint8_t>();
     if (!type) {
         return std::unexpected(type.error());
@@ -913,7 +931,7 @@ inline std::expected<std::pair<std::string, Tag>, Errc> readNamedTag(BinaryReade
     if (!name) {
         return std::unexpected(name.error());
     }
-    auto payload = readTag(stream, static_cast<Type>(*type));
+    auto payload = readTag(stream, static_cast<Type>(*type), depth);
     if (!payload) {
         return std::unexpected(payload.error());
     }
