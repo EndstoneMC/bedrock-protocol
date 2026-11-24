@@ -291,6 +291,8 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str,
                     if member.range.contains(version) and not member.sentinel:
                         newest.setdefault(member.name, member)
     aliases = {name for name, member in newest.items() if isinstance(member.value, MemberRef | Binary)}
+    synonyms: dict[int, Member] = {}
+    repeating: set[int] = set()
     for version in versions:
         members = [
             member
@@ -319,11 +321,17 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str,
                 case Binary(left=MemberRef(name=name), right=Int(value=offset)):
                     number = numbers[name] - offset
             numbers[member.name] = number
-        real: dict[int, str] = {}
-        for member in members:
-            if isinstance(member.value, MemberRef | Binary) or member.sentinel or member.synonym:
+        real = [
+            member for member in members if not isinstance(member.value, MemberRef | Binary) and not member.sentinel
+        ]
+        named: dict[int, str] = {}
+        for member in real:
+            if member.synonym:
+                synonyms[id(member)] = member
+                if any(numbers[other.name] == numbers[member.name] for other in real if other is not member):
+                    repeating.add(id(member))
                 continue
-            first = real.setdefault(numbers[member.name], member.name)
+            first = named.setdefault(numbers[member.name], member.name)
             if first != member.name:
                 raise CompilerError(
                     f"{path}: {qualified}.{member.name}: shares the number {numbers[member.name]} with {first} at "
@@ -336,6 +344,12 @@ def check_enum(versions: tuple[int, ...], path: str, enum: Enum, qualified: str,
                     f"{path}: {qualified}.{member.name}: takes the number {numbers[member.name]}, which no member "
                     f"that is neither an alias nor a sentinel holds at {version}"
                 )
+    for key, member in synonyms.items():
+        if key not in repeating:
+            raise CompilerError(
+                f"{path}: {qualified}.{member.name}: is a synonym but shares its number with no other member at any "
+                "version"
+            )
     union = [
         member
         for declaration in (*enum.declarations, *([] if twin is None else twin.declarations))

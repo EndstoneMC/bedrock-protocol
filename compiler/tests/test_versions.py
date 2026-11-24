@@ -544,12 +544,19 @@ def test_two_members_sharing_a_number_at_a_version_are_rejected(build_package):
         build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = 1\n"})
 
 
+def test_a_synonym_sharing_its_number_with_no_other_member_is_rejected(build_package):
+    message = r"^a\.py: E\.B: is a synonym but shares its number with no other member at any version$"
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, synonym=True)\n"})
+
+
 @pytest.mark.parametrize(
     "members",
     [
         pytest.param("    A = 1\n    B = value(1, synonym=True)\n", id="synonym"),
         pytest.param("    A = 1\n    B = A\n", id="derived"),
         pytest.param("    A = value(1, until=3)\n    B = value(1, since=3)\n", id="never live together"),
+        pytest.param("    A = value(1, until=3)\n    B = value(1, synonym=True)\n", id="synonym at some versions"),
     ],
 )
 def test_a_member_sharing_a_number_is_accepted_as_a_synonym_a_pointer_or_a_renumbering(build_package, members):
