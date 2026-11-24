@@ -1,0 +1,9 @@
+[
+ {
+  "id": "hide_armor",
+  "value": {
+   "hide_armor": true
+  },
+  "bytes": "01"
+ }
+]

@@ -1,0 +1,16 @@
+[
+ {
+  "id": "online_with_signed_content",
+  "value": {
+   "request_id": 300,
+   "state": "online",
+   "shared_metadata": {
+    "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoicyJ9.c2lncw"
+   },
+   "playback_content": {
+    "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoicCJ9.c2lncA"
+   }
+  },
+  "bytes": "2c010000066f6e6c696e652865794a68624763694f694a46557a4d344e434a392e65794a75496a6f6963794a392e63326c6e63772865794a68624763694f694a46557a4d344e434a392e65794a75496a6f6963434a392e63326c6e6341"
+ }
+]

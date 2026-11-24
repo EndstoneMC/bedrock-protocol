@@ -1,0 +1,14 @@
+[
+ {
+  "id": "one_not_found_failure",
+  "value": {
+   "failures": [
+    {
+     "state": "notfound",
+     "description": "missing"
+    }
+   ]
+  },
+  "bytes": "01086e6f74666f756e64076d697373696e67"
+ }
+]

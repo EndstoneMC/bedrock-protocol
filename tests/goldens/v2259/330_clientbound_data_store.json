@@ -1,0 +1,66 @@
+[
+ {
+  "id": "update_change_and_removal_arms",
+  "value": {
+   "updates": [
+    {
+     "__class__": "DataStoreUpdate",
+     "variable_name": "hud",
+     "data": 0.5,
+     "update_count": 1
+    },
+    {
+     "__class__": "DataStoreChange",
+     "variable_name": "form",
+     "update_count": 7,
+     "new_data": "Chest"
+    },
+    {
+     "__class__": "DataStoreRemoval",
+     "variable_name": "form"
+    }
+   ]
+  },
+  "bytes": "03000368756400000000000000e03f010000000104666f726d07000000020543686573740204666f726d"
+ },
+ {
+  "id": "changes_with_double_and_bool_new_data",
+  "value": {
+   "updates": [
+    {
+     "__class__": "DataStoreChange",
+     "variable_name": "form",
+     "update_count": 2,
+     "new_data": 0.25
+    },
+    {
+     "__class__": "DataStoreChange",
+     "variable_name": "hud",
+     "update_count": 3,
+     "new_data": true
+    }
+   ]
+  },
+  "bytes": "020104666f726d0200000000000000000000d03f0103687564030000000101"
+ },
+ {
+  "id": "two_updates_with_bool_and_string_data",
+  "value": {
+   "updates": [
+    {
+     "__class__": "DataStoreUpdate",
+     "variable_name": "hud",
+     "data": true,
+     "update_count": 2
+    },
+    {
+     "__class__": "DataStoreUpdate",
+     "variable_name": "form",
+     "data": "Chest",
+     "update_count": 4
+    }
+   ]
+  },
+  "bytes": "0200036875640101020000000004666f726d0205436865737404000000"
+ }
+]

@@ -1,0 +1,40 @@
+[
+ {
+  "id": "every_optional_present",
+  "value": {
+   "name": "note.harp",
+   "pos": {
+    "x": 8,
+    "y": 16,
+    "z": 24
+   },
+   "volume": 0.5,
+   "pitch": 1.5,
+   "loop_count": 3,
+   "bypass_listener_range_check": true,
+   "server_sound_handle": 42,
+   "playback_position_seconds": 2.5,
+   "start_delay_seconds": 0.25,
+   "attach_options": {
+    "entity_to_attach_to_id": 77
+   }
+  },
+  "bytes": "096e6f74652e686172701020300000003f0000c03f0601012a000000000000000100002040010000803e014d"
+ },
+ {
+  "id": "every_optional_absent",
+  "value": {
+   "name": "note.harp",
+   "pos": {
+    "x": 8,
+    "y": 16,
+    "z": 24
+   },
+   "volume": 0.5,
+   "pitch": 1.5,
+   "loop_count": 3,
+   "bypass_listener_range_check": true
+  },
+  "bytes": "096e6f74652e686172701020300000003f0000c03f060100000000"
+ }
+]

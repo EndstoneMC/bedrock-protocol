@@ -1,0 +1,350 @@
+[
+ {
+  "id": "update_environment_attributes_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateEnvironmentAttributesData",
+    "layer_name": "wet",
+    "layer_dimension_id": 1,
+    "attributes": [
+     {
+      "name": "a",
+      "payload": {
+       "__class__": "ConstantAttributeData",
+       "attribute": {
+        "__class__": "BoolAttributeData",
+        "value": true,
+        "operation": "xor"
+       }
+      }
+     },
+     {
+      "name": "b",
+      "payload": {
+       "__class__": "ConstantAttributeData",
+       "attribute": {
+        "__class__": "FloatAttributeData",
+        "value": 0.75,
+        "operation": "maximum"
+       }
+      }
+     },
+     {
+      "name": "c",
+      "payload": {
+       "__class__": "ConstantAttributeData",
+       "attribute": {
+        "__class__": "ColorAttributeData",
+        "value": "#0a141eff",
+        "operation": "multiply"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "bytes": "02037765740203016100000103786f72016200010000403f076d6178696d756d0000016300020a000000140000001e000000ff000000086d756c7469706c79"
+ },
+ {
+  "id": "update_attribute_layers_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateAttributeLayersData",
+    "attribute_layers": [
+     {
+      "name": "rain",
+      "dimension_id": 0,
+      "settings": {
+       "priority": 5,
+       "weight": 0.5,
+       "enabled": true,
+       "transitions_paused": false
+      },
+      "attributes": [
+       {
+        "name": "a",
+        "payload": {
+         "__class__": "TransitionAttributeData",
+         "from_attribute": {
+          "__class__": "BoolAttributeData",
+          "value": true,
+          "operation": "xor"
+         },
+         "to_attribute": {
+          "__class__": "FloatAttributeData",
+          "value": 0.75,
+          "operation": "add",
+          "constraint_min_value": 0.5,
+          "constraint_max_value": 2.5
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock"
+         }
+        }
+       },
+       {
+        "name": "b",
+        "payload": {
+         "__class__": "TransitionAttributeData",
+         "from_attribute": {
+          "__class__": "FloatAttributeData",
+          "value": 0.75,
+          "operation": "maximum"
+         },
+         "to_attribute": {
+          "__class__": "ColorAttributeData",
+          "value": "#0a141eff",
+          "operation": "multiply"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock"
+         }
+        }
+       },
+       {
+        "name": "c",
+        "payload": {
+         "__class__": "TransitionAttributeData",
+         "from_attribute": {
+          "__class__": "ColorAttributeData",
+          "value": "#0a141eff",
+          "operation": "multiply"
+         },
+         "to_attribute": {
+          "__class__": "BoolAttributeData",
+          "value": true,
+          "operation": "xor"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock"
+         }
+        }
+       }
+      ]
+     },
+     {
+      "name": "fog",
+      "dimension_id": 2,
+      "settings": {
+       "priority": -3,
+       "weight": 1.5,
+       "enabled": false,
+       "transitions_paused": true
+      },
+      "attributes": [
+       {
+        "name": "d",
+        "payload": {
+         "__class__": "NoiseTransitionAttributeData",
+         "from_attribute": {
+          "__class__": "BoolAttributeData",
+          "value": true,
+          "operation": "xor"
+         },
+         "to_attribute": {
+          "__class__": "FloatAttributeData",
+          "value": 0.75,
+          "operation": "add",
+          "constraint_min_value": 0.5,
+          "constraint_max_value": 2.5
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock",
+          "local_transition_ticks": 5,
+          "noise_name": "gusts",
+          "noise_alignment": {
+           "type": 0,
+           "value": 4
+          }
+         }
+        }
+       },
+       {
+        "name": "e",
+        "payload": {
+         "__class__": "NoiseTransitionAttributeData",
+         "from_attribute": {
+          "__class__": "FloatAttributeData",
+          "value": 0.75,
+          "operation": "maximum"
+         },
+         "to_attribute": {
+          "__class__": "ColorAttributeData",
+          "value": "#0a141eff",
+          "operation": "multiply"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock",
+          "local_transition_ticks": 5,
+          "noise_name": "gusts",
+          "noise_alignment": {
+           "type": 0,
+           "value": 4
+          }
+         }
+        }
+       },
+       {
+        "name": "f",
+        "payload": {
+         "__class__": "NoiseTransitionAttributeData",
+         "from_attribute": {
+          "__class__": "ColorAttributeData",
+          "value": "#0a141eff",
+          "operation": "multiply"
+         },
+         "to_attribute": {
+          "__class__": "BoolAttributeData",
+          "value": true,
+          "operation": "xor"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock",
+          "local_transition_ticks": 5,
+          "noise_name": "gusts",
+          "noise_alignment": {
+           "type": 0,
+           "value": 4
+          }
+         }
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "bytes": "0002047261696e00050000000000003f010003016101000103786f72010000403f03616464010000003f010000204028030305636c6f636b016201010000403f076d6178696d756d0000020a000000140000001e000000ff000000086d756c7469706c7928030305636c6f636b016301020a000000140000001e000000ff000000086d756c7469706c79000103786f7228030305636c6f636b03666f6704fdffffff0000c03f000103016402000103786f72010000403f03616464010000003f010000204028030305636c6f636b050567757374730004016502010000403f076d6178696d756d0000020a000000140000001e000000ff000000086d756c7469706c7928030305636c6f636b050567757374730004016602020a000000140000001e000000ff000000086d756c7469706c79000103786f7228030305636c6f636b050567757374730004"
+ },
+ {
+  "id": "update_attribute_layer_settings_arm",
+  "value": {
+   "data": {
+    "__class__": "UpdateAttributeLayerSettingsData",
+    "layer_name": "rain",
+    "layer_dimension_id": 0,
+    "attribute_layer_settings": {
+     "priority": 5,
+     "weight": 0.5,
+     "enabled": true,
+     "transitions_paused": false
+    }
+   }
+  },
+  "bytes": "01047261696e00050000000000003f0100"
+ },
+ {
+  "id": "remove_environment_attributes_arm",
+  "value": {
+   "data": {
+    "__class__": "RemoveEnvironmentAttributesData",
+    "layer_name": "rain",
+    "layer_dimension_id": 1,
+    "attributes": ["a"]
+   }
+  },
+  "bytes": "03047261696e02010161"
+ },
+ {
+  "id": "string_attribute_in_every_payload",
+  "value": {
+   "data": {
+    "__class__": "UpdateAttributeLayersData",
+    "attribute_layers": [
+     {
+      "name": "mist",
+      "dimension_id": 1,
+      "settings": {
+       "priority": 2,
+       "weight": 0.25,
+       "enabled": true,
+       "transitions_paused": false
+      },
+      "attributes": [
+       {
+        "name": "a",
+        "payload": {
+         "__class__": "ConstantAttributeData",
+         "attribute": {
+          "__class__": "StringAttributeData",
+          "value": "dawn",
+          "operation": "override"
+         }
+        }
+       },
+       {
+        "name": "b",
+        "payload": {
+         "__class__": "TransitionAttributeData",
+         "from_attribute": {
+          "__class__": "StringAttributeData",
+          "value": "dusk",
+          "operation": "override"
+         },
+         "to_attribute": {
+          "__class__": "StringAttributeData",
+          "value": "noon",
+          "operation": "override"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock"
+         }
+        }
+       },
+       {
+        "name": "c",
+        "payload": {
+         "__class__": "NoiseTransitionAttributeData",
+         "from_attribute": {
+          "__class__": "StringAttributeData",
+          "value": "haze",
+          "operation": "override"
+         },
+         "to_attribute": {
+          "__class__": "StringAttributeData",
+          "value": "mist",
+          "operation": "override"
+         },
+         "settings": {
+          "total_transition_ticks": 40,
+          "current_transition_ticks": 3,
+          "easing": 3,
+          "clock_name": "clock",
+          "local_transition_ticks": 5,
+          "noise_name": "gusts",
+          "noise_alignment": {
+           "type": 0,
+           "value": 4
+          }
+         }
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "bytes": "0001046d69737402020000000000803e01000301610003046461776e086f7665727269646501620103046475736b086f7665727269646503046e6f6f6e086f7665727269646528030305636c6f636b016302030468617a65086f7665727269646503046d697374086f7665727269646528030305636c6f636b050567757374730004"
+ }
+]

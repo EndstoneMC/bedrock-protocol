@@ -1,0 +1,48 @@
+[
+ {
+  "id": "message_only_arm",
+  "value": {
+   "localize": false,
+   "body": {
+    "__class__": "MessageOnly",
+    "type": 11,
+    "message": "{\"rawtext\":[{\"text\":\"hi\"}]}"
+   },
+   "xuid": "2535400000000001",
+   "platform_id": "pc"
+  },
+  "bytes": "00000b1b7b2272617774657874223a5b7b2274657874223a226869227d5d7d103235333534303030303030303030303102706300"
+ },
+ {
+  "id": "author_and_message_arm",
+  "value": {
+   "localize": false,
+   "body": {
+    "__class__": "AuthorAndMessage",
+    "type": 1,
+    "author": "Steve",
+    "message": "hello"
+   },
+   "xuid": "2535400000000000",
+   "platform_id": "switch-1",
+   "filtered_message": "h***o"
+  },
+  "bytes": "0001010553746576650568656c6c6f1032353335343030303030303030303030087377697463682d310105682a2a2a6f"
+ },
+ {
+  "id": "message_and_params_arm",
+  "value": {
+   "localize": true,
+   "body": {
+    "__class__": "MessageAndParams",
+    "type": 2,
+    "message": "commands.kill.successful",
+    "params": ["Alex"],
+    "queue": true
+   },
+   "xuid": "2535400000000002",
+   "platform_id": "xbox"
+  },
+  "bytes": "01020218636f6d6d616e64732e6b696c6c2e7375636365737366756c0104416c65780110323533353430303030303030303030320478626f7800"
+ }
+]

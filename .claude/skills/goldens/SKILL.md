@@ -7,7 +7,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 
 `.claude/rules/protocol/goldens.md` decides what a case holds and when it freezes. This skill produces the BDS evidence it asks for. Run every step from the repository root: the comparison with `compare.py` beside this file, every other step as an inline command. Save no other script anywhere, the scratchpad included.
 
-`<protocol>` names the case folder `tests/goldens/v<protocol>`, and `<version>` is the BDS build that goldens.md says checks it.
+`<protocol>` names the case folder `tests/goldens/v<protocol>`, `<version>` is the BDS build that goldens.md says checks it, and `<channel>` is that build's channel, `stable` or `preview`.
 
 ## Never
 
@@ -21,7 +21,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 1. List the packets whose class differs from the modelled protocol before it: `[i for i, cls in v<protocol>.packets.items() if v<previous>.packets.get(i) is not cls or _core.encodings[<previous>].get(cls) != _core.encodings[<protocol>][cls]]`.
 2. Copy each one's file from the nearest folder toward `v2168/` that holds it, change only the fields whose encoding changed, and write it as `layout(cases)` with bytes from the library. Give a new packet cases of its own from the dump.
 3. Delete every file left byte-identical to the one it was copied from.
-4. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
+4. Pick a BDS build at `<protocol>` the runner builds, a stable one unless only a preview reports `<protocol>`, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
 
 ## An older protocol's folder
 
@@ -31,7 +31,7 @@ description: Runs BDS over the golden cases in tests/goldens through a local, mo
 4. Where BDS prints no JSON for a packet, judge the case by its `bds_trace`. Where a script cannot walk the trace against the value, have an agent compare them leaf by leaf and give a verdict per case. A confirmed case freezes, and nothing reruns it.
 5. Where the build cannot run a packet's read or write, such as a read that skips to the end of the buffer, a write that ignores what was read, a read that fails `undefined schema` because the build binds the packet's cereal schema into no packet context, or `crashed no factory builds this packet id` for an id the build declares, leave the packet out (goldens.md) and have `bds-reverse-engineer` read the sides the build has against the DSL.
 6. Have `bds-reverse-engineer` date each schema fix across every build on disk from the folder's protocol back to 776, one address per build, and gate the fix only where a build changes.
-7. Pick a stable BDS build at `<protocol>` the runner builds, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
+7. Pick a BDS build at `<protocol>` the runner builds, a stable one unless only a preview reports `<protocol>`, add its `Check` line to goldens.md, then build, run, compare and measure the figure.
 
 ## The runner
 
@@ -61,15 +61,15 @@ If the log shows no golden mode, add it to the clone and commit it there:
 ## Build
 
 ```
-(cd build/bedrock-dumper && cmake --preset clang-relwithdebinfo -B build/stable-<version> -DBEDROCK_SERVER_VERSION=<version> -DBEDROCK_SERVER_CHANNEL=stable && cmake --build build/stable-<version>)
+(cd build/bedrock-dumper && cmake --preset clang-relwithdebinfo -B build/<channel>-<version> -DBEDROCK_SERVER_VERSION=<version> -DBEDROCK_SERVER_CHANNEL=<channel> && cmake --build build/<channel>-<version>)
 ```
 
-Each build has its own tree, which fetches BDS into `build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port`, and `server-portv6` where the build has one, to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
+Each build has its own tree, which fetches BDS into `build/bedrock-dumper/build/<channel>-<version>/bedrock-server-<version>` and makes it load the dumper. In that folder's `server.properties`, set `server-port`, and `server-portv6` where the build has one, to ports nothing else uses, and set `enable-lan-visibility=false`. If the build does not compile, or does not dump, on `<version>`, follow bedrock-dumper's own `update` skill.
 
 ## Run
 
 ```
-S=build/bedrock-dumper/build/stable-<version>/bedrock-server-<version>
+S=build/bedrock-dumper/build/<channel>-<version>/bedrock-server-<version>
 G=$PWD/build/goldens/<version>
 mkdir -p $G
 ```

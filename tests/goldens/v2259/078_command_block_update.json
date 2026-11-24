@@ -1,0 +1,45 @@
+[
+ {
+  "id": "block_command_data_arm",
+  "value": {
+   "target": {
+    "__class__": "BlockCommandData",
+    "block_pos": {
+     "x": 1,
+     "y": -2,
+     "z": 300
+    },
+    "mode": 2,
+    "redstone_mode": true,
+    "is_conditional": true
+   },
+   "command": "say hi",
+   "last_output": "done",
+   "name": "greeter",
+   "filtered_name": "greeter",
+   "track_output": true,
+   "tick_delay": 300,
+   "execute_on_first_tick": true,
+   "last_output_is_raw_message": true
+  },
+  "bytes": "010203d8040201010673617920686904646f6e6507677265657465720767726565746572012c0100000101"
+ },
+ {
+  "id": "entity_command_target_arm",
+  "value": {
+   "target": {
+    "__class__": "EntityCommandTarget",
+    "entity_id": 300
+   },
+   "command": "say hi",
+   "last_output": "ok",
+   "name": "n",
+   "filtered_name": "n",
+   "track_output": true,
+   "tick_delay": 20,
+   "execute_on_first_tick": true,
+   "last_output_is_raw_message": false
+  },
+  "bytes": "00ac0206736179206869026f6b016e016e01140000000100"
+ }
+]

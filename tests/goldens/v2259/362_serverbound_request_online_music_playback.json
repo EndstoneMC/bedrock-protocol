@@ -1,0 +1,10 @@
+[
+ {
+  "id": "record_request",
+  "value": {
+   "request_id": 300,
+   "sound_event_name": "record.flurry"
+  },
+  "bytes": "2c0100000d7265636f72642e666c75727279"
+ }
+]

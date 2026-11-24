@@ -1,0 +1,14 @@
+[
+ {
+  "id": "snappy_with_client_throttle",
+  "value": {
+   "compression_threshold": 1024,
+   "compression_algorithm": 1,
+   "client_throttle_enabled": true,
+   "client_throttle_threshold": 200,
+   "client_throttle_scalar": 0.5,
+   "sctp_recovery_profile": 2
+  },
+  "bytes": "0004010001c80000003f02"
+ }
+]

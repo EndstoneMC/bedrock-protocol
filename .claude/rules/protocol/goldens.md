@@ -32,6 +32,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Check `v1001/` with BDS 1.26.36.1.
 - Check `v2193/` with BDS 1.26.51.1.
 - Check `v2225/` with BDS 1.26.60.6.
+- Check `v2259/` with BDS 1.26.70.26.
 - Seed a folder's cases from the neighbour's and change only the leaves its encoding change needs; a class that differs only in an enum's members gets no file.
 - Keep a seeded case's id unless the encoding change adds or removes the branch it names, such as an optional's side; then rename it to the state it reaches, and never name a leaf's value in it.
 - Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
@@ -104,12 +105,12 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep a colour channel in 0..255, an effect duration at 0 or above, and a voxel shape's cell storage at one bit per cell.
 - Set an optional BDS derives from an earlier field exactly when BDS writes it: `InventorySource`'s container id for `CONTAINER_INVENTORY` and `NON_IMPLEMENTED_FEATURE_TODO` and its flags for `WORLD_INTERACTION`; the legacy set item slots when `raw_id < -1 and raw_id & 1 == 0`; a response slot's item stack net id when its amount is not 0; `PlayerAuthInputPacket`'s optionals from their `input_data` bits; `ItemStackResponseInfo`'s containers only on `SUCCESS`; `MapItemTrackedActor`'s entity id only for `ENTITY` and block position only for `BLOCK_ENTITY`.
 - Send `NetworkStackLatencyPacket.create_time` as 0; BDS reads it in milliseconds and writes it in nanoseconds.
-- Set an ability layer's `abilities_set` bit 13, 14 or 19 whenever it carries a non-zero fly, walk or vertical fly speed; BDS drops a speed whose bit is clear.
+- Before 2168, set an ability layer's `abilities_set` bit 13, 14 or 19 whenever it carries a non-zero fly, walk or vertical fly speed; BDS drops a speed whose bit is clear.
 - Give a case only enum members and flag bits its build has, such as no `molang_version` 13 before 827 and no `abilities_set` bit 19 before 776; BDS rewrites a member it lacks and clears a bit it lacks.
 - Write a pre-cereal skin's colours as `#aarrggbb` with an alpha of 0x10 or above; BDS prints a colour back as unpadded ARGB hex.
 - Keep a `MapItemTrackedActor` block position's y at 0 before 944; BDS reads it as a varint and writes it as an unsigned varint.
 - Set `ClientboundMapItemDataPacket.map_id` to `map_ids[0]` when the creation flag is set; BDS holds both in one vector.
-- Keep `StructureBlockUpdatePacket.is_waterlogged` false; BDS writes it from a settings flag its read clears.
+- Keep `StructureBlockUpdatePacket.is_waterlogged` false before 2168; BDS writes it from a settings flag its read clears.
 - Keep `StartGamePacket`'s `override_force_experimental_gameplay_flag` false before 2168; BDS writes back only whether a server holds one, and a server never does.
 - Give an `ItemStackRequestData` before 2168 a negative odd `client_request_id`; BDS reads nothing after any other id.
 - Leave actions `PLACE_IN_ITEM_CONTAINER_DEPRECATED` and `TAKE_FROM_ITEM_CONTAINER_DEPRECATED`, and `TEST` at 776, out of an `ItemStackRequestData` before 2168; BDS reads their type byte as no action and writes nothing for it.

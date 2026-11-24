@@ -1,0 +1,55 @@
+[
+ {
+  "id": "every_optional_present",
+  "value": {
+   "signed_chat": {
+    "key_id": "key",
+    "sender_id": "sender",
+    "message_id": "msg-1",
+    "scan_text": "hello",
+    "redacted_text": "h***o",
+    "author_name": "Steve",
+    "signature": "c2ln"
+   },
+   "room_id": "room",
+   "formatting": {
+    "name_prefix": "[",
+    "name_postfix": "]",
+    "message_prefix": "<",
+    "message_postfix": ">"
+   }
+  },
+  "bytes": "036b65790673656e646572056d73672d310568656c6c6f05682a2a2a6f0553746576650463326c6e0104726f6f6d0101015b01015d01013c01013e"
+ },
+ {
+  "id": "formatting_without_affixes",
+  "value": {
+   "signed_chat": {
+    "key_id": "key",
+    "sender_id": "sender",
+    "message_id": "msg-1",
+    "scan_text": "hello",
+    "redacted_text": "h***o",
+    "author_name": "Steve",
+    "signature": "c2ln"
+   },
+   "formatting": {}
+  },
+  "bytes": "036b65790673656e646572056d73672d310568656c6c6f05682a2a2a6f0553746576650463326c6e000100000000"
+ },
+ {
+  "id": "every_optional_absent",
+  "value": {
+   "signed_chat": {
+    "key_id": "key",
+    "sender_id": "sender",
+    "message_id": "msg-1",
+    "scan_text": "hello",
+    "redacted_text": "h***o",
+    "author_name": "Steve",
+    "signature": "c2ln"
+   }
+  },
+  "bytes": "036b65790673656e646572056d73672d310568656c6c6f05682a2a2a6f0553746576650463326c6e0000"
+ }
+]

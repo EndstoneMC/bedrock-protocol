@@ -1,0 +1,33 @@
+[
+ {
+  "id": "music_with_play_sound",
+  "value": {
+   "shared_metadata": {
+    "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoicyJ9.c2lncw"
+   },
+   "playback_content": {
+    "compact_jwt": "eyJhbGciOiJFUzM4NCJ9.eyJuIjoicCJ9.c2lncA"
+   },
+   "playback_type": "music",
+   "play_sound": {
+    "name": "note.harp",
+    "pos": {
+     "x": 8,
+     "y": 16,
+     "z": 24
+    },
+    "volume": 0.5,
+    "pitch": 1.5,
+    "loop_count": 3,
+    "bypass_listener_range_check": true,
+    "server_sound_handle": 42,
+    "playback_position_seconds": 2.5,
+    "start_delay_seconds": 0.25,
+    "attach_options": {
+     "entity_to_attach_to_id": 77
+    }
+   }
+  },
+  "bytes": "2865794a68624763694f694a46557a4d344e434a392e65794a75496a6f6963794a392e63326c6e63772865794a68624763694f694a46557a4d344e434a392e65794a75496a6f6963434a392e63326c6e6341056d75736963096e6f74652e686172701020300000003f0000c03f0601012a000000000000000100002040010000803e014d"
+ }
+]

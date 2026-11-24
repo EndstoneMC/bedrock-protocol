@@ -1,0 +1,21 @@
+[
+ {
+  "id": "one_slot",
+  "value": {
+   "container_id": 5,
+   "session_id": 300,
+   "title": "Chest",
+   "slots": [
+    {
+     "id": 323,
+     "stack_size": 1,
+     "aux_value": 3,
+     "net_id_variant": 9,
+     "block_runtime_id": 0,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    }
+   ]
+  },
+  "bytes": "05ac020543686573740143010100030112000a00000000000000000000"
+ }
+]

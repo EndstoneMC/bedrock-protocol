@@ -1,0 +1,54 @@
+[
+ {
+  "id": "gatherings_configuration_absent",
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a010000"
+ },
+ {
+  "id": "gatherings_without_world_and_target",
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true,
+   "gatherings_configuration": {
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+    "experience_name": "exp",
+    "creator_id": "creator"
+   },
+   "server_transfer_settings": {}
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a090365787000000763726561746f720000000100000000000000"
+ },
+ {
+  "id": "gatherings_every_optional_present",
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132,
+   "reload_world": true,
+   "gatherings_configuration": {
+    "experience_id": "01020304-0506-0708-090a-0b0c0d0e0f10",
+    "experience_name": "exp",
+    "experience_world_id": "11121314-1516-1718-191a-1b1c1d1e1f20",
+    "experience_world_name": "world",
+    "creator_id": "creator",
+    "target_id": "21222324-2526-2728-292a-2b2c2d2e2f30",
+    "mpsas_scenario_id": "scenario",
+    "server_id": "server"
+   },
+   "server_transfer_settings": {
+    "title_text": "Transferring",
+    "body_text": "Please wait",
+    "title_visible": true,
+    "body_visible": false,
+    "cancel_button_text": "Cancel",
+    "cancel_button_visible": true,
+    "cancel_button_delay_seconds": 2.5
+   }
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a01010807060504030201100f0e0d0c0b0a0903657870011817161514131211201f1e1d1c1b1a190105776f726c640763726561746f72012827262524232221302f2e2d2c2b2a2901087363656e6172696f010673657276657201010c5472616e7366657272696e67010b506c65617365207761697401010100010643616e63656c01010100002040"
+ }
+]

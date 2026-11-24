@@ -1,0 +1,33 @@
+[
+ {
+  "id": "passenger_of_block_data_present",
+  "value": {
+   "passenger": 1234,
+   "passenger_of_block_data": {
+    "block_pos": {
+     "x": 5,
+     "y": 64,
+     "z": -7
+    },
+    "offset": {
+     "x": 0.5,
+     "y": 1.5,
+     "z": -2.5
+    },
+    "rotation": 90.0,
+    "rotation_limit": 45.0,
+    "emote": 1,
+    "block_type": 12345,
+    "pack_uuid": "31323334-3536-3738-393a-3b3c3d3e3f40"
+   }
+  },
+  "bytes": "a413010a80010d0000003f0000c03f000020c00000b442000034420139300000000000003837363534333231403f3e3d3c3b3a39"
+ },
+ {
+  "id": "passenger_of_block_data_absent",
+  "value": {
+   "passenger": 1234
+  },
+  "bytes": "a41300"
+ }
+]

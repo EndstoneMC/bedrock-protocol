@@ -1,0 +1,35 @@
+[
+ {
+  "id": "string_data_with_large_counts",
+  "value": {
+   "update": {
+    "variable_name": "inventory",
+    "data": "diamond_sword",
+    "update_count": 4294967294
+   }
+  },
+  "bytes": "09696e76656e746f7279020d6469616d6f6e645f73776f7264feffffff"
+ },
+ {
+  "id": "float_data",
+  "value": {
+   "update": {
+    "variable_name": "hud",
+    "data": 0.5,
+    "update_count": 1
+   }
+  },
+  "bytes": "0368756400000000000000e03f01000000"
+ },
+ {
+  "id": "bool_data",
+  "value": {
+   "update": {
+    "variable_name": "hud",
+    "data": true,
+    "update_count": 1
+   }
+  },
+  "bytes": "03687564010101000000"
+ }
+]

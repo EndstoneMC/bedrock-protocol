@@ -1,0 +1,11 @@
+[
+ {
+  "id": "user_closed_confirmation",
+  "value": {
+   "session_id": 300,
+   "kind": 2,
+   "cause": 1
+  },
+  "bytes": "ac020201"
+ }
+]
