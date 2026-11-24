@@ -221,27 +221,6 @@ class FileGenerator:
             p.emit("template <int V> using $selector$ = typename detail::$selector$<V>::type;", selector=selector)
         p.emit("")
 
-    def packet(self, p: Printer, packet_id: int, family: Struct) -> None:
-        held = self.held[family]
-        runs = sorted((run for ranges in held.values() for run in ranges), key=lambda run: run.since or 0)
-        constraint = names.requirement(self.schema, Range(runs[0].since, runs[-1].until))
-        (only, *rest) = held
-        spelled = (
-            names.qualified(self.schema, only)
-            if not rest and not only.versioned
-            else f"::{names.namespace(self.schema)}::{names.selector(family.name)}<V>"
-        )
-        p.emit(
-            """
-            template <int V>$constraint$
-            struct packet_of<V, $id$> { using type = $type$; };
-
-            """,
-            constraint=constraint,
-            id=packet_id,
-            type=spelled,
-        )
-
     def listing(self, target: StructModel | EnumType, path: str) -> list[tuple[str, str, str]]:
         listed = [(names.qualified(self.schema, target), path, names.bare(self.schema, target))]
         if isinstance(target, StructModel):

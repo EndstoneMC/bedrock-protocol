@@ -28,7 +28,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - Never commit generated code.
 - `include/bedrock/`: the hand-written C++ runtime.
 - `python/`: the nanobind binding, laid out and named after nanobind's and pybind11's official examples and large projects; `bedrock_protocol.v<N>` holds protocol N's codec and the classes it introduced that the latest protocol lacks, and the bare package declares the latest protocol's classes and re-exports the latest `v<N>`'s `encode` and `decode`; its stubs are generated at build time by `python/stubgen.py` with `python/stubgen.pat`.
-- `tests/`: pytest, reaching the C++ through the binding; `tests/package/` is CI's `find_package` consumer, and its `enum.cpp` holds the static_asserts of the per-protocol enum API.
+- `tests/`: pytest, reaching the C++ through the binding; `tests/package/` is CI's `find_package` consumer, its `enum.cpp` holds the static_asserts of the per-protocol enum API, and its `registry.cpp` those of `packet_of` over `packets_fwd.hpp` alone.
 - `java/`: the Gradle build of the hand-written Java runtime and the generated Java codecs; it builds into `build/java`.
 - Distribution names follow PEP 752: `bedrock-protocol` is the root, `bedrock-protocol-compiler` its child.
 - `CMakeLists.txt`'s `project()` VERSION is the only version: a build at its `v<version>` tag is `<version>` everywhere, and any other is `<version>.dev0` in Python through `python/version.py` and `<version>-SNAPSHOT` in Java. It names the next release: push its tag to release, then bump it.

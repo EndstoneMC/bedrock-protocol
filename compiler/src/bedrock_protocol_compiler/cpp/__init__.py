@@ -1,8 +1,8 @@
 from bedrock_protocol_compiler.context import GeneratorContext
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.file import FileGenerator
-from bedrock_protocol_compiler.descriptor import Struct
-from bedrock_protocol_compiler.schema import Schema
+from bedrock_protocol_compiler.descriptor import Range, Struct
+from bedrock_protocol_compiler.schema import EnumType, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
@@ -10,6 +10,18 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
     for file in files:
         file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
         file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))
+    registered: list[tuple[int, Range, StructModel | EnumType]] = []
+    for file in files:
+        for family in file.families:
+            if isinstance(family, Struct) and family.packet_id is not None:
+                registered += [
+                    (family.packet_id, run, target) for target, runs in file.held[family].items() for run in runs
+                ]
+    registered.sort(key=lambda each: (each[0], each[1].since or 0))
+    declared: dict[tuple[str, ...], list[str]] = {}
+    targets = dict.fromkeys(target for _, _, target in registered)
+    for target in sorted(targets, key=lambda each: schema.scope(each) or 0):
+        declared.setdefault(names.scope(schema, target), []).append(names.declared(schema, target))
     registry = context.open(names.REGISTRY_HEADER)
     registry.emit(
         """
@@ -17,19 +29,23 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
 
         #include <type_traits>
 
-        #include "$include_dir$/detail/reflect.hpp"
-        #include "$include_dir$/serializer.hpp"
-
-        """,
-        include_dir=names.INCLUDE_DIR,
-    )
-    for file in files:
-        registry.emit("#include $header$", header=names.generated(file.module.stem))
-    registry.emit(
-        """
-
         namespace $namespace$ {
 
+        """,
+        namespace=names.namespace(schema),
+    )
+    for scope, structs in declared.items():
+        for part in scope:
+            registry.emit("namespace $part$ {", part=part)
+            registry.emit("")
+        for struct in structs:
+            registry.emit("struct $struct$;", struct=struct)
+        registry.emit("")
+        for part in reversed(scope):
+            registry.emit("}  // namespace $part$", part=part)
+            registry.emit("")
+    registry.emit(
+        """
         template <int V, int Id>
         struct packet_of {
             using type = void;
@@ -41,20 +57,44 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
         template <int V, int Id>
         inline constexpr bool has_packet_v = !std::is_void_v<packet_of_t<V, Id>>;
 
+        """
+    )
+    for packet_id, run, target in registered:
+        registry.emit(
+            """
+            template <int V>$requirement$
+            struct packet_of<V, $id$> { using type = $type$; };
+
+            """,
+            requirement=names.requirement(schema, run),
+            id=packet_id,
+            type=names.qualified(schema, target),
+        )
+    registry.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
+    packets = context.open(names.PACKETS_HEADER)
+    packets.emit(
+        """
+        #pragma once
+
+        #include "$include_dir$/detail/reflect.hpp"
+        #include "$include_dir$/packets_fwd.hpp"
+        #include "$include_dir$/serializer.hpp"
+
+        """,
+        include_dir=names.INCLUDE_DIR,
+    )
+    for file in files:
+        packets.emit("#include $header$", header=names.generated(file.module.stem))
+    packets.emit(
+        """
+
+        namespace $namespace$ {
+
         """,
         namespace=names.namespace(schema),
     )
-    packets = [
-        (family.packet_id, file, family)
-        for file in files
-        for family in file.families
-        if isinstance(family, Struct) and family.packet_id is not None
-    ]
-    packets.sort(key=lambda each: each[0])
-    for packet_id, file, family in packets:
-        file.packet(registry, packet_id, family)
     for number in schema.versions:
-        registry.emit(
+        packets.emit(
             """
             $inline$namespace v$number$ {
 
@@ -72,7 +112,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             number=number,
             namespace=names.namespace(schema),
         )
-    registry.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
+    packets.emit("}  // namespace $namespace$", namespace=names.namespace(schema))
     version = context.open(f"{names.INCLUDE_DIR}/version.hpp")
     version.emit(
         """

@@ -2,7 +2,8 @@ from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef
 from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema, SerializationMode, StructModel
 
 INCLUDE_DIR = "bedrock/protocol"
-REGISTRY_HEADER = f"{INCLUDE_DIR}/packets.hpp"
+REGISTRY_HEADER = f"{INCLUDE_DIR}/packets_fwd.hpp"
+PACKETS_HEADER = f"{INCLUDE_DIR}/packets.hpp"
 PRIMITIVES = {
     "str": "std::string",
     "bytes": "std::vector<std::byte>",

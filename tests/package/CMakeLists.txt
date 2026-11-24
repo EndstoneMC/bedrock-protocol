@@ -3,5 +3,5 @@ project(bedrock-protocol-package-test LANGUAGES CXX)
 
 find_package(bedrock-protocol CONFIG REQUIRED)
 
-add_executable(package_test main.cpp enum.cpp)
+add_executable(package_test main.cpp enum.cpp registry.cpp)
 target_link_libraries(package_test PRIVATE bedrock::protocol)

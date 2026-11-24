@@ -234,6 +234,21 @@ class Q:
     a: uint8
 """
 
+RESHAPED = """
+from protocol import packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@packet(id=2, until=3)
+class Q:
+    a: uint8
+
+@packet(id=2, since=3)
+class Q:
+    a: uint8
+    b: uint8
+"""
+
 ENUM_SPLIT = """
 from enum import IntEnum
 from protocol import uint8, value
@@ -1020,10 +1035,18 @@ def generate(build_package, tmp_path):
     return run
 
 
-def test_a_header_and_a_source_per_module_packets_hpp_and_version_hpp(generate):
+def test_a_header_and_a_source_per_module_packets_hpp_packets_fwd_hpp_and_version_hpp(generate):
     out = generate({"a": A, "b": B})
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "b.cpp", "b.h", "packets.hpp", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == [
+        "a.cpp",
+        "a.h",
+        "b.cpp",
+        "b.h",
+        "packets.hpp",
+        "packets_fwd.hpp",
+        "version.hpp",
+    ]
 
 
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
@@ -1042,7 +1065,13 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert sorted(path.name for path in out.iterdir()) == ["a.cpp", "a.h", "packets.hpp", "version.hpp"]
+    assert sorted(path.name for path in out.iterdir()) == [
+        "a.cpp",
+        "a.h",
+        "packets.hpp",
+        "packets_fwd.hpp",
+        "version.hpp",
+    ]
 
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
@@ -1167,10 +1196,10 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1_000_000_000}
 
 
-def test_packets_hpp_names_every_packet_of_every_module(generate):
+def test_packets_fwd_hpp_names_every_packet_of_every_module(generate):
     out = generate({"a": A, "c": C})
 
-    registry = (out / "packets.hpp").read_text()
+    registry = (out / "packets_fwd.hpp").read_text()
     assert "struct packet_of<V, 1>" in registry
     assert "struct packet_of<V, 2>" in registry
 
@@ -1185,6 +1214,32 @@ def test_packets_hpp_includes_every_module_header(generate):
     out = generate({"a": A, "b": B})
 
     assert "#include <bedrock/protocol/b.h>" in (out / "packets.hpp").read_text()
+
+
+def test_packets_hpp_includes_packets_fwd_hpp(generate):
+    out = generate({"a": A})
+
+    assert '#include "bedrock/protocol/packets_fwd.hpp"' in (out / "packets.hpp").read_text()
+
+
+def test_packets_fwd_hpp_includes_only_type_traits(generate):
+    registry = (generate({"a": A, "b": B}) / "packets_fwd.hpp").read_text()
+
+    assert re.findall(r"^#include .*$", registry, re.MULTILINE) == ["#include <type_traits>"]
+
+
+@pytest.mark.parametrize(("module", "name"), [(RESHAPED, "Q"), (GATED, "G")], ids=["reshaped", "gated"])
+def test_a_versioned_packets_registry_names_each_run_its_selector_names(generate, module, name):
+    out = generate({"a": module})
+    selected = re.findall(
+        rf"template <int V>( requires .*)\nstruct {name}_<V> {{ using type = (.*); }};", (out / "a.h").read_text()
+    )
+    registered = re.findall(
+        r"template <int V>( requires .*)\nstruct packet_of<V, 2> { using type = (.*); };",
+        (out / "packets_fwd.hpp").read_text(),
+    )
+
+    assert registered == selected
 
 
 def test_packets_hpp_gives_each_protocol_a_namespace_holding_its_number(generate):
@@ -2627,7 +2682,7 @@ def test_a_cerealized_model_reflects_its_declared_name(generate):
 
 
 def test_packet_of_names_a_merged_packet_bare(generate):
-    registry = (generate({"a": ENCODING}) / "packets.hpp").read_text()
+    registry = (generate({"a": ENCODING}) / "packets_fwd.hpp").read_text()
 
     assert "struct packet_of<V, 1> { using type = ::bedrock::protocol::P; };" in registry
 
