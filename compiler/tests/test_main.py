@@ -1139,6 +1139,13 @@ def test_a_protocols_namespace_holds_only_its_number_and_codec(generate):
     )
 
 
+def test_packets_hpp_inlines_only_the_newest_protocols_namespace(generate):
+    registry = (generate({"a": A}) / "packets.hpp").read_text()
+    opened = re.findall(r"^(inline )?namespace v(\d+) \{$", registry, re.MULTILINE)
+
+    assert opened == [("", "1"), ("", "2"), ("", "3"), ("", "4"), ("inline ", "5")]
+
+
 def test_version_hpp_names_each_release_for_its_first_version(generate):
     init = """
 from bedrock_protocol_compiler.dsl import field, packet, type, uint8

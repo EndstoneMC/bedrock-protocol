@@ -55,6 +55,7 @@ CheckOptions:
   readability-identifier-naming.EnumConstantCase: aNy_CasE
   readability-identifier-naming.ParameterCase: lower_case
   readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.VariableIgnoredRegexp: '^[a-z][a-z0-9_]*$'
   readability-identifier-naming.MemberCase: lower_case
   readability-identifier-naming.PrivateMemberCase: lower_case
   readability-identifier-naming.PrivateMemberSuffix: '_'

@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include <bedrock/protocol.hpp>
 
@@ -10,6 +11,22 @@ namespace bp = bedrock::protocol;
 
 using std::string_view_literals::operator""sv;
 
+namespace {
+
+template <typename T>
+auto encode(const T &packet) -> std::string_view;
+
+}  // namespace
+
+template <int... V>
+concept encodable_at = requires(const bp::TextPacket &packet) { bp::encode_<V...>(packet); };
+
+static_assert(encodable_at<bp::v2225::version>);
+static_assert(!encodable_at<>);
+static_assert(bp::version == bp::ProtocolVersion::MAXIMUM_VERSION.getProtocol());
+static_assert(
+    std::same_as<decltype(bp::encode), decltype(bp::encode_<bp::ProtocolVersion::MAXIMUM_VERSION.getProtocol()>)>);
+static_assert(std::same_as<decltype(encode(std::declval<const bp::TextPacket &>())), std::string_view>);
 static_assert(!std::invocable<decltype(bp::v2225::encode), const bp::Vec3 &>);
 static_assert(bp::ProtocolVersion::get(2193)->getName() == "1.26.50");
 static_assert(bp::ProtocolVersion::get(2169)->getName() == "1.26.45");
@@ -31,11 +48,11 @@ int main()
         return 1;
     }
 
-    std::expected<std::string, bp::EncodeError> pinned = bp::encode<bp::v2225::version>(packet);
+    std::expected<std::string, bp::EncodeError> pinned = bp::encode_<bp::v2225::version>(packet);
     if (!pinned || *pinned != *data) {
         return 1;
     }
-    std::expected<bp::TextPacket, bp::DecodeError> read = bp::decode<bp::v2225::version, bp::TextPacket>(*pinned);
+    std::expected<bp::TextPacket, bp::DecodeError> read = bp::decode_<bp::v2225::version, bp::TextPacket>(*pinned);
     if (!read || *read != packet) {
         return 1;
     }
@@ -60,10 +77,10 @@ int main()
     // tests/goldens/v2168/009_text.json, message_only_arm
     const std::string_view golden = "\x00\x00\x0b\x1b{\"rawtext\":[{\"text\":\"hi\"}]}\x10"
                                     "2535400000000001\x02pc\x00"sv;
-    std::expected<bp::TextPacket, bp::DecodeError> unchanged = bp::decode<2169, bp::TextPacket>(golden);
+    std::expected<bp::TextPacket, bp::DecodeError> unchanged = bp::decode_<2169, bp::TextPacket>(golden);
     if (!unchanged) {
         return 1;
     }
-    std::expected<std::string, bp::EncodeError> again = bp::encode<2169>(*unchanged);
+    std::expected<std::string, bp::EncodeError> again = bp::encode_<2169>(*unchanged);
     return again && *again == golden ? 0 : 1;
 }

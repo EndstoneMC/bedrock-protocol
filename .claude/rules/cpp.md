@@ -14,6 +14,7 @@ paths:
 - Where one protocol sends both encodings of a class name and they hold different members, name the hand-written form's type `<Name>` and the cereal form's `Cerealized<Name>` at those protocols only; `Cerealized<Name>_<V>` resolves nowhere else.
 - Name a serialization mode only where a class name has two at a protocol: `Serializer<T, V, SerializationMode::Cereal>` or `SerializationMode::Manual`; `SerializationMode::Default` exists only where it has one, and a generated body calls a child by its implementation's first protocol and mode.
 - Declare the type live at the latest protocol at the root of `bedrock::protocol` and every other under `v<N>`, N the first protocol that holds it and the first modelled protocol for the oldest; `X_<V>` selects the type of protocol V.
+- Spell the form of a name that takes the protocol `name_<V, …>` wherever the bare name also exists without it (`encode_<V>`, `decode_<V, T>`, `StartGamePacket_<V>`); the bare name is the latest protocol's.
 - Make every enum one `enum class` holding every member any protocol has, each member valued by its library value, its number at the newest protocol that has it; the generated codec maps it to each protocol's numbers and names.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
@@ -22,8 +23,8 @@ paths:
 - Declare public, then protected, then private; within each, declare types, constants, constructors, methods, then data members.
 - Mark a single-argument constructor `explicit`, except a sum type's constructors from its own alternatives.
 - Return results as values (`std::expected`, or a struct to destructure); never write through an out-parameter.
-- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the function templates `encode[<V>](packet[, writer])` and `decode<[V, ]T>(data | reader)`, which take only a `Packet<T, V>` and no mode and read a left-out `V` as `ProtocolVersion::MAXIMUM_VERSION.getProtocol()`, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`.
-- Give each protocol N a `v<N>` namespace holding only `version`, and the function objects `encode` and `decode<T>` that call `encode<N>` and `decode<N, T>`, so a using-declaration finds no root overload by ADL.
+- Say `serialize` and `deserialize` only on `Serializer<T, V>`; the entry points around it are the variable templates `encode_<V>(packet[, writer])` and `decode_<V, T>(data | reader)`, never functions, which take only a `Packet<T, V>` and no mode, and a bare type or a mode goes only through `detail::encode_fn<V>` and `detail::decode_fn<V, T>`.
+- Give each protocol N a `v<N>` namespace holding only `version`, and the function objects `encode` and `decode<T>` that call `encode_<N>` and `decode_<N, T>`; the newest protocol's is an `inline namespace`, so the root's `encode`, `decode<T>` and `version` are the latest protocol's.
 - Report bad encoded bytes, and a value its encoding cannot write, as `std::unexpected(Errc)`; generated code names the failing field with `stream.fail` on the reader and the writer; never throw for either.
 - Check a value on encode only where its encoding is narrower than its member, failing one whose cast back differs with `Errc::out_of_range`.
 - Decode a number a protocol gives a member to that member and any other number to a non-member value; reject a number the protocol cannot place, a name it lacks, a value it cannot number or name on encode, and text a text-coded `UUID` cannot parse, with `Errc::unknown_value`.

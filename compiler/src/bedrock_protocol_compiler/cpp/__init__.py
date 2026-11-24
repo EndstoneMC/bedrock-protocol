@@ -62,7 +62,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
     for number in schema.versions:
         registry.emit(
             """
-            namespace v$number$ {
+            $inline$namespace v$number$ {
 
             inline constexpr int version = $number$;
 
@@ -74,6 +74,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             }  // namespace v$number$
 
             """,
+            inline="inline " if number == schema.latest else "",
             number=number,
             namespace=names.namespace(schema),
         )
