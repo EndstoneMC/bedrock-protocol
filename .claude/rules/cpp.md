@@ -14,7 +14,7 @@ paths:
 - Where one protocol sends both encodings of a class name and they hold different members, name the hand-written form's type `<Name>` and the cereal form's `Cerealized<Name>` at those protocols only; `Cerealized<Name>_<V>` resolves nowhere else.
 - Name a serialization mode only where a class name has two at a protocol: `Serializer<T, V, SerializationMode::Cereal>` or `SerializationMode::Manual`; `SerializationMode::Default` exists only where it has one, and a generated body calls a child by its implementation's first protocol and mode.
 - Declare the type live at the latest protocol at the root of `bedrock::protocol` and every other under `v<N>`, N the first protocol that holds it and the first modelled protocol for the oldest; `X_<V>` selects the type of protocol V.
-- Spell the form of a name that takes the protocol `name_<V, …>` wherever the bare name also exists without it (`encode_<V>`, `decode_<V, T>`, `StartGamePacket_<V>`); the root's bare name is the latest protocol's.
+- Spell the form of a name that takes the protocol `name_<V, …>` wherever the bare name also exists without it (`encode_<V>`, `decode_<V, T>`, `StartGamePacket_<V>`); the root's bare name is the latest protocol's or, where it takes no protocol at all, protocol-free.
 - Make every enum one `enum class` holding every member any protocol has, each member valued by its library value, its number at the newest protocol that has it; the generated codec maps it to each protocol's numbers and names.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
