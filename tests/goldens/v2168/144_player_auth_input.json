@@ -536,5 +536,146 @@
    }
   },
   "bytes": "0000803f00000040000080400000a0400000c0400000e0400000004100004040010244480200020000104100002041c801000030410000404100005041010105000101010001010c010002000000000000000001004000000112a19cc481080a000000000000000000000201020406040a01004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403fa3a0bdaa01010101010d03000001070003090000003b00000000000007090c0e05010103616263030000000100010001000000604100007041000080410000884100009041000098410000a041"
+ },
+ {
+  "id": "craft_non_implemented_and_craft_results_arms",
+  "value": {
+   "rot": {
+    "x": 1.0,
+    "y": 2.0
+   },
+   "pos": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "move": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 3.0,
+   "input_data": [34, 36],
+   "input_mode": 2,
+   "play_mode": 0,
+   "new_interaction_model": 1,
+   "interact_rotation": {
+    "x": 9.0,
+    "y": 10.0
+   },
+   "client_tick": 200,
+   "pos_delta": {
+    "x": 11.0,
+    "y": 12.0,
+    "z": 13.0
+   },
+   "item_use_transaction": {
+    "id": {
+     "raw_id": -3
+    },
+    "transaction": {
+     "transaction": {
+      "actions": [
+       {
+        "source": {
+         "type": 0,
+         "container_id": 12
+        },
+        "slot": 2,
+        "from_item_descriptor": {
+         "id": 0,
+         "stack_size": 0,
+         "aux_value": 0,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        },
+        "to_item_descriptor": {
+         "id": 1,
+         "stack_size": 64,
+         "aux_value": 0,
+         "net_id_variant": 9,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+        }
+       }
+      ]
+     },
+     "action_type": 1,
+     "trigger_type": 1,
+     "pos": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "face": 4,
+     "slot": 5,
+     "item": {
+      "id": 1,
+      "stack_size": 64,
+      "aux_value": 0,
+      "net_id_variant": 9,
+      "block_runtime_id": 2150698529,
+      "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "click_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "target_block_id": 357519395,
+     "client_predicted_result": 1,
+     "client_cooldown_state": 1
+    }
+   },
+   "item_stack_request": {
+    "client_request_id": {
+     "raw_id": -7
+    },
+    "actions": [
+     {
+      "__class__": "CraftNonImplementedActionData",
+      "action_type": 18
+     },
+     {
+      "__class__": "CraftResultsActionData",
+      "action_type": 19,
+      "craft_results": [
+       {
+        "item_descriptor": {
+         "__class__": "ItemNameDescriptorData",
+         "descriptor_type": 1,
+         "full_name": "minecraft:stone",
+         "aux_value": 0
+        },
+        "stack_size": 2,
+        "block_runtime_id": 2150698529,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      ],
+      "num_crafts": 2
+     }
+    ],
+    "strings_to_filter": ["abc"],
+    "strings_to_filter_origin": 3
+   },
+   "analog_move_vector": {
+    "x": 14.0,
+    "y": 15.0
+   },
+   "camera_orientation": {
+    "x": 16.0,
+    "y": 17.0,
+    "z": 18.0
+   },
+   "raw_move_vector": {
+    "x": 19.0,
+    "y": 20.0
+   }
+  },
+  "bytes": "0000803f00000040000080400000a0400000c0400000e0400000004100004040010244480200020000104100002041c801000030410000404100005041010105000101010001010c010002000000000000000001004000000112a19cc481080a000000000000000000000201020406040a01004000000112a19cc481080a000000000000000000000000803f00000040000040400000003f0000803e0000403fa3a0bdaa01010101010d02101211130101010f6d696e6563726166743a73746f6e65000200a19cc481080a00000000000000000000020103616263030000000100010001000000604100007041000080410000884100009041000098410000a041"
  }
 ]

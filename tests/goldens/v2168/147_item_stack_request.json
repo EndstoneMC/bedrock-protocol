@@ -237,5 +237,44 @@
    ]
   },
   "bytes": "01090d0101021d010500000004090000001c00010000000002021c00020a0000001d00050b0000000303031c00030c000000010404041c00040d0000000505051c00050e000000060602080a0206090b0c0e0f0000000a0c08020b0d0903040000010001010f6d696e6563726166743a73746f6e6500020002022971756572792e69735f6974656d5f6e616d655f616e7928276d696e6563726166743a6170706c6527290d00030003030f6d696e6563726166743a626f61747304000d0f0a010000000e100b00000001180f110763726565706572010003000000"
+ },
+ {
+  "id": "craft_non_implemented_and_craft_results_arms",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -7
+     },
+     "actions": [
+      {
+       "__class__": "CraftNonImplementedActionData",
+       "action_type": 18
+      },
+      {
+       "__class__": "CraftResultsActionData",
+       "action_type": 19,
+       "craft_results": [
+        {
+         "item_descriptor": {
+          "__class__": "ItemNameDescriptorData",
+          "descriptor_type": 1,
+          "full_name": "minecraft:stone",
+          "aux_value": 0
+         },
+         "stack_size": 2,
+         "block_runtime_id": 2150698529,
+         "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+        }
+       ],
+       "num_crafts": 2
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "010d02101211130101010f6d696e6563726166743a73746f6e65000200a19cc481080a00000000000000000000020003000000"
  }
 ]
