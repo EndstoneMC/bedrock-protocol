@@ -522,6 +522,52 @@ class P:
     e: E = field(type=str)
 """
 
+ENUM_NAME_THEN_NUMBER = """
+from enum import IntEnum
+from protocol import field, packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+
+@packet(id=1)
+class P:
+    e: E = field(type=str, until=3)
+    e: E = field(since=3)
+"""
+
+ENUM_RENAMED_THEN_NUMBER = """
+from enum import IntEnum
+from protocol import field, packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = value(1, 'old', until=3)
+    A = value(1, 'new', since=3)
+
+@packet(id=1)
+class P:
+    e: E = field(type=str, until=3)
+    e: E = field(since=3)
+"""
+
+ENUM_NAME_LATER_FIELD = """
+from enum import IntEnum
+from protocol import field, packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+
+@packet(id=1)
+class P:
+    x: uint8
+    e: E = field(type=str, since=3)
+"""
+
 ENUM_NAME_GAINED = """
 from enum import IntEnum
 from protocol import field, packet, uint8, value
@@ -1963,7 +2009,7 @@ def test_a_naming_lists_the_names_it_writes(generate):
     assert naming_table(header, 3, "names") == '        "new",\n'
 
 
-def test_a_naming_covers_the_protocols_of_its_serializer(generate):
+def test_a_naming_covers_each_protocol_a_field_codes_it_by_name(generate):
     header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
 
     assert (
@@ -1974,6 +2020,30 @@ def test_a_naming_covers_the_protocols_of_its_serializer(generate):
         "template <int V> requires (V >= 3 && V <= 5)\n"
         "struct Naming<::bedrock::protocol::E, V> : Naming<::bedrock::protocol::E, 3> {};\n"
     ) in header
+
+
+def test_a_naming_leaves_out_the_protocols_a_field_codes_it_by_number(generate):
+    header = (generate({"a": ENUM_NAME_THEN_NUMBER}) / "a.h").read_text()
+
+    assert (
+        "template <int V> requires (V >= 1 && V < 3)\n"
+        "struct Naming<::bedrock::protocol::E, V> : Naming<::bedrock::protocol::E, 1> {};\n"
+    ) in header
+    assert header.count("struct Naming<::bedrock::protocol::E, V>") == 1
+
+
+def test_a_naming_is_named_for_the_first_protocol_a_field_codes_it_by_name(generate):
+    out = generate({"a": ENUM_NAME_LATER_FIELD})
+
+    assert "struct Naming<::bedrock::protocol::E, 3> {\n" in (out / "a.h").read_text()
+    assert "detail::name_of(detail::Naming<::bedrock::protocol::E, 3>::written, value)" in (out / "a.cpp").read_text()
+
+
+def test_a_naming_no_field_codes_by_name_has_no_table(generate):
+    out = generate({"a": ENUM_RENAMED_THEN_NUMBER})
+
+    assert "struct Naming<::bedrock::protocol::E, 3> {\n" not in (out / "a.h").read_text()
+    assert "detail::name_of(detail::Naming<::bedrock::protocol::E, 3>::written, value)" in (out / "a.cpp").read_text()
 
 
 def test_a_name_coded_enum_says_so(generate):

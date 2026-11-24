@@ -31,6 +31,27 @@ class EnumGenerator:
         self.underlying = names.PRIMITIVES[enum_type.underlying.name]
         self.enumerators = schema.enumerators(enum_type)
         self.namings = schema.namings(enum_type)
+        self.coded = {
+            naming: schema.ranges(
+                sorted(
+                    {
+                        version
+                        for encodings in schema.model_encodings.values()
+                        for encoding in encodings
+                        if naming in encoding.reached.values()
+                        for runs in encoding.served.values()
+                        for run in runs
+                        for version in schema.versions
+                        if run.contains(version)
+                    }
+                )
+            )
+            for naming in self.namings
+        }
+        self.read_at = {
+            naming: (runs[0].since or schema.versions[0]) if runs else naming.since
+            for naming, runs in self.coded.items()
+        }
         self.numberings = [numbering for numbering in schema.numberings(enum_type) if not numbering.identity]
         live = schema.enum_runs(enum_type)
         self.formless = schema.ranges(
@@ -176,6 +197,8 @@ class EnumGenerator:
             declared = dict.fromkeys(self.enumerators[member.name] for member in self.target.members)
             row = f"std::pair<{self.qualified}, std::string_view>"
             for naming in self.namings:
+                if not self.coded[naming]:
+                    continue
                 written = [(value, naming.written[value]) for value in declared if value in naming.written]
                 read = sorted((value, name) for name, value in naming.read.items())
                 tables = [
@@ -189,7 +212,7 @@ class EnumGenerator:
                     struct Naming<$qualified$, $since$> {
                     """,
                     qualified=self.qualified,
-                    since=naming.since,
+                    since=self.read_at[naming],
                 )
                 with p.indent():
                     for table, element, rows in tables:
@@ -205,7 +228,7 @@ class EnumGenerator:
                         p.emit("}};")
                 p.emit("};")
                 p.emit("")
-                for run in naming.runs:
+                for run in self.coded[naming]:
                     p.emit(
                         """
                         template <int V>$requirement$
@@ -214,7 +237,7 @@ class EnumGenerator:
                         """,
                         requirement=names.requirement(self.schema, run),
                         qualified=self.qualified,
-                        since=naming.since,
+                        since=self.read_at[naming],
                     )
 
     def held(self, number: int) -> int:
@@ -247,7 +270,7 @@ class EnumGenerator:
         unknown = names.unexpected(names.UNKNOWN_VALUE)
         for naming in self.namings:
             serializer = names.serializer(self.qualified, naming.since)
-            table = f"detail::Naming<{self.qualified}, {naming.since}>"
+            table = f"detail::Naming<{self.qualified}, {self.read_at[naming]}>"
             p.emit(
                 "auto $serializer$::serialize(BinaryWriter &stream, $qualified$ value) -> $encoded$",
                 serializer=serializer,
