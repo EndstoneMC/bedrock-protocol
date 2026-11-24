@@ -3,11 +3,15 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+
+#include "bedrock/protocol/detail/numbering.hpp"
+#include "bedrock/protocol/version.hpp"
 
 namespace bedrock::protocol {
 
@@ -28,6 +32,9 @@ inline constexpr std::array<std::string_view, 0> schema_names_v{};
 
 template <typename E>
 inline constexpr std::array<bool, 0> deprecated_v{};
+
+template <typename E>
+inline constexpr std::array<bool, 0> aliased_v{};
 
 template <typename E>
 inline constexpr auto count_v = values_v<E>.size();
@@ -293,6 +300,81 @@ template <typename E>
 [[nodiscard]] constexpr bool enum_contains(std::string_view value) noexcept
 {
     return enum_cast<E>(value).has_value();
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr std::optional<std::underlying_type_t<E>> enum_integer_(E value) noexcept
+{
+    const auto number = detail::to_number<E, V>(value);
+    if (!number) {
+        return std::nullopt;
+    }
+    return *number;
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr std::optional<E> enum_cast_(std::underlying_type_t<E> number) noexcept
+{
+    const auto value = detail::to_value<E, V>(number);
+    if (!value) {
+        return std::nullopt;
+    }
+    return *value;
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr bool enum_contains_(E value) noexcept
+{
+    return detail::to_number<E, V>(value).has_value();
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr bool enum_contains_(std::underlying_type_t<E> number) noexcept
+{
+    return detail::to_value<E, V>(number).has_value();
+}
+
+namespace detail {
+
+template <typename E>
+struct Numbered {
+    std::array<E, count_v<E>> values;
+    std::size_t count;
+};
+
+template <int V, typename E>
+constexpr Numbered<E> numbered() noexcept
+{
+    Numbered<E> out{};
+    for (std::size_t i = 0; i < count_v<E>; ++i) {
+        if (!(i < aliased_v<E>.size() && aliased_v<E>[i]) && to_number<E, V>(values_v<E>[i])) {
+            out.values[out.count++] = values_v<E>[i];
+        }
+    }
+    return out;
+}
+
+template <int V, typename E>
+inline constexpr Numbered<E> numbered_v = numbered<V, E>();
+
+}  // namespace detail
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr std::span<const E> enum_values_() noexcept
+{
+    return {detail::numbered_v<V, E>.values.data(), detail::numbered_v<V, E>.count};
+}
+
+template <int V, typename E>
+    requires(ProtocolVersion::get(V).has_value() && detail::is_reflected_v<E>)
+[[nodiscard]] constexpr std::size_t enum_count_() noexcept
+{
+    return detail::numbered_v<V, E>.count;
 }
 
 }  // namespace bedrock::protocol

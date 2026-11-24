@@ -4,11 +4,11 @@ from bedrock_protocol_compiler.cpp.enum import EnumGenerator
 from bedrock_protocol_compiler.cpp.struct import StructGenerator
 from bedrock_protocol_compiler.descriptor import Alias, Enum, Module, Range, Struct
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, EnumType, Numbering, Schema, StructModel, roots_reached
+from bedrock_protocol_compiler.schema import EnumModel, EnumType, Schema, StructModel, roots_reached
 
 
 class FileGenerator:
-    def __init__(self, schema: Schema, module: Module, reached: set[Numbering]) -> None:
+    def __init__(self, schema: Schema, module: Module) -> None:
         self.schema = schema
         self.module = module
         self.own = [family for family in module.families if isinstance(family, Struct | Enum)]
@@ -27,9 +27,7 @@ class FileGenerator:
             if isinstance(family, Struct):
                 models = [model for model in schema.models(family) if isinstance(model, StructModel)]
                 self.held[family] = {model: model.runs[family] for model in models}
-                self.generators += [
-                    StructGenerator(schema, model, reached) for model in models if model not in defined_models
-                ]
+                self.generators += [StructGenerator(schema, model) for model in models if model not in defined_models]
                 defined_models.update(models)
                 continue
             types: dict[EnumType, list[int]] = {}
@@ -38,7 +36,7 @@ class FileGenerator:
                     if isinstance(model, EnumModel) and any(run.contains(version) for run in model.runs[family]):
                         types.setdefault(schema.enum_type(family, version), []).append(version)
             self.held[family] = {enum_type: schema.ranges(versions) for enum_type, versions in types.items()}
-            self.generators += [EnumGenerator(schema, enum_type, reached) for enum_type in schema.enum_types(family)]
+            self.generators += [EnumGenerator(schema, enum_type) for enum_type in schema.enum_types(family)]
         holders = {
             generator.target: generator for generator in self.generators if isinstance(generator, StructGenerator)
         }

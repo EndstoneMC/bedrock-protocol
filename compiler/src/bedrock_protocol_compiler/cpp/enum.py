@@ -1,8 +1,9 @@
+from bedrock_protocol_compiler.builder import WIDTHS
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.field import primitive_includes
 from bedrock_protocol_compiler.descriptor import Binary, Int, MemberRef, Range
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import EnumModel, Numbering, Schema, SerializationMode
+from bedrock_protocol_compiler.schema import EnumModel, Schema, SerializationMode
 
 
 def partials(
@@ -23,7 +24,7 @@ def partials(
 
 
 class EnumGenerator:
-    def __init__(self, schema: Schema, enum_type: EnumModel, reached: set[Numbering]) -> None:
+    def __init__(self, schema: Schema, enum_type: EnumModel) -> None:
         self.schema = schema
         self.target = enum_type
         self.qualified = names.qualified(schema, enum_type)
@@ -31,7 +32,11 @@ class EnumGenerator:
         self.enumerators = schema.enumerators(enum_type)
         self.namings = schema.namings(enum_type)
         self.stem = names.bare(schema, enum_type).replace("::", "_")
-        self.numberings = [numbering for numbering in schema.numberings(enum_type) if numbering in reached]
+        self.numberings = [numbering for numbering in schema.numberings(enum_type) if not numbering.identity]
+        live = schema.enum_runs(enum_type)
+        self.formless = schema.ranges(
+            [version for version in schema.versions if not any(run.contains(version) for run in live)]
+        )
 
     def includes(self) -> set[str]:
         includes = {names.runtime("enum"), "<array>", "<string_view>"} | primitive_includes(self.target.underlying)
@@ -39,7 +44,7 @@ class EnumGenerator:
             includes |= names.SERIALIZER_INCLUDES
         if len(self.namings) > 1:
             includes.add(names.runtime("detail/naming"))
-        if self.numberings:
+        if self.numberings or self.formless:
             includes.add(names.runtime("detail/numbering"))
         return includes
 
@@ -82,6 +87,11 @@ class EnumGenerator:
         ]
         if any(member.deprecated for member in members):
             tables.append(("deprecated_v", "bool", [str(member.deprecated).lower() for member in members]))
+        numbers = [self.enumerators[member.name] for member in members]
+        if len(set(numbers)) != len(numbers):
+            tables.append(
+                ("aliased_v", "bool", [str(value in numbers[:index]).lower() for index, value in enumerate(numbers)])
+            )
         for table, element, rows in tables:
             p.emit(
                 """
@@ -117,11 +127,13 @@ class EnumGenerator:
                 qualified=self.qualified,
                 since=numbering.since,
             )
+            encoded = sorted(numbering.encoded.items(), key=lambda each: self.held(each[0]))
+            decoded = sorted(numbering.decoded.items(), key=lambda each: self.held(each[0]))
             tables = [
-                ("encoded", pair, [self.pair(each) for each in sorted(numbering.encoded.items())]),
-                ("decoded", pair, [self.pair(each) for each in sorted(numbering.decoded.items())]),
-                ("absent", self.underlying, [self.spell(each) for each in sorted(numbering.absent)]),
-                ("lossy", self.underlying, [self.spell(each) for each in sorted(numbering.lossy)]),
+                ("encoded", pair, [self.pair(each) for each in encoded]),
+                ("decoded", pair, [self.pair(each) for each in decoded]),
+                ("absent", self.underlying, [self.spell(each) for each in sorted(numbering.absent, key=self.held)]),
+                ("lossy", self.underlying, [self.spell(each) for each in sorted(numbering.lossy, key=self.held)]),
             ]
             with p.indent():
                 for table, element, rows in tables:
@@ -134,6 +146,25 @@ class EnumGenerator:
                     )
             p.emit("};")
             p.emit("")
+        selected = [
+            (run, f"Numbering<{self.qualified}, {each.since}>") for each in self.numberings for run in each.runs
+        ]
+        selected += [(run, "Formless") for run in self.formless]
+        for run, table in sorted(selected, key=lambda each: each[0].since or 0):
+            p.emit(
+                """
+                template <int V>$requirement$
+                struct numbering_of<$qualified$, V> : $table$ {};
+
+                """,
+                requirement=names.requirement(self.schema, run),
+                qualified=self.qualified,
+                table=table,
+            )
+
+    def held(self, number: int) -> int:
+        signed, width = WIDTHS[self.target.underlying.name]
+        return number if signed else number % (1 << width)
 
     def pair(self, entry: tuple[int, int]) -> str:
         return f"{{{self.spell(entry[0])}, {self.spell(entry[1])}}}"

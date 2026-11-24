@@ -571,6 +571,21 @@ class H:
     d: D
 """
 
+ENUM_UNTIL_3 = """
+from enum import IntEnum
+from protocol import type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class E(IntEnum, uint8):
+    A = 1
+
+@type(until=3)
+class H:
+    e: E
+"""
+
 ENUM_ASYMMETRIC = """
 from enum import IntEnum
 from protocol import uint8, value
@@ -1532,11 +1547,58 @@ def test_a_numbering_follows_the_reflection_of_its_enum_inside_detail(generate):
     assert "}  // namespace detail" not in header[reflection:specialization]
 
 
-def test_a_numbering_no_field_reaches_emits_no_specialization(generate):
+def test_a_numbering_no_field_reaches_is_emitted(generate):
     header = (generate({"a": ENUM_WIDTH_ONLY}) / "a.h").read_text()
 
-    assert "struct Numbering<" not in header
-    assert "detail/numbering.hpp" not in header
+    assert "template <>\nstruct Numbering<::bedrock::protocol::E, 1> {\n" in header
+
+
+def test_a_numbering_is_selected_over_each_run_it_serves(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    selector = (
+        "template <int V> requires (V >= 1 && V < 3)\n"
+        "struct numbering_of<::bedrock::protocol::E, V> : Numbering<::bedrock::protocol::E, 1> {};\n"
+    )
+    assert selector in header
+
+
+def test_an_identity_numbering_is_left_to_the_primary_selector(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert header.count("struct numbering_of<") == 1
+
+
+def test_an_enum_selects_no_numbering_where_it_has_no_form(generate):
+    header = (generate({"a": ENUM_UNTIL_3}) / "a.h").read_text()
+
+    selector = (
+        "template <int V> requires (V >= 3 && V <= 5)\n"
+        "struct numbering_of<::bedrock::protocol::v1::E, V> : Formless {};\n"
+    )
+    assert selector in header
+
+
+def test_an_enum_without_a_form_at_some_protocol_includes_the_numbering_runtime(generate):
+    header = (generate({"a": ENUM_UNTIL_3}) / "a.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/numbering.hpp>\n" in header
+
+
+def test_a_member_sharing_an_earlier_members_value_is_flagged(generate):
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+
+    flags = (
+        "inline constexpr std::array<bool, 4> aliased_v<::bedrock::protocol::E>{{\n"
+        "    false,\n    false,\n    true,\n    true,\n}};\n"
+    )
+    assert flags in header
+
+
+def test_an_enum_whose_members_hold_distinct_values_flags_none(generate):
+    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+
+    assert "aliased_v<" not in header
 
 
 def test_an_enum_with_a_numbering_includes_the_numbering_runtime(generate):

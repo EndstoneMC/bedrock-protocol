@@ -697,6 +697,63 @@ def test_a_version_class_holds_its_protocol_number(emitted):
     assert holds in emitted(SCALAR, "Protocol.java")
 
 
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param(
+            "        public static <E extends Enum<E>> @NotNull OptionalInt enumInteger(@NotNull E value) {\n"
+            "            return Protocol.enumInteger(VERSION, value);\n"
+            "        }\n",
+            id="enum-integer",
+        ),
+        pytest.param(
+            "        public static <E extends Enum<E>> @NotNull Optional<E> enumCast("
+            "@NotNull Class<E> type, int number) {\n"
+            "            return Protocol.enumCast(VERSION, type, number);\n"
+            "        }\n",
+            id="enum-cast",
+        ),
+        pytest.param(
+            "        public static <E extends Enum<E>> boolean enumContains(@NotNull E value) {\n"
+            "            return Protocol.enumInteger(VERSION, value).isPresent();\n"
+            "        }\n",
+            id="enum-contains-value",
+        ),
+        pytest.param(
+            "        public static <E extends Enum<E>> boolean enumContains(@NotNull Class<E> type, int number) {\n"
+            "            return Protocol.enumCast(VERSION, type, number).isPresent();\n"
+            "        }\n",
+            id="enum-contains-number",
+        ),
+        pytest.param(
+            "        public static <E extends Enum<E>> @NotNull List<E> enumValues(@NotNull Class<E> type) {\n"
+            "            return Protocol.enumValues(VERSION, type);\n"
+            "        }\n",
+            id="enum-values",
+        ),
+        pytest.param(
+            "        public static <E extends Enum<E>> int enumCount(@NotNull Class<E> type) {\n"
+            "            return Protocol.enumValues(VERSION, type).size();\n"
+            "        }\n",
+            id="enum-count",
+        ),
+    ],
+)
+def test_a_version_class_answers_for_enums_at_its_protocol(emitted, method):
+    assert method in emitted(SCALAR, "Protocol.java")
+
+
+def test_the_protocol_class_registers_every_enum_with_its_numbering(java):
+    text = (java(COLORS + "class P:\n    c: Color\n") / "Protocol.java").read_text()
+
+    numbering = "dev.endstone.protocol.internal.ColorNumbering"
+    registration = (
+        f"            register(dev.endstone.protocol.Color.class, {numbering}::enumInteger, {numbering}::enumCast, "
+        f"{numbering}::enumValues);\n"
+    )
+    assert registration in text
+
+
 def test_a_version_class_has_a_private_constructor(emitted):
     constructor = "        public static final int VERSION = 3;\n\n        private v3() {}\n"
 
@@ -1619,10 +1676,37 @@ def test_a_renumbered_enum_has_a_numbering_class_in_the_internal_package(java):
     assert (java(RENUMBERED) / "internal/ModeNumbering.java").is_file()
 
 
-def test_an_enum_without_a_numbering_to_apply_has_no_numbering_class(java):
+def test_an_enum_without_a_numbering_to_apply_has_a_numbering_class(java):
     root = java(COLORS + "class P:\n    c: Color\n")
 
-    assert not (root / "internal").exists()
+    assert (root / "internal/ColorNumbering.java").is_file()
+
+
+def test_encodes_rejects_a_value_the_protocol_cannot_number(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    cases = (
+        "    public static boolean encodes(int protocol, int value) {\n"
+        "        if (protocol < 3) {\n"
+        "            return switch (value) {\n"
+        "                case 2 -> false;\n"
+        "                default -> true;\n"
+        "            };\n"
+    )
+    assert cases in text
+
+
+def test_decodes_answers_false_at_a_protocol_the_enum_is_not_live_at(java):
+    text = (java(GROWING_UNTIL_5) / "internal/Mode_v1Numbering.java").read_text()
+
+    tail = "            return true;\n        }\n        return false;\n    }\n\n    public static int fromNumber("
+    assert tail in text
+
+
+def test_enum_cast_reads_an_unnamed_value_as_unrecognized(java):
+    text = (java(LEAVING) / "internal/ModeNumbering.java").read_text()
+
+    assert "        return Optional.of(value == null ? dev.endstone.protocol.Mode.UNRECOGNIZED : value);\n" in text
 
 
 def test_to_number_maps_a_value_to_its_number_below_the_protocol_that_renumbers(java):

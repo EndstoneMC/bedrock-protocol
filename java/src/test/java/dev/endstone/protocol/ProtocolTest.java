@@ -1,13 +1,18 @@
 package dev.endstone.protocol;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import dev.endstone.protocol.internal.SerializationMode;
 import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -152,6 +157,62 @@ final class ProtocolTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> Protocol.v2225.decode(Unregistered.class, new byte[0]))
+                        .getMessage());
+    }
+
+    @Test
+    void aProtocolNumbersAnEnumValue() {
+        assertEquals(OptionalInt.of(614), Protocol.v2168.enumInteger(LevelSoundEvent.UNDEFINED));
+    }
+
+    @Test
+    void aProtocolGivesNoNumberToAValueItCannotEncode() {
+        assertEquals(OptionalInt.empty(), Protocol.v2193.enumInteger(ContainerType.DISC_PRESS));
+    }
+
+    @Test
+    void aProtocolCannotEncodeAValueItGivesNoNumber() {
+        assertFalse(Protocol.v2193.enumContains(ContainerType.DISC_PRESS));
+    }
+
+    @Test
+    void aNumberReadsAsTheMemberTheProtocolGivesIt() {
+        assertEquals(
+                Optional.of(MolangVersion.LEAF_SUPPORTING_IN_FIRST_SOLID_BLOCK_BELOW),
+                Protocol.v729.enumCast(MolangVersion.class, 12));
+    }
+
+    @Test
+    void aNumberNoMemberHoldsReadsAsUnrecognized() {
+        assertEquals(
+                Optional.of(ContainerType.UNRECOGNIZED),
+                Protocol.v2225.enumCast(ContainerType.class, 100));
+    }
+
+    @Test
+    void aProtocolCannotDecodeANumberItCannotPlace() {
+        assertFalse(Protocol.v2168.enumContains(ContainerID.class, 126));
+    }
+
+    @Test
+    void aProtocolListsNoValueOfAnEnumItLacks() {
+        assertEquals(List.of(), Protocol.v2193.enumValues(CursorItemDragState.class));
+    }
+
+    @Test
+    void aProtocolCountsOneValueFewerWhereItLacksOne() {
+        assertEquals(
+                Protocol.v2225.enumCount(ContainerType.class) - 1,
+                Protocol.v2193.enumCount(ContainerType.class));
+    }
+
+    @Test
+    void enumValuesRejectsAnEnumTheSchemaLacks() {
+        assertEquals(
+                "dev.endstone.protocol.internal.SerializationMode: is not an enum",
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> Protocol.v2225.enumValues(SerializationMode.class))
                         .getMessage());
     }
 }

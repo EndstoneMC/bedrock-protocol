@@ -2,17 +2,11 @@ from bedrock_protocol_compiler.context import GeneratorContext
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.file import FileGenerator
 from bedrock_protocol_compiler.descriptor import Struct
-from bedrock_protocol_compiler.schema import Numbering, Schema
+from bedrock_protocol_compiler.schema import Schema
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
-    reached = {
-        each
-        for encoding in schema.encoded.values()
-        for each in encoding.reached.values()
-        if isinstance(each, Numbering) and not each.identity
-    }
-    files = [FileGenerator(schema, module, reached) for module in schema.modules]
+    files = [FileGenerator(schema, module) for module in schema.modules]
     for file in files:
         file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
         file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))

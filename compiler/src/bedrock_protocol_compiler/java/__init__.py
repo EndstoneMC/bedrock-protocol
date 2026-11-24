@@ -4,7 +4,7 @@ from bedrock_protocol_compiler.java import file, names, protocol, version
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.message import MessageGenerator, type_generator
-from bedrock_protocol_compiler.java.numbering import NumberingGenerator, reached
+from bedrock_protocol_compiler.java.numbering import NumberingGenerator, enums
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema, StructModel
 
@@ -43,7 +43,7 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
             file.write(schema, context.open(names.path(package, name)), package, body)
     internal = names.internal(schema)
     numbered: dict[str, EnumModel] = {}
-    for model in reached(schema):
+    for model in enums(schema):
         body = Printer()
         numbering = NumberingGenerator(schema, model)
         if numbered.setdefault(numbering.name, model) is not model:
@@ -57,5 +57,5 @@ def generate(schema: Schema, context: GeneratorContext) -> None:
     version.table(schema, body)
     file.write(schema, context.open(names.path(schema.java_package, names.VERSION)), schema.java_package, body)
     body = Printer()
-    protocol.definition(schema, generators, body)
+    protocol.definition(schema, generators, enums(schema), body)
     file.write(schema, context.open(names.path(schema.java_package, names.PROTOCOL)), schema.java_package, body)

@@ -4,10 +4,12 @@ from bedrock_protocol_compiler.java import names
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.message import MessageGenerator
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Schema
+from bedrock_protocol_compiler.schema import EnumModel, Schema
 
 
-def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator], p: Printer) -> None:
+def definition(
+    schema: Schema, generators: list[MessageGenerator | EnumGenerator], enums: list[EnumModel], p: Printer
+) -> None:
     p.emit(
         """
         public final class $name$ {
@@ -64,6 +66,19 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 return type.cast(registration.decode(buf, version));
             }
 
+            private static <E extends Enum<E>> @NotNull OptionalInt enumInteger(int version, @NotNull E value) {
+                return Enums.of(value.getDeclaringClass()).enumInteger(version, value);
+            }
+
+            private static <E extends Enum<E>> @NotNull Optional<E> enumCast(
+                    int version, @NotNull Class<E> type, int number) {
+                return Enums.of(type).cast().apply(version, number).map(type::cast);
+            }
+
+            private static <E extends Enum<E>> @NotNull List<E> enumValues(int version, @NotNull Class<E> type) {
+                return Enums.of(type).values().apply(version).stream().map(type::cast).toList();
+            }
+
             private static final class Registry {
                 private static final @NotNull Map<Class<? extends Packet>, Registration<?>> TYPES = new HashMap<>();
 
@@ -76,6 +91,42 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 private static <T extends Packet> void register(
                         @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
                     TYPES.put(type, new Registration<>(type, name, selector));
+                }
+            }
+
+            private static final class Enums {
+                private static final @NotNull Map<Class<?>, Numbered<?>> TYPES = new HashMap<>();
+
+                static {
+                    $enums$
+                }
+
+                private Enums() {}
+
+                private static <E extends Enum<E>> void register(
+                        @NotNull Class<E> type,
+                        @NotNull BiFunction<Integer, E, OptionalInt> integer,
+                        @NotNull BiFunction<Integer, Integer, Optional<E>> cast,
+                        @NotNull IntFunction<List<E>> values) {
+                    TYPES.put(type, new Numbered<>(type, integer, cast, values));
+                }
+
+                private static @NotNull Numbered<?> of(@NotNull Class<?> type) {
+                    Numbered<?> numbered = TYPES.get(type);
+                    if (numbered == null) {
+                        throw new IllegalArgumentException(type.getName() + ": is not an enum");
+                    }
+                    return numbered;
+                }
+            }
+
+            private record Numbered<E extends Enum<E>>(
+                    @NotNull Class<E> type,
+                    @NotNull BiFunction<Integer, E, OptionalInt> integer,
+                    @NotNull BiFunction<Integer, Integer, Optional<E>> cast,
+                    @NotNull IntFunction<List<E>> values) {
+                @NotNull OptionalInt enumInteger(int version, @NotNull Object value) {
+                    return integer.apply(version, type.cast(value));
                 }
             }
 
@@ -99,6 +150,7 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
         latest=schema.latest,
         versions=partial(versions, schema, p),
         registrations=partial(registrations, schema, p, generators),
+        enums=partial(enum_registrations, schema, p, enums),
     )
 
 
@@ -126,6 +178,30 @@ def versions(schema: Schema, p: Printer) -> None:
                 public static <T extends Packet> @NotNull T decode(@NotNull Class<T> type, @NotNull ByteBuf buf) {
                     return $name$.decode(VERSION, type, buf);
                 }
+
+                public static <E extends Enum<E>> @NotNull OptionalInt enumInteger(@NotNull E value) {
+                    return $name$.enumInteger(VERSION, value);
+                }
+
+                public static <E extends Enum<E>> @NotNull Optional<E> enumCast(@NotNull Class<E> type, int number) {
+                    return $name$.enumCast(VERSION, type, number);
+                }
+
+                public static <E extends Enum<E>> boolean enumContains(@NotNull E value) {
+                    return $name$.enumInteger(VERSION, value).isPresent();
+                }
+
+                public static <E extends Enum<E>> boolean enumContains(@NotNull Class<E> type, int number) {
+                    return $name$.enumCast(VERSION, type, number).isPresent();
+                }
+
+                public static <E extends Enum<E>> @NotNull List<E> enumValues(@NotNull Class<E> type) {
+                    return $name$.enumValues(VERSION, type);
+                }
+
+                public static <E extends Enum<E>> int enumCount(@NotNull Class<E> type) {
+                    return $name$.enumValues(VERSION, type).size();
+                }
             }
 
             """,
@@ -145,3 +221,13 @@ def registrations(schema: Schema, p: Printer, generators: list[MessageGenerator 
                 name=names.nested(schema, generator.model),
             )
         registrations(schema, p, generator.nested)
+
+
+def enum_registrations(schema: Schema, p: Printer, enums: list[EnumModel]) -> None:
+    for model in enums:
+        numbering = f"{names.internal(schema)}.{names.numbering(schema, model)}"
+        p.emit(
+            "register($spelled$.class, $numbering$::enumInteger, $numbering$::enumCast, $numbering$::enumValues);",
+            spelled=names.qualified(schema, model),
+            numbering=numbering,
+        )

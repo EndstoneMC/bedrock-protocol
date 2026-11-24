@@ -1,7 +1,7 @@
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import v729, v1001
+from bedrock_protocol import v729, v898, v1001, v2168, v2193, v2225
 
 
 def test_an_enum_member_keeps_its_schema_name():
@@ -211,3 +211,100 @@ def test_the_number_of_a_sentinel_is_no_member():
 
 def test_a_deprecated_member_says_so_in_its_docstring():
     assert bp.InputMode.MOTION_CONTROLLER_DEPRECATED.__doc__ == "Deprecated."
+
+
+@pytest.mark.parametrize(
+    ("module", "value", "number"),
+    [
+        pytest.param(v2225, bp.ContainerType.DISC_PRESS, 38, id="appended-member"),
+        pytest.param(v2168, bp.LevelSoundEvent.UNDEFINED, 614, id="member-shifted-later"),
+        pytest.param(v2225, bp.LevelSoundEvent.UNDEFINED, 615, id="member-at-its-library-value"),
+        pytest.param(v898, bp.ActorDamageCause.DEHYDRATION, 35, id="member-valued-above-its-number"),
+        pytest.param(v729, bp.MolangVersion.LATEST, 12, id="derived-member"),
+        pytest.param(v2168, bp.PieceType.UNSUPPORTED, 28, id="member-shifted-by-an-insertion"),
+        pytest.param(v2193, bp.CurrentCmdVersion.LATEST, 52, id="enum-no-field-numbers"),
+    ],
+)
+def test_a_protocol_numbers_an_enum_value(module, value, number):
+    assert module.enum_integer(value) == number
+
+
+@pytest.mark.parametrize(
+    ("module", "value"),
+    [
+        pytest.param(v2193, bp.ContainerType.DISC_PRESS, id="member-added-later"),
+        pytest.param(v2168, bp.LevelSoundEvent.ICE_BALL_BREAK, id="member-inserted-later"),
+        pytest.param(v729, bp.ActorDamageCause.DEHYDRATION, id="member-of-a-later-span"),
+        pytest.param(v2168, bp.PieceType.CO_CO, id="member-inserted-before-another"),
+        pytest.param(v2193, bp.CursorItemDragState.START, id="enum-the-protocol-lacks"),
+    ],
+)
+def test_a_protocol_gives_no_number_to_a_value_it_cannot_encode(module, value):
+    assert module.enum_integer(value) is None
+
+
+def test_a_protocol_cannot_encode_a_value_it_gives_no_number():
+    assert not v2193.enum_contains(bp.ContainerType.DISC_PRESS)
+
+
+def test_a_protocol_can_encode_a_value_it_numbers():
+    assert v2225.enum_contains(bp.ContainerType.DISC_PRESS)
+
+
+def test_a_number_reads_as_the_member_the_protocol_gives_it():
+    assert v729.enum_cast(bp.MolangVersion, 12) is bp.MolangVersion.LEAF_SUPPORTING_IN_FIRST_SOLID_BLOCK_BELOW
+
+
+def test_a_number_no_member_holds_reads_as_an_int():
+    assert type(v2225.enum_cast(bp.ContainerType, 100)) is int
+
+
+def test_a_number_the_protocol_cannot_place_reads_as_none():
+    assert v2168.enum_cast(bp.ContainerID, 126) is None
+
+
+def test_a_protocol_cannot_decode_a_number_it_cannot_place():
+    assert not v2168.enum_contains(bp.ContainerID, 126)
+
+
+def test_a_number_of_an_enum_the_protocol_lacks_reads_as_none():
+    assert v2193.enum_cast(bp.CursorItemDragState, 0) is None
+
+
+def test_a_protocol_lists_the_values_it_can_encode_in_declaration_order():
+    assert v2225.enum_values(bp.CursorItemDragState) == (bp.CursorItemDragState.START, bp.CursorItemDragState.STOP)
+
+
+def test_a_protocol_lists_no_value_of_an_enum_it_lacks():
+    assert v2193.enum_values(bp.CursorItemDragState) == ()
+
+
+def test_a_protocol_leaves_out_a_value_it_cannot_encode():
+    assert bp.ContainerType.DISC_PRESS not in v2193.enum_values(bp.ContainerType)
+
+
+def test_a_value_two_members_share_is_listed_once():
+    assert v2225.enum_values(bp.MolangVersion).count(bp.MolangVersion.LATEST) == 1
+
+
+def test_a_protocol_counts_the_values_it_lists(protocol):
+    assert protocol.enum_count(bp.LevelSoundEvent) == len(protocol.enum_values(bp.LevelSoundEvent))
+
+
+def test_a_protocol_counts_one_value_fewer_where_it_lacks_one():
+    assert v2193.enum_count(bp.ContainerType) == v2225.enum_count(bp.ContainerType) - 1
+
+
+def test_enum_integer_rejects_a_value_that_is_no_enum():
+    with pytest.raises(TypeError, match=r"^value: <class 'int'> is not an enum$"):
+        v2225.enum_integer(5)
+
+
+def test_enum_cast_rejects_a_class_that_is_no_enum():
+    with pytest.raises(TypeError, match=r"^cls: <class 'bedrock_protocol.TextPacket'> is not an enum$"):
+        v2225.enum_cast(bp.TextPacket, 0)
+
+
+def test_enum_cast_rejects_a_number_its_enum_cannot_hold():
+    with pytest.raises(TypeError, match=r"^number: cannot hold 300$"):
+        v2225.enum_cast(bp.ContainerType, 300)
