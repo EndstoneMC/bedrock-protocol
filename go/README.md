@@ -19,19 +19,19 @@ import "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 packet := &protocol.TextPacket{}
 packet.Body = &protocol.TextPacket_MessageOnly_{
-	MessageOnly: &protocol.TextPacket_MessageOnly{Type: protocol.TextPacketType_CHAT, Message: "hello"},
+    MessageOnly: &protocol.TextPacket_MessageOnly{Type: protocol.TextPacketType_CHAT, Message: "hello"},
 }
 
 data, err := protocol.Encode(packet)
 if err != nil {
-	panic(err)
+    panic(err)
 }
 decoded := &protocol.TextPacket{}
 if err := protocol.Decode(data, decoded); err != nil {
-	panic(err)
+    panic(err)
 }
 if decoded.GetMessageOnly().GetMessage() != "hello" {
-	panic(decoded)
+    panic(decoded)
 }
 ```
 
@@ -40,19 +40,19 @@ if decoded.GetMessageOnly().GetMessage() != "hello" {
 ```go
 version, ok := protocol.GetProtocolVersion(2259)
 if !ok || version.Name() != "1.26.70" {
-	panic(version)
+    panic(version)
 }
 
 pinned, err := protocol.V2259.Encode(packet)
 if err != nil {
-	panic(err)
+    panic(err)
 }
 picked := &protocol.TextPacket{}
 if err := protocol.V2259.Decode(pinned, picked); err != nil {
-	panic(err)
+    panic(err)
 }
 if picked.GetMessageOnly().GetMessage() != "hello" {
-	panic(picked)
+    panic(picked)
 }
 ```
 
