@@ -9,7 +9,7 @@ paths:
 
 - Name every schema module after a BDS game-tree folder, and open it with a Google-style docstring: the summary line `<subject>, from <folders>.`, then, after a blank line, what it holds and one `Not ...` line per exclusion.
 - Settle placement by grepping the docstrings (`head -qn 1 protocol/*.py`, `grep -n "^Not " protocol/*.py`), never by re-deriving the taxonomy.
-- Declare `package = "bedrock.protocol"` after a module's imports and `java_package = "dev.endstone.protocol"` on the line below it, and add the module's header to `include/bedrock/protocol.hpp` in the same commit.
+- Declare `package = "bedrock.protocol"` after a module's imports, `java_package = "dev.endstone.protocol"` on the line below it and `go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"` below that, and add the module's header to `include/bedrock/protocol.hpp` in the same commit.
 - Change a module's docstring in the same commit that adds a declaration it excludes.
 - Place a declaration by its BDS header's domain folder:
   - a reusable type goes to its domain's module;

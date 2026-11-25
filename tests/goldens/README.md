@@ -1,6 +1,6 @@
 # Goldens
 
-Packet values with the bytes Bedrock Dedicated Server (BDS) reads and writes back unchanged, checked both ways by `tests/test_goldens.py` and Java's `GoldensTest`.
+Packet values with the bytes Bedrock Dedicated Server (BDS) reads and writes back unchanged, checked both ways by `tests/test_goldens.py`, Java's `GoldensTest` and Go's `goldens_test.go`.
 
 `v2168/` holds every packet live at 2168, and each other `v<protocol>/` the packets whose encoding differs from its neighbour's toward 2168; each folder is checked against the BDS build [`goldens.md`](../../.claude/rules/protocol/goldens.md) names.
 

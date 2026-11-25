@@ -8,6 +8,7 @@ from typing import Literal
 from protocol import array, bitset, field, packet, sentinel, type, uint8, uint16, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 GATED_ALIAS = (

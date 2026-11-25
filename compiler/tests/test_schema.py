@@ -25,6 +25,7 @@ from typing import Literal
 from protocol import array, bitset, field, int8, int32, packet, sentinel, type, uint8, uint16, value, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 APPENDED_INIT = """
@@ -40,6 +41,7 @@ from enum import IntEnum
 from protocol import field, packet, int64, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 type ActorUniqueID = int64
 
@@ -77,6 +79,7 @@ SOUND = """
 from protocol import field, packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=348, since=2168)
 class ClientboundUpdateSoundDataPacket:

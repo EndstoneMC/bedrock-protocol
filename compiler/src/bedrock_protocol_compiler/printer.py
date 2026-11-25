@@ -23,7 +23,7 @@ class Printer:
         yield
         self.prefix = outer
 
-    def emit(self, template: str, **variables: str | int | Callable[[], None]) -> None:
+    def emit(self, template: str, **variables: str | int | Callable[[], object]) -> None:
         for line in textwrap.dedent(template).removeprefix("\n").removesuffix("\n").split("\n"):
             body = line.lstrip(" ")
             whole_line = MARKER.fullmatch(body)

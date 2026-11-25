@@ -232,6 +232,7 @@ class Schema:
         self.modules = package.modules
         self.package = package.modules[0].package
         self.java_package = package.modules[0].java_package
+        self.go_package = package.modules[0].go_package
         self.versions = package.versions
         self.releases = package.releases
         self.latest = package.versions[-1]

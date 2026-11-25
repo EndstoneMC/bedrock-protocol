@@ -10,6 +10,7 @@ from enum import IntEnum
 from protocol import field, packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     X = 1
@@ -23,6 +24,7 @@ B = """
 from protocol import type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class B:
     x: uint8
@@ -33,6 +35,7 @@ C = """
 from protocol import packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=2)
 class Q:
@@ -44,6 +47,7 @@ GATED = """
 from protocol import packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=2, since=3)
 class G:
@@ -56,6 +60,7 @@ from enum import IntEnum
 from protocol import bitset, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -72,6 +77,7 @@ from enum import IntEnum
 from protocol import bitset, field, packet, sentinel, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -96,6 +102,7 @@ from enum import IntEnum
 from protocol import auto, field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class D(IntEnum, uint8):
     A = 1
@@ -113,6 +120,7 @@ CYLINDER = """
 from protocol import field
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Vec2:
     x: float
@@ -127,6 +135,7 @@ NESTED = """
 from protocol import type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Inner:
     x: uint8
@@ -140,6 +149,7 @@ RETURNING = """
 from protocol import type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class A:
@@ -158,6 +168,7 @@ LISTS = """
 from protocol import uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Item:
     x: uint8
@@ -172,6 +183,7 @@ from enum import IntEnum
 from protocol import bitset, builtin, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @builtin
 class DynamicValue:
@@ -192,6 +204,7 @@ MAPS = """
 from protocol import uint8, uint16
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Item:
     x: uint8
@@ -204,6 +217,7 @@ ENCODING = """
 from protocol import packet, type, int32, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class S:
@@ -222,6 +236,7 @@ ORDER = """
 from protocol import packet, uint8, uint16
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=2, until=3)
 class Q:
@@ -238,6 +253,7 @@ RESHAPED = """
 from protocol import packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=2, until=3)
 class Q:
@@ -254,6 +270,7 @@ from enum import IntEnum
 from protocol import uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -267,6 +284,7 @@ MERGED_NEST = """
 from protocol import packet, uint8, int32, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @packet(id=2, until=3)
 class T:
@@ -290,6 +308,7 @@ VERSIONED = """
 from protocol import type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class R:
@@ -305,6 +324,7 @@ PAIR_EQUAL = """
 from protocol import field, packet, type, int32, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class B:
@@ -332,6 +352,7 @@ PAIR_SHARED_LATER = """
 from protocol import field, packet, type, int32, uint8, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class G:
@@ -355,6 +376,7 @@ PAIR_DIFFERENT = """
 from protocol import field, packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class H:
@@ -394,6 +416,7 @@ PAIR_NEW_ENCODING_AFTER_MIXED = """
 from protocol import field, packet, type, int32, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class B:
@@ -422,6 +445,7 @@ from enum import IntEnum
 from protocol import field, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -437,6 +461,7 @@ from enum import IntEnum
 from protocol import uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -452,6 +477,7 @@ from enum import IntEnum
 from protocol import int32, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, int32):
     Old = value(1, until=3)
@@ -468,6 +494,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(since=3)
 class Z(IntEnum, uint8):
@@ -484,6 +511,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=4)
 class F(IntEnum, uint8):
@@ -500,6 +528,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class N:
@@ -527,6 +556,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = value(1, 'old', until=3)
@@ -542,6 +572,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -557,6 +588,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = value(1, 'old', until=3)
@@ -573,6 +605,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -588,6 +621,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -604,6 +638,7 @@ from typing import Literal
 from protocol import field, packet, sentinel, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -622,6 +657,7 @@ from enum import IntEnum
 from protocol import uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class D(IntEnum, uint8):
     A = 1
@@ -637,6 +673,7 @@ from enum import IntEnum
 from protocol import packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -652,6 +689,7 @@ from enum import IntEnum
 from protocol import field, packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class F(IntEnum, uint8):
@@ -681,6 +719,7 @@ from enum import IntEnum
 from protocol import type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class E(IntEnum, uint8):
@@ -696,6 +735,7 @@ from enum import IntEnum
 from protocol import uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -712,6 +752,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -729,6 +770,7 @@ from enum import IntEnum
 from protocol import int16, packet, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, int16):
     A = 1
@@ -745,6 +787,7 @@ from enum import IntEnum
 from protocol import field, int32, packet, uint8, uvarint32, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, int32):
     A = 1
@@ -764,6 +807,7 @@ from enum import IntEnum
 from protocol import packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -783,6 +827,7 @@ from typing import Literal
 from protocol import packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -799,6 +844,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1
@@ -816,6 +862,7 @@ from enum import IntEnum
 from protocol import bitset, field, packet, sentinel, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = value(1, until=3)
@@ -837,6 +884,7 @@ from enum import IntEnum
 from protocol import bitset, packet, sentinel, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     X = 1
@@ -854,6 +902,7 @@ from enum import IntEnum
 from protocol import field, packet, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = value(1, "old", until=3)
@@ -871,6 +920,7 @@ from enum import IntEnum
 from protocol import field, packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class B:
     class F(IntEnum, uint8):
@@ -896,6 +946,7 @@ from enum import IntEnum
 from protocol import field, packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class F(IntEnum, uint8):
     A = 1
@@ -920,6 +971,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class N:
@@ -953,6 +1005,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class N:
@@ -993,6 +1046,7 @@ DEEP_SHARED_CHAIN = """
 from protocol import packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class N:
@@ -1039,6 +1093,7 @@ from enum import IntEnum
 from protocol import packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 @type(until=3)
 class N:
@@ -1119,7 +1174,8 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
     build_package({"a": B})
     (tmp_path / "protocol/a.py").write_text(
-        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\nclass A:\n    x: Missing\n'
+        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n'
+        'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\nclass A:\n    x: Missing\n'
     )
 
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
@@ -1174,7 +1230,8 @@ def test_a_deprecated_member_is_a_deprecated_enumerator(generate):
 def test_a_pointer_is_defined_after_the_members_it_ranks_before(generate):
     source = (
         'from enum import IntEnum, auto\nfrom protocol import uint8\npackage = "bedrock.protocol"\n'
-        'java_package = "dev.endstone.protocol"\n\n'
+        'java_package = "dev.endstone.protocol"\n'
+        'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n\n'
         "class E(IntEnum, uint8):\n    A = 1\n    B = 2\n"
         "    COUNT = auto()\n    LATEST = COUNT - 1\n\nclass H:\n    e: E\n"
     )
@@ -1228,7 +1285,8 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     for path in out.iterdir():
         os.utime(path, ns=(1_000_000_000, 1_000_000_000))
     (tmp_path / "protocol/b.py").write_text(
-        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\nclass B:\n    x: Missing\n'
+        'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n'
+        'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\nclass B:\n    x: Missing\n'
     )
 
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
@@ -1365,6 +1423,7 @@ CONDITIONAL_COPIES = """
 from protocol import field, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Swing:
     action: uint8
@@ -1398,6 +1457,7 @@ EXCLUDED = """
 from protocol import field, packet, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Info:
     id: uint8
@@ -1498,6 +1558,7 @@ EXCLUDED_REENCODED = """
 from protocol import field, packet, uint8, uint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class Info:
     id: uint8
@@ -1528,6 +1589,7 @@ EXCLUDED_PAIR = """
 from protocol import field, packet, type, uint8
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class B:
     x: uint8

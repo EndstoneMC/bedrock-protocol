@@ -7,6 +7,7 @@ from protocol.actor import ActorType, ActorUniqueID
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 class MinecraftEventing:

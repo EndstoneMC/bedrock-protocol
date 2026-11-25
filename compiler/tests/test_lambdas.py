@@ -18,6 +18,7 @@ from enum import IntEnum
 from protocol import bitset, field, packet, type, uint8, uint32, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 class E(IntEnum, uint8):
     A = 1

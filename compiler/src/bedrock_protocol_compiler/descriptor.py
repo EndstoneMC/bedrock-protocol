@@ -241,6 +241,7 @@ class Module:
     stem: str
     package: str
     java_package: str
+    go_package: str
     families: tuple[Family, ...]
 
 

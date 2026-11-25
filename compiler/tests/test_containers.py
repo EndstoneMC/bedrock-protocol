@@ -23,6 +23,7 @@ from typing import Literal, Union
 from protocol import array, bitset, field, int8, int32, uint8, uint16, uint32, uvarint32, varint32
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 
@@ -106,6 +107,7 @@ def test_union_alias_naming_an_alias_from_a_later_module_builds(build_package):
         "from bedrock_protocol_compiler.dsl import uint8, uint32\n"
         "package = 'bedrock.protocol'\n"
         "java_package = 'dev.endstone.protocol'\n"
+        "go_package = 'github.com/EndstoneMC/bedrock-protocol/go/protocol'\n"
     )
     a = imports + "from protocol.b import Id\n\ntype V = Id | uint8\n"
     b = imports + "type Id = uint32\n"
@@ -129,6 +131,7 @@ def test_union_alias_imported_by_another_module_resolves_to_its_variant(build_pa
         "from bedrock_protocol_compiler.dsl import uint8, uint16\n"
         "package = 'bedrock.protocol'\n"
         "java_package = 'dev.endstone.protocol'\n"
+        "go_package = 'github.com/EndstoneMC/bedrock-protocol/go/protocol'\n"
     )
     a = imports + "type V = uint8 | uint16\n"
     b = imports + "from protocol.a import V\n\nclass B:\n    x: V\n"
