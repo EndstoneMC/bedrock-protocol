@@ -147,17 +147,17 @@ Only a `freezes` case can freeze, or a traced one as above. A difference no rule
 The coverage build lives in `build/Debug`, and its venv holds scikit-build-core, nanobind==2.13.0, pytest, nbtlib and `./compiler`:
 
 ```
-uv venv build/coverage-venv
-uv pip install --python build/coverage-venv/bin/python scikit-build-core nanobind==2.13.0 pytest nbtlib ./compiler
-uv pip install --python build/coverage-venv/bin/python --no-build-isolation --no-deps --reinstall-package bedrock-protocol -C install.strip=false -C cmake.build-type=Debug -C cmake.define.CMAKE_CXX_COMPILER=clang++ -C "cmake.define.CMAKE_CXX_FLAGS=-fprofile-instr-generate -fcoverage-mapping" -C "cmake.define.CMAKE_MODULE_LINKER_FLAGS=-fprofile-instr-generate" .
-SO=$(find build/coverage-venv -name '_core*.so')
+uv venv build/Debug/.venv
+uv pip install --python build/Debug/.venv/bin/python scikit-build-core nanobind==2.13.0 pytest nbtlib ./compiler
+uv pip install --python build/Debug/.venv/bin/python --no-build-isolation --no-deps --reinstall-package bedrock-protocol -C install.strip=false -C cmake.build-type=Debug -C cmake.define.CMAKE_CXX_COMPILER=clang++ -C "cmake.define.CMAKE_CXX_FLAGS=-fprofile-instr-generate -fcoverage-mapping" -C "cmake.define.CMAKE_MODULE_LINKER_FLAGS=-fprofile-instr-generate" .
+SO=$(find build/Debug/.venv -name '_core*.so')
 ```
 
 The report for the whole suite:
 
 ```
 D=build/Debug/profiles/all; rm -rf $D; mkdir -p $D
-LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests
+LLVM_PROFILE_FILE=$D/%p.profraw build/Debug/.venv/bin/python -m pytest tests
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov report $SO -instr-profile=$D/merged.profdata -show-branch-summary -ignore-filename-regex='(/nanobind/|^/usr/|/python/)'
 llvm-cov show $SO -instr-profile=$D/merged.profdata -show-branches=count build/Debug/generated/bedrock/protocol/<module>.cpp
@@ -167,7 +167,7 @@ The protocol's figure, the one goldens.md measures, runs the folder's cases alon
 
 ```
 D=build/Debug/profiles/v<protocol>; rm -rf $D; mkdir -p $D
-LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
+LLVM_PROFILE_FILE=$D/%p.profraw build/Debug/.venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
 python3 -I - $D/export.json <<'EOF' | sort > $D.missed
@@ -209,7 +209,7 @@ One case's footprint is the branch outcomes it reaches (true count > 0, false co
 
 ```
 D=build/Debug/profiles/<stem>.<id>; rm -rf $D; mkdir -p $D
-LLVM_PROFILE_FILE=$D/%p.profraw build/coverage-venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/<stem>/<id>]'
+LLVM_PROFILE_FILE=$D/%p.profraw build/Debug/.venv/bin/python -m pytest tests/test_goldens.py -k 'v<protocol>/<stem>/<id>]'
 llvm-profdata merge -sparse $D/*.profraw -o $D/merged.profdata
 llvm-cov export $SO -instr-profile=$D/merged.profdata -skip-expansions -skip-functions -ignore-filename-regex='(/nanobind/|^/usr/|/python/)' > $D/export.json
 python3 -I - $D/export.json <<'EOF' | sort -u > $D.fp
