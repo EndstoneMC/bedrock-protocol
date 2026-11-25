@@ -45,6 +45,46 @@
   "bytes": "0301060201020101010200024000000112bdc7f7fc0f0a00000000000000000000"
  },
  {
+  "id": "odd_legacy_request_id_without_slots",
+  "value": {
+   "legacy_request_id": -3,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "InventoryMismatchData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 1,
+        "container_id": 0,
+        "flags": 0
+       },
+       "slot": 2,
+       "from_item_descriptor": {
+        "id": 0,
+        "stack_size": 0,
+        "aux_value": 0,
+        "block_runtime_id": 0,
+        "user_data_buffer": ""
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id": {
+         "raw_id": 9
+        },
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "050101010200024000000112bdc7f7fc0f0a00000000000000000000"
+ },
+ {
   "id": "item_use_arm",
   "value": {
    "legacy_request_id": 0,
