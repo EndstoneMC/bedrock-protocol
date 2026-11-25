@@ -314,7 +314,9 @@ class ItemReleaseInventoryTransaction:
 @packet(id=30, until=1001)
 class InventoryTransactionPacket:
     legacy_request_id: varint32
-    legacy_set_item_slots: list[LegacySetSlot] = field(when=lambda p: p.legacy_request_id != 0)
+    legacy_set_item_slots: list[LegacySetSlot] = field(
+        when=lambda p: p.legacy_request_id < -1 and p.legacy_request_id & 1 == 0
+    )
     transaction: (
         NormalTransactionData
         | InventoryMismatchData
