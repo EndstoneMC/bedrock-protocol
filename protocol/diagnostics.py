@@ -5,7 +5,7 @@ Whisker scopes, memory categories, frame and system timings, debug markers and t
 
 from enum import IntEnum, auto
 
-from protocol import field, packet, sentinel, type, uint8, uint64, value
+from protocol import field, packet, sentinel, type, uint8, uint32, uint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
 from protocol.nbt import CompoundTag
@@ -225,7 +225,25 @@ class DebugInfoPacket:
     data: str
 
 
-@packet(id=164)
+@packet(id=164, until=898)
+class ClientboundDebugRendererPacket:
+    class Type(IntEnum, uint32):
+        INVALID = 0
+        CLEAR_DEBUG_MARKERS = 1
+        ADD_DEBUG_MARKER_CUBE = 2
+
+    class DebugMarkerData:
+        text: str
+        position: Vec3
+        # TODO: BDS writes mce::Color as four floats; needs a type decision
+        color: Color
+        duration_ms: uint64
+
+    type: Type = field(type=uint32)
+    debug_marker_data: DebugMarkerData = field(when=lambda p: p.type == Type.ADD_DEBUG_MARKER_CUBE)
+
+
+@packet(id=164, since=898)
 class ClientboundDebugRendererPacket:
     class PayloadType(IntEnum, uint8):
         INVALID = 0
