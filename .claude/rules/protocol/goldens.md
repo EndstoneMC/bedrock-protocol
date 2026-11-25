@@ -15,6 +15,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, whatever its codec's number, and never a file identical to the neighbour's.
 - Leave a packet out of a folder before 2168 when that build cannot run both its read and its write: a stub, a write of a member its read never fills, a cereal schema the build binds into no packet context, or an id its factory builds nothing for; have the sides it has checked against the DSL statically instead.
+- Check `v712/` with BDS 1.21.23.01.
 - Check `v729/` with BDS 1.21.31.04.
 - Check `v748/` with BDS 1.21.44.01.
 - Check `v766/` with BDS 1.21.51.02.
@@ -87,6 +88,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
 - Write an empty item as id 0; BDS reads an id of -1 as empty too, and writes it back as 0.
+- Give every non-empty `InventorySlotPacket` and `InventoryContentPacket` item a net id from 712 to 776; BDS sets its include-net-id flag before writing it.
 - Give a recipe ingredient's descriptor only `name`, `tags` or `item_tag`, and an `item_tag` only a registered item carries.
 - Give a recipe ingredient before 2168 no `DEFERRED` descriptor and no `DEFAULT` descriptor with id 0; BDS resolves a deferred name to a default or an invalid descriptor, and writes a default id 0 as invalid.
 - Give a craft results action before 2168 only non-empty results; BDS reads one with an empty result as no action and writes nothing for it.

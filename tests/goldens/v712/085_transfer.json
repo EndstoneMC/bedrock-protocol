@@ -1,0 +1,10 @@
+[
+ {
+  "id": "destination_with_port",
+  "value": {
+   "destination": "play.example.com",
+   "destination_port": 19132
+  },
+  "bytes": "10706c61792e6578616d706c652e636f6dbc4a"
+ }
+]

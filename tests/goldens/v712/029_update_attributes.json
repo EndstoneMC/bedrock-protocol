@@ -1,0 +1,37 @@
+[
+ {
+  "id": "health_with_modifier",
+  "value": {
+   "runtime_id": 300,
+   "attribute_data": [
+    {
+     "min_value": 1.0,
+     "max_value": 20.0,
+     "current_value": 17.0,
+     "default_value": 20.0,
+     "name": "minecraft:health",
+     "modifiers": [
+      {
+       "id": "00000000-0000-0000-0000-000000000001",
+       "name": "buff",
+       "amount": 2.5,
+       "operation": 1,
+       "operand": 2,
+       "serialize": true
+      }
+     ]
+    },
+    {
+     "min_value": 0.1,
+     "max_value": 1.0,
+     "current_value": 0.25,
+     "default_value": 0.5,
+     "name": "minecraft:movement",
+     "modifiers": []
+    }
+   ],
+   "tick": 1000
+  },
+  "bytes": "ac02020000803f0000a041000088410000a041106d696e6563726166743a6865616c7468012430303030303030302d303030302d303030302d303030302d303030303030303030303031046275666600002040010000000200000001cdcccc3d0000803f0000803e0000003f126d696e6563726166743a6d6f76656d656e7400e807"
+ }
+]
