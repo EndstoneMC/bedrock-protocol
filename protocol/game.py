@@ -409,7 +409,8 @@ class MultiplayerSettingsPacket:
 class UpdatePlayerGameTypePacket:
     player_game_type: GameType
     target_player: ActorUniqueID
-    tick: PlayerInputTick
+    tick: PlayerInputTick = field(type=uvarint32, until=748)
+    tick: PlayerInputTick = field(since=748)
 
 
 class SimulationType(IntEnum, uint8):
