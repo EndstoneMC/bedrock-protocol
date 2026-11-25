@@ -50,7 +50,8 @@ class ItemStackRequestActionType(IntEnum, uint8):
             19, "CraftNonImplemented_DEPRECATEDASKTYLAING", deprecated=True
         )
         CRAFT_RESULTS_DEPRECATEDASKTYLAING = value(20, "CraftResults_DEPRECATEDASKTYLAING", deprecated=True)
-    TEST = value(20, since=776, until=786)
+    with value(since=776, until=786):
+        TEST = 20
 
 
 class ItemStackNetResult(IntEnum, uint8):

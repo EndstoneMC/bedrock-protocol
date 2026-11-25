@@ -109,7 +109,8 @@ class ExpressionOp(IntEnum, int16):
     RETURN = 74
     COMMA = 75
     THIS = 76
-    INTERNAL_NON_EVALUATED_ARRAY = value(77, "Internal_NonEvaluatedArray", since=800)
+    with value(since=800):
+        INTERNAL_NON_EVALUATED_ARRAY = 77, "Internal_NonEvaluatedArray"
     with value(since=859):
         INVERSE_LERP = 78
         EASE_IN_QUAD = 79

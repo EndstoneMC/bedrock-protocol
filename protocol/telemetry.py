@@ -56,7 +56,8 @@ class MinecraftEventing:
         TREASURE_HUNTER = 67
         SHOOTING_STAR = 68
         FASHION_SHOW = 69
-        BRILLIANCE = value(70, until=776)
+        with value(until=776):
+            BRILLIANCE = 70
         SELF_PUBLISHED_AUTHOR = 71
         ALTERNATIVE_FUEL = 72
         SLEEP_WITH_THE_FISHES = 73
@@ -99,11 +100,16 @@ class MinecraftEventing:
         CRAFTERS_CRAFTING_CRAFTERS = 110
         WHO_NEEDS_ROCKETS = 111
         OVER_OVERKILL = 112
-        HEART_TRANSPLANTER = value(113, since=766)
-        STAY_HYDRATED = value(114, since=818)
-        MOB_KABOB = value(115, since=898)
-        ADVENTURING_TIME = value(116, since=924)
-        UH_OH = value(117, since=1001)
+        with value(since=766):
+            HEART_TRANSPLANTER = 113
+        with value(since=818):
+            STAY_HYDRATED = 114
+        with value(since=898):
+            MOB_KABOB = 115
+        with value(since=924):
+            ADVENTURING_TIME = 116
+        with value(since=1001):
+            UH_OH = 117
         with value(since=2168):
             GETTING_WOOD = 118
             BENCH_MAKING = 119
@@ -114,7 +120,8 @@ class MinecraftEventing:
             MONSTER_HUNTER = 124
             DIAMONDS = 125
             PLETHORA_OF_CATS = 126
-        WHAT_GOES_AROUND_COMES_AROUND = value(127, since=2225)
+        with value(since=2225):
+            WHAT_GOES_AROUND_COMES_AROUND = 127
         COUNT = sentinel()
 
     class POIBlockInteractionType(IntEnum, uint8):

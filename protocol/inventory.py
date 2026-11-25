@@ -117,7 +117,8 @@ class ContainerEnumName(IntEnum, uint8):
         DISC_PRESS_DYE_CONTAINER = 68
         DISC_PRESS_DISC_CONTAINER = 69
         DISC_PRESS_RESULT_PREVIEW_CONTAINER = 70
-    VIRTUAL_CONTAINER = value(71, since=2259)
+    with value(since=2259):
+        VIRTUAL_CONTAINER = 71
 
 
 class FullContainerName:

@@ -508,7 +508,8 @@ class LevelSoundEvent(IntEnum, uint32):
     RECORD_PRECIPICE = 529
     VAULT_REJECT_REWARDED_PLAYER = 530
     IMITATE_DROWNED = 531
-    IMITATE_CREAKING = value(532, since=766)
+    with value(since=766):
+        IMITATE_CREAKING = 532
     BUNDLE_INSERT_FAIL = 533
     with value(since=766):
         SPONGE_ABSORB = 534
@@ -539,9 +540,12 @@ class LevelSoundEvent(IntEnum, uint32):
         LEAD_UNLEASH = 558
         LEAD_BREAK = 559
         UNSADDLE = 560
-    EQUIP_COPPER = value(561, since=827)
-    RECORD_LAVA_CHICKEN = value(561, since=819, until=827)
-    RECORD_LAVA_CHICKEN = value(562, since=827)
+    with value(since=827):
+        EQUIP_COPPER = 561
+    with value(since=819, until=827):
+        RECORD_LAVA_CHICKEN = 561
+    with value(since=827):
+        RECORD_LAVA_CHICKEN = 562
     with value(since=844):
         PLACE_ITEM = 563
         SINGLE_ITEM_SWAP = 564
@@ -600,7 +604,8 @@ class LevelSoundEvent(IntEnum, uint32):
         MOUNT = 611
         DISMOUNT = 612
         STRAW_BED_BREAK_LEAVE = 613
-    ICE_BALL_BREAK = value(614, since=2225, until=2259)
+    with value(since=2225, until=2259):
+        ICE_BALL_BREAK = 614
     with value(since=2259):
         CONVERT_TO_FROSTBITE = 614
         CONVERT_TO_ZOMBIE = 615

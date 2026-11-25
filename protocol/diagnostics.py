@@ -18,10 +18,12 @@ class MemoryCategory(IntEnum, uint8):
     ACTOR = 2
     ACTOR_ANIMATION = 3
     ACTOR_RENDERING = 4
-    BALANCER = value(until=944)
+    with value(until=944):
+        BALANCER = auto()
     BLOCK_TICKING_QUEUES = auto()
     BIOME_STORAGE = auto()
-    BLOBS = value(since=2168)
+    with value(since=2168):
+        BLOBS = auto()
     CEREAL = auto()
     CIRCUIT_SYSTEM = auto()
     CLIENT = auto()
@@ -57,9 +59,11 @@ class MemoryCategory(IntEnum, uint8):
     LEVEL_CHUNK = auto()
     LEVEL_CHUNK_GEN = auto()
     LEVEL_CHUNK_GEN_THREAD_LOCAL = auto()
-    LIGHT_VOLUME_MANAGER = value(since=944)
+    with value(since=944):
+        LIGHT_VOLUME_MANAGER = auto()
     NETWORK = auto()
-    MARKETPLACE = value(since=844)
+    with value(since=844):
+        MARKETPLACE = auto()
     MATERIAL_DRAGON_COMPILED_DEFINITION = auto()
     MATERIAL_DRAGON_MATERIAL = auto()
     MATERIAL_DRAGON_RESOURCE = auto()
@@ -69,7 +73,8 @@ class MemoryCategory(IntEnum, uint8):
     MATERIAL_VARIATION_MANAGER = auto()
     MOLANG = auto()
     ORE_UI = value(cpp_name="OreUI")
-    PERSONA = value(until=2168)
+    with value(until=2168):
+        PERSONA = auto()
     with value(since=2168):
         ORE_UI_CLIENT = value(cpp_name="OreUIClient")
         PERSONA_PIECES = auto()
@@ -92,24 +97,29 @@ class MemoryCategory(IntEnum, uint8):
         RENDERING_LIBRARY = auto()
         RENDERING_POLYGON_OPERATOR_POOL = auto()
         RENDERING_PBR_TEXTURE_DATA = value(cpp_name="RenderingPBRTextureData")
-    RENDERING_RENDER_REGISTRY = value(since=975)
-    RENDERING_LIBRARY = value(until=2168)
+    with value(since=975):
+        RENDERING_RENDER_REGISTRY = auto()
+    with value(until=2168):
+        RENDERING_LIBRARY = auto()
     with value(since=2168):
         RENDERING_SETUP = auto()
         RENDERING_VERTICES = auto()
-    REQUEST_LOG = value(since=898)
+    with value(since=898):
+        REQUEST_LOG = auto()
     RESOURCE_PACKS = auto()
     SOUND = auto()
     SUB_CHUNK_BIOME_DATA = auto()
     SUB_CHUNK_BLOCK_DATA = auto()
     SUB_CHUNK_LIGHT_DATA = auto()
     TEXTURES = auto()
-    VR = value(until=975)
+    with value(until=975):
+        VR = auto()
     WEATHER_RENDERER = auto()
     WORLD_GENERATOR = auto()
     TASKS = auto()
     TEST = auto()
-    TEST_LOAD_TEST_TAGS = value(since=2168)
+    with value(since=2168):
+        TEST_LOAD_TEST_TAGS = auto()
     SCRIPTING = auto()
     SCRIPTING_RUNTIME = auto()
     SCRIPTING_CONTEXT = auto()
@@ -134,7 +144,8 @@ class MemoryCategory(IntEnum, uint8):
     with value(since=2168):
         GAMEFACE_SCRIPT = auto()
         GAMEFACE_LAYOUT = auto()
-    EXECUTABLE = value(since=2225)
+    with value(since=2225):
+        EXECUTABLE = auto()
     MEMORY_CATEGORY_COUNT = sentinel()
 
 

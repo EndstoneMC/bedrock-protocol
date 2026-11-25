@@ -156,22 +156,30 @@ class ActorFlags(IntEnum, int32):
     TIMER_FLAG_2 = 116
     TIMER_FLAG_3 = 117
     BODY_ROTATION_BLOCKED = 118
-    RENDERS_WHEN_INVISIBLE = value(119, since=776)
+    with value(since=776):
+        RENDERS_WHEN_INVISIBLE = 119
     with value(since=786):
         ROTATION_AXIS_ALIGNED = 120
         COLLIDABLE = 121
         WASD_FREE_CAMERA_CONTROLLED = 122
-    DOES_SERVER_AUTH_ONLY_DISMOUNT = value(123, since=800)
-    BODY_ROTATION_ALWAYS_FOLLOWS_HEAD = value(124, since=818)
-    CAN_USE_VERTICAL_MOVEMENT_ACTION = value(125, since=844)
-    ROTATION_LOCKED_TO_VEHICLE = value(126, since=898)
+    with value(since=800):
+        DOES_SERVER_AUTH_ONLY_DISMOUNT = 123
+    with value(since=818):
+        BODY_ROTATION_ALWAYS_FOLLOWS_HEAD = 124
+    with value(since=844):
+        CAN_USE_VERTICAL_MOVEMENT_ACTION = 125
+    with value(since=898):
+        ROTATION_LOCKED_TO_VEHICLE = 126
     with value(since=975):
         USES_LEGACY_FRICTION = 127
         USES_UNIFORM_AIR_DRAG = 128
         NAMEPLATE_DEPTH_TESTED = 129
-    NOT_PICKABLE_FROM_INSIDE = value(130, since=2168)
-    COUNT = value(until=2259)
-    COUNT = value(133, since=2259)  # TODO: 131 and 132 unnamed until a header branch above r26_u6
+    with value(since=2168):
+        NOT_PICKABLE_FROM_INSIDE = 130
+    with value(until=2259):
+        COUNT = auto()
+    with value(since=2259):
+        COUNT = 133  # TODO: 131 and 132 unnamed until a header branch above r26_u6
 
 
 class ActorDataIDs(IntEnum, uint8):
@@ -320,7 +328,8 @@ class ActorDataIDs(IntEnum, uint8):
     with value(since=975):
         RESERVED_139 = 139
         NAMEPLATE_RENDER_DISTANCE_MAX = 140
-    INTERACTION_RESULT = value(141, since=2225)
+    with value(since=2225):
+        INTERACTION_RESULT = 141
     COUNT = auto()
 
 
@@ -486,7 +495,8 @@ class ActorType(IntEnum, int32):
     ANIMAL = 4864
     TAMABLE_ANIMAL = 21248
     AMBIENT = 33024
-    UNDEAD = value(65792, since=924)
+    with value(since=924):
+        UNDEAD = 65792
     UNDEAD_MONSTER = 68352
     ZOMBIE_MONSTER = 199424
     ARTHROPOD = 264960
@@ -517,10 +527,14 @@ class ActorType(IntEnum, int32):
     DOLPHIN = 8991
     DONKEY = 2118424
     MULE = 2118425
-    SKELETON_HORSE = value(2186010, until=924)
-    SKELETON_HORSE = value(2183962, since=924)
-    ZOMBIE_HORSE = value(2186011, until=924)
-    ZOMBIE_HORSE = value(2183963, since=924)
+    with value(until=924):
+        SKELETON_HORSE = 2186010
+    with value(since=924):
+        SKELETON_HORSE = 2183962
+    with value(until=924):
+        ZOMBIE_HORSE = 2186011
+    with value(since=924):
+        ZOMBIE_HORSE = 2183963
     ZOMBIE = 199456
     CREEPER = 2849
     SKELETON = 1116962
@@ -632,16 +646,24 @@ class ActorType(IntEnum, int32):
     WIND_CHARGE_PROJECTILE = 4194447
     BOGGED = 1117072
     OMINOUS_ITEM_SPAWNER = 145
-    CREAKING = value(2962, since=766)
-    HAPPY_GHAST = value(5011, since=800)
-    COPPER_GOLEM = value(916, since=827)
+    with value(since=766):
+        CREAKING = 2962
+    with value(since=800):
+        HAPPY_GHAST = 5011
+    with value(since=827):
+        COPPER_GOLEM = 916
     NAUTILUS = 9109
-    ZOMBIE_NAUTILUS = value(76694, until=924)
-    ZOMBIE_NAUTILUS = value(74646, since=924)
+    with value(until=924):
+        ZOMBIE_NAUTILUS = 76694
+    with value(since=924):
+        ZOMBIE_NAUTILUS = 74646
     PARCHED = 1117079
-    CAMEL_HUSK = value(68504, until=924)
-    CAMEL_HUSK = value(70552, since=924)
-    SULFUR_CUBE = value(2969, since=975, until=2168)
+    with value(until=924):
+        CAMEL_HUSK = 68504
+    with value(since=924):
+        CAMEL_HUSK = 70552
+    with value(since=975, until=2168):
+        SULFUR_CUBE = 2969
     with value(since=2168):
         SULFUR_CUBE = 921
         CUSHION = 154

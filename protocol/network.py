@@ -30,10 +30,12 @@ class MinecraftPacketIds(IntEnum, int32):
     TAKE_ITEM_ACTOR = 17
     MOVE_ABSOLUTE_ACTOR = 18
     MOVE_PLAYER = 19
-    PASSENGER_JUMP = value(20, until=800)
+    with value(until=800):
+        PASSENGER_JUMP = 20
     UPDATE_BLOCK = 21
     ADD_PAINTING = 22
-    LEVEL_SOUND_EVENT_V1 = value(24, until=786)
+    with value(until=786):
+        LEVEL_SOUND_EVENT_V1 = 24
     LEVEL_EVENT = 25
     TILE_EVENT = 26
     ACTOR_EVENT = 27
@@ -63,7 +65,8 @@ class MinecraftPacketIds(IntEnum, int32):
     CRAFTING_DATA = 52
     GUI_DATA_PICK_ITEM = 54
     BLOCK_ACTOR_DATA = 56
-    PLAYER_INPUT = value(57, until=800)
+    with value(until=800):
+        PLAYER_INPUT = 57
     FULL_CHUNK_DATA = 58
     SET_COMMANDS_ENABLED = 59
     SET_DIFFICULTY = 60
@@ -123,7 +126,8 @@ class MinecraftPacketIds(IntEnum, int32):
     PING = 115
     SPAWN_PARTICLE_EFFECT = 118
     AVAILABLE_ACTOR_ID_LIST = value(119, cpp_name="AvailableActorIDList")
-    LEVEL_SOUND_EVENT_V2 = value(120, until=786)
+    with value(until=786):
+        LEVEL_SOUND_EVENT_V2 = 120
     NETWORK_CHUNK_PUBLISHER_UPDATE = 121
     BIOME_DEFINITION_LIST = 122
     LEVEL_SOUND_EVENT = 123
@@ -161,8 +165,10 @@ class MinecraftPacketIds(IntEnum, int32):
     CAMERA_SHAKE = 159
     PLAYER_FOG_SETTING = 160
     CORRECT_PLAYER_MOVE_PREDICTION_PACKET = 161
-    ITEM_COMPONENT_PACKET = value(162, until=776)
-    ITEM_REGISTRY_PACKET = value(162, since=776)
+    with value(until=776):
+        ITEM_COMPONENT_PACKET = 162
+    with value(since=776):
+        ITEM_REGISTRY_PACKET = 162
     CLIENT_BOUND_DEBUG_RENDERER_PACKET = 164
     SYNC_ACTOR_PROPERTY = 165
     ADD_VOLUME_ENTITY_PACKET = 166
@@ -200,7 +206,8 @@ class MinecraftPacketIds(IntEnum, int32):
     TITLE_SPECIFIC_PACKETS_START = 200
     TITLE_SPECIFIC_PACKETS_END = 299
     CAMERA_INSTRUCTION = 300
-    COMPRESSED_BIOME_DEFINITION_LIST = value(301, until=800)
+    with value(until=800):
+        COMPRESSED_BIOME_DEFINITION_LIST = 301
     TRIM_DATA = 302
     OPEN_SIGN = 303
     AGENT_ANIMATION = 304
@@ -216,9 +223,12 @@ class MinecraftPacketIds(IntEnum, int32):
     SERVERBOUND_DIAGNOSTICS_PACKET = 315
     CAMERA_AIM_ASSIST = 316
     CONTAINER_REGISTRY_CLEANUP = 317
-    MOVEMENT_EFFECT = value(318, since=748)
-    SET_MOVEMENT_AUTHORITY_MODE = value(319, since=748, until=818)
-    CAMERA_AIM_ASSIST_PRESETS = value(320, since=766)
+    with value(since=748):
+        MOVEMENT_EFFECT = 318
+    with value(since=748, until=818):
+        SET_MOVEMENT_AUTHORITY_MODE = 319
+    with value(since=766):
+        CAMERA_AIM_ASSIST_PRESETS = 320
     with value(since=776):
         CLIENT_CAMERA_AIM_ASSIST = 321
         CLIENT_MOVEMENT_PREDICTION_SYNC_PACKET = 322
@@ -229,14 +239,22 @@ class MinecraftPacketIds(IntEnum, int32):
     with value(since=800):
         PLAYER_LOCATION = 326
         CLIENTBOUND_CONTROL_SCHEME_SET_PACKET = 327
-    SERVER_SCRIPT_DEBUG_DRAWER_PACKET = value(328, since=818, until=859)
-    DEBUG_DRAWER_PACKET = value(328, since=859, until=975)
-    PRIMITIVE_SHAPES_PACKET = value(328, since=975)
-    SERVERBOUND_PACK_SETTING_CHANGE_PACKET = value(329, since=844)
-    DATA_STORE_SYNC = value(330, since=859, until=898)
-    CLIENTBOUND_DATA_STORE = value(330, since=898)
-    GRAPHICS_PARAMETER_OVERRIDE_PACKET = value(331, since=859)
-    SERVERBOUND_DATA_STORE = value(332, since=898)
+    with value(since=818, until=859):
+        SERVER_SCRIPT_DEBUG_DRAWER_PACKET = 328
+    with value(since=859, until=975):
+        DEBUG_DRAWER_PACKET = 328
+    with value(since=975):
+        PRIMITIVE_SHAPES_PACKET = 328
+    with value(since=844):
+        SERVERBOUND_PACK_SETTING_CHANGE_PACKET = 329
+    with value(since=859, until=898):
+        DATA_STORE_SYNC = 330
+    with value(since=898):
+        CLIENTBOUND_DATA_STORE = 330
+    with value(since=859):
+        GRAPHICS_PARAMETER_OVERRIDE_PACKET = 331
+    with value(since=898):
+        SERVERBOUND_DATA_STORE = 332
     with value(since=924):
         CLIENTBOUND_DATA_DRIVEN_UI_SHOW_SCREEN = value(333, cpp_name="ClientboundDataDrivenUIShowScreen")
         CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_ALL_SCREENS = value(
@@ -404,12 +422,14 @@ class DisconnectFailReason(IntEnum, int32):
     NETHER_NET_CLIENT_SIGNALING_ERROR = 115
     SUB_CLIENT_LOGIN_DISABLED = 116
     DEEP_LINK_TRYING_TO_OPEN_DEMO_WORLD_WHILE_SIGNED_IN = 117
-    ASYNC_JOIN_TASK_DENIED = value(118, since=800)
+    with value(since=800):
+        ASYNC_JOIN_TASK_DENIED = 118
     with value(since=818):
         REALMS_TIMELINE_REQUIRED = 119
         GUEST_WITHOUT_HOST = 120
         FAILED_TO_JOIN_EXPERIENCE = 121
-    NETHER_NET_DATA_CHANNEL_CLOSED = value(122, since=827)
+    with value(since=827):
+        NETHER_NET_DATA_CHANNEL_CLOSED = 122
     with value(since=859):
         DISCOVERY_ENVIRONMENT_MISMATCH = 123
         HOST_WITHOUT_KEYS = 124
@@ -443,7 +463,8 @@ class DisconnectFailReason(IntEnum, int32):
     with value(since=2193):
         MISSING_STRUCTURE_DATA = 148
         UNSUPPORTED_TRANSPORT = 149
-    SUB_CLIENT_LOGIN_NOT_BOUND = value(150, since=2225)
+    with value(since=2225):
+        SUB_CLIENT_LOGIN_NOT_BOUND = 150
     with value(since=2259):
         SESSION_RUNTIME_ERROR = 151
         SESSION_INVALID_RESPONSE = 152
