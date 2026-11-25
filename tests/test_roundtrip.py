@@ -2,7 +2,6 @@ import importlib
 
 import pytest
 
-import bedrock_protocol
 from bedrock_protocol import _core
 from bedrock_protocol._core import SerializationMode
 
@@ -18,20 +17,8 @@ for module in versions:
             SERIALIZABLE.setdefault((cls, mode, since), (module, cls, mode, f"{module.__name__}.{cls.__qualname__}"))
 
 
-BINDING_GAP = {f"{version.__name__}.CommandRequestPacket" for version in versions}
-GAP = pytest.mark.xfail(
-    raises=bedrock_protocol.EncodeError,
-    strict=True,
-    reason="binding gap: a name-coded enum defaults to an unnamed value",
-)
-
-
 def packet_id(value):
     return value.__name__.rsplit(".", 1)[-1] if hasattr(value, "__name__") else str(value)
-
-
-def gap(path):
-    return GAP if path in BINDING_GAP else ()
 
 
 VALUES = [
@@ -39,18 +26,13 @@ VALUES = [
         module,
         cls,
         mode,
-        marks=gap(path),
         id=path if mode == SerializationMode.DEFAULT else f"{path}-{mode.name.lower()}",
     )
     for module, cls, mode, path in SERIALIZABLE.values()
 ]
 
 
-@pytest.mark.parametrize(
-    ("module", "cls"),
-    [pytest.param(m, cls, marks=gap(f"{m.__name__}.{cls.__qualname__}")) for m, cls in packets],
-    ids=packet_id,
-)
+@pytest.mark.parametrize(("module", "cls"), packets, ids=packet_id)
 def test_a_default_packet_round_trips_at_every_protocol_that_has_it(module, cls):
     packet = cls()
     assert module.decode(cls, module.encode(packet)) == packet

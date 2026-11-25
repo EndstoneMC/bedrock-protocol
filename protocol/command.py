@@ -250,7 +250,7 @@ class CurrentCmdVersion(IntEnum, int32):
         GAME_TEST_RUN_SET_MULTI_TAG = 56
         SAME_ACTOR_BLOCK_REPLACEMENT_RETAINS_ITEMS_FIX = 57
     COUNT = auto()
-    LATEST = COUNT - 1
+    LATEST = value(COUNT - 1, default=True)
 
 
 @packet(id=77)
