@@ -153,7 +153,7 @@ class ArmorSlot(IntEnum, int32):
     TORSO = 1
     LEGS = 2
     FEET = 3
-    # TODO: BDS 686 has four slots (std::bitset<4>); gate BODY at 712 once HUMANOID_COUNT at 686 is known
+    # TODO: BDS before 712 has four slots (std::bitset<4>); gate BODY at 712 once HUMANOID_COUNT before 712 is known
     BODY = 4
     HUMANOID_COUNT = value(4, synonym=True)
     COUNT = sentinel()

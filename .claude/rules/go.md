@@ -20,7 +20,7 @@ paths:
 - Return every failure as an `error` and never panic: a decode fails with `stream.ErrTruncated`, `ErrOutOfRange`, `ErrUnknownValue` or `ErrTrailingBytes` inside a `*protocol.DecodeError`, an encode with `ErrOutOfRange` or `ErrUnknownValue` inside a `*protocol.EncodeError`, each carrying the type and the path, field names as `string` and indices as `int`, as C++'s do.
 - Fail a `stream.Reader` or `stream.Writer` once: the first `Fail` keeps its reason and offset, a later read returns the zero value and moves nothing, and generated code prepends the field or index where it finds the stream failed.
 - Decode in place into the packet given, cleared first, so a failed decode leaves the fields read so far, as protobuf's unfinished message.
-- Fail `Encode` and `Decode` with a plain `error` naming the type for a packet with no encoding at the protocol, `protocol.TextPacket_v686: is not a type at protocol 2259`.
+- Fail `Encode` and `Decode` with a plain `error` naming the type for a packet with no encoding at the protocol, `protocol.TextPacket_v685: is not a type at protocol 2259`.
 
 ## Messages
 

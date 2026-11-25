@@ -182,7 +182,7 @@ class ServerSettingsResponsePacket:
     form_json: str
 
 
-@packet(id=310)
+@packet(id=310, since=686)
 class ClientboundCloseFormPacket:
     pass
 

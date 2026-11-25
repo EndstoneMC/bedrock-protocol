@@ -37,13 +37,13 @@ func TestDecodingIntoNilIsNotATypeAtTheProtocol(t *testing.T) {
 }
 
 func TestEncodingAPacketAtAProtocolItLacksNamesItsType(t *testing.T) {
-	_, err := V2259.Encode(new(TextPacket_v686))
-	check.Equal(t, err.Error(), "protocol.TextPacket_v686: is not a type at protocol 2259")
+	_, err := V2259.Encode(new(TextPacket_v685))
+	check.Equal(t, err.Error(), "protocol.TextPacket_v685: is not a type at protocol 2259")
 }
 
 func TestDecodingIntoAPacketAtAProtocolItLacksNamesItsType(t *testing.T) {
-	err := V2259.Decode(nil, new(TextPacket_v686))
-	check.Equal(t, err.Error(), "protocol.TextPacket_v686: is not a type at protocol 2259")
+	err := V2259.Decode(nil, new(TextPacket_v685))
+	check.Equal(t, err.Error(), "protocol.TextPacket_v685: is not a type at protocol 2259")
 }
 
 func TestDecodingIntoANilPacketNamesItsType(t *testing.T) {
