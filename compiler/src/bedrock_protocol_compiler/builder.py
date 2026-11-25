@@ -192,10 +192,6 @@ def reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None
             if alias.primitive.name not in INTEGERS or encoded == "str" or endian:
                 return None
             return replace(node, encoded=encoded)
-        case BuiltinRef(builtin=builtin):
-            if builtin is not UUID or encoded != "str" or endian:
-                return None
-            return replace(node, encoded=encoded)
     return None
 
 

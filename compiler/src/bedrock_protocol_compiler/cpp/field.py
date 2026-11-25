@@ -291,40 +291,6 @@ class BuiltinField(SerializerField):
         return {names.header(self.node.builtin)}
 
 
-class BuiltinTextField:
-    def __init__(self, schema: Schema, node: BuiltinRef, where: str) -> None:
-        self.node = node
-        self.where = where
-        self.spelled = names.qualified(schema, node.builtin)
-
-    def fallible(self) -> bool:
-        return False
-
-    def includes(self) -> set[str]:
-        return {"<string>", names.header(self.node.builtin)}
-
-    def write(self, p: Printer, value: str) -> None:
-        p.emit(names.write("str", None, f"{value}.asString()"))
-
-    def read(self, p: Printer, target: str) -> None:
-        p.emit(
-            """
-            {
-                auto v = $call$;
-                if (!v) $fail$
-                auto parsed = $type$::fromString(*v);
-                if (!parsed) $unknown$
-                $target$ = *parsed;
-            }
-            """,
-            call=names.read("str", None),
-            fail=names.fail("v.error()", self.where),
-            type=self.spelled,
-            unknown=names.fail(names.UNKNOWN_VALUE, self.where),
-            target=target,
-        )
-
-
 class BitsetField(SerializerField):
     def __init__(self, schema: Schema, node: Bitset, encoding: Encoding, where: str) -> None:
         spelled = f"std::bitset<{schema.width(encoding.model, node)}>"
@@ -666,8 +632,6 @@ def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: 
             return EnumField(schema, node, encoding, where)
         case StructRef() | EnumName():
             return ReferenceField(schema, node, encoding, where)
-        case BuiltinRef(encoded="str"):
-            return BuiltinTextField(schema, node, where)
         case BuiltinRef():
             return BuiltinField(schema, node, encoding, where)
         case Literal():

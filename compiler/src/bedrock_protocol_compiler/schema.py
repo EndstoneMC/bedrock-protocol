@@ -9,7 +9,6 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Binary,
     Bitset,
-    BuiltinRef,
     Choice,
     CompilerError,
     Enum,
@@ -143,8 +142,6 @@ def strip(node: Type) -> Type:
             return Primitive(DOMAINS.get(name, name))
         case AliasRef(alias=alias):
             return AliasRef(alias)
-        case BuiltinRef(builtin=builtin):
-            return BuiltinRef(builtin)
         case EnumRef(enum=enum) | EnumName(enum=enum):
             return EnumRef(enum)
         case Optional(element=element):

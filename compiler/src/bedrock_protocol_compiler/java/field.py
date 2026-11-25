@@ -119,8 +119,8 @@ class FieldContext:
                 read = f"{spelled}.decode({since}buf)"
                 write = f"{{}}.encode({since}buf);"
                 return Reference(spelled, default, read, write, label, number=enum_class(enum_type))
-            case BuiltinRef(builtin=builtin, encoded=encoded):
-                codec = names.pascal(names.snake(builtin.name)) + ("String" if encoded == "str" else "")
+            case BuiltinRef(builtin=builtin):
+                codec = names.pascal(names.snake(builtin.name))
                 read = f"ByteBufCodec.read{codec}(buf)"
                 write = f"ByteBufCodec.write{codec}(buf, {{}});"
                 if builtin is UUID:

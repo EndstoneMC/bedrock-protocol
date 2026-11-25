@@ -957,18 +957,6 @@ def test_a_list_whose_count_changes_is_a_second_encoding(build_package):
     assert len(schema.encodings(model)) == 2
 
 
-def test_a_uuid_read_as_text_keeps_the_model(build_package):
-    source = (
-        HEADER
-        + "import uuid\n\n"
-        + "class A:\n    x: uuid.UUID = field(until=3)\n    x: uuid.UUID = field(since=3, type=str)\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    (family,) = schema.order
-
-    assert len(schema.models(family)) == 1
-
-
 def test_a_field_whose_copies_change_is_a_second_encoding(build_package):
     source = HEADER + "class A:\n    x: uint8 = field(until=3)\n    x: uint8 = field(since=3, duplicate=2)\n"
     schema = Schema(build_package({"a": source}))

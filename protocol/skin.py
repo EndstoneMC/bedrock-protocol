@@ -133,7 +133,7 @@ class AnimatedImageData:
 class SerializedPersonaPieceHandle:
     piece_id: str
     piece_type: PieceType = field(type=str)
-    pack_id: uuid.UUID = field(type=str)
+    pack_id: str
     is_default_piece: bool
     product_id: str
 

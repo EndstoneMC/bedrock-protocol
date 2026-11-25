@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.endstone.protocol.nbt.CompoundTag;
+import dev.endstone.protocol.v729.PlayerSkinPacket_v729;
+import dev.endstone.protocol.v729.SerializedPersonaPieceHandle_v729;
+import dev.endstone.protocol.v729.SerializedSkinRef_v729;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -251,11 +254,15 @@ final class MessageTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        SerializedPersonaPieceHandle.codec(729)
-                                                .encode(
-                                                        SerializedPersonaPieceHandle
-                                                                .getDefaultInstance(),
-                                                        Unpooled.buffer()))
+                                        Protocol.v729.encode(
+                                                PlayerSkinPacket_v729.newBuilder()
+                                                        .setSkin(
+                                                                SerializedSkinRef_v729.newBuilder()
+                                                                        .addPersonaPieces(
+                                                                                SerializedPersonaPieceHandle_v729
+                                                                                        .getDefaultInstance())
+                                                                        .build())
+                                                        .build()))
                         .getMessage());
     }
 

@@ -1,7 +1,6 @@
 """Mob attribute algebra: world/attribute/ -- modifiers, operands, AttributeData.
 Not the environment attribute system -- world/eas/, in eas.py."""
 
-import uuid
 from enum import IntEnum
 
 from protocol import field, int32, packet, value
@@ -29,7 +28,7 @@ class AttributeOperands(IntEnum, int32):
 
 
 class AttributeModifier:
-    id: uuid.UUID = field(type=str)
+    id: str
     name: str
     amount: float
     operation: AttributeModifierOperation = field(type=int32)

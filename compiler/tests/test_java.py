@@ -2125,30 +2125,12 @@ def test_a_union_with_two_cases_of_one_name_is_a_compiler_error(build_package, t
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-@pytest.mark.parametrize(
-    ("annotation", "read"),
-    [
-        pytest.param("uuid.UUID", "                out.id_ = ByteBufCodec.readUuid(buf);\n", id="raw"),
-        pytest.param(
-            "uuid.UUID = field(type=str)", "                out.id_ = ByteBufCodec.readUuidString(buf);\n", id="str"
-        ),
-    ],
-)
-def test_a_uuid_reads_by_its_encoding(emitted, annotation, read):
-    assert read in emitted(f"class P:\n    id: {annotation}\n")
+def test_a_uuid_reads_by_its_encoding(emitted):
+    assert "                out.id_ = ByteBufCodec.readUuid(buf);\n" in emitted("class P:\n    id: uuid.UUID\n")
 
 
-@pytest.mark.parametrize(
-    ("annotation", "write"),
-    [
-        pytest.param("uuid.UUID", "            ByteBufCodec.writeUuid(buf, value.id_);\n", id="raw"),
-        pytest.param(
-            "uuid.UUID = field(type=str)", "            ByteBufCodec.writeUuidString(buf, value.id_);\n", id="str"
-        ),
-    ],
-)
-def test_a_uuid_writes_by_its_encoding(emitted, annotation, write):
-    assert write in emitted(f"class P:\n    id: {annotation}\n")
+def test_a_uuid_writes_by_its_encoding(emitted):
+    assert "            ByteBufCodec.writeUuid(buf, value.id_);\n" in emitted("class P:\n    id: uuid.UUID\n")
 
 
 def test_a_uuid_is_a_java_util_uuid(emitted):

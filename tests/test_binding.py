@@ -400,7 +400,7 @@ def test_a_member_a_protocol_lacks_fails_to_encode(version, packet, message):
 
 def test_a_piece_type_a_protocol_lacks_fails_to_encode():
     with pytest.raises(bp.EncodeError, match=r"^SerializedPersonaPieceHandle\.piece_type: unknown value$"):
-        _core.encode(v729.VERSION, bp.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
+        _core.encode(v729.VERSION, v729.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
 
 
 @pytest.mark.parametrize(
@@ -483,43 +483,14 @@ def test_a_uuid_crosses_as_uuid():
     assert _core.decode(proto.VERSION, type(request), _core.encode(proto.VERSION, request)).uuid == value
 
 
-def test_a_uuid_carried_as_text_writes_it_lower_case_and_hyphenated():
-    identity = bp.ContentIdentity(identity=uuid.UUID("6F0B5E2A-1C3D-4E8F-9A7B-2D4C6E8F0A1B"))
-    assert _core.encode(proto.VERSION, identity) == b"\x246f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b"
-
-
 @pytest.mark.parametrize(
     "text",
-    [
-        b"6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b",
-        b"6F0B5E2A-1C3D-4E8F-9A7B-2D4C6E8F0A1B",
-        b"6f0b5e2a1c3d4e8f9a7b2d4c6e8f0a1b",
-    ],
-    ids=["hyphenated", "upper-case", "bare-digits"],
+    [b"6F0B5E2A-1C3D-4E8F-9A7B-2D4C6E8F0A1B", b"6f0b5e2a1c3d4e8f9a7b2d4c6e8f0a1b", b"", b"cid"],
+    ids=["upper-case", "bare-digits", "empty", "not-a-uuid"],
 )
-def test_a_uuid_carried_as_text_reads_every_form_bds_parses(text):
-    identity = _core.decode(proto.VERSION, bp.ContentIdentity, bytes([len(text)]) + text)
-    assert identity.identity == uuid.UUID("6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1b")
-
-
-@pytest.mark.parametrize(
-    "text",
-    [
-        b"",
-        b"cid",
-        b"6f0b5e2a1-c3d-4e8f-9a7b-2d4c6e8f0a1b",
-        b"6f0b5e2a-1c3d-4e8f-9a7b-2d4c6e8f0a1g",
-        b"{6f0b5e2a1c3d4e8f9a7b2d4c6e8f0a1}",
-    ],
-    ids=["empty", "short", "hyphen-out-of-place", "not-hex", "braced"],
-)
-def test_a_uuid_carried_as_text_rejects_text_bds_reads_as_nil(text):
+def test_a_uuid_carried_as_text_keeps_its_text_as_encoded(text):
     encoded = bytes([len(text)]) + text
-    with pytest.raises(
-        bp.DecodeError,
-        match=rf"^ContentIdentity\.identity: unknown value at byte {len(encoded)} of {len(encoded)}$",
-    ):
-        _core.decode(proto.VERSION, bp.ContentIdentity, encoded)
+    assert _core.encode(proto.VERSION, _core.decode(proto.VERSION, bp.ContentIdentity, encoded)) == encoded
 
 
 def test_a_python_keyword_member_keeps_the_dsl_underscore():

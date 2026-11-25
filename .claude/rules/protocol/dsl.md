@@ -17,7 +17,7 @@ paths:
 
 - Write a cerealised form as bare `name: Type` lines. Annotation clutter on one means the pre-cereal shape is being modelled.
 - Model a packet before 2168 in the encoding its build sends by default: the hand-written write when golden mode's `serialization_mode` is below CerealOnly, cereal when its read goes through cereal; a case seeded from `v2168/` holds the cereal shape.
-- Write a split between declared and encoded type as `name: DeclaredType = field(type=<encoded>)`. Never drop to the raw primitive.
+- Write a split between declared and encoded type as `name: DeclaredType = field(type=<encoded>)`. Never drop to the raw primitive, except an `mce::UUID` BDS encodes as text, which is `str`.
 - Use `field(type=<primitive>)` on an alias only for the members BDS holds as that plain primitive; its cereal JSON is a bare value there and a one-member wrapper object everywhere else.
 - Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length BDS holds as its own member or writes apart from the list, as an expression over earlier fields, never as a constant.
 - Declare a member that BDS writes several times in a row as one field with `field(duplicate=N)`, N the copies BDS writes: one per name the dump binds it under, or one per write in a hand-written encoding. Write a count that depends on an earlier member as a lambda like `when=`, `field(duplicate=lambda p: 2 if p.action & 0x80 != 0 else 1)`.

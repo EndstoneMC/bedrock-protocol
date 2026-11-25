@@ -26,7 +26,6 @@ class StructRef:
 @dataclass(frozen=True)
 class BuiltinRef:
     builtin: "Builtin"
-    encoded: str | None = None
 
 
 @dataclass(frozen=True)
