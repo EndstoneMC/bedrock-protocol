@@ -53,6 +53,7 @@ If the log shows no golden mode, add it to the clone and commit it there:
 - Print `bds_json` with the packet's own `toString`. `toString` binds the packet into a fresh reflection ctx, where a type bound twice, such as Vec3, takes whichever binder runs first; so detour `cereal::BasicSaver::saveImpl`, found by a byte signature, and for the packet being printed alone pass the original a handle over the same packet in the server's packet reflection ctx. A detour that never sees the packet records `bds_json_error`.
 - Send `bds_json` as one JSON string of BDS's text, each byte outside valid UTF-8 written as `\udcXX`; BDS's text is not always JSON, so the reader parses it.
 - On a build before 1.26.40, gate a writer trace on the build's version: a `BinaryStream` subclass that overrides every writer and documented-write helper, records each call's method, value, label, notes, offset, size and depth, and opens a scope for each array, conditional and branching write. When the packet has no reflected type or its `toString` prints nothing, write the packet into it and send `bds_trace` with `bds_trace_bytes_equal`.
+- Before 1.21.40, `BinaryStream` declares no virtual writer, so golden mode sends no `bds_trace`; `read` and `write` take no ctx before 1.21.100.
 - Give the parent a 30 s deadline, then SIGKILL. It records `crash` as the signal name, `exit N` or `timeout`, and the run goes on.
 - Append and flush each record. At the end, log `golden: N cases written to <path>`.
 - Before forking, flush only stdout and stderr. BDS's console thread holds stdin's lock.
@@ -104,9 +105,9 @@ A clean stop exits 0 and logs `Quit correctly`.
 uv run python .claude/skills/goldens/compare.py tests/goldens/v<protocol> $G
 ```
 
-`compare.py` has no trace walk. A case with a `bds_trace` freezes when BDS wrote its bytes back unchanged, `bds_trace_bytes_equal` holds and every leaf of the trace matches the case's value in order.
+`compare.py` has no trace walk. A case with a `bds_trace` freezes when BDS wrote its bytes back unchanged, `bds_trace_bytes_equal` holds and every leaf of the trace matches the case's value in order. A case before 1.21.40 freezes when BDS read every byte and wrote them back unchanged, and every leaf of a static read of that build's writer matches the case's value in order.
 
-Only a `freezes` case can freeze, or a traced one as above. A difference no rule in goldens.md explains is a finding: fix the schema, the case or `CaseForm`, and never relax the comparison.
+Only a `freezes` case can freeze, or a traced or statically read one as above. A difference no rule in goldens.md explains is a finding: fix the schema, the case or `CaseForm`, and never relax the comparison.
 
 ## Symptom -> action
 
@@ -122,7 +123,7 @@ Only a `freezes` case can freeze, or a traced one as above. A difference no rule
 | `JSON differs at <packet>` before 2168, with `serialization_mode` below CerealOnly | BDS printed the cereal shape of a packet it sent by hand. Have an agent match the case's values against BDS's JSON (an older protocol's folder, step 4). |
 | `no reflected type for packet id N`, `toString printed nothing` or `this build has no Packet::toString`, on a build before 1.26.40 | Judge the case by its `bds_trace` (an older protocol's folder, step 4). |
 | A `bds_trace` before 1.21.60 holds only `raw` entries, with `writeIf` or `writeConditional` scopes at most | That build's writers are not virtual, so the trace carries no leaves: judge the case by its bytes against the DSL statically (an older protocol's folder, step 5). |
-| A record before 1.21.100 has no `serialization_mode` | That era has no cereal packets, so BDS read and wrote the hand-written encoding: judge the case by its `bds_trace`. |
+| A record before 1.21.100 has no `serialization_mode` | That era has no cereal packets, so BDS read and wrote the hand-written encoding: judge the case by its `bds_trace`, and before 1.21.40, which has none, by its bytes against the DSL statically (an older protocol's folder, step 5). |
 | Before 1.21.130, a crash in `entt::any_cast<int>` on `[cereal:packet]`, or BDS's JSON wrapped in one `mPayload` member | That era reflects a packet as a class holding one `mPayload`, with no int id property. Take the id from the packet's `getId` and print `mPayload` alone. |
 | `crashed` on every case | A `Packet` slot or stream mirror is wrong. Re-check the slots against a vtable. |
 | `crashed` with a signal on one case | Its bytes drive BDS somewhere it cannot handle, such as a login at another protocol (goldens.md). The child's `dump crashed` trace, if it printed one, follows the case's `golden <stem>[<index>]` line in `golden.log`. |
