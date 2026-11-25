@@ -190,6 +190,7 @@ class Member:
     sentinel: bool = False
     deprecated: bool = False
     synonym: bool = False
+    default: bool = False
 
 
 @dataclass(frozen=True)

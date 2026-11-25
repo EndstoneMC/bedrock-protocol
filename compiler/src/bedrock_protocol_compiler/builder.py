@@ -802,6 +802,7 @@ class Builder:
             sentinel = False
             deprecated = False
             synonym = False
+            default = False
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -823,13 +824,15 @@ class Builder:
                     deprecated = literal(source, arguments["deprecated"], bool, name)
                 if "synonym" in arguments:
                     synonym = literal(source, arguments["synonym"], bool, name)
+                if "default" in arguments:
+                    default = literal(source, arguments["default"], bool, name)
                 if (
                     "name" in arguments
-                    and not {"cpp_name", "deprecated", "synonym"} & arguments.keys()
+                    and not {"cpp_name", "deprecated", "synonym", "default"} & arguments.keys()
                     and own == Range(None, None)
                 ):
                     raise error(source, expression, name, "a member without its own gate takes a pair, not value()")
-                value = Int(literal(source, arguments["v"], int, name)) if "v" in arguments else None
+                value = self.number(source, pending.enum, members, name, arguments["v"]) if "v" in arguments else None
             elif (
                 isinstance(expression, ast.Call)
                 and function in (enum.auto, dsl.sentinel)
@@ -843,28 +846,23 @@ class Builder:
                 if "deprecated" in arguments:
                     deprecated = literal(source, arguments["deprecated"], bool, name)
                 value = None
-            elif isinstance(expression, ast.Name | ast.BinOp):
-                offset = None
-                if isinstance(expression, ast.BinOp):
-                    if not (isinstance(expression.op, ast.Sub) and isinstance(expression.left, ast.Name)):
-                        raise error(source, expression, name, "is not a member minus an integer")
-                    offset = literal(source, expression.right, int, name)
-                    expression = expression.left
-                if not any(member.name == expression.id for member in members):
-                    raise error(source, expression, name, f"{expression.id} is not a member declared above it")
-                value = MemberRef(pending.enum, expression.id)
-                if offset is not None:
-                    value = Binary("-", value, Int(offset))
             else:
-                value = Int(literal(source, expression, int, name))
+                value = self.number(source, pending.enum, members, name, expression)
             encoded_name = encoded_name.lower()
             member_range = self.narrow(source, statement, name, own, within)
+            if default and member_range != pending.range:
+                raise error(source, statement, name, "a default member takes no gate")
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated, synonym))
+            members.append(
+                Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated, synonym, default)
+            )
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
+        defaults = [member.name for member in members if member.default]
+        if len(defaults) > 1:
+            raise error(source, node, pending.enum.name, f"marks both {defaults[0]} and {defaults[1]} default")
         self.tile(source, node, pending.enum, pending.range)
         pending.enum.declarations.append(EnumDeclaration(pending.range, underlying, tuple(members)))
 
@@ -1109,6 +1107,23 @@ class Builder:
                 raise error(source, statement, name, f"a with block holds only {noun}")
             within = self.narrow(source, statement, name, self.read_range(source, block, name, arguments), range)
             yield from ((inner, within, arguments.get("when"), statement) for inner in statement.body)
+
+    def number(
+        self, source: Source, enum: Enum, members: list[Member], name: str, expression: ast.expr
+    ) -> Int | MemberRef | Binary:
+        if not isinstance(expression, ast.Name | ast.BinOp):
+            return Int(literal(source, expression, int, name))
+        offset = None
+        if isinstance(expression, ast.BinOp):
+            if not (isinstance(expression.op, ast.Sub) and isinstance(expression.left, ast.Name)):
+                raise error(source, expression, name, "is not a member minus an integer")
+            offset = literal(source, expression.right, int, name)
+            expression = expression.left
+        if not any(member.name == expression.id for member in members):
+            raise error(source, expression, name, f"{expression.id} is not a member declared above it")
+        if offset is None:
+            return MemberRef(enum, expression.id)
+        return Binary("-", MemberRef(enum, expression.id), Int(offset))
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}

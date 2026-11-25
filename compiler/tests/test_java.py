@@ -1532,6 +1532,27 @@ def test_a_name_coded_enum_defaults_to_its_first_member(emitted):
     assert "c_ = dev.endstone.protocol.Color.CRIMSON;" in text
 
 
+def test_a_name_coded_enum_defaults_to_the_member_its_enum_marks_default(emitted):
+    text = emitted(
+        "class Hue(IntEnum, uint8):\n    RED = 1\n    BLUE = value(2, default=True)\n\n"
+        + "class P:\n    c: Hue = field(type=str)\n"
+    )
+
+    assert "c_ = dev.endstone.protocol.Hue.BLUE;" in text
+
+
+def test_a_name_coded_enum_takes_the_default_its_enum_marks_at_its_message_protocol(java):
+    root = java(
+        "@type(until=2)\nclass F(IntEnum, uint8):\n    A = 1\n    B = value(2, default=True)\n\n"
+        "@type(since=2)\nclass F(IntEnum, uint8):\n    NONE = 0\n    B = 2\n\n"
+        "@type(until=2)\nclass H:\n    f: F = field(type=str)\n\n"
+        "@type(since=2)\nclass H:\n    f: F = field(type=str)\n    y: uint8\n\n"
+        "@packet(id=7)\nclass P:\n    h: H\n"
+    )
+
+    assert "f_ = dev.endstone.protocol.F.B;" in (root / "v1/H_v1.java").read_text()
+
+
 RENUMBERED = (
     "class Mode(IntEnum, uint8):\n    A = value(0, until=3)\n    A = value(1, since=3)\n    B = 2\n\n"
     "@packet(id=7)\nclass P:\n    m: Mode\n"

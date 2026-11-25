@@ -18,6 +18,7 @@ paths:
 - Declare the type live at the latest protocol at the root of `bedrock::protocol` and every other under `v<N>`, N the first protocol that holds it and the first modelled protocol for the oldest; `X_<V>` selects the type of protocol V.
 - Spell the form of a name that takes the protocol `name_<V, …>` wherever the bare name also exists without it (`encode_<V>`, `decode_<V, T>`, `StartGamePacket_<V>`); the root's bare name is the latest protocol's or, where it takes no protocol at all, protocol-free.
 - Make every enum one `enum class` holding every member any protocol has, each member valued by its library value, its number at the newest protocol that has it; the generated codec maps it to each protocol's numbers and names.
+- Default a struct's enum member to the member that its enum's declaration at the newest protocol the struct covers marks `default=True`, and to 0 (`{}`) where that declaration marks none.
 - Open every header with `#pragma once`, with nothing above it.
 - Keep one code path for every platform, toolchain and version: no `#if` alternative and no polyfill; raise the toolchain floor instead.
 - Keep one namespace block per file with inner namespaces nested inside it; never close a namespace and reopen it.

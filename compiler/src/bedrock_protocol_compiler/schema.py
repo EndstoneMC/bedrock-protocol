@@ -479,6 +479,10 @@ class Schema:
             return self.struct_models[node.struct, self.read_at[model]]
         return self.enum_type(node.enum, self.read_at[model])
 
+    def default_member(self, model: StructModel, node: EnumRef | EnumName) -> Member | None:
+        shape = cast(EnumShape, self.live[node.enum, self.read_at[model]])
+        return next((member for member in shape.members if member.default), None)
+
     def owner(self, child: StructModel | EnumType) -> StructModel | None:
         return self.owners.get(child)
 

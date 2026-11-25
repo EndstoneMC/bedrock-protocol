@@ -97,6 +97,26 @@ def test_a_deprecated_value_may_carry_its_bds_spelling_ungated(build_package):
     assert members(package)[1].encoded_name == "b_deprecated"
 
 
+def test_value_marks_its_member_default(build_package):
+    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, default=True)\n"})
+
+    assert [(member.value, member.default) for member in members(package)] == [(Int(1), False), (Int(2), True)]
+
+
+def test_a_default_value_may_carry_its_bds_spelling_ungated(build_package):
+    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = value(1, 'a_b', default=True)\n"})
+
+    assert members(package)[0].encoded_name == "a_b"
+
+
+def test_value_takes_a_pointer(build_package):
+    package = build_package(
+        {"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    COUNT = 2\n    LATEST = value(COUNT - 1, since=2)\n"}
+    )
+
+    assert members(package)[2].value == Binary("-", MemberRef(package.modules[0].families[0], "COUNT"), Int(1))
+
+
 def test_value_carries_a_number_and_a_range(build_package):
     package = build_package(
         {
@@ -239,8 +259,7 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 1,\n", "A: a pair is a value and an encoded name"),
         ("class E(IntEnum, int32):\n    A = value(1, 2)\n", "A: is not a literal str"),
         ("class E(IntEnum, int32):\n    A = value(1, until='3')\n", "A: is not a literal int"),
-        ("class E(IntEnum, int32):\n    A = value(A)\n", "A: is not a literal int"),
-        ("class E(IntEnum, int32):\n    A = 1\n    B = value(A - 1, since=2)\n", "B: is not a literal int"),
+        ("class E(IntEnum, int32):\n    A = value(A)\n", "A: A is not a member declared above it"),
         ("class E(IntEnum, int32):\n    A = (value(1, since=2), 'x')\n", "A: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = (auto(), 'x')\n", "A: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1\n    B = (A, 'x')\n", "B: is not a literal int"),
@@ -262,6 +281,20 @@ def test_an_enum_takes_type(build_package):
         ("class E(IntEnum, int32):\n    A = 1\n    B = (sentinel(), 'x')\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = 1\n    B = sentinel(deprecated=True)\n", "B: is not a literal int"),
         ("class E(IntEnum, int32):\n    A = value(1, deprecated=1)\n", "A: is not a literal bool"),
+        ("class E(IntEnum, int32):\n    A = value(1, default=1)\n", "A: is not a literal bool"),
+        (
+            "class E(IntEnum, int32):\n    A = value(1, default=True)\n    B = value(2, default=True)\n",
+            "E: marks both A and B default",
+        ),
+        (
+            "class E(IntEnum, int32):\n    A = 1\n    B = value(2, since=2, default=True)\n",
+            "B: a default member takes no gate",
+        ),
+        (
+            "class E(IntEnum, int32):\n    A = 1\n    with value(since=2):\n        B = value(2, default=True)\n"
+            "        C = 3\n",
+            "B: a default member takes no gate",
+        ),
         ("class E(IntEnum, int32):\n    A = 1\n    A = 2\n", "A: is declared twice over overlapping versions"),
         (
             "class E(IntEnum, int32):\n    A = value(1, until=3)\n    A = value(2, since=2)\n",

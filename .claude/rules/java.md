@@ -29,6 +29,7 @@ paths:
 - Default a union to its first case; clearing a required one restores that case, and clearing an optional one gives its `NOT_SET` case.
 - Order a map's keys as the C++ `std::map` does: strings by their unsigned bytes, floats by `<`, so `-0.0` and `0.0` are one key.
 - Keep an int-coded enum open as protobuf's are: `getXValue()`, `forNumber`, and `UNRECOGNIZED` for a value no member has; `getNumber()` and `getXValue()` are the library value.
+- Default a name-coded enum field to the member that its enum's declaration at the newest protocol the message covers marks `default=True`.
 - Hold a field typed by the enum itself that one encoding of a model codes by name and another by number in the open form, mapping that int through the naming and throwing `IllegalArgumentException` for a value with no name, and fail the compile for any other such field.
 - Emit each literal field as a public constant on the codec of every encoding that writes it, named by its DSL name in upper case without leading underscores (`ACTION_TYPE`), typed by its enum's class, and `@Deprecated` when its member or that member's canonical constant is deprecated.
 - Name a packet's id accessor `getPacketId()`, and fail the compile when a generated accessor, selector, codec class or codec constant would equal another generated member.

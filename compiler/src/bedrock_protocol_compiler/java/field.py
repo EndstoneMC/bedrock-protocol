@@ -115,7 +115,7 @@ class FieldContext:
                 since = f"{naming.since}, " if len(self.schema.namings(enum_type)) > 1 else ""
                 if self.numbered:
                     return NamedScalar(enum_type.underlying.name, label, spelled, since)
-                default = f"{spelled}.{enum_type.members[0].name}"
+                default = f"{spelled}.{(self.schema.default_member(self.model, node) or enum_type.members[0]).name}"
                 read = f"{spelled}.decode({since}buf)"
                 write = f"{{}}.encode({since}buf);"
                 return Reference(spelled, default, read, write, label, number=enum_class(enum_type))

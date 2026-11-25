@@ -632,6 +632,50 @@ class H:
     d: D
 """
 
+ENUM_MARKS_A_DEFAULT = """
+from enum import IntEnum
+from protocol import packet, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class E(IntEnum, uint8):
+    A = 1
+    B = value(2, default=True)
+
+@packet(id=1)
+class P:
+    e: E
+"""
+
+ENUM_LOSES_ITS_DEFAULT = """
+from enum import IntEnum
+from protocol import field, packet, type, uint8, value
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+@type(until=3)
+class F(IntEnum, uint8):
+    A = value(1, default=True)
+
+@type(since=3)
+class F(IntEnum, uint8):
+    NONE = 0
+    A = 1
+
+@type(until=3)
+class H:
+    f: F = field(type=str)
+
+@type(since=3)
+class H:
+    f: F = field(type=str)
+    y: uint8
+
+@packet(id=1)
+class P:
+    h: H
+"""
+
 ENUM_UNTIL_3 = """
 from enum import IntEnum
 from protocol import type, uint8
@@ -2457,6 +2501,19 @@ def test_an_enum_shared_by_both_forms_of_a_pair_is_the_member_type_of_each(gener
     header = (generate({"a": PAIR_SHARED_ENUM}) / "a.h").read_text()
 
     assert header.count("    ::bedrock::protocol::F f{};\n") == 2
+
+
+def test_an_enum_member_defaults_to_the_member_its_enum_marks_default(generate):
+    header = (generate({"a": ENUM_MARKS_A_DEFAULT}) / "a.h").read_text()
+
+    assert "    ::bedrock::protocol::E e{::bedrock::protocol::E::B};\n" in header
+
+
+def test_an_enum_member_takes_the_default_its_enum_marks_at_its_struct_protocol(generate):
+    header = (generate({"a": ENUM_LOSES_ITS_DEFAULT}) / "a.h").read_text()
+
+    assert "struct H {\n    ::bedrock::protocol::F f{::bedrock::protocol::F::A};\n" in header
+    assert "struct H {\n    ::bedrock::protocol::F f{};\n" in header
 
 
 def test_a_name_coded_enum_with_one_shape_keeps_its_membership_check_on_write(generate):

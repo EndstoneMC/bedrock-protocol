@@ -5,7 +5,7 @@ from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator, partials
 from bedrock_protocol_compiler.cpp.expression import render
 from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
-from bedrock_protocol_compiler.descriptor import Expression, Field, Int
+from bedrock_protocol_compiler.descriptor import EnumName, EnumRef, Expression, Field, Int
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel, reached_by
 
@@ -26,7 +26,11 @@ class StructGenerator:
             if schema.owner(child) is model
         ]
         self.pending = dict(self.owned)
-        self.members = [(cpp_type(schema, model, slot.type), slot.name) for slot in model.slots]
+        self.members: list[tuple[str, str, str]] = []
+        for slot in model.slots:
+            spelled = cpp_type(schema, model, slot.type)
+            marked = schema.default_member(model, slot.type) if isinstance(slot.type, EnumRef | EnumName) else None
+            self.members.append((spelled, slot.name, "" if marked is None else f"{spelled}::{marked.cpp_name}"))
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
@@ -101,8 +105,8 @@ class StructGenerator:
             p.emit("")
         if packet_id is not None:
             p.emit("static constexpr int Id = $id$;", id=packet_id)
-        for spelled, member in self.members:
-            p.emit("$type$ $name${};", type=spelled, name=member)
+        for spelled, member, initial in self.members:
+            p.emit("$type$ $name${$initial$};", type=spelled, name=member, initial=initial)
         if self.target.nested or packet_id is not None or self.members:
             p.emit("")
         p.emit("friend bool operator==(const $name$ &, const $name$ &) = default;", name=self.name)
@@ -110,7 +114,7 @@ class StructGenerator:
     def reflection(self, p: Printer) -> None:
         for _, child in self.owned:
             child.reflection(p)
-        members = [member for _, member in self.members]
+        members = [member for _, member, _ in self.members]
         p.emit(
             """
             template <>
