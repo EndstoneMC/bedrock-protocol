@@ -4,31 +4,31 @@ import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 
 public final class EndTag implements Tag {
-    public static final @NotNull TagType<EndTag> TYPE = buf -> EndTag.INSTANCE;
-    public static final @NotNull EndTag INSTANCE = new EndTag();
+  public static final @NotNull TagType<EndTag> TYPE = buf -> EndTag.INSTANCE;
+  public static final @NotNull EndTag INSTANCE = new EndTag();
 
-    private EndTag() {}
+  private EndTag() {}
 
-    @Override
-    public void encode(@NotNull ByteBuf buf) {}
+  @Override
+  public void encode(@NotNull ByteBuf buf) {}
 
-    @Override
-    public byte getId() {
-        return TAG_END;
-    }
+  @Override
+  public byte getId() {
+    return TAG_END;
+  }
 
-    @Override
-    public @NotNull TagType<EndTag> getType() {
-        return TYPE;
-    }
+  @Override
+  public @NotNull TagType<EndTag> getType() {
+    return TYPE;
+  }
 
-    @Override
-    public @NotNull EndTag copy() {
-        return this;
-    }
+  @Override
+  public @NotNull EndTag copy() {
+    return this;
+  }
 
-    @Override
-    public @NotNull String toString() {
-        return "EndTag";
-    }
+  @Override
+  public @NotNull String toString() {
+    return "EndTag";
+  }
 }

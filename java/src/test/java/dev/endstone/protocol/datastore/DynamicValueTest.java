@@ -26,92 +26,90 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class DynamicValueTest {
-    static Stream<Arguments> values() {
-        return Stream.of(
-                argumentSet("null", new NullValue(), "00000000"),
-                argumentSet("bool", new BoolValue(true), "0100000001"),
-                argumentSet("integer", new IntegerValue(-2L), "02000000feffffffffffffff"),
-                argumentSet("number", new NumberValue(1.0), "03000000000000000000f03f"),
-                argumentSet("string", new StringValue("hi"), "04000000026869"),
-                argumentSet(
-                        "array", new ArrayValue(List.of(new NullValue())), "050000000100000000"),
-                argumentSet(
-                        "array two groups",
-                        new ArrayValue(Collections.nCopies(128, new NullValue())),
-                        "05000000" + "8001" + "00000000".repeat(128)),
-                argumentSet(
-                        "object",
-                        new ObjectValue(Map.of("b", new NullValue(), "a", new BoolValue(true))),
-                        "0600000002" + "0161" + "0100000001" + "0162" + "00000000"));
-    }
+  static Stream<Arguments> values() {
+    return Stream.of(
+        argumentSet("null", new NullValue(), "00000000"),
+        argumentSet("bool", new BoolValue(true), "0100000001"),
+        argumentSet("integer", new IntegerValue(-2L), "02000000feffffffffffffff"),
+        argumentSet("number", new NumberValue(1.0), "03000000000000000000f03f"),
+        argumentSet("string", new StringValue("hi"), "04000000026869"),
+        argumentSet("array", new ArrayValue(List.of(new NullValue())), "050000000100000000"),
+        argumentSet(
+            "array two groups",
+            new ArrayValue(Collections.nCopies(128, new NullValue())),
+            "05000000" + "8001" + "00000000".repeat(128)),
+        argumentSet(
+            "object",
+            new ObjectValue(Map.of("b", new NullValue(), "a", new BoolValue(true))),
+            "0600000002" + "0161" + "0100000001" + "0162" + "00000000"));
+  }
 
-    private static ByteBuf hex(String hex) {
-        return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
-    }
+  private static ByteBuf hex(String hex) {
+    return Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(hex));
+  }
 
-    private static DynamicValue decode(String hex) {
-        return ByteBufCodec.decode(hex(hex), "DynamicValue", ByteBufCodec::readDynamicValue);
-    }
+  private static DynamicValue decode(String hex) {
+    return ByteBufCodec.decode(hex(hex), "DynamicValue", ByteBufCodec::readDynamicValue);
+  }
 
-    private static DecodeException fail(String hex) {
-        return assertThrows(DecodeException.class, () -> decode(hex));
-    }
+  private static DecodeException fail(String hex) {
+    return assertThrows(DecodeException.class, () -> decode(hex));
+  }
 
-    @ParameterizedTest
-    @MethodSource("values")
-    void encodeWritesTheTagThenThePayload(DynamicValue value, String hex) {
-        ByteBuf buf = Unpooled.buffer();
-        ByteBufCodec.writeDynamicValue(buf, value);
-        assertEquals(hex, ByteBufUtil.hexDump(buf));
-    }
+  @ParameterizedTest
+  @MethodSource("values")
+  void encodeWritesTheTagThenThePayload(DynamicValue value, String hex) {
+    ByteBuf buf = Unpooled.buffer();
+    ByteBufCodec.writeDynamicValue(buf, value);
+    assertEquals(hex, ByteBufUtil.hexDump(buf));
+  }
 
-    @ParameterizedTest
-    @MethodSource("values")
-    void readReadsTheTagThenThePayload(DynamicValue value, String hex) {
-        assertEquals(value, decode(hex));
-    }
+  @ParameterizedTest
+  @MethodSource("values")
+  void readReadsTheTagThenThePayload(DynamicValue value, String hex) {
+    assertEquals(value, decode(hex));
+  }
 
-    @Test
-    void objectKeysAreWrittenInUnsignedByteOrder() {
-        ByteBuf buf = Unpooled.buffer();
-        ByteBufCodec.writeDynamicValue(
-                buf, new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())));
-        assertEquals(
-                "0600000002" + "03efbfbf00000000" + "04f090808000000000", ByteBufUtil.hexDump(buf));
-    }
+  @Test
+  void objectKeysAreWrittenInUnsignedByteOrder() {
+    ByteBuf buf = Unpooled.buffer();
+    ByteBufCodec.writeDynamicValue(
+        buf, new ObjectValue(Map.of("𐀀", new NullValue(), "￿", new NullValue())));
+    assertEquals(
+        "0600000002" + "03efbfbf00000000" + "04f090808000000000", ByteBufUtil.hexDump(buf));
+  }
 
-    @Test
-    void aDuplicateKeyKeepsTheFirstValue() {
-        assertEquals(
-                new ObjectValue(Map.of("a", new NullValue())),
-                decode("0600000002" + "016100000000" + "01610100000001"));
-    }
+  @Test
+  void aDuplicateKeyKeepsTheFirstValue() {
+    assertEquals(
+        new ObjectValue(Map.of("a", new NullValue())),
+        decode("0600000002" + "016100000000" + "01610100000001"));
+  }
 
-    static Stream<Arguments> unknownTags() {
-        return Stream.of(argumentSet("seven", "07000000"), argumentSet("all ones", "ffffffff"));
-    }
+  static Stream<Arguments> unknownTags() {
+    return Stream.of(argumentSet("seven", "07000000"), argumentSet("all ones", "ffffffff"));
+  }
 
-    @ParameterizedTest
-    @MethodSource("unknownTags")
-    void anUnknownTagIsAnUnknownValue(String hex) {
-        assertEquals("DynamicValue: unknown value at byte 4 of 4", fail(hex).getMessage());
-    }
+  @ParameterizedTest
+  @MethodSource("unknownTags")
+  void anUnknownTagIsAnUnknownValue(String hex) {
+    assertEquals("DynamicValue: unknown value at byte 4 of 4", fail(hex).getMessage());
+  }
 
-    @Test
-    void aMissingPayloadIsTruncated() {
-        assertEquals("DynamicValue: truncated at byte 4 of 4", fail("01000000").getMessage());
-    }
+  @Test
+  void aMissingPayloadIsTruncated() {
+    assertEquals("DynamicValue: truncated at byte 4 of 4", fail("01000000").getMessage());
+  }
 
-    @Test
-    void bytesAfterTheValueAreTrailing() {
-        assertEquals(
-                "DynamicValue: trailing bytes at byte 4 of 5", fail("0000000000").getMessage());
-    }
+  @Test
+  void bytesAfterTheValueAreTrailing() {
+    assertEquals("DynamicValue: trailing bytes at byte 4 of 5", fail("0000000000").getMessage());
+  }
 
-    @Test
-    void aStringValueRejectsNull() {
-        assertEquals(
-                "StringValue.value",
-                assertThrows(NullPointerException.class, () -> new StringValue(null)).getMessage());
-    }
+  @Test
+  void aStringValueRejectsNull() {
+    assertEquals(
+        "StringValue.value",
+        assertThrows(NullPointerException.class, () -> new StringValue(null)).getMessage());
+  }
 }

@@ -120,13 +120,13 @@ import dev.endstone.protocol.TextPacket;
 import dev.endstone.protocol.TextPacketType;
 
 TextPacket packet =
-        TextPacket.newBuilder()
-                .setMessageOnly(
-                        TextPacket.MessageOnly.newBuilder()
-                                .setType(TextPacketType.CHAT)
-                                .setMessage("hello")
-                                .build())
-                .build();
+    TextPacket.newBuilder()
+        .setMessageOnly(
+            TextPacket.MessageOnly.newBuilder()
+                .setType(TextPacketType.CHAT)
+                .setMessage("hello")
+                .build())
+        .build();
 
 byte[] data = Protocol.encode(packet);
 TextPacket decoded = Protocol.decode(TextPacket.class, data);

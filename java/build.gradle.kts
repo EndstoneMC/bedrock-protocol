@@ -86,7 +86,7 @@ sourceSets.main {
 spotless {
     java {
         target("src/**/*.java")
-        googleJavaFormat("1.36.1").aosp()
+        googleJavaFormat("1.36.1")
     }
 }
 

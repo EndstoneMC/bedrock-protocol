@@ -16,247 +16,247 @@ import org.jetbrains.annotations.Nullable;
 
 /** A compound tag; its entries are kept, and encoded, in the unsigned byte order of their keys. */
 public final class CompoundTag implements Tag {
-    public static final @NotNull TagType<CompoundTag> TYPE =
-            buf -> {
-                CompoundTag tag = new CompoundTag();
-                while (true) {
-                    int id = ByteBufCodec.readUnsignedByte(buf);
-                    if (id == TAG_END) {
-                        return tag;
-                    }
-                    TagType<?> type = TagTypes.getType(id);
-                    if (type == null) {
-                        throw DecodeException.unknownValue(buf.readerIndex());
-                    }
-                    String name = ByteBufCodec.readString(buf);
-                    tag.tags.putIfAbsent(name, type.decode(buf));
-                }
-            };
-
-    public static @NotNull CompoundTag getDefaultInstance() {
-        return new CompoundTag();
-    }
-
-    private final Map<String, Tag> tags = new TreeMap<>(ByteBufCodec.STR_ORDER);
-
-    @Override
-    public void encode(@NotNull ByteBuf buf) {
-        for (Map.Entry<String, Tag> entry : tags.entrySet()) {
-            buf.writeByte(entry.getValue().getId());
-            ByteBufCodec.writeString(buf, entry.getKey());
-            entry.getValue().encode(buf);
+  public static final @NotNull TagType<CompoundTag> TYPE =
+      buf -> {
+        CompoundTag tag = new CompoundTag();
+        while (true) {
+          int id = ByteBufCodec.readUnsignedByte(buf);
+          if (id == TAG_END) {
+            return tag;
+          }
+          TagType<?> type = TagTypes.getType(id);
+          if (type == null) {
+            throw DecodeException.unknownValue(buf.readerIndex());
+          }
+          String name = ByteBufCodec.readString(buf);
+          tag.tags.putIfAbsent(name, type.decode(buf));
         }
-        buf.writeByte(TAG_END);
-    }
+      };
 
-    @Override
-    public byte getId() {
-        return TAG_COMPOUND;
-    }
+  public static @NotNull CompoundTag getDefaultInstance() {
+    return new CompoundTag();
+  }
 
-    @Override
-    public @NotNull TagType<CompoundTag> getType() {
-        return TYPE;
-    }
+  private final Map<String, Tag> tags = new TreeMap<>(ByteBufCodec.STR_ORDER);
 
-    @Override
-    public @NotNull CompoundTag copy() {
-        CompoundTag copy = new CompoundTag();
-        tags.forEach((key, value) -> copy.tags.put(key, value.copy()));
-        return copy;
+  @Override
+  public void encode(@NotNull ByteBuf buf) {
+    for (Map.Entry<String, Tag> entry : tags.entrySet()) {
+      buf.writeByte(entry.getValue().getId());
+      ByteBufCodec.writeString(buf, entry.getKey());
+      entry.getValue().encode(buf);
     }
+    buf.writeByte(TAG_END);
+  }
 
-    @Override
-    public @NotNull Optional<CompoundTag> asCompound() {
-        return Optional.of(this);
-    }
+  @Override
+  public byte getId() {
+    return TAG_COMPOUND;
+  }
 
-    public int size() {
-        return tags.size();
-    }
+  @Override
+  public @NotNull TagType<CompoundTag> getType() {
+    return TYPE;
+  }
 
-    public boolean isEmpty() {
-        return tags.isEmpty();
-    }
+  @Override
+  public @NotNull CompoundTag copy() {
+    CompoundTag copy = new CompoundTag();
+    tags.forEach((key, value) -> copy.tags.put(key, value.copy()));
+    return copy;
+  }
 
-    public @NotNull Set<String> keySet() {
-        return Collections.unmodifiableSet(tags.keySet());
-    }
+  @Override
+  public @NotNull Optional<CompoundTag> asCompound() {
+    return Optional.of(this);
+  }
 
-    public @NotNull Set<Map.Entry<String, Tag>> entrySet() {
-        return Collections.unmodifiableMap(tags).entrySet();
-    }
+  public int size() {
+    return tags.size();
+  }
 
-    public @NotNull Collection<Tag> values() {
-        return Collections.unmodifiableCollection(tags.values());
-    }
+  public boolean isEmpty() {
+    return tags.isEmpty();
+  }
 
-    public void forEach(@NotNull BiConsumer<String, Tag> action) {
-        tags.forEach(action);
-    }
+  public @NotNull Set<String> keySet() {
+    return Collections.unmodifiableSet(tags.keySet());
+  }
 
-    public @Nullable Tag put(@NotNull String key, @NotNull Tag value) {
-        return tags.put(
-                Objects.requireNonNull(key, "CompoundTag.key"),
-                Objects.requireNonNull(value, "CompoundTag.value"));
-    }
+  public @NotNull Set<Map.Entry<String, Tag>> entrySet() {
+    return Collections.unmodifiableMap(tags).entrySet();
+  }
 
-    public void putByte(@NotNull String key, byte value) {
-        put(key, ByteTag.valueOf(value));
-    }
+  public @NotNull Collection<Tag> values() {
+    return Collections.unmodifiableCollection(tags.values());
+  }
 
-    public void putShort(@NotNull String key, short value) {
-        put(key, ShortTag.valueOf(value));
-    }
+  public void forEach(@NotNull BiConsumer<String, Tag> action) {
+    tags.forEach(action);
+  }
 
-    public void putInt(@NotNull String key, int value) {
-        put(key, IntTag.valueOf(value));
-    }
+  public @Nullable Tag put(@NotNull String key, @NotNull Tag value) {
+    return tags.put(
+        Objects.requireNonNull(key, "CompoundTag.key"),
+        Objects.requireNonNull(value, "CompoundTag.value"));
+  }
 
-    public void putLong(@NotNull String key, long value) {
-        put(key, LongTag.valueOf(value));
-    }
+  public void putByte(@NotNull String key, byte value) {
+    put(key, ByteTag.valueOf(value));
+  }
 
-    public void putFloat(@NotNull String key, float value) {
-        put(key, FloatTag.valueOf(value));
-    }
+  public void putShort(@NotNull String key, short value) {
+    put(key, ShortTag.valueOf(value));
+  }
 
-    public void putDouble(@NotNull String key, double value) {
-        put(key, DoubleTag.valueOf(value));
-    }
+  public void putInt(@NotNull String key, int value) {
+    put(key, IntTag.valueOf(value));
+  }
 
-    public void putString(@NotNull String key, @NotNull String value) {
-        put(key, StringTag.valueOf(value));
-    }
+  public void putLong(@NotNull String key, long value) {
+    put(key, LongTag.valueOf(value));
+  }
 
-    public void putByteArray(@NotNull String key, byte @NotNull [] value) {
-        put(key, new ByteArrayTag(value));
-    }
+  public void putFloat(@NotNull String key, float value) {
+    put(key, FloatTag.valueOf(value));
+  }
 
-    public void putIntArray(@NotNull String key, int @NotNull [] value) {
-        put(key, new IntArrayTag(value));
-    }
+  public void putDouble(@NotNull String key, double value) {
+    put(key, DoubleTag.valueOf(value));
+  }
 
-    public void putBoolean(@NotNull String key, boolean value) {
-        put(key, ByteTag.valueOf(value));
-    }
+  public void putString(@NotNull String key, @NotNull String value) {
+    put(key, StringTag.valueOf(value));
+  }
 
-    public @Nullable Tag get(@NotNull String key) {
-        return tags.get(key);
-    }
+  public void putByteArray(@NotNull String key, byte @NotNull [] value) {
+    put(key, new ByteArrayTag(value));
+  }
 
-    public boolean contains(@NotNull String key) {
-        return tags.containsKey(key);
-    }
+  public void putIntArray(@NotNull String key, int @NotNull [] value) {
+    put(key, new IntArrayTag(value));
+  }
 
-    public @Nullable Tag remove(@NotNull String key) {
-        return tags.remove(key);
-    }
+  public void putBoolean(@NotNull String key, boolean value) {
+    put(key, ByteTag.valueOf(value));
+  }
 
-    public @NotNull Optional<Byte> getByte(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asByte);
-    }
+  public @Nullable Tag get(@NotNull String key) {
+    return tags.get(key);
+  }
 
-    public byte getByteOr(@NotNull String key, byte fallback) {
-        return getByte(key).orElse(fallback);
-    }
+  public boolean contains(@NotNull String key) {
+    return tags.containsKey(key);
+  }
 
-    public @NotNull Optional<Short> getShort(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asShort);
-    }
+  public @Nullable Tag remove(@NotNull String key) {
+    return tags.remove(key);
+  }
 
-    public short getShortOr(@NotNull String key, short fallback) {
-        return getShort(key).orElse(fallback);
-    }
+  public @NotNull Optional<Byte> getByte(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asByte);
+  }
 
-    public @NotNull Optional<Integer> getInt(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asInt);
-    }
+  public byte getByteOr(@NotNull String key, byte fallback) {
+    return getByte(key).orElse(fallback);
+  }
 
-    public int getIntOr(@NotNull String key, int fallback) {
-        return getInt(key).orElse(fallback);
-    }
+  public @NotNull Optional<Short> getShort(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asShort);
+  }
 
-    public @NotNull Optional<Long> getLong(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asLong);
-    }
+  public short getShortOr(@NotNull String key, short fallback) {
+    return getShort(key).orElse(fallback);
+  }
 
-    public long getLongOr(@NotNull String key, long fallback) {
-        return getLong(key).orElse(fallback);
-    }
+  public @NotNull Optional<Integer> getInt(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asInt);
+  }
 
-    public @NotNull Optional<Float> getFloat(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asFloat);
-    }
+  public int getIntOr(@NotNull String key, int fallback) {
+    return getInt(key).orElse(fallback);
+  }
 
-    public float getFloatOr(@NotNull String key, float fallback) {
-        return getFloat(key).orElse(fallback);
-    }
+  public @NotNull Optional<Long> getLong(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asLong);
+  }
 
-    public @NotNull Optional<Double> getDouble(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asDouble);
-    }
+  public long getLongOr(@NotNull String key, long fallback) {
+    return getLong(key).orElse(fallback);
+  }
 
-    public double getDoubleOr(@NotNull String key, double fallback) {
-        return getDouble(key).orElse(fallback);
-    }
+  public @NotNull Optional<Float> getFloat(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asFloat);
+  }
 
-    public @NotNull Optional<String> getString(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asString);
-    }
+  public float getFloatOr(@NotNull String key, float fallback) {
+    return getFloat(key).orElse(fallback);
+  }
 
-    public @NotNull String getStringOr(@NotNull String key, @NotNull String fallback) {
-        return getString(key).orElse(fallback);
-    }
+  public @NotNull Optional<Double> getDouble(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asDouble);
+  }
 
-    public @NotNull Optional<byte[]> getByteArray(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asByteArray);
-    }
+  public double getDoubleOr(@NotNull String key, double fallback) {
+    return getDouble(key).orElse(fallback);
+  }
 
-    public @NotNull Optional<int[]> getIntArray(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asIntArray);
-    }
+  public @NotNull Optional<String> getString(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asString);
+  }
 
-    public @NotNull Optional<CompoundTag> getCompound(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asCompound);
-    }
+  public @NotNull String getStringOr(@NotNull String key, @NotNull String fallback) {
+    return getString(key).orElse(fallback);
+  }
 
-    public @NotNull CompoundTag getCompoundOrEmpty(@NotNull String key) {
-        return getCompound(key).orElseGet(CompoundTag::new);
-    }
+  public @NotNull Optional<byte[]> getByteArray(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asByteArray);
+  }
 
-    public @NotNull Optional<ListTag> getList(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asList);
-    }
+  public @NotNull Optional<int[]> getIntArray(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asIntArray);
+  }
 
-    public @NotNull ListTag getListOrEmpty(@NotNull String key) {
-        return getList(key).orElseGet(ListTag::new);
-    }
+  public @NotNull Optional<CompoundTag> getCompound(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asCompound);
+  }
 
-    public @NotNull Optional<Boolean> getBoolean(@NotNull String key) {
-        return getOptional(key).flatMap(Tag::asBoolean);
-    }
+  public @NotNull CompoundTag getCompoundOrEmpty(@NotNull String key) {
+    return getCompound(key).orElseGet(CompoundTag::new);
+  }
 
-    public boolean getBooleanOr(@NotNull String key, boolean fallback) {
-        return getBoolean(key).orElse(fallback);
-    }
+  public @NotNull Optional<ListTag> getList(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asList);
+  }
 
-    private Optional<Tag> getOptional(String key) {
-        return Optional.ofNullable(tags.get(key));
-    }
+  public @NotNull ListTag getListOrEmpty(@NotNull String key) {
+    return getList(key).orElseGet(ListTag::new);
+  }
 
-    @Override
-    public boolean equals(@Nullable Object other) {
-        return other instanceof CompoundTag tag && tags.equals(tag.tags);
-    }
+  public @NotNull Optional<Boolean> getBoolean(@NotNull String key) {
+    return getOptional(key).flatMap(Tag::asBoolean);
+  }
 
-    @Override
-    public int hashCode() {
-        return tags.hashCode();
-    }
+  public boolean getBooleanOr(@NotNull String key, boolean fallback) {
+    return getBoolean(key).orElse(fallback);
+  }
 
-    @Override
-    public @NotNull String toString() {
-        return "CompoundTag" + tags;
-    }
+  private Optional<Tag> getOptional(String key) {
+    return Optional.ofNullable(tags.get(key));
+  }
+
+  @Override
+  public boolean equals(@Nullable Object other) {
+    return other instanceof CompoundTag tag && tags.equals(tag.tags);
+  }
+
+  @Override
+  public int hashCode() {
+    return tags.hashCode();
+  }
+
+  @Override
+  public @NotNull String toString() {
+    return "CompoundTag" + tags;
+  }
 }
