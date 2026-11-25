@@ -1,0 +1,27 @@
+[
+ {
+  "id": "bare_and_loaded_presets",
+  "value": {
+   "camera_presets": {
+    "presets": [
+     {
+      "name": "bare",
+      "inherit_from": "minecraft:first_person"
+     },
+     {
+      "name": "loaded",
+      "inherit_from": "minecraft:free",
+      "pos_x": 1.0,
+      "pos_y": 2.0,
+      "pos_z": 3.0,
+      "rot_x": 0.5,
+      "rot_y": 0.25,
+      "listener": 1,
+      "player_effects": true
+     }
+    ]
+   }
+  },
+  "bytes": "020462617265166d696e6563726166743a66697273745f706572736f6e00000000000000066c6f616465640e6d696e6563726166743a66726565010000803f01000000400100004040010000003f010000803e01010101"
+ }
+]

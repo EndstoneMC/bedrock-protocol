@@ -1,0 +1,298 @@
+[
+ {
+  "id": "inventory_mismatch_with_legacy_slots",
+  "value": {
+   "legacy_request_id": -2,
+   "legacy_set_item_slots": [
+    {
+     "container_enum": 6,
+     "slots": "\\x01\\x02"
+    }
+   ],
+   "transaction": {
+    "__class__": "InventoryMismatchData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 1,
+        "container_id": 0,
+        "flags": 0
+       },
+       "slot": 2,
+       "from_item_descriptor": {
+        "id": 0,
+        "stack_size": 0,
+        "aux_value": 0,
+        "block_runtime_id": 0,
+        "user_data_buffer": ""
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id": {
+         "raw_id": 9
+        },
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0301060201020101010200024000000112bdc7f7fc0f0a00000000000000000000"
+ },
+ {
+  "id": "odd_legacy_request_id_without_slots",
+  "value": {
+   "legacy_request_id": -3,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "InventoryMismatchData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 1,
+        "container_id": 0,
+        "flags": 0
+       },
+       "slot": 2,
+       "from_item_descriptor": {
+        "id": 0,
+        "stack_size": 0,
+        "aux_value": 0,
+        "block_runtime_id": 0,
+        "user_data_buffer": ""
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id": {
+         "raw_id": 9
+        },
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "050101010200024000000112bdc7f7fc0f0a00000000000000000000"
+ },
+ {
+  "id": "item_use_arm",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "CerealizedItemUseInventoryTransaction",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 2,
+        "container_id": 0,
+        "flags": 1
+       },
+       "slot": 2,
+       "from_item_descriptor": {
+        "id": 0,
+        "stack_size": 0,
+        "aux_value": 0,
+        "block_runtime_id": 0,
+        "user_data_buffer": ""
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id": {
+         "raw_id": 9
+        },
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    },
+    "action_type": 1,
+    "pos": {
+     "x": 1,
+     "y": 2,
+     "z": 3
+    },
+    "face": 4,
+    "slot": 5,
+    "item": {
+     "id": 1,
+     "stack_size": 64,
+     "aux_value": 0,
+     "net_id": {
+      "raw_id": 9
+     },
+     "block_runtime_id": -2144268767,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    },
+    "from_pos": {
+     "x": 1.0,
+     "y": 2.0,
+     "z": 3.0
+    },
+    "click_pos": {
+     "x": 0.5,
+     "y": 0.25,
+     "z": 0.75
+    },
+    "target_block_id": 2150698529
+   }
+  },
+  "bytes": "00020102010200024000000112bdc7f7fc0f0a0000000000000000000001020206080a024000000112bdc7f7fc0f0a000000000000000000000000803f00000040000040400000003f0000803e0000403fa19cc48108"
+ },
+ {
+  "id": "item_use_on_actor_arm",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "ItemUseOnActorInventoryTransaction",
+    "transaction": {
+     "actions": []
+    },
+    "runtime_id": 7,
+    "action_type": 1,
+    "slot": 2,
+    "item": {
+     "id": 1,
+     "stack_size": 64,
+     "aux_value": 0,
+     "net_id": {
+      "raw_id": 9
+     },
+     "block_runtime_id": -2144268767,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    },
+    "from_pos": {
+     "x": 1.0,
+     "y": 2.0,
+     "z": 3.0
+    },
+    "hit_pos": {
+     "x": 0.5,
+     "y": 0.25,
+     "z": 0.75
+    }
+   }
+  },
+  "bytes": "000300070104024000000112bdc7f7fc0f0a000000000000000000000000803f00000040000040400000003f0000803e0000403f"
+ },
+ {
+  "id": "item_release_arm",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "ItemReleaseInventoryTransaction",
+    "transaction": {
+     "actions": []
+    },
+    "action_type": 1,
+    "slot": 2,
+    "item": {
+     "id": 1,
+     "stack_size": 64,
+     "aux_value": 0,
+     "net_id": {
+      "raw_id": 9
+     },
+     "block_runtime_id": -2144268767,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    },
+    "from_pos": {
+     "x": 1.0,
+     "y": 2.0,
+     "z": 3.0
+    }
+   }
+  },
+  "bytes": "0004000104024000000112bdc7f7fc0f0a000000000000000000000000803f0000004000004040"
+ },
+ {
+  "id": "item_without_net_id",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "NormalTransactionData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 0,
+        "container_id": 12,
+        "flags": 0
+       },
+       "slot": 3,
+       "from_item_descriptor": {
+        "id": 323,
+        "stack_size": 2,
+        "aux_value": 3,
+        "block_runtime_id": 0,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "000001001803860502000300000a000000000000000000000240000000bdc7f7fc0f0a00000000000000000000"
+ },
+ {
+  "id": "source_non_implemented_feature",
+  "value": {
+   "legacy_request_id": 0,
+   "legacy_set_item_slots": [],
+   "transaction": {
+    "__class__": "NormalTransactionData",
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 99999,
+        "container_id": 119,
+        "flags": 0
+       },
+       "slot": 3,
+       "from_item_descriptor": {
+        "id": 323,
+        "stack_size": 2,
+        "aux_value": 3,
+        "block_runtime_id": 0,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       },
+       "to_item_descriptor": {
+        "id": 1,
+        "stack_size": 64,
+        "aux_value": 0,
+        "block_runtime_id": -2144268767,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "bytes": "0000019f8d06ee0103860502000300000a000000000000000000000240000000bdc7f7fc0f0a00000000000000000000"
+ }
+]

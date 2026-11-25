@@ -1,0 +1,48 @@
+[
+ {
+  "id": "vehicle_prediction",
+  "value": {
+   "prediction_type": 1,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "pos_delta": {
+    "x": 0.5,
+    "y": -0.5,
+    "z": 0.25
+   },
+   "vehicle_rotation": {
+    "x": 45.0,
+    "y": 90.0
+   },
+   "on_ground": true,
+   "tick": 300
+  },
+  "bytes": "010000803f00000040000040400000003f000000bf0000803e000034420000b44201ac02"
+ },
+ {
+  "id": "player_prediction",
+  "value": {
+   "prediction_type": 0,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "pos_delta": {
+    "x": 0.5,
+    "y": -0.5,
+    "z": 0.25
+   },
+   "vehicle_rotation": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "on_ground": false,
+   "tick": 300
+  },
+  "bytes": "000000803f00000040000040400000003f000000bf0000803e00ac02"
+ }
+]

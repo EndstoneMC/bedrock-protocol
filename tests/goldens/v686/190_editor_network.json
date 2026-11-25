@@ -1,0 +1,9 @@
+[
+ {
+  "id": "compound_payload",
+  "value": {
+   "payload": "{payload:\"abc\"}"
+  },
+  "bytes": "0a0008077061796c6f61640361626300"
+ }
+]

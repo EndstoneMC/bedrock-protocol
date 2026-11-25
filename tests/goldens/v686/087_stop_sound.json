@@ -1,0 +1,10 @@
+[
+ {
+  "id": "stop_all_sounds",
+  "value": {
+   "name": "record.pigstep",
+   "stop_all": true
+  },
+  "bytes": "0e7265636f72642e7069677374657001"
+ }
+]

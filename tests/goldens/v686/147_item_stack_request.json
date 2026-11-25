@@ -1,0 +1,289 @@
+[
+ {
+  "id": "take_action_arm",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -1
+     },
+     "actions": [
+      {
+       "__class__": "ItemStackRequestActionTake",
+       "amount": 1,
+       "src": {
+        "open_container_net_id": 7,
+        "slot": 3,
+        "net_id_variant": 9
+       },
+       "dst": {
+        "open_container_net_id": 59,
+        "slot": 0,
+        "net_id_variant": 0
+       }
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "01010100010703123b00000003000000"
+ },
+ {
+  "id": "lab_table_and_creative_craft_with_filter",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -3
+     },
+     "actions": [
+      {
+       "__class__": "ItemStackRequestActionLabTableCombine"
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftCreative",
+       "creative_item_net_id": 5
+      }
+     ],
+     "strings_to_filter": ["anvil name"],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "010502090e05010a616e76696c206e616d6503000000"
+ },
+ {
+  "id": "every_remaining_action_arm",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "__class__": "ItemStackRequestActionPlace",
+       "amount": 2,
+       "src": {
+        "open_container_net_id": 29,
+        "slot": 4,
+        "net_id_variant": 9
+       },
+       "dst": {
+        "open_container_net_id": 28,
+        "slot": 1,
+        "net_id_variant": 0
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionSwap",
+       "src": {
+        "open_container_net_id": 28,
+        "slot": 2,
+        "net_id_variant": 10
+       },
+       "dst": {
+        "open_container_net_id": 29,
+        "slot": 5,
+        "net_id_variant": 11
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionDrop",
+       "amount": 3,
+       "src": {
+        "open_container_net_id": 28,
+        "slot": 3,
+        "net_id_variant": 12
+       },
+       "randomly": true
+      },
+      {
+       "__class__": "ItemStackRequestActionDestroy",
+       "amount": 4,
+       "src": {
+        "open_container_net_id": 28,
+        "slot": 4,
+        "net_id_variant": 13
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionConsume",
+       "amount": 5,
+       "src": {
+        "open_container_net_id": 28,
+        "slot": 5,
+        "net_id_variant": 14
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionCreate",
+       "results_index": 2
+      },
+      {
+       "__class__": "ItemStackRequestActionPlaceInItemContainer",
+       "amount": 6,
+       "src": {
+        "open_container_net_id": 28,
+        "slot": 6,
+        "net_id_variant": 16
+       },
+       "dst": {
+        "open_container_net_id": 29,
+        "slot": 7,
+        "net_id_variant": 17
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionTakeFromItemContainer",
+       "amount": 7,
+       "src": {
+        "open_container_net_id": 29,
+        "slot": 8,
+        "net_id_variant": 18
+       },
+       "dst": {
+        "open_container_net_id": 28,
+        "slot": 9,
+        "net_id_variant": 19
+       }
+      },
+      {
+       "__class__": "ItemStackRequestActionBeaconPayment",
+       "primary_effect_id": 1,
+       "secondary_effect_id": 3
+      },
+      {
+       "__class__": "ItemStackRequestActionMineBlock",
+       "slot": 6,
+       "predicted_durability": 7,
+       "net_id_variant": 15
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftRecipe",
+       "recipe_net_id": 8
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftRecipeAuto",
+       "recipe_net_id": 9,
+       "num_crafts": 2,
+       "num_ingredients": 4,
+       "ingredients": [
+        {
+         "descriptor": {
+          "internal_type": 0,
+          "id": 0,
+          "name": "",
+          "molang_version": 0,
+          "aux_value": 0
+         },
+         "stack_size": 1
+        },
+        {
+         "descriptor": {
+          "internal_type": 1,
+          "id": 1,
+          "name": "",
+          "molang_version": 0,
+          "aux_value": 0
+         },
+         "stack_size": 2
+        },
+        {
+         "descriptor": {
+          "internal_type": 2,
+          "id": 0,
+          "name": "query.any_tag('minecraft:boats')",
+          "molang_version": 12,
+          "aux_value": 0
+         },
+         "stack_size": 3
+        },
+        {
+         "descriptor": {
+          "internal_type": 3,
+          "id": 0,
+          "name": "minecraft:boats",
+          "molang_version": 0,
+          "aux_value": 0
+         },
+         "stack_size": 4
+        }
+       ]
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftRecipeOptional",
+       "recipe_net_id": 10,
+       "filtered_string_index": 1
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftGrindstone",
+       "recipe_net_id": -6,
+       "repair_cost": 12
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftLoom",
+       "pattern_name_id": "creeper"
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING"
+      },
+      {
+       "__class__": "ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING",
+       "craft_results": [
+        {
+         "id": 285,
+         "stack_size": 3,
+         "aux_value": 0,
+         "block_runtime_id": 0,
+         "user_data_buffer": ""
+        }
+       ],
+       "num_crafts": 2
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "01091101021d04121c0100021c02141d051603031c03180104041c041a05051c051c060207061c06201d072208071d08241c09260a02060b0c0e1e0c080d0902040002010100000004022071756572792e616e795f74616728276d696e6563726166743a626f61747327290c06030f6d696e6563726166743a626f617473080f0a01000000100b18110763726565706572121301ba040300000000020003000000"
+ },
+ {
+  "id": "complex_alias_ingredient",
+  "value": {
+   "requests": [
+    {
+     "client_request_id": {
+      "raw_id": -5
+     },
+     "actions": [
+      {
+       "__class__": "ItemStackRequestActionCraftRecipeAuto",
+       "recipe_net_id": 9,
+       "num_crafts": 4,
+       "num_ingredients": 1,
+       "ingredients": [
+        {
+         "descriptor": {
+          "internal_type": 5,
+          "id": 0,
+          "name": "minecraft:planks",
+          "molang_version": 0,
+          "aux_value": 0
+         },
+         "stack_size": 2
+        }
+       ]
+      }
+     ],
+     "strings_to_filter": [],
+     "strings_to_filter_origin": 3
+    }
+   ]
+  },
+  "bytes": "0109010d09040105106d696e6563726166743a706c616e6b73040003000000"
+ }
+]

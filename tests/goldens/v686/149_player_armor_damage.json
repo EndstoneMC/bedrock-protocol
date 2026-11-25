@@ -1,0 +1,24 @@
+[
+ {
+  "id": "head_and_legs_damaged",
+  "value": {
+   "slots": 5,
+   "head_damage": 3,
+   "torso_damage": 0,
+   "legs_damage": 5,
+   "feet_damage": 0
+  },
+  "bytes": "05060a"
+ },
+ {
+  "id": "torso_and_feet_damaged",
+  "value": {
+   "slots": 10,
+   "head_damage": 0,
+   "torso_damage": 4,
+   "legs_damage": 0,
+   "feet_damage": 6
+  },
+  "bytes": "0a080c"
+ }
+]

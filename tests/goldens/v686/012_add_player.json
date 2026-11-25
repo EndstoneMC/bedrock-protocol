@@ -1,0 +1,311 @@
+[
+ {
+  "id": "one_actor_data_item",
+  "value": {
+   "uuid": "00000000-0000-0001-0000-000000000002",
+   "name": "Steve",
+   "runtime_id": 2,
+   "platform_online_id": "chat",
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "rot": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 9.0,
+   "carried_item": {
+    "id": 323,
+    "stack_size": 1,
+    "aux_value": 0,
+    "block_runtime_id": 0,
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+   },
+   "player_game_type": 0,
+   "unpack": {
+    "data": [
+     {
+      "id": 38,
+      "payload": {
+       "__class__": "DataItemFloatPayload",
+       "value": 0.5
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "abilities_data": {
+    "target_player": 1,
+    "player_permissions": 1,
+    "command_permissions": 0,
+    "layers": [
+     {
+      "serialized_layer": 1,
+      "abilities_set": 24579,
+      "ability_values": 1,
+      "fly_speed": 0.05,
+      "walk_speed": 0.1
+     }
+    ]
+   },
+   "links": [
+    {
+     "a": 1,
+     "b": 2,
+     "type": 1,
+     "immediate": true,
+     "passenger_initiated": false
+    }
+   ],
+   "device_id": "dev",
+   "build_platform": 8
+  },
+  "bytes": "010000000000000002000000000000000553746576650204636861740000803f0000004000004040000080400000a0400000c0400000e0400000004100001041860501000000000a00000000000000000000000126030000003f01010301020000003f010000000000000001000101000360000001000000cdcc4c3dcdcccc3d0102040101000364657608000000"
+ },
+ {
+  "id": "one_of_each_actor_data_arm",
+  "value": {
+   "uuid": "00000000-0000-0001-0000-000000000002",
+   "name": "Steve",
+   "runtime_id": 2,
+   "platform_online_id": "chat",
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "rot": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 9.0,
+   "carried_item": {
+    "id": 323,
+    "stack_size": 1,
+    "aux_value": 0,
+    "net_id": {
+     "raw_id": 9
+    },
+    "block_runtime_id": 0,
+    "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+   },
+   "player_game_type": 0,
+   "unpack": {
+    "data": [
+     {
+      "id": 2,
+      "payload": {
+       "__class__": "DataItemIntPayload",
+       "value": 7
+      }
+     },
+     {
+      "id": 3,
+      "payload": {
+       "__class__": "DataItemBytePayload",
+       "value": 3
+      }
+     },
+     {
+      "id": 4,
+      "payload": {
+       "__class__": "DataItemStringPayload",
+       "value": "Bob"
+      }
+     },
+     {
+      "id": 5,
+      "payload": {
+       "__class__": "DataItemInt64Payload",
+       "value": -4000000000
+      }
+     },
+     {
+      "id": 7,
+      "payload": {
+       "__class__": "DataItemShortPayload",
+       "value": 300
+      }
+     },
+     {
+      "id": 28,
+      "payload": {
+       "__class__": "DataItemPosPayload",
+       "value": {
+        "x": 1,
+        "y": -2,
+        "z": 3
+       }
+      }
+     },
+     {
+      "id": 118,
+      "payload": {
+       "__class__": "DataItemCompoundTagPayload",
+       "value": "{Hitboxes:[{Height:1.5f,Width:0.75f}]}"
+      }
+     },
+     {
+      "id": 130,
+      "payload": {
+       "__class__": "DataItemVec3Payload",
+       "value": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 2.5
+       }
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "abilities_data": {
+    "target_player": 1,
+    "player_permissions": 1,
+    "command_permissions": 0,
+    "layers": [
+     {
+      "serialized_layer": 1,
+      "abilities_set": 24579,
+      "ability_values": 1,
+      "fly_speed": 0.05,
+      "walk_speed": 0.1
+     }
+    ]
+   },
+   "links": [
+    {
+     "a": 1,
+     "b": 2,
+     "type": 1,
+     "immediate": true,
+     "passenger_initiated": false
+    }
+   ],
+   "device_id": "dev",
+   "build_platform": 8
+  },
+  "bytes": "010000000000000002000000000000000553746576650204636861740000803f0000004000004040000080400000a0400000c0400000e040000000410000104186050100000112000a00000000000000000000000802020e030003040403426f620507ff9fd9e61d07012c011c0602030676050a000908486974626f7865730a0205064865696768740000c03f050557696474680000403f00008201080000003f0000c03f0000204001010301020000003f010000000000000001000101000360000001000000cdcc4c3dcdcccc3d0102040101000364657608000000"
+ },
+ {
+  "id": "empty_carried_item",
+  "value": {
+   "uuid": "00000000-0000-0001-0000-000000000002",
+   "name": "Steve",
+   "runtime_id": 2,
+   "platform_online_id": "chat",
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "velocity": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "rot": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 9.0,
+   "carried_item": {
+    "id": 0,
+    "stack_size": 0,
+    "aux_value": 0,
+    "block_runtime_id": 0,
+    "user_data_buffer": ""
+   },
+   "player_game_type": 0,
+   "unpack": {
+    "data": [
+     {
+      "id": 38,
+      "payload": {
+       "__class__": "DataItemFloatPayload",
+       "value": 0.5
+      }
+     }
+    ]
+   },
+   "synched_properties": {
+    "int_entries": [
+     {
+      "property_index": 1,
+      "data": -2
+     }
+    ],
+    "float_entries": [
+     {
+      "property_index": 2,
+      "data": 0.5
+     }
+    ]
+   },
+   "abilities_data": {
+    "target_player": 1,
+    "player_permissions": 1,
+    "command_permissions": 0,
+    "layers": [
+     {
+      "serialized_layer": 1,
+      "abilities_set": 24579,
+      "ability_values": 1,
+      "fly_speed": 0.05,
+      "walk_speed": 0.1
+     }
+    ]
+   },
+   "links": [
+    {
+     "a": 1,
+     "b": 2,
+     "type": 1,
+     "immediate": true,
+     "passenger_initiated": false
+    }
+   ],
+   "device_id": "dev",
+   "build_platform": 8
+  },
+  "bytes": "010000000000000002000000000000000553746576650204636861740000803f0000004000004040000080400000a0400000c0400000e040000000410000104100000126030000003f01010301020000003f010000000000000001000101000360000001000000cdcc4c3dcdcccc3d0102040101000364657608000000"
+ }
+]

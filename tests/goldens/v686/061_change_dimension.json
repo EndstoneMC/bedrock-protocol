@@ -1,0 +1,15 @@
+[
+ {
+  "id": "dimension_change",
+  "value": {
+   "dimension_id": 2,
+   "pos": {
+    "x": 1.0,
+    "y": 2.0,
+    "z": 3.0
+   },
+   "respawn": true
+  },
+  "bytes": "040000803f000000400000404001"
+ }
+]

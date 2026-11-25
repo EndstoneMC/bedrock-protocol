@@ -1,0 +1,15 @@
+[
+ {
+  "id": "passenger_initiated_link",
+  "value": {
+   "link": {
+    "a": -1,
+    "b": 300,
+    "type": 2,
+    "immediate": false,
+    "passenger_initiated": true
+   }
+  },
+  "bytes": "01d804020001"
+ }
+]
