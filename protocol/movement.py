@@ -157,7 +157,7 @@ class CorrectPlayerMovePredictionPacket:
     pos_delta: Vec3
     with field(when=lambda p: p.prediction_type == RewindType.VEHICLE):
         vehicle_rotation: Vec2
-        vehicle_angular_velocity: float | None
+        vehicle_angular_velocity: float | None = field(since=712)
     on_ground: bool
     tick: PlayerInputTick
 

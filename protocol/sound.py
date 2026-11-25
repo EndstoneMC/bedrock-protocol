@@ -171,6 +171,8 @@ class LevelSoundEvent(IntEnum, uint32):
     IMITATE_EVOCATION_ILLAGER = 152
     IMITATE_GHAST = 153
     IMITATE_HUSK = 154
+    with value(until=712):
+        IMITATE_ILLUSION_ILLAGER = 155
     IMITATE_MAGMA_CUBE = 156
     IMITATE_POLAR_BEAR = 157
     IMITATE_SHULKER = 158
@@ -489,7 +491,8 @@ class LevelSoundEvent(IntEnum, uint32):
     VAULT_DEACTIVATE = 507
     HURT_REDUCED = 508
     WIND_CHARGE_BURST = 509
-    IMITATE_BOGGED = 510
+    with value(since=712):
+        IMITATE_BOGGED = 510
     WOLF_ARMOR_CRACK = 511
     WOLF_ARMOR_BREAK = 512
     WOLF_ARMOR_REPAIR = 513
@@ -508,7 +511,8 @@ class LevelSoundEvent(IntEnum, uint32):
     RECORD_CREATOR = 527
     RECORD_CREATOR_MUSIC_BOX = 528
     RECORD_PRECIPICE = 529
-    VAULT_REJECT_REWARDED_PLAYER = 530
+    with value(since=712):
+        VAULT_REJECT_REWARDED_PLAYER = 530
     with value(since=729):
         IMITATE_DROWNED = 531
         IMITATE_CREAKING = value(532, since=766)
@@ -746,7 +750,7 @@ class RecordStartedPacket:
 class StopSoundPacket:
     name: str
     stop_all: bool
-    stop_music_legacy: bool
+    stop_music_legacy: bool = field(since=712)
 
 
 @type(since=2225)

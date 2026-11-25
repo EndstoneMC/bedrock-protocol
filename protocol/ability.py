@@ -90,7 +90,7 @@ class SerializedAbilitiesData:
         SPECTATOR = 2
         COMMANDS = 3
         EDITOR = 4
-        LOADING_SCREEN = 5
+        LOADING_SCREEN = value(5, since=712)
 
     class SerializedLayer:
         serialized_layer: SerializedAbilitiesLayer = field(type=uint16)

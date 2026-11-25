@@ -14,7 +14,7 @@ from protocol.crafting import (
     SerializedNetworkItemInstanceDescriptor,
     SerializedRecipeIngredient,
 )
-from protocol.inventory import FullContainerName
+from protocol.inventory import ContainerEnumName, FullContainerName
 from protocol.item import ItemStackNetId, ItemStackRequestId
 from protocol.molang import MolangVersion
 
@@ -183,7 +183,8 @@ class ItemStackResponseSlotInfo:
 
 
 class ItemStackResponseContainerInfo:
-    full_container_name: FullContainerName
+    open_container_net_id: ContainerEnumName = field(until=712)
+    full_container_name: FullContainerName = field(since=712)
     slots: list[ItemStackResponseSlotInfo]
 
 
@@ -456,7 +457,8 @@ class ItemStackRequestPacket:
 
 @type(until=2168)
 class ItemStackRequestSlotInfo:
-    full_container_name: FullContainerName
+    open_container_net_id: ContainerEnumName = field(until=712)
+    full_container_name: FullContainerName = field(since=712)
     slot: uint8
     net_id_variant: varint32
 
@@ -536,13 +538,14 @@ class ItemStackRequestActionMineBlock:
 @type(until=2168)
 class ItemStackRequestActionCraftRecipe:
     recipe_net_id: RecipeNetId
-    num_crafts: uint8
+    num_crafts: uint8 = field(since=712)
 
 
 @type(until=2168)
 class ItemStackRequestActionCraftRecipeAuto:
     recipe_net_id: RecipeNetId
-    num_crafts: uint8 = field(duplicate=2)
+    num_crafts: uint8 = field(until=712)
+    num_crafts: uint8 = field(duplicate=2, since=712)
     num_ingredients: uint8
     ingredients: list[SerializedRecipeIngredient] = field(count=lambda a: a.num_ingredients)
 
@@ -550,7 +553,7 @@ class ItemStackRequestActionCraftRecipeAuto:
 @type(until=2168)
 class ItemStackRequestActionCraftCreative:
     creative_item_net_id: CreativeItemNetId
-    num_crafts: uint8
+    num_crafts: uint8 = field(since=712)
 
 
 @type(until=2168)
@@ -562,14 +565,14 @@ class ItemStackRequestActionCraftRecipeOptional:
 @type(until=2168)
 class ItemStackRequestActionCraftGrindstone:
     recipe_net_id: varint32
-    num_crafts: uint8
+    num_crafts: uint8 = field(since=712)
     repair_cost: varint32
 
 
 @type(until=2168)
 class ItemStackRequestActionCraftLoom:
     pattern_name_id: str
-    num_crafts: uint8
+    num_crafts: uint8 = field(since=712)
 
 
 @type(until=2168)
@@ -594,6 +597,28 @@ class ItemStackRequestData:
         | ItemStackRequestActionDestroy
         | ItemStackRequestActionConsume
         | ItemStackRequestActionCreate
+        | ItemStackRequestActionPlaceInItemContainer
+        | ItemStackRequestActionTakeFromItemContainer
+        | ItemStackRequestActionLabTableCombine
+        | ItemStackRequestActionBeaconPayment
+        | ItemStackRequestActionMineBlock
+        | ItemStackRequestActionCraftRecipe
+        | ItemStackRequestActionCraftRecipeAuto
+        | ItemStackRequestActionCraftCreative
+        | ItemStackRequestActionCraftRecipeOptional
+        | ItemStackRequestActionCraftGrindstone
+        | ItemStackRequestActionCraftLoom
+        | ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING
+        | ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING
+    ] = field(until=712)
+    actions: list[
+        ItemStackRequestActionTake
+        | ItemStackRequestActionPlace
+        | ItemStackRequestActionSwap
+        | ItemStackRequestActionDrop
+        | ItemStackRequestActionDestroy
+        | ItemStackRequestActionConsume
+        | ItemStackRequestActionCreate
         | ItemStackRequestActionPlaceInItemContainer_DEPRECATED
         | ItemStackRequestActionTakeFromItemContainer_DEPRECATED
         | ItemStackRequestActionLabTableCombine
@@ -607,6 +632,20 @@ class ItemStackRequestData:
         | ItemStackRequestActionCraftLoom
         | ItemStackRequestActionCraftNonImplemented_DEPRECATEDASKTYLAING
         | ItemStackRequestActionCraftResults_DEPRECATEDASKTYLAING
-    ]
+    ] = field(since=712)
     strings_to_filter: list[str]
     strings_to_filter_origin: TextProcessingEventOrigin = field(type=int32)
+
+
+@type(until=712)
+class ItemStackRequestActionPlaceInItemContainer:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo
+
+
+@type(until=712)
+class ItemStackRequestActionTakeFromItemContainer:
+    amount: uint8
+    src: ItemStackRequestSlotInfo
+    dst: ItemStackRequestSlotInfo

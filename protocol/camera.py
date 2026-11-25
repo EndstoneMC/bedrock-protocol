@@ -56,9 +56,10 @@ class CameraPreset:
         vertical_rotation_limit: Vec2 | None
         continue_targeting: bool | None
     tracking_radius: float | None = field(since=766)
-    view_offset: Vec2 | None
-    entity_offset: Vec3 | None = field(since=729)
-    radius: float | None
+    with field(since=712):
+        view_offset: Vec2 | None
+        entity_offset: Vec3 | None = field(since=729)
+        radius: float | None
     with field(since=776):
         yaw_limit_min: float | None
         yaw_limit_max: float | None
@@ -240,7 +241,7 @@ class SetInstruction:
     pos: PosOption | None
     rot: RotOption | None
     facing: FacingOption | None
-    view_offset: ViewOffsetOption | None
+    view_offset: ViewOffsetOption | None = field(since=712)
     entity_offset: EntityOffsetOption | None = field(since=748)
     default_: bool | None
     remove_ignore_starting_values_component: bool = field(since=818)
@@ -319,8 +320,9 @@ class CameraInstruction:
     set: SetInstruction | None
     clear: bool | None
     fade: FadeInstruction | None
-    target: TargetInstruction | None
-    remove_target: bool | None
+    with field(since=712):
+        target: TargetInstruction | None
+        remove_target: bool | None
     field_of_view: FovInstruction | None = field(since=827)
     with field(since=859):
         spline: SplineInstruction | None

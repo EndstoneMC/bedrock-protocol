@@ -110,7 +110,8 @@ class ContainerEnumName(IntEnum, uint8):
     CREATED_OUTPUT_CONTAINER = 60
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
     CRAFTER_LEVEL_ENTITY_CONTAINER = 62
-    DYNAMIC_CONTAINER = 63
+    with value(since=712):
+        DYNAMIC_CONTAINER = 63
     with value(since=924):
         RECIPE_FOOD_CONTAINER = 64
         RECIPE_BLOCKS_CONTAINER = 65
@@ -134,7 +135,7 @@ class FullContainerName:
 class InventoryContentPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slots: list[NetworkItemStackDescriptor]
-    dynamic_container_id: uvarint32 = field(until=729)
+    dynamic_container_id: uvarint32 = field(since=712, until=729)
     with field(since=729):
         full_container_name: FullContainerName
         dynamic_container_size: uvarint32 = field(until=748)
@@ -153,7 +154,7 @@ class InventoryContentPacket:
 class InventorySlotPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slot: uvarint32
-    dynamic_container_id: uvarint32 = field(until=729)
+    dynamic_container_id: uvarint32 = field(since=712, until=729)
     with field(since=729):
         full_container_name: FullContainerName
         dynamic_container_size: uvarint32 = field(until=748)
@@ -446,7 +447,7 @@ class MobArmorEquipmentPacket:
     torso: NetworkItemStackDescriptor
     legs: NetworkItemStackDescriptor
     feet: NetworkItemStackDescriptor
-    body: NetworkItemStackDescriptor
+    body: NetworkItemStackDescriptor = field(since=712)
 
 
 @packet(id=32, since=1001)

@@ -219,10 +219,11 @@ class MinecraftPacketIds(IntEnum, int32):
     SET_HUD_PACKET = 308
     AWARD_ACHIEVEMENT_PACKET = 309
     CLIENTBOUND_CLOSE_SCREEN = 310
-    SERVERBOUND_LOADING_SCREEN_PACKET = 312
-    JIGSAW_STRUCTURE_DATA_PACKET = 313
-    CURRENT_STRUCTURE_FEATURE_PACKET = 314
-    SERVERBOUND_DIAGNOSTICS_PACKET = 315
+    with value(since=712):
+        SERVERBOUND_LOADING_SCREEN_PACKET = 312
+        JIGSAW_STRUCTURE_DATA_PACKET = 313
+        CURRENT_STRUCTURE_FEATURE_PACKET = 314
+        SERVERBOUND_DIAGNOSTICS_PACKET = 315
     with value(since=729):
         CAMERA_AIM_ASSIST = 316
         CONTAINER_REGISTRY_CLEANUP = 317
@@ -423,7 +424,8 @@ class DisconnectFailReason(IntEnum, int32):
     NETHER_NET_NO_SIGNALING_CHANNEL = 113
     NETHER_NET_NOT_LOGGED_IN = 114
     NETHER_NET_CLIENT_SIGNALING_ERROR = 115
-    SUB_CLIENT_LOGIN_DISABLED = 116
+    with value(since=712):
+        SUB_CLIENT_LOGIN_DISABLED = 116
     with value(since=729):
         DEEP_LINK_TRYING_TO_OPEN_DEMO_WORLD_WHILE_SIGNED_IN = 117
     with value(since=800):
@@ -525,7 +527,7 @@ class ServerToClientHandshakePacket:
 
 class DisconnectPacketMessages:
     message: str
-    filtered_message: str
+    filtered_message: str = field(since=712)
 
 
 @packet(id=5)

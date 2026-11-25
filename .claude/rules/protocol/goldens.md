@@ -115,7 +115,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Keep `StructureBlockUpdatePacket.is_waterlogged` false before 2168; BDS writes it from a settings flag its read clears.
 - Keep `StartGamePacket`'s `override_force_experimental_gameplay_flag` false before 2168; BDS writes back only whether a server holds one, and a server never does.
 - Give an `ItemStackRequestData` before 2168 a negative odd `client_request_id`; BDS reads nothing after any other id.
-- Leave actions `PLACE_IN_ITEM_CONTAINER_DEPRECATED` and `TAKE_FROM_ITEM_CONTAINER_DEPRECATED`, and `TEST` at 776, out of an `ItemStackRequestData` before 2168; BDS reads their type byte as no action and writes nothing for it.
+- Leave actions `PLACE_IN_ITEM_CONTAINER_DEPRECATED` and `TAKE_FROM_ITEM_CONTAINER_DEPRECATED`, and `TEST` at 776, out of an `ItemStackRequestData` from 712 to 2168; BDS reads their type byte as no action and writes nothing for it.
 
 ## Login and handshake
 

@@ -445,7 +445,7 @@ class ActorLink:
     type: ActorLinkType
     immediate: bool
     passenger_initiated: bool
-    vehicle_angular_velocity: float
+    vehicle_angular_velocity: float = field(since=712)
 
 
 class PassengerOfBlockArguments:

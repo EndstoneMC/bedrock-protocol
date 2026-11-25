@@ -188,7 +188,7 @@ class ScopeDataSummary:
     total_low_cost_ns: uint64
 
 
-@packet(id=315)
+@packet(id=315, since=712)
 class ServerboundDiagnosticsPacket:
     avg_fps: float
     avg_server_sim_tick_time_ms: float
@@ -208,7 +208,7 @@ class ServerboundDiagnosticsPacket:
 
 @packet(id=190, until=944)
 class EditorNetworkPacket:
-    route_to_manager: bool
+    route_to_manager: bool = field(since=712)
     payload: CompoundTag
 
 

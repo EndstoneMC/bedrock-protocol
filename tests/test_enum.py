@@ -1,7 +1,7 @@
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import v712, v1001
+from bedrock_protocol import v686, v712, v1001
 
 
 def test_an_enum_member_keeps_its_schema_name():
@@ -94,7 +94,7 @@ def test_a_nested_enum_is_qualified_by_its_owner(enum, name):
             bp.ItemUseInventoryTransaction.ActionType,
             id="action-type",
         ),
-        pytest.param(v712.AnimatePacket.Action, bp.AnimatePacket.Action, id="animate-action"),
+        pytest.param(v686.AnimatePacket.Action, bp.AnimatePacket.Action, id="animate-action"),
     ],
 )
 def test_a_nested_enum_is_one_type_across_its_owners(first, last):

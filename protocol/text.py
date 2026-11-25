@@ -130,4 +130,4 @@ class SetTitlePacket:
     fade_out_time: varint32
     xuid: str
     platform_online_id: str
-    filtered_title_text: str
+    filtered_title_text: str = field(since=712)

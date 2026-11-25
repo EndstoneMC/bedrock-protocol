@@ -35,7 +35,7 @@ class PackInfoData:
     subpack_name: str
     content_identity: ContentIdentity
     has_scripts: bool
-    is_addon_pack: bool
+    is_addon_pack: bool = field(since=712)
     is_ray_tracing_capable: bool
     cdn_url: str = field(since=748)
 

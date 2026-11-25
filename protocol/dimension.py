@@ -43,4 +43,4 @@ class ChangeDimensionPacket:
     dimension_id: DimensionType
     pos: Vec3
     respawn: bool
-    loading_screen_id: uint32 | None
+    loading_screen_id: uint32 | None = field(since=712)

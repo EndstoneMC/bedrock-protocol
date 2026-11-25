@@ -137,7 +137,7 @@ class ItemUseInventoryTransaction:
 
     transaction: InventoryTransaction
     action_type: ActionType = field(type=uvarint32)
-    trigger_type: TriggerType = field(type=uvarint32)
+    trigger_type: TriggerType = field(type=uvarint32, since=712)
     pos: NetworkBlockPosition
     face: varint32
     slot: varint32
@@ -145,7 +145,7 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: PredictedResult = field(type=uvarint32, until=776)
+    client_predicted_result: PredictedResult = field(type=uvarint32, since=712, until=776)
     client_predicted_result: PredictedResult = field(since=776)
 
 
@@ -224,7 +224,7 @@ class ItemUseInventoryTransaction:
 class ItemUseInventoryTransaction:
     actions: list[InventoryAction] = field(cereal=False)
     action_type: ItemUseInventoryTransaction.ActionType = field(type=uvarint32)
-    trigger_type: ItemUseInventoryTransaction.TriggerType = field(type=uvarint32)
+    trigger_type: ItemUseInventoryTransaction.TriggerType = field(type=uvarint32, since=712)
     pos: NetworkBlockPosition
     face: varint32
     slot: varint32
@@ -232,7 +232,7 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32, until=776)
+    client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(type=uvarint32, since=712, until=776)
     client_predicted_result: ItemUseInventoryTransaction.PredictedResult = field(since=776)
 
 

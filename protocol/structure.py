@@ -118,7 +118,7 @@ class TickingAreasLoadStatusPacket:
     waiting_for_preload: bool
 
 
-@packet(id=314)
+@packet(id=314, since=712)
 class CurrentStructureFeaturePacket:
     current_structure_feature: str
 
@@ -128,6 +128,7 @@ class StructureTemplateRequestOperation(IntEnum, uint8):
     EXPORT_FROM_SAVE_MODE = 1
     EXPORT_FROM_LOAD_MODE = 2
     QUERY_SAVED_STRUCTURE = 3
+    IMPORT = value(4, until=712)
 
 
 @packet(id=132)
@@ -143,6 +144,7 @@ class StructureTemplateResponseType(IntEnum, uint8):
     NONE = 0
     EXPORT = 1
     QUERY = 2
+    IMPORT = value(3, until=712)
 
 
 @packet(id=133)
@@ -152,7 +154,7 @@ class StructureTemplateDataResponsePacket:
     response_type: StructureTemplateResponseType
 
 
-@packet(id=313)
+@packet(id=313, since=712)
 class JigsawStructureDataPacket:
     jigsaw_structure_data_tag: CompoundTag
 

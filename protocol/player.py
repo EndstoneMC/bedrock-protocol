@@ -152,6 +152,7 @@ class ArmorSlot(IntEnum, int32):
     TORSO = 1
     LEGS = 2
     FEET = 3
+    # TODO: BDS 686 has four slots (std::bitset<4>); gate BODY at 712 once HUMANOID_COUNT at 686 is known
     BODY = 4
     HUMANOID_COUNT = value(4, synonym=True)
     COUNT = sentinel()
@@ -169,7 +170,7 @@ class PlayerArmorDamagePacket:
     torso_damage: varint32 = field(when=lambda p: p.slots & 2 != 0)
     legs_damage: varint32 = field(when=lambda p: p.slots & 4 != 0)
     feet_damage: varint32 = field(when=lambda p: p.slots & 8 != 0)
-    body_damage: varint32 = field(when=lambda p: p.slots & 16 != 0)
+    body_damage: varint32 = field(since=712, when=lambda p: p.slots & 16 != 0)
 
 
 @packet(id=149, since=844)
