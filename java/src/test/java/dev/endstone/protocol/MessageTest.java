@@ -248,49 +248,6 @@ final class MessageTest {
     }
 
     @Test
-    void aCommandVersionLeftUnnamedFailsToEncode() {
-        assertEquals(
-                "CurrentCmdVersion: has no encoded name at protocol 2225",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () ->
-                                        Protocol.v2225.encode(
-                                                CommandRequestPacket.newBuilder()
-                                                        .setVersion(
-                                                                CurrentCmdVersion
-                                                                        .REDSTONE_CIRCUIT_STATE_CHANGE_FIX)
-                                                        .build()))
-                        .getMessage());
-    }
-
-    @Test
-    void aCommandVersionNameLeftUnboundFailsToDecode() {
-        assertEquals(
-                "CommandRequestPacket.version: unknown value at byte 59 of 59",
-                assertThrows(
-                                DecodeException.class,
-                                () ->
-                                        Protocol.v2225.decode(
-                                                CommandRequestPacket.class,
-                                                hex(
-                                                        "0006706c617965720000000000000000000000000000000000000000000000000000"
-                                                                + "1874696d65636f6d6d616e64636c6f636b7372656c65617365")))
-                        .getMessage());
-    }
-
-    @Test
-    void theNameLatestEncodesAgainAfterItIsDecodedWhereItsMemberIsUnnamed() {
-        assertEquals(
-                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
-                ByteBufUtil.hexDump(
-                        Protocol.v2225.encode(
-                                Protocol.v2225.decode(
-                                        CommandRequestPacket.class,
-                                        hex(
-                                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374")))));
-    }
-
-    @Test
     void theDefaultPersonaPieceFailsToEncodeWhereItsTypeHasNoName() {
         assertEquals(
                 "PieceType: has no encoded name at protocol 729",

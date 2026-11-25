@@ -1971,52 +1971,6 @@ def test_the_first_of_two_pointers_numbered_alike_is_written(build_package):
     assert schema.naming_at(enum, 1).written == {1: "x"}
 
 
-UNNAMED = (
-    HEADER
-    + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, unnamed_since=3)\n\n"
-    + "class P:\n    e: E = field(type=str)\n"
-)
-
-
-def test_an_unnamed_member_has_no_name_from_its_unnamed_since(build_package):
-    schema = Schema(build_package({"a": UNNAMED}))
-    enum, _ = schema.order
-    naming = schema.naming_at(enum, 3)
-
-    assert (naming.names, naming.written, naming.read) == ({"A": "a"}, {1: "a"}, {"a": 1})
-
-
-def test_an_unnamed_member_keeps_its_name_below_its_unnamed_since(build_package):
-    schema = Schema(build_package({"a": UNNAMED}))
-    enum, _ = schema.order
-    naming = schema.naming_at(enum, 1)
-
-    assert (naming.names, naming.written, naming.read) == ({"A": "a", "B": "b"}, {1: "a", 2: "b"}, {"a": 1, "b": 2})
-
-
-def test_an_unnamed_member_writes_the_name_of_a_derived_member_numbered_like_it(build_package):
-    source = (
-        HEADER
-        + "class E(IntEnum, uint8):\n    A = 0\n    B = value(1, unnamed_since=3)\n    COUNT = auto()\n"
-        + "    LATEST = COUNT - 1\n\nclass P:\n    e: E = field(type=str)\n"
-    )
-    schema = Schema(build_package({"a": source}))
-    enum, _ = schema.order
-
-    assert schema.naming_at(enum, 3).written == {0: "a", 1: "latest", 2: "count"}
-
-
-def test_a_member_unnamed_wherever_it_is_live_in_an_enum_whose_names_never_change_is_rejected(build_package):
-    source = (
-        HEADER
-        + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, since=3, unnamed_since=3)\n\n"
-        + "class P:\n    e: E = field(type=str)\n"
-    )
-
-    with pytest.raises(CompilerError, match=r"^a\.py: E\.B: unnamed_since 3 leaves it no name$"):
-        Schema(build_package({"a": source}))
-
-
 def test_namings_lists_a_models_namings_in_version_order(build_package):
     schema = Schema(build_package({"a": RENAMED + "class P:\n    e: E = field(type=str)\n"}))
     enum, _ = schema.order

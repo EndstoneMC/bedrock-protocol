@@ -108,18 +108,6 @@ def test_members_are_clipped_to_their_declaration(build_package):
             "@type(until=3)\nclass E(IntEnum, uint8):\n    A = value(1, until=4)\n",
             "A: has a gate its enclosing range already decides",
         ),
-        (
-            "class E(IntEnum, uint8):\n    A = value(1, unnamed_since=9)\n",
-            "A: unnamed_since 9 is not a modelled version",
-        ),
-        (
-            "class E(IntEnum, uint8):\n    A = value(1, since=3, unnamed_since=2)\n",
-            "A: unnamed_since 2 is outside its version range",
-        ),
-        (
-            "class E(IntEnum, uint8):\n    A = value(1, until=3, unnamed_since=3)\n",
-            "A: unnamed_since 3 is outside its version range",
-        ),
     ],
 )
 def test_bad_gate_is_rejected(build_package, source, message):
@@ -669,28 +657,6 @@ def test_an_enum_block_gives_each_member_its_range(build_package):
     ]
 
 
-def test_a_value_carries_its_unnamed_since(build_package):
-    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = 1\n    B = value(2, unnamed_since=3)\n"})
-
-    assert [member.unnamed_since for member in package.modules[0].families[0].declarations[0].members] == [None, 3]
-
-
-def test_an_unnamed_value_may_carry_its_bds_spelling_ungated(build_package):
-    package = build_package({"a": HEADER + "class E(IntEnum, uint8):\n    A = value(1, 'Aye', unnamed_since=3)\n"})
-
-    assert package.modules[0].families[0].declarations[0].members[0].encoded_name == "aye"
-
-
-def test_an_enum_block_gives_each_member_its_unnamed_since(build_package):
-    source = (
-        "class E(IntEnum, uint8):\n    A = 1\n    with value(since=2, unnamed_since=3):\n        B = 2\n"
-        "        C = auto()\n    D = auto()\n"
-    )
-    members = build_package({"a": HEADER + source}).modules[0].families[0].declarations[0].members
-
-    assert [member.unnamed_since for member in members] == [None, 3, 3, None]
-
-
 def test_a_pair_and_auto_inside_an_enum_block(build_package):
     source = (
         "class E(IntEnum, uint8):\n    A = 1\n    with value(since=3):\n        B = 2, 'Bee'\n"
@@ -737,11 +703,7 @@ def test_a_sentinel_inside_an_enum_block_takes_its_gate(build_package):
         ),
         (
             "class E(IntEnum, uint8):\n    with value():\n        A = 1\n",
-            "E: a with block takes only since=, until= and unnamed_since=",
-        ),
-        (
-            "class E(IntEnum, uint8):\n    with value(since=3, unnamed_since=2):\n        A = 1\n",
-            "A: unnamed_since 2 is outside its version range",
+            "E: a with block takes only since= and until=",
         ),
         (
             "class E(IntEnum, uint8):\n    with value(since=2):\n        A = value(1, 'Aye')\n",

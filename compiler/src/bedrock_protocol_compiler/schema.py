@@ -850,19 +850,14 @@ class Schema:
                 self.numbered[form, version] = numbering
                 spans.setdefault(numbering, set()).add(version)
                 if form in self.name_coded:
-                    named = [
-                        member
-                        for member in shape.members
-                        if member.unnamed_since is None or version < member.unnamed_since
-                    ]
                     canonical: dict[int, str] = {}
                     for member in sorted(
-                        named,
+                        shape.members,
                         key=lambda member: (not isinstance(member.value, MemberRef | Binary), member.synonym),
                     ):
                         canonical.setdefault(shape.numbers[member.name], member.encoded_name)
-                    names = {member.name: member.encoded_name for member in named}
-                    written = {value: canonical[number] for value, number in mapped.items() if number in canonical} | {
+                    names = {member.name: member.encoded_name for member in shape.members}
+                    written = {value: canonical[number] for value, number in mapped.items()} | {
                         values[member.name]: canonical[shape.numbers[member.name]]
                         for member in aliases
                         if values[member.name] not in mapped
@@ -872,7 +867,7 @@ class Schema:
                         member.encoded_name: values[member.name]
                         if member.name in derived
                         else inverse[shape.numbers[member.name]]
-                        for member in named
+                        for member in shape.members
                     }
                     naming = namings.setdefault(
                         (frozenset(names.items()), frozenset(written.items()), frozenset(read.items())),
@@ -886,15 +881,6 @@ class Schema:
             coding.since = min(versions)
         self.model_numberings[model] = sorted(numberings.values(), key=lambda numbering: numbering.since)
         self.model_namings[model] = sorted(namings.values(), key=lambda naming: naming.since)
-        if len(namings) == 1:
-            for form in forms:
-                for declaration in form.declarations:
-                    for member in declaration.members:
-                        if member.unnamed_since is not None:
-                            raise CompilerError(
-                                f"{form.module}.py: {qualified(form)}.{member.name}: unnamed_since "
-                                f"{member.unnamed_since} leaves it no name"
-                            )
         primary = next(iter(model.runs.values()))
         model.since = primary[0].since
         model.versioned = primary != [ALWAYS]
