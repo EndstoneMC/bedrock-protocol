@@ -44,7 +44,7 @@ class HudVisibility(IntEnum, int32):
 
 @packet(id=308, until=786)
 class SetHudPacket:
-    hud_element: list[HudElement] = field(type=uvarint32)
+    hud_element: list[HudElement] = field(type=uint8)
     hud_visible: HudVisibility = field(type=uint8)
 
 
