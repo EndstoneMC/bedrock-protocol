@@ -78,8 +78,9 @@ class RequestAbilityPacket:
 
     ability: AbilitiesIndex = field(type=varint32)
     value_type: Type
-    bool_: bool
-    float_: float
+    with field(when=lambda p: p.value_type in {Type.BOOL, Type.FLOAT}):
+        bool_: bool
+        float_: float
 
 
 class SerializedAbilitiesData:
