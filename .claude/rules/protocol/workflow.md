@@ -18,7 +18,7 @@ paths:
   - encoding: the same field, encoded differently;
   - enum: a value added, removed, renamed or shifted; a sentinel moved.
 - When the four do not fit one pass, fan out one `version-delta` agent per category, each given the interval, the sources and the schema.
-- Treat a change to a packet the schema does not model as a finding, and model the packet.
+- Treat a change to a packet the schema does not model as a finding, and model the packet at every modelled era from that era's writer; an ungated declaration claims them all.
 - Never stop at the first category with hits; a name-level read cannot see encoding and enum changes.
 
 ## Start from the declaration
@@ -64,6 +64,7 @@ paths:
 ## Back-port
 
 - Go one step down: diff the target against the nearest modelled snapshot above it, never skipping one.
+- Check every packet live at the target against the target build's hand-written writer and reader, not only the delta; an ungated declaration claims the target too.
 - Bound a gophertunnel window by the two commits that set each era's `CurrentProtocol`, and diff the whole `minecraft/protocol` tree between them.
 - Classify every commit in the window (the bump, a retro-fix to the older era, non-encoding churn) before attributing any of it; the interval diff is only a candidate set.
 - At HEAD, read CloudburstMC/Protocol's `codec/v<new>/` listing as the packet-level changelog, and compare `Bedrock_v<new>.java` against `v<old>` for ids.
