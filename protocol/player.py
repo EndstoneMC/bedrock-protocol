@@ -99,7 +99,21 @@ class AwardAchievementPacket:
     achievement_id: int32
 
 
-@packet(id=33)
+@packet(id=33, until=898)
+class InteractPacket:
+    class Action(IntEnum, uint8):
+        INVALID = 0
+        STOP_RIDING = 3
+        INTERACT_UPDATE = 4
+        NPC_OPEN = 5
+        OPEN_INVENTORY = 6
+
+    action: Action
+    target_id: ActorRuntimeID
+    pos: Vec3 = field(when=lambda p: p.action in {Action.STOP_RIDING, Action.INTERACT_UPDATE})
+
+
+@packet(id=33, since=898)
 class InteractPacket:
     class Action(IntEnum, uint8):
         INVALID = 0
