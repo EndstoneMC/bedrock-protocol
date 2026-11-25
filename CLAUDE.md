@@ -14,7 +14,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 - A docstring is one line, two at most, saying what the signature cannot: none on properties, obvious functions or tests, and never history, rationale or a walkthrough.
 - Write no one-use helper function or lambda: inline the expression or bind a named local. A lambda passed as an argument, or invoked in place to expand a parameter pack, is fine.
 - Never write "wire" in a rule, comment, name or message: say "encoding".
-- Keep no docs beyond `README.md`.
+- Keep no docs beyond a `README.md` at the root and in `compiler/`, `java/`, `protocol/`, `python/` and `tests/goldens/`, each saying only what its part is and holds, and none repeating another.
 - A change that makes a rule false, or leaves it incomplete, updates that rule in the same commit.
 - Write a rule as one short final-state line, once, in the file whose `paths:` govern it or here when repo-wide, and point to it from elsewhere; no rationale, history or dates.
 - Write a skill as a team handbook, symptom -> action, with nothing about one machine or one person.
