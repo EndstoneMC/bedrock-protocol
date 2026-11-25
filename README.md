@@ -11,45 +11,12 @@
 
 </div>
 
-## Python
+## Languages
 
-### Install
-
-Install the Linux or Windows wheel for Python 3.12 or newer from PyPI:
-
-```shell
-uv pip install bedrock-protocol
-```
-
-Or build it from a checkout with CMake and a C++23 compiler:
-
-```shell
-git clone https://github.com/EndstoneMC/bedrock-protocol
-uv pip install ./bedrock-protocol
-```
-
-### Encode and decode
-
-```python
-import bedrock_protocol as bp
-
-packet = bp.TextPacket()
-packet.body = bp.TextPacket.MessageOnly(type=bp.TextPacketType.CHAT, message="hello")
-data = bp.encode(packet)
-decoded = bp.decode(bp.TextPacket, data)
-assert decoded == packet
-```
-
-### Pick a protocol
-
-```python
-version = bp.ProtocolVersion.get(2259)
-assert version is not None and version.name == "1.26.70"
-
-pinned = bp.v2259.encode(packet)
-picked = bp.v2259.decode(bp.TextPacket, pinned)
-assert picked == packet
-```
+- C++, below
+- [Python](python/README.md)
+- [Java](java/README.md)
+- [Go](go/README.md)
 
 ## C++
 
@@ -90,118 +57,6 @@ std::expected<std::string, bp::EncodeError> pinned = bp::v2259::encode(packet);
 assert(pinned);
 std::expected<bp::TextPacket, bp::DecodeError> picked = bp::v2259::decode<bp::TextPacket>(*pinned);
 assert(picked && *picked == packet);
-```
-
-## Java
-
-### Install
-
-Add the package from Maven Central to a Gradle build:
-
-```kotlin
-dependencies {
-    implementation("dev.endstone:bedrock-protocol:X.Y.Z")
-}
-```
-
-Or build it from a checkout with JDK 21 and Python 3.12 or newer into the local Maven repository:
-
-```shell
-git clone https://github.com/EndstoneMC/bedrock-protocol
-cd bedrock-protocol/java
-./gradlew publishToMavenLocal
-```
-
-### Encode and decode
-
-```java
-import dev.endstone.protocol.Protocol;
-import dev.endstone.protocol.TextPacket;
-import dev.endstone.protocol.TextPacketType;
-
-TextPacket packet =
-    TextPacket.newBuilder()
-        .setMessageOnly(
-            TextPacket.MessageOnly.newBuilder()
-                .setType(TextPacketType.CHAT)
-                .setMessage("hello")
-                .build())
-        .build();
-
-byte[] data = Protocol.encode(packet);
-TextPacket decoded = Protocol.decode(TextPacket.class, data);
-assert decoded.equals(packet);
-```
-
-### Pick a protocol
-
-```java
-import dev.endstone.protocol.ProtocolVersion;
-
-import java.util.Optional;
-
-Optional<ProtocolVersion> version = ProtocolVersion.get(2259);
-assert version.isPresent() && version.get().getName().equals("1.26.70");
-
-byte[] pinned = Protocol.v2259.encode(packet);
-TextPacket picked = Protocol.v2259.decode(TextPacket.class, pinned);
-assert picked.equals(packet);
-```
-
-## Go
-
-### Install
-
-Generate the codecs in a checkout with Go 1.26 and uv, then point a module at it:
-
-```shell
-git clone https://github.com/EndstoneMC/bedrock-protocol
-(cd bedrock-protocol/go && go generate ./...)
-go mod edit -require=github.com/EndstoneMC/bedrock-protocol/go@v0.0.0 -replace=github.com/EndstoneMC/bedrock-protocol/go=./bedrock-protocol/go
-```
-
-### Encode and decode
-
-```go
-import "github.com/EndstoneMC/bedrock-protocol/go/protocol"
-
-packet := &protocol.TextPacket{}
-packet.Body = &protocol.TextPacket_MessageOnly_{
-	MessageOnly: &protocol.TextPacket_MessageOnly{Type: protocol.TextPacketType_CHAT, Message: "hello"},
-}
-
-data, err := protocol.Encode(packet)
-if err != nil {
-	panic(err)
-}
-decoded := &protocol.TextPacket{}
-if err := protocol.Decode(data, decoded); err != nil {
-	panic(err)
-}
-if decoded.GetMessageOnly().GetMessage() != "hello" {
-	panic(decoded)
-}
-```
-
-### Pick a protocol
-
-```go
-version, ok := protocol.GetProtocolVersion(2259)
-if !ok || version.Name() != "1.26.70" {
-	panic(version)
-}
-
-pinned, err := protocol.V2259.Encode(packet)
-if err != nil {
-	panic(err)
-}
-picked := &protocol.TextPacket{}
-if err := protocol.V2259.Decode(pinned, picked); err != nil {
-	panic(err)
-}
-if picked.GetMessageOnly().GetMessage() != "hello" {
-	panic(picked)
-}
 ```
 
 ## Supported Protocols
