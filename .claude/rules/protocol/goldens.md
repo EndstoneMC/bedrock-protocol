@@ -101,7 +101,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Fill `StartGamePacket`'s game rules with exactly the list BDS writes, in its order.
 - Give `StructureSettings.integrity_seed` a value a float holds exactly.
 - List an item-use transaction's actions in ascending `InventorySource` type order.
-- Keep `RequestAbilityPacket`'s bool member false when its `value_type` is `FLOAT`.
+- Keep `RequestAbilityPacket`'s bool false for `FLOAT` and its float 0.0 for `BOOL`.
 - Make `NpcDialoguePacket.action_json` an array of actions BDS accepts.
 - Make `SpawnParticleEffectPacket.molang_variables` a JSON array of `{"name", "value"}` variables, each value `{"type": "float", "value": N}` or `{"type": "member_array", "value": [...]}`, each name lowercase letters, digits and `_` with at most one `.`.
 - Keep a colour channel in 0..255, an effect duration at 0 or above, and a voxel shape's cell storage at one bit per cell.

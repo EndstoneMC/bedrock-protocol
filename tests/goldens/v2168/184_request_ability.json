@@ -8,5 +8,25 @@
    "float_": 0.5
   },
   "bytes": "2602000000003f"
+ },
+ {
+  "id": "bool_with_zero_float",
+  "value": {
+   "ability": 19,
+   "value_type": 1,
+   "bool_": true,
+   "float_": 0.0
+  },
+  "bytes": "26010100000000"
+ },
+ {
+  "id": "unset_without_values",
+  "value": {
+   "ability": 19,
+   "value_type": 0,
+   "bool_": false,
+   "float_": 0.0
+  },
+  "bytes": "2600"
  }
 ]
