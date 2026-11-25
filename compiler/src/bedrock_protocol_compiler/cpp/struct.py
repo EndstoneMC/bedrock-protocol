@@ -30,7 +30,7 @@ class StructGenerator:
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
-            if not encoding.fields and model.nested:
+            if not encoding.fields and model.nested and encoding.excluded is None:
                 continue
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
@@ -167,7 +167,7 @@ class StructGenerator:
         for _, child in self.owned:
             child.serializer_declaration(p)
         for encoding, _ in self.implemented:
-            serializer = names.serializer(self.qualified, encoding.since, encoding.mode)
+            serializer = names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded)
             p.emit(
                 """
                 template <>
@@ -206,7 +206,7 @@ class StructGenerator:
                 }
 
                 """,
-                serializer=names.serializer(self.qualified, encoding.since, encoding.mode),
+                serializer=names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded),
                 qualified=self.qualified,
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),

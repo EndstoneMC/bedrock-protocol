@@ -1350,6 +1350,166 @@ def test_a_duplicated_field_counts_its_copies_from_an_earlier_field_when_read(ge
     assert count in (out / "a.cpp").read_text()
 
 
+EXCLUDED = """
+from protocol import field, packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Info:
+    id: uint8
+    capable: bool
+
+@packet(id=1)
+class P:
+    behavior: list[Info] = field(exclude="capable")
+    resource: list[Info]
+"""
+
+EXCLUDE = "Serializer<Exclude<::bedrock::protocol::Info, &::bedrock::protocol::Info::capable>, 1>"
+
+
+def test_an_excluded_member_gets_a_serializer_of_its_own(generate):
+    out = generate({"a": EXCLUDED})
+
+    assert f"template <>\nstruct {EXCLUDE} {{\n    static constexpr int since = 1;\n" in (out / "a.h").read_text()
+
+
+def test_no_protocol_inherits_an_excluding_serializer(generate):
+    out = generate({"a": EXCLUDED})
+
+    assert ": Serializer<Exclude<" not in (out / "a.h").read_text()
+
+
+def test_an_excluding_serializer_writes_every_member_but_the_excluded_one(generate):
+    out = generate({"a": EXCLUDED})
+
+    write = (
+        f"auto {EXCLUDE}::serialize(BinaryWriter &stream, const ::bedrock::protocol::Info &value)"
+        " -> std::expected<void, Errc>\n"
+        "{\n"
+        "    stream.write<std::uint8_t>(value.id);\n"
+        "    return {};\n"
+        "}\n"
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_an_excluding_serializer_leaves_the_excluded_member_at_its_default(generate):
+    out = generate({"a": EXCLUDED})
+
+    read = (
+        f"auto {EXCLUDE}::deserialize(BinaryReader &stream) -> std::expected<::bedrock::protocol::Info, Errc>\n"
+        "{\n"
+        "    ::bedrock::protocol::Info out;\n"
+        "    {\n"
+        "        auto v = stream.read<std::uint8_t>();\n"
+        '        if (!v) return stream.fail(v.error(), "id");\n'
+        "        out.id = *v;\n"
+        "    }\n"
+        "    return out;\n"
+        "}\n"
+    )
+    assert read in (out / "a.cpp").read_text()
+
+
+def test_a_field_with_exclude_calls_the_excluding_serializer(generate):
+    out = generate({"a": EXCLUDED})
+
+    write = (
+        f"            auto r = {EXCLUDE}::serialize(stream, e0);\n"
+        '            if (!r) return stream.fail(r.error(), "behavior", i0);\n'
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_a_field_without_exclude_calls_the_whole_serializer(generate):
+    out = generate({"a": EXCLUDED})
+
+    write = (
+        "            auto r = Serializer<::bedrock::protocol::Info, 1>::serialize(stream, e0);\n"
+        '            if (!r) return stream.fail(r.error(), "resource", i0);\n'
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_a_field_calls_the_whole_serializer_where_its_type_lacks_the_excluded_member(generate):
+    out = generate({"a": EXCLUDED.replace("    capable: bool\n", "    capable: bool = field(since=3)\n")})
+
+    write = (
+        "            auto r = Serializer<::bedrock::protocol::v1::Info, 1>::serialize(stream, e0);\n"
+        '            if (!r) return stream.fail(r.error(), "behavior", i0);\n'
+    )
+    assert write in (out / "a.cpp").read_text()
+
+
+def test_an_exclusion_that_leaves_no_member_still_gets_a_serializer(generate):
+    source = EXCLUDED.replace("    id: uint8\n", "    class Kind:\n        x: uint8\n\n")
+
+    header = (generate({"a": source}) / "a.h").read_text()
+
+    assert f"template <>\nstruct {EXCLUDE} {{\n" in header
+
+
+EXCLUDED_REENCODED = """
+from protocol import field, packet, uint8, uint32
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class Info:
+    id: uint8
+    capable: uint32 = field(type=uint8, until=3)
+    capable: uint32 = field(since=3)
+
+@packet(id=1)
+class P:
+    behavior: list[Info] = field(exclude="capable")
+"""
+
+
+def test_encodings_that_differ_only_in_the_excluded_member_share_one_excluding_serializer(generate):
+    header = (generate({"a": EXCLUDED_REENCODED}) / "a.h").read_text()
+
+    assert re.findall(r"\nstruct (Serializer<Exclude<.*>) \{\n", header) == [EXCLUDE]
+
+
+def test_encodings_that_differ_only_in_the_excluded_member_keep_one_serializer_for_their_caller(generate):
+    header = (generate({"a": EXCLUDED_REENCODED}) / "a.h").read_text()
+
+    assert re.findall(r"\nstruct (Serializer<::bedrock::protocol::P, \d+>) \{\n", header) == [
+        "Serializer<::bedrock::protocol::P, 1>"
+    ]
+
+
+EXCLUDED_PAIR = """
+from protocol import field, packet, type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+
+class B:
+    x: uint8
+    y: uint8
+
+@type(cereal=False)
+class B:
+    x: uint8
+    y: uint8
+
+@packet(id=1)
+class P:
+    b: B = field(cereal=False)
+    c: B = field(exclude="y")
+"""
+
+
+def test_an_excluding_serializer_names_the_mode_its_type_has_where_first_called(generate):
+    header = (generate({"a": EXCLUDED_PAIR}) / "a.h").read_text()
+
+    assert (
+        "template <>\nstruct Serializer<Exclude<::bedrock::protocol::B, &::bedrock::protocol::B::y>, 1, "
+        "SerializationMode::Cereal> {\n"
+    ) in header
+
+
 def test_an_implementation_is_named_for_its_shapes_first_protocol(generate):
     out = generate({"a": NESTED})
 

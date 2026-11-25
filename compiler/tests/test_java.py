@@ -1281,6 +1281,84 @@ def test_a_duplicated_field_counts_its_copies_from_an_earlier_field(emitted):
     assert "                for (int copy = 0; copy < (((out.a_) & (128)) != (0) ? 2 : 1); copy++) {\n" in text
 
 
+EXCLUDED = """
+class Info:
+    id: uint8
+    capable: bool
+
+class P:
+    behavior: list[Info] = field(exclude="capable")
+    resource: list[Info]
+"""
+
+
+def test_an_excluded_member_gets_a_codec_of_its_own(emitted):
+    assert "\n    static final class Codec1ExcludeCapable implements Codec<Info> {\n" in emitted(EXCLUDED, "Info.java")
+
+
+def test_the_selector_never_picks_an_excluding_codec(emitted):
+    assert "return Codec1ExcludeCapable.INSTANCE;" not in emitted(EXCLUDED, "Info.java")
+
+
+def test_an_excluding_codec_writes_every_member_but_the_excluded_one(emitted):
+    write = (
+        "        public void encode(@NotNull Info value, @NotNull ByteBuf buf) {\n"
+        "            buf.writeByte(value.id_);\n"
+        "        }\n"
+    )
+    assert write in emitted(EXCLUDED, "Info.java")
+
+
+def test_an_excluding_codec_leaves_the_excluded_member_at_its_default(emitted):
+    read = (
+        "            Builder out = new Builder();\n"
+        "            try {\n"
+        "                out.id_ = ByteBufCodec.readUnsignedByte(buf);\n"
+        "            } catch (DecodeException e) {\n"
+        '                throw e.prepend("id").setUnfinishedMessage(out.build());\n'
+        "            }\n"
+        "            return out.build();\n"
+    )
+    assert read in emitted(EXCLUDED, "Info.java")
+
+
+def test_a_field_with_exclude_calls_the_excluding_codec(emitted):
+    write = "                dev.endstone.protocol.Info.Codec1ExcludeCapable.INSTANCE.encode(element0, buf);\n"
+    assert write in emitted(EXCLUDED)
+
+
+def test_a_field_without_exclude_calls_the_whole_codec(emitted):
+    write = "                dev.endstone.protocol.Info.Codec1.INSTANCE.encode(element1, buf);\n"
+    assert write in emitted(EXCLUDED)
+
+
+def test_a_union_wrapper_takes_a_codec_only_for_the_encodings_that_hold_its_union(emitted):
+    source = (
+        "class Info:\n    id: uint8\n    v: list[uint8 | str]\n\n"
+        'class P:\n    behavior: list[Info] = field(exclude="v")\n    resource: list[Info]\n'
+    )
+
+    assert re.findall(r"\n        static final class (\w+) implements Codec<V> \{", emitted(source, "Info.java")) == [
+        "Codec1"
+    ]
+
+
+def test_an_exclusion_that_leaves_no_member_still_gets_a_codec(emitted):
+    source = EXCLUDED.replace("    id: uint8\n", "    class Kind:\n        x: uint8\n\n")
+
+    assert "\n    static final class Codec1ExcludeCapable implements Codec<Info> {\n" in emitted(source, "Info.java")
+
+
+def test_an_excluding_codec_names_the_mode_its_type_has_where_first_called(emitted):
+    source = (
+        "class B:\n    x: uint8\n    y: uint8\n\n"
+        "@type(cereal=False)\nclass B:\n    x: uint8\n    y: uint8\n\n"
+        '@packet(id=1)\nclass P:\n    b: B = field(cereal=False)\n    c: B = field(exclude="y")\n'
+    )
+
+    assert "\n    static final class Codec1CerealExcludeY implements Codec<B> {\n" in emitted(source, "B.java")
+
+
 def test_a_condition_groups_its_fields_in_one_block(emitted):
     text = emitted(
         "class P:\n    f: bool\n    a: uint8 = field(when=lambda p: p.f)\n    b: uint8 = field(when=lambda p: p.f)\n"

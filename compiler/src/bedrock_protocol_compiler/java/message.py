@@ -99,7 +99,7 @@ class MessageGenerator:
         }
         self.codecs: list[tuple[Encoding, list[Slot], dict[str, Union]]] = []
         for encoding in sorted(schema.encodings(model), key=lambda each: (each.since, MODES.index(each.mode))):
-            if not encoding.fields and model.nested and self.packet_id is None:
+            if not encoding.fields and model.nested and self.packet_id is None and encoding.excluded is None:
                 continue
             coded = self.build(encoding, scratch)
             for slot, unions in coded:
@@ -179,7 +179,14 @@ class MessageGenerator:
         for slot in self.slots:
             slot.definitions(p)
         for union in self.unions:
-            union.definition(p, [(names.codec(each), wrappers[union.name]) for each, _, wrappers in self.codecs])
+            union.definition(
+                p,
+                [
+                    (names.codec(each), wrappers[union.name])
+                    for each, _, wrappers in self.codecs
+                    if union.name in wrappers
+                ],
+            )
         for child in self.nested:
             child.definition(p)
             p.emit("")

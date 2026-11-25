@@ -349,3 +349,129 @@ def test_duplicate_is_rejected_on_a_with_block(build_package):
 
     with pytest.raises(CompilerError, match="a with block takes only"):
         build_package({"a": source})
+
+
+INFO = "class Info:\n    id: uint8\n    capable: bool\n\n"
+
+
+def test_exclude_marks_the_member_at_its_call_site_only(build_package):
+    package = build_package({"a": HEADER + INFO + 'class A:\n    x: Info = field(exclude="capable")\n    y: Info\n'})
+
+    info = package.modules[0].families[0]
+
+    assert field_types(package) == [StructRef(info, excluded="capable"), StructRef(info)]
+
+
+@pytest.mark.parametrize(
+    ("annotation", "container"),
+    [
+        pytest.param("list[Info]", lambda element: List(element, Primitive("uvarint32")), id="list"),
+        pytest.param("array[Info, 2]", lambda element: Array(element, 2), id="array"),
+        pytest.param("Info | None", Optional, id="optional"),
+    ],
+)
+def test_exclude_marks_the_member_on_the_element_struct(build_package, annotation, container):
+    package = build_package({"a": HEADER + INFO + f'class A:\n    x: {annotation} = field(exclude="capable")\n'})
+
+    info = package.modules[0].families[0]
+
+    assert field_types(package) == [container(StructRef(info, excluded="capable"))]
+
+
+@pytest.mark.parametrize(
+    ("exclude", "message"),
+    [
+        pytest.param("1", "x: is not a literal str", id="not_a_str"),
+        pytest.param('["capable"]', "x: is not a literal str", id="a_list"),
+        pytest.param("capable", "x: is not a literal str", id="not_a_literal"),
+        pytest.param('""', "x: is an empty string", id="empty"),
+    ],
+)
+def test_exclude_is_rejected_unless_one_string_literal(build_package, exclude, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + INFO + f"class A:\n    x: Info = field(exclude={exclude})\n"})
+
+
+def test_exclude_is_rejected_for_a_member_the_type_does_not_declare(build_package):
+    source = HEADER + INFO + 'class A:\n    x: Info = field(exclude="missing")\n'
+
+    with pytest.raises(CompilerError, match=r"A\.x: exclude names missing, which Info does not declare"):
+        build_package({"a": source})
+
+
+def test_exclude_is_rejected_for_a_member_the_type_encodes_only_outside_the_field(build_package):
+    source = (
+        HEADER
+        + "class Info:\n    id: uint8\n    capable: bool = field(since=3)\n\n"
+        + 'class A:\n    x: Info = field(until=3, exclude="capable")\n'
+    )
+
+    with pytest.raises(
+        CompilerError, match=r"A\.x: exclude names capable, which Info does not encode at any protocol the field spans"
+    ):
+        build_package({"a": source})
+
+
+def test_exclude_is_rejected_for_a_constant(build_package):
+    source = (
+        HEADER
+        + "from typing import Literal\n"
+        + "class Info:\n    _true: Literal[True]\n    capable: bool\n\n"
+        + 'class A:\n    x: Info = field(exclude="_true")\n'
+    )
+
+    with pytest.raises(CompilerError, match=r"A\.x: exclude names _true, which Info holds as a constant"):
+        build_package({"a": source})
+
+
+@pytest.mark.parametrize(
+    "reader",
+    [
+        pytest.param("extra: uint8 = field(when=lambda p: p.capable != 0)", id="when"),
+        pytest.param("extra: list[uint8] = field(count=lambda p: p.capable)", id="count"),
+        pytest.param("extra: uint8 = field(duplicate=lambda p: p.capable)", id="duplicate"),
+    ],
+)
+def test_exclude_is_rejected_for_a_member_another_member_reads(build_package, reader):
+    source = (
+        HEADER
+        + f"class Info:\n    id: uint8\n    capable: uint8\n    {reader}\n\n"
+        + 'class A:\n    x: Info = field(exclude="capable")\n'
+    )
+
+    with pytest.raises(CompilerError, match=r"A\.x: exclude names capable, which Info\.extra reads"):
+        build_package({"a": source})
+
+
+def test_exclude_names_a_keyword_member_without_its_trailing_underscore(build_package):
+    source = (
+        HEADER
+        + "class Info:\n    pass_: uint8\n    extra: uint8 = field(when=lambda p: p.pass_ != 0)\n\n"
+        + 'class A:\n    x: Info = field(exclude="pass_")\n'
+    )
+
+    with pytest.raises(CompilerError, match=r"A\.x: exclude names pass, which Info\.extra reads"):
+        build_package({"a": source})
+
+
+def test_exclude_is_rejected_on_a_with_block(build_package):
+    source = HEADER + INFO + 'class A:\n    with field(exclude="capable"):\n        x: Info\n'
+
+    with pytest.raises(CompilerError, match="a with block takes only"):
+        build_package({"a": source})
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    [
+        pytest.param("uint8", id="primitive"),
+        pytest.param("dict[uint8, Info]", id="map"),
+        pytest.param("Info | uint8", id="union"),
+        pytest.param("list[list[Info]]", id="nested_list"),
+    ],
+)
+def test_exclude_is_rejected_on_a_field_that_holds_no_struct(build_package, annotation):
+    with pytest.raises(
+        CompilerError, match="x: exclude is given to something other than a struct or a list, array or optional of one"
+    ):
+        build_package({"a": HEADER + INFO + f'class A:\n    x: {annotation} = field(exclude="capable")\n'})

@@ -137,7 +137,8 @@ def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
 
 def codec(encoding: Encoding) -> str:
     suffix = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
-    return f"{CODEC}{encoding.since}{suffix}"
+    excluded = "" if encoding.excluded is None else f"Exclude{pascal(encoding.excluded)}"
+    return f"{CODEC}{encoding.since}{suffix}{excluded}"
 
 
 def path(package_name: str, name: str) -> str:

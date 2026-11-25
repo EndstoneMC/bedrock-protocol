@@ -21,6 +21,7 @@ class AliasRef:
 @dataclass(frozen=True)
 class StructRef:
     struct: "Struct"
+    excluded: str | None = None
 
 
 @dataclass(frozen=True)

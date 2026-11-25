@@ -269,7 +269,7 @@ class ReferenceField(SerializerField):
             child = encoding.reached[node]
             assert isinstance(child, Encoding)
             spelled = names.qualified(schema, child.model)
-            implementation = names.serializer(spelled, *schema.call(encoding, node))
+            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded)
         else:
             self.family = node.enum
             naming = encoding.reached[node]

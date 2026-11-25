@@ -59,9 +59,15 @@ def selector(label: str) -> str:
     return f"{label}_"
 
 
-def serializer(spelled: str, version: int | str, mode: SerializationMode = SerializationMode.DEFAULT) -> str:
+def serializer(
+    spelled: str,
+    version: int | str,
+    mode: SerializationMode = SerializationMode.DEFAULT,
+    excluded: str | None = None,
+) -> str:
+    target = spelled if excluded is None else f"Exclude<{spelled}, &{spelled}::{excluded}>"
     suffix = "" if mode is SerializationMode.DEFAULT else f", SerializationMode::{mode.name.capitalize()}"
-    return f"Serializer<{spelled}, {version}{suffix}>"
+    return f"Serializer<{target}, {version}{suffix}>"
 
 
 def decoded(spelled: str) -> str:

@@ -46,6 +46,7 @@ def field(
     count: Any = None,
     cereal: bool = True,
     duplicate: Any = None,
+    exclude: str | None = None,
 ) -> Any:
     """Mark a struct field: an encoding override, a version gate, or a condition over earlier fields."""
     return None

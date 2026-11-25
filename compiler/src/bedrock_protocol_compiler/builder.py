@@ -32,7 +32,9 @@ from bedrock_protocol_compiler.descriptor import (
     Expression,
     Family,
     Field,
+    FieldRef,
     Int,
+    Len,
     List,
     Literal,
     Map,
@@ -230,6 +232,21 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
                 yield from reaches(case)
 
 
+def fields_read(node: Type | Expression | None) -> Iterator[str]:
+    match node:
+        case FieldRef(name=name) | Len(field=name) | Test(field=name):
+            yield name
+        case List(count=operand) | Not(operand=operand):
+            yield from fields_read(operand)
+        case Binary(left=left, right=right):
+            yield from fields_read(left)
+            yield from fields_read(right)
+        case Choice(test=test, when_true=when_true, when_false=when_false):
+            yield from fields_read(test)
+            yield from fields_read(when_true)
+            yield from fields_read(when_false)
+
+
 def check(package: Package) -> None:
     first = package.modules[0]
     for module in package.modules:
@@ -265,6 +282,42 @@ def sibling[F: (Struct, Enum)](family: F, families: Iterable[object]) -> F | Non
 def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified: str, twin: Struct | None) -> None:
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
+            where = f"{path}: {qualified}.{struct_field.name}"
+            element = struct_field.type
+            if isinstance(element, Optional | List | Array):
+                element = element.element
+            match element:
+                case StructRef(struct=holder, excluded=str() as excluded):
+                    spanned = [
+                        each
+                        for declared in holder.declarations
+                        for each in declared.fields
+                        if any(
+                            struct_field.range.contains(version) and each.range.contains(version)
+                            for version in versions
+                        )
+                    ]
+                    held = [each for each in spanned if each.name == excluded]
+                    if not any(each.name == excluded for declared in holder.declarations for each in declared.fields):
+                        raise CompilerError(f"{where}: exclude names {excluded}, which {holder.name} does not declare")
+                    if not held:
+                        raise CompilerError(
+                            f"{where}: exclude names {excluded}, which {holder.name} does not encode at any protocol "
+                            "the field spans"
+                        )
+                    if any(isinstance(each.type, Literal) for each in held):
+                        raise CompilerError(
+                            f"{where}: exclude names {excluded}, which {holder.name} holds as a constant"
+                        )
+                    for reader in spanned:
+                        if excluded in (
+                            *fields_read(reader.type),
+                            *fields_read(reader.when),
+                            *fields_read(reader.duplicate),
+                        ):
+                            raise CompilerError(
+                                f"{where}: exclude names {excluded}, which {holder.name}.{reader.name} reads"
+                            )
             for target in (
                 *reaches(struct_field.type),
                 *reaches(struct_field.when),
@@ -284,7 +337,6 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
                         found = any(declared.range.contains(version) for declared in target.declarations)
                         missing = target.name
                     if not found:
-                        where = f"{path}: {qualified}.{struct_field.name}"
                         raise CompilerError(f"{where}: reaches {missing}, which does not exist at {version}")
     for nested in struct.nested:
         twins = [] if twin is None else twin.nested
@@ -886,6 +938,9 @@ class Builder:
                 if existing.name == name and existing.range.overlaps(field_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
             live: list[int | None] = [version for version in self.versions if field_range.contains(version)] or [None]
+            excluded: str | None = None
+            if call is not None and "exclude" in arguments:
+                excluded = field_name(literal(source, arguments["exclude"], str, name))
             spans: list[tuple[int | None, Type]] = []
             for version in live:
                 self.at = version
@@ -943,6 +998,23 @@ class Builder:
                         lambda node, reason: error(source, node, name, reason),
                     )
                     field_type = replace(field_type, prefix=None, count=parse_count(count))
+                if excluded is not None:
+                    match field_type:
+                        case StructRef():
+                            field_type = replace(field_type, excluded=excluded)
+                        case (
+                            Optional(element=StructRef() as element)
+                            | List(element=StructRef() as element)
+                            | Array(element=StructRef() as element)
+                        ):
+                            field_type = replace(field_type, element=replace(element, excluded=excluded))
+                        case _:
+                            raise error(
+                                source,
+                                statement,
+                                name,
+                                "exclude is given to something other than a struct or a list, array or optional of one",
+                            )
                 if not spans or spans[-1][1] != field_type:
                     spans.append((version, field_type))
             self.at = None

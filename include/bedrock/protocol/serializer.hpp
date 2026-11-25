@@ -26,6 +26,9 @@ enum class SerializationMode : std::uint8_t {
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 struct Serializer;
 
+template <typename T, auto Member>
+struct Exclude;
+
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
     { Serializer<T, V, M>::serialize(writer, value) } -> std::same_as<std::expected<void, Errc>>;

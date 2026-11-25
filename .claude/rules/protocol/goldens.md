@@ -65,7 +65,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 
 - A case tests the encoding, never what a value means.
 - Reach every branch that valid data takes in the codecs a folder owns, with as few cases as a unit test would use, each a golden BDS writes back unchanged; read and validation failures and a generated variant switch's no-match path stay outside the measure; the arms of a deprecated member BDS reads as no action stay unreached, reported as the folder's misses; any other valid-path branch no golden reaches is a generator defect.
-- A folder owns every codec its packets reach at its protocol, the `Serializer<T, N>` that `_core.encodings[<protocol>]` names for each, whatever its N.
+- A folder owns every codec its packets reach at its protocol, the `Serializer<T, N>` that `_core.encodings[<protocol>]` names for each, whatever its N, and the `Serializer<Exclude<T, &T::member>, N>` a field's `exclude=` calls.
 - Report as a folder's misses, too, a branch only data BDS rewrites reaches, such as an empty item written as id -1, and a `GameRule` arm of a type no rule of the build has: BDS writes the rules it registers, by name, drops a rule of type none and aborts on a float given to an int rule.
 - Add a case only when it reaches a branch no other case does, and drop one whose branches the others reach.
 - Count a packet's branches in its generated codec; a runtime header's branch, such as a multi-byte varint, counts across the suite, so never grow a list or string to reach one.
@@ -82,7 +82,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Read enum bindings, limits, items and blocks from the dump of the build that checks the folder, never from another build's protocol-docs.
 - Read a wire constant, such as a TextPacket category string, from the case bytes, never from the dump's `value`, which can differ in case from the wire.
 - Pick an enum member the field's dump binds, never a `sentinel()` or `deprecated=True` member, and keep a value inside the field's dump limits: `minimum`, `maximum`, `max_length`, `max_items`, `pattern` and `enum_values`; a field whose dump binds no enum takes any integer of its dump type, whatever enum the DSL types it as.
-- Leave a branch the case does not send, a `when=` arm its selector skips, at the defaults decode leaves there, 0, "" and false; the enum and limit rules above bind only what a case sends.
+- Leave a branch the case does not send, a `when=` arm its selector skips or a member a field's `exclude=` leaves out, at the defaults decode leaves there, 0, "" and false; the enum and limit rules above bind only what a case sends.
 - Pick an enum member whose value the dump binds to no earlier member; BDS writes back the first member bound to a shared value.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
