@@ -39,9 +39,10 @@ class Rotation(IntEnum, uint8):
     ROTATE_90 = 1
     ROTATE_180 = 2
     ROTATE_270 = 3
-    CLOCKWISE_90 = value(1, synonym=True)
-    CLOCKWISE_180 = value(2, synonym=True)
-    COUNTER_CLOCKWISE_90 = value(3, synonym=True)
+    with value(since=729):
+        CLOCKWISE_90 = value(1, synonym=True)
+        CLOCKWISE_180 = value(2, synonym=True)
+        COUNTER_CLOCKWISE_90 = value(3, synonym=True)
     TOTAL = sentinel()
 
 

@@ -223,7 +223,8 @@ class CurrentCmdVersion(IntEnum, int32):
     CLONE_CONTAINER_BLOCK_ENTITY_REMOVAL_FIX = 39
     STOP_SOUND_MUSIC_FIX = 40
     SPREAD_PLAYERS_STUCK_IN_GROUND_FIX_AND_MAX_HEIGHT_PARAMETER = 41
-    LOCATE_STRUCTURE_OUTPUT = 42
+    with value(since=729):
+        LOCATE_STRUCTURE_OUTPUT = 42
     with value(since=786):
         POST_BLOCK_FLATTENING = 43
     with value(since=818):

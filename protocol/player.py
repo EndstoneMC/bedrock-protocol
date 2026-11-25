@@ -77,7 +77,7 @@ class ActorDamageCause(IntEnum, int32):
     SONIC_BOOM = 31
     CAMPFIRE = 32
     SOUL_CAMPFIRE = 33
-    MACE_SMASH = 34
+    MACE_SMASH = value(34, since=729)
     DEHYDRATION = value(35, since=898, until=924)
     ALL = auto()
 

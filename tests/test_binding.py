@@ -8,7 +8,7 @@ import uuid
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import _core, v729, v748, v800, v818, v844, v898, v975, v1001, v2168, v2225
+from bedrock_protocol import _core, v712, v729, v748, v800, v818, v844, v898, v975, v1001, v2168, v2225
 from bedrock_protocol import v2193 as proto
 from bedrock_protocol._core import SerializationMode
 
@@ -46,7 +46,7 @@ def test_a_protocol_holds_only_the_types_it_introduced(protocol):
 
 
 def test_a_packet_names_the_protocol_that_introduced_it_as_its_module():
-    assert v729.MovePlayerPacket.__module__ == "bedrock_protocol.v729"
+    assert v712.MovePlayerPacket.__module__ == "bedrock_protocol.v712"
 
 
 @pytest.mark.parametrize(
@@ -112,7 +112,7 @@ def test_a_keyword_the_schema_does_not_name_is_rejected():
             id="optional-enum",
         ),
         pytest.param(bp.GameRule, "value", True, id="variant-with-monostate"),
-        pytest.param(v729.DataStoreChange, "new_data", 3, id="dynamic-value"),
+        pytest.param(v712.DataStoreChange, "new_data", 3, id="dynamic-value"),
     ],
 )
 def test_a_nullable_field_takes_none(cls, field, value):
@@ -163,12 +163,12 @@ def test_an_enum_argument_also_takes_an_int():
     ("function", "shown"),
     [
         pytest.param(
-            v729.DataStoreChange.__init__,
+            v712.DataStoreChange.__init__,
             "new_data: bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None = ...",
             id="argument",
         ),
         pytest.param(
-            v729.DataStoreChange.new_data.fget,
+            v712.DataStoreChange.new_data.fget,
             "-> bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None",
             id="return",
         ),
@@ -250,11 +250,11 @@ def test_an_enum_value_its_cpp_type_cannot_hold_is_rejected():
 
 def test_a_name_the_schema_does_not_hold_is_rejected():
     with pytest.raises(bp.DecodeError, match=r"^CommandOutput\.type: unknown value at byte 5 of 5$"):
-        _core.decode(proto.VERSION, v729.CommandOutput, b"\x04nope")
+        _core.decode(proto.VERSION, v712.CommandOutput, b"\x04nope")
 
 
 def test_a_name_in_any_case_decodes_as_bds_folds_it():
-    assert _core.decode(proto.VERSION, v729.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
+    assert _core.decode(proto.VERSION, v712.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
 
 
 def test_a_container_id_the_schema_does_not_name_round_trips():
@@ -353,7 +353,7 @@ def test_a_number_or_name_another_protocol_gives_is_an_unknown_value(version, cl
 )
 def test_a_piece_type_name_another_protocol_gives_is_an_unknown_value(data, message):
     with pytest.raises(bp.DecodeError, match=message):
-        _core.decode(v729.VERSION, v729.TintMapColor, data)
+        _core.decode(v729.VERSION, v712.TintMapColor, data)
 
 
 @pytest.mark.parametrize(
@@ -400,7 +400,7 @@ def test_a_member_a_protocol_lacks_fails_to_encode(version, packet, message):
 
 def test_a_piece_type_a_protocol_lacks_fails_to_encode():
     with pytest.raises(bp.EncodeError, match=r"^SerializedPersonaPieceHandle\.piece_type: unknown value$"):
-        _core.encode(v729.VERSION, v729.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
+        _core.encode(v729.VERSION, v712.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
 
 
 @pytest.mark.parametrize(
@@ -408,7 +408,7 @@ def test_a_piece_type_a_protocol_lacks_fails_to_encode():
     [
         pytest.param(
             v729,
-            v729.TintMapColor(piece_type=bp.PieceType.SKELETON),
+            v712.TintMapColor(piece_type=bp.PieceType.SKELETON),
             TINT_MAP_COLOR_SKELETON_729,
             id="name-at-729",
         ),
@@ -431,7 +431,7 @@ def test_a_piece_type_is_written_as_the_protocol_codes_it(version, value, data):
         pytest.param(bp.DisconnectPacket, bp.DisconnectPacket, id="disconnect"),
         pytest.param(bp.MovementEffectPacket, bp.MovementEffectPacket, id="movement-effect-748"),
         pytest.param(bp.MovementEffectPacket, bp.MovementEffectPacket, id="movement-effect-776"),
-        pytest.param(v729.AnimatePacket, v729.AnimatePacket, id="animate"),
+        pytest.param(v712.AnimatePacket, v712.AnimatePacket, id="animate"),
         pytest.param(bp.SetLastHurtByPacket, bp.SetLastHurtByPacket, id="set-last-hurt-by"),
         pytest.param(bp.CommandRequestPacket, bp.CommandRequestPacket, id="command-request"),
         pytest.param(bp.HurtArmorPacket, bp.HurtArmorPacket, id="hurt-armor"),
@@ -629,16 +629,16 @@ def test_a_bound_struct_cannot_be_subclassed(cls):
 
 def test_encode_rejects_a_class_of_another_version():
     with pytest.raises(
-        TypeError, match=r"^packet: <class 'bedrock_protocol\.v729\.AddActorPacket'> is not a packet at protocol 2225$"
+        TypeError, match=r"^packet: <class 'bedrock_protocol\.v712\.AddActorPacket'> is not a packet at protocol 2225$"
     ):
-        v2225.encode(v729.AddActorPacket())
+        v2225.encode(v712.AddActorPacket())
 
 
 def test_decode_rejects_a_class_of_another_version():
     with pytest.raises(
-        TypeError, match=r"^cls: <class 'bedrock_protocol\.v729\.AddActorPacket'> is not a packet at protocol 2225$"
+        TypeError, match=r"^cls: <class 'bedrock_protocol\.v712\.AddActorPacket'> is not a packet at protocol 2225$"
     ):
-        v2225.decode(v729.AddActorPacket, b"")
+        v2225.decode(v712.AddActorPacket, b"")
 
 
 def test_the_manual_mode_round_trips_a_value():
@@ -719,12 +719,12 @@ def test_no_cerealized_sub_chunk_pos_exists(protocol):
 
 
 def test_a_cerealized_game_rule_exists_where_the_forms_hold_different_members():
-    assert hasattr(v729, "CerealizedGameRule")
+    assert hasattr(v712, "CerealizedGameRule")
 
 
 @pytest.mark.parametrize("version", [v844, v975, v1001], ids=lambda module: module.__name__)
 def test_no_cerealized_game_rule_exists_where_the_forms_hold_equal_members(version):
-    assert v729.CerealizedGameRule not in _core.modes[version.VERSION]
+    assert v712.CerealizedGameRule not in _core.modes[version.VERSION]
 
 
 @pytest.mark.parametrize("version", [v729, v844, v975], ids=lambda module: module.__name__)
@@ -733,7 +733,7 @@ def test_no_cerealized_inventory_source_exists_where_the_forms_differ_only_in_an
 
 
 def test_a_cerealized_inventory_source_exists_where_the_forms_hold_different_members():
-    assert {v729.InventorySource, bp.InventorySource} <= _core.modes[v1001.VERSION].keys()
+    assert {v712.InventorySource, bp.InventorySource} <= _core.modes[v1001.VERSION].keys()
 
 
 LATE_VERSIONS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in _core.modes if number >= 2168]
@@ -759,7 +759,7 @@ def test_a_class_takes_the_encoding_of_the_version_it_is_read_at():
     assert (
         _core.encodings[v975.VERSION][bp.SubChunkRequestPacket],
         _core.encodings[v1001.VERSION][bp.SubChunkRequestPacket],
-    ) == (729, 1001)
+    ) == (712, 1001)
 
 
 @pytest.mark.parametrize(
@@ -767,7 +767,7 @@ def test_a_class_takes_the_encoding_of_the_version_it_is_read_at():
     [pytest.param(bp.SubChunkPos, 1001, id="sub-chunk-pos"), pytest.param(bp.GameRule, 844, id="game-rule")],
 )
 def test_a_class_with_two_modes_lists_each_with_its_encoding(cls, cereal):
-    assert _core.modes[v1001.VERSION][cls] == {SerializationMode.CEREAL: cereal, SerializationMode.MANUAL: 729}
+    assert _core.modes[v1001.VERSION][cls] == {SerializationMode.CEREAL: cereal, SerializationMode.MANUAL: 712}
 
 
 def test_the_modes_of_a_class_cannot_be_assigned_to():
@@ -787,7 +787,7 @@ def test_a_versions_modes_are_the_ones_the_schema_serves(protocol, served):
 
 
 def test_a_class_with_one_mode_lists_it():
-    assert _core.modes[v729.VERSION][bp.GameRule] == {SerializationMode.MANUAL: 729}
+    assert _core.modes[v729.VERSION][bp.GameRule] == {SerializationMode.MANUAL: 712}
 
 
 def test_a_class_with_two_modes_has_no_default_encoding():
@@ -799,24 +799,24 @@ def test_a_class_after_the_mixed_range_has_its_default_encoding():
 
 
 def test_a_cerealized_class_belongs_to_the_protocol_that_introduced_it():
-    assert v729.CerealizedGameRule.__module__ == "bedrock_protocol.v729"
+    assert v712.CerealizedGameRule.__module__ == "bedrock_protocol.v712"
 
 
 def test_a_nested_enum_is_shared_by_the_cerealized_class_and_the_plain_one():
-    assert bp.InventorySource.InventorySourceFlags is v729.InventorySource.InventorySourceFlags
+    assert bp.InventorySource.InventorySourceFlags is v712.InventorySource.InventorySourceFlags
 
 
 def test_encode_rejects_a_cerealized_class_of_another_version():
     with pytest.raises(
         TypeError,
-        match=r"^value: <class 'bedrock_protocol\.v729\.CerealizedGameRule'> is not a type at protocol 1001$",
+        match=r"^value: <class 'bedrock_protocol\.v712\.CerealizedGameRule'> is not a type at protocol 1001$",
     ):
-        _core.encode(v1001.VERSION, v729.CerealizedGameRule(), mode=SerializationMode.CEREAL)
+        _core.encode(v1001.VERSION, v712.CerealizedGameRule(), mode=SerializationMode.CEREAL)
 
 
 def test_encode_rejects_a_name_the_schema_does_not_hold():
     with pytest.raises(bp.EncodeError, match=r"^CommandOutput\.type: unknown value$"):
-        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
 
 
 UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPacket.CommandData(permission=99)])
@@ -824,12 +824,12 @@ UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPa
 
 def test_an_encode_error_is_a_value_error():
     with pytest.raises(ValueError, match="unknown value"):
-        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
 
 
 def test_an_encode_error_carries_its_reason():
     with pytest.raises(bp.EncodeError, match="unknown value") as caught:
-        _core.encode(proto.VERSION, v729.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
     assert caught.value.reason == "unknown value"
 
 
@@ -896,7 +896,7 @@ def test_a_manual_encode_rejects_an_uninitialized_instance():
 
 
 def test_encode_raises_an_encode_error_for_a_value_it_cannot_write():
-    packet = v729.CommandOutputPacket(output=v729.CommandOutput(type=99))
+    packet = v712.CommandOutputPacket(output=v712.CommandOutput(type=99))
     with pytest.raises(bp.EncodeError, match=r"^CommandOutputPacket\.output\.type: unknown value$") as caught:
         proto.encode(packet)
     assert (caught.value.reason, caught.value.path) == ("unknown value", ("output", "type"))

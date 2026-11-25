@@ -41,8 +41,9 @@ class ContainerID(IntEnum, int8):
     ARMOR = 120, "CONTAINER_ID_ARMOR"
     SELECTION_SLOTS = 122, "CONTAINER_ID_SELECTION_SLOTS"
     PLAYER_ONLY_UI = 124, "CONTAINER_ID_PLAYER_ONLY_UI"
-    REGISTRY = 125, "CONTAINER_ID_REGISTRY"
-    REGISTRY_INVENTORY = value(126, until=748)
+    with value(since=729):
+        REGISTRY = 125, "CONTAINER_ID_REGISTRY"
+        REGISTRY_INVENTORY = value(126, until=748)
 
 
 class ContainerEnumName(IntEnum, uint8):
@@ -125,15 +126,18 @@ class ContainerEnumName(IntEnum, uint8):
 
 class FullContainerName:
     name: ContainerEnumName
-    dynamic_id: uint32 | None
+    dynamic_id: uint32 = field(until=729)
+    dynamic_id: uint32 | None = field(since=729)
 
 
 @packet(id=49, until=1001)
 class InventoryContentPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slots: list[NetworkItemStackDescriptor]
-    full_container_name: FullContainerName
-    dynamic_container_size: uvarint32 = field(until=748)
+    dynamic_container_id: uvarint32 = field(until=729)
+    with field(since=729):
+        full_container_name: FullContainerName
+        dynamic_container_size: uvarint32 = field(until=748)
     storage_item: NetworkItemStackDescriptor = field(since=748)
 
 
@@ -149,8 +153,10 @@ class InventoryContentPacket:
 class InventorySlotPacket:
     inventory_id: ContainerID = field(type=uvarint32)
     slot: uvarint32
-    full_container_name: FullContainerName
-    dynamic_container_size: uvarint32 = field(until=748)
+    dynamic_container_id: uvarint32 = field(until=729)
+    with field(since=729):
+        full_container_name: FullContainerName
+        dynamic_container_size: uvarint32 = field(until=748)
     storage_item: NetworkItemStackDescriptor = field(since=748)
     item: NetworkItemStackDescriptor
 
@@ -295,7 +301,7 @@ class ContainerOpenPacket:
     entity_unique_id: ActorUniqueID
 
 
-@packet(id=317)
+@packet(id=317, since=729)
 class ContainerRegistryCleanupPacket:
     removed_containers: list[FullContainerName]
 

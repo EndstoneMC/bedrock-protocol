@@ -52,8 +52,10 @@ class ResourcePacksInfoPacket:
     resource_pack_required: bool
     has_addon_packs: bool
     has_scripts: bool
+    force_server_packs_enabled: bool = field(until=729)
     force_disable_vibrant_visuals: bool = field(since=818)
     world_template_id_and_version: PackIdVersion = field(since=766)
+    behavior_packs: list[PackInfoData] = field(prefix=uint16, until=729, exclude="is_ray_tracing_capable")
     resource_packs: list[PackInfoData] = field(prefix=uint16)
     pack_urls: list[PackUrl] = field(until=748)
 

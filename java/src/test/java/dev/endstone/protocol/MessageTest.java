@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.endstone.protocol.nbt.CompoundTag;
-import dev.endstone.protocol.v729.PlayerSkinPacket_v729;
-import dev.endstone.protocol.v729.SerializedPersonaPieceHandle_v729;
-import dev.endstone.protocol.v729.SerializedSkinRef_v729;
+import dev.endstone.protocol.v712.PlayerSkinPacket_v712;
+import dev.endstone.protocol.v712.SerializedPersonaPieceHandle_v712;
+import dev.endstone.protocol.v712.SerializedSkinRef_v712;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -250,16 +250,16 @@ final class MessageTest {
     @Test
     void theDefaultPersonaPieceFailsToEncodeWhereItsTypeHasNoName() {
         assertEquals(
-                "PieceType: has no encoded name at protocol 729",
+                "PieceType: has no encoded name at protocol 712",
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        Protocol.v729.encode(
-                                                PlayerSkinPacket_v729.newBuilder()
+                                        Protocol.v712.encode(
+                                                PlayerSkinPacket_v712.newBuilder()
                                                         .setSkin(
-                                                                SerializedSkinRef_v729.newBuilder()
+                                                                SerializedSkinRef_v712.newBuilder()
                                                                         .addPersonaPieces(
-                                                                                SerializedPersonaPieceHandle_v729
+                                                                                SerializedPersonaPieceHandle_v712
                                                                                         .getDefaultInstance())
                                                                         .build())
                                                         .build()))

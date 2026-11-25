@@ -19,8 +19,8 @@ for module in versions:
 
 
 BINDING_GAP = {f"{version.__name__}.CommandRequestPacket" for version in versions} | {
-    "bedrock_protocol.v729.SerializedPersonaPieceHandle",
-    "bedrock_protocol.v729.TintMapColor",
+    "bedrock_protocol.v712.SerializedPersonaPieceHandle",
+    "bedrock_protocol.v712.TintMapColor",
 }
 GAP = pytest.mark.xfail(
     raises=bedrock_protocol.EncodeError,

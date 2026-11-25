@@ -223,8 +223,9 @@ class MinecraftPacketIds(IntEnum, int32):
     JIGSAW_STRUCTURE_DATA_PACKET = 313
     CURRENT_STRUCTURE_FEATURE_PACKET = 314
     SERVERBOUND_DIAGNOSTICS_PACKET = 315
-    CAMERA_AIM_ASSIST = 316
-    CONTAINER_REGISTRY_CLEANUP = 317
+    with value(since=729):
+        CAMERA_AIM_ASSIST = 316
+        CONTAINER_REGISTRY_CLEANUP = 317
     with value(since=748):
         MOVEMENT_EFFECT = 318
     with value(since=748, until=818):
@@ -423,7 +424,8 @@ class DisconnectFailReason(IntEnum, int32):
     NETHER_NET_NOT_LOGGED_IN = 114
     NETHER_NET_CLIENT_SIGNALING_ERROR = 115
     SUB_CLIENT_LOGIN_DISABLED = 116
-    DEEP_LINK_TRYING_TO_OPEN_DEMO_WORLD_WHILE_SIGNED_IN = 117
+    with value(since=729):
+        DEEP_LINK_TRYING_TO_OPEN_DEMO_WORLD_WHILE_SIGNED_IN = 117
     with value(since=800):
         ASYNC_JOIN_TASK_DENIED = 118
     with value(since=818):

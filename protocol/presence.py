@@ -110,7 +110,7 @@ class TransferPlayerUIOptions:
 class TransferPacket:
     destination: str
     destination_port: uint16
-    reload_world: bool
+    reload_world: bool = field(since=729)
     gatherings_configuration: GatheringsConfigurationJoinInfo | None = field(since=2168)
     server_transfer_settings: TransferPlayerUIOptions | None = field(since=2259)
 

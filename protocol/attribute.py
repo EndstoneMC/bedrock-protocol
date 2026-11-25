@@ -43,8 +43,9 @@ class AttributeData:
     min_value: float
     max_value: float
     current_value: float
-    default_min_value: float
-    default_max_value: float
+    with field(since=729):
+        default_min_value: float
+        default_max_value: float
     default_value: float
     name: str
     modifiers: list[AttributeModifier]

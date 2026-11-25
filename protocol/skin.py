@@ -241,7 +241,7 @@ class EmotePacket:
 
     runtime_id: ActorRuntimeID
     piece_id: str
-    emote_ticks: uvarint32
+    emote_ticks: uvarint32 = field(since=729)
     xuid: str
     platform_id: str
     flags: uint8

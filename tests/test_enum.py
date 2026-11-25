@@ -1,7 +1,7 @@
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import v729, v1001
+from bedrock_protocol import v712, v1001
 
 
 def test_an_enum_member_keeps_its_schema_name():
@@ -68,7 +68,7 @@ def test_an_enum_is_named_for_its_schema_class(name):
             bp.ItemUseInventoryTransaction.ActionType, "ItemUseInventoryTransaction.ActionType", id="action-type"
         ),
         pytest.param(
-            v729.CerealizedItemUseInventoryTransaction.ActionType,
+            v712.CerealizedItemUseInventoryTransaction.ActionType,
             "ItemUseInventoryTransaction.ActionType",
             id="cerealized-action-type",
         ),
@@ -85,16 +85,16 @@ def test_a_nested_enum_is_qualified_by_its_owner(enum, name):
     ("first", "last"),
     [
         pytest.param(
-            v729.CerealizedItemUseInventoryTransaction.TriggerType,
+            v712.CerealizedItemUseInventoryTransaction.TriggerType,
             v1001.CerealizedItemUseInventoryTransaction.TriggerType,
             id="trigger-type",
         ),
         pytest.param(
-            v729.CerealizedItemUseInventoryTransaction.ActionType,
+            v712.CerealizedItemUseInventoryTransaction.ActionType,
             bp.ItemUseInventoryTransaction.ActionType,
             id="action-type",
         ),
-        pytest.param(v729.AnimatePacket.Action, bp.AnimatePacket.Action, id="animate-action"),
+        pytest.param(v712.AnimatePacket.Action, bp.AnimatePacket.Action, id="animate-action"),
     ],
 )
 def test_a_nested_enum_is_one_type_across_its_owners(first, last):
@@ -111,7 +111,7 @@ def test_a_nested_enum_finds_a_member_by_name():
 
 
 def test_a_nested_enum_holds_a_member_an_owner_gated():
-    assert v729.CerealizedItemUseInventoryTransaction.ActionType.USE_AS_ATTACK.value == 3
+    assert v712.CerealizedItemUseInventoryTransaction.ActionType.USE_AS_ATTACK.value == 3
 
 
 def test_a_nested_enum_holds_a_member_the_latest_owner_dropped():

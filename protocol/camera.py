@@ -48,15 +48,16 @@ class CameraPreset:
     pos_z: float | None
     rot_x: float | None
     rot_y: float | None
-    camera_rotation_speed: float | None
-    snap_to_target: bool | None
+    with field(since=729):
+        camera_rotation_speed: float | None
+        snap_to_target: bool | None
     with field(since=748):
         horizontal_rotation_limit: Vec2 | None
         vertical_rotation_limit: Vec2 | None
         continue_targeting: bool | None
     tracking_radius: float | None = field(since=766)
     view_offset: Vec2 | None
-    entity_offset: Vec3 | None
+    entity_offset: Vec3 | None = field(since=729)
     radius: float | None
     with field(since=776):
         yaw_limit_min: float | None
@@ -130,7 +131,7 @@ class ClientCameraAimAssistPacket:
     allow_aim_assist: bool
 
 
-@packet(id=316)
+@packet(id=316, since=729)
 class CameraAimAssistPacket:
     class Action(IntEnum, uint8):
         SET = 0

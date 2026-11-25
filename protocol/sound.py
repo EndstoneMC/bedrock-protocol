@@ -509,10 +509,10 @@ class LevelSoundEvent(IntEnum, uint32):
     RECORD_CREATOR_MUSIC_BOX = 528
     RECORD_PRECIPICE = 529
     VAULT_REJECT_REWARDED_PLAYER = 530
-    IMITATE_DROWNED = 531
-    with value(since=766):
-        IMITATE_CREAKING = 532
-    BUNDLE_INSERT_FAIL = 533
+    with value(since=729):
+        IMITATE_DROWNED = 531
+        IMITATE_CREAKING = value(532, since=766)
+        BUNDLE_INSERT_FAIL = 533
     with value(since=766):
         SPONGE_ABSORB = 534
         CREAKING_HEART_TRAIL = 536

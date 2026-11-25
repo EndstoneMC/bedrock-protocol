@@ -183,10 +183,11 @@ class PlayerAuthInputPacket:
         PADDLING_LEFT = 46
         PADDLING_RIGHT = 47
         BLOCK_BREAKING_DELAY_ENABLED = 48
-        HORIZONTAL_COLLISION = 49
-        VERTICAL_COLLISION = 50
-        DOWN_LEFT = 51
-        DOWN_RIGHT = 52
+        with value(since=729):
+            HORIZONTAL_COLLISION = 49
+            VERTICAL_COLLISION = 50
+            DOWN_LEFT = 51
+            DOWN_RIGHT = 52
         with value(since=748):
             START_USING_ITEM = 53
             IS_CAMERA_RELATIVE_MOVEMENT_ENABLED_DEPRECATED = value(
