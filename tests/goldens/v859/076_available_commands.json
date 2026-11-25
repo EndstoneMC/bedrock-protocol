@@ -1,0 +1,68 @@
+[
+ {
+  "id": "one_command_with_enum",
+  "value": {
+   "enum_values": ["true"],
+   "chained_subcommand_values": ["as", "at", "if", "in"],
+   "postfixes": ["L"],
+   "enums": [
+    {
+     "name": "Boolean",
+     "values": []
+    }
+   ],
+   "chained_subcommands": [
+    {
+     "name": "execute",
+     "values": [
+      {
+       "sub_command_first_value": 2,
+       "sub_command_second_value": 3
+      }
+     ]
+    },
+    {
+     "name": "chain",
+     "values": []
+    }
+   ],
+   "commands": [
+    {
+     "name": "test",
+     "description": "a test",
+     "flags": 258,
+     "permission": 2,
+     "alias_enum": -1,
+     "chained_subcommand_indexes": [1],
+     "overloads": [
+      {
+       "is_chaining": true,
+       "params": [
+        {
+         "name": "arg",
+         "parse_symbol": 1048577,
+         "optional": true,
+         "param_options": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "soft_enums": [
+    {
+     "name": "soft",
+     "values": ["a"]
+    }
+   ],
+   "constraints": [
+    {
+     "enum_value_symbol": 0,
+     "enum_symbol": 0,
+     "constraints": "\\x01"
+    }
+   ]
+  },
+  "bytes": "0104747275650402617302617402696602696e01014c0107426f6f6c65616e00020765786563757465010200030005636861696e0001047465737406612074657374020102ffffffff010100010101036172670100100001010104736f66740101610100000000000000000101"
+ }
+]
