@@ -2908,6 +2908,15 @@ def test_served_lists_the_runs_of_an_encoding_per_mode(build_package):
     }
 
 
+def test_a_type_with_the_default_mode_and_another_at_one_protocol_is_rejected(build_package, monkeypatch):
+    package = build_package({"a": TIED})
+    mixed = Schema.mixed
+    monkeypatch.setattr(Schema, "mixed", lambda self, family: mixed(self, family) if family.cereal else [])
+
+    with pytest.raises(CompilerError, match=r"a\.py: B: has the default mode and another at 1"):
+        Schema(package)
+
+
 CALLS = (
     HEADER
     + "class B:\n    x: uint8\n\n@type(cereal=False)\nclass B:\n    x: uint16\n\n"

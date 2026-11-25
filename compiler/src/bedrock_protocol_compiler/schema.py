@@ -318,8 +318,20 @@ class Schema:
                 each.slots = tuple(
                     Slot(each.name, strip(each.type)) for each in holder.fields if not isinstance(each.type, Literal)
                 )
-        for listed in self.model_encodings.values():
+        for model, listed in self.model_encodings.items():
             listed.sort(key=lambda encoding: encoding.since)
+            for version in self.versions:
+                modes = {
+                    mode
+                    for encoding in listed
+                    for mode, runs in encoding.served.items()
+                    if any(run.contains(version) for run in runs)
+                }
+                if SerializationMode.DEFAULT in modes and len(modes) > 1:
+                    raise CompilerError(
+                        f"{model.family.module}.py: {qualified(model.family)}: has the default mode and another at "
+                        f"{version}"
+                    )
         holders: dict[StructModel | EnumType, list[StructModel]] = {}
         for model in self.read_at:
             for child in model.nested:
