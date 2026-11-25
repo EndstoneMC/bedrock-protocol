@@ -145,7 +145,8 @@ class ItemUseInventoryTransaction:
     from_pos: Vec3
     click_pos: Vec3
     target_block_id: BlockRuntimeId
-    client_predicted_result: PredictedResult
+    client_predicted_result: PredictedResult = field(type=uvarint32, until=776)
+    client_predicted_result: PredictedResult = field(since=776)
 
 
 @type(since=944, until=1001)
