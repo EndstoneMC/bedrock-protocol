@@ -727,6 +727,120 @@
   "bytes": "0000803f00000040000080400000a0400000c0400000e04000000041000040408080808040020001c801000030410000404100005041010100180200b2054000000112000a000000000000000000000101020206080ab2054000000112000a000000000000000000000000803f00000040000040400000003f0000803e0000403fa19cc48108010000604100007041"
  },
  {
+  "id": "item_use_held_item_without_net_id",
+  "value": {
+   "rot": {
+    "x": 1.0,
+    "y": 2.0
+   },
+   "pos": {
+    "x": 4.0,
+    "y": 5.0,
+    "z": 6.0
+   },
+   "move": {
+    "x": 7.0,
+    "y": 8.0
+   },
+   "y_head_rot": 3.0,
+   "input_data": "0b10000000000000000000000000000000000",
+   "input_mode": 2,
+   "play_mode": 0,
+   "new_interaction_model": 1,
+   "gaze_direction": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+   },
+   "client_tick": 200,
+   "pos_delta": {
+    "x": 11.0,
+    "y": 12.0,
+    "z": 13.0
+   },
+   "item_use_transaction": {
+    "id": -1,
+    "slots": [],
+    "transaction": {
+     "actions": [
+      {
+       "source": {
+        "type": 0,
+        "container_id": 12,
+        "flags": 0
+       },
+       "slot": 2,
+       "from_item_descriptor": {
+        "id": 0,
+        "stack_size": 0,
+        "aux_value": 0,
+        "block_runtime_id": 0,
+        "user_data_buffer": ""
+       },
+       "to_item_descriptor": {
+        "id": 345,
+        "stack_size": 64,
+        "aux_value": 0,
+        "net_id": {
+         "raw_id": 9
+        },
+        "block_runtime_id": 0,
+        "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+       }
+      }
+     ],
+     "action_type": 1,
+     "trigger_type": 1,
+     "pos": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+     },
+     "face": 4,
+     "slot": 5,
+     "item": {
+      "id": 345,
+      "stack_size": 64,
+      "aux_value": 0,
+      "block_runtime_id": 0,
+      "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+     },
+     "from_pos": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+     },
+     "click_pos": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.75
+     },
+     "target_block_id": 2150698529,
+     "client_predicted_result": 1
+    }
+   },
+   "item_stack_request": {
+    "client_request_id": {
+     "raw_id": 0
+    },
+    "actions": [],
+    "strings_to_filter": [],
+    "strings_to_filter_origin": 0
+   },
+   "player_block_actions": [],
+   "vehicle_rot": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "client_predicted_vehicle": 0,
+   "analog_move_vector": {
+    "x": 14.0,
+    "y": 15.0
+   }
+  },
+  "bytes": "0000803f00000040000080400000a0400000c0400000e04000000041000040408080808040020001c801000030410000404100005041010100180200b2054000000112000a000000000000000000000101020206080ab20540000000000a000000000000000000000000803f00000040000040400000003f0000803e0000403fa19cc48108010000604100007041"
+ },
+ {
   "id": "block_action_kinds",
   "value": {
    "rot": {
