@@ -18,10 +18,7 @@ for module in versions:
             SERIALIZABLE.setdefault((cls, mode, since), (module, cls, mode, f"{module.__name__}.{cls.__qualname__}"))
 
 
-BINDING_GAP = {f"{version.__name__}.CommandRequestPacket" for version in versions} | {
-    "bedrock_protocol.v712.SerializedPersonaPieceHandle",
-    "bedrock_protocol.v712.TintMapColor",
-}
+BINDING_GAP = {f"{version.__name__}.CommandRequestPacket" for version in versions}
 GAP = pytest.mark.xfail(
     raises=bedrock_protocol.EncodeError,
     strict=True,

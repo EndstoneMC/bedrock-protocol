@@ -25,6 +25,7 @@ class ArmSizeType(IntEnum, uint8):
 class PieceType(IntEnum, uint32):
     """persona::stringFromPieceType."""
 
+    UNKNOWN = 0, "persona_unknown"
     SKELETON = 1, "persona_skeleton"
     BODY = 2, "persona_body"
     SKIN = 3, "persona_skin"

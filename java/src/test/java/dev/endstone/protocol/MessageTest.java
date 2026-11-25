@@ -248,22 +248,20 @@ final class MessageTest {
     }
 
     @Test
-    void theDefaultPersonaPieceFailsToEncodeWhereItsTypeHasNoName() {
+    void theDefaultPersonaPieceEncodesWhereItsTypeIsAName() {
         assertEquals(
-                "PieceType: has no encoded name at protocol 712",
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () ->
-                                        Protocol.v712.encode(
-                                                PlayerSkinPacket_v712.newBuilder()
-                                                        .setSkin(
-                                                                SerializedSkinRef_v712.newBuilder()
-                                                                        .addPersonaPieces(
-                                                                                SerializedPersonaPieceHandle_v712
-                                                                                        .getDefaultInstance())
-                                                                        .build())
-                                                        .build()))
-                        .getMessage());
+                "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                        + "000004736c696d0001000000000f706572736f6e615f756e6b6e6f776e000000000000000000000000000000",
+                ByteBufUtil.hexDump(
+                        Protocol.v712.encode(
+                                PlayerSkinPacket_v712.newBuilder()
+                                        .setSkin(
+                                                SerializedSkinRef_v712.newBuilder()
+                                                        .addPersonaPieces(
+                                                                SerializedPersonaPieceHandle_v712
+                                                                        .getDefaultInstance())
+                                                        .build())
+                                        .build())));
     }
 
     @Test
