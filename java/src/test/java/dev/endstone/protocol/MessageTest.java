@@ -189,9 +189,9 @@ final class MessageTest {
     @Test
     void theLatestCommandVersionEncodesAsItsNameAtAnEarlyVersion() {
         assertEquals(
-                "0000000000000000000000000000000000000000066c6174657374",
+                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
                 ByteBufUtil.hexDump(
-                        Protocol.v729.encode(
+                        Protocol.v898.encode(
                                 CommandRequestPacket.newBuilder()
                                         .setVersion(CurrentCmdVersion.LATEST)
                                         .build())));
@@ -200,9 +200,10 @@ final class MessageTest {
     @Test
     void theNameLatestDecodesToLatestAtAnEarlyVersion() {
         CommandRequestPacket packet =
-                Protocol.v729.decode(
+                Protocol.v898.decode(
                         CommandRequestPacket.class,
-                        hex("0000000000000000000000000000000000000000066c6174657374"));
+                        hex(
+                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"));
         assertEquals(CurrentCmdVersion.LATEST, packet.getVersion());
     }
 
@@ -221,23 +222,23 @@ final class MessageTest {
     @Test
     void theNameLatestEncodesAgainAfterItIsDecodedAtAnEarlyVersion() {
         assertEquals(
-                "0000000000000000000000000000000000000000066c6174657374",
+                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
                 ByteBufUtil.hexDump(
-                        Protocol.v729.encode(
-                                Protocol.v729.decode(
+                        Protocol.v898.encode(
+                                Protocol.v898.decode(
                                         CommandRequestPacket.class,
                                         hex(
-                                                "0000000000000000000000000000000000000000066c6174657374")))));
+                                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374")))));
     }
 
     @Test
     void aCommandVersionAddedAfterAnEarlyVersionFailsToEncodeThere() {
         assertEquals(
-                "CurrentCmdVersion: has no encoded name at protocol 729",
+                "CurrentCmdVersion: has no encoded name at protocol 898",
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () ->
-                                        Protocol.v729.encode(
+                                        Protocol.v898.encode(
                                                 CommandRequestPacket.newBuilder()
                                                         .setVersion(
                                                                 CurrentCmdVersion

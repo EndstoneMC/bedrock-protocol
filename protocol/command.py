@@ -264,7 +264,15 @@ class CurrentCmdVersion(IntEnum, int32):
     LATEST = value(COUNT - 1, default=True)
 
 
-@packet(id=77)
+@packet(id=77, until=898)
+class CommandRequestPacket:
+    command: str
+    origin: CommandOriginData
+    internal_source: bool
+    version: CurrentCmdVersion
+
+
+@packet(id=77, since=898)
 class CommandRequestPacket:
     command: str
     origin: CommandOriginData

@@ -281,7 +281,9 @@ TINT_MAP_COLOR_BARE_SKELETON_729 = bytes.fromhex("08736b656c65746f6e00000000")
 PERSONA_PIECE_HANDLE_SKELETON_2168 = bytes.fromhex("0001000000000000000000000000000000000000000000")
 ANIMATE_ENTITY_MOLANG_729 = bytes.fromhex("0000000c000000000000000000")
 ANIMATE_ENTITY_MOLANG_2225 = bytes.fromhex("0000000d000000000000000000")
-COMMAND_REQUEST_LATEST = bytes.fromhex("0000000000000000000000000000000000000000066c6174657374")
+COMMAND_REQUEST_LATEST_898 = bytes.fromhex(
+    "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"
+)
 COMMAND_REQUEST_LATEST_2168 = bytes.fromhex(
     "072f736179206869106175746f6d6174696f6e706c61796572efcdab89674523011032547698badcfe057265712d31feffffffffffffff01"
     "066c6174657374"
@@ -956,7 +958,7 @@ def test_a_number_a_pointer_shares_decodes_to_the_pointer():
 @pytest.mark.parametrize(
     ("version", "data"),
     [
-        pytest.param(v729, COMMAND_REQUEST_LATEST, id="729"),
+        pytest.param(v898, COMMAND_REQUEST_LATEST_898, id="898"),
         pytest.param(v2168, COMMAND_REQUEST_LATEST_2168, id="2168"),
         pytest.param(proto, COMMAND_REQUEST_LATEST_2168, id="2193"),
         pytest.param(v2225, COMMAND_REQUEST_LATEST_2168, id="2225"),
@@ -985,10 +987,10 @@ def test_a_name_whose_number_a_pointer_shares_decodes_to_its_own_member():
 
 
 def test_the_member_a_derived_name_decodes_to_encodes_to_that_name_again():
-    packet = v729.decode(bp.CommandRequestPacket, COMMAND_REQUEST_LATEST)
-    assert v729.encode(packet) == COMMAND_REQUEST_LATEST
+    packet = v898.decode(bp.CommandRequestPacket, COMMAND_REQUEST_LATEST_898)
+    assert v898.encode(packet) == COMMAND_REQUEST_LATEST_898
 
 
 def test_a_member_sharing_a_derived_names_value_encodes_to_that_name():
     packet = bp.CommandRequestPacket(version=bp.CurrentCmdVersion.SAME_ACTOR_BLOCK_REPLACEMENT_RETAINS_ITEMS_FIX)
-    assert v729.encode(packet) == COMMAND_REQUEST_LATEST
+    assert v898.encode(packet) == COMMAND_REQUEST_LATEST_898
