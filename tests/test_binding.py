@@ -250,11 +250,11 @@ def test_an_enum_value_its_cpp_type_cannot_hold_is_rejected():
 
 def test_a_name_the_schema_does_not_hold_is_rejected():
     with pytest.raises(bp.DecodeError, match=r"^CommandOutput\.type: unknown value at byte 5 of 5$"):
-        _core.decode(proto.VERSION, v712.CommandOutput, b"\x04nope")
+        _core.decode(proto.VERSION, v898.CommandOutput, b"\x04nope")
 
 
 def test_a_name_in_any_case_decodes_as_bds_folds_it():
-    assert _core.decode(proto.VERSION, v712.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
+    assert _core.decode(proto.VERSION, v898.CommandOutput, b"\x04NONE" + bytes(6)).type is bp.CommandOutputType.NONE
 
 
 def test_a_container_id_the_schema_does_not_name_round_trips():
@@ -816,7 +816,7 @@ def test_encode_rejects_a_cerealized_class_of_another_version():
 
 def test_encode_rejects_a_name_the_schema_does_not_hold():
     with pytest.raises(bp.EncodeError, match=r"^CommandOutput\.type: unknown value$"):
-        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v898.CommandOutput(type=99))
 
 
 UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPacket.CommandData(permission=99)])
@@ -824,12 +824,12 @@ UNKNOWN_PERMISSION = bp.AvailableCommandsPacket(commands=[bp.AvailableCommandsPa
 
 def test_an_encode_error_is_a_value_error():
     with pytest.raises(ValueError, match="unknown value"):
-        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v898.CommandOutput(type=99))
 
 
 def test_an_encode_error_carries_its_reason():
     with pytest.raises(bp.EncodeError, match="unknown value") as caught:
-        _core.encode(proto.VERSION, v712.CommandOutput(type=99))
+        _core.encode(proto.VERSION, v898.CommandOutput(type=99))
     assert caught.value.reason == "unknown value"
 
 
@@ -896,7 +896,7 @@ def test_a_manual_encode_rejects_an_uninitialized_instance():
 
 
 def test_encode_raises_an_encode_error_for_a_value_it_cannot_write():
-    packet = v712.CommandOutputPacket(output=v712.CommandOutput(type=99))
+    packet = v898.CommandOutputPacket(output=v898.CommandOutput(type=99))
     with pytest.raises(bp.EncodeError, match=r"^CommandOutputPacket\.output\.type: unknown value$") as caught:
         proto.encode(packet)
     assert (caught.value.reason, caught.value.path) == ("unknown value", ("output", "type"))

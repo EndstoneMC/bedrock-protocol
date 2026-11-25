@@ -288,6 +288,14 @@ class CommandOutputType(IntEnum, int32):
     DATA_SET = 4
 
 
+@type(until=898)
+class CommandOutputMessage:
+    successful: bool
+    message_id: str
+    params: list[str]
+
+
+@type(since=898)
 class CommandOutputMessage:
     message_id: str
     successful: bool
@@ -295,6 +303,15 @@ class CommandOutputMessage:
     raw_message: str | None = field(since=2259)
 
 
+@type(until=898)
+class CommandOutput:
+    type: CommandOutputType = field(type=uint8)
+    success_count: uvarint32
+    messages: list[CommandOutputMessage]
+    data: str = field(when=lambda o: o.type == CommandOutputType.DATA_SET)
+
+
+@type(since=898)
 class CommandOutput:
     type: CommandOutputType = field(type=str)
     success_count: uint32
