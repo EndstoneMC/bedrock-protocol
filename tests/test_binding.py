@@ -207,7 +207,7 @@ UNNAMED_VALUES = [
         id="violating-packet-id",
     ),
     pytest.param(v729, bp.SetLastHurtByPacket, UNNAMED_ACTOR_TYPE, "last_hurt_by", 5, id="actor-type-729"),
-    pytest.param(v729, bp.SetLastHurtByPacket, PAIRED_ACTOR_TYPE, "last_hurt_by", 68504, id="actor-type-729-paired"),
+    pytest.param(v729, bp.SetLastHurtByPacket, PAIRED_ACTOR_TYPE, "last_hurt_by", 2186010, id="actor-type-729-paired"),
 ]
 
 UNNAMED_ENCODINGS = [

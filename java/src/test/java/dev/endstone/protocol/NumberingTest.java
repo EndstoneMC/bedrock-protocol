@@ -65,8 +65,6 @@ final class NumberingTest {
                 argumentSet("number 0", 0),
                 argumentSet("number 154", 154),
                 argumentSet("number 916", 916),
-                argumentSet("number 921", 921),
-                argumentSet("number 2962", 2962),
                 argumentSet("number 68504", 68504),
                 argumentSet("number 76694", 76694),
                 argumentSet("number 2186010", 2186010),
@@ -76,6 +74,8 @@ final class NumberingTest {
 
     static Stream<Arguments> unplacedActorTypeNumbers() {
         return Stream.of(
+                argumentSet("number 921", 921),
+                argumentSet("number 2962", 2962),
                 argumentSet("number 5011", 5011),
                 argumentSet("number 65792", 65792),
                 argumentSet("number 70552", 70552),

@@ -652,13 +652,15 @@ class ActorType(IntEnum, int32):
         HAPPY_GHAST = 5011
     with value(since=827):
         COPPER_GOLEM = 916
-    NAUTILUS = 9109
-    with value(until=924):
+    with value(since=898):
+        NAUTILUS = 9109
+    with value(since=898, until=924):
         ZOMBIE_NAUTILUS = 76694
     with value(since=924):
         ZOMBIE_NAUTILUS = 74646
-    PARCHED = 1117079
-    with value(until=924):
+    with value(since=898):
+        PARCHED = 1117079
+    with value(since=898, until=924):
         CAMEL_HUSK = 68504
     with value(since=924):
         CAMEL_HUSK = 70552
