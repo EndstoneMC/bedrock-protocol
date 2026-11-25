@@ -413,7 +413,9 @@ class Builder:
             node.value.value
             for source in self.sources.values()
             for node in ast.walk(source.tree)
-            if isinstance(node, ast.keyword) and node.arg in ("since", "until") and isinstance(node.value, ast.Constant)
+            if isinstance(node, ast.keyword)
+            and node.arg in ("since", "until", "unnamed_since")
+            and isinstance(node.value, ast.Constant)
         }
         self.versions = tuple(
             release.number
@@ -721,14 +723,14 @@ class Builder:
         if not (isinstance(underlying, Primitive) and underlying.name in ENUM_UNDERLYING):
             raise error(source, node.bases[1], node.name, "is not an enum underlying type")
         members: list[Member] = []
-        for statement, within, _, _ in self.blocks(
+        for statement, within, block, _ in self.blocks(
             source,
             pending.scope,
             node.body,
             node.name,
             pending.range,
             dsl.value,
-            ("since", "until"),
+            ("since", "until", "unnamed_since"),
             ast.Assign,
             "members",
         ):
@@ -750,6 +752,7 @@ class Builder:
             sentinel = False
             deprecated = False
             synonym = False
+            unnamed = block.get("unnamed_since")
             value: Int | MemberRef | Binary | None
             if isinstance(expression, ast.Tuple):
                 if len(expression.elts) != 2:
@@ -771,9 +774,10 @@ class Builder:
                     deprecated = literal(source, arguments["deprecated"], bool, name)
                 if "synonym" in arguments:
                     synonym = literal(source, arguments["synonym"], bool, name)
+                unnamed = arguments.get("unnamed_since", unnamed)
                 if (
                     "name" in arguments
-                    and not {"cpp_name", "deprecated", "synonym"} & arguments.keys()
+                    and not {"cpp_name", "deprecated", "synonym", "unnamed_since"} & arguments.keys()
                     and own == Range(None, None)
                 ):
                     raise error(source, expression, name, "a member without its own gate takes a pair, not value()")
@@ -810,7 +814,16 @@ class Builder:
             for earlier in members:
                 if earlier.name == name and earlier.range.overlaps(member_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            members.append(Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated, synonym))
+            unnamed_since = None
+            if unnamed is not None:
+                unnamed_since = literal(source, unnamed, int, name)
+                if unnamed_since not in self.versions:
+                    raise error(source, unnamed, name, f"unnamed_since {unnamed_since} is not a modelled version")
+                if not member_range.contains(unnamed_since):
+                    raise error(source, unnamed, name, f"unnamed_since {unnamed_since} is outside its version range")
+            members.append(
+                Member(name, value, member_range, cpp_name, encoded_name, sentinel, deprecated, synonym, unnamed_since)
+            )
         if not members:
             raise error(source, node, pending.enum.name, "has no members")
         self.tile(source, node, pending.enum, pending.range)
@@ -858,7 +871,7 @@ class Builder:
             "fields",
         )
         runs: list[tuple[ast.stmt, list[str]]] = []
-        for statement, within, block_when, block in statements:
+        for statement, within, block_arguments, block in statements:
             if isinstance(statement, ast.Pass | ast.ClassDef):
                 continue
             if not (isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)):
@@ -946,7 +959,7 @@ class Builder:
                 if not spans or spans[-1][1] != field_type:
                     spans.append((version, field_type))
             self.at = None
-            guards = [] if block_when is None else [block_when]
+            guards = [] if "when" not in block_arguments else [block_arguments["when"]]
             if call is not None and "when" in arguments:
                 guards.append(arguments["when"])
             predicates = [
@@ -1020,10 +1033,10 @@ class Builder:
         allowed: tuple[str, ...],
         holds: type[ast.stmt],
         noun: str,
-    ) -> Iterator[tuple[ast.stmt, Range, ast.expr | None, ast.stmt]]:
+    ) -> Iterator[tuple[ast.stmt, Range, dict[str, ast.expr], ast.stmt]]:
         for statement in without_docstring(body):
             if not isinstance(statement, ast.With):
-                yield statement, range, None, statement
+                yield statement, range, {}, statement
                 continue
             single = len(statement.items) == 1 and statement.items[0].optional_vars is None
             block = statement.items[0].context_expr if single else None
@@ -1036,7 +1049,7 @@ class Builder:
             if any(not isinstance(inner, holds) for inner in statement.body):
                 raise error(source, statement, name, f"a with block holds only {noun}")
             within = self.narrow(source, statement, name, self.read_range(source, block, name, arguments), range)
-            yield from ((inner, within, arguments.get("when"), statement) for inner in statement.body)
+            yield from ((inner, within, arguments, statement) for inner in statement.body)
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}

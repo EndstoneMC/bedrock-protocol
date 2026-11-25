@@ -292,6 +292,17 @@ COMMAND_REQUEST_PINNED_2168 = bytes.fromhex(
     "072f736179206869106175746f6d6174696f6e706c61796572efcdab89674523011032547698badcfe057265712d31feffffffffffffff01"
     "17636c6f6e657061727469616c626564626c6f636b666978"
 )
+COMMAND_REQUEST_TIME_OF_COMMAND_OVERLOADS = bytes.fromhex(
+    "0006706c6179657200000000000000000000000000000000000000000000000000001674696d656f66636f6d6d616e646f7665726c6f616473"
+)
+COMMAND_REQUEST_REDSTONE_CIRCUIT_STATE_CHANGE_FIX = bytes.fromhex(
+    "0006706c617965720000000000000000000000000000000000000000000000000000"
+    "1d72656473746f6e656369726375697473746174656368616e6765666978"
+)
+COMMAND_REQUEST_TIME_COMMAND_CLOCKS_RELEASE = bytes.fromhex(
+    "0006706c617965720000000000000000000000000000000000000000000000000000"
+    "1874696d65636f6d6d616e64636c6f636b7372656c65617365"
+)
 MOVEMENT_EFFECT = bytes.fromhex("01040604")
 DISCONNECT_ASYNC_JOIN_DENIED = bytes.fromhex("ec01000000")
 VIOLATION_OF_CLIENTBOUND_DATA_STORE = bytes.fromhex("0000940500")
@@ -994,3 +1005,48 @@ def test_the_member_a_derived_name_decodes_to_encodes_to_that_name_again():
 def test_a_member_sharing_a_derived_names_value_encodes_to_that_name():
     packet = bp.CommandRequestPacket(version=bp.CurrentCmdVersion.SAME_ACTOR_BLOCK_REPLACEMENT_RETAINS_ITEMS_FIX)
     assert v729.encode(packet) == COMMAND_REQUEST_LATEST
+
+
+@pytest.mark.parametrize(
+    "version",
+    [
+        pytest.param(bp.CurrentCmdVersion.CLONE_EXTRA_BLOCK_FILTER_FIX, id="45"),
+        pytest.param(bp.CurrentCmdVersion.TIME_OF_COMMAND_OVERLOADS, id="52"),
+        pytest.param(bp.CurrentCmdVersion.REDSTONE_CIRCUIT_STATE_CHANGE_FIX, id="53"),
+        pytest.param(bp.CurrentCmdVersion.TIME_COMMAND_PREVENT_NEGATIVE_TIME, id="54"),
+    ],
+)
+def test_a_member_a_protocol_leaves_unnamed_fails_to_encode(version):
+    with pytest.raises(bp.EncodeError, match=r"^CommandRequestPacket\.version: unknown value$"):
+        v2225.encode(bp.CommandRequestPacket(version=version))
+
+
+@pytest.mark.parametrize(
+    ("data", "message"),
+    [
+        pytest.param(
+            COMMAND_REQUEST_TIME_OF_COMMAND_OVERLOADS,
+            r"^CommandRequestPacket\.version: unknown value at byte 57 of 57$",
+            id="timeofcommandoverloads",
+        ),
+        pytest.param(
+            COMMAND_REQUEST_REDSTONE_CIRCUIT_STATE_CHANGE_FIX,
+            r"^CommandRequestPacket\.version: unknown value at byte 64 of 64$",
+            id="redstonecircuitstatechangefix",
+        ),
+        pytest.param(
+            COMMAND_REQUEST_TIME_COMMAND_CLOCKS_RELEASE,
+            r"^CommandRequestPacket\.version: unknown value at byte 59 of 59$",
+            id="timecommandclocksrelease",
+        ),
+    ],
+)
+def test_a_name_a_protocol_leaves_unbound_is_an_unknown_value(data, message):
+    with pytest.raises(bp.DecodeError, match=message):
+        v2225.decode(bp.CommandRequestPacket, data)
+
+
+def test_a_named_member_decodes_to_itself_again_beside_unnamed_ones():
+    packet = bp.CommandRequestPacket(version=bp.CurrentCmdVersion.TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE)
+    decoded = v2225.decode(bp.CommandRequestPacket, v2225.encode(packet))
+    assert decoded.version is bp.CurrentCmdVersion.TEST_FOR_BLOCK_COMMAND_DOES_NOT_IGNORE_BLOCK_STATE

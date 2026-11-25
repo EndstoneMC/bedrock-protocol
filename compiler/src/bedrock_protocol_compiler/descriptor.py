@@ -189,6 +189,7 @@ class Member:
     sentinel: bool = False
     deprecated: bool = False
     synonym: bool = False
+    unnamed_since: int | None = None
 
 
 @dataclass(frozen=True)

@@ -16,6 +16,7 @@ def value(
     cpp_name: str | None = None,
     since: int | None = None,
     until: int | None = None,
+    unnamed_since: int | None = None,
     deprecated: bool = False,
     synonym: bool = False,
 ) -> Any:

@@ -11,7 +11,7 @@ paths:
 - Record BDS's spelling in the DSL, never the encoding's.
 - Pair a member with BDS's spelling only where it differs from the member's name with its underscores dropped by more than case: a kept separator (`IN_QUAD = 2, "in_quad"`) or an added prefix (`HIGH_PANTS = 8, "persona_high_pants"`); `DOWNLOADING_FINISHED = 3` takes none.
 - Keep BDS's spelling as the pair of a member renamed away from it.
-- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=`, `deprecated=True` or `synonym=True`.
+- Write a gated member's pair as `value(N, "X", since=, until=)`, and as a plain pair (`X = N, "Name"`) inside a `with value(...)` block; `value(N, "X")` is an error unless it carries its own gate, `cpp_name=`, `unnamed_since=`, `deprecated=True` or `synonym=True`.
 - Never mangle a member to match the encoding (`DOWNLOADINGFINISHED`).
 
 ## Values
@@ -22,7 +22,7 @@ paths:
 - Write a pointer, a member that stands for another (a count's last value, the current version), as an expression over that member (`LATEST = COUNT - 1`, `CURRENT = EDITOR_ACHIEVEMENTS`), never as a literal.
 - Mark the member bedrock-headers declares second of two that share a number at one version, where neither is a pointer, with `value(N, synonym=True)` (`HUMANOID_COUNT = value(4, synonym=True)`).
 - Mark a member bedrock-headers names deprecated with `deprecated=True`: `value(N, deprecated=True)`, or `auto(deprecated=True)` imported from `protocol` in auto position; bpc keeps it, marked deprecated.
-- Leave any other member the dump does not bind as declared, and report it.
+- Leave any other member the dump does not bind as declared, and report it; where its enum is name-coded, mark it `unnamed_since=` the first era whose dump does not bind it by name.
 
 ## Underlying type
 

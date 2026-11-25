@@ -100,7 +100,9 @@ static_assert(std::ranges::count(bp::enum_entries_<2193, bp::CurrentCmdVersion>(
                                  &CmdEntry::first) == 1);
 static_assert(std::ranges::count(bp::enum_entries_<2193, bp::CurrentCmdVersion>(), bp::CurrentCmdVersion::Latest,
                                  &CmdEntry::first) == 1);
-static_assert(!bp::enum_name_<2193>(*bp::enum_cast_<2225, bp::CurrentCmdVersion>("timecommandpreventnegativetime")));
+static_assert(!bp::enum_name_<2193>(*bp::enum_cast_<2259, bp::CurrentCmdVersion>("gametestrunsetmultitag")));
+static_assert(!bp::enum_cast_<2225, bp::CurrentCmdVersion>("timecommandpreventnegativetime"));
+static_assert(!bp::enum_name_<2259>(bp::CurrentCmdVersion::TimeCommandClocksRelease));
 static_assert(!bp::enum_name_<2193>(bp::CurrentCmdVersion::RedstoneCircuitStateChangeFix));
 static_assert(bp::enum_name_<2225>(bp::AudioContentPlaybackType::Music) == "music");
 static_assert(!bp::enum_name_<2193>(bp::AudioContentPlaybackType::Music));
