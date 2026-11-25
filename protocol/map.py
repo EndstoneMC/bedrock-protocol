@@ -12,6 +12,7 @@ from protocol.network import NetworkBlockPosition
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 class MapItemTrackedActor:

@@ -7,6 +7,17 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Range
 from bedrock_protocol_compiler.java.names import OBJECT, OBJECT_METHODS, bounds
 from bedrock_protocol_compiler.printer import Printer
 
+PARENTHESIZED = """
+if ($clause$) {
+    $body$
+}
+"""
+BARE = """
+if $clause$ {
+    $body$
+}
+"""
+
 METHOD = re.compile(r"[^=]*?\b(?P<name>[a-z]\w*)\((?P<parameters>[^()]*)\) \{")
 FIELD = re.compile(r"[\w.<>?,@\[\] ]+ (?P<name>\w+)(?: = .+)?;")
 TYPE_ARGUMENTS = re.compile(r"<[^<>]*>")
@@ -73,12 +84,12 @@ class Members:
                     raise CompilerError(f"{scope.where}.{clash}: is generated for both {first} and {origin}")
 
 
-def check_names(where: str, names: Iterable[tuple[str, str]]) -> None:
+def check_names(where: str, names: Iterable[tuple[str, str]], separator: str = ".") -> None:
     seen: dict[str, str] = {}
     for name, origin in names:
         first = seen.setdefault(name, origin)
         if first != origin:
-            raise CompilerError(f"{where}.{name}: is generated for both {first} and {origin}")
+            raise CompilerError(f"{where}{separator}{name}: is generated for both {first} and {origin}")
 
 
 def equals(p: Printer, name: str, comparisons: list[str]) -> None:
@@ -144,23 +155,21 @@ def combine(p: Printer, hashes: list[str]) -> None:
     p.emit("return hash;")
 
 
-def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], absent: str) -> None:
-    for runs, body in entries:
+def branch(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], test: str, last: str) -> bool:
+    """Emits `test` per entry until one's runs hold every protocol, else `last`, and says whether it tested any."""
+    for index, (runs, body) in enumerate(entries):
         clauses = [" && ".join(bounds(run.since, run.until, "protocol")) for run in runs]
         if "" in clauses:
             body()
-            return
+            return index > 0
         clause = clauses[0] if len(clauses) == 1 else " || ".join(f"({each})" for each in clauses)
-        p.emit(
-            """
-            if ($clause$) {
-                $body$
-            }
-            """,
-            clause=clause,
-            body=body,
-        )
-    p.emit("throw new IllegalArgumentException($absent$ + protocol);", absent=absent)
+        p.emit(test, clause=clause, body=body)
+    p.emit(last)
+    return True
+
+
+def ladder(p: Printer, entries: list[tuple[list[Range], Callable[[], None]]], absent: str) -> None:
+    branch(p, entries, PARENTHESIZED, f"throw new IllegalArgumentException({absent} + protocol);")
 
 
 def enum_getter(p: Printer, enum: str, name: str, number: str, index: str = "") -> None:

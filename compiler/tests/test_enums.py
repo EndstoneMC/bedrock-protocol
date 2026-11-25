@@ -16,6 +16,7 @@ from enum import IntEnum, auto
 from protocol import builtin, int8, int16, int32, int64, packet, sentinel, type, uint8, uint16, uint32, uint64, value
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 
@@ -79,6 +80,7 @@ def test_a_deprecated_auto_has_no_number_and_is_marked(build_package):
     source = (
         "from enum import IntEnum\nfrom protocol import auto, uint8\n"
         + 'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n'
+        'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n'
         + "class E(IntEnum, uint8):\n    A = 1\n    B = auto(deprecated=True)\n    C = auto()\n"
     )
 

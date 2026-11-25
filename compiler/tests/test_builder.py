@@ -15,14 +15,17 @@ HEADER = """
 from protocol import builtin, field, packet, type, uint8, uint32, double
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 
 def test_package_lists_modules(build_package):
     package = build_package(
         {
-            "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
-            "b": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
+            "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n'
+            'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
+            "b": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n'
+            'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
         },
         INIT_123,
     )
@@ -35,7 +38,10 @@ def test_package_lists_modules(build_package):
 
 def test_package_lists_releases(build_package):
     package = build_package(
-        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        {
+            "a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'
+            'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n'
+        },
         'versions = {1: "1.1.0-1.1.2", 2: "1.2.0", 3: "1.3.6x"}\n',
     )
 
@@ -54,7 +60,10 @@ def test_a_gate_bound_is_a_snapshot(build_package):
 
 def test_a_number_nothing_gates_on_is_only_a_release(build_package):
     package = build_package(
-        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        {
+            "a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'
+            'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n'
+        },
         INIT_123,
     )
 
@@ -63,7 +72,10 @@ def test_a_number_nothing_gates_on_is_only_a_release(build_package):
 
 def test_a_closed_newest_entry_is_accepted(build_package):
     package = build_package(
-        {"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'},
+        {
+            "a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'
+            'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n'
+        },
         'versions = {2225: "1.26.60-1.26.63", 2226: "1.26.64"}\n',
     )
 
@@ -74,8 +86,10 @@ def test_modules_declare_one_package(build_package):
     with pytest.raises(CompilerError, match=r"b\.py: package: 'a\.c' differs from a\.py's 'a\.b'"):
         build_package(
             {
-                "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n',
-                "b": 'package = "a.c"\njava_package = "dev.endstone.protocol"\n',
+                "a": 'package = "a.b"\njava_package = "dev.endstone.protocol"\n'
+                'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
+                "b": 'package = "a.c"\njava_package = "dev.endstone.protocol"\n'
+                'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
             }
         )
 
@@ -84,8 +98,20 @@ def test_modules_declare_one_java_package(build_package):
     with pytest.raises(CompilerError, match=r"b\.py: java_package: 'x\.z' differs from a\.py's 'x\.y'"):
         build_package(
             {
-                "a": 'package = "a"\njava_package = "x.y"\n',
-                "b": 'package = "a"\njava_package = "x.z"\n',
+                "a": 'package = "a"\njava_package = "x.y"\n'
+                'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
+                "b": 'package = "a"\njava_package = "x.z"\n'
+                'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n',
+            }
+        )
+
+
+def test_modules_declare_one_go_package(build_package):
+    with pytest.raises(CompilerError, match=r"b\.py: go_package: 'x/z' differs from a\.py's 'x/y'"):
+        build_package(
+            {
+                "a": 'package = "a"\njava_package = "dev.endstone.protocol"\ngo_package = "x/y"\n',
+                "b": 'package = "a"\njava_package = "dev.endstone.protocol"\ngo_package = "x/z"\n',
             }
         )
 
@@ -224,7 +250,11 @@ def test_import_may_precede_the_module_it_names(build_package):
 def test_protocol_exports_only_what_its_init_binds(build_package):
     with pytest.raises(CompilerError, match="uint8: is not exported by protocol"):
         build_package(
-            {"a": 'from protocol import uint8\npackage = "a"\njava_package = "dev.endstone.protocol"\n'}, INIT_123
+            {
+                "a": 'from protocol import uint8\npackage = "a"\njava_package = "dev.endstone.protocol"\n'
+                'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n'
+            },
+            INIT_123,
         )
 
 
@@ -280,6 +310,7 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("package = 3\n", "module: holds only imports"),
         ('package = "bedrock.protocol"\n', "package: is declared twice"),
         ('java_package = "dev.endstone.protocol"\n', "java_package: is declared twice"),
+        ('go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n', "go_package: is declared twice"),
         ("from . import a\n", r"\.: is not an importable module"),
         ("from .enum import IntEnum\n", r"\.enum: is not an importable module"),
         ("class A:\n    x: uint8 = field(**{})\n", "field: takes its arguments written out"),
@@ -303,13 +334,18 @@ def test_module_without_java_package_is_rejected(build_package):
         build_package({"a": 'package = "a"\n'})
 
 
+def test_module_without_go_package_is_rejected(build_package):
+    with pytest.raises(CompilerError, match=r"a\.py: go_package: missing"):
+        build_package({"a": 'package = "a"\njava_package = "dev.endstone.protocol"\n'})
+
+
 def test_family_name_repeated_across_modules_is_rejected(build_package):
     with pytest.raises(CompilerError, match="A: is already declared"):
         build_package({"a": HEADER + "class A:\n    pass\n", "b": HEADER + "class A:\n    pass\n"})
 
 
 def test_error_names_the_file_and_position(build_package):
-    with pytest.raises(CompilerError, match=r"protocol/a.py:6:8: Missing: is not defined"):
+    with pytest.raises(CompilerError, match=r"protocol/a.py:7:8: Missing: is not defined"):
         build_package({"a": HEADER + "class A:\n    x: Missing\n"})
 
 

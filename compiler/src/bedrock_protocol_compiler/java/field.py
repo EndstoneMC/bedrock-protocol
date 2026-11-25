@@ -23,19 +23,18 @@ from bedrock_protocol_compiler.descriptor import (
     Type,
     Variant,
 )
+from bedrock_protocol_compiler.expression import CLASSES, Num, enum_class
 from bedrock_protocol_compiler.java import members, names
-from bedrock_protocol_compiler.java.expression import Renderer, enum_class
+from bedrock_protocol_compiler.java.expression import Renderer
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.union import Union, UnionGenerator, case_name
 from bedrock_protocol_compiler.java.value import (
-    CLASSES,
     READS,
     WRITES,
     BitsetValue,
     Body,
     ListValue,
     NamedScalar,
-    Num,
     Reference,
     Scalar,
     Value,

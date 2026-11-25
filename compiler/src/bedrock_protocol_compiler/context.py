@@ -4,8 +4,9 @@ from bedrock_protocol_compiler.printer import Printer
 
 
 class GeneratorContext:
-    def __init__(self, out: Path) -> None:
+    def __init__(self, out: Path, owned: tuple[str, ...] = ("*",)) -> None:
         self.out = out
+        self.owned = owned
         self.printers: dict[Path, Printer] = {}
 
     def open(self, path: str) -> Printer:
@@ -20,6 +21,7 @@ class GeneratorContext:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(text)
         for root in {relative.parts[0] for relative in self.printers}:
-            for stale in (self.out / root).rglob("*"):
-                if stale.is_file() and stale.relative_to(self.out) not in self.printers:
-                    stale.unlink()
+            for pattern in self.owned:
+                for stale in (self.out / root).rglob(pattern):
+                    if stale.is_file() and stale.relative_to(self.out) not in self.printers:
+                        stale.unlink()

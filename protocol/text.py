@@ -7,6 +7,7 @@ from protocol import field, int32, packet, uint8, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 class TextPacketType(IntEnum, uint8):

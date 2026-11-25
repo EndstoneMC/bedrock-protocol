@@ -135,10 +135,14 @@ def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
     return [f"version >= {lowest}", f"version <= {schema.latest}" if until is None else f"version < {until}"]
 
 
-def codec(encoding: Encoding) -> str:
-    suffix = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
+def suffix(encoding: Encoding) -> str:
+    mode = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
     excluded = "" if encoding.excluded is None else f"Exclude{pascal(encoding.excluded)}"
-    return f"{CODEC}{encoding.since}{suffix}{excluded}"
+    return f"{encoding.since}{mode}{excluded}"
+
+
+def codec(encoding: Encoding) -> str:
+    return f"{CODEC}{suffix(encoding)}"
 
 
 def path(package_name: str, name: str) -> str:

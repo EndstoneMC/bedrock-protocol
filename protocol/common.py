@@ -7,6 +7,7 @@ from protocol import int32, uvarint32, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 type BlockRuntimeId = uvarint32

@@ -3,8 +3,8 @@ from collections.abc import Callable
 from functools import partial
 
 from bedrock_protocol_compiler.descriptor import Literal, MemberRef, Range, Struct
+from bedrock_protocol_compiler.expression import enum_class
 from bedrock_protocol_compiler.java import members, names
-from bedrock_protocol_compiler.java.expression import enum_class
 from bedrock_protocol_compiler.java.value import literal
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import EnumModel, Numbering, Schema, StructModel

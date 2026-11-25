@@ -12,6 +12,7 @@ from protocol.eas import EasingType
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 class Scheme(IntEnum, uint8):

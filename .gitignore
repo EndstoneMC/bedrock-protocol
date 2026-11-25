@@ -22,6 +22,10 @@ __pycache__/
 *.py[cod]
 .venv/
 
+# Go
+/go/protocol/*.bpc.go
+/go/protocol/*.bpc_test.go
+
 # VS Code
 .vscode/settings.json
 

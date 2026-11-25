@@ -14,6 +14,7 @@ from protocol import (
 )
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 """
 
 INIT_IMPORTS = """
@@ -97,7 +98,7 @@ def test_no_output_directory_is_a_usage_error(build_package, tmp_path, capsys):
     with pytest.raises(SystemExit, match=r"^2$"):
         main([str(tmp_path / "protocol")])
 
-    assert "one of --out and --java-out is required" in capsys.readouterr().err
+    assert "one of --out, --java-out and --go-out is required" in capsys.readouterr().err
 
 
 def test_a_java_error_writes_neither_output(build_package, tmp_path):

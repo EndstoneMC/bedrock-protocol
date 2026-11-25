@@ -3,7 +3,7 @@
 <h3>bedrock-protocol</h3>
 
 <p>
-  <b>The Minecraft: Bedrock Edition network protocol for C++, Python and Java</b>
+  <b>The Minecraft: Bedrock Edition network protocol for C++, Python, Java and Go</b>
 </p>
 
 [![CI](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/EndstoneMC/bedrock-protocol/actions/workflows/ci.yml)
@@ -146,6 +146,62 @@ assert version.isPresent() && version.get().getName().equals("1.26.70");
 byte[] pinned = Protocol.v2259.encode(packet);
 TextPacket picked = Protocol.v2259.decode(TextPacket.class, pinned);
 assert picked.equals(packet);
+```
+
+## Go
+
+### Install
+
+Generate the codecs in a checkout with Go 1.26 and uv, then point a module at it:
+
+```shell
+git clone https://github.com/EndstoneMC/bedrock-protocol
+(cd bedrock-protocol/go && go generate ./...)
+go mod edit -require=github.com/EndstoneMC/bedrock-protocol/go@v0.0.0 -replace=github.com/EndstoneMC/bedrock-protocol/go=./bedrock-protocol/go
+```
+
+### Encode and decode
+
+```go
+import "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+packet := &protocol.TextPacket{}
+packet.Body = &protocol.TextPacket_MessageOnly_{
+	MessageOnly: &protocol.TextPacket_MessageOnly{Type: protocol.TextPacketType_CHAT, Message: "hello"},
+}
+
+data, err := protocol.Encode(packet)
+if err != nil {
+	panic(err)
+}
+decoded := &protocol.TextPacket{}
+if err := protocol.Decode(data, decoded); err != nil {
+	panic(err)
+}
+if decoded.GetMessageOnly().GetMessage() != "hello" {
+	panic(decoded)
+}
+```
+
+### Pick a protocol
+
+```go
+version, ok := protocol.GetProtocolVersion(2259)
+if !ok || version.Name() != "1.26.70" {
+	panic(version)
+}
+
+pinned, err := protocol.V2259.Encode(packet)
+if err != nil {
+	panic(err)
+}
+picked := &protocol.TextPacket{}
+if err := protocol.V2259.Decode(pinned, picked); err != nil {
+	panic(err)
+}
+if picked.GetMessageOnly().GetMessage() != "hello" {
+	panic(picked)
+}
 ```
 
 ## Supported Protocols

@@ -1,69 +1,25 @@
 from collections.abc import Mapping
-from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, override
 
-from bedrock_protocol_compiler.descriptor import (
-    Binary,
-    Choice,
-    CompilerError,
-    Expression,
-    FieldRef,
-    Int,
-    Len,
-    MemberRef,
-    Not,
-    Test,
-)
-from bedrock_protocol_compiler.java.value import BOOL, CLASSES, Num, convert, java_of, literal
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, Schema
-
-INT32 = CLASSES["int32"]
-UINT32 = CLASSES["uint32"]
-INT64 = CLASSES["int64"]
-UINT64 = CLASSES["uint64"]
-OPERATORS = {"and": "&&", "or": "||"}
+from bedrock_protocol_compiler import expression
+from bedrock_protocol_compiler.descriptor import Binary, CompilerError, Expression, Len
+from bedrock_protocol_compiler.expression import BOOL, INT64, Num, Term, common
+from bedrock_protocol_compiler.java.value import convert, java_of, literal
+from bedrock_protocol_compiler.schema import Encoding, Schema
 
 
-class Operand(Protocol):
+class Operand(expression.Operand, Protocol):
     label: str
     member: str
-    term: Num | None
     suffix: str
-    bitset: bool
-    sized: bool
 
 
-@dataclass(frozen=True)
-class Term:
-    code: str | None
-    cls: Num
-    value: int = 0
+class Renderer(expression.Renderer[Operand]):
+    backend = "Java"
 
-
-def enum_class(enum_type: EnumModel) -> Num:
-    underlying = CLASSES[enum_type.underlying.name]
-    return Num("int", False, 8) if underlying == BOOL else underlying
-
-
-def common(a: Num, b: Num) -> Num:
-    if a.signed == b.signed:
-        return a if a.bits >= b.bits else b
-    unsigned, signed = (a, b) if not a.signed else (b, a)
-    return unsigned if unsigned.bits >= signed.bits else signed
-
-
-class Renderer:
     def __init__(self, schema: Schema, encoding: Encoding, operands: Mapping[str, Operand], receiver: str) -> None:
-        self.schema = schema
-        self.encoding = encoding
-        self.operands = operands
+        super().__init__(schema, encoding, operands)
         self.receiver = receiver
-
-    def predicate(self, expression: Expression) -> str:
-        term = self.term(expression)
-        if term.cls == BOOL and term.code is not None:
-            return term.code
-        return f"({self.spell(term, term.cls)}) != 0"
 
     def count(self, expression: Expression) -> str:
         match expression:
@@ -77,69 +33,45 @@ class Renderer:
         widest = self.promoted(self.term(expression))
         return f"ByteBufCodec.countValue(buf, {self.spell(widest, common(widest.cls, INT64))})"
 
-    def copies(self, expression: Expression) -> str:
-        return self.spell(self.promoted(self.term(expression)), INT32)
+    @override
+    def label(self, operand: Operand) -> str:
+        return operand.label
 
-    def member(self, member: MemberRef) -> Term:
-        enum_type = self.schema.enum_type(member.enum, self.encoding.since)
-        resolved = self.schema.resolve(member, self.encoding.since)
-        value = self.schema.enumerators(enum_type).get(resolved.name)
-        if value is None:
-            value = self.schema.number(self.encoding, member)
-        return Term(None, enum_class(enum_type), value)
+    @override
+    def access(self, operand: Operand) -> str:
+        return f"{self.receiver}{operand.member}{operand.suffix}"
 
-    def term(self, expression: Expression) -> Term:
-        match expression:
-            case FieldRef(name=name):
-                operand = self.operands[name]
-                if operand.term is None:
-                    raise CompilerError(f"{operand.label}: is not an integer, a bool or an enum")
-                return Term(f"{self.receiver}{operand.member}{operand.suffix}", operand.term)
-            case MemberRef():
-                return self.member(expression)
-            case Int(value=value):
-                if -(1 << 31) <= value < 1 << 31:
-                    return Term(None, INT32, value)
-                return Term(None, INT64 if -(1 << 63) <= value < 1 << 63 else UINT64, value)
-            case Test(field=name, member=member):
-                operand = self.operands[name]
-                if not operand.bitset:
-                    raise CompilerError(f"{operand.label}: is not a bitset")
-                return Term(f"{self.receiver}{operand.member}.get({self.schema.number(self.encoding, member)})", BOOL)
-            case Not(operand=operand):
-                return Term(f"!({self.predicate(operand)})", BOOL)
-            case Choice(test=test, when_true=when_true, when_false=when_false):
-                first = self.promoted(self.term(when_true))
-                second = self.promoted(self.term(when_false))
-                cls = common(first.cls, second.cls)
-                return Term(f"({self.predicate(test)} ? {self.spell(first, cls)} : {self.spell(second, cls)})", cls)
-            case Binary(operator="and" | "or" as operator, left=left, right=right):
-                spelled = f"({self.predicate(left)}) {OPERATORS[operator]} ({self.predicate(right)})"
-                return Term(spelled, BOOL)
-            case Binary(operator=operator, left=left, right=right):
-                first = self.promoted(self.term(left))
-                second = self.promoted(self.term(right))
-                cls = common(first.cls, second.cls)
-                if operator in ("==", "!="):
-                    for constant, other in ((first, second), (second, first)):
-                        if constant.code is None and other.cls == UINT32 and 0 <= constant.value < 1 << 32:
-                            cls = UINT32
-                a = self.spell(first, cls)
-                b = self.spell(second, cls)
-                if operator == "<" and not cls.signed:
-                    boxed = "Long" if cls.bits == 64 else "Integer"
-                    return Term(f"{boxed}.compareUnsigned({a}, {b}) < 0", BOOL)
-                return Term(f"({a}) {operator} ({b})", BOOL if operator in ("==", "!=", "<") else cls)
-        raise CompilerError(f"{expression}: is not a predicate the Java backend renders")
+    @override
+    def test(self, operand: Operand, bit: int) -> str:
+        return f"{self.receiver}{operand.member}.get({bit})"
 
-    def promoted(self, term: Term) -> Term:
-        if term.cls == BOOL:
-            return Term(f"({term.code} ? 1 : 0)", INT32)
-        if term.cls.bits < 32:
-            return Term(term.code, INT32, term.value)
-        return term
+    @override
+    def choice(self, test: str, first: str, second: str) -> str:
+        return f"({test} ? {first} : {second})"
 
-    def spell(self, term: Term, cls: Num) -> str:
-        if term.code is None:
-            return literal(term.value, cls)
-        return convert(term.code, java_of(term.cls), term.cls, cls, java_of(cls))
+    @override
+    def counted(self, code: str) -> str:
+        return f"({code} ? 1 : 0)"
+
+    @override
+    def nonzero(self, code: str) -> str:
+        return f"({code}) != 0"
+
+    @override
+    def constant(self, value: int, cls: Num) -> str:
+        return literal(value, cls)
+
+    @override
+    def cast(self, code: str, source: Num, target: Num) -> str:
+        return convert(code, java_of(source), source, target, java_of(target))
+
+    @override
+    def widened(self, code: str, source: Num) -> str:
+        return code
+
+    @override
+    def binary(self, operator: str, first: Term, second: Term, cls: Num) -> Term:
+        if operator == "<" and not cls.signed:
+            boxed = "Long" if cls.bits == 64 else "Integer"
+            return Term(f"{boxed}.compareUnsigned({self.spell(first, cls)}, {self.spell(second, cls)}) < 0", BOOL)
+        return super().binary(operator, first, second, cls)

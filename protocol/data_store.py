@@ -4,6 +4,7 @@ from protocol import builtin, double, packet, type, uint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 @builtin

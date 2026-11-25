@@ -10,6 +10,7 @@ from protocol import field, int8, packet, type, uint8, uint16
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 @type(until=1001)

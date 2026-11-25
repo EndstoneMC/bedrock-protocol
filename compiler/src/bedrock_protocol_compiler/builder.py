@@ -110,6 +110,7 @@ class Source:
     scope: Scope
     package: str = ""
     java_package: str = ""
+    go_package: str = ""
     families: dict[str, Family] = field(default_factory=dict)
     order: list[Family] = field(default_factory=list)
     pre_cereal_families: dict[str, tuple[ast.ClassDef, Struct | Enum]] = field(default_factory=dict)
@@ -258,6 +259,11 @@ def check(package: Package) -> None:
             raise CompilerError(
                 f"{module.stem}.py: java_package: {module.java_package!r} differs from {first.stem}.py's "
                 f"{first.java_package!r}"
+            )
+        if module.go_package != first.go_package:
+            raise CompilerError(
+                f"{module.stem}.py: go_package: {module.go_package!r} differs from {first.stem}.py's "
+                f"{first.go_package!r}"
             )
         for family in module.families:
             if isinstance(family, Struct):
@@ -497,6 +503,7 @@ class Builder:
                 source.stem,
                 source.package,
                 source.java_package,
+                source.go_package,
                 tuple(source.order),
             )
             for source in self.sources.values()
@@ -590,17 +597,23 @@ class Builder:
                     if source.java_package:
                         raise error(source, statement, "java_package", "is declared twice")
                     source.java_package = java_package
+                case ast.Assign(targets=[ast.Name(id="go_package")], value=ast.Constant(value=str() as go_package)):
+                    if source.go_package:
+                        raise error(source, statement, "go_package", "is declared twice")
+                    source.go_package = go_package
                 case _:
                     raise error(
                         source,
                         statement,
                         "module",
-                        "holds only imports, classes, type aliases, a docstring, package and java_package",
+                        "holds only imports, classes, type aliases, a docstring, package, java_package and go_package",
                     )
         if not source.package:
             raise CompilerError(f"{source.path}: package: missing")
         if not source.java_package:
             raise CompilerError(f"{source.path}: java_package: missing")
+        if not source.go_package:
+            raise CompilerError(f"{source.path}: go_package: missing")
 
     def add(self, source: Source, scope: Scope, node: ast.stmt | ast.alias, name: str, value: object) -> None:
         if name in scope.names:

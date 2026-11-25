@@ -1,44 +1,12 @@
 import json
 from collections import Counter
-from dataclasses import dataclass
 from typing import override
 
 from bedrock_protocol_compiler.descriptor import CompilerError, Primitive
+from bedrock_protocol_compiler.expression import BOOL, CLASSES, Num, wrap
 from bedrock_protocol_compiler.java.names import atom
 from bedrock_protocol_compiler.printer import Printer
 
-
-@dataclass(frozen=True)
-class Num:
-    kind: str
-    signed: bool = True
-    bits: int = 0
-
-
-BOOL = Num("bool")
-FLOAT = Num("float")
-DOUBLE = Num("double")
-STR = Num("str")
-BYTES = Num("bytes")
-CLASSES = {
-    "bool": BOOL,
-    "float": FLOAT,
-    "double": DOUBLE,
-    "str": STR,
-    "bytes": BYTES,
-    "int8": Num("int", True, 8),
-    "uint8": Num("int", False, 8),
-    "int16": Num("int", True, 16),
-    "uint16": Num("int", False, 16),
-    "int32": Num("int", True, 32),
-    "varint32": Num("int", True, 32),
-    "uint32": Num("int", False, 32),
-    "uvarint32": Num("int", False, 32),
-    "int64": Num("int", True, 64),
-    "varint64": Num("int", True, 64),
-    "uint64": Num("int", False, 64),
-    "uvarint64": Num("int", False, 64),
-}
 JAVA = {"bool": "boolean", "float": "float", "double": "double", "str": "String", "bytes": "byte[]"}
 BOXED = {"boolean": "Boolean", "int": "Integer", "long": "Long", "float": "Float", "double": "Double"}
 DEFAULTS = {
@@ -162,9 +130,7 @@ def bits(code: str, java: str, source: Num, target: Num) -> str:
 def literal(value: int | bool, cls: Num) -> str:
     if cls == BOOL:
         return "true" if value else "false"
-    wrapped = int(value) % (1 << cls.bits)
-    if cls.signed and wrapped >= 1 << (cls.bits - 1):
-        wrapped -= 1 << cls.bits
+    wrapped = wrap(value, cls)
     suffix = "L" if cls.bits == 64 else ""
     if cls.bits >= 32 and wrapped >= 1 << (cls.bits - 1):
         return f"0x{wrapped:X}{suffix}"

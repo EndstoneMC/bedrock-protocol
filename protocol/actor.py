@@ -31,6 +31,7 @@ from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 type ActorUniqueID = varint64

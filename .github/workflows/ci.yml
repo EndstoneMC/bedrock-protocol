@@ -68,6 +68,11 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1.13.0
         if: runner.os == 'Windows'
 
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go/go.mod
+          cache: false
+
       - name: Test the compiler
         run: uv run --directory compiler pytest -n auto --junitxml=junit.xml -o junit_family=legacy
 
@@ -252,6 +257,31 @@ jobs:
           report_type: test_results
           fail_ci_if_error: true
           use_oidc: true
+
+  go:
+    name: Go
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go/go.mod
+          cache: false
+      - name: Generate the codecs
+        run: go generate ./...
+
+      - name: Check the formatting
+        run: test -z "$(gofmt -l . | tee /dev/stderr)"
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Run the tests
+        run: go test ./...
 
   coverage:
     name: Coverage
