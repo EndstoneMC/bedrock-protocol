@@ -37,7 +37,7 @@ paths:
 ## Across versions
 
 - Gate a member arriving or leaving with `value(N, since=)` or `value(N, until=)`, and a run of two or more consecutive members that share one gate with one `with value(since=, until=):` block; an enum holding such a block writes every gate as a block, a lone member included. A block never nests in another, and a member in it that narrows the gate keeps its own `value(N, since=)` or `value(N, until=)`.
-- Declare a moved member once per value, over disjoint ranges (`RECORD_LAVA_CHICKEN` is 561 over `[819, 827)` and 562 from 827).
+- Declare a moved member once per value, over disjoint ranges (`RECORD_LAVA_CHICKEN` is 561 over `[819, 827)` and 562 from 827); move a run of consecutive members that move at one version as a `with value(until=N):` block directly followed by a `with value(since=N):` block with the same names in the same order.
 - Redeclare an enum over adjacent ranges only for a wholesale renumbering.
 - Gate an appended value with `value(N, since=)` and let the trailing count (`auto()` or `sentinel()`) follow it.
 - Gate a removed value with `value(N, until=)` and make every member after it `auto()`; an insertion and a removal in one span can cancel, so redeclare only when that fails.

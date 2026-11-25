@@ -531,11 +531,9 @@ class ActorType(IntEnum, int32):
     MULE = 2118425
     with value(until=924):
         SKELETON_HORSE = 2186010
-    with value(since=924):
-        SKELETON_HORSE = 2183962
-    with value(until=924):
         ZOMBIE_HORSE = 2186011
     with value(since=924):
+        SKELETON_HORSE = 2183962
         ZOMBIE_HORSE = 2183963
     ZOMBIE = 199456
     CREEPER = 2849
