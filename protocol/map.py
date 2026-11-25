@@ -1,5 +1,7 @@
-"""Maps and photos: world/level/saveddata/maps/ and world/level/saveddata/photos/ --
-decorations, tracked actors, map transfer, photo transfer, video capture."""
+"""Maps and photos, from world/level/saveddata/maps/ and world/level/saveddata/photos/.
+
+Decorations, tracked actors, map transfer, photo transfer, video capture.
+"""
 
 from enum import IntEnum, auto
 

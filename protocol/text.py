@@ -1,4 +1,4 @@
-"""Chat, titles and toasts: textobject/."""
+"""Chat, titles and toasts, from textobject/."""
 
 from enum import IntEnum
 from typing import Literal

@@ -1,5 +1,8 @@
-"""Mob attribute algebra: world/attribute/ -- modifiers, operands, AttributeData.
-Not the environment attribute system -- world/eas/, in eas.py."""
+"""Mob attribute algebra, from world/attribute/.
+
+Modifiers, operands, AttributeData.
+Not the environment attribute system -- world/eas/, in eas.py.
+"""
 
 from enum import IntEnum
 

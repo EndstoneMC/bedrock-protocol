@@ -1,6 +1,8 @@
-"""Recipes and their registries: world/item/crafting/ and world/item/alchemy/ --
-recipe payloads, potion and container mixes, material reduction, the lab table.
-Not enchanting -- world/item/enchanting/, in enchanting.py."""
+"""Recipes and their registries, from world/item/crafting/ and world/item/alchemy/.
+
+Recipe payloads, potion and container mixes, material reduction, the lab table.
+Not enchanting -- world/item/enchanting/, in enchanting.py.
+"""
 
 import uuid
 from enum import IntEnum, auto

@@ -1,4 +1,4 @@
-"""The scripting data-store sync: scripting/data_sync/."""
+"""The scripting data-store sync, from scripting/data_sync/."""
 
 from protocol import builtin, double, packet, type, uint32
 

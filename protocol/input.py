@@ -1,4 +1,4 @@
-"""What the client's input device reports and what the server locks out: input/."""
+"""What the client's input device reports and what the server locks out, from input/."""
 
 from enum import IntEnum, auto
 from typing import Literal

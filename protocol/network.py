@@ -1,5 +1,7 @@
-"""The connection itself: network/ -- the packet id registry, login and handshake,
-disconnect, compression, blob-cache negotiation and server stats."""
+"""The connection itself, from network/.
+
+The packet id registry, login and handshake, disconnect, compression, blob-cache negotiation and server stats.
+"""
 
 from enum import IntEnum
 from typing import Union

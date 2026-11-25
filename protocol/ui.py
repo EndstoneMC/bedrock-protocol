@@ -1,5 +1,7 @@
-"""Server-driven screens and HUD: dataDrivenUI/ plus world/Waypoint*.h and
-util/HudElementsEnum.h -- forms, data-driven UI, HUD elements and the locator bar."""
+"""Server-driven screens and HUD, from dataDrivenUI/, world/Waypoint*.h and util/HudElementsEnum.h.
+
+Forms, data-driven UI, HUD elements and the locator bar.
+"""
 
 import uuid
 from enum import IntEnum

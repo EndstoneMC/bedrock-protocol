@@ -1,6 +1,8 @@
-"""The legacy inventory transaction family: world/inventory/transaction/ --
-sources, actions, and the four transaction shapes.
-Not container state -- world/containers/, in inventory.py."""
+"""The legacy inventory transaction family, from world/inventory/transaction/.
+
+Sources, actions, and the four transaction shapes.
+Not container state -- world/containers/, in inventory.py.
+"""
 
 from enum import IntEnum
 from typing import Literal

@@ -1,4 +1,4 @@
-"""Legacy telemetry events and the MinecraftEventing enum namespace: Events/."""
+"""Legacy telemetry events and the MinecraftEventing enum namespace, from Events/."""
 
 from enum import IntEnum
 

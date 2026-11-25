@@ -1,5 +1,7 @@
-"""Cameras: world/level/camera/ -- presets, shake, instructions, splines, aim assist,
-and the world/level/controlscheme/ control scheme."""
+"""Cameras, from world/level/camera/ and world/level/controlscheme/.
+
+Presets, shake, instructions, splines, aim assist, and the control scheme.
+"""
 
 from enum import IntEnum
 

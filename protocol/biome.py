@@ -1,4 +1,4 @@
-"""Biome definitions as serialized to the client: world/level/biome/serialization/."""
+"""Biome definitions as serialized to the client, from world/level/biome/serialization/."""
 
 from enum import IntEnum
 

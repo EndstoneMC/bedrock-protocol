@@ -1,7 +1,9 @@
-"""The actor as a subject: id aliases, links, events, synched data, the ActorType
-registry, and the packets that spawn, remove and animate one. world/actor/.
+"""The actor as a subject, from world/actor/.
+
+Id aliases, links, events, synched data, the ActorType registry, and the packets that spawn, remove and animate one.
 Not the player -- world/actor/player/ is player.py.
-Not movement -- network/packet/, in movement.py."""
+Not movement -- network/packet/, in movement.py.
+"""
 
 import uuid
 from enum import IntEnum, auto

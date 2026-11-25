@@ -1,5 +1,7 @@
-"""Commands: server/commands/ -- the command tree, origins, output, soft enums,
-and both permission ladders."""
+"""Commands, from server/commands/.
+
+The command tree, origins, output, soft enums, and both permission ladders.
+"""
 
 import uuid
 from enum import IntEnum, auto

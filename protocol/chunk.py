@@ -1,5 +1,4 @@
-"""Chunk and sub-chunk transfer, radius negotiation, publisher updates:
-world/level/chunk/."""
+"""Chunk and sub-chunk transfer, radius negotiation and publisher updates, from world/level/chunk/."""
 
 from enum import IntEnum
 

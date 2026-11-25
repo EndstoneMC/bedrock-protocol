@@ -1,4 +1,4 @@
-"""Status and movement effects applied to an actor: world/effect/."""
+"""Status and movement effects applied to an actor, from world/effect/."""
 
 from enum import IntEnum
 

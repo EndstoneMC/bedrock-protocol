@@ -1,5 +1,7 @@
-"""The scripting surface: scripting/ -- script messages and the primitive debug shapes
-ScriptModuleMinecraft exposes."""
+"""The scripting surface, from scripting/.
+
+Script messages and the primitive debug shapes ScriptModuleMinecraft exposes.
+"""
 
 from enum import IntEnum
 

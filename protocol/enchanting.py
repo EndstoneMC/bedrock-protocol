@@ -1,6 +1,8 @@
-"""Enchantments and the enchanting table: world/item/enchanting/ -- the enchantment
-type table, an instance and a slot's set of them, and the table's options.
-Not the recipes that consume them -- world/item/crafting/, in crafting.py."""
+"""Enchantments and the enchanting table, from world/item/enchanting/.
+
+The enchantment type table, an instance and a slot's set of them, and the table's options.
+Not the recipes that consume them -- world/item/crafting/, in crafting.py.
+"""
 
 from enum import IntEnum, auto
 

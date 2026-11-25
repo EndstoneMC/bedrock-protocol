@@ -1,5 +1,7 @@
-"""Education Edition: codebuilder/, edu level settings, edu URI resources, and the Agent
-(world/actor/agent/)."""
+"""Education Edition, from codebuilder/ and world/actor/agent/.
+
+The code builder, edu level settings, edu URI resources, and the Agent.
+"""
 
 from enum import IntEnum
 from typing import Literal

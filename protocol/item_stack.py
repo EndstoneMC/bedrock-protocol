@@ -1,5 +1,7 @@
-"""The item-stack request/response protocol: world/inventory/network/ --
-request actions, responses, and the cereal namespace carrier."""
+"""The item-stack request/response protocol, from world/inventory/network/.
+
+Request actions, responses, and the cereal namespace carrier.
+"""
 
 from enum import IntEnum
 from typing import Literal

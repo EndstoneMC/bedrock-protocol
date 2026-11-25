@@ -1,5 +1,7 @@
-"""Structures and the harness that lays them out: world/level/levelgen/structure/
-and gametest/ -- structure blocks, templates, jigsaws, features, ticking areas."""
+"""Structures and the harness that lays them out, from world/level/levelgen/structure/ and gametest/.
+
+Structure blocks, templates, jigsaws, features, ticking areas.
+"""
 
 from enum import IntEnum
 

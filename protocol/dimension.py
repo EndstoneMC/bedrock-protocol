@@ -1,5 +1,7 @@
-"""Dimension definitions and dimension change: world/level/dimension/.
-Not DimensionType itself -- that is a versionless primitive, in common.py."""
+"""Dimension definitions and dimension change, from world/level/dimension/.
+
+Not DimensionType itself -- that is a versionless primitive, in common.py.
+"""
 
 import uuid
 

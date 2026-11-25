@@ -1,5 +1,7 @@
-"""The item as a subject: world/item/ -- the registry, the stack descriptors and the
-net ids they carry, the hand slots, trims, cooldowns, book editing."""
+"""The item as a subject, from world/item/.
+
+The registry, the stack descriptors and the net ids they carry, the hand slots, trims, cooldowns, book editing.
+"""
 
 from enum import IntEnum
 

@@ -1,5 +1,4 @@
-"""Molang versions and expression opcodes: util/molang/ and
-SharedTypes/versionless/Molang/."""
+"""Molang versions and expression opcodes, from util/molang/ and SharedTypes/versionless/Molang/."""
 
 from enum import IntEnum, auto
 

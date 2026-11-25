@@ -1,7 +1,9 @@
-"""Position and movement in the encoding: move, teleport, delta moves, motion,
-prediction hints, prediction correction and sync.
+"""Position and movement in the encoding.
+
+Move, teleport, delta moves, motion, prediction hints, prediction correction and sync.
 Not actor spawning -- world/actor/, in actor.py.
-Not player spawning -- world/actor/player/, in player.py."""
+Not player spawning -- world/actor/player/, in player.py.
+"""
 
 from enum import IntEnum
 

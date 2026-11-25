@@ -1,4 +1,4 @@
-"""Scoreboard ids, identities, objectives and scores: world/scores/."""
+"""Scoreboard ids, identities, objectives and scores, from world/scores/."""
 
 from enum import IntEnum
 from typing import Literal

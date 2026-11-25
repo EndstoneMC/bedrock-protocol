@@ -1,6 +1,8 @@
-"""Player ability and permission layers: world/actor/player/Abilities.h plus
-network/packet/types/world/actor/SerializedAbilitiesData.h.
-Not the command permission ladder -- that is server/commands/, in command.py."""
+"""Player ability and permission layers.
+
+From world/actor/player/Abilities.h and network/packet/types/world/actor/SerializedAbilitiesData.h.
+Not the command permission ladder -- that is server/commands/, in command.py.
+"""
 
 from enum import IntEnum, auto
 

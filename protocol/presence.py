@@ -1,5 +1,7 @@
-"""The server's session presence: gathering configuration, store entry point,
-telemetry identity, the player's party, matchmaking, and transfer."""
+"""The server's session presence.
+
+Gathering configuration, store entry point, telemetry identity, the player's party, matchmaking, and transfer.
+"""
 
 import uuid
 from enum import IntEnum

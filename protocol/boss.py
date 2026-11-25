@@ -1,5 +1,7 @@
-"""The boss bar: world/actor/boss/ and the BossEvent enums BDS declares in
-network/packet/types/world/actor/ai/util/BossEventData.h."""
+"""The boss bar, from world/actor/boss/.
+
+The BossEvent enums BDS declares in network/packet/types/world/actor/ai/util/BossEventData.h.
+"""
 
 from enum import IntEnum
 

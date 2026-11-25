@@ -1,5 +1,7 @@
-"""The serialized skin and the persona pieces it is built from, including emotes:
-world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/."""
+"""The serialized skin, from world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/.
+
+The persona pieces it is built from, including emotes.
+"""
 
 import uuid
 from enum import IntEnum, auto

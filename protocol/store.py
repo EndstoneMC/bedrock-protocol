@@ -1,4 +1,7 @@
-"""Marketplace: store/ -- profile, store offers, receipts, entitlements."""
+"""Marketplace, from store/.
+
+Profile, store offers, receipts, entitlements.
+"""
 
 import uuid
 from enum import IntEnum

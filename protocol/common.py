@@ -1,5 +1,7 @@
-"""Versionless primitives shared across domains: SharedTypes/versionless/ -- Vec2, Vec3,
-BlockPos, Color, DimensionType -- and world/level/block/'s BlockRuntimeId."""
+"""Versionless primitives shared across domains, from SharedTypes/versionless/.
+
+Vec2, Vec3, BlockPos, Color, DimensionType, and world/level/block/'s BlockRuntimeId.
+"""
 
 from protocol import int32, uvarint32, varint32
 

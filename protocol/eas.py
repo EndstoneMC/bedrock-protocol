@@ -1,5 +1,7 @@
-"""The Environment Attribute System: world/eas/ and world/eas/attributes/ --
-bool/float/colour/string environment attributes, their operations and easing, and attribute layers."""
+"""The Environment Attribute System, from world/eas/ and world/eas/attributes/.
+
+Bool/float/colour/string environment attributes, their operations and easing, and attribute layers.
+"""
 
 from enum import IntEnum
 

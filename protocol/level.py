@@ -1,6 +1,8 @@
-"""Level state that is not settings: world/level/clock/ world clocks and time markers,
-and world/level/PositionTrackingId.h behind lodestone markers.
-Not game rules or LevelSettings -- those are in game.py."""
+"""Level state that is not settings, from world/level/clock/ and world/level/PositionTrackingId.h.
+
+World clocks and time markers, and the PositionTrackingId behind lodestone markers.
+Not game rules or LevelSettings -- those are in game.py.
+"""
 
 from enum import IntEnum
 

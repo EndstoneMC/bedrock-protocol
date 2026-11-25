@@ -1,7 +1,9 @@
-"""Containers and inventory options: world/containers/ + world/inventory/ --
-container ids and types, screen options, furnace, stonecutter and trade windows, equipment.
+"""Containers and inventory options, from world/containers/ and world/inventory/.
+
+Container ids and types, screen options, furnace, stonecutter and trade windows, equipment.
 Not the item-stack request/response protocol -- world/inventory/network/, in item_stack.py.
-Not the legacy transaction family -- world/inventory/transaction/, in transaction.py."""
+Not the legacy transaction family -- world/inventory/transaction/, in transaction.py.
+"""
 
 from enum import IntEnum
 

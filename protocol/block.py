@@ -1,6 +1,8 @@
-"""The level's block space: world/level/block/ -- blocks, block actors, sub-chunk
-block changes, the level events fired over them, and world/level/voxelshape/ volumes.
-Not chunk transfer -- world/level/chunk/, in chunk.py."""
+"""The level's block space, from world/level/block/ and world/level/voxelshape/.
+
+Blocks, block actors, sub-chunk block changes, the level events fired over them, and voxel shape volumes.
+Not chunk transfer -- world/level/chunk/, in chunk.py.
+"""
 
 from enum import IntEnum
 

@@ -1,5 +1,7 @@
-"""What the client reports for diagnosis: profile/ Whisker scopes, memory categories,
-frame and system timings, plus debug/ markers and the editor channel."""
+"""What the client reports for diagnosis, from profile/ and debug/.
+
+Whisker scopes, memory categories, frame and system timings, debug markers and the editor channel.
+"""
 
 from enum import IntEnum, auto
 

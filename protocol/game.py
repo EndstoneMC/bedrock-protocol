@@ -1,6 +1,8 @@
-"""The level at runtime and the settings it ships on join: world/level/ --
-game type, difficulty, game rules, simulation type, LevelSettings and StartGame.
-Not world clocks or position tracking -- also world/level/, but in level.py."""
+"""The level at runtime and the settings it ships on join, from world/level/.
+
+Game type, difficulty, game rules, simulation type, LevelSettings and StartGame.
+Not world clocks or position tracking -- also world/level/, but in level.py.
+"""
 
 import uuid
 from enum import IntEnum
