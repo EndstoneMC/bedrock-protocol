@@ -30,7 +30,60 @@ class SettingsCommandPacket:
     suppress_output: bool
 
 
-@packet(id=76)
+@packet(id=76, until=898)
+class AvailableCommandsPacket:
+    class EnumData:
+        name: str
+        # TODO: uint8, uint16 or uint32 each by len(enum_values); needs a DSL construct
+        values: list[uint32]
+
+    class ChainedSubcommandRelationship:
+        sub_command_first_value: uint32 = field(type=uint16)
+        sub_command_second_value: uint32 = field(type=uint16)
+
+    class ChainedSubcommandData:
+        name: str
+        values: list[ChainedSubcommandRelationship]
+
+    class SoftEnumData:
+        name: str
+        values: list[str]
+
+    class ConstrainedValueData:
+        enum_value_symbol: uint32
+        enum_symbol: uint32
+        constraints: list[uint8]
+
+    class ParamData:
+        name: str
+        parse_symbol: uint32
+        optional: bool
+        param_options: uint8
+
+    class OverloadData:
+        is_chaining: bool
+        params: list[ParamData]
+
+    class CommandData:
+        name: str
+        description: str
+        flags: uint16
+        permission: CommandPermissionLevel
+        alias_enum: int32
+        chained_subcommand_indexes: list[uint32] = field(type=uint16)
+        overloads: list[OverloadData]
+
+    enum_values: list[str]
+    chained_subcommand_values: list[str]
+    postfixes: list[str]
+    enums: list[EnumData]
+    chained_subcommands: list[ChainedSubcommandData]
+    commands: list[CommandData]
+    soft_enums: list[SoftEnumData]
+    constraints: list[ConstrainedValueData]
+
+
+@packet(id=76, since=898)
 class AvailableCommandsPacket:
     class EnumData:
         name: str
