@@ -6,7 +6,7 @@ The command tree, origins, output, soft enums, and both permission ladders.
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, int64, packet, uint8, uint16, uint32, uvarint32, value
+from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint32, value, varint64
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.network import NetworkBlockPosition
@@ -171,6 +171,17 @@ class CommandOriginType(IntEnum, uint8):
     EXECUTE_CONTEXT = 15
 
 
+@type(until=898)
+class CommandOriginData:
+    type: CommandOriginType = field(type=uvarint32)
+    uuid: uuid.UUID
+    request_id: str
+    player_id: ActorUniqueID = field(
+        type=varint64, when=lambda o: o.type in {CommandOriginType.DEV_CONSOLE, CommandOriginType.TEST}
+    )
+
+
+@type(since=898)
 class CommandOriginData:
     type: CommandOriginType = field(type=str)
     uuid: uuid.UUID

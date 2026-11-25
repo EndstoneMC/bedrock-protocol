@@ -189,7 +189,7 @@ final class MessageTest {
     @Test
     void theLatestCommandVersionEncodesAsItsNameAtAnEarlyVersion() {
         assertEquals(
-                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
+                "0000000000000000000000000000000000000000066c6174657374",
                 ByteBufUtil.hexDump(
                         Protocol.v729.encode(
                                 CommandRequestPacket.newBuilder()
@@ -202,8 +202,7 @@ final class MessageTest {
         CommandRequestPacket packet =
                 Protocol.v729.decode(
                         CommandRequestPacket.class,
-                        hex(
-                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374"));
+                        hex("0000000000000000000000000000000000000000066c6174657374"));
         assertEquals(CurrentCmdVersion.LATEST, packet.getVersion());
     }
 
@@ -222,13 +221,13 @@ final class MessageTest {
     @Test
     void theNameLatestEncodesAgainAfterItIsDecodedAtAnEarlyVersion() {
         assertEquals(
-                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374",
+                "0000000000000000000000000000000000000000066c6174657374",
                 ByteBufUtil.hexDump(
                         Protocol.v729.encode(
                                 Protocol.v729.decode(
                                         CommandRequestPacket.class,
                                         hex(
-                                                "0006706c617965720000000000000000000000000000000000000000000000000000066c6174657374")))));
+                                                "0000000000000000000000000000000000000000066c6174657374")))));
     }
 
     @Test

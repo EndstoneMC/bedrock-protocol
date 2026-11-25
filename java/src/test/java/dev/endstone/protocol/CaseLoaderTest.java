@@ -177,7 +177,7 @@ final class CaseLoaderTest {
                                 IllegalArgumentException.class,
                                 () ->
                                         CaseLoader.load(
-                                                729,
+                                                898,
                                                 CommandRequestPacket.class,
                                                 JsonParser.parseString(
                                                         COMMAND_REQUEST.formatted(
@@ -191,7 +191,7 @@ final class CaseLoaderTest {
         assertEquals(
                 CurrentCmdVersion.LATEST,
                 CaseLoader.load(
-                                729,
+                                898,
                                 CommandRequestPacket.class,
                                 JsonParser.parseString(COMMAND_REQUEST.formatted("latest")))
                         .getVersion());
