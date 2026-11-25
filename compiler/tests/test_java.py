@@ -791,7 +791,7 @@ def test_the_helper_encoding_to_a_buffer_rejects_a_class_the_registry_lacks(emit
         "        Registration<?> registration = Registry.TYPES.get(packet.getClass());\n"
         "        if (registration == null) {\n"
         "            throw new IllegalArgumentException(\n"
-        '                    packet.getClass().getName() + ": is not a type at protocol " + version);\n'
+        '                packet.getClass().getName() + ": is not a type at protocol " + version);\n'
         "        }\n"
         "        registration.encode(packet, buf, version);\n"
         "    }\n"
@@ -803,7 +803,7 @@ def test_the_helper_encoding_to_a_buffer_rejects_a_class_the_registry_lacks(emit
 def test_the_helper_decoding_bytes_wraps_them_in_a_buffer(emitted):
     helper = (
         "    private static <T extends Packet> @NotNull T decode(\n"
-        "            int version, @NotNull Class<T> type, byte @NotNull [] data) {\n"
+        "        int version, @NotNull Class<T> type, byte @NotNull [] data) {\n"
         "        return decode(version, type, Unpooled.wrappedBuffer(data));\n"
         "    }\n"
     )
@@ -814,11 +814,11 @@ def test_the_helper_decoding_bytes_wraps_them_in_a_buffer(emitted):
 def test_the_helper_decoding_a_buffer_rejects_a_class_the_registry_lacks(emitted):
     helper = (
         "    private static <T extends Packet> @NotNull T decode(\n"
-        "            int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {\n"
+        "        int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {\n"
         "        Registration<?> registration = Registry.TYPES.get(type);\n"
         "        if (registration == null) {\n"
         "            throw new IllegalArgumentException(\n"
-        '                    type.getName() + ": is not a type at protocol " + version);\n'
+        '                type.getName() + ": is not a type at protocol " + version);\n'
         "        }\n"
         "        return type.cast(registration.decode(buf, version));\n"
         "    }\n"
@@ -888,11 +888,11 @@ def test_the_version_table_is_a_final_class(java):
 def test_the_version_table_lists_a_version_per_release(java):
     supported = (
         "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
-        '            new ProtocolVersion(1, "1.1.0"),\n'
-        '            new ProtocolVersion(2, "1.2.0"),\n'
-        '            new ProtocolVersion(3, "1.3.0"),\n'
-        '            new ProtocolVersion(4, "1.4.0"),\n'
-        '            new ProtocolVersion(5, "1.5.0"));\n'
+        '        new ProtocolVersion(1, "1.1.0"),\n'
+        '        new ProtocolVersion(2, "1.2.0"),\n'
+        '        new ProtocolVersion(3, "1.3.0"),\n'
+        '        new ProtocolVersion(4, "1.4.0"),\n'
+        '        new ProtocolVersion(5, "1.5.0"));\n'
     )
 
     assert supported in (java(SCALAR) / "ProtocolVersion.java").read_text()
@@ -906,8 +906,8 @@ def test_a_version_is_named_after_the_first_release_of_its_range(build_package, 
     text = (tmp_path / "java/dev/endstone/protocol/ProtocolVersion.java").read_text()
     supported = (
         "    public static final @NotNull List<ProtocolVersion> SUPPORTED_VERSIONS = List.of(\n"
-        '            new ProtocolVersion(1, "1.1.0"),\n'
-        '            new ProtocolVersion(2, "1.2.0"));\n'
+        '        new ProtocolVersion(1, "1.1.0"),\n'
+        '        new ProtocolVersion(2, "1.2.0"));\n'
     )
     assert supported in text
 
@@ -2183,7 +2183,7 @@ def test_a_union_read_prepends_the_field_name_to_a_failure(emitted):
 def test_a_union_compares_its_case_then_its_values(emitted):
     text = emitted("class P:\n    v: uint8 | str\n")
 
-    assert "        return vCase_ == other.vCase_\n                && vUint8_ == other.vUint8_\n" in text
+    assert "        return vCase_ == other.vCase_\n            && vUint8_ == other.vUint8_\n" in text
 
 
 def test_a_union_hashes_its_case_then_its_values(emitted):

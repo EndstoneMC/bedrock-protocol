@@ -44,22 +44,22 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 Registration<?> registration = Registry.TYPES.get(packet.getClass());
                 if (registration == null) {
                     throw new IllegalArgumentException(
-                            packet.getClass().getName() + ": is not a type at protocol " + version);
+                        packet.getClass().getName() + ": is not a type at protocol " + version);
                 }
                 registration.encode(packet, buf, version);
             }
 
             private static <T extends Packet> @NotNull T decode(
-                    int version, @NotNull Class<T> type, byte @NotNull [] data) {
+                int version, @NotNull Class<T> type, byte @NotNull [] data) {
                 return decode(version, type, Unpooled.wrappedBuffer(data));
             }
 
             private static <T extends Packet> @NotNull T decode(
-                    int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {
+                int version, @NotNull Class<T> type, @NotNull ByteBuf buf) {
                 Registration<?> registration = Registry.TYPES.get(type);
                 if (registration == null) {
                     throw new IllegalArgumentException(
-                            type.getName() + ": is not a type at protocol " + version);
+                        type.getName() + ": is not a type at protocol " + version);
                 }
                 return type.cast(registration.decode(buf, version));
             }
@@ -74,7 +74,7 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
                 private Registry() {}
 
                 private static <T extends Packet> void register(
-                        @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
+                    @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
                     TYPES.put(type, new Registration<>(type, name, selector));
                 }
             }
@@ -84,7 +84,7 @@ def definition(schema: Schema, generators: list[MessageGenerator | EnumGenerator
             }
 
             private record Registration<T extends Packet>(
-                    @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
+                @NotNull Class<T> type, @NotNull String name, @NotNull Selector<T> selector) {
                 void encode(@NotNull Packet packet, @NotNull ByteBuf buf, int version) {
                     selector.codec(version).encode(type.cast(packet), buf);
                 }

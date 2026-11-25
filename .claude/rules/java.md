@@ -51,7 +51,7 @@ paths:
 - Publish the library as `dev.endstone:bedrock-protocol` through the `com.vanniktech.maven.publish` plugin, with a sources jar, a javadoc jar and a POM whose license and developers match `pyproject.toml`, signed whenever `signingInMemoryKey` is set.
 - Shape the `nbt` package after Java Edition's `net.minecraft.nbt` under Mojang's mappings: `Tag`, `CompoundTag`, `ListTag`, `NumericTag`, the `valueOf` factories, `getIntOr` accessors and `TAG_*` ids.
 - Write a Java source with the checkout's line endings, CRLF where `core.autocrlf` is true, or `spotlessCheck` fails.
-- Wrap an emitted Java line that would take its template past ruff's 120 columns after its `(`, with google-java-format's AOSP 8-space continuation.
+- Wrap an emitted Java line that would take its template past ruff's 120 columns after its `(`, with google-java-format's 4-space continuation.
 - Write one-line javadoc, only where the signature cannot say it; comment only as CLAUDE.md allows.
 - Check every golden in `GoldensTest` both ways through the case's `Protocol.v<N>`, finding its class among the generated packets by the id its file name starts with and the one whose `codec(version)` takes the case's protocol, and through `CaseLoader`, which builds a case's `value` by reflection over the generated builders, reading every form `save` in `tests/conftest.py` writes as conftest's loader reads it and each literal against the codec `codec(version)` selects.
 - Reach a package-private selector or codec in a test from its type's package, or through `setAccessible` in `CaseLoader`.

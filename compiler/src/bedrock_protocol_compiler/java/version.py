@@ -10,7 +10,7 @@ def table(schema: Schema, p: Printer) -> None:
         """
         public final class $name$ {
             public static final @NotNull List<$name$> SUPPORTED_VERSIONS = List.of(
-                    $releases$
+                $releases$
 
             public static final @NotNull $name$ MINIMUM_VERSION = SUPPORTED_VERSIONS.getFirst();
 

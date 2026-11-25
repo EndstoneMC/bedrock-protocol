@@ -127,7 +127,7 @@ def equals(p: Printer, name: str, comparisons: list[str]) -> None:
 def conjunction(p: Printer, comparisons: list[str]) -> None:
     end = ";" if len(comparisons) == 1 else ""
     p.emit("return $first$$end$", first=comparisons[0], end=end)
-    with p.indent(), p.indent():
+    with p.indent():
         for index, comparison in enumerate(comparisons[1:], 2):
             p.emit("&& $comparison$$end$", comparison=comparison, end=";" if index == len(comparisons) else "")
 
