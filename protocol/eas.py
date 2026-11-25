@@ -120,13 +120,16 @@ class StringAttributeData:
     operation: StringAttributeOperation = field(type=str)
 
 
-type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
+with type(until=2259):
+    type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData
+
+with type(since=2259):
+    type AttributeDataVariant = BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
 
 
 @type(since=2225)
 class ConstantAttributeData:
-    attribute: AttributeDataVariant = field(until=2259)
-    attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData = field(since=2259)
+    attribute: AttributeDataVariant
 
 
 @type(since=2225)
@@ -139,12 +142,8 @@ class TransitionSettingsData:
 
 @type(since=2225)
 class TransitionAttributeData:
-    with field(until=2259):
-        from_attribute: AttributeDataVariant
-        to_attribute: AttributeDataVariant
-    with field(since=2259):
-        from_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
-        to_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
+    from_attribute: AttributeDataVariant
+    to_attribute: AttributeDataVariant
     settings: TransitionSettingsData
 
 
@@ -161,12 +160,8 @@ class NoiseTransitionSettingsData:
 
 @type(since=2225)
 class NoiseTransitionAttributeData:
-    with field(until=2259):
-        from_attribute: AttributeDataVariant
-        to_attribute: AttributeDataVariant
-    with field(since=2259):
-        from_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
-        to_attribute: BoolAttributeData | FloatAttributeData | ColorAttributeData | StringAttributeData
+    from_attribute: AttributeDataVariant
+    to_attribute: AttributeDataVariant
     settings: NoiseTransitionSettingsData
 
 
