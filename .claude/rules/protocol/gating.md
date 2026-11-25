@@ -17,7 +17,7 @@ paths:
 - Read a delete plus an add at the same position with the same type as a rename, and check whether its meaning changed.
 - Inserting a union case renumbers every case after it.
 - When BDS drops an always-true marker, gate that one `Literal[True]` field `until=<version>` and move nothing else.
-- Gate a whole type with `@type(since=, until=)`; outside that range the type does not exist.
+- Gate a whole type with `@type(since=, until=)` and a union alias with `with type(since=, until=):`; outside that range it does not exist.
 
 ## What the evidence separates
 

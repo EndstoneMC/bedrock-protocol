@@ -1,6 +1,6 @@
 import pytest
 
-from bedrock_protocol_compiler.descriptor import CompilerError, Int, Range
+from bedrock_protocol_compiler.descriptor import CompilerError, Int, Primitive, Range, Variant
 
 HEADER = """
 from enum import IntEnum, auto
@@ -9,6 +9,12 @@ from protocol import array, bitset, field, packet, sentinel, type, uint8, uint16
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 """
+
+GATED_ALIAS = (
+    "with type(until=3):\n    type V = uint8 | uint16\n\nwith type(since=3):\n    type V = uint8 | uint16 | bool\n\n"
+)
+NARROW = Variant((Primitive("uint8"), Primitive("uint16")))
+WIDE = Variant((Primitive("uint8"), Primitive("uint16"), Primitive("bool")))
 
 
 def test_declarations_carry_their_ranges(build_package):
@@ -161,6 +167,56 @@ def test_redeclared_enums_must_tile(build_package):
     )
 
     with pytest.raises(CompilerError, match="E: starts at 4, but its previous declaration ends at 3"):
+        build_package({"a": HEADER + source})
+
+
+def test_a_field_naming_a_gated_union_alias_takes_each_declaration_over_its_range(build_package):
+    package = build_package({"a": HEADER + GATED_ALIAS + "class A:\n    x: V\n"})
+
+    fields = package.modules[0].families[0].declarations[0].fields
+
+    assert [(field.type, field.range) for field in fields] == [(NARROW, Range(None, 3)), (WIDE, Range(3, None))]
+
+
+def test_a_field_within_one_declaration_of_a_gated_union_alias_stays_whole(build_package):
+    package = build_package({"a": HEADER + GATED_ALIAS + "class A:\n    x: V = field(since=3)\n"})
+
+    fields = package.modules[0].families[0].declarations[0].fields
+
+    assert [(field.type, field.range) for field in fields] == [(WIDE, Range(3, None))]
+
+
+def test_a_union_alias_naming_a_gated_one_splits_a_field_at_the_inner_gate(build_package):
+    package = build_package({"a": HEADER + GATED_ALIAS + "type W = V | str\n\nclass A:\n    x: W\n"})
+
+    fields = package.modules[0].families[0].declarations[0].fields
+
+    assert [(field.type, field.range) for field in fields] == [
+        (Variant((NARROW, Primitive("str"))), Range(None, 3)),
+        (Variant((WIDE, Primitive("str"))), Range(3, None)),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        (
+            "with type(until=2):\n    type V = uint8 | uint16\n\nwith type(since=3):\n    type V = uint8 | bool\n",
+            "V: starts at 3, but its previous declaration ends at 2",
+        ),
+        ("type V = uint8 | uint16\n\ntype V = uint8 | bool\n", "V: is declared again after an open declaration"),
+        ("with type(since=3):\n    type V = uint8\n", "V: is a primitive alias, which takes no gate"),
+        (
+            "with type(cereal=False):\n    type V = uint8 | uint16\n",
+            "module: a with block takes only since= and until=",
+        ),
+        ("with type(since=3):\n    class A:\n        pass\n", "module: a with block holds only type aliases"),
+        ("with type(since=9):\n    type V = uint8 | uint16\n", "module: since 9 is not a modelled version"),
+        ("with type(since=3):\n    type V = uint8 | uint16\n\ntype W = V | bool\n", "V: does not exist at 1"),
+    ],
+)
+def test_a_union_alias_declaration_is_rejected(build_package, source, message):
+    with pytest.raises(CompilerError, match=message):
         build_package({"a": HEADER + source})
 
 
@@ -391,6 +447,7 @@ def test_a_nested_enum_redeclares_with_its_owner(build_package):
             + "class S:\n    k: E\n    x: uint8 = field(when=lambda p: not p.k == E.C)\n",
             "a.py: S.x: reaches E.C, which does not exist at 1",
         ),
+        ("with type(since=3):\n    type V = uint8 | uint16\n\nclass S:\n    x: V\n", "V: does not exist at 1"),
     ],
 )
 def test_a_field_reaches_only_what_exists_where_it_is_present(build_package, source, message):

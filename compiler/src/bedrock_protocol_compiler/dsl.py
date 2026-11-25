@@ -51,8 +51,8 @@ def field(
     return None
 
 
-def type(*, since: int | None = None, until: int | None = None, cereal: bool = True) -> Callable[[Any], Any]:
-    """Class decorator: gate a struct or enum by protocol version."""
+def type(*, since: int | None = None, until: int | None = None, cereal: bool = True) -> Any:
+    """Gate a struct or enum by protocol version as a class decorator, or union aliases as a with block."""
     return lambda cls: cls
 
 

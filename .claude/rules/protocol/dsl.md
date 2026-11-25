@@ -51,7 +51,7 @@ paths:
 
 ## Shared types
 
-- Gate a shared type with one `@type(until=N)`/`@type(since=N)` pair only where every call site changes encoding at N; otherwise model its encoding per call site.
+- Gate a shared type with one `@type(until=N)`/`@type(since=N)` pair, or a union alias with one `with type(until=N):`/`with type(since=N):` pair, only where every call site changes encoding at N; otherwise model its encoding per call site.
 - Use `cereal=False` only where one protocol version sends both encodings of a class name; everywhere else gate the two declarations by version. Where BDS names the cerealised form separately, declare that name instead.
 - Mark each field of a `cereal=False` class whose type has a `cereal=False` declaration with `field(cereal=False)` too; a bare field takes the cereal declaration.
 

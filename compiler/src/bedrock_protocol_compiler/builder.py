@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from functools import reduce
 from importlib import import_module
+from itertools import pairwise
 from pathlib import Path
 from types import ModuleType
 from typing import TypeAliasType
@@ -131,10 +132,17 @@ class PendingEnum:
     range: Range
 
 
+@dataclass
+class UnionDeclaration:
+    range: Range
+    node: ast.TypeAlias
+
+
 @dataclass(eq=False)
 class UnionAlias:
     source: Source
-    node: ast.TypeAlias
+    name: str
+    declarations: list[UnionDeclaration] = field(default_factory=list)
 
 
 @dataclass
@@ -397,6 +405,7 @@ class Builder:
         self.aliases: list[PendingAlias] = []
         self.unions: list[UnionAlias] = []
         self.expanding: list[UnionAlias] = []
+        self.at: int | None = None
 
     def build(self) -> Package:
         self.releases = self.declare_init(self.init)
@@ -421,7 +430,14 @@ class Builder:
         for pending_alias in self.aliases:
             self.build_alias(pending_alias)
         for union in self.unions:
-            self.expand(union.source, union.node, union)
+            for declaration in union.declarations:
+                covered: list[int | None] = [
+                    version for version in self.versions if declaration.range.contains(version)
+                ]
+                for version in covered or [None]:
+                    self.at = version
+                    self.expand(union.source, declaration.node, union)
+        self.at = None
         for pending_struct in self.structs:
             self.build_struct(pending_struct)
         modules = tuple(
@@ -494,26 +510,26 @@ class Builder:
         return tuple(releases)
 
     def declare_module(self, source: Source) -> None:
-        for statement in without_docstring(source.tree.body):
+        everywhere = Range(None, None)
+        statements = self.blocks(
+            source,
+            source.scope,
+            source.tree.body,
+            "module",
+            everywhere,
+            dsl.type,
+            ("since", "until"),
+            ast.TypeAlias,
+            "type aliases",
+        )
+        for statement, gate, _, _ in statements:
             match statement:
                 case ast.Import() | ast.ImportFrom():
                     self.bind_import(source, statement)
                 case ast.ClassDef():
-                    self.declare_class(source, source.scope, statement, None, Range(None, None))
+                    self.declare_class(source, source.scope, statement, None, everywhere)
                 case ast.TypeAlias():
-                    name = statement.name.id
-                    if statement.type_params:
-                        raise error(source, statement, name, "type parameters are not allowed")
-                    if isinstance(statement.value, ast.Name | ast.Attribute):
-                        alias = Alias(name, source.stem)
-                        self.declare_family(source, statement, alias)
-                        self.aliases.append(PendingAlias(source, statement, alias))
-                    else:
-                        union = UnionAlias(source, statement)
-                        self.claim(source, statement, name, True)
-                        self.add(source, source.scope, statement, name, union)
-                        source.unions[name] = union
-                        self.unions.append(union)
+                    self.declare_alias(source, statement, gate)
                 case ast.Assign(targets=[ast.Name(id="package")], value=ast.Constant(value=str() as package)):
                     if source.package:
                         raise error(source, statement, "package", "is declared twice")
@@ -549,6 +565,27 @@ class Builder:
         self.add(source, source.scope, node, family.name, family)
         source.families[family.name] = family
         source.order.append(family)
+
+    def declare_alias(self, source: Source, statement: ast.TypeAlias, gate: Range) -> None:
+        name = statement.name.id
+        if statement.type_params:
+            raise error(source, statement, name, "type parameters are not allowed")
+        if isinstance(statement.value, ast.Name | ast.Attribute):
+            if gate != Range(None, None):
+                raise error(source, statement, name, "is a primitive alias, which takes no gate")
+            alias = Alias(name, source.stem)
+            self.declare_family(source, statement, alias)
+            self.aliases.append(PendingAlias(source, statement, alias))
+            return
+        union = source.unions.get(name)
+        if union is None:
+            union = UnionAlias(source, name)
+            self.claim(source, statement, name, True)
+            self.add(source, source.scope, statement, name, union)
+            source.unions[name] = union
+            self.unions.append(union)
+        self.tile(source, statement, union, gate)
+        union.declarations.append(UnionDeclaration(gate, statement))
 
     def bind_import(self, source: Source, statement: ast.Import | ast.ImportFrom) -> None:
         if isinstance(statement, ast.Import):
@@ -685,7 +722,15 @@ class Builder:
             raise error(source, node.bases[1], node.name, "is not an enum underlying type")
         members: list[Member] = []
         for statement, within, _, _ in self.blocks(
-            source, pending.scope, node, node.name, pending.range, dsl.value, ("since", "until"), ast.Assign, "members"
+            source,
+            pending.scope,
+            node.body,
+            node.name,
+            pending.range,
+            dsl.value,
+            ("since", "until"),
+            ast.Assign,
+            "members",
         ):
             if not (
                 isinstance(statement, ast.Assign)
@@ -780,15 +825,22 @@ class Builder:
         pending.alias.primitive = primitive
 
     def expand(self, source: Source, node: ast.expr | ast.stmt, union: UnionAlias) -> Variant:
-        name = union.node.name.id
         if union in self.expanding:
-            raise error(source, node, name, "names itself")
+            raise error(source, node, union.name, "names itself")
+        declarations = union.declarations
+        if self.at is not None:
+            declarations = [declaration for declaration in declarations if declaration.range.contains(self.at)]
+            if not declarations:
+                raise error(source, node, union.name, f"does not exist at {self.at}")
         self.expanding.append(union)
-        expanded = self.type_of(union.source, union.source.scope, union.node.value)
+        variants: list[Variant] = []
+        for declaration in declarations:
+            expanded = self.type_of(union.source, union.source.scope, declaration.node.value)
+            if not isinstance(expanded, Variant):
+                raise error(union.source, declaration.node.value, union.name, "is not a union")
+            variants.append(expanded)
         self.expanding.pop()
-        if not isinstance(expanded, Variant):
-            raise error(union.source, union.node.value, name, "is not a union")
-        return expanded
+        return variants[-1]
 
     def build_struct(self, pending: PendingStruct) -> None:
         source = pending.source
@@ -797,7 +849,7 @@ class Builder:
         statements = self.blocks(
             source,
             scope,
-            pending.node,
+            pending.node.body,
             pending.struct.name,
             pending.range,
             dsl.field,
@@ -828,65 +880,72 @@ class Builder:
             cereal = True
             if call is not None and "cereal" in arguments:
                 cereal = literal(source, arguments["cereal"], bool, name)
-            if (
-                isinstance(annotation, ast.Subscript)
-                and self.resolve(source, scope, annotation.value) is typing.Literal
-            ):
-                values = annotation.slice.elts if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
-                if len(values) != 1:
-                    raise error(source, annotation, ast.unparse(annotation), "is not a type with these arguments")
-                if not cereal:
-                    raise error(source, annotation, name, "has no cereal=False declaration")
-                if isinstance(values[0], ast.Constant) and isinstance(values[0].value, bool | str):
-                    field_type: Type = Literal(values[0].value)
-                else:
-                    field_type = Literal(self.member_of(source, scope, values[0]))
-            else:
-                field_type = self.type_of(source, scope, annotation, cereal)
-            if call is not None and "prefix" in arguments:
-                prefix = self.type_of(source, scope, arguments["prefix"])
-                if not isinstance(field_type, List):
-                    raise error(source, call, name, "prefix is given to something other than a list")
-                if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
-                    raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
-                field_type = replace(field_type, prefix=prefix)
-            encoded = None
-            endian = None
-            if call is not None and "type" in arguments:
-                encoded_type = self.type_of(source, scope, arguments["type"])
-                if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
-                    raise error(source, arguments["type"], name, "type is not str or an integer primitive")
-                encoded = encoded_type.name
-            if call is not None and "endian" in arguments:
-                if literal(source, arguments["endian"], str, name) != "big":
-                    raise error(source, arguments["endian"], name, 'endian is not "big"')
-                endian = "big"
-            if encoded or endian:
-                reencoded = reencode(field_type, encoded, endian)
-                if reencoded is None:
-                    raise error(
-                        source, statement, name, "type and endian do not reach exactly one scalar that takes them"
-                    )
-                field_type = reencoded
             own = self.read_range(source, call, name, arguments) if call is not None else Range(None, None)
             field_range = self.narrow(source, statement, name, own, within)
             for existing in fields:
                 if existing.name == name and existing.range.overlaps(field_range):
                     raise error(source, statement, name, "is declared twice over overlapping versions")
-            if call is not None and "count" in arguments:
-                if not isinstance(field_type, List):
-                    raise error(source, call, name, "count is given to something other than a bare list")
-                if "prefix" in arguments:
-                    raise error(source, call, name, "count and prefix are both given")
-                count = read_lambda(
-                    arguments["count"],
-                    fields,
-                    field_range,
-                    self.versions,
-                    lambda node: self.member_of(source, scope, node),
-                    lambda node, reason: error(source, node, name, reason),
-                )
-                field_type = replace(field_type, prefix=None, count=parse_count(count))
+            live: list[int | None] = [version for version in self.versions if field_range.contains(version)] or [None]
+            spans: list[tuple[int | None, Type]] = []
+            for version in live:
+                self.at = version
+                if (
+                    isinstance(annotation, ast.Subscript)
+                    and self.resolve(source, scope, annotation.value) is typing.Literal
+                ):
+                    values = annotation.slice.elts if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
+                    if len(values) != 1:
+                        raise error(source, annotation, ast.unparse(annotation), "is not a type with these arguments")
+                    if not cereal:
+                        raise error(source, annotation, name, "has no cereal=False declaration")
+                    if isinstance(values[0], ast.Constant) and isinstance(values[0].value, bool | str):
+                        field_type: Type = Literal(values[0].value)
+                    else:
+                        field_type = Literal(self.member_of(source, scope, values[0]))
+                else:
+                    field_type = self.type_of(source, scope, annotation, cereal)
+                if call is not None and "prefix" in arguments:
+                    prefix = self.type_of(source, scope, arguments["prefix"])
+                    if not isinstance(field_type, List):
+                        raise error(source, call, name, "prefix is given to something other than a list")
+                    if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
+                        raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
+                    field_type = replace(field_type, prefix=prefix)
+                encoded = None
+                endian = None
+                if call is not None and "type" in arguments:
+                    encoded_type = self.type_of(source, scope, arguments["type"])
+                    if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
+                        raise error(source, arguments["type"], name, "type is not str or an integer primitive")
+                    encoded = encoded_type.name
+                if call is not None and "endian" in arguments:
+                    if literal(source, arguments["endian"], str, name) != "big":
+                        raise error(source, arguments["endian"], name, 'endian is not "big"')
+                    endian = "big"
+                if encoded or endian:
+                    reencoded = reencode(field_type, encoded, endian)
+                    if reencoded is None:
+                        raise error(
+                            source, statement, name, "type and endian do not reach exactly one scalar that takes them"
+                        )
+                    field_type = reencoded
+                if call is not None and "count" in arguments:
+                    if not isinstance(field_type, List):
+                        raise error(source, call, name, "count is given to something other than a bare list")
+                    if "prefix" in arguments:
+                        raise error(source, call, name, "count and prefix are both given")
+                    count = read_lambda(
+                        arguments["count"],
+                        fields,
+                        field_range,
+                        self.versions,
+                        lambda node: self.member_of(source, scope, node),
+                        lambda node, reason: error(source, node, name, reason),
+                    )
+                    field_type = replace(field_type, prefix=None, count=parse_count(count))
+                if not spans or spans[-1][1] != field_type:
+                    spans.append((version, field_type))
+            self.at = None
             guards = [] if block_when is None else [block_when]
             if call is not None and "when" in arguments:
                 guards.append(arguments["when"])
@@ -922,7 +981,9 @@ class Builder:
                     if written < 2:
                         raise error(source, arguments["duplicate"], name, "duplicate is fewer than two copies")
                     copies = Int(written)
-            fields.append(Field(name, field_type, field_range, when, copies))
+            bounds = [field_range.since, *(since for since, _ in spans[1:]), field_range.until]
+            for (_, field_type), (since, until) in zip(spans, pairwise(bounds), strict=True):
+                fields.append(Field(name, field_type, Range(since, until), when, copies))
         declared: list[str] = []
         previous: list[str] = []
         for block, names in runs:
@@ -952,18 +1013,17 @@ class Builder:
         self,
         source: Source,
         scope: Scope,
-        node: ast.ClassDef,
+        body: list[ast.stmt],
         name: str,
         range: Range,
         opener: Callable[..., object],
         allowed: tuple[str, ...],
         holds: type[ast.stmt],
         noun: str,
-    ) -> list[tuple[ast.stmt, Range, ast.expr | None, ast.stmt]]:
-        statements: list[tuple[ast.stmt, Range, ast.expr | None, ast.stmt]] = []
-        for statement in without_docstring(node.body):
+    ) -> Iterator[tuple[ast.stmt, Range, ast.expr | None, ast.stmt]]:
+        for statement in without_docstring(body):
             if not isinstance(statement, ast.With):
-                statements.append((statement, range, None, statement))
+                yield statement, range, None, statement
                 continue
             single = len(statement.items) == 1 and statement.items[0].optional_vars is None
             block = statement.items[0].context_expr if single else None
@@ -976,8 +1036,7 @@ class Builder:
             if any(not isinstance(inner, holds) for inner in statement.body):
                 raise error(source, statement, name, f"a with block holds only {noun}")
             within = self.narrow(source, statement, name, self.read_range(source, block, name, arguments), range)
-            statements.extend((inner, within, arguments.get("when"), statement) for inner in statement.body)
-        return statements
+            yield from ((inner, within, arguments.get("when"), statement) for inner in statement.body)
 
     def read_range(self, source: Source, node: ast.expr, name: str, arguments: dict[str, ast.expr]) -> Range:
         bounds: dict[str, int | None] = {"since": None, "until": None}
@@ -997,7 +1056,7 @@ class Builder:
                 raise error(source, node, name, "has a gate its enclosing range already decides")
         return own.intersect(within)
 
-    def tile(self, source: Source, node: ast.ClassDef, family: Struct | Enum, range: Range) -> None:
+    def tile(self, source: Source, node: ast.stmt, family: Struct | Enum | UnionAlias, range: Range) -> None:
         if not family.declarations:
             return
         previous = family.declarations[-1].range
