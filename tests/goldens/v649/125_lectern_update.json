@@ -1,0 +1,16 @@
+[
+ {
+  "id": "page_200_of_255",
+  "value": {
+   "page": 200,
+   "total_pages": 255,
+   "pos": {
+    "x": 1,
+    "y": 4294967294,
+    "z": 3
+   },
+   "drop_book": true
+  },
+  "bytes": "c8ff02feffffff0f0601"
+ }
+]
