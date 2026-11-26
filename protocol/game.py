@@ -135,7 +135,7 @@ class LevelSettings:
     spawn_settings: SpawnSettings
     generator: GeneratorType
     game_type: GameType
-    is_hardcore: bool
+    is_hardcore: bool = field(since=671)
     game_difficulty: Difficulty
     default_spawn: NetworkBlockPosition
     achievements_disabled: bool
@@ -410,7 +410,7 @@ class MultiplayerSettingsPacket:
 class UpdatePlayerGameTypePacket:
     player_game_type: GameType
     target_player: ActorUniqueID
-    tick: PlayerInputTick = field(type=uvarint32, until=748)
+    tick: PlayerInputTick = field(type=uvarint32, since=671, until=748)
     tick: PlayerInputTick = field(since=748)
 
 

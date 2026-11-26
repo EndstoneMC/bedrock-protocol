@@ -494,17 +494,19 @@ class LevelSoundEvent(IntEnum, uint32):
     WIND_CHARGE_BURST = 509
     with value(since=712):
         IMITATE_BOGGED = 510
-    WOLF_ARMOR_CRACK = 511
-    WOLF_ARMOR_BREAK = 512
-    WOLF_ARMOR_REPAIR = 513
-    MACE_SMASH_AIR = 514
-    MACE_SMASH_GROUND = 515
+    with value(since=671):
+        WOLF_ARMOR_CRACK = 511
+        WOLF_ARMOR_BREAK = 512
+        WOLF_ARMOR_REPAIR = 513
+        MACE_SMASH_AIR = 514
+        MACE_SMASH_GROUND = 515
     with value(since=685):
         TRIAL_SPAWNER_CHARGE_ACTIVATE = 516
         TRIAL_SPAWNER_AMBIENT_OMINOUS = 517
         OMINOUS_ITEM_SPAWNER_SPAWN_ITEM = 518
         OMINOUS_BOTTLE_END_USE = 519
-    MACE_HEAVY_SMASH_GROUND = 520
+    with value(since=671):
+        MACE_HEAVY_SMASH_GROUND = 520
     with value(since=685):
         OMINOUS_ITEM_SPAWNER_SPAWN_ITEM_BEGIN = 521
         APPLY_EFFECT_BAD_OMEN = 523
@@ -622,7 +624,10 @@ class LevelSoundEvent(IntEnum, uint32):
         ICE_BALL_THROW = 617
         RECORD_FLURRY = 618
         IMITATE_FROSTBITE = 619
-    UNDEFINED = auto()
+    with value(until=671):
+        UNDEFINED = 511  # TODO: 510 unnamed before 712
+    with value(since=671):
+        UNDEFINED = auto()
 
 
 type ServerSoundHandle = uint64

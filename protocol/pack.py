@@ -123,7 +123,7 @@ class ResourcePackStackPacket:
     texture_pack_ids_and_versions: list[PackInstanceId]
     base_game_version: str
     experiments: Experiments
-    include_editor_packs: bool = field(until=2259)
+    include_editor_packs: bool = field(since=671, until=2259)
     editor_pack_types: EditorPackType = field(since=2259)
 
 

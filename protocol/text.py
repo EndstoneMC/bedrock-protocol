@@ -1,4 +1,4 @@
-"""Chat, titles and toasts, from textobject/."""
+"""Chat, titles, toasts and text filtering, from textobject/."""
 
 from enum import IntEnum
 from typing import Literal
@@ -132,3 +132,9 @@ class SetTitlePacket:
     xuid: str
     platform_online_id: str
     filtered_title_text: str = field(since=712)
+
+
+@packet(id=163, until=671)
+class FilterTextPacket:
+    text: str
+    from_server: bool

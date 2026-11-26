@@ -62,7 +62,7 @@ class MapDecoration:
         VILLAGE_TAIGA = 21
         JUNGLE_TEMPLE = 22
         WITCH_HUT = 23
-        TRIAL_CHAMBERS = 24
+        TRIAL_CHAMBERS = value(24, since=671)
         COUNT = auto()
 
     image: Type

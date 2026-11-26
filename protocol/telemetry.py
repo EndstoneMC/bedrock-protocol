@@ -195,7 +195,7 @@ class LegacyTelemetryEventPacket:
         achievement_id: MinecraftEventing.AchievementIds = field(since=898)
 
     class Interaction:
-        interacted_entity_id: ActorUniqueID
+        interacted_entity_id: ActorUniqueID = field(since=671)
         interaction_type: MinecraftEventing.InteractionType = field(type=varint32, until=898)
         interaction_type: MinecraftEventing.InteractionType = field(since=898)
         interacted_entity_type: varint32

@@ -6,7 +6,7 @@ Forms, data-driven UI, HUD elements and the locator bar.
 import uuid
 from enum import IntEnum
 
-from protocol import field, int32, packet, sentinel, type, uint8, uint32, uvarint32, uvarint64
+from protocol import field, int32, packet, sentinel, type, uint8, uint32, uvarint32, uvarint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -32,8 +32,9 @@ class HudElement(IntEnum, int32):
     HUNGER = 8
     AIR_BUBBLES = 9
     HORSE_HEALTH = 10
-    STATUS_EFFECTS = 11
-    ITEM_TEXT = 12
+    with value(since=671):
+        STATUS_EFFECTS = 11
+        ITEM_TEXT = 12
     COUNT = sentinel()
 
 

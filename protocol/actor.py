@@ -158,7 +158,8 @@ class ActorFlags(IntEnum, int32):
     TIMER_FLAG_1 = 115
     TIMER_FLAG_2 = 116
     TIMER_FLAG_3 = 117
-    BODY_ROTATION_BLOCKED = 118
+    with value(since=671):
+        BODY_ROTATION_BLOCKED = 118
     with value(since=776):
         RENDERS_WHEN_INVISIBLE = 119
     with value(since=786):
