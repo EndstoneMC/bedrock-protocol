@@ -1,0 +1,10 @@
+[
+ {
+  "id": "adventure_for_target_player",
+  "value": {
+   "player_game_type": 2,
+   "target_player": 7
+  },
+  "bytes": "040e"
+ }
+]

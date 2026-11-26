@@ -1,0 +1,10 @@
+[
+ {
+  "id": "text_and_origin",
+  "value": {
+   "text": "hello",
+   "from_server": true
+  },
+  "bytes": "0568656c6c6f01"
+ }
+]
