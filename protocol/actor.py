@@ -317,7 +317,8 @@ class ActorDataIDs(IntEnum, uint8):
     PLAYER_LAST_DEATH_DIMENSION = 128
     PLAYER_HAS_DIED = 129
     COLLISION_BOX = 130
-    VISIBLE_MOB_EFFECTS = 131
+    with value(since=685):
+        VISIBLE_MOB_EFFECTS = 131
     with value(since=776):
         FILTERED_NAME = 132
         ENTER_BED_POSITION = 133
@@ -646,7 +647,8 @@ class ActorType(IntEnum, int32):
     ARMADILLO = 5006
     WIND_CHARGE_PROJECTILE = 4194447
     BOGGED = 1117072
-    OMINOUS_ITEM_SPAWNER = 145
+    with value(since=685):
+        OMINOUS_ITEM_SPAWNER = 145
     with value(since=766):
         CREAKING = 2962
     with value(since=800):

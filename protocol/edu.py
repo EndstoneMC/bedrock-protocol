@@ -100,7 +100,8 @@ class CodeStatus(IntEnum, uint8):
 class CodeBuilderSourcePacket:
     operation: Operation
     category: Category
-    code_status: CodeStatus
+    value: str = field(until=685)
+    code_status: CodeStatus = field(since=685)
 
 
 class AgentAnimation(IntEnum, uint8):

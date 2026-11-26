@@ -54,10 +54,12 @@ class Enchant:
         QUICK_CHARGE = 35
         SOUL_SPEED = 36
         SWIFT_SNEAK = 37
-        WIND_BURST = 38
-        DENSITY = 39
-        BREACH = 40
-        LUNGE = value(41, since=898)
+        with value(since=685):
+            WIND_BURST = 38
+            DENSITY = 39
+            BREACH = 40
+        with value(since=898):
+            LUNGE = 41
         NUM_ENCHANTMENTS = auto()
         INVALID_ENCHANTMENT = auto()
 

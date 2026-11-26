@@ -6,7 +6,7 @@ The packet id registry, login and handshake, disconnect, compression, blob-cache
 from enum import IntEnum
 from typing import Union
 
-from protocol import field, int32, packet, sentinel, type, uint8, uint16, uint64, uvarint32, value, varint32
+from protocol import field, int32, int64, packet, sentinel, type, uint8, uint16, uint64, uvarint32, value, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -37,6 +37,8 @@ class MinecraftPacketIds(IntEnum, int32):
         PASSENGER_JUMP = 20
     UPDATE_BLOCK = 21
     ADD_PAINTING = 22
+    with value(until=685):
+        TICK_SYNC = 23
     with value(until=786):
         LEVEL_SOUND_EVENT_V1 = 24
     LEVEL_EVENT = 25
@@ -218,7 +220,8 @@ class MinecraftPacketIds(IntEnum, int32):
     PLAYER_TOGGLE_CRAFTER_SLOT_REQUEST_PACKET = 306
     SET_PLAYER_INVENTORY_OPTIONS = 307
     SET_HUD_PACKET = 308
-    AWARD_ACHIEVEMENT_PACKET = 309
+    with value(since=685):
+        AWARD_ACHIEVEMENT_PACKET = 309
     with value(since=686):
         CLIENTBOUND_CLOSE_SCREEN = 310
     with value(since=712):
@@ -658,3 +661,9 @@ class NetworkBlockPosition:
     x: varint32
     y: int32 = field(type=uvarint32)
     z: varint32
+
+
+@packet(id=23, until=685)
+class TickSyncPacket:
+    client_request_timestamp: int64
+    server_reception_response_timestamp: int64

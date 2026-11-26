@@ -32,7 +32,7 @@ def test_a_number_no_release_reports_is_named_for_the_release_below_it(number, n
     assert ProtocolVersion.get(number).name == name
 
 
-@pytest.mark.parametrize("number", [684, 2260], ids=["below-the-oldest", "above-the-newest"])
+@pytest.mark.parametrize("number", [670, 2260], ids=["below-the-oldest", "above-the-newest"])
 def test_a_number_outside_the_supported_range_has_no_version(number):
     assert ProtocolVersion.get(number) is None
 

@@ -188,7 +188,7 @@ class LegacyTelemetryEventPacket:
         STRIDER_RIDDEN_IN_LAVA_IN_OVERWORLD = 28
         SNEAK_CLOSE_TO_SCULK_SENSOR = 29
         CAREFUL_RESTORATION = 30
-        ITEM_USED = 31
+        ITEM_USED = value(31, since=685)  # TODO: confirm against BDS
 
     class Achievement:
         achievement_id: MinecraftEventing.AchievementIds = field(type=varint32, until=898)
@@ -337,7 +337,7 @@ class LegacyTelemetryEventPacket:
     code_builder_scoreboard: CodeBuilderScoreboard = field(
         until=898, when=lambda p: p.type == Type.CODE_BUILDER_SCOREBOARD
     )
-    item_used: ItemUsed = field(until=898, when=lambda p: p.type == Type.ITEM_USED)
+    item_used: ItemUsed = field(since=685, until=898, when=lambda p: p.type == Type.ITEM_USED)
     event_data: (
         Achievement
         | Interaction

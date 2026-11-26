@@ -102,7 +102,7 @@ class ShapedRecipePayload:
     tag: str
     priority: varint32
     assume_symmetry: bool
-    unlocking_requirement: SerializedRecipeUnlockingRequirement
+    unlocking_requirement: SerializedRecipeUnlockingRequirement = field(since=685)
     net_id: RecipeNetId
 
 
@@ -129,7 +129,7 @@ class ShapelessRecipePayload:
     uuid: uuid.UUID
     tag: str
     priority: varint32
-    unlocking_requirement: SerializedRecipeUnlockingRequirement
+    unlocking_requirement: SerializedRecipeUnlockingRequirement = field(since=685)
     net_id: RecipeNetId
 
 

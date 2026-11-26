@@ -28,7 +28,7 @@ paths:
 
 - Model `PlayerAuthInputPacket.input_data` as a length-prefixed list of `InputData` from 2168 and a bitset before it; the header's `std::bitset` is the in-memory member.
 - `PackedItemUseLegacyInventoryTransaction` before 2168 and `InventoryTransactionPacket` before 1001 write their legacy slots only for a legacy request id below -1 and even.
-- Before 2168, the chemistry recipe writers do not write the unlocking requirement; the other four recipe writers do.
+- Before 2168, the shaped and shapeless recipe writers write the unlocking requirement from 685 and the shulker-box writer from 748; no other recipe writer does.
 - Never unify `ContainerID`: it is `uvarint32` in packet 49 and, from 975, `uint8` in packet 50; they part at `NONE = -1`.
 - `TextPacket`'s twelve constant strings are encoded folded, over `[898, 924)`.
 - Spell packet 124's event data `CompoundTagData`: a compound's entries plus `TAG_End`, no root tag, at every version.

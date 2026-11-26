@@ -220,7 +220,7 @@ class ContainerType(IntEnum, int8):
 @packet(id=47)
 class ContainerClosePacket:
     container_id: ContainerID = field(type=uint8)
-    container_type: ContainerType
+    container_type: ContainerType = field(since=685)
     server_initiated_close: bool
 
 

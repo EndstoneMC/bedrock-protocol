@@ -95,7 +95,7 @@ class SetHealthPacket:
     health: varint32
 
 
-@packet(id=309)
+@packet(id=309, since=685)
 class AwardAchievementPacket:
     achievement_id: int32
 

@@ -180,7 +180,7 @@ class LevelSettings:
     override_force_experimental_gameplay_flag: bool
     chat_restriction_level: ChatRestrictionLevel
     disable_player_interactions: bool
-    with field(until=924):
+    with field(since=685, until=924):
         server_id: str
         world_id: str
         scenario_id: str

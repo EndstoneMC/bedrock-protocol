@@ -38,7 +38,7 @@ class TextPacket:
     )
     xuid: str
     platform_id: str
-    filtered_message: str
+    filtered_message: str = field(since=685)
 
 
 @packet(id=9, since=898)

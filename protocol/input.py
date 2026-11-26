@@ -183,7 +183,8 @@ class PlayerAuthInputPacket:
         IS_IN_CLIENT_PREDICTED_VEHICLE = 45
         PADDLING_LEFT = 46
         PADDLING_RIGHT = 47
-        BLOCK_BREAKING_DELAY_ENABLED = 48
+        with value(since=685):
+            BLOCK_BREAKING_DELAY_ENABLED = 48
         with value(since=729):
             HORIZONTAL_COLLISION = 49
             VERTICAL_COLLISION = 50
