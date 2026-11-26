@@ -54,7 +54,7 @@ If the log shows no golden mode, add it to the clone and commit it there:
 - Send `bds_json` as one JSON string of BDS's text, each byte outside valid UTF-8 written as `\udcXX`; BDS's text is not always JSON, so the reader parses it.
 - On a build from 1.21.60 to before 1.26.40, gate a writer trace on the build's version: a `BinaryStream` subclass that overrides every writer and documented-write helper, records each call's method, value, label, notes, offset, size and depth, and opens a scope for each array, conditional and branching write. When the packet has no reflected type or its `toString` prints nothing, write the packet into it and send `bds_trace` with `bds_trace_bytes_equal`.
 - Before 1.21.60, `BinaryStream`'s writers are not virtual, and from 1.21.40 only `writeIf` and `writeConditional` are, so golden mode sends no `bds_trace`; `read` and `write` take no ctx before 1.21.100.
-- `saveImpl` takes a `const SaverConfig &` after the schema before 1.26.40; gate it in the detour's declaration, definition and forwarded calls.
+- `saveImpl` takes a `const SaverConfig &` after the schema before 1.26.30; gate it in the detour's declaration, definition and forwarded calls.
 - Give the parent a 30 s deadline, then SIGKILL. It records `crash` as the signal name, `exit N` or `timeout`, and the run goes on.
 - Append and flush each record. At the end, log `golden: N cases written to <path>`.
 - Before forking, flush only stdout and stderr. BDS's console thread holds stdin's lock.
