@@ -51,7 +51,7 @@ class ResourcePackResponse(IntEnum, int8):
 @packet(id=6, until=2168)
 class ResourcePacksInfoPacket:
     resource_pack_required: bool
-    has_addon_packs: bool
+    has_addon_packs: bool = field(since=662)
     has_scripts: bool
     force_server_packs_enabled: bool = field(until=729)
     force_disable_vibrant_visuals: bool = field(since=818)

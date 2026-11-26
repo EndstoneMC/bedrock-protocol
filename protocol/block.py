@@ -79,6 +79,7 @@ class LecternUpdatePacket:
     total_pages: int32 = field(type=uint8)
     pos: NetworkBlockPosition = field(until=944)
     pos: BlockPos = field(since=944)
+    drop_book: bool = field(until=662)
 
 
 @packet(id=303)
@@ -178,3 +179,8 @@ class AddVolumeEntityPacket:
         max_bounds: BlockPos
     dimension_type: DimensionType
     min_engine_version: str
+
+
+@packet(id=71, until=662)
+class ItemFrameDropItemPacket:
+    pos: NetworkBlockPosition

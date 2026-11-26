@@ -644,10 +644,14 @@ class ActorType(IntEnum, int32):
     CAMEL = 5002
     SNIFFER = 5003
     BREEZE = 2956
-    BREEZE_WIND_CHARGE_PROJECTILE = 4194445
+    with value(since=662):
+        BREEZE_WIND_CHARGE_PROJECTILE = 4194445
     ARMADILLO = 5006
-    WIND_CHARGE_PROJECTILE = 4194447
-    BOGGED = 1117072
+    with value(until=662):
+        WIND_CHARGE_PROJECTILE = 4194445
+    with value(since=662):
+        WIND_CHARGE_PROJECTILE = 4194447
+        BOGGED = 1117072
     with value(since=685):
         OMINOUS_ITEM_SPAWNER = 145
     with value(since=766):

@@ -111,7 +111,7 @@ class MoveActorAbsolutePacket:
 class SetActorMotionPacket:
     runtime_id: ActorRuntimeID
     motion: Vec3
-    tick: PlayerInputTick
+    tick: PlayerInputTick = field(since=662)
 
 
 @packet(id=157)

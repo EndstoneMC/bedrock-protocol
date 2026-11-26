@@ -35,7 +35,7 @@ class MobEffectPacket:
     effect_amplifier: varint32
     show_particles: bool
     effect_duration_ticks: varint32
-    tick: PlayerInputTick = field(type=uint64)
+    tick: PlayerInputTick = field(type=uint64, since=662)
 
 
 @packet(id=28, since=748)

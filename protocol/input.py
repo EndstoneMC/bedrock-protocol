@@ -181,8 +181,9 @@ class PlayerAuthInputPacket:
         STOP_FLYING = 43
         CLIENT_ACK_SERVER_DATA = 44
         IS_IN_CLIENT_PREDICTED_VEHICLE = 45
-        PADDLING_LEFT = 46
-        PADDLING_RIGHT = 47
+        with value(since=662):
+            PADDLING_LEFT = 46
+            PADDLING_RIGHT = 47
         with value(since=685):
             BLOCK_BREAKING_DELAY_ENABLED = 48
         with value(since=729):
@@ -233,7 +234,7 @@ class PlayerAuthInputPacket:
     )
 
     with field(when=lambda p: p.input_data.test(InputData.IS_IN_CLIENT_PREDICTED_VEHICLE)):
-        vehicle_rot: Vec2
+        vehicle_rot: Vec2 = field(since=662)
         client_predicted_vehicle: ActorUniqueID
 
     analog_move_vector: Vec2
