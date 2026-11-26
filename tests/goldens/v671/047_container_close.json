@@ -1,0 +1,10 @@
+[
+ {
+  "id": "server_initiated_armor_close",
+  "value": {
+   "container_id": 120,
+   "server_initiated_close": true
+  },
+  "bytes": "7801"
+ }
+]

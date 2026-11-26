@@ -1,0 +1,2186 @@
+[
+ {
+  "id": "mob_killed_event",
+  "value": {
+   "player_unique_id": -5,
+   "type": 4,
+   "use_player_id": true,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 1,
+    "killed_mob_id": 2,
+    "damage_child_type": 319,
+    "damage_source": 2,
+    "trader_tier": -1,
+    "trader_name": "trader"
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0908010204fe04040106747261646572"
+ },
+ {
+  "id": "poi_cauldron_used_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 15,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 9,
+    "item_id": 307
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e1e0012e604"
+ },
+ {
+  "id": "cauldron_used_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 5,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 5,
+    "contents_type": -2,
+    "fill_level": 300
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e0a000503d804"
+ },
+ {
+  "id": "achievement_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 0,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 20
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e000028"
+ },
+ {
+  "id": "interaction_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 1,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 9,
+    "interaction_type": 2,
+    "interacted_entity_type": 4,
+    "interacted_entity_variant": 2,
+    "interacted_entity_color": 3
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e02001204080403"
+ },
+ {
+  "id": "portal_created_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 2,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 1
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e040002"
+ },
+ {
+  "id": "portal_used_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 3,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 1
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e06000002"
+ },
+ {
+  "id": "player_died_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 6,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 5,
+    "killer_variant": 2,
+    "damage_source": 3,
+    "in_raid": true
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e0c000a040601"
+ },
+ {
+  "id": "boss_killed_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 7,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 12,
+    "party_size": 3,
+    "boss_type": 4
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e0e00180608"
+ },
+ {
+  "id": "slash_command_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 11,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 2,
+    "error_count": 1,
+    "command_name": "give",
+    "error_list": "err"
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e16000402046769766503657272"
+ },
+ {
+  "id": "mob_born_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 13,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 5,
+    "baby_variant": 2,
+    "baby_color": 3
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e1a000a0403"
+ },
+ {
+  "id": "composter_used_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 16,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 19,
+    "item_id": 306
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e200026e404"
+ },
+ {
+  "id": "bell_used_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 17,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 307
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e2200e604"
+ },
+ {
+  "id": "actor_definition_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 18,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": "event"
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e2400056576656e74"
+ },
+ {
+  "id": "raid_update_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 19,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 2,
+    "total_waves": 5,
+    "success": true
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e2600040a01"
+ },
+ {
+  "id": "target_block_hit_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 23,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 7
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e2e000e"
+ },
+ {
+  "id": "piglin_barter_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 24,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 306,
+    "was_targeting_bartering_player": true
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e3000e40401"
+ },
+ {
+  "id": "waxed_or_unwaxed_copper_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 25,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 5
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e32000a"
+ },
+ {
+  "id": "code_builder_runtime_action_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 26,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": "run"
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e34000372756e"
+ },
+ {
+  "id": "code_builder_scoreboard_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 27,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 0,
+    "int_2": 0,
+    "text_1": "",
+    "text_2": "",
+    "text_3": ""
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "obj",
+    "score": 9
+   }
+  },
+  "bytes": "0e3600036f626a12"
+ },
+ {
+  "id": "agent_command_obsolete_event",
+  "value": {
+   "player_unique_id": 7,
+   "type": 8,
+   "use_player_id": false,
+   "achievement": {
+    "achievement_id": 0
+   },
+   "interaction": {
+    "interacted_entity_id": 0,
+    "interaction_type": 0,
+    "interacted_entity_type": 0,
+    "interacted_entity_variant": 0,
+    "interacted_entity_color": 0
+   },
+   "portal_created": {
+    "built_in_dimension": 0
+   },
+   "portal_used": {
+    "from_dimension": 0,
+    "to_dimension": 0
+   },
+   "mob_killed": {
+    "killer_entity_id": 0,
+    "killed_mob_id": 0,
+    "damage_child_type": 0,
+    "damage_source": 0,
+    "trader_tier": 0,
+    "trader_name": ""
+   },
+   "cauldron_used": {
+    "contents_color": 0,
+    "contents_type": 0,
+    "fill_level": 0
+   },
+   "player_died": {
+    "killer_id": 0,
+    "killer_variant": 0,
+    "damage_source": 0,
+    "in_raid": false
+   },
+   "boss_killed": {
+    "boss_unique_id": 0,
+    "party_size": 0,
+    "boss_type": 0
+   },
+   "agent_command_obsolete": {
+    "int_1": 3,
+    "int_2": 9,
+    "text_1": "agent",
+    "text_2": "move",
+    "text_3": "north"
+   },
+   "slash_command": {
+    "success_count": 0,
+    "error_count": 0,
+    "command_name": "",
+    "error_list": ""
+   },
+   "mob_born": {
+    "baby_type": 0,
+    "baby_variant": 0,
+    "baby_color": 0
+   },
+   "poi_cauldron_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "composter_used": {
+    "interaction_type": 0,
+    "item_id": 0
+   },
+   "bell_used": {
+    "item_id": 0
+   },
+   "actor_definition": {
+    "event_name": ""
+   },
+   "raid_update": {
+    "current_wave": 0,
+    "total_waves": 0,
+    "success": false
+   },
+   "target_block_hit": {
+    "redstone_level": 0
+   },
+   "piglin_barter": {
+    "item_id": 0,
+    "was_targeting_bartering_player": false
+   },
+   "player_waxed_or_unwaxed_copper": {
+    "block_id": 0
+   },
+   "code_builder_runtime_action": {
+    "runtime_action": ""
+   },
+   "code_builder_scoreboard": {
+    "objective_name": "",
+    "score": 0
+   }
+  },
+  "bytes": "0e10000612056167656e74046d6f7665056e6f727468"
+ }
+]

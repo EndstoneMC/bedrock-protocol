@@ -15,6 +15,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Name a case's `id` for the state it reaches, in lower_with_under, as the `<state>` of Google's `test_<method_under_test>_<state>` (`every_optional_absent`, `item_use_arm`), unique within its file; a packet's only case names what it holds (`player_spawn`), never `basic`, `default`, `full` or a number.
 - Hold every packet live at 2168 in `v2168/`, checked by BDS 1.26.40.8; another protocol's folder holds a packet only when its encoding differs from the neighbour's toward 2168, whatever its codec's number, and never a file identical to the neighbour's.
 - Leave a packet out of a folder before 2168 when that build cannot run both its read and its write: a stub, a write of a member its read never fills, a cereal schema the build binds into no packet context, or an id its factory builds nothing for; have the sides it has checked against the DSL statically instead.
+- Check `v671/` with BDS 1.20.81.01.
 - Check `v686/` with BDS 1.21.3.01.
 - Check `v712/` with BDS 1.21.23.01.
 - Check `v729/` with BDS 1.21.31.04.
@@ -36,7 +37,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Check `v2225/` with BDS 1.26.60.6.
 - Check `v2259/` with BDS 1.26.70.26.
 - Seed a folder's cases from the neighbour's and change only the leaves its encoding change needs; a class that differs only in an enum's members gets no file.
-- Keep a seeded case's id unless the encoding change adds or removes the branch it names, such as an optional's side; then rename it to the state it reaches, and never name a leaf's value in it.
+- Keep a seeded case's id unless the encoding change adds or removes the branch or the member it names, such as an optional's side; then rename it to the state it reaches, and never name a leaf's value in it.
 - Write `value` exactly as `save` in `tests/conftest.py` returns it, key order included, and `bytes` as the lowercase hex of the library's encoding of `value`; never type `bytes` by hand.
 - Keep a case's `value` in the DSL's shape, with an alias bare and a UUID as its canonical string; map it to BDS's JSON only when comparing, through `CaseForm` in `tests/conftest.py`.
 - Never load BDS's printed JSON into a packet; compare it with a case only through `CaseForm.matches`.
@@ -115,6 +116,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Set `ClientboundMapItemDataPacket.map_id` to `map_ids[0]` when the creation flag is set; BDS holds both in one vector.
 - Keep `StructureBlockUpdatePacket.is_waterlogged` false before 2168; BDS writes it from a settings flag its read clears.
 - Keep `StartGamePacket`'s `override_force_experimental_gameplay_flag` false before 2168; BDS writes back only whether a server holds one, and a server never does.
+- Keep `StartGamePacket`'s `is_hardcore` false at 671; BDS writes it only behind a feature toggle a server leaves off.
 - Give an `ItemStackRequestData` before 2168 a negative odd `client_request_id`; BDS reads nothing after any other id.
 - Leave actions `PLACE_IN_ITEM_CONTAINER_DEPRECATED` and `TAKE_FROM_ITEM_CONTAINER_DEPRECATED`, and `TEST` at 776, out of an `ItemStackRequestData` from 712 to 2168; BDS reads their type byte as no action and writes nothing for it.
 

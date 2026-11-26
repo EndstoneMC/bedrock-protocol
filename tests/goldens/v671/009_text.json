@@ -1,0 +1,80 @@
+[
+ {
+  "id": "author_and_message_arm",
+  "value": {
+   "type": 1,
+   "localize": false,
+   "author": "Steve",
+   "message": "hello",
+   "params": [],
+   "xuid": "2535400000000000",
+   "platform_id": "switch-1"
+  },
+  "bytes": "01000553746576650568656c6c6f1032353335343030303030303030303030087377697463682d31"
+ },
+ {
+  "id": "message_and_params_arm",
+  "value": {
+   "type": 2,
+   "localize": true,
+   "author": "",
+   "message": "commands.kill.successful",
+   "params": ["Alex"],
+   "xuid": "2535400000000002",
+   "platform_id": "xbox"
+  },
+  "bytes": "020118636f6d6d616e64732e6b696c6c2e7375636365737366756c0104416c657810323533353430303030303030303030320478626f78"
+ },
+ {
+  "id": "whisper_arm",
+  "value": {
+   "type": 7,
+   "localize": true,
+   "author": "Alex",
+   "message": "psst",
+   "params": [],
+   "xuid": "2535400000000003",
+   "platform_id": "ios"
+  },
+  "bytes": "070104416c65780470737374103235333534303030303030303030303303696f73"
+ },
+ {
+  "id": "announcement_arm",
+  "value": {
+   "type": 8,
+   "localize": true,
+   "author": "Server",
+   "message": "restart",
+   "params": [],
+   "xuid": "2535400000000004",
+   "platform_id": "android"
+  },
+  "bytes": "0801065365727665720772657374617274103235333534303030303030303030303407616e64726f6964"
+ },
+ {
+  "id": "popup_arm",
+  "value": {
+   "type": 3,
+   "localize": true,
+   "author": "",
+   "message": "bed",
+   "params": ["Steve"],
+   "xuid": "2535400000000005",
+   "platform_id": "win10"
+  },
+  "bytes": "0301036265640105537465766510323533353430303030303030303030350577696e3130"
+ },
+ {
+  "id": "jukebox_popup_arm",
+  "value": {
+   "type": 4,
+   "localize": true,
+   "author": "",
+   "message": "disc",
+   "params": ["cat"],
+   "xuid": "2535400000000006",
+   "platform_id": "ps4"
+  },
+  "bytes": "040104646973630103636174103235333534303030303030303030303603707334"
+ }
+]

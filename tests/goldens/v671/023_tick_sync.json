@@ -1,0 +1,10 @@
+[
+ {
+  "id": "request_and_reception_timestamps",
+  "value": {
+   "client_request_timestamp": 1732579200123,
+   "server_reception_response_timestamp": 1732579200456
+  },
+  "bytes": "7b8cc46593010000c88dc46593010000"
+ }
+]

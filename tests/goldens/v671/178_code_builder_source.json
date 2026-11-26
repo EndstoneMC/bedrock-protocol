@@ -1,0 +1,11 @@
+[
+ {
+  "id": "source_value",
+  "value": {
+   "operation": 3,
+   "category": 2,
+   "value": "agent.move()"
+  },
+  "bytes": "03020c6167656e742e6d6f76652829"
+ }
+]
