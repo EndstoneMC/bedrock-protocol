@@ -35,7 +35,6 @@ class SettingsCommandPacket:
 class AvailableCommandsPacket:
     class EnumData:
         name: str
-        # TODO: uint8, uint16 or uint32 each by len(enum_values); needs a DSL construct
         values: list[uint32]
 
     class ChainedSubcommandRelationship:
@@ -77,7 +76,9 @@ class AvailableCommandsPacket:
     enum_values: list[str]
     chained_subcommand_values: list[str]
     postfixes: list[str]
-    enums: list[EnumData]
+    enums: list[EnumData] = field(
+        type=lambda p: uint8 if len(p.enum_values) <= 0x100 else uint16 if len(p.enum_values) <= 0x10000 else uint32
+    )
     chained_subcommands: list[ChainedSubcommandData]
     commands: list[CommandData]
     soft_enums: list[SoftEnumData]

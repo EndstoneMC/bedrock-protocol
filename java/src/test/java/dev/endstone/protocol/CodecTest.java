@@ -11,6 +11,7 @@ import dev.endstone.protocol.v649.ClientboundDebugRendererPacket_v649;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import java.util.Collections;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -166,6 +167,65 @@ final class CodecTest {
     assertEquals(
         packet,
         ClientboundDebugRendererPacket_v649.codec(859)
+            .decode(Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(expected))));
+  }
+
+  static Stream<Arguments> pre898AvailableCommandsBoundaries() {
+    return Stream.of(
+        argumentSet("small table uses uint8", 1, 0, 13, "0165010000000000"),
+        argumentSet("256 values uses uint8", 256, 255, 269, "016501ff00000000"),
+        argumentSet("257 values uses uint16", 257, 256, 271, "016501000100000000"),
+        argumentSet("65536 values uses uint16", 65536, 65535, 65551, "016501ffff00000000"),
+        argumentSet("65537 values uses uint32", 65537, 65536, 65554, "0165010000010000000000"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("pre898AvailableCommandsBoundaries")
+  void pre898AvailableCommandsEncodesEnumIndicesByEnumValueCount(
+      int valueCount, int index, int expectedBytes, String expectedTailHex) {
+    AvailableCommandsPacket packet =
+        AvailableCommandsPacket.newBuilder()
+            .addAllEnumValues(Collections.nCopies(valueCount, ""))
+            .addEnums(
+                AvailableCommandsPacket.EnumData.newBuilder().setName("e").addValues(index).build())
+            .build();
+    ByteBuf buf = Unpooled.buffer();
+    AvailableCommandsPacket.codec(859).encode(packet, buf);
+    assertEquals(expectedBytes, buf.readableBytes());
+    String hex = ByteBufUtil.hexDump(buf);
+    assertEquals(expectedTailHex, hex.substring(hex.length() - expectedTailHex.length()));
+    assertEquals(packet, AvailableCommandsPacket.codec(859).decode(buf));
+    assertEquals(0, buf.readableBytes());
+  }
+
+  @Test
+  void pre898AvailableCommandsRejectsEnumIndexOutsideChosenWidth() {
+    AvailableCommandsPacket packet =
+        AvailableCommandsPacket.newBuilder()
+            .addEnumValues("a")
+            .addEnums(
+                AvailableCommandsPacket.EnumData.newBuilder().setName("e").addValues(256).build())
+            .build();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> AvailableCommandsPacket.codec(859).encode(packet, Unpooled.buffer()));
+  }
+
+  @Test
+  void v898AvailableCommandsKeepsFixedUint32EnumIndices() {
+    AvailableCommandsPacket packet =
+        AvailableCommandsPacket.newBuilder()
+            .addEnumValues("")
+            .addEnums(
+                AvailableCommandsPacket.EnumData.newBuilder().setName("e").addValues(0).build())
+            .build();
+    String expected = "01000000010165010000000000000000";
+    ByteBuf buf = Unpooled.buffer();
+    AvailableCommandsPacket.codec(898).encode(packet, buf);
+    assertEquals(expected, ByteBufUtil.hexDump(buf));
+    assertEquals(
+        packet,
+        AvailableCommandsPacket.codec(898)
             .decode(Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(expected))));
   }
 }
