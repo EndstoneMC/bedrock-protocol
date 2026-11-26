@@ -3033,3 +3033,37 @@ def test_a_name_coded_enum_inside_a_map_read_is_spelled_by_the_shape_live_where_
     source = (generate({"a": ENUM_NAME_LATER}) / "a.cpp").read_text()
 
     assert "            std::map<::bedrock::protocol::E, std::uint8_t>::key_type key0{};\n" in source
+
+
+TYPE_CHOICE = """
+from protocol import field, packet, uint8, uint16, uint32
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+class Entry:
+    name: str
+    values: list[uint32]
+
+@packet(id=1)
+class P:
+    table: list[str]
+    entries: list[Entry] = field(
+        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32
+    )
+"""
+
+
+def test_a_type_choice_emits_reencode_specializations_and_branches_in_cpp(generate):
+    out = generate({"a": TYPE_CHOICE})
+    header = (out / "a.h").read_text()
+    source = (out / "a.cpp").read_text()
+
+    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint8_t>, 1> {" in header
+    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint16_t>, 1> {" in header
+    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint32_t>, 1> {" not in header
+    assert "if ((static_cast<std::int64_t>(value.table.size())) <= (256)) {" in source
+    assert "} else if ((static_cast<std::int64_t>(value.table.size())) <= (65536)) {" in source
+    assert "Serializer<Reencode<::bedrock::protocol::Entry, std::uint8_t>, 1>::serialize(stream, e0);" in source
+    assert "Serializer<Reencode<::bedrock::protocol::Entry, std::uint16_t>, 1>::deserialize(stream);" in source
+    assert "Serializer<::bedrock::protocol::Entry, 1>::serialize(stream, e0);" in source

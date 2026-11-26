@@ -99,7 +99,13 @@ class MessageGenerator:
         }
         self.codecs: list[tuple[Encoding, list[Slot], dict[str, Union]]] = []
         for encoding in sorted(schema.encodings(model), key=lambda each: (each.since, MODES.index(each.mode))):
-            if not encoding.fields and model.nested and self.packet_id is None and encoding.excluded is None:
+            if (
+                not encoding.fields
+                and model.nested
+                and self.packet_id is None
+                and encoding.excluded is None
+                and encoding.reencoded is None
+            ):
                 continue
             coded = self.build(encoding, scratch)
             for slot, unions in coded:
@@ -330,7 +336,7 @@ class MessageGenerator:
             p.emit("}")
 
     def write(self, body: Body, renderer: Renderer, slot: Slot) -> None:
-        self.duplicated(body.p, renderer, slot, lambda: slot.write(body, "value."))
+        self.duplicated(body.p, renderer, slot, lambda: slot.write(body, "value.", renderer))
 
     def duplicated(self, p: Printer, renderer: Renderer, slot: Slot, each: Callable[[], None]) -> None:
         if slot.copies is None:

@@ -4,7 +4,7 @@ from typing import Protocol
 
 from bedrock_protocol_compiler.builder import WIDTHS
 from bedrock_protocol_compiler.cpp import names
-from bedrock_protocol_compiler.cpp.expression import render_count
+from bedrock_protocol_compiler.cpp.expression import render, render_count
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
@@ -22,6 +22,7 @@ from bedrock_protocol_compiler.descriptor import (
     Struct,
     StructRef,
     Type,
+    TypeChoice,
     Variant,
 )
 from bedrock_protocol_compiler.printer import Printer
@@ -264,12 +265,15 @@ class SerializerField:
 class ReferenceField(SerializerField):
     def __init__(self, schema: Schema, node: StructRef | EnumName, encoding: Encoding, where: str) -> None:
         self.family: Struct | Enum
+        self.extra_includes: set[str] = set()
         if isinstance(node, StructRef):
             self.family = node.struct
             child = encoding.reached[node]
             assert isinstance(child, Encoding)
             spelled = names.qualified(schema, child.model)
-            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded)
+            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded, child.reencoded)
+            if child.reencoded is not None and names.ENCODINGS[child.reencoded].startswith("std::"):
+                self.extra_includes.add("<cstdint>")
         else:
             self.family = node.enum
             naming = encoding.reached[node]
@@ -278,7 +282,7 @@ class ReferenceField(SerializerField):
         super().__init__(where, implementation)
 
     def includes(self) -> set[str]:
-        return {names.header(self.family)}
+        return {names.header(self.family)} | self.extra_includes
 
 
 class BuiltinField(SerializerField):
@@ -622,6 +626,57 @@ class DuplicatedField:
         )
 
 
+class ChoiceField:
+    def __init__(self, schema: Schema, node: TypeChoice, encoding: Encoding, where: str, depth: int) -> None:
+        self.schema = schema
+        self.node = node
+        self.encoding = encoding
+        self.when_true = make_field_generator(schema, node.when_true, encoding, where, depth)
+        self.when_false = make_field_generator(schema, node.when_false, encoding, where, depth)
+
+    def fallible(self) -> bool:
+        return self.when_true.fallible() or self.when_false.fallible()
+
+    def includes(self) -> set[str]:
+        return {"<cstdint>"} | self.when_true.includes() | self.when_false.includes()
+
+    def write(self, p: Printer, value: str) -> None:
+        branch: FieldGenerator = self
+        keyword = "if"
+        while isinstance(branch, ChoiceField):
+            p.emit(
+                "$keyword$ ($condition$) {",
+                keyword=keyword,
+                condition=render(self.schema, self.encoding, branch.node.test, "value"),
+            )
+            with p.indent():
+                branch.when_true.write(p, value)
+            keyword = "} else if"
+            branch = branch.when_false
+        p.emit("} else {")
+        with p.indent():
+            branch.write(p, value)
+        p.emit("}")
+
+    def read(self, p: Printer, target: str) -> None:
+        branch: FieldGenerator = self
+        keyword = "if"
+        while isinstance(branch, ChoiceField):
+            p.emit(
+                "$keyword$ ($condition$) {",
+                keyword=keyword,
+                condition=render(self.schema, self.encoding, branch.node.test, "out"),
+            )
+            with p.indent():
+                branch.when_true.read(p, target)
+            keyword = "} else if"
+            branch = branch.when_false
+        p.emit("} else {")
+        with p.indent():
+            branch.read(p, target)
+        p.emit("}")
+
+
 def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: str, depth: int) -> FieldGenerator:
     match node:
         case Primitive():
@@ -648,3 +703,5 @@ def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: 
             return MapField(schema, node, encoding, where, depth)
         case Variant():
             return VariantField(schema, node, encoding, where, depth)
+        case TypeChoice():
+            return ChoiceField(schema, node, encoding, where, depth)

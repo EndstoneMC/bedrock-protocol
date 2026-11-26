@@ -781,3 +781,27 @@ def test_a_case_names_the_class_of_a_struct_union_case(emitted):
     text = emitted("class S:\n    x: uint8\n\n@packet(id=7)\nclass P:\n    u: S | str\n", "a.bpc_test.go")
 
     assert '\t\ta0 = caseClass("S", x.GetS().case1())\n' in text
+
+
+def test_a_type_choice_emits_reencoded_codecs_and_branches_in_go(go):
+    source = (
+        "class Entry:\n    name: str\n    values: list[uint32]\n\n"
+        "@packet(id=1)\nclass P:\n    table: list[str]\n"
+        "    entries: list[Entry] = field(\n"
+        "        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32\n"
+        "    )\n"
+    )
+    out = go(source)
+    text = (out / "a.bpc.go").read_text()
+    cases = (out / "a.bpc_test.go").read_text()
+
+    assert "func (x *Entry) encode1AsUint8(w *stream.Writer)" in text
+    assert "func (x *Entry) decode1AsUint16(r *stream.Reader)" in text
+    assert "encode1AsUint32" not in text
+    assert "if (int64(len(x.Table))) <= (int64(256)) {" in text
+    assert "} else if (int64(len(x.Table))) <= (int64(65536)) {" in text
+    assert ".encode1AsUint8(w)" in text
+    assert ".decode1AsUint16(r)" in text
+    assert ".encode1(w)" in text
+    assert "case1AsUint8" not in cases
+    assert "v.case1()" in cases

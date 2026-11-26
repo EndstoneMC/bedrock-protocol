@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, replace
 from enum import IntEnum
 from typing import cast
 
-from bedrock_protocol_compiler.builder import WIDTHS, reaches
+from bedrock_protocol_compiler.builder import WIDTHS, reaches, reencode
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
@@ -32,6 +32,7 @@ from bedrock_protocol_compiler.descriptor import (
     StructRef,
     Test,
     Type,
+    TypeChoice,
     Variant,
 )
 
@@ -113,6 +114,7 @@ class Encoding:
     mode: SerializationMode = field(init=False)
     served: dict[SerializationMode, list[Range]] = field(default_factory=dict)
     excluded: str | None = None
+    reencoded: str | None = None
 
 
 @dataclass(eq=False)
@@ -143,6 +145,8 @@ def strip(node: Type) -> Type:
             return Primitive(DOMAINS.get(name, name))
         case AliasRef(alias=alias):
             return AliasRef(alias)
+        case StructRef(struct=family):
+            return StructRef(family)
         case EnumRef(enum=enum) | EnumName(enum=enum):
             return EnumRef(enum)
         case Optional(element=element):
@@ -155,7 +159,35 @@ def strip(node: Type) -> Type:
             return Map(strip(key), strip(value))
         case Variant(cases=cases):
             return Variant(tuple(None if case is None else strip(case) for case in cases))
+        case TypeChoice(when_true=when_true):
+            return strip(when_true)
     return node
+
+
+def effective_encoding(node: Type) -> object:
+    match node:
+        case Primitive(name=name, encoded=encoded, endian=endian):
+            return Primitive, encoded or name, endian
+        case AliasRef(alias=alias, encoded=encoded):
+            return AliasRef, alias, encoded or alias.primitive.name
+        case EnumRef(enum=enum, encoded=encoded, endian=endian):
+            return EnumRef, enum, encoded, endian
+        case Optional(element=element):
+            return Optional, effective_encoding(element)
+        case List(element=element, prefix=prefix, count=count):
+            return List, effective_encoding(element), prefix, count
+        case Array(element=element, size=size):
+            return Array, effective_encoding(element), size
+        case Map(key=key, value=value):
+            return Map, effective_encoding(key), effective_encoding(value)
+    return node
+
+
+def conditions_of(node: Type) -> Iterator[Expression]:
+    if isinstance(node, TypeChoice):
+        yield node.test
+        yield from conditions_of(node.when_true)
+        yield from conditions_of(node.when_false)
 
 
 def name_coded(node: Type) -> Iterator[Enum]:
@@ -167,6 +199,9 @@ def name_coded(node: Type) -> Iterator[Enum]:
         case Map(key=key, value=value):
             yield from name_coded(key)
             yield from name_coded(value)
+        case TypeChoice(when_true=when_true, when_false=when_false):
+            yield from name_coded(when_true)
+            yield from name_coded(when_false)
 
 
 def outermost(family: Struct | Enum) -> Struct | Enum:
@@ -201,7 +236,9 @@ def numbered_by(node: Type | Expression | None) -> Iterator[MemberRef]:
             yield from numbered_by(element)
         case Not(operand=operand):
             yield from numbered_by(operand)
-        case Choice(test=test, when_true=when_true, when_false=when_false):
+        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
+            test=test, when_true=when_true, when_false=when_false
+        ):
             yield from numbered_by(test)
             yield from numbered_by(when_true)
             yield from numbered_by(when_false)
@@ -335,7 +372,7 @@ class Schema:
             )
             self.model_encodings[exclusion.model].append(exclusion)
         for model, listed in self.model_encodings.items():
-            listed.sort(key=lambda encoding: encoding.since)
+            listed.sort(key=lambda encoding: (encoding.since, encoding.excluded or "", encoding.reencoded or ""))
             for version in self.versions:
                 modes = {
                     mode
@@ -583,11 +620,31 @@ class Schema:
         reached: dict[StructRef | EnumRef | EnumName, "Encoding | Numbering | Naming"],
     ) -> object:
         match node:
-            case StructRef(struct=family, excluded=excluded):
+            case StructRef(struct=family, excluded=excluded, encoded=encoded):
                 child = self.encoded[family, version]
                 kept = tuple(each for each in child.fields if each.name != excluded)
-                if len(kept) < len(child.fields):
-                    child = self.project_encoding(family, child.model, kept, version, self.exclusions, excluded)
+                dropped = excluded if len(kept) < len(child.fields) else None
+                reencoded: str | None = None
+                if encoded is not None:
+                    rewritten = []
+                    changed = False
+                    for each in kept:
+                        if isinstance(each.type, Literal):
+                            rewritten.append(each)
+                            continue
+                        updated = reencode(each.type, encoded, None)
+                        if updated is not None and effective_encoding(updated) != effective_encoding(each.type):
+                            rewritten.append(replace(each, type=updated))
+                            changed = True
+                        else:
+                            rewritten.append(each)
+                    if changed:
+                        kept = tuple(rewritten)
+                        reencoded = encoded
+                if dropped is not None or reencoded is not None:
+                    child = self.project_encoding(
+                        family, child.model, kept, version, self.exclusions, dropped, reencoded
+                    )
                     self.excluding.setdefault(child, {}).setdefault(family, set()).add(version)
                 return reached.setdefault(node, child)
             case EnumRef(enum=family, encoded=encoded, endian=endian):
@@ -617,6 +674,13 @@ class Schema:
                 return Map, self.coded(key, version, reached), self.coded(value, version, reached)
             case Variant(cases=cases):
                 return Variant, tuple(self.coded(case, version, reached) for case in cases)
+            case TypeChoice(test=test, when_true=when_true, when_false=when_false):
+                return (
+                    TypeChoice,
+                    self.coded(test, version, reached),
+                    self.coded(when_true, version, reached),
+                    self.coded(when_false, version, reached),
+                )
             case Not(operand=operand):
                 return Not, self.coded(operand, version, reached)
             case Choice(test=test, when_true=when_true, when_false=when_false):
@@ -675,6 +739,8 @@ class Schema:
                 return Map, self.resolved(key, version), self.resolved(value, version)
             case Variant(cases=cases):
                 return Variant, tuple(self.resolved(case, version) for case in cases)
+            case TypeChoice(when_true=when_true):
+                return self.resolved(when_true, version)
         return node
 
     def project_enum(self, forms: list[Enum]) -> None:
@@ -942,49 +1008,55 @@ class Schema:
         version: int,
         encodings: dict[tuple[object, ...], Encoding],
         excluded: str | None = None,
+        reencoded: str | None = None,
     ) -> Encoding:
         sentinels: dict[MemberRef, int] = {}
         for each in fields:
-            for operator, operand, other in operands(each.when):
-                read = other if isinstance(operand, MemberRef) else operand
-                held = next(
-                    (earlier.type for earlier in fields if isinstance(read, FieldRef) and earlier.name == read.name),
-                    None,
-                )
-                if isinstance(held, EnumRef | EnumName) and (held.enum, version) in self.merged:
-                    derived, target = self.merged[held.enum, version]
-                    raise CompilerError(
-                        f"{family.module}.py: {qualified(family)}.{each.name}: compares a value of "
-                        f"{qualified(held.enum)} at {version}, where {derived} encodes to {target}'s number"
+            for condition in (each.when, *conditions_of(each.type)):
+                for operator, operand, other in operands(condition):
+                    read = other if isinstance(operand, MemberRef) else operand
+                    held = next(
+                        (
+                            earlier.type
+                            for earlier in fields
+                            if isinstance(read, FieldRef) and earlier.name == read.name
+                        ),
+                        None,
                     )
-                if isinstance(operand, MemberRef):
-                    if not (
-                        isinstance(held, EnumRef | EnumName)
-                        and self.family_models[held.enum][0] is self.family_models[operand.enum][0]
-                    ):
+                    if isinstance(held, EnumRef | EnumName) and (held.enum, version) in self.merged:
+                        derived, target = self.merged[held.enum, version]
                         raise CompilerError(
-                            f"{family.module}.py: {qualified(family)}.{each.name}: compares "
-                            f"{qualified(operand.enum)}.{operand.name} with a value of another type"
+                            f"{family.module}.py: {qualified(family)}.{each.name}: compares a value of "
+                            f"{qualified(held.enum)} at {version}, where {derived} encodes to {target}'s number"
                         )
-                    if operand.name not in self.enum_models[operand.enum, version].values:
-                        number = self.numbers[operand.enum, version][operand.name]
-                        numbering = self.numbered[held.enum, version]
-                        if number in numbering.lossy:
+                    if isinstance(operand, MemberRef):
+                        if not (
+                            isinstance(held, EnumRef | EnumName)
+                            and self.family_models[held.enum][0] is self.family_models[operand.enum][0]
+                        ):
                             raise CompilerError(
                                 f"{family.module}.py: {qualified(family)}.{each.name}: compares "
-                                f"{qualified(operand.enum)}.{operand.name}, numbered {number} at {version}, which "
-                                "decodes to no value"
+                                f"{qualified(operand.enum)}.{operand.name} with a value of another type"
                             )
-                        sentinels[operand] = numbering.decoded.get(number, number)
-                elif (
-                    isinstance(held, EnumRef | EnumName)
-                    and not (operator in ("==", "!=") and isinstance(other, MemberRef))
-                    and (self.numbered[held.enum, version].encoded or self.numbered[held.enum, version].decoded)
-                ):
-                    raise CompilerError(
-                        f"{family.module}.py: {qualified(family)}.{each.name}: reads {operand.name} as a number "
-                        f"at {version}, where {qualified(held.enum)} numbers a value apart from it"
-                    )
+                        if operand.name not in self.enum_models[operand.enum, version].values:
+                            number = self.numbers[operand.enum, version][operand.name]
+                            numbering = self.numbered[held.enum, version]
+                            if number in numbering.lossy:
+                                raise CompilerError(
+                                    f"{family.module}.py: {qualified(family)}.{each.name}: compares "
+                                    f"{qualified(operand.enum)}.{operand.name}, numbered {number} at {version}, which "
+                                    "decodes to no value"
+                                )
+                            sentinels[operand] = numbering.decoded.get(number, number)
+                    elif (
+                        isinstance(held, EnumRef | EnumName)
+                        and not (operator in ("==", "!=") and isinstance(other, MemberRef))
+                        and (self.numbered[held.enum, version].encoded or self.numbered[held.enum, version].decoded)
+                    ):
+                        raise CompilerError(
+                            f"{family.module}.py: {qualified(family)}.{each.name}: reads {operand.name} as a number "
+                            f"at {version}, where {qualified(held.enum)} numbers a value apart from it"
+                        )
         reached: dict[StructRef | EnumRef | EnumName, Encoding | Numbering | Naming] = {}
         key = tuple(
             (
@@ -1002,7 +1074,7 @@ class Schema:
         }
         return encodings.setdefault(
             (model, key, frozenset(sentinels.items())),
-            Encoding(model, fields, reached, numbers | sentinels, excluded=excluded),
+            Encoding(model, fields, reached, numbers | sentinels, excluded=excluded, reencoded=reencoded),
         )
 
     def shapes(self, family: Struct | Enum) -> list[Shape]:

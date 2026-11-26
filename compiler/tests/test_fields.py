@@ -476,3 +476,29 @@ def test_exclude_is_rejected_on_a_field_that_holds_no_struct(build_package, anno
         CompilerError, match="x: exclude is given to something other than a struct or a list, array or optional of one"
     ):
         build_package({"a": HEADER + INFO + f'class A:\n    x: {annotation} = field(exclude="capable")\n'})
+
+
+def test_type_reaches_through_a_struct_with_one_reencodable_scalar(build_package):
+    source = (
+        HEADER
+        + "class Entry:\n    name: str\n    values: list[uint32]\n\n"
+        + "class A:\n    x: Entry = field(type=uint8)\n    ys: list[Entry] = field(type=uint16)\n"
+    )
+    package = build_package({"a": source})
+    entry = package.modules[0].families[0]
+
+    assert field_types(package) == [
+        StructRef(entry, encoded="uint8"),
+        List(StructRef(entry, encoded="uint16"), Primitive("uvarint32")),
+    ]
+
+
+def test_type_on_a_struct_with_two_reencodable_scalars_is_rejected(build_package):
+    source = (
+        HEADER
+        + "class Pair:\n    a: uint32\n    b: uint32\n\n"
+        + "class A:\n    x: Pair = field(type=uint8)\n"
+    )
+
+    with pytest.raises(CompilerError, match=REENCODE):
+        build_package({"a": source})

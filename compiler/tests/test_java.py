@@ -2296,3 +2296,27 @@ def test_a_big_endian_width_the_runtime_lacks_is_a_compiler_error(build_package,
 
     with pytest.raises(SystemExit, match=r"P\.x: ByteBufCodec has no big-endian int16"):
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+
+def test_a_type_choice_emits_reencoded_codecs_and_branches_in_java(build_package, tmp_path):
+    source = (
+        HEADER
+        + "class Entry:\n    name: str\n    values: list[uint32]\n\n"
+        + "@packet(id=1)\nclass P:\n    table: list[str]\n"
+        + "    entries: list[Entry] = field(\n"
+        + "        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32\n"
+        + "    )\n"
+    )
+    build_package({"a": source})
+    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+    entry_java = (tmp_path / "java/dev/endstone/protocol/Entry.java").read_text()
+    packet_java = (tmp_path / "java/dev/endstone/protocol/P.java").read_text()
+
+    assert "static final class Codec1AsUint8 implements Codec<Entry>" in entry_java
+    assert "static final class Codec1AsUint16 implements Codec<Entry>" in entry_java
+    assert "Codec1AsUint32" not in entry_java
+    assert "if (((long) value.table_.size()) <= (256L)) {" in packet_java
+    assert "} else if (((long) value.table_.size()) <= (65536L)) {" in packet_java
+    assert "Entry.Codec1AsUint8.INSTANCE.encode(" in packet_java
+    assert "Entry.Codec1AsUint16.INSTANCE.decode(buf)" in packet_java
+    assert "Entry.Codec1.INSTANCE.encode(" in packet_java

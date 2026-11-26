@@ -43,6 +43,10 @@ class Renderer(expression.Renderer[Operand]):
         return operand.operand()
 
     @override
+    def length(self, operand: Operand) -> str:
+        return f"int64(len({operand.access()}))"
+
+    @override
     def test(self, operand: Operand, bit: int) -> str:
         return f"{operand.access()}.Test({bit})"
 

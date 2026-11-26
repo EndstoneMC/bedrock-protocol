@@ -6,6 +6,7 @@ from bedrock_protocol_compiler.go import names
 from bedrock_protocol_compiler.go.enum import EnumGenerator
 from bedrock_protocol_compiler.go.expression import Renderer
 from bedrock_protocol_compiler.go.field import (
+    ChoiceSlot,
     FieldContext,
     ListSlot,
     MapSlot,
@@ -43,6 +44,8 @@ def fallible(slot: Slot) -> bool:
             return slot.key.fallible or slot.value.fallible
         case UnionSlot():
             return any(case is not None and case.value.fallible for case in slot.union.cases)
+        case ChoiceSlot():
+            return fallible(slot.when_true) or fallible(slot.when_false)
     return False
 
 
@@ -54,7 +57,7 @@ class Codec:
         self.name = suffix(encoding)
         self.slots = slots
         self.wrapped = {union.holder: union for union in wrapped}
-        self.cased = encoding.excluded is None
+        self.cased = encoding.excluded is None and encoding.reencoded is None
 
 
 class MessageGenerator:
@@ -71,7 +74,13 @@ class MessageGenerator:
         ]
         self.codecs: list[Codec] = []
         for encoding in sorted(schema.encodings(model), key=lambda each: (each.since, MODES.index(each.mode))):
-            if not encoding.fields and model.nested and self.packet_id is None and encoding.excluded is None:
+            if (
+                not encoding.fields
+                and model.nested
+                and self.packet_id is None
+                and encoding.excluded is None
+                and encoding.reencoded is None
+            ):
                 continue
             slots, wrapped = self.build(encoding)
             self.codecs.append(Codec(encoding, slots, wrapped))
@@ -240,7 +249,7 @@ class MessageGenerator:
         with p.indent():
             if stored:
                 guard(p, holder)
-            self.fields(p, renderer, slots, "w", lambda body, slot: slot.write(body), fallible)
+            self.fields(p, renderer, slots, "w", lambda body, slot: slot.write(body, renderer), fallible)
         p.emit("}")
         p.emit("")
         p.emit("func (x *$holder$) decode$name$(r *stream.Reader) {", holder=holder, name=name)

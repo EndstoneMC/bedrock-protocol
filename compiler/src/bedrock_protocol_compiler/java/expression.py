@@ -42,6 +42,10 @@ class Renderer(expression.Renderer[Operand]):
         return f"{self.receiver}{operand.member}{operand.suffix}"
 
     @override
+    def length(self, operand: Operand) -> str:
+        return f"(long) {self.receiver}{operand.member}.size()"
+
+    @override
     def test(self, operand: Operand, bit: int) -> str:
         return f"{self.receiver}{operand.member}.get({bit})"
 
@@ -71,7 +75,10 @@ class Renderer(expression.Renderer[Operand]):
 
     @override
     def binary(self, operator: str, first: Term, second: Term, cls: Num) -> Term:
-        if operator == "<" and not cls.signed:
+        if operator in ("<", "<=") and not cls.signed:
             boxed = "Long" if cls.bits == 64 else "Integer"
-            return Term(f"{boxed}.compareUnsigned({self.spell(first, cls)}, {self.spell(second, cls)}) < 0", BOOL)
+            return Term(
+                f"{boxed}.compareUnsigned({self.spell(first, cls)}, {self.spell(second, cls)}) {operator} 0",
+                BOOL,
+            )
         return super().binary(operator, first, second, cls)

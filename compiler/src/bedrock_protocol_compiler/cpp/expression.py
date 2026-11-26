@@ -14,7 +14,7 @@ def render(schema: Schema, encoding: Encoding, expression: Expression, receiver:
         case Int(value=value):
             return str(value)
         case Len(field=name):
-            return f"{receiver}.{name}.size()"
+            return f"static_cast<std::int64_t>({receiver}.{name}.size())"
         case Test(field=name, member=member):
             return f"{receiver}.{name}.test(static_cast<std::size_t>({names.numbered(schema, member, encoding)}))"
         case Not(operand=operand):
@@ -38,4 +38,6 @@ def render_count(schema: Schema, encoding: Encoding, expression: Expression, rec
             left_count = render_count(schema, encoding, left, receiver)
             right_count = render_count(schema, encoding, right, receiver)
             return f"detail::countProduct({left_count}, {right_count})"
+        case Len(field=name):
+            return f"detail::countValue({receiver}.{name}.size())"
     return f"detail::countValue({render(schema, encoding, expression, receiver)})"

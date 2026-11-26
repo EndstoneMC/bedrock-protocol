@@ -34,8 +34,10 @@ class StructGenerator:
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
-            if not encoding.fields and model.nested and encoding.excluded is None:
+            if not encoding.fields and model.nested and encoding.excluded is None and encoding.reencoded is None:
                 continue
+            if encoding.reencoded is not None and names.ENCODINGS[encoding.reencoded].startswith("std::"):
+                self.field_includes.add("<cstdint>")
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
                 generator = make_field_generator(schema, each.type, encoding, f'"{each.name}"', 0)
@@ -48,6 +50,8 @@ class StructGenerator:
                 fields.append((each, generator))
                 self.field_includes |= generator.includes()
                 self.field_includes |= {names.header(target) for target in reached_by(each)}
+                if each.when is not None:
+                    self.field_includes.add("<cstdint>")
             self.implemented.append((encoding, fields))
 
     def copies(self, encoding: Encoding, copies: Expression, receiver: str) -> str:
@@ -171,7 +175,9 @@ class StructGenerator:
         for _, child in self.owned:
             child.serializer_declaration(p)
         for encoding, _ in self.implemented:
-            serializer = names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded)
+            serializer = names.serializer(
+                self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.reencoded
+            )
             p.emit(
                 """
                 template <>
@@ -210,7 +216,9 @@ class StructGenerator:
                 }
 
                 """,
-                serializer=names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded),
+                serializer=names.serializer(
+                    self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.reencoded
+                ),
                 qualified=self.qualified,
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),

@@ -52,9 +52,17 @@ from bedrock_protocol_compiler.descriptor import (
     StructRef,
     Test,
     Type,
+    TypeChoice,
     Variant,
 )
-from bedrock_protocol_compiler.lambdas import field_name, parse_copies, parse_count, parse_predicate, read_lambda
+from bedrock_protocol_compiler.lambdas import (
+    field_name,
+    parse_copies,
+    parse_count,
+    parse_predicate,
+    parse_type_choice,
+    read_lambda,
+)
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
@@ -206,6 +214,36 @@ def reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None
     return None
 
 
+def reencode_struct(node: Type, encoded: str) -> Type | None:
+    match node:
+        case StructRef():
+            return replace(node, encoded=encoded)
+        case (
+            Optional(element=StructRef() as element)
+            | List(element=StructRef() as element)
+            | Array(element=StructRef() as element)
+        ):
+            return replace(node, element=replace(element, encoded=encoded))
+    return None
+
+
+def apply_reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None:
+    reencoded = reencode(node, encoded, endian)
+    if reencoded is not None:
+        return reencoded
+    if encoded is not None and endian is None:
+        return reencode_struct(node, encoded)
+    return None
+
+
+def type_leaves(node: Type) -> Iterator[Type]:
+    if isinstance(node, TypeChoice):
+        yield from type_leaves(node.when_true)
+        yield from type_leaves(node.when_false)
+    else:
+        yield node
+
+
 def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRef]:
     match node:
         case StructRef(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
@@ -218,7 +256,9 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
             yield from reaches(element)
         case Not(operand=operand):
             yield from reaches(operand)
-        case Choice(test=test, when_true=when_true, when_false=when_false):
+        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
+            test=test, when_true=when_true, when_false=when_false
+        ):
             yield from reaches(test)
             yield from reaches(when_true)
             yield from reaches(when_false)
@@ -242,7 +282,9 @@ def fields_read(node: Type | Expression | None) -> Iterator[str]:
         case Binary(left=left, right=right):
             yield from fields_read(left)
             yield from fields_read(right)
-        case Choice(test=test, when_true=when_true, when_false=when_false):
+        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
+            test=test, when_true=when_true, when_false=when_false
+        ):
             yield from fields_read(test)
             yield from fields_read(when_true)
             yield from fields_read(when_false)
@@ -289,11 +331,15 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
             where = f"{path}: {qualified}.{struct_field.name}"
-            element = struct_field.type
-            if isinstance(element, Optional | List | Array):
-                element = element.element
-            match element:
-                case StructRef(struct=holder, excluded=str() as excluded):
+            for leaf in type_leaves(struct_field.type):
+                element = leaf
+                if isinstance(element, Optional | List | Array):
+                    element = element.element
+                if not isinstance(element, StructRef):
+                    continue
+                holder = element.struct
+                if element.excluded is not None:
+                    excluded = element.excluded
                     spanned = [
                         each
                         for declared in holder.declarations
@@ -323,6 +369,26 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
                         ):
                             raise CompilerError(
                                 f"{where}: exclude names {excluded}, which {holder.name}.{reader.name} reads"
+                            )
+                if element.encoded is not None:
+                    for version in versions:
+                        if not struct_field.range.contains(version):
+                            continue
+                        live_fields = [
+                            each
+                            for declared in holder.declarations
+                            if declared.range.contains(version)
+                            for each in declared.fields
+                            if each.range.contains(version)
+                            and each.name != element.excluded
+                            and not isinstance(each.type, Literal)
+                        ]
+                        reencodable = [
+                            each for each in live_fields if reencode(each.type, element.encoded, None) is not None
+                        ]
+                        if len(reencodable) != 1:
+                            raise CompilerError(
+                                f"{where}: type and endian do not reach exactly one scalar that takes them"
                             )
             for target in (
                 *reaches(struct_field.type),
@@ -977,24 +1043,6 @@ class Builder:
                     if not (isinstance(prefix, Primitive) and prefix.name in LIST_PREFIXES):
                         raise error(source, arguments["prefix"], name, "prefix is not uint32, uint16 or varint32")
                     field_type = replace(field_type, prefix=prefix)
-                encoded = None
-                endian = None
-                if call is not None and "type" in arguments:
-                    encoded_type = self.type_of(source, scope, arguments["type"])
-                    if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
-                        raise error(source, arguments["type"], name, "type is not str or an integer primitive")
-                    encoded = encoded_type.name
-                if call is not None and "endian" in arguments:
-                    if literal(source, arguments["endian"], str, name) != "big":
-                        raise error(source, arguments["endian"], name, 'endian is not "big"')
-                    endian = "big"
-                if encoded or endian:
-                    reencoded = reencode(field_type, encoded, endian)
-                    if reencoded is None:
-                        raise error(
-                            source, statement, name, "type and endian do not reach exactly one scalar that takes them"
-                        )
-                    field_type = reencoded
                 if call is not None and "count" in arguments:
                     if not isinstance(field_type, List):
                         raise error(source, call, name, "count is given to something other than a bare list")
@@ -1026,6 +1074,45 @@ class Builder:
                                 name,
                                 "exclude is given to something other than a struct or a list, array or optional of one",
                             )
+                endian = None
+                if call is not None and "endian" in arguments:
+                    if literal(source, arguments["endian"], str, name) != "big":
+                        raise error(source, arguments["endian"], name, 'endian is not "big"')
+                    endian = "big"
+                if call is not None and "type" in arguments:
+                    def apply_encoded(encoded_node: ast.expr) -> Type:
+                        encoded_type = self.type_of(source, scope, encoded_node)
+                        if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
+                            raise error(source, encoded_node, name, "type is not str or an integer primitive")
+                        reencoded = apply_reencode(field_type, encoded_type.name, endian)
+                        if reencoded is None:
+                            raise error(
+                                source,
+                                statement,
+                                name,
+                                "type and endian do not reach exactly one scalar that takes them",
+                            )
+                        return reencoded
+
+                    if isinstance(arguments["type"], ast.Lambda):
+                        choice = read_lambda(
+                            arguments["type"],
+                            fields,
+                            field_range,
+                            self.versions,
+                            lambda node: self.member_of(source, scope, node),
+                            lambda node, reason: error(source, node, name, reason),
+                        )
+                        field_type = parse_type_choice(choice, apply_encoded)
+                    else:
+                        field_type = apply_encoded(arguments["type"])
+                elif endian:
+                    reencoded = apply_reencode(field_type, None, endian)
+                    if reencoded is None:
+                        raise error(
+                            source, statement, name, "type and endian do not reach exactly one scalar that takes them"
+                        )
+                    field_type = reencoded
                 if not spans or spans[-1][1] != field_type:
                     spans.append((version, field_type))
             self.at = None

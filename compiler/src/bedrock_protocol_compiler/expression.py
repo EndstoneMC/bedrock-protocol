@@ -9,6 +9,7 @@ from bedrock_protocol_compiler.descriptor import (
     Expression,
     FieldRef,
     Int,
+    Len,
     MemberRef,
     Not,
     Test,
@@ -52,7 +53,7 @@ UINT32 = CLASSES["uint32"]
 INT64 = CLASSES["int64"]
 UINT64 = CLASSES["uint64"]
 LOGICAL = {"and": "&&", "or": "||"}
-COMPARISONS = ("==", "!=", "<")
+COMPARISONS = ("==", "!=", "<", "<=")
 
 
 class Operand(Protocol):
@@ -101,6 +102,9 @@ class Renderer[O: Operand]:
         raise NotImplementedError
 
     def access(self, operand: O) -> str:
+        raise NotImplementedError
+
+    def length(self, operand: O) -> str:
         raise NotImplementedError
 
     def test(self, operand: O, bit: int) -> str:
@@ -158,6 +162,11 @@ class Renderer[O: Operand]:
                 if -(1 << 31) <= value < 1 << 31:
                     return Term(None, INT32, value)
                 return Term(None, INT64 if -(1 << 63) <= value < 1 << 63 else UINT64, value)
+            case Len(field=name):
+                operand = self.operands[name]
+                if not operand.sized:
+                    raise CompilerError(f"{self.label(operand)}: is not a list or a map")
+                return Term(self.length(operand), INT64)
             case Test(field=name, member=member):
                 operand = self.operands[name]
                 if not operand.bitset:

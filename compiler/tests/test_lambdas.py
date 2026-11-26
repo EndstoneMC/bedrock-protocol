@@ -7,10 +7,14 @@ from bedrock_protocol_compiler.descriptor import (
     FieldRef,
     Int,
     Len,
+    List,
     MemberRef,
     Not,
+    Primitive,
     Range,
+    StructRef,
     Test,
+    TypeChoice,
 )
 
 HEADER = """
@@ -205,7 +209,10 @@ def test_bad_duplicate_lambda_is_rejected(build_package, body, message):
         ("k: uint8\n    x: uint8 = field(when=lambda p: p.k >= 1)", "x: is not a predicate"),
         ("k: uint8\n    x: uint8 = field(when=lambda p: p.k not in {1})", "x: is not a predicate"),
         ("k: uint8\n    x: uint8 = field(when=lambda p: p.k in [1])", "x: is not a predicate"),
-        ("k: uint8\n    x: uint8 = field(when=lambda p: len(p.k))", "x: is not a predicate"),
+        (
+            "k: uint8\n    x: uint8 = field(when=lambda p: len(p.k))",
+            "x: len is given something other than a list or map",
+        ),
         (
             "k: uint8\n    x: uint8 = field(when=lambda p: p.k.test(E.A))",
             "x: test is given something other than a bitset",
@@ -316,3 +323,62 @@ def test_a_lambda_may_default_its_argument(build_package):
     package = build_package({"a": HEADER + "class S:\n    k: uint8\n    x: uint8 = field(when=lambda p=1: p.k)\n"})
 
     assert when_of(package, "x") == FieldRef("k")
+
+
+def test_a_predicate_accepts_len_and_lte(build_package):
+    source = HEADER + (
+        "class S:\n    xs: list[str]\n    x: uint8 = field(when=lambda p: len(p.xs) <= 0x100)\n"
+    )
+    package = build_package({"a": source})
+
+    assert when_of(package, "x") == Binary("<=", Len("xs"), Int(256))
+
+
+def test_type_lambda_builds_a_type_choice_over_reencoded_structs(build_package):
+    source = (
+        "from protocol import field, uint8, uint16, uint32\n"
+        'package = "bedrock.protocol"\n'
+        'java_package = "dev.endstone.protocol"\n'
+        'go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"\n\n'
+        "class Item:\n    name: str\n    values: list[uint32]\n\n"
+        "class S:\n    table: list[str]\n"
+        "    items: list[Item] = field(\n"
+        "        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32\n"
+        "    )\n"
+    )
+    package = build_package({"a": source})
+    item = family_of(package, "Item")
+    items = family_of(package, "S").declarations[0].fields[1]
+
+    assert items.type == TypeChoice(
+        Binary("<=", Len("table"), Int(256)),
+        List(StructRef(item, encoded="uint8"), Primitive("uvarint32")),
+        TypeChoice(
+            Binary("<=", Len("table"), Int(65536)),
+            List(StructRef(item, encoded="uint16"), Primitive("uvarint32")),
+            List(StructRef(item, encoded="uint32"), Primitive("uvarint32")),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("table: list[str]\n    x: uint32 = field(type=lambda p: uint8)", "x: is not a conditional type"),
+        (
+            "table: list[str]\n    x: uint32 = field(type=lambda p, q: uint8 if len(p.table) <= 1 else uint32)",
+            "x: is not a lambda of one argument",
+        ),
+        (
+            "x: uint32 = field(type=lambda p: uint8 if len(p.table) <= 1 else uint32)\n    table: list[str]",
+            "x: p.table is not an earlier field",
+        ),
+        (
+            "table: list[str]\n    x: uint32 = field(type=lambda p: bool if len(p.table) <= 1 else uint32)",
+            "x: type is not str or an integer primitive",
+        ),
+    ],
+)
+def test_bad_type_lambda_is_rejected(build_package, body, message):
+    with pytest.raises(CompilerError, match=message):
+        build_package({"a": HEADER + f"class S:\n    {body}\n"})

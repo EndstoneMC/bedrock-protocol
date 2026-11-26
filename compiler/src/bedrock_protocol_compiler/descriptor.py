@@ -22,6 +22,7 @@ class AliasRef:
 class StructRef:
     struct: "Struct"
     excluded: str | None = None
+    encoded: str | None = None
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,13 @@ class Bitset:
     width: "MemberRef"
 
 
+@dataclass(frozen=True)
+class TypeChoice:
+    test: "Expression"
+    when_true: "Type"
+    when_false: "Type"
+
+
 type Type = (
     Primitive
     | AliasRef
@@ -94,6 +102,7 @@ type Type = (
     | Variant
     | Literal
     | Bitset
+    | TypeChoice
 )
 
 
