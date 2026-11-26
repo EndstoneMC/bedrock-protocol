@@ -675,6 +675,14 @@ def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
+def test_a_type_choice_whose_branches_hold_otherwise_is_a_compiler_error(build_package, tmp_path):
+    source = COLORS + "class P:\n    k: uint8\n    c: Color = field(type=lambda p: str if p.k == 1 else uint8)\n"
+    build_package({"a": HEADER + source})
+
+    with pytest.raises(SystemExit, match=r"P\.c: takes another Java type, setter check or enum form from each branch$"):
+        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
+
+
 def test_the_protocol_class_is_final(emitted):
     assert "public final class Protocol {\n" in emitted(SCALAR, "Protocol.java")
 

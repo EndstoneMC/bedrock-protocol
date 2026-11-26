@@ -219,7 +219,12 @@ class FieldContext:
             case Variant(cases=cases) if self.inline:
                 slot = UnionSlot(self.field, label, self.union(cases, label, True), self.where)
             case TypeChoice(test=test, when_true=when_true, when_false=when_false):
-                slot = ChoiceSlot(self.field, label, test, self.slot(when_true), self.slot(when_false))
+                chosen, other = self.slot(when_true), self.slot(when_false)
+                if held(chosen, []) != held(other, []):
+                    raise CompilerError(
+                        f"{self.where}: takes another Java type, setter check or enum form from each branch"
+                    )
+                slot = ChoiceSlot(self.field, label, test, chosen, other)
             case _:
                 slot = ScalarSlot(self.field, label, self.value(node, label))
         if len(self.unions) > 1:
@@ -1094,3 +1099,21 @@ class ChoiceSlot(Slot):
         with body.p.indent():
             branch.read(body, renderer)
         body.p.emit("}")
+
+
+def held(slot: Slot, unions: list[UnionGenerator]) -> str:
+    p = Printer()
+    slot.declare(p, True)
+    slot.declare(p, False)
+    slot.construct(p)
+    slot.initialize(p)
+    slot.adopt(p)
+    slot.getters(p, False)
+    slot.getters(p, True)
+    slot.setters(p)
+    slot.definitions(p)
+    for each in (*slot.comparisons(), *slot.hashes()):
+        p.emit("$each$", each=each)
+    for union in unions:
+        union.definition(p, [])
+    return p.text

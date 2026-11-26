@@ -7,7 +7,7 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Literal, Range, 
 from bedrock_protocol_compiler.java import members, names
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.expression import Renderer
-from bedrock_protocol_compiler.java.field import FieldContext, Slot
+from bedrock_protocol_compiler.java.field import FieldContext, Slot, held
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.names import BUILDER, OBJECT
 from bedrock_protocol_compiler.java.union import Union, UnionGenerator, case_name
@@ -40,24 +40,6 @@ def spans(served: Served) -> list[Span]:
         else:
             found.append((since, until, modes))
     return found
-
-
-def held(slot: Slot, unions: list[UnionGenerator]) -> str:
-    p = Printer()
-    slot.declare(p, True)
-    slot.declare(p, False)
-    slot.construct(p)
-    slot.initialize(p)
-    slot.adopt(p)
-    slot.getters(p, False)
-    slot.getters(p, True)
-    slot.setters(p)
-    slot.definitions(p)
-    for each in (*slot.comparisons(), *slot.hashes()):
-        p.emit("$each$", each=each)
-    for union in unions:
-        union.definition(p, [])
-    return p.text
 
 
 class MessageGenerator:
