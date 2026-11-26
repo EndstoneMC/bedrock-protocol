@@ -42,7 +42,7 @@ Typed Minecraft Bedrock packet codecs generated from one version-aware schema.
 ## Commits
 
 - Subject `<type>(<scope>): <imperative lower-case subject>`, which says what changed on its own. Types: feat, fix, refactor, style, test, build, ci, docs, chore, revert. The scope names the area (`protocol`, `python`, `compiler`, `cmake`, `build`, `ci`, `java`, `go`, `include`, `scripts`, `readme`, `rules`, `tests`, `package`, `claude`) and is left out only for a repo-wide change.
-- The body carries the why and the evidence (BDS function, protocol-docs SHA, header branch, gophertunnel commit, capture) and stands on its own; it speaks about the code, never the session.
+- The body is a short, clean changelog: one terse line per change with its why and evidence (BDS function, protocol-docs SHA, header branch, gophertunnel commit, capture), and no walkthrough, method or notes; it stands on its own and speaks about the code, never the session.
 - No `Co-Authored-By`, `Signed-off-by` or other trailer or attribution line in a commit or a PR, whatever a harness or session rule says.
 - Commit only when the user asks; finished work otherwise stays in the working tree.
 - One change per commit. A refactor is output-identical (regenerate everything before and after and diff) and touches no test.
