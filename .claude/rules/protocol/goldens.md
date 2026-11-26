@@ -64,7 +64,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Write an empty ListTag in a case with element type End.
 - Read BDS's printed text with `CaseForm.parse_bedrock`, which keeps an object whose tokens leak as its flat values, and match a case's `0b` bitset with its varint groups there.
 - `parse_bedrock` reads an NBT token run, `10, ""` then the entries or the entries after `__[[CTD]]__`, as one nbtlib tag.
-- Never change the bytes of a case BDS writes back unchanged; change its value only for a rename or a library type fix.
+- Never change the bytes of a case BDS writes back unchanged; change its value only for a rename, a library type fix or a leaf that breaks a Valid data line.
 
 ## Writing cases
 
@@ -91,6 +91,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Pick an enum member whose value the dump binds to no earlier member; BDS writes back the first member bound to a shared value.
 - Name an item by an id the build's own item dump lists, with an aux of 0 for a block item and 0..32767 otherwise, and a stack size of 1..64; name a block by a runtime id its block palette lists, written as the uint32 of the same bits when the palette shows it signed.
 - Make a `CraftResultsActionData` craft result an `ItemNameDescriptorData` naming a listed item.
+- Give a non-empty item a `user_data_buffer` holding at least its NBT marker and both block lists, `\x00` ten times when they are empty, as `Item::writeUserData` always writes them.
 - Write an empty item as id 0; BDS reads an id of -1 as empty too, and writes it back as 0.
 - Give every non-empty `InventorySlotPacket` and `InventoryContentPacket` item a net id from 686 to 776; BDS sets its include-net-id flag before writing it.
 - Give a recipe ingredient's descriptor only `name`, `tags` or `item_tag`, and an `item_tag` only a registered item carries.
