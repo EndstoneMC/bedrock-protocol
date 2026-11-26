@@ -326,9 +326,7 @@ def test_a_lambda_may_default_its_argument(build_package):
 
 
 def test_a_predicate_accepts_len_and_lte(build_package):
-    source = HEADER + (
-        "class S:\n    xs: list[str]\n    x: uint8 = field(when=lambda p: len(p.xs) <= 0x100)\n"
-    )
+    source = HEADER + ("class S:\n    xs: list[str]\n    x: uint8 = field(when=lambda p: len(p.xs) <= 0x100)\n")
     package = build_package({"a": source})
 
     assert when_of(package, "x") == Binary("<=", Len("xs"), Int(256))

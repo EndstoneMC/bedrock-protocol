@@ -256,8 +256,9 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
             yield from reaches(element)
         case Not(operand=operand):
             yield from reaches(operand)
-        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
-            test=test, when_true=when_true, when_false=when_false
+        case (
+            Choice(test=test, when_true=when_true, when_false=when_false)
+            | TypeChoice(test=test, when_true=when_true, when_false=when_false)
         ):
             yield from reaches(test)
             yield from reaches(when_true)
@@ -282,8 +283,9 @@ def fields_read(node: Type | Expression | None) -> Iterator[str]:
         case Binary(left=left, right=right):
             yield from fields_read(left)
             yield from fields_read(right)
-        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
-            test=test, when_true=when_true, when_false=when_false
+        case (
+            Choice(test=test, when_true=when_true, when_false=when_false)
+            | TypeChoice(test=test, when_true=when_true, when_false=when_false)
         ):
             yield from fields_read(test)
             yield from fields_read(when_true)
@@ -1080,6 +1082,7 @@ class Builder:
                         raise error(source, arguments["endian"], name, 'endian is not "big"')
                     endian = "big"
                 if call is not None and "type" in arguments:
+
                     def apply_encoded(encoded_node: ast.expr) -> Type:
                         encoded_type = self.type_of(source, scope, encoded_node)
                         if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):

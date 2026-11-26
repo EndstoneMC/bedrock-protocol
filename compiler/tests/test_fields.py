@@ -494,11 +494,7 @@ def test_type_reaches_through_a_struct_with_one_reencodable_scalar(build_package
 
 
 def test_type_on_a_struct_with_two_reencodable_scalars_is_rejected(build_package):
-    source = (
-        HEADER
-        + "class Pair:\n    a: uint32\n    b: uint32\n\n"
-        + "class A:\n    x: Pair = field(type=uint8)\n"
-    )
+    source = HEADER + "class Pair:\n    a: uint32\n    b: uint32\n\n" + "class A:\n    x: Pair = field(type=uint8)\n"
 
     with pytest.raises(CompilerError, match=REENCODE):
         build_package({"a": source})

@@ -236,8 +236,9 @@ def numbered_by(node: Type | Expression | None) -> Iterator[MemberRef]:
             yield from numbered_by(element)
         case Not(operand=operand):
             yield from numbered_by(operand)
-        case Choice(test=test, when_true=when_true, when_false=when_false) | TypeChoice(
-            test=test, when_true=when_true, when_false=when_false
+        case (
+            Choice(test=test, when_true=when_true, when_false=when_false)
+            | TypeChoice(test=test, when_true=when_true, when_false=when_false)
         ):
             yield from numbered_by(test)
             yield from numbered_by(when_true)
