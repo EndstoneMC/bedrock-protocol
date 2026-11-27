@@ -1,5 +1,27 @@
 [
  {
+  "id": "add_debug_marker_cube_arm",
+  "value": {
+   "type": 2,
+   "debug_marker_data": {
+    "text": "marker",
+    "position": {
+     "x": 1.0,
+     "y": 2.0,
+     "z": 3.0
+    },
+    "color": {
+     "r": 0.25,
+     "g": 0.5,
+     "b": 0.75,
+     "a": 1.0
+    },
+    "duration_ms": 1500
+   }
+  },
+  "bytes": "02000000066d61726b65720000803f00000040000040400000803e0000003f0000403f0000803fdc05000000000000"
+ },
+ {
   "id": "clear_debug_markers_arm",
   "value": {
    "type": 1,
