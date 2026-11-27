@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -122,6 +123,28 @@ void bind_name(nb::handle owner, std::string_view leaf, nb::handle cls)
 void register_packet(const Scope &scope, int id, nb::handle cls)
 {
     scope.packets[nb::int_(id)] = cls;
+}
+
+void bind_version(nb::handle home, const Scope &scope, std::string_view label, std::string_view declared,
+                  const std::type_info *cpp_type, void (*bind)(nb::handle, const char *), const VersionBinding &binding)
+{
+    nb::handle cls = nb::detail::nb_type_lookup(cpp_type);
+    const auto [owner, parent, leaf] = claim_owner(scope, home, declared, label, !cls.is_valid());
+    if (!cls.is_valid()) {
+        const std::string name(declared.substr(declared.find_last_of(':') + 1));
+        bind(parent, name.c_str());
+        cls = nb::detail::nb_type_lookup(cpp_type);
+    }
+    bind_name(owner, leaf, cls);
+    for (std::size_t i = 0; i < mode_count; ++i) {
+        const ModeCodec &mode = binding.modes[i];
+        if (mode.codec != nullptr) {
+            register_mode(scope, cls, static_cast<SerializationMode>(i), mode.since, mode.codec);
+        }
+    }
+    if (binding.packet) {
+        register_packet(scope, *binding.packet, cls);
+    }
 }
 
 void init_versions(nb::module_ &core, nb::module_ &package)

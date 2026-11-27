@@ -1,6 +1,7 @@
 #include "_core.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <optional>
 #include <string>
@@ -39,6 +40,14 @@ template <typename Error, typename... Extra>
     throw nb::python_error();
 }
 
+char *instance(nb::handle self, const StructInfo &info)
+{
+    if (Py_TYPE(self.ptr()) != info.type || !nb::inst_ready(self)) {
+        throw nb::type_error(std::format("{}: incompatible self", info.name).c_str());
+    }
+    return nb::inst_ptr<char>(self);
+}
+
 }  // namespace
 
 void throw_decode_error(const DecodeError &error)
@@ -49,6 +58,84 @@ void throw_decode_error(const DecodeError &error)
 void throw_encode_error(const EncodeError &error)
 {
     throw_error("EncodeError", error);
+}
+
+void throw_cannot_hold(const Label &label, nb::handle src)
+{
+    throw nb::type_error(std::format("{}.{}: cannot hold {}", label.type, label.field, nb::repr(src).c_str()).c_str());
+}
+
+void *field_address(nb::handle self, const StructInfo &info, std::size_t index)
+{
+    return instance(self, info) + info.fields[index].offset;
+}
+
+void assign_fields(void *value, PyObject **args, const StructInfo &info)
+{
+    for (std::size_t i = 0; i < info.fields.size(); ++i) {
+        if (args[i] != Py_Ellipsis) {
+            const Field &field = info.fields[i];
+            field.assign(static_cast<char *>(value) + field.offset, args[i], Label{info.name, info.names[i]});
+        }
+    }
+}
+
+PyObject *construct_impl(void *capture, PyObject **args, std::uint8_t *flags, nb::rv_policy,
+                         nb::detail::cleanup_list *cleanup)
+{
+    const auto &info = *static_cast<const StructInfo *>(static_cast<void **>(capture)[0]);
+    void *storage = nullptr;
+    if (!nb::detail::nb_type_get(info.cpp_type, args[0], flags[0], cleanup, &storage)) {
+        return NB_NEXT_OVERLOAD;
+    }
+    info.construct(storage, args + 1, info);
+    return nb::detail::none_ref();
+}
+
+nb::object copy_instance(nb::handle self, const StructInfo &info)
+{
+    instance(self, info);
+    nb::object out = nb::inst_alloc(self.type());
+    nb::inst_copy(out, self);
+    return out;
+}
+
+void def_eq(nb::handle cls, const StructInfo &info)
+{
+    const StructInfo *owner = &info;
+    nb::cpp_function_def(
+        [owner](nb::handle self, nb::handle other) -> nb::object {
+            if (Py_TYPE(self.ptr()) != owner->type || Py_TYPE(other.ptr()) != owner->type || !nb::inst_ready(self) ||
+                !nb::inst_ready(other)) {
+                return nb::borrow(Py_NotImplemented);
+            }
+            const char *a = nb::inst_ptr<char>(self);
+            const char *b = nb::inst_ptr<char>(other);
+            for (const Field &field : owner->fields) {
+                if (!field.equal(a + field.offset, b + field.offset)) {
+                    return nb::bool_(false);
+                }
+            }
+            return nb::bool_(true);
+        },
+        nb::scope(cls), nb::name("__eq__"), nb::is_method(), nb::is_operator(), nb::sig(eq_signature));
+}
+
+void def_repr(nb::handle cls, const StructInfo &info)
+{
+    const StructInfo *owner = &info;
+    nb::cpp_function_def(
+        [owner](nb::handle self) {
+            const char *base = instance(self, *owner);
+            std::string members;
+            for (std::size_t i = 0; i < owner->fields.size(); ++i) {
+                const Field &field = owner->fields[i];
+                members += std::format("{}{}={}", i ? ", " : "", owner->names[i],
+                                       nb::repr(field.value(base + field.offset)).c_str());
+            }
+            return std::format("{}({})", nb::cast<std::string>(self.type().attr("__qualname__")), members);
+        },
+        nb::scope(cls), nb::name("__repr__"), nb::is_method());
 }
 
 }  // namespace bedrock::protocol::python

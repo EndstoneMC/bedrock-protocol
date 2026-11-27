@@ -4,6 +4,7 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <format>
 #include <optional>
@@ -12,13 +13,13 @@
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <typeinfo>
 #include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include <nanobind/nanobind.h>
-#include <nanobind/operators.h>
 
 #include "bedrock/protocol/detail/reflect.hpp"
 #include "bedrock/protocol/enum.hpp"
@@ -283,8 +284,15 @@ nb::object to_python(const F &value)
     }
 }
 
+struct Label {
+    std::string_view type;
+    std::string_view field;
+};
+
+[[noreturn]] void throw_cannot_hold(const Label &label, nb::handle src);
+
 template <typename F>
-F from_python(nb::handle src, const std::string &label)
+F from_python(nb::handle src, const Label &label)
 {
     if constexpr (std::is_enum_v<F>) {
         if (PyLong_Check(src.ptr())) {
@@ -327,87 +335,234 @@ F from_python(nb::handle src, const std::string &label)
             return out;
         }
     }
-    throw nb::type_error(std::format("{}: cannot hold {}", label, nb::repr(src).c_str()).c_str());
+    throw_cannot_hold(label, src);
 }
 
-template <typename T, std::size_t I>
-const std::string &field_label()
+struct Field {
+    std::ptrdiff_t offset;
+    void (*assign)(void *field, nb::handle src, const Label &label);
+    bool (*equal)(const void *a, const void *b);
+    nb::object (*value)(const void *field);
+};
+
+struct StructInfo {
+    const std::type_info *cpp_type;
+    std::string_view name;
+    const std::string *names;
+    std::span<const Field> fields;
+    void (*construct)(void *storage, PyObject **args, const StructInfo &info);
+    PyTypeObject *type;
+};
+
+void *field_address(nb::handle self, const StructInfo &info, std::size_t index);
+void assign_fields(void *value, PyObject **args, const StructInfo &info);
+PyObject *construct_impl(void *capture, PyObject **args, std::uint8_t *flags, nb::rv_policy policy,
+                         nb::detail::cleanup_list *cleanup);
+nb::object copy_instance(nb::handle self, const StructInfo &info);
+void def_eq(nb::handle cls, const StructInfo &info);
+void def_repr(nb::handle cls, const StructInfo &info);
+
+template <typename F>
+void assign_at(void *field, nb::handle src, const Label &label)
 {
-    static const std::string label = std::format("{}.{}", struct_name<T>(), python_names<T>()[I]);
-    return label;
+    *static_cast<F *>(field) = from_python<F>(src, label);
 }
 
-template <typename T, std::size_t I>
-void bind_field(nb::class_<T> &cls)
+template <typename F>
+bool equal_at(const void *a, const void *b)
 {
-    using F = field_t<T, I>;
-    const char *name = python_names<T>()[I].c_str();
-    const auto setter = [](T &self, field_arg<F> value) {
-        field_get<I>(self) = from_python<F>(value, field_label<T, I>());
-    };
-    const auto value_arg = nb::for_setter(nb::arg("value").none(nullable_v<F>));
+    return *static_cast<const F *>(a) == *static_cast<const F *>(b);
+}
+
+template <typename F>
+nb::object value_at(const void *field)
+{
+    return to_python(*static_cast<const F *>(field));
+}
+
+template <typename T>
+void construct_from(void *storage, PyObject **args, const StructInfo &info)
+{
+    T value{};
+    assign_fields(&value, args, info);
+    new (storage) T(std::move(value));
+}
+
+template <typename T>
+StructInfo &struct_info()
+{
+    static const auto fields = [] {
+        const T probe{};
+        const auto *base = reinterpret_cast<const char *>(&probe);
+        return [&]<std::size_t... I>(std::index_sequence<I...>) {
+            return std::array<Field, sizeof...(I)>{Field{reinterpret_cast<const char *>(&field_get<I>(probe)) - base,
+                                                         &assign_at<field_t<T, I>>, &equal_at<field_t<T, I>>,
+                                                         &value_at<field_t<T, I>>}...};
+        }(std::make_index_sequence<field_count<T>()>{});
+    }();
+    static StructInfo info{&typeid(T), struct_name<T>(), python_names<T>().data(), fields, &construct_from<T>, nullptr};
+    return info;
+}
+
+template <typename F>
+void bind_field(nb::handle cls, const StructInfo &info, std::size_t index)
+{
+    const StructInfo *owner = &info;
+    nb::object get;
     if constexpr (holds_enum<F>()) {
-        cls.def_prop_rw(
-            name,
-            [](const T &self) -> nb::typed<nb::object, python_type_t<F>> { return to_python(field_get<I>(self)); },
-            setter, value_arg);
+        get = nb::cpp_function(
+            [owner, index](nb::handle self) -> nb::typed<nb::object, python_type_t<F>> {
+                return to_python(*static_cast<const F *>(field_address(self, *owner, index)));
+            },
+            nb::is_method(), nb::is_getter());
     }
     else if constexpr (Reflected<F>) {
-        cls.def_prop_rw(
-            name, [](T &self) -> F & { return field_get<I>(self); }, setter, nb::rv_policy::reference_internal,
-            value_arg);
+        get = nb::cpp_function(
+            [owner, index](nb::handle self) -> F & { return *static_cast<F *>(field_address(self, *owner, index)); },
+            nb::is_method(), nb::is_getter(), nb::rv_policy::reference_internal);
     }
     else {
-        cls.def_prop_rw(
-            name, [](const T &self) -> const F & { return field_get<I>(self); }, setter, nb::rv_policy::copy,
-            value_arg);
+        get = nb::cpp_function(
+            [owner, index](nb::handle self) -> const F & {
+                return *static_cast<const F *>(field_address(self, *owner, index));
+            },
+            nb::is_method(), nb::is_getter(), nb::rv_policy::copy);
     }
+    const nb::object set = nb::cpp_function(
+        [owner, index](nb::handle self, field_arg<F> value) {
+            assign_at<F>(field_address(self, *owner, index), value, Label{owner->name, owner->names[index]});
+        },
+        nb::is_method(), nb::arg("value").none(nullable_v<F>));
+    nb::detail::property_install(cls.ptr(), owner->names[index].c_str(), get.ptr(), set.ptr());
+}
+
+template <std::size_t N>
+void def_init(nb::handle cls, const StructInfo &info, const char *descr, const std::type_info **types,
+              const std::array<bool, N> &nullable)
+{
+    nb::detail::func_data_prelim<N> record{};
+    record.capture[0] = const_cast<StructInfo *>(&info);
+    record.impl = &construct_impl;
+    record.descr = descr;
+    record.descr_types = types;
+    record.flags = static_cast<std::uint32_t>(nb::detail::func_flags::has_args) |
+                   static_cast<std::uint32_t>(nb::detail::func_flags::is_method) |
+                   static_cast<std::uint32_t>(nb::detail::func_flags::has_name) |
+                   static_cast<std::uint32_t>(nb::detail::func_flags::has_scope);
+    record.nargs = N + 1;
+    record.nargs_pos = 1;
+    record.name = "__init__";
+    record.scope = cls.ptr();
+    for (std::size_t i = 0; i < N; ++i) {
+        const auto none = nullable[i] ? nb::detail::cast_flags::accepts_none : nb::detail::cast_flags{};
+        record.args[i] = {info.names[i].c_str(), "...", nullptr, Py_Ellipsis,
+                          static_cast<std::uint8_t>(static_cast<std::uint8_t>(none) |
+                                                    static_cast<std::uint8_t>(nb::detail::cast_flags::convert))};
+    }
+    nb::detail::nb_func_new(&record);
+}
+
+template <typename T, std::size_t... I>
+void bind_init(nb::handle cls, const StructInfo &info, std::index_sequence<I...>)
+{
+    static constexpr auto descr = nb::detail::const_name("(") +
+                                  concat(type_descr(nb::detail::make_caster<T>::Name),
+                                         type_descr(nb::detail::make_caster<field_arg<field_t<T, I>>>::Name)...) +
+                                  nb::detail::const_name(") -> ") +
+                                  nb::detail::make_caster<nb::detail::void_type>::Name;
+    static constexpr std::array<bool, sizeof...(I)> nullable{nullable_v<field_t<T, I>>...};
+    std::array<const std::type_info *, descr.type_count() + 1> types{};
+    descr.put_types(types.data());
+    def_init<sizeof...(I)>(cls, info, descr.text, types.data(), nullable);
 }
 
 template <typename T>
 void bind_struct(nb::handle scope, const char *name)
 {
     nb::class_<T> cls(scope, name, nb::is_final());
+    StructInfo &info = struct_info<T>();
+    info.type = reinterpret_cast<PyTypeObject *>(cls.ptr());
+    if constexpr (field_count<T>() == 0) {
+        cls.def(nb::init<>());
+    }
+    else {
+        bind_init<T>(cls, info, std::make_index_sequence<field_count<T>()>{});
+    }
     [&]<std::size_t... I>(std::index_sequence<I...>) {
-        if constexpr (sizeof...(I) == 0) {
-            cls.def(nb::init<>());
-        }
-        else {
-            cls.def(
-                "__init__",
-                [](T *self, field_arg<field_t<T, I>>... values) {
-                    T value{};
-                    (
-                        [&] {
-                            if (!values.is(nb::ellipsis())) {
-                                field_get<I>(value) = from_python<field_t<T, I>>(values, field_label<T, I>());
-                            }
-                        }(),
-                        ...);
-                    new (self) T(std::move(value));
-                },
-                nb::kw_only(),
-                (nb::arg(python_names<T>()[I].c_str()).none(nullable_v<field_t<T, I>>).sig("...") = nb::ellipsis())...);
-        }
-        (bind_field<T, I>(cls), ...);
+        (bind_field<field_t<T, I>>(cls, info, I), ...);
     }(std::make_index_sequence<field_count<T>()>{});
 
-    cls.def(nb::self == nb::self, nb::sig(eq_signature));
+    def_eq(cls, info);
     cls.attr("__hash__") = nb::none();
-    cls.def("__copy__", [](const T &self) { return T(self); });
-    cls.def("__deepcopy__", [](const T &self, nb::handle) { return T(self); }, nb::arg("memo"));
-    cls.def("__repr__", [](const T &self) {
-        std::string members;
-        [&]<std::size_t... I>(std::index_sequence<I...>) {
-            ((members += std::format("{}{}={}", I ? ", " : "", python_names<T>()[I],
-                                     nb::repr(to_python(field_get<I>(self))).c_str())),
-             ...);
-        }(std::make_index_sequence<field_count<T>()>{});
-        return std::format("{}({})", nb::cast<std::string>(nb::type<T>().attr("__qualname__")), members);
-    });
+    cls.def("__copy__",
+            [](nb::handle self) -> nb::typed<nb::object, T> { return copy_instance(self, struct_info<T>()); });
+    cls.def(
+        "__deepcopy__",
+        [](nb::handle self, nb::handle) -> nb::typed<nb::object, T> { return copy_instance(self, struct_info<T>()); },
+        nb::arg("memo"));
+    def_repr(cls, info);
 
     if constexpr (requires { T::Id; }) {
         cls.attr("ID") = T::Id;
+    }
+}
+
+struct ModeCodec {
+    int since;
+    const Codec *codec;
+};
+
+struct VersionBinding {
+    std::array<ModeCodec, mode_count> modes;
+    std::optional<int> packet;
+};
+
+void bind_version(nb::handle home, const Scope &scope, std::string_view label, std::string_view declared,
+                  const std::type_info *cpp_type, void (*bind)(nb::handle, const char *),
+                  const VersionBinding &binding);
+
+template <typename T, int V, SerializationMode M>
+constexpr ModeCodec mode_codec()
+{
+    if constexpr (Serializable<T, V, M>) {
+        constexpr int since = Serializer<T, V, M>::since;
+        return {since, &codec<T, since, implementation<T, V, M>>};
+    }
+    else {
+        return {};
+    }
+}
+
+template <typename T, int V>
+constexpr VersionBinding version_binding()
+{
+    VersionBinding out{};
+    if constexpr (!std::is_enum_v<T>) {
+        if constexpr (Serializable<T, V, SerializationMode::Default>) {
+            out.modes[std::to_underlying(SerializationMode::Default)] = mode_codec<T, V, SerializationMode::Default>();
+        }
+        else {
+            out.modes[std::to_underlying(SerializationMode::Cereal)] = mode_codec<T, V, SerializationMode::Cereal>();
+            out.modes[std::to_underlying(SerializationMode::Manual)] = mode_codec<T, V, SerializationMode::Manual>();
+        }
+    }
+    if constexpr (Packet<T, V>) {
+        out.packet = T::Id;
+    }
+    return out;
+}
+
+template <typename T, int V>
+inline constexpr VersionBinding version_binding_v = version_binding<T, V>();
+
+template <typename T>
+void bind_new_type(nb::handle scope, const char *name)
+{
+    if constexpr (std::is_enum_v<T>) {
+        bind_enum<T>(scope, name);
+    }
+    else {
+        bind_struct<T>(scope, name);
     }
 }
 
@@ -421,42 +576,7 @@ void bind_type(nb::handle home, const Scope &scope, std::string_view label)
     else {
         declared = struct_name<T>();
     }
-    nb::handle cls = nb::type<T>();
-    const auto [owner, parent, leaf] = claim_owner(scope, home, declared, label, !cls.is_valid());
-    if (!cls.is_valid()) {
-        const std::string name(declared.substr(declared.find_last_of(':') + 1));
-        if constexpr (std::is_enum_v<T>) {
-            bind_enum<T>(parent, name.c_str());
-        }
-        else {
-            bind_struct<T>(parent, name.c_str());
-        }
-        cls = nb::type<T>();
-    }
-    bind_name(owner, leaf, cls);
-    const auto bind_modes = [&]<std::size_t... I>(std::index_sequence<I...>) {
-        (
-            [&] {
-                constexpr auto mode = static_cast<SerializationMode>(I);
-                if constexpr (Serializable<T, V, mode>) {
-                    constexpr int since = Serializer<T, V, mode>::since;
-                    register_mode(scope, cls, mode, since, &codec<T, since, implementation<T, V, mode>>);
-                }
-            }(),
-            ...);
-    };
-    if constexpr (!std::is_enum_v<T>) {
-        if constexpr (Serializable<T, V, SerializationMode::Default>) {
-            bind_modes(std::index_sequence<std::to_underlying(SerializationMode::Default)>{});
-        }
-        else {
-            bind_modes(std::index_sequence<std::to_underlying(SerializationMode::Cereal),
-                                           std::to_underlying(SerializationMode::Manual)>{});
-        }
-    }
-    if constexpr (Packet<T, V>) {
-        register_packet(scope, T::Id, cls);
-    }
+    bind_version(home, scope, label, declared, &typeid(T), &bind_new_type<T>, version_binding_v<T, V>);
 }
 
 template <typename T, typename List>
