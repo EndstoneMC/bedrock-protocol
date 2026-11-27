@@ -3137,25 +3137,6 @@ def test_a_name_coded_enum_inside_a_map_read_is_spelled_by_the_shape_live_where_
     assert "            std::map<::bedrock::protocol::E, std::uint8_t>::key_type key0{};\n" in source
 
 
-TYPE_CHOICE = """
-from protocol import field, packet, uint8, uint16, uint32
-package = "bedrock.protocol"
-java_package = "dev.endstone.protocol"
-go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
-
-class Entry:
-    name: str
-    values: list[uint32]
-
-@packet(id=1)
-class P:
-    table: list[str]
-    entries: list[Entry] = field(
-        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32
-    )
-"""
-
-
 PACKED_COLORS = """
 from protocol import field, int32, packet, uvarint32
 package = "bedrock.protocol"
@@ -3212,16 +3193,102 @@ def test_a_packed_color_leaves_the_color_runtime_out_of_its_packets_header(gener
     assert "detail/color.hpp" not in header
 
 
-def test_a_type_choice_emits_as_specializations_and_branches_in_cpp(generate):
-    out = generate({"a": TYPE_CHOICE})
-    header = (out / "detail/a/Entry.h").read_text()
-    source = (out / "a.cpp").read_text()
+MANUAL = """
+from protocol import field, manual, packet, uint32
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
-    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint8_t>, 1> {" in header
-    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint16_t>, 1> {" in header
-    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint32_t>, 1> {" not in header
-    assert "if ((static_cast<std::int64_t>(value.table.size())) <= (256)) {" in source
-    assert "} else if ((static_cast<std::int64_t>(value.table.size())) <= (65536)) {" in source
-    assert "Serializer<As<::bedrock::protocol::Entry, std::uint8_t>, 1>::serialize(stream, e0);" in source
-    assert "Serializer<As<::bedrock::protocol::Entry, std::uint16_t>, 1>::deserialize(stream);" in source
-    assert "Serializer<::bedrock::protocol::Entry, 1>::serialize(stream, e0);" in source
+@manual
+class Entry:
+    name: str
+    values: list[uint32]
+
+@packet(id=1)
+class P:
+    table: list[str]
+    entries: list[Entry] = field(args=lambda self: len(self.table))
+"""
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        pytest.param(
+            "    static inline auto serialize(BinaryWriter &stream, const ::bedrock::protocol::Entry &value, "
+            "std::int64_t argument) -> std::expected<void, Errc>;\n",
+            id="serialize",
+        ),
+        pytest.param(
+            "    static inline auto deserialize(BinaryReader &stream, std::int64_t argument) "
+            "-> std::expected<::bedrock::protocol::Entry, Errc>;\n",
+            id="deserialize",
+        ),
+    ],
+)
+def test_a_manual_struct_declares_its_serializer_with_an_argument_in_cpp(generate, declaration):
+    assert declaration in (generate({"a": MANUAL}) / "detail/a/Entry.h").read_text()
+
+
+def test_a_manual_struct_has_no_generated_body_in_cpp(generate):
+    source = (generate({"a": MANUAL}) / "a.cpp").read_text()
+
+    assert "Serializer<::bedrock::protocol::Entry, 1>::serialize(BinaryWriter" not in source
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(
+            "Serializer<::bedrock::protocol::Entry, 1>::serialize(stream, e0, "
+            "static_cast<std::int64_t>(value.table.size()));",
+            id="serialize",
+        ),
+        pytest.param(
+            "Serializer<::bedrock::protocol::Entry, 1>::deserialize(stream, "
+            "static_cast<std::int64_t>(out.table.size()));",
+            id="deserialize",
+        ),
+    ],
+)
+def test_args_passes_its_expression_to_the_hand_written_serializer_in_cpp(generate, call):
+    assert call in (generate({"a": MANUAL}) / "a.cpp").read_text()
+
+
+def test_a_manual_struct_includes_its_modules_hand_written_header_in_the_cpp_source(generate):
+    assert "#include <bedrock/protocol/a.hpp>\n" in (generate({"a": MANUAL}) / "a.cpp").read_text()
+
+
+def test_a_manual_struct_leaves_its_modules_hand_written_header_out_of_its_holders_header(generate):
+    assert "bedrock/protocol/a.hpp" not in (generate({"a": MANUAL}) / "detail/a/P.h").read_text()
+
+
+MANUAL_UNTIL_3 = """
+from protocol import field, manual, packet, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+@packet(id=1, until=3)
+class P:
+    @manual
+    class E:
+        x: uint8
+
+    k: uint8
+    e: E = field(args=lambda self: self.k)
+
+@packet(id=1, since=3)
+class P:
+    class E:
+        x: uint8
+
+    k: uint8
+    e: E
+"""
+
+
+def test_a_struct_manual_only_until_a_protocol_has_a_generated_body_from_it_in_cpp(generate):
+    source = (generate({"a": MANUAL_UNTIL_3}) / "a.cpp").read_text()
+
+    assert "auto Serializer<::bedrock::protocol::P_nested::E, 3>::serialize(BinaryWriter &stream" in source

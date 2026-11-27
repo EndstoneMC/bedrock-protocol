@@ -7,7 +7,7 @@ from bedrock_protocol_compiler.descriptor import CompilerError, Literal, Range, 
 from bedrock_protocol_compiler.java import members, names
 from bedrock_protocol_compiler.java.enum import EnumGenerator
 from bedrock_protocol_compiler.java.expression import Renderer
-from bedrock_protocol_compiler.java.field import FieldContext, Slot, held
+from bedrock_protocol_compiler.java.field import FieldContext, Slot
 from bedrock_protocol_compiler.java.members import Members
 from bedrock_protocol_compiler.java.names import BUILDER, OBJECT
 from bedrock_protocol_compiler.java.union import Union, UnionGenerator, case_name
@@ -23,7 +23,7 @@ from bedrock_protocol_compiler.schema import (
 )
 
 type Built = list[tuple[Slot, list[UnionGenerator]]]
-type Served = list[tuple[Range, SerializationMode, str]]
+type Served = list[tuple[Range, SerializationMode, str | None]]
 type Span = tuple[int | None, int | None, list[SerializationMode]]
 
 MODES = list(SerializationMode)
@@ -40,6 +40,24 @@ def spans(served: Served) -> list[Span]:
         else:
             found.append((since, until, modes))
     return found
+
+
+def held(slot: Slot, unions: list[UnionGenerator]) -> str:
+    p = Printer()
+    slot.declare(p, True)
+    slot.declare(p, False)
+    slot.construct(p)
+    slot.initialize(p)
+    slot.adopt(p)
+    slot.getters(p, False)
+    slot.getters(p, True)
+    slot.setters(p)
+    slot.definitions(p)
+    for each in (*slot.comparisons(), *slot.hashes()):
+        p.emit("$each$", each=each)
+    for union in unions:
+        union.definition(p, [])
+    return p.text
 
 
 class MessageGenerator:
@@ -81,13 +99,7 @@ class MessageGenerator:
         }
         self.codecs: list[tuple[Encoding, list[Slot], dict[str, Union]]] = []
         for encoding in sorted(schema.encodings(model), key=lambda each: (each.since, MODES.index(each.mode))):
-            if (
-                not encoding.fields
-                and model.nested
-                and self.packet_id is None
-                and encoding.excluded is None
-                and encoding.encoded_as is None
-            ):
+            if not encoding.fields and model.nested and self.packet_id is None and encoding.excluded is None:
                 continue
             coded = self.build(encoding, scratch)
             for slot, unions in coded:
@@ -103,7 +115,7 @@ class MessageGenerator:
         types += [kind for slot in self.slots for kind in slot.types()]
         if self.codecs:
             types.append((BUILDER, f"{self.qualified}.{BUILDER}"))
-        codecs = [names.codec(encoding) for encoding, _, _ in self.codecs]
+        codecs = [names.codec(encoding) for encoding, _, _ in self.codecs if not encoding.manual]
         types += [(codec, names.runtime(schema, names.CODEC)) for codec in codecs]
         members.check_names(self.qualified, types)
         reserved = names.reserved(schema)
@@ -131,7 +143,8 @@ class MessageGenerator:
         built: Built = []
         for each in encoding.fields:
             inline = each.name not in shared
-            context = FieldContext(self.schema, encoding, self.name, self.qualified, each, registry, inline)
+            earlier = {slot.name: slot for slot, _ in built}
+            context = FieldContext(self.schema, encoding, self.name, self.qualified, each, registry, inline, earlier)
             built.append((context.slot(), context.unions))
         return built
 
@@ -221,6 +234,8 @@ class MessageGenerator:
             p.emit("}")
             p.emit("")
             for encoding, slots, _ in self.codecs:
+                if encoding.manual:
+                    continue
                 members.codec(
                     p,
                     self.members,
@@ -237,7 +252,7 @@ class MessageGenerator:
     def selector(self, p: Printer) -> None:
         served = sorted(
             (
-                (run, mode, names.codec(encoding))
+                (run, mode, None if encoding.manual else names.codec(encoding))
                 for encoding, _, _ in self.codecs
                 for mode, runs in encoding.served.items()
                 for run in runs
@@ -263,19 +278,23 @@ class MessageGenerator:
             )
 
     def selections(self, p: Printer, served: Served) -> None:
+        relative = self.qualified.removeprefix(f"{self.schema.java_package}.")
         for run, mode, codec in served:
+            selected = f"return {codec}.INSTANCE;"
+            if codec is None:
+                manual = json.dumps(f"{relative}: has a manual codec at protocol ")
+                selected = f"throw new IllegalArgumentException({manual} + version);"
             p.emit(
                 """
                 if ($clause$) {
-                    return $codec$.INSTANCE;
+                    $selected$
                 }
                 """,
                 clause=" && ".join(
                     (f"mode == {names.MODE}.{mode.name}", *names.bounded(self.schema, run.since, run.until))
                 ),
-                codec=codec,
+                selected=selected,
             )
-        relative = self.qualified.removeprefix(f"{self.schema.java_package}.")
         for since, until, modes in spans(served):
             if not modes:
                 continue
@@ -318,7 +337,7 @@ class MessageGenerator:
             p.emit("}")
 
     def write(self, body: Body, renderer: Renderer, slot: Slot) -> None:
-        self.duplicated(body.p, renderer, slot, lambda: slot.write(body, "value.", renderer))
+        self.duplicated(body.p, renderer, slot, lambda: slot.write(body, "value."))
 
     def duplicated(self, p: Printer, renderer: Renderer, slot: Slot, each: Callable[[], None]) -> None:
         if slot.copies is None:

@@ -289,7 +289,15 @@ def test_class_scopes_resolve_outward_before_the_module(build_package):
         ("@packet(id=1, bogus=2)\nclass A:\n    pass\n", "packet: got an unexpected keyword argument 'bogus'"),
         ("@packet(id='1')\nclass A:\n    pass\n", "packet: is not a literal int"),
         ("@packet(id=True)\nclass A:\n    pass\n", "packet: is not a literal int"),
-        ("@packet(id=1)\n@type()\nclass A:\n    pass\n", "A: takes only one of packet, type and builtin"),
+        ("@packet(id=1)\n@type()\nclass A:\n    pass\n", "A: takes only one of packet, type, builtin and manual"),
+        (
+            "from protocol import manual\n\n@manual\n@type()\nclass A:\n    pass\n",
+            "A: takes only one of packet, type, builtin and manual",
+        ),
+        (
+            "from protocol import manual\n\n@manual(uint8)\nclass A:\n    pass\n",
+            "A: is decorated with something other than a bare builtin or manual",
+        ),
         ("@print\nclass A:\n    pass\n", "is decorated with something other than"),
         ("@builtin\nclass A:\n    x: uint8\n", "A: a builtin has no body"),
         ("type Id = A\n\nclass A:\n    pass\n", "Id: is not a primitive"),

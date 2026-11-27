@@ -22,7 +22,6 @@ from bedrock_protocol_compiler.descriptor import (
     Primitive,
     StructRef,
     Type,
-    TypeChoice,
     Variant,
 )
 from bedrock_protocol_compiler.expression import CLASSES, Num, enum_class
@@ -57,6 +56,7 @@ class FieldContext:
         field: Field,
         registry: Members,
         inline: bool,
+        earlier: dict[str, "Slot"],
     ) -> None:
         self.schema = schema
         self.encoding = encoding
@@ -67,6 +67,7 @@ class FieldContext:
         self.label = f"{owner}.{names.camel(field.name)}"
         self.members = registry
         self.inline = inline
+        self.earlier = earlier
         self.unions: list[UnionGenerator] = []
         self.numbered = isinstance(field.type, EnumName) and any(
             isinstance(each.type, EnumRef) and other.reached[each.type].model is encoding.reached[field.type].model
@@ -97,17 +98,18 @@ class FieldContext:
                         numbering.since,
                     )
                 return Scalar(underlying, encoded, node.endian, label, names.qualified(self.schema, enum_type), helper)
-            case StructRef():
+            case StructRef(args=args):
                 child = cast(Encoding, self.encoding.reached[node])
                 spelled = names.qualified(self.schema, child.model)
-                codec = f"{spelled}.{names.codec(child)}.INSTANCE"
-                return Reference(
-                    spelled,
-                    f"{spelled}.getDefaultInstance()",
-                    f"{codec}.decode(buf)",
-                    f"{codec}.encode({{}}, buf);",
-                    label,
-                )
+                if args is None:
+                    codec = f"{spelled}.{names.codec(child)}.INSTANCE"
+                    read, write = f"{codec}.decode(buf)", f"{codec}.encode({{}}, buf);"
+                else:
+                    codec = names.manual_codec(self.schema, child)
+                    decoded = Renderer(self.schema, self.encoding, self.earlier, "out.").argument(args)
+                    encoded = Renderer(self.schema, self.encoding, self.earlier, "value.").argument(args)
+                    read, write = f"{codec}.decode(buf, {decoded})", f"{codec}.encode({{}}, buf, {encoded});"
+                return Reference(spelled, f"{spelled}.getDefaultInstance()", read, write, label)
             case Color(struct=family, encoded=encoded):
                 model = self.schema.encoding_at(family, self.encoding.since).model
                 members = [names.pascal(name) for name in channels(model)]
@@ -168,9 +170,8 @@ class FieldContext:
             built.append((name, self.value(case, f"{stem}.{names.camel(name)}")))
         return Union(self.field.name, built, self.where, inline, self.members)
 
-    def slot(self, node: Type | None = None) -> "Slot":
-        if node is None:
-            node = self.field.type
+    def slot(self) -> "Slot":
+        node = self.field.type
         label = self.label
         if isinstance(node, Literal) and not self.field.name.strip("_"):
             raise CompilerError(f"{self.where}: a literal needs a name besides underscores")
@@ -224,13 +225,6 @@ class FieldContext:
                 slot = EnumSlot(self.field, label, self.value(node, label))
             case Variant(cases=cases) if self.inline:
                 slot = UnionSlot(self.field, label, self.union(cases, label, True), self.where)
-            case TypeChoice(test=test, when_true=when_true, when_false=when_false):
-                chosen, other = self.slot(when_true), self.slot(when_false)
-                if held(chosen, []) != held(other, []):
-                    raise CompilerError(
-                        f"{self.where}: takes another Java type, setter check or enum form from each branch"
-                    )
-                slot = ChoiceSlot(self.field, label, test, chosen, other)
             case _:
                 slot = ScalarSlot(self.field, label, self.value(node, label))
         if len(self.unions) > 1:
@@ -285,7 +279,7 @@ class Slot:
     def definitions(self, p: Printer) -> None:
         pass
 
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         raise NotImplementedError
 
     def read(self, body: Body, renderer: Renderer) -> None:
@@ -434,7 +428,7 @@ class ScalarSlot(StoredSlot):
         return self.value.hash(self.member)
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         self.value.write(body, f"{receiver}{self.member}")
 
     @override
@@ -552,7 +546,7 @@ class OptionalSlot(StoredSlot):
         return self.element.nullable_hash(self.member)
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         member = f"{receiver}{self.member}"
         body.line(f"buf.writeBoolean({member} != null);")
         body.p.emit(
@@ -738,7 +732,7 @@ class ListSlot(StoredSlot):
         return self.value.hash(self.member)
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         self.value.write(body, f"{receiver}{self.member}")
 
     @override
@@ -883,7 +877,7 @@ class MapSlot(StoredSlot):
         return f"{self.member}.hashCode()"
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         entry = body.fresh("entry")
         body.line(f"ByteBufCodec.writeUnsignedVarInt(buf, {receiver}{self.member}.size());")
         body.p.emit(
@@ -950,7 +944,7 @@ class LiteralSlot(Slot):
         )
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         body.line(WRITES[self.encoded].format(self.constant))
 
     @override
@@ -1013,113 +1007,9 @@ class UnionSlot(Slot):
         self.union.kind_enum(p)
 
     @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
+    def write(self, body: Body, receiver: str) -> None:
         self.union.write(body, receiver)
 
     @override
     def read(self, body: Body, renderer: Renderer) -> None:
         self.union.read(body)
-
-
-class ChoiceSlot(Slot):
-    def __init__(self, field: Field, label: str, test: Expression, when_true: Slot, when_false: Slot) -> None:
-        super().__init__(field, label)
-        self.test = test
-        self.when_true = when_true
-        self.when_false = when_false
-        self.term = when_true.term
-        self.suffix = when_true.suffix
-        self.bitset = when_true.bitset
-        self.sized = when_true.sized
-
-    @override
-    def declare(self, p: Printer, final: bool) -> None:
-        self.when_true.declare(p, final)
-
-    @override
-    def construct(self, p: Printer) -> None:
-        self.when_true.construct(p)
-
-    @override
-    def initialize(self, p: Printer) -> None:
-        self.when_true.initialize(p)
-
-    @override
-    def adopt(self, p: Printer) -> None:
-        self.when_true.adopt(p)
-
-    @override
-    def getters(self, p: Printer, builder: bool) -> None:
-        self.when_true.getters(p, builder)
-
-    @override
-    def setters(self, p: Printer) -> None:
-        self.when_true.setters(p)
-
-    @override
-    def comparisons(self) -> list[str]:
-        return self.when_true.comparisons()
-
-    @override
-    def hashes(self) -> list[str]:
-        return self.when_true.hashes()
-
-    @override
-    def types(self) -> list[tuple[str, str]]:
-        return self.when_true.types()
-
-    @override
-    def constants(self, p: Printer) -> None:
-        self.when_true.constants(p)
-
-    @override
-    def definitions(self, p: Printer) -> None:
-        self.when_true.definitions(p)
-
-    @override
-    def write(self, body: Body, receiver: str, renderer: Renderer) -> None:
-        branch: Slot = self
-        keyword = "if"
-        while isinstance(branch, ChoiceSlot):
-            body.p.emit("$keyword$ ($condition$) {", keyword=keyword, condition=renderer.predicate(branch.test))
-            with body.p.indent():
-                branch.when_true.write(body, receiver, renderer)
-            keyword = "} else if"
-            branch = branch.when_false
-        body.p.emit("} else {")
-        with body.p.indent():
-            branch.write(body, receiver, renderer)
-        body.p.emit("}")
-
-    @override
-    def read(self, body: Body, renderer: Renderer) -> None:
-        branch: Slot = self
-        keyword = "if"
-        while isinstance(branch, ChoiceSlot):
-            body.p.emit("$keyword$ ($condition$) {", keyword=keyword, condition=renderer.predicate(branch.test))
-            with body.p.indent():
-                branch.when_true.read(body, renderer)
-            keyword = "} else if"
-            branch = branch.when_false
-        body.p.emit("} else {")
-        with body.p.indent():
-            branch.read(body, renderer)
-        body.p.emit("}")
-
-
-def held(slot: Slot, unions: list[UnionGenerator]) -> str:
-    p = Printer()
-    slot.declare(p, True)
-    slot.declare(p, False)
-    slot.construct(p)
-    slot.initialize(p)
-    slot.adopt(p)
-    slot.getters(p, False)
-    slot.getters(p, True)
-    slot.setters(p)
-    slot.definitions(p)
-    for each in (*slot.comparisons(), *slot.hashes()):
-        p.emit("$each$", each=each)
-    for union in unions:
-        union.definition(p, [])
-    return p.text

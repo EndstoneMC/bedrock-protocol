@@ -8,6 +8,7 @@ from bedrock_protocol_compiler.descriptor import (
     EnumName,
     EnumRef,
     Int,
+    Len,
     List,
     Map,
     Optional,
@@ -20,7 +21,7 @@ HEADER = """
 from enum import IntEnum
 from protocol import (
     array, field, int8, int16, int32, int64, packet, type, uint8, uint16, uint32, uint64, uvarint32, uvarint64,
-    varint32, varint64
+    manual, varint32, varint64
 )
 from typing import Union
 package = "bedrock.protocol"
@@ -426,17 +427,22 @@ def test_exclude_is_rejected_for_a_constant(build_package):
         build_package({"a": source})
 
 
+ENTRY = "@manual\nclass Entry:\n    name: str\n    values: list[uint32]\n\n"
+
+
 @pytest.mark.parametrize(
     "reader",
     [
         pytest.param("extra: uint8 = field(when=lambda p: p.capable != 0)", id="when"),
         pytest.param("extra: list[uint8] = field(count=lambda p: p.capable)", id="count"),
         pytest.param("extra: uint8 = field(duplicate=lambda p: p.capable)", id="duplicate"),
+        pytest.param("extra: list[Entry] = field(args=lambda self: self.capable)", id="args"),
     ],
 )
 def test_exclude_is_rejected_for_a_member_another_member_reads(build_package, reader):
     source = (
         HEADER
+        + ENTRY
         + f"class Info:\n    id: uint8\n    capable: uint8\n    {reader}\n\n"
         + 'class A:\n    x: Info = field(exclude="capable")\n'
     )
@@ -479,19 +485,16 @@ def test_exclude_is_rejected_on_a_field_that_holds_no_struct(build_package, anno
         build_package({"a": HEADER + INFO + f'class A:\n    x: {annotation} = field(exclude="capable")\n'})
 
 
-def test_type_reaches_through_a_struct_with_one_reencodable_scalar(build_package):
+@pytest.mark.parametrize("annotation", [pytest.param("Entry", id="struct"), pytest.param("list[Entry]", id="list")])
+def test_type_on_a_struct_other_than_a_color_is_rejected(build_package, annotation):
     source = (
         HEADER
         + "class Entry:\n    name: str\n    values: list[uint32]\n\n"
-        + "class A:\n    x: Entry = field(type=uint8)\n    ys: list[Entry] = field(type=uint16)\n"
+        + f"class A:\n    x: {annotation} = field(type=uint8)\n"
     )
-    package = build_package({"a": source})
-    entry = package.modules[0].families[0]
 
-    assert field_types(package) == [
-        StructRef(entry, encoded="uint8"),
-        List(StructRef(entry, encoded="uint16"), Primitive("uvarint32")),
-    ]
+    with pytest.raises(CompilerError, match=rf"A\.x: {REENCODE}$"):
+        build_package({"a": source})
 
 
 COLOR = "class Color:\n    r: float\n    g: float\n    b: float\n    a: float\n"
@@ -549,8 +552,90 @@ def test_type_packs_four_floats_only_into_str_or_a_32_bit_integer(build_package)
         build_package({"a": source})
 
 
-def test_type_on_a_struct_with_two_reencodable_scalars_is_rejected(build_package):
-    source = HEADER + "class Pair:\n    a: uint32\n    b: uint32\n\n" + "class A:\n    x: Pair = field(type=uint8)\n"
+def test_manual_marks_the_declaration_of_its_struct(build_package):
+    package = build_package({"a": HEADER + ENTRY})
 
-    with pytest.raises(CompilerError, match=REENCODE):
+    assert [declaration.manual for declaration in package.modules[0].families[0].declarations] == [True]
+
+
+def test_args_holds_its_expression_on_the_reference_to_a_manual_struct(build_package):
+    source = (
+        HEADER
+        + ENTRY
+        + "class A:\n    table: list[str]\n    x: list[Entry] = field(args=lambda self: len(self.table))\n"
+    )
+    package = build_package({"a": source})
+    entry = package.modules[0].families[0]
+
+    assert field_types(package)[1] == List(StructRef(entry, args=Len("table")), Primitive("uvarint32"))
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    [
+        pytest.param("uint8", id="primitive"),
+        pytest.param("dict[uint8, Entry]", id="map"),
+        pytest.param("Entry | uint8", id="union"),
+        pytest.param("list[list[Entry]]", id="nested-list"),
+    ],
+)
+def test_args_is_rejected_on_a_field_that_holds_no_struct(build_package, annotation):
+    source = HEADER + ENTRY + f"class A:\n    k: uint8\n    x: {annotation} = field(args=lambda self: self.k)\n"
+
+    with pytest.raises(
+        CompilerError, match="x: args is given to something other than a struct or a list, array or optional of one"
+    ):
+        build_package({"a": source})
+
+
+def test_args_is_rejected_on_a_struct_that_is_not_manual(build_package):
+    source = (
+        HEADER
+        + "class Plain:\n    x: uint8\n\nclass A:\n    k: uint8\n    x: Plain = field(args=lambda self: self.k)\n"
+    )
+
+    with pytest.raises(CompilerError, match=r"A\.x: args is given to Plain, which is not manual at 1$"):
+        build_package({"a": source})
+
+
+def test_args_is_rejected_at_a_protocol_where_its_struct_is_not_manual(build_package):
+    source = HEADER + (
+        "@packet(id=1, until=3)\nclass P:\n    @manual\n    class E:\n        x: uint8\n\n"
+        "    k: uint8\n    e: E = field(args=lambda self: self.k)\n\n"
+        "@packet(id=1, since=3)\nclass P:\n    class E:\n        x: uint8\n\n"
+        "    k: uint8\n    e: E = field(args=lambda self: self.k)\n"
+    )
+
+    with pytest.raises(CompilerError, match=r"P\.e: args is given to E, which is not manual at 3$"):
+        build_package({"a": source})
+
+
+def test_args_is_rejected_over_a_later_field(build_package):
+    source = HEADER + ENTRY + "class A:\n    x: Entry = field(args=lambda self: self.k)\n    k: uint8\n"
+
+    with pytest.raises(CompilerError, match=r"x: self\.k is not an earlier field"):
+        build_package({"a": source})
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    [
+        pytest.param("Entry", id="struct"),
+        pytest.param("list[Entry]", id="list"),
+        pytest.param("dict[uint8, Entry]", id="map"),
+        pytest.param("Entry | uint8", id="union"),
+        pytest.param("list[list[Entry]]", id="nested-list"),
+    ],
+)
+def test_a_manual_struct_reached_without_args_is_rejected(build_package, annotation):
+    source = HEADER + ENTRY + f"class A:\n    x: {annotation}\n"
+
+    with pytest.raises(CompilerError, match=r"A\.x: reaches Entry, which is manual at 1, without args$"):
+        build_package({"a": source})
+
+
+def test_exclude_is_rejected_on_a_manual_struct(build_package):
+    source = HEADER + ENTRY + 'class A:\n    k: uint8\n    x: Entry = field(args=lambda self: self.k, exclude="name")\n'
+
+    with pytest.raises(CompilerError, match=r"A\.x: exclude is given to Entry, which is manual$"):
         build_package({"a": source})

@@ -37,7 +37,6 @@ from bedrock_protocol_compiler.descriptor import (
     Primitive,
     Struct,
     StructRef,
-    TypeChoice,
     Variant,
 )
 from bedrock_protocol_compiler.descriptor import Optional as OptionalType
@@ -1638,11 +1637,8 @@ class ReflectionCtx:
             self.composites[family] = schema = composite(cls, [])
             for field in self.shape(family).fields:
                 attribute = f"{field.name}_" if keyword.iskeyword(field.name) else field.name
-                node = field.type
-                while isinstance(node, TypeChoice):
-                    node = node.when_true
-                optional = isinstance(node, OptionalType)
-                node = node.element if optional else node
+                optional = isinstance(field.type, OptionalType)
+                node = field.type.element if optional else field.type
                 match node:
                     case Literal(value=MemberRef(enum=enum, name=selector)):
                         number = self.shape(enum).numbers[selector]

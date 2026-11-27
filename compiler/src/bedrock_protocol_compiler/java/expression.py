@@ -75,10 +75,7 @@ class Renderer(expression.Renderer[Operand]):
 
     @override
     def binary(self, operator: str, first: Term, second: Term, cls: Num) -> Term:
-        if operator in ("<", "<=") and not cls.signed:
+        if operator == "<" and not cls.signed:
             boxed = "Long" if cls.bits == 64 else "Integer"
-            return Term(
-                f"{boxed}.compareUnsigned({self.spell(first, cls)}, {self.spell(second, cls)}) {operator} 0",
-                BOOL,
-            )
+            return Term(f"{boxed}.compareUnsigned({self.spell(first, cls)}, {self.spell(second, cls)}) < 0", BOOL)
         return super().binary(operator, first, second, cls)

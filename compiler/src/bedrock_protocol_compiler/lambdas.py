@@ -20,8 +20,6 @@ from bedrock_protocol_compiler.descriptor import (
     Not,
     Range,
     Test,
-    Type,
-    TypeChoice,
 )
 
 
@@ -87,22 +85,6 @@ def parse_copies(context: Lambda) -> Expression:
     return copies_of(context, context.body)
 
 
-def parse_type_choice(context: Lambda, type_of: Callable[[ast.expr], Type]) -> Type:
-    if not isinstance(context.body, ast.IfExp):
-        raise context.error(context.body, "is not a conditional type")
-    return type_choice_of(context, context.body, type_of)
-
-
-def type_choice_of(context: Lambda, node: ast.expr, type_of: Callable[[ast.expr], Type]) -> Type:
-    if isinstance(node, ast.IfExp):
-        return TypeChoice(
-            predicate_of(context, node.test),
-            type_choice_of(context, node.body, type_of),
-            type_choice_of(context, node.orelse, type_of),
-        )
-    return type_of(node)
-
-
 def copies_of(context: Lambda, node: ast.expr) -> Expression:
     match node:
         case ast.IfExp(test=test, body=when_true, orelse=when_false):
@@ -148,11 +130,9 @@ def predicate_of(context: Lambda, node: ast.expr) -> Expression:
             tested = predicate_of(context, left)
             operands = [Binary("==", tested, predicate_of(context, element)) for element in elements]
             return reduce(lambda first, second: Binary("or", first, second), operands)
-        case ast.Compare(left=left, ops=[ast.Eq() | ast.NotEq() | ast.Lt() | ast.LtE() as op], comparators=[right]):
-            operator = {ast.Eq: "==", ast.NotEq: "!=", ast.Lt: "<", ast.LtE: "<="}[type(op)]
+        case ast.Compare(left=left, ops=[ast.Eq() | ast.NotEq() | ast.Lt() as op], comparators=[right]):
+            operator = {ast.Eq: "==", ast.NotEq: "!=", ast.Lt: "<"}[type(op)]
             return Binary(operator, predicate_of(context, left), predicate_of(context, right))
-        case ast.Call(func=ast.Name(id="len"), args=[argument], keywords=[]):
-            return length_of(context, argument)
         case ast.Call(func=ast.Attribute(value=receiver, attr="test"), args=[bit], keywords=[]):
             bits = earlier_fields(context, receiver)
             if not all(isinstance(each.type, Bitset) for each in bits):

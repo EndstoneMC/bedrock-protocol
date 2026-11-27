@@ -23,7 +23,6 @@ from bedrock_protocol_compiler.descriptor import (
     Struct,
     StructRef,
     Type,
-    TypeChoice,
     Variant,
 )
 from bedrock_protocol_compiler.printer import Printer
@@ -256,9 +255,11 @@ class EnumField(ScalarField):
 
 
 class SerializerField:
-    def __init__(self, where: str, implementation: str) -> None:
+    def __init__(self, where: str, implementation: str, serialized: str = "", deserialized: str = "") -> None:
         self.where = where
         self.implementation = implementation
+        self.serialized = serialized
+        self.deserialized = deserialized
 
     def fallible(self) -> bool:
         return True
@@ -267,12 +268,13 @@ class SerializerField:
         p.emit(
             """
             {
-                auto r = $implementation$::serialize(stream, $value$);
+                auto r = $implementation$::serialize(stream, $value$$argument$);
                 if (!r) $fail$
             }
             """,
             implementation=self.implementation,
             value=value,
+            argument=self.serialized,
             fail=names.fail("r.error()", self.where),
         )
 
@@ -280,12 +282,13 @@ class SerializerField:
         p.emit(
             """
             {
-                auto v = $implementation$::deserialize(stream);
+                auto v = $implementation$::deserialize(stream$argument$);
                 if (!v) $fail$
                 $target$ = std::move(*v);
             }
             """,
             implementation=self.implementation,
+            argument=self.deserialized,
             fail=names.fail("v.error()", self.where),
             target=target,
         )
@@ -294,24 +297,28 @@ class SerializerField:
 class ReferenceField(SerializerField):
     def __init__(self, schema: Schema, node: StructRef | EnumName, encoding: Encoding, where: str) -> None:
         self.family: Struct | Enum
-        self.extra_includes: set[str] = set()
+        serialized = deserialized = ""
         if isinstance(node, StructRef):
             self.family = node.struct
             child = encoding.reached[node]
             assert isinstance(child, Encoding)
             spelled = names.qualified(schema, child.model)
-            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded, child.encoded_as)
-            if child.encoded_as is not None and names.ENCODINGS[child.encoded_as].startswith("std::"):
-                self.extra_includes.add("<cstdint>")
+            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded)
+            if node.args is not None:
+                serialized = f", {render(schema, encoding, node.args, 'value')}"
+                deserialized = f", {render(schema, encoding, node.args, 'out')}"
         else:
             self.family = node.enum
             naming = encoding.reached[node]
             assert isinstance(naming, Naming)
             implementation = names.serializer(names.qualified(schema, naming.model), naming.since)
-        super().__init__(where, implementation)
+        super().__init__(where, implementation, serialized, deserialized)
 
     def includes(self) -> set[str]:
-        return {names.header(self.family)} | self.extra_includes
+        found = {names.header(self.family)}
+        if self.serialized:
+            found.add("<cstdint>")
+        return found
 
 
 class ColorField:
@@ -721,57 +728,6 @@ class DuplicatedField:
         )
 
 
-class ChoiceField:
-    def __init__(self, schema: Schema, node: TypeChoice, encoding: Encoding, where: str, depth: int) -> None:
-        self.schema = schema
-        self.node = node
-        self.encoding = encoding
-        self.when_true = make_field_generator(schema, node.when_true, encoding, where, depth)
-        self.when_false = make_field_generator(schema, node.when_false, encoding, where, depth)
-
-    def fallible(self) -> bool:
-        return self.when_true.fallible() or self.when_false.fallible()
-
-    def includes(self) -> set[str]:
-        return {"<cstdint>"} | self.when_true.includes() | self.when_false.includes()
-
-    def write(self, p: Printer, value: str) -> None:
-        branch: FieldGenerator = self
-        keyword = "if"
-        while isinstance(branch, ChoiceField):
-            p.emit(
-                "$keyword$ ($condition$) {",
-                keyword=keyword,
-                condition=render(self.schema, self.encoding, branch.node.test, "value"),
-            )
-            with p.indent():
-                branch.when_true.write(p, value)
-            keyword = "} else if"
-            branch = branch.when_false
-        p.emit("} else {")
-        with p.indent():
-            branch.write(p, value)
-        p.emit("}")
-
-    def read(self, p: Printer, target: str) -> None:
-        branch: FieldGenerator = self
-        keyword = "if"
-        while isinstance(branch, ChoiceField):
-            p.emit(
-                "$keyword$ ($condition$) {",
-                keyword=keyword,
-                condition=render(self.schema, self.encoding, branch.node.test, "out"),
-            )
-            with p.indent():
-                branch.when_true.read(p, target)
-            keyword = "} else if"
-            branch = branch.when_false
-        p.emit("} else {")
-        with p.indent():
-            branch.read(p, target)
-        p.emit("}")
-
-
 def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: str, depth: int) -> FieldGenerator:
     match node:
         case Primitive():
@@ -800,5 +756,3 @@ def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: 
             return MapField(schema, node, encoding, where, depth)
         case Variant():
             return VariantField(schema, node, encoding, where, depth)
-        case TypeChoice():
-            return ChoiceField(schema, node, encoding, where, depth)

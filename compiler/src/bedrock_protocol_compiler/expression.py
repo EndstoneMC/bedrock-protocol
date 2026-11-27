@@ -53,7 +53,7 @@ UINT32 = CLASSES["uint32"]
 INT64 = CLASSES["int64"]
 UINT64 = CLASSES["uint64"]
 LOGICAL = {"and": "&&", "or": "||"}
-COMPARISONS = ("==", "!=", "<", "<=")
+COMPARISONS = ("==", "!=", "<")
 
 
 class Operand(Protocol):
@@ -140,6 +140,9 @@ class Renderer[O: Operand]:
 
     def copies(self, expression: Expression) -> str:
         return self.spell(self.promoted(self.term(expression)), INT32)
+
+    def argument(self, expression: Expression) -> str:
+        return self.spell(self.promoted(self.term(expression)), INT64)
 
     def member(self, member: MemberRef) -> Term:
         enum_type = self.schema.enum_type(member.enum, self.encoding.since)

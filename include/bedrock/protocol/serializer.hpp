@@ -29,14 +29,6 @@ struct Serializer;
 template <typename T, auto Member>
 struct Exclude;
 
-struct VarInt32;
-struct VarInt64;
-struct UVarInt32;
-struct UVarInt64;
-
-template <typename T, typename Encoded>
-struct As;
-
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {
     { Serializer<T, V, M>::serialize(writer, value) } -> std::same_as<std::expected<void, Errc>>;

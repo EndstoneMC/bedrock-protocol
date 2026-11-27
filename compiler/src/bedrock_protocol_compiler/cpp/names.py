@@ -25,13 +25,6 @@ PRIMITIVES = {
     "uint64": "std::uint64_t",
 }
 VARINTS = ("varint32", "varint64", "uvarint32", "uvarint64")
-ENCODINGS = {
-    **PRIMITIVES,
-    "varint32": "VarInt32",
-    "varint64": "VarInt64",
-    "uvarint32": "UVarInt32",
-    "uvarint64": "UVarInt64",
-}
 OUT_OF_RANGE = "Errc::out_of_range"
 UNKNOWN_VALUE = "Errc::unknown_value"
 ENCODED = "std::expected<void, Errc>"
@@ -75,11 +68,8 @@ def serializer(
     version: int | str,
     mode: SerializationMode = SerializationMode.DEFAULT,
     excluded: str | None = None,
-    encoded_as: str | None = None,
 ) -> str:
     target = spelled if excluded is None else f"Exclude<{spelled}, &{spelled}::{excluded}>"
-    if encoded_as is not None:
-        target = f"As<{target}, {ENCODINGS[encoded_as]}>"
     suffix = "" if mode is SerializationMode.DEFAULT else f", SerializationMode::{mode.name.capitalize()}"
     return f"Serializer<{target}, {version}{suffix}>"
 

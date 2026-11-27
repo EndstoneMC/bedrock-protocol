@@ -41,9 +41,9 @@ class StructGenerator:
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
-            if not encoding.fields and model.nested and encoding.excluded is None and encoding.encoded_as is None:
+            if not encoding.fields and model.nested and encoding.excluded is None:
                 continue
-            if encoding.encoded_as is not None and names.ENCODINGS[encoding.encoded_as].startswith("std::"):
+            if encoding.manual:
                 self.declared_includes.add("<cstdint>")
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
@@ -59,6 +59,11 @@ class StructGenerator:
                 self.field_includes |= {names.header(target) for target in reached_by(each)}
                 if each.when is not None:
                     self.field_includes.add("<cstdint>")
+            self.field_includes |= {
+                names.runtime(child.model.family.module)
+                for child in encoding.reached.values()
+                if isinstance(child, Encoding) and child.manual
+            }
             self.implemented.append((encoding, fields))
 
     def copies(self, encoding: Encoding, copies: Expression, receiver: str) -> str:
@@ -159,22 +164,22 @@ class StructGenerator:
 
     def serializer_declaration(self, p: Printer) -> None:
         for encoding, _ in self.implemented:
-            serializer = names.serializer(
-                self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.encoded_as
-            )
+            serializer = names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded)
             p.emit(
                 """
                 template <>
                 struct $serializer$ {
                     static constexpr int since = $since$;
-                    static auto serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$;
-                    static auto deserialize(BinaryReader &stream) -> $decoded$;
+                    $static$ auto serialize(BinaryWriter &stream, const $qualified$ &value$argument$) -> $encoded$;
+                    $static$ auto deserialize(BinaryReader &stream$argument$) -> $decoded$;
                 };
 
                 """,
                 serializer=serializer,
                 since=encoding.since,
+                static="static inline" if encoding.manual else "static",
                 qualified=self.qualified,
+                argument=", std::int64_t argument" if encoding.manual else "",
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),
             )
@@ -184,6 +189,8 @@ class StructGenerator:
         for _, child in self.owned:
             child.serializer_body(p)
         for encoding, fields in self.implemented:
+            if encoding.manual:
+                continue
             p.emit(
                 """
                 auto $serializer$::serialize(BinaryWriter &stream, const $qualified$ &value) -> $encoded$
@@ -200,9 +207,7 @@ class StructGenerator:
                 }
 
                 """,
-                serializer=names.serializer(
-                    self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.encoded_as
-                ),
+                serializer=names.serializer(self.qualified, encoding.since, encoding.mode, encoding.excluded),
                 qualified=self.qualified,
                 encoded=names.ENCODED,
                 decoded=names.decoded(self.qualified),

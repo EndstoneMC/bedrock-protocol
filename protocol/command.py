@@ -3,7 +3,7 @@
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint32, value, varint64
+from protocol import field, int8, int32, int64, manual, packet, type, uint8, uint16, uint32, uvarint32, value, varint64
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.block import CommandBlockMode
 from protocol.common import BlockPos
@@ -31,6 +31,7 @@ class SettingsCommandPacket:
 
 @packet(id=76, until=898)
 class AvailableCommandsPacket:
+    @manual
     class EnumData:
         name: str
         values: list[uint32]
@@ -74,9 +75,7 @@ class AvailableCommandsPacket:
     enum_values: list[str]
     chained_subcommand_values: list[str]
     postfixes: list[str]
-    enums: list[EnumData] = field(
-        type=lambda p: uint8 if len(p.enum_values) <= 0x100 else uint16 if len(p.enum_values) <= 0x10000 else uint32
-    )
+    enums: list[EnumData] = field(args=lambda self: len(self.enum_values))
     chained_subcommands: list[ChainedSubcommandData]
     commands: list[CommandData]
     soft_enums: list[SoftEnumData]

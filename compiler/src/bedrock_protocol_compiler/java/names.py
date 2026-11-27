@@ -138,12 +138,16 @@ def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
 def suffix(encoding: Encoding) -> str:
     mode = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
     excluded = "" if encoding.excluded is None else f"Exclude{pascal(encoding.excluded)}"
-    encoded_as = "" if encoding.encoded_as is None else f"As{pascal(encoding.encoded_as)}"
-    return f"{encoding.since}{mode}{excluded}{encoded_as}"
+    return f"{encoding.since}{mode}{excluded}"
 
 
 def codec(encoding: Encoding) -> str:
     return f"{CODEC}{suffix(encoding)}"
+
+
+def manual_codec(schema: Schema, encoding: Encoding) -> str:
+    model = encoding.model
+    return f"{home(schema, model)}.{nested(schema, model).replace('.', '')}{codec(encoding)}"
 
 
 def path(package_name: str, name: str) -> str:

@@ -675,14 +675,6 @@ def test_a_field_two_encodings_hold_otherwise_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_type_choice_whose_branches_hold_otherwise_is_a_compiler_error(build_package, tmp_path):
-    source = COLORS + "class P:\n    k: uint8\n    c: Color = field(type=lambda p: str if p.k == 1 else uint8)\n"
-    build_package({"a": HEADER + source})
-
-    with pytest.raises(SystemExit, match=r"P\.c: takes another Java type, setter check or enum form from each branch$"):
-        main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
-
-
 PACKED_COLOR = "from protocol import int32\n\nclass Color:\n    r: float\n    g: float\n    b: float\n    a: float\n\n"
 PACKED_COLORS = (
     PACKED_COLOR + "@packet(id=1)\nclass P:\n    floats: Color\n    packed: Color = field(type=int32)\n"
@@ -2389,25 +2381,44 @@ def test_a_big_endian_width_the_runtime_lacks_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_type_choice_emits_as_codecs_and_branches_in_java(build_package, tmp_path):
-    source = (
-        HEADER
-        + "class Entry:\n    name: str\n    values: list[uint32]\n\n"
-        + "@packet(id=1)\nclass P:\n    table: list[str]\n"
-        + "    entries: list[Entry] = field(\n"
-        + "        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32\n"
-        + "    )\n"
-    )
-    build_package({"a": source})
-    main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
-    entry_java = (tmp_path / "java/dev/endstone/protocol/Entry.java").read_text()
-    packet_java = (tmp_path / "java/dev/endstone/protocol/P.java").read_text()
+MANUAL = (
+    "from protocol import manual\n\n"
+    "@manual\nclass Entry:\n    name: str\n    values: list[uint32]\n\n"
+    "@packet(id=1)\nclass P:\n    table: list[str]\n"
+    "    entries: list[Entry] = field(args=lambda self: len(self.table))\n"
+)
 
-    assert "static final class Codec1AsUint8 implements Codec<Entry>" in entry_java
-    assert "static final class Codec1AsUint16 implements Codec<Entry>" in entry_java
-    assert "Codec1AsUint32" not in entry_java
-    assert "if (((long) value.table_.size()) <= (256L)) {" in packet_java
-    assert "} else if (((long) value.table_.size()) <= (65536L)) {" in packet_java
-    assert "Entry.Codec1AsUint8.INSTANCE.encode(" in packet_java
-    assert "Entry.Codec1AsUint16.INSTANCE.decode(buf)" in packet_java
-    assert "Entry.Codec1.INSTANCE.encode(" in packet_java
+
+def test_a_manual_struct_emits_its_model_but_no_codec_in_java(emitted):
+    text = emitted(MANUAL, "Entry.java")
+
+    assert "    public @NotNull String getName() {\n" in text
+    assert "implements Codec<Entry>" not in text
+
+
+def test_a_manual_struct_selector_throws_at_a_protocol_its_codec_is_hand_written_in_java(emitted):
+    text = emitted(MANUAL, "Entry.java")
+
+    assert 'throw new IllegalArgumentException("Entry: has a manual codec at protocol " + version);\n' in text
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(
+            "dev.endstone.protocol.EntryCodec1.encode(element1, buf, (long) value.table_.size());", id="encode"
+        ),
+        pytest.param("dev.endstone.protocol.EntryCodec1.decode(buf, (long) out.table_.size())", id="decode"),
+    ],
+)
+def test_args_passes_its_expression_to_the_hand_written_codec_in_java(emitted, call):
+    assert call in emitted(MANUAL)
+
+
+def test_a_nested_manual_struct_names_its_hand_written_codec_after_its_owners_in_java(emitted):
+    source = (
+        "from protocol import manual\n\n@packet(id=1)\nclass P:\n    @manual\n    class Entry:\n        x: uint8\n\n"
+        "    k: uint8\n    entry: Entry = field(args=lambda self: self.k)\n"
+    )
+
+    assert "dev.endstone.protocol.PEntryCodec1.encode(value.entry_, buf, (long) value.k_);" in emitted(source)

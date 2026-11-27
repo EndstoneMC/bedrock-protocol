@@ -51,8 +51,9 @@ def field(
     cereal: bool = True,
     duplicate: Any = None,
     exclude: str | None = None,
+    args: Any = None,
 ) -> Any:
-    """Mark a struct field: an encoding override, a version gate, or a condition over earlier fields."""
+    """Mark a struct field: an encoding override, a version gate, a condition or a manual codec's argument."""
     return None
 
 
@@ -68,6 +69,11 @@ def packet(*, id: int, since: int | None = None, until: int | None = None) -> Ca
 
 def builtin[T](cls: T) -> T:
     """Class decorator: a hand-written type whose `Serializer` the compiler calls."""
+    return cls
+
+
+def manual[T](cls: T) -> T:
+    """Class decorator: a struct whose model the compiler generates and whose codec each runtime hand-writes."""
     return cls
 
 

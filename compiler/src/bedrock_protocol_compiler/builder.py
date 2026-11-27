@@ -53,17 +53,9 @@ from bedrock_protocol_compiler.descriptor import (
     StructRef,
     Test,
     Type,
-    TypeChoice,
     Variant,
 )
-from bedrock_protocol_compiler.lambdas import (
-    field_name,
-    parse_copies,
-    parse_count,
-    parse_predicate,
-    parse_type_choice,
-    read_lambda,
-)
+from bedrock_protocol_compiler.lambdas import field_name, parse_copies, parse_count, parse_predicate, read_lambda
 
 STDLIB_MODULES = ("enum", "typing", "uuid")
 FOREIGN_MODULES = (*STDLIB_MODULES, "bedrock_protocol_compiler.dsl")
@@ -89,7 +81,8 @@ INTEGERS = tuple(name for name, (_, width) in WIDTHS.items() if width > 1)
 RELEASE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
 RELEASE_NAME = re.compile(rf"(?P<first>{RELEASE})(?:-(?P<last>{RELEASE}))?")
 RELEASE_WILDCARD = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:[1-9]\d*)?x")
-DECORATOR_ERROR = "is decorated with something other than a bare builtin or a called packet or type"
+DECORATOR_ERROR = "is decorated with something other than a bare builtin or manual or a called packet or type"
+REENCODE_ERROR = "type and endian do not reach exactly one scalar that takes them"
 UUID = Builtin("UUID", "uuid")
 PRIMITIVES: dict[object, str] = {
     **{alias: alias.__name__ for alias in vars(dsl).values() if isinstance(alias, TypeAliasType)},
@@ -133,6 +126,7 @@ class PendingStruct:
     node: ast.ClassDef
     struct: Struct
     range: Range
+    manual: bool
 
 
 @dataclass
@@ -215,36 +209,6 @@ def reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None
     return None
 
 
-def reencode_struct(node: Type, encoded: str) -> Type | None:
-    match node:
-        case StructRef():
-            return replace(node, encoded=encoded)
-        case (
-            Optional(element=StructRef() as element)
-            | List(element=StructRef() as element)
-            | Array(element=StructRef() as element)
-        ):
-            return replace(node, element=replace(element, encoded=encoded))
-    return None
-
-
-def apply_reencode(node: Type, encoded: str | None, endian: str | None) -> Type | None:
-    reencoded = reencode(node, encoded, endian)
-    if reencoded is not None:
-        return reencoded
-    if encoded is not None and endian is None:
-        return reencode_struct(node, encoded)
-    return None
-
-
-def type_leaves(node: Type) -> Iterator[Type]:
-    if isinstance(node, TypeChoice):
-        yield from type_leaves(node.when_true)
-        yield from type_leaves(node.when_false)
-    else:
-        yield node
-
-
 def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRef]:
     match node:
         case StructRef(struct=family) | Color(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
@@ -257,10 +221,7 @@ def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRe
             yield from reaches(element)
         case Not(operand=operand):
             yield from reaches(operand)
-        case (
-            Choice(test=test, when_true=when_true, when_false=when_false)
-            | TypeChoice(test=test, when_true=when_true, when_false=when_false)
-        ):
+        case Choice(test=test, when_true=when_true, when_false=when_false):
             yield from reaches(test)
             yield from reaches(when_true)
             yield from reaches(when_false)
@@ -279,15 +240,15 @@ def fields_read(node: Type | Expression | None) -> Iterator[str]:
     match node:
         case FieldRef(name=name) | Len(field=name) | Test(field=name):
             yield name
-        case List(count=operand) | Not(operand=operand):
+        case List(count=count, element=element):
+            yield from fields_read(count)
+            yield from fields_read(element)
+        case Optional(element=operand) | Array(element=operand) | StructRef(args=operand) | Not(operand=operand):
             yield from fields_read(operand)
         case Binary(left=left, right=right):
             yield from fields_read(left)
             yield from fields_read(right)
-        case (
-            Choice(test=test, when_true=when_true, when_false=when_false)
-            | TypeChoice(test=test, when_true=when_true, when_false=when_false)
-        ):
+        case Choice(test=test, when_true=when_true, when_false=when_false):
             yield from fields_read(test)
             yield from fields_read(when_true)
             yield from fields_read(when_false)
@@ -306,7 +267,7 @@ def pack_colors(path: str, struct: Struct, qualified: str) -> None:
 
 def colored(where: str, node: Type) -> Type:
     match node:
-        case StructRef(struct=family, excluded=None, encoded=str(encoded)) if all(
+        case StructRef(struct=family, excluded=None, encoded=str(encoded), args=None) if all(
             len(declaration.fields) == 4
             and all(
                 each.type == Primitive("float")
@@ -320,6 +281,8 @@ def colored(where: str, node: Type) -> Type:
             if encoded != "str" and WIDTHS[encoded][1] != 32:
                 raise CompilerError(f"{where}: type packs four floats only into str or a 32-bit integer")
             return Color(family, encoded)
+        case StructRef(encoded=str()):
+            raise CompilerError(f"{where}: {REENCODE_ERROR}")
         case Optional(element=element) | List(element=element) | Array(element=element):
             return replace(node, element=colored(where, element))
     return node
@@ -366,15 +329,11 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
     for declaration in struct.declarations:
         for struct_field in declaration.fields:
             where = f"{path}: {qualified}.{struct_field.name}"
-            for leaf in type_leaves(struct_field.type):
-                element = leaf
-                if isinstance(element, Optional | List | Array):
-                    element = element.element
-                if not isinstance(element, StructRef):
-                    continue
-                holder = element.struct
-                if element.excluded is not None:
-                    excluded = element.excluded
+            element = struct_field.type
+            if isinstance(element, Optional | List | Array):
+                element = element.element
+            match element:
+                case StructRef(struct=holder, excluded=str() as excluded):
                     spanned = [
                         each
                         for declared in holder.declarations
@@ -405,26 +364,6 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
                             raise CompilerError(
                                 f"{where}: exclude names {excluded}, which {holder.name}.{reader.name} reads"
                             )
-                if element.encoded is not None:
-                    for version in versions:
-                        if not struct_field.range.contains(version):
-                            continue
-                        live_fields = [
-                            each
-                            for declared in holder.declarations
-                            if declared.range.contains(version)
-                            for each in declared.fields
-                            if each.range.contains(version)
-                            and each.name != element.excluded
-                            and not isinstance(each.type, Literal)
-                        ]
-                        reencodable = [
-                            each for each in live_fields if reencode(each.type, element.encoded, None) is not None
-                        ]
-                        if len(reencodable) != 1:
-                            raise CompilerError(
-                                f"{where}: type and endian do not reach exactly one scalar that takes them"
-                            )
             for target in (
                 *reaches(struct_field.type),
                 *reaches(struct_field.when),
@@ -445,6 +384,27 @@ def check_struct(versions: tuple[int, ...], path: str, struct: Struct, qualified
                         missing = target.name
                     if not found:
                         raise CompilerError(f"{where}: reaches {missing}, which does not exist at {version}")
+            called = element if isinstance(element, StructRef) and element.args is not None else None
+            for version in versions:
+                if not struct_field.range.contains(version):
+                    continue
+                manual = [
+                    target
+                    for target in reaches(struct_field.type)
+                    if isinstance(target, Struct)
+                    and any(declared.manual and declared.range.contains(version) for declared in target.declarations)
+                ]
+                for target in manual:
+                    if called is None or called.struct is not target:
+                        raise CompilerError(
+                            f"{where}: reaches {target.name}, which is manual at {version}, without args"
+                        )
+                if called is not None and called.struct not in manual:
+                    raise CompilerError(
+                        f"{where}: args is given to {called.struct.name}, which is not manual at {version}"
+                    )
+                if called is not None and called.excluded is not None:
+                    raise CompilerError(f"{where}: exclude is given to {called.struct.name}, which is manual")
     for nested in struct.nested:
         twins = [] if twin is None else twin.nested
         if isinstance(nested, Struct):
@@ -820,11 +780,11 @@ class Builder:
                     cereal = literal(source, arguments["cereal"], bool, "type")
             else:
                 function = self.resolve(source, scope, decorator)
-                if function is not dsl.builtin:
+                if function is not dsl.builtin and function is not dsl.manual:
                     raise error(source, decorator, node.name, DECORATOR_ERROR)
             kinds.append(function)
         if len(kinds) > 1:
-            raise error(source, node, node.name, "takes only one of packet, type and builtin")
+            raise error(source, node, node.name, "takes only one of packet, type, builtin and manual")
         if not cereal and owner is not None:
             raise error(source, node, node.name, "cereal=False marks a module-scope declaration")
         if owner is not None:
@@ -878,7 +838,7 @@ class Builder:
         for statement in node.body:
             if isinstance(statement, ast.ClassDef):
                 self.declare_class(source, inner, statement, family, range)
-        self.structs.append(PendingStruct(source, node, family, range))
+        self.structs.append(PendingStruct(source, node, family, range, kinds == [dsl.manual]))
 
     def build_enum(self, pending: PendingEnum) -> None:
         source = pending.source
@@ -1057,6 +1017,18 @@ class Builder:
             excluded: str | None = None
             if call is not None and "exclude" in arguments:
                 excluded = field_name(literal(source, arguments["exclude"], str, name))
+            args: Expression | None = None
+            if call is not None and "args" in arguments:
+                args = parse_count(
+                    read_lambda(
+                        arguments["args"],
+                        fields,
+                        field_range,
+                        self.versions,
+                        lambda node: self.member_of(source, scope, node),
+                        lambda node, reason: error(source, node, name, reason),
+                    )
+                )
             spans: list[tuple[int | None, Type]] = []
             for version in live:
                 self.at = version
@@ -1096,63 +1068,51 @@ class Builder:
                         lambda node, reason: error(source, node, name, reason),
                     )
                     field_type = replace(field_type, prefix=None, count=parse_count(count))
-                if excluded is not None:
+                if excluded is not None or args is not None:
                     match field_type:
                         case StructRef():
-                            field_type = replace(field_type, excluded=excluded)
+                            field_type = replace(field_type, excluded=excluded, args=args)
                         case (
                             Optional(element=StructRef() as element)
                             | List(element=StructRef() as element)
                             | Array(element=StructRef() as element)
                         ):
-                            field_type = replace(field_type, element=replace(element, excluded=excluded))
+                            field_type = replace(field_type, element=replace(element, excluded=excluded, args=args))
                         case _:
+                            given = "exclude" if excluded is not None else "args"
                             raise error(
                                 source,
                                 statement,
                                 name,
-                                "exclude is given to something other than a struct or a list, array or optional of one",
+                                f"{given} is given to something other than a struct or a list, array or optional "
+                                "of one",
                             )
+                encoded = None
                 endian = None
+                if call is not None and "type" in arguments:
+                    encoded_type = self.type_of(source, scope, arguments["type"])
+                    if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
+                        raise error(source, arguments["type"], name, "type is not str or an integer primitive")
+                    encoded = encoded_type.name
                 if call is not None and "endian" in arguments:
                     if literal(source, arguments["endian"], str, name) != "big":
                         raise error(source, arguments["endian"], name, 'endian is not "big"')
                     endian = "big"
-                if call is not None and "type" in arguments:
-
-                    def apply_encoded(encoded_node: ast.expr) -> Type:
-                        encoded_type = self.type_of(source, scope, encoded_node)
-                        if not (isinstance(encoded_type, Primitive) and encoded_type.name in ("str", *INTEGERS)):
-                            raise error(source, encoded_node, name, "type is not str or an integer primitive")
-                        reencoded = apply_reencode(field_type, encoded_type.name, endian)
-                        if reencoded is None:
-                            raise error(
-                                source,
-                                statement,
-                                name,
-                                "type and endian do not reach exactly one scalar that takes them",
-                            )
-                        return reencoded
-
-                    if isinstance(arguments["type"], ast.Lambda):
-                        choice = read_lambda(
-                            arguments["type"],
-                            fields,
-                            field_range,
-                            self.versions,
-                            lambda node: self.member_of(source, scope, node),
-                            lambda node, reason: error(source, node, name, reason),
-                        )
-                        field_type = parse_type_choice(choice, apply_encoded)
-                    else:
-                        field_type = apply_encoded(arguments["type"])
-                elif endian:
-                    reencoded = apply_reencode(field_type, None, endian)
-                    if reencoded is None:
-                        raise error(
-                            source, statement, name, "type and endian do not reach exactly one scalar that takes them"
-                        )
-                    field_type = reencoded
+                if encoded or endian:
+                    match field_type:
+                        case StructRef() if not endian:
+                            field_type = replace(field_type, encoded=encoded)
+                        case (
+                            Optional(element=StructRef() as element)
+                            | List(element=StructRef() as element)
+                            | Array(element=StructRef() as element)
+                        ) if not endian:
+                            field_type = replace(field_type, element=replace(element, encoded=encoded))
+                        case _:
+                            reencoded = reencode(field_type, encoded, endian)
+                            if reencoded is None:
+                                raise error(source, statement, name, REENCODE_ERROR)
+                            field_type = reencoded
                 if not spans or spans[-1][1] != field_type:
                     spans.append((version, field_type))
             self.at = None
@@ -1217,7 +1177,7 @@ class Builder:
                         source, pending.node, struct.name, f"takes packet id {struct.packet_id} from {other.name}"
                     )
             claimed.append((struct, pending.range))
-        struct.declarations.append(StructDeclaration(pending.range, tuple(fields)))
+        struct.declarations.append(StructDeclaration(pending.range, tuple(fields), pending.manual))
 
     def blocks(
         self,

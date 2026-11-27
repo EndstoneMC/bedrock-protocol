@@ -23,6 +23,7 @@ class StructRef:
     struct: "Struct"
     excluded: str | None = None
     encoded: str | None = None
+    args: "Expression | None" = None
 
 
 @dataclass(frozen=True)
@@ -87,13 +88,6 @@ class Bitset:
     width: "MemberRef"
 
 
-@dataclass(frozen=True)
-class TypeChoice:
-    test: "Expression"
-    when_true: "Type"
-    when_false: "Type"
-
-
 type Type = (
     Primitive
     | AliasRef
@@ -109,7 +103,6 @@ type Type = (
     | Variant
     | Literal
     | Bitset
-    | TypeChoice
 )
 
 
@@ -145,6 +138,7 @@ class Field:
 class StructDeclaration:
     range: Range
     fields: tuple[Field, ...]
+    manual: bool = False
 
 
 @dataclass(frozen=True)

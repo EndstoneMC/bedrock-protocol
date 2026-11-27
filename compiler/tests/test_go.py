@@ -847,25 +847,38 @@ def test_a_case_names_the_class_of_a_struct_union_case(emitted):
     assert '\t\ta0 = caseClass("S", x.GetS().case1())\n' in text
 
 
-def test_a_type_choice_emits_as_codecs_and_branches_in_go(go):
-    source = (
-        "class Entry:\n    name: str\n    values: list[uint32]\n\n"
-        "@packet(id=1)\nclass P:\n    table: list[str]\n"
-        "    entries: list[Entry] = field(\n"
-        "        type=lambda p: uint8 if len(p.table) <= 0x100 else uint16 if len(p.table) <= 0x10000 else uint32\n"
-        "    )\n"
-    )
-    out = go(source)
-    text = (out / "a.bpc.go").read_text()
-    cases = (out / "a.bpc_test.go").read_text()
+MANUAL = (
+    "from protocol import manual\n\n"
+    "@manual\nclass Entry:\n    name: str\n    values: list[uint32]\n\n"
+    "@packet(id=1)\nclass P:\n    table: list[str]\n"
+    "    entries: list[Entry] = field(args=lambda self: len(self.table))\n"
+)
 
-    assert "func (x *Entry) encode1AsUint8(w *stream.Writer)" in text
-    assert "func (x *Entry) decode1AsUint16(r *stream.Reader)" in text
-    assert "encode1AsUint32" not in text
-    assert "if (int64(len(x.Table))) <= (int64(256)) {" in text
-    assert "} else if (int64(len(x.Table))) <= (int64(65536)) {" in text
-    assert ".encode1AsUint8(w)" in text
-    assert ".decode1AsUint16(r)" in text
-    assert ".encode1(w)" in text
-    assert "case1AsUint8" not in cases
-    assert "v.case1()" in cases
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param("func (x *Entry) encode1(", id="encode"),
+        pytest.param("func (x *Entry) decode1(", id="decode"),
+    ],
+)
+def test_a_manual_struct_emits_its_model_but_no_codec_in_go(emitted, method):
+    text = emitted(MANUAL)
+
+    assert "type Entry struct {\n" in text
+    assert method not in text
+
+
+def test_a_manual_struct_keeps_its_case_in_go(emitted):
+    assert "func (x *Entry) case1() any {\n" in emitted(MANUAL, "a.bpc_test.go")
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param("\t\te1.encode1(w, int64(len(x.Table)))\n", id="encode"),
+        pytest.param("\t\tm0.decode1(r, int64(len(x.Table)))\n", id="decode"),
+    ],
+)
+def test_args_passes_its_expression_to_the_hand_written_codec_in_go(emitted, call):
+    assert call in emitted(MANUAL)

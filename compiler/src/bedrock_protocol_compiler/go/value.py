@@ -205,7 +205,7 @@ class Named(Value):
 
 
 class Reference(Value):
-    def __init__(self, go: str, codec: str, cased: str, bound: str | None = None) -> None:
+    def __init__(self, go: str, codec: str, cased: str, bound: str | None = None, argument: str = "") -> None:
         self.type = go
         self.bound = bound
         self.go = f"*{go}"
@@ -214,17 +214,18 @@ class Reference(Value):
         self.fallible = True
         self.codec = codec
         self.cased = cased
+        self.argument = argument
 
     @override
     def read(self, body: Body) -> str:
         value = body.fresh("m")
         body.line(f"{value} := new({self.type})")
-        body.line(f"{value}.decode{self.codec}(r)")
+        body.line(f"{value}.decode{self.codec}(r{self.argument})")
         return value
 
     @override
     def write(self, body: Body, value: str) -> None:
-        body.line(f"{atom(value)}.encode{self.codec}(w)")
+        body.line(f"{atom(value)}.encode{self.codec}(w{self.argument})")
 
     @override
     def case(self, value: str) -> str:
