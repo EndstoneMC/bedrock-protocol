@@ -6,7 +6,7 @@ import (
 	"github.com/EndstoneMC/bedrock-protocol/go/stream"
 )
 
-func (x *AvailableCommandsPacket_EnumData) encode622(w *stream.Writer, argument int64) {
+func (x *AvailableCommandsPacket_EnumData) encode618(w *stream.Writer, argument int64) {
 	if x == nil {
 		x = new(AvailableCommandsPacket_EnumData)
 	}
@@ -31,7 +31,7 @@ func (x *AvailableCommandsPacket_EnumData) encode622(w *stream.Writer, argument 
 	}
 }
 
-func (x *AvailableCommandsPacket_EnumData) decode622(r *stream.Reader, argument int64) {
+func (x *AvailableCommandsPacket_EnumData) decode618(r *stream.Reader, argument int64) {
 	*x = AvailableCommandsPacket_EnumData{}
 	x.Name = r.ReadString()
 	if r.Failed() {

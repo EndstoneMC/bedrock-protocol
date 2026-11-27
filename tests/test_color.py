@@ -1,7 +1,7 @@
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import _core, v622, v729
+from bedrock_protocol import _core, v618, v729
 
 SKELETON = bytes.fromhex("10706572736f6e615f736b656c65746f6e01000000")
 
@@ -27,11 +27,11 @@ SKELETON = bytes.fromhex("10706572736f6e615f736b656c65746f6e01000000")
     ],
 )
 def test_a_color_text_reads_as_mce_color_from_hex_string_reads_it(text, color):
-    assert _core.decode(v729.VERSION, v622.TintMapColor, SKELETON + bytes([len(text)]) + text).colors == [color]
+    assert _core.decode(v729.VERSION, v618.TintMapColor, SKELETON + bytes([len(text)]) + text).colors == [color]
 
 
 def test_a_color_text_is_written_without_padding():
-    value = v622.TintMapColor(
+    value = v618.TintMapColor(
         piece_type=bp.PieceType.SKELETON, colors=[bp.Color(r=2 / 255, g=3 / 255, b=4 / 255, a=1 / 255)]
     )
     assert _core.encode(v729.VERSION, value) == SKELETON + b"\x08#1020304"
@@ -47,6 +47,6 @@ def test_a_color_text_is_written_without_padding():
     ],
 )
 def test_encode_rejects_a_color_channel_outside_zero_to_one(channel):
-    value = v622.TintMapColor(piece_type=bp.PieceType.SKELETON, colors=[bp.Color(g=channel)])
+    value = v618.TintMapColor(piece_type=bp.PieceType.SKELETON, colors=[bp.Color(g=channel)])
     with pytest.raises(bp.EncodeError, match=r"^TintMapColor\.colors\[0\]: out of range$"):
         _core.encode(v729.VERSION, value)

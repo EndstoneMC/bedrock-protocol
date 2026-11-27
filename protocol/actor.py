@@ -150,9 +150,10 @@ class ActorFlags(IntEnum, int32):
     DEPRECATED_3 = value(112, deprecated=True)
     SEARCHING = 113
     CRAWLING = 114
-    TIMER_FLAG_1 = 115
-    TIMER_FLAG_2 = 116
-    TIMER_FLAG_3 = 117
+    with value(since=622):
+        TIMER_FLAG_1 = 115
+        TIMER_FLAG_2 = 116
+        TIMER_FLAG_3 = 117
     with value(since=671):
         BODY_ROTATION_BLOCKED = 118
     with value(since=776):
@@ -769,6 +770,7 @@ class ActorEvent(IntEnum, uint8):
     TREASURE_HUNT = 72
     SUMMON_AGENT = 73
     FINISHED_CHARGING_ITEM = 74
+    LANDED_ON_GROUND = value(75, until=622)
     ACTOR_GROW_UP = 76
     VIBRATION_DETECTED = 77
     DRINK_MILK = 78

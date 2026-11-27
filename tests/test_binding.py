@@ -10,6 +10,7 @@ import pytest
 import bedrock_protocol as bp
 from bedrock_protocol import (
     _core,
+    v618,
     v622,
     v630,
     v649,
@@ -64,7 +65,7 @@ def test_a_protocol_holds_only_the_types_it_introduced(protocol):
 
 
 def test_a_packet_names_the_protocol_that_introduced_it_as_its_module():
-    assert v622.MovePlayerPacket.__module__ == "bedrock_protocol.v622"
+    assert v618.MovePlayerPacket.__module__ == "bedrock_protocol.v618"
 
 
 @pytest.mark.parametrize(
@@ -130,7 +131,7 @@ def test_a_keyword_the_schema_does_not_name_is_rejected():
             id="optional-enum",
         ),
         pytest.param(bp.GameRule, "value", True, id="variant-with-monostate"),
-        pytest.param(v622.DataStoreChange, "new_data", 3, id="dynamic-value"),
+        pytest.param(v618.DataStoreChange, "new_data", 3, id="dynamic-value"),
     ],
 )
 def test_a_nullable_field_takes_none(cls, field, value):
@@ -181,12 +182,12 @@ def test_an_enum_argument_also_takes_an_int():
     ("function", "shown"),
     [
         pytest.param(
-            v622.DataStoreChange.__init__,
+            v618.DataStoreChange.__init__,
             "new_data: bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None = ...",
             id="argument",
         ),
         pytest.param(
-            v622.DataStoreChange.new_data.fget,
+            v618.DataStoreChange.new_data.fget,
             "-> bool | int | float | str | list[typing.Any] | dict[str, typing.Any] | None",
             id="return",
         ),
@@ -297,6 +298,7 @@ TINT_MAP_COLOR_SKELETON_729 = bytes.fromhex("10706572736f6e615f736b656c65746f6e0
 TINT_MAP_COLOR_CO_CO_729 = bytes.fromhex("05636f5f636f00000000")
 TINT_MAP_COLOR_BARE_SKELETON_729 = bytes.fromhex("08736b656c65746f6e00000000")
 PERSONA_PIECE_HANDLE_SKELETON_2168 = bytes.fromhex("0001000000000000000000000000000000000000000000")
+ANIMATE_ENTITY_MOLANG_618 = bytes.fromhex("00000009000000000000000000")
 ANIMATE_ENTITY_MOLANG_622 = bytes.fromhex("0000000a000000000000000000")
 ANIMATE_ENTITY_MOLANG_649 = bytes.fromhex("0000000b000000000000000000")
 ANIMATE_ENTITY_MOLANG_729 = bytes.fromhex("0000000c000000000000000000")
@@ -378,7 +380,7 @@ def test_a_number_or_name_another_protocol_gives_is_an_unknown_value(version, cl
 )
 def test_a_piece_type_name_another_protocol_gives_is_an_unknown_value(data, message):
     with pytest.raises(bp.DecodeError, match=message):
-        _core.decode(v729.VERSION, v622.TintMapColor, data)
+        _core.decode(v729.VERSION, v618.TintMapColor, data)
 
 
 @pytest.mark.parametrize(
@@ -425,7 +427,7 @@ def test_a_member_a_protocol_lacks_fails_to_encode(version, packet, message):
 
 def test_a_piece_type_a_protocol_lacks_fails_to_encode():
     with pytest.raises(bp.EncodeError, match=r"^SerializedPersonaPieceHandle\.piece_type: unknown value$"):
-        _core.encode(v729.VERSION, v622.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
+        _core.encode(v729.VERSION, v618.SerializedPersonaPieceHandle(piece_type=bp.PieceType.CO_CO))
 
 
 @pytest.mark.parametrize(
@@ -433,7 +435,7 @@ def test_a_piece_type_a_protocol_lacks_fails_to_encode():
     [
         pytest.param(
             v729,
-            v622.TintMapColor(piece_type=bp.PieceType.SKELETON),
+            v618.TintMapColor(piece_type=bp.PieceType.SKELETON),
             TINT_MAP_COLOR_SKELETON_729,
             id="name-at-729",
         ),
@@ -456,7 +458,7 @@ def test_a_piece_type_is_written_as_the_protocol_codes_it(version, value, data):
         pytest.param(bp.DisconnectPacket, bp.DisconnectPacket, id="disconnect"),
         pytest.param(bp.MovementEffectPacket, bp.MovementEffectPacket, id="movement-effect-748"),
         pytest.param(bp.MovementEffectPacket, bp.MovementEffectPacket, id="movement-effect-776"),
-        pytest.param(v622.AnimatePacket, v622.AnimatePacket, id="animate"),
+        pytest.param(v618.AnimatePacket, v618.AnimatePacket, id="animate"),
         pytest.param(bp.SetLastHurtByPacket, bp.SetLastHurtByPacket, id="set-last-hurt-by"),
         pytest.param(bp.CommandRequestPacket, bp.CommandRequestPacket, id="command-request"),
         pytest.param(bp.HurtArmorPacket, bp.HurtArmorPacket, id="hurt-armor"),
@@ -744,12 +746,12 @@ def test_no_cerealized_sub_chunk_pos_exists(protocol):
 
 
 def test_a_cerealized_game_rule_exists_where_the_forms_hold_different_members():
-    assert hasattr(v622, "CerealizedGameRule")
+    assert hasattr(v618, "CerealizedGameRule")
 
 
 @pytest.mark.parametrize("version", [v844, v975, v1001], ids=lambda module: module.__name__)
 def test_no_cerealized_game_rule_exists_where_the_forms_hold_equal_members(version):
-    assert v622.CerealizedGameRule not in _core.modes[version.VERSION]
+    assert v618.CerealizedGameRule not in _core.modes[version.VERSION]
 
 
 @pytest.mark.parametrize("version", [v729, v844, v975], ids=lambda module: module.__name__)
@@ -758,7 +760,7 @@ def test_no_cerealized_inventory_source_exists_where_the_forms_differ_only_in_an
 
 
 def test_a_cerealized_inventory_source_exists_where_the_forms_hold_different_members():
-    assert {v622.InventorySource, bp.InventorySource} <= _core.modes[v1001.VERSION].keys()
+    assert {v618.InventorySource, bp.InventorySource} <= _core.modes[v1001.VERSION].keys()
 
 
 LATE_VERSIONS = [importlib.import_module(f"bedrock_protocol.v{number}") for number in _core.modes if number >= 2168]
@@ -784,7 +786,7 @@ def test_a_class_takes_the_encoding_of_the_version_it_is_read_at():
     assert (
         _core.encodings[v975.VERSION][bp.SubChunkRequestPacket],
         _core.encodings[v1001.VERSION][bp.SubChunkRequestPacket],
-    ) == (622, 1001)
+    ) == (618, 1001)
 
 
 @pytest.mark.parametrize(
@@ -792,7 +794,7 @@ def test_a_class_takes_the_encoding_of_the_version_it_is_read_at():
     [pytest.param(bp.SubChunkPos, 1001, id="sub-chunk-pos"), pytest.param(bp.GameRule, 844, id="game-rule")],
 )
 def test_a_class_with_two_modes_lists_each_with_its_encoding(cls, cereal):
-    assert _core.modes[v1001.VERSION][cls] == {SerializationMode.CEREAL: cereal, SerializationMode.MANUAL: 622}
+    assert _core.modes[v1001.VERSION][cls] == {SerializationMode.CEREAL: cereal, SerializationMode.MANUAL: 618}
 
 
 def test_the_modes_of_a_class_cannot_be_assigned_to():
@@ -812,7 +814,7 @@ def test_a_versions_modes_are_the_ones_the_schema_serves(protocol, served):
 
 
 def test_a_class_with_one_mode_lists_it():
-    assert _core.modes[v729.VERSION][bp.GameRule] == {SerializationMode.MANUAL: 622}
+    assert _core.modes[v729.VERSION][bp.GameRule] == {SerializationMode.MANUAL: 618}
 
 
 def test_a_class_with_two_modes_has_no_default_encoding():
@@ -824,19 +826,19 @@ def test_a_class_after_the_mixed_range_has_its_default_encoding():
 
 
 def test_a_cerealized_class_belongs_to_the_protocol_that_introduced_it():
-    assert v622.CerealizedGameRule.__module__ == "bedrock_protocol.v622"
+    assert v618.CerealizedGameRule.__module__ == "bedrock_protocol.v618"
 
 
 def test_a_nested_enum_is_shared_by_the_cerealized_class_and_the_plain_one():
-    assert bp.InventorySource.InventorySourceFlags is v622.InventorySource.InventorySourceFlags
+    assert bp.InventorySource.InventorySourceFlags is v618.InventorySource.InventorySourceFlags
 
 
 def test_encode_rejects_a_cerealized_class_of_another_version():
     with pytest.raises(
         TypeError,
-        match=r"^value: <class 'bedrock_protocol\.v622\.CerealizedGameRule'> is not a type at protocol 1001$",
+        match=r"^value: <class 'bedrock_protocol\.v618\.CerealizedGameRule'> is not a type at protocol 1001$",
     ):
-        _core.encode(v1001.VERSION, v622.CerealizedGameRule(), mode=SerializationMode.CEREAL)
+        _core.encode(v1001.VERSION, v618.CerealizedGameRule(), mode=SerializationMode.CEREAL)
 
 
 def test_encode_rejects_a_name_the_schema_does_not_hold():
@@ -961,6 +963,12 @@ def test_a_derived_member_keeps_its_own_name():
 @pytest.mark.parametrize(
     ("version", "packet", "data"),
     [
+        pytest.param(
+            v618,
+            bp.AnimateEntityPacket(stop_expression_version=bp.MolangVersion.LATEST),
+            ANIMATE_ENTITY_MOLANG_618,
+            id="molang-618",
+        ),
         pytest.param(
             v622,
             bp.AnimateEntityPacket(stop_expression_version=bp.MolangVersion.LATEST),

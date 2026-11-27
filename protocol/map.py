@@ -52,14 +52,16 @@ class MapDecoration:
         MANSION = 14
         MONUMENT = 15
         NO_DRAW = 16
-        VILLAGE_DESERT = 17
-        VILLAGE_PLAINS = 18
-        VILLAGE_SAVANNA = 19
-        VILLAGE_SNOWY = 20
-        VILLAGE_TAIGA = 21
-        JUNGLE_TEMPLE = 22
-        WITCH_HUT = 23
-        TRIAL_CHAMBERS = value(24, since=671)
+        with value(since=622):
+            VILLAGE_DESERT = 17
+            VILLAGE_PLAINS = 18
+            VILLAGE_SAVANNA = 19
+            VILLAGE_SNOWY = 20
+            VILLAGE_TAIGA = 21
+            JUNGLE_TEMPLE = 22
+            WITCH_HUT = 23
+        with value(since=671):
+            TRIAL_CHAMBERS = 24
         COUNT = auto()
 
     image: Type

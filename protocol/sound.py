@@ -456,8 +456,9 @@ class LevelSoundEvent(IntEnum, uint32):
     HOGLIN_CONVERT_TO_ZOMBIFIED = 474
     AMBIENT_UNDERWATER_ENTER = 475
     AMBIENT_UNDERWATER_EXIT = 476
-    BOTTLE_FILL = 477
-    BOTTLE_EMPTY = 478
+    with value(since=622):
+        BOTTLE_FILL = 477
+        BOTTLE_EMPTY = 478
     with value(since=630):
         CRAFTER_CRAFT = 479
         CRAFTER_FAIL = 480

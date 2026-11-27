@@ -549,7 +549,7 @@ class DisconnectPacketMessages:
 
 @packet(id=5)
 class DisconnectPacket:
-    reason: DisconnectFailReason
+    reason: DisconnectFailReason = field(since=622)
     messages: Union[DisconnectPacketMessages, None]
 
 

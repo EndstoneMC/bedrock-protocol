@@ -84,7 +84,7 @@ class PlayerActionType(IntEnum, int32):
     STOP_CRAWLING = 33
     START_FLYING = 34
     STOP_FLYING = 35
-    DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", deprecated=True)
+    DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", since=622, deprecated=True)
     START_USING_ITEM = value(37, since=748)
     SWAP_OFFHAND = value(38, since=2168)
     COUNT = auto()
@@ -179,7 +179,8 @@ class PlayerAuthInputPacket:
         STOP_CRAWLING = 41
         START_FLYING = 42
         STOP_FLYING = 43
-        CLIENT_ACK_SERVER_DATA = 44
+        with value(since=622):
+            CLIENT_ACK_SERVER_DATA = 44
         with value(since=649):
             IS_IN_CLIENT_PREDICTED_VEHICLE = 45
         with value(since=662):

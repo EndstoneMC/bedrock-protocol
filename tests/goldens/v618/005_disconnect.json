@@ -1,0 +1,19 @@
+[
+ {
+  "id": "message_present",
+  "value": {
+   "messages": {
+    "__class__": "DisconnectPacketMessages",
+    "message": "bye"
+   }
+  },
+  "bytes": "0003627965"
+ },
+ {
+  "id": "message_absent",
+  "value": {
+   "messages": null
+  },
+  "bytes": "01"
+ }
+]

@@ -12,7 +12,7 @@
 
 namespace bedrock::protocol {
 
-inline auto Serializer<AvailableCommandsPacket::EnumData, 622>::serialize(
+inline auto Serializer<AvailableCommandsPacket::EnumData, 618>::serialize(
     BinaryWriter &stream, const AvailableCommandsPacket::EnumData &value, std::int64_t argument)
     -> std::expected<void, Errc>
 {
@@ -39,7 +39,7 @@ inline auto Serializer<AvailableCommandsPacket::EnumData, 622>::serialize(
     return {};
 }
 
-inline auto Serializer<AvailableCommandsPacket::EnumData, 622>::deserialize(BinaryReader &stream, std::int64_t argument)
+inline auto Serializer<AvailableCommandsPacket::EnumData, 618>::deserialize(BinaryReader &stream, std::int64_t argument)
     -> std::expected<AvailableCommandsPacket::EnumData, Errc>
 {
     AvailableCommandsPacket::EnumData out;
