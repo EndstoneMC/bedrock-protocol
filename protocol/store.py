@@ -32,7 +32,8 @@ class ShowStoreOfferRedirectType(IntEnum, uint8):
 class ShowStoreOfferPacket:
     offer_id: str = field(until=859)
     offer_id: uuid.UUID = field(since=859)
-    redirect_type: ShowStoreOfferRedirectType
+    show_all: bool = field(until=630)
+    redirect_type: ShowStoreOfferRedirectType = field(since=630)
 
 
 @packet(id=92)

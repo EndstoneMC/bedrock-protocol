@@ -1,0 +1,50 @@
+[
+ {
+  "id": "empty_inputs_and_outputs",
+  "value": {
+   "container_id": 1,
+   "type": 1,
+   "uuid": "0575c61f-a5da-4b7f-9961-ffda2908861e",
+   "inputs": [],
+   "outputs": []
+  },
+  "bytes": "01027f4bdaa51fc675051e860829daff61990000"
+ },
+ {
+  "id": "items_and_empty_slot",
+  "value": {
+   "container_id": 119,
+   "type": 2,
+   "uuid": "11223344-5566-7788-99aa-bbccddeeff00",
+   "inputs": [
+    {
+     "id": 345,
+     "stack_size": 3,
+     "aux_value": 5,
+     "net_id": {
+      "raw_id": 9
+     },
+     "block_runtime_id": 0,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    },
+    {
+     "id": 0,
+     "stack_size": 0,
+     "aux_value": 0,
+     "block_runtime_id": 0,
+     "user_data_buffer": ""
+    }
+   ],
+   "outputs": [
+    {
+     "id": 345,
+     "stack_size": 2,
+     "aux_value": 4,
+     "block_runtime_id": 0,
+     "user_data_buffer": "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"
+    }
+   ]
+  },
+  "bytes": "7704887766554433221100ffeeddccbbaa9902b2050300050112000a000000000000000000000001b20502000400000a00000000000000000000"
+ }
+]

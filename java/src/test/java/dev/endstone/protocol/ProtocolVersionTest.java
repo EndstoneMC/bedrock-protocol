@@ -32,7 +32,7 @@ final class ProtocolVersionTest {
   }
 
   static Stream<Arguments> unsupported() {
-    return Stream.of(argumentSet("below the oldest", 629), argumentSet("above the newest", 2260));
+    return Stream.of(argumentSet("below the oldest", 621), argumentSet("above the newest", 2260));
   }
 
   @Test

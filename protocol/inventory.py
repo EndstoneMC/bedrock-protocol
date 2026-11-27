@@ -91,7 +91,8 @@ class ContainerEnumName(IntEnum, uint8):
     CURSOR_CONTAINER = 59
     CREATED_OUTPUT_CONTAINER = 60
     SMITHING_TABLE_TEMPLATE_CONTAINER = 61
-    CRAFTER_LEVEL_ENTITY_CONTAINER = 62
+    with value(since=630):
+        CRAFTER_LEVEL_ENTITY_CONTAINER = 62
     with value(since=712):
         DYNAMIC_CONTAINER = 63
     with value(since=924):
@@ -191,11 +192,15 @@ class ContainerType(IntEnum, int8):
     JIGSAW_EDITOR = 32, "JIGSAW_EDITOR"
     SMITHING_TABLE = 33, "SMITHING_TABLE"
     CHEST_BOAT = 34, "CHEST_BOAT"
-    DECORATED_POT = 35, "DECORATED_POT"
-    CRAFTER = 36
-    DATA_DRIVEN_CONTAINER = value(37, "DATA_DRIVEN_CONTAINER", since=2193)
-    DISC_PRESS = value(38, "DISC_PRESS", since=2225)
-    VIRTUAL_CONTAINER = value(39, "VIRTUAL_CONTAINER", since=2259)
+    with value(since=630):
+        DECORATED_POT = 35, "DECORATED_POT"
+        CRAFTER = 36
+    with value(since=2193):
+        DATA_DRIVEN_CONTAINER = 37, "DATA_DRIVEN_CONTAINER"
+    with value(since=2225):
+        DISC_PRESS = 38, "DISC_PRESS"
+    with value(since=2259):
+        VIRTUAL_CONTAINER = 39, "VIRTUAL_CONTAINER"
 
 
 @packet(id=47)
@@ -260,7 +265,7 @@ class GuiDataPickItemPacket:
     slot: int32
 
 
-@packet(id=306)
+@packet(id=306, since=630)
 class PlayerToggleCrafterSlotRequestPacket:
     pos_x: int32
     pos_y: int32
@@ -318,7 +323,7 @@ class InventoryOptions:
     layout_craft: InventoryLayout
 
 
-@packet(id=307)
+@packet(id=307, since=630)
 class SetPlayerInventoryOptionsPacket:
     inventory_options: InventoryOptions
 

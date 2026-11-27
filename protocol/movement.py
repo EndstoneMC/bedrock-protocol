@@ -116,7 +116,7 @@ class MotionPredictionHintsPacket:
     on_ground: bool
 
 
-@packet(id=16)
+@packet(id=16, since=630)
 class ServerPlayerPostMovePositionPacket:
     pos: Vec3
 

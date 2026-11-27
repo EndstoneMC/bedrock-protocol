@@ -4,7 +4,8 @@ import uuid
 from enum import IntEnum, auto
 
 from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
-from protocol.item import ItemDescriptor, SerializedNetworkItemInstanceDescriptor
+from protocol.inventory import ContainerID
+from protocol.item import ItemDescriptor, NetworkItemStackDescriptor, SerializedNetworkItemInstanceDescriptor
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -304,3 +305,12 @@ class CraftingDataEntry:
                 e.entry_type in {CraftingDataEntryType.FURNACE_RECIPE, CraftingDataEntryType.FURNACE_AUX_RECIPE}
             )
         )
+
+
+@packet(id=53, until=630)
+class CraftingEventPacket:
+    container_id: ContainerID = field(type=uint8)
+    type: varint32
+    uuid: uuid.UUID
+    inputs: list[NetworkItemStackDescriptor]
+    outputs: list[NetworkItemStackDescriptor]
