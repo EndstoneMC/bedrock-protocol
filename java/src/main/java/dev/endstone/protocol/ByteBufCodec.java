@@ -360,7 +360,7 @@ public final class ByteBufCodec {
     return packed;
   }
 
-  /** Parses the hex after the first byte as strtoull does, then clamps it to 32 bits. */
+  /** Parses hex past the first byte as strtoull does, saturating one in [2^32, 2^64 - 2^32). */
   public static int parseColor(byte @NotNull [] text) {
     int i = 1;
     while (i < text.length && (text[i] == ' ' || (text[i] >= '\t' && text[i] <= '\r'))) {

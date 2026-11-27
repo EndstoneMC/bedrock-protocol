@@ -12,6 +12,7 @@ Packet values with the bytes Bedrock Dedicated Server (BDS) reads and writes bac
 | Enum | Its number at the folder's protocol, or its encoded name |
 | Byte blob, non-UTF-8 string | `\xNN` per byte |
 | UUID | Its canonical string |
+| Packed `Color` | `#aarrggbb` |
 | `Color255RGBA` | `#rrggbbaa` |
 | Bitset | `0b` and its bits, most significant first |
 | NBT | Compact SNBT |

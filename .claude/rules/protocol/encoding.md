@@ -23,6 +23,7 @@ paths:
 ## Text
 
 - A `mce::UUID` encoded as text is `mce::UUID::asString`'s lower-case 8-4-4-4-12; BDS reads 36 hyphenated or 32 bare hex digits, either case, and any other text as the nil UUID; the schema holds the text as `str` (`dsl.md`).
+- A `mce::Color` encoded as text is `mce::Color::toHexString`'s `#` and unpadded lower-case hex of `toARGB`; BDS's `fromHexString` reads past the first byte as `strtoul` in base 16, saturates a value in [2^32, 0xFFFFFFFF00000000) to 0xFFFFFFFF, keeps the low 32 bits of any other, and reads empty text as zero.
 
 ## Packets
 

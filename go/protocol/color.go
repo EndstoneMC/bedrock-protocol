@@ -26,7 +26,7 @@ func formatColor(packed uint32) string {
 	return "#" + strconv.FormatUint(uint64(packed), 16)
 }
 
-// parseColor reads text past its first byte as C's strtoull in base 16 does, clamping a value past 32 bits.
+// parseColor reads text past its first byte as C's strtoull in base 16 does, saturating one in [2^32, 2^64 - 2^32).
 func parseColor(text string) uint32 {
 	if text == "" {
 		return 0
