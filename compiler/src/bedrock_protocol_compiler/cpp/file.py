@@ -12,7 +12,6 @@ class FileGenerator:
         self.schema = schema
         self.module = module
         self.own = [family for family in module.families if isinstance(family, Struct | Enum)]
-        self.aliases = [AliasGenerator(each) for each in module.families if isinstance(each, Alias)]
         self.rank = {family: index for index, family in enumerate(self.own)}
         self.families: list[Struct | Enum] = []
         for family in self.own:
@@ -37,31 +36,15 @@ class FileGenerator:
                         types.setdefault(schema.enum_type(family, version), []).append(version)
             self.held[family] = {enum_type: schema.ranges(versions) for enum_type, versions in types.items()}
             self.generators += [EnumGenerator(schema, enum_type) for enum_type in schema.enum_types(family)]
-        holders = {
-            generator.target: generator for generator in self.generators if isinstance(generator, StructGenerator)
+        self.headers: dict[str, list[AliasGenerator | StructGenerator | EnumGenerator]] = {
+            names.detail(each): [AliasGenerator(each)] for each in module.families if isinstance(each, Alias)
         }
-        self.early: list[dict[tuple[StructGenerator, ...], list[StructGenerator | EnumGenerator]]] = []
-        defined: set[StructModel | EnumType] = set()
-        for generator in self.generators:
-            early: dict[tuple[StructGenerator, ...], list[StructGenerator | EnumGenerator]] = {}
+        walk = list(self.generators)
+        while walk:
+            generator = walk.pop(0)
+            self.headers.setdefault(names.detail(generator.target.family), []).append(generator)
             if isinstance(generator, StructGenerator):
-                walk = list(generator.target.nested)
-                while walk:
-                    child = walk.pop(0)
-                    owners: list[StructModel] = []
-                    while (parent := schema.owner(owners[0] if owners else child)) is not None:
-                        owners.insert(0, parent)
-                    if not defined.intersection((*owners, child)) and owners[0] is not generator.target:
-                        path = [holders[owners[0]]]
-                        for owner in owners[1:]:
-                            holder = path[-1].pending[owner]
-                            assert isinstance(holder, StructGenerator)
-                            path.append(holder)
-                        early.setdefault(tuple(path), []).append(path[-1].pending.pop(child))
-                    defined.add(child)
-                    if isinstance(child, StructModel):
-                        walk[0:0] = child.nested
-            self.early.append(early)
+                walk[0:0] = [child for _, child in generator.owned]
 
     def place(self, family: Struct | Enum) -> None:
         if family in self.families:
@@ -70,16 +53,10 @@ class FileGenerator:
             self.place(dependency)
         self.families.append(family)
 
-    def includes(self) -> set[str]:
-        includes = {names.runtime("detail/reflect"), "<array>", "<string_view>"}
-        for generator in (*self.aliases, *self.generators):
-            includes |= generator.includes()
-        return includes - {names.generated(self.module.stem)}
+    def includes(self, path: str) -> set[str]:
+        return set[str]().union(*(generator.includes() for generator in self.headers[path])) - {f"<{path}>"}
 
-    def header(self, p: Printer) -> None:
-        p.emit("#pragma once")
-        p.emit("")
-        includes = self.includes()
+    def include(self, p: Printer, includes: set[str]) -> None:
         groups = (
             [each for each in includes if not each.startswith(f"<{names.INCLUDE_DIR}/")],
             [each for each in includes if each.endswith(".hpp>")],
@@ -90,55 +67,78 @@ class FileGenerator:
                 p.emit("#include $each$", each=each)
             if group:
                 p.emit("")
+
+    def detail_header(self, p: Printer, path: str) -> None:
+        p.emit(
+            """
+            #pragma once
+            // IWYU pragma: private, include $header$
+
+            """,
+            header=names.generated(self.module.stem),
+        )
+        self.include(p, self.includes(path))
         p.emit("namespace $namespace$ {", namespace=names.namespace(self.schema))
         p.emit("")
-        self.primitive_aliases(p)
-        self.definitions(p)
-        self.selectors(p)
-        p.emit("namespace detail {")
+        self.primitive_aliases(p, [each for each in self.headers[path] if isinstance(each, AliasGenerator)])
+        generators = [each for each in self.headers[path] if isinstance(each, StructGenerator | EnumGenerator)]
+        if generators:
+            self.definitions(p, generators)
+            self.selectors(p, [family for family in self.families if family.cereal and names.detail(family) == path])
+            p.emit("namespace detail {")
+            p.emit("")
+            for generator in generators:
+                generator.reflection(p)
+            p.emit("}  // namespace detail")
+            p.emit("")
+            for generator in generators:
+                generator.serializer_declaration(p)
+        p.emit("}  // namespace $namespace$", namespace=names.namespace(self.schema))
+
+    def header(self, p: Printer) -> None:
+        p.emit("#pragma once")
         p.emit("")
-        for generator in self.generators:
-            generator.reflection(p)
-        p.emit("}  // namespace detail")
+        own = {f"<{path}>" for path in self.headers}
+        self.include(p, {names.runtime("detail/reflect"), "<array>", "<string_view>", *own})
+        p.emit("namespace $namespace$ {", namespace=names.namespace(self.schema))
         p.emit("")
-        for generator in self.generators:
-            generator.serializer_declaration(p)
         self.types(p)
         p.emit("}  // namespace $namespace$", namespace=names.namespace(self.schema))
 
     def source(self, p: Printer) -> None:
-        p.emit(
-            """
-            #include $header$
-
-            namespace $namespace$ {
-
-            """,
-            header=names.generated(self.module.stem),
-            namespace=names.namespace(self.schema),
+        covered = {f"<{path}>" for path in self.headers}.union(*(self.includes(path) for path in self.headers))
+        fields = set[str]().union(
+            *(
+                generator.field_includes
+                for generators in self.headers.values()
+                for generator in generators
+                if isinstance(generator, StructGenerator)
+            )
         )
+        p.emit("#include $header$", header=names.generated(self.module.stem))
+        p.emit("")
+        self.include(p, fields - covered)
+        p.emit("namespace $namespace$ {", namespace=names.namespace(self.schema))
+        p.emit("")
         for generator in self.generators:
             generator.serializer_body(p)
         p.emit("}  // namespace $namespace$", namespace=names.namespace(self.schema))
 
-    def primitive_aliases(self, p: Printer) -> None:
-        if not self.aliases:
+    def primitive_aliases(self, p: Printer, aliases: list[AliasGenerator]) -> None:
+        if not aliases:
             return
-        for alias in self.aliases:
+        for alias in aliases:
             alias.definition(p)
         p.emit("namespace detail {")
         p.emit("")
-        for alias in self.aliases:
+        for alias in aliases:
             alias.trait(p)
         p.emit("}  // namespace detail")
         p.emit("")
 
-    def definitions(self, p: Printer) -> None:
+    def definitions(self, p: Printer, generators: list[StructGenerator | EnumGenerator]) -> None:
         current: tuple[str, ...] = ()
-        for generator, early in zip(self.generators, self.early, strict=True):
-            for path, children in early.items():
-                current = self.enter(p, current, names.scope(self.schema, path[0].target))
-                path[-1].nested(p, children, path[:-1])
+        for generator in generators:
             current = self.enter(p, current, names.scope(self.schema, generator.target))
             generator.definition(p)
             p.emit("")
@@ -163,13 +163,13 @@ class FileGenerator:
             None,
         )
 
-    def selectors(self, p: Printer) -> None:
+    def selectors(self, p: Printer, families: list[Struct | Enum]) -> None:
+        if not families:
+            return
         selectors: list[str] = []
         p.emit("namespace detail {")
         p.emit("")
-        for family in self.families:
-            if not family.cereal:
-                continue
+        for family in families:
             sibling = self.siblings.get(family)
             labelled: dict[str, dict[StructModel | EnumType, list[int]]] = {}
             for version in self.schema.versions:

@@ -1132,14 +1132,17 @@ def generate(build_package, tmp_path):
     return run
 
 
-def test_a_header_and_a_source_per_module_packets_hpp_packets_fwd_hpp_and_version_hpp(generate):
+def test_a_header_and_a_source_per_module_a_header_per_type_packets_hpp_packets_fwd_hpp_and_version_hpp(generate):
     out = generate({"a": A, "b": B})
 
-    assert sorted(path.name for path in out.iterdir()) == [
+    assert sorted(path.relative_to(out).as_posix() for path in out.rglob("*") if path.is_file()) == [
         "a.cpp",
         "a.h",
         "b.cpp",
         "b.h",
+        "detail/a/E.h",
+        "detail/a/P.h",
+        "detail/b/B.h",
         "packets.hpp",
         "packets_fwd.hpp",
         "version.hpp",
@@ -1148,12 +1151,13 @@ def test_a_header_and_a_source_per_module_packets_hpp_packets_fwd_hpp_and_versio
 
 def test_a_second_run_leaves_every_file_untouched(generate, tmp_path):
     out = generate({"a": A})
-    for path in out.iterdir():
+    files = [path for path in out.rglob("*") if path.is_file()]
+    for path in files:
         os.utime(path, ns=(1_000_000_000, 1_000_000_000))
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1_000_000_000}
+    assert {path.stat().st_mtime_ns for path in files} == {1_000_000_000}
 
 
 def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
@@ -1162,13 +1166,116 @@ def test_a_file_the_schema_no_longer_names_is_deleted(generate, tmp_path):
 
     main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert sorted(path.name for path in out.iterdir()) == [
+    assert sorted(path.relative_to(out).as_posix() for path in out.rglob("*") if path.is_file()) == [
         "a.cpp",
         "a.h",
+        "detail/a/E.h",
+        "detail/a/P.h",
         "packets.hpp",
         "packets_fwd.hpp",
         "version.hpp",
     ]
+
+
+HOLDER = """
+from protocol import packet
+from protocol.b import B
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+@packet(id=1)
+class H:
+    b: B
+"""
+
+MUTUAL_A = """
+from protocol import uint8
+from protocol.b import Y
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+class X:
+    y: Y
+"""
+
+MUTUAL_B = """
+from protocol import packet, uint8
+from protocol.a import X
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+class Y:
+    v: uint8
+
+@packet(id=1)
+class Z:
+    x: X
+"""
+
+PAIR_THROUGH_ANOTHER = """
+from protocol import field, packet, type, uint8
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+class F:
+    g: G
+
+@type(cereal=False)
+class F:
+    x: uint8
+
+class G:
+    f: F = field(cereal=False)
+
+@packet(id=1)
+class P:
+    f: F
+"""
+
+
+def test_a_type_header_is_private_to_its_modules_header(generate):
+    header = (generate({"a": A}) / "detail/a/P.h").read_text()
+
+    assert header.startswith("#pragma once\n// IWYU pragma: private, include <bedrock/protocol/a.h>\n\n")
+
+
+def test_a_module_header_includes_only_its_own_types_headers(generate):
+    header = (generate({"a": HOLDER, "b": B}) / "a.h").read_text()
+
+    assert re.findall(r"#include <bedrock/protocol/(.*)\.h>", header) == ["detail/a/H"]
+
+
+def test_a_type_header_includes_the_header_of_a_member_type_from_another_module(generate):
+    header = (generate({"a": HOLDER, "b": B}) / "detail/a/H.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/b/B.h>\n" in header
+
+
+def test_a_source_includes_its_modules_header_before_what_only_its_bodies_need(generate):
+    source = (generate({"a": PACKED_COLORS}) / "a.cpp").read_text()
+
+    assert source.startswith("#include <bedrock/protocol/a.h>\n\n")
+
+
+def test_modules_that_import_each_other_include_each_others_type_headers(generate):
+    out = generate({"a": MUTUAL_A, "b": MUTUAL_B})
+
+    assert "#include <bedrock/protocol/detail/b/Y.h>\n" in (out / "detail/a/X.h").read_text()
+    assert "#include <bedrock/protocol/detail/a/X.h>\n" in (out / "detail/b/Z.h").read_text()
+
+
+def test_a_header_cycle_exits_with_the_headers_it_runs_through(build_package, tmp_path):
+    build_package({"a": PAIR_THROUGH_ANOTHER})
+
+    with pytest.raises(
+        SystemExit,
+        match=r"^bpc: bedrock/protocol/detail/a/F\.h: includes itself through bedrock/protocol/detail/a/G\.h$",
+    ):
+        main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
 
 def test_a_schema_error_exits_with_its_message(build_package, tmp_path):
@@ -1191,11 +1298,11 @@ def test_a_bitset_width_may_name_a_derived_member(generate):
 def test_a_sentinel_is_no_enumerator(generate):
     out = generate({"a": SENTINEL})
 
-    assert "enum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};" in (out / "a.h").read_text()
+    assert "enum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};" in (out / "detail/a/E.h").read_text()
 
 
 def test_a_sentinel_has_no_reflected_value_or_name(generate):
-    header = (generate({"a": SENTINEL}) / "a.h").read_text()
+    header = (generate({"a": SENTINEL}) / "detail/a/E.h").read_text()
     values = "values_v<::bedrock::protocol::E>{{\n    ::bedrock::protocol::E::A,\n    ::bedrock::protocol::E::B,\n}};"
 
     assert values in header
@@ -1206,13 +1313,13 @@ def test_a_sentinel_has_no_reflected_value_or_name(generate):
 def test_a_member_named_after_a_sentinel_takes_its_number(generate):
     out = generate({"a": SENTINEL})
 
-    assert "enum class F : std::uint8_t {\n    A = 1,\n    Latest = 1,\n};" in (out / "a.h").read_text()
+    assert "enum class F : std::uint8_t {\n    A = 1,\n    Latest = 1,\n};" in (out / "detail/a/F.h").read_text()
 
 
 def test_a_bitset_is_as_wide_as_the_sentinel_it_names(generate):
     out = generate({"a": SENTINEL})
 
-    assert "std::bitset<3> width{};" in (out / "a.h").read_text()
+    assert "std::bitset<3> width{};" in (out / "detail/a/P.h").read_text()
 
 
 def test_a_predicate_reads_a_sentinel_as_its_number(generate):
@@ -1224,7 +1331,7 @@ def test_a_predicate_reads_a_sentinel_as_its_number(generate):
 def test_a_deprecated_member_is_a_deprecated_enumerator(generate):
     out = generate({"a": DEPRECATED})
 
-    assert "    Old [[deprecated]] = 2,\n    Next [[deprecated]] = 3,\n" in (out / "a.h").read_text()
+    assert "    Old [[deprecated]] = 2,\n    Next [[deprecated]] = 3,\n" in (out / "detail/a/D.h").read_text()
 
 
 def test_a_pointer_is_defined_after_the_members_it_ranks_before(generate):
@@ -1235,7 +1342,7 @@ def test_a_pointer_is_defined_after_the_members_it_ranks_before(generate):
         "class E(IntEnum, uint8):\n    A = 1\n    B = 2\n"
         "    COUNT = auto()\n    LATEST = COUNT - 1\n\nclass H:\n    e: E\n"
     )
-    header = (generate({"a": source}) / "a.h").read_text()
+    header = (generate({"a": source}) / "detail/a/E.h").read_text()
 
     assert (
         "enum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n    Count = 3,\n    Latest = Count - 1,\n};" in header
@@ -1245,11 +1352,11 @@ def test_a_pointer_is_defined_after_the_members_it_ranks_before(generate):
 def test_an_alias_of_a_deprecated_member_spells_its_number(generate):
     out = generate({"a": DEPRECATED})
 
-    assert "    Latest = 2,\n};" in (out / "a.h").read_text()
+    assert "    Latest = 2,\n};" in (out / "detail/a/D.h").read_text()
 
 
 def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
-    header = (generate({"a": DEPRECATED}) / "a.h").read_text()
+    header = (generate({"a": DEPRECATED}) / "detail/a/D.h").read_text()
     values = (
         "values_v<::bedrock::protocol::D>{{\n    ::bedrock::protocol::D::A,\n    ::bedrock::protocol::D::Latest,\n"
         "    static_cast<::bedrock::protocol::D>(2),\n    static_cast<::bedrock::protocol::D>(3),\n}};"
@@ -1262,7 +1369,7 @@ def test_a_deprecated_member_reflects_its_number_and_encoded_name(generate):
 
 
 def test_an_enum_with_a_deprecated_member_flags_each_reflected_member(generate):
-    header = (generate({"a": DEPRECATED}) / "a.h").read_text()
+    header = (generate({"a": DEPRECATED}) / "detail/a/D.h").read_text()
 
     assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    false,\n    true,\n    true,\n}};" in header
 
@@ -1270,7 +1377,7 @@ def test_an_enum_with_a_deprecated_member_flags_each_reflected_member(generate):
 def test_an_enum_without_a_deprecated_member_has_no_deprecated_flags(generate):
     out = generate({"a": SENTINEL})
 
-    assert "deprecated_v" not in (out / "a.h").read_text()
+    assert "deprecated_v" not in (out / "detail/a/E.h").read_text()
 
 
 def test_a_predicate_reads_a_deprecated_member_as_its_number(generate):
@@ -1281,8 +1388,9 @@ def test_a_predicate_reads_a_deprecated_member_as_its_number(generate):
 
 def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     out = generate({"a": A, "b": B})
-    before = {path.name: path.read_bytes() for path in out.iterdir()}
-    for path in out.iterdir():
+    files = [path for path in out.rglob("*") if path.is_file()]
+    before = {path: path.read_bytes() for path in files}
+    for path in files:
         os.utime(path, ns=(1_000_000_000, 1_000_000_000))
     (tmp_path / "protocol/b.py").write_text(
         'package = "bedrock.protocol"\njava_package = "dev.endstone.protocol"\n'
@@ -1292,8 +1400,8 @@ def test_a_schema_error_leaves_the_output_tree_untouched(generate, tmp_path):
     with pytest.raises(SystemExit, match=r"bpc: .*Missing"):
         main([str(tmp_path / "protocol"), "--out", str(tmp_path / "out")])
 
-    assert {path.name: path.read_bytes() for path in out.iterdir()} == before
-    assert {path.stat().st_mtime_ns for path in out.iterdir()} == {1_000_000_000}
+    assert {path: path.read_bytes() for path in out.rglob("*") if path.is_file()} == before
+    assert {path.stat().st_mtime_ns for path in files} == {1_000_000_000}
 
 
 def test_packets_fwd_hpp_names_every_packet_of_every_module(generate):
@@ -1304,10 +1412,10 @@ def test_packets_fwd_hpp_names_every_packet_of_every_module(generate):
     assert "struct packet_of<V, 2>" in registry
 
 
-def test_a_module_header_specialises_no_packet_of(generate):
+def test_a_packets_header_specialises_no_packet_of(generate):
     out = generate({"a": A})
 
-    assert "packet_of" not in (out / "a.h").read_text()
+    assert "packet_of" not in (out / "detail/a/P.h").read_text()
 
 
 def test_packets_hpp_includes_every_module_header(generate):
@@ -1332,7 +1440,8 @@ def test_packets_fwd_hpp_includes_only_type_traits(generate):
 def test_a_versioned_packets_registry_names_each_run_its_selector_names(generate, module, name):
     out = generate({"a": module})
     selected = re.findall(
-        rf"template <int V>( requires .*)\nstruct {name}_<V> {{ using type = (.*); }};", (out / "a.h").read_text()
+        rf"template <int V>( requires .*)\nstruct {name}_<V> {{ using type = (.*); }};",
+        (out / f"detail/a/{name}.h").read_text(),
     )
     registered = re.findall(
         r"template <int V>( requires .*)\nstruct packet_of<V, 2> { using type = (.*); };",
@@ -1475,13 +1584,16 @@ EXCLUDE = "Serializer<Exclude<::bedrock::protocol::Info, &::bedrock::protocol::I
 def test_an_excluded_member_gets_a_serializer_of_its_own(generate):
     out = generate({"a": EXCLUDED})
 
-    assert f"template <>\nstruct {EXCLUDE} {{\n    static constexpr int since = 1;\n" in (out / "a.h").read_text()
+    assert (
+        f"template <>\nstruct {EXCLUDE} {{\n    static constexpr int since = 1;\n"
+        in (out / "detail/a/Info.h").read_text()
+    )
 
 
 def test_no_protocol_inherits_an_excluding_serializer(generate):
     out = generate({"a": EXCLUDED})
 
-    assert ": Serializer<Exclude<" not in (out / "a.h").read_text()
+    assert ": Serializer<Exclude<" not in (out / "detail/a/Info.h").read_text()
 
 
 def test_an_excluding_serializer_writes_every_member_but_the_excluded_one(generate):
@@ -1549,7 +1661,7 @@ def test_a_field_calls_the_whole_serializer_where_its_type_lacks_the_excluded_me
 def test_an_exclusion_that_leaves_no_member_still_gets_a_serializer(generate):
     source = EXCLUDED.replace("    id: uint8\n", "    class Kind:\n        x: uint8\n\n")
 
-    header = (generate({"a": source}) / "a.h").read_text()
+    header = (generate({"a": source}) / "detail/a/Info.h").read_text()
 
     assert f"template <>\nstruct {EXCLUDE} {{\n" in header
 
@@ -1572,13 +1684,13 @@ class P:
 
 
 def test_encodings_that_differ_only_in_the_excluded_member_share_one_excluding_serializer(generate):
-    header = (generate({"a": EXCLUDED_REENCODED}) / "a.h").read_text()
+    header = (generate({"a": EXCLUDED_REENCODED}) / "detail/a/Info.h").read_text()
 
     assert re.findall(r"\nstruct (Serializer<Exclude<.*>) \{\n", header) == [EXCLUDE]
 
 
 def test_encodings_that_differ_only_in_the_excluded_member_keep_one_serializer_for_their_caller(generate):
-    header = (generate({"a": EXCLUDED_REENCODED}) / "a.h").read_text()
+    header = (generate({"a": EXCLUDED_REENCODED}) / "detail/a/P.h").read_text()
 
     assert re.findall(r"\nstruct (Serializer<::bedrock::protocol::P, \d+>) \{\n", header) == [
         "Serializer<::bedrock::protocol::P, 1>"
@@ -1608,7 +1720,7 @@ class P:
 
 
 def test_an_excluding_serializer_names_the_mode_its_type_has_where_first_called(generate):
-    header = (generate({"a": EXCLUDED_PAIR}) / "a.h").read_text()
+    header = (generate({"a": EXCLUDED_PAIR}) / "detail/a/B.h").read_text()
 
     assert (
         "template <>\nstruct Serializer<Exclude<::bedrock::protocol::B, &::bedrock::protocol::B::y>, 1, "
@@ -1619,14 +1731,14 @@ def test_an_excluding_serializer_names_the_mode_its_type_has_where_first_called(
 def test_an_implementation_is_named_for_its_shapes_first_protocol(generate):
     out = generate({"a": NESTED})
 
-    assert "struct Serializer<::bedrock::protocol::Outer, 2> {\n" in (out / "a.h").read_text()
+    assert "struct Serializer<::bedrock::protocol::Outer, 2> {\n" in (out / "detail/a/Outer.h").read_text()
     assert "auto Serializer<::bedrock::protocol::Outer, 2>::serialize(" in (out / "a.cpp").read_text()
 
 
 def test_an_implementation_carries_its_first_protocol_as_since(generate):
     out = generate({"a": NESTED})
 
-    assert "    static constexpr int since = 2;\n" in (out / "a.h").read_text()
+    assert "    static constexpr int since = 2;\n" in (out / "detail/a/Outer.h").read_text()
 
 
 def test_a_run_gets_a_partial_bounded_by_it(generate):
@@ -1636,7 +1748,7 @@ def test_a_run_gets_a_partial_bounded_by_it(generate):
         "template <int V> requires (V >= 2 && V <= 5)\n"
         "struct Serializer<::bedrock::protocol::Outer, V> : Serializer<::bedrock::protocol::Outer, 2> {};\n"
     )
-    assert partial in (out / "a.h").read_text()
+    assert partial in (out / "detail/a/Outer.h").read_text()
 
 
 def test_get_refuses_a_protocol_outside_versions(generate):
@@ -1658,13 +1770,13 @@ def test_a_shape_live_at_every_version_gets_a_partial_over_every_supported_proto
         "template <int V> requires (V >= 1 && V <= 5)\n"
         "struct Serializer<::bedrock::protocol::Inner, V> : Serializer<::bedrock::protocol::Inner, 1> {};\n"
     )
-    assert partial in (out / "a.h").read_text()
+    assert partial in (out / "detail/a/Inner.h").read_text()
 
 
 def test_a_shape_live_in_two_runs_gets_a_partial_per_run(generate):
     out = generate({"a": RETURNING})
 
-    header = (out / "a.h").read_text()
+    header = (out / "detail/a/A.h").read_text()
     assert (
         "template <int V> requires (V >= 1 && V < 3)\n"
         "struct Serializer<::bedrock::protocol::A, V> : Serializer<::bedrock::protocol::A, 1> {};\n"
@@ -1751,7 +1863,7 @@ def test_an_explicit_specialization_comes_before_its_partials(generate):
         "template <int V> requires (V >= 2 && V <= 5)\n"
         "struct Serializer<::bedrock::protocol::Outer, V>"
     )
-    assert order in (out / "a.h").read_text()
+    assert order in (out / "detail/a/Outer.h").read_text()
 
 
 def test_a_builtin_is_called_with_the_callers_protocol(generate):
@@ -1790,21 +1902,21 @@ def body_of(source, signature):
 
 
 def test_an_encoding_only_difference_shares_one_struct(generate):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/S.h").read_text()
 
     assert header.count("\nstruct S {\n") == 1
 
 
 @pytest.mark.parametrize("since", [1, 3], ids=["first-encoding", "second-encoding"])
 def test_an_encoding_gets_one_implementation_named_for_its_first_protocol(generate, since):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/S.h").read_text()
 
     assert f"template <>\nstruct Serializer<::bedrock::protocol::S, {since}> {{\n" in header
 
 
 @pytest.mark.parametrize("since", [1, 3], ids=["first-encoding", "second-encoding"])
 def test_an_implementation_carries_its_first_protocol_as_since_on_its_explicit_specialization(generate, since):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/S.h").read_text()
 
     assert (
         f"struct Serializer<::bedrock::protocol::S, {since}> {{\n"
@@ -1819,7 +1931,7 @@ def test_an_implementation_carries_its_first_protocol_as_since_on_its_explicit_s
     ids=["first-encoding", "second-encoding"],
 )
 def test_an_encodings_partial_covers_its_run(generate, bound, since):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/S.h").read_text()
 
     assert (
         f"template <int V> requires ({bound})\n"
@@ -1836,7 +1948,7 @@ def test_a_parent_calls_the_child_encoding_of_its_own_encoding(generate, since):
 
 
 def test_a_shared_struct_lists_its_members_in_the_newest_order(generate):
-    header = (generate({"a": ORDER}) / "a.h").read_text()
+    header = (generate({"a": ORDER}) / "detail/a/Q.h").read_text()
 
     assert "    std::uint16_t b{};\n    std::uint8_t a{};\n" in header
     assert "    std::uint8_t a{};\n    std::uint16_t b{};\n" not in header
@@ -1850,7 +1962,7 @@ def test_the_older_encoding_of_a_shared_struct_writes_in_its_own_order(generate)
 
 
 def test_a_struct_whose_enum_only_gains_a_member_is_one_model(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/H.h").read_text()
 
     assert header.count("\nstruct H {\n") == 1
     assert "::bedrock::protocol::v1::H" not in header
@@ -1858,7 +1970,7 @@ def test_a_struct_whose_enum_only_gains_a_member_is_one_model(generate):
 
 
 def test_a_struct_whose_enum_only_gains_a_member_has_a_serializer_per_membership(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/H.h").read_text()
 
     assert header.count("struct Serializer<::bedrock::protocol::H, ") == 4
     assert (
@@ -1870,13 +1982,13 @@ def test_a_struct_whose_enum_only_gains_a_member_has_a_serializer_per_membership
 
 
 def test_a_struct_whose_enum_only_gains_a_member_stays_one_struct(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/H.h").read_text()
 
     assert header.count("\nstruct H {\n") == 1
 
 
 def test_a_struct_whose_enum_is_renumbered_has_a_serializer_per_numbering(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/H.h").read_text()
 
     assert "template <>\nstruct Serializer<::bedrock::protocol::H, 1> {\n" in header
     assert "template <>\nstruct Serializer<::bedrock::protocol::H, 3> {\n" in header
@@ -1884,7 +1996,7 @@ def test_a_struct_whose_enum_is_renumbered_has_a_serializer_per_numbering(genera
 
 
 def test_a_renumbered_enum_is_one_enum_class_of_library_values(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert header.count("enum class E ") == 1
     assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 3,\n};\n" in header
@@ -1892,7 +2004,7 @@ def test_a_renumbered_enum_is_one_enum_class_of_library_values(generate):
 
 
 def test_a_renumbered_enum_is_selected_by_its_primary_definition_alone(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V <= 5)\nstruct E_ { using type = ::bedrock::protocol::E; };\n" in header
@@ -1910,27 +2022,27 @@ def test_a_renumbered_enum_is_selected_by_its_primary_definition_alone(generate)
     ],
 )
 def test_a_numbering_holds_each_of_its_four_tables(generate, line):
-    header = (generate({"a": ENUM_ASYMMETRIC}) / "a.h").read_text()
+    header = (generate({"a": ENUM_ASYMMETRIC}) / "detail/a/E.h").read_text()
 
     assert "template <>\nstruct Numbering<::bedrock::protocol::E, 1> {\n" in header
     assert f"    static constexpr {line};\n" in header
 
 
 def test_a_numbering_spells_an_empty_table_as_an_empty_array(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert "    static constexpr std::array<NumberPair<::bedrock::protocol::E>, 0> encoded{};\n" in header
 
 
 def test_an_identity_numbering_emits_no_specialization(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert header.count("struct Numbering<") == 1
     assert "struct Numbering<::bedrock::protocol::E, 3>" not in header
 
 
 def test_a_numbering_follows_the_reflection_of_its_enum_inside_detail(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     reflection = header.index("type_name_v<::bedrock::protocol::E>")
     specialization = header.index("struct Numbering<")
@@ -1939,13 +2051,13 @@ def test_a_numbering_follows_the_reflection_of_its_enum_inside_detail(generate):
 
 
 def test_a_numbering_no_field_reaches_is_emitted(generate):
-    header = (generate({"a": ENUM_WIDTH_ONLY}) / "a.h").read_text()
+    header = (generate({"a": ENUM_WIDTH_ONLY}) / "detail/a/E.h").read_text()
 
     assert "template <>\nstruct Numbering<::bedrock::protocol::E, 1> {\n" in header
 
 
 def test_a_numbering_is_selected_over_each_run_it_serves(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     selector = (
         "template <int V> requires (V >= 1 && V < 3)\n"
@@ -1955,13 +2067,13 @@ def test_a_numbering_is_selected_over_each_run_it_serves(generate):
 
 
 def test_an_identity_numbering_is_left_to_the_primary_selector(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert header.count("struct numbering_of<") == 1
 
 
 def test_an_enum_selects_no_numbering_where_it_has_no_form(generate):
-    header = (generate({"a": ENUM_UNTIL_3}) / "a.h").read_text()
+    header = (generate({"a": ENUM_UNTIL_3}) / "detail/a/E.h").read_text()
 
     selector = (
         "template <int V> requires (V >= 3 && V <= 5)\n"
@@ -1971,13 +2083,13 @@ def test_an_enum_selects_no_numbering_where_it_has_no_form(generate):
 
 
 def test_an_enum_without_a_form_at_some_protocol_includes_the_numbering_runtime(generate):
-    header = (generate({"a": ENUM_UNTIL_3}) / "a.h").read_text()
+    header = (generate({"a": ENUM_UNTIL_3}) / "detail/a/E.h").read_text()
 
     assert "#include <bedrock/protocol/detail/numbering.hpp>\n" in header
 
 
 def test_a_member_sharing_an_earlier_members_value_is_flagged(generate):
-    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "detail/a/E.h").read_text()
 
     flags = (
         "inline constexpr std::array<bool, 4> aliased_v<::bedrock::protocol::E>{{\n"
@@ -1987,25 +2099,25 @@ def test_a_member_sharing_an_earlier_members_value_is_flagged(generate):
 
 
 def test_an_enum_whose_members_hold_distinct_values_flags_none(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert "aliased_v<" not in header
 
 
 def test_an_enum_with_a_numbering_includes_the_numbering_runtime(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert "#include <bedrock/protocol/detail/numbering.hpp>\n" in header
 
 
 def test_an_enum_without_a_numbering_does_not_include_the_numbering_runtime(generate):
-    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "detail/a/E.h").read_text()
 
     assert "detail/numbering.hpp" not in header
 
 
 def test_an_enum_gaining_members_is_one_block_holding_every_member(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert header.count("enum class E ") == 1
     assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
@@ -2014,14 +2126,14 @@ def test_an_enum_gaining_members_is_one_block_holding_every_member(generate):
 
 @pytest.mark.parametrize("table", ["values_v", "names_v", "schema_names_v", "type_name_v"])
 def test_an_enum_gaining_members_has_one_reflection_table_of_each_kind(generate, table):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert header.count(f" {table}<::bedrock::protocol::E>{{") == 1
     assert f" {table}<::bedrock::protocol::v1::E>{{" not in header
 
 
 def test_an_enum_gaining_members_reflects_every_member(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert (
         "values_v<::bedrock::protocol::E>{{\n    ::bedrock::protocol::E::A,\n    ::bedrock::protocol::E::B,\n}};"
@@ -2030,7 +2142,7 @@ def test_an_enum_gaining_members_reflects_every_member(generate):
 
 
 def test_an_enum_live_at_every_version_is_selected_by_its_primary_definition_alone(generate):
-    header = (generate({"a": ENUM_SPLIT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SPLIT}) / "detail/a/E.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V <= 5)\nstruct E_ { using type = ::bedrock::protocol::E; };\n" in header
@@ -2039,7 +2151,7 @@ def test_an_enum_live_at_every_version_is_selected_by_its_primary_definition_alo
 
 
 def test_an_enum_gaining_members_after_its_first_version_is_selected_by_one_partial(generate):
-    header = (generate({"a": ENUM_LATE}) / "a.h").read_text()
+    header = (generate({"a": ENUM_LATE}) / "detail/a/Z.h").read_text()
 
     assert (
         "template <int V>\nstruct Z_;\n"
@@ -2051,14 +2163,14 @@ def test_an_enum_gaining_members_after_its_first_version_is_selected_by_one_part
 
 
 def test_an_enum_gaining_members_before_it_ends_is_one_block_under_its_first_version(generate):
-    header = (generate({"a": ENUM_ENDED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_ENDED}) / "detail/a/F.h").read_text()
 
     assert header.count("enum class F ") == 1
     assert "namespace v1 {\n\nenum class F : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
 
 
 def test_an_enum_gaining_members_before_it_ends_is_selected_by_one_partial_over_its_run(generate):
-    header = (generate({"a": ENUM_ENDED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_ENDED}) / "detail/a/F.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 4)\nstruct F_<V> { using type = ::bedrock::protocol::v1::F; };\n"
@@ -2068,13 +2180,13 @@ def test_an_enum_gaining_members_before_it_ends_is_selected_by_one_partial_over_
 
 
 def test_members_sharing_a_value_are_ordered_newest_live_first_within_their_positions(generate):
-    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "detail/a/E.h").read_text()
 
     assert "enum class E : std::int32_t {\n    New = 1,\n    Mid = 2,\n    Old = 1,\n    Alias = 2,\n};\n" in header
 
 
 def test_the_newest_live_member_of_a_shared_value_is_the_first_reflected(generate):
-    header = (generate({"a": ENUM_SHARED_VALUE}) / "a.h").read_text()
+    header = (generate({"a": ENUM_SHARED_VALUE}) / "detail/a/E.h").read_text()
 
     assert (
         "values_v<::bedrock::protocol::E>{{\n"
@@ -2280,7 +2392,7 @@ def test_an_integer_coded_enum_field_has_no_membership_test(generate):
 
 
 def test_a_nested_enum_gaining_members_is_one_block_in_its_newest_holders_nested_namespace(generate):
-    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "detail/a/N/F.h").read_text()
 
     assert header.count("enum class F ") == 1
     assert (
@@ -2296,33 +2408,33 @@ def test_a_nested_enum_gaining_members_is_one_block_in_its_newest_holders_nested
     assert "v1::N_nested" not in header
 
 
-def test_a_nested_enum_gaining_members_is_declared_before_the_first_older_holder(generate):
-    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+def test_a_nested_enum_gaining_members_is_included_by_the_header_of_every_holder(generate):
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "detail/a/N.h").read_text()
 
-    assert header.index("namespace N_nested {\n\nenum class F ") < header.index("namespace v1 {\n")
-
-
-def test_an_enum_two_levels_deep_is_declared_before_the_older_holder_that_uses_it(generate):
-    header = (generate({"a": DEEP_CHILD_GAIN}) / "a.h").read_text()
-
-    assert header.count("enum class F ") == 1
-    assert header.index("namespace I_nested {\n\nenum class F ") < header.index("namespace v1 {\n")
+    assert "#include <bedrock/protocol/detail/a/N/F.h>\n" in header
 
 
-def test_a_sibling_of_a_deep_enum_is_declared_before_the_holder_that_uses_it(generate):
-    header = (generate({"a": DEEP_SIBLING_GAIN}) / "a.h").read_text()
+def test_an_enum_two_levels_deep_is_declared_once_in_a_header_its_holder_includes(generate):
+    out = generate({"a": DEEP_CHILD_GAIN})
 
-    assert header.index("    std::uint8_t y{};\n") < header.index("    ::bedrock::protocol::N_nested::J j{};\n")
+    assert (out / "detail/a/N/I/F.h").read_text().count("enum class F ") == 1
+    assert "#include <bedrock/protocol/detail/a/N/I/F.h>\n" in (out / "detail/a/N/I.h").read_text()
 
 
-def test_a_deep_struct_is_declared_before_the_struct_that_uses_it(generate):
-    header = (generate({"a": DEEP_SHARED_CHAIN}) / "a.h").read_text()
+def test_a_sibling_of_a_deep_enum_is_included_by_the_holder_that_uses_it(generate):
+    header = (generate({"a": DEEP_SIBLING_GAIN}) / "detail/a/N/I.h").read_text()
 
-    assert header.index("\nstruct T {\n") < header.index("\nstruct S {\n")
+    assert "#include <bedrock/protocol/detail/a/N/J.h>\n" in header
+
+
+def test_a_deep_struct_is_included_by_the_struct_that_uses_it(generate):
+    header = (generate({"a": DEEP_SHARED_CHAIN}) / "detail/a/N/I/S.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/a/N/I/U/T.h>\n" in header
 
 
 def test_every_model_of_the_holder_aliases_the_one_nested_enum(generate):
-    header = (generate({"a": SHARED_CHILD_GAIN}) / "a.h").read_text()
+    header = (generate({"a": SHARED_CHILD_GAIN}) / "detail/a/N.h").read_text()
 
     assert header.count("    using F = ::bedrock::protocol::N_nested::F;\n") == 2
     assert header.count("    ::bedrock::protocol::N_nested::F f{};\n") == 2
@@ -2334,27 +2446,27 @@ def naming_table(header, since, table):
 
 
 def test_a_renamed_name_coded_member_is_written_by_its_old_name_at_the_protocol_that_names_it_so(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::A, "old"},\n'
     assert naming_table(header, 3, "written") == '        {::bedrock::protocol::E::A, "new"},\n'
 
 
 def test_a_renamed_name_coded_member_is_read_by_its_old_name_at_the_protocol_that_names_it_so(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert naming_table(header, 1, "read") == '        {::bedrock::protocol::E::A, "old"},\n'
     assert naming_table(header, 3, "read") == '        {::bedrock::protocol::E::A, "new"},\n'
 
 
 def test_a_naming_lists_the_names_it_writes(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert naming_table(header, 3, "names") == '        "new",\n'
 
 
 def test_a_naming_covers_each_protocol_a_field_codes_it_by_name(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 3)\n"
@@ -2367,7 +2479,7 @@ def test_a_naming_covers_each_protocol_a_field_codes_it_by_name(generate):
 
 
 def test_a_naming_leaves_out_the_protocols_a_field_codes_it_by_number(generate):
-    header = (generate({"a": ENUM_NAME_THEN_NUMBER}) / "a.h").read_text()
+    header = (generate({"a": ENUM_NAME_THEN_NUMBER}) / "detail/a/E.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 3)\n"
@@ -2379,39 +2491,39 @@ def test_a_naming_leaves_out_the_protocols_a_field_codes_it_by_number(generate):
 def test_a_naming_is_named_for_the_first_protocol_a_field_codes_it_by_name(generate):
     out = generate({"a": ENUM_NAME_LATER_FIELD})
 
-    assert "struct Naming<::bedrock::protocol::E, 3> {\n" in (out / "a.h").read_text()
+    assert "struct Naming<::bedrock::protocol::E, 3> {\n" in (out / "detail/a/E.h").read_text()
     assert "detail::name_of(detail::Naming<::bedrock::protocol::E, 3>::written, value)" in (out / "a.cpp").read_text()
 
 
 def test_a_naming_no_field_codes_by_name_has_no_table(generate):
     out = generate({"a": ENUM_RENAMED_THEN_NUMBER})
 
-    assert "struct Naming<::bedrock::protocol::E, 3> {\n" not in (out / "a.h").read_text()
+    assert "struct Naming<::bedrock::protocol::E, 3> {\n" not in (out / "detail/a/E.h").read_text()
     assert "detail::name_of(detail::Naming<::bedrock::protocol::E, 3>::written, value)" in (out / "a.cpp").read_text()
 
 
 def test_a_name_coded_enum_says_so(generate):
-    header = (generate({"a": A}) / "a.h").read_text()
+    header = (generate({"a": A}) / "detail/a/E.h").read_text()
 
     assert "template <>\ninline constexpr bool is_name_coded_v<::bedrock::protocol::E> = true;\n" in header
 
 
 def test_an_enum_no_field_codes_by_name_has_no_naming(generate):
-    header = (generate({"a": ENUM_RENUMBERED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENUMBERED}) / "detail/a/E.h").read_text()
 
     assert "is_name_coded_v" not in header
     assert "Naming<" not in header
 
 
 def test_a_renamed_name_coded_enum_is_one_enum_class(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert header.count("enum class E ") == 1
     assert "namespace v1" not in header
 
 
 def test_a_name_coded_enum_with_several_namings_has_a_serializer_per_naming(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert "template <>\nstruct Serializer<::bedrock::protocol::E, 1> {\n" in header
     assert "template <>\nstruct Serializer<::bedrock::protocol::E, 3> {\n" in header
@@ -2420,13 +2532,13 @@ def test_a_name_coded_enum_with_several_namings_has_a_serializer_per_naming(gene
 
 
 def test_a_name_coded_enum_with_several_namings_includes_the_naming_runtime(generate):
-    header = (generate({"a": ENUM_RENAMED_NAME}) / "a.h").read_text()
+    header = (generate({"a": ENUM_RENAMED_NAME}) / "detail/a/E.h").read_text()
 
     assert "#include <bedrock/protocol/detail/naming.hpp>\n" in header
 
 
 def test_a_name_coded_enum_with_one_naming_has_a_naming(generate):
-    header = (generate({"a": A}) / "a.h").read_text()
+    header = (generate({"a": A}) / "detail/a/E.h").read_text()
 
     assert "#include <bedrock/protocol/detail/naming.hpp>\n" in header
     assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::X, "x"},\n'
@@ -2434,7 +2546,7 @@ def test_a_name_coded_enum_with_one_naming_has_a_naming(generate):
 
 def test_a_naming_table_is_written_in_the_header_detail_namespace(generate):
     out = generate({"a": ENUM_RENAMED_NAME})
-    header = (out / "a.h").read_text()
+    header = (out / "detail/a/E.h").read_text()
 
     start = header.index("struct Naming<::bedrock::protocol::E, 1> {")
     end = header.index("struct Naming<::bedrock::protocol::E, 3> {")
@@ -2443,14 +2555,14 @@ def test_a_naming_table_is_written_in_the_header_detail_namespace(generate):
 
 
 def test_a_name_coded_member_gained_later_is_one_enum_class_holding_every_member(generate):
-    header = (generate({"a": ENUM_NAME_GAINED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_NAME_GAINED}) / "detail/a/E.h").read_text()
 
     assert "\nenum class E : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
     assert "namespace v1" not in header
 
 
 def test_a_name_coded_member_gained_later_has_no_row_in_the_naming_of_the_earlier_protocol(generate):
-    header = (generate({"a": ENUM_NAME_GAINED}) / "a.h").read_text()
+    header = (generate({"a": ENUM_NAME_GAINED}) / "detail/a/E.h").read_text()
 
     assert naming_table(header, 1, "written") == '        {::bedrock::protocol::E::A, "a"},\n'
     assert naming_table(header, 1, "read") == '        {::bedrock::protocol::E::A, "a"},\n'
@@ -2473,14 +2585,14 @@ def test_a_name_without_a_row_fails_to_decode_by_name(generate):
 
 
 def test_a_name_coded_pointer_and_its_target_read_as_the_pointer(generate):
-    read = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "read")
+    read = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "detail/a/E.h").read_text(), 3, "read")
 
     assert '        {::bedrock::protocol::E::Latest, "b"},\n' in read
     assert '        {::bedrock::protocol::E::Latest, "latest"},\n' in read
 
 
 def test_a_name_coded_pointer_is_written_by_its_name_in_one_row(generate):
-    written = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "a.h").read_text(), 3, "written")
+    written = naming_table((generate({"a": ENUM_NAMED_ALIAS}) / "detail/a/E.h").read_text(), 3, "written")
 
     assert written.count("::bedrock::protocol::E::Latest,") == 1
     assert '        {::bedrock::protocol::E::Latest, "latest"},\n' in written
@@ -2510,7 +2622,7 @@ def test_a_literal_of_a_derived_member_is_the_member_when_the_value_is_the_numbe
 
 
 def test_a_pointer_precedes_its_target_in_the_reflection_tables(generate):
-    header = (generate({"a": ENUM_DERIVED_MEMBER}) / "a.h").read_text()
+    header = (generate({"a": ENUM_DERIVED_MEMBER}) / "detail/a/E.h").read_text()
 
     assert (
         "values_v<::bedrock::protocol::E>{{\n"
@@ -2522,13 +2634,13 @@ def test_a_pointer_precedes_its_target_in_the_reflection_tables(generate):
 
 
 def test_a_unioned_enum_marks_a_deprecated_member_in_its_deprecated_table(generate):
-    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "a.h").read_text()
+    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "detail/a/D.h").read_text()
 
     assert "deprecated_v<::bedrock::protocol::D>{{\n    false,\n    true,\n    false,\n}};" in header
 
 
 def test_a_unioned_enum_reflects_a_deprecated_member_by_its_number(generate):
-    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "a.h").read_text()
+    header = (generate({"a": ENUM_DEPRECATED_GAIN}) / "detail/a/D.h").read_text()
 
     assert (
         "values_v<::bedrock::protocol::D>{{\n"
@@ -2540,7 +2652,7 @@ def test_a_unioned_enum_reflects_a_deprecated_member_by_its_number(generate):
 
 
 def test_a_name_coded_enum_nested_in_both_forms_of_a_pair_has_a_declared_serializer(generate):
-    header = (generate({"a": PAIR_NAME_CODED_CHILD}) / "a.h").read_text()
+    header = (generate({"a": PAIR_NAME_CODED_CHILD}) / "detail/a/B/F.h").read_text()
 
     assert "template <>\nstruct Serializer<::bedrock::protocol::B_nested::F, 1> {\n" in header
 
@@ -2553,26 +2665,26 @@ def test_a_name_coded_enum_nested_in_both_forms_of_a_pair_has_a_defined_serializ
 
 
 def test_an_enum_shared_by_both_forms_of_a_pair_is_declared_once(generate):
-    header = (generate({"a": PAIR_SHARED_ENUM}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_ENUM}) / "detail/a/F.h").read_text()
 
     assert header.count("enum class F ") == 1
     assert "\nenum class F : std::uint8_t {\n    A = 1,\n    B = 2,\n};\n" in header
 
 
 def test_an_enum_shared_by_both_forms_of_a_pair_is_the_member_type_of_each(generate):
-    header = (generate({"a": PAIR_SHARED_ENUM}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_ENUM}) / "detail/a/H.h").read_text()
 
     assert header.count("    ::bedrock::protocol::F f{};\n") == 2
 
 
 def test_an_enum_member_defaults_to_the_member_its_enum_marks_default(generate):
-    header = (generate({"a": ENUM_MARKS_A_DEFAULT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_MARKS_A_DEFAULT}) / "detail/a/P.h").read_text()
 
     assert "    ::bedrock::protocol::E e{::bedrock::protocol::E::B};\n" in header
 
 
 def test_an_enum_member_takes_the_default_its_enum_marks_at_its_struct_protocol(generate):
-    header = (generate({"a": ENUM_LOSES_ITS_DEFAULT}) / "a.h").read_text()
+    header = (generate({"a": ENUM_LOSES_ITS_DEFAULT}) / "detail/a/H.h").read_text()
 
     assert "struct H {\n    ::bedrock::protocol::F f{::bedrock::protocol::F::A};\n" in header
     assert "struct H {\n    ::bedrock::protocol::F f{};\n" in header
@@ -2599,7 +2711,7 @@ def test_a_name_coded_enum_with_one_shape_rejects_an_unknown_name_on_read(genera
 
 
 def test_a_hand_written_form_with_equal_members_shares_the_cereal_struct(generate):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     assert header.count("\nstruct B {\n") == 1
     assert "::bedrock::protocol::v1::B" not in header
@@ -2607,7 +2719,7 @@ def test_a_hand_written_form_with_equal_members_shares_the_cereal_struct(generat
 
 @pytest.mark.parametrize("since", [1, 3], ids=["first-encoding", "second-encoding"])
 def test_a_shared_type_has_an_explicit_specialization_per_encoding(generate, since):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     assert (
         f"template <>\nstruct Serializer<::bedrock::protocol::B, {since}, SerializationMode::Cereal> {{\n"
@@ -2621,7 +2733,7 @@ def test_a_shared_type_has_an_explicit_specialization_per_encoding(generate, sin
     ids=["first-encoding", "second-encoding"],
 )
 def test_a_shared_type_has_a_cereal_partial_per_run(generate, bound, since):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     assert (
         f"template <int V> requires ({bound})\n"
@@ -2631,7 +2743,7 @@ def test_a_shared_type_has_a_cereal_partial_per_run(generate, bound, since):
 
 
 def test_a_tie_between_the_forms_is_keyed_cereal_with_a_manual_partial_inheriting_from_it(generate):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     assert "struct Serializer<::bedrock::protocol::B, 1, SerializationMode::Manual> {" not in header
     assert (
@@ -2642,7 +2754,7 @@ def test_a_tie_between_the_forms_is_keyed_cereal_with_a_manual_partial_inheritin
 
 
 def test_only_the_default_partial_after_the_last_mixed_version_covers_the_default_mode(generate):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     partials = re.findall(r"template <int V>[^\n]*\nstruct Serializer<::bedrock::protocol::B, V> : [^\n]*\n", header)
     assert partials == [
@@ -2653,7 +2765,7 @@ def test_only_the_default_partial_after_the_last_mixed_version_covers_the_defaul
 
 
 def test_no_cereal_or_manual_partial_reaches_a_version_after_the_last_mixed_one(generate):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     heads = re.findall(r"struct Serializer<::bedrock::protocol::B, V, SerializationMode::\w+> :", header)
     bounds = re.findall(
@@ -2671,7 +2783,7 @@ def test_no_cereal_or_manual_partial_reaches_a_version_after_the_last_mixed_one(
     ids=["tie", "distinct-keys", "default-keys"],
 )
 def test_every_partial_inherits_directly_from_an_explicit_specialization(generate, module, name):
-    header = (generate({"a": module}) / "a.h").read_text()
+    header = (generate({"a": module}) / f"detail/a/{name}.h").read_text()
 
     mode = r"(?:, SerializationMode::(\w+))?"
     qualified = rf"::bedrock::protocol::{name}"
@@ -2732,7 +2844,7 @@ def test_the_definition_of_a_keyed_implementation_carries_its_mode(generate, mem
 
 
 def test_an_equal_pair_is_selected_by_its_primary_definition_and_has_no_cerealized_selector(generate):
-    header = (generate({"a": PAIR_EQUAL}) / "a.h").read_text()
+    header = (generate({"a": PAIR_EQUAL}) / "detail/a/B.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V <= 5)\nstruct B_ { using type = ::bedrock::protocol::B; };\n" in header
@@ -2748,7 +2860,7 @@ def test_a_shared_type_is_listed_once_in_every_types_list(generate):
 
 
 def test_a_hand_written_form_equal_to_a_later_cereal_model_shares_its_struct(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert header.count("\nstruct G {\n") == 1
 
@@ -2759,7 +2871,7 @@ def test_a_hand_written_form_equal_to_a_later_cereal_model_shares_its_struct(gen
     ids=["hand-written-encoding", "cereal-encoding"],
 )
 def test_a_shared_type_keys_each_encoding_by_the_mode_that_introduced_it(generate, since, mode):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert (
         f"template <>\nstruct Serializer<::bedrock::protocol::G, {since}, SerializationMode::{mode}> {{\n"
@@ -2768,7 +2880,7 @@ def test_a_shared_type_keys_each_encoding_by_the_mode_that_introduced_it(generat
 
 
 def test_a_manual_partial_covers_the_hand_written_run_of_a_shared_type(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 5)\n"
@@ -2778,7 +2890,7 @@ def test_a_manual_partial_covers_the_hand_written_run_of_a_shared_type(generate)
 
 
 def test_a_cereal_partial_covers_the_mixed_run_and_a_default_partial_the_unmixed_run(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert (
         "template <int V> requires (V >= 3 && V < 5)\n"
@@ -2793,14 +2905,14 @@ def test_a_cereal_partial_covers_the_mixed_run_and_a_default_partial_the_unmixed
 
 
 def test_a_cereal_model_that_differs_only_until_some_version_is_declared_prefixed(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert "struct CerealizedG {\n" in header
     assert "struct Serializer<::bedrock::protocol::v1::CerealizedG, 1, SerializationMode::Cereal> {\n" in header
 
 
 def test_a_cerealized_selector_stops_at_the_last_version_where_the_forms_differ(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert (
         "template <int V>\n"
@@ -2813,7 +2925,7 @@ def test_a_cerealized_selector_stops_at_the_last_version_where_the_forms_differ(
 
 
 def test_the_shared_type_of_a_pair_that_differs_only_until_some_version_is_selected_by_the_plain_selector(generate):
-    header = (generate({"a": PAIR_SHARED_LATER}) / "a.h").read_text()
+    header = (generate({"a": PAIR_SHARED_LATER}) / "detail/a/G.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V <= 5)\nstruct G_ { using type = ::bedrock::protocol::G; };\n" in header
@@ -2821,7 +2933,7 @@ def test_the_shared_type_of_a_pair_that_differs_only_until_some_version_is_selec
 
 
 def test_a_selector_picks_the_hand_written_model_where_the_forms_differ(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 5)\nstruct H_<V> { using type = ::bedrock::protocol::v1::H; };\n"
@@ -2829,13 +2941,13 @@ def test_a_selector_picks_the_hand_written_model_where_the_forms_differ(generate
 
 
 def test_a_selector_picks_the_cereal_model_after_the_forms_stop_differing(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert ("template <int V> requires (V == 5)\nstruct H_<V> { using type = ::bedrock::protocol::H; };\n") in header
 
 
 def test_a_cerealized_selector_has_a_partial_per_cereal_model_inside_the_overlap(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V < 3)\n"
@@ -2848,20 +2960,20 @@ def test_a_cerealized_selector_has_a_partial_per_cereal_model_inside_the_overlap
 
 
 def test_a_cerealized_selector_stops_at_the_end_of_the_overlap(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert header.count("struct CerealizedH_<V> {") == 2
 
 
 def test_a_cereal_model_living_past_the_overlap_is_declared_plain(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert "\nstruct H {\n    std::uint8_t x{};\n\n    friend" in header
     assert header.count("struct CerealizedH {") == 1
 
 
 def test_a_cereal_model_living_only_inside_the_overlap_is_declared_prefixed(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert "struct CerealizedH {\n" in header
     assert "struct Serializer<::bedrock::protocol::v1::CerealizedH, 1, SerializationMode::Cereal> {\n" in header
@@ -2909,32 +3021,22 @@ def test_a_type_at_the_end_of_the_overlap_has_no_label(generate):
 
 
 def test_a_nested_child_is_owned_by_its_newest_holder(generate):
-    header = (generate({"a": SHARED_CHILD}) / "a.h").read_text()
+    header = (generate({"a": SHARED_CHILD}) / "detail/a/N.h").read_text()
 
     assert "    using F = ::bedrock::protocol::N_nested::F;\n" in header
 
 
-def test_a_nested_child_is_defined_before_its_first_holder(generate):
-    header = (generate({"a": SHARED_CHILD}) / "a.h").read_text()
+def test_a_nested_child_is_declared_once_in_its_own_header_in_its_owners_nested_namespace(generate):
+    header = (generate({"a": SHARED_CHILD}) / "detail/a/N/F.h").read_text()
 
     assert (
-        "namespace N_nested {\n"
-        "\n"
-        "enum class F : std::uint8_t {\n"
-        "    A = 1,\n"
-        "};\n"
-        "\n"
-        "}  // namespace N_nested\n"
-        "\n"
-        "namespace v1 {\n"
-        "\n"
-        "struct N {\n"
+        "namespace N_nested {\n\nenum class F : std::uint8_t {\n    A = 1,\n};\n\n}  // namespace N_nested\n"
     ) in header
     assert header.count("enum class F ") == 1
 
 
 def test_an_unversioned_family_is_selected_by_its_primary_definition_alone(generate):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/P.h").read_text()
 
     assert (
         "template <int V> requires (V >= 1 && V <= 5)\nstruct P_ { using type = ::bedrock::protocol::P; };\n" in header
@@ -2942,7 +3044,7 @@ def test_an_unversioned_family_is_selected_by_its_primary_definition_alone(gener
 
 
 def test_reflection_is_emitted_once_for_a_shared_struct(generate):
-    header = (generate({"a": ENCODING}) / "a.h").read_text()
+    header = (generate({"a": ENCODING}) / "detail/a/S.h").read_text()
 
     assert header.count("is_reflected_struct_v<::bedrock::protocol::S> = true;") == 1
     assert header.count("field_names_v<::bedrock::protocol::S>{{") == 1
@@ -2965,7 +3067,7 @@ def test_an_owner_is_listed_before_its_nested_children(generate):
 
 
 def test_a_cerealized_model_reflects_its_declared_name(generate):
-    header = (generate({"a": PAIR_DIFFERENT}) / "a.h").read_text()
+    header = (generate({"a": PAIR_DIFFERENT}) / "detail/a/H.h").read_text()
 
     assert 'struct_name_v<::bedrock::protocol::v1::CerealizedH>{"CerealizedH"};' in header
 
@@ -2977,20 +3079,20 @@ def test_packet_of_names_a_merged_packet_bare(generate):
 
 
 def test_a_nested_struct_under_a_merged_owner_is_declared_in_its_owners_nested_namespace(generate):
-    header = (generate({"a": MERGED_NEST}) / "a.h").read_text()
+    out = generate({"a": MERGED_NEST})
 
-    assert "namespace T_nested {\n\nstruct Child {\n" in header
-    assert "    using Child = ::bedrock::protocol::T_nested::Child;\n" in header
+    assert "namespace T_nested {\n\nstruct Child {\n" in (out / "detail/a/T/Child.h").read_text()
+    assert "    using Child = ::bedrock::protocol::T_nested::Child;\n" in (out / "detail/a/T.h").read_text()
 
 
 def test_the_output_holds_no_pre_cereal_name(generate):
     out = generate({"a": PAIR_DIFFERENT})
 
-    assert "pre_cereal" not in "".join(path.read_text() for path in sorted(out.iterdir()))
+    assert "pre_cereal" not in "".join(path.read_text() for path in sorted(out.rglob("*")) if path.is_file())
 
 
 def test_the_model_live_at_the_latest_version_is_declared_bare_and_an_older_one_under_its_first_version(generate):
-    header = (generate({"a": VERSIONED}) / "a.h").read_text()
+    header = (generate({"a": VERSIONED}) / "detail/a/R.h").read_text()
 
     assert "namespace v1 {\n\nstruct R {\n    std::uint8_t x{};\n" in header
     assert "struct Serializer<::bedrock::protocol::v1::R, 1> {\n" in header
@@ -2998,7 +3100,7 @@ def test_the_model_live_at_the_latest_version_is_declared_bare_and_an_older_one_
 
 
 def test_no_alias_is_emitted_for_a_family_with_several_models(generate):
-    header = (generate({"a": VERSIONED}) / "a.h").read_text()
+    header = (generate({"a": VERSIONED}) / "detail/a/R.h").read_text()
 
     assert "template <int V> using R_ = typename detail::R_<V>::type;\n" in header
     assert "using R = R_<5>;" not in header
@@ -3012,7 +3114,7 @@ def test_a_map_read_declares_its_key_and_mapped_types_from_the_container(generat
 
 
 def test_an_encoding_first_used_after_the_mixed_run_has_an_explicit_specialization_with_no_mode(generate):
-    header = (generate({"a": PAIR_NEW_ENCODING_AFTER_MIXED}) / "a.h").read_text()
+    header = (generate({"a": PAIR_NEW_ENCODING_AFTER_MIXED}) / "detail/a/B.h").read_text()
 
     assert (
         "template <>\nstruct Serializer<::bedrock::protocol::B, 5> {\n    static constexpr int since = 5;\n"
@@ -3020,7 +3122,7 @@ def test_an_encoding_first_used_after_the_mixed_run_has_an_explicit_specializati
 
 
 def test_no_explicit_specialization_at_or_past_the_end_of_the_mixed_run_carries_a_mode(generate):
-    header = (generate({"a": PAIR_NEW_ENCODING_AFTER_MIXED}) / "a.h").read_text()
+    header = (generate({"a": PAIR_NEW_ENCODING_AFTER_MIXED}) / "detail/a/B.h").read_text()
 
     keyed = re.findall(
         r"template <>\nstruct Serializer<::bedrock::protocol::B, (\d+), SerializationMode::\w+> \{\n", header
@@ -3098,15 +3200,21 @@ def test_a_packed_color_packs_its_channels_around_its_encoded_scalar_in_cpp(gene
     assert code in source
 
 
-def test_a_packed_color_includes_the_color_runtime_in_cpp(generate):
-    header = (generate({"a": PACKED_COLORS}) / "a.h").read_text()
+def test_a_packed_color_includes_the_color_runtime_in_its_modules_cpp_source(generate):
+    source = (generate({"a": PACKED_COLORS}) / "a.cpp").read_text()
 
-    assert "#include <bedrock/protocol/detail/color.hpp>\n" in header
+    assert "#include <bedrock/protocol/detail/color.hpp>\n" in source
+
+
+def test_a_packed_color_leaves_the_color_runtime_out_of_its_packets_header(generate):
+    header = (generate({"a": PACKED_COLORS}) / "detail/a/P.h").read_text()
+
+    assert "detail/color.hpp" not in header
 
 
 def test_a_type_choice_emits_as_specializations_and_branches_in_cpp(generate):
     out = generate({"a": TYPE_CHOICE})
-    header = (out / "a.h").read_text()
+    header = (out / "detail/a/Entry.h").read_text()
     source = (out / "a.cpp").read_text()
 
     assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint8_t>, 1> {" in header

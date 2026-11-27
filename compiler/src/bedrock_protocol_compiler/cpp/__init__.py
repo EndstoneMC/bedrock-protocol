@@ -1,13 +1,27 @@
+from graphlib import CycleError, TopologicalSorter
+
 from bedrock_protocol_compiler.context import GeneratorContext
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.file import FileGenerator
-from bedrock_protocol_compiler.descriptor import Range, Struct
+from bedrock_protocol_compiler.descriptor import CompilerError, Range, Struct
 from bedrock_protocol_compiler.schema import EnumType, Schema, StructModel
 
 
 def generate(schema: Schema, context: GeneratorContext) -> None:
     files = [FileGenerator(schema, module) for module in schema.modules]
+    graph = {
+        path: {each[1:-1] for each in file.includes(path) if each.endswith(".h>")}
+        for file in files
+        for path in file.headers
+    }
+    try:
+        TopologicalSorter(graph).prepare()
+    except CycleError as error:
+        cycle = error.args[1][::-1]
+        raise CompilerError(f"{cycle[0]}: includes itself through {' -> '.join(cycle[1:-1])}") from error
     for file in files:
+        for path in file.headers:
+            file.detail_header(context.open(path), path)
         file.header(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.h"))
         file.source(context.open(f"{names.INCLUDE_DIR}/{file.module.stem}.cpp"))
     registered: list[tuple[int, Range, StructModel | EnumType]] = []

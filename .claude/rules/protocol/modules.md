@@ -23,7 +23,6 @@ paths:
 - Keep a packet family, such as every move, motion and movement-prediction packet with its data types, in one module, and let no two module docstrings claim the same subject.
 - Never create a module because of size; a lookup table lives with its subject.
 - Give a topic Paper's API designs on its own, such as boss bars, skins or abilities, its own module, even when BDS files it under a larger folder; never fold one into actor.py or player.py.
-- Keep the schema's import graph acyclic.
 
 ## Order
 

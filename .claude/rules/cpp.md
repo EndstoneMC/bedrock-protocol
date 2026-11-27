@@ -9,7 +9,8 @@ paths:
 
 - Include the repo's own headers with quotes and the full path from the include root (`"bedrock/protocol/stream.hpp"`); use `<>` only for the standard library and third-party headers; never use `./` or `../`.
 - Name a header with its own `.cpp` `.h` and a header-only one `.hpp`; this holds for the generated headers too.
-- Emit each schema module as a `.h` and a `.cpp` in the static library; never make generated code header-only.
+- Emit each schema module as a `.h` and a `.cpp` in the static library; the `.h` holds `<module>_types` and includes its own types' headers and no other module's `.h`; never make generated code header-only.
+- Emit each type as `detail/<module>/<Type>.h` and each nested type as `detail/<module>/<Owner>/<Type>.h`, holding every version and both forms of it with their selectors, reflection and serializer declarations, IWYU-private to its module's `.h` and including only the headers its declarations name; the module's `.cpp` includes what only its serializer bodies need.
 - Give every version whose members match one C++ type, written out whole; give each distinct encoding of it one `Serializer<T, N>`, named for the first protocol N that uses it, which every other version's `Serializer<T, V>` inherits empty; never derive one version's type from another's.
 - Make each encoding of a generated type exactly one `serialize` and one `deserialize`, on its `Serializer<T, N, M>`, which every protocol that uses it inherits and which read no protocol but that encoding's, so two protocols reach the same functions exactly when they share an encoding; a hand-written serializer, partial over the protocol, has its own per protocol.
 - Give each distinct encoding that `field(exclude=)` leaves of a type one `Serializer<Exclude<T, &T::member>, N, M>`, named for the first protocol N that calls it and the mode M its type has there, which no protocol's `Serializer<T, V>` inherits.

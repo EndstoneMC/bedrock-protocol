@@ -85,6 +85,34 @@ def cpp_type(schema: Schema, model: StructModel, node: Type) -> str:
     raise AssertionError(node)
 
 
+def cpp_type_includes(node: Type) -> set[str]:
+    match node:
+        case Primitive():
+            return primitive_includes(node)
+        case (
+            AliasRef(alias=family)
+            | BuiltinRef(builtin=family)
+            | EnumRef(enum=family)
+            | EnumName(enum=family)
+            | StructRef(struct=family)
+            | Color(struct=family)
+        ):
+            return {names.header(family)}
+        case Bitset():
+            return {"<bitset>"}
+        case Optional(element=element):
+            return {"<optional>"} | cpp_type_includes(element)
+        case List(element=element):
+            return {"<vector>"} | cpp_type_includes(element)
+        case Array(element=element):
+            return {"<array>"} | cpp_type_includes(element)
+        case Map(key=key, value=value):
+            return {"<map>"} | cpp_type_includes(key) | cpp_type_includes(value)
+        case Variant(cases=cases):
+            return {"<variant>"}.union(*(cpp_type_includes(case) for case in cases if case is not None))
+    raise AssertionError(node)
+
+
 class FieldGenerator(Protocol):
     def includes(self) -> set[str]: ...
 

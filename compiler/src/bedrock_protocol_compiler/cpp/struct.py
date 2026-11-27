@@ -4,7 +4,13 @@ from itertools import groupby
 from bedrock_protocol_compiler.cpp import names
 from bedrock_protocol_compiler.cpp.enum import EnumGenerator, partials
 from bedrock_protocol_compiler.cpp.expression import render
-from bedrock_protocol_compiler.cpp.field import DuplicatedField, FieldGenerator, cpp_type, make_field_generator
+from bedrock_protocol_compiler.cpp.field import (
+    DuplicatedField,
+    FieldGenerator,
+    cpp_type,
+    cpp_type_includes,
+    make_field_generator,
+)
 from bedrock_protocol_compiler.descriptor import EnumName, EnumRef, Expression, Field, Int
 from bedrock_protocol_compiler.printer import Printer
 from bedrock_protocol_compiler.schema import Encoding, Schema, StructModel, reached_by
@@ -25,19 +31,20 @@ class StructGenerator:
             for child in model.nested
             if schema.owner(child) is model
         ]
-        self.pending = dict(self.owned)
         self.members: list[tuple[str, str, str]] = []
+        self.declared_includes = {names.header(child.family) for child in model.nested}
         for slot in model.slots:
             spelled = cpp_type(schema, model, slot.type)
             marked = schema.default_member(model, slot.type) if isinstance(slot.type, EnumRef | EnumName) else None
             self.members.append((spelled, slot.name, "" if marked is None else f"{spelled}::{marked.cpp_name}"))
+            self.declared_includes |= cpp_type_includes(slot.type)
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
             if not encoding.fields and model.nested and encoding.excluded is None and encoding.encoded_as is None:
                 continue
             if encoding.encoded_as is not None and names.ENCODINGS[encoding.encoded_as].startswith("std::"):
-                self.field_includes.add("<cstdint>")
+                self.declared_includes.add("<cstdint>")
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
                 generator = make_field_generator(schema, each.type, encoding, f'"{each.name}"', 0)
@@ -61,7 +68,7 @@ class StructGenerator:
 
     def includes(self) -> set[str]:
         includes = {
-            *self.field_includes,
+            *self.declared_includes,
             names.runtime("detail/reflect"),
             "<array>",
             "<cstddef>",
@@ -69,28 +76,9 @@ class StructGenerator:
         }
         if self.implemented:
             includes |= names.SERIALIZER_INCLUDES
-        return includes.union(*(child.includes() for _, child in self.owned))
-
-    def nested(
-        self,
-        p: Printer,
-        children: "list[StructGenerator | EnumGenerator]",
-        outer: "tuple[StructGenerator, ...]" = (),
-    ) -> None:
-        scopes = [names.nested(each.name) for each in (*outer, self)]
-        for scope in scopes:
-            p.emit("namespace $nested$ {", nested=scope)
-            p.emit("")
-        for child in children:
-            child.definition(p)
-            p.emit("")
-        for scope in reversed(scopes):
-            p.emit("}  // namespace $nested$", nested=scope)
-            p.emit("")
+        return includes
 
     def definition(self, p: Printer) -> None:
-        if self.pending:
-            self.nested(p, list(self.pending.values()))
         packet_id = self.target.family.packet_id
         p.emit(
             """
@@ -116,8 +104,6 @@ class StructGenerator:
         p.emit("friend bool operator==(const $name$ &, const $name$ &) = default;", name=self.name)
 
     def reflection(self, p: Printer) -> None:
-        for _, child in self.owned:
-            child.reflection(p)
         members = [member for _, member, _ in self.members]
         p.emit(
             """
@@ -172,8 +158,6 @@ class StructGenerator:
             p.emit("}")
 
     def serializer_declaration(self, p: Printer) -> None:
-        for _, child in self.owned:
-            child.serializer_declaration(p)
         for encoding, _ in self.implemented:
             serializer = names.serializer(
                 self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.encoded_as

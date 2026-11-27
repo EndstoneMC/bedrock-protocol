@@ -1,5 +1,6 @@
 from bedrock_protocol_compiler.descriptor import Alias, Builtin, Enum, MemberRef, Range, Struct
 from bedrock_protocol_compiler.schema import Encoding, EnumType, Schema, SerializationMode, StructModel
+from bedrock_protocol_compiler.schema import qualified as dotted
 
 INCLUDE_DIR = "bedrock/protocol"
 REGISTRY_HEADER = f"{INCLUDE_DIR}/packets_fwd.hpp"
@@ -41,6 +42,9 @@ def namespace(schema: Schema) -> str:
 
 
 def scope(schema: Schema, target: StructModel | EnumType) -> tuple[str, ...]:
+    owner = schema.owner(target)
+    if owner is not None:
+        return (*scope(schema, owner), nested(declared(schema, owner)))
     since = schema.scope(target)
     return () if since is None else (f"v{since}",)
 
@@ -151,5 +155,10 @@ def generated(stem: str) -> str:
 SERIALIZER_INCLUDES = frozenset({runtime("serializer"), runtime("stream"), "<expected>"})
 
 
+def detail(family: Struct | Enum | Alias) -> str:
+    path = family.name if isinstance(family, Alias) else dotted(family).replace(".", "/")
+    return f"{INCLUDE_DIR}/detail/{family.module}/{path}.h"
+
+
 def header(family: Struct | Enum | Alias | Builtin) -> str:
-    return runtime(family.stem) if isinstance(family, Builtin) else generated(family.module)
+    return runtime(family.stem) if isinstance(family, Builtin) else f"<{detail(family)}>"
