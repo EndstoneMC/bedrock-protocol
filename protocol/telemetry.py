@@ -278,6 +278,23 @@ class LegacyTelemetryEventPacket:
         total_waves: varint32
         success: bool
 
+    @type(until=649)
+    class PlayerMovementAnomalyObsolete:
+        event_type: uint8  # TODO: MovementEventType enumerators
+        observed_score: float
+        average_pos_delta: float
+        total_pos_delta: float
+        min_pos_delta: float
+        max_pos_delta: float
+
+    @type(until=649)
+    class PlayerMovementCorrectedObsolete:
+        position_delta: float
+        observed_score: float
+        threshold_score: float
+        threshold_distance: float
+        threshold_duration_ms: varint32
+
     class TargetBlockHit:
         redstone_level: varint32
 
@@ -326,7 +343,12 @@ class LegacyTelemetryEventPacket:
     bell_used: BellUsed = field(until=898, when=lambda p: p.type == Type.BELL_USED)
     actor_definition: ActorDefinition = field(until=898, when=lambda p: p.type == Type.ACTOR_DEFINITION)
     raid_update: RaidUpdate = field(until=898, when=lambda p: p.type == Type.RAID_UPDATE)
-    # TODO: PLAYER_MOVEMENT_ANOMALY_OBSOLETE and PLAYER_MOVEMENT_CORRECTED_OBSOLETE payloads before 649
+    player_movement_anomaly_obsolete: PlayerMovementAnomalyObsolete = field(
+        until=649, when=lambda p: p.type == Type.PLAYER_MOVEMENT_ANOMALY_OBSOLETE
+    )
+    player_movement_corrected_obsolete: PlayerMovementCorrectedObsolete = field(
+        until=649, when=lambda p: p.type == Type.PLAYER_MOVEMENT_CORRECTED_OBSOLETE
+    )
     target_block_hit: TargetBlockHit = field(until=898, when=lambda p: p.type == Type.TARGET_BLOCK_HIT)
     piglin_barter: PiglinBarter = field(until=898, when=lambda p: p.type == Type.PIGLIN_BARTER)
     player_waxed_or_unwaxed_copper: PlayerWaxedOrUnwaxedCopper = field(
