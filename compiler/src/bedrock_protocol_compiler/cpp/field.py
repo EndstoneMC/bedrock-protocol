@@ -27,7 +27,7 @@ from bedrock_protocol_compiler.descriptor import (
     Variant,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, Naming, Numbering, Schema, StructModel
+from bedrock_protocol_compiler.schema import Encoding, Naming, Numbering, Schema, StructModel, channels
 
 ENUM_ENCODINGS = {
     "bool": "bool",
@@ -286,22 +286,70 @@ class ReferenceField(SerializerField):
         return {names.header(self.family)} | self.extra_includes
 
 
-class ColorField(SerializerField):
+class ColorField:
     def __init__(self, schema: Schema, node: Color, encoding: Encoding, where: str) -> None:
         target = schema.target(encoding.model, node)
         assert isinstance(target, StructModel)
         spelled = names.qualified(schema, target)
-        channels = ", ".join(f"&{spelled}::{slot.name}" for slot in (target.slots[-1], *target.slots[:-1]))
-        packed = f"detail::Color<{spelled}, {names.ENCODINGS[node.encoded]}, {channels}>"
-        super().__init__(where, names.serializer(packed, encoding.since))
+        members = ", ".join(f"&{spelled}::{name}" for name in channels(target))
+        self.where = where
+        self.color = f"detail::Color<{spelled}, {members}>"
         self.node = node
+        self.encoded = names.PRIMITIVES[node.encoded]
+
+    def fallible(self) -> bool:
+        return True
 
     def includes(self) -> set[str]:
         return {
             names.runtime("detail/color"),
             names.header(self.node.struct),
             *primitive_includes(Primitive(self.node.encoded)),
+            *({"<format>"} if self.node.encoded == "str" else ()),
         }
+
+    def write(self, p: Printer, value: str) -> None:
+        if self.node.encoded == "str":
+            packed = 'std::format("#{:x}", *c)'
+        elif self.encoded == "std::uint32_t":
+            packed = "*c"
+        else:
+            packed = f"static_cast<{self.encoded}>(*c)"
+        p.emit(
+            """
+            {
+                const auto c = $color$::pack($value$);
+                if (!c) $fail$
+                $write$
+            }
+            """,
+            color=self.color,
+            value=value,
+            fail=names.fail("c.error()", self.where),
+            write=names.write(self.node.encoded, None, packed),
+        )
+
+    def read(self, p: Printer, target: str) -> None:
+        if self.node.encoded == "str":
+            packed = "detail::parse_color(*v)"
+        elif self.encoded == "std::uint32_t":
+            packed = "*v"
+        else:
+            packed = "static_cast<std::uint32_t>(*v)"
+        p.emit(
+            """
+            {
+                auto v = $read$;
+                if (!v) $fail$
+                $target$ = $color$::unpack($packed$);
+            }
+            """,
+            read=names.read(self.node.encoded, None),
+            fail=names.fail("v.error()", self.where),
+            target=target,
+            color=self.color,
+            packed=packed,
+        )
 
 
 class BuiltinField(SerializerField):

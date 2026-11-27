@@ -3074,24 +3074,28 @@ class P:
     varint: Color | None = field(type=uvarint32)
 """
 PACKED_COLOR = (
-    "Serializer<detail::Color<::bedrock::protocol::Color, {}, &::bedrock::protocol::Color::a, "
-    "&::bedrock::protocol::Color::r, &::bedrock::protocol::Color::g, &::bedrock::protocol::Color::b>, 1>::{}"
+    "detail::Color<::bedrock::protocol::Color, &::bedrock::protocol::Color::a, &::bedrock::protocol::Color::r, "
+    "&::bedrock::protocol::Color::g, &::bedrock::protocol::Color::b>::"
 )
 
 
 @pytest.mark.parametrize(
-    "call",
+    "code",
     [
         pytest.param("Serializer<::bedrock::protocol::Color, 1>::serialize(stream, value.floats);", id="bare-floats"),
-        pytest.param(PACKED_COLOR.format("std::int32_t", "serialize(stream, value.packed);"), id="packed-int32"),
-        pytest.param(PACKED_COLOR.format("std::string", "serialize(stream, e0);"), id="text-in-a-list"),
-        pytest.param(PACKED_COLOR.format("UVarInt32", "deserialize(stream);"), id="packed-uvarint32-in-an-optional"),
+        pytest.param(f"const auto c = {PACKED_COLOR}pack(value.packed);", id="packed-int32-last-member-first"),
+        pytest.param("stream.write<std::int32_t>(static_cast<std::int32_t>(*c));", id="packed-int32-written"),
+        pytest.param(f"out.packed = {PACKED_COLOR}unpack(static_cast<std::uint32_t>(*v));", id="packed-int32-read"),
+        pytest.param('stream.write(std::format("#{:x}", *c));', id="text-in-a-list-written"),
+        pytest.param(f"out.texts.back() = {PACKED_COLOR}unpack(detail::parse_color(*v));", id="text-in-a-list-read"),
+        pytest.param("stream.writeVarInt<std::uint32_t>(*c);", id="packed-uvarint32-in-an-optional-written"),
+        pytest.param(f"(*out.varint) = {PACKED_COLOR}unpack(*v);", id="packed-uvarint32-in-an-optional-read"),
     ],
 )
-def test_a_packed_color_calls_the_color_serializer_with_its_last_member_first_in_cpp(generate, call):
+def test_a_packed_color_packs_its_channels_around_its_encoded_scalar_in_cpp(generate, code):
     source = (generate({"a": PACKED_COLORS}) / "a.cpp").read_text()
 
-    assert call in source
+    assert code in source
 
 
 def test_a_packed_color_includes_the_color_runtime_in_cpp(generate):
