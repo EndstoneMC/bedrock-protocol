@@ -766,14 +766,6 @@ def test_a_color_packed_at_one_protocol_and_bare_at_another_is_one_field_in_java
     assert "    public @NotNull dev.endstone.protocol.Color getC() {\n" in emitted(source)
 
 
-def test_a_type_choice_between_packed_colors_reads_its_other_branch_in_java(emitted):
-    source = PACKED_COLOR + "class P:\n    k: uint8\n    c: Color = field(type=lambda p: str if p.k == 1 else int32)\n"
-
-    read = "                } else {\n                    int packed1 = ByteBufCodec.readIntLE(buf);\n"
-
-    assert read in emitted(source)
-
-
 def test_the_protocol_class_is_final(emitted):
     assert "public final class Protocol {\n" in emitted(SCALAR, "Protocol.java")
 

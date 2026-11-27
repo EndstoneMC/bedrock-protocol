@@ -322,8 +322,6 @@ def colored(where: str, node: Type) -> Type:
             return Color(family, encoded)
         case Optional(element=element) | List(element=element) | Array(element=element):
             return replace(node, element=colored(where, element))
-        case TypeChoice(when_true=when_true, when_false=when_false):
-            return replace(node, when_true=colored(where, when_true), when_false=colored(where, when_false))
     return node
 
 
