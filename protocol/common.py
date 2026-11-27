@@ -3,7 +3,7 @@
 Vec2, Vec3, BlockPos, Color, DimensionType, and world/level/block/'s BlockRuntimeId.
 """
 
-from protocol import int32, uvarint32, varint32
+from protocol import uvarint32, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -11,7 +11,6 @@ go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 type BlockRuntimeId = uvarint32
-type Color = int32
 type DimensionType = varint32
 
 
@@ -30,3 +29,10 @@ class BlockPos:
     x: varint32
     y: varint32
     z: varint32
+
+
+class Color:
+    r: float
+    g: float
+    b: float
+    a: float

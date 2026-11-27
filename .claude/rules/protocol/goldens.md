@@ -58,6 +58,7 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Match a `Literal` member the case leaves out, such as a TextPacket category string, with the BDS member the dump declares in its place by the Literal's constant; a dump field with no name prints nothing.
 - Match a case's member that BDS leaves out of its JSON only when the checking build's dump declares no field for it, such as the 924 camera's `actor_locator`, `spline_identifier` and `load_from_json`; only the bytes check those.
 - Write a `Color255RGBA` in a case as `#rrggbbaa`, and compare it by turning it into BDS's `[r, g, b, a]` array.
+- Write a packed `Color` in a case as `#aarrggbb`, and compare it as the int `mce::Color::toARGB` packs, which BDS prints.
 - Write a bitset in a case as `0b` followed by its bits, most significant first.
 - Every union arm written as an object starts with `"__class__"`, its DSL class name, and loads as that arm alone.
 - Write an NBT value in a case as nbtlib's compact SNBT string, and compare it by the compact SNBT of both sides.
@@ -114,7 +115,6 @@ A golden is a case BDS agrees with; the `goldens` skill runs BDS over the cases.
 - Send `NetworkStackLatencyPacket.create_time` as 0; BDS reads it in milliseconds and writes it in nanoseconds.
 - Before 2168, set an ability layer's `abilities_set` bit 13, 14 or 19 whenever it carries a non-zero fly, walk or vertical fly speed; BDS drops a speed whose bit is clear.
 - Give a case only enum members and flag bits its build has, such as no `molang_version` 13 before 827 and no `abilities_set` bit 19 before 776; BDS rewrites a member it lacks and clears a bit it lacks.
-- Write a pre-cereal skin's colours as `#aarrggbb` with an alpha of 0x10 or above; BDS prints a colour back as unpadded ARGB hex.
 - Keep a `MapItemTrackedActor` block position's y at 0 before 944; BDS reads it as a varint and writes it as an unsigned varint.
 - Set `ClientboundMapItemDataPacket.map_id` to `map_ids[0]` when the creation flag is set; BDS holds both in one vector.
 - Keep `StructureBlockUpdatePacket.is_waterlogged` false before 2168; BDS writes it from a settings flag its read clears.

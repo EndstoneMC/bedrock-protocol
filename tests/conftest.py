@@ -26,6 +26,7 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Bitset,
     BuiltinRef,
+    Color,
     EnumName,
     EnumRef,
     Int,
@@ -1107,6 +1108,9 @@ class CaseForm:
                 return cls.matches(case, bedrock, schema.element, declared, node)
             case DynamicValueSchema() if isinstance(case, dict):
                 return cls.matches(case, bedrock, schema.object, declared, node)
+            # "#04010203" vs {"Color": 67174915}
+            case ColorCase() if isinstance(case, str):
+                return cls.matches(schema.to_bedrock(case), bedrock, schema, declared, node)
             case DynamicValueSchema() if isinstance(case, list):
                 return cls.matches(case, bedrock, schema.array, declared, node)
             case VariantCase() if not (isinstance(case, dict) and "__class__" in case):
@@ -1553,6 +1557,36 @@ class HexColorSchema(GenericCompositeSchema):
         writer.write("#" + "".join(f"{member.get(value):02x}" for member in self.members))
 
 
+class ColorCase(BasicSchema):
+    """A packed mce::Color as the string #aarrggbb of the int mce::Color::toARGB packs its channels into."""
+
+    def __init__(self, channels):
+        self.channels = channels
+        self.bound_type = channels.bound_type
+        self.order = (channels.members[-1], *channels.members[:-1])
+
+    @staticmethod
+    def to_bedrock(case):
+        packed = int(case[1:], 16)
+        return packed - (1 << 32) if packed >> 31 else packed
+
+    @override
+    def do_load(self, reader, context, traits):
+        owner = self.channels.cls()
+        text = reader.as_string()
+        if text is None or not ESCAPED_COLOR.fullmatch(text):
+            context.log(ResultCode.ERROR, "expected #aarrggbb")
+            return owner
+        for index, member in enumerate(self.order):
+            member.set(owner, int(text[1 + 2 * index : 3 + 2 * index], 16) / 255)
+        return owner
+
+    @override
+    def do_save(self, value, writer, context, traits):
+        channels = (CaseForm.widened_float32(member.get(value)) for member in self.order)
+        writer.write("#" + "".join(f"{int(CaseForm.widened_float32(channel * 255)):02x}" for channel in channels))
+
+
 MODEL = Schema(build(Path(__file__).parents[1] / "protocol"))
 
 
@@ -1687,6 +1721,8 @@ class ReflectionCtx:
                 return EnumSchema(self.shape(enum), None, naming=MODEL.naming_at(enum, self.protocol))
             case StructRef(struct=family):
                 return self.composite(family)
+            case Color(struct=family):
+                return ColorCase(self.composite(family))
             case List(element=Primitive(name="uint8", encoded=None)):
                 return BlobCase(BlobSchema(True))
             case List(element=Primitive(name="int8", encoded=None)):

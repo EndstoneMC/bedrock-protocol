@@ -8,6 +8,7 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Bitset,
     BuiltinRef,
+    Color,
     CompilerError,
     EnumName,
     EnumRef,
@@ -36,6 +37,7 @@ from bedrock_protocol_compiler.java.value import (
     Body,
     ListValue,
     NamedScalar,
+    PackedColor,
     Reference,
     Scalar,
     Value,
@@ -106,6 +108,10 @@ class FieldContext:
                     f"{codec}.encode({{}}, buf);",
                     label,
                 )
+            case Color(struct=family, encoded=encoded):
+                model = self.schema.encoding_at(family, self.encoding.since).model
+                members = [names.pascal(each.name) for each in model.slots]
+                return PackedColor(names.qualified(self.schema, model), members, encoded, label)
             case EnumName():
                 enum_type = self.enum_type(node)
                 spelled = names.qualified(self.schema, enum_type)

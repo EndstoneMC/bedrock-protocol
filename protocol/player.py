@@ -255,7 +255,7 @@ class PlayerListPacket:
         is_teacher: bool
         is_host: bool
         is_sub_client: bool
-        color: Color
+        color: Color = field(type=int32)
 
     entries: list[RemoveEntry | AddEntry]
 
@@ -378,4 +378,4 @@ class PlayerListEntry:
     is_teacher: bool
     is_host: bool
     is_sub_client: bool
-    color: Color = field(since=800)
+    color: Color = field(type=int32, since=800)

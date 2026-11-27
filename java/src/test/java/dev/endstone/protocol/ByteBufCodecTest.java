@@ -10,6 +10,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.List;
 import java.util.UUID;
@@ -352,6 +353,65 @@ final class ByteBufCodecTest {
   @Test
   void strOrderTreatsAPrefixAsSmaller() {
     assertTrue(ByteBufCodec.STR_ORDER.compare("ab", "abc") < 0);
+  }
+
+  @Test
+  void packColorOrdersAlphaRedGreenBlueFromTheTopByte() {
+    assertEquals(0xFFBF3F00, ByteBufCodec.packColor(1.0f, 0.75f, 0.25f, 0.0f, "P.c"));
+  }
+
+  @Test
+  void packColorTruncatesAChannelTowardZero() {
+    assertEquals(0x7F, ByteBufCodec.packColor(0.0f, 0.0f, 0.0f, 0.5f, "P.c"));
+  }
+
+  static Stream<Arguments> colorChannelsOutOfRange() {
+    return Stream.of(
+        argumentSet("alpha below zero", -0.5f, 0.0f, 0.0f, 0.0f, "P.c: -0.5 is out of range"),
+        argumentSet("red above one", 0.0f, 1.5f, 0.0f, 0.0f, "P.c: 1.5 is out of range"),
+        argumentSet("green not a number", 0.0f, 0.0f, Float.NaN, 0.0f, "P.c: NaN is out of range"),
+        argumentSet("blue above one", 0.0f, 0.0f, 0.0f, 2.0f, "P.c: 2.0 is out of range"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("colorChannelsOutOfRange")
+  void packColorRejectsAChannelOutsideZeroToOne(
+      float alpha, float red, float green, float blue, String message) {
+    IllegalArgumentException error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ByteBufCodec.packColor(alpha, red, green, blue, "P.c"));
+    assertEquals(message, error.getMessage());
+  }
+
+  static Stream<Arguments> colorTexts() {
+    return Stream.of(
+        argumentSet("hex digits", "#ff00ff00", 0xFF00FF00),
+        argumentSet("any first character", "fff", 0xFF),
+        argumentSet("a multi-byte first character", "éff", 0),
+        argumentSet("leading whitespace", "# \t\n\u000b\f\rff", 0xFF),
+        argumentSet("whitespace after the sign", "#- ff", 0),
+        argumentSet("plus sign", "#+ff", 0xFF),
+        argumentSet("minus sign", "#-ff", 0xFFFFFF01),
+        argumentSet("lower-case 0x", "#0xff", 0xFF),
+        argumentSet("upper-case 0X", "#0Xff", 0xFF),
+        argumentSet("0x without a hex digit", "#0xg", 0),
+        argumentSet("digits up to the first other character", "#ffzz1", 0xFF),
+        argumentSet("no digits", "#g", 0),
+        argumentSet("the first character alone", "#", 0),
+        argumentSet("empty text", "", 0),
+        argumentSet("leading zeros", "#00000000000000000000ff", 0xFF),
+        argumentSet("past 32 bits", "#100000000", 0xFFFFFFFF),
+        argumentSet("negated to the top 32 bits", "#-100000000", 0),
+        argumentSet("negated to just below the top 32 bits", "#-100000001", 0xFFFFFFFF),
+        argumentSet("past 64 bits", "#10000000000000000", 0xFFFFFFFF),
+        argumentSet("negated past 64 bits", "#-10000000000000000", 0xFFFFFFFF));
+  }
+
+  @ParameterizedTest
+  @MethodSource("colorTexts")
+  void parseColorReadsTheHexAfterTheFirstByteAsStrtoullDoes(String text, int expected) {
+    assertEquals(expected, ByteBufCodec.parseColor(text.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test

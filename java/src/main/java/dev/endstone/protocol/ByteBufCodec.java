@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -344,6 +345,48 @@ public final class ByteBufCodec {
       }
       buf.writeByte(group + 1 < groups ? b | 0x80 : b);
     }
+  }
+
+  /** Packs four channels in [0, 1] into 32 bits, alpha in the top byte. */
+  public static int packColor(
+      float alpha, float red, float green, float blue, @NotNull String field) {
+    int packed = 0;
+    for (float channel : new float[] {alpha, red, green, blue}) {
+      if (!(channel >= 0.0f && channel <= 1.0f)) {
+        throw new IllegalArgumentException(field + ": " + channel + " is out of range");
+      }
+      packed = packed << 8 | (int) (channel * 255.0f);
+    }
+    return packed;
+  }
+
+  /** Parses the hex after the first byte as strtoull does, then clamps it to 32 bits. */
+  public static int parseColor(byte @NotNull [] text) {
+    int i = 1;
+    while (i < text.length && (text[i] == ' ' || (text[i] >= '\t' && text[i] <= '\r'))) {
+      i++;
+    }
+    boolean negative = i < text.length && text[i] == '-';
+    if (i < text.length && (negative || text[i] == '+')) {
+      i++;
+    }
+    if (i + 2 < text.length
+        && text[i] == '0'
+        && (text[i + 1] == 'x' || text[i + 1] == 'X')
+        && HexFormat.isHexDigit(text[i + 2])) {
+      i += 2;
+    }
+    long value = 0;
+    boolean overflow = false;
+    for (; i < text.length && HexFormat.isHexDigit(text[i]); i++) {
+      overflow |= value >>> 60 != 0;
+      value = value << 4 | HexFormat.fromHexDigit(text[i]);
+    }
+    long parsed = overflow ? -1L : negative ? -value : value;
+    boolean clamped =
+        Long.compareUnsigned(parsed, 0xFFFF_FFFFL) > 0
+            && Long.compareUnsigned(parsed, 0xFFFF_FFFF_0000_0000L) < 0;
+    return clamped ? -1 : (int) parsed;
   }
 
   /** Lowercases A-Z only. */

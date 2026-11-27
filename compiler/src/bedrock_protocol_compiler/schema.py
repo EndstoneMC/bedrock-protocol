@@ -10,6 +10,7 @@ from bedrock_protocol_compiler.descriptor import (
     Binary,
     Bitset,
     Choice,
+    Color,
     CompilerError,
     Enum,
     EnumName,
@@ -145,7 +146,7 @@ def strip(node: Type) -> Type:
             return Primitive(DOMAINS.get(name, name))
         case AliasRef(alias=alias):
             return AliasRef(alias)
-        case StructRef(struct=family):
+        case StructRef(struct=family) | Color(struct=family):
             return StructRef(family)
         case EnumRef(enum=enum) | EnumName(enum=enum):
             return EnumRef(enum)
@@ -513,8 +514,8 @@ class Schema:
             ]
         )
 
-    def target(self, model: StructModel, node: StructRef | EnumRef | EnumName) -> StructModel | EnumType:
-        if isinstance(node, StructRef):
+    def target(self, model: StructModel, node: StructRef | Color | EnumRef | EnumName) -> StructModel | EnumType:
+        if isinstance(node, StructRef | Color):
             return self.struct_models[node.struct, self.read_at[model]]
         return self.enum_type(node.enum, self.read_at[model])
 
@@ -648,6 +649,8 @@ class Schema:
                     )
                     self.excluding.setdefault(child, {}).setdefault(family, set()).add(version)
                 return reached.setdefault(node, child)
+            case Color(struct=family, encoded=encoded):
+                return Color, self.encoded[family, version].model, encoded
             case EnumRef(enum=family, encoded=encoded, endian=endian):
                 return reached.setdefault(node, self.numbered[family, version]), encoded, endian
             case EnumName(enum=family):

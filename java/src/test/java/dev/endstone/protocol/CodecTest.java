@@ -146,16 +146,11 @@ final class CodecTest {
         ClientboundDebugRendererPacket_v649.newBuilder()
             .setType(ClientboundDebugRendererPacket_v649.Type.ADD_DEBUG_MARKER_CUBE)
             .setDebugMarkerData(
-                ClientboundDebugRendererPacket_v649.DebugMarkerData.newBuilder()
+                ClientboundDebugRendererPacket.DebugMarkerData.newBuilder()
                     .setText("marker")
                     .setPosition(Vec3.newBuilder().setX(1.0f).setY(2.0f).setZ(3.0f).build())
                     .setColor(
-                        ClientboundDebugRendererPacket_v649.Color.newBuilder()
-                            .setR(1.0f)
-                            .setG(0.5f)
-                            .setB(0.25f)
-                            .setA(0.75f)
-                            .build())
+                        Color.newBuilder().setR(1.0f).setG(0.5f).setB(0.25f).setA(0.75f).build())
                     .setDurationMs(1500L)
                     .build())
             .build();

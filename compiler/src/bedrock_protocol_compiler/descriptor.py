@@ -26,6 +26,12 @@ class StructRef:
 
 
 @dataclass(frozen=True)
+class Color:
+    struct: "Struct"
+    encoded: str
+
+
+@dataclass(frozen=True)
 class BuiltinRef:
     builtin: "Builtin"
 
@@ -92,6 +98,7 @@ type Type = (
     Primitive
     | AliasRef
     | StructRef
+    | Color
     | BuiltinRef
     | EnumRef
     | EnumName

@@ -200,7 +200,20 @@ final class CaseLoaderTest {
             729,
             MapDecoration.class,
             JsonParser.parseString(
-                "{\"image\":25,\"rotation\":0,\"x\":0,\"y\":0,\"label\":\"\",\"color\":0}"));
+                "{\"image\":25,\"rotation\":0,\"x\":0,\"y\":0,\"label\":\"\",\"color\":\"#00000000\"}"));
     assertEquals(30, decoration.getImageValue());
+  }
+
+  @Test
+  void aPackedColorLoadsItsPairsAsAlphaRedGreenBlue() throws ReflectiveOperationException {
+    MapDecoration decoration =
+        CaseLoader.load(
+            729,
+            MapDecoration.class,
+            JsonParser.parseString(
+                "{\"image\":0,\"rotation\":0,\"x\":0,\"y\":0,\"label\":\"\",\"color\":\"#ff336699\"}"));
+    assertEquals(
+        Color.newBuilder().setR(0.2f).setG(0.4f).setB(0.6f).setA(1.0f).build(),
+        decoration.getColor());
   }
 }

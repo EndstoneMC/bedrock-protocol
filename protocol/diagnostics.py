@@ -5,10 +5,9 @@ Whisker scopes, memory categories, frame and system timings, debug markers and t
 
 from enum import IntEnum, auto
 
-from protocol import field, packet, sentinel, type, uint8, uint32, uint64, value
+from protocol import field, int32, packet, sentinel, type, uint8, uint32, uint64, value
 from protocol.actor import ActorUniqueID
-from protocol.common import Color as PackedColor
-from protocol.common import Vec3
+from protocol.common import Color, Vec3
 from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
@@ -234,12 +233,6 @@ class ClientboundDebugRendererPacket:
         CLEAR_DEBUG_MARKERS = 1
         ADD_DEBUG_MARKER_CUBE = 2
 
-    class Color:
-        r: float
-        g: float
-        b: float
-        a: float
-
     class DebugMarkerData:
         text: str
         position: Vec3
@@ -260,7 +253,7 @@ class ClientboundDebugRendererPacket:
     class DebugMarkerData:
         text: str
         position: Vec3
-        color: PackedColor
+        color: Color = field(type=int32)
         duration_ms: uint64
 
     type: PayloadType = field(type=str)

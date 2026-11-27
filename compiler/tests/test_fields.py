@@ -3,6 +3,7 @@ import pytest
 from bedrock_protocol_compiler.descriptor import (
     AliasRef,
     Array,
+    Color,
     CompilerError,
     EnumName,
     EnumRef,
@@ -491,6 +492,34 @@ def test_type_reaches_through_a_struct_with_one_reencodable_scalar(build_package
         StructRef(entry, encoded="uint8"),
         List(StructRef(entry, encoded="uint16"), Primitive("uvarint32")),
     ]
+
+
+COLOR = "class Color:\n    r: float\n    g: float\n    b: float\n    a: float\n"
+
+
+def test_type_packs_a_struct_of_four_floats_as_a_color(build_package):
+    source = (
+        HEADER
+        + "class A:\n    w: Color\n    x: Color = field(type=int32)\n"
+        + "    ys: list[Color] = field(type=str)\n    z: Color | None = field(type=uvarint32)\n\n"
+        + COLOR
+    )
+    package = build_package({"a": source})
+    color = package.modules[0].families[1]
+
+    assert field_types(package) == [
+        StructRef(color),
+        Color(color, "int32"),
+        List(Color(color, "str"), Primitive("uvarint32")),
+        Optional(Color(color, "uvarint32")),
+    ]
+
+
+def test_type_packs_four_floats_only_into_str_or_a_32_bit_integer(build_package):
+    source = HEADER + COLOR + "class A:\n    x: Color = field(type=uint16)\n"
+
+    with pytest.raises(CompilerError, match=r"A\.x: type packs four floats only into str or a 32-bit integer$"):
+        build_package({"a": source})
 
 
 def test_type_on_a_struct_with_two_reencodable_scalars_is_rejected(build_package):

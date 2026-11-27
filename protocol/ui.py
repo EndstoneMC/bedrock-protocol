@@ -117,7 +117,7 @@ class ServerWaypoint:
         is_visible: bool | None
         world_position: WorldPosition | None
         texture_id: uint32 | None
-        color: Color | None
+        color: Color | None = field(type=int32)
         client_position_authority: bool | None
         actor_id: ActorUniqueID | None
 
@@ -128,7 +128,7 @@ class ServerWaypoint:
         world_position: WorldPosition | None
         texture_path: str | None
         icon_size: Vec2 | None
-        color: Color | None
+        color: Color | None = field(type=int32)
         client_position_authority: bool | None
         actor_id: ActorUniqueID | None
 

@@ -683,6 +683,97 @@ def test_a_type_choice_whose_branches_hold_otherwise_is_a_compiler_error(build_p
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
+PACKED_COLOR = "from protocol import int32\n\nclass Color:\n    r: float\n    g: float\n    b: float\n    a: float\n\n"
+PACKED_COLORS = (
+    PACKED_COLOR + "@packet(id=1)\nclass P:\n    floats: Color\n    packed: Color = field(type=int32)\n"
+    "    texts: list[Color] = field(type=str)\n    varint: Color | None = field(type=uvarint32)\n"
+)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(
+            "            dev.endstone.protocol.Color.Codec1.INSTANCE.encode(value.floats_, buf);\n", id="bare-floats"
+        ),
+        pytest.param(
+            "            buf.writeIntLE(ByteBufCodec.packColor(value.packed_.getA(), value.packed_.getR(), "
+            'value.packed_.getG(), value.packed_.getB(), "P.packed"));\n',
+            id="packed-int32",
+        ),
+        pytest.param(
+            '                ByteBufCodec.writeString(buf, "#" + Integer.toHexString(ByteBufCodec.packColor('
+            'element0.getA(), element0.getR(), element0.getG(), element0.getB(), "P.texts")));\n',
+            id="text-in-a-list",
+        ),
+        pytest.param(
+            "                ByteBufCodec.writeUnsignedVarInt(buf, ByteBufCodec.packColor(value.varint_.getA(), "
+            'value.varint_.getR(), value.varint_.getG(), value.varint_.getB(), "P.varint"));\n',
+            id="packed-uvarint32-in-an-optional",
+        ),
+    ],
+)
+def test_a_color_writes_its_last_member_first_where_its_field_packs_it_in_java(emitted, call):
+    assert call in emitted(PACKED_COLORS)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(
+            "                out.floats_ = dev.endstone.protocol.Color.Codec1.INSTANCE.decode(buf);\n", id="bare-floats"
+        ),
+        pytest.param("                int packed0 = ByteBufCodec.readIntLE(buf);\n", id="packed-int32"),
+        pytest.param(
+            "                        int packed1 = ByteBufCodec.parseColor(ByteBufCodec.readByteArray(buf));\n",
+            id="text-in-a-list",
+        ),
+        pytest.param(
+            "                    int packed2 = ByteBufCodec.readUnsignedVarInt(buf);\n",
+            id="packed-uvarint32-in-an-optional",
+        ),
+    ],
+)
+def test_a_color_reads_the_encoding_its_field_declares_in_java(emitted, call):
+    assert call in emitted(PACKED_COLORS)
+
+
+def test_a_packed_color_unpacks_its_top_byte_into_its_last_member_in_java(emitted):
+    read = (
+        "                out.packed_ = dev.endstone.protocol.Color.newBuilder().setA((packed0 >>> 24) / 255.0f)"
+        ".setR((packed0 >>> 16 & 0xFF) / 255.0f).setG((packed0 >>> 8 & 0xFF) / 255.0f).setB((packed0 & 0xFF) / 255.0f)"
+        ".build();\n"
+    )
+
+    assert read in emitted(PACKED_COLORS)
+
+
+def test_a_packed_color_holds_its_struct_message_in_java(emitted):
+    source = PACKED_COLOR + "class P:\n    c: Color = field(type=int32)\n"
+
+    assert "    public @NotNull dev.endstone.protocol.Color getC() {\n" in emitted(source)
+
+
+def test_a_packed_color_defaults_to_its_struct_default_instance_in_java(emitted):
+    source = PACKED_COLOR + "class P:\n    c: Color = field(type=int32)\n"
+
+    assert "            c_ = dev.endstone.protocol.Color.getDefaultInstance();\n" in emitted(source)
+
+
+def test_a_color_packed_at_one_protocol_and_bare_at_another_is_one_field_in_java(emitted):
+    source = PACKED_COLOR + "class P:\n    c: Color = field(type=int32, until=3)\n    c: Color = field(since=3)\n"
+
+    assert "    public @NotNull dev.endstone.protocol.Color getC() {\n" in emitted(source)
+
+
+def test_a_type_choice_between_packed_colors_reads_its_other_branch_in_java(emitted):
+    source = PACKED_COLOR + "class P:\n    k: uint8\n    c: Color = field(type=lambda p: str if p.k == 1 else int32)\n"
+
+    read = "                } else {\n                    int packed1 = ByteBufCodec.readIntLE(buf);\n"
+
+    assert read in emitted(source)
+
+
 def test_the_protocol_class_is_final(emitted):
     assert "public final class Protocol {\n" in emitted(SCALAR, "Protocol.java")
 

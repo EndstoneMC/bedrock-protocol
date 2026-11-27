@@ -8,6 +8,7 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Bitset,
     BuiltinRef,
+    Color,
     CompilerError,
     EnumName,
     EnumRef,
@@ -32,6 +33,7 @@ from bedrock_protocol_compiler.go.value import (
     BitsetValue,
     Body,
     BuiltinValue,
+    ColorValue,
     ListValue,
     Named,
     Reference,
@@ -42,7 +44,7 @@ from bedrock_protocol_compiler.go.value import (
 from bedrock_protocol_compiler.java.names import pascal, suffix
 from bedrock_protocol_compiler.java.union import case_name
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, strip
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, StructModel, strip
 
 
 class FieldContext:
@@ -58,6 +60,9 @@ class FieldContext:
 
     def enum_type(self, node: EnumRef | EnumName) -> EnumModel:
         return cast(Numbering | Naming, self.encoding.reached[node]).model
+
+    def bound(self, model: StructModel) -> str:
+        return model.family.name if self.schema.owner(model) is not None else self.schema.name(model)
 
     def value(self, node: Type) -> Value:
         match node:
@@ -91,12 +96,21 @@ class FieldContext:
                 return Named(spelled, names.unexported(spelled), naming.since, enum_class(enum_type))
             case StructRef():
                 child = cast(Encoding, self.encoding.reached[node])
-                owned = self.schema.owner(child.model) is not None
                 return Reference(
                     names.declared(self.schema, child.model),
                     suffix(child),
                     suffix(full(self.schema, child)),
-                    child.model.family.name if owned else self.schema.name(child.model),
+                    self.bound(child.model),
+                )
+            case Color(struct=family, encoded=encoded):
+                child = self.schema.encoding_at(family, self.encoding.since)
+                members = [pascal(each.name) for each in child.fields]
+                return ColorValue(
+                    names.declared(self.schema, child.model),
+                    suffix(child),
+                    self.bound(child.model),
+                    (members[-1], *members[:-1]),
+                    encoded,
                 )
             case BuiltinRef(builtin=builtin):
                 spelled = f"{names.stem(builtin)}.{builtin.name}"

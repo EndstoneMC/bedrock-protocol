@@ -33,7 +33,7 @@ paths:
 - Give each encoding of a model an unexported method pair `encode<N>` and `decode<N>` on its message, `Cereal` or `Manual` appended for a non-`Default` key and `Exclude` and the member in Pascal case for an `Exclude<T, &T::member>` one, and call a child's pair by name through the encoding the field's own encoding reaches, never through a selector.
 - Give a packet the unexported selectors `encodeAt` and `decodeAt`, and in its test half `caseAt`, one `case` per run of its default-mode encodings, and no other type a selector.
 - Encode a map in the order C++ `std::map` holds it: strings by their bytes, numbers by `<`.
-- Check a value on encode only where its encoding is narrower than its field, failing one whose cast back differs with `ErrOutOfRange`.
+- Check a value on encode only where its encoding is narrower than its field, failing one whose cast back differs, or a packed colour's channel outside 0 to 1, with `ErrOutOfRange`.
 - Decode a required struct to a non-nil pointer, a list and a map to non-nil ones and a name-coded enum to its member's value, so a decoded message compares to a built one through its getters, never through `reflect.DeepEqual`.
 
 ## Enums
@@ -53,5 +53,5 @@ paths:
 ## Tests
 
 - Check every golden in `goldens_test.go` both ways through the case's `V<N>`, found among the generated `casePins`, finding its type among the generated packets by the id its file name starts with and the one with an encoding at N: decoding the bytes gives the case's value, as the generated `case<N>` methods of the `.bpc_test.go` files write it, and re-encoding gives the bytes.
-- Compare a case's value by structure: a number by its value, a `#` and hex pairs against an object of byte members in order, and a literal that the case leaves out as absent.
+- Compare a case's value by structure: a number by its value, a `#` and hex pairs against an object of byte members in order or of float members last first, each a pair over 255, and a literal that the case leaves out as absent.
 - Run a test's cases from a table through `t.Run`, the only loop a test holds, named and scoped as `.claude/rules/tests.md` says, with no mocks.

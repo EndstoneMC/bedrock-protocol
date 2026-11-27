@@ -8,7 +8,7 @@ from enum import IntEnum
 from typing import Literal
 from protocol import (
     array, bitset, builtin, double, field, int16, int32, packet, sentinel, type, uint8, uint16, uint32, uvarint32,
-    uvarint64, value,
+    uvarint64, value, varint32,
 )
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -60,6 +60,10 @@ UNION = "@packet(id=7)\nclass P:\n    u: uint8 | str\n"
 OPTIONAL_UNION = "@packet(id=7)\nclass P:\n    u: None | uint8 | str\n"
 
 BUILTIN = "@builtin\nclass NBTThing:\n    pass\n\nclass P:\n    t: NBTThing\n"
+
+COLOR = "class Color:\n    r: float\n    g: float\n    b: float\n    a: float\n\n"
+
+PACKED_COLOR = COLOR + "class P:\n    c: Color = field(type=int32)\n"
 
 
 @pytest.fixture
@@ -192,6 +196,13 @@ def test_a_getter_is_nil_safe(emitted):
         pytest.param("class P:\n    s: list[uint8]\n", "\tS []uint8\n", id="blob"),
         pytest.param("class P:\n    s: uuid.UUID\n", "\tS uuid.UUID\n", id="uuid"),
         pytest.param(BUILTIN.replace("t: NBTThing", "s: NBTThing"), "\tS a.NBTThing\n", id="builtin"),
+        pytest.param(PACKED_COLOR, "\tC *Color\n", id="packed-color"),
+        pytest.param(
+            COLOR + "class P:\n    c: Color | None = field(type=int32)\n", "\tC *Color\n", id="optional-packed-color"
+        ),
+        pytest.param(
+            COLOR + "class P:\n    c: list[Color] = field(type=str)\n", "\tC []*Color\n", id="packed-color-list"
+        ),
     ],
 )
 def test_a_field_is_held_by_its_go_type(emitted, source, declared):
@@ -478,6 +489,55 @@ def test_a_narrowing_write_fails_out_of_range(emitted):
 
 def test_a_write_its_encoding_reinterprets_at_its_width_is_unchecked(emitted):
     assert "\tw.WriteUint16(uint16(x.Y))\n" in emitted("class P:\n    y: int16 = field(type=uint16)\n")
+
+
+def test_a_bare_color_writes_its_floats_through_its_codec(emitted):
+    assert "\tx.C.encode1(w)\n" in emitted(COLOR + "class P:\n    c: Color\n")
+
+
+def test_a_packed_color_packs_its_last_member_first(emitted):
+    assert "\tp0, ok0 := packColor(x.C.GetA(), x.C.GetR(), x.C.GetG(), x.C.GetB())\n" in emitted(PACKED_COLOR)
+
+
+def test_a_packed_color_channel_outside_zero_to_one_fails_out_of_range(emitted):
+    write = (
+        "\tp0, ok0 := packColor(x.C.GetA(), x.C.GetR(), x.C.GetG(), x.C.GetB())\n"
+        "\tif !ok0 {\n\t\tw.Fail(stream.ErrOutOfRange)\n\t}\n"
+    )
+
+    assert write in emitted(PACKED_COLOR)
+
+
+@pytest.mark.parametrize(
+    ("encoded", "write"),
+    [
+        pytest.param("int32", "\tw.WriteInt32(int32(p0))\n", id="int32"),
+        pytest.param("uint32", "\tw.WriteUint32(p0)\n", id="uint32"),
+        pytest.param("varint32", "\tw.WriteVarint32(int32(p0))\n", id="varint32"),
+        pytest.param("uvarint32", "\tw.WriteUvarint32(p0)\n", id="uvarint32"),
+        pytest.param("str", "\tw.WriteString(formatColor(p0))\n", id="str"),
+    ],
+)
+def test_a_packed_color_writes_its_bits_as_its_encoding(emitted, encoded, write):
+    assert write in emitted(COLOR + f"class P:\n    c: Color = field(type={encoded})\n")
+
+
+@pytest.mark.parametrize(
+    ("encoded", "read"),
+    [
+        pytest.param("int32", "unpackColor(uint32(r.ReadInt32()))", id="int32"),
+        pytest.param("uint32", "unpackColor(r.ReadUint32())", id="uint32"),
+        pytest.param("varint32", "unpackColor(uint32(r.ReadVarint32()))", id="varint32"),
+        pytest.param("uvarint32", "unpackColor(r.ReadUvarint32())", id="uvarint32"),
+        pytest.param("str", "unpackColor(parseColor(r.ReadString()))", id="str"),
+    ],
+)
+def test_a_packed_color_reads_its_bits_from_its_encoding(emitted, encoded, read):
+    assert f"\tc0, c1, c2, c3 := {read}\n" in emitted(COLOR + f"class P:\n    c: Color = field(type={encoded})\n")
+
+
+def test_a_packed_color_reads_its_highest_byte_into_its_last_member(emitted):
+    assert "\tx.C = &Color{A: c0, R: c1, G: c2, B: c3}\n" in emitted(PACKED_COLOR)
 
 
 def test_a_literal_is_no_field(emitted):
@@ -775,6 +835,10 @@ def test_a_case_prints_an_integer_as_its_encoded_type(emitted):
     text = emitted("class P:\n    y: int16 = field(type=uint16)\n", "a.bpc_test.go")
 
     assert '\to = append(o, caseEntry{"y", uint16(x.Y), false})\n' in text
+
+
+def test_a_case_prints_a_packed_color_as_its_struct(emitted):
+    assert '\to = append(o, caseEntry{"c", x.C.case1(), false})\n' in emitted(PACKED_COLOR, "a.bpc_test.go")
 
 
 def test_a_case_names_the_class_of_a_struct_union_case(emitted):

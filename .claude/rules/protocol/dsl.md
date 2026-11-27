@@ -15,9 +15,10 @@ paths:
 
 ## Fields
 
-- Write a cerealised form as bare `name: Type` lines. Annotation clutter on one means the pre-cereal shape is being modelled.
+- Write a cerealised form as bare `name: Type` lines, a packed `Color` aside. Annotation clutter on one means the pre-cereal shape is being modelled.
 - Model a packet in the encoding its build sends by default: the hand-written write when golden mode's `serialization_mode` is below CerealOnly, cereal when its read goes through cereal.
 - Write a split between declared and encoded type as `name: DeclaredType = field(type=<encoded>)`. Never drop to the raw primitive, except an `mce::UUID` BDS encodes as text, which is `str`.
+- Write an `mce::Color` as `Color`, its four floats `r, g, b, a`: bare where BDS writes the floats, `field(type=int32)` or `field(type=uvarint32)` where it packs them through `mce::Color::toARGB`, and `field(type=str)` where it writes `toHexString`.
 - Use `field(type=<encoded>)` on a struct (or `list`/`array`/`Optional` of one) when that struct has one reencodable scalar field whose encoding changes at that call site, and `field(type=lambda p: ...)` when an earlier field picks the encoding.
 - Use `field(type=<primitive>)` on an alias only for the members BDS holds as that plain primitive; its cereal JSON is a bare value there and a one-member wrapper object everywhere else.
 - Use `array[T, N]` for a BDS `std::array<T, N>` and `list[T]` for a length-prefixed sequence. Use `field(count=)` only for a length BDS holds as its own member or writes apart from the list, as an expression over earlier fields, never as a constant.

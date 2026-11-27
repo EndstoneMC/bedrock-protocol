@@ -3054,6 +3054,52 @@ class P:
 """
 
 
+PACKED_COLORS = """
+from protocol import field, int32, packet, uvarint32
+package = "bedrock.protocol"
+java_package = "dev.endstone.protocol"
+go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
+
+class Color:
+    r: float
+    g: float
+    b: float
+    a: float
+
+@packet(id=1)
+class P:
+    floats: Color
+    packed: Color = field(type=int32)
+    texts: list[Color] = field(type=str)
+    varint: Color | None = field(type=uvarint32)
+"""
+PACKED_COLOR = (
+    "Serializer<detail::Color<::bedrock::protocol::Color, {}, &::bedrock::protocol::Color::a, "
+    "&::bedrock::protocol::Color::r, &::bedrock::protocol::Color::g, &::bedrock::protocol::Color::b>, 1>::{}"
+)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param("Serializer<::bedrock::protocol::Color, 1>::serialize(stream, value.floats);", id="bare-floats"),
+        pytest.param(PACKED_COLOR.format("std::int32_t", "serialize(stream, value.packed);"), id="packed-int32"),
+        pytest.param(PACKED_COLOR.format("std::string", "serialize(stream, e0);"), id="text-in-a-list"),
+        pytest.param(PACKED_COLOR.format("UVarInt32", "deserialize(stream);"), id="packed-uvarint32-in-an-optional"),
+    ],
+)
+def test_a_packed_color_calls_the_color_serializer_with_its_last_member_first_in_cpp(generate, call):
+    source = (generate({"a": PACKED_COLORS}) / "a.cpp").read_text()
+
+    assert call in source
+
+
+def test_a_packed_color_includes_the_color_runtime_in_cpp(generate):
+    header = (generate({"a": PACKED_COLORS}) / "a.h").read_text()
+
+    assert "#include <bedrock/protocol/detail/color.hpp>\n" in header
+
+
 def test_a_type_choice_emits_reencode_specializations_and_branches_in_cpp(generate):
     out = generate({"a": TYPE_CHOICE})
     header = (out / "a.h").read_text()

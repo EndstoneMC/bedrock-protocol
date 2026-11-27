@@ -114,7 +114,7 @@ class MapDecoration:
     x: int8 = field(type=uint8)
     y: int8 = field(type=uint8)
     label: str
-    color: Color
+    color: Color = field(type=int32)
 
 
 @packet(id=67, until=2168)

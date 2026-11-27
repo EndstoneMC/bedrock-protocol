@@ -33,7 +33,7 @@
       "cape_id": "cid",
       "full_id": "fid",
       "arm_size_type": 1,
-      "skin_color": 16909060,
+      "skin_color": "#01020304",
       "persona_pieces": [],
       "piece_tint_colors": [],
       "is_premium": true,
@@ -47,7 +47,7 @@
      "is_teacher": true,
      "is_host": true,
      "is_sub_client": true,
-     "color": 84281096
+     "color": "#05060708"
     },
     {
      "__class__": "RemoveEntry",
@@ -103,7 +103,7 @@
       "cape_id": "cid",
       "full_id": "fid",
       "arm_size_type": 1,
-      "skin_color": 16909060,
+      "skin_color": "#01020304",
       "persona_pieces": [
        {
         "piece_id": "pid",
@@ -117,7 +117,7 @@
        {
         "key": "hair",
         "value": {
-         "colors": [16909060, 84281096, 16909061, 84281097]
+         "colors": ["#01020304", "#05060708", "#01020305", "#05060709"]
         }
        }
       ],
@@ -132,7 +132,7 @@
      "is_teacher": true,
      "is_host": true,
      "is_sub_client": true,
-     "color": 84281096
+     "color": "#05060708"
     }
    ]
   },

@@ -439,6 +439,33 @@ class Reference(Value):
         return f"Comparator.comparingInt({self.java}::getNumber)"
 
 
+class PackedColor(Reference):
+    """A struct of four floats coded as one 32-bit value, its last member in the top byte."""
+
+    def __init__(self, java: str, members: list[str], encoded: str, label: str) -> None:
+        read, write = READS[encoded][0], WRITES[encoded]
+        if encoded == "str":
+            read = "ByteBufCodec.parseColor(ByteBufCodec.readByteArray(buf))"
+            write = write.format('"#" + Integer.toHexString({})')
+        super().__init__(java, f"{java}.getDefaultInstance()", read, write, label)
+        self.channels = [members[-1], *members[:-1]]
+
+    @override
+    def read(self, body: Body) -> str:
+        packed = body.fresh("packed")
+        body.line(f"int {packed} = {self.decode};")
+        shifted = (f"{packed} >>> 24", f"{packed} >>> 16 & 0xFF", f"{packed} >>> 8 & 0xFF", f"{packed} & 0xFF")
+        setters = "".join(
+            f".set{member}(({channel}) / 255.0f)" for member, channel in zip(self.channels, shifted, strict=True)
+        )
+        return f"{self.java}.newBuilder(){setters}.build()"
+
+    @override
+    def write(self, body: Body, value: str) -> None:
+        channels = ", ".join(f"{value}.get{member}()" for member in self.channels)
+        body.line(self.encode.format(f"ByteBufCodec.packColor({channels}, {json.dumps(self.label)})"))
+
+
 class BitsetValue(Value):
     def __init__(self, width: int, label: str) -> None:
         self.java = "BitSet"

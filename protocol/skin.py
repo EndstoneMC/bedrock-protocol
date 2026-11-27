@@ -6,7 +6,7 @@ The persona pieces it is built from, including emotes.
 import uuid
 from enum import IntEnum, auto
 
-from protocol import array, field, int8, packet, sentinel, type, uint8, uint32, uvarint32, value
+from protocol import array, field, int8, int32, packet, sentinel, type, uint8, uint32, uvarint32, value
 from protocol.actor import ActorRuntimeID
 from protocol.common import Color
 
@@ -154,12 +154,12 @@ class SerializedPersonaPieceHandle:
 @type(until=2168)
 class TintMapColor:
     piece_type: PieceType = field(type=str)
-    colors: list[str] = field(prefix=uint32)
+    colors: list[Color] = field(type=str, prefix=uint32)
 
 
 @type(since=2168)
 class TintMapColor:
-    colors: array[Color, 4]
+    colors: array[Color, 4] = field(type=int32)
 
 
 @type(until=2168)
@@ -182,7 +182,7 @@ class SerializedSkinRef:
     cape_id: str
     full_id: str
     arm_size: ArmSizeType = field(type=str)
-    skin_color: str
+    skin_color: Color = field(type=str)
     persona_pieces: list[SerializedPersonaPieceHandle] = field(prefix=uint32)
     piece_tint_colors: list[TintMapColor] = field(prefix=uint32)
     is_premium: bool
@@ -206,7 +206,7 @@ class SerializedSkinRef:
     cape_id: str
     full_id: str
     arm_size_type: ArmSizeType
-    skin_color: Color
+    skin_color: Color = field(type=int32)
     persona_pieces: list[SerializedPersonaPieceHandle]
     piece_tint_colors: dict[PieceType, TintMapColor] = field(type=str)
     is_premium: bool

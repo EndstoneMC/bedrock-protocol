@@ -35,7 +35,7 @@
     "cape_id": "cape",
     "full_id": "full",
     "arm_size_type": 1,
-    "skin_color": 67305985,
+    "skin_color": "#04030201",
     "persona_pieces": [
      {
       "piece_id": "p1",
@@ -49,7 +49,7 @@
      {
       "key": "skeleton",
       "value": {
-       "colors": [1, 2, 3, 4]
+       "colors": ["#00000001", "#00000002", "#00000003", "#00000004"]
       }
      }
     ],

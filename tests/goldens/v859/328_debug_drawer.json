@@ -23,7 +23,7 @@
       "z": 0.75
      },
      "time_left_total_sec": 2.0,
-     "color": 1146447479,
+     "color": "#44556677",
      "dimension_id": 1,
      "extra_data_payload": {
       "__class__": "SphereDataPayload",

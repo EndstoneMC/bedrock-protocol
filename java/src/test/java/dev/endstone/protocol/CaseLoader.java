@@ -161,13 +161,20 @@ final class CaseLoader {
       Method selector = type.getDeclaredMethod("codec", int.class);
       selector.setAccessible(true);
       Object codec = selector.invoke(null, version);
+      Class<?> channel = null;
       for (Method setter : methods) {
         if (!setter.getName().startsWith("set")) {
           continue;
         }
-        if (setter.getParameterCount() != 1 || setter.getParameterTypes()[0] != int.class) {
-          throw fail(path, setter.getName() + " is not a single int setter");
+        Class<?>[] parameters = setter.getParameterTypes();
+        if (parameters.length != 1
+            || (parameters[0] != int.class && parameters[0] != float.class)) {
+          throw fail(path, setter.getName() + " is not a single int or float setter");
         }
+        if (channel != null && parameters[0] != channel) {
+          throw fail(path, setter.getName() + " takes another type than the other setters");
+        }
+        channel = parameters[0];
         Object probe = type.getMethod("newBuilder").invoke(null);
         setter.invoke(probe, 1);
         ByteBuf encoded = Unpooled.buffer();
@@ -185,10 +192,13 @@ final class CaseLoader {
       if (ordered.size() != (text.length() - 1) / 2) {
         throw fail(path, "the pairs and the members differ in number");
       }
-      int pair = 0;
-      for (Method setter : ordered.values()) {
-        setter.invoke(builder, Integer.parseInt(text.substring(1 + 2 * pair, 3 + 2 * pair), 16));
-        pair++;
+      List<Method> members = new ArrayList<>(ordered.values());
+      if (channel == float.class) {
+        members.addFirst(members.removeLast());
+      }
+      for (int pair = 0; pair < members.size(); pair++) {
+        int read = Integer.parseInt(text.substring(1 + 2 * pair, 3 + 2 * pair), 16);
+        members.get(pair).invoke(builder, channel == float.class ? (Object) (read / 255.0f) : read);
       }
     } else {
       if (!json.isJsonObject()) {

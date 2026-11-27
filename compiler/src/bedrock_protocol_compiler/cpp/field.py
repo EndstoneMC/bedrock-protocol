@@ -10,6 +10,7 @@ from bedrock_protocol_compiler.descriptor import (
     Array,
     Bitset,
     BuiltinRef,
+    Color,
     Enum,
     EnumName,
     EnumRef,
@@ -66,7 +67,7 @@ def cpp_type(schema: Schema, model: StructModel, node: Type) -> str:
             return names.qualified(schema, alias)
         case BuiltinRef(builtin=builtin):
             return names.qualified(schema, builtin)
-        case EnumRef() | StructRef() | EnumName():
+        case EnumRef() | StructRef() | Color() | EnumName():
             return names.qualified(schema, schema.target(model, node))
         case Bitset():
             return f"std::bitset<{schema.width(model, node)}>"
@@ -283,6 +284,24 @@ class ReferenceField(SerializerField):
 
     def includes(self) -> set[str]:
         return {names.header(self.family)} | self.extra_includes
+
+
+class ColorField(SerializerField):
+    def __init__(self, schema: Schema, node: Color, encoding: Encoding, where: str) -> None:
+        target = schema.target(encoding.model, node)
+        assert isinstance(target, StructModel)
+        spelled = names.qualified(schema, target)
+        channels = ", ".join(f"&{spelled}::{slot.name}" for slot in (target.slots[-1], *target.slots[:-1]))
+        packed = f"detail::Color<{spelled}, {names.ENCODINGS[node.encoded]}, {channels}>"
+        super().__init__(where, names.serializer(packed, encoding.since))
+        self.node = node
+
+    def includes(self) -> set[str]:
+        return {
+            names.runtime("detail/color"),
+            names.header(self.node.struct),
+            *primitive_includes(Primitive(self.node.encoded)),
+        }
 
 
 class BuiltinField(SerializerField):
@@ -687,6 +706,8 @@ def make_field_generator(schema: Schema, node: Type, encoding: Encoding, where: 
             return EnumField(schema, node, encoding, where)
         case StructRef() | EnumName():
             return ReferenceField(schema, node, encoding, where)
+        case Color():
+            return ColorField(schema, node, encoding, where)
         case BuiltinRef():
             return BuiltinField(schema, node, encoding, where)
         case Literal():

@@ -259,15 +259,21 @@ func mismatch(want, got any, path string) string {
 	same := false
 	switch got := got.(type) {
 	case caseObject:
-		if text, isText := want.(string); isText && colour.MatchString(text) {
-			spelled := "#"
-			for _, entry := range got {
-				spelled += fmt.Sprintf("%02x", entry.value)
-			}
-			same = spelled == text
-			break
-		}
 		object, isObject := want.(map[string]any)
+		if text, isText := want.(string); isText && colour.MatchString(text) {
+			pairs, _ := hex.DecodeString(text[1:])
+			if len(pairs) != len(got) {
+				break
+			}
+			object, isObject = map[string]any{}, true
+			for index, entry := range got {
+				number := strconv.Itoa(int(pairs[index]))
+				if _, channel := entry.value.(caseFloat); channel {
+					number = strconv.FormatFloat(float64(float32(pairs[(index+1)%len(pairs)])/255), 'g', -1, 32)
+				}
+				object[entry.key] = json.Number(number)
+			}
+		}
 		if !isObject {
 			break
 		}

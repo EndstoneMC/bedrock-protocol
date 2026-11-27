@@ -2,7 +2,7 @@ from collections import Counter
 from typing import override
 
 from bedrock_protocol_compiler.descriptor import CompilerError, Primitive
-from bedrock_protocol_compiler.expression import BOOL, CLASSES, Num, wrap
+from bedrock_protocol_compiler.expression import BOOL, CLASSES, UINT32, Num, wrap
 from bedrock_protocol_compiler.go import names
 from bedrock_protocol_compiler.printer import Printer
 
@@ -229,6 +229,35 @@ class Reference(Value):
     @override
     def case(self, value: str) -> str:
         return f"{atom(value)}.case{self.cased}()"
+
+
+class ColorValue(Reference):
+    """A struct of four float channels packed a byte each, `channels` naming its members from the highest byte."""
+
+    def __init__(self, go: str, cased: str, bound: str, channels: tuple[str, ...], encoded: str) -> None:
+        super().__init__(go, cased, cased, bound)
+        self.channels = channels
+        self.encoded = encoded
+        self.method = names.method(encoded)
+
+    @override
+    def read(self, body: Body) -> str:
+        raw = f"r.Read{self.method}()"
+        packed = f"parseColor({raw})" if self.encoded == "str" else convert(raw, CLASSES[self.encoded], UINT32)
+        read = [body.fresh("c") for _ in self.channels]
+        body.line(f"{', '.join(read)} := unpackColor({packed})")
+        members = ", ".join(f"{member}: {channel}" for member, channel in zip(self.channels, read, strict=True))
+        return f"&{self.type}{{{members}}}"
+
+    @override
+    def write(self, body: Body, value: str) -> None:
+        packed = body.fresh("p")
+        placed = body.fresh("ok")
+        channels = ", ".join(f"{atom(value)}.Get{member}()" for member in self.channels)
+        body.line(f"{packed}, {placed} := packColor({channels})")
+        body.fail(f"!{placed}", "ErrOutOfRange")
+        written = f"formatColor({packed})" if self.encoded == "str" else convert(packed, UINT32, CLASSES[self.encoded])
+        body.line(f"w.Write{self.method}({written})")
 
 
 class BuiltinValue(Value):

@@ -23,7 +23,7 @@
      },
      "time_left_total_sec": 2.0,
      "max_render_distance": 64.0,
-     "color": 1146447479,
+     "color": "#44556677",
      "dimension_id": 1,
      "attached_to_id": -7,
      "extra_data_payload": {
@@ -38,7 +38,7 @@
       "__class__": "TextDataPayload",
       "text": "hi",
       "use_rotation": true,
-      "background_color": 1146447479,
+      "background_color": "#44556677",
       "line_gap_height": 1.5,
       "depth_test": true,
       "show_backface": true,

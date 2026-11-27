@@ -5,7 +5,7 @@ Script messages and the primitive debug shapes ScriptModuleMinecraft exposes.
 
 from enum import IntEnum
 
-from protocol import field, packet, sentinel, type, uint8, uint16, uvarint64, value
+from protocol import field, int32, packet, sentinel, type, uint8, uint16, uvarint64, value
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -57,7 +57,7 @@ class TextDataPayload:
     text: str
     with field(since=975):
         use_rotation: bool
-        background_color: Color | None
+        background_color: Color | None = field(type=int32)
     line_gap_height: float = field(since=2193)
     with field(since=975):
         depth_test: bool
@@ -112,7 +112,7 @@ class PrimitiveShapeDataPayload:
     scale: float | None
     rotation: Vec3 | None
     time_left_total_sec: float | None
-    color: Color | None
+    color: Color | None = field(type=int32)
     dimension_id: DimensionType
     extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
 
@@ -125,7 +125,7 @@ class PrimitiveShapeDataPayload:
     scale: float | None
     rotation: Vec3 | None
     time_left_total_sec: float | None
-    color: Color | None
+    color: Color | None = field(type=int32)
     dimension_id: DimensionType | None
     attached_to_id: ActorRuntimeID | None = field(since=924)
     extra_data_payload: None | ArrowDataPayload | TextDataPayload | BoxDataPayload | LineDataPayload | SphereDataPayload
@@ -140,7 +140,7 @@ class PrimitiveShapeDataPayload:
     rotation: Vec3 | None
     time_left_total_sec: float | None
     max_render_distance: float | None
-    color: Color | None
+    color: Color | None = field(type=int32)
     dimension_id: DimensionType | None
     attached_to_id: ActorUniqueID | None
     extra_data_payload: (
@@ -180,7 +180,7 @@ class PacketShapeData:
     scale: float | None
     rotation: Vec3 | None
     time_left_total_sec: float | None
-    color: Color | None
+    color: Color | None = field(type=int32)
     text: str | None
     box_bound: Vec3 | None
     end_location: Vec3 | None

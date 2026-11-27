@@ -24,6 +24,7 @@ from bedrock_protocol_compiler.descriptor import (
     Builtin,
     BuiltinRef,
     Choice,
+    Color,
     CompilerError,
     Enum,
     EnumDeclaration,
@@ -246,7 +247,7 @@ def type_leaves(node: Type) -> Iterator[Type]:
 
 def reaches(node: Type | Expression | None) -> Iterator[Struct | Enum | MemberRef]:
     match node:
-        case StructRef(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
+        case StructRef(struct=family) | Color(struct=family) | EnumRef(enum=family) | EnumName(enum=family):
             yield family
         case MemberRef():
             yield node
@@ -290,6 +291,40 @@ def fields_read(node: Type | Expression | None) -> Iterator[str]:
             yield from fields_read(test)
             yield from fields_read(when_true)
             yield from fields_read(when_false)
+
+
+def pack_colors(path: str, struct: Struct, qualified: str) -> None:
+    for index, declaration in enumerate(struct.declarations):
+        fields = tuple(
+            replace(each, type=colored(f"{path}: {qualified}.{each.name}", each.type)) for each in declaration.fields
+        )
+        struct.declarations[index] = replace(declaration, fields=fields)
+    for nested in struct.nested:
+        if isinstance(nested, Struct):
+            pack_colors(path, nested, f"{qualified}.{nested.name}")
+
+
+def colored(where: str, node: Type) -> Type:
+    match node:
+        case StructRef(struct=family, excluded=None, encoded=str(encoded)) if all(
+            len(declaration.fields) == 4
+            and all(
+                each.type == Primitive("float")
+                and each.range == declaration.range
+                and each.when is None
+                and each.duplicate is None
+                for each in declaration.fields
+            )
+            for declaration in family.declarations
+        ):
+            if encoded != "str" and WIDTHS[encoded][1] != 32:
+                raise CompilerError(f"{where}: type packs four floats only into str or a 32-bit integer")
+            return Color(family, encoded)
+        case Optional(element=element) | List(element=element) | Array(element=element):
+            return replace(node, element=colored(where, element))
+        case TypeChoice(when_true=when_true, when_false=when_false):
+            return replace(node, when_true=colored(where, when_true), when_false=colored(where, when_false))
+    return node
 
 
 def check(package: Package) -> None:
@@ -577,6 +612,10 @@ class Builder:
             for source in self.sources.values()
         )
         package = Package(self.versions, self.releases, modules)
+        for module in modules:
+            for family in module.families:
+                if isinstance(family, Struct):
+                    pack_colors(f"{module.stem}.py", family, family.name)
         check(package)
         return package
 
