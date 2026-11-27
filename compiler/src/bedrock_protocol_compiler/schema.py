@@ -205,6 +205,12 @@ def name_coded(node: Type) -> Iterator[Enum]:
             yield from name_coded(when_false)
 
 
+def channels(model: StructModel) -> list[str]:
+    """A packed colour's member names, from the one in its highest byte."""
+    *rest, highest = (slot.name for slot in model.slots)
+    return [highest, *rest]
+
+
 def outermost(family: Struct | Enum) -> Struct | Enum:
     return family if family.owner is None else outermost(family.owner)
 

@@ -44,7 +44,7 @@ from bedrock_protocol_compiler.java.value import (
     literal,
 )
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, strip
+from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, channels, strip
 
 
 class FieldContext:
@@ -110,7 +110,7 @@ class FieldContext:
                 )
             case Color(struct=family, encoded=encoded):
                 model = self.schema.encoding_at(family, self.encoding.since).model
-                members = [names.pascal(each.name) for each in model.slots]
+                members = [names.pascal(name) for name in channels(model)]
                 return PackedColor(names.qualified(self.schema, model), members, encoded, label)
             case EnumName():
                 enum_type = self.enum_type(node)

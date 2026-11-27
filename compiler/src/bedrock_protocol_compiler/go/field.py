@@ -44,7 +44,16 @@ from bedrock_protocol_compiler.go.value import (
 from bedrock_protocol_compiler.java.names import pascal, suffix
 from bedrock_protocol_compiler.java.union import case_name
 from bedrock_protocol_compiler.printer import Printer
-from bedrock_protocol_compiler.schema import Encoding, EnumModel, Naming, Numbering, Schema, StructModel, strip
+from bedrock_protocol_compiler.schema import (
+    Encoding,
+    EnumModel,
+    Naming,
+    Numbering,
+    Schema,
+    StructModel,
+    channels,
+    strip,
+)
 
 
 class FieldContext:
@@ -104,12 +113,12 @@ class FieldContext:
                 )
             case Color(struct=family, encoded=encoded):
                 child = self.schema.encoding_at(family, self.encoding.since)
-                members = [pascal(each.name) for each in child.fields]
+                members = tuple(pascal(name) for name in channels(child.model))
                 return ColorValue(
                     names.declared(self.schema, child.model),
                     suffix(child),
                     self.bound(child.model),
-                    (members[-1], *members[:-1]),
+                    members,
                     encoded,
                 )
             case BuiltinRef(builtin=builtin):

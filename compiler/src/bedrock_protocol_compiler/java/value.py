@@ -440,15 +440,15 @@ class Reference(Value):
 
 
 class PackedColor(Reference):
-    """A struct of four floats coded as one 32-bit value, its last member in the top byte."""
+    """A struct of four floats coded as one 32-bit value, `channels` naming its members from the top byte."""
 
-    def __init__(self, java: str, members: list[str], encoded: str, label: str) -> None:
+    def __init__(self, java: str, channels: list[str], encoded: str, label: str) -> None:
         read, write = READS[encoded][0], WRITES[encoded]
         if encoded == "str":
             read = "ByteBufCodec.parseColor(ByteBufCodec.readByteArray(buf))"
             write = write.format('"#" + Integer.toHexString({})')
         super().__init__(java, f"{java}.getDefaultInstance()", read, write, label)
-        self.channels = [members[-1], *members[:-1]]
+        self.channels = channels
 
     @override
     def read(self, body: Body) -> str:
