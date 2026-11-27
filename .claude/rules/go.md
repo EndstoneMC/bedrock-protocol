@@ -30,7 +30,7 @@ paths:
 - Wrap a union in a struct of its own, `Owner_Field` holding the oneof as its one field, as a list, array or map element, inside an optional, or beside a union whose case names it shares.
 - Name a union case after its value domain, as `java.md` does.
 - Fail the compile when a generated type, constant, function or method would equal another, naming the two declarations or union cases that give it.
-- Give each encoding of a model an unexported method pair `encode<N>` and `decode<N>` on its message, `Cereal` or `Manual` appended for a non-`Default` key, `Exclude` and the member in Pascal case for an `Exclude<T, &T::member>` one, and `As` and the encoding in Pascal case for a `Reencode<T, E>` one, and call a child's pair by name through the encoding the field's own encoding reaches, never through a selector.
+- Give each encoding of a model an unexported method pair `encode<N>` and `decode<N>` on its message, `Cereal` or `Manual` appended for a non-`Default` key, `Exclude` and the member in Pascal case for an `Exclude<T, &T::member>` one, and `As` and the encoding in Pascal case for an `As<T, E>` one, and call a child's pair by name through the encoding the field's own encoding reaches, never through a selector.
 - Give a packet the unexported selectors `encodeAt` and `decodeAt`, and in its test half `caseAt`, one `case` per run of its default-mode encodings, and no other type a selector.
 - Encode a map in the order C++ `std::map` holds it: strings by their bytes, numbers by `<`.
 - Check a value on encode only where its encoding is narrower than its field, failing one whose cast back differs, or a packed colour's channel outside 0 to 1, with `ErrOutOfRange`.

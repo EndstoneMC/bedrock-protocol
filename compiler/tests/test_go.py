@@ -847,7 +847,7 @@ def test_a_case_names_the_class_of_a_struct_union_case(emitted):
     assert '\t\ta0 = caseClass("S", x.GetS().case1())\n' in text
 
 
-def test_a_type_choice_emits_reencoded_codecs_and_branches_in_go(go):
+def test_a_type_choice_emits_as_codecs_and_branches_in_go(go):
     source = (
         "class Entry:\n    name: str\n    values: list[uint32]\n\n"
         "@packet(id=1)\nclass P:\n    table: list[str]\n"

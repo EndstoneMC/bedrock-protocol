@@ -115,7 +115,7 @@ class Encoding:
     mode: SerializationMode = field(init=False)
     served: dict[SerializationMode, list[Range]] = field(default_factory=dict)
     excluded: str | None = None
-    reencoded: str | None = None
+    encoded_as: str | None = None
 
 
 @dataclass(eq=False)
@@ -380,7 +380,7 @@ class Schema:
             )
             self.model_encodings[exclusion.model].append(exclusion)
         for model, listed in self.model_encodings.items():
-            listed.sort(key=lambda encoding: (encoding.since, encoding.excluded or "", encoding.reencoded or ""))
+            listed.sort(key=lambda encoding: (encoding.since, encoding.excluded or "", encoding.encoded_as or ""))
             for version in self.versions:
                 modes = {
                     mode
@@ -632,7 +632,7 @@ class Schema:
                 child = self.encoded[family, version]
                 kept = tuple(each for each in child.fields if each.name != excluded)
                 dropped = excluded if len(kept) < len(child.fields) else None
-                reencoded: str | None = None
+                encoded_as: str | None = None
                 if encoded is not None:
                     rewritten = []
                     changed = False
@@ -648,10 +648,10 @@ class Schema:
                             rewritten.append(each)
                     if changed:
                         kept = tuple(rewritten)
-                        reencoded = encoded
-                if dropped is not None or reencoded is not None:
+                        encoded_as = encoded
+                if dropped is not None or encoded_as is not None:
                     child = self.project_encoding(
-                        family, child.model, kept, version, self.exclusions, dropped, reencoded
+                        family, child.model, kept, version, self.exclusions, dropped, encoded_as
                     )
                     self.excluding.setdefault(child, {}).setdefault(family, set()).add(version)
                 return reached.setdefault(node, child)
@@ -1018,7 +1018,7 @@ class Schema:
         version: int,
         encodings: dict[tuple[object, ...], Encoding],
         excluded: str | None = None,
-        reencoded: str | None = None,
+        encoded_as: str | None = None,
     ) -> Encoding:
         sentinels: dict[MemberRef, int] = {}
         for each in fields:
@@ -1084,7 +1084,7 @@ class Schema:
         }
         return encodings.setdefault(
             (model, key, frozenset(sentinels.items())),
-            Encoding(model, fields, reached, numbers | sentinels, excluded=excluded, reencoded=reencoded),
+            Encoding(model, fields, reached, numbers | sentinels, excluded=excluded, encoded_as=encoded_as),
         )
 
     def shapes(self, family: Struct | Enum) -> list[Shape]:

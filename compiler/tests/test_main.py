@@ -3104,16 +3104,16 @@ def test_a_packed_color_includes_the_color_runtime_in_cpp(generate):
     assert "#include <bedrock/protocol/detail/color.hpp>\n" in header
 
 
-def test_a_type_choice_emits_reencode_specializations_and_branches_in_cpp(generate):
+def test_a_type_choice_emits_as_specializations_and_branches_in_cpp(generate):
     out = generate({"a": TYPE_CHOICE})
     header = (out / "a.h").read_text()
     source = (out / "a.cpp").read_text()
 
-    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint8_t>, 1> {" in header
-    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint16_t>, 1> {" in header
-    assert "struct Serializer<Reencode<::bedrock::protocol::Entry, std::uint32_t>, 1> {" not in header
+    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint8_t>, 1> {" in header
+    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint16_t>, 1> {" in header
+    assert "struct Serializer<As<::bedrock::protocol::Entry, std::uint32_t>, 1> {" not in header
     assert "if ((static_cast<std::int64_t>(value.table.size())) <= (256)) {" in source
     assert "} else if ((static_cast<std::int64_t>(value.table.size())) <= (65536)) {" in source
-    assert "Serializer<Reencode<::bedrock::protocol::Entry, std::uint8_t>, 1>::serialize(stream, e0);" in source
-    assert "Serializer<Reencode<::bedrock::protocol::Entry, std::uint16_t>, 1>::deserialize(stream);" in source
+    assert "Serializer<As<::bedrock::protocol::Entry, std::uint8_t>, 1>::serialize(stream, e0);" in source
+    assert "Serializer<As<::bedrock::protocol::Entry, std::uint16_t>, 1>::deserialize(stream);" in source
     assert "Serializer<::bedrock::protocol::Entry, 1>::serialize(stream, e0);" in source

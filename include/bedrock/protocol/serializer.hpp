@@ -35,7 +35,7 @@ struct UVarInt32;
 struct UVarInt64;
 
 template <typename T, typename Encoded>
-struct Reencode;
+struct As;
 
 template <typename T, int V, SerializationMode M = SerializationMode::Default>
 concept Serializable = requires(BinaryWriter &writer, BinaryReader &reader, const T &value) {

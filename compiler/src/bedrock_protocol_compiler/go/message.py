@@ -57,7 +57,7 @@ class Codec:
         self.name = suffix(encoding)
         self.slots = slots
         self.wrapped = {union.holder: union for union in wrapped}
-        self.cased = encoding.excluded is None and encoding.reencoded is None
+        self.cased = encoding.excluded is None and encoding.encoded_as is None
 
 
 class MessageGenerator:
@@ -79,7 +79,7 @@ class MessageGenerator:
                 and model.nested
                 and self.packet_id is None
                 and encoding.excluded is None
-                and encoding.reencoded is None
+                and encoding.encoded_as is None
             ):
                 continue
             slots, wrapped = self.build(encoding)

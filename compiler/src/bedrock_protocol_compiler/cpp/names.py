@@ -71,11 +71,11 @@ def serializer(
     version: int | str,
     mode: SerializationMode = SerializationMode.DEFAULT,
     excluded: str | None = None,
-    reencoded: str | None = None,
+    encoded_as: str | None = None,
 ) -> str:
     target = spelled if excluded is None else f"Exclude<{spelled}, &{spelled}::{excluded}>"
-    if reencoded is not None:
-        target = f"Reencode<{target}, {ENCODINGS[reencoded]}>"
+    if encoded_as is not None:
+        target = f"As<{target}, {ENCODINGS[encoded_as]}>"
     suffix = "" if mode is SerializationMode.DEFAULT else f", SerializationMode::{mode.name.capitalize()}"
     return f"Serializer<{target}, {version}{suffix}>"
 

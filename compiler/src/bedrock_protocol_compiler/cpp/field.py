@@ -272,8 +272,8 @@ class ReferenceField(SerializerField):
             child = encoding.reached[node]
             assert isinstance(child, Encoding)
             spelled = names.qualified(schema, child.model)
-            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded, child.reencoded)
-            if child.reencoded is not None and names.ENCODINGS[child.reencoded].startswith("std::"):
+            implementation = names.serializer(spelled, *schema.call(encoding, node), child.excluded, child.encoded_as)
+            if child.encoded_as is not None and names.ENCODINGS[child.encoded_as].startswith("std::"):
                 self.extra_includes.add("<cstdint>")
         else:
             self.family = node.enum

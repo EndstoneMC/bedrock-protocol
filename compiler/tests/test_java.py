@@ -2389,7 +2389,7 @@ def test_a_big_endian_width_the_runtime_lacks_is_a_compiler_error(build_package,
         main([str(tmp_path / "protocol"), "--java-out", str(tmp_path / "java")])
 
 
-def test_a_type_choice_emits_reencoded_codecs_and_branches_in_java(build_package, tmp_path):
+def test_a_type_choice_emits_as_codecs_and_branches_in_java(build_package, tmp_path):
     source = (
         HEADER
         + "class Entry:\n    name: str\n    values: list[uint32]\n\n"

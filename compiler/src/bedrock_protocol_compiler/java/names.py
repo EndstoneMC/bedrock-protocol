@@ -138,8 +138,8 @@ def bounded(schema: Schema, since: int | None, until: int | None) -> list[str]:
 def suffix(encoding: Encoding) -> str:
     mode = "" if encoding.mode is SerializationMode.DEFAULT else pascal(encoding.mode.name.lower())
     excluded = "" if encoding.excluded is None else f"Exclude{pascal(encoding.excluded)}"
-    reencoded = "" if encoding.reencoded is None else f"As{pascal(encoding.reencoded)}"
-    return f"{encoding.since}{mode}{excluded}{reencoded}"
+    encoded_as = "" if encoding.encoded_as is None else f"As{pascal(encoding.encoded_as)}"
+    return f"{encoding.since}{mode}{excluded}{encoded_as}"
 
 
 def codec(encoding: Encoding) -> str:

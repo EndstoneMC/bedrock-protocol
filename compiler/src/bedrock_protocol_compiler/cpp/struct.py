@@ -34,9 +34,9 @@ class StructGenerator:
         self.field_includes: set[str] = set()
         self.implemented: list[tuple[Encoding, list[tuple[Field, FieldGenerator]]]] = []
         for encoding in schema.encodings(model):
-            if not encoding.fields and model.nested and encoding.excluded is None and encoding.reencoded is None:
+            if not encoding.fields and model.nested and encoding.excluded is None and encoding.encoded_as is None:
                 continue
-            if encoding.reencoded is not None and names.ENCODINGS[encoding.reencoded].startswith("std::"):
+            if encoding.encoded_as is not None and names.ENCODINGS[encoding.encoded_as].startswith("std::"):
                 self.field_includes.add("<cstdint>")
             fields: list[tuple[Field, FieldGenerator]] = []
             for each in encoding.fields:
@@ -176,7 +176,7 @@ class StructGenerator:
             child.serializer_declaration(p)
         for encoding, _ in self.implemented:
             serializer = names.serializer(
-                self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.reencoded
+                self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.encoded_as
             )
             p.emit(
                 """
@@ -217,7 +217,7 @@ class StructGenerator:
 
                 """,
                 serializer=names.serializer(
-                    self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.reencoded
+                    self.qualified, encoding.since, encoding.mode, encoding.excluded, encoding.encoded_as
                 ),
                 qualified=self.qualified,
                 encoded=names.ENCODED,

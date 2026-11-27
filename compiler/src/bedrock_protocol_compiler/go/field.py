@@ -199,7 +199,7 @@ class FieldContext:
 
 
 def full(schema: Schema, encoding: Encoding) -> Encoding:
-    if encoding.excluded is None and encoding.reencoded is None:
+    if encoding.excluded is None and encoding.encoded_as is None:
         return encoding
     family = next(iter(encoding.runs))
     return schema.encoding_at(family, encoding.since)

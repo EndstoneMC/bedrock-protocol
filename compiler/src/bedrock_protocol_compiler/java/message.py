@@ -86,7 +86,7 @@ class MessageGenerator:
                 and model.nested
                 and self.packet_id is None
                 and encoding.excluded is None
-                and encoding.reencoded is None
+                and encoding.encoded_as is None
             ):
                 continue
             coded = self.build(encoding, scratch)
