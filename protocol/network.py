@@ -1,7 +1,4 @@
-"""The connection itself, from network/.
-
-The packet id registry, login and handshake, disconnect, compression, blob-cache negotiation and server stats.
-"""
+"""Packets and types relating to the network connection."""
 
 from enum import IntEnum
 from typing import Union
@@ -648,13 +645,6 @@ class GamePublishSetting(IntEnum, int32):
     FRIENDS_ONLY = 2
     FRIENDS_OF_FRIENDS = 3
     PUBLIC = 4
-
-
-class ServerEditorConnectionPolicy(IntEnum, int32):
-    MATCH_WORLD_TYPE = 0
-    EDITOR_ONLY = 1
-    VANILLA_ONLY = 2
-    MIXED = 3
 
 
 class NetworkPermissions:

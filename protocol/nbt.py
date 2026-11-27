@@ -1,4 +1,4 @@
-"""NBT (Named Binary Tag) types, hand-written in include/bedrock/protocol/nbt.hpp."""
+"""Types relating to NBT data."""
 
 from protocol import builtin
 

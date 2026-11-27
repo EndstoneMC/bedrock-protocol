@@ -1,14 +1,11 @@
-"""Server-driven screens and HUD, from dataDrivenUI/, world/Waypoint*.h and util/HudElementsEnum.h.
-
-Forms, data-driven UI, HUD elements and the locator bar.
-"""
+"""Packets and types relating to forms, server-driven screens and the HUD."""
 
 import uuid
 from enum import IntEnum
 
 from protocol import field, int32, packet, sentinel, type, uint8, uint32, uvarint32, uvarint64, value
 from protocol.actor import ActorUniqueID
-from protocol.common import Color, DimensionType, Vec2, Vec3
+from protocol.common import Color, Vec2, WorldPosition
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -98,11 +95,6 @@ class ClientboundTextureShiftPacket:
     current_length_in_ticks: uvarint64
     total_length_in_ticks: uvarint64
     enabled: bool
-
-
-class WorldPosition:
-    pos: Vec3
-    dimension_type: DimensionType
 
 
 class WaypointGroup:

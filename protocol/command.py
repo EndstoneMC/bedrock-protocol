@@ -1,13 +1,11 @@
-"""Commands, from server/commands/.
-
-The command tree, origins, output, soft enums, and both permission ladders.
-"""
+"""Packets and types relating to commands."""
 
 import uuid
 from enum import IntEnum, auto
 
 from protocol import field, int8, int32, int64, packet, type, uint8, uint16, uint32, uvarint32, value, varint64
 from protocol.actor import ActorRuntimeID, ActorUniqueID
+from protocol.block import CommandBlockMode
 from protocol.common import BlockPos
 from protocol.network import NetworkBlockPosition
 
@@ -135,12 +133,6 @@ class AvailableCommandsPacket:
     commands: list[CommandData]
     soft_enums: list[SoftEnumData]
     constraints: list[ConstrainedValueData]
-
-
-class CommandBlockMode(IntEnum, uint16):
-    NORMAL = 0
-    REPEATING = 1
-    CHAIN = 2
 
 
 @packet(id=78, until=944)

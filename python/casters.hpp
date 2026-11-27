@@ -18,7 +18,7 @@
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
-#include "bedrock/protocol/data_store.hpp"
+#include "bedrock/protocol/datastore.hpp"
 #include "bedrock/protocol/detail/reflect.hpp"
 #include "bedrock/protocol/nbt.hpp"
 #include "bedrock/protocol/uuid.hpp"

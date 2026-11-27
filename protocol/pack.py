@@ -1,14 +1,12 @@
-"""Resource and behaviour packs, from Core/Resource/ and engine/PackInfrastructure.
-
-Pack identity, versions, the download handshake, the applied stack, pack settings.
-"""
+"""Packets and types relating to resource and behaviour packs."""
 
 import uuid
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int8, int32, packet, sentinel, type, uint8, uint16, uint32, uint64
-from protocol.game import Experiments
+from protocol import field, int8, int32, packet, sentinel, type, uint16, uint32, uint64
+from protocol.editor import EditorPackType
+from protocol.level import Experiments
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -107,13 +105,6 @@ class PackInstanceId:
     pack_id: str
     version: str
     subpack_name: str
-
-
-@type(since=2259)
-class EditorPackType(IntEnum, uint8):
-    NONE = 0
-    CORE = 1
-    ANNOTATION = 2
 
 
 @packet(id=7)

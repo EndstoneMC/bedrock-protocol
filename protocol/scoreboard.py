@@ -1,4 +1,4 @@
-"""Scoreboard ids, identities, objectives and scores, from world/scores/."""
+"""Packets and types relating to scoreboards."""
 
 from enum import IntEnum
 from typing import Literal
@@ -87,7 +87,7 @@ class ScoreboardIdentityPacketInfo:
 
 @packet(id=108, until=2168)
 class SetScorePacket:
-    # TODO: one mScoreInfo, without RemovedScorePacketInfo, once field(when=) can read the enclosing packet
+    # TODO: one score_info, without RemovedScorePacketInfo, once field(when=) can read the enclosing packet
     class RemovedScorePacketInfo:
         scoreboard_id: ScoreboardId
         objective_name: str
@@ -105,7 +105,7 @@ class SetScorePacket:
 
 @packet(id=112, until=2168)
 class SetScoreboardIdentityPacket:
-    # TODO: one mIdentityInfo once field(when=) can read the enclosing packet
+    # TODO: one identity_info once field(when=) can read the enclosing packet
     type: ScoreboardIdentityPacketType
     identity_info: list[ScoreboardIdentityPacketInfo] = field(
         when=lambda p: p.type == ScoreboardIdentityPacketType.UPDATE

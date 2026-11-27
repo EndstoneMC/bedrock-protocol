@@ -1,14 +1,10 @@
-"""Cameras, from world/level/camera/ and world/level/controlscheme/.
-
-Presets, shake, instructions, splines, aim assist, and the control scheme.
-"""
+"""Packets and types relating to cameras."""
 
 from enum import IntEnum
 
 from protocol import field, int32, int64, packet, sentinel, type, uint8, uint32
 from protocol.actor import ActorUniqueID
-from protocol.common import Vec2, Vec3
-from protocol.eas import EasingType
+from protocol.common import EasingType, Vec2, Vec3
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"

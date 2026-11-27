@@ -1,8 +1,4 @@
-"""The player as a subject, from world/actor/player/.
-
-Respawn state, damage cause, armour slots, client options, the player list, location and property overrides, AddPlayer.
-Not abilities -- those are in ability.py.
-"""
+"""Packets and types relating to players."""
 
 import uuid
 from enum import IntEnum, auto
@@ -19,8 +15,9 @@ from protocol.actor import (
     SynchedActorData,
 )
 from protocol.common import BlockPos, Color, DimensionType, Vec2, Vec3
-from protocol.game import GameType
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
+from protocol.level import GameType
+from protocol.movement import ServerAuthMovementMode
 from protocol.network import NetworkBlockPosition
 from protocol.skin import SerializedSkinRef
 
@@ -153,7 +150,7 @@ class ArmorSlot(IntEnum, int32):
     TORSO = 1
     LEGS = 2
     FEET = 3
-    # TODO: BDS before 712 has four slots (std::bitset<4>); gate BODY at 712 once HUMANOID_COUNT before 712 is known
+    # TODO: four slots before 712; gate BODY at 712 once HUMANOID_COUNT before 712 is known
     BODY = 4
     HUMANOID_COUNT = value(4, synonym=True)
     COUNT = sentinel()
@@ -364,6 +361,26 @@ class AddPlayerPacket:
     passenger_of_block_data: PassengerOfBlockArguments | None = field(since=2225)
     device_id: str
     build_platform: BuildPlatform = field(type=int32)
+
+
+@packet(id=189)
+class DeathInfoPacket:
+    class DeathCauseMessage:
+        attack_name: str
+        message_list: list[str]
+
+    death_cause_message: DeathCauseMessage
+
+
+class SyncedPlayerMovementSettings:
+    authority_mode: ServerAuthMovementMode = field(type=varint32, until=818)
+    rewind_history_size: varint32
+    server_auth_block_breaking: bool
+
+
+class PlayerPartyInfo:
+    party_id: str
+    is_leader: bool
 
 
 @type(until=2168)

@@ -1,4 +1,4 @@
-"""Chunk and sub-chunk transfer, radius negotiation and publisher updates, from world/level/chunk/."""
+"""Packets and types relating to chunk transfer and chunk radius."""
 
 from enum import IntEnum
 

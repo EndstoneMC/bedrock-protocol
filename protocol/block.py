@@ -1,12 +1,8 @@
-"""The level's block space, from world/level/block/ and world/level/voxelshape/.
-
-Blocks, block actors, sub-chunk block changes, the level events fired over them, and voxel shape volumes.
-Not chunk transfer -- world/level/chunk/, in chunk.py.
-"""
+"""Packets and types relating to blocks, block actors and level events."""
 
 from enum import IntEnum
 
-from protocol import field, int32, packet, uint8, uint16, uint32, uvarint32, uvarint64, varint32
+from protocol import field, int32, packet, sentinel, type, uint8, uint16, uint32, uvarint32, uvarint64, varint32
 from protocol.actor import ActorUniqueID
 from protocol.common import BlockPos, BlockRuntimeId, DimensionType, Vec3
 from protocol.nbt import CompoundTag, CompoundTagData
@@ -110,30 +106,6 @@ class UpdateSubChunkBlocksPacket:
     blocks_changed: UpdateSubChunkBlocksChangedInfo
 
 
-type RegistryHandle = uint16
-
-
-class SerializableCells:
-    x_size: uint8
-    y_size: uint8
-    z_size: uint8
-    storage: list[uint8]
-
-
-class SerializableVoxelShape:
-    cells: SerializableCells
-    x_coords: list[float]
-    y_coords: list[float]
-    z_coords: list[float]
-
-
-@packet(id=337, since=924)
-class VoxelShapesPacket:
-    shapes: list[SerializableVoxelShape]
-    name_map: dict[str, RegistryHandle]
-    custom_shape_count: uint16 = field(since=944)
-
-
 @packet(id=25)
 class LevelEventPacket:
     event_id: varint32
@@ -157,6 +129,61 @@ class SpawnParticleEffectPacket:
 
 
 type EntityNetId = uvarint32
+
+
+class BlockEntry:
+    name: str
+    properties: CompoundTag
+
+
+@type(since=2168)
+class ServerBlockProperty:
+    name: str
+    tag: CompoundTag
+
+
+class StructureBlockType(IntEnum, int32):
+    DATA = 0
+    SAVE = 1
+    LOAD = 2
+    CORNER = 3
+    INVALID = 4
+    EXPORT = 5
+    COUNT = sentinel()
+
+
+class CommandBlockMode(IntEnum, uint16):
+    NORMAL = 0
+    REPEATING = 1
+    CHAIN = 2
+
+
+class LabTableReactionType(IntEnum, uint8):
+    NONE = 0
+    ICE_BOMB = 1
+    BLEACH = 2
+    ELEPHANT_TOOTHPASTE = 3
+    FERTILIZER = 4
+    HEAT_BLOCK = 5
+    MAGNESIUM_SALTS = 6
+    MISC_FIRE = 7
+    MISC_EXPLOSION = 8
+    MISC_LAVA = 9
+    MISC_MYSTICAL = 10
+    MISC_SMOKE = 11
+    MISC_LARGE_SMOKE = 12
+
+
+@packet(id=109)
+class LabTablePacket:
+    class Type(IntEnum, uint8):
+        START_COMBINE = 0
+        START_REACTION = 1
+        RESET = 2
+
+    type: Type
+    pos: BlockPos
+    reaction: LabTableReactionType
 
 
 @packet(id=167, until=2259)

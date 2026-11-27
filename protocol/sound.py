@@ -1,7 +1,4 @@
-"""Sound events and handles, from sound/ and world/level/LevelSoundEvent.h.
-
-The packets that play, stop and update sound, and the LevelSoundEvent table.
-"""
+"""Packets and types relating to sounds and music."""
 
 from enum import IntEnum, auto
 from typing import Literal

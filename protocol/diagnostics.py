@@ -1,14 +1,10 @@
-"""What the client reports for diagnosis, from profile/ and debug/.
-
-Whisker scopes, memory categories, frame and system timings, debug markers and the editor channel.
-"""
+"""Packets and types relating to client diagnostics and debugging."""
 
 from enum import IntEnum, auto
 
 from protocol import field, int32, packet, sentinel, type, uint8, uint32, uint64, value
 from protocol.actor import ActorUniqueID
 from protocol.common import Color, Vec3
-from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -205,19 +201,6 @@ class ServerboundDiagnosticsPacket:
     system_timings: list[SystemDiagnosticTimingInfo] = field(since=975)
     system_categories: list[SystemCategory] | None = field(since=2168)
     whisker_data: list[ScopeDataSummary] = field(since=1001)
-
-
-@packet(id=190, until=944)
-class EditorNetworkPacket:
-    route_to_manager: bool = field(since=712)
-    payload: CompoundTag
-
-
-@packet(id=190, since=944)
-class EditorNetworkPacket:
-    route_to_manager: bool
-    raw_variant_name: str
-    raw_variant_data: str
 
 
 @packet(id=155)

@@ -1,9 +1,9 @@
-"""Chat, titles, toasts and text filtering, from textobject/."""
+"""Packets and types relating to chat, titles, toasts and text filtering."""
 
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int32, packet, uint8, varint32
+from protocol import field, int32, packet, type, uint8, varint32
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -132,6 +132,18 @@ class SetTitlePacket:
     xuid: str
     platform_online_id: str
     filtered_title_text: str = field(since=712)
+
+
+@type(since=766, until=2168)
+class RedactableString:
+    unredacted_string: str
+    redacted_string: str
+
+
+@type(since=2168)
+class RedactableString:
+    unredacted_string: str
+    redacted_string: str | None
 
 
 @packet(id=163, until=671)

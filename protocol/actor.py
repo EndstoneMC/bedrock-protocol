@@ -1,9 +1,4 @@
-"""The actor as a subject, from world/actor/.
-
-Id aliases, links, events, synched data, the ActorType registry, and the packets that spawn, remove and animate one.
-Not the player -- world/actor/player/ is player.py.
-Not movement -- network/packet/, in movement.py.
-"""
+"""Packets and types relating to actors."""
 
 import uuid
 from enum import IntEnum, auto
@@ -183,7 +178,7 @@ class ActorFlags(IntEnum, int32):
     with value(until=2259):
         COUNT = auto()
     with value(since=2259):
-        COUNT = 133  # TODO: 131 and 132 unnamed until a header branch above r26_u6
+        COUNT = 133  # TODO: name 131 and 132
 
 
 class ActorDataIDs(IntEnum, uint8):
@@ -870,15 +865,6 @@ class SpawnExperienceOrbPacket:
 @packet(id=119)
 class AvailableActorIdentifiersPacket:
     identifier_list: CompoundTag
-
-
-@packet(id=189)
-class DeathInfoPacket:
-    class DeathCauseMessage:
-        attack_name: str
-        message_list: list[str]
-
-    death_cause_message: DeathCauseMessage
 
 
 @packet(id=165)

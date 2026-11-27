@@ -1,16 +1,14 @@
-"""Structures and the harness that lays them out, from world/level/levelgen/structure/ and gametest/.
-
-Structure blocks, templates, jigsaws, features, ticking areas.
-"""
+"""Packets and types relating to structures and game tests."""
 
 from enum import IntEnum
 
-from protocol import field, int32, packet, sentinel, type, uint8, uint32, value, varint32
+from protocol import field, packet, sentinel, type, uint8, uint32, value, varint32
 from protocol.actor import ActorUniqueID
+from protocol.block import StructureBlockType
 from protocol.common import BlockPos, Vec3
-from protocol.item_stack import RedactableString
 from protocol.nbt import CompoundTag
 from protocol.network import NetworkBlockPosition
+from protocol.text import RedactableString
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -18,16 +16,6 @@ go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
 type RandomSeed = uint32
-
-
-class StructureBlockType(IntEnum, int32):
-    DATA = 0
-    SAVE = 1
-    LOAD = 2
-    CORNER = 3
-    INVALID = 4
-    EXPORT = 5
-    COUNT = sentinel()
 
 
 class StructureRedstoneSaveMode(IntEnum, uint8):

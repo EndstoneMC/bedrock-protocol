@@ -1,27 +1,8 @@
-"""Containers and inventory options, from world/containers/ and world/inventory/.
-
-Container ids and types, screen options, furnace, stonecutter and trade windows, equipment.
-Not the item-stack request/response protocol -- world/inventory/network/, in item_stack.py.
-Not the legacy transaction family -- world/inventory/transaction/, in transaction.py.
-"""
+"""Packets and types relating to containers, inventories and equipment."""
 
 from enum import IntEnum
 
-from protocol import (
-    field,
-    int8,
-    int16,
-    int32,
-    packet,
-    sentinel,
-    type,
-    uint8,
-    uint32,
-    uvarint32,
-    uvarint64,
-    value,
-    varint32,
-)
+from protocol import field, int8, int32, packet, sentinel, type, uint8, uint32, uvarint32, uvarint64, value, varint32
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import BlockPos
 from protocol.item import NetworkItemStackDescriptor, SerializedNetworkItemStackDescriptor
@@ -277,12 +258,6 @@ class GuiDataPickItemPacket:
     item_name: str
     item_effect_name: str
     slot: int32
-
-
-@packet(id=142)
-class CompletedUsingItemPacket:
-    item_id: int16
-    item_use_method: int32
 
 
 @packet(id=306)

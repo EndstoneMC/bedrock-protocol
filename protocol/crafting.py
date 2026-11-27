@@ -1,57 +1,17 @@
-"""Recipes and their registries, from world/item/crafting/ and world/item/alchemy/.
-
-Recipe payloads, potion and container mixes, material reduction, the lab table.
-Not enchanting -- world/item/enchanting/, in enchanting.py.
-"""
+"""Packets and types relating to recipes."""
 
 import uuid
 from enum import IntEnum, auto
 
-from protocol import field, int16, int32, packet, sentinel, type, uint8, uint16, uint32, uvarint32, value, varint32
-from protocol.common import BlockPos, BlockRuntimeId
+from protocol import field, int32, packet, type, uint8, uint16, uint32, uvarint32, value, varint32
+from protocol.item import ItemDescriptor, SerializedNetworkItemInstanceDescriptor
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 
 
-class CreativeItemCategory(IntEnum, uint8):
-    ALL = 0
-    CONSTRUCTION = 1
-    NATURE = 2
-    EQUIPMENT = 3
-    ITEMS = 4
-    ITEM_COMMAND_ONLY = 5
-    UNDEFINED = 6
-    NUM_CATEGORIES = sentinel()
-
-
 type RecipeNetId = uvarint32
-type CreativeItemNetId = uvarint32
-
-
-@type(until=2168)
-class SerializedNetworkItemInstanceDescriptor:
-    """NetworkItemInstanceDescriptor::write."""
-
-    id: varint32
-
-    with field(when=lambda d: d.id != 0 and d.id != -1):
-        stack_size: uint16
-        aux_value: uvarint32
-        block_runtime_id: BlockRuntimeId = field(type=varint32)
-        user_data_buffer: bytes
-
-
-@type(since=2168)
-class SerializedNetworkItemInstanceDescriptor:
-    """cerealizer<NetworkItemInstanceDescriptor>::SerializedData."""
-
-    id: varint32
-    stack_size: uint16
-    aux_value: uvarint32
-    block_runtime_id: varint32
-    user_data_buffer: bytes
 
 
 @type(until=2168)
@@ -62,8 +22,6 @@ class SerializedRecipeIngredient:
 
 @type(since=2168)
 class SerializedRecipeIngredient:
-    """cerealizer<RecipeIngredient>::SerializedData."""
-
     descriptor: dict[str, str]
     aux_value: varint32
     stack_size: varint32
@@ -219,60 +177,6 @@ class CraftingDataPacket:
     clear_recipes: bool
 
 
-@type(since=776, until=2168)
-class CreativeGroupInfoPayload:
-    creative_item_category: CreativeItemCategory = field(type=int32)
-    name: str
-    icon: SerializedNetworkItemInstanceDescriptor
-
-
-@type(since=2168)
-class CreativeGroupInfoPayload:
-    creative_item_category: CreativeItemCategory
-    name: str
-    icon: SerializedNetworkItemInstanceDescriptor
-
-
-class CreativeItemEntryPayload:
-    creative_item_net_id: CreativeItemNetId
-    item_descriptor: SerializedNetworkItemInstanceDescriptor
-    group_index: uvarint32 = field(since=776)
-
-
-@packet(id=145)
-class CreativeContentPacket:
-    groups: list[CreativeGroupInfoPayload] = field(since=776)
-    entries: list[CreativeItemEntryPayload]
-
-
-class LabTableReactionType(IntEnum, uint8):
-    NONE = 0
-    ICE_BOMB = 1
-    BLEACH = 2
-    ELEPHANT_TOOTHPASTE = 3
-    FERTILIZER = 4
-    HEAT_BLOCK = 5
-    MAGNESIUM_SALTS = 6
-    MISC_FIRE = 7
-    MISC_EXPLOSION = 8
-    MISC_LAVA = 9
-    MISC_MYSTICAL = 10
-    MISC_SMOKE = 11
-    MISC_LARGE_SMOKE = 12
-
-
-@packet(id=109)
-class LabTablePacket:
-    class Type(IntEnum, uint8):
-        START_COMBINE = 0
-        START_REACTION = 1
-        RESET = 2
-
-    type: Type
-    pos: BlockPos
-    reaction: LabTableReactionType
-
-
 @packet(id=199)
 class UnlockedRecipesPacket:
     class PacketType(IntEnum, uint32):
@@ -284,32 +188,6 @@ class UnlockedRecipesPacket:
 
     packet_type: PacketType = field(type=uint32)
     unlocked_recipes: list[str]
-
-
-@type(until=2168)
-class ItemDescriptor:
-    class InternalType(IntEnum, uint8):
-        INVALID = 0
-        DEFAULT = 1
-        MOLANG = 2
-        ITEM_TAG = 3
-        DEFERRED = 4
-        COMPLEX_ALIAS = 5
-
-    internal_type: InternalType
-    id: int16 = field(when=lambda d: d.internal_type == InternalType.DEFAULT)
-    name: str = field(
-        when=lambda d: (
-            d.internal_type
-            in {InternalType.MOLANG, InternalType.ITEM_TAG, InternalType.DEFERRED, InternalType.COMPLEX_ALIAS}
-        )
-    )
-    molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
-    aux_value: int16 = field(
-        when=lambda d: (
-            d.internal_type == InternalType.DEFERRED or (d.internal_type == InternalType.DEFAULT and d.id != 0)
-        )
-    )
 
 
 @type(until=2168)

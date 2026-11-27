@@ -1,4 +1,4 @@
-"""The scripting data-store sync, from scripting/data_sync/."""
+"""Packets and types relating to scripting data stores."""
 
 from protocol import builtin, double, packet, type, uint32
 

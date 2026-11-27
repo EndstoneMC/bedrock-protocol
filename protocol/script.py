@@ -1,11 +1,8 @@
-"""The scripting surface, from scripting/.
-
-Script messages and the primitive debug shapes ScriptModuleMinecraft exposes.
-"""
+"""Packets and types relating to scripting."""
 
 from enum import IntEnum
 
-from protocol import field, int32, packet, sentinel, type, uint8, uint16, uvarint64, value
+from protocol import field, int32, packet, sentinel, type, uint8, uvarint64, value
 from protocol.actor import ActorRuntimeID, ActorUniqueID
 from protocol.common import Color, DimensionType, Vec2, Vec3
 
@@ -18,17 +15,6 @@ go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
 class ScriptMessagePacket:
     message_id: str
     message_value: str
-
-
-@packet(id=64)
-class SimpleEventPacket:
-    class Subtype(IntEnum, uint16):
-        UNINITIALIZED_SUBTYPE = 0
-        ENABLE_COMMANDS = 1
-        DISABLE_COMMANDS = 2
-        UNLOCK_WORLD_TEMPLATE_SETTINGS = 3
-
-    subtype: Subtype = field(type=uint16)
 
 
 class ScriptPrimitiveShapeType(IntEnum, uint8):
@@ -172,8 +158,6 @@ class DebugDrawerPacket:
 
 @type(until=859)
 class PacketShapeData:
-    """ScriptModuleMinecraft::ScriptPrimitiveShape::populatePacketData."""
-
     network_id: uvarint64
     shape_type: ScriptPrimitiveShapeType | None
     location: Vec3 | None

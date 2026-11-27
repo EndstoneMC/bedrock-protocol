@@ -1,22 +1,16 @@
-"""The item-stack request/response protocol, from world/inventory/network/.
-
-Request actions, responses, and the cereal namespace carrier.
-"""
+"""Packets and types relating to item stack requests and responses."""
 
 from enum import IntEnum
 from typing import Literal
 
-from protocol import field, int16, int32, packet, sentinel, type, uint8, uint16, uvarint32, value, varint32
+from protocol import field, int16, int32, packet, type, uint8, uint16, uvarint32, value, varint32
 from protocol.common import BlockRuntimeId
-from protocol.crafting import (
-    CreativeItemNetId,
-    RecipeNetId,
-    SerializedNetworkItemInstanceDescriptor,
-    SerializedRecipeIngredient,
-)
+from protocol.crafting import RecipeNetId, SerializedRecipeIngredient
 from protocol.inventory import ContainerEnumName, FullContainerName
-from protocol.item import ItemStackNetId, ItemStackRequestId
+from protocol.item import CreativeItemNetId, ItemStackNetId, ItemStackRequestId, SerializedNetworkItemInstanceDescriptor
 from protocol.molang import MolangVersion
+from protocol.telemetry import TextProcessingEventOrigin
+from protocol.text import RedactableString
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -126,39 +120,6 @@ class ItemStackNetResult(IntEnum, uint8):
     CANNOT_REMOVE_ITEM = 65
     CANNOT_CONSUME_ITEM = 66
     SCREEN_STACK_ERROR = 67
-
-
-class TextProcessingEventOrigin(IntEnum, int32):
-    UNKNOWN = -1
-    SERVER_CHAT_PUBLIC = 0
-    SERVER_CHAT_WHISPER = 1
-    SIGN_TEXT = 2
-    ANVIL_TEXT = 3
-    BOOK_AND_QUILL_TEXT = 4
-    COMMAND_BLOCK_TEXT = 5
-    BLOCK_ACTOR_DATA_TEXT = 6
-    JOIN_EVENT_TEXT = 7
-    LEAVE_EVENT_TEXT = 8
-    SLASH_COMMAND_CHAT = 9
-    CARTOGRAPHY_TEXT = 10
-    KICK_COMMAND = 11
-    TITLE_COMMAND = 12
-    SUMMON_COMMAND = 13
-    SERVER_FORM = 14
-    DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI", since=975)
-    COUNT = sentinel()
-
-
-@type(since=766, until=2168)
-class RedactableString:
-    unredacted_string: str
-    redacted_string: str
-
-
-@type(since=2168)
-class RedactableString:
-    unredacted_string: str
-    redacted_string: str | None
 
 
 @type(until=2168)

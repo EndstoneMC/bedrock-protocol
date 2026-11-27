@@ -1,22 +1,14 @@
-"""Education Edition, from codebuilder/ and world/actor/agent/.
-
-The code builder, edu level settings, edu URI resources, and the Agent.
-"""
+"""Packets and types relating to Education Edition."""
 
 from enum import IntEnum
-from typing import Literal
 
 from protocol import field, int8, int32, packet, uint8, varint32
 from protocol.actor import ActorRuntimeID
+from protocol.level import EducationLevelSettings, EduSharedUriResource
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
 go_package = "github.com/EndstoneMC/bedrock-protocol/go/protocol"
-
-
-class EduSharedUriResource:
-    button_name: str
-    link_uri: str
 
 
 @packet(id=150)
@@ -36,32 +28,6 @@ class LessonProgressPacket:
     action: LessonAction = field(type=varint32)
     score: varint32
     activity_id: str
-
-
-class AgentCapabilities:
-    can_modify_blocks: bool | None
-
-
-class EducationLocalLevelSettings:
-    code_builder_override_uri: str | None
-
-
-class ExternalLinkSettings:
-    url: str
-    display_name: str
-
-
-class EducationLevelSettings:
-    code_builder_default_uri: str
-    code_builder_title: str
-    can_resize_code_builder: bool
-    disable_legacy_title_bar: bool
-    post_process_filter: str
-    screenshot_border_resource_path: str
-    agent_capabilities: AgentCapabilities | None
-    local_settings: EducationLocalLevelSettings
-    _deprecated: Literal[False]
-    external_link_settings: ExternalLinkSettings | None
 
 
 @packet(id=137)

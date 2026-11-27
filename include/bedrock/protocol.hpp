@@ -11,10 +11,10 @@
 #include "bedrock/protocol/command.h"        // IWYU pragma: export
 #include "bedrock/protocol/common.h"         // IWYU pragma: export
 #include "bedrock/protocol/crafting.h"       // IWYU pragma: export
-#include "bedrock/protocol/data_store.h"     // IWYU pragma: export
+#include "bedrock/protocol/datastore.h"      // IWYU pragma: export
 #include "bedrock/protocol/diagnostics.h"    // IWYU pragma: export
 #include "bedrock/protocol/dimension.h"      // IWYU pragma: export
-#include "bedrock/protocol/eas.h"            // IWYU pragma: export
+#include "bedrock/protocol/editor.h"         // IWYU pragma: export
 #include "bedrock/protocol/edu.h"            // IWYU pragma: export
 #include "bedrock/protocol/effect.h"         // IWYU pragma: export
 #include "bedrock/protocol/enchanting.h"     // IWYU pragma: export
@@ -51,3 +51,4 @@
 #include "bedrock/protocol/ui.h"             // IWYU pragma: export
 #include "bedrock/protocol/uuid.hpp"         // IWYU pragma: export
 #include "bedrock/protocol/version.hpp"      // IWYU pragma: export
+#include "bedrock/protocol/voxelshape.h"     // IWYU pragma: export

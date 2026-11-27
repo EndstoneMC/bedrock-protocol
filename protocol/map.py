@@ -1,7 +1,4 @@
-"""Maps and photos, from world/level/saveddata/maps/ and world/level/saveddata/photos/.
-
-Decorations, tracked actors, map transfer, photo transfer, video capture.
-"""
+"""Packets and types relating to maps and photos."""
 
 from enum import IntEnum, auto
 

@@ -1,4 +1,4 @@
-"""Server-driven rendering-parameter overrides."""
+"""Packets and types relating to graphics parameter overrides."""
 
 from enum import IntEnum
 

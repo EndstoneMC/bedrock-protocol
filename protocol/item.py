@@ -1,7 +1,4 @@
-"""The item as a subject, from world/item/.
-
-The registry, the stack descriptors and the net ids they carry, the hand slots, trims, cooldowns, book editing.
-"""
+"""Packets and types relating to items."""
 
 from enum import IntEnum
 
@@ -130,6 +127,7 @@ class ItemStackLegacyRequestId:
 
 
 type ItemStackNetIdVariant = ItemStackNetId | ItemStackRequestId | ItemStackLegacyRequestId
+type CreativeItemNetId = uvarint32
 
 
 class NetworkItemStackDescriptor:
@@ -145,8 +143,6 @@ class NetworkItemStackDescriptor:
 
 @type(until=2168)
 class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData."""
-
     id: int16
     stack_size: uint16
     aux_value: uvarint32
@@ -157,14 +153,101 @@ class SerializedNetworkItemStackDescriptor:
 
 @type(since=2168)
 class SerializedNetworkItemStackDescriptor:
-    """cerealizer<NetworkItemStackDescriptor>::SerializedData."""
-
     id: int16
     stack_size: uint16
     aux_value: uvarint32
     net_id_variant: varint32 | None
     block_runtime_id: BlockRuntimeId
     user_data_buffer: bytes
+
+
+class CreativeItemCategory(IntEnum, uint8):
+    ALL = 0
+    CONSTRUCTION = 1
+    NATURE = 2
+    EQUIPMENT = 3
+    ITEMS = 4
+    ITEM_COMMAND_ONLY = 5
+    UNDEFINED = 6
+    NUM_CATEGORIES = sentinel()
+
+
+@type(until=2168)
+class SerializedNetworkItemInstanceDescriptor:
+    id: varint32
+
+    with field(when=lambda d: d.id != 0 and d.id != -1):
+        stack_size: uint16
+        aux_value: uvarint32
+        block_runtime_id: BlockRuntimeId = field(type=varint32)
+        user_data_buffer: bytes
+
+
+@type(since=2168)
+class SerializedNetworkItemInstanceDescriptor:
+    id: varint32
+    stack_size: uint16
+    aux_value: uvarint32
+    block_runtime_id: varint32
+    user_data_buffer: bytes
+
+
+@type(since=776, until=2168)
+class CreativeGroupInfoPayload:
+    creative_item_category: CreativeItemCategory = field(type=int32)
+    name: str
+    icon: SerializedNetworkItemInstanceDescriptor
+
+
+@type(since=2168)
+class CreativeGroupInfoPayload:
+    creative_item_category: CreativeItemCategory
+    name: str
+    icon: SerializedNetworkItemInstanceDescriptor
+
+
+class CreativeItemEntryPayload:
+    creative_item_net_id: CreativeItemNetId
+    item_descriptor: SerializedNetworkItemInstanceDescriptor
+    group_index: uvarint32 = field(since=776)
+
+
+@packet(id=145)
+class CreativeContentPacket:
+    groups: list[CreativeGroupInfoPayload] = field(since=776)
+    entries: list[CreativeItemEntryPayload]
+
+
+@packet(id=142)
+class CompletedUsingItemPacket:
+    item_id: int16
+    item_use_method: int32
+
+
+@type(until=2168)
+class ItemDescriptor:
+    class InternalType(IntEnum, uint8):
+        INVALID = 0
+        DEFAULT = 1
+        MOLANG = 2
+        ITEM_TAG = 3
+        DEFERRED = 4
+        COMPLEX_ALIAS = 5
+
+    internal_type: InternalType
+    id: int16 = field(when=lambda d: d.internal_type == InternalType.DEFAULT)
+    name: str = field(
+        when=lambda d: (
+            d.internal_type
+            in {InternalType.MOLANG, InternalType.ITEM_TAG, InternalType.DEFERRED, InternalType.COMPLEX_ALIAS}
+        )
+    )
+    molang_version: uint8 = field(when=lambda d: d.internal_type == InternalType.MOLANG)
+    aux_value: int16 = field(
+        when=lambda d: (
+            d.internal_type == InternalType.DEFERRED or (d.internal_type == InternalType.DEFAULT and d.id != 0)
+        )
+    )
 
 
 @type(until=924)

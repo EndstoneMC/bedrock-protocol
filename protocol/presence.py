@@ -1,12 +1,10 @@
-"""The server's session presence.
-
-Gathering configuration, store entry point, telemetry identity, the player's party, matchmaking, and transfer.
-"""
+"""Packets and types relating to server presence, parties, matchmaking and transfer."""
 
 import uuid
 from enum import IntEnum
 
 from protocol import field, int8, packet, type, uint8, uint16
+from protocol.player import PlayerPartyInfo
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -84,13 +82,6 @@ class ServerConfigurationJoinInfo:
     managed_chat: ManagedChatJoinInfo | None = field(since=2259)
 
 
-class ServerTelemetryData:
-    server_id: str
-    scenario_id: str
-    world_id: str
-    owner_id: str
-
-
 @packet(id=347, since=975)
 class ServerPresenceInfoPacket:
     presence_configuration: PresenceConfiguration | None
@@ -120,11 +111,6 @@ class TransferPacket:
 class PartyDestinationCookieResponsePacket:
     cookie: str
     accepted: bool
-
-
-class PlayerPartyInfo:
-    party_id: str
-    is_leader: bool
 
 
 @packet(id=342, since=944, until=975)

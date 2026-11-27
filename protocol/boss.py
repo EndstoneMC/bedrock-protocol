@@ -1,7 +1,4 @@
-"""The boss bar, from world/actor/boss/.
-
-The BossEvent enums BDS declares in network/packet/types/world/actor/ai/util/BossEventData.h.
-"""
+"""Packets and types relating to boss bars."""
 
 from enum import IntEnum
 

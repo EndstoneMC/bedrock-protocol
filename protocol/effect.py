@@ -1,4 +1,4 @@
-"""Status and movement effects applied to an actor, from world/effect/."""
+"""Packets and types relating to mob and movement effects."""
 
 from enum import IntEnum
 

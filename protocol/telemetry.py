@@ -1,4 +1,4 @@
-"""Legacy telemetry events and the MinecraftEventing enum namespace, from Events/."""
+"""Packets and types relating to telemetry events."""
 
 from enum import IntEnum
 
@@ -362,3 +362,31 @@ class LegacyTelemetryEventPacket:
         | ItemUsed
         | Empty
     ) = field(since=898)
+
+
+class ServerTelemetryData:
+    server_id: str
+    scenario_id: str
+    world_id: str
+    owner_id: str
+
+
+class TextProcessingEventOrigin(IntEnum, int32):
+    UNKNOWN = -1
+    SERVER_CHAT_PUBLIC = 0
+    SERVER_CHAT_WHISPER = 1
+    SIGN_TEXT = 2
+    ANVIL_TEXT = 3
+    BOOK_AND_QUILL_TEXT = 4
+    COMMAND_BLOCK_TEXT = 5
+    BLOCK_ACTOR_DATA_TEXT = 6
+    JOIN_EVENT_TEXT = 7
+    LEAVE_EVENT_TEXT = 8
+    SLASH_COMMAND_CHAT = 9
+    CARTOGRAPHY_TEXT = 10
+    KICK_COMMAND = 11
+    TITLE_COMMAND = 12
+    SUMMON_COMMAND = 13
+    SERVER_FORM = 14
+    DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI", since=975)
+    COUNT = sentinel()

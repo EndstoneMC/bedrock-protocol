@@ -1,7 +1,4 @@
-"""The serialized skin, from world/actor/player/SerializedSkinRef.h, persona/ and resources/persona/.
-
-The persona pieces it is built from, including emotes.
-"""
+"""Packets and types relating to skins, persona pieces and emotes."""
 
 import uuid
 from enum import IntEnum, auto
@@ -24,8 +21,6 @@ class ArmSizeType(IntEnum, uint8):
 
 @type(until=2168)
 class PieceType(IntEnum, uint32):
-    """persona::stringFromPieceType."""
-
     UNKNOWN = 0, "persona_unknown"
     SKELETON = 1, "persona_skeleton"
     BODY = 2, "persona_body"
@@ -164,8 +159,6 @@ class TintMapColor:
 
 @type(until=2168)
 class SerializedSkinRef:
-    """SerializedSkinImpl::write."""
-
     id: str
     play_fab_id: str
     resource_patch: str

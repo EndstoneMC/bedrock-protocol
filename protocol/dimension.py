@@ -1,13 +1,10 @@
-"""Dimension definitions and dimension change, from world/level/dimension/.
-
-Not DimensionType itself -- that is a versionless primitive, in common.py.
-"""
+"""Packets and types relating to dimensions."""
 
 import uuid
 
 from protocol import field, packet, type, uint32, varint32
 from protocol.common import DimensionType, Vec3
-from protocol.game import GeneratorType
+from protocol.level import GeneratorType
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
