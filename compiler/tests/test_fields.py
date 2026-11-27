@@ -515,6 +515,33 @@ def test_type_packs_a_struct_of_four_floats_as_a_color(build_package):
     ]
 
 
+FLOATS = "class Color:\n    r: float\n    g: float\n    b: float\n"
+
+
+@pytest.mark.parametrize(
+    ("color", "options"),
+    [
+        pytest.param(FLOATS, "type=int32", id="three-members"),
+        pytest.param(COLOR + "    w: float\n", "type=int32", id="five-members"),
+        pytest.param(FLOATS + "    a: str\n", "type=int32", id="a-text-member"),
+        pytest.param(FLOATS + "    a: float = field(since=2)\n", "type=int32", id="a-gated-member"),
+        pytest.param(
+            FLOATS + "    a: float = field(when=lambda p: p.r != 0)\n", "type=int32", id="a-conditional-member"
+        ),
+        pytest.param(FLOATS + "    a: float = field(duplicate=2)\n", "type=int32", id="a-duplicated-member"),
+        pytest.param(COLOR, 'type=int32, exclude="a"', id="an-excluded-member"),
+        pytest.param(
+            f"@type(until=3)\n{COLOR}\n@type(since=3)\n{FLOATS}", "type=int32", id="a-declaration-of-three-members"
+        ),
+    ],
+)
+def test_type_packs_only_a_struct_of_four_plain_floats_as_a_color(build_package, color, options):
+    source = HEADER + color + f"\nclass A:\n    x: Color = field({options})\n"
+
+    with pytest.raises(CompilerError, match=rf"A\.x: {REENCODE}$"):
+        build_package({"a": source})
+
+
 def test_type_packs_four_floats_only_into_str_or_a_32_bit_integer(build_package):
     source = HEADER + COLOR + "class A:\n    x: Color = field(type=uint16)\n"
 
