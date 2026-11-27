@@ -211,3 +211,13 @@ class AddVolumeEntityPacket:
 @packet(id=71, until=662)
 class ItemFrameDropItemPacket:
     pos: NetworkBlockPosition
+
+
+@packet(id=127, until=649)
+class AddEntityPacket:
+    entity_net_id: EntityNetId
+
+
+@packet(id=128, until=649)
+class RemoveEntityPacket:
+    entity_net_id: EntityNetId

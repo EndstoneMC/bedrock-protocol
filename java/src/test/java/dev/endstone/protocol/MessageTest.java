@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.endstone.protocol.nbt.CompoundTag;
-import dev.endstone.protocol.v649.PlayerSkinPacket_v649;
-import dev.endstone.protocol.v649.SerializedPersonaPieceHandle_v649;
-import dev.endstone.protocol.v649.SerializedSkinRef_v649;
+import dev.endstone.protocol.v630.PlayerSkinPacket_v630;
+import dev.endstone.protocol.v630.SerializedPersonaPieceHandle_v630;
+import dev.endstone.protocol.v630.SerializedSkinRef_v630;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -238,11 +238,11 @@ final class MessageTest {
             + "000004736c696d02233001000000000f706572736f6e615f756e6b6e6f776e000000000000000000000000000000",
         ByteBufUtil.hexDump(
             Protocol.v712.encode(
-                PlayerSkinPacket_v649.newBuilder()
+                PlayerSkinPacket_v630.newBuilder()
                     .setSkin(
-                        SerializedSkinRef_v649.newBuilder()
+                        SerializedSkinRef_v630.newBuilder()
                             .addPersonaPieces(
-                                SerializedPersonaPieceHandle_v649.getDefaultInstance())
+                                SerializedPersonaPieceHandle_v630.getDefaultInstance())
                             .build())
                     .build())));
   }

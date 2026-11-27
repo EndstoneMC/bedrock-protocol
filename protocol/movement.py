@@ -152,7 +152,7 @@ class CorrectPlayerMovePredictionPacket:
     pos_delta: Vec3
     on_ground: bool
     tick: PlayerInputTick
-    prediction_type: RewindType
+    prediction_type: RewindType = field(since=649)
 
 
 @packet(id=161, since=671, until=827)

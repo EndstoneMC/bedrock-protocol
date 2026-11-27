@@ -35,7 +35,7 @@ class LevelChunkPacket:
         blob_id: uint64
 
     pos: ChunkPos
-    dimension_id: DimensionType
+    dimension_id: DimensionType = field(since=649)
     sub_chunks_count: uvarint32
     client_request_sub_chunk_limit: uint16 = field(when=lambda p: p.sub_chunks_count == 4294967294)
     cache_enabled: bool

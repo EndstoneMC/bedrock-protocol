@@ -41,7 +41,7 @@ class HudVisibility(IntEnum, int32):
     COUNT = sentinel()
 
 
-@packet(id=308, until=786)
+@packet(id=308, since=649, until=786)
 class SetHudPacket:
     hud_element: list[HudElement] = field(type=uint8)
     hud_visible: HudVisibility = field(type=uint8)

@@ -341,6 +341,7 @@ class AgentCapabilities:
 
 class EducationLocalLevelSettings:
     code_builder_override_uri: str | None
+    has_quiz: bool = field(until=649)
 
 
 class ExternalLinkSettings:
@@ -357,7 +358,7 @@ class EducationLevelSettings:
     screenshot_border_resource_path: str
     agent_capabilities: AgentCapabilities | None
     local_settings: EducationLocalLevelSettings
-    _deprecated: Literal[False]
+    _deprecated: Literal[False] = field(since=649)
     external_link_settings: ExternalLinkSettings | None
 
 

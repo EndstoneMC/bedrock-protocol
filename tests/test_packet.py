@@ -1,7 +1,24 @@
 import pytest
 
 import bedrock_protocol as bp
-from bedrock_protocol import v649, v662, v671, v685, v686, v712, v729, v776, v844, v859, v898, v975, v1001, v2168, v2225
+from bedrock_protocol import (
+    v630,
+    v649,
+    v662,
+    v671,
+    v685,
+    v686,
+    v712,
+    v729,
+    v776,
+    v844,
+    v859,
+    v898,
+    v975,
+    v1001,
+    v2168,
+    v2225,
+)
 
 
 def test_a_snapshot_packet_resolves_to_the_type_of_its_first_bound_version():
@@ -31,6 +48,7 @@ def test_a_packet_whose_enum_changes_its_numbers_resolves_to_one_class(version):
 @pytest.mark.parametrize(
     ("version", "end_id"),
     [
+        pytest.param(v630, 308, id="v630"),
         pytest.param(v649, 309, id="v649"),
         pytest.param(v662, 309, id="v662"),
         pytest.param(v671, 309, id="v671"),

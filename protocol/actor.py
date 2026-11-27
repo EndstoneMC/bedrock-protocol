@@ -638,12 +638,11 @@ class ActorType(IntEnum, int32):
     TRADER_LLAMA = 5021
     CAMEL = 5002
     SNIFFER = 5003
-    BREEZE = 2956
-    with value(since=662):
-        BREEZE_WIND_CHARGE_PROJECTILE = 4194445
-    ARMADILLO = 5006
-    with value(until=662):
-        WIND_CHARGE_PROJECTILE = 4194445
+    with value(since=649):
+        BREEZE = 2956
+        BREEZE_WIND_CHARGE_PROJECTILE = value(4194445, since=662)
+        ARMADILLO = 5006
+        WIND_CHARGE_PROJECTILE = value(4194445, until=662)
     with value(since=662):
         WIND_CHARGE_PROJECTILE = 4194447
         BOGGED = 1117072

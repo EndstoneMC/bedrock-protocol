@@ -326,6 +326,7 @@ class LegacyTelemetryEventPacket:
     bell_used: BellUsed = field(until=898, when=lambda p: p.type == Type.BELL_USED)
     actor_definition: ActorDefinition = field(until=898, when=lambda p: p.type == Type.ACTOR_DEFINITION)
     raid_update: RaidUpdate = field(until=898, when=lambda p: p.type == Type.RAID_UPDATE)
+    # TODO: PLAYER_MOVEMENT_ANOMALY_OBSOLETE and PLAYER_MOVEMENT_CORRECTED_OBSOLETE payloads before 649
     target_block_hit: TargetBlockHit = field(until=898, when=lambda p: p.type == Type.TARGET_BLOCK_HIT)
     piglin_barter: PiglinBarter = field(until=898, when=lambda p: p.type == Type.PIGLIN_BARTER)
     player_waxed_or_unwaxed_copper: PlayerWaxedOrUnwaxedCopper = field(

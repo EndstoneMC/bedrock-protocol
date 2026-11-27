@@ -394,5 +394,5 @@ class PlayerListEntry:
     skin: SerializedSkinRef
     is_teacher: bool
     is_host: bool
-    is_sub_client: bool
+    is_sub_client: bool = field(since=649)
     color: Color = field(type=int32, since=800)
