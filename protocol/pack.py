@@ -56,7 +56,7 @@ class ResourcePacksInfoPacket:
     world_template_id_and_version: PackIdVersion = field(since=766)
     behavior_packs: list[PackInfoData] = field(prefix=uint16, until=729, exclude="is_ray_tracing_capable")
     resource_packs: list[PackInfoData] = field(prefix=uint16)
-    pack_urls: list[PackUrl] = field(until=748)
+    pack_urls: list[PackUrl] = field(since=618, until=748)
 
 
 @packet(id=6, since=2168)

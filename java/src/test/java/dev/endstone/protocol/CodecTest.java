@@ -7,7 +7,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import dev.endstone.protocol.internal.SerializationMode;
 import dev.endstone.protocol.v2168.PlaySoundPacket_v2168;
-import dev.endstone.protocol.v618.ClientboundDebugRendererPacket_v618;
+import dev.endstone.protocol.v594.ClientboundDebugRendererPacket_v594;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class CodecTest {
   static Stream<Arguments> unsupported() {
-    return Stream.of(argumentSet("below the oldest", 617), argumentSet("above the newest", 2260));
+    return Stream.of(argumentSet("below the oldest", 593), argumentSet("above the newest", 2260));
   }
 
   @Test
@@ -142,9 +142,9 @@ final class CodecTest {
 
   @Test
   void pre898DebugRendererMarkerEncodesColorAsFourFloats() {
-    ClientboundDebugRendererPacket_v618 packet =
-        ClientboundDebugRendererPacket_v618.newBuilder()
-            .setType(ClientboundDebugRendererPacket_v618.Type.ADD_DEBUG_MARKER_CUBE)
+    ClientboundDebugRendererPacket_v594 packet =
+        ClientboundDebugRendererPacket_v594.newBuilder()
+            .setType(ClientboundDebugRendererPacket_v594.Type.ADD_DEBUG_MARKER_CUBE)
             .setDebugMarkerData(
                 ClientboundDebugRendererPacket.DebugMarkerData.newBuilder()
                     .setText("marker")
@@ -157,11 +157,11 @@ final class CodecTest {
     String expected =
         "02000000066d61726b65720000803f00000040000040400000803f0000003f0000803e0000403fdc05000000000000";
     ByteBuf buf = Unpooled.buffer();
-    ClientboundDebugRendererPacket_v618.codec(859).encode(packet, buf);
+    ClientboundDebugRendererPacket_v594.codec(859).encode(packet, buf);
     assertEquals(expected, ByteBufUtil.hexDump(buf));
     assertEquals(
         packet,
-        ClientboundDebugRendererPacket_v618.codec(859)
+        ClientboundDebugRendererPacket_v594.codec(859)
             .decode(Unpooled.wrappedBuffer(ByteBufUtil.decodeHexDump(expected))));
   }
 

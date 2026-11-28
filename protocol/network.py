@@ -223,7 +223,8 @@ class MinecraftPacketIds(IntEnum, int32):
     TRIM_DATA = 302
     OPEN_SIGN = 303
     AGENT_ANIMATION = 304
-    REFRESH_ENTITLEMENTS_PACKET = 305
+    with value(since=618):
+        REFRESH_ENTITLEMENTS_PACKET = 305
     with value(since=630):
         PLAYER_TOGGLE_CRAFTER_SLOT_REQUEST_PACKET = 306
         SET_PLAYER_INVENTORY_OPTIONS = 307

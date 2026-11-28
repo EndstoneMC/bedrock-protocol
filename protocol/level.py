@@ -102,7 +102,8 @@ class LevelSettings:
     game_difficulty: Difficulty
     default_spawn: NetworkBlockPosition
     achievements_disabled: bool
-    editor_world_type: WorldType
+    is_editor_world: bool = field(until=618)
+    editor_world_type: WorldType = field(since=618)
     is_created_in_editor: bool
     is_exported_from_editor: bool
     time: varint32

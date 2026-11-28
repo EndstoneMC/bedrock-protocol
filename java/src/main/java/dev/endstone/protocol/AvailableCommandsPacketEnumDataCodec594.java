@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
-final class AvailableCommandsPacketEnumDataCodec618 {
+final class AvailableCommandsPacketEnumDataCodec594 {
 
-  private AvailableCommandsPacketEnumDataCodec618() {}
+  private AvailableCommandsPacketEnumDataCodec594() {}
 
   static void encode(
       @NotNull AvailableCommandsPacket.EnumData value, @NotNull ByteBuf buf, long argument) {

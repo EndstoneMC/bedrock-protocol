@@ -2,6 +2,7 @@ import pytest
 
 import bedrock_protocol as bp
 from bedrock_protocol import (
+    v594,
     v618,
     v622,
     v630,
@@ -50,6 +51,7 @@ def test_a_packet_whose_enum_changes_its_numbers_resolves_to_one_class(version):
 @pytest.mark.parametrize(
     ("version", "end_id"),
     [
+        pytest.param(v594, 305, id="v594"),
         pytest.param(v618, 306, id="v618"),
         pytest.param(v622, 306, id="v622"),
         pytest.param(v630, 308, id="v630"),

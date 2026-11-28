@@ -1,0 +1,9 @@
+[
+ {
+  "id": "preset_list_compound",
+  "value": {
+   "data": "{presets:[{identifier:\"minecraft:free\",inherit_from:\"minecraft:first_person\"}]}"
+  },
+  "bytes": "0a000907707265736574730a02080a6964656e7469666965720e6d696e6563726166743a66726565080c696e68657269745f66726f6d166d696e6563726166743a66697273745f706572736f6e0000"
+ }
+]

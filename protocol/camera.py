@@ -5,6 +5,7 @@ from enum import IntEnum
 from protocol import field, int32, int64, packet, sentinel, type, uint8, uint32
 from protocol.actor import ActorUniqueID
 from protocol.common import EasingType, Vec2, Vec3
+from protocol.nbt import CompoundTag
 
 package = "bedrock.protocol"
 java_package = "dev.endstone.protocol"
@@ -74,7 +75,12 @@ class CameraPresets:
     presets: list[CameraPreset]
 
 
-@packet(id=198)
+@packet(id=198, until=618)
+class CameraPresetsPacket:
+    data: CompoundTag
+
+
+@packet(id=198, since=618)
 class CameraPresetsPacket:
     camera_presets: CameraPresets
 
@@ -327,7 +333,12 @@ class CameraInstruction:
         detach_from_entity: bool | None
 
 
-@packet(id=300)
+@packet(id=300, until=618)
+class CameraInstructionPacket:
+    data: CompoundTag
+
+
+@packet(id=300, since=618)
 class CameraInstructionPacket:
     camera_instruction: CameraInstruction
 

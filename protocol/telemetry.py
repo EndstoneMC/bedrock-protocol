@@ -410,6 +410,6 @@ class TextProcessingEventOrigin(IntEnum, int32):
     KICK_COMMAND = 11
     TITLE_COMMAND = 12
     SUMMON_COMMAND = 13
-    SERVER_FORM = 14
+    SERVER_FORM = value(14, since=618)
     DATA_DRIVEN_UI = value(15, cpp_name="DataDrivenUI", since=975)
     COUNT = sentinel()

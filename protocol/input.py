@@ -82,11 +82,15 @@ class PlayerActionType(IntEnum, int32):
     MISSED_SWING = 31
     START_CRAWLING = 32
     STOP_CRAWLING = 33
-    START_FLYING = 34
-    STOP_FLYING = 35
-    DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", since=622, deprecated=True)
-    START_USING_ITEM = value(37, since=748)
-    SWAP_OFFHAND = value(38, since=2168)
+    with value(since=618):
+        START_FLYING = 34
+        STOP_FLYING = 35
+    with value(since=622):
+        DEPRECATED_CLIENT_ACK_SERVER_DATA = value(36, "DEPRECATED_ClientAckServerData", deprecated=True)
+    with value(since=748):
+        START_USING_ITEM = 37
+    with value(since=2168):
+        SWAP_OFFHAND = 38
     COUNT = auto()
 
 
@@ -177,8 +181,9 @@ class PlayerAuthInputPacket:
         MISSED_SWING = 39
         START_CRAWLING = 40
         STOP_CRAWLING = 41
-        START_FLYING = 42
-        STOP_FLYING = 43
+        with value(since=618):
+            START_FLYING = 42
+            STOP_FLYING = 43
         with value(since=622):
             CLIENT_ACK_SERVER_DATA = 44
         with value(since=649):

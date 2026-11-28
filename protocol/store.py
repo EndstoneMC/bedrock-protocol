@@ -16,7 +16,7 @@ class ShowProfilePacket:
     player_xuid: str
 
 
-@packet(id=305)
+@packet(id=305, since=618)
 class RefreshEntitlementsPacket:
     pass
 
